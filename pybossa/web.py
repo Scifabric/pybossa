@@ -12,7 +12,7 @@ def home():
     return render_template('/home/index.html')
 
 @app.route('/faq')
-def home():
+def faq():
     return render_template('/home/faq.html')
 
 if __name__ == "__main__":
