@@ -30,22 +30,14 @@
             <li><a href="/faq">FAQ</a></li>
           </ul>
           <ul class="nav secondary-nav">
-            <li>
-              <form action="/search" method="GET">
-                <input type="text" name="q" placeholder="search" />
-              </form>
-            </li>
             {% if current_user and current_user.is_anonymous() %}
             <li>
-              <a href="{{url_for('account.register')}}">Register</a>
+              <a href="{{url_for('home')}}">Register</a>
             </li>
             <li>
-              <a href="{{url_for('account.login')}}">Login</a>
+              <a href="{{url_for('home')}}">Login</a>
             </li>
             {% elif current_user %}
-            <li>
-              <a alt="view your account" title="view your account" href="/account/{{current_user.id}}"><strong><input type="hidden" id="current_user" value="{{current_user.id}}" />{{current_user.id}}</strong></a>
-            </li>
             <li>
               <a href="{{ url_for('account.logout') }}">Logout</a>
             </li>

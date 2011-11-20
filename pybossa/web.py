@@ -2,7 +2,7 @@ import logging
 
 from flask import request, g, render_template, abort, flash
 
-from pybossa.core import app
+from pybossa.core import app, login_manager
 import pybossa.model as model
 
 logger = logging.getLogger('pybossa')
@@ -24,6 +24,10 @@ def remove_db_session():
 @app.context_processor
 def inject_project_vars():
     return dict(title = app.config['TITLE'], copyright = app.config['COPYRIGHT'])
+
+@login_manager.user_loader
+def load_user(userid):
+    return model.Session.query(model.User).filter_by(name=userid).first()
 
 
 @app.route('/')

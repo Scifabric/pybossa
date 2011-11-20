@@ -1,6 +1,8 @@
 import os
 import logging
 from flask import Flask
+from flaskext.login import LoginManager, current_user
+
 from pybossa import default_settings as settings
 
 def create_app():
@@ -8,6 +10,7 @@ def create_app():
     configure_app(app)
     setup_error_email(app)
     setup_logging(app)
+    login_manager.setup_app(app)
     return app
 
 def configure_app(app):
@@ -46,5 +49,6 @@ def setup_logging(app):
         logger.setLevel(log_level)
         logger.addHandler(file_handler)
 
+login_manager = LoginManager()
 app = create_app()
 

@@ -9,6 +9,7 @@ from sqlalchemy import Integer, Unicode, Float, UnicodeText
 from sqlalchemy.schema import Table, MetaData, Column, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker
+import flaskext.login
 
 log = logging.getLogger(__name__)
 
@@ -61,7 +62,7 @@ class TaskRun(Base):
     calibration         = Column(Integer)
     info                = Column(UnicodeText)
 
-class User(Base):
+class User(Base, flaskext.login.UserMixin):
     __tablename__ = 'user'
     id             = Column(Integer, primary_key=True)
     create_time         = Column(Integer, default=make_timestamp_as_int)
