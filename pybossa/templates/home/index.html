@@ -2,23 +2,30 @@
 
 {% block content %}
       <div class="hero-unit">
-              <h1>Welcome to {{ title }}!</h1>
-        <p>{{ title }} makes it easy to ....</p>
-        <p><a class="btn primary large" href="/faq">Learn more &raquo;</a></p>
+        <h1>Welcome to {{ title }}!</h1>
+        <p>{{description|safe}} is about ....</p>
+        <p><a class="btn primary large" href="/start">Start contributing now &raquo;</a></p>
       </div>
 
       <!-- Example row of columns -->
       <div class="row">
         <div class="span-one-third column">
-          <h2>Search ...</h3>
-          <p>...</p>
-          <p><a href="/search" class="btn">Search now &raquo;</a></p>
+          <h2>Get Started</h2>
+          <p>It's really simple to start contributing.</p>
+          <p><a href="/start" class="btn">Start now &raquo;</a></p>
         </div>
         <div class="span-one-third column">
-          <h2>Something Else</h2>
+          <h2>Top Contributors</h2>
+          <p><a href="/stats" class="btn">The Leaderboard &raquo;</a></p>
         </div>
         <div class="span-one-third column">
-          <h2>Recent ...</h2>
+          <h2>Why Contribute</h2>
+          <ul>
+            <li>Help advance research</li>
+            <li>Everything is open and freely usable</li>
+            <li>Things computers can't do</li>
+          </ul>
+          <p><a href="/faq#why" class="btn">Read more &raquo;</a></p>
         </div>
       </div>
 {% endblock %}

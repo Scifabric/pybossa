@@ -1,17 +1,12 @@
 import json
 
-import pybossa.web as web
-import pybossa.model as model
+from base import web, model
 
 
 class TestAPI:
     def setUp(self):
-        web.app.config['TESTING'] = True
         self.app = web.app.test_client()
-        dburi = web.app.config['SQLALCHEMY_DATABASE_URI']
-        engine = model.create_engine(dburi)
-        model.Base.metadata.drop_all(bind=engine)
-        model.Base.metadata.create_all(bind=engine)
+        model.rebuild_db()
 
     def test_01(self):
         res = self.app.get('/api/project')
@@ -29,4 +24,31 @@ class TestAPI:
         )
         out = model.Session.query(model.App).filter_by(name=name).one()
         assert out
+
+        data = dict(
+            app_id=out.id,
+            state=1,
+            info='my job data'
+            )
+        data = json.dumps(data)
+        res = self.app.post('/api/task',
+            data=data
+        )
+        tasks = model.Session.query(model.Task).filter_by(app_id=out.id).all()
+        assert tasks, tasks
+
+        data = dict(
+            app_id=out.id,
+            job_id=tasks[0].id,
+            info='my job result'
+            )
+        data = json.dumps(data)
+        res = self.app.post('/api/taskrun',
+            data=data
+        )
+        taskrun = model.Session.query(model.TaskRun).filter_by(app_id=out.id).all()
+        assert taskrun, taskrun
+        assert taskrun[0].create_time, taskrun
+        assert taskrun[0].app_id == out.id
+
 

@@ -23,6 +23,10 @@ def make_timestamp_as_int():
     now = datetime.datetime.now()
     return time.mktime(now.timetuple())
 
+def rebuild_db():
+    Base.metadata.drop_all()
+    Base.metadata.create_all()
+
 
 class DomainObject(object):
     def dictize(self):
@@ -70,8 +74,9 @@ class TaskRun(Base):
     id                  = Column(Integer, primary_key=True)
     create_time         = Column(Integer, default=make_timestamp_as_int)
     app_id              = Column(Integer, ForeignKey('bossa_app.id'))
+    job_id              = Column(Integer, ForeignKey('bossa_job.id'))
+    user_id             = Column(Integer, ForeignKey('user.id'))
     batch_id            = Column(Integer, ForeignKey('bossa_batch.id'))
-    user_id            = Column(Integer, ForeignKey('user.id'))
     finish_time         = Column(Integer)
     timeout             = Column(Integer)
     calibration         = Column(Integer)

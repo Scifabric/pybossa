@@ -9,4 +9,6 @@ SECRET_KEY = 'my-session-secret'
 
 ## project configuration
 TITLE = 'PyBossa'
-COPYRIGHT = 'Your Institution'
+COPYRIGHT = 'Set Your Institution'
+DESCRIPTION = 'Set the description in your config'
+

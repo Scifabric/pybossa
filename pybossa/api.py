@@ -43,18 +43,28 @@ class APIBase(MethodView):
 class ProjectAPI(APIBase):
     __class__ = model.App
 
-project_view = ProjectAPI.as_view('project_api')
-blueprint.add_url_rule('/project',
-    view_func=project_view,
-    defaults={'id': None},
-    methods=['GET']
-    )
-blueprint.add_url_rule('/project',
-    view_func=project_view,
-    methods=['POST']
-    )
-blueprint.add_url_rule('/project/<int:id>',
-    view_func=project_view,
-    methods=['GET', 'PUT', 'DELETE']
-    )
+class TaskAPI(APIBase):
+    __class__ = model.Task
 
+class TaskRunAPI(APIBase):
+    __class__ = model.TaskRun
+
+def register_api(view, endpoint, url, pk='id', pk_type='int'):
+    view_func = view.as_view(endpoint)
+    blueprint.add_url_rule(url,
+        view_func=view_func,
+        defaults={pk: None},
+        methods=['GET']
+        )
+    blueprint.add_url_rule(url,
+        view_func=view_func,
+        methods=['POST']
+        )
+    blueprint.add_url_rule('%s/<%s:%s>' % (url, pk_type, pk),
+        view_func=view_func,
+        methods=['GET', 'PUT', 'DELETE']
+        )
+
+register_api(ProjectAPI, 'api_project', '/project', pk='id', pk_type='int')
+register_api(TaskAPI, 'api_task', '/task', pk='id', pk_type='int')
+register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
