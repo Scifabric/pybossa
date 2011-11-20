@@ -9,8 +9,11 @@ logger = logging.getLogger('pybossa')
 
 @app.route('/')
 def home():
-    #  return render_template('index.html')
-    return 'Coming soon!'
+    return render_template('/home/index.html')
+
+@app.route('/faq')
+def home():
+    return render_template('/home/faq.html')
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.NOTSET)

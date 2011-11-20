@@ -1,0 +1,16 @@
+body {
+  padding-top: 40px;
+}
+
+.content {
+  margin-top: 20px;
+}
+
+/************************************
+  * Flash notifications / messages
+  ***********************************/
+
+div.alert-messages {
+  margin-top: 15px;
+}
+
