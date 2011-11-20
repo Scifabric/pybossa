@@ -5,7 +5,8 @@ setup(
     version = '0.1a',
     packages = find_packages(),
     install_requires = [
-        'Flask==0.8'
+        'Flask==0.8',
+        'SQLAlchemy==0.7.3'
         ],
     # metadata for upload to PyPI
     author = 'Citizen Cyberscience Centre and Open Knowledge Foundation',

@@ -1,6 +1,13 @@
 BOSSA in Python
 
-# Install
+Install
+=======
+
+Pre-requisites:
+
+  * Python >= 2.6, <3.0
+  * MySQL database
+  * Python MySQL bindings (e.g. on ubuntu python-mysqldb)
 
 Install the code and requirements (you may wish to create a virtualenv first)::
 
@@ -11,10 +18,12 @@ Install the code and requirements (you may wish to create a virtualenv first)::
   # virtualenv ~/{my-virtualenv}
   pip install -e .
 
-[Optional] Add to or override the default settings by copying the provided
-template (in pybossa/default_settings.py)::
+Create a settings file and enter your SQLAlchemy DB URI (you can also override
+default settings as needed)::
 
   cp settings_local.py.tmpl settings_local.py
+  # now edit ...
+  vim settings_local.py
 
 Alternatively, if you want your config elsewhere or with different name::
 
