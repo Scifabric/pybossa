@@ -6,6 +6,9 @@ from pybossa.core import app
 
 logger = logging.getLogger('pybossa')
 
+@app.context_processor
+def inject_project_vars():
+    return dict(title = app.config['TITLE'], copyright = app.config['COPYRIGHT'])
 
 @app.route('/')
 def home():
