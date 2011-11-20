@@ -25,10 +25,16 @@ default settings as needed)::
   # now edit ...
   vim settings_local.py
 
-Alternatively, if you want your config elsewhere or with different name::
+.. note:
 
-  cp settings_local.py.tmpl {/my/config/file/somewhere}
-  export PYBOSSA_SETTINGS={/my/config/file/somewhere}
+  Alternatively, if you want your config elsewhere or with different name::
+
+    cp settings_local.py.tmpl {/my/config/file/somewhere}
+    export PYBOSSA_SETTINGS={/my/config/file/somewhere}
+
+Setup the database::
+
+  python cli.py db_create
 
 Run the web server::
 
