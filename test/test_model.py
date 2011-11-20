@@ -30,3 +30,7 @@ class TestModel:
         user = model.User.by_name(u'test-user')
         assert user
 
+        out = user.dictize()
+        assert out['name'] == u'test-user'
+
+

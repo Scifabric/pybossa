@@ -13,8 +13,6 @@ import flaskext.login
 
 log = logging.getLogger(__name__)
 
-
-Base = declarative_base()
 Session = scoped_session(sessionmaker())
 
 def set_engine(engine):
@@ -23,6 +21,22 @@ def set_engine(engine):
 def make_timestamp_as_int():
     now = datetime.datetime.now()
     return time.mktime(now.timetuple())
+
+
+class DomainObject(object):
+    def dictize(self):
+        out = {}
+        for col in self.__table__.c:
+            out[col.name] = getattr(self, col.name)
+        return out
+
+    @classmethod
+    def undictize(cls, dict_):
+        raise NotImplementedError()
+    
+
+Base = declarative_base(cls=DomainObject)
+
 
 class App(Base):
     __tablename__ = 'bossa_app'
