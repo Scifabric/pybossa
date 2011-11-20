@@ -6,7 +6,7 @@ import time
 
 from sqlalchemy import create_engine
 from sqlalchemy import Integer, Unicode, Float, UnicodeText
-from sqlalchemy.schema import Table, MetaData, Column
+from sqlalchemy.schema import Table, MetaData, Column, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker
 
@@ -26,7 +26,6 @@ def make_timestamp_as_int():
 class App(Base):
     __tablename__ = 'bossa_app'
     id                  = Column(Integer, primary_key=True)
-    # create_time         = Column(Integer, default=datetime.datetime.now())
     create_time         = Column(Integer, default=make_timestamp_as_int)
     name                = Column(Unicode(length=255), unique=True)
     short_name          = Column(Unicode(length=255), unique=True)
@@ -42,9 +41,9 @@ class App(Base):
 class Task(Base):
     __tablename__ = 'bossa_job'
     id                  = Column(Integer, primary_key=True)
-    create_time         = Column(Integer)
-    app_id              = Column(Integer)
-    batch_id            = Column(Integer)
+    create_time         = Column(Integer, default=make_timestamp_as_int)
+    app_id              = Column(Integer, ForeignKey('bossa_app.id'))
+    batch_id            = Column(Integer, ForeignKey('bossa_batch.id'))
     state               = Column(Integer)
     info                = Column(UnicodeText)
     calibration         = Column(Integer)
@@ -53,19 +52,23 @@ class Task(Base):
 class TaskRun(Base):
     __tablename__ = 'bossa_job_inst'
     id                  = Column(Integer, primary_key=True)
-    create_time         = Column(Integer)
-    app_id              = Column(Integer)
-    job_id              = Column(Integer)
-    user_id             = Column(Integer)
-    batch_id            = Column(Integer)
+    create_time         = Column(Integer, default=make_timestamp_as_int)
+    app_id              = Column(Integer, ForeignKey('bossa_app.id'))
+    batch_id            = Column(Integer, ForeignKey('bossa_batch.id'))
+    user_id            = Column(Integer, ForeignKey('user.id'))
     finish_time         = Column(Integer)
     timeout             = Column(Integer)
     calibration         = Column(Integer)
     info                = Column(UnicodeText)
 
 class User(Base):
-    __tablename__ = 'bossa_user'
-    user_id             = Column(Integer, primary_key=True)
+    __tablename__ = 'user'
+    id             = Column(Integer, primary_key=True)
+    create_time         = Column(Integer, default=make_timestamp_as_int)
+    email_addr          = Column(Unicode(length=254), unique=True)
+    name                = Column(Unicode(length=254), unique=True)
+    passwd_hash         = Column(Unicode(length=254), unique=True)
+    # bossa specific
     category            = Column(Integer)
     flags               = Column(Integer)
     info                = Column(UnicodeText)
@@ -73,8 +76,8 @@ class User(Base):
 class Batch(Base):
     __tablename__ = 'bossa_batch'
     id                  = Column(Integer, primary_key=True)
-    create_time         = Column(Integer)
+    create_time         = Column(Integer, default=make_timestamp_as_int)
     name                = Column(Unicode(length=255))
-    app_id              = Column(Integer)
+    app_id              = Column(Integer, ForeignKey('bossa_app.id'))
     calibration         = Column(Integer)
 
