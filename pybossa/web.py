@@ -7,6 +7,7 @@ import pybossa.model as model
 
 logger = logging.getLogger('pybossa')
 
+
 @app.before_request
 def bind_db_engine():
     dburi = app.config.get('SQLALCHEMY_DATABASE_URI', '')
@@ -19,6 +20,11 @@ def bind_db_engine():
 @app.before_request
 def remove_db_session():
     model.Session.remove()
+
+@app.context_processor
+def inject_project_vars():
+    return dict(title = app.config['TITLE'], copyright = app.config['COPYRIGHT'])
+
 
 @app.route('/')
 def home():
