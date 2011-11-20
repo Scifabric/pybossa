@@ -5,9 +5,12 @@ from flaskext.login import login_user, logout_user, current_user
 
 from pybossa.core import app, login_manager
 import pybossa.model as model
+from pybossa.api import blueprint as api
 
 logger = logging.getLogger('pybossa')
 
+# other views ...
+app.register_blueprint(api, url_prefix='/api')
 
 @app.before_request
 def bind_db_engine():
