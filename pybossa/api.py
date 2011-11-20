@@ -14,16 +14,14 @@ def index():
     return 'The PyBossa API'
 
 
-class ProjectAPI(MethodView):
-    __class__ = model.App
-
+class APIBase(MethodView):
     @jsonpify
-    def get(self, project_id):
-        if project_id is None:
-            items = [ x.dictize() for x in model.Session.query(model.App).all() ]
+    def get(self, id):
+        if id is None:
+            items = [ x.dictize() for x in model.Session.query(self.__class__).all() ]
             return json.dumps(items)
         else:
-            item = model.Session.query(model.App).get(project_id)
+            item = model.Session.query(self.__class__).get(id)
             return json.dumps(item.dictize()) 
 
     @jsonpify
@@ -34,25 +32,28 @@ class ProjectAPI(MethodView):
         model.Session.commit()
         return json.dumps(inst.dictize())
 
-    def delete(self, project_id):
+    def delete(self, id):
         # delete a single project
         pass
 
-    def put(self, project_id):
+    def put(self, id):
         # update a single project
         pass
+
+class ProjectAPI(APIBase):
+    __class__ = model.App
 
 project_view = ProjectAPI.as_view('project_api')
 blueprint.add_url_rule('/project',
     view_func=project_view,
-    defaults={'project_id': None},
+    defaults={'id': None},
     methods=['GET']
     )
 blueprint.add_url_rule('/project',
     view_func=project_view,
     methods=['POST']
     )
-blueprint.add_url_rule('/project/<int:project_id>',
+blueprint.add_url_rule('/project/<int:id>',
     view_func=project_view,
     methods=['GET', 'PUT', 'DELETE']
     )
