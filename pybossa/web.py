@@ -1,6 +1,7 @@
 import logging
 
-from flask import request, g, render_template, abort, flash
+from flask import request, g, render_template, abort, flash, redirect, session
+from flaskext.login import login_user, logout_user, current_user
 
 from pybossa.core import app, login_manager
 import pybossa.model as model
@@ -22,11 +23,20 @@ def remove_db_session():
     model.Session.remove()
 
 @app.context_processor
-def inject_project_vars():
-    return dict(title = app.config['TITLE'], copyright = app.config['COPYRIGHT'])
+def global_template_context():
+    return dict(
+        title = app.config['TITLE'],
+        copyright = app.config['COPYRIGHT'],
+        current_user=current_user
+        )
 
 @login_manager.user_loader
 def load_user(userid):
+    # HACK: this repetition is painful but seems that before_request not yet called
+    # TODO: maybe time to use Flask-SQLAlchemy
+    dburi = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+    engine = model.create_engine(dburi)
+    model.set_engine(engine)
     return model.Session.query(model.User).filter_by(name=userid).first()
 
 
@@ -37,6 +47,21 @@ def home():
 @app.route('/faq')
 def faq():
     return render_template('/home/faq.html')
+
+@app.route('/login')
+def login():
+    '''Stub login (to be replaced asap) ...'''
+    tester = model.User.by_name('tester')
+    login_user(tester, remember=True)
+    flash('You were logged in', 'success')
+    return redirect('/')
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    flash('You were logged out', 'success')
+    return redirect('/')
+
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.NOTSET)

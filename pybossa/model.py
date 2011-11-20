@@ -74,6 +74,10 @@ class User(Base, flaskext.login.UserMixin):
     flags               = Column(Integer)
     info                = Column(UnicodeText)
 
+    def get_id(self):
+        '''id for login system. equates to name'''
+        return self.name
+
     @classmethod
     def by_name(cls, name):
         '''Lookup user by (user)name.'''

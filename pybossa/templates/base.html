@@ -30,16 +30,16 @@
             <li><a href="/faq">FAQ</a></li>
           </ul>
           <ul class="nav secondary-nav">
-            {% if current_user and current_user.is_anonymous() %}
+            {% if current_user.is_anonymous() %}
             <li>
               <a href="{{url_for('home')}}">Register</a>
             </li>
             <li>
-              <a href="{{url_for('home')}}">Login</a>
+              <a href="{{url_for('login')}}">Login</a>
             </li>
-            {% elif current_user %}
+            {% else %}
             <li>
-              <a href="{{ url_for('account.logout') }}">Logout</a>
+              <a href="{{ url_for('logout') }}">Logout</a>
             </li>
             {% endif %}
           </ul>
