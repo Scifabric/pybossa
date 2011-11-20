@@ -74,6 +74,11 @@ class User(Base, flaskext.login.UserMixin):
     flags               = Column(Integer)
     info                = Column(UnicodeText)
 
+    @classmethod
+    def by_name(cls, name):
+        '''Lookup user by (user)name.'''
+        return Session.query(User).filter_by(name=name).first()
+
 class Batch(Base):
     __tablename__ = 'bossa_batch'
     id                  = Column(Integer, primary_key=True)
