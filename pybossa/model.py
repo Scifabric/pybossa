@@ -23,6 +23,10 @@ def make_timestamp_as_int():
     now = datetime.datetime.now()
     return time.mktime(now.timetuple())
 
+def rebuild_db():
+    Base.metadata.drop_all()
+    Base.metadata.create_all()
+
 
 class DomainObject(object):
     def dictize(self):

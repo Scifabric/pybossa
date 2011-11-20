@@ -1,17 +1,12 @@
 import json
 
-import pybossa.web as web
-import pybossa.model as model
+from base import web, model
 
 
 class TestAPI:
     def setUp(self):
-        web.app.config['TESTING'] = True
         self.app = web.app.test_client()
-        dburi = web.app.config['SQLALCHEMY_DATABASE_URI']
-        engine = model.create_engine(dburi)
-        model.Base.metadata.drop_all(bind=engine)
-        model.Base.metadata.create_all(bind=engine)
+        model.rebuild_db()
 
     def test_01(self):
         res = self.app.get('/api/project')

@@ -1,14 +1,9 @@
-import pybossa.web as web
-import pybossa.model as model
+from base import web, model
 
 class TestModel:
     @classmethod
     def setup_class(self):
-        dburi = web.app.config['SQLALCHEMY_DATABASE_URI']
-        engine = model.create_engine(dburi)
-        model.Base.metadata.drop_all(bind=engine)
-        model.Base.metadata.create_all(bind=engine)
-        model.set_engine(engine)
+        model.rebuild_db()
 
     def test_01(self):
         app = model.App(name=u'My New App', short_name=u'my-new-app')
