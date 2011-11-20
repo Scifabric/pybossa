@@ -30,6 +30,7 @@ def global_template_context():
     return dict(
         title = app.config['TITLE'],
         copyright = app.config['COPYRIGHT'],
+        description = app.config['DESCRIPTION'],
         current_user=current_user
         )
 

@@ -6,6 +6,10 @@ body {
   margin-top: 20px;
 }
 
+.hero-unit h1 {
+  line-height: 1.5;
+}
+
 /************************************
   * Flash notifications / messages
   ***********************************/
