@@ -10,18 +10,27 @@ import pybossa.web as web
 def db_create():
     '''Create the db'''
     dburi = web.app.config['SQLALCHEMY_DATABASE_URI']
+    engine = model.create_engine(dburi)
     model.Base.metadata.create_all(bind=engine)
 
 def db_rebuild():
     '''Rebuild the db'''
     dburi = web.app.config['SQLALCHEMY_DATABASE_URI']
+    engine = model.create_engine(dburi)
     model.Base.metadata.drop_all(bind=engine)
     model.Base.metadata.create_all(bind=engine)
 
 def fixtures():
     '''Not yet implemented!'''
-    # TODO
-    pass
+    dburi = web.app.config['SQLALCHEMY_DATABASE_URI']
+    engine = model.create_engine(dburi)
+    model.set_engine(engine)
+    user = model.User(
+        name=u'tester',
+        email_addr=u'tester@tester.org'
+        )
+    model.Session.add(user)
+    model.Session.commit()
     
 
 ## ==================================================
