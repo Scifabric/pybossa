@@ -1,13 +1,14 @@
 from setuptools import setup, find_packages
+try:
+    requirements = open('requirements.txt').read().split('\n')
+except:
+    requirements = []
 
 setup(
     name = 'pybossa',
     version = '0.1a',
     packages = find_packages(),
-    install_requires = [
-        'Flask==0.8',
-        'SQLAlchemy==0.7.3'
-        ],
+    install_requires = requirements,
     # metadata for upload to PyPI
     author = 'Citizen Cyberscience Centre and Open Knowledge Foundation',
     # TODO: change
