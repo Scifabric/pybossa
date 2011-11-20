@@ -8,11 +8,12 @@ Pre-requisites:
   * Python >= 2.6, <3.0
   * MySQL database
   * Python MySQL bindings (e.g. on ubuntu python-mysqldb)
+  * pip for installing python packages
 
 Install the code and requirements (you may wish to create a virtualenv first)::
 
   # get the source
-  git clone https://github.com/okfn/pybossa
+  git clone https://github.com/citizen-cyberscience-centre/pybossa
   cd pybossa
   # [optional] create virtualenv first
   # virtualenv ~/{my-virtualenv}
