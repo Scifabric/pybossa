@@ -8,7 +8,7 @@ Pre-requisites:
   * Python >= 2.6, <3.0
   * MySQL database
   * Python MySQL bindings (e.g. on ubuntu python-mysqldb)
-  * pip for installing python packages (e.g. on ubuntu python-mysqldb)
+  * pip for installing python packages (e.g. on ubuntu python-pip)
 
 Install the code and requirements (you may wish to create a virtualenv first)::
 
