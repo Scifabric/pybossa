@@ -32,14 +32,14 @@
           <ul class="nav secondary-nav">
             {% if current_user.is_anonymous() %}
             <li>
-              <a href="{{url_for('home')}}">Register</a>
+              <a href="{{url_for('account.register')}}">Register</a>
             </li>
             <li>
-              <a href="{{url_for('login')}}">Login</a>
+              <a href="{{url_for('account.login')}}">Login</a>
             </li>
             {% else %}
             <li>
-              <a href="{{ url_for('logout') }}">Logout</a>
+              <a href="{{ url_for('account.logout') }}">Logout</a>
             </li>
             {% endif %}
           </ul>

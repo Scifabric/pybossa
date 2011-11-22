@@ -6,11 +6,13 @@ from flaskext.login import login_user, logout_user, current_user
 from pybossa.core import app, login_manager
 import pybossa.model as model
 from pybossa.api import blueprint as api
+from pybossa.view.account import blueprint as account
 
 logger = logging.getLogger('pybossa')
 
 # other views ...
 app.register_blueprint(api, url_prefix='/api')
+app.register_blueprint(account, url_prefix='/account')
 
 @app.before_request
 def bind_db_engine():
@@ -51,20 +53,6 @@ def home():
 @app.route('/faq')
 def faq():
     return render_template('/home/faq.html')
-
-@app.route('/login')
-def login():
-    '''Stub login (to be replaced asap) ...'''
-    tester = model.User.by_name('tester')
-    login_user(tester, remember=True)
-    flash('You were logged in', 'success')
-    return redirect('/')
-
-@app.route('/logout')
-def logout():
-    logout_user()
-    flash('You were logged out', 'success')
-    return redirect('/')
 
 
 if __name__ == "__main__":

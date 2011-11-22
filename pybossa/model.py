@@ -4,6 +4,7 @@ import logging
 import datetime
 import time
 
+from werkzeug import generate_password_hash, check_password_hash
 from sqlalchemy import create_engine
 from sqlalchemy import Integer, Unicode, Float, UnicodeText
 from sqlalchemy.schema import Table, MetaData, Column, ForeignKey
@@ -97,6 +98,12 @@ class User(Base, flaskext.login.UserMixin):
     def get_id(self):
         '''id for login system. equates to name'''
         return self.name
+
+    def set_password(self, password):
+        self.passwd_hash  = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.passwd_hash, password)
 
     @classmethod
     def by_name(cls, name):
