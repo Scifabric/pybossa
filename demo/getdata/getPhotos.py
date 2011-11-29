@@ -1,12 +1,28 @@
 #!/usr/bin/env python 
 # -*- coding: utf-8 -*-
 
+# This file is part of PyBOSSA.
+# 
+# PyBOSSA is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# 
+# PyBOSSA is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+# 
+# You should have received a copy of the GNU Affero General Public License
+# along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+
+
 import urllib
 import json
 
 def getFlickrPhotos(size="big"):
         # Flickr key and tag to search
-        key = "2a245e43304b99ff465689cc5630a566"
+        key = "1def541a422a4fe07880ab3204a1cc7e"
         tags = "rainforest"
         
         # Get the ID of the photos and load it in the output var
