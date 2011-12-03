@@ -63,7 +63,17 @@ def load_user(userid):
 
 @app.route('/')
 def home():
-    return render_template('/home/index.html')
+    app_count = model.Session.query(model.App).count()
+    task_count = model.Session.query(model.Task).count()
+    taskrun_count = model.Session.query(model.TaskRun).count()
+    user_count = model.Session.query(model.User).count()
+    stats = {
+        'app': app_count,
+        'task': task_count,
+        'taskrun': taskrun_count,
+        'user': user_count
+        }
+    return render_template('/home/index.html', stats=stats)
 
 @app.route('/faq')
 def faq():
