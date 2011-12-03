@@ -2,3 +2,4 @@
 .*.swp
 *.pyc
 settings_local.py
+doc/_build
