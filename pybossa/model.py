@@ -18,14 +18,16 @@ from glob import iglob
 import logging
 import datetime
 import time
+import json
 
 from werkzeug import generate_password_hash, check_password_hash
+import flaskext.login
 from sqlalchemy import create_engine
-from sqlalchemy import Integer, Unicode, Float, UnicodeText
+from sqlalchemy import Integer, Unicode, Float, UnicodeText, Text
 from sqlalchemy.schema import Table, MetaData, Column, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker
-import flaskext.login
+from sqlalchemy.types import MutableType, TypeDecorator
 
 log = logging.getLogger(__name__)
 
@@ -43,6 +45,26 @@ def rebuild_db():
     Base.metadata.drop_all()
     Base.metadata.create_all()
 
+# =========================================
+# Basics
+
+class JSONType(MutableType, TypeDecorator):
+    '''Additional Database Type for handling JSON values.
+    '''
+    impl = Text
+
+    def __init__(self):
+        super(JSONType, self).__init__()
+
+    def process_bind_param(self, value, dialect):
+        return json.dumps(value)
+
+    def process_result_value(self, value, dialiect):
+        return json.loads(value)
+
+    def copy_value(self, value):
+        return json.loads(json.dumps(value))
+
 
 class DomainObject(object):
     def dictize(self):
@@ -59,6 +81,9 @@ class DomainObject(object):
 Base = declarative_base(cls=DomainObject)
 
 
+# =========================================
+# Domain Objects
+
 class App(Base):
     __tablename__ = 'bossa_app'
     id                  = Column(Integer, primary_key=True)
@@ -72,7 +97,7 @@ class App(Base):
     time_estimate       = Column(Integer)
     time_limit          = Column(Integer)
     calibration_frac    = Column(Float)
-    info                = Column(UnicodeText)
+    info                = Column(JSONType, default=dict)
 
 class Task(Base):
     __tablename__ = 'bossa_job'
@@ -81,7 +106,7 @@ class Task(Base):
     app_id              = Column(Integer, ForeignKey('bossa_app.id'))
     batch_id            = Column(Integer, ForeignKey('bossa_batch.id'))
     state               = Column(Integer)
-    info                = Column(UnicodeText)
+    info                = Column(JSONType, default=dict)
     calibration         = Column(Integer)
     priority_0          = Column(Float)
 
@@ -96,7 +121,7 @@ class TaskRun(Base):
     finish_time         = Column(Integer)
     timeout             = Column(Integer)
     calibration         = Column(Integer)
-    info                = Column(UnicodeText)
+    info                = Column(JSONType, default=dict)
 
 class User(Base, flaskext.login.UserMixin):
     __tablename__ = 'user'
@@ -108,7 +133,7 @@ class User(Base, flaskext.login.UserMixin):
     # bossa specific
     category            = Column(Integer)
     flags               = Column(Integer)
-    info                = Column(UnicodeText)
+    info                = Column(JSONType, default=dict)
 
     def get_id(self):
         '''id for login system. equates to name'''

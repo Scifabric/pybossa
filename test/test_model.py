@@ -6,7 +6,15 @@ class TestModel:
         model.rebuild_db()
 
     def test_01(self):
-        app = model.App(name=u'My New App', short_name=u'my-new-app')
+        info = {
+            'total': 150,
+            'long_description': 'hello world'
+            }
+        app = model.App(
+            name=u'My New App',
+            short_name=u'my-new-app',
+            info=info
+            )
         model.Session.add(app)
         model.Session.commit()
         app_id = app.id 
@@ -27,5 +35,4 @@ class TestModel:
 
         out = user.dictize()
         assert out['name'] == u'test-user'
-
 
