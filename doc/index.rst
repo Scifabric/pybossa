@@ -7,7 +7,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-
+   model
 
 Indices and tables
 ==================
