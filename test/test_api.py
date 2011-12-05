@@ -9,7 +9,7 @@ class TestAPI:
         model.rebuild_db()
 
     def test_01(self):
-        res = self.app.get('/api/project')
+        res = self.app.get('/api/app')
         # assert 'nothing' in res.data, res.data
 
     def test_02(self):
@@ -19,7 +19,7 @@ class TestAPI:
             short_name='xxxx-project'
             )
         data = json.dumps(data)
-        res = self.app.post('/api/project',
+        res = self.app.post('/api/app',
             data=data
         )
         out = model.Session.query(model.App).filter_by(name=name).one()
