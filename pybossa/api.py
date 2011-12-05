@@ -80,6 +80,6 @@ def register_api(view, endpoint, url, pk='id', pk_type='int'):
         methods=['GET', 'PUT', 'DELETE']
         )
 
-register_api(ProjectAPI, 'api_project', '/project', pk='id', pk_type='int')
+register_api(ProjectAPI, 'api_app', '/app', pk='id', pk_type='int')
 register_api(TaskAPI, 'api_task', '/task', pk='id', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
