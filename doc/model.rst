@@ -57,6 +57,6 @@ Operations:
 
 Example usage::
 
-  curl -X POST -H -d '{"name": "myapp", "info": {"xyz": 1}}' http://localhost:500/api/app
+  curl -X POST -H -d '{"name": "myapp", "info": {"xyz": 1}}' http://localhost:5000/api/app
 
 
