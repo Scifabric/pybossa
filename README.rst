@@ -50,3 +50,13 @@ Run the web server::
 
   python pybossa/web.py
 
+Architecture
+============
+
+More info in the wiki docs: https://github.com/citizen-cyberscience-centre/pybossa/wiki
+
+.. image:: https://docs.google.com/drawings/pub?id=1ZXoCX5Q5AbOXu7-99yrNPoNLCpdxzONsXpCXEL6-4_Q&w=960&h=720
+   :align: center
+   :alt: PyBossa Architecture
+   :width: 90%
+
