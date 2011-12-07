@@ -19,6 +19,9 @@
 
 import urllib2
 import json
+import datetime
+
+url_api = 'http://0.0.0.0:5000/api/'
 
 def createApp():
     """
@@ -33,15 +36,13 @@ def createApp():
     data = dict(name = name, short_name = short_name, description = description)
     data = json.dumps(data)
 
-    url_api = 'http://0.0.0.0:5000/api/'
-
     # Checking which apps have been already registered in the DB
     create_app = True
     apps = json.loads(urllib2.urlopen(url_api + 'app').read())
     for app in apps:
         if app['name'] == name: 
             print '{app_name} app is already registered in the DB'.format(app_name = name)
-            create_app = False
+            return app['id']
     
     if create_app:
         print "The application is not registered in PyBOSSA. Creating it..."
@@ -52,10 +53,36 @@ def createApp():
 
         # Create the app in PyBOSSA
         output = json.loads(urllib2.urlopen(request).read())
-        if (output['create_time'] != None):
+        if (output['id'] != None):
             print "Done!"
+            return output['id']
         else:
             print "Error creating the application"
+            return 0
+
+def createBatch(app_id):
+    """Creates a Batch of tasks for the application (app_id)"""
+    # We set the name of the batch as the time and day (like in Berkeley BOSSA)
+    name = datetime.datetime.now().strftime("%Y/%m/%d - %H:%M:%S")
+    data = dict (name = name, app_id = app_id, calibration = 0)
+    data = json.dumps(data)
+
+    # Setting the POST action
+    request = urllib2.Request(url_api + 'batch')
+    request.add_data(data)
+    request.add_header('Content-type', 'application/json')
+
+    # Create the batch 
+    output = json.loads(urllib2.urlopen(request).read())
+    if (output['id'] != None):
+        print "Batch created successfully"
+        return output['id']
+    else:
+        return 0
+
+def createTasks(app_id, batch_id):
+    """Creates tasks for the application"""
+    pass
 
 def getFlickrPhotos(size="big"):
     # Flickr key and tag to search
@@ -86,4 +113,5 @@ def getFlickrPhotos(size="big"):
             photos.append(PhotoURL)
             return photos
 
-createApp()
+app_id = createApp()
+batch_id = createBatch(app_id)
