@@ -1,4 +1,4 @@
-PyBossa is an open source platform (AGPLv3 + ODbl) for crowd-sourcing online (volunteer)
+PyBossa is an open source platform for crowd-sourcing online (volunteer)
 assistance to perform tasks that require human cognition, knowledge or
 intelligence (e.g. image classification, transcription, information location
 etc). 
