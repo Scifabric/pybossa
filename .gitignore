@@ -4,3 +4,8 @@
 *.db
 settings_local.py
 doc/_build
+# epio stuff
+epio.ini
+.epio-app
+settings_epio.py
+.epioignore
