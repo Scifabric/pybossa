@@ -10,43 +10,32 @@ crowd-source human problem-solving skills!
 
 .. _BOSSA: http://bossa.berkeley.edu/
 
+
+Demo Site
+=========
+
+We have a demo site running here: http://pybossa.ep.io
+
+
 Install
 =======
 
-Pre-requisites:
+See doc/install.rst or http://pybossa.readthedocs.org/install.html
 
-  * Python >= 2.6, <3.0
-  * MySQL database plus Python MySQL bindings (e.g. on ubuntu python-mysqldb)
-  * pip for installing python packages (e.g. on ubuntu python-pip)
 
-Install the code and requirements (you may wish to create a virtualenv first)::
+Useful Links
+============
 
-  # get the source
-  git clone https://github.com/citizen-cyberscience-centre/pybossa
-  cd pybossa
-  # [optional] create virtualenv first
-  # virtualenv ~/{my-virtualenv}
-  pip install -e .
+* Documentation: http://pybossa.readthedocs.org/
+* Mailing List http://lists.okfn.org/mailman/listinfo/open-science-dev
 
-Create a settings file and enter your SQLAlchemy DB URI (you can also override
-default settings as needed)::
 
-  cp settings_local.py.tmpl settings_local.py
-  # now edit ...
-  vim settings_local.py
+Authors
+=======
 
-.. note:
+* Daniel Lombraña González - Citizen Cyberscience Centre
+* Rufus Pollock - Open Knowledge Foundation
+* Chris Powell - EPICollect
+* David Anderson - BOINC / Berkeley (via BOSSA)
 
-  Alternatively, if you want your config elsewhere or with different name::
-
-    cp settings_local.py.tmpl {/my/config/file/somewhere}
-    export PYBOSSA_SETTINGS={/my/config/file/somewhere}
-
-Setup the database::
-
-  python cli.py db_create
-
-Run the web server::
-
-  python pybossa/web.py
 

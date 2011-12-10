@@ -14,14 +14,28 @@ crowd-source human problem-solving skills!
 
 .. _BOSSA: http://bossa.berkeley.edu/
 
-Table of Contents
-=================
+Useful Links
+============
+
+* Mailing list: http://lists.okfn.org/mailman/listinfo/open-science-dev
+* Source code: https://github.com/citizen-cyberscience-centre/pybossa
+
+Overview and API
+================
 
 .. toctree::
    :maxdepth: 2
 
    overview 
    model
+
+For Developers and Deployers
+============================
+
+.. toctree::
+   :maxdepth: 2
+
+   install
 
 
 Indices and tables
