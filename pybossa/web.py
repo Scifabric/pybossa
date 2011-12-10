@@ -17,6 +17,7 @@ import logging
 
 from flask import request, g, render_template, abort, flash, redirect, session
 from flaskext.login import login_user, logout_user, current_user
+from sqlalchemy.exc import UnboundExecutionError
 
 from pybossa.core import app, login_manager
 import pybossa.model as model
@@ -63,16 +64,24 @@ def load_user(userid):
 
 @app.route('/')
 def home():
-    app_count = model.Session.query(model.App).count()
-    task_count = model.Session.query(model.Task).count()
-    taskrun_count = model.Session.query(model.TaskRun).count()
-    user_count = model.Session.query(model.User).count()
-    stats = {
-        'app': app_count,
-        'task': task_count,
-        'taskrun': taskrun_count,
-        'user': user_count
-        }
+    try: # in case we have not set up database yet
+        app_count = model.Session.query(model.App).count()
+        task_count = model.Session.query(model.Task).count()
+        taskrun_count = model.Session.query(model.TaskRun).count()
+        user_count = model.Session.query(model.User).count()
+        stats = {
+            'app': app_count,
+            'task': task_count,
+            'taskrun': taskrun_count,
+            'user': user_count
+            }
+    except UnboundExecutionError:
+        stats = {
+            'app': 0,
+            'task': 0,
+            'taskrun': 0,
+            'user': 0
+            }
     return render_template('/home/index.html', stats=stats)
 
 @app.route('/faq')
