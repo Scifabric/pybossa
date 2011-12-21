@@ -29,8 +29,8 @@ Overview and API
    overview 
    model
 
-For Developers and Deployers
-============================
+Installation
+============
 
 .. toctree::
    :maxdepth: 2
