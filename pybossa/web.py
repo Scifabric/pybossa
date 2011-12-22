@@ -88,6 +88,9 @@ def home():
 def faq():
     return render_template('/home/faq.html')
 
+@app.route('/flickrperson')
+def flickrperson():
+    return render_template('/flickrperson/example.html')
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.NOTSET)

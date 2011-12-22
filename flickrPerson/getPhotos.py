@@ -80,10 +80,10 @@ def createBatch(app_id):
     else:
         return 0
 
-def createTask(app_id, batch_id, url):
+def createTask(app_id, batch_id, photo):
     """Creates tasks for the application"""
     # Data for the tasks
-    info = dict (url = url)
+    info = dict (link = photo['link'], url = photo['url'])
     data = dict (app_id = app_id, batch_id = batch_id, state = 0, info = info, calibration = 0, priority_0 = 0)
     data = json.dumps(data)
 
@@ -110,7 +110,7 @@ def getFlickrPhotos(size="big"):
     # (or thumbnail) + Flickr page hosting the photo
     photos = []
     for photo in output['items']:
-        photos.append(photo["media"]["m"])
+        photos.append({'link': photo["link"], 'url':  photo["media"]["m"]})
     return photos
 
 # First of all we get the URL photos
@@ -123,5 +123,5 @@ app_id = createApp()
 batch_id = createBatch(app_id)
 # Finally, we have to create a set of tasks for the application and batch
 # For this, we get first the photo URLs from Flickr
-for url in photos:
-    createTask(app_id, batch_id, url)
+for photo in photos:
+    createTask(app_id, batch_id, photo)
