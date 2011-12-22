@@ -37,6 +37,13 @@ Installation
 
    install
 
+Tutorials
+=========
+
+.. toctree::
+   :maxdepth: 2
+
+   task-presenter 
 
 Indices and tables
 ==================
