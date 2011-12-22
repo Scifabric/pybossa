@@ -27,9 +27,9 @@ First of all we have to create an application for the project. The application w
 
 The **description** field is used to store the **question** that we want to ask in our tasks. As Flickr Person is trying to figure out if there is a person in the photo, the question is: *Do you see a human in this photo?*. The other two fields are the names used for naming the application (short_name will be the slug name of the application).
 
-Please, check the following script lines_ for more information.
+Please, check the following script `lines <https://github.com/citizen-cyberscience-centre/pybossa/blob/master/flickrPerson/getPhotos.py#L25>`_ for more information.
 
-.. _lines: https://github.com/citizen-cyberscience-centre/pybossa/blob/master/flickrPerson/getPhotos.py#L25
+
 
 2. Create a batch for the application
 =====================================
@@ -44,8 +44,7 @@ We use the creation time of the batch as name, but it possible to use whatever y
 
 As you can see, all the data is sent in JSON format. The API URL to POST the data is: **/api/batch**.
 
-Please, check the following script lines_ for more information.
-.. _lines: https://github.com/citizen-cyberscience-centre/pybossa/blob/master/flickrPerson/getPhotos.py#L63
+Please, check the following script `lines <https://github.com/citizen-cyberscience-centre/pybossa/blob/master/flickrPerson/getPhotos.py#L63>`_ for more information.
 
 3. Create the tasks
 ===================
@@ -58,8 +57,7 @@ The last step involves the creation of tasks associated to a **batch** and an **
 
 The most important field for the task is the **info** one. This field will be used to store a JSON object with the required data for the task. As Flickr Person is trying to figure out if there is a human or not in a photo, the provided information is: the Flickr Link page of the photo, and the image URL of the photo. If your application needs more fields, you are free to add them based on your needs.
 
-Please, check the following script lines_ for more information.
-.. _lines: https://github.com/citizen-cyberscience-centre/pybossa/blob/master/flickrPerson/getPhotos.py#L83
+Please, check the following script `lines <https://github.com/citizen-cyberscience-centre/pybossa/blob/master/flickrPerson/getPhotos.py#L83>`_ for more information.
 
 Testing Flickr Person Demo Application
 ======================================
@@ -112,9 +110,9 @@ getTask will obtain all the available tasks in the system (as in the previous st
 
 The users then can click Yes, No or I don't know. Yes and No save the answer in the DB (check **/api/taskrun**) with information about the task and the answer, while the button **I don't know** simply loads another task as sometimes the image is not available (the Flickr user has delete it) or it is not clear if there is a human or not in the image (you only see one hand and nothing else). 
 
-Please, read the file_ for more details about all the steps.
+Please, read the `file <https://github.com/citizen-cyberscience-centre/pybossa/blob/master/pybossa/templates/flickrperson/example.html>`_ for more details about all the steps.
 
-.. _file: https://github.com/citizen-cyberscience-centre/pybossa/blob/master/pybossa/templates/flickrperson/example.html
+
 
 3. Test the task presenter
 ==========================
