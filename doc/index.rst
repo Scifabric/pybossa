@@ -14,36 +14,63 @@ crowd-source human problem-solving skills!
 
 .. _BOSSA: http://bossa.berkeley.edu/
 
-Useful Links
-============
+User Guide
+==========
 
-* Mailing list: http://lists.okfn.org/mailman/listinfo/open-science-dev
-* Source code: https://github.com/citizen-cyberscience-centre/pybossa
+This section covers how to use PyBossa from the perspective of a PyBossa
+end-user such as:
 
-Overview and API
-================
+  * Creators and managers of a specific PyBossa microtasking application
+  * The administrator of a PyBossa deployment
+    
+We suggest starting by taking a quick look at the overview of the PyBossa
+system as this will introduce you to a few pieces of terminology and help you
+understand how things fit together.
 
 .. toctree::
    :maxdepth: 2
 
    overview 
-   model
 
 Tutorials
-=========
+---------
 
 .. toctree::
    :maxdepth: 2
 
    task-presenter 
 
-Installation
-============
+
+Developer Guide
+================
+
+This section covers how to use or contribute to PyBossa as a developer.
+
+Useful Links
+------------
+
+* Mailing list: http://lists.okfn.org/mailman/listinfo/open-science-dev
+* Source code: https://github.com/citizen-cyberscience-centre/pybossa
+* User stories: http://science.okfnpad.org/pybossa-userstories
+* General etherpad: http://science.okfnpad.org/pybossa
+
+Overview and API
+----------------
+
+.. toctree::
+   :maxdepth: 2
+   
+   overview
+   model
+
+Installing
+----------
 
 .. toctree::
    :maxdepth: 2
 
    install
+
 
 Indices and tables
 ==================
