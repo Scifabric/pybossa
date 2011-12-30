@@ -29,14 +29,6 @@ Overview and API
    overview 
    model
 
-Installation
-============
-
-.. toctree::
-   :maxdepth: 2
-
-   install
-
 Tutorials
 =========
 
@@ -44,6 +36,14 @@ Tutorials
    :maxdepth: 2
 
    task-presenter 
+
+Installation
+============
+
+.. toctree::
+   :maxdepth: 2
+
+   install
 
 Indices and tables
 ==================
