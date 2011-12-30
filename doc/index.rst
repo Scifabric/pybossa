@@ -31,14 +31,8 @@ understand how things fit together.
    :maxdepth: 2
 
    overview 
-
-Tutorials
----------
-
-.. toctree::
-   :maxdepth: 2
-
-   task-presenter 
+   user/create-application
+   user/create-application-tutorial
 
 
 Developer Guide
