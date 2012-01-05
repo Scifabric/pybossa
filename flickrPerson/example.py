@@ -16,20 +16,24 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-
 import urllib2
 import json
 import datetime
 
 url_api = 'http://0.0.0.0:5000/api/'
 
-def createApp():
+def createApp(name=None, short_name=None, description=None):
     """
-    Creates the Flickr Person Finder application. First checks if the
-    application already exists in PyBOSSA, otherwise it will create it.
+    Creates the Flickr Person Finder application. 
+
+    :arg string name: The application name.
+    :arg string short_name: The slug application name.
+    :arg string description: A short description of the application. 
+
+    :returns: Application ID or 0 in case of error.
+    :rtype: integer
     """
 
-    # Data application
     name = u'Flickr Person Finder'
     short_name = u'FlickrPerson'
     description = u'Do you see a human in this photo?'
@@ -61,7 +65,13 @@ def createApp():
             return 0
 
 def createBatch(app_id):
-    """Creates a Batch of tasks for the application (app_id)"""
+    """
+    Creates a Batch of tasks for the application (app_id)
+
+    :arg string app_id: Application ID in PyBossa.
+    :returns: PyBossa Batch ID or 0 in case of an error.
+    :rtype: integer
+    """
     # We set the name of the batch as the time and day (like in Berkeley BOSSA)
     name = datetime.datetime.now().strftime("%Y/%m/%d - %H:%M:%S")
     data = dict (name = name, app_id = app_id, calibration = 0)
@@ -81,7 +91,14 @@ def createBatch(app_id):
         return 0
 
 def createTask(app_id, batch_id, photo):
-    """Creates tasks for the application"""
+    """
+    Creates tasks for the application
+
+    :arg integer app_id: Application ID in PyBossa.
+    :arg integer batch_id: Batch ID in PyBossa.
+    :returns: Task ID in PyBossa.
+    :rtype: integer
+    """
     # Data for the tasks
     info = dict (link = photo['link'], url = photo['url'])
     data = dict (app_id = app_id, batch_id = batch_id, state = 0, info = info, calibration = 0, priority_0 = 0)
@@ -100,7 +117,13 @@ def createTask(app_id, batch_id, photo):
         return False
 
 def getFlickrPhotos(size="big"):
-    """Gets public photos from Flickr feeds"""
+    """
+    Gets public photos from Flickr feeds
+    
+    :arg string size: Size of the image that should be obtained from Flickr feed. 
+    :returns: A list of photos.
+    :rtype: list
+    """
 
     # Get the ID of the photos and load it in the output var
     query = "http://api.flickr.com/services/feeds/photos_public.gne?nojsoncallback=1&format=json"
@@ -113,15 +136,16 @@ def getFlickrPhotos(size="big"):
         photos.append({'link': photo["link"], 'url':  photo["media"]["m"]})
     return photos
 
-# First of all we get the URL photos
-# WARNING: Sometimes the flickr feed returns a wrong escape character, so it may
-# fail at this step
-photos = getFlickrPhotos()
-# Now, we have to create the application
-app_id = createApp()
-# Then, we have to create a bag of tasks (a Batch in BOSSA terminology)
-batch_id = createBatch(app_id)
-# Finally, we have to create a set of tasks for the application and batch
-# For this, we get first the photo URLs from Flickr
-for photo in photos:
-    createTask(app_id, batch_id, photo)
+if __name__ == "__main__":
+    # First of all we get the URL photos
+    # WARNING: Sometimes the flickr feed returns a wrong escape character, so it may
+    # fail at this step
+    photos = getFlickrPhotos()
+    # Now, we have to create the application
+    app_id = createApp()
+    # Then, we have to create a bag of tasks (a Batch in BOSSA terminology)
+    batch_id = createBatch(app_id)
+    # Finally, we have to create a set of tasks for the application and batch
+    # For this, we get first the photo URLs from Flickr
+    for photo in photos:
+        createTask(app_id, batch_id, photo)
