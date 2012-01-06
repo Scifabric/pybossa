@@ -35,7 +35,7 @@ def create_app(name=None, short_name=None, description=None):
     """
     print('Creating app')
     name = u'Flickr Person Finder'
-    short_name = u'FlickrPerson'
+    short_name = u'flickrperson'
     description = u'Do you see a human in this photo?'
     data = dict(name = name, short_name = short_name, description = description)
     data = json.dumps(data)

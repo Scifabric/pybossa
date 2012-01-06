@@ -36,7 +36,8 @@ function getBatches(app_id) {
                     app_id_batches.push(this);
                 }
             });
-            batch = app_id_batches[Math.floor(Math.random()*app_id_batches.length)];
+            var idx = Math.floor(Math.random()*app_id_batches.length);
+            var batch = app_id_batches[idx];
             $("#batch-id").text(batch.id);
             getTask(app_id, batch.id);
     });
@@ -100,10 +101,10 @@ function submitTask(answer) {
                             setTimeout(function() {
                                 $("#success").fadeOut();
                                 }, 1000);
-                            getApp("FlickrPerson");
+                            getApp("flickrperson");
                          }
             });
     });
 }
 
-getApp("FlickrPerson");
+getApp("flickrperson");
