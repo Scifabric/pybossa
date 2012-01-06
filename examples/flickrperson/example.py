@@ -22,7 +22,7 @@ import datetime
 
 url_api = 'http://0.0.0.0:5000/api/'
 
-def createApp(name=None, short_name=None, description=None):
+def create_app(name=None, short_name=None, description=None):
     """
     Creates the Flickr Person Finder application. 
 
@@ -33,7 +33,7 @@ def createApp(name=None, short_name=None, description=None):
     :returns: Application ID or 0 in case of error.
     :rtype: integer
     """
-
+    print('Creating app')
     name = u'Flickr Person Finder'
     short_name = u'FlickrPerson'
     description = u'Do you see a human in this photo?'
@@ -41,30 +41,27 @@ def createApp(name=None, short_name=None, description=None):
     data = json.dumps(data)
 
     # Checking which apps have been already registered in the DB
-    create_app = True
     apps = json.loads(urllib2.urlopen(url_api + 'app').read())
     for app in apps:
         if app['name'] == name: 
-            print '{app_name} app is already registered in the DB'.format(app_name = name)
+            print('{app_name} app is already registered in the DB'.format(app_name = name))
             return app['id']
-    
-    if create_app:
-        print "The application is not registered in PyBOSSA. Creating it..."
-        # Setting the POST action
-        request = urllib2.Request(url_api + 'app')
-        request.add_data(data)
-        request.add_header('Content-type', 'application/json')
+    print("The application is not registered in PyBOSSA. Creating it...")
+    # Setting the POST action
+    request = urllib2.Request(url_api + 'app')
+    request.add_data(data)
+    request.add_header('Content-type', 'application/json')
 
-        # Create the app in PyBOSSA
-        output = json.loads(urllib2.urlopen(request).read())
-        if (output['id'] != None):
-            print "Done!"
-            return output['id']
-        else:
-            print "Error creating the application"
-            return 0
+    # Create the app in PyBOSSA
+    output = json.loads(urllib2.urlopen(request).read())
+    if (output['id'] != None):
+        print("Done!")
+        return output['id']
+    else:
+        print("Error creating the application")
+        return 0
 
-def createBatch(app_id):
+def create_batch(app_id):
     """
     Creates a Batch of tasks for the application (app_id)
 
@@ -72,6 +69,7 @@ def createBatch(app_id):
     :returns: PyBossa Batch ID or 0 in case of an error.
     :rtype: integer
     """
+    print('Creating batch with app id: %s' % app_id)
     # We set the name of the batch as the time and day (like in Berkeley BOSSA)
     name = datetime.datetime.now().strftime("%Y/%m/%d - %H:%M:%S")
     data = dict (name = name, app_id = app_id, calibration = 0)
@@ -85,12 +83,12 @@ def createBatch(app_id):
     # Create the batch 
     output = json.loads(urllib2.urlopen(request).read())
     if (output['id'] != None):
-        print "Batch created successfully"
+        print("Batch created successfully")
         return output['id']
     else:
         return 0
 
-def createTask(app_id, batch_id, photo):
+def create_task(app_id, batch_id, photo):
     """
     Creates tasks for the application
 
@@ -116,7 +114,7 @@ def createTask(app_id, batch_id, photo):
     else:
         return False
 
-def getFlickrPhotos(size="big"):
+def get_flickr_photos(size="big"):
     """
     Gets public photos from Flickr feeds
     
@@ -124,28 +122,33 @@ def getFlickrPhotos(size="big"):
     :returns: A list of photos.
     :rtype: list
     """
-
     # Get the ID of the photos and load it in the output var
+    print('Contacting Flickr for photos')
     query = "http://api.flickr.com/services/feeds/photos_public.gne?nojsoncallback=1&format=json"
-    output = json.load(urllib2.urlopen(query))
+    urlobj = urllib2.urlopen(query)
+    data = urlobj.read()
+    urlobj.close()
+    output = json.loads(data)
+    print('Data retrieved from Flickr')
 
     # For each photo ID create its direct URL according to its size: big, medium, small
     # (or thumbnail) + Flickr page hosting the photo
     photos = []
-    for photo in output['items']:
+    for idx, photo in enumerate(output['items']):
+        print 'Retrieved photo: %s' % idx
         photos.append({'link': photo["link"], 'url':  photo["media"]["m"]})
     return photos
 
 if __name__ == "__main__":
+    app_id = create_app()
     # First of all we get the URL photos
     # WARNING: Sometimes the flickr feed returns a wrong escape character, so it may
     # fail at this step
-    photos = getFlickrPhotos()
-    # Now, we have to create the application
-    app_id = createApp()
+    photos = get_flickr_photos()
     # Then, we have to create a bag of tasks (a Batch in BOSSA terminology)
-    batch_id = createBatch(app_id)
+    batch_id = create_batch(app_id)
     # Finally, we have to create a set of tasks for the application and batch
     # For this, we get first the photo URLs from Flickr
     for photo in photos:
-        createTask(app_id, batch_id, photo)
+        create_task(app_id, batch_id, photo)
+

@@ -29,7 +29,7 @@ We now need to load tasks for your application into PyBossa.
 
 Run the following script::
 
-  python flickrPerson/getPhotos.py
+  python examples/flickrperson/example.py
 
 This script will grab the latest published photos in the Flickr public feed and
 save the *link* of the image (the Flickr web page) and the *url* of the image.
