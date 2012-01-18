@@ -20,7 +20,7 @@ We have a demo site running here: http://pybossa.ep.io
 Install
 =======
 
-See doc/install.rst or http://pybossa.readthedocs.org/install.html
+See doc/install.rst or http://pybossa.readthedocs.org/en/latest/install.html
 
 Deploying
 =========
