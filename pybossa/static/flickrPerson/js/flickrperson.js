@@ -82,7 +82,6 @@ function submitTask(answer) {
             'create_time': task.create_time,
             'app_id': task.app_id,
             'job_id': task.id,
-            'user_id': 0,
             'batch_id': task.batch_id,
             'info': {'answer': answer }
             };
