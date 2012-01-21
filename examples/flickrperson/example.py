@@ -43,7 +43,7 @@ def create_app(name=None, short_name=None, description=None):
     # Checking which apps have been already registered in the DB
     apps = json.loads(urllib2.urlopen(url_api + 'app').read())
     for app in apps:
-        if app['name'] == name: 
+        if app['short_name'] == short_name: 
             print('{app_name} app is already registered in the DB'.format(app_name = name))
             return app['id']
     print("The application is not registered in PyBOSSA. Creating it...")
@@ -139,7 +139,13 @@ def get_flickr_photos(size="big"):
         photos.append({'link': photo["link"], 'url':  photo["media"]["m"]})
     return photos
 
+
+import sys
 if __name__ == "__main__":
+    if len(sys.argv) >= 2:
+        url_api = sys.argv[1]
+    print('Running against PyBosssa instance at: %s' % url_api)
+
     app_id = create_app()
     # First of all we get the URL photos
     # WARNING: Sometimes the flickr feed returns a wrong escape character, so it may
