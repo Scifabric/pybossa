@@ -49,7 +49,9 @@ def global_template_context():
         title = app.config['TITLE'],
         copyright = app.config['COPYRIGHT'],
         description = app.config['DESCRIPTION'],
-        current_user=current_user
+        version = app.config['VERSION'],
+        current_user = current_user,
+        apps =  model.Session.query(model.App).filter(model.App.hidden == 0)
         )
 
 @login_manager.user_loader
@@ -65,7 +67,7 @@ def load_user(userid):
 @app.route('/')
 def home():
     try: # in case we have not set up database yet
-        app_count = model.Session.query(model.App).count()
+        app_count = model.Session.query(model.App).filter(model.App.hidden == 0).count()
         task_count = model.Session.query(model.Task).count()
         taskrun_count = model.Session.query(model.TaskRun).count()
         user_count = model.Session.query(model.User).count()

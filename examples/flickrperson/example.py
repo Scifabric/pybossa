@@ -37,7 +37,8 @@ def create_app(name=None, short_name=None, description=None):
     name = u'Flickr Person Finder'
     short_name = u'flickrperson'
     description = u'Do you see a human in this photo?'
-    data = dict(name = name, short_name = short_name, description = description)
+    data = dict(name = name, short_name = short_name, description = description,
+               hidden = 0)
     data = json.dumps(data)
 
     # Checking which apps have been already registered in the DB
