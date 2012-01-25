@@ -19,6 +19,7 @@ from flask import request, g, render_template, abort, flash, redirect, session
 from flaskext.login import login_user, logout_user, current_user
 from sqlalchemy.exc import UnboundExecutionError
 
+import pybossa
 from pybossa.core import app, login_manager
 import pybossa.model as model
 from pybossa.api import blueprint as api
@@ -49,7 +50,7 @@ def global_template_context():
         title = app.config['TITLE'],
         copyright = app.config['COPYRIGHT'],
         description = app.config['DESCRIPTION'],
-        version = app.config['VERSION'],
+        version = pybossa.__version__,
         current_user = current_user,
         apps =  model.Session.query(model.App).filter(model.App.hidden == 0)
         )
