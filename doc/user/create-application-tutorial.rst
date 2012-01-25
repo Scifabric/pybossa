@@ -87,13 +87,20 @@ the cases, the calls are using the RESTful API of PyBossa.
 
 First of all we need to get the application ID, so we can check which batches
 are available for the users. The function getApp(name) will get all the
-registered applications in PyBossa and get the ID for Flickr Person::
+registered applications in PyBossa and get the ID for Flickr Person. In this case, *name*
+will have the value "FlickrPerson".
 
-  getApp("FlickrPerson")
+.. js:function:: getApp(name)
+
+   :param string name: The name of the application. 
 
 In this case we use the short name or slug to identify for which application we
 want the tasks. If the application is in the system, the function will call the
 method **getBatches** to obtain all the available batches for the application.
+
+.. js:function:: getBatches(app_id)
+
+   :param integer app_id: Application ID
 
 getBatches obtains all the available batches in the system (for the moment it
 is not possible get all the batches for a given application via the API), and
@@ -101,27 +108,46 @@ then checks which ones belong to FlickrPerson. The method uses the simplest
 approach and choses randomly one of the available batches, and calls the next
 function to get all the tasks associated to that batch: **getTask**.
 
+.. js:function:: getTask(app_id, batch_id)
+
+   :param integer app_id: Application ID
+   :param integer batch_id: Batch ID
+
 getTask will obtain all the available tasks in the system (as in the previous
 step, for the moment is not possible to get the task for a given batch or app
 ID via the API) and selects those ones that belong to the batch. Then, it
 choses one randomly and fills in the HTML skeleton with the available
 information of the task:
 
-  * the Batch ID
+  * the Batch ID and
   * the Task ID
 
-The users then can click Yes, No or I don't know. Yes and No save the answer in
-the DB (check **/api/taskrun**) with information about the task and the answer,
+
+3. Saving the answer
+--------------------
+
+Once the task has been presented, the users can click the answer buttons: **Yes**, **No** or **I don't know**.
+Yes and No save the answer in the DB (check **/api/taskrun**) with information about the task and the answer,
 while the button **I don't know** simply loads another task as sometimes the
 image is not available (the Flickr user has delete it) or it is not clear if
 there is a human or not in the image (you only see one hand and nothing else). 
+
+flickrperson.js uses the function submitTask(answer) to stores the answer:
+
+.. js:function:: submitTask(answer)
+
+   :parameter string answer: 'Yes' or 'No' values
+
+The function gets the answer from the button and embeds it in the *info* field of a JSON object::
+
+  'info': {'answer': answer}
 
 Please, read the `example file
 <https://github.com/citizen-cyberscience-centre/pybossa/blob/master/pybossa/templates/flickrperson/example.html>`_
 for more details about all the steps.
 
 
-3. Test the task presenter
+4. Test the task presenter
 --------------------------
 
 In order to test the task presenter, you only have to load the main page of

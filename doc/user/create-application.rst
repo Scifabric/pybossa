@@ -28,14 +28,15 @@ project)::
   name = u'Flickr Person Finder'
   short_name = u'FlickrPerson'
   description = u'Do you see a human in this photo?'
-  data = dict(name = name, short_name = short_name, description = description)
+  data = dict(name = name, short_name = short_name, description = description, hidden = 0)
   data = json.dumps(data)
 
 The **description** field is used to store the **question** that we want to ask
 in our tasks. As Flickr Person is trying to figure out if there is a person in
 the photo, the question is: *Do you see a human in this photo?*. The other two
 fields are the names used for naming the application (short_name will be the
-slug name of the application).
+slug name of the application). Finally, the *hidden* field is a bool flag to hide the 
+application for users but not administrators (roles will be implemented soon).
 
 Please, check the following script `lines
 <https://github.com/citizen-cyberscience-centre/pybossa/blob/master/flickrPerson/getPhotos.py#L25>`_
