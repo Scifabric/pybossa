@@ -30,8 +30,21 @@ def index():
 
 
 class APIBase(MethodView):
+    """
+    Class to create CRUD methods for all the items: project, applications,
+    tasks, etc.
+    """
     @jsonpify
     def get(self, id):
+        """
+        Returns an item from the DB with the request.data JSON object or all the
+        items if id == None
+
+        :arg self: The class of the object to be retrieved
+        :arg integer id: the ID of the object in the DB
+        :returns: The JSON item/s stored in the DB
+        """
+
         if id is None:
             items = [ x.dictize() for x in model.Session.query(self.__class__).all() ]
             return json.dumps(items)
@@ -41,6 +54,12 @@ class APIBase(MethodView):
 
     @jsonpify
     def post(self):
+        """
+        Adds an item to the DB with the request.data JSON object
+
+        :arg self: The class of the object to be inserted
+        :returns: The JSON item stored in the DB
+        """
         data = json.loads(request.data)
         inst = self.__class__(**data)
         model.Session.add(inst)
@@ -48,12 +67,42 @@ class APIBase(MethodView):
         return json.dumps(inst.dictize())
 
     def delete(self, id):
-        # delete a single project
-        pass
+        """
+        Deletes a single item from the DB
+
+        :arg self: The class of the object to be deleted
+        :arg integer id: the ID of the object in the DB
+        :returns: An HTTP status code based on the output of the action. 
+
+        More info about HTTP status codes for this action `here
+        <http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.7>`_.
+        """
+        item = model.Session.query(self.__class__).get(id)
+        if (item == None): return 'The item does not exist', 404
+        else:
+            model.Session.delete(item)
+            model.Session.commit()
+            return "", 204
 
     def put(self, id):
-        # update a single project
-        pass
+        """
+        Updates a single item in the DB
+
+        :arg self: The class of the object to be updated
+        :arg integer id: the ID of the object in the DB
+        :returns: An HTTP status code based on the output of the action. 
+
+        More info about HTTP status codes for this action `here
+        <http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6>`_.
+        """
+        data = json.loads(request.data)
+        inst = self.__class__(**data)
+        item = model.Session.query(self.__class__).get(id)
+        if (item == None): return "The item does not exist", 404
+        else:
+            model.Session.merge(inst)
+            model.Session.commit()
+            return "", 200
 
 class ProjectAPI(APIBase):
     __class__ = model.App

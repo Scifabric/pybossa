@@ -22,6 +22,43 @@ import datetime
 
 url_api = 'http://0.0.0.0:5000/api/'
 
+def delete_app(id):
+    """
+    Deletes the Flickr Person Finder application.
+
+    :arg integer id: The ID of the application
+    :returns: True if the application has been deleted
+    :rtype: boolean
+    """
+    request = urllib2.Request(url_api + 'app/' + str(id))
+    request.get_method = lambda: 'DELETE'
+
+    if (urllib2.urlopen(request).getcode() == 204): 
+        return True
+    else:
+        return False
+
+def update_app(id, name = None):
+    """
+    Updates the name of the Flickr PErson Finder application
+    
+    :arg integer id: The ID of the application
+    :arg string name: The new name for the application
+    :returns: True if the application has been updated
+    :rtype: boolean
+    """
+    data = dict(id = id, name = name)
+    data = json.dumps(data)
+    request = urllib2.Request(url_api + 'app/' + str(id))
+    request.add_data(data)
+    request.add_header('Content-type', 'application/json')
+    request.get_method = lambda: 'PUT'
+
+    if (urllib2.urlopen(request).getcode() == 200): 
+        return True
+    else:
+        return False
+
 def create_app(name=None, short_name=None, description=None):
     """
     Creates the Flickr Person Finder application. 
@@ -34,7 +71,7 @@ def create_app(name=None, short_name=None, description=None):
     :rtype: integer
     """
     print('Creating app')
-    name = u'Flickr Person Finder'
+    name = u'Flickr Person PHinder' # Name with a typo
     short_name = u'flickrperson'
     description = u'Do you see a human in this photo?'
     data = dict(name = name, short_name = short_name, description = description,
@@ -46,7 +83,8 @@ def create_app(name=None, short_name=None, description=None):
     for app in apps:
         if app['short_name'] == short_name: 
             print('{app_name} app is already registered in the DB'.format(app_name = name))
-            return app['id']
+            print('Deleting it!')
+            if (delete_app(app['id'])): print "Application deleted!"
     print("The application is not registered in PyBOSSA. Creating it...")
     # Setting the POST action
     request = urllib2.Request(url_api + 'app')
@@ -57,7 +95,13 @@ def create_app(name=None, short_name=None, description=None):
     output = json.loads(urllib2.urlopen(request).read())
     if (output['id'] != None):
         print("Done!")
-        return output['id']
+        print("Ooooops! the name of the application has a typo!")
+        print("Updating it!")
+        if (update_app(output['id'], "Flickr Person Finder")): 
+            print "Application name fixed!"
+            return output['id']
+        else:
+            print "An error has occurred"
     else:
         print("Error creating the application")
         return 0

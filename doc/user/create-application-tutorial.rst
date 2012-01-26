@@ -29,7 +29,7 @@ We now need to load tasks for your application into PyBossa.
 
 Run the following script::
 
-  python examples/flickrperson/example.py {optional-path-to-your-pybossa-api}
+  python examples/flickrperson.py {optional-path-to-your-pybossa-api}
 
 This script will grab the latest published photos in the Flickr public feed and
 save the *link* of the image (the Flickr web page) and the *url* of the image.
@@ -49,6 +49,11 @@ And saved into the task field **info** of the task model.
 
   Sometimes the script fails because Flickr does not provide a sane JSON feed,
   so you will have to re-run it until you get one successful run.
+
+The script provides an example to use the CRUD methods provided by the API for the application (create_app also reads the application):
+
+.. automodule:: examples.flickrperson
+   :members: create_app, update_app, delete_app
 
 Presenting the Tasks to the user
 ================================

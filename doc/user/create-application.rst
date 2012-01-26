@@ -38,10 +38,8 @@ fields are the names used for naming the application (short_name will be the
 slug name of the application). Finally, the *hidden* field is a bool flag to hide the 
 application for users but not administrators (roles will be implemented soon).
 
-Please, check the following script `lines
-<https://github.com/citizen-cyberscience-centre/pybossa/blob/master/flickrPerson/getPhotos.py#L25>`_
-for more information.
-
+.. automodule:: examples.flickrperson
+   :members: create_app, get_flickr_photos
 
 2. Create a batch for the application
 =====================================
@@ -62,9 +60,8 @@ you like.
 As you can see, all the data is sent in JSON format. The API URL to POST the
 data is: **/api/batch**.
 
-Please, check the following script `lines
-<https://github.com/citizen-cyberscience-centre/pybossa/blob/master/flickrPerson/getPhotos.py#L63>`_
-for more information.
+.. automodule:: examples.flickrperson
+   :members: create_batch
 
 3. Create the Tasks
 ===================
@@ -84,9 +81,8 @@ provided information is: the Flickr Link page of the photo, and the image URL
 of the photo. If your application needs more fields, you are free to add them
 based on your needs.
 
-Please, check the following script `lines
-<https://github.com/citizen-cyberscience-centre/pybossa/blob/master/flickrPerson/getPhotos.py#L83>`_
-for more information.
+.. automodule:: examples.flickrperson
+   :members: create_task
 
 4. Specify a Task Presenter
 ===========================

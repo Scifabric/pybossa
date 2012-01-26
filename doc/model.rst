@@ -64,6 +64,9 @@ The RESTful API is located at::
 
 It expects and returns JSON.
 
+.. autoclass:: pybossa.api.APIBase
+   :members:
+
 Operations
 ----------
 
