@@ -48,7 +48,7 @@ class TestAPI:
         )
         taskrun = model.Session.query(model.TaskRun).filter_by(app_id=out.id).all()
         assert taskrun, taskrun
-        assert taskrun[0].create_time, taskrun
+        assert taskrun[0].created, taskrun
         assert taskrun[0].app_id == out.id
 
 

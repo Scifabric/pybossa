@@ -1,4 +1,5 @@
 from base import web, model
+import datetime
 
 class TestModel:
     @classmethod
@@ -37,6 +38,8 @@ class TestModel:
 
         app = model.Session.query(model.App).get(app_id)
         assert app.name == u'My New App'
+        # year would start with 201...
+        assert app.created.startswith('201'), app.created
         assert len(app.tasks) == 1
         out_task = app.tasks[0]
         assert out_task.info['question'] == task_info['question']
