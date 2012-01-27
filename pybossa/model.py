@@ -151,7 +151,6 @@ class Task(Base):
     #: ForeignKey to App.id (NB: use task relationship rather than this field
     #: in normal use
     app_id              = Column(Integer, ForeignKey('bossa_app.id'))
-    batch_id            = Column(Integer, ForeignKey('bossa_batch.id'))
     #: a StateEnum instance
     state               = Column(UnicodeText)
     #: Boolean indicating whether this is a calibration Task or not.
@@ -187,7 +186,6 @@ class TaskRun(Base):
     #: user id of performer of this task
     user_id             = Column(Integer, ForeignKey('user.id'))
     # TODO: add user_ip
-    batch_id            = Column(Integer, ForeignKey('bossa_batch.id'))
     # TODO add .... start_time
     finish_time         = Column(Integer)
 
@@ -241,11 +239,3 @@ class User(Base, flaskext.login.UserMixin):
     #: `Task`s for this user
     task_runs = relationship('TaskRun', backref='user')
 
-class Batch(Base):
-    '''Not used at the present time.'''
-    __tablename__ = 'bossa_batch'
-    id                  = Column(Integer, primary_key=True)
-    create_time         = Column(Integer, default=make_timestamp_as_int)
-    name                = Column(Unicode(length=255))
-    app_id              = Column(Integer, ForeignKey('bossa_app.id'))
-    calibration         = Column(Integer)

@@ -113,9 +113,6 @@ class TaskAPI(APIBase):
 class TaskRunAPI(APIBase):
     __class__ = model.TaskRun
 
-class BatchAPI(APIBase):
-    __class__ = model.Batch
-
 def register_api(view, endpoint, url, pk='id', pk_type='int'):
     view_func = view.as_view(endpoint)
     blueprint.add_url_rule(url,
@@ -135,4 +132,4 @@ def register_api(view, endpoint, url, pk='id', pk_type='int'):
 register_api(ProjectAPI, 'api_app', '/app', pk='id', pk_type='int')
 register_api(TaskAPI, 'api_task', '/task', pk='id', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
-register_api(BatchAPI, 'api_batch', '/batch', pk='id', pk_type='int')
+
