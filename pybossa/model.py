@@ -67,6 +67,25 @@ class JSONType(MutableType, TypeDecorator):
         return json.loads(json.dumps(value))
 
 
+
+class StateEnum:
+    '''When creating  a task, the task can have the following states::
+    
+       * ALL: First time created
+       * IN_PROGRESS:  The task is being run by one user
+       * PENDING: The task has been completed but need to be validated
+       * VALID: The task has been completed and validated
+       * INVALID: The task has been complete but it is invalid
+       * ERROR: The task has an error
+    '''
+    ALL =  u'all'
+    IN_PROGRESS = u'in_progress'
+    PENDING = u'pending'
+    VALID = u'valid'
+    INVALID = u'invalid'
+    ERROR = u'error'
+
+
 class DomainObject(object):
     def dictize(self):
         out = {}
@@ -125,7 +144,7 @@ class Task(Base):
     app_id              = Column(Integer, ForeignKey('bossa_app.id'))
     batch_id            = Column(Integer, ForeignKey('bossa_batch.id'))
     #: a StateEnum instance
-    state               = Column(Integer)
+    state               = Column(UnicodeText)
     #: Boolean indicating whether this is a calibration Task or not.
     calibration         = Column(Integer)
     #: Value between 0 and 1 indicating priority of task within App (higher = more important)
