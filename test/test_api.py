@@ -28,7 +28,7 @@ class TestAPI:
         data = dict(
             app_id=out.id,
             state=1,
-            info='my job data'
+            info='my task data'
             )
         data = json.dumps(data)
         res = self.app.post('/api/task',
@@ -39,8 +39,8 @@ class TestAPI:
 
         data = dict(
             app_id=out.id,
-            job_id=tasks[0].id,
-            info='my job result'
+            task_id=tasks[0].id,
+            info='my task result'
             )
         data = json.dumps(data)
         res = self.app.post('/api/taskrun',
