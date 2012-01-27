@@ -44,18 +44,15 @@ class APIBase(MethodView):
         :arg integer id: the ID of the object in the DB
         :returns: The JSON item/s stored in the DB
         """
-        try:
-            if id is None:
-                items = [ x.dictize() for x in model.Session.query(self.__class__).all() ]
-                return json.dumps(items)
+        if id is None:
+            items = [ x.dictize() for x in model.Session.query(self.__class__).all() ]
+            return json.dumps(items)
+        else:
+            item = model.Session.query(self.__class__).get(id)
+            if item is None:
+                abort(404)
             else:
-                item = model.Session.query(self.__class__).get(id)
-                if item is None:
-                    abort(404)
-                else:
-                    return json.dumps(item.dictize()) 
-        except:
-            abort(500)
+                return json.dumps(item.dictize()) 
 
     @jsonpify
     def post(self):
