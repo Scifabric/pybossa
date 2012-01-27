@@ -18,6 +18,7 @@ class TestModel:
             short_name=u'my-new-app',
             info=info
             )
+        app.owner = user
         task_info = {
             'question': 'My random question',
             'url': 'my url'
@@ -33,6 +34,7 @@ class TestModel:
         model.Session.add_all([user, app, task, task_run])
         model.Session.commit()
         app_id = app.id 
+        user_id = user.id
 
         model.Session.remove()
 
@@ -41,12 +43,17 @@ class TestModel:
         # year would start with 201...
         assert app.created.startswith('201'), app.created
         assert len(app.tasks) == 1
+        assert app.owner.name == username
+
         out_task = app.tasks[0]
         assert out_task.info['question'] == task_info['question']
         assert len(out_task.task_runs) == 1
         outrun = out_task.task_runs[0]
         assert outrun.info['answer'] == task_run_info['answer']
         assert outrun.user.name == username
+
+        user = model.User.by_name(username)
+        assert user.apps[0].id == app_id
 
     def test_user(self):
         user = model.User(name=u'test-user', email_addr=u'test@xyz.org')
@@ -57,6 +64,7 @@ class TestModel:
         model.Session.remove()
         user = model.User.by_name(u'test-user')
         assert user
+        assert len(user.api_key) == 36, user
 
         out = user.dictize()
         assert out['name'] == u'test-user'
