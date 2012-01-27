@@ -87,10 +87,10 @@ At the end of the skeleton we load the Javascript.
 
 All the action takes place in the file_
 **static/flickrPerson/js/flickrperson.js**. The script has several functions to
-get from PyBossa the application and its associated batches and tasks. In all
+get from PyBossa the application and its associated tasks. In all
 the cases, the calls are using the RESTful API of PyBossa.
 
-First of all we need to get the application ID, so we can check which batches
+First of all we need to get the application ID, so we can check which tasks
 are available for the users. The function getApp(name) will get all the
 registered applications in PyBossa and get the ID for Flickr Person. In this case, *name*
 will have the value "FlickrPerson".
@@ -101,30 +101,18 @@ will have the value "FlickrPerson".
 
 In this case we use the short name or slug to identify for which application we
 want the tasks. If the application is in the system, the function will call the
-method **getBatches** to obtain all the available batches for the application.
+method **getTask** to obtain all the available tasks for the application.
 
-.. js:function:: getBatches(app_id)
-
-   :param integer app_id: Application ID
-
-getBatches obtains all the available batches in the system (for the moment it
-is not possible get all the batches for a given application via the API), and
-then checks which ones belong to FlickrPerson. The method uses the simplest
-approach and choses randomly one of the available batches, and calls the next
-function to get all the tasks associated to that batch: **getTask**.
-
-.. js:function:: getTask(app_id, batch_id)
+.. js:function:: getTask(app_id)
 
    :param integer app_id: Application ID
-   :param integer batch_id: Batch ID
 
 getTask will obtain all the available tasks in the system (as in the previous
-step, for the moment is not possible to get the task for a given batch or app
-ID via the API) and selects those ones that belong to the batch. Then, it
+step, for the moment it is not possible to get the task for a given app
+ID via the API) and selects those ones that belong to the application. Then, it
 choses one randomly and fills in the HTML skeleton with the available
 information of the task:
 
-  * the Batch ID and
   * the Task ID
 
 

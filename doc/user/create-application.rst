@@ -41,37 +41,15 @@ application for users but not administrators (roles will be implemented soon).
 .. automodule:: examples.flickrperson
    :members: create_app, get_flickr_photos
 
-2. Create a batch for the application
-=====================================
-
-**Deprecated**
-
-Once the application has been created, a batch of tasks can be created
-associated to the application **ID**. The following fields have to be
-provided::
-
-  name = datetime.datetime.now().strftime("%Y/%m/%d - %H:%M:%S")                                                                                                   
-  data = dict (name = name, app_id = app_id, calibration = 0)
-  data = json.dumps(data)
-
-We use the creation time of the batch as name, but it possible to use whatever
-you like. 
-
-As you can see, all the data is sent in JSON format. The API URL to POST the
-data is: **/api/batch**.
-
-.. automodule:: examples.flickrperson
-   :members: create_batch
-
 3. Create the Tasks
 ===================
 
-The last step involves the creation of tasks associated to a **batch** and an
+The last step involves the creation of tasks associated to an
 **application**. As in all the previous steps, we are going to create a JSON
 object and POST it using the following API URL **/api/task**::
 
   info = dict (link = photo['link'], url = photo['url'])
-  data = dict (app_id = app_id, batch_id = batch_id, state = 0, info = info, calibration = 0, priority_0 = 0)
+  data = dict (app_id = app_id, state = 0, info = info, calibration = 0, priority_0 = 0)
   data = json.dumps(data)
 
 The most important field for the task is the **info** one. This field will be

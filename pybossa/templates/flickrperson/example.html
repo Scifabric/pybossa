@@ -4,10 +4,18 @@
 <div class="row">
   <!-- Success and Error Messages for the user --> 
   <!-- Question, task id, photo and action buttons for answering the question-->
-  <div class="span9 offset4" style="height:50px;">
+  <div class="span9 offset4">
     <div id="success" class="alert-message success" data-alert="alert" style="display:none;">
       <a class="close" href="#">&times</a>
       <p><strong>Well done!</strong> Your answer has been saved</strong></p>
+    </div>
+    <div id="finish" class="alert-message block-message success" data-alert="alert" style="display:none;">
+      <p><strong>Congratulations!</strong> All the tasks have been completed!</strong></p>
+      <br/>
+      <div class="alert-actions">
+              <a class="btn small" href="/">Go back</a>
+              <a class="btn small" href="/app">or, Check other applications</a>
+      </div>
     </div>
     <div id="error" class="alert-message error" data-alert="alert" style="display:none;">
       <a class="close" href="#">&times</a>
@@ -18,7 +26,7 @@
   <div class="span9 offset4">
     <div id="question">
       <h1>Question</h1>
-      <p>Batch: <span id="batch-id" class="label success">#</span> Task: <span id="task-id" class="label warning">#</span></p>
+      <p>Task: <span id="task-id" class="label warning">#</span></p>
       <ul class="media-grid">
         <li><a id="photo-link" href="#"><img id="photo" src="#"></a></li>
       </ul>

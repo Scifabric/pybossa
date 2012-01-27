@@ -21,7 +21,7 @@ Task Creators
 =============
 
 Task Creators are responsible for the creation of Tasks (and related entites --
-Apps, Batches etc) in PyBossa. As such they will usually operate entirely
+Apps, etc) in PyBossa. As such they will usually operate entirely
 outside of PyBossa itself interacting with PyBossa via the API.
 
 *Coming soon*: A demonstration python script for creating tasks from a CSV file

@@ -13,7 +13,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //
 
-// Gets the application name and gets all its task batches
+// Gets the application name and gets all its tasks 
 function getApp(name) {
     app_id = null;
     $.getJSON('/api/app', function(apps) {
@@ -23,53 +23,44 @@ function getApp(name) {
                     $("#question h1").text(this.description);
                 }
             });
-            getBatches(app_id);
+            getTask(app_id);
     });
 }
 
-// Gets all the batches for a given application, and selects one randomly to get all its tasks
-function getBatches(app_id) {
-    app_id_batches = [];
-    $.getJSON('/api/batch', function(all_batches){
-            $.each(all_batches, function(){
-                if (this.app_id == app_id) {
-                    app_id_batches.push(this);
-                }
-            });
-            var idx = Math.floor(Math.random()*app_id_batches.length);
-            var batch = app_id_batches[idx];
-            $("#batch-id").text(batch.id);
-            getTask(app_id, batch.id);
-    });
-}
-
-// Get all the tasks for a given application and its associated batch. Selects one task randomly
-function getTask(app_id, batch_id) {
+// Get all the tasks for a given application. Selects one task randomly
+function getTask(app_id) {
     previous_task_id = $("#task-id").text();
     app_id_tasks = [];
     $.getJSON('/api/task', function(all_tasks){
         $.each(all_tasks, function(){
-            if ((this.app_id == app_id) & (this.batch_id == batch_id)) {
+            if ((this.app_id == app_id) & (this.state != "1")) {
                 app_id_tasks.push(this);    
             }
             });
-        $.each(app_id_tasks, function(){
-            if (previous_task_id != "#"){
-            app_id_tasks = jQuery.grep(app_id_tasks, function(value) {
-                    return value != previous_task_id;
+        if (app_id_tasks.length >= 1) {
+                $.each(app_id_tasks, function(){
+                    if (previous_task_id != "#"){
+                    app_id_tasks = jQuery.grep(app_id_tasks, function(value) {
+                            return value != previous_task_id;
+                            });
+                    }
+
+                    task = app_id_tasks[Math.floor(Math.random()*app_id_tasks.length)];
+
+                    if ((task.app_id == app_id) & (task.state == "0")) {
+                    $("#photo-link").attr("href", task.info.link);
+                    $("#photo").attr("src",task.info.url);
+                    $("#task-id").text(task.id);
+                    return false;
+                    }
                     });
-            }
+        }
+        else {
 
-            task = app_id_tasks[Math.floor(Math.random()*app_id_tasks.length)];
-
-            if ((task.app_id == app_id) & (task.batch_id == batch_id) & (task.state == 0)) {
-            $("#photo-link").attr("href", task.info.link);
-            $("#photo").attr("src",task.info.url);
-            $("#task-id").text(task.id);
-            return false;
-            }
-
-            });
+                $("#question").hide();
+                $("#answer").hide();
+                $("#finish").fadeIn();
+        }
     });
 }
 
@@ -78,31 +69,45 @@ function submitTask(answer) {
     task_id = $("#task-id").text();
     url = '/api/task/' + task_id;
     $.getJSON(url, function(task){
-            taskrun = {
-            'create_time': task.create_time,
-            'app_id': task.app_id,
-            'job_id': task.id,
-            'batch_id': task.batch_id,
-            'info': {'answer': answer }
-            };
-
-            // Convert it to a string
-            taskrun = JSON.stringify(taskrun);
-
+            // Task completed
+            task.state = "1"
+            // Update the state of the task in the DB
             $.ajax({
-                type: 'POST',
+                type: 'PUT',
                 dataType: 'json',
-                url: '/api/taskrun', 
-                data: taskrun,
+                url: url, 
+                data: JSON.stringify(task),
                 contentType: 'application/json',
                 success: function() { 
-                            $("#success").fadeIn();
-                            setTimeout(function() {
-                                $("#success").fadeOut();
-                                }, 1000);
-                            getApp("flickrperson");
+                        taskrun = {
+                        'created': task.create_time,
+                        'app_id': task.app_id,
+                        'task_id': task.id,
+                        'info': {'answer': answer }
+                        };
+
+                        // Convert it to a string
+                        taskrun = JSON.stringify(taskrun);
+
+                        $.ajax({
+                            type: 'POST',
+                            dataType: 'json',
+                            url: '/api/taskrun', 
+                            data: taskrun,
+                            contentType: 'application/json',
+                            success: function() { 
+                                        $("#success").fadeIn();
+                                        setTimeout(function() {
+                                            $("#success").fadeOut();
+                                            }, 1000);
+                                        getApp("flickrperson");
+                                     }
+                        });
+
                          }
             });
+
+
     });
 }
 

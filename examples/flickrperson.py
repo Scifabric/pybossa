@@ -106,45 +106,17 @@ def create_app(name=None, short_name=None, description=None):
         print("Error creating the application")
         return 0
 
-def create_batch(app_id):
-    """
-    Creates a Batch of tasks for the application (app_id)
-
-    :arg string app_id: Application ID in PyBossa.
-    :returns: PyBossa Batch ID or 0 in case of an error.
-    :rtype: integer
-    """
-    print('Creating batch with app id: %s' % app_id)
-    # We set the name of the batch as the time and day (like in Berkeley BOSSA)
-    name = datetime.datetime.now().strftime("%Y/%m/%d - %H:%M:%S")
-    data = dict (name = name, app_id = app_id, calibration = 0)
-    data = json.dumps(data)
-
-    # Setting the POST action
-    request = urllib2.Request(url_api + 'batch')
-    request.add_data(data)
-    request.add_header('Content-type', 'application/json')
-
-    # Create the batch 
-    output = json.loads(urllib2.urlopen(request).read())
-    if (output['id'] != None):
-        print("Batch created successfully")
-        return output['id']
-    else:
-        return 0
-
-def create_task(app_id, batch_id, photo):
+def create_task(app_id, photo):
     """
     Creates tasks for the application
 
     :arg integer app_id: Application ID in PyBossa.
-    :arg integer batch_id: Batch ID in PyBossa.
     :returns: Task ID in PyBossa.
     :rtype: integer
     """
     # Data for the tasks
     info = dict (link = photo['link'], url = photo['url'])
-    data = dict (app_id = app_id, batch_id = batch_id, state = 0, info = info, calibration = 0, priority_0 = 0)
+    data = dict (app_id = app_id, state = 0, info = info, calibration = 0, priority_0 = 0)
     data = json.dumps(data)
 
     # Setting the POST action
@@ -196,10 +168,8 @@ if __name__ == "__main__":
     # WARNING: Sometimes the flickr feed returns a wrong escape character, so it may
     # fail at this step
     photos = get_flickr_photos()
-    # Then, we have to create a bag of tasks (a Batch in BOSSA terminology)
-    batch_id = create_batch(app_id)
-    # Finally, we have to create a set of tasks for the application and batch
+    # Finally, we have to create a set of tasks for the application
     # For this, we get first the photo URLs from Flickr
     for photo in photos:
-        create_task(app_id, batch_id, photo)
+        create_task(app_id, photo)
 
