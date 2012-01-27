@@ -15,7 +15,7 @@
 
 import json
 
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, abort
 from flask.views import View, MethodView
 
 from pybossa.util import jsonpify
@@ -44,13 +44,18 @@ class APIBase(MethodView):
         :arg integer id: the ID of the object in the DB
         :returns: The JSON item/s stored in the DB
         """
-
-        if id is None:
-            items = [ x.dictize() for x in model.Session.query(self.__class__).all() ]
-            return json.dumps(items)
-        else:
-            item = model.Session.query(self.__class__).get(id)
-            return json.dumps(item.dictize()) 
+        try:
+            if id is None:
+                items = [ x.dictize() for x in model.Session.query(self.__class__).all() ]
+                return json.dumps(items)
+            else:
+                item = model.Session.query(self.__class__).get(id)
+                if item is None:
+                    abort(404)
+                else:
+                    return json.dumps(item.dictize()) 
+        except:
+            abort(500)
 
     @jsonpify
     def post(self):
@@ -60,11 +65,14 @@ class APIBase(MethodView):
         :arg self: The class of the object to be inserted
         :returns: The JSON item stored in the DB
         """
-        data = json.loads(request.data)
-        inst = self.__class__(**data)
-        model.Session.add(inst)
-        model.Session.commit()
-        return json.dumps(inst.dictize())
+        try:
+            data = json.loads(request.data)
+            inst = self.__class__(**data)
+            model.Session.add(inst)
+            model.Session.commit()
+            return json.dumps(inst.dictize())
+        except:
+            abort(500)
 
     def delete(self, id):
         """
@@ -77,12 +85,18 @@ class APIBase(MethodView):
         More info about HTTP status codes for this action `here
         <http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.7>`_.
         """
-        item = model.Session.query(self.__class__).get(id)
-        if (item == None): return 'The item does not exist', 404
-        else:
-            model.Session.delete(item)
-            model.Session.commit()
-            return "", 204
+        try:
+            item = model.Session.query(self.__class__).get(id)
+            if (item == None): abort(404)
+            else:
+                try:
+                    model.Session.delete(item)
+                    model.Session.commit()
+                    return "", 204
+                except:
+                    abort(500)
+        except:
+            abort(500)
 
     def put(self, id):
         """
@@ -95,14 +109,20 @@ class APIBase(MethodView):
         More info about HTTP status codes for this action `here
         <http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6>`_.
         """
-        data = json.loads(request.data)
-        inst = self.__class__(**data)
-        item = model.Session.query(self.__class__).get(id)
-        if (item == None): return "The item does not exist", 404
-        else:
-            model.Session.merge(inst)
-            model.Session.commit()
-            return "", 200
+        try:
+            data = json.loads(request.data)
+            inst = self.__class__(**data)
+            item = model.Session.query(self.__class__).get(id)
+            if (item == None): abort(404)
+            else:
+                try:
+                    model.Session.merge(inst)
+                    model.Session.commit()
+                    return "", 200
+                except:
+                    abort(500)
+        except:
+            abort(500)
 
 class ProjectAPI(APIBase):
     __class__ = model.App

@@ -15,10 +15,12 @@
 
 import logging
 import datetime
+import json
 
-from flask import request, g, render_template, abort, flash, redirect, session
+from flask import Response, request, g, render_template, abort, flash, redirect, session
 from flaskext.login import login_user, logout_user, current_user
 from sqlalchemy.exc import UnboundExecutionError
+from werkzeug.exceptions import *
 
 import pybossa
 from pybossa.core import app, login_manager
@@ -44,6 +46,24 @@ def bind_db_engine():
 @app.before_request
 def remove_db_session():
     model.Session.remove()
+
+@app.errorhandler(401)
+@app.errorhandler(403)
+@app.errorhandler(404)
+@app.errorhandler(410)
+@app.errorhandler(500)
+def handle_exceptions(exc):
+    """
+    Re-format exceptions to JSON 
+
+    :arg error: The exception object
+    :returns: The exception object in JSON format
+    """
+    output = {'status': exc.code,
+              'name': exc.name,
+              'description': exc.description
+             }
+    return json.dumps(output)
 
 @app.context_processor
 def global_template_context():
