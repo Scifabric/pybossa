@@ -26,6 +26,7 @@ import flaskext.login
 from sqlalchemy import create_engine
 from sqlalchemy import Integer, Unicode, Float, UnicodeText, Text
 from sqlalchemy.schema import Table, MetaData, Column, ForeignKey
+from sqlalchemy.orm import relationship, backref
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.types import MutableType, TypeDecorator
@@ -134,6 +135,12 @@ class App(Base):
     #: Standard JSON blob for additional data
     info                = Column(JSONType, default=dict)
 
+    ## Relationships
+    #: `Task`s for this app.
+    tasks = relationship('Task', backref='app')
+    #: `TaskRun`s for this app.
+    task_runs = relationship('TaskRun', backref='app')
+
 class Task(Base):
     '''An individual Task which can be performed by a user. A Task is
     associated to an App.
@@ -141,6 +148,8 @@ class Task(Base):
     __tablename__ = 'bossa_job'
     id                  = Column(Integer, primary_key=True)
     create_time         = Column(Integer, default=make_timestamp_as_int)
+    #: ForeignKey to App.id (NB: use task relationship rather than this field
+    #: in normal use
     app_id              = Column(Integer, ForeignKey('bossa_app.id'))
     batch_id            = Column(Integer, ForeignKey('bossa_batch.id'))
     #: a StateEnum instance
@@ -157,6 +166,11 @@ class Task(Base):
     #:    }
     info                = Column(JSONType, default=dict)
 
+    ## Relationships
+    #: `TaskRun`s for this task
+    task_runs = relationship('TaskRun', backref='task')
+
+
 class TaskRun(Base):
     '''A run of a given task by a specific user.
     '''
@@ -168,6 +182,7 @@ class TaskRun(Base):
     create_time         = Column(Integer, default=make_timestamp_as_int)
     #: application id of this task run
     app_id              = Column(Integer, ForeignKey('bossa_app.id'))
+    #: task id of this task run
     job_id              = Column(Integer, ForeignKey('bossa_job.id'))
     #: user id of performer of this task
     user_id             = Column(Integer, ForeignKey('user.id'))
@@ -190,7 +205,6 @@ class TaskRun(Base):
             whatever information shoudl be recorded -- up to task presenter
         }
     '''
-
 
 class User(Base, flaskext.login.UserMixin):
     __tablename__ = 'user'
@@ -223,6 +237,9 @@ class User(Base, flaskext.login.UserMixin):
         '''Lookup user by (user)name.'''
         return Session.query(User).filter_by(name=name).first()
 
+    ## Relationships
+    #: `Task`s for this user
+    task_runs = relationship('TaskRun', backref='user')
 
 class Batch(Base):
     '''Not used at the present time.'''
