@@ -17,6 +17,7 @@ import os
 import logging
 from flask import Flask
 from flaskext.login import LoginManager, current_user
+from flaskext.gravatar import Gravatar
 
 from pybossa import default_settings as settings
 
@@ -26,6 +27,8 @@ def create_app():
     setup_error_email(app)
     setup_logging(app)
     login_manager.setup_app(app)
+    # Set up Gravatar for users
+    gravatar = Gravatar(app, size = 100, rating = 'g', default = 'retro', force_default = False, force_lower = False)
     return app
 
 def configure_app(app):

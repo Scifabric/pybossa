@@ -2,12 +2,19 @@
 
 {% block content %}
 <div class="row">
-  <div class="span6 offset1">
+  <div class="span12 offset2">
     <h3>User: {{current_user['name']}}</h3>
-    <ul>
-      <li><strong>E-mail: </strong> {{current_user['email_addr']}}</li>
-      <li><strong>API key:</strong> {{current_user['api_key']}}</li>
-    </ul>
+          <div class="row">
+            <div class="span2">
+              <img src="{{ current_user['email_addr'] | gravatar}}">
+            </div>
+            <div class="span6">
+              <ul>
+                <li><strong>E-mail: </strong> {{current_user['email_addr']}}</li>
+                <li><strong>API key:</strong> {{current_user['api_key']}}</li>
+              </ul>
+            </div>
+          </div>
   </div>
 </div>
 {% endblock %}
