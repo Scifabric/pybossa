@@ -50,6 +50,9 @@
             </li>
             {% else %}
             <li>
+            <img src="{{current_user['email_addr'] | gravatar(size=34)}}">
+            </li>
+            <li>
               <a href="{{url_for('account.profile')}}">Profile</a>
             </li>
             <li>
