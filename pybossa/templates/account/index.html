@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+  <div class="span12 offset2">
+          {% if accounts %}
+      <ul class="media-grid">
+      {% for account in accounts %}
+      <li> 
+      <a href="#" rel='popover' title="{{account['name']}}" data-content="
+                        <strong>Joined:</strong> ToDo
+                        <br/><strong>Activity:</strong> ToDo">
+                <img src="{{account['email_addr'] | gravatar(size=90)}}">
+        </a>
+      </li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+</div>
+<script>
+$("a[rel=popover]").popover({
+        offset: 1,
+        html: true,
+        animate: true,
+        position: 'above'
+                }).click(function(e) {
+                        e.preventDefault()
+                        });
+
+</script>
+{% endblock %}

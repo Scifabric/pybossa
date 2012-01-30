@@ -26,9 +26,9 @@ blueprint = Blueprint('account', __name__)
 
 @blueprint.route('/')
 def index():
-    return 'Accounts'
-
-
+    accounts = model.Session.query(model.User).all()
+    return render_template('account/index.html', accounts = accounts)
+    
 class LoginForm(Form):
     username = TextField('Username', [validators.Required()])
     password = PasswordField('Password', [validators.Required()])
