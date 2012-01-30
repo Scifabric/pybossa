@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row">
+  <div class="span6 offset1">
+    <h3>User: {{current_user['name']}}</h3>
+    <ul>
+      <li><strong>E-mail: </strong> {{current_user['email_addr']}}</li>
+      <li><strong>API key:</strong> {{current_user['api_key']}}</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
