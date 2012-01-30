@@ -14,7 +14,6 @@
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
-import datetime
 import json
 
 from flask import Response, request, g, render_template, abort, flash, redirect, session
@@ -114,12 +113,10 @@ def apps():
     try: # in case we have not set up database yet
         bossa_apps = model.Session.query(model.App).filter(model.App.hidden == 0)
         for bossa_app in bossa_apps:
-            creation_timestamp = bossa_app.create_time
-            creation_date = datetime.date.fromtimestamp(creation_timestamp).strftime('%Y-%m-%d')
             app = {
                 'name': bossa_app.name,
                 'description': bossa_app.description[0:100],
-                'creation': creation_date,
+                'creation': bossa_app.created[0:10],
                 'last_active': 'ToDo',
                 'image': 'ToDo',
             }
