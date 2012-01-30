@@ -86,3 +86,6 @@ def register():
         flash('Please correct the errors', 'error')
     return render_template('account/register.html', form=form)
 
+@blueprint.route('/profile', methods = ['GET', 'POST'])
+def profile():
+    return render_template('account/profile.html')

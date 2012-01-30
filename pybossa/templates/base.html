@@ -50,6 +50,9 @@
             </li>
             {% else %}
             <li>
+              <a href="{{url_for('account.profile')}}">Profile</a>
+            </li>
+            <li>
               <a href="{{ url_for('account.logout') }}">Logout</a>
             </li>
             {% endif %}
