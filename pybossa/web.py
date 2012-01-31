@@ -115,6 +115,7 @@ def apps():
         for bossa_app in bossa_apps:
             app = {
                 'name': bossa_app.name,
+                'short_name': bossa_app.short_name,
                 'description': bossa_app.description[0:100],
                 'creation': bossa_app.created[0:10],
                 'last_active': 'ToDo',
@@ -123,7 +124,17 @@ def apps():
             applications.append(app)
     except UnboundExecutionError:
         pass
-    return render_template('/home/app.html', bossa_apps=applications)
+    return render_template('/app/list.html', bossa_apps=applications)
+
+@app.route('/app/<short_name>')
+def app_details(short_name):
+    try: # in case we have not set up database yet
+        applications = model.Session.query(model.App).filter(model.App.short_name == short_name)
+        if applications.count() != 0:
+            return render_template('/app/app.html', bossa_app=applications[0])
+    except UnboundExecutionError:
+        pass
+    return render_template('/app/app.html', bossa_app=None)
 
 @app.route('/faq')
 def faq():
