@@ -7,7 +7,7 @@
   <h1>Available Projects</h1>
 </div>
 {% for app in bossa_apps %}
-  <h2>{{ app['name'] }}</h2>
+  <h2><a href="/app/{{app['short_name']}}">{{ app['name'] }}</a></h2>
   <ul>
     <li>Description: {{ app['description'] }}</li>
     <li>Creation Date: {{ app['creation'] }}</li>
