@@ -24,24 +24,29 @@
   </head>
 
   <body>
+    {% set active_page = active_page | default('index') -%}
     <div class="topbar">
       <div class="fill">
         <div class="container">
                 <h3><a href="/">{{ title }}</a></h3>
           <ul class="nav">
-            <li class="active"><a href="/">Home</a></li>
-            <li><a href="/account">Community</a></li>
+            <li {% if active_page == "index"  %} class="active" {% endif %}><a href="/">Home</a></li>
+            <li {% if active_page == "community"  %} class="active" {% endif %}><a href="/account">Community</a></li>
             {% if apps.count() >= 1 %}
-              <li class="dropdown" data-dropdown="dropdown">
+            <li {% if active_page == "applications"  %} class="dropdown active" {% endif %} data-dropdown="dropdown">
                   <a href="#" class="dropdown-toggle">Applications</a>
                     <ul class="dropdown-menu">
                         {% for app in apps: %}
-                        <li><a href="/flickrperson"> {{ app['short_name']}}</a></li>
+                        <li {% if active_app == "flickrperson"  %} class="active" {% endif %} >
+                          <a href={{app.short_name}}> {{ app.short_name}}</a>
+                        </li>
                         {% endfor %}
+                        <li class="divider"></li>
+                        <li {% if active_app == "all"  %} class="active" {% endif %}><a href="/app">All</a></li>
                     </ul>
               </li>
             {% endif %}
-            <li><a href="/faq">FAQ</a></li>
+            <li {% if active_page == "faq"  %} class="active" {% endif %}><a href="/faq">FAQ</a></li>
           </ul>
           <ul class="nav secondary-nav">
             {% if current_user.is_anonymous() %}
@@ -52,10 +57,10 @@
               <a href="{{url_for('account.login')}}">Login</a>
             </li>
             {% else %}
-            <li>
-            <img src="{{current_user['email_addr'] | gravatar(size=34)}}">
+            <li {% if active_page == "profile"  %} class="active" {% endif %}>
+             <img src="{{current_user['email_addr'] | gravatar(size=34)}}">
             </li>
-            <li>
+            <li {% if active_page == "profile"  %} class="active" {% endif %}>
               <a href="{{url_for('account.profile')}}">Profile</a>
             </li>
             <li>
