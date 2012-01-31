@@ -8,7 +8,7 @@
       {% for account in accounts %}
       <li> 
       <a href="#" rel='popover' title="{{account['name']}}" data-content="
-                        <strong>Joined:</strong> ToDo
+              <strong>Joined:</strong> {{account['created'][0:10]}}
                         <br/><strong>Activity:</strong> ToDo">
                 <img src="{{account['email_addr'] | gravatar(size=90)}}">
         </a>
