@@ -146,6 +146,17 @@ class App(Base):
     #: `TaskRun`s for this app.
     task_runs = relationship('TaskRun', backref='app')
 
+    #: Percentage of completed tasks
+    def completion_status(self):
+        total = 0
+        for task in self.tasks:
+            if task.quorum:
+                total += task.quorum
+            else:
+                total += 1
+        return float(len(self.task_runs))/total
+
+
 class Task(Base):
     '''An individual Task which can be performed by a user. A Task is
     associated to an App.

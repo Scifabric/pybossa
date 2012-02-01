@@ -129,9 +129,18 @@ def apps():
 @app.route('/app/<short_name>')
 def app_details(short_name):
     try: # in case we have not set up database yet
-        applications = model.Session.query(model.App).filter(model.App.short_name == short_name)
-        if applications.count() != 0:
-            return render_template('/app/app.html', bossa_app=applications[0])
+        application = model.Session.query(model.App).filter(model.App.short_name == short_name).first()
+        if application and application.hidden == 0:
+            app = {
+                'name': application.name,
+                'short_name': application.short_name,
+                'description': application.description,
+                'creation': application.created[0:10],
+                'completion': application.completion_status()*100,
+                'last_active': 'ToDo',
+                'image': 'ToDo',
+            }
+            return render_template('/app/app.html', bossa_app=app)
     except UnboundExecutionError:
         pass
     return render_template('/app/app.html', bossa_app=None)
