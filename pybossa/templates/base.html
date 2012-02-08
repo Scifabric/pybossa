@@ -72,10 +72,7 @@
               </li>
               {% else %}
               <li {% if active_page == "profile"  %} class="active" {% endif %}>
-               <img src="{{current_user['email_addr'] | gravatar(size=34)}}">
-              </li>
-              <li {% if active_page == "profile"  %} class="active" {% endif %}>
-                <a href="{{url_for('account.profile')}}">Profile</a>
+              <p class="navbar-text pull-right">Logged in as <a href="{{url_for('account.profile')}}">{{ current_user.name}}</a></p>
               </li>
               <li>
                 <a href="{{ url_for('account.logout') }}">Logout</a>
