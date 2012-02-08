@@ -40,7 +40,7 @@
           <a class="brand" href="/">{{ title }}</a>
           <div class="nav-collapse">
             <ul class="nav">
-              <li {% if active_page == "index"  %} class="active" {% endif %}><a href="/">Home</a></li>
+              <li {% if active_page == "index"  %} class="active" {% endif %}> <a href="/"><i class="icon-home icon-white"></i> Home</a></li>
               <li {% if active_page == "community"  %} class="active" {% endif %}><a href="/account">Community</a></li>
               {% if apps.count() >= 1 %}
               <li {% if active_page == "applications"  %} class="dropdown active" {% else %} class="dropdown"  {% endif %}>
@@ -55,7 +55,7 @@
                         <li {% if active_app == "all"  %} class="active" {% endif %}><a href="/app">All</a></li>
                         {% if not current_user.is_anonymous() %} 
                         <li class="divider"></li>
-                        <li><a href="/app/new">Create an application</a></li>
+                        <li><a href="/app/new"><i class="icon-plus icon-white"></i> Create an application</a></li>
                         {% endif %}
                     </ul>
               </li>
