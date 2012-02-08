@@ -26,12 +26,14 @@ from pybossa.core import app, login_manager
 import pybossa.model as model
 from pybossa.api import blueprint as api
 from pybossa.view.account import blueprint as account
+from pybossa.view.applications import blueprint as applications
 
 logger = logging.getLogger('pybossa')
 
 # other views ...
 app.register_blueprint(api, url_prefix='/api')
 app.register_blueprint(account, url_prefix='/account')
+app.register_blueprint(applications, url_prefix='/app')
 
 @app.before_request
 def bind_db_engine():
@@ -46,23 +48,23 @@ def bind_db_engine():
 def remove_db_session():
     model.Session.remove()
 
-@app.errorhandler(401)
-@app.errorhandler(403)
-@app.errorhandler(404)
-@app.errorhandler(410)
-@app.errorhandler(500)
-def handle_exceptions(exc):
-    """
-    Re-format exceptions to JSON 
-
-    :arg error: The exception object
-    :returns: The exception object in JSON format
-    """
-    output = {'status': exc.code,
-              'name': exc.name,
-              'description': exc.description
-             }
-    return json.dumps(output)
+#@app.errorhandler(401)
+#@app.errorhandler(403)
+#@app.errorhandler(404)
+#@app.errorhandler(410)
+#@app.errorhandler(500)
+#def handle_exceptions(exc):
+#    """
+#    Re-format exceptions to JSON 
+#
+#    :arg error: The exception object
+#    :returns: The exception object in JSON format
+#    """
+#    output = {'status': exc.code,
+#              'name': exc.name,
+#              'description': exc.description
+#             }
+#    return json.dumps(output)
 
 @app.context_processor
 def global_template_context():
@@ -107,43 +109,6 @@ def home():
             }
     return render_template('/home/index.html', stats=stats)
 
-@app.route('/app')
-def apps():
-    applications = []
-    try: # in case we have not set up database yet
-        bossa_apps = model.Session.query(model.App).filter(model.App.hidden == 0)
-        for bossa_app in bossa_apps:
-            app = {
-                'name': bossa_app.name,
-                'short_name': bossa_app.short_name,
-                'description': bossa_app.description[0:100],
-                'creation': bossa_app.created[0:10],
-                'last_active': 'ToDo',
-                'image': 'ToDo',
-            }
-            applications.append(app)
-    except UnboundExecutionError:
-        pass
-    return render_template('/app/list.html', bossa_apps=applications)
-
-@app.route('/app/<short_name>')
-def app_details(short_name):
-    try: # in case we have not set up database yet
-        application = model.Session.query(model.App).filter(model.App.short_name == short_name).first()
-        if application and application.hidden == 0:
-            app = {
-                'name': application.name,
-                'short_name': application.short_name,
-                'description': application.description,
-                'creation': application.created[0:10],
-                'completion': application.completion_status()*100,
-                'last_active': 'ToDo',
-                'image': 'ToDo',
-            }
-            return render_template('/app/app.html', bossa_app=app)
-    except UnboundExecutionError:
-        pass
-    return render_template('/app/app.html', bossa_app=None)
 
 @app.route('/faq')
 def faq():

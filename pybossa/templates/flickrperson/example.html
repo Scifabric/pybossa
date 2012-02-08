@@ -6,37 +6,36 @@
 <div class="row">
   <!-- Success and Error Messages for the user --> 
   <!-- Question, task id, photo and action buttons for answering the question-->
-  <div class="span9 offset4">
-    <div id="success" class="alert-message success" data-alert="alert" style="display:none;">
-      <a class="close" href="#">&times</a>
-      <p><strong>Well done!</strong> Your answer has been saved</strong></p>
+  <div class="span8 offset3">
+    <div id="success" class="alert alert-success" style="display:none;">
+      <a class="close">×</a>
+      <strong>Well done!</strong> Your answer has been saved</strong>
     </div>
-    <div id="finish" class="alert-message block-message success" data-alert="alert" style="display:none;">
-      <p><strong>Congratulations!</strong> All the tasks have been completed!</strong></p>
+    <div id="finish" class="alert alert-success" style="display:none;">
+      <strong>Congratulations!</strong> All the tasks have been completed!</strong>
       <br/>
       <div class="alert-actions">
               <a class="btn small" href="/">Go back</a>
               <a class="btn small" href="/app">or, Check other applications</a>
       </div>
     </div>
-    <div id="error" class="alert-message error" data-alert="alert" style="display:none;">
-      <a class="close" href="#">&times</a>
-      <p><strong>Error!</strong> Something went wrong, please contact the site administrators</strong></p>
+    <div id="error" class="alert alert-error" style="display:none;">
+      <a class="close">×</a>
+      <strong>Error!</strong> Something went wrong, please contact the site administrators</strong>
     </div>
   </div>
 
-  <div class="span9 offset4">
+  <div class="span8 offset3">
     <div id="question">
       <h1>Question</h1>
-      <p>Task: <span id="task-id" class="label warning">#</span></p>
-      <ul class="media-grid">
-        <li><a id="photo-link" href="#"><img id="photo" src="#"></a></li>
+      <p>Task: <span id="task-id" class="label label-warning">#</span></p>
+      <ul class="thumbnails">
+              <li><a id="photo-link" href="#" class="thumbnail"><img id="photo" src="#"></a></li>
       </ul>
     </div>
-
     <div id="answer">
-      <button class="btn success" onclick="submitTask('Yes')">Yes</button>
-      <button class="btn info" onclick="submitTask('No')">No</button>
+      <button class="btn btn-success" onclick="submitTask('Yes')">Yes</button>
+      <button class="btn btn-info" onclick="submitTask('No')">No</button>
       <button class="btn" onclick="getApp('flickrperson')">I don't know</button>
     </div>
 

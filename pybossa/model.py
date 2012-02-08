@@ -154,8 +154,10 @@ class App(Base):
                 total += task.quorum
             else:
                 total += 1
-        return float(len(self.task_runs))/total
-
+        if total != 0:
+            return float(len(self.task_runs))/total
+        else:
+            return float(0)
 
 class Task(Base):
     '''An individual Task which can be performed by a user. A Task is

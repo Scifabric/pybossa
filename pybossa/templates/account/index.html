@@ -3,12 +3,12 @@
 
 {% block content %}
 <div class="row">
-  <div class="span12 offset2">
+  <div class="span10 offset2">
           {% if accounts %}
-      <ul class="media-grid">
+      <ul class="thumbnails">
       {% for account in accounts %}
       <li> 
-      <a href="#" rel='popover' title="{{account['name']}}" data-content="
+      <a href="#" class="thumbnail" rel='popover' title="{{account['name']}}" data-content="
               <strong>Joined:</strong> {{account['created'][0:10]}}
                         <br/><strong>Activity:</strong> ToDo">
                 <img src="{{account['email_addr'] | gravatar(size=90)}}">
