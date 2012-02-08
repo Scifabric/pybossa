@@ -1,0 +1,30 @@
+{% extends "/base.html" %}
+{% set active_page = "applications" %}
+{% set active_app  = "all" %}
+
+{% block content %}
+{% if bossa_app %}
+  <div class="page-header">
+    <h1>{{ bossa_app['name'] }}</h1>
+  </div>
+  <div class="row">
+    <div class="span8">
+      <ul>
+        <li>Description: {{ bossa_app['description'] }}</li>
+        <li>Creation Date: {{ bossa_app['creation'] }}</li>
+        <li>Last Activity: {{ bossa_app['last_active'] }}</li>
+      </ul>
+    </div>
+    <div class="span4">
+      <h4>Completed tasks</h4>
+      <div class="progress progress-info progress-striped"> 
+              <div class="bar" style="width:{{ bossa_app['completion'] }}%;"></div>
+      </div>
+    </div>
+  </div>
+{% else %}
+  <div class="page-header">
+    <h1>Sorry! This app does not exists.</h1>
+  </div>
+{% endif %}
+{% endblock %}

@@ -46,7 +46,7 @@ def apps():
             applications.append(app)
     except UnboundExecutionError:
         pass
-    return render_template('/app/list.html', bossa_apps=applications)
+    return render_template('/applications/list.html', bossa_apps=applications)
 
 @blueprint.route('/new', methods=['GET', 'POST'])
 @login_required
@@ -72,7 +72,7 @@ def new():
 
     if request.method == 'POST' and not form.validate():
         flash('Please correct the errors', 'error')
-    return render_template('app/new.html', form = form)
+    return render_template('applications/new.html', form = form)
 
 @blueprint.route('/<short_name>')
 def app_details(short_name):
@@ -88,7 +88,7 @@ def app_details(short_name):
                 'last_active': 'ToDo',
                 'image': 'ToDo',
             }
-            return render_template('/app/app.html', bossa_app=app)
+            return render_template('/applications/app.html', bossa_app=app)
     except UnboundExecutionError:
         pass
     return render_template('/app/app.html', bossa_app=None)
