@@ -16,13 +16,13 @@
 from flask import Blueprint, request, url_for, flash, redirect
 from flask import render_template
 from flaskext.login import login_user, logout_user
-from flaskext.wtf import Form, TextField, PasswordField, validators
+from flaskext.wtf import Form, TextField, PasswordField, validators, ValidationError
 
 import pybossa.model as model
+from pybossa.util import Unique
 
 
 blueprint = Blueprint('account', __name__)
-
 
 @blueprint.route('/')
 def index():
@@ -60,7 +60,9 @@ def logout():
 
 class RegisterForm(Form):
     username = TextField('Username', [validators.Length(min=3, max=25)])
-    email = TextField('Email Address', [validators.Length(min=3, max=35)])
+    email_addr = TextField('Email Address', [validators.Length(min=3, max=35),
+                                        Unique(model.Session, model.User,
+                                               model.User.email_addr)])
     password = PasswordField('New Password', [
         validators.Required(),
         validators.EqualTo('confirm', message='Passwords must match')
@@ -74,7 +76,7 @@ def register():
     if request.method == 'POST' and form.validate():
         account = model.User(
             name=form.username.data,
-            email_addr=form.email.data
+            email_addr=form.email_addr.data
             )
         account.set_password(form.password.data)
         model.Session.add(account)

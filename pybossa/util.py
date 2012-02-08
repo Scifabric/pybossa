@@ -14,6 +14,7 @@
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from functools import wraps
+from flaskext.wtf import Form, TextField, PasswordField, validators, ValidationError
 
 def jsonpify(f):
     """Wraps JSONified output for JSONP"""
@@ -27,4 +28,19 @@ def jsonpify(f):
         else:
             return f(*args, **kwargs)
     return decorated_function
+
+class Unique(object):
+    """Validator that checks field uniqueness"""
+    def __init__(self, session, model, field, message=None):
+        self.session = session
+        self.model = model
+        self.field = field
+        if not message:
+            message = u'This item already exists'
+        self.message = message
+
+    def __call__(self, form, field):
+        check = self.session.query(self.model).filter(self.field == field.data).first()
+        if check:
+            raise ValidationError(self.message)
 

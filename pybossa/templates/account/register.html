@@ -5,7 +5,7 @@
 
   <form method="post" action="{{url_for('account.register')}}">
       {{ render_field(form.username, placeholder="myusername") }}
-      {{ render_field(form.email, placeholder="hello@mywebsite.org") }}
+      {{ render_field(form.email_addr, placeholder="hello@mywebsite.org") }}
       {{ render_field(form.password, placeholder="********") }}
       {{ render_field(form.confirm, placeholder="********") }}
     <div class="actions">

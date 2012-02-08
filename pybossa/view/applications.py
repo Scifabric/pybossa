@@ -20,12 +20,17 @@ from flaskext.login import login_required
 from sqlalchemy.exc import UnboundExecutionError
 
 import pybossa.model as model
+from pybossa.util import Unique
 
 blueprint = Blueprint('app', __name__)
 
 class AppForm(Form):
-    name = TextField('Name', [validators.Required()])
-    short_name = TextField('Short Name', [validators.Required()])
+    name = TextField('Name', [validators.Required(), Unique(model.Session,
+                                                             model.App,
+                                                             model.App.name)])
+    short_name = TextField('Short Name', [validators.Required(),
+                                          Unique(model.Session, model.App,
+                                                 model.App.short_name)])
     description = TextField('Description', [validators.Required()])
     hidden = BooleanField('Hide?')
 
@@ -59,17 +64,10 @@ def new():
             description = form.description.data,
             hidden = form.hidden.data
             )
-        obj = model.Session.query(model.App).filter_by(name = application.name).first()
-        if (obj == None):
-            model.Session.add(application)
-            model.Session.commit()
-            flash('Application created!','success')
-            return redirect('app')
-        else:
-            flash('There is an application with the same name, please select a different one!', 'error')
-            if (obj.short_name == application.short_name):
-                flash('There is an application with the same short name, please select a different one!', 'error')
-
+        model.Session.add(application)
+        model.Session.commit()
+        flash('Application created!','success')
+        return redirect('app')
     if request.method == 'POST' and not form.validate():
         flash('Please correct the errors', 'error')
     return render_template('applications/new.html', form = form)
