@@ -28,79 +28,15 @@
   </head>
 
   <body>
+
     {% set active_page = active_page | default('index') -%}
-    <div class="navbar navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
-          <a class="brand" href="/">{{ title }}</a>
-          <div class="nav-collapse">
-            <ul class="nav">
-              <li {% if active_page == "index"  %} class="active" {% endif %}> <a href="/"><i class="icon-home icon-white"></i> Home</a></li>
-              <li {% if active_page == "community"  %} class="active" {% endif %}><a href="/account">Community</a></li>
-              {% if apps.count() >= 1 %}
-              <li {% if active_page == "applications"  %} class="dropdown active" {% else %} class="dropdown"  {% endif %}>
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Applications <b class="caret"></b></a>
-                    <ul class="dropdown-menu">
-                        {% for app in apps: %}
-                        <li {% if active_app == "flickrperson"  %} class="active" {% endif %} >
-                          <a href="/{{app.short_name}}"> {{ app.short_name}}</a>
-                        </li>
-                        {% endfor %}
-                        <li class="divider"></li>
-                        <li {% if active_app == "all"  %} class="active" {% endif %}><a href="/app">All</a></li>
-                        {% if not current_user.is_anonymous() %} 
-                        <li class="divider"></li>
-                        <li><a href="/app/new"><i class="icon-plus icon-white"></i> Create an application</a></li>
-                        {% endif %}
-                    </ul>
-              </li>
-              {% endif %}
-              <li {% if active_page == "faq"  %} class="active" {% endif %}><a href="/faq">FAQ</a></li>
-            </ul>
-            <ul class="nav secondary-nav pull-right">
-              {% if current_user.is_anonymous() %}
-              <li>
-                <a href="{{url_for('account.register')}}">Register</a>
-              </li>
-              <li>
-                <a href="{{url_for('account.login')}}">Login</a>
-              </li>
-              {% else %}
-              <li {% if active_page == "profile"  %} class="active" {% endif %}>
-              <p class="navbar-text pull-right">Logged in as <a href="{{url_for('account.profile')}}">{{ current_user.name}}</a></p>
-              </li>
-              <li>
-                <a href="{{ url_for('account.logout') }}">Logout</a>
-              </li>
-              {% endif %}
-            </ul>
-          </div>
-        </div>
-      </div>
-    </div>
+    {% include "_navbar.html" %}
 
     <div class="container">
 
-    <div class="alert-messages">
+    {% include "_flash_messages.html" %}
 
-    {% with messages = get_flashed_messages(with_categories=True) %}
-    {%if messages %}
-      {% for category, message in messages %}
-        <div class="alert alert-{{category}} fade in">
-            <a class="close" data-dismiss="alert" href="#">&times;</a>
-          {{ message }}
-        </div>
-      {% endfor %}
-    {% endif %}
-    {% endwith %}
-    </div>
-
-      {% block content %}{% endblock %}
+    {% block content %}{% endblock %}
 
     <hr>
     <footer>
@@ -127,6 +63,7 @@
                       src="http://www.gnu.org/graphics/agplv3-88x31.png"
                       style="vertical-align:middle;"></a>
           </p>
+          <p>Navbar icons courtesy of <a href="http://glyphicons.com/">Glyphicons.com</a></p>
           <p>Powered by <a href="http://pybossa.org">PyBossa</a> <span class="label label-info"> {{ version }}</span></p>
         </div>
       </div>
