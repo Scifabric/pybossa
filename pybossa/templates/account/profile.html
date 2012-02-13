@@ -5,17 +5,33 @@
 <div class="row">
   <div class="span12 offset2">
     <h3>User: {{current_user['name']}}</h3>
-          <div class="row">
-            <div class="span2">
-              <img src="{{ current_user['email_addr'] | gravatar}}">
-            </div>
-            <div class="span6">
-              <ul>
-                <li><strong>E-mail: </strong> {{current_user['email_addr']}}</li>
-                <li><strong>API key:</strong> {{current_user['api_key']}}</li>
-              </ul>
-            </div>
-          </div>
+    <div class="row">
+      <div class="span2">
+        <img src="{{ current_user['email_addr'] | gravatar}}">
+      </div>
+      <div class="span6">
+        <ul>
+          <li><strong>E-mail: </strong> {{current_user['email_addr']}}</li>
+          <li><strong>API key:</strong> {{current_user['api_key']}}</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  </br></br>
+  <div class="span12 offset2">
+    <div class="row">
+      <h3>Your Applications!</h3>
+      <div class="span2">
+        <p><a href="/app/new" class="btn">Create new!</a></p>
+      </div>
+      <div class="span6">
+        <ul>
+        {% for app in user_apps %}
+          <li><a href="/app/{{app['short_name']}}">{{ app['name'] }}</a> - (un)hidden - delete</li>
+        {% endfor %}
+        </ul>
+      </div>
+    </div>
   </div>
 </div>
 {% endblock %}
