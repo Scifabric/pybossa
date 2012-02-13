@@ -46,7 +46,7 @@ def apps():
                 'short_name': bossa_app.short_name,
                 'description': bossa_app.description[0:100],
                 'creation': bossa_app.created[0:10],
-                'last_active': 'ToDo',
+                'last_active': bossa_app.last_activity()[0:10],
                 'image': 'ToDo',
             }
             applications.append(app)
@@ -85,7 +85,7 @@ def app_details(short_name):
                 'description': application.description,
                 'creation': application.created[0:10],
                 'completion': application.completion_status()*100,
-                'last_active': 'ToDo',
+                'last_active': application.last_activity()[0:10],
                 'image': 'ToDo',
             }
             return render_template('/applications/app.html', bossa_app=app)

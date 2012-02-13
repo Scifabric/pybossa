@@ -144,20 +144,27 @@ class App(Base):
     #: `Task`s for this app.
     tasks = relationship('Task', backref='app')
     #: `TaskRun`s for this app.
-    task_runs = relationship('TaskRun', backref='app')
+    task_runs = relationship('TaskRun', backref='app',
+                             order_by='TaskRun.finish_time.desc()')
 
-    #: Percentage of completed tasks
+    #: Percentage of completed tasks based on Task.state 
+    #: (0 not done, 1 completed)
     def completion_status(self):
-        total = 0
+        completed = 0
         for task in self.tasks:
-            if task.quorum:
-                total += task.quorum
-            else:
-                total += 1
-        if total != 0:
-            return float(len(self.task_runs))/total
+            if (task.state == '1'):
+                completed += 1
+        if len(self.tasks) != 0:
+            return float(completed)/len(self.tasks)
         else:
             return float(0)
+
+    def last_activity(self):
+        if (len(self.task_runs) >= 1):
+            return self.task_runs[0].finish_time
+        else:
+            return "None"
+
 
 class Task(Base):
     '''An individual Task which can be performed by a user. A Task is
