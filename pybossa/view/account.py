@@ -15,12 +15,12 @@
 
 from flask import Blueprint, request, url_for, flash, redirect
 from flask import render_template
-from flaskext.login import login_user, logout_user
+from flaskext.login import login_user, logout_user, current_user
 from flaskext.wtf import Form, TextField, PasswordField, validators, ValidationError
 
 import pybossa.model as model
 from pybossa.util import Unique
-
+from pybossa.auth.util import logged_user
 
 blueprint = Blueprint('account', __name__)
 
@@ -90,4 +90,15 @@ def register():
 
 @blueprint.route('/profile', methods = ['GET', 'POST'])
 def profile():
-    return render_template('account/profile.html')
+    user_apps = []
+    user = logged_user() 
+    if(user):
+        apps = user.apps
+        for app in apps:
+            user_apps.append({
+               'id': app.id,
+               'short_name': app.short_name,
+               'name': app.name,
+               'hidden': app.hidden,
+            }) 
+    return render_template('account/profile.html', user_apps=user_apps )
