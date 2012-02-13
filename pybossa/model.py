@@ -146,16 +146,15 @@ class App(Base):
     #: `TaskRun`s for this app.
     task_runs = relationship('TaskRun', backref='app')
 
-    #: Percentage of completed tasks
+    #: Percentage of completed tasks based on Task.state 
+    #: (0 not done, 1 completed)
     def completion_status(self):
-        total = 0
+        completed = 0
         for task in self.tasks:
-            if task.quorum:
-                total += task.quorum
-            else:
-                total += 1
-        if total != 0:
-            return float(len(self.task_runs))/total
+            if (task.state == '1'):
+                completed += 1
+        if completed != 0:
+            return float(completed)/len(self.tasks)
         else:
             return float(0)
 
