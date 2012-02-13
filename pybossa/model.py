@@ -153,7 +153,7 @@ class App(Base):
         for task in self.tasks:
             if (task.state == '1'):
                 completed += 1
-        if completed != 0:
+        if len(self.tasks) != 0:
             return float(completed)/len(self.tasks)
         else:
             return float(0)
