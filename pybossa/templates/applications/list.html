@@ -11,7 +11,9 @@
   <ul>
     <li>Description: {{ app['description'] }}</li>
     <li>Creation Date: {{ app['creation'] }}</li>
+    {% if app.last_active != "None" %}
     <li>Last Activity: {{ app['last_active'] }}</li>
+    {% endif %}
   </ul>
 {% endfor %}
 
