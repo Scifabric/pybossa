@@ -1,0 +1,12 @@
+{% extends "applications/app.html" %}
+{% set active_page = "applications" %}
+{% set active_app  = "all" %}
+
+{% block update %}
+  <div class="row">
+          <div class="span8">
+                  <a class="btn btn-info"   href="update/{{bossa_app.id}}"><i class="icon-edit icon-white"></i> Update Application</a>
+                  <a class="btn btn-danger" href="delete/{{bossa_app.id}}"><i class="icon-trash icon-white"></i> Delete Application</a>
+          </div>
+  </div>
+{% endblock %}

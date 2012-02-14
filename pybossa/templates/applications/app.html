@@ -11,8 +11,8 @@
     <div class="span8">
       <ul>
         <li>Description: {{ bossa_app['description'] }}</li>
-        <li>Creation Date: {{ bossa_app['creation'] }}</li>
-        <li>Last Activity: {{ bossa_app['last_active'] }}</li>
+        <li>Creation Date: {{ bossa_app.created[0:10] }}</li>
+        <li>Last Activity: {{ bossa_app.last_activity()[0:10]}}</li>
       </ul>
     </div>
     <div class="span4">
@@ -22,6 +22,7 @@
       </div>
     </div>
   </div>
+  {% block update %}{% endblock %}
 {% else %}
   <div class="page-header">
     <h1>Sorry! This app does not exists.</h1>
