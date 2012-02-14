@@ -66,7 +66,7 @@ def new():
                 name = form.name.data,
                 short_name = form.short_name.data,
                 description = form.description.data,
-                hidden = form.hidden.data,
+                hidden = int(form.hidden.data),
                 owner_id = current_user.id,
                 )
             model.Session.add(application)
