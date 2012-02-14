@@ -16,12 +16,11 @@
 from flask import Blueprint, request, url_for, flash, redirect
 from flask import render_template
 from flaskext.wtf import Form, TextField, BooleanField, validators
-from flaskext.login import login_required
+from flaskext.login import login_required, current_user
 from sqlalchemy.exc import UnboundExecutionError
 
 import pybossa.model as model
 from pybossa.util import Unique
-from pybossa.auth.util import logged_user
 
 blueprint = Blueprint('app', __name__)
 
@@ -64,7 +63,7 @@ def new():
             short_name = form.short_name.data,
             description = form.description.data,
             hidden = form.hidden.data,
-            owner_id = logged_user().id,
+            owner_id = current_user.id,
             )
         model.Session.add(application)
         model.Session.commit()
@@ -78,7 +77,7 @@ def new():
 def app_details(short_name):
     try: # in case we have not set up database yet
         application = model.Session.query(model.App).filter(model.App.short_name == short_name).first()
-        if application and (application.hidden == 0 or application.owner_id == logged_user().id):
+        if application and (application.hidden == 0 or application.owner_id == current_user.id):
             app = {
                 'name': application.name,
                 'short_name': application.short_name,
@@ -92,5 +91,3 @@ def app_details(short_name):
     except UnboundExecutionError:
         pass
     return render_template('/applications/app.html', bossa_app=None)
-
-

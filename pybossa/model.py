@@ -273,5 +273,5 @@ class User(Base, flaskext.login.UserMixin):
     ## Relationships
     #: `Task`s for this user
     task_runs = relationship('TaskRun', backref='user')
-    apps = relationship('App', backref='owner')
+    apps = relationship('App', lazy='joined', backref='owner')
 
