@@ -35,7 +35,6 @@ class APIBase(MethodView):
     tasks, etc.
     """
 
-    @authenticate
     @jsonpify
     def get(self, id):
         """
