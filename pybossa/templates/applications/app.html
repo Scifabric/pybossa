@@ -18,7 +18,7 @@
     <div class="span4">
       <h4>Completed tasks</h4>
       <div class="progress progress-info progress-striped"> 
-              <div class="bar" style="width:{{ bossa_app['completion'] }}%;"></div>
+              <div class="bar" style="width:{{ bossa_app.completion_status()*100 }}%;"></div>
       </div>
     </div>
   </div>
