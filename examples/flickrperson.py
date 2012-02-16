@@ -21,6 +21,7 @@ import json
 import datetime
 
 url_api = 'http://0.0.0.0:5000/api/'
+api_key = 'aec377d6-646b-45f7-bdfa-423087082fd3'
 
 def delete_app(id):
     """
@@ -30,7 +31,9 @@ def delete_app(id):
     :returns: True if the application has been deleted
     :rtype: boolean
     """
-    request = urllib2.Request(url_api + 'app/' + str(id))
+    request = urllib2.Request(url_api + 'app/' + str(id) + '?api_key=' + api_key)
+    data = dict(api_key = api_key)
+    request.add_data(data)
     request.get_method = lambda: 'DELETE'
 
     if (urllib2.urlopen(request).getcode() == 204): 
@@ -49,7 +52,7 @@ def update_app(id, name = None):
     """
     data = dict(id = id, name = name)
     data = json.dumps(data)
-    request = urllib2.Request(url_api + 'app/' + str(id))
+    request = urllib2.Request(url_api + 'app/' + str(id) + '?api_key=' + api_key)
     request.add_data(data)
     request.add_header('Content-type', 'application/json')
     request.get_method = lambda: 'PUT'
@@ -79,7 +82,7 @@ def create_app(name=None, short_name=None, description=None):
     data = json.dumps(data)
 
     # Checking which apps have been already registered in the DB
-    apps = json.loads(urllib2.urlopen(url_api + 'app').read())
+    apps = json.loads(urllib2.urlopen(url_api + 'app' + '?api_key=' + api_key).read())
     for app in apps:
         if app['short_name'] == short_name: 
             print('{app_name} app is already registered in the DB'.format(app_name = name))
@@ -87,7 +90,7 @@ def create_app(name=None, short_name=None, description=None):
             if (delete_app(app['id'])): print "Application deleted!"
     print("The application is not registered in PyBOSSA. Creating it...")
     # Setting the POST action
-    request = urllib2.Request(url_api + 'app')
+    request = urllib2.Request(url_api + 'app?api_key=' + api_key )
     request.add_data(data)
     request.add_header('Content-type', 'application/json')
 
@@ -116,7 +119,7 @@ def create_task(app_id, photo):
     """
     # Data for the tasks
     info = dict (link = photo['link'], url = photo['url'])
-    data = dict (app_id = app_id, state = 0, info = info, calibration = 0, priority_0 = 0)
+    data = dict (api_key = api_key, app_id = app_id, state = 0, info = info, calibration = 0, priority_0 = 0)
     data = json.dumps(data)
 
     # Setting the POST action
