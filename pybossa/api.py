@@ -18,7 +18,7 @@ import json
 from flask import Blueprint, request, jsonify, abort
 from flask.views import View, MethodView
 
-from pybossa.util import jsonpify, authenticate
+from pybossa.util import jsonpify 
 import pybossa.model as model
 
 blueprint = Blueprint('api', __name__)
@@ -55,7 +55,6 @@ class APIBase(MethodView):
             else:
                 return json.dumps(item.dictize()) 
 
-    @authenticate
     @jsonpify
     def post(self):
         """
@@ -70,7 +69,6 @@ class APIBase(MethodView):
         model.Session.commit()
         return json.dumps(inst.dictize())
 
-    @authenticate
     def delete(self, id):
         """
         Deletes a single item from the DB
@@ -95,7 +93,6 @@ class APIBase(MethodView):
         except:
             abort(500)
 
-    @authenticate
     def put(self, id):
         """
         Updates a single item in the DB
