@@ -32,8 +32,6 @@ def delete_app(id):
     :rtype: boolean
     """
     request = urllib2.Request(url_api + 'app/' + str(id) + '?api_key=' + api_key)
-    data = dict(api_key = api_key)
-    request.add_data(data)
     request.get_method = lambda: 'DELETE'
 
     if (urllib2.urlopen(request).getcode() == 204): 
@@ -119,11 +117,11 @@ def create_task(app_id, photo):
     """
     # Data for the tasks
     info = dict (link = photo['link'], url = photo['url'])
-    data = dict (api_key = api_key, app_id = app_id, state = 0, info = info, calibration = 0, priority_0 = 0)
+    data = dict (app_id = app_id, state = 0, info = info, calibration = 0, priority_0 = 0)
     data = json.dumps(data)
 
     # Setting the POST action
-    request = urllib2.Request(url_api + 'task')
+    request = urllib2.Request(url_api + 'task' + '?api_key=' + api_key)
     request.add_data(data)
     request.add_header('Content-type', 'application/json')
 
