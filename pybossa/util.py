@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+import json
+from flask import abort
 from functools import wraps
 from flaskext.wtf import Form, TextField, PasswordField, validators, ValidationError
 
@@ -27,6 +29,25 @@ def jsonpify(f):
             return current_app.response_class(content, mimetype='application/javascript')
         else:
             return f(*args, **kwargs)
+    return decorated_function
+
+def authenticate(f):
+    """Autenticate API based on api_key"""
+    from flask import request, current_app
+    import pybossa.model as model
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        api_key = request.args.get('api_key')
+        if api_key is None:
+            return abort(403)
+        else:
+            print "Validating API KEY:"
+            print api_key
+            obj = model.Session.query(model.User).filter(model.User.api_key ==
+                                                         api_key).first()
+            if (obj == None): return abort(403)
+            else: 
+                return f(*args, **kwargs)
     return decorated_function
 
 class Unique(object):
