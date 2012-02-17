@@ -1,18 +1,26 @@
 import json
 
-from base import web, model
+from base import web, model, Fixtures
 
 
 class TestAPI:
     def setUp(self):
         self.app = web.app.test_client()
         model.rebuild_db()
+        Fixtures.create()
 
-    def test_01(self):
+    @classmethod
+    def teardown_class(cls):
+        model.rebuild_db()
+
+    def test_01_app_query(self):
         res = self.app.get('/api/app')
-        # assert 'nothing' in res.data, res.data
+        data = json.loads(res.data)
+        assert len(data) == 1, data
+        app = data[0]
+        assert app['info']['total'] == 150, data
 
-    def test_02(self):
+    def test_02_app_post(self):
         name = u'XXXX Project'
         data = dict(
             name=name,
@@ -22,9 +30,14 @@ class TestAPI:
         res = self.app.post('/api/app',
             data=data
         )
+        assert res.status == '403 FORBIDDEN', res.status
+        res = self.app.post('/api/app?api_key=' + Fixtures.api_key,
+            data=data,
+        )
         out = model.Session.query(model.App).filter_by(name=name).one()
         assert out
 
+    def _test_03_app_task_post(self):
         data = dict(
             app_id=out.id,
             state=1,
