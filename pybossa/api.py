@@ -104,11 +104,14 @@ class APIBase(MethodView):
         <http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6>`_.
         """
         data = json.loads(request.data)
+        # may be missing the id as we allow partial updates
+        data['id'] = id
         inst = self.__class__(**data)
         item = model.Session.query(self.__class__).get(id)
-        if (item == None): abort(404)
+        if (item == None):
+            abort(404)
         else:
-            model.Session.merge(inst)
+            out = model.Session.merge(inst)
             model.Session.commit()
             return "", 200
 

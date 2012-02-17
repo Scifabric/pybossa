@@ -13,12 +13,15 @@ model.set_engine(engine)
 
 class Fixtures:
     username = u'tester'
+    username_2 = u'tester-2'
     api_key = 'tester'
+    api_key_2 = 'tester-2'
     app_name = u'test-app'
 
     @classmethod
     def create(cls):
         user = model.User(name=cls.username, api_key=cls.api_key)
+        user2 = model.User(name=cls.username_2, api_key=cls.api_key_2)
         info = {
             'total': 150,
             'long_description': 'hello world'
@@ -41,7 +44,7 @@ class Fixtures:
         task.app = app
         task_run.task = task
         task_run.user = user
-        model.Session.add_all([user, app, task, task_run])
+        model.Session.add_all([user, user2, app, task, task_run])
         model.Session.commit()
         model.Session.remove()
 
