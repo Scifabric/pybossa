@@ -21,7 +21,7 @@ import json
 import datetime
 
 url_api = 'http://0.0.0.0:5000/api/'
-api_key = 'aec377d6-646b-45f7-bdfa-423087082fd3'
+api_key = 'YOUR-KEY'
 
 def delete_app(id):
     """
