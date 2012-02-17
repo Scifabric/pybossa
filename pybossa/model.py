@@ -26,7 +26,7 @@ import flaskext.login
 from sqlalchemy import create_engine
 from sqlalchemy import Integer, Unicode, Float, UnicodeText, Text
 from sqlalchemy.schema import Table, MetaData, Column, ForeignKey
-from sqlalchemy.orm import relationship, backref
+from sqlalchemy.orm import relationship, backref, class_mapper
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.types import MutableType, TypeDecorator
@@ -100,6 +100,21 @@ class DomainObject(object):
     @classmethod
     def undictize(cls, dict_):
         raise NotImplementedError()
+
+    def __str__(self):
+        return self.__unicode__().encode('utf8')
+
+    def __unicode__(self):
+        repr = u'<%s' % self.__class__.__name__
+        table = class_mapper(self.__class__).mapped_table
+        for col in table.c:
+            try:
+                repr += u' %s=%s' % (col.name, getattr(self, col.name))
+            except Exception, inst:
+                repr += u' %s=%s' % (col.name, inst)
+                
+        repr += '>'
+        return repr
     
 
 Base = declarative_base(cls=DomainObject)
