@@ -246,7 +246,7 @@ class User(Base, flaskext.login.UserMixin):
     #: full name
     fullname            = Column(Unicode(length=500))
     #: api key
-    api_key             = Column(Text(length=36), default=make_uuid)
+    api_key             = Column(Text(length=36), default=make_uuid, unique=True)
     passwd_hash         = Column(Unicode(length=254), unique=True)
     #: TODO: find out ... bossa specific
     category            = Column(Integer)
