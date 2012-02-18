@@ -21,14 +21,16 @@ def db_rebuild():
     model.Base.metadata.create_all(bind=engine)
 
 def fixtures():
-    '''Not yet implemented!'''
+    '''Create some fixtures!'''
     dburi = web.app.config['SQLALCHEMY_DATABASE_URI']
     engine = model.create_engine(dburi)
     model.set_engine(engine)
     user = model.User(
         name=u'tester',
-        email_addr=u'tester@tester.org'
+        email_addr=u'tester@tester.org',
+        api_key='tester'
         )
+    user.set_password(u'tester')
     model.Session.add(user)
     model.Session.commit()
     
