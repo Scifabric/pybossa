@@ -31,31 +31,6 @@ def jsonpify(f):
             return f(*args, **kwargs)
     return decorated_function
 
-def authenticate(f):
-    """Autenticate API based on api_key"""
-    from flask import request, current_app
-    import pybossa.model as model
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        # Rules for anonymous visitors to allow to GET, PUT and POST tasks for
-        # apps
-        if request.endpoint == 'api.api_app' and request.method == 'GET': return f(*args, **kwargs)
-        if request.endpoint == 'api.api_task' and request.method == 'GET': return f(*args, **kwargs)
-        if request.endpoint == 'api.api_task' and request.method == 'PUT': return f(*args, **kwargs)
-        if request.endpoint == 'api.api_taskrun' and request.method == 'POST': return f(*args, **kwargs)
-        api_key = request.args.get('api_key')
-        if api_key is None:
-            return abort(403)
-        else:
-            # print "Validating API KEY:"
-            # print api_key
-            obj = model.Session.query(model.User).filter(model.User.api_key ==
-                                                         api_key).first()
-            if (obj == None): return abort(403)
-            else: 
-                return f(*args, **kwargs)
-    return decorated_function
-
 class Unique(object):
     """Validator that checks field uniqueness"""
     def __init__(self, session, model, field, message=None):

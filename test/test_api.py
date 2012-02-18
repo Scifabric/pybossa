@@ -1,5 +1,7 @@
 import json
 
+from flaskext.login import login_user, logout_user, current_user
+
 from base import web, model, Fixtures
 from nose.tools import assert_equal
 
@@ -32,14 +34,14 @@ class TestAPI:
         res = self.app.post('/api/app',
             data=data
         )
-        assert res.status == '403 FORBIDDEN', res.status
+        assert_equal(res.status, '403 FORBIDDEN', 'Should not be allowed to create')
         # now a real user
         res = self.app.post('/api/app?api_key=' + Fixtures.api_key,
             data=data,
         )
         out = model.Session.query(model.App).filter_by(name=name).one()
         assert out
-        assert out.short_name == 'xxxx-project', out
+        assert_equal(out.short_name, 'xxxx-project'), out
         id_ = out.id
         model.Session.remove()
 
@@ -48,15 +50,22 @@ class TestAPI:
             'name': 'My New Title'
             }
         datajson = json.dumps(data)
+        ## anonymous
         res = self.app.put('/api/app/%s' % id_,
             data=data
         )
-        assert res.status == '403 FORBIDDEN', res.status
-        print data
+        assert_equal(res.status, '403 FORBIDDEN', 'Anonymous should not be allowed to update')
+        ### real user but not allowed as not owner!
+        res = self.app.put('/api/app/%s?api_key=%s' % (id_, Fixtures.api_key_2),
+            data=datajson
+        )
+        assert_equal(res.status, '401 UNAUTHORIZED', 'Should not be able to update apps of others')
+
+        print 'HERE@'
         res = self.app.put('/api/app/%s?api_key=%s' % (id_, Fixtures.api_key),
             data=datajson
         )
-        assert res.status == '200 OK', res.data
+        assert_equal(res.status, '200 OK', res.data)
         out2 = model.Session.query(model.App).get(id_)
         assert_equal(out2.name, data['name'])
 

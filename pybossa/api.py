@@ -17,10 +17,11 @@ import json
 
 from flask import Blueprint, request, jsonify, abort
 from flask.views import View, MethodView
+from flaskext.login import current_user
 
 from pybossa.util import jsonpify 
-from pybossa.util import authenticate
 import pybossa.model as model
+from pybossa.auth import require
 
 blueprint = Blueprint('api', __name__)
 
@@ -36,7 +37,6 @@ class APIBase(MethodView):
     tasks, etc.
     """
 
-    @authenticate
     @jsonpify
     def get(self, id):
         """
@@ -47,6 +47,7 @@ class APIBase(MethodView):
         :arg integer id: the ID of the object in the DB
         :returns: The JSON item/s stored in the DB
         """
+        getattr(require, self.__class__.__name__.lower()).read()
         if id is None:
             items = [ x.dictize() for x in model.Session.query(self.__class__).all() ]
             return json.dumps(items)
@@ -57,7 +58,6 @@ class APIBase(MethodView):
             else:
                 return json.dumps(item.dictize()) 
 
-    @authenticate
     @jsonpify
     def post(self):
         """
@@ -66,13 +66,14 @@ class APIBase(MethodView):
         :arg self: The class of the object to be inserted
         :returns: The JSON item stored in the DB
         """
+        getattr(require, self.__class__.__name__.lower()).create()
         data = json.loads(request.data)
+        self._update_data(data)
         inst = self.__class__(**data)
         model.Session.add(inst)
         model.Session.commit()
         return json.dumps(inst.dictize())
 
-    @authenticate
     def delete(self, id):
         """
         Deletes a single item from the DB
@@ -91,7 +92,6 @@ class APIBase(MethodView):
             model.Session.commit()
             return "", 204
 
-    @authenticate
     def put(self, id):
         """
         Updates a single item in the DB
@@ -103,26 +103,38 @@ class APIBase(MethodView):
         More info about HTTP status codes for this action `here
         <http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6>`_.
         """
+        existing = model.Session.query(self.__class__).get(id)
+        getattr(require, self.__class__.__name__.lower()).update(existing)
         data = json.loads(request.data)
         # may be missing the id as we allow partial updates
         data['id'] = id
         inst = self.__class__(**data)
-        item = model.Session.query(self.__class__).get(id)
-        if (item == None):
+        if (existing == None):
             abort(404)
         else:
             out = model.Session.merge(inst)
             model.Session.commit()
             return "", 200
+    
+    def _update_data(self, data_dict):
+        '''Method to be overriden in inheriting classes which wish to update
+        data dict.'''
+        pass
 
 class ProjectAPI(APIBase):
     __class__ = model.App
+
+    def _update_data(self, data_dict):
+        data_dict['owner_id'] = current_user.id
 
 class TaskAPI(APIBase):
     __class__ = model.Task
 
 class TaskRunAPI(APIBase):
     __class__ = model.TaskRun
+
+    def _update_data(self, data_dict):
+        data_dict['user_id'] = current_user.id
 
 def register_api(view, endpoint, url, pk='id', pk_type='int'):
     view_func = view.as_view(endpoint)

@@ -90,6 +90,7 @@ def load_user(username):
 def api_authentication():
     """ Attempt API authentication on a per-request basis. """
     apikey = request.args.get('api_key', None)
+    from flask import _request_ctx_stack
     if 'Authorization' in request.headers:
         apikey = request.headers.get('Authorization')
     if apikey:
@@ -97,7 +98,10 @@ def api_authentication():
         engine = model.create_engine(dburi)
         model.set_engine(engine)
         user = model.Session.query(model.User).filter_by(api_key=apikey).first()
-        login_user(user)
+        ## HACK: 
+        # login_user sets a session cookie which we really don't want.
+        # login_user(user)
+        _request_ctx_stack.top.user = user
 
 @app.route('/')
 def home():
