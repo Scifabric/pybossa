@@ -101,7 +101,8 @@ def api_authentication():
         ## HACK: 
         # login_user sets a session cookie which we really don't want.
         # login_user(user)
-        _request_ctx_stack.top.user = user
+        if user:
+            _request_ctx_stack.top.user = user
 
 @app.route('/')
 def home():
