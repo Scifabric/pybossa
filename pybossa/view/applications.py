@@ -21,7 +21,7 @@ from sqlalchemy.exc import UnboundExecutionError
 
 import pybossa.model as model
 from pybossa.util import Unique
-from pybossa.auth import application as AppPerm
+from pybossa.auth import require
 
 blueprint = Blueprint('app', __name__)
 
@@ -39,7 +39,7 @@ class AppForm(Form):
 def apps():
     applications = []
     try: # in case we have not set up database yet
-        if AppPerm.read():
+        if require.app.read():
             bossa_apps = model.Session.query(model.App).filter(model.App.hidden == 0)
             for bossa_app in bossa_apps:
                 app = {
@@ -59,7 +59,7 @@ def apps():
 
 @blueprint.route('/new', methods=['GET', 'POST'])
 def new():
-    if AppPerm.create():
+    if require.app.create():
         form = AppForm(request.form, csrf_enabled=False)
         if request.method == 'POST' and form.validate():
             application = model.App(
@@ -82,7 +82,7 @@ def new():
 @blueprint.route('/delete/<id>')
 def delete(id):
     application = model.Session.query(model.App).filter(model.App.id == id).first()
-    if AppPerm.delete(application):
+    if require.app.delete(application):
         try: 
             model.Session.delete(application)
             model.Session.commit()
@@ -97,7 +97,7 @@ def delete(id):
 def update(id):
     try:
         application = model.Session.query(model.App).filter(model.App.id == id).first()
-        if AppPerm.update(application) :
+        if require.app.update(application) :
             if request.method == 'GET':
                 form = AppForm(obj=application, csrf_enabled=False)
                 form.populate_obj(application)
@@ -133,27 +133,25 @@ def update(id):
 @blueprint.route('/<short_name>')
 def app_details(short_name):
     try: # in case we have not set up database yet
-        if AppPerm.read():
-            application = model.Session.query(model.App).filter(model.App.short_name == short_name).first()
-            if application and (application.hidden == 0 or application.owner_id == current_user.id):
-                app = {
-                    'name': application.name,
-                    'short_name': application.short_name,
-                    'description': application.description,
-                    'creation': application.created[0:10],
-                    'completion': application.completion_status()*100,
-                    'last_active': application.last_activity()[0:10],
-                    'owner_id': application.owner_id,
-                    'image': 'ToDo',
-                }
-                if AppPerm.update(application):
-                    return render_template('/applications/actions.html',
-                                           bossa_app=application)
-                else:
-                    return render_template('/applications/app.html',
-                                           bossa_app=application)
-        else:
-            abort(403)
+        application = model.Session.query(model.App).filter(model.App.short_name == short_name).first()
+        if application and (application.hidden == 0 or application.owner_id == current_user.id):
+            require.app.read(application)
+            app = {
+                'name': application.name,
+                'short_name': application.short_name,
+                'description': application.description,
+                'creation': application.created[0:10],
+                'completion': application.completion_status()*100,
+                'last_active': application.last_activity()[0:10],
+                'owner_id': application.owner_id,
+                'image': 'ToDo',
+            }
+            if require.app.update(application):
+                return render_template('/applications/actions.html',
+                                       bossa_app=application)
+            else:
+                return render_template('/applications/app.html',
+                                       bossa_app=application)
     except UnboundExecutionError:
         pass
     return render_template('/applications/app.html', bossa_app=None)
