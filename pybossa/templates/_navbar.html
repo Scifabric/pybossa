@@ -17,7 +17,7 @@
                     <ul class="dropdown-menu">
                         {% for app in apps: %}
                         <li {% if active_app == "flickrperson"  %} class="active" {% endif %} >
-                          <a href="/{{app.short_name}}"> {{ app.short_name}}</a>
+                          <a href="/app/{{app.short_name}}/presenter"> {{ app.short_name}}</a>
                         </li>
                         {% endfor %}
                         <li class="divider"></li>

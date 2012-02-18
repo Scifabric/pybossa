@@ -157,3 +157,9 @@ def app_details(short_name):
     except UnboundExecutionError:
         pass
     return render_template('/applications/app.html', bossa_app=None)
+
+@blueprint.route('/<short_name>/presenter')
+def presenter(short_name):
+    app = model.Session.query(model.App).filter(model.App.short_name == short_name).first()
+    return render_template('/applications/presenter.html', app = app)
+
