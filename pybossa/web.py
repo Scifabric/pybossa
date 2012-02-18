@@ -78,14 +78,26 @@ def global_template_context():
         )
 
 @login_manager.user_loader
-def load_user(userid):
+def load_user(username):
     # HACK: this repetition is painful but seems that before_request not yet called
     # TODO: maybe time to use Flask-SQLAlchemy
     dburi = app.config.get('SQLALCHEMY_DATABASE_URI', '')
     engine = model.create_engine(dburi)
     model.set_engine(engine)
-    return model.Session.query(model.User).filter_by(name=userid).first()
+    return model.Session.query(model.User).filter_by(name=username).first()
 
+@app.before_request
+def api_authentication():
+    """ Attempt API authentication on a per-request basis. """
+    apikey = request.args.get('api_key', None)
+    if 'Authorization' in request.headers:
+        apikey = request.headers.get('Authorization')
+    if apikey:
+        dburi = app.config.get('SQLALCHEMY_DATABASE_URI', '')
+        engine = model.create_engine(dburi)
+        model.set_engine(engine)
+        user = model.Session.query(model.User).filter_by(api_key=apikey).first()
+        login_user(user)
 
 @app.route('/')
 def home():

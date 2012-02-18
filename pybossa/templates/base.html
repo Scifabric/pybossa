@@ -28,6 +28,10 @@
   </head>
 
   <body>
+    {% if not current_user.is_anonymous() %}
+    <!-- checkpoint::logged-in::{{current_user.name}} -->
+    {% endif %}
+
 
     {% set active_page = active_page | default('index') -%}
     {% include "_navbar.html" %}
