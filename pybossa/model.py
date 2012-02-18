@@ -24,7 +24,7 @@ import uuid
 from werkzeug import generate_password_hash, check_password_hash
 import flaskext.login
 from sqlalchemy import create_engine
-from sqlalchemy import Integer, Unicode, Float, UnicodeText, Text
+from sqlalchemy import Integer, Unicode, Float, UnicodeText, Text, String
 from sqlalchemy.schema import Table, MetaData, Column, ForeignKey
 from sqlalchemy.orm import relationship, backref, class_mapper
 from sqlalchemy.ext.declarative import declarative_base
@@ -261,7 +261,7 @@ class User(Base, flaskext.login.UserMixin):
     #: full name
     fullname            = Column(Unicode(length=500))
     #: api key
-    api_key             = Column(Text(length=36), default=make_uuid, unique=True)
+    api_key             = Column(String(length=36), default=make_uuid, unique=True)
     passwd_hash         = Column(Unicode(length=254), unique=True)
     #: TODO: find out ... bossa specific
     category            = Column(Integer)
