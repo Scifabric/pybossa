@@ -66,10 +66,10 @@ class APIBase(MethodView):
         :arg self: The class of the object to be inserted
         :returns: The JSON item stored in the DB
         """
-        getattr(require, self.__class__.__name__.lower()).create()
         data = json.loads(request.data)
-        self._update_data(data)
         inst = self.__class__(**data)
+        getattr(require, self.__class__.__name__.lower()).create(inst)
+        self._update_object(inst)
         model.Session.add(inst)
         model.Session.commit()
         return json.dumps(inst.dictize())
@@ -116,7 +116,7 @@ class APIBase(MethodView):
             model.Session.commit()
             return "", 200
     
-    def _update_data(self, data_dict):
+    def _update_object(self, data_dict):
         '''Method to be overriden in inheriting classes which wish to update
         data dict.'''
         pass
@@ -124,8 +124,8 @@ class APIBase(MethodView):
 class ProjectAPI(APIBase):
     __class__ = model.App
 
-    def _update_data(self, data_dict):
-        data_dict['owner_id'] = current_user.id
+    def _update_object(self, obj):
+        obj.owner = current_user
 
 class TaskAPI(APIBase):
     __class__ = model.Task
@@ -133,8 +133,9 @@ class TaskAPI(APIBase):
 class TaskRunAPI(APIBase):
     __class__ = model.TaskRun
 
-    def _update_data(self, data_dict):
-        data_dict['user_id'] = current_user.id
+    def _update_object(self, obj):
+        if not current_user.is_anonymous():
+            obj.user = current_user
 
 def register_api(view, endpoint, url, pk='id', pk_type='int'):
     view_func = view.as_view(endpoint)

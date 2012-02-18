@@ -1,6 +1,6 @@
 from flaskext.login import current_user
 
-def create():
+def create(app=None):
     return not current_user.is_anonymous()
 
 def read(app=None):

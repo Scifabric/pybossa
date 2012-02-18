@@ -42,6 +42,7 @@ class TestAPI:
         out = model.Session.query(model.App).filter_by(name=name).one()
         assert out
         assert_equal(out.short_name, 'xxxx-project'), out
+        assert_equal(out.owner.name, 'tester')
         id_ = out.id
         model.Session.remove()
 
@@ -61,7 +62,6 @@ class TestAPI:
         )
         assert_equal(res.status, '401 UNAUTHORIZED', 'Should not be able to update apps of others')
 
-        print 'HERE@'
         res = self.app.put('/api/app/%s?api_key=%s' % (id_, Fixtures.api_key),
             data=datajson
         )
@@ -69,9 +69,11 @@ class TestAPI:
         out2 = model.Session.query(model.App).get(id_)
         assert_equal(out2.name, data['name'])
 
-    def _test_03_app_task_post(self):
+    def test_03_task_post(self):
+        '''Test Task and TaskRun creation and auth'''
+        app = model.Session.query(model.App).filter_by(short_name=Fixtures.app_name).one()
         data = dict(
-            app_id=out.id,
+            app_id=app.id,
             state=1,
             info='my task data'
             )
@@ -79,11 +81,12 @@ class TestAPI:
         res = self.app.post('/api/task',
             data=data
         )
-        tasks = model.Session.query(model.Task).filter_by(app_id=out.id).all()
+        tasks = model.Session.query(model.Task).filter_by(app_id=app.id).all()
         assert tasks, tasks
 
+        # Create taskrun
         data = dict(
-            app_id=out.id,
+            app_id=app.id,
             task_id=tasks[0].id,
             info='my task result'
             )
@@ -91,9 +94,16 @@ class TestAPI:
         res = self.app.post('/api/taskrun',
             data=data
         )
-        taskrun = model.Session.query(model.TaskRun).filter_by(app_id=out.id).all()
+        taskrun = model.Session.query(model.TaskRun).filter_by(app_id=app.id).all()
         assert taskrun, taskrun
         assert taskrun[0].created, taskrun
-        assert taskrun[0].app_id == out.id
+        assert taskrun[0].app_id == app.id
 
+        # create task run as authenticated user
+        res = self.app.post('/api/taskrun?api_key=%s' % Fixtures.api_key,
+            data=data
+        )
+        taskrun = model.Session.query(model.TaskRun).filter_by(app_id=app.id).all()[-1]
+        assert taskrun.app_id == app.id
+        assert taskrun.user.name == Fixtures.username
 

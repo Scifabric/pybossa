@@ -3,6 +3,8 @@ from flask import abort
 from flaskext.login import current_user
 
 import app
+import task
+import taskrun
 
 class Requirement(object):
     """ Checks a function call and raises an exception if the
