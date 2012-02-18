@@ -19,7 +19,7 @@ from flask import Blueprint, request, jsonify, abort
 from flask.views import View, MethodView
 from flaskext.login import current_user
 
-from pybossa.util import jsonpify 
+from pybossa.util import jsonpify, crossdomain
 import pybossa.model as model
 from pybossa.auth import require
 
@@ -27,6 +27,7 @@ blueprint = Blueprint('api', __name__)
 
 
 @blueprint.route('/')
+@crossdomain(origin='*')
 def index():
     return 'The PyBossa API'
 
@@ -38,6 +39,7 @@ class APIBase(MethodView):
     """
 
     @jsonpify
+    @crossdomain(origin='*')
     def get(self, id):
         """
         Returns an item from the DB with the request.data JSON object or all the
@@ -59,6 +61,7 @@ class APIBase(MethodView):
                 return json.dumps(item.dictize()) 
 
     @jsonpify
+    @crossdomain(origin='*')
     def post(self):
         """
         Adds an item to the DB with the request.data JSON object
@@ -74,6 +77,8 @@ class APIBase(MethodView):
         model.Session.commit()
         return json.dumps(inst.dictize())
 
+    @jsonpify
+    @crossdomain(origin='*')
     def delete(self, id):
         """
         Deletes a single item from the DB
@@ -92,6 +97,8 @@ class APIBase(MethodView):
             model.Session.commit()
             return "", 204
 
+    @jsonpify
+    @crossdomain(origin='*')
     def put(self, id):
         """
         Updates a single item in the DB
