@@ -290,3 +290,17 @@ class User(Base, flaskext.login.UserMixin):
     task_runs = relationship('TaskRun', backref='user')
     apps = relationship('App', lazy='joined', backref='owner')
 
+import random
+def new_task(app_id, user_id=None):
+    q = Session.query(Task
+            ).join(TaskRun
+            ).filter(Task.app_id==app_id)
+    if user_id:
+        q = q.filter(TaskRun.user_id!=user_id)
+    total_remaining = q.count()
+    if q.count() == 0:
+        return None
+    rand = random.randrange(0, total_remaining)
+    out = q[rand]
+    return out
+

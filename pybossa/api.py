@@ -157,3 +157,10 @@ register_api(ProjectAPI, 'api_app', '/app', pk='id', pk_type='int')
 register_api(TaskAPI, 'api_task', '/task', pk='id', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
 
+@jsonpify
+@blueprint.route('/app/<app_id>/newtask')
+def new_task(app_id):
+    # TODO: make this better - for now just any old task ...
+    task = model.new_task(app_id)
+    return json.dumps(task.dictize())
+

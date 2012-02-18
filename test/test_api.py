@@ -107,3 +107,11 @@ class TestAPI:
         assert taskrun.app_id == app.id
         assert taskrun.user.name == Fixtures.username
 
+        # test getting a new taskrun
+        res = self.app.get('/api/app/%s/newtask' % app.id,
+            data=data
+        )
+        assert res
+        task = json.loads(res.data)
+        assert_equal(task['app_id'], app.id)
+        
