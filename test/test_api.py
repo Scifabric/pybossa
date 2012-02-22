@@ -22,8 +22,15 @@ class TestAPI:
         assert len(data) == 1, data
         app = data[0]
         assert app['info']['total'] == 150, data
+    
+    def test_02_task_query(self):
+        res = self.app.get('/api/task')
+        tasks = json.loads(res.data)
+        assert len(tasks) == 1, tasks
+        task = tasks[0]
+        assert task['info']['question'] == 'My random question', task
 
-    def test_02_app_post(self):
+    def test_03_app_post(self):
         name = u'XXXX Project'
         data = dict(
             name=name,
@@ -86,18 +93,91 @@ class TestAPI:
         )
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
-    def test_03_task_post(self):
+    def test_04_task_post(self):
         '''Test Task and TaskRun creation and auth'''
-        app = model.Session.query(model.App).filter_by(short_name=Fixtures.app_name).one()
+        user = model.Session.query(model.User).filter_by(name = Fixtures.username).one()
+        app = model.Session.query(model.App).filter_by(owner_id = user.id).one()
         data = dict(
             app_id=app.id,
-            state=1,
+            state='0',
             info='my task data'
             )
         data = json.dumps(data)
+
+        ########
+        # POST #
+        ########
+
+        # anonymous user
+        # no api-key
         res = self.app.post('/api/task',
             data=data
         )
+        assert_equal(res.status, '403 FORBIDDEN', 'Should not be allowed to create')
+
+        ### real user but not allowed as not owner!
+        res = self.app.post('/api/task?api_key=' + Fixtures.api_key_2,
+            data=data
+        )
+        print res.status
+        assert_equal(res.status, '401 UNAUTHORIZED', 'Should not be able to post tasks for apps of others')
+
+        # now a real user
+        res = self.app.post('/api/task?api_key=' + Fixtures.api_key,
+            data=data,
+        )
+        assert res.data
+        datajson = json.loads(res.data)
+        out = model.Session.query(model.Task).filter_by(id=datajson['id']).one()
+        assert out
+        assert_equal(out.info, 'my task data'), out
+        assert_equal(out.app_id, app.id)
+        id_ = out.id
+
+        ##########
+        # UPDATE #
+        ##########
+
+        data = {
+            'state':'1'
+            }
+        datajson = json.dumps(data)
+
+        ## anonymous
+        res = self.app.put('/api/task/%s' % id_,
+            data=data
+        )
+        assert_equal(res.status, '403 FORBIDDEN', 'Anonymous should not be allowed to update')
+        ### real user but not allowed as not owner!
+        res = self.app.put('/api/task/%s?api_key=%s' % (id_, Fixtures.api_key_2),
+            data=datajson
+        )
+        assert_equal(res.status, '401 UNAUTHORIZED', 'Should not be able to update tasks of others')
+
+        ### real user
+        res = self.app.put('/api/task/%s?api_key=%s' % (id_, Fixtures.api_key),
+            data=datajson
+        )
+        assert_equal(res.status, '200 OK', res.data)
+        out2 = model.Session.query(model.Task).get(id_)
+        assert_equal(out2.state, data['state'])
+
+
+        ##########
+        # DELETE #
+        ##########
+
+        ## anonymous
+        res = self.app.delete('/api/task/%s' % id_)
+        assert_equal(res.status, '403 FORBIDDEN', 'Anonymous should not be allowed to update')
+        ### real user but not allowed as not owner!
+        res = self.app.delete('/api/task/%s?api_key=%s' % (id_, Fixtures.api_key_2))
+        assert_equal(res.status, '401 UNAUTHORIZED', 'Should not be able to update tasks of others')
+
+        #### real user
+        res = self.app.delete('/api/task/%s?api_key=%s' % (id_, Fixtures.api_key))
+        assert_equal(res.status, '204 NO CONTENT', res.data)
+
         tasks = model.Session.query(model.Task).filter_by(app_id=app.id).all()
         assert tasks, tasks
 

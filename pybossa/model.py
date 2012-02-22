@@ -194,6 +194,7 @@ class Task(Base):
     #: in normal use
     app_id              = Column(Integer, ForeignKey('app.id'))
     #: a StateEnum instance
+    # TODO: state should be an integer?
     state               = Column(UnicodeText)
     #: Quorum (number of times this task should be done by different users)
     quorum              = Column(Integer)
