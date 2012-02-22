@@ -69,6 +69,23 @@ class TestAPI:
         out2 = model.Session.query(model.App).get(id_)
         assert_equal(out2.name, data['name'])
 
+        # test delete
+        ## anonymous
+        res = self.app.delete('/api/app/%s' % id_,
+            data=data
+        )
+        assert_equal(res.status, '403 FORBIDDEN', 'Anonymous should not be allowed to delete')
+        ### real user but not allowed as not owner!
+        res = self.app.delete('/api/app/%s?api_key=%s' % (id_, Fixtures.api_key_2),
+            data=datajson
+        )
+        assert_equal(res.status, '401 UNAUTHORIZED', 'Should not be able to delete apps of others')
+
+        res = self.app.delete('/api/app/%s?api_key=%s' % (id_, Fixtures.api_key),
+            data=datajson
+        )
+        assert_equal(res.status, '204 NO CONTENT', res.data)
+
     def test_03_task_post(self):
         '''Test Task and TaskRun creation and auth'''
         app = model.Session.query(model.App).filter_by(short_name=Fixtures.app_name).one()

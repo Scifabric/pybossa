@@ -91,6 +91,7 @@ class APIBase(MethodView):
         <http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.7>`_.
         """
         item = model.Session.query(self.__class__).get(id)
+        getattr(require, self.__class__.__name__.lower()).delete(item)
         if (item == None): abort(404)
         else:
             model.Session.delete(item)
