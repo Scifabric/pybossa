@@ -36,7 +36,6 @@ log = logging.getLogger(__name__)
 Session = scoped_session(sessionmaker())
 
 def set_engine(engine):
-    Session.configure(bind=engine)
     Base.metadata.bind = engine
 
 def make_timestamp():
