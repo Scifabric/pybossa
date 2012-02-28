@@ -292,9 +292,7 @@ class User(Base, flaskext.login.UserMixin):
 
 import random
 def new_task(app_id, user_id=None):
-    q = Session.query(Task
-            ).join(TaskRun
-            ).filter(Task.app_id==app_id)
+    q = Session.query(Task).outerjoin(TaskRun).filter(Task.app_id == app_id)
     if user_id:
         q = q.filter(TaskRun.user_id!=user_id)
     total_remaining = q.count()
