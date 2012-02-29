@@ -23,6 +23,10 @@ class TestAPI:
         assert len(data) == 1, data
         app = data[0]
         assert app['info']['total'] == 150, data
+
+        # The output should have a mime-type: application/json
+        print res.mimetype
+        assert res.mimetype == 'application/json', res
     
     def test_02_task_query(self):
         """ Test Model Task query"""
@@ -32,6 +36,11 @@ class TestAPI:
         task = tasks[0]
         assert task['info']['question'] == 'My random question', task
 
+        # The output should have a mime-type: application/json
+        print res.mimetype
+        assert res.mimetype == 'application/json', res
+
+
     def test_03_taskrun_query(self):
         """Test Model TaskRun query"""
         res = self.app.get('/api/taskrun')
@@ -40,6 +49,10 @@ class TestAPI:
         taskrun = taskruns[0]
         print taskrun
         assert taskrun['info']['answer'] == 'annakarenina', taskrun
+
+        # The output should have a mime-type: application/json
+        print res.mimetype
+        assert res.mimetype == 'application/json', res
 
     def test_04_app_post(self):
         """Test Model App creation and auth"""
@@ -290,6 +303,11 @@ class TestAPI:
         assert res
         task = json.loads(res.data)
         assert_equal(task['app_id'], app.id)
+
+        # The output should have a mime-type: application/json
+        print res.mimetype
+        assert res.mimetype == 'application/json', res
+
 
         # as a real user
         res = self.app.get('/api/app/%s/newtask?api_key=%s' % (app.id, Fixtures.api_key))

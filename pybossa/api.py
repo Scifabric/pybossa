@@ -15,7 +15,7 @@
 
 import json
 
-from flask import Blueprint, request, jsonify, abort
+from flask import Blueprint, request, jsonify, abort, Response
 from flask.views import View, MethodView
 from flaskext.login import current_user
 
@@ -52,13 +52,13 @@ class APIBase(MethodView):
         getattr(require, self.__class__.__name__.lower()).read()
         if id is None:
             items = [ x.dictize() for x in model.Session.query(self.__class__).all() ]
-            return json.dumps(items)
+            return Response(json.dumps(items), mimetype='application/json')
         else:
             item = model.Session.query(self.__class__).get(id)
             if item is None:
                 abort(404)
             else:
-                return json.dumps(item.dictize()) 
+                return Response(json.dumps(item.dictize()), mimetype='application/json')
 
     @jsonpify
     @crossdomain(origin='*')
@@ -170,5 +170,5 @@ register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
 def new_task(app_id):
     # TODO: make this better - for now just any old task ...
     task = model.new_task(app_id)
-    return json.dumps(task.dictize())
+    return Response(json.dumps(task.dictize()), mimetype="application/json")
 
