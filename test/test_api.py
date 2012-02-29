@@ -25,7 +25,6 @@ class TestAPI:
         assert app['info']['total'] == 150, data
 
         # The output should have a mime-type: application/json
-        print res.mimetype
         assert res.mimetype == 'application/json', res
     
     def test_02_task_query(self):
@@ -37,7 +36,6 @@ class TestAPI:
         assert task['info']['question'] == 'My random question', task
 
         # The output should have a mime-type: application/json
-        print res.mimetype
         assert res.mimetype == 'application/json', res
 
 
@@ -51,7 +49,6 @@ class TestAPI:
         assert taskrun['info']['answer'] == 'annakarenina', taskrun
 
         # The output should have a mime-type: application/json
-        print res.mimetype
         assert res.mimetype == 'application/json', res
 
     def test_04_app_post(self):
@@ -305,7 +302,6 @@ class TestAPI:
         assert_equal(task['app_id'], app.id)
 
         # The output should have a mime-type: application/json
-        print res.mimetype
         assert res.mimetype == 'application/json', res
 
 
