@@ -127,10 +127,6 @@ def home():
     return render_template('/home/index.html', stats=stats)
 
 
-@app.route('/faq')
-def faq():
-    return render_template('/home/faq.html')
-
 @app.route('/flickrperson')
 def flickrperson():
     return render_template('/flickrperson/example.html')
