@@ -217,7 +217,7 @@ class TestAPI:
             )
         datajson = json.dumps(data)
     
-        # anonymouse user
+        # anonymous user
         # any user can create a TaskRun
         res = self.app.post('/api/taskrun',
             data=datajson
@@ -250,7 +250,7 @@ class TestAPI:
         res = self.app.put('/api/taskrun/%s' % _id_anonymous, data = datajson)
         taskrun = model.Session.query(model.TaskRun).filter_by(id = _id_anonymous).one()
         assert taskrun, taskrun
-        print res.status
+        assert_equal (taskrun.user, None)
         assert_equal(res.status, '403 FORBIDDEN', 'Should not be allowed to update')
         # real user but not allowed as not owner!
         res = self.app.put('/api/taskrun/%s?api_key=%s' % (_id, Fixtures.api_key_2), data = datajson)
@@ -263,6 +263,7 @@ class TestAPI:
         assert_equal(res.status, '200 OK', res.data)
         out2 = model.Session.query(model.TaskRun).get(_id)
         assert_equal(out2.info,data['info'])
+        assert_equal(out2.user.name, Fixtures.username)
 
         ##########
         # DELETE #
