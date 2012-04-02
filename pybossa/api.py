@@ -144,6 +144,8 @@ class TaskRunAPI(APIBase):
     def _update_object(self, obj):
         if not current_user.is_anonymous():
             obj.user = current_user
+        else:
+            obj.user_ip = request.remote_addr
 
 def register_api(view, endpoint, url, pk='id', pk_type='int'):
     view_func = view.as_view(endpoint)
