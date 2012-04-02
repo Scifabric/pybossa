@@ -7,8 +7,11 @@ def read(taskrun=None):
     return True
 
 def update(taskrun):
-    if not current_user.is_anonymous() and taskrun.user == current_user:
-        return True
+    if not current_user.is_anonymous() and taskrun.user != None:
+        if taskrun.user.id == current_user.id:
+            return True
+        else:
+            return False
     else:
         return False
 
