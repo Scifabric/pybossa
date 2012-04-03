@@ -1,0 +1,3 @@
+[submodule "pybossa/static/js/pybossa"]
+	path = pybossa/static/js/pybossa
+	url = git@github.com:PyBossa/pybossa.js.git
