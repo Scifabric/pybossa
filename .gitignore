@@ -3,6 +3,7 @@
 *.pyc
 *.db
 settings_local.py
+env/
 doc/_build
 # epio stuff
 epio.ini
