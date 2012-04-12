@@ -37,25 +37,10 @@ class AppForm(Form):
 
 @blueprint.route('/')
 def apps():
-    applications = []
-    try: # in case we have not set up database yet
-        if require.app.read():
-            bossa_apps = model.Session.query(model.App).filter(model.App.hidden == 0)
-            for bossa_app in bossa_apps:
-                app = {
-                    'name': bossa_app.name,
-                    'short_name': bossa_app.short_name,
-                    'description': bossa_app.description[0:100],
-                    'creation': bossa_app.created[0:10],
-                    'last_active': bossa_app.last_activity()[0:10],
-                    'image': 'ToDo',
-                }
-                applications.append(app)
-        else:
-            abort(403)
-    except UnboundExecutionError:
-        pass
-    return render_template('/applications/list.html', bossa_apps=applications)
+    if require.app.read():
+        return render_template('/applications/list.html')
+    else:
+        abort(403)
 
 @blueprint.route('/new', methods=['GET', 'POST'])
 def new():
