@@ -4,6 +4,7 @@
 {% from "_formhelpers.html" import render_field %}
 
   <form method="post" action="{{url_for('account.register')}}">
+      {{ render_field(form.fullname, placeholder="my full name") }}
       {{ render_field(form.username, placeholder="myusername") }}
       {{ render_field(form.email_addr, placeholder="hello@mywebsite.org") }}
       {{ render_field(form.password, placeholder="********") }}

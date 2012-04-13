@@ -15,17 +15,13 @@
     <link rel="stylesheet" type="text/css" href="/static/css/style.css">
 
     <!-- Bootstrap styles -->
-    <link rel="stylesheet" href="/static/vendor/bootstrap/2.0.0/bootstrap.min.css">
-    <link rel="stylesheet" href="/static/vendor/bootstrap/2.0.0/bootstrap-responsive.min.css">
+    <link rel="stylesheet" href="/static/vendor/bootstrap/2.0.2/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/vendor/bootstrap/2.0.2/bootstrap-responsive.min.css">
 
     <!-- Le javascript -->
     <script type="text/javascript" src="/static/vendor/jquery.js"></script>
-    <script type="text/javascript" src="/static/vendor/bootstrap/2.0.0/bootstrap-alert.js"></script>
-    <script type="text/javascript" src="/static/vendor/bootstrap/2.0.0/bootstrap-dropdown.js"></script>
-    <script type="text/javascript" src="/static/vendor/bootstrap/2.0.0/bootstrap-tooltip.js"></script>
-    <script type="text/javascript" src="/static/vendor/bootstrap/2.0.0/bootstrap-popover.js"></script>
-    <script type="text/javascript" src="/static/vendor/bootstrap/2.0.0/bootstrap-collapse.js"></script>
-  </head>
+    <script type="text/javascript" src="/static/vendor/bootstrap/2.0.2/bootstrap.js"></script>
+ </head>
 
   <body>
     {% if not current_user.is_anonymous() %}
@@ -34,6 +30,7 @@
 
 
     {% set active_page = active_page | default('index') -%}
+    {% set active_app  = active_app | default('none') -%}
     {% include "_navbar.html" %}
 
     <div class="container">
