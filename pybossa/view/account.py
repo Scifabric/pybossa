@@ -58,7 +58,8 @@ def logout():
 
 
 class RegisterForm(Form):
-    username = TextField('Username', [validators.Length(min=3, max=25)])
+    fullname = TextField('Full name', [validators.Length(min=3, max=35)])
+    username = TextField('User name', [validators.Length(min=3, max=25)])
     email_addr = TextField('Email Address', [validators.Length(min=3, max=35),
                                         Unique(model.Session, model.User,
                                                model.User.email_addr)])
@@ -74,6 +75,7 @@ def register():
     form = RegisterForm(request.form, csrf_enabled=False)
     if request.method == 'POST' and form.validate():
         account = model.User(
+            fullname=form.fullname.data,
             name=form.username.data,
             email_addr=form.email_addr.data
             )

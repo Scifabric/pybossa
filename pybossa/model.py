@@ -31,6 +31,8 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.types import MutableType, TypeDecorator
 
+from pybossa.util import pretty_date
+
 log = logging.getLogger(__name__)
 
 Session = scoped_session(sessionmaker())
@@ -158,7 +160,7 @@ class App(Base):
     #: `Task`s for this app.
     tasks = relationship('Task', backref='app')
     #: `TaskRun`s for this app.
-    task_runs = relationship('TaskRun', backref='app',
+    task_runs = relationship('TaskRun', lazy='joined', backref='app',
                              order_by='TaskRun.finish_time.desc()')
 
     #: Percentage of completed tasks based on Task.state 
@@ -175,7 +177,8 @@ class App(Base):
 
     def last_activity(self):
         if (len(self.task_runs) >= 1):
-            return self.task_runs[0].finish_time
+            return pretty_date(self.task_runs[0].finish_time)
+            #return self.task_runs[0].finish_time
         else:
             return "None"
 

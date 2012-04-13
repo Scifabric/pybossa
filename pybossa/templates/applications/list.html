@@ -20,7 +20,7 @@
             </ul>
         </div>
         <div id="data" class="span4">
-          <h2><a href="/app/{{ app.short_name }}/presenter">{{ app.name }}</a></h2>
+          <h2>{{ app.name }}</h2>
           <ul>
             <li><strong>Description</strong>: {{ app.description }}</li>
             <li><strong>Creation Date</strong>: {{ app.creation }}</li>
@@ -29,13 +29,11 @@
             {% endif %}
             {% if app.owner.id == current_user.id %}
             <li><strong>Owner</strong>: Me</li>
-            </ul>
-            <a class="btn btn-info" href="update/{{app.id}}"><i class="icon-edit icon-white"></i> Edit the application</a>
-            <a class="btn btn-danger" href="delete/{{app.id}}"><i class="icon-trash icon-white"></i> Delete the application</a>
             {% else %}
             <li><strong>Owner</strong>: {{ app.owner.name }}</li>
-            </ul>
             {% endif %}
+            </ul>
+            <a class="btn btn-large btn-primary" href="{{ app.short_name }}/presenter">Do some tasks!</a>
         </div>
       </div>
     </div>
