@@ -6,15 +6,37 @@
 <div class="page-header">
   <h1>Available Projects</h1>
 </div>
-{% for app in bossa_apps %}
-  <h2><a href="/app/{{app['short_name']}}">{{ app['name'] }}</a></h2>
-  <ul>
-    <li>Description: {{ app['description'] }}</li>
-    <li>Creation Date: {{ app['creation'] }}</li>
-    {% if app.last_active != "None" %}
-    <li>Last Activity: {{ app['last_active'] }}</li>
-    {% endif %}
-  </ul>
+{% for app in apps %}
+<div id="app" class="row">
+    <div id="buttons" class="span6 well">
+      <div id="img" class="row">
+        <div class="span2">
+            <ul class="thumbnails">
+                <li>
+                    <a href="#" class="thumbnail">
+                        <img src="http://placehold.it/120x120">
+                    </a>
+                </li>
+            </ul>
+        </div>
+        <div id="data" class="span4">
+          <h2>{{ app.name }}</h2>
+          <ul>
+            <li><strong>Description</strong>: {{ app.description }}</li>
+            <li><strong>Creation Date</strong>: {{ app.creation }}</li>
+            {% if app.last_active != "None" %}
+            <li><strong>Last Activity</strong>: {{ app.last_active }}</li>
+            {% endif %}
+            {% if app.owner.id == current_user.id %}
+            <li><strong>Owner</strong>: Me</li>
+            {% else %}
+            <li><strong>Owner</strong>: {{ app.owner.name }}</li>
+            {% endif %}
+            </ul>
+            <a class="btn btn-large btn-primary" href="{{ app.short_name }}/presenter">Do some tasks!</a>
+        </div>
+      </div>
+    </div>
+</div>
 {% endfor %}
-
 {% endblock %}
