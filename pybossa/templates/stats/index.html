@@ -11,7 +11,9 @@
                 {% for app in apps %}
                   <h4>{{ app.name }}</h4>
                     <ul>
-                      {% if app.last_active != "None" %}
+                      {% if app.last_activity() == "None" %}
+                      <li><strong>Updated</strong>: Not yet</li>
+                      {% else %}
                       <li><strong>Updated</strong>: {{ app.last_activity() }}</li>
                       {% endif %}
                       {% if app.owner.id == current_user.id %}
@@ -26,7 +28,7 @@
             <div class="span5 well">
                 <h2>Most active volunteers</h2>
                 {% for user in users %}
-                  <img src="{{ current_user.email_addr | gravatar(size=30)}}">
+                  <img src="{{ user.email_addr | gravatar(size=30)}}">
                   <strong>{{ user.fullname }}</strong>
                     <ul>
                         <li>Total submitted tasks: {{ user.task_runs | length }}</li>

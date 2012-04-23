@@ -145,16 +145,6 @@ def app_details(short_name):
         application = model.Session.query(model.App).filter(model.App.short_name == short_name).first()
         if application and (application.hidden == 0 or application.owner_id == current_user.id):
             require.app.read(application)
-            app = {
-                'name': application.name,
-                'short_name': application.short_name,
-                'description': application.description,
-                'creation': application.created[0:10],
-                'completion': application.completion_status()*100,
-                'last_active': application.last_activity()[0:10],
-                'owner_id': application.owner_id,
-                'image': 'ToDo',
-            }
             if require.app.update(application):
                 return render_template('/applications/actions.html',
                                         title = "Application: %s" % application.name, 

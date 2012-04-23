@@ -97,14 +97,14 @@ class TestWeb:
 
     # Tests
     def test_stats(self):
-        """Make sure the leaderboard or stats page works"""
+        """Test WEB leaderboard or stats page works"""
         res = self.app.get("/stats", follow_redirects = True)
         assert self.html_title("Leaderboard") in res.data
         assert "Most active applications" in res.data
         assert "Most active volunteers" in res.data
 
     def test_register(self):
-        """Make sure user registering works"""
+        """Test WEB register user works"""
         res = self.register(method="GET")
         # The output should have a mime-type: text/html
         assert res.mimetype == 'text/html', res
@@ -156,7 +156,7 @@ class TestWeb:
         assert "Passwords must match" in res.data
     
     def test_login_logout(self):
-        """Make sure logging in and logging out works"""
+        """Test WEB logging in and logging out works"""
         res = self.register()
         # Log out as the registration already logs in the user
         res = self.logout()
@@ -164,6 +164,28 @@ class TestWeb:
         res = self.login(method="GET")
         assert self.html_title("Login") in res.data
         assert "Login" in res.data
+
+        res = self.login(username='')
+        assert "Please correct the errors" in  res.data
+        assert "The username is required" in res.data
+
+        res = self.login(password='')
+        assert "Please correct the errors" in  res.data
+        assert "You must provide a password" in res.data
+
+        res = self.login(username='', password='')
+        assert "Please correct the errors" in  res.data
+        assert "The username is required" in res.data
+        assert "You must provide a password" in res.data
+
+        res = self.login(username='wrongusername')
+        assert "Incorrect email/password" in  res.data
+
+        res = self.login(password='wrongpassword')
+        assert "Incorrect email/password" in  res.data
+
+        res = self.login(username='wrongusername', password='wrongpassword')
+        assert "Incorrect email/password" in  res.data
 
         res = self.login()
         assert self.html_title() in res.data
@@ -197,13 +219,13 @@ class TestWeb:
         assert "API key" in res.data
 
     def test_applications(self):
-        """Make sure applications web interface works"""
+        """Test WEB applications interface works"""
         res = self.app.get('/app/')
         assert self.html_title("Applications") in res.data
         assert "Available Projects" in res.data
 
     def test_create_application(self):
-        """Make sure create an application works"""
+        """Test WEB create an application works"""
         # Create an app as an anonymous user
         res = self.new_application(method="GET")
         assert self.html_title("Login") in res.data
@@ -227,7 +249,7 @@ class TestWeb:
         assert "Application created!" in res.data
 
     def test_update_application(self):
-        """Make sure update an application works"""
+        """Test WEB update application works"""
         self.register()
         self.new_application()
 
@@ -245,7 +267,7 @@ class TestWeb:
         assert "Application updated!" in res.data
         
     def test_delete_application(self):
-        """Make sure deleting an application works"""
+        """Test WEB delete application works"""
         self.register()
         self.new_application()
         res = self.delete_application(method="GET")

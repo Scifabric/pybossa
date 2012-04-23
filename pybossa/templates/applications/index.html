@@ -24,8 +24,8 @@
           <ul>
             <li><strong>Description</strong>: {{ app.description }}</li>
             <li><strong>Creation Date</strong>: {{ app.creation }}</li>
-            {% if app.last_active != "None" %}
-            <li><strong>Last Activity</strong>: {{ app.last_active }}</li>
+            {% if app.last_activity() != "None" %}
+            <li><strong>Last Activity</strong>: {{ app.last_activity() }}</li>
             {% endif %}
             {% if app.owner.id == current_user.id %}
             <li><strong>Owner</strong>: Me</li>

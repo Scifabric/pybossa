@@ -30,8 +30,8 @@ def index():
     return render_template('account/index.html', accounts = accounts, title = "Community")
     
 class LoginForm(Form):
-    username = TextField('Username', [validators.Required()])
-    password = PasswordField('Password', [validators.Required()])
+    username = TextField('Username', [validators.Required(message="The username is required")])
+    password = PasswordField('Password', [validators.Required(message="You must provide a password")])
 
 @blueprint.route('/login', methods=['GET', 'POST'])
 def login():
@@ -46,8 +46,9 @@ def login():
             return redirect(request.args.get("next") or url_for("home"))
         else:
             flash('Incorrect email/password', 'error')
+
     if request.method == 'POST' and not form.validate():
-        flash('Invalid form', 'error')
+        flash('Please correct the errors', 'error')
     return render_template('account/login.html', title = "Login", form=form)
 
 
