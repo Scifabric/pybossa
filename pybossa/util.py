@@ -44,7 +44,11 @@ class Unique(object):
 
     def __call__(self, form, field):
         check = self.session.query(self.model).filter(self.field == field.data).first()
-        if check:
+        if 'id' in form:
+            id = form.id.data
+        else:
+            id = None
+        if check and (id is None or id != check.id):
             raise ValidationError(self.message)
 
 # from http://flask.pocoo.org/snippets/56/

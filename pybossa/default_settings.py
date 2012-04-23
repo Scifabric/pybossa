@@ -23,6 +23,7 @@ SECRET = 'foobar'
 SECRET_KEY = 'my-session-secret'
 
 ## project configuration
+BRAND = 'PyBossa'
 TITLE = 'PyBossa'
 COPYRIGHT = 'Set Your Institution'
 DESCRIPTION = 'Set the description in your config'

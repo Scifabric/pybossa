@@ -17,7 +17,7 @@ class TestAPI:
         model.rebuild_db()
 
     def test_01_app_query(self):
-        """ Test Model App query"""
+        """ Test API App query"""
         res = self.app.get('/api/app')
         data = json.loads(res.data)
         assert len(data) == 1, data
@@ -28,7 +28,7 @@ class TestAPI:
         assert res.mimetype == 'application/json', res
     
     def test_02_task_query(self):
-        """ Test Model Task query"""
+        """ Test API Task query"""
         res = self.app.get('/api/task')
         tasks = json.loads(res.data)
         assert len(tasks) == 1, tasks
@@ -40,7 +40,7 @@ class TestAPI:
 
 
     def test_03_taskrun_query(self):
-        """Test Model TaskRun query"""
+        """Test API TaskRun query"""
         res = self.app.get('/api/taskrun')
         taskruns = json.loads(res.data)
         assert len(taskruns) == 1, taskruns
@@ -52,7 +52,7 @@ class TestAPI:
         assert res.mimetype == 'application/json', res
 
     def test_04_app_post(self):
-        """Test Model App creation and auth"""
+        """Test API App creation and auth"""
         name = u'XXXX Project'
         data = dict(
             name=name,
@@ -116,7 +116,7 @@ class TestAPI:
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
     def test_05_task_post(self):
-        '''Test Model Task creation and auth'''
+        '''Test API Task creation and auth'''
         user = model.Session.query(model.User).filter_by(name = Fixtures.username).one()
         app = model.Session.query(model.App).filter_by(owner_id = user.id).one()
         data = dict(
@@ -204,7 +204,7 @@ class TestAPI:
         assert tasks, tasks
 
     def test_06_taskrun_post(self):
-        """Test Model TaskRun creation and auth"""
+        """Test API TaskRun creation and auth"""
         # user = model.Session.query(model.User).filter_by(name = Fixtures.username).one()
         app = model.Session.query(model.App).filter_by(short_name = Fixtures.app_name ).one()
         tasks = model.Session.query(model.Task).filter_by(app_id = app.id)
@@ -290,7 +290,7 @@ class TestAPI:
 
 
     def test_taskrun_newtask(self):
-        """Test App.new_task method and authentication"""
+        """Test API App.new_task method and authentication"""
         app = model.Session.query(model.App).filter_by(short_name = Fixtures.app_name ).one()
         tasks = model.Session.query(model.Task).filter_by(app_id = app.id)
 

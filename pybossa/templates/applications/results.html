@@ -1,0 +1,9 @@
+{% extends "/base.html" %}
+{% set active_page = "applications"  %}
+{% set active_app = app.short_name  %}
+
+{% block content %}
+
+{{ app.info.task_result|safe}}
+
+{% endblock %}

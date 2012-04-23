@@ -27,6 +27,7 @@ import pybossa.model as model
 from pybossa.api import blueprint as api
 from pybossa.view.account import blueprint as account
 from pybossa.view.applications import blueprint as applications
+from pybossa.view.stats import blueprint as stats
 
 logger = logging.getLogger('pybossa')
 
@@ -34,6 +35,7 @@ logger = logging.getLogger('pybossa')
 app.register_blueprint(api, url_prefix='/api')
 app.register_blueprint(account, url_prefix='/account')
 app.register_blueprint(applications, url_prefix='/app')
+app.register_blueprint(stats, url_prefix='/stats')
 
 @app.before_request
 def bind_db_engine():
@@ -69,6 +71,7 @@ def remove_db_session():
 @app.context_processor
 def global_template_context():
     return dict(
+        brand = app.config['BRAND'],
         title = app.config['TITLE'],
         copyright = app.config['COPYRIGHT'],
         description = app.config['DESCRIPTION'],

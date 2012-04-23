@@ -7,6 +7,7 @@ class TestModel:
         model.rebuild_db()
 
     def test_all(self):
+        """Test MODEL works"""
         username = u'test-user-1'
         user = model.User(name=username)
         info = {
@@ -62,6 +63,7 @@ class TestModel:
         assert task
 
     def test_user(self):
+        """Test MODEL User works"""
         user = model.User(name=u'test-user', email_addr=u'test@xyz.org')
         model.Session.add(user)
         model.Session.commit()
