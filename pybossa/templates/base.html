@@ -2,7 +2,11 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
+    {% if brand == title %}
     <title>{{ title }}</title>
+    {% else %}
+    <title>{{ brand }} &middot; {{ title }}</title>
+    {% endif %}
     <meta name="description" content="PyBossa - ...">
     <meta name="author" content="">
 

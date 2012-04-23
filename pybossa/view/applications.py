@@ -15,7 +15,7 @@
 
 from flask import Blueprint, request, url_for, flash, redirect, abort
 from flask import render_template
-from flaskext.wtf import Form, TextField, BooleanField, validators
+from flaskext.wtf import Form, IntegerField, TextField, BooleanField, validators, HiddenInput
 from flaskext.login import login_required, current_user
 from sqlalchemy.exc import UnboundExecutionError
 
@@ -26,23 +26,34 @@ from pybossa.auth import require
 blueprint = Blueprint('app', __name__)
 
 class AppForm(Form):
-    name = TextField('Name', [validators.Required(), Unique(model.Session,
-                                                             model.App,
-                                                             model.App.name)])
+    id = IntegerField(label=None, widget=HiddenInput())
+    name = TextField('Name', [validators.Required(), 
+                              Unique(
+                                  model.Session, 
+                                  model.App,
+                                  model.App.name, 
+                                  message = "Name is already taken.")])
     short_name = TextField('Short Name', [validators.Required(),
-                                          Unique(model.Session, model.App,
-                                                 model.App.short_name)])
-    description = TextField('Description', [validators.Required()])
+                                          Unique(
+                                              model.Session, 
+                                              model.App,
+                                              model.App.short_name, 
+                                              message = "Short Name is already taken.")
+                                          ])
+    description = TextField('Description', [validators.Required(
+                                                        message="You must provide a description.")
+                                           ])
     hidden = BooleanField('Hide?')
 
 @blueprint.route('/')
 def apps():
     if require.app.read():
-        return render_template('/applications/list.html')
+        return render_template('/applications/index.html', title = "Applications")
     else:
         abort(403)
 
 @blueprint.route('/new', methods=['GET', 'POST'])
+@login_required
 def new():
     if require.app.create():
         form = AppForm(request.form, csrf_enabled=False)
@@ -57,58 +68,71 @@ def new():
             model.Session.add(application)
             model.Session.commit()
             flash('Application created!','success')
-            return redirect('app')
+            return redirect('/app/' + application.short_name)
         if request.method == 'POST' and not form.validate():
             flash('Please correct the errors', 'error')
-        return render_template('applications/new.html', form = form)
+        return render_template('applications/new.html', title = "New Application", form = form)
     else:
         abort(403)
 
-@blueprint.route('/delete/<id>')
-def delete(id):
-    application = model.Session.query(model.App).filter(model.App.id == id).first()
+@blueprint.route('/<short_name>/delete', methods = ['GET', 'POST'])
+@login_required
+def delete(short_name):
+    application = model.Session.query(model.App).filter(model.App.short_name == short_name).first()
     if require.app.delete(application):
-        try: 
-            model.Session.delete(application)
-            model.Session.commit()
-            flash('Application deleted!', 'success')
-            return redirect(url_for('account.profile'))
-        except UnboundExecutionError:
-            pass
+            if request.method == 'GET':
+                return render_template('/applications/delete.html', 
+                                        title="Delete Application: %s" % application.name,
+                                        bossa_app = application)
+            else:
+                try: 
+                    model.Session.delete(application)
+                    model.Session.commit()
+                    flash('Application deleted!', 'success')
+                    return redirect(url_for('account.profile'))
+                except UnboundExecutionError:
+                    pass
     else:
         abort(403)
 
-@blueprint.route('/update/<id>', methods=['GET', 'POST'])
-def update(id):
+@blueprint.route('/<short_name>/update', methods=['GET', 'POST'])
+@login_required
+def update(short_name):
     try:
-        application = model.Session.query(model.App).filter(model.App.id == id).first()
+        application = model.Session.query(model.App).filter(model.App.short_name == short_name).first()
         if require.app.update(application) :
             if request.method == 'GET':
                 form = AppForm(obj=application, csrf_enabled=False)
                 form.populate_obj(application)
-                return render_template('/applications/update.html', form = form,
-                                       bossa_app = application)
+                return render_template('/applications/update.html', 
+                                        title = "Update the application: %s" % application.name,
+                                        form = form,
+                                        bossa_app = application)
 
             if request.method == 'POST':
                 form = AppForm(request.form, csrf_enabled=False)
                 if form.validate():
+                    if form.hidden.data:
+                        hidden = 1
+                    else:
+                        hidden = 0
                     new_application = model.App(
+                        id = form.id.data,
                         name = form.name.data,
                         short_name = form.short_name.data,
                         description = form.description.data,
-                        hidden = form.hidden.data,
+                        hidden = hidden,
                         owner_id = current_user.id,
                         )
-                    application = model.Session.query(model.App).filter(model.App.id == id).first()
-                    new_application.id = application.id
-
+                    application = model.Session.query(model.App).filter(model.App.short_name == short_name).first()
                     model.Session.merge(new_application)
                     model.Session.commit()
                     flash('Application updated!', 'success')
-                    return redirect(url_for('account.profile'))
+                    return redirect(url_for('.app_details', short_name = new_application.short_name))
                 else:
                     flash('Please correct the errors', 'error')
                     return render_template('/applications/update.html', form = form, 
+                                            title = "Edit the application",
                                             bossa_app = application)
         else:
             abort(403)
@@ -133,10 +157,11 @@ def app_details(short_name):
             }
             if require.app.update(application):
                 return render_template('/applications/actions.html',
-                                       bossa_app=application)
+                                        title = "Application: %s" % application.name, 
+                                        bossa_app=application)
             else:
                 return render_template('/applications/app.html',
-                                       bossa_app=application)
+                                        bossa_app=application)
     except UnboundExecutionError:
         pass
     return render_template('/applications/app.html', bossa_app=None)

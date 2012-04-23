@@ -27,7 +27,7 @@ blueprint = Blueprint('account', __name__)
 @blueprint.route('/')
 def index():
     accounts = model.Session.query(model.User).all()
-    return render_template('account/index.html', accounts = accounts)
+    return render_template('account/index.html', accounts = accounts, title = "Community")
     
 class LoginForm(Form):
     username = TextField('Username', [validators.Required()])
@@ -48,7 +48,7 @@ def login():
             flash('Incorrect email/password', 'error')
     if request.method == 'POST' and not form.validate():
         flash('Invalid form', 'error')
-    return render_template('account/login.html', form=form)
+    return render_template('account/login.html', title = "Login", form=form)
 
 
 @blueprint.route('/logout')
@@ -90,9 +90,9 @@ def register():
         return redirect(url_for('home'))
     if request.method == 'POST' and not form.validate():
         flash('Please correct the errors', 'error')
-    return render_template('account/register.html', form=form)
+    return render_template('account/register.html', title="Register", form=form)
 
 @blueprint.route('/profile', methods = ['GET'])
 @login_required
 def profile():
-    return render_template('account/profile.html')
+    return render_template('account/profile.html', title="Profile")
