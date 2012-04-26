@@ -23,14 +23,15 @@ from pybossa.util import Unique
 
 blueprint = Blueprint('account', __name__)
 
+
 @blueprint.route('/')
 def index():
     accounts = model.Session.query(model.User).all()
-    return render_template('account/index.html', accounts = accounts)
+    return render_template('account/index.html', accounts = accounts, title = "Community")
     
 class LoginForm(Form):
-    username = TextField('Username', [validators.Required()])
-    password = PasswordField('Password', [validators.Required()])
+    username = TextField('Username', [validators.Required(message="The username is required")])
+    password = PasswordField('Password', [validators.Required(message="You must provide a password")])
 
 @blueprint.route('/login', methods=['GET', 'POST'])
 def login():
@@ -41,13 +42,14 @@ def login():
         user = model.User.by_name(username)
         if user and user.check_password(password):
             login_user(user, remember=True)
-            flash('Welcome back', 'success')
-            return redirect(url_for('home'))
+            flash("Welcome back %s" % user.fullname, 'success')
+            return redirect(request.args.get("next") or url_for("home"))
         else:
             flash('Incorrect email/password', 'error')
+
     if request.method == 'POST' and not form.validate():
-        flash('Invalid form', 'error')
-    return render_template('account/login.html', form=form)
+        flash('Please correct the errors', 'error')
+    return render_template('account/login.html', title = "Login", form=form)
 
 
 @blueprint.route('/logout')
@@ -58,13 +60,15 @@ def logout():
 
 
 class RegisterForm(Form):
-    fullname = TextField('Full name', [validators.Length(min=3, max=35)])
-    username = TextField('User name', [validators.Length(min=3, max=25)])
-    email_addr = TextField('Email Address', [validators.Length(min=3, max=35),
-                                        Unique(model.Session, model.User,
-                                               model.User.email_addr)])
+    fullname = TextField('Full name', [validators.Length(min=3, max=35, message="Full name must be between 3 and 35 characters long")])
+    username = TextField('User name', [validators.Length(min=3, max=35, message="User name must be between 3 and 35 characters long"),
+                                       Unique(model.Session, model.User, model.User.name, message="The user name is already taken")
+                                      ])
+    email_addr = TextField('Email Address', [validators.Length(min=3, max=35, message="Email must be between 3 and 35 characters long"),
+                                             validators.Email(),
+                                             Unique(model.Session, model.User, model.User.email_addr, message="Email is already taken")])
     password = PasswordField('New Password', [
-        validators.Required(),
+        validators.Required(message="Password cannot be empty"),
         validators.EqualTo('confirm', message='Passwords must match')
     ])
     confirm = PasswordField('Repeat Password')
@@ -87,9 +91,9 @@ def register():
         return redirect(url_for('home'))
     if request.method == 'POST' and not form.validate():
         flash('Please correct the errors', 'error')
-    return render_template('account/register.html', form=form)
+    return render_template('account/register.html', title="Register", form=form)
 
-@blueprint.route('/profile', methods = ['GET', 'POST'])
+@blueprint.route('/profile', methods = ['GET'])
 @login_required
 def profile():
-    return render_template('account/profile.html')
+    return render_template('account/profile.html', title="Profile")

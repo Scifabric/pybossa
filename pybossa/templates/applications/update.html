@@ -5,17 +5,21 @@
 {% block content %}
 {% from "_formhelpers.html" import render_field %}
 <div class="row">
-  <div class="span8 offset4">
-    <h3>Update the application:</h3>
-    <form method="post" action="/app/update/{{bossa_app.id}}">
-      {{ render_field(form.name, class_="input-xlarge", placeholder="The name of the application") }}
-      {{ render_field(form.short_name, class_="input-xlarge", placeholder="Short name or slug for the application") }}
-      {{ render_field(form.description, class_="input-xlarge", placeholder="Give some details about the application")}}
-      {{ render_field(form.hidden)}}
-      <div class="actions">
-        <input type="submit" value="Update" class="btn btn-primary" />
-        <input type="reset" value="Cancel" class="btn" />
-      </div>
+  <div class="span4 offset3">
+    <legend>Update the application</legend>
+    <form class="form-horizontal" method="post" action="/app/{{bossa_app.short_name}}/update">
+      <fieldset>
+        {{form.id}}
+        {{ render_field(form.name, class_="input-xlarge", placeholder="The name of the application") }}
+        {{ render_field(form.short_name, class_="input-xlarge", placeholder="Short name or slug for the application") }}
+        {{ render_field(form.description, class_="input-xlarge", placeholder="Give some details about the application")}}
+        {{ render_field(form.hidden)}}
+        <div class="form-actions">
+          <input type="submit" value="Save the changes" class="btn btn-primary" />
+          <input type="reset" value="Cancel" class="btn" />
+        </div>
+      </fieldset>
     </form>
+  </div>
 </div>
 {% endblock %}

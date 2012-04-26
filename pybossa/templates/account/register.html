@@ -3,16 +3,18 @@
 {% block content %}
 {% from "_formhelpers.html" import render_field %}
 
-  <form method="post" action="{{url_for('account.register')}}">
+  <legend>Create an account</legend>
+  <form method="post" class="form-horizontal" action="{{url_for('account.register')}}">
+      <fieldset>
       {{ render_field(form.fullname, placeholder="my full name") }}
       {{ render_field(form.username, placeholder="myusername") }}
       {{ render_field(form.email_addr, placeholder="hello@mywebsite.org") }}
       {{ render_field(form.password, placeholder="********") }}
       {{ render_field(form.confirm, placeholder="********") }}
-    <div class="actions">
-      <input type="submit" value="Signup" class="btn primary" />
-      <input type="reset" value="Cancel" class="btn" />
-    </div>
+      <div class="form-actions">
+        <input type="submit" value="Create an account" class="btn btn-primary btn-large" />
+        <input type="reset" value="Cancel" class="btn" />
+      </div>
+      </fieldset>
   </form>
 {% endblock %}
-

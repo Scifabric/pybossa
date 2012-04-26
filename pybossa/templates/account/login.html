@@ -2,11 +2,11 @@
 
 {% block content %}
 {% from "_formhelpers.html" import render_field %}
-  <form method="post" action="">
+  <form method="post" class="form-horizontal" action="">
       {{ render_field(form.username, placeholder="your username") }}
       {{ render_field(form.password, placeholder="********") }}
-    <div class="actions">
-      <input type="submit" value="Login" class="btn primary" />
+    <div class="form-actions">
+      <input type="submit" value="Sign in" class="btn btn-primary btn-large" />
       <input type="reset" value="Cancel" class="btn" />
     </div>
   </form>

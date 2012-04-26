@@ -167,8 +167,7 @@ class App(Base):
     #: (0 not done, 1 completed)
     def completion_status(self):
         completed = 0
-        for task in self.tasks:
-            if (task.state == '1'):
+        for task_run in self.task_runs:
                 completed += 1
         if len(self.tasks) != 0:
             return float(completed)/len(self.tasks)

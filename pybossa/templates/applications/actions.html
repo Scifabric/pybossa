@@ -5,8 +5,8 @@
 {% block update %}
   <div class="row">
           <div class="span8">
-                  <a class="btn btn-info"   href="update/{{bossa_app.id}}"><i class="icon-edit icon-white"></i> Edit the application</a>
-                  <a class="btn btn-danger" href="delete/{{bossa_app.id}}"><i class="icon-trash icon-white"></i> Delete the application</a>
+              <a class="btn btn-info"   href="{{bossa_app.short_name}}/update"><i class="icon-edit icon-white"></i> Edit the application</a>
+              <a class="btn btn-danger" href="{{bossa_app.short_name}}/delete"><i class="icon-trash icon-white"></i> Delete the application</a>
           </div>
   </div>
 {% endblock %}

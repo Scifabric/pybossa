@@ -57,7 +57,9 @@
                   <ul>
                     <li><strong>Description:</strong> {{ app.description }}</li>
                     <li><strong>Created:</strong> {{ app.created[0:10] }}</li>
-                    {% if app.last_active != "None" %}
+                    {% if app.last_activity() == "None" %}
+                    <li><strong>Last Submitted Task:</strong> Not yet</li>
+                    {% else %}
                     <li><strong>Last Submitted Task:</strong> {{ app.last_activity() }}</li>
                     {% endif %}
                     </ul>
