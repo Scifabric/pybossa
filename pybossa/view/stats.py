@@ -31,13 +31,16 @@ def stats():
     # Get top 5 app ids
     top5_active_app_ids = model.Session.query(model.TaskRun.app_id, func.count(model.TaskRun.id).label('total')).group_by(model.TaskRun.app_id).order_by('total DESC').limit(5).all()
     apps = []
+    print top5_active_app_ids
     for id in top5_active_app_ids:
-        apps.append(model.Session.query(model.App).get(id[0]))
+        if id[0] != None:
+            apps.append(model.Session.query(model.App).get(id[0]))
 
     # Get top 5 user ids
     top5_active_user_ids = model.Session.query(model.TaskRun.user_id, func.count(model.TaskRun.id).label('total')).group_by(model.TaskRun.user_id).order_by('total DESC').limit(5).all()
     users = []
     for id in top5_active_user_ids:
-        users.append(model.Session.query(model.User).get(id[0]))
+        if id[0] != None:
+            users.append(model.Session.query(model.User).get(id[0]))
 
     return render_template('/stats/index.html', title = "Leaderboard", apps = apps, users = users)
