@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+
+  <legend>Update your profile</legend>
+  <form method="post" class="form-horizontal" action="{{url_for('account.update_profile')}}">
+      <fieldset>
+      {{ form.id }}
+      {{ render_field(form.fullname, placeholder="my full name") }}
+      {{ render_field(form.name, placeholder="myusername") }}
+      {{ render_field(form.email_addr, placeholder="hello@mywebsite.org") }}
+      <div>
+          <img src="{{ current_user.email_addr | gravatar(size=25)}}">
+          <a href="http://www.gravatar.com">Change your avatar at Gravatar.com</a>. We are using {{current_user.email_addr}}
+          <hr>
+          <span class="label label-warning"><i class="icon icon-white icon-star"></i> Note</span> If you change your <strong>user name</strong> you will be asked to sign in again.
+      </div>
+      <div class="form-actions">
+        <input type="submit" value="Save the changes" class="btn btn-primary btn-large" />
+        <input type="reset" value="Cancel" class="btn" />
+      </div>
+      </fieldset>
+  </form>
+{% endblock %}

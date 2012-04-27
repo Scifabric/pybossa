@@ -59,6 +59,18 @@ class TestWeb:
         """Helper function to check profile of logged user"""
         return self.app.get("/account/profile", follow_redirects = True)
 
+    def update_profile(self, method="POST", id=1, fullname="John Doe", name="johndoe", email_addr="johndoe@example.com"):
+        """Helper function to update the profile of users"""
+        if (method == "POST"):
+            return self.app.post("/account/profile/update", data = {
+                    'id': id,
+                    'fullname': fullname,
+                    'name': name,
+                    'email_addr': email_addr
+                }, follow_redirects = True)
+        else:
+            return self.app.get("/account/profile/update", follow_redirects = True)
+
     def logout(self):
         """Helper function to logout current user"""
         return self.app.get('/account/logout', follow_redirects = True)
@@ -195,9 +207,11 @@ class TestWeb:
         res = self.profile()
         assert self.html_title("Profile") in res.data
         assert "John Doe" in res.data
+        assert "Logged in " in res.data
         assert "johndoe@example.com" in res.data
         assert "API key" in res.data
         assert "Create a new application" in res.data
+
 
         # Log out
         res = self.logout()
@@ -207,16 +221,65 @@ class TestWeb:
         
         # Request profile as an anonymous user
         res = self.profile()
-        #print res.data
         # As a user must be logged in to access, the page the title will be the redirection to log in
         assert self.html_title("Login") in res.data
         assert "Please log in to access this page." in res.data
+
+
 
         res = self.login(next='%2Faccount%2Fprofile')
         #print res
         assert self.html_title("Profile") in res.data
         assert "Welcome back John Doe" in res.data
         assert "API key" in res.data
+
+    def test_update_user_profile(self):
+        """Test WEB update user profile"""
+
+        # Create an account and log in
+        self.register()
+
+        # Update profile with new data
+        res = self.update_profile(method="GET")
+        assert self.html_title("Update your profile: John Doe") in res.data
+        assert '<input id="id" name="id" type="hidden" value="1" />' in res.data
+        assert "John Doe" in res.data
+        assert "Save the changes" in res.data
+
+        res = self.update_profile(fullname="John Doe 2", email_addr="johndoe2@example.com")
+        assert self.html_title("Profile") in res.data
+        assert "Your profile has been updated!" in res.data
+        assert "John Doe 2" in res.data
+        assert "johndoe" in res.data
+        assert "johndoe2@example.com" in res.data
+
+        # Updating the username field forces the user to re-log in
+        res = self.update_profile(fullname="John Doe 2", email_addr="johndoe2@example.com", name="johndoe2")
+        assert "Your profile has been updated!" in res.data
+        assert "Please log in to access this page" in res.data
+
+        res = self.login(method="POST", username="johndoe2", password="p4ssw0rd", next="%2Faccount%2Fprofile")
+        print res.data
+        assert "Welcome back John Doe 2" in res.data
+        assert "John Doe 2" in res.data
+        assert "johndoe2" in res.data
+        assert "johndoe2@example.com" in res.data
+
+        res = self.logout()
+        assert self.html_title() in res.data
+        assert "You are now logged out" in res.data
+
+        # A user must be logged in to access the update page, the page the title will be the redirection to log in
+        res = self.update_profile(method="GET")
+        assert self.html_title("Login") in res.data
+        assert "Please log in to access this page." in res.data
+
+        # A user must be logged in to access the update page, the page the title will be the redirection to log in
+        res = self.update_profile()
+        assert self.html_title("Login") in res.data
+        assert "Please log in to access this page." in res.data
+
+
 
     def test_applications(self):
         """Test WEB applications interface works"""
