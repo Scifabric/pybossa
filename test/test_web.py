@@ -242,7 +242,7 @@ class TestWeb:
         # Update profile with new data
         res = self.update_profile(method="GET")
         assert self.html_title("Update your profile: John Doe") in res.data
-        assert '<input id="id" name="id" type="hidden" value="1" />' in res.data
+        assert 'input id="id" name="id" type="hidden" value="1"' in res.data
         assert "John Doe" in res.data
         assert "Save the changes" in res.data
 
@@ -259,7 +259,7 @@ class TestWeb:
         assert "Please log in to access this page" in res.data
 
         res = self.login(method="POST", username="johndoe2", password="p4ssw0rd", next="%2Faccount%2Fprofile")
-        print res.data
+        #print res.data
         assert "Welcome back John Doe 2" in res.data
         assert "John Doe 2" in res.data
         assert "johndoe2" in res.data
@@ -318,14 +318,14 @@ class TestWeb:
 
         # Get the Update App web page
         res = self.update_application(method="GET")
-        print res.data
+        #print res.data
         assert self.html_title("Update the application: Sample App") in res.data
-        assert '<input id="id" name="id" type="hidden" value="1" />' in res.data
+        assert 'input id="id" name="id" type="hidden" value="1"' in res.data
         assert "Save the changes" in res.data
 
         # Update the application
         res = self.update_application(new_name="New Sample App", new_short_name="newshortname", new_description="New description", new_hidden=1)
-        print res.data
+        #print res.data
         assert self.html_title("Application: New Sample App") in res.data
         assert "Application updated!" in res.data
         
