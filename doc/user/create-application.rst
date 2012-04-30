@@ -38,9 +38,6 @@ fields are the names used for naming the application (short_name will be the
 slug name of the application). Finally, the *hidden* field is a bool flag to hide the 
 application for users but not administrators (roles will be implemented soon).
 
-.. automodule:: examples.flickrperson
-   :members: create_app, get_flickr_photos
-
 3. Create the Tasks
 ===================
 
@@ -58,9 +55,6 @@ Person is trying to figure out if there is a human or not in a photo, the
 provided information is: the Flickr Link page of the photo, and the image URL
 of the photo. If your application needs more fields, you are free to add them
 based on your needs.
-
-.. automodule:: examples.flickrperson
-   :members: create_task
 
 4. Specify a Task Presenter
 ===========================

@@ -52,9 +52,6 @@ And saved into the task field **info** of the task model.
 
 The script provides an example to use the CRUD methods provided by the API for the application (create_app also reads the application):
 
-.. automodule:: examples.flickrperson
-   :members: create_app, update_app, delete_app
-
 Presenting the Tasks to the user
 ================================
 
