@@ -24,11 +24,6 @@ Task Creators are responsible for the creation of Tasks (and related entites --
 Apps, etc) in PyBossa. As such they will usually operate entirely
 outside of PyBossa itself interacting with PyBossa via the API.
 
-*Coming soon*: A demonstration python script for creating tasks from a CSV file
-(creatable from any spreadsheet programme such as Excel or Google Spreadsheets)
-can be found in the contrib directory of the PyBossa source.
-
-
 Task Presenters
 ===============
 
@@ -43,10 +38,9 @@ Task Presenters can be written in any language and run anywhere as long as they
 can communicate with the PyBossa server via its API.
 
 However, Task Presenters that wish to run as part of a PyBossa instance must be
-written in HTML and javascript. In addition, Task Presenters running on as part
+written in HTML and JavaScript. In addition, Task Presenters running on as part
 of a PyBossa instance will have available some additional information such as
 the id of the current logged in user performing the task.
-
 
 BOSSA Original Architecture
 ===========================

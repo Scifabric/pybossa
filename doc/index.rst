@@ -34,7 +34,6 @@ understand how things fit together.
    user/create-application
    user/create-application-tutorial
 
-
 Developer Guide
 ================
 

@@ -67,6 +67,9 @@ It expects and returns JSON.
 .. autoclass:: pybossa.api.APIBase
    :members:
 
+Some requests will need an **API-KEY** to authenticate & authorize the
+operation. You can get your API-KEY in your *profile* account.
+
 Operations
 ----------
 
@@ -84,35 +87,50 @@ Get
 
 Get a specific domain object by id. Returns domain object.::
 
-    GET http://{pybossa-site-url}/api/{domain-object}/{id}
+    GET http://{pybossa-site-url}/api/{domain-object}/{id}[?api_key=API-KEY]
+
+.. note::
+    Some GET actions require to authenticate & authorize the request. Use the
+    ?api_key arguement to pass the **API-KEY**.
 
 Create
 ~~~~~~
 
 Create a domain object. Returns created domain object.::
 
-    POST http://{pybossa-site-url}/api/{domain-object}
+    POST http://{pybossa-site-url}/api/{domain-object}[?api_key=API-KEY]
+
+.. note::
+    Some POST actions require to authenticate & authorize the request. Use the
+    ?api_key arguement to pass the **API-KEY**.
 
 Update
 ~~~~~~
 
 Update a domain object (not yet implemented)::
 
-  PUT http://{pybossa-site-url}/api/{domain-object}/{id}
+  PUT http://{pybossa-site-url}/api/{domain-object}/{id}[?api_key=API-KEY]
+
+.. note::
+    Some PUT actions require to authenticate & authorize the request. Use the
+    ?api_key arguement to pass the **API-KEY**.
 
 Delete
 ~~~~~~
 
 Delete a domain object (not yet implemented)::
 
-  DELETE http://{pybossa-site-url}/api/{domain-object}/{id}
+  DELETE http://{pybossa-site-url}/api/{domain-object}/{id}[?api_key=API-KEY]
 
+.. note::
+    Some DELETE actions require to authenticate & authorize the request. Use the
+    ?api_key arguement to pass the **API-KEY**.
 
 Example Usage
 -------------
 
 Create an Application object::
 
-  curl -X POST -H "Content-Type:application/json" -s -d '{"name":"myapp", "info":{"xyz":1}}' 'http://localhost:5000/api/app'
+  curl -X POST -H "Content-Type:application/json" -s -d '{"name":"myapp", "info":{"xyz":1}}' 'http://localhost:5000/api/app?api_key=API-KEY'
 
 
