@@ -18,6 +18,7 @@ from flask import render_template
 from flaskext.wtf import Form, IntegerField, TextField, BooleanField, validators, HiddenInput
 from flaskext.login import login_required, current_user
 from sqlalchemy.exc import UnboundExecutionError
+from werkzeug.exceptions import HTTPException
 
 import pybossa.model as model
 from pybossa.util import Unique
@@ -141,20 +142,22 @@ def update(short_name):
 
 @blueprint.route('/<short_name>')
 def app_details(short_name):
-    try: # in case we have not set up database yet
-        application = model.Session.query(model.App).filter(model.App.short_name == short_name).first()
-        if application and (application.hidden == 0 or application.owner_id == current_user.id):
+    application = model.Session.query(model.App).filter(model.App.short_name == short_name).first()
+    if application:
+        try:
             require.app.read(application)
-            if require.app.update(application):
-                return render_template('/applications/actions.html',
-                                        title = "Application: %s" % application.name, 
-                                        bossa_app=application)
-            else:
-                return render_template('/applications/app.html',
-                                        bossa_app=application)
-    except UnboundExecutionError:
-        pass
-    return render_template('/applications/app.html', bossa_app=None)
+            require.app.update(application)
+            return render_template('/applications/actions.html',
+                                    title = "Application: %s" % application.name, 
+                                    bossa_app=application)
+        except HTTPException:
+            # This exception is raised because the user is not authenticated or
+            # it has not privileges to edit/delte the application 
+            return render_template('/applications/app.html',
+                                    title = "Application: %s" % application.name, 
+                                    bossa_app=application)
+    else:
+        return render_template('/applications/app.html', bossa_app=None)
 
 @blueprint.route('/<short_name>/presenter')
 def presenter(short_name):

@@ -282,10 +282,43 @@ class TestWeb:
 
 
     def test_applications(self):
-        """Test WEB applications interface works"""
+        """Test WEB applications index interface works"""
         res = self.app.get('/app/')
         assert self.html_title("Applications") in res.data
         assert "Available Projects" in res.data
+
+    def test_get_application(self):
+        """Test WEB application URL/<short_name> works"""
+        # Login and create an application
+        self.register()
+        res = self.new_application()
+
+        res = self.app.get('/app/sampleapp', follow_redirects = True)
+        #print res.data
+        assert self.html_title("Application: Sample App") in res.data
+        assert "Description" in res.data
+        assert "Completed tasks" in res.data
+        assert "Edit the application" in res.data
+        assert "Delete the application" in res.data
+        self.logout()
+
+        # Now as an anonymous user
+        res = self.app.get('/app/sampleapp', follow_redirects = True)
+        assert self.html_title("Application: Sample App") in res.data
+        assert "Description" in res.data
+        assert "Completed tasks" in res.data
+        assert "Edit the application" not in res.data
+        assert "Delete the application" not in res.data
+
+        # Now with a different user
+        self.register(fullname="Perico Palotes", username="perico")
+        res = self.app.get('/app/sampleapp', follow_redirects = True)
+        assert self.html_title("Application: Sample App") in res.data
+        assert "Description" in res.data
+        assert "Completed tasks" in res.data
+        assert "Edit the application" not in res.data
+        assert "Delete the application" not in res.data
+
 
     def test_create_application(self):
         """Test WEB create an application works"""
@@ -325,7 +358,6 @@ class TestWeb:
 
         # Update the application
         res = self.update_application(new_name="New Sample App", new_short_name="newshortname", new_description="New description", new_hidden=1)
-        #print res.data
         assert self.html_title("Application: New Sample App") in res.data
         assert "Application updated!" in res.data
         
