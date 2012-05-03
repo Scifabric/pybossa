@@ -382,6 +382,19 @@ class TestWeb:
         res = self.update_application(new_name="New Sample App", new_short_name="newshortname", new_description="New description", new_hidden=True)
         assert self.html_title("Application: New Sample App") in res.data
         assert "Application updated!" in res.data
+
+    def test_hidden_applications(self):
+        """Test WEB hidden application works"""
+        self.register()
+        self.new_application()
+        self.update_application(new_hidden = True)
+        self.logout()
+
+        res = self.app.get('/app/',follow_redirects = True)
+        assert "Sample App" not in res.data
+
+        res = self.app.get('/app/sampleapp', follow_redirects = True)
+        assert "Sorry! This app does not exists." in res.data
         
     def test_delete_application(self):
         """Test WEB delete application works"""

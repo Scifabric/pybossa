@@ -142,7 +142,9 @@ def update(short_name):
 
 @blueprint.route('/<short_name>')
 def app_details(short_name):
-    application = model.Session.query(model.App).filter(model.App.short_name == short_name).first()
+    application = model.Session.query(model.App).\
+            filter(model.App.short_name == short_name).\
+            first()
     if application:
         try:
             require.app.read(application)
@@ -153,9 +155,12 @@ def app_details(short_name):
         except HTTPException:
             # This exception is raised because the user is not authenticated or
             # it has not privileges to edit/delte the application 
-            return render_template('/applications/app.html',
+            if application.hidden == 0:
+                return render_template('/applications/app.html',
                                     title = "Application: %s" % application.name, 
                                     bossa_app=application)
+            else:
+                return render_template('/applications/app.html', bossa_app=None)
     else:
         return render_template('/applications/app.html', bossa_app=None)
 

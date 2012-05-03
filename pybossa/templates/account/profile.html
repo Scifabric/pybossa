@@ -61,6 +61,10 @@
                     {% else %}
                     <li><strong>Last Submitted Task:</strong> {{ app.last_activity() }}</li>
                     {% endif %}
+                    <li><strong>Hidden</strong>: {% if app.hidden == 1 %}
+                        <i class="icon icon-eye-close"></i> Yes {% else %} 
+                        <i class="icon icon-eye-open"></i> No {% endif %}
+                    </li>
                     </ul>
                     <a class="btn btn-inverse" href="/app/{{ app.short_name }}"><i class="icon-edit icon-white"></i> Manage the application</a>
                 </div>
