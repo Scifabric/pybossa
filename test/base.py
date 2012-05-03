@@ -40,11 +40,14 @@ class Fixtures:
         task_run_info = {
             'answer': u'annakarenina'
             }
-        task_run = model.TaskRun(info=task_run_info)
+        task_run = model.TaskRun(info=task_run_info, app_id=1)
         task.app = app
         task_run.task = task
         task_run.user = user
         model.Session.add_all([user, user2, app, task, task_run])
+        for i in range (0,9):
+            task_run = model.TaskRun(info=task_run_info, app_id=1)
+            model.Session.add(task_run)
         model.Session.commit()
         model.Session.remove()
 

@@ -18,6 +18,7 @@ import json
 from flask import Blueprint, request, jsonify, abort, Response
 from flask.views import View, MethodView
 from flaskext.login import current_user
+from sqlalchemy.exc import DatabaseError
 
 from pybossa.util import jsonpify, crossdomain
 import pybossa.model as model
@@ -49,16 +50,30 @@ class APIBase(MethodView):
         :arg integer id: the ID of the object in the DB
         :returns: The JSON item/s stored in the DB
         """
-        getattr(require, self.__class__.__name__.lower()).read()
-        if id is None:
-            items = [ x.dictize() for x in model.Session.query(self.__class__).all() ]
-            return Response(json.dumps(items), mimetype='application/json')
-        else:
-            item = model.Session.query(self.__class__).get(id)
-            if item is None:
-                abort(404)
+        try:
+            getattr(require, self.__class__.__name__.lower()).read()
+            if id is None:
+                #items = [ x.dictize() for x in model.Session.query(self.__class__).all() ]
+                query = model.Session.query(self.__class__)
+                limit = False
+                for k in request.args.keys():
+                    if k == 'limit':
+                        limit = True
+                    if k != 'limit' and request.args[k] != '':
+                        query = query.filter("%s = '%s'" % (k, request.args[k]))
+                if limit:
+                    query = query.limit(int(request.args['limit']))
+                items = [ x.dictize() for x in query.all() ]
+                return Response(json.dumps(items), mimetype='application/json')
             else:
-                return Response(json.dumps(item.dictize()), mimetype='application/json')
+                item = model.Session.query(self.__class__).get(id)
+                if item is None:
+                    abort(404)
+                else:
+                    return Response(json.dumps(item.dictize()), mimetype='application/json')
+        #except ProgrammingError, e:
+        except DatabaseError as e:
+            return Response(json.dumps({'error': "%s" % e.orig}), mimetype='application/json')
 
     @jsonpify
     @crossdomain(origin='*')

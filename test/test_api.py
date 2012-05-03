@@ -1,4 +1,5 @@
 import json
+import urllib
 
 from flaskext.login import login_user, logout_user, current_user
 
@@ -26,6 +27,46 @@ class TestAPI:
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
+
+    def test_query_search(self):
+        """ Test API query search works"""
+        # Test first a non-existant field
+        endpoints = ['app', 'task', 'taskrun']
+        for endpoint in endpoints:
+            res = self.app.get("/api/%s?wrongfield=value" % endpoint)
+            data = json.loads(res.data)
+            assert "no such column: wrongfield" in data['error']
+
+        
+        res = self.app.get("/api/app?short_name=test-app")
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 1
+        # Correct result
+        assert data[0]['short_name'] == 'test-app'
+
+        # Valid field but wrong value
+        res = self.app.get("/api/app?short_name=wrongvalue")
+        data = json.loads(res.data)
+        assert len(data) == 0
+
+        # Multiple fields
+        res = self.app.get('/api/app?short_name=test-app&name=My New App')
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 1
+        # Correct result
+        assert data[0]['short_name'] == 'test-app'
+        assert data[0]['name'] == 'My New App'
+
+        # Limits
+        res = self.app.get("/api/taskrun?app_id=1&limit=5")
+        print res.data
+        data = json.loads(res.data)
+        for item in data:
+            assert item['app_id'] == 1, item
+        assert len(data) == 5, data
+
     
     def test_02_task_query(self):
         """ Test API Task query"""
@@ -43,9 +84,9 @@ class TestAPI:
         """Test API TaskRun query"""
         res = self.app.get('/api/taskrun')
         taskruns = json.loads(res.data)
-        assert len(taskruns) == 1, taskruns
+        assert len(taskruns) == 10, taskruns
         taskrun = taskruns[0]
-        print taskrun
+        #print taskrun
         assert taskrun['info']['answer'] == 'annakarenina', taskrun
 
         # The output should have a mime-type: application/json
@@ -141,7 +182,7 @@ class TestAPI:
         res = self.app.post('/api/task?api_key=' + Fixtures.api_key_2,
             data=data
         )
-        print res.status
+        #print res.status
         assert_equal(res.status, '401 UNAUTHORIZED', 'Should not be able to post tasks for apps of others')
 
         # now a real user
