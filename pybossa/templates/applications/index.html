@@ -8,22 +8,20 @@
 </div>
 {% for app in apps %}
 <div id="app" class="row">
-    <div id="buttons" class="span6 well">
+    <div id="buttons" class="span10 well">
       <div id="img" class="row">
         <div class="span2">
             <ul class="thumbnails">
                 <li>
-                    <a href="#" class="thumbnail">
-                        <img src="http://placehold.it/120x120">
-                    </a>
+                  <img class="thumbnail" src="http://placehold.it/100x100">
                 </li>
             </ul>
         </div>
-        <div id="data" class="span4">
-          <h2>{{ app.name }}</h2>
+        <div id="data" class="span8">
+            <h2><a href="/app/{{app.short_name}}">{{ app.name }}</a></h2>
           <ul>
             <li><strong>Description</strong>: {{ app.description }}</li>
-            <li><strong>Creation Date</strong>: {{ app.creation }}</li>
+            <li><strong>Creation Date</strong>: {{ app.created[0:10] }}</li>
             {% if app.last_activity() != "None" %}
             <li><strong>Last Activity</strong>: {{ app.last_activity() }}</li>
             {% endif %}
@@ -33,7 +31,7 @@
             <li><strong>Owner</strong>: {{ app.owner.name }}</li>
             {% endif %}
             </ul>
-            <a class="btn btn-large btn-primary" href="{{ app.short_name }}/presenter">Do some tasks!</a>
+            <a class="btn btn-primary" href="{{ app.short_name }}/presenter"><i class="icon icon-white icon-ok"></i> Do some tasks!</a>
         </div>
       </div>
     </div>

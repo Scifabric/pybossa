@@ -75,14 +75,21 @@ class TestWeb:
         """Helper function to logout current user"""
         return self.app.get('/account/logout', follow_redirects = True)
 
-    def new_application(self, method="POST", name="Sample App", short_name="sampleapp", description="Description", hidden=0):
+    def new_application(self, method="POST", name="Sample App", short_name="sampleapp", description="Description", hidden = False):
         """Helper function to create an application"""
         if method == "POST":
-            return self.app.post("/app/new", data = {
+            if hidden:
+                return self.app.post("/app/new", data = {
                     'name': name,
                     'short_name': short_name,
                     'description': description,
                     'hidden': hidden,
+                }, follow_redirects = True)
+            else:
+                return self.app.post("/app/new", data = {
+                    'name': name,
+                    'short_name': short_name,
+                    'description': description
                 }, follow_redirects = True)
         else:
             return self.app.get("/app/new", follow_redirects = True)
@@ -94,16 +101,24 @@ class TestWeb:
         else:
             return self.app.get("/app/%s/delete" % short_name, follow_redirects = True)
 
-    def update_application(self, method="POST", short_name="sampleapp", id=1, new_name="Sample App", new_short_name="sampleapp", new_description="Description", new_hidden=0):
+    def update_application(self, method="POST", short_name="sampleapp", id=1, new_name="Sample App", new_short_name="sampleapp", new_description="Description", new_hidden=False):
         """Helper function to create an application"""
         if method == "POST":
-            return self.app.post("/app/%s/update" % short_name, data = {
-                    'id': id,
-                    'name': new_name,
-                    'short_name': new_short_name,
-                    'description': new_description,
-                    'hidden': new_hidden,
-                }, follow_redirects = True)
+            if new_hidden:
+                return self.app.post("/app/%s/update" % short_name, data = {
+                        'id': id,
+                        'name': new_name,
+                        'short_name': new_short_name,
+                        'description': new_description,
+                        'hidden': new_hidden,
+                    }, follow_redirects = True)
+            else:
+                return self.app.post("/app/%s/update" % short_name, data = {
+                        'id': id,
+                        'name': new_name,
+                        'short_name': new_short_name,
+                        'description': new_description,
+                    }, follow_redirects = True)
         else:
             return self.app.get("/app/%s/update" % short_name, follow_redirects = True)
 
@@ -283,9 +298,16 @@ class TestWeb:
 
     def test_applications(self):
         """Test WEB applications index interface works"""
-        res = self.app.get('/app/')
+        self.register()
+        self.new_application()
+        self.logout()
+
+        res = self.app.get('/app/' )
         assert self.html_title("Applications") in res.data
         assert "Available Projects" in res.data
+        assert '/app/sampleapp' in res.data
+
+
 
     def test_get_application(self):
         """Test WEB application URL/<short_name> works"""
@@ -357,7 +379,7 @@ class TestWeb:
         assert "Save the changes" in res.data
 
         # Update the application
-        res = self.update_application(new_name="New Sample App", new_short_name="newshortname", new_description="New description", new_hidden=1)
+        res = self.update_application(new_name="New Sample App", new_short_name="newshortname", new_description="New description", new_hidden=True)
         assert self.html_title("Application: New Sample App") in res.data
         assert "Application updated!" in res.data
         
