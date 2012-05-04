@@ -90,8 +90,25 @@ Get a specific domain object by id. Returns domain object.::
     GET http://{pybossa-site-url}/api/{domain-object}/{id}[?api_key=API-KEY]
 
 .. note::
-    Some GET actions require to authenticate & authorize the request. Use the
+    Some GET actions may require to authenticate & authorize the request. Use the
     ?api_key arguement to pass the **API-KEY**.
+
+Search
+~~~~~~
+
+Get a list of domain objects by its fields. Returns a list of domain objects
+matching the query::
+
+    GET http://{pybossa-site-url}/api/{domain-object}[?domain-object-field=value]
+
+Multiple fields can be used::
+
+    GET http://{pybossa-site-url}/api/{domain-object}[?field1=value&field2=value2]
+
+It is possible to limit the number of returned objects::
+
+    GET http://{pybossa-site-url}/api/{domain-object}[?field1=value&limit=20]
+
 
 Create
 ~~~~~~
@@ -101,7 +118,7 @@ Create a domain object. Returns created domain object.::
     POST http://{pybossa-site-url}/api/{domain-object}[?api_key=API-KEY]
 
 .. note::
-    Some POST actions require to authenticate & authorize the request. Use the
+    Some POST actions may require to authenticate & authorize the request. Use the
     ?api_key arguement to pass the **API-KEY**.
 
 Update
@@ -112,7 +129,7 @@ Update a domain object (not yet implemented)::
   PUT http://{pybossa-site-url}/api/{domain-object}/{id}[?api_key=API-KEY]
 
 .. note::
-    Some PUT actions require to authenticate & authorize the request. Use the
+    Some PUT actions may require to authenticate & authorize the request. Use the
     ?api_key arguement to pass the **API-KEY**.
 
 Delete
@@ -123,7 +140,7 @@ Delete a domain object (not yet implemented)::
   DELETE http://{pybossa-site-url}/api/{domain-object}/{id}[?api_key=API-KEY]
 
 .. note::
-    Some DELETE actions require to authenticate & authorize the request. Use the
+    Some DELETE actions may require to authenticate & authorize the request. Use the
     ?api_key arguement to pass the **API-KEY**.
 
 Example Usage
