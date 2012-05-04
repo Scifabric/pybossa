@@ -36,7 +36,7 @@ class Fixtures:
             'question': 'My random question',
             'url': 'my url'
             }
-        task = model.Task(info=task_info)
+        task = model.Task(info=task_info, app_id=1, state='0')
         task_run_info = {
             'answer': u'annakarenina'
             }
@@ -46,8 +46,9 @@ class Fixtures:
         task_run.user = user
         model.Session.add_all([user, user2, app, task, task_run])
         for i in range (0,9):
+            task = model.Task(info=task_info, app_id=1, state='0')
             task_run = model.TaskRun(info=task_run_info, app_id=1)
-            model.Session.add(task_run)
+            model.Session.add_all([task, task_run])
         model.Session.commit()
         model.Session.remove()
 

@@ -28,36 +28,38 @@ class TestAPI:
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
 
-    def test_query_search(self):
+    def test_query_search_wrongfield(self):
         """ Test API query search works"""
-        # Test first a non-existant field
+        # Test first a non-existant field for all end-points
         endpoints = ['app', 'task', 'taskrun']
         for endpoint in endpoints:
             res = self.app.get("/api/%s?wrongfield=value" % endpoint)
             data = json.loads(res.data)
             assert "no such column: wrongfield" in data['error']
 
-        
+    def test_query_app(self):
+        """Test API query for app endpoint works"""
+        # Test for real field
         res = self.app.get("/api/app?short_name=test-app")
         data = json.loads(res.data)
-        # One result
-        assert len(data) == 1
+        # Should return one result
+        assert len(data) == 1, data
         # Correct result
-        assert data[0]['short_name'] == 'test-app'
+        assert data[0]['short_name'] == 'test-app', data
 
         # Valid field but wrong value
         res = self.app.get("/api/app?short_name=wrongvalue")
         data = json.loads(res.data)
-        assert len(data) == 0
+        assert len(data) == 0, data
 
         # Multiple fields
         res = self.app.get('/api/app?short_name=test-app&name=My New App')
         data = json.loads(res.data)
         # One result
-        assert len(data) == 1
+        assert len(data) == 1, data
         # Correct result
-        assert data[0]['short_name'] == 'test-app'
-        assert data[0]['name'] == 'My New App'
+        assert data[0]['short_name'] == 'test-app', data
+        assert data[0]['name'] == 'My New App', data
 
         # Limits
         res = self.app.get("/api/taskrun?app_id=1&limit=5")
@@ -67,12 +69,75 @@ class TestAPI:
             assert item['app_id'] == 1, item
         assert len(data) == 5, data
 
+    def test_query_task(self):
+        """Test API query for task endpoint works"""
+        # Test for real field
+        res = self.app.get("/api/task?app_id=1")
+        data = json.loads(res.data)
+        # Should return one result
+        assert len(data) == 10, data
+        # Correct result
+        assert data[0]['app_id'] == 1, data
+
+        # Valid field but wrong value
+        res = self.app.get("/api/task?app_id=99999999")
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        # Multiple fields
+        res = self.app.get('/api/task?app_id=1&state=0')
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 10, data
+        # Correct result
+        assert data[0]['app_id'] == 1 , data
+        assert data[0]['state'] == '0', data
+
+        # Limits
+        res = self.app.get("/api/task?app_id=1&limit=5")
+        print res.data
+        data = json.loads(res.data)
+        for item in data:
+            assert item['app_id'] == 1, item
+        assert len(data) == 5, data
+
+    def test_query_taskrun(self):
+        """Test API query for taskrun endpoint works"""
+        # Test for real field
+        res = self.app.get("/api/taskrun?app_id=1")
+        data = json.loads(res.data)
+        # Should return one result
+        assert len(data) == 10, data
+        # Correct result
+        assert data[0]['app_id'] == 1, data
+
+        # Valid field but wrong value
+        res = self.app.get("/api/taskrun?app_id=99999999")
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        # Multiple fields
+        res = self.app.get('/api/taskrun?app_id=1&task_id=1')
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 1, data
+        # Correct result
+        assert data[0]['app_id'] == 1 , data
+        assert data[0]['task_id'] == 1, data
+
+        # Limits
+        res = self.app.get("/api/taskrun?app_id=1&limit=5")
+        print res.data
+        data = json.loads(res.data)
+        for item in data:
+            assert item['app_id'] == 1, item
+        assert len(data) == 5, data
     
     def test_02_task_query(self):
         """ Test API Task query"""
         res = self.app.get('/api/task')
         tasks = json.loads(res.data)
-        assert len(tasks) == 1, tasks
+        assert len(tasks) == 10, tasks
         task = tasks[0]
         assert task['info']['question'] == 'My random question', task
 
