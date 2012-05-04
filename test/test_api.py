@@ -35,7 +35,7 @@ class TestAPI:
         for endpoint in endpoints:
             res = self.app.get("/api/%s?wrongfield=value" % endpoint)
             data = json.loads(res.data)
-            assert "no such column: wrongfield" in data['error']
+            assert "no such column: wrongfield" in data['error'], data
 
     def test_query_app(self):
         """Test API query for app endpoint works"""
@@ -175,7 +175,7 @@ class TestAPI:
             data=data,
         )
         out = model.Session.query(model.App).filter_by(name=name).one()
-        assert out
+        assert out, out
         assert_equal(out.short_name, 'xxxx-project'), out
         assert_equal(out.owner.name, 'tester')
         id_ = out.id
@@ -254,10 +254,10 @@ class TestAPI:
         res = self.app.post('/api/task?api_key=' + Fixtures.api_key,
             data=data,
         )
-        assert res.data
+        assert res.data, res
         datajson = json.loads(res.data)
         out = model.Session.query(model.Task).filter_by(id=datajson['id']).one()
-        assert out
+        assert out, out
         assert_equal(out.info, 'my task data'), out
         assert_equal(out.app_id, app.id)
         id_ = out.id
@@ -333,7 +333,7 @@ class TestAPI:
         _id_anonymous = taskrun.id
         assert taskrun, taskrun
         assert taskrun.created, taskrun
-        assert taskrun.app_id == app.id
+        assert taskrun.app_id == app.id, taskrun
     
         # create task run as authenticated user
         res = self.app.post('/api/taskrun?api_key=%s' % Fixtures.api_key,
@@ -341,8 +341,8 @@ class TestAPI:
         )
         taskrun = model.Session.query(model.TaskRun).filter_by(app_id = app.id).all()[-1]
         _id = taskrun.id
-        assert taskrun.app_id == app.id
-        assert taskrun.user.name == Fixtures.name
+        assert taskrun.app_id == app.id, taskrun
+        assert taskrun.user.name == Fixtures.name, taskrun
 
         ##########
         # UPDATE #
@@ -404,7 +404,7 @@ class TestAPI:
         # anonymous
         # test getting a new task
         res = self.app.get('/api/app/%s/newtask' % app.id)
-        assert res
+        assert res, res
         task = json.loads(res.data)
         assert_equal(task['app_id'], app.id)
 
@@ -414,7 +414,7 @@ class TestAPI:
 
         # as a real user
         res = self.app.get('/api/app/%s/newtask?api_key=%s' % (app.id, Fixtures.api_key))
-        assert res
+        assert res, res
         task = json.loads(res.data)
         assert_equal(task['app_id'], app.id)
 
@@ -425,13 +425,13 @@ class TestAPI:
         # anonymous
         # test getting a new task
         res = self.app.get('/api/app/%s/newtask' % app.id)
-        assert res
+        assert res, res
         task = json.loads(res.data)
         assert_equal(task['app_id'], app.id)
 
         # as a real user
         res = self.app.get('/api/app/%s/newtask?api_key=%s' % (app.id, Fixtures.api_key))
-        assert res
+        assert res, res
         task = json.loads(res.data)
         assert_equal(task['app_id'], app.id)
 

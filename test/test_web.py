@@ -126,61 +126,53 @@ class TestWeb:
     def test_stats(self):
         """Test WEB leaderboard or stats page works"""
         res = self.app.get("/stats", follow_redirects = True)
-        assert self.html_title("Leaderboard") in res.data
-        assert "Most active applications" in res.data
-        assert "Most active volunteers" in res.data
+        assert self.html_title("Leaderboard") in res.data, res
+        assert "Most active applications" in res.data, res
+        assert "Most active volunteers" in res.data, res
 
     def test_register(self):
         """Test WEB register user works"""
         res = self.register(method="GET")
         # The output should have a mime-type: text/html
         assert res.mimetype == 'text/html', res
-        assert self.html_title("Register") in res.data
+        assert self.html_title("Register") in res.data, res
 
         res = self.register()
-        assert self.html_title() in res.data
-        assert "Thanks for signing-up" in res.data
+        assert self.html_title() in res.data, res
+        assert "Thanks for signing-up" in res.data, res
 
         res = self.register()
-        #print res.data
-        assert self.html_title("Register") in res.data
-        assert "The user name is already taken" in res.data
+        assert self.html_title("Register") in res.data, res
+        assert "The user name is already taken" in res.data, res
 
         res = self.register(fullname='')
-        #print res.data
-        assert self.html_title("Register") in res.data
-        assert "Full name must be between 3 and 35 characters long" in res.data
+        assert self.html_title("Register") in res.data, res
+        assert "Full name must be between 3 and 35 characters long" in res.data, res
 
         res = self.register(username='')
-        #print res.data
-        assert self.html_title("Register") in res.data
-        assert "User name must be between 3 and 35 characters long" in res.data
+        assert self.html_title("Register") in res.data, res
+        assert "User name must be between 3 and 35 characters long" in res.data, res
 
         res = self.register(email = '')
-        assert self.html_title("Register") in res.data
-        #print res.data
-        assert self.html_title("Register") in res.data
-        assert "Email must be between 3 and 35 characters long" in res.data
+        assert self.html_title("Register") in res.data, res
+        assert self.html_title("Register") in res.data, res
+        assert "Email must be between 3 and 35 characters long" in res.data, res
 
         res = self.register(email = 'invalidemailaddress')
-        #print res.data
-        assert self.html_title("Register") in res.data
-        assert "Invalid email address" in res.data
+        assert self.html_title("Register") in res.data, res
+        assert "Invalid email address" in res.data, res
 
         res = self.register()
-        #print res.data
-        assert self.html_title("Register") in res.data
-        assert "Email is already taken" in res.data
+        assert self.html_title("Register") in res.data, res
+        assert "Email is already taken" in res.data, res
 
         res = self.register(password='')
-        #print res.data
-        assert self.html_title("Register") in res.data
-        assert "Password cannot be empty" in res.data
+        assert self.html_title("Register") in res.data, res
+        assert "Password cannot be empty" in res.data, res
 
         res = self.register(password2='different')
-        #print res.data
-        assert self.html_title("Register") in res.data
-        assert "Passwords must match" in res.data
+        assert self.html_title("Register") in res.data, res
+        assert "Passwords must match" in res.data, res
     
     def test_login_logout(self):
         """Test WEB logging in and logging out works"""
@@ -189,64 +181,62 @@ class TestWeb:
         res = self.logout()
 
         res = self.login(method="GET")
-        assert self.html_title("Login") in res.data
-        assert "Login" in res.data
+        assert self.html_title("Login") in res.data, res
+        assert "Login" in res.data, res
 
         res = self.login(username='')
-        assert "Please correct the errors" in  res.data
-        assert "The username is required" in res.data
+        assert "Please correct the errors" in  res.data, res
+        assert "The username is required" in res.data, res
 
         res = self.login(password='')
-        assert "Please correct the errors" in  res.data
-        assert "You must provide a password" in res.data
+        assert "Please correct the errors" in  res.data, res
+        assert "You must provide a password" in res.data, res
 
         res = self.login(username='', password='')
-        assert "Please correct the errors" in  res.data
-        assert "The username is required" in res.data
-        assert "You must provide a password" in res.data
+        assert "Please correct the errors" in  res.data, res
+        assert "The username is required" in res.data, res
+        assert "You must provide a password" in res.data, res
 
         res = self.login(username='wrongusername')
-        assert "Incorrect email/password" in  res.data
+        assert "Incorrect email/password" in  res.data, res
 
         res = self.login(password='wrongpassword')
-        assert "Incorrect email/password" in  res.data
+        assert "Incorrect email/password" in  res.data, res
 
         res = self.login(username='wrongusername', password='wrongpassword')
-        assert "Incorrect email/password" in  res.data
+        assert "Incorrect email/password" in  res.data, res
 
         res = self.login()
-        assert self.html_title() in res.data
-        assert "Welcome back John Doe" in res.data
+        assert self.html_title() in res.data, res
+        assert "Welcome back John Doe" in res.data, res
 
         # Check profile page with several information chunks
         res = self.profile()
-        assert self.html_title("Profile") in res.data
-        assert "John Doe" in res.data
-        assert "Logged in " in res.data
-        assert "johndoe@example.com" in res.data
-        assert "API key" in res.data
-        assert "Create a new application" in res.data
+        assert self.html_title("Profile") in res.data, res
+        assert "John Doe" in res.data, res
+        assert "Logged in " in res.data, res
+        assert "johndoe@example.com" in res.data, res
+        assert "API key" in res.data, res
+        assert "Create a new application" in res.data, res
 
 
         # Log out
         res = self.logout()
-        #print res.data
-        assert self.html_title() in res.data
-        assert "You are now logged out" in res.data
+        assert self.html_title() in res.data, res
+        assert "You are now logged out" in res.data, res
         
         # Request profile as an anonymous user
         res = self.profile()
         # As a user must be logged in to access, the page the title will be the redirection to log in
-        assert self.html_title("Login") in res.data
-        assert "Please log in to access this page." in res.data
+        assert self.html_title("Login") in res.data, res
+        assert "Please log in to access this page." in res.data, res
 
 
 
         res = self.login(next='%2Faccount%2Fprofile')
-        #print res
-        assert self.html_title("Profile") in res.data
-        assert "Welcome back John Doe" in res.data
-        assert "API key" in res.data
+        assert self.html_title("Profile") in res.data, res
+        assert "Welcome back John Doe" in res.data, res
+        assert "API key" in res.data, res
 
     def test_update_user_profile(self):
         """Test WEB update user profile"""
@@ -256,43 +246,42 @@ class TestWeb:
 
         # Update profile with new data
         res = self.update_profile(method="GET")
-        assert self.html_title("Update your profile: John Doe") in res.data
-        assert 'input id="id" name="id" type="hidden" value="1"' in res.data
-        assert "John Doe" in res.data
-        assert "Save the changes" in res.data
+        assert self.html_title("Update your profile: John Doe") in res.data, res
+        assert 'input id="id" name="id" type="hidden" value="1"' in res.data, res
+        assert "John Doe" in res.data, res
+        assert "Save the changes" in res.data, res
 
         res = self.update_profile(fullname="John Doe 2", email_addr="johndoe2@example.com")
-        assert self.html_title("Profile") in res.data
-        assert "Your profile has been updated!" in res.data
-        assert "John Doe 2" in res.data
-        assert "johndoe" in res.data
-        assert "johndoe2@example.com" in res.data
+        assert self.html_title("Profile") in res.data, res
+        assert "Your profile has been updated!" in res.data, res
+        assert "John Doe 2" in res.data, res
+        assert "johndoe" in res.data, res
+        assert "johndoe2@example.com" in res.data, res
 
         # Updating the username field forces the user to re-log in
         res = self.update_profile(fullname="John Doe 2", email_addr="johndoe2@example.com", name="johndoe2")
-        assert "Your profile has been updated!" in res.data
-        assert "Please log in to access this page" in res.data
+        assert "Your profile has been updated!" in res.data, res
+        assert "Please log in to access this page" in res.data, res
 
         res = self.login(method="POST", username="johndoe2", password="p4ssw0rd", next="%2Faccount%2Fprofile")
-        #print res.data
-        assert "Welcome back John Doe 2" in res.data
-        assert "John Doe 2" in res.data
-        assert "johndoe2" in res.data
-        assert "johndoe2@example.com" in res.data
+        assert "Welcome back John Doe 2" in res.data, res
+        assert "John Doe 2" in res.data, res
+        assert "johndoe2" in res.data, res
+        assert "johndoe2@example.com" in res.data, res
 
         res = self.logout()
-        assert self.html_title() in res.data
-        assert "You are now logged out" in res.data
+        assert self.html_title() in res.data, res
+        assert "You are now logged out" in res.data, res
 
         # A user must be logged in to access the update page, the page the title will be the redirection to log in
         res = self.update_profile(method="GET")
-        assert self.html_title("Login") in res.data
-        assert "Please log in to access this page." in res.data
+        assert self.html_title("Login") in res.data, res
+        assert "Please log in to access this page." in res.data, res
 
         # A user must be logged in to access the update page, the page the title will be the redirection to log in
         res = self.update_profile()
-        assert self.html_title("Login") in res.data
-        assert "Please log in to access this page." in res.data
+        assert self.html_title("Login") in res.data, res
+        assert "Please log in to access this page." in res.data, res
 
 
 
@@ -303,9 +292,9 @@ class TestWeb:
         self.logout()
 
         res = self.app.get('/app/' )
-        assert self.html_title("Applications") in res.data
-        assert "Available Projects" in res.data
-        assert '/app/sampleapp' in res.data
+        assert self.html_title("Applications") in res.data, res
+        assert "Available Projects" in res.data, res
+        assert '/app/sampleapp' in res.data, res
 
 
 
@@ -316,55 +305,52 @@ class TestWeb:
         res = self.new_application()
 
         res = self.app.get('/app/sampleapp', follow_redirects = True)
-        #print res.data
-        assert self.html_title("Application: Sample App") in res.data
-        assert "Description" in res.data
-        assert "Completed tasks" in res.data
-        assert "Edit the application" in res.data
-        assert "Delete the application" in res.data
+        assert self.html_title("Application: Sample App") in res.data, res
+        assert "Description" in res.data, res
+        assert "Completed tasks" in res.data, res
+        assert "Edit the application" in res.data, res
+        assert "Delete the application" in res.data, res
         self.logout()
 
         # Now as an anonymous user
         res = self.app.get('/app/sampleapp', follow_redirects = True)
-        assert self.html_title("Application: Sample App") in res.data
-        assert "Description" in res.data
-        assert "Completed tasks" in res.data
-        assert "Edit the application" not in res.data
-        assert "Delete the application" not in res.data
+        assert self.html_title("Application: Sample App") in res.data, res
+        assert "Description" in res.data, res
+        assert "Completed tasks" in res.data, res
+        assert "Edit the application" not in res.data, res
+        assert "Delete the application" not in res.data, res
 
         # Now with a different user
         self.register(fullname="Perico Palotes", username="perico")
         res = self.app.get('/app/sampleapp', follow_redirects = True)
-        assert self.html_title("Application: Sample App") in res.data
-        assert "Description" in res.data
-        assert "Completed tasks" in res.data
-        assert "Edit the application" not in res.data
-        assert "Delete the application" not in res.data
+        assert self.html_title("Application: Sample App") in res.data, res
+        assert "Description" in res.data, res
+        assert "Completed tasks" in res.data, res
+        assert "Edit the application" not in res.data, res
+        assert "Delete the application" not in res.data, res
 
 
     def test_create_application(self):
         """Test WEB create an application works"""
         # Create an app as an anonymous user
         res = self.new_application(method="GET")
-        assert self.html_title("Login") in res.data
-        assert "Please log in to access this page" in res.data
+        assert self.html_title("Login") in res.data, res
+        assert "Please log in to access this page" in res.data, res
 
         res = self.new_application()
-        #print res.data
-        assert self.html_title("Login") in res.data
-        assert "Please log in to access this page." in res.data
+        assert self.html_title("Login") in res.data, res
+        assert "Please log in to access this page." in res.data, res
 
         # Login and create an application
         res = self.register()
 
         res = self.new_application(method="GET")
-        assert self.html_title("New Application") in res.data
-        assert "Create the application" in res.data
+        assert self.html_title("New Application") in res.data, res
+        assert "Create the application" in res.data, res
 
         res = self.new_application()
-        #print res.data
-        assert self.html_title("Application: %s" % "Sample App" ) in res.data
-        assert "Application created!" in res.data
+        assert self.html_title("Application: %s" % "Sample App" ) in res.data, res
+        assert "Application created!" in res.data, res
 
     def test_update_application(self):
         """Test WEB update application works"""
@@ -373,15 +359,14 @@ class TestWeb:
 
         # Get the Update App web page
         res = self.update_application(method="GET")
-        #print res.data
-        assert self.html_title("Update the application: Sample App") in res.data
-        assert 'input id="id" name="id" type="hidden" value="1"' in res.data
-        assert "Save the changes" in res.data
+        assert self.html_title("Update the application: Sample App") in res.data, res
+        assert 'input id="id" name="id" type="hidden" value="1"' in res.data, res
+        assert "Save the changes" in res.data, res
 
         # Update the application
         res = self.update_application(new_name="New Sample App", new_short_name="newshortname", new_description="New description", new_hidden=True)
-        assert self.html_title("Application: New Sample App") in res.data
-        assert "Application updated!" in res.data
+        assert self.html_title("Application: New Sample App") in res.data, res
+        assert "Application updated!" in res.data, res
 
     def test_hidden_applications(self):
         """Test WEB hidden application works"""
@@ -391,19 +376,19 @@ class TestWeb:
         self.logout()
 
         res = self.app.get('/app/',follow_redirects = True)
-        assert "Sample App" not in res.data
+        assert "Sample App" not in res.data, res
 
         res = self.app.get('/app/sampleapp', follow_redirects = True)
-        assert "Sorry! This app does not exists." in res.data
+        assert "Sorry! This app does not exists." in res.data, res
         
     def test_delete_application(self):
         """Test WEB delete application works"""
         self.register()
         self.new_application()
         res = self.delete_application(method="GET")
-        assert self.html_title("Delete Application: Sample App") in res.data
-        assert "No, do not delete it" in res.data
+        assert self.html_title("Delete Application: Sample App") in res.data, res
+        assert "No, do not delete it" in res.data, res
 
         res = self.delete_application()
-        assert "Application deleted!" in res.data
+        assert "Application deleted!" in res.data, res
 

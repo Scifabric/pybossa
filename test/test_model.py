@@ -40,27 +40,27 @@ class TestModel:
         model.Session.remove()
 
         app = model.Session.query(model.App).get(app_id)
-        assert app.name == u'My New App'
+        assert app.name == u'My New App', app
         # year would start with 201...
         assert app.created.startswith('201'), app.created
-        assert len(app.tasks) == 1
-        assert app.owner.name == username
+        assert len(app.tasks) == 1, app
+        assert app.owner.name == username, app
 
         out_task = app.tasks[0]
-        assert out_task.info['question'] == task_info['question']
-        assert len(out_task.task_runs) == 1
+        assert out_task.info['question'] == task_info['question'], out_task
+        assert len(out_task.task_runs) == 1, out_task
         outrun = out_task.task_runs[0]
-        assert outrun.info['answer'] == task_run_info['answer']
-        assert outrun.user.name == username
+        assert outrun.info['answer'] == task_run_info['answer'], outrun
+        assert outrun.user.name == username, outrun
 
         user = model.User.by_name(username)
-        assert user.apps[0].id == app_id
+        assert user.apps[0].id == app_id, user
 
         # TODO: better testing where we actually get a random task
         task = model.new_task(app_id, user_id)
         assert task is None, 'There should be no tasks for this user'
         task = model.new_task(app_id)
-        assert task
+        assert task, task
 
     def test_user(self):
         """Test MODEL User works"""
@@ -71,9 +71,9 @@ class TestModel:
 
         model.Session.remove()
         user = model.User.by_name(u'test-user')
-        assert user
+        assert user, user
         assert len(user.api_key) == 36, user
 
         out = user.dictize()
-        assert out['name'] == u'test-user'
+        assert out['name'] == u'test-user', out
 
