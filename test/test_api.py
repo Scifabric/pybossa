@@ -223,7 +223,7 @@ class TestAPI:
 
     def test_05_task_post(self):
         '''Test API Task creation and auth'''
-        user = model.Session.query(model.User).filter_by(name = Fixtures.username).one()
+        user = model.Session.query(model.User).filter_by(name = Fixtures.name).one()
         app = model.Session.query(model.App).filter_by(owner_id = user.id).one()
         data = dict(
             app_id=app.id,
@@ -342,7 +342,7 @@ class TestAPI:
         taskrun = model.Session.query(model.TaskRun).filter_by(app_id = app.id).all()[-1]
         _id = taskrun.id
         assert taskrun.app_id == app.id
-        assert taskrun.user.name == Fixtures.username
+        assert taskrun.user.name == Fixtures.name
 
         ##########
         # UPDATE #
@@ -369,7 +369,7 @@ class TestAPI:
         assert_equal(res.status, '200 OK', res.data)
         out2 = model.Session.query(model.TaskRun).get(_id)
         assert_equal(out2.info,data['info'])
-        assert_equal(out2.user.name, Fixtures.username)
+        assert_equal(out2.user.name, Fixtures.name)
 
         ##########
         # DELETE #
