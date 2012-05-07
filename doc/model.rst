@@ -101,7 +101,7 @@ matching the query::
 
     GET http://{pybossa-site-url}/api/{domain-object}[?domain-object-field=value]
 
-Multiple fields can be used::
+Multiple fields can be used separated by the **&** symbol::
 
     GET http://{pybossa-site-url}/api/{domain-object}[?field1=value&field2=value2]
 

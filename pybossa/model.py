@@ -157,9 +157,9 @@ class App(Base):
     info                = Column(JSONType, default=dict)
 
     ## Relationships
-    #: `Task`s for this app.
+    #: `Task`s for this app.`
     tasks = relationship('Task', backref='app')
-    #: `TaskRun`s for this app.
+    #: `TaskRun`s for this app.`
     task_runs = relationship('TaskRun', lazy='joined', backref='app',
                              order_by='TaskRun.finish_time.desc()')
 
@@ -205,6 +205,7 @@ class Task(Base):
     priority_0          = Column(Float)
     #: all configuration / details of the Task is stored in info which is an arbitrary JSON object. (Usually expected to be a hash/dict)
     #: For example for an image classification project this would be::
+    #: 
     #:    {
     #:       url: [image-url],
     #:       question: [is this a person]
@@ -212,7 +213,7 @@ class Task(Base):
     info                = Column(JSONType, default=dict)
 
     ## Relationships
-    #: `TaskRun`s for this task
+    #: `TaskRun`s for this task`
     task_runs = relationship('TaskRun', backref='task')
 
 
