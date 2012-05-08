@@ -265,3 +265,17 @@ In order to test the application task presenter, go to the following URL:
 
 The presenter will load one task, and you will be able to submit and save one
 answer for the current task.
+
+5. Check the results
+--------------------
+
+In order to see the answers from the volunteers, you can open in your web
+browser the file **results.html**. The web page should show a chart pie with
+answers from the server http://pybossa.com but you can modify the file
+**results.js** to poll your own server data.
+¬                                                                                    
+The results page shows the number of answers from the volunteers for a given
+task (the related photo will be shown), making easy to compare the results
+submitted by the volunteers.
+
+The results page is created using the `D3.JS library <http://d3js.org>`_.
