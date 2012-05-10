@@ -10,3 +10,4 @@ epio.ini
 .epio-app
 .epioignore
 *.un~
+*.wsgi

@@ -1,0 +1,9 @@
+# Check the official documentation http://flask.pocoo.org/docs/deploying/mod_wsgi/
+# Activate the virtual env (we assume that virtualenv is in the env folder)
+activate_this = '/home/user/pybossa/env/bin/activate_this.py'
+execfile(activate_this, dict(__file__=activate_this))
+# Import sys to add the path of PyBossa
+import sys
+sys.path.insert(0,'/home/user/pybossa')
+# Run the web-app
+from pybossa.web import app as application
