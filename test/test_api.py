@@ -12,6 +12,7 @@ class TestAPI:
         self.app = web.app.test_client()
         model.rebuild_db()
         Fixtures.create()
+        self.endpoints = ['app', 'task', 'taskrun']
 
     @classmethod
     def teardown_class(cls):
@@ -27,6 +28,33 @@ class TestAPI:
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
+
+    def test_get_query_with_api_key(self):
+        """ Test API GET query with an API-KEY"""
+        for endpoint in self.endpoints:
+            res = self.app.get('/api/' + endpoint + '?api_key=' + Fixtures.api_key)
+            data = json.loads(res.data)
+
+            if endpoint == 'app':
+                assert len(data) == 1, data
+                app = data[0]
+                assert app['info']['total'] == 150, data
+                # The output should have a mime-type: application/json
+                assert res.mimetype == 'application/json', res
+
+            if endpoint == 'task':
+                assert len(data) == 10, data
+                task = data[0]
+                assert task['info']['url'] == 'my url', data
+                # The output should have a mime-type: application/json
+                assert res.mimetype == 'application/json', res
+
+            if endpoint == 'taskrun':
+                assert len(data) == 10, data
+                taskrun= data[0]
+                assert taskrun['info']['answer'] == 'annakarenina', data
+                # The output should have a mime-type: application/json
+                assert res.mimetype == 'application/json', res
 
     def test_query_search_wrongfield(self):
         """ Test API query search works"""

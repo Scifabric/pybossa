@@ -53,13 +53,12 @@ class APIBase(MethodView):
         try:
             getattr(require, self.__class__.__name__.lower()).read()
             if id is None:
-                #items = [ x.dictize() for x in model.Session.query(self.__class__).all() ]
                 query = model.Session.query(self.__class__)
                 limit = False
                 for k in request.args.keys():
                     if k == 'limit':
                         limit = True
-                    if k != 'limit' and request.args[k] != '':
+                    if k != 'limit' and k != 'api_key' and request.args[k] != '':
                         query = query.filter("%s = '%s'" % (k, request.args[k]))
                 if limit:
                     query = query.limit(int(request.args['limit']))
