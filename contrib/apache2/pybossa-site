@@ -3,7 +3,7 @@
 
     DocumentRoot /home/user/pybossa
     WSGIDaemonProcess pybossa user=user1 group=group1 threads=5
-    WSGIScriptAlias / /home/user/pybossa/pybossa.wsgi
+    WSGIScriptAlias / /home/user/pybossa/contrib/pybossa.wsgi
 
     <Directory /home/user/pybossa>
         WSGIProcessGroup pybossa

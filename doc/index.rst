@@ -39,6 +39,16 @@ Developer Guide
 
 This section covers how to use or contribute to PyBossa as a developer.
 
+Deploying PyBossa
+=================
+
+This section covers how you can deploy PyBossa in your web server.
+
+.. toctree::
+   :maxdepth: 2
+
+   apache2
+
 Useful Links
 ------------
 
