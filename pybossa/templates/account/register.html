@@ -4,7 +4,7 @@
 {% from "_formhelpers.html" import render_field %}
 
   <legend>Create an account</legend>
-  <form method="post" class="form-horizontal" action="{{url_for('account.register')}}">
+  <form method="post" class="form-horizontal" action="{{ url_for('account.register') }}">
       <fieldset>
       {{ render_field(form.fullname, placeholder="my full name") }}
       {{ render_field(form.username, placeholder="myusername") }}

@@ -4,7 +4,7 @@
       <div class="hero-unit">
         <h1>Welcome to {{ title }}!</h1>
         <p>{{description|safe}}</p>
-        <p><a class="btn btn-primary btn-large" href="/app">Start contributing now &raquo;</a></p>
+        <p><a class="btn btn-primary btn-large" href="{{ url_for('app.index') }}">Start contributing now &raquo;</a></p>
       </div>
 
       <!-- Example row of columns -->
@@ -12,7 +12,7 @@
         <div class="span4">
           <h2>Get Started</h2>
           <p>It's really simple to start contributing.</p>
-          <p><a href="/app" class="btn">Start now &raquo;</a></p>
+          <p><a href="{{ url_for('app.index') }}" class="btn">Start now &raquo;</a></p>
         </div>
         <div class="span4">
           <h2>Stats</h2>
@@ -22,7 +22,7 @@
             <li>Task count: {{ stats['task'] }}</li>
             <li>Task Run count: {{ stats['taskrun'] }}</li>
           </ul>
-          <p><a href="/stats" class="btn">The Leaderboard &raquo;</a></p>
+          <p><a href="{{ url_for('stats.index') }}" class="btn">The Leaderboard &raquo;</a></p>
         </div>
         <div class="span4">
           <h2>Why Contribute</h2>

@@ -4,7 +4,7 @@
 {% from "_formhelpers.html" import render_field %}
 
   <legend>Update your profile</legend>
-  <form method="post" class="form-horizontal" action="{{url_for('account.update_profile')}}">
+  <form method="post" class="form-horizontal" action="{{ url_for('account.update_profile') }}">
       <fieldset>
       {{ form.id }}
       {{ render_field(form.fullname, placeholder="my full name") }}

@@ -9,22 +9,22 @@
           <a class="brand" href="/">{{ brand }}</a>
           <div class="nav-collapse">
             <ul class="nav">
-              <li {% if active_page == "index"  %} class="active" {% endif %}> <a href="/"><i class="icon-home icon-white"></i> Home</a></li>
-              <li {% if active_page == "community"  %} class="active" {% endif %}><a href="/account"><i class="icon-user icon-white"></i> Community</a></li>
-              <li {% if active_page == "applications"  %} class="active" {% endif %}><a href="/app"><i class="icon-th icon-white"></i> Applications </a></li>
+                <li {% if active_page == "index"  %} class="active" {% endif %}> <a href="{{ url_for('home') }}"><i class="icon-home icon-white"></i> Home</a></li>
+              <li {% if active_page == "community"  %} class="active" {% endif %}><a href="{{ url_for('account.index')}}"><i class="icon-user icon-white"></i> Community</a></li>
+              <li {% if active_page == "applications"  %} class="active" {% endif %}><a href="{{ url_for('app.index') }}"><i class="icon-th icon-white"></i> Applications </a></li>
               <li><a href="http://docs.pybossa.com/">Guide and Documentation</a></li>
             </ul>
             <ul class="nav secondary-nav pull-right">
               {% if current_user.is_anonymous() %}
               <li>
-                <a href="{{url_for('account.register')}}">Register</a>
+                <a href="{{ url_for('account.register') }}">Register</a>
               </li>
               <li>
-                <a href="{{url_for('account.login')}}">Login</a>
+                <a href="{{ url_for('account.login') }}">Login</a>
               </li>
               {% else %}
               <li {% if active_page == "profile"  %} class="active" {% endif %}>
-              <p class="navbar-text pull-right">Logged in as <a href="{{url_for('account.profile')}}">{{ current_user.name}}</a></p>
+              <p class="navbar-text pull-right">Logged in as <a href="{{ url_for('account.profile') }}">{{ current_user.name}}</a></p>
               </li>
               <li>
               <a href="{{ url_for('account.logout') }}">Logout <i class="icon-off icon-white"></i></a>

@@ -29,7 +29,7 @@
               <h3>Joined: <small>{{ current_user.created[0:10] }}</small></h3>
               <h3>API key: <small>{{ current_user.api_key }}</small></h3>
               <div style="text-align:center">
-              <a href="profile/update" class="btn btn-large"><i class="icon icon-user"></i> Update your profile</a>
+                  <a href="{{ url_for('account.update_profile') }}" class="btn btn-large"><i class="icon icon-user"></i> Update your profile</a>
               </div>
           </div>
         </div>
@@ -37,7 +37,7 @@
       <div class="tab-pane" id="apps">
         <div id="app" class="row">
            <div id="actions" class="span9 well" style="text-align:center">
-               <a href="/app/new" class="btn btn-primary"><i class="icon-plus icon-white"></i> Create a new application</a>
+               <a href="{{ url_for('app.new') }}" class="btn btn-primary"><i class="icon-plus icon-white"></i> Create a new application</a>
            </div>
         </div>
         {% for app in current_user.apps %}
@@ -66,7 +66,7 @@
                         <i class="icon icon-eye-open"></i> No {% endif %}
                     </li>
                     </ul>
-                    <a class="btn btn-inverse" href="/app/{{ app.short_name }}"><i class="icon-edit icon-white"></i> Manage the application</a>
+                    <a class="btn btn-inverse" href="{{ url_for('app.details', short_name=app.short_name)}}"><i class="icon-edit icon-white"></i> Manage the application</a>
                 </div>
               </div>
             </div>

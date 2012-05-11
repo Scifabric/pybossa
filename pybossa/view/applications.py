@@ -47,7 +47,7 @@ class AppForm(Form):
     hidden = BooleanField('Hide?')
 
 @blueprint.route('/')
-def apps():
+def index():
     if require.app.read():
         return render_template('/applications/index.html', title = "Applications")
     else:
@@ -129,7 +129,7 @@ def update(short_name):
                     model.Session.merge(new_application)
                     model.Session.commit()
                     flash('Application updated!', 'success')
-                    return redirect(url_for('.app_details', short_name = new_application.short_name))
+                    return redirect(url_for('.details', short_name = new_application.short_name))
                 else:
                     flash('Please correct the errors', 'error')
                     return render_template('/applications/update.html', form = form, 
@@ -141,7 +141,7 @@ def update(short_name):
         pass
 
 @blueprint.route('/<short_name>')
-def app_details(short_name):
+def details(short_name):
     application = model.Session.query(model.App).\
             filter(model.App.short_name == short_name).\
             first()

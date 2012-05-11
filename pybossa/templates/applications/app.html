@@ -26,7 +26,7 @@
       <div class="progress progress-info progress-striped"> 
               <div class="bar" style="width:{{ bossa_app.completion_status()*100 }}%;"></div>
       </div>
-          <a class="btn btn-primary" href="/app/{{bossa_app.short_name}}/presenter"><i class="icon icon-white icon-ok"></i> Do some tasks!</a>
+      <a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = bossa_app.short_name) }}"><i class="icon icon-white icon-ok"></i> Do some tasks!</a>
 
     </div>
   </div>

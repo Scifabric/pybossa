@@ -26,7 +26,7 @@ from pybossa.auth import require
 blueprint = Blueprint('stats', __name__)
 
 @blueprint.route('/')
-def stats():
+def index():
     """Get the last activity from users and apps"""
     # Get top 5 app ids
     top5_active_app_ids = model.Session.query(model.TaskRun.app_id, func.count(model.TaskRun.id).label('total')).group_by(model.TaskRun.app_id).order_by('total DESC').limit(5).all()
