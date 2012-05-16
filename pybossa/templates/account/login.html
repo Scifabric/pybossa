@@ -1,6 +1,15 @@
 {% extends "base.html" %}
 
 {% block content %}
+{% if auth.twitter %}
+  {% if next is not none%}
+      <a href="{{ url_for('account.login_twitter', next=next) }}" class="btn btn-info">Sign in with Twitter</a>
+  {% else %}
+      <a href="{{ url_for('account.login_twitter') }}" class="btn btn-info">Sign in with Twitter</a>
+  {% endif %}
+      <hr>
+{% endif %}
+
 {% from "_formhelpers.html" import render_field %}
   <form method="post" class="form-horizontal" action="">
       {{ render_field(form.username, placeholder="your username") }}

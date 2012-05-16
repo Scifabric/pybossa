@@ -270,6 +270,8 @@ class User(Base, flaskext.login.UserMixin):
     category            = Column(Integer)
     #: TODO: find out ...
     flags               = Column(Integer)
+    # Twitter user_id field
+    twitter_user_id     = Column(Integer, unique=True)
     #: arbitrary additional information about the user in a JSON dict.
     info                = Column(JSONType, default=dict)
 

@@ -19,6 +19,7 @@ from functools import update_wrapper
 from flask import abort, request, make_response, current_app
 from functools import wraps
 from flaskext.wtf import Form, TextField, PasswordField, validators, ValidationError
+from flaskext.oauth import OAuth
 
 def jsonpify(f):
     """Wraps JSONified output for JSONP"""
@@ -139,3 +140,25 @@ def pretty_date(time=False):
         return str(day_diff/30) + " months ago"
     return str(day_diff/365) + " years ago"
 
+class Twitter:
+    oauth = OAuth()
+    def __init__(self, c_k, c_s):
+        #oauth = OAuth()
+        # Use Twitter as example remote application
+        self.oauth = self.oauth.remote_app('twitter',
+            # unless absolute urls are used to make requests, this will be added
+            # before all URLs. This is also true for request_token_url and others.
+            base_url='http://api.twitter.com/1/',
+            # where flask should look for new request tokens
+            request_token_url='http://api.twitter.com/oauth/request_token',
+            # where flask should exchange the token with the remote application
+            access_token_url='http://api.twitter.com/oauth/access_token',
+            # twitter knows two authorizatiom URLs. /authorize and /authenticate.
+            # they mostly work the same, but for sign on /authenticate is
+            # expected because this will give the user a slightly different
+            # user interface on the twitter side.
+            authorize_url='http://api.twitter.com/oauth/authenticate',
+            # the consumer keys from the twitter application registry.
+            consumer_key = c_k, #app.config['TWITTER_CONSUMER_KEY'], #'xBeXxg9lyElUgwZT6AZ0A',
+            consumer_secret = c_s #app.config['TWITTER_CONSUMER_KEY']#'aawnSpNTOVuDCjx7HMh6uSXetjNN8zWLpZwCEU4LBrk'
+        )

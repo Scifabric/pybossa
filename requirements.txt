@@ -4,3 +4,4 @@ Flask-Login
 Flask-WTF
 Flask-Gravatar
 dateutils
+alembic

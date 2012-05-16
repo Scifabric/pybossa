@@ -127,6 +127,8 @@ def home():
             'taskrun': 0,
             'user': 0
             }
+    if current_user.is_authenticated() and current_user.email_addr == "None":
+        flash("Please update your e-mail address in your profile page, right now it is empty!")
     return render_template('/home/index.html', stats=stats)
 
 if __name__ == "__main__":

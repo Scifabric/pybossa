@@ -6,6 +6,7 @@ from flaskext.login import login_user, logout_user, current_user
 from base import web, model, Fixtures
 from nose.tools import assert_equal
 
+import oauth2 as oauth
 
 class TestWeb:
     def setUp(self):
@@ -392,3 +393,23 @@ class TestWeb:
         res = self.delete_application()
         assert "Application deleted!" in res.data, res
 
+    def test_twitter_email_warning(self):
+        """Test WEB Twitter email warning works"""
+        # This test assumes that the user allows Twitter to authenticate, returning
+        # a valid resp. The only difference is a user object without a password
+        # Register a user and logout
+        self.register()
+        self.logout()
+        # Get the user in the DB and update the email_addr to None
+        user = model.Session.query(model.User).get(1)
+        user.email_addr = "None"
+        # Update twitter_user_id
+        user.twitter_user_id = 1
+        model.Session.merge(user)
+        model.Session.commit()
+
+        # Login again and check the warning message
+        self.login()
+        res = self.app.get('/', follow_redirects = True)
+        msg = "Please update your e-mail address in your profile page, right now it is empty!"
+        assert msg in res.data, res.data

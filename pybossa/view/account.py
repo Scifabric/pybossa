@@ -13,16 +13,17 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from flask import Blueprint, request, url_for, flash, redirect
+from flask import Blueprint, request, url_for, flash, redirect, session
 from flask import render_template
 from flaskext.login import login_required, login_user, logout_user, current_user
 from flaskext.wtf import Form, TextField, PasswordField, validators, ValidationError, IntegerField, HiddenInput
 
 import pybossa.model as model
 from pybossa.util import Unique
+from pybossa.util import Twitter
+import settings_local as config
 
 blueprint = Blueprint('account', __name__)
-
 
 @blueprint.route('/')
 def index():
@@ -49,8 +50,95 @@ def login():
 
     if request.method == 'POST' and not form.validate():
         flash('Please correct the errors', 'error')
-    return render_template('account/login.html', title = "Login", form=form)
+    auth = {'twitter': False}
+    if current_user.is_anonymous():
+        try:
+            twitter
+            auth['twitter'] = True
+            return render_template('account/login.html', title="Login", form=form, auth=auth, next=request.args.get('next'))
+        except NameError:
+            return render_template('account/login.html', title="Login", form=form, auth=auth, next=request.args.get('next'))
+    else:
+        # User already signed in, so redirect to home page
+        return redirect(url_for("home"))
 
+
+try:
+    twitter = Twitter(config.TWITTER_CONSUMER_KEY, config.TWITTER_CONSUMER_SECRET)
+    @blueprint.route('/twitter', methods=['GET','POST'])
+    def login_twitter():
+        return twitter.oauth.authorize(callback=url_for('.oauth_authorized',
+                next=request.args.get("next") ))
+    
+    @twitter.oauth.tokengetter
+    def get_twitter_token():
+        if current_user.is_anonymous(): 
+            return None
+        else:
+            return((current_user.info['twitter_token']['oauth_token'], 
+                   current_user.info['twitter_token']['oauth_token_secret'])) 
+    
+    @blueprint.route('/oauth-authorized')
+    @twitter.oauth.authorized_handler
+    def oauth_authorized(resp):
+        """Called after authorization. After this function finished handling,
+        the OAuth information is removed from the session again. When this
+        happened, the tokengetter from above is used to retrieve the oauth
+        token and secret.
+        
+        Because the remote application could have re-authorized the application
+        it is necessary to update the values in the database.
+        
+        If the application redirected back after denying, the response passed
+        to the function will be `None`. Otherwise a dictionary with the values
+        the application submitted. Note that Twitter itself does not really
+        redirect back unless the user clicks on the application name.
+        """
+        next_url = request.args.get('next') or url_for('home')
+        if resp is None:
+            flash(u'You denied the request to sign in.', 'error')
+            return redirect(next_url)
+    
+        user = model.Session.query(model.User).filter_by(twitter_user_id = resp['user_id']).first()
+    
+        # user never signed on
+        # Twitter API does not provide a way to get the e-mail so we will ask for it
+        # only the first time
+        request_email = False
+        first_login = False
+        if user is None:
+            request_email = True
+            first_login = True
+            twitter_token = dict(
+                    oauth_token = resp['oauth_token'],
+                    oauth_token_secret = resp['oauth_token_secret']
+                    )
+            info = dict(twitter_token = twitter_token)
+            user = model.User(
+                    fullname = resp['screen_name'],
+                    name = resp['screen_name'],
+                    email_addr = 'None',
+                    twitter_user_id = resp['user_id'],
+                    info = info 
+                    )
+            model.Session.add(user)
+            model.Session.commit()
+    
+        login_user(user, remember=True)
+        flash("Welcome back %s" % user.fullname, 'success')
+        if (user.email_addr == "None"): request_email = True
+
+        if request_email:
+            if first_login:
+                flash("This is your first login, please add a valid e-mail")
+            else:
+                flash("Please update your e-mail address in your profile page")
+            return redirect(url_for('.update_profile'))
+
+        return redirect(next_url)
+except:
+    print "Twitter CONSUMER_KEY and CONSUMER_SECRET not available in the config file"
+    print "Twitter login disabled"
 
 @blueprint.route('/logout')
 def logout():

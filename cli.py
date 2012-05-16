@@ -7,11 +7,18 @@ import inspect
 import pybossa.model as model
 import pybossa.web as web
 
+from alembic.config import Config
+from alembic import command
+
 def db_create():
     '''Create the db'''
     dburi = web.app.config['SQLALCHEMY_DATABASE_URI']
     engine = model.create_engine(dburi)
     model.Base.metadata.create_all(bind=engine)
+    # then, load the Alembic configuration and generate the
+    # version table, "stamping" it with the most recent rev:
+    alembic_cfg = Config("alembic.ini")
+    command.stamp(alembic_cfg,"head")
 
 def db_rebuild():
     '''Rebuild the db'''
@@ -19,6 +26,10 @@ def db_rebuild():
     engine = model.create_engine(dburi)
     model.Base.metadata.drop_all(bind=engine)
     model.Base.metadata.create_all(bind=engine)
+    # then, load the Alembic configuration and generate the
+    # version table, "stamping" it with the most recent rev:
+    alembic_cfg = Config("alembic.ini")
+    command.stamp(alembic_cfg,"head")
 
 def fixtures():
     '''Create some fixtures!'''
