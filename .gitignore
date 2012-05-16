@@ -11,3 +11,4 @@ epio.ini
 .epioignore
 *.un~
 *.wsgi
+alembic.ini
