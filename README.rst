@@ -11,10 +11,10 @@ crowd-source human problem-solving skills!
 .. _BOSSA: http://bossa.berkeley.edu/
 
 
-Demo Site
-=========
+See it in Action
+================
 
-We have a demo site running here: http://pybossa.ep.io
+PyBossa powers http://pybossa.com/ - check it out!
 
 
 Install
