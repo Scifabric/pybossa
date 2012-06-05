@@ -1,6 +1,6 @@
 Flask==0.8
 SQLAlchemy==0.7.3
-Flask-Login
+Flask-Login==0.1
 Flask-WTF
 Flask-Gravatar
 Flask-OAuth
