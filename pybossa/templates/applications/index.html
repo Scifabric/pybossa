@@ -13,7 +13,11 @@
         <div class="span2">
             <ul class="thumbnails">
                 <li>
-                  <img class="thumbnail" src="http://placehold.it/100x100">
+                  {% if app.info.thumbnail %}
+                    <img class="thumbnail" src="{{ app.info.thumbnail }}">
+                  {% else %}
+                    <img class="thumbnail" src="http://placehold.it/100x100">
+                  {% endif %}
                 </li>
             </ul>
         </div>
