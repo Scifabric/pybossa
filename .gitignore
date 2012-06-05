@@ -5,10 +5,6 @@
 settings_local.py
 env/
 doc/_build
-# epio stuff
-epio.ini
-.epio-app
-.epioignore
 *.un~
 *.wsgi
 alembic.ini
