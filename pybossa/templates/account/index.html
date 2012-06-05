@@ -10,8 +10,8 @@
       <li> 
       <a href="#" class="thumbnail" rel='popover' title="{{account['name']}}" data-content="
               <strong>Joined:</strong> {{account['created'][0:10]}}
-              <br/>
               {% for app in account.apps %}
+              <br/>
               <strong>Owner of:</strong> {{ app.name }}
               {% endfor %}
               <br/>
