@@ -10,7 +10,13 @@
       <li> 
       <a href="#" class="thumbnail" rel='popover' title="{{account['name']}}" data-content="
               <strong>Joined:</strong> {{account['created'][0:10]}}
-                        <br/><strong>Activity:</strong> ToDo">
+              <br/>
+              {% for app in account.apps %}
+              <strong>Owner of:</strong> {{ app.name }}
+              {% endfor %}
+              <br/>
+              <strong>Submitted Tasks:</strong> {{ account.task_runs | count }}
+              ">
                 <img src="{{account['email_addr'] | gravatar(size=90)}}">
         </a>
       </li>
