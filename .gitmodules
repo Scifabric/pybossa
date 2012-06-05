@@ -1,6 +1,6 @@
 [submodule "pybossa/static/js/pybossa"]
 	path = pybossa/static/js/pybossa
-	url = git@github.com:PyBossa/pybossa.js.git
+	url = git://github.com/PyBossa/pybossa.js.git
 [submodule "pybossa/static/js/throbber"]
 	path = pybossa/static/js/throbber
 	url = git://github.com/aino/throbber.js.git
