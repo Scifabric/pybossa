@@ -37,6 +37,14 @@ app.register_blueprint(account, url_prefix='/account')
 app.register_blueprint(applications, url_prefix='/app')
 app.register_blueprint(stats, url_prefix='/stats')
 
+# Enable Twitter if available
+try:
+    if (app.config['TWITTER_CONSUMER_KEY'] and app.config['TWITTER_CONSUMER_SECRET']):
+        from pybossa.view.twitter import blueprint as twitter
+        app.register_blueprint(twitter, url_prefix='/twitter')
+except:
+    print "Twitter singin disabled"
+
 @app.before_request
 def bind_db_engine():
     dburi = app.config.get('SQLALCHEMY_DATABASE_URI', '')
