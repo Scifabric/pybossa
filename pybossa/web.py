@@ -29,6 +29,8 @@ from pybossa.view.account import blueprint as account
 from pybossa.view.applications import blueprint as applications
 from pybossa.view.stats import blueprint as stats
 
+import random 
+
 logger = logging.getLogger('pybossa')
 
 # other views ...
@@ -128,6 +130,23 @@ def home():
             'taskrun': taskrun_count,
             'user': user_count
             }
+        apps = model.Session.query(model.App).filter(model.App.hidden == 0).all()
+        twoapps = False
+        if (len(apps) > 0):
+            if (len(apps) == 1):
+                frontPageApps = apps
+                tmp = model.App( name = "Your application", description = "Could be here!")
+                frontPageApps.append(tmp)
+            else:
+                frontPageApps = []
+                for i in range(0,2):
+                    app = random.choice(apps)
+                    apps.pop(apps.index(app))
+                    frontPageApps.append(app)
+                    twoapps = True
+        else:
+            frontPageApps = []
+
     except UnboundExecutionError:
         stats = {
             'app': 0,
@@ -137,7 +156,7 @@ def home():
             }
     if current_user.is_authenticated() and current_user.email_addr == "None":
         flash("Please update your e-mail address in your profile page, right now it is empty!")
-    return render_template('/home/index.html', stats=stats)
+    return render_template('/home/index.html', stats = stats, frontPageApps = frontPageApps, twoapps = twoapps)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.NOTSET)
