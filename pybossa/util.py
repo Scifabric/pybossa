@@ -159,6 +159,6 @@ class Twitter:
             # user interface on the twitter side.
             authorize_url='http://api.twitter.com/oauth/authenticate',
             # the consumer keys from the twitter application registry.
-            consumer_key = c_k, #app.config['TWITTER_CONSUMER_KEY'], #'xBeXxg9lyElUgwZT6AZ0A',
-            consumer_secret = c_s #app.config['TWITTER_CONSUMER_KEY']#'aawnSpNTOVuDCjx7HMh6uSXetjNN8zWLpZwCEU4LBrk'
+            consumer_key = c_k, #app.config['TWITTER_CONSUMER_KEY'], 
+            consumer_secret = c_s #app.config['TWITTER_CONSUMER_KEY']
         )
