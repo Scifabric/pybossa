@@ -81,11 +81,6 @@ And saved into the task field **info** of the task model. As Flickr only
 publishes the latest 20 uploaded photos in their public feed, the script will
 create only 20 tasks in PyBossa.
 
-.. note::
-
-  Sometimes the script fails because Flickr does not provide a sane JSON object,
-  so you will have to re-run it until you get a successful run.
-
 In order to create the application and its tasks, run the following script::
 
   python createTasks.py -u http://PYBOSSA-SERVER -k API-KEY
