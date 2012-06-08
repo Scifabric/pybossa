@@ -57,13 +57,6 @@
                 </div>
                 <div id="data" class="span6">
                   <h2>{{ app.name }}</h2>
-                  {% if app.tasks | count == 0 %}
-                    <div class="alert alert-info">
-                        <strong>Warning!</strong> This application has no assigned tasks yet!
-                        <p>
-                        Therefore it will not be displayed in the front page or applications index.</p>
-                    </div>
-                  {% endif %}
                   <ul>
                     <li><strong>Description:</strong> {{ app.description }}</li>
                     <li><strong>Created:</strong> {{ app.created[0:10] }}</li>
