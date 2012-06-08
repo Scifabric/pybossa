@@ -166,6 +166,8 @@ def details(short_name):
 
 @blueprint.route('/<short_name>/presenter')
 def presenter(short_name):
+    if (current_user.is_anonymous()):
+        flash("Ooops! You are an anonymous user and will not get any credit for your contributions. Sign in now!", "warning")
     app = model.Session.query(model.App).filter(model.App.short_name == short_name).first()
     return render_template('/applications/presenter.html', app = app)
 
