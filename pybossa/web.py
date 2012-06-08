@@ -158,10 +158,10 @@ def home():
         flash("Please update your e-mail address in your profile page, right now it is empty!")
     return render_template('/home/index.html', stats = stats, frontPageApps = frontPageApps, threeApps = threeApps)
 
-@app.route("/support")
-def support():
-    """Render support template"""
-    return render_template("/home/support.html")
+@app.route("/about")
+def about():
+    """Render the about template"""
+    return render_template("/home/about.html")
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.NOTSET)
