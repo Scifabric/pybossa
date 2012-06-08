@@ -36,19 +36,19 @@
       </div>
       <div class="tab-pane" id="apps">
         <div id="app" class="row">
-           <div id="actions" class="span9 well" style="text-align:center">
+           <div id="actions" class="span8 well" style="text-align:center">
                <a href="{{ url_for('app.new') }}" class="btn btn-primary"><i class="icon-plus icon-white"></i> Create a new application</a>
            </div>
         </div>
         {% for app in current_user.apps %}
         <div id="app" class="row">
-            <div id="buttons" class="span9 well">
+            <div id="buttons" class="span8 well">
               <div id="img" class="row">
-                <div class="span3">
+                <div class="span2">
                     <ul class="thumbnails">
                         <li>
                             {% if app.info.thumbnail %}
-                                <img class="thumbnail" src="{{ app.info.thumbnail}}">
+                                <img class="thumbnail" src="{{ app.info.thumbnail }}">
                             {% else %}
                                 <img class="thumbnail" src="http://placehold.it/100x100">
                             {% endif %}
