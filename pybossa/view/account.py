@@ -33,8 +33,8 @@ class LoginForm(Form):
     username = TextField('Username', [validators.Required(message="The username is required")])
     password = PasswordField('Password', [validators.Required(message="You must provide a password")])
 
-@blueprint.route('/login', methods=['GET', 'POST'])
-def login():
+@blueprint.route('/signin', methods=['GET', 'POST'])
+def signin():
     form = LoginForm(request.form, csrf_enabled=False)
     if request.method == 'POST' and form.validate():
         password = form.password.data
@@ -54,18 +54,18 @@ def login():
         # If Twitter is enabled in config, show the Twitter Sign in button
         if ('twitter' in current_app.blueprints):
                 auth['twitter'] = True
-                return render_template('account/login.html', title="Login", form=form, auth=auth, next=request.args.get('next'))
+                return render_template('account/signin.html', title="Sign in", form=form, auth=auth, next=request.args.get('next'))
         # Else use only the default system
         else:
-            return render_template('account/login.html', title="Login", form=form, auth=auth, next=request.args.get('next'))
+            return render_template('account/signin.html', title="Sign in", form=form, auth=auth, next=request.args.get('next'))
     else:
         # User already signed in, so redirect to home page
         return redirect(url_for("home"))
 
-@blueprint.route('/logout')
-def logout():
+@blueprint.route('/signout')
+def signout():
     logout_user()
-    flash('You are now logged out', 'success')
+    flash('You are now signed out', 'success')
     return redirect(url_for('home'))
 
 

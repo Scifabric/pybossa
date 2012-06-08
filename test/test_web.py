@@ -27,7 +27,7 @@ class TestWeb:
             return "<title>PyBossa &middot; %s</title>" % title 
 
     def register(self, method="POST", fullname="John Doe", username="johndoe", password="p4ssw0rd", password2=None, email=None):
-        """Helper function to register and login a user"""
+        """Helper function to register and sign in a user"""
         if password2 is None:
             password2 = password
         if email is None:
@@ -43,9 +43,9 @@ class TestWeb:
         else:
             return self.app.get('/account/register', follow_redirects = True)
 
-    def login(self, method="POST", username="johndoe", password="p4ssw0rd", next=None):
-        """Helper function to login current user"""
-        url = '/account/login'
+    def signin(self, method="POST", username="johndoe", password="p4ssw0rd", next=None):
+        """Helper function to sign in current user"""
+        url = '/account/signin'
         if next != None:
             url = url + '?next=' + next
         if method == "POST":
@@ -57,7 +57,7 @@ class TestWeb:
             return self.app.get(url, follow_redirects = True)
 
     def profile(self):
-        """Helper function to check profile of logged user"""
+        """Helper function to check profile of signed in user"""
         return self.app.get("/account/profile", follow_redirects = True)
 
     def update_profile(self, method="POST", id=1, fullname="John Doe", name="johndoe", email_addr="johndoe@example.com"):
@@ -72,9 +72,9 @@ class TestWeb:
         else:
             return self.app.get("/account/profile/update", follow_redirects = True)
 
-    def logout(self):
-        """Helper function to logout current user"""
-        return self.app.get('/account/logout', follow_redirects = True)
+    def signout(self):
+        """Helper function to sign out current user"""
+        return self.app.get('/account/signout', follow_redirects = True)
 
     def new_application(self, method="POST", name="Sample App", short_name="sampleapp", description="Description", hidden = False):
         """Helper function to create an application"""
@@ -182,39 +182,39 @@ class TestWeb:
         assert self.html_title("Register") in res.data, res
         assert "Passwords must match" in res.data, res
     
-    def test_04_login_logout(self):
-        """Test WEB logging in and logging out works"""
+    def test_04_signin_signout(self):
+        """Test WEB sign in and sign out works"""
         res = self.register()
         # Log out as the registration already logs in the user
-        res = self.logout()
+        res = self.signout()
 
-        res = self.login(method="GET")
-        assert self.html_title("Login") in res.data, res
-        assert "Login" in res.data, res
+        res = self.signin(method="GET")
+        assert self.html_title("Sign in") in res.data, res.data
+        assert "Sign in" in res.data, res.data
 
-        res = self.login(username='')
+        res = self.signin(username='')
         assert "Please correct the errors" in  res.data, res
         assert "The username is required" in res.data, res
 
-        res = self.login(password='')
+        res = self.signin(password='')
         assert "Please correct the errors" in  res.data, res
         assert "You must provide a password" in res.data, res
 
-        res = self.login(username='', password='')
+        res = self.signin(username='', password='')
         assert "Please correct the errors" in  res.data, res
         assert "The username is required" in res.data, res
         assert "You must provide a password" in res.data, res
 
-        res = self.login(username='wrongusername')
+        res = self.signin(username='wrongusername')
         assert "Incorrect email/password" in  res.data, res
 
-        res = self.login(password='wrongpassword')
+        res = self.signin(password='wrongpassword')
         assert "Incorrect email/password" in  res.data, res
 
-        res = self.login(username='wrongusername', password='wrongpassword')
+        res = self.signin(username='wrongusername', password='wrongpassword')
         assert "Incorrect email/password" in  res.data, res
 
-        res = self.login()
+        res = self.signin()
         assert self.html_title() in res.data, res
         assert "Welcome back John Doe" in res.data, res
 
@@ -222,26 +222,25 @@ class TestWeb:
         res = self.profile()
         assert self.html_title("Profile") in res.data, res
         assert "John Doe" in res.data, res
-        assert "Logged in " in res.data, res
         assert "johndoe@example.com" in res.data, res
         assert "API key" in res.data, res
         assert "Create a new application" in res.data, res
 
 
         # Log out
-        res = self.logout()
+        res = self.signout()
         assert self.html_title() in res.data, res
-        assert "You are now logged out" in res.data, res
+        assert "You are now signed out" in res.data, res
         
         # Request profile as an anonymous user
         res = self.profile()
-        # As a user must be logged in to access, the page the title will be the redirection to log in
-        assert self.html_title("Login") in res.data, res
-        assert "Please log in to access this page." in res.data, res
+        # As a user must be signed in to access, the page the title will be the redirection to log in
+        assert self.html_title("Sign in") in res.data, res
+        assert "Please sign in to access this page." in res.data, res
 
 
 
-        res = self.login(next='%2Faccount%2Fprofile')
+        res = self.signin(next='%2Faccount%2Fprofile')
         assert self.html_title("Profile") in res.data, res
         assert "Welcome back John Doe" in res.data, res
         assert "API key" in res.data, res
@@ -269,27 +268,27 @@ class TestWeb:
         # Updating the username field forces the user to re-log in
         res = self.update_profile(fullname="John Doe 2", email_addr="johndoe2@example.com", name="johndoe2")
         assert "Your profile has been updated!" in res.data, res
-        assert "Please log in to access this page" in res.data, res
+        assert "Please sign in to access this page" in res.data, res
 
-        res = self.login(method="POST", username="johndoe2", password="p4ssw0rd", next="%2Faccount%2Fprofile")
+        res = self.signin(method="POST", username="johndoe2", password="p4ssw0rd", next="%2Faccount%2Fprofile")
         assert "Welcome back John Doe 2" in res.data, res
         assert "John Doe 2" in res.data, res
         assert "johndoe2" in res.data, res
         assert "johndoe2@example.com" in res.data, res
 
-        res = self.logout()
+        res = self.signout()
         assert self.html_title() in res.data, res
-        assert "You are now logged out" in res.data, res
+        assert "You are now signed out" in res.data, res
 
-        # A user must be logged in to access the update page, the page the title will be the redirection to log in
+        # A user must be signed in to access the update page, the page the title will be the redirection to log in
         res = self.update_profile(method="GET")
-        assert self.html_title("Login") in res.data, res
-        assert "Please log in to access this page." in res.data, res
+        assert self.html_title("Sign in") in res.data, res
+        assert "Please sign in to access this page." in res.data, res
 
-        # A user must be logged in to access the update page, the page the title will be the redirection to log in
+        # A user must be signed in to access the update page, the page the title will be the redirection to log in
         res = self.update_profile()
-        assert self.html_title("Login") in res.data, res
-        assert "Please log in to access this page." in res.data, res
+        assert self.html_title("Sign in") in res.data, res
+        assert "Please sign in to access this page." in res.data, res
 
 
 
@@ -297,7 +296,7 @@ class TestWeb:
         """Test WEB applications index interface works"""
         self.register()
         self.new_application()
-        self.logout()
+        self.signout()
 
         res = self.app.get('/app/' )
         assert self.html_title("Applications") in res.data, res.data
@@ -309,7 +308,7 @@ class TestWeb:
         # With one application in the system
         self.register()
         self.new_application()
-        self.logout()
+        self.signout()
         res = self.app.get('/')
         assert "Featured applications" in res.data, res.data
         assert "Sample App" in res.data, res.data
@@ -324,7 +323,7 @@ class TestWeb:
         self.register()
         self.new_application()
         self.new_application(name="New App", short_name="newapp", description="New description")
-        self.logout()
+        self.signout()
         res = self.app.get('/')
         assert "Featured applications" in res.data, res.data
         # First app
@@ -347,7 +346,7 @@ class TestWeb:
         self.new_application()
         self.new_application(name="New App", short_name="newapp", description="New description")
         self.new_application(name="Third App", short_name="thirdapp", description="Third description")
-        self.logout()
+        self.signout()
         res = self.app.get('/')
         assert "Featured applications" in res.data, res.data
         # First app
@@ -369,7 +368,7 @@ class TestWeb:
 
     def test_10_get_application(self):
         """Test WEB application URL/<short_name> works"""
-        # Login and create an application
+        # Sign in and create an application
         self.register()
         res = self.new_application()
 
@@ -379,7 +378,7 @@ class TestWeb:
         assert "Completed tasks" in res.data, res
         assert "Edit the application" in res.data, res
         assert "Delete the application" in res.data, res
-        self.logout()
+        self.signout()
 
         # Now as an anonymous user
         res = self.app.get('/app/sampleapp', follow_redirects = True)
@@ -403,14 +402,14 @@ class TestWeb:
         """Test WEB create an application works"""
         # Create an app as an anonymous user
         res = self.new_application(method="GET")
-        assert self.html_title("Login") in res.data, res
-        assert "Please log in to access this page" in res.data, res
+        assert self.html_title("Sign in") in res.data, res
+        assert "Please sign in to access this page" in res.data, res
 
         res = self.new_application()
-        assert self.html_title("Login") in res.data, res
-        assert "Please log in to access this page." in res.data, res
+        assert self.html_title("Sign in") in res.data, res.data
+        assert "Please sign in to access this page." in res.data, res.data
 
-        # Login and create an application
+        # Sign in and create an application
         res = self.register()
 
         res = self.new_application(method="GET")
@@ -442,7 +441,7 @@ class TestWeb:
         self.register()
         self.new_application()
         self.update_application(new_hidden = True)
-        self.logout()
+        self.signout()
 
         res = self.app.get('/app/',follow_redirects = True)
         assert "Sample App" not in res.data, res
@@ -465,9 +464,9 @@ class TestWeb:
         """Test WEB Twitter email warning works"""
         # This test assumes that the user allows Twitter to authenticate, returning
         # a valid resp. The only difference is a user object without a password
-        # Register a user and logout
+        # Register a user and sign out 
         self.register()
-        self.logout()
+        self.signout()
         # Get the user in the DB and update the email_addr to None
         user = model.Session.query(model.User).get(1)
         user.email_addr = "None"
@@ -476,8 +475,8 @@ class TestWeb:
         model.Session.merge(user)
         model.Session.commit()
 
-        # Login again and check the warning message
-        self.login()
+        # Sign in again and check the warning message
+        self.signin()
         res = self.app.get('/', follow_redirects = True)
         msg = "Please update your e-mail address in your profile page, right now it is empty!"
         assert msg in res.data, res.data

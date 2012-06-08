@@ -12,6 +12,7 @@
 
 {% from "_formhelpers.html" import render_field %}
   <form method="post" class="form-horizontal" action="">
+    <legend>Or Sign in with your PyBossa account</legend>
       {{ render_field(form.username, placeholder="your username") }}
       {{ render_field(form.password, placeholder="********") }}
     <div class="form-actions">
@@ -19,4 +20,10 @@
       <input type="reset" value="Cancel" class="btn" />
     </div>
   </form>
+
+<div class="row">
+    <div class="span12" style="text-align:center">
+        <a href="{{ url_for('account.register') }}" class="btn btn-success"><i class="icon icon-white icon-user"></i> Create a new account!</a>
+    </div>
+</div>
 {% endblock %}
