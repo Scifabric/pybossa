@@ -12,7 +12,8 @@
                 <li {% if active_page == "index"  %} class="active" {% endif %}> <a href="{{ url_for('home') }}"><i class="icon-home icon-white"></i> Home</a></li>
               <li {% if active_page == "community"  %} class="active" {% endif %}><a href="{{ url_for('account.index')}}"><i class="icon-user icon-white"></i> Community</a></li>
               <li {% if active_page == "applications"  %} class="active" {% endif %}><a href="{{ url_for('app.index') }}"><i class="icon-th icon-white"></i> Applications </a></li>
-              <li><a href="http://docs.pybossa.com/">Guide and Documentation</a></li>
+              <li><a href="http://docs.pybossa.com/"><i class="icon icon-white icon-book"></i> Guide and Documentation</a></li>
+              <li {% if active_page == "support"  %} class="active" {% endif %}><a href="{{ url_for('support')}}"><i class="icon icon-white icon-question-sign"></i> Support</a></li>
             </ul>
             <ul class="nav secondary-nav pull-right">
               {% if current_user.is_anonymous() %}

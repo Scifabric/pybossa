@@ -39,6 +39,9 @@
     {% include "_navbar.html" %}
 
     <div class="container">
+    <!-- We are Alpha yet! -->
+    <img src="{{ url_for('static', filename='img/ribbon-right.png')}}" class="visible-desktop" style="position:absolute; top:40px; right:0; border:0;">
+    <img src="{{ url_for('static', filename='img/ribbon-right.png')}}" class="visible-tablet visible-phone" style="position:absolute; top:50px; right:0; border:0;">
 
     {% include "_flash_messages.html" %}
 
