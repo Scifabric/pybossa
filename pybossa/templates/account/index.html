@@ -8,7 +8,7 @@
       <ul class="thumbnails">
       {% for account in accounts %}
       <li> 
-      <a href="#" class="thumbnail" rel='popover' title="{{account['name']}}" data-content="
+      <a href="#" class="thumbnail" rel='popover' title="{{account['fullname']}}" data-content="
               <strong>Joined:</strong> {{account['created'][0:10]}}
               {% for app in account.apps %}
               <br/>

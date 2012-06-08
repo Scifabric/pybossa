@@ -131,19 +131,19 @@ def home():
             'user': user_count
             }
         apps = model.Session.query(model.App).filter(model.App.hidden == 0).all()
-        twoapps = False
+        threeApps = False
         if (len(apps) > 0):
-            if (len(apps) == 1):
+            if (len(apps) == 1 or len(apps) == 2):
                 frontPageApps = apps
                 tmp = model.App( name = "Your application", description = "Could be here!")
                 frontPageApps.append(tmp)
             else:
                 frontPageApps = []
-                for i in range(0,2):
+                for i in range(0,3):
                     app = random.choice(apps)
                     apps.pop(apps.index(app))
                     frontPageApps.append(app)
-                    twoapps = True
+                    threeApps = True
         else:
             frontPageApps = []
 
@@ -156,7 +156,7 @@ def home():
             }
     if current_user.is_authenticated() and current_user.email_addr == "None":
         flash("Please update your e-mail address in your profile page, right now it is empty!")
-    return render_template('/home/index.html', stats = stats, frontPageApps = frontPageApps, twoapps = twoapps)
+    return render_template('/home/index.html', stats = stats, frontPageApps = frontPageApps, threeApps = threeApps)
 
 @app.route("/support")
 def support():

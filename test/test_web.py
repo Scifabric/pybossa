@@ -300,9 +300,9 @@ class TestWeb:
         self.logout()
 
         res = self.app.get('/app/' )
-        assert self.html_title("Applications") in res.data, res
-        assert "Available Projects" in res.data, res
-        assert '/app/sampleapp' in res.data, res
+        assert self.html_title("Applications") in res.data, res.data
+        assert "Available applications" in res.data, res.data
+        assert '/app/sampleapp' in res.data, res.data
 
     def test_07_index_one_app(self):
         """Test WEB index Featured for one registered application works"""
@@ -312,11 +312,11 @@ class TestWeb:
         self.logout()
         res = self.app.get('/')
         assert "Featured applications" in res.data, res.data
-        assert "Sample App" in res.data, res
-        assert "Try it!" in res.data, res
-        assert "Your application" in res.data, res
-        assert "Could be here!" in res.data, res
-        assert "Create an application!" in res.data, res
+        assert "Sample App" in res.data, res.data
+        assert "Try it!" in res.data, res.data
+        assert "Your application" in res.data, res.data
+        assert "Could be here!" in res.data, res.data
+        assert "Create an application!" in res.data, res.data
 
     def test_08_index_two_apps(self):
         """Test WEB index Featured for two registered applications works"""
@@ -328,19 +328,46 @@ class TestWeb:
         res = self.app.get('/')
         assert "Featured applications" in res.data, res.data
         # First app
-        assert "Sample App" in res.data, res
-        assert "Description" in res.data, res
-        assert "Try it!" in res.data, res
+        assert "Sample App" in res.data, res.data
+        assert "Description" in res.data, res.data
+        assert "Try it!" in res.data, res.data
         # Second app
-        assert "New App" in res.data, res
-        assert "New description" in res.data, res
-        assert "Try it!" in res.data, res
+        assert "New App" in res.data, res.data
+        assert "New description" in res.data, res.data
+        assert "Try it!" in res.data, res.data
+        # Create application demo 
+        assert "Your application" in res.data, res.data
+        assert "Could be here!" in res.data, res.data
+        assert "Create an application!" in res.data, res.data
+
+    def test_09_index_three_apps(self):
+        """Test WEB index Featured for three registered applications works"""
+        # With one application in the system
+        self.register()
+        self.new_application()
+        self.new_application(name="New App", short_name="newapp", description="New description")
+        self.new_application(name="Third App", short_name="thirdapp", description="Third description")
+        self.logout()
+        res = self.app.get('/')
+        assert "Featured applications" in res.data, res.data
+        # First app
+        assert "Sample App" in res.data, res.data
+        assert "Description" in res.data, res.data
+        assert "Try it!" in res.data, res.data
+        # Second app
+        assert "New App" in res.data, res.data
+        assert "New description" in res.data, res.data
+        assert "Try it!" in res.data, res.data
+        # Create application demo 
+        assert "Third App" in res.data, res.data
+        assert "Third description" in res.data, res.data
+        assert "Try it!" in res.data, res.data
         # Big black button
-        assert "Create your own application!" in res.data, res
+        assert "Create your own application" in res.data, res.data
 
 
 
-    def test_09_get_application(self):
+    def test_10_get_application(self):
         """Test WEB application URL/<short_name> works"""
         # Login and create an application
         self.register()
@@ -372,7 +399,7 @@ class TestWeb:
         assert "Delete the application" not in res.data, res
 
 
-    def test_10_create_application(self):
+    def test_11_create_application(self):
         """Test WEB create an application works"""
         # Create an app as an anonymous user
         res = self.new_application(method="GET")
@@ -394,7 +421,7 @@ class TestWeb:
         assert self.html_title("Application: %s" % "Sample App" ) in res.data, res
         assert "Application created!" in res.data, res
 
-    def test_11_update_application(self):
+    def test_12_update_application(self):
         """Test WEB update application works"""
         self.register()
         self.new_application()
@@ -410,7 +437,7 @@ class TestWeb:
         assert self.html_title("Application: New Sample App") in res.data, res
         assert "Application updated!" in res.data, res
 
-    def test_12_hidden_applications(self):
+    def test_13_hidden_applications(self):
         """Test WEB hidden application works"""
         self.register()
         self.new_application()
@@ -423,7 +450,7 @@ class TestWeb:
         res = self.app.get('/app/sampleapp', follow_redirects = True)
         assert "Sorry! This app does not exists." in res.data, res
         
-    def test_13_delete_application(self):
+    def test_14_delete_application(self):
         """Test WEB delete application works"""
         self.register()
         self.new_application()
@@ -434,7 +461,7 @@ class TestWeb:
         res = self.delete_application()
         assert "Application deleted!" in res.data, res
 
-    def test_14_twitter_email_warning(self):
+    def test_15_twitter_email_warning(self):
         """Test WEB Twitter email warning works"""
         # This test assumes that the user allows Twitter to authenticate, returning
         # a valid resp. The only difference is a user object without a password
