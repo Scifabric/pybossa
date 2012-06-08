@@ -53,7 +53,7 @@ Useful Links
 ------------
 
 * Mailing list: http://lists.okfn.org/mailman/listinfo/open-science-dev
-* Source code: https://github.com/citizen-cyberscience-centre/pybossa
+* Source code: https://github.com/PyBossa/pybossa
 * User stories: http://science.okfnpad.org/pybossa-userstories
 * General etherpad: http://science.okfnpad.org/pybossa
 

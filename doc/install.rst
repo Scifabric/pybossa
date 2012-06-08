@@ -14,7 +14,7 @@ Pre-requisites:
 Install the code and requirements (you may wish to create a virtualenv first)::
 
   # get the source
-  git clone https://github.com/citizen-cyberscience-centre/pybossa
+  git clone https://github.com/PyBossa/pybossa
   cd pybossa
   # [optional] create virtualenv first
   # virtualenv ~/{my-virtualenv}
