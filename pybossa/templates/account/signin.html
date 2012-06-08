@@ -3,9 +3,9 @@
 {% block content %}
 {% if auth.twitter %}
   {% if next is not none%}
-      <a href="{{ url_for('twitter.login', next=next) }}" class="btn btn-info">Sign in with Twitter</a>
+  <a href="{{ url_for('twitter.login', next=next) }}" class="btn btn-info"><i class="icon-twitter"></i> Sign in with Twitter</a>
   {% else %}
-      <a href="{{ url_for('twitter.login') }}" class="btn btn-info">Sign in with Twitter</a>
+      <a href="{{ url_for('twitter.login') }}" class="btn btn-info"><i class="icon-twitter"></i> Sign in with Twitter</a>
   {% endif %}
       <hr>
 {% endif %}

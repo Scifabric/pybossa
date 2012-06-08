@@ -22,6 +22,8 @@
     <!-- Bootstrap styles -->
     <link rel="stylesheet" href="/static/vendor/bootstrap/2.0.4/bootstrap.min.css">
     <link rel="stylesheet" href="/static/vendor/bootstrap/2.0.4/bootstrap-responsive.min.css">
+    <!-- FontAwesome goodies -->
+    <link rel="stylesheet" href="/static/vendor/fontawesome/css/font-awesome.css">
 
     <!-- Le javascript -->
     <script type="text/javascript" src="/static/vendor/jquery.js"></script>
@@ -52,7 +54,24 @@
       <div class="row">
         <div id="copyright" class="span12">
           <p>&copy; {{ copyright }}</p>
+          <hr>
+          <div class="row">
+              <div class="span4 offset2">
+                  <a href="http://citizencyberscience.net">
+                  <img src="{{ url_for('static', filename="img/ccc.png") }}">
+                  </a>
+              </div>
+              <div class="span4">
+                  <a href="http://okfn.org">
+                  <img src="{{ url_for('static', filename="img/okfn.png") }}">
+                  </a>
+              </div>
+          </div>
           <p>Powered by <a href="http://pybossa.com">PyBossa</a> <span class="label label-info"> {{ version }}</span></p>
+          <p>Contact us: <a href="mailto:info@pybossa.com"><i class="icon-envelope"></i> info@pybossa.com</a></p>
+          <p><a class="btn btn-mini" href="http://github.com/PyBossa/pybossa"><i class="icon-github"></i> Code on Github</a>
+          <a class="btn btn-mini" href="http://github.com/PyBossa/pybossa/issues"><i class="icon-github"></i> Issues on Github</a><p>
+          <p><a class="btn btn-mini" href="http://twitter.com/pybossa"><i class="icon-twitter"></i> Follow us on Twitter</a></p>
         </div>
         <div class="row">
           <div id="okfn" class="span6">
@@ -66,11 +85,6 @@
                         src="http://www.gnu.org/graphics/agplv3-88x31.png"
                         style="vertical-align:middle;"></a>
           </div>
-        </div>
-        <div class="row">
-            <div id="glyphicons" class="span12">
-                <p>Navbar icons courtesy of <a href="http://glyphicons.com/">Glyphicons.com</a></p>
-            </div>
         </div>
     </footer>
     </div> <!-- /container -->
