@@ -77,4 +77,7 @@ Authors
 * Chris Powell - EPICollect
 * David Anderson - BOINC / Berkeley (via BOSSA)
 
+* Twitter Bootstrap Icons by Glyphicons http://http://glyphicons.com/
+* FontAwesome fonts by http://fortawesome.github.com/Font-Awesome/
+
 
