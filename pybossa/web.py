@@ -87,7 +87,7 @@ def global_template_context():
         description = app.config['DESCRIPTION'],
         version = pybossa.__version__,
         current_user = current_user,
-        apps =  model.Session.query(model.App).filter(model.App.hidden == 0).filter(model.App.tasks != None)
+        apps =  model.Session.query(model.App).filter(model.App.hidden == 0)
         )
 
 @login_manager.user_loader
