@@ -87,7 +87,7 @@ def global_template_context():
         description = app.config['DESCRIPTION'],
         version = pybossa.__version__,
         current_user = current_user,
-        apps =  model.Session.query(model.App).filter(model.App.hidden == 0)
+        apps =  model.Session.query(model.App).filter(model.App.hidden == 0).filter(model.App.tasks != None)
         )
 
 @login_manager.user_loader
@@ -130,7 +130,7 @@ def home():
             'taskrun': taskrun_count,
             'user': user_count
             }
-        apps = model.Session.query(model.App).filter(model.App.hidden == 0).all()
+        apps = model.Session.query(model.App).filter(model.App.hidden == 0).filter(model.App.tasks != None).all()
         threeApps = False
         if (len(apps) > 0):
             if (len(apps) == 1 or len(apps) == 2):

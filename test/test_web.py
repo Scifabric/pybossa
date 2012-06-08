@@ -95,6 +95,15 @@ class TestWeb:
         else:
             return self.app.get("/app/new", follow_redirects = True)
 
+    def new_task(self, appid):
+        """Helper function to create tasks for an app"""
+        tasks = []
+        for i in range(0,10):
+            tasks.append(model.Task(app_id = appid, state = '0', info = {}))
+        model.Session.add_all(tasks)
+        model.Session.commit()
+            
+
     def delete_application(self, method="POST", short_name="sampleapp"):
         """Helper function to create an application"""
         if method == "POST":
@@ -290,12 +299,24 @@ class TestWeb:
         assert self.html_title("Sign in") in res.data, res
         assert "Please sign in to access this page." in res.data, res
 
+    def test_06a_applications(self):
+        """Test WEB applications index interface without tasks works"""
+        self.register()
+        self.new_application()
+        self.signout()
+
+        res = self.app.get('/app/' )
+        assert self.html_title("Applications") in res.data, res.data
+        assert "Available applications" in res.data, res.data
+        assert '/app/sampleapp' not in res.data, res.data
 
 
     def test_06_applications(self):
         """Test WEB applications index interface works"""
         self.register()
         self.new_application()
+        self.new_task(1)
+
         self.signout()
 
         res = self.app.get('/app/' )
@@ -308,6 +329,7 @@ class TestWeb:
         # With one application in the system
         self.register()
         self.new_application()
+        self.new_task(1)
         self.signout()
         res = self.app.get('/')
         assert "Featured applications" in res.data, res.data
@@ -322,7 +344,9 @@ class TestWeb:
         # With one application in the system
         self.register()
         self.new_application()
+        self.new_task(1)
         self.new_application(name="New App", short_name="newapp", description="New description")
+        self.new_task(2)
         self.signout()
         res = self.app.get('/')
         assert "Featured applications" in res.data, res.data
@@ -344,8 +368,11 @@ class TestWeb:
         # With one application in the system
         self.register()
         self.new_application()
+        self.new_task(1)
         self.new_application(name="New App", short_name="newapp", description="New description")
+        self.new_task(2)
         self.new_application(name="Third App", short_name="thirdapp", description="Third description")
+        self.new_task(3)
         self.signout()
         res = self.app.get('/')
         assert "Featured applications" in res.data, res.data

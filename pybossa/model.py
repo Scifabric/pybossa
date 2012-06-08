@@ -158,7 +158,7 @@ class App(Base):
 
     ## Relationships
     #: `Task`s for this app.`
-    tasks = relationship('Task', backref='app')
+    tasks = relationship('Task', lazy='joined', backref='app')
     #: `TaskRun`s for this app.`
     task_runs = relationship('TaskRun', lazy='joined', backref='app',
                              order_by='TaskRun.finish_time.desc()')
