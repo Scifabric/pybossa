@@ -1,4 +1,5 @@
-### Instructions to heroku deploy
+Instructions to heroku deploy
+============================
 
 - git clone pybossa, etc get this repo
 - gem install heroku if you already dont have it
