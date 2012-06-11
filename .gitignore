@@ -8,3 +8,4 @@ doc/_build
 *.un~
 *.wsgi
 alembic.ini
+pybossa/templates/custom_footer.html
