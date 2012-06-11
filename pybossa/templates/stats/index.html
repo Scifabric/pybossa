@@ -34,6 +34,7 @@
                   <strong>{{ item.user.fullname }}</strong>
                     <ul>
                         <li>Total submitted tasks: {{ item.user.task_runs | length }}</li>
+                      {% if item.apps %}
                       <li><strong>Collaborating in</strong>:</li>
                         <ul>
                             {% for app in item.apps %}
@@ -44,6 +45,7 @@
                             {% endif %}
                             {% endfor %}
                         </ul>
+                        {% endif %}
                     </ul>
                     {% if not loop.last %}
                     <hr>

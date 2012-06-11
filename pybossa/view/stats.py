@@ -42,11 +42,11 @@ def index():
     for id in top5_active_user_ids:
         if id[0] != None:
             u = model.Session.query(model.User).get(id[0])
-            userApps =  model.Session.query(model.App).join(model.TaskRun)\
-                                          .filter(model.TaskRun.user_id == u.id)\
-                                          .all()
+            # userApps =  model.Session.query(model.App).join(model.TaskRun)\
+            #                               .filter(model.TaskRun.user_id == u.id)\
+            #                               .all()
 
-            tmp = dict ( user = u, apps = userApps )
+            tmp = dict ( user = u, apps = [] )
 
             top5Users.append(tmp)
 
