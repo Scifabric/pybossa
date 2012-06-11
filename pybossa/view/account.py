@@ -30,7 +30,7 @@ blueprint = Blueprint('account', __name__)
 @blueprint.route('/', defaults={'page': 1})
 @blueprint.route('/page/<int:page>')
 def index(page):
-    per_page = 20
+    per_page = 24
     count = model.Session.query(model.User).count()
     accounts = model.Session.query(model.User)\
                     .limit(per_page)\
