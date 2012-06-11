@@ -117,7 +117,9 @@ def register():
 @blueprint.route('/profile', methods = ['GET'])
 @login_required
 def profile():
-    return render_template('account/profile.html', title="Profile")
+    user = model.Session.query(model.User).get(current_user.id)
+
+    return render_template('account/profile.html', title="Profile", user = user)
 
 @blueprint.route('/profile/update', methods = ['GET','POST'])
 @login_required

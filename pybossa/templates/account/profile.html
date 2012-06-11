@@ -6,7 +6,7 @@
 <div class="row">
     <div class="tabbable span2 well" style="padding: 8px 0;">
       <ul class="nav nav-list">
-          <li class="nav-header">{{ current_user.name }}</li>
+          <li class="nav-header">{{ user.name }}</li>
         <li class="active"><a href="#account" data-toggle="tab"><i class="icon-user"></i> Profile</a></li>
         <li class="nav-header">Applications</li>
         <li><a href="#apps" data-toggle="tab"><i class="icon-th-list"></i> List</a></li>
@@ -18,16 +18,16 @@
           <div class="span2">
               <ul class="thumbnails">
                   <li>
-                    <img class="thumbnail" src="{{ current_user.email_addr | gravatar(size=80)}}">
+                    <img class="thumbnail" src="{{ user.email_addr | gravatar(size=80)}}">
                   </li>
               </ul>
           </div>
           <div class="span6">
-              <h2>{{ current_user.fullname }}</h2>
-              <h3>Nick: <small>{{ current_user.name }}</small></h3>
-              <h3>E-mail: <small>{{ current_user.email_addr }}</small></h3>
-              <h3>Joined: <small>{{ current_user.created[0:10] }}</small></h3>
-              <h3>API key: <small>{{ current_user.api_key }}</small></h3>
+              <h2>{{ user.fullname }}</h2>
+              <h3>Nick: <small>{{ user.name }}</small></h3>
+              <h3>E-mail: <small>{{ user.email_addr }}</small></h3>
+              <h3>Joined: <small>{{ user.created[0:10] }}</small></h3>
+              <h3>API key: <small>{{ user.api_key }}</small></h3>
               <div style="text-align:center">
                   <a href="{{ url_for('account.update_profile') }}" class="btn btn-large"><i class="icon icon-user"></i> Update your profile</a>
               </div>
@@ -40,7 +40,7 @@
                <a href="{{ url_for('app.new') }}" class="btn btn-primary"><i class="icon-plus icon-white"></i> Create a new application</a>
            </div>
         </div>
-        {% for app in current_user.apps %}
+        {% for app in user.apps %}
         <div id="app" class="row">
             <div id="buttons" class="span8 well">
               <div id="img" class="row">

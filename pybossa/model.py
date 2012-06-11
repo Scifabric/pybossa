@@ -160,7 +160,7 @@ class App(Base):
     #: `Task`s for this app.`
     tasks = relationship('Task', backref='app')
     #: `TaskRun`s for this app.`
-    task_runs = relationship('TaskRun', lazy='joined', backref='app',
+    task_runs = relationship('TaskRun', backref='app',
                              order_by='TaskRun.finish_time.desc()')
 
     #: Percentage of completed tasks based on Task.state 
@@ -293,7 +293,7 @@ class User(Base, flaskext.login.UserMixin):
     ## Relationships
     #: `Task`s for this user
     task_runs = relationship('TaskRun', backref='user')
-    apps = relationship('App', lazy='joined', backref='owner')
+    apps = relationship('App', backref='owner')
 
 import random
 def new_task(app_id, user_id=None):

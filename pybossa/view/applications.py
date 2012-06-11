@@ -49,7 +49,8 @@ class AppForm(Form):
 @blueprint.route('/')
 def index():
     if require.app.read():
-        return render_template('/applications/index.html', title = "Applications")
+        apps =  model.Session.query(model.App).filter(model.App.hidden == 0)
+        return render_template('/applications/index.html', title = "Applications", apps = apps)
     else:
         abort(403)
 
