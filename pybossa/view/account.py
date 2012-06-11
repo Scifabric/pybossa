@@ -20,14 +20,26 @@ from flaskext.wtf import Form, TextField, PasswordField, validators, ValidationE
 
 import pybossa.model as model
 from pybossa.util import Unique
+from pybossa.util import Pagination
 from pybossa.util import Twitter
 
 blueprint = Blueprint('account', __name__)
 
-@blueprint.route('/')
-def index():
-    accounts = model.Session.query(model.User).all()
-    return render_template('account/index.html', accounts = accounts, title = "Community")
+
+
+@blueprint.route('/', defaults={'page': 1})
+@blueprint.route('/page/<int:page>')
+def index(page):
+    per_page = 20
+    count = model.Session.query(model.User).count()
+    accounts = model.Session.query(model.User)\
+                    .limit(per_page)\
+                    .offset((page - 1) * per_page).all()
+    if not accounts and page!= 1:
+        abort(404)
+    pagination = Pagination(page, per_page, count)
+    return render_template('account/index.html', accounts = accounts, 
+                           title = "Community", pagination = pagination)
     
 class LoginForm(Form):
     username = TextField('Username', [validators.Required(message="The username is required")])

@@ -16,7 +16,7 @@
 import logging
 import json
 
-from flask import Response, request, g, render_template, abort, flash, redirect, session
+from flask import Response, request, g, render_template, abort, flash, redirect, session, url_for
 from flaskext.login import login_user, logout_user, current_user
 from sqlalchemy.exc import UnboundExecutionError
 from werkzeug.exceptions import *
@@ -46,6 +46,13 @@ try:
         app.register_blueprint(twitter, url_prefix='/twitter')
 except:
     print "Twitter singin disabled"
+
+
+def url_for_other_page(page):
+    args = request.view_args.copy()
+    args['page'] = page
+    return url_for(request.endpoint, **args)
+app.jinja_env.globals['url_for_other_page'] = url_for_other_page
 
 @app.before_request
 def bind_db_engine():

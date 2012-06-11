@@ -1,9 +1,48 @@
 {% extends "base.html" %}
 {% set active_page = "community"  %}
 
+{% macro render_pagination(pagination) %}
+  <div class="pagination pagination-centered">
+      <ul>
+        {% if pagination.has_prev %}
+          <li>
+          <a href="{{ url_for_other_page(pagination.page - 1)
+            }}">&laquo; Prev</a>
+          </li>
+        {% endif %}
+
+        {%- for page in pagination.iter_pages() %}
+          {% if page %}
+            {% if page != pagination.page %}
+            <li>
+              <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
+             </li>
+            {% else %}
+            <li class="active">
+                <a href="#">{{ page }}</a>
+            </li>  
+            {% endif %}
+          {% endif %}
+        {%- endfor %}
+        {% if pagination.has_next %}
+          <li>
+          <a href="{{ url_for_other_page(pagination.page + 1)
+            }}">Next &raquo;</a>
+          </li>
+        {% endif %}
+    </ul>
+  </div>
+{% endmacro %}
+
 {% block content %}
 <div class="row">
-  <div class="span10 offset2">
+    <div class="span10 offset1">
+        {{ render_pagination(pagination) }}
+    </div>
+</div>
+
+<div class="row">
+  <div class="span10 offset1">
           {% if accounts %}
       <ul class="thumbnails">
       {% for account in accounts %}
@@ -27,7 +66,6 @@
 </div>
 <script>
 $("a[rel=popover]").popover({
-        offset: 1,
         html: true,
         animate: true,
         position: 'above'
