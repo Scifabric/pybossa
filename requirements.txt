@@ -6,3 +6,4 @@ Flask-Gravatar
 Flask-OAuth
 dateutils
 alembic
+psycopg2
