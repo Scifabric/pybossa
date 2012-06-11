@@ -299,18 +299,6 @@ class TestWeb:
         assert self.html_title("Sign in") in res.data, res
         assert "Please sign in to access this page." in res.data, res
 
-    def test_06a_applications(self):
-        """Test WEB applications index interface without tasks works"""
-        self.register()
-        self.new_application()
-        self.signout()
-
-        res = self.app.get('/app/' )
-        assert self.html_title("Applications") in res.data, res.data
-        assert "Available applications" in res.data, res.data
-        assert '/app/sampleapp' not in res.data, res.data
-
-
     def test_06_applications(self):
         """Test WEB applications index interface works"""
         self.register()

@@ -31,16 +31,23 @@ def index():
     # Get top 5 app ids
     top5_active_app_ids = model.Session.query(model.TaskRun.app_id, func.count(model.TaskRun.id).label('total')).group_by(model.TaskRun.app_id).order_by('total DESC').limit(5).all()
     apps = []
-    print top5_active_app_ids
+    # print top5_active_app_ids
     for id in top5_active_app_ids:
         if id[0] != None:
             apps.append(model.Session.query(model.App).get(id[0]))
 
     # Get top 5 user ids
     top5_active_user_ids = model.Session.query(model.TaskRun.user_id, func.count(model.TaskRun.id).label('total')).group_by(model.TaskRun.user_id).order_by('total DESC').limit(5).all()
-    users = []
+    top5Users = []
     for id in top5_active_user_ids:
         if id[0] != None:
-            users.append(model.Session.query(model.User).get(id[0]))
+            u = model.Session.query(model.User).get(id[0])
+            userApps =  model.Session.query(model.App).join(model.TaskRun)\
+                                          .filter(model.TaskRun.user_id == u.id)\
+                                          .all()
 
-    return render_template('/stats/index.html', title = "Leaderboard", apps = apps, users = users)
+            tmp = dict ( user = u, apps = userApps )
+
+            top5Users.append(tmp)
+
+    return render_template('/stats/index.html', title = "Leaderboard", apps = apps, top5Users = top5Users)

@@ -1,5 +1,5 @@
 {% extends "/base.html" %}
-{% set active_page = "applications" %}
+{% set active_page = "leaderboard" %}
 {% set active_app  = "all" %}
 
 {% block content %}
@@ -22,24 +22,32 @@
                       <li><strong>Owner</strong>: {{ app.owner.name }}</li>
                       {% endif %}
                     </ul>
+                    {% if not loop.last %}
                     <hr>
+                    {% endif %}
                     {% endfor %}
             </div>
             <div class="span5 well">
                 <h2>Most active volunteers</h2>
-                {% for user in users %}
-                  <img src="{{ user.email_addr | gravatar(size=30)}}">
-                  <strong>{{ user.fullname }}</strong>
+                {% for item in top5Users %}
+                  <img src="{{ item.user.email_addr | gravatar(size=30)}}">
+                  <strong>{{ item.user.fullname }}</strong>
                     <ul>
-                        <li>Total submitted tasks: {{ user.task_runs | length }}</li>
+                        <li>Total submitted tasks: {{ item.user.task_runs | length }}</li>
                       <li><strong>Collaborating in</strong>:</li>
                         <ul>
-                            {% for app in user.apps %}
-                            <li>{{ app.name }}</li>
+                            {% for app in item.apps %}
+                            {% if app.hidden %}
+                            <li>Hidden application</li>
+                            {% else %}
+                            <li><a href="{{ url_for('app.presenter', short_name = app.short_name) }}">{{ app.name }}</a></li>
+                            {% endif %}
                             {% endfor %}
                         </ul>
                     </ul>
+                    {% if not loop.last %}
                     <hr>
+                    {% endif %}
                     {% endfor %}
             </div>
         </div>
