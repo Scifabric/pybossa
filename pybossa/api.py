@@ -23,9 +23,9 @@ from sqlalchemy.exc import DatabaseError
 from pybossa.util import jsonpify, crossdomain
 import pybossa.model as model
 from pybossa.auth import require
+from pybossa.sched import get_task
 
 blueprint = Blueprint('api', __name__)
-
 
 @blueprint.route('/')
 @crossdomain(origin='*')
@@ -184,7 +184,11 @@ register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
 @jsonpify
 @blueprint.route('/app/<app_id>/newtask')
 def new_task(app_id):
-    # TODO: make this better - for now just any old task ...
-    task = model.new_task(app_id)
-    return Response(json.dumps(task.dictize()), mimetype="application/json")
-
+    if current_user.is_anonymous():
+        task = get_task(app_id,user_ip=request.remote_addr)
+    else:
+        task = get_task(app_id, user_id=current_user.id)
+    if task:
+        return Response(json.dumps(task.dictize()), mimetype="application/json")
+    else:
+        return Response(json.dumps({}), mimetype="application/json")

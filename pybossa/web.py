@@ -39,6 +39,7 @@ app.register_blueprint(account, url_prefix='/account')
 app.register_blueprint(applications, url_prefix='/app')
 app.register_blueprint(stats, url_prefix='/stats')
 
+
 # Enable Twitter if available
 try:
     if (app.config['TWITTER_CONSUMER_KEY'] and app.config['TWITTER_CONSUMER_SECRET']):
