@@ -56,12 +56,6 @@ class TestModel:
         user = model.User.by_name(username)
         assert user.apps[0].id == app_id, user
 
-        # TODO: better testing where we actually get a random task
-        task = model.new_task(app_id, user_id)
-        assert task is None, 'There should be no tasks for this user'
-        task = model.new_task(app_id)
-        assert task, task
-
     def test_user(self):
         """Test MODEL User works"""
         user = model.User(name=u'test-user', email_addr=u'test@xyz.org')

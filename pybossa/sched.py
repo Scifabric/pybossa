@@ -19,40 +19,43 @@
 import pybossa.model as model
 import random
 
-def get_task(app_id, user_id=None, user_ip=None, limit=3):
+def get_task(app_id, user_id=None, user_ip=None, limit=10):
     """Gets a new task for a given application"""
     #: Get all the Task and TaskRuns for this app
     q = model.Session.query(model.Task).outerjoin(model.TaskRun).filter(model.Task.app_id == app_id)
 
     tasks = q.all()
-    print "Available Task for this AppID: %s : %s" % (app_id, len(tasks))
+    # print "Available Task for this AppID: %s : %s" % (app_id, len(tasks))
     for t in tasks:
-        print "This TaskID: %s has %s TaskRuns" % (t.id,len(t.task_runs))
+        # print "This TaskID: %s has %s TaskRuns" % (t.id,len(t.task_runs))
         if (len(t.task_runs) >= limit):
-            print "This TaskID: %s has more than %s TaskRuns" % (t.id, limit)
+            # print "This TaskID: %s has more than %s TaskRuns" % (t.id, limit)
             q = q.filter(model.Task.id!=t.id)
-            print "Removing it from the candidate Tasks"
-    print "New Query with Tasks with less than the limit %s " % limit
-    for t in q.all():
-        print "This TaskID: %s has less than %s TaskRuns" % (t.id, limit)
-    print "There are %s Available Tasks with less TaskRuns than %s" % (len(q.all()),limit)
+            # print "Removing it from the candidate Tasks"
+    # print "New Query with Tasks with less than the limit %s " % limit
+    #for t in q.all():
+        #print "This TaskID: %s has less than %s TaskRuns" % (t.id, limit)
+    #print "There are %s Available Tasks with less TaskRuns than %s" % (len(q.all()),limit)
 
     #: If a user has already given an answer to a task, remove it from the fina list
     if user_id and not user_ip:
-        print "Authenticated user"
+        #print "Authenticated user"
         tasks = q.filter(model.TaskRun.user_id==user_id)
     else:
-        print "Anonymous user"
-        tasks = q.filter(model.TaskRun.user_ip==user_ip)
+        #print "Anonymous user"
+        if user_ip:
+            tasks = q.filter(model.TaskRun.user_ip==user_ip)
+        else:
+            tasks = q.filter(model.TaskRun.user_ip=="127.0.0.1")
     
     for t in tasks:
-        "Print Removing TaskID: %s because user has already provided an answer" % t.id
+        #print "Print Removing TaskID: %s because user has already provided an answer" % t.id
         q = q.filter(model.Task.id != t.id)
 
     if user_id and not user_ip:
-        print "There are only this new Tasks %s for this user %s" % (len(q.all()),user_id)
+        print "This UserID: %s can answer %s Tasks" % (user_id, len(q.all()))
     else:
-        print "There are only this new Tasks %s for the Anonymous %s" % (len(q.all()),user_ip)
+        print "This Anonymous User with IP: %s can answer %s Tasks" % (user_ip, len(q.all()))
 
     total_remaining = q.count()
     if q.count() == 0:
