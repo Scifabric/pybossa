@@ -166,21 +166,42 @@ class App(Base):
     #: Percentage of completed tasks based on Task.state 
     #: (0 not done, 1 completed)
     def completion_status(self):
+        """Returns the percentage of Tasks that are completed"""
         completed = 0
-        for task_run in self.task_runs:
+        n_answers = 30
+        for t in self.tasks:
+            if (t.info.get('n_answers')):
+                print "This task has a different limit for n_answers: %s" % t.info['n_answers']
+                n_answers = t.info['n_answers']
+
+            print "This taskId: %s has %s TaskRuns" % (t.id,len(t.task_runs))
+            if len(t.task_runs) >= n_answers:
                 completed += 1
         if len(self.tasks) != 0:
-            return float(completed)/len(self.tasks)
+             return float(completed)/len(self.tasks)
         else:
-            return float(0)
+             return float(0)
 
+    def n_completed_tasks(self):
+        """Returns the number of Tasks that are completed"""
+        completed = 0
+        n_answers = 30
+        for t in self.tasks:
+            if (t.info.get('n_answers')):
+                print "This task has a different limit for n_answers: %s" % t.info['n_answers']
+                n_answers = t.info['n_answers']
+
+            print "This taskId: %s has %s TaskRuns" % (t.id,len(t.task_runs))
+            if len(t.task_runs) >= n_answers:
+                completed += 1
+        return completed
+    
     def last_activity(self):
         if (len(self.task_runs) >= 1):
             return pretty_date(self.task_runs[0].finish_time)
             #return self.task_runs[0].finish_time
         else:
             return "None"
-
 
 class Task(Base):
     '''An individual Task which can be performed by a user. A Task is

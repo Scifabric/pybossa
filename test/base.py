@@ -52,6 +52,7 @@ class Fixtures:
 
         app.owner = user
         task_info = {
+            'n_answers': 10,
             'question': 'My random question',
             'url': 'my url'
             }

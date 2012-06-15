@@ -19,7 +19,7 @@
 import pybossa.model as model
 import random
 
-def get_task(app_id, user_id=None, user_ip=None, limit=10):
+def get_task(app_id, user_id=None, user_ip=None, n_answers=30):
     """Gets a new task for a given application"""
     #: Get all the Task and TaskRuns for this app
     q = model.Session.query(model.Task).outerjoin(model.TaskRun).filter(model.Task.app_id == app_id)
@@ -27,9 +27,13 @@ def get_task(app_id, user_id=None, user_ip=None, limit=10):
     tasks = q.all()
     # print "Available Task for this AppID: %s : %s" % (app_id, len(tasks))
     for t in tasks:
+        #: Check if this Task has a different limit than the default one = 30
+        if (t.info.get('n_answers')):
+            # print "This task has a different samples limit: %s " % (t.info['n_answers'])
+            n_answers = t.info['n_answers']
         # print "This TaskID: %s has %s TaskRuns" % (t.id,len(t.task_runs))
-        if (len(t.task_runs) >= limit):
-            # print "This TaskID: %s has more than %s TaskRuns" % (t.id, limit)
+        if (len(t.task_runs) >= n_answers):
+            # print "This TaskID: %s has more than %s TaskRuns" % (t.id, n_answers)
             q = q.filter(model.Task.id!=t.id)
             # print "Removing it from the candidate Tasks"
     # print "New Query with Tasks with less than the limit %s " % limit

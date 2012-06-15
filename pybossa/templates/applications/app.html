@@ -22,12 +22,17 @@
       </ul>
     </div>
     <div class="span4">
-      <h4>Completed tasks</h4>
+        <h4>Completed tasks <small>{{ bossa_app.n_completed_tasks() }} of {{ bossa_app.tasks | count }}</small></h4>
+      
+
       <div class="progress progress-info progress-striped"> 
               <div class="bar" style="width:{{ bossa_app.completion_status()*100 }}%;"></div>
       </div>
-      <a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = bossa_app.short_name) }}"><i class="icon icon-white icon-ok"></i> Do some tasks!</a>
-
+      {% if (bossa_app.completion_status()*100) < 100 %}
+        <a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = bossa_app.short_name) }}"><i class="icon icon-white icon-ok"></i> Do some tasks!</a>
+      {% else %}
+        <a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = bossa_app.short_name) }}"><i class="icon icon-white icon-ok"></i> Do some tasks!</a>
+      {% endif %}
     </div>
   </div>
     <hr>
