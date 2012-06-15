@@ -7,7 +7,7 @@
 <div class="row">
   <div class="span4 offset3">
     <legend>Update the application</legend>
-    <form class="form-horizontal" method="post" action="{{ url_for('app.update', short_name = bossa_app.short_name) }}">
+    <form class="form-horizontal" method="post" action="{{ url_for('app.update', short_name = app.short_name) }}">
       <fieldset>
         {{form.id}}
         {{ render_field(form.name, class_="input-xlarge", placeholder="The name of the application") }}

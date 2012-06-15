@@ -5,8 +5,8 @@
 {% block update %}
   <div class="row">
           <div class="span8">
-              <a class="btn btn-info"   href="{{ url_for('app.update', short_name = bossa_app.short_name) }}"><i class="icon-edit icon-white"></i> Edit the application</a>
-              <a class="btn btn-danger" href="{{ url_for('app.delete', short_name = bossa_app.short_name) }}"><i class="icon-trash icon-white"></i> Delete the application</a>
+              <a class="btn btn-info"   href="{{ url_for('app.update', short_name = app.short_name) }}"><i class="icon-edit icon-white"></i> Edit the application</a>
+              <a class="btn btn-danger" href="{{ url_for('app.delete', short_name = app.short_name) }}"><i class="icon-trash icon-white"></i> Delete the application</a>
           </div>
   </div>
 {% endblock %}

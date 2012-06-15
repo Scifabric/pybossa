@@ -85,7 +85,7 @@ def delete(short_name):
             if request.method == 'GET':
                 return render_template('/applications/delete.html', 
                                         title="Delete Application: %s" % application.name,
-                                        bossa_app = application)
+                                        app = application)
             else:
                 try: 
                     model.Session.delete(application)
@@ -109,7 +109,7 @@ def update(short_name):
                 return render_template('/applications/update.html', 
                                         title = "Update the application: %s" % application.name,
                                         form = form,
-                                        bossa_app = application)
+                                        app = application)
 
             if request.method == 'POST':
                 form = AppForm(request.form, csrf_enabled=False)
@@ -135,7 +135,7 @@ def update(short_name):
                     flash('Please correct the errors', 'error')
                     return render_template('/applications/update.html', form = form, 
                                             title = "Edit the application",
-                                            bossa_app = application)
+                                            app = application)
         else:
             abort(403)
     except UnboundExecutionError:
@@ -152,18 +152,18 @@ def details(short_name):
             require.app.update(application)
             return render_template('/applications/actions.html',
                                     title = "Application: %s" % application.name, 
-                                    bossa_app=application)
+                                    app=application)
         except HTTPException:
             # This exception is raised because the user is not authenticated or
             # it has not privileges to edit/delte the application 
             if application.hidden == 0:
                 return render_template('/applications/app.html',
                                     title = "Application: %s" % application.name, 
-                                    bossa_app=application)
+                                    app=application)
             else:
-                return render_template('/applications/app.html', bossa_app=None)
+                return render_template('/applications/app.html', app=None)
     else:
-        return render_template('/applications/app.html', bossa_app=None)
+        return render_template('/applications/app.html', app=None)
 
 @blueprint.route('/<short_name>/presenter')
 def presenter(short_name):

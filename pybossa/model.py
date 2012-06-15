@@ -237,6 +237,17 @@ class Task(Base):
     #: `TaskRun`s for this task`
     task_runs = relationship('TaskRun', backref='task')
 
+    def pct_status(self):
+        """Returns the percentage of Tasks that are completed"""
+        n_answers = 30
+        if (self.info.get('n_answers')):
+            n_answers = self.info['n_answers']
+        if n_answers != 0:
+             print "Number of TaskRuns: %s" % len(self.task_runs)
+             print "Number of Answers: %s" % n_answers
+             return float(len(self.task_runs))/n_answers
+        else:
+             return float(0)
 
 class TaskRun(Base):
     '''A run of a given task by a specific user.
