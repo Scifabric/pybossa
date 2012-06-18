@@ -521,9 +521,33 @@ class TestWeb:
         assert "1 of 1" in res.data, res.data
         assert 'Task <span class="label label-success">#1</span>' in res.data, res.data
         assert '10 of 10' in res.data, res.data
-        # assert 'Export data' in res.data, res.data
+        assert 'Export data' in res.data, res.data
 
-    def test_17_task_status_wip(self):
+    def test_17_export_task_runs(self):
+        """Test WEB TaskRun export works"""
+        self.register()
+        self.new_application()
+
+        app = model.Session.query(model.App).first()
+        task = model.Task(app_id=app.id, info={'n_answers': 10})
+        model.Session.add(task)
+        model.Session.commit()
+
+        for i in range(10):
+            task_run = model.TaskRun(app_id=app.id,task_id=1,info={'answer':1})
+            model.Session.add(task_run)
+            model.Session.commit()
+
+        self.signout()
+
+        app = model.Session.query(model.App).first()
+        res = self.app.get('app/%s/%s/results.json' % (app.id, 1), follow_redirects=True)
+        data = json.loads(res.data)
+        assert len(data)==10, data
+        for tr in data:
+            assert tr['info']['answer']==1, tr
+
+    def test_18_task_status_wip(self):
         """Test WEB Task Status on going works"""
         self.register()
         self.new_application()
@@ -542,6 +566,3 @@ class TestWeb:
         assert "0 of 1" in res.data, res.data
         assert 'Task <span class="label label-info">#1</span>' in res.data, res.data
         assert '0 of 10' in res.data, res.data
-        # assert 'Export data' in res.data, res.data
-
-

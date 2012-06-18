@@ -63,6 +63,11 @@
           <div class="progress progress-success progress-striped span6"> 
                   <div class="bar" style="width:{{ task_pct }}%;"></div>
           </div>
+          <div class="span2">
+              <a class="btn btn-warning" href="{{ url_for('app.export', 
+                  short_name=app.short_name,
+                  task_id=t.id) }}"> Export data</a>
+          </div>
           {% else %}
           <p>Nothing yet! Wait a bit more and check the on going tasks!</p>
           {% endfor %}

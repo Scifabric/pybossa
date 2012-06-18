@@ -184,3 +184,13 @@ def presenter(short_name):
         flash("Ooops! You are an anonymous user and will not get any credit for your contributions. Sign in now!", "warning")
     app = model.Session.query(model.App).filter(model.App.short_name == short_name).first()
     return render_template('/applications/presenter.html', app = app)
+
+@blueprint.route('/<short_name>/<int:task_id>/results.json')
+def export(short_name, task_id):
+    """Return a file will all the TaskRuns for a give Task"""
+    task = model.Session.query(model.Task)\
+            .filter(model.Task.id == task_id)\
+            .first()
+
+    results = [ tr.dictize() for tr in task.task_runs ]
+    return Response(json.dumps(results), mimetype='application/json')
