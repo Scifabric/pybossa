@@ -495,3 +495,53 @@ class TestWeb:
         res = self.app.get('/', follow_redirects = True)
         msg = "Please update your e-mail address in your profile page, right now it is empty!"
         assert msg in res.data, res.data
+
+    def test_16_task_status_completed(self):
+        """Test WEB Task Status Completed works"""
+        self.register()
+        self.new_application()
+
+        app = model.Session.query(model.App).first()
+        task = model.Task(app_id=app.id, info={'n_answers': 10})
+        model.Session.add(task)
+        model.Session.commit()
+
+        for i in range(10):
+            task_run = model.TaskRun(app_id=app.id,task_id=1,info={'answer':1})
+            model.Session.add(task_run)
+            model.Session.commit()
+
+        self.signout()
+
+        app = model.Session.query(model.App).first()
+
+        res = self.app.get('app/' + app.short_name, follow_redirects=True)
+        assert "Sample App" in res.data, res.data
+        assert "Completed tasks" in res.data, res.data
+        assert "1 of 1" in res.data, res.data
+        assert 'Task <span class="label label-success">#1</span>' in res.data, res.data
+        assert '10 of 10' in res.data, res.data
+        # assert 'Export data' in res.data, res.data
+
+    def test_17_task_status_wip(self):
+        """Test WEB Task Status on going works"""
+        self.register()
+        self.new_application()
+
+        app = model.Session.query(model.App).first()
+        task = model.Task(app_id=app.id, info={'n_answers': 10})
+        model.Session.add(task)
+        model.Session.commit()
+        self.signout()
+
+        app = model.Session.query(model.App).first()
+
+        res = self.app.get('app/' + app.short_name, follow_redirects=True)
+        assert "Sample App" in res.data, res.data
+        assert "Completed tasks" in res.data, res.data
+        assert "0 of 1" in res.data, res.data
+        assert 'Task <span class="label label-info">#1</span>' in res.data, res.data
+        assert '0 of 10' in res.data, res.data
+        # assert 'Export data' in res.data, res.data
+
+

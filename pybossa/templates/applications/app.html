@@ -43,23 +43,46 @@
 
   <div class="row">
       <div class="span12">
-          <h2>Task status</h2>
+          <h2>Task status for {{ app.name }}</h2>
       </div>
   </div>
-  {% for t in app.tasks %}
-  {% set task_pct = t.pct_status()*100 %}
-  <div class="row">
-        <div class="span3">
-              Task <span class="label {% if task_pct >= 100 %} label-success {% else %} label-info {% endif %}">#{{ t.id }}</span>
-              <small>
-                  {{ t.task_runs | count }} of {{ t.info['n_answers'] | default('30')}}
-              </small>
+
+  <div class="tabbable">
+      <ul class="nav nav-tabs">
+        <li class="active"><a href="#tab1" data-toggle="tab">Completed</a></li>
+        <li><a href="#tab2" data-toggle="tab">On Going</a></li>
+      </ul>
+      <div class="tab-content">
+        <div class="tab-pane active" id="tab1">
+          {% for t in completed_tasks %}
+          {% set task_pct = t.pct_status()*100 %}
+          <div class="span3">
+                Task <span class="label label-success">#{{ t.id }}</span>
+                {{ t.task_runs | count }} of {{ t.info['n_answers'] | default('30')}}
+          </div>
+          <div class="progress progress-success progress-striped span6"> 
+                  <div class="bar" style="width:{{ task_pct }}%;"></div>
+          </div>
+          {% else %}
+          <p>Nothing yet! Wait a bit more and check the on going tasks!</p>
+          {% endfor %}
         </div>
-        <div class="progress {% if task_pct >= 100 %} progress-success {% else %} progress-info {% endif %} progress-striped"> 
-                <div class="bar" style="width:{{ task_pct }}%;"></div>
+        <div class="tab-pane" id="tab2">
+          {% for t in wip_tasks %}
+          {% set task_pct = t.pct_status()*100 %}
+          <div class="span3">
+                Task <span class="label label-info">#{{ t.id }}</span>
+                {{ t.task_runs | count }} of {{ t.info['n_answers'] | default('30')}}
+          </div>
+          <div class="progress progress-info progress-striped"> 
+                  <div class="bar" style="width:{{ task_pct }}%;"></div>
+          </div>
+          {% else %}
+          <p>This applicationd does not have any available tasks yet.</p>
+          {% endfor %}
         </div>
-  </div>
-  {% endfor %}
+      </div>
+  </div> <!-- /tabbable -->
 
 {% else %}
   <div class="page-header">

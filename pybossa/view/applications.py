@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from flask import Blueprint, request, url_for, flash, redirect, abort
+from flask import Blueprint, request, url_for, flash, redirect, abort, Response
 from flask import render_template
 from flaskext.wtf import Form, IntegerField, TextField, BooleanField, validators, HiddenInput
 from flaskext.login import login_required, current_user
@@ -23,6 +23,8 @@ from werkzeug.exceptions import HTTPException
 import pybossa.model as model
 from pybossa.util import Unique
 from pybossa.auth import require
+
+import json
 
 blueprint = Blueprint('app', __name__)
 
@@ -146,20 +148,31 @@ def details(short_name):
     application = model.Session.query(model.App).\
             filter(model.App.short_name == short_name).\
             first()
+    #: Short tasks based
+    completed_tasks = []
+    wip_tasks = []
+    for t in application.tasks:
+        if t.pct_status()*100 >= 100:
+            completed_tasks.append(t)
+        else:
+            wip_tasks.append(t)
+
     if application:
         try:
             require.app.read(application)
             require.app.update(application)
             return render_template('/applications/actions.html',
                                     title = "Application: %s" % application.name, 
-                                    app=application)
+                                    app=application, completed_tasks=completed_tasks,
+                                    wip_tasks=wip_tasks)
         except HTTPException:
             # This exception is raised because the user is not authenticated or
             # it has not privileges to edit/delte the application 
             if application.hidden == 0:
                 return render_template('/applications/app.html',
                                     title = "Application: %s" % application.name, 
-                                    app=application)
+                                    app=application, completed_tasks=completed_tasks,
+                                    wip_tasks=wip_tasks)
             else:
                 return render_template('/applications/app.html', app=None)
     else:
@@ -171,4 +184,3 @@ def presenter(short_name):
         flash("Ooops! You are an anonymous user and will not get any credit for your contributions. Sign in now!", "warning")
     app = model.Session.query(model.App).filter(model.App.short_name == short_name).first()
     return render_template('/applications/presenter.html', app = app)
-

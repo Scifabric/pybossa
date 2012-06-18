@@ -78,7 +78,7 @@ class Fixtures:
                 task_run = model.TaskRun(
                         app_id = 1, 
                         task_id = 1, 
-                        user_ip = '127.0.0.1', 
+                        user_ip = '127.0.0.%s' % i, 
                         info = task_run_info)
             task_run.task = task
             model.Session.add_all([task, task_run])
