@@ -56,10 +56,10 @@ def get_task(app_id, user_id=None, user_ip=None, n_answers=30):
         #print "Print Removing TaskID: %s because user has already provided an answer" % t.id
         q = q.filter(model.Task.id != t.id)
 
-    if user_id and not user_ip:
-        print "This UserID: %s can answer %s Tasks" % (user_id, len(q.all()))
-    else:
-        print "This Anonymous User with IP: %s can answer %s Tasks" % (user_ip, len(q.all()))
+    # if user_id and not user_ip:
+    #     print "This UserID: %s can answer %s Tasks" % (user_id, len(q.all()))
+    # else:
+    #     print "This Anonymous User with IP: %s can answer %s Tasks" % (user_ip, len(q.all()))
 
     total_remaining = q.count()
     if q.count() == 0:

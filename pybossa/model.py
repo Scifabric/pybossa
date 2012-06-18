@@ -243,8 +243,8 @@ class Task(Base):
         if (self.info.get('n_answers')):
             n_answers = self.info['n_answers']
         if n_answers != 0:
-             print "Number of TaskRuns: %s" % len(self.task_runs)
-             print "Number of Answers: %s" % n_answers
+             # print "Number of TaskRuns: %s" % len(self.task_runs)
+             # print "Number of Answers: %s" % n_answers
              return float(len(self.task_runs))/n_answers
         else:
              return float(0)
