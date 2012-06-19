@@ -69,7 +69,8 @@ application <http://app-flickrperson.rtfd.org>`_)::
   name = u'Flickr Person Finder'
   short_name = u'FlickrPerson'
   description = u'Do you see a human in this photo?'
-  info = { 'task_presenter': u'<div> Skeleton for the tasks</div>' }
+  info = { 'thumbnail': u'http://domain/thumbnail.png', 
+           'task_presenter': u'<div> Skeleton for the tasks</div>' }
   data = dict(name = name, short_name = short_name, description = description, info = info, hidden = 0)
   data = json.dumps(data)
 
@@ -79,6 +80,12 @@ the photo, the question is: *Do you see a human in this photo?*. The other two
 fields are the names used for naming the application (short_name will be the
 slug name of the application). Finally, the *hidden* field is a bool flag to hide the 
 application for users but not for the creator.
+
+The **Thumbnail** is a field that you can use to include a nice icon for the
+application. Flickr Person Finder uses as a thumbnail a cropped version
+(100x100 pixels) of a `Flickr photo from Sean McGrath (license CC BY 2.0) 
+<http://www.flickr.com/photos/mcgraths/3289448299/>`_. If you decide to not
+include a thumbnail, PyBossa will render for you a grey icon of 100x100 pixels.
 
 The **Task Presenter** is usually a template of HTML+JS that will present the
 tasks to the users, and save the answers in the database. The `Flickr Person demo
@@ -112,7 +119,7 @@ following with the `Flickr Person demo application
 <http://app-flickrperson.rtfd.org>`_ example, the JSON object will be like
 this::
 
-  info = dict (link = photo['link'], url = photo['url'])
+  info = dict (link = photo['link'], url = photo['url_m'])
   data = dict (app_id = app_id, state = 0, info = info, calibration = 0, priority_0 = 0)
   data = json.dumps(data)
 

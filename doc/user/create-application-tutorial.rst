@@ -22,7 +22,7 @@ In order to run the tutorial, you will need to create an account in a PyBossa
 server. The PyBossa server could be running in your computer or in a third party
 server.
 
-.. note:
+.. note::
 
    You can use http://pybossa.com for testing. 
 
@@ -70,12 +70,21 @@ saves the *link* of the Flickr web page publishing the photo, as well as the
 For example:
 
   * **Link**: http://www.flickr.com/photos/teleyinex/2945647308/
-  * **URL**: http://farm4.staticflickr.com/3208/2945647308_f048cc1633_m.jpg
+  * **URL_m**: http://farm4.staticflickr.com/3208/2945647308_f048cc1633_m.jpg
+  * **URL_b**: http://farm4.staticflickr.com/3208/2945647308_f048cc1633_b.jpg
 
-Those two variables (Link and URL) will be stored in a JSON object::
+.. note::
+
+    Flickr creates from the original image, different cropped versions of the
+    image. Flickr uses a pattern to distinguish them: **_m** for medium size,
+    and **_b** for the big ones. There are more options, so if you need more
+    help in this matter, check the official Flickr documentation.
+
+Those three variables (Link URL_m and URL_b) will be stored in a JSON object::
 
   { 'link': 'http://www.flickr.com/photos/teleyinex/2945647308/',
-    'url': 'http://farm4.staticflickr.com/3208/2945647308_f048cc1633_m.jpg' }
+    'url_m': 'http://farm4.staticflickr.com/3208/2945647308_f048cc1633_m.jpg', 
+    'url_b': 'http://farm4.staticflickr.com/3208/2945647308_f048cc1633_b.jpg' }
 
 And saved into the task field **info** of the task model. As Flickr only
 publishes the latest 20 uploaded photos in their public feed, the script will
@@ -83,7 +92,21 @@ create only 20 tasks in PyBossa.
 
 In order to create the application and its tasks, run the following script::
 
-  python createTasks.py -u http://PYBOSSA-SERVER -k API-KEY
+  python createTasks.py -u http://PYBOSSA-SERVER -k API-KEY -c
+
+Adding an icon to the application
+=================================
+
+It is possible also to add a nice icon for the application. By default PyBossa
+will render a 100x100 pixels empty thumbnail for those applications that do not
+provide it. If you want to add an icon you only have to upload the thumbnail of
+size 100x100 pixels to a hosting service like Flickr, ImageShack, etc. and use
+the URL image link to include it in the **info** field (check createTask.py
+script as it has an example)::
+
+  info = { 'thumbnail': http://hosting-service/thumbnail-name.png,
+           'task_presenter': template.html file
+         }
 
 Presenting the Tasks to the user
 ================================
@@ -141,7 +164,17 @@ template only has to define the structure to present the data from the tasks to 
 users and the action buttons, input methods, etc. to retrieve and save the 
 answer from the volunteers.
 
-2. Loading the Task data
+2. Updating the template for all the tasks
+------------------------------------------
+
+It is possible to update the template of the application without
+having to re-create the application and its tasks. In order to update the
+template, you only have to modify the file template.html and run the following
+command::
+
+  python createTasks.py -u http://PYBOSSA-SERVER -k API-KEY -t
+
+3. Loading the Task data
 ------------------------
 
 All the action takes place in the file_
@@ -165,7 +198,7 @@ structure::
             id: value,
             ...,
             info: { 
-                    url: 
+                    url_m: 
                     link:
                    } 
           } 
@@ -177,7 +210,7 @@ do something like this::
   $("#question h1").text(data.question);
   $("#task-id").text(data.task.id);
   $("#photo-link").attr("href", data.task.info.link);
-  $("#photo").attr("src",data.task.info.url);
+  $("#photo").attr("src",data.task.info.url_m);
 
 and wrap it in the *pybossa.newTask* method::
 
@@ -186,7 +219,7 @@ and wrap it in the *pybossa.newTask* method::
       $("#question h1").text(data.question);
       $("#task-id").text(data.task.id);
       $("#photo-link").attr("href", data.task.info.link);
-      $("#photo").attr("src",data.task.info.url);
+      $("#photo").attr("src",data.task.info.url_m);
     };
   );
 
@@ -194,10 +227,31 @@ Every time that we want to load a new task, we will have to call the above
 function, so it will be better if we create a specific function for this
 purpose (check the *loadData* function in the script).
 
+At some point the user will not receive more tasks for the application, so it
+will be really helpful for the user to flash a message giving thanks to the
+user. In the warnings section, we have a specific div to show the finish
+message to the user, saying thank you to the user and inviting him to help in
+other applications. As the skeleton is no longer useful, there is no more
+images that will be loaded for this user, it should be hidden.Thus, in the
+**loadData** function we could run the following test to see if we have to load
+the image, or pop-up the finish message::
+
+  if ( !$.isEmptyObject(data.task) ) {
+     spinnerStart();
+     $("#question h2").text(data.question);
+     $("#task-id").text(data.task.id);
+     $("#photo-link").attr("href", data.task.info.link);
+     $("#photo").attr("src",data.task.info.url_m);
+  }
+  else {
+     $(".skeleton").hide();
+     $("#finish").fadeIn();
+  }
+
 Once the data have been loaded, it is time to bind the buttons *onclick*
 events to functions that will save the answer from the user in the data base.
 
-3. Saving the answer
+4. Saving the answer
 --------------------
 
 Once the task has been presented, the users can click on the answer buttons:
@@ -209,8 +263,8 @@ task as sometimes the image is not available (the Flickr user has delete it) or 
 is not clear if there is a human or not in the image (you only see one hand and 
 nothing else).
 
-In order to submit and save the answer from the user, we will use again the
- `PyBossa.JS library <http://pybossajs.rtfd.org>`_. In this case::
+In order to submit and save the answer from the user, we will use again the `PyBossa.JS 
+library <http://pybossajs.rtfd.org>`_. In this case::
 
   pybossa.saveTask( taskid, answer )
 
@@ -234,19 +288,20 @@ has been saved and then load a new Task::
     };
   );
 
-Now we only have to bind the action of the *Yes* and *No* buttons to call the above
+Now we only have to bind the action of the *Yes*, *No* and *I don't know* buttons to call the above
 snippet. In order to bind it, we will use the *onclick event* to call a new and
-simple function for both buttons:
+simple function for both buttons::
 
- * <button class="btn btn-success" onclick="submitTask('Yes')">Yes</button>
- * <button class="btn btn-info" onclick="submitTask('No')">No</button>
+  <button class="btn btn-success" onclick="submitTask('Yes')">Yes</button>
+  <button class="btn btn-info" onclick="submitTask('No')">No</button>
+  <button class="btn" onclick="submitTask('DontKnow')">I don't know</button>
 
 The function *submitTask* will get the *task-id* from the DOM, and the answer is
 the string 'Yes' or 'No' depending on which button the user has clicked. The
 only missing button is the "I don't know" which will use the same event,
-*onclick*, to request a new task using the *pybossa.newTask* function:
+*onclick*, to request a new task using the *pybossa.newTask* function::
 
- * <button class="btn" onclick="pybossa.newTask('flickrperson').done( function( data ) { loadData( data ) });">I don't know</button>
+ <button class="btn" onclick="pybossa.newTask('flickrperson').done( function( data ) { loadData( data ) });">I don't know</button>
 
 For more details about the code, please, check the `template file
 <https://github.com/PyBossa/app-flickrperson/blob/master/app-flickrperson/template.html>`_.
