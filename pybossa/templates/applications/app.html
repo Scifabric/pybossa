@@ -31,11 +31,13 @@
       <div class="progress progress-info progress-striped"> 
               <div class="bar" style="width:{{ app.completion_status()*100 }}%;"></div>
       </div>
-      {% if (app.completion_status()*100) < 100 %}
+      {% if app.tasks | count > 0 %}
+        {% if (app.completion_status()*100) < 100 %}
         <a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = app.short_name) }}"><i class="icon icon-white icon-ok"></i> Do some tasks!</a>
-      {% else %}
+        {% else %}
         <a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = app.short_name) }}"><i class="icon icon-white icon-ok"></i> Do some tasks!</a>
-      {% endif %}
+        {% endif %}
+       {% endif %}
     </div>
   </div>
   {% block update %}{% endblock %}

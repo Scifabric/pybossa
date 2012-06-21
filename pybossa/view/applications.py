@@ -52,7 +52,17 @@ class AppForm(Form):
 def index():
     if require.app.read():
         apps =  model.Session.query(model.App).filter(model.App.hidden == 0)
-        return render_template('/applications/index.html', title = "Applications", apps = apps)
+        apps_with_tasks = []
+        apps_without_tasks = []
+        for a in apps:
+            if (len(a.tasks) > 0):
+                apps_with_tasks.append(a)
+            else:
+                apps_without_tasks.append(a)
+
+        return render_template('/applications/index.html', title = "Applications", 
+                                apps_with_tasks=apps_with_tasks,
+                                apps_without_tasks=apps_without_tasks)
     else:
         abort(403)
 

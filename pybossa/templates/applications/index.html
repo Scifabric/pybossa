@@ -5,39 +5,87 @@
 {% block content %}
 <h1>Available applications</h1>
 <br/>
-{% for app in apps %}
-<div id="app" class="row">
-    <div id="buttons" class="span10 well">
-      <div id="img" class="row">
-        <div class="span2">
-            <ul class="thumbnails">
-                <li>
-                  {% if app.info.thumbnail %}
-                    <img class="thumbnail" src="{{ app.info.thumbnail }}">
-                  {% else %}
-                    <img class="thumbnail" src="http://placehold.it/100x100">
-                  {% endif %}
-                </li>
-            </ul>
-        </div>
-        <div id="data" class="span8">
-            <h2><a href="{{ url_for('app.details', short_name = app.short_name) }}">{{ app.name }}</a></h2>
-          <ul>
-            <li><strong>Description</strong>: {{ app.description }}</li>
-            <li><strong>Creation Date</strong>: {{ app.created[0:10] }}</li>
-            {% if app.last_activity() != "None" %}
-            <li><strong>Last Activity</strong>: {{ app.last_activity() }}</li>
-            {% endif %}
-            {% if app.owner.id == current_user.id %}
-            <li><strong>Owner</strong>: Me</li>
-            {% else %}
-            <li><strong>Owner</strong>: {{ app.owner.name }}</li>
-            {% endif %}
-            </ul>
-            <a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = app.short_name) }}"><i class="icon icon-white icon-ok"></i> Do some tasks!</a>
-        </div>
+  <div class="tabbable">
+      <ul class="nav nav-tabs">
+        <li class="active"><a href="#tab1" data-toggle="tab">With Tasks</a></li>
+        <li><a href="#tab2" data-toggle="tab">Without Tasks</a></li>
+      </ul>
+      <div class="tab-content">
+          <div class="tab-pane active" id="tab1">
+            {% for app in apps_with_tasks %}
+            <div id="app{{app.short_name}}WithTasks" class="row">
+                <div id="buttons" class="span10 well">
+                  <div id="img" class="row">
+                    <div class="span2">
+                        <ul class="thumbnails">
+                            <li>
+                              {% if app.info.thumbnail %}
+                                <img class="thumbnail" src="{{ app.info.thumbnail }}">
+                              {% else %}
+                                <img class="thumbnail" src="http://placehold.it/100x100">
+                              {% endif %}
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="data" class="span8">
+                        <h2><a href="{{ url_for('app.details', short_name = app.short_name) }}">{{ app.name }}</a></h2>
+                      <ul>
+                        <li><strong>Description</strong>: {{ app.description }}</li>
+                        <li><strong>Creation Date</strong>: {{ app.created[0:10] }}</li>
+                        {% if app.last_activity() != "None" %}
+                        <li><strong>Last Activity</strong>: {{ app.last_activity() }}</li>
+                        {% endif %}
+                        {% if app.owner.id == current_user.id %}
+                        <li><strong>Owner</strong>: Me</li>
+                        {% else %}
+                        <li><strong>Owner</strong>: {{ app.owner.name }}</li>
+                        {% endif %}
+                        </ul>
+                        <a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = app.short_name) }}"><i class="icon icon-white icon-ok"></i> Do some tasks!</a>
+                    </div>
+                  </div>
+                </div>
+            </div>
+            {% endfor %}
+          </div>
+          <div class="tab-pane" id="tab2">
+            {% for app in apps_without_tasks %}
+            <div id="app{{ app.short_name }}WithoutTasks" class="row">
+                <div id="buttons" class="span10 well">
+                  <div id="img" class="row">
+                    <div class="span2">
+                        <ul class="thumbnails">
+                            <li>
+                              {% if app.info.thumbnail %}
+                                <img class="thumbnail" src="{{ app.info.thumbnail }}">
+                              {% else %}
+                                <img class="thumbnail" src="http://placehold.it/100x100">
+                              {% endif %}
+                            </li>
+                        </ul>
+                    </div>
+                    <div id="data" class="span8">
+                        <h2><a href="{{ url_for('app.details', short_name = app.short_name) }}">{{ app.name }}</a></h2>
+                      <ul>
+                        <li><strong>Description</strong>: {{ app.description }}</li>
+                        <li><strong>Creation Date</strong>: {{ app.created[0:10] }}</li>
+                        {% if app.last_activity() != "None" %}
+                        <li><strong>Last Activity</strong>: {{ app.last_activity() }}</li>
+                        {% endif %}
+                        {% if app.owner.id == current_user.id %}
+                        <li><strong>Owner</strong>: Me</li>
+                        {% else %}
+                        <li><strong>Owner</strong>: {{ app.owner.name }}</li>
+                        {% endif %}
+                        </ul>
+                    </div>
+                  </div>
+                </div>
+            </div>
+            {% endfor %}
+          </div>
+
       </div>
-    </div>
-</div>
-{% endfor %}
+  </div>
+
 {% endblock %}

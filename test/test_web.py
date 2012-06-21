@@ -566,3 +566,32 @@ class TestWeb:
         assert "0 of 1" in res.data, res.data
         assert 'Task <span class="label label-info">#1</span>' in res.data, res.data
         assert '0 of 10' in res.data, res.data
+
+    def test_19_app_index_without_task_sort(self):
+        """Test WEB Application Index Without Task tabbed browsing works"""
+        self.register()
+        self.new_application()
+        self.signout()
+
+        res = self.app.get('app', follow_redirects=True)
+        assert "Available applications" in res.data, res.data
+        assert "With Tasks" in res.data, res.data
+        assert "Without Tasks" in res.data, res.data
+        assert "appsampleappWithoutTasks" in res.data, res.data
+        
+    def test_20_app_index_with_task_sort(self):
+        """Test WEB Application Index With Task tabbed browsing works"""
+        self.register()
+        self.new_application()
+        app = model.Session.query(model.App).first()
+        task = model.Task(app_id=app.id, info={'n_answers': 10})
+        model.Session.add(task)
+        model.Session.commit()
+        self.signout()
+
+        res = self.app.get('app', follow_redirects=True)
+        assert "Available applications" in res.data, res.data
+        assert "With Tasks" in res.data, res.data
+        assert "Without Tasks" in res.data, res.data
+        assert "appsampleappWithTasks" in res.data, res.data
+ 
