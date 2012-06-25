@@ -2,7 +2,8 @@
 Domain Model and API
 ====================
 
-This section introduces the main domain objects present in the BOSSA system and how they can be accessed via the API.
+This section introduces the main domain objects present in the PyBossa system and 
+how they can be accessed via the API.
 
 Domain Model
 ============
@@ -10,9 +11,9 @@ Domain Model
 Overview
 --------
 
-BOSSA has 4 main domain objects:
+PyBossa has 4 main domain objects:
 
-  * App: the overall Application/Project to which Tasks are associated.
+  * App: the overall Application to which Tasks are associated.
 
     * HasMany: Tasks
 

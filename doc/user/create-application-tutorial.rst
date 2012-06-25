@@ -94,6 +94,31 @@ In order to create the application and its tasks, run the following script::
 
   python createTasks.py -u http://PYBOSSA-SERVER -k API-KEY -c
 
+Providing more details about the application
+============================================
+
+If you check the source code, you will see that there is a file named
+*long_description.html*. This file has a long description of the application,
+explaining different aspects of it.
+
+This information is not mandatory, however it will be very useful for the users
+as they will get a bit more of information about the application goals.
+
+The file can be composed using HTML or plain text. As PyBossa is using `Twitter
+Bootstrap <http://twitter.github.com/bootstrap/>`_ you can use all the available 
+CSS properties that this framework provides.
+
+The long description is shown in the application home page::
+
+ http://pybossa.com/app/flickrperson
+
+If you want to modify the description you have two options:
+
+ * Edit it via the web interface, or
+ * modify locally the *long_description.html* file and run the command again
+   with the **-t** option to update it.
+
+
 Adding an icon to the application
 =================================
 
