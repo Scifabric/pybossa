@@ -138,6 +138,8 @@ class App(Base):
     short_name          = Column(Unicode(length=255), unique=True)
     #: description
     description         = Column(Unicode(length=255))
+    #: long description
+    long_description    = Column(Unicode)
     #: TODO: What is this?
     long_tasks           = Column(Integer)
     #: Boolean integer (0,1) indicating that this App should be hidden from everyone but Administrators

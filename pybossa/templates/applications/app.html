@@ -7,41 +7,49 @@
   <div class="page-header">
     <h1>{{ app['name'] }}</h1>
   </div>
+  {% if app.long_description %}
+    {{ app.long_description|safe}}
+  {% endif %}
   <div class="row">
-    <div class="span8">
-      <ul>
-        <li><strong>Description</strong>: {{ app['description'] }}</li>
-        <li><strong>Creation Date</strong>: {{ app.created[0:10] }}</li>
-        <li><strong>Last Activity</strong>: {{ app.last_activity()}}</li>
-        {% if not current_user.is_anonymous() %}
-        <li><strong>Hidden</strong>: {% if app.hidden == 1 %}
-            <i class="icon icon-eye-close"></i> Yes {% else %} 
-            <i class="icon icon-eye-open"></i> No {% endif %}
-        </li>
-        {% endif %}
-      </ul>
-    </div>
-    <div class="span4">
-        <h4>Completed tasks 
-            <small>
-                {{ app.n_completed_tasks() }} of {{ app.tasks | count }}
-            </small>
-        </h4>
+      <div class="span12">
+          <h2>Short summary</h2>
+          <hr>
+            <div class="span8">
+              <ul>
+                <li><strong>Description</strong>: {{ app['description'] }}</li>
+                <li><strong>Creation Date</strong>: {{ app.created[0:10] }}</li>
+                <li><strong>Last Activity</strong>: {{ app.last_activity()}}</li>
+                {% if not current_user.is_anonymous() %}
+                <li><strong>Hidden</strong>: {% if app.hidden == 1 %}
+                    <i class="icon icon-eye-close"></i> Yes {% else %} 
+                    <i class="icon icon-eye-open"></i> No {% endif %}
+                </li>
+                {% endif %}
+              </ul>
+            </div>
+            <div class="span3">
+                <h4>Completed tasks 
+                    <small>
+                        {{ app.n_completed_tasks() }} of {{ app.tasks | count }}
+                    </small>
+                </h4>
 
-      <div class="progress progress-info progress-striped"> 
-              <div class="bar" style="width:{{ app.completion_status()*100 }}%;"></div>
+              <div class="progress progress-info progress-striped"> 
+                      <div class="bar" style="width:{{ app.completion_status()*100 }}%;"></div>
+              </div>
+              {% if app.tasks | count > 0 %}
+                {% if (app.completion_status()*100) < 100 %}
+                <a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = app.short_name) }}"><i class="icon icon-white icon-ok"></i> Do some tasks!</a>
+                {% else %}
+                <a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = app.short_name) }}"><i class="icon icon-white icon-ok"></i> Do some tasks!</a>
+                {% endif %}
+               {% endif %}
+            </div>
       </div>
-      {% if app.tasks | count > 0 %}
-        {% if (app.completion_status()*100) < 100 %}
-        <a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = app.short_name) }}"><i class="icon icon-white icon-ok"></i> Do some tasks!</a>
-        {% else %}
-        <a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = app.short_name) }}"><i class="icon icon-white icon-ok"></i> Do some tasks!</a>
-        {% endif %}
-       {% endif %}
-    </div>
   </div>
   {% block update %}{% endblock %}
   <br/>
+
 
   <div class="row">
       <div class="span12">
