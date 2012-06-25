@@ -76,7 +76,10 @@ class TestWeb:
         """Helper function to sign out current user"""
         return self.app.get('/account/signout', follow_redirects = True)
 
-    def new_application(self, method="POST", name="Sample App", short_name="sampleapp", description="Description", hidden = False):
+    def new_application(self, method="POST", name="Sample App", 
+                        short_name="sampleapp", description="Description", 
+                        long_description=u'<div id="long_desc">Long desc</div>',
+                        hidden = False):
         """Helper function to create an application"""
         if method == "POST":
             if hidden:
@@ -84,13 +87,15 @@ class TestWeb:
                     'name': name,
                     'short_name': short_name,
                     'description': description,
+                    'long_description': long_description,
                     'hidden': hidden,
                 }, follow_redirects = True)
             else:
                 return self.app.post("/app/new", data = {
                     'name': name,
                     'short_name': short_name,
-                    'description': description
+                    'description': description,
+                    'long_description': long_description
                 }, follow_redirects = True)
         else:
             return self.app.get("/app/new", follow_redirects = True)
@@ -111,7 +116,11 @@ class TestWeb:
         else:
             return self.app.get("/app/%s/delete" % short_name, follow_redirects = True)
 
-    def update_application(self, method="POST", short_name="sampleapp", id=1, new_name="Sample App", new_short_name="sampleapp", new_description="Description", new_hidden=False):
+    def update_application(self, method="POST", short_name="sampleapp", id=1, 
+                           new_name="Sample App", new_short_name="sampleapp", 
+                           new_description="Description", 
+                           new_long_description="Long desc",
+                           new_hidden=False):
         """Helper function to create an application"""
         if method == "POST":
             if new_hidden:
@@ -333,7 +342,8 @@ class TestWeb:
         self.register()
         self.new_application()
         self.new_task(1)
-        self.new_application(name="New App", short_name="newapp", description="New description")
+        self.new_application(name="New App", short_name="newapp", 
+                             description="New description")
         self.new_task(2)
         self.signout()
         res = self.app.get('/')
@@ -357,9 +367,11 @@ class TestWeb:
         self.register()
         self.new_application()
         self.new_task(1)
-        self.new_application(name="New App", short_name="newapp", description="New description")
+        self.new_application(name="New App", short_name="newapp", 
+                             description="New description")
         self.new_task(2)
-        self.new_application(name="Third App", short_name="thirdapp", description="Third description")
+        self.new_application(name="Third App", short_name="thirdapp", 
+                             description="Third description")
         self.new_task(3)
         self.signout()
         res = self.app.get('/')
@@ -389,7 +401,8 @@ class TestWeb:
 
         res = self.app.get('/app/sampleapp', follow_redirects = True)
         assert self.html_title("Application: Sample App") in res.data, res
-        assert "Description" in res.data, res
+        assert "Long desc" in res.data, res
+        assert "Short summary" in res.data, res
         assert "Completed tasks" in res.data, res
         assert "Edit the application" in res.data, res
         assert "Delete the application" in res.data, res
@@ -398,7 +411,8 @@ class TestWeb:
         # Now as an anonymous user
         res = self.app.get('/app/sampleapp', follow_redirects = True)
         assert self.html_title("Application: Sample App") in res.data, res
-        assert "Description" in res.data, res
+        assert "Long desc" in res.data, res
+        assert "Short summary" in res.data, res
         assert "Completed tasks" in res.data, res
         assert "Edit the application" not in res.data, res
         assert "Delete the application" not in res.data, res
@@ -407,7 +421,8 @@ class TestWeb:
         self.register(fullname="Perico Palotes", username="perico")
         res = self.app.get('/app/sampleapp', follow_redirects = True)
         assert self.html_title("Application: Sample App") in res.data, res
-        assert "Description" in res.data, res
+        assert "Long desc" in res.data, res
+        assert "Short summary" in res.data, res
         assert "Completed tasks" in res.data, res
         assert "Edit the application" not in res.data, res
         assert "Delete the application" not in res.data, res
@@ -447,7 +462,11 @@ class TestWeb:
         assert "Save the changes" in res.data, res
 
         # Update the application
-        res = self.update_application(new_name="New Sample App", new_short_name="newshortname", new_description="New description", new_hidden=True)
+        res = self.update_application(new_name="New Sample App", 
+                                      new_short_name="newshortname", 
+                                      new_description="New description", 
+                                      new_long_description=u'New long desc',
+                                      new_hidden=True)
         assert self.html_title("Application: New Sample App") in res.data, res
         assert "Application updated!" in res.data, res
 

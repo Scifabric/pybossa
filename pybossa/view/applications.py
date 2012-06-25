@@ -15,7 +15,8 @@
 
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response
 from flask import render_template
-from flaskext.wtf import Form, IntegerField, TextField, BooleanField, validators, HiddenInput
+from flaskext.wtf import Form, IntegerField, TextField, BooleanField, validators, \
+                         HiddenInput, TextAreaField
 from flaskext.login import login_required, current_user
 from sqlalchemy.exc import UnboundExecutionError
 from werkzeug.exceptions import HTTPException
@@ -46,6 +47,8 @@ class AppForm(Form):
     description = TextField('Description', [validators.Required(
                                                         message="You must provide a description.")
                                            ])
+
+    long_description = TextAreaField('Long Description') 
     hidden = BooleanField('Hide?')
 
 @blueprint.route('/')
@@ -76,6 +79,7 @@ def new():
                 name = form.name.data,
                 short_name = form.short_name.data,
                 description = form.description.data,
+                long_description = form.long_description.data,
                 hidden = int(form.hidden.data),
                 owner_id = current_user.id,
                 )
@@ -135,6 +139,7 @@ def update(short_name):
                         name = form.name.data,
                         short_name = form.short_name.data,
                         description = form.description.data,
+                        long_description = form.long_description.data,
                         hidden = hidden,
                         owner_id = current_user.id,
                         )

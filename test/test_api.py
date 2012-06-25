@@ -190,7 +190,8 @@ class TestAPI:
         name = u'XXXX Project'
         data = dict(
             name=name,
-            short_name='xxxx-project'
+            short_name='xxxx-project',
+            long_description=u'<div id="longdescription">Long Description</div>'
             )
         data = json.dumps(data)
         # no api-key
