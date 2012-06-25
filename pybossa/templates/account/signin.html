@@ -13,8 +13,8 @@
 {% from "_formhelpers.html" import render_field %}
   <form method="post" class="form-horizontal" action="">
     <legend>Or Sign in with your PyBossa account</legend>
-      {{ render_field(form.username, placeholder="your username") }}
-      {{ render_field(form.password, placeholder="********") }}
+      {{ render_field(form.username, placeholder="") }}
+      {{ render_field(form.password, placeholder="") }}
     <div class="form-actions">
       <input type="submit" value="Sign in" class="btn btn-primary btn-large" />
       <input type="reset" value="Cancel" class="btn" />
