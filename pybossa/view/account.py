@@ -22,6 +22,7 @@ import pybossa.model as model
 from pybossa.util import Unique
 from pybossa.util import Pagination
 from pybossa.util import Twitter
+from pybossa.util import Facebook
 
 blueprint = Blueprint('account', __name__)
 
@@ -61,15 +62,17 @@ def signin():
 
     if request.method == 'POST' and not form.validate():
         flash('Please correct the errors', 'error')
-    auth = {'twitter': False}
+    auth = {'twitter': False, 'facebook': False}
     if current_user.is_anonymous():
         # If Twitter is enabled in config, show the Twitter Sign in button
         if ('twitter' in current_app.blueprints):
                 auth['twitter'] = True
-                return render_template('account/signin.html', title="Sign in", form=form, auth=auth, next=request.args.get('next'))
+        if ('facebook' in current_app.blueprints):
+                auth['facebook'] = True
+                #return render_template('account/signin.html', title="Sign in", form=form, auth=auth, next=request.args.get('next'))
         # Else use only the default system
-        else:
-            return render_template('account/signin.html', title="Sign in", form=form, auth=auth, next=request.args.get('next'))
+        #else:
+        return render_template('account/signin.html', title="Sign in", form=form, auth=auth, next=request.args.get('next'))
     else:
         # User already signed in, so redirect to home page
         return redirect(url_for("home"))

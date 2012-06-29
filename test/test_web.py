@@ -402,7 +402,7 @@ class TestWeb:
         res = self.app.get('/app/sampleapp', follow_redirects = True)
         assert self.html_title("Application: Sample App") in res.data, res
         assert "Long desc" in res.data, res
-        assert "Short summary" in res.data, res
+        assert "Summary" in res.data, res
         assert "Completed tasks" in res.data, res
         assert "Edit the application" in res.data, res
         assert "Delete the application" in res.data, res
@@ -411,8 +411,9 @@ class TestWeb:
         # Now as an anonymous user
         res = self.app.get('/app/sampleapp', follow_redirects = True)
         assert self.html_title("Application: Sample App") in res.data, res
+        assert "Overview" in res.data, res
         assert "Long desc" in res.data, res
-        assert "Short summary" in res.data, res
+        assert "Summary" in res.data, res
         assert "Completed tasks" in res.data, res
         assert "Edit the application" not in res.data, res
         assert "Delete the application" not in res.data, res
@@ -421,8 +422,9 @@ class TestWeb:
         self.register(fullname="Perico Palotes", username="perico")
         res = self.app.get('/app/sampleapp', follow_redirects = True)
         assert self.html_title("Application: Sample App") in res.data, res
+        assert "Overview" in res.data, res
         assert "Long desc" in res.data, res
-        assert "Short summary" in res.data, res
+        assert "Summary" in res.data, res
         assert "Completed tasks" in res.data, res
         assert "Edit the application" not in res.data, res
         assert "Delete the application" not in res.data, res

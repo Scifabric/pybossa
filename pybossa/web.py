@@ -48,6 +48,17 @@ try:
 except:
     print "Twitter singin disabled"
 
+# Enable Facebook if available
+try:
+    if (app.config['FACEBOOK_APP_ID'] and app.config['FACEBOOK_APP_SECRET']):
+        from pybossa.view.facebook import blueprint as facebook
+        app.register_blueprint(facebook, url_prefix='/facebook')
+except Exception as inst:
+    print type(inst)
+    print inst.args
+    print inst
+    print "Facebook singin disabled"
+
 
 def url_for_other_page(page):
     args = request.view_args.copy()

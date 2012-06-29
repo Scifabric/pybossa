@@ -195,3 +195,16 @@ class Twitter:
             consumer_key = c_k, #app.config['TWITTER_CONSUMER_KEY'], 
             consumer_secret = c_s #app.config['TWITTER_CONSUMER_KEY']
         )
+
+class Facebook:
+    oauth = OAuth()
+    def __init__(self, c_k, c_s):
+        self.oauth = self.oauth.remote_app('facebook',
+            base_url='https://graph.facebook.com/',
+            request_token_url=None,
+            access_token_url='/oauth/access_token',
+            authorize_url='https://www.facebook.com/dialog/oauth',
+            consumer_key = c_k, #app.config['FACEBOOK_APP_ID'], 
+            consumer_secret = c_s, #app.config['FACEBOOK_APP_SECRET']
+            request_token_params={'scope': 'email'}
+        )

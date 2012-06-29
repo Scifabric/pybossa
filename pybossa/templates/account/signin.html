@@ -1,14 +1,22 @@
 {% extends "base.html" %}
 
 {% block content %}
-{% if auth.twitter %}
-  {% if next is not none%}
+{% if next is not none%}
+  {% if auth.twitter %}
   <a href="{{ url_for('twitter.login', next=next) }}" class="btn btn-info"><i class="icon-twitter"></i> Sign in with Twitter</a>
-  {% else %}
-      <a href="{{ url_for('twitter.login') }}" class="btn btn-info"><i class="icon-twitter"></i> Sign in with Twitter</a>
   {% endif %}
-      <hr>
+  {% if auth.facebook %}
+  <a href="{{ url_for('facebook.login', next=next) }}" class="btn btn-primary"><i class="icon-facebook"></i> Sign in with Facebook</a>
+  {% endif %}
+{% else %}
+  {% if auth.twitter %}
+  <a href="{{ url_for('twitter.login') }}" class="btn btn-info"><i class="icon-twitter"></i> Sign in with Twitter</a>
+  {% endif %}
+  {% if auth.facebook %}
+  <a href="{{ url_for('facebook.login') }}" class="btn btn-primary"><i class="icon-facebook"></i> Sign in with Facebook</a>
+  {% endif %}
 {% endif %}
+<hr>
 
 {% from "_formhelpers.html" import render_field %}
   <form method="post" class="form-horizontal" action="">
