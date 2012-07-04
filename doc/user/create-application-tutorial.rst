@@ -2,10 +2,12 @@
 Application Tutorial: Flickr Person
 ===================================
 
-This tutorial is based in the demo application **Flickr Person** provided with
+This tutorial is based in the demo application **`Flickr Person`_** provided with
 PyBossa. This demo application is a simple microtasking application where users have to
 answer the following question: *Do you see a human in this photo?* The possible
 answers are: *Yes, No* and *I don't know*.
+
+.. _Flickr Person: https://github.com/PyBossa/app-flickrperson
 
 The demo application Flickr Person has two main components:
 
@@ -58,10 +60,12 @@ The following section gives more details about how to use the script.
 Creating the Tasks and Application
 ==================================
 
-The createTasks.py script has a full example about how to create
+The createTasks.py_ script has a full example about how to create
 an application and several tasks for the application. PyBossa will deliver the
 tasks for the users (authenticated and anonymous ones) and store the submitted
 answers in the PyBossa data base.
+
+.. _createTasks.py: https://github.com/PyBossa/app-flickrperson/blob/master/createTasks.py
 
 The script gets the latest 20 published photos from the public Flickr feed and
 saves the *link* of the Flickr web page publishing the photo, as well as the 
@@ -334,9 +338,9 @@ For more details about the code, please, check the `template file
 4. Test the task presenter
 --------------------------
 
-In order to test the application task presenter, go to the following URL:
+In order to test the application task presenter, go to the following URL::
 
- * http://PYBOSSA-SERVER/app/SLUG/presenter
+  http://PYBOSSA-SERVER/app/SLUG/presenter
 
 The presenter will load one task, and you will be able to submit and save one
 answer for the current task.
