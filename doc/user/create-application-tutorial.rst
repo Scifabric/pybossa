@@ -2,12 +2,12 @@
 Application Tutorial: Flickr Person
 ===================================
 
-This tutorial is based in the demo application **`Flickr Person`_** provided with
+This tutorial is based in the demo application **Flickr Person** (`source code`_) provided with
 PyBossa. This demo application is a simple microtasking application where users have to
 answer the following question: *Do you see a human in this photo?* The possible
 answers are: *Yes, No* and *I don't know*.
 
-.. _Flickr Person: https://github.com/PyBossa/app-flickrperson
+.. _source code: https://github.com/PyBossa/app-flickrperson
 
 The demo application Flickr Person has two main components:
 
