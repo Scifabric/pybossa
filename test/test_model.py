@@ -43,11 +43,20 @@ class TestModel:
         assert app.name == u'My New App', app
         # year would start with 201...
         assert app.created.startswith('201'), app.created
+        assert app.long_tasks==0, app.long_tasks
+        assert app.hidden==0, app.hidden
+        assert app.time_estimate==0, app
+        assert app.time_limit==0, app
+        assert app.calibration_frac==0, app
+        assert app.bolt_course_id==0
         assert len(app.tasks) == 1, app
         assert app.owner.name == username, app
-
         out_task = app.tasks[0]
         assert out_task.info['question'] == task_info['question'], out_task
+        assert out_task.quorum==0, out_task
+        assert out_task.state=="ongoing", out_task
+        assert out_task.calibration==0, out_task
+        assert out_task.priority_0==0, out_task
         assert len(out_task.task_runs) == 1, out_task
         outrun = out_task.task_runs[0]
         assert outrun.info['answer'] == task_run_info['answer'], outrun
@@ -55,6 +64,7 @@ class TestModel:
 
         user = model.User.by_name(username)
         assert user.apps[0].id == app_id, user
+
 
     def test_user(self):
         """Test MODEL User works"""

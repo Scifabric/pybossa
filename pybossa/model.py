@@ -141,20 +141,20 @@ class App(Base):
     #: long description
     long_description    = Column(Unicode)
     #: TODO: What is this?
-    long_tasks           = Column(Integer)
+    long_tasks           = Column(Integer, default=0)
     #: Boolean integer (0,1) indicating that this App should be hidden from everyone but Administrators
-    hidden              = Column(Integer)
+    hidden              = Column(Integer, default=0)
     #: owner (id)
     owner_id            = Column(Integer, ForeignKey('user.id'))
     
     ## Following may not be relevant ...
     ## TODO: ask about these
     #: estimate of time it should take for user
-    time_estimate       = Column(Integer)
+    time_estimate       = Column(Integer, default=0)
     #: time limit for a task
-    time_limit          = Column(Integer)
-    calibration_frac    = Column(Float)
-    bolt_course_id      = Column(Integer)
+    time_limit          = Column(Integer, default=0)
+    calibration_frac    = Column(Float, default=0)
+    bolt_course_id      = Column(Integer, default=0)
     #: Standard JSON blob for additional data
     info                = Column(JSONType, default=dict)
 
@@ -219,13 +219,13 @@ class Task(Base):
     app_id              = Column(Integer, ForeignKey('app.id'))
     #: a StateEnum instance
     # TODO: state should be an integer?
-    state               = Column(UnicodeText)
+    state               = Column(UnicodeText, default=u'ongoing')
     #: Quorum (number of times this task should be done by different users)
-    quorum              = Column(Integer)
+    quorum              = Column(Integer, default=0)
     #: Boolean indicating whether this is a calibration Task or not.
-    calibration         = Column(Integer)
+    calibration         = Column(Integer, default=0)
     #: Value between 0 and 1 indicating priority of task within App (higher = more important)
-    priority_0          = Column(Float)
+    priority_0          = Column(Float, default=0)
     #: all configuration / details of the Task is stored in info which is an arbitrary JSON object. (Usually expected to be a hash/dict)
     #: For example for an image classification project this would be::
     #: 
