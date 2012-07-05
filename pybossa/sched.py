@@ -54,6 +54,7 @@ def get_task(app_id, user_id=None, user_ip=None, n_answers=30):
             # The user has not participated in this task
             if n == 0:
                 candidate_tasks.append(t)
+                break
     else:
         #print "Anonymous user"
         if not user_ip:
@@ -67,8 +68,10 @@ def get_task(app_id, user_id=None, user_ip=None, n_answers=30):
                 # The user has not participated in this task
             if n == 0:
                 candidate_tasks.append(t)
+                break
     
     total_remaining = len(candidate_tasks)
+    print "Available tasks %s " % total_remaining
     if total_remaining == 0:
         return None
     rand = random.randrange(0, total_remaining)
