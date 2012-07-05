@@ -3,6 +3,12 @@
 {% set active_app  = "all" %}
 
 {% block content %}
+<div class="row">
+  <div class="span12 well" style="text-align:center">
+    <a href="{{ url_for('app.new')}}" class="btn btn-large btn-inverse"><i class="icon-white icon-plus"></i> Create an application!</a>
+  </div>
+</div>
+
 <h1>Available applications</h1>
 <br/>
   <div class="tabbable">
