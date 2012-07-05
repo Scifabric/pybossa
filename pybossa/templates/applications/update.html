@@ -17,7 +17,7 @@
         {{ render_field(form.hidden)}}
         <div class="form-actions">
           <input type="submit" value="Save the changes" class="btn btn-primary" />
-          <input type="reset" value="Cancel" class="btn" />
+          <a href="{{url_for('app.details', short_name=app.short_name)}}" class="btn">Cancel</a>
         </div>
       </fieldset>
     </form>
