@@ -170,14 +170,8 @@ class App(Base):
     def completion_status(self):
         """Returns the percentage of Tasks that are completed"""
         completed = 0
-        n_answers = 30
         for t in self.tasks:
-            if (t.info.get('n_answers')):
-                print "This task has a different limit for n_answers: %s" % t.info['n_answers']
-                n_answers = t.info['n_answers']
-
-            print "This taskId: %s has %s TaskRuns" % (t.id,len(t.task_runs))
-            if len(t.task_runs) >= n_answers:
+            if t.state=="completed":
                 completed += 1
         if len(self.tasks) != 0:
              return float(completed)/len(self.tasks)
@@ -187,21 +181,14 @@ class App(Base):
     def n_completed_tasks(self):
         """Returns the number of Tasks that are completed"""
         completed = 0
-        n_answers = 30
         for t in self.tasks:
-            if (t.info.get('n_answers')):
-                print "This task has a different limit for n_answers: %s" % t.info['n_answers']
-                n_answers = t.info['n_answers']
-
-            print "This taskId: %s has %s TaskRuns" % (t.id,len(t.task_runs))
-            if len(t.task_runs) >= n_answers:
+            if t.state=="completed":
                 completed += 1
         return completed
     
     def last_activity(self):
         if (len(self.task_runs) >= 1):
             return pretty_date(self.task_runs[0].finish_time)
-            #return self.task_runs[0].finish_time
         else:
             return "None"
 
@@ -245,8 +232,6 @@ class Task(Base):
         if (self.info.get('n_answers')):
             n_answers = self.info['n_answers']
         if n_answers != 0:
-             # print "Number of TaskRuns: %s" % len(self.task_runs)
-             # print "Number of Answers: %s" % n_answers
              return float(len(self.task_runs))/n_answers
         else:
              return float(0)

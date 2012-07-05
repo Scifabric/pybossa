@@ -531,6 +531,7 @@ class TestWeb:
             task_run = model.TaskRun(app_id=app.id,task_id=1,info={'answer':1})
             model.Session.add(task_run)
             model.Session.commit()
+            self.app.get('api/app/%s/newtask' % app.id)
 
         self.signout()
 
