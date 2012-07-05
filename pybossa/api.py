@@ -62,6 +62,9 @@ class APIBase(MethodView):
                         query = query.filter("%s = '%s'" % (k, request.args[k]))
                 if limit:
                     query = query.limit(int(request.args['limit']))
+                else:
+                    # By default limit all queries to 20 records
+                    query = query.limit(20)
                 items = [ x.dictize() for x in query.all() ]
                 return Response(json.dumps(items), mimetype='application/json')
             else:

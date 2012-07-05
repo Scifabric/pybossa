@@ -18,6 +18,36 @@ class TestAPI:
     def teardown_class(cls):
         model.rebuild_db()
 
+    def test_00_limits_query(self):
+        """Test API GET limits works"""
+        for i in range(30):
+            app = model.App(name="name%s" % i,
+                            short_name="short_name%s" % i,
+                            description="desc",
+                            owner_id=1)
+
+            info = dict(a=0)
+            task = model.Task(app_id=1, info=info)
+            taskrun = model.TaskRun(app_id=1, task_id=1)
+            model.Session.add(app)
+            model.Session.add(task)
+            model.Session.add(taskrun)
+        model.Session.commit()
+
+        res = self.app.get('/api/app')
+        data = json.loads(res.data)
+        assert len(data) == 20, len(data)
+
+        res = self.app.get('/api/task')
+        data = json.loads(res.data)
+        assert len(data) == 20, len(data)
+
+        res = self.app.get('/api/taskrun')
+        data = json.loads(res.data)
+        assert len(data) == 20, len(data)
+
+
+
     def test_01_app_query(self):
         """ Test API App query"""
         res = self.app.get('/api/app')
