@@ -267,6 +267,9 @@ class TestSCHED:
         for t in tasks:
             for tr in t.task_runs:
                 assert self.isUnique(tr.user_id,t.task_runs), "There are two or more Answers from same User"
+        # Check that task.state is updated to completed
+        for t in tasks:
+            assert t.state=="completed", t.state
 
     def test_tasks_for_user_ip_id(self):
         """ Test SCHED newtask to see if sends the same ammount of Task to 

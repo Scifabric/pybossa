@@ -21,49 +21,56 @@ import random
 
 def get_task(app_id, user_id=None, user_ip=None, n_answers=30):
     """Gets a new task for a given application"""
-    #: Get all the Task and TaskRuns for this app
-    q = model.Session.query(model.Task).outerjoin(model.TaskRun).filter(model.Task.app_id == app_id)
+    # Get all pending tasks for the application
+    tasks = model.Session.query(model.Task)\
+            .filter(model.Task.app_id==app_id)\
+            .filter(model.Task.state!="completed")\
+            .all()
 
-    tasks = q.all()
-    # print "Available Task for this AppID: %s : %s" % (app_id, len(tasks))
+    # Update state of uncompleted tasks if the len(TaskRuns) >= n_answers
     for t in tasks:
-        #: Check if this Task has a different limit than the default one = 30
         if (t.info.get('n_answers')):
-            # print "This task has a different samples limit: %s " % (t.info['n_answers'])
             n_answers = t.info['n_answers']
-        # print "This TaskID: %s has %s TaskRuns" % (t.id,len(t.task_runs))
         if (len(t.task_runs) >= n_answers):
-            # print "This TaskID: %s has more than %s TaskRuns" % (t.id, n_answers)
-            q = q.filter(model.Task.id!=t.id)
-            # print "Removing it from the candidate Tasks"
-    # print "New Query with Tasks with less than the limit %s " % limit
-    #for t in q.all():
-        #print "This TaskID: %s has less than %s TaskRuns" % (t.id, limit)
-    #print "There are %s Available Tasks with less TaskRuns than %s" % (len(q.all()),limit)
+                t.state = "completed"
+                model.Session.merge(t)
+                model.Session.commit()
 
-    #: If a user has already given an answer to a task, remove it from the fina list
+    # Get all pending tasks again after the update
+    tasks = model.Session.query(model.Task)\
+            .filter(model.Task.app_id==app_id)\
+            .filter(model.Task.state!="completed")
+
+    # Create a list of candidate_tasks
+    candidate_tasks = []
     if user_id and not user_ip:
         #print "Authenticated user"
-        tasks = q.filter(model.TaskRun.user_id==user_id)
+        for t in tasks:
+            n = model.Session.query(model.TaskRun)\
+                    .filter(model.TaskRun.app_id==app_id)\
+                    .filter(model.TaskRun.task_id==t.id)\
+                    .filter(model.TaskRun.user_id==user_id)\
+                    .count()
+            # The user has not participated in this task
+            if n == 0:
+                candidate_tasks.append(t)
     else:
         #print "Anonymous user"
-        if user_ip:
-            tasks = q.filter(model.TaskRun.user_ip==user_ip)
-        else:
-            tasks = q.filter(model.TaskRun.user_ip=="127.0.0.1")
+        if not user_ip:
+            user_ip = "127.0.0.1"
+        for t in tasks:
+            n = model.Session.query(model.TaskRun)\
+                        .filter(model.TaskRun.app_id==app_id)\
+                        .filter(model.TaskRun.task_id==t.id)\
+                        .filter(model.TaskRun.user_ip==user_ip)\
+                        .count()
+                # The user has not participated in this task
+            if n == 0:
+                candidate_tasks.append(t)
     
-    for t in tasks:
-        #print "Print Removing TaskID: %s because user has already provided an answer" % t.id
-        q = q.filter(model.Task.id != t.id)
-
-    # if user_id and not user_ip:
-    #     print "This UserID: %s can answer %s Tasks" % (user_id, len(q.all()))
-    # else:
-    #     print "This Anonymous User with IP: %s can answer %s Tasks" % (user_ip, len(q.all()))
-
-    total_remaining = q.count()
-    if q.count() == 0:
+    total_remaining = len(candidate_tasks)
+    if total_remaining == 0:
         return None
     rand = random.randrange(0, total_remaining)
-    out = q[rand]
+    out = candidate_tasks[rand]
     return out
