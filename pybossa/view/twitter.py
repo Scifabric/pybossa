@@ -78,15 +78,23 @@ def oauth_authorized(resp):
                 oauth_token_secret = resp['oauth_token_secret']
                 )
         info = dict(twitter_token = twitter_token)
-        user = model.User(
-                fullname = resp['screen_name'],
-                name = resp['screen_name'],
-                email_addr = 'None',
-                twitter_user_id = resp['user_id'],
-                info = info 
-                )
-        model.Session.add(user)
-        model.Session.commit()
+        user = model.Session.query(model.User)\
+                .filter_by(name=resp['screen_name']).first()
+        if user is None:
+            user = model.User(
+                    fullname = resp['screen_name'],
+                    name = resp['screen_name'],
+                    email_addr = 'None',
+                    twitter_user_id = resp['user_id'],
+                    info = info 
+                    )
+            model.Session.add(user)
+            model.Session.commit()
+        else:
+            flash(u'Sorry, there is already an account with the same user name.', 'error') 
+            flash(u'You can create a new account and sign in', 'info')
+            return redirect(url_for('account.register'))
+
 
     login_user(user, remember=True)
     flash("Welcome back %s" % user.fullname, 'success')
