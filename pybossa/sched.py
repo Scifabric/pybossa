@@ -19,7 +19,7 @@
 import pybossa.model as model
 import random
 
-def get_task(app_id, user_id=None, user_ip=None, n_answers=30):
+def get_default_task(app_id, user_id=None, user_ip=None, n_answers=30):
     """Gets a new task for a given application"""
     # Get all pending tasks for the application
     tasks = model.Session.query(model.Task)\
@@ -77,3 +77,10 @@ def get_task(app_id, user_id=None, user_ip=None, n_answers=30):
     rand = random.randrange(0, total_remaining)
     out = candidate_tasks[rand]
     return out
+
+
+def get_random_task(app_id, user_id=None, user_ip=None, n_answers=30):
+    """Returns a random task for the user"""
+    app = model.Session.query(model.App).get(app_id)
+    from random import choice
+    return choice(app.tasks)
