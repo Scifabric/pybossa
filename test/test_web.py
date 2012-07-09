@@ -308,8 +308,18 @@ class TestWeb:
         assert self.html_title("Sign in") in res.data, res
         assert "Please sign in to access this page." in res.data, res
 
+    def test_05a_get_nonexistant_app(self):
+        """Test WEB get not existant app should return 404"""
+        res = self.app.get('/app/nonapp')
+        assert res.status == '404 NOT FOUND', res.status
+
     def test_06_applications(self):
         """Test WEB applications index interface works"""
+        # Check first without apps
+        res = self.app.get('/app', follow_redirects=True)
+        assert "Create an application!" in res.data, res.data
+        assert "Available applications" in res.data, res.data
+
         self.register()
         self.new_application()
         self.new_task(1)

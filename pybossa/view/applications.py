@@ -163,17 +163,18 @@ def details(short_name):
     application = model.Session.query(model.App).\
             filter(model.App.short_name == short_name).\
             first()
-    #: Short tasks based
-    completed_tasks = []
-    wip_tasks = []
-    for t in application.tasks:
-        if t.pct_status()*100 >= 100:
-            completed_tasks.append(t)
-        else:
-            wip_tasks.append(t)
 
     if application:
         try:
+            #: Short tasks based
+            completed_tasks = []
+            wip_tasks = []
+            for t in application.tasks:
+                if t.pct_status()*100 >= 100:
+                    completed_tasks.append(t)
+                else:
+                    wip_tasks.append(t)
+
             require.app.read(application)
             require.app.update(application)
             return render_template('/applications/actions.html',
@@ -191,7 +192,8 @@ def details(short_name):
             else:
                 return render_template('/applications/app.html', app=None)
     else:
-        return render_template('/applications/app.html', app=None)
+        return abort(404)
+        #return render_template('/applications/app.html', app=None)
 
 @blueprint.route('/<short_name>/presenter')
 def presenter(short_name):
