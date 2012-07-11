@@ -724,3 +724,32 @@ class TestWeb:
         assert 'You have already participated in this task' in res.data, res.data
         assert 'Try with another one' in res.data, res.data
         self.signout()
+
+    def test_25_get_wrong_task_app(self):
+        """Test WEB get wrong task.id for an app works"""
+
+        model.rebuild_db()
+        Fixtures.create()
+        app1 = model.Session.query(model.App).get(1)
+        task1 = model.Session.query(model.Task)\
+                .filter(model.Task.app_id==1)\
+                .first()
+
+        self.register()
+        self.new_application()
+        app2 = model.Session.query(model.App).get(2)
+        self.new_task(app2.id)
+        task2 = model.Session.query(model.Task)\
+                .filter(model.Task.app_id==2)\
+                .first()
+        self.signout()
+
+
+        res = self.app.get('/app/%s/task/%s' % (app1.short_name,task2.id))
+        assert "Error" in res.data, res.data
+        assert "This task does not belong to %s" % app1.short_name in res.data, res.data
+        
+
+
+
+
