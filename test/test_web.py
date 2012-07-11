@@ -108,6 +108,10 @@ class TestWeb:
         model.Session.add_all(tasks)
         model.Session.commit()
             
+    def delTaskRuns(self, app_id=1):
+        """Deletes all TaskRuns for a given app_id"""
+        model.Session.query(model.TaskRun).filter_by(app_id=1).delete()
+        model.Session.commit()
 
     def delete_application(self, method="POST", short_name="sampleapp"):
         """Helper function to create an application"""
@@ -627,3 +631,96 @@ class TestWeb:
         assert "Without Tasks" in res.data, res.data
         assert "appsampleappWithTasks" in res.data, res.data
  
+    def test_21_get_specific_ongoing_task_anonymous(self):
+        """Test WEB get specific ongoing task_id for an app works as anonymous"""
+
+        Fixtures.create()
+        self.delTaskRuns()
+        app = model.Session.query(model.App).first()
+        task = model.Session.query(model.Task)\
+                .filter(model.App.id==app.id)\
+                .first()
+        res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
+                follow_redirects=True)
+        assert 'TaskPresenter' in res.data, res.data
+
+    def test_22_get_specific_completed_task_anonymous(self):
+        """Test WEB get specific completed task_id for an app works as anonymous"""
+
+        model.rebuild_db()
+        Fixtures.create()
+        app = model.Session.query(model.App).first()
+        task = model.Session.query(model.Task)\
+                .filter(model.App.id==app.id)\
+                .first()
+
+        for i in range(10):
+            task_run = model.TaskRun(app_id=app.id,
+                    task_id=task.id,
+                    user_ip="127.0.0.1",
+                    info={'answer':1})
+            model.Session.add(task_run)
+            model.Session.commit()
+
+
+        ntask = model.Task(id=task.id,state='completed')
+
+        assert ntask not in model.Session
+        model.Session.merge(ntask)
+        model.Session.commit()
+
+        res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
+                follow_redirects=True)
+        assert 'You have already participated in this task' in res.data, res.data
+        assert 'Try with another one' in res.data, res.data
+
+    def test_23_get_specific_ongoing_task_user(self):
+        """Test WEB get specific ongoing task_id for an app works as an user"""
+
+        Fixtures.create()
+        self.delTaskRuns()
+        self.register()
+        self.signin()
+        app = model.Session.query(model.App).first()
+        task = model.Session.query(model.Task)\
+                .filter(model.App.id==app.id)\
+                .first()
+        res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
+                follow_redirects=True)
+        assert 'TaskPresenter' in res.data, res.data
+        self.signout()
+
+    def test_24_get_specific_completed_task_user(self):
+        """Test WEB get specific completed task_id for an app works as an user"""
+
+        model.rebuild_db()
+        Fixtures.create()
+        self.register()
+
+        user = model.Session.query(model.User)\
+                .filter(model.User.name=='johndoe')\
+                .first()
+        app = model.Session.query(model.App).first()
+        task = model.Session.query(model.Task)\
+                .filter(model.App.id==app.id)\
+                .first()
+        for i in range(10):
+            task_run = model.TaskRun(app_id=app.id,
+                    task_id=task.id,
+                    user_id=user.id,
+                    info={'answer':1})
+            model.Session.add(task_run)
+            model.Session.commit()
+            #self.app.get('api/app/%s/newtask' % app.id)
+
+        ntask = model.Task(id=task.id,state='completed')
+        #self.signin()
+        assert ntask not in model.Session
+        model.Session.merge(ntask)
+        model.Session.commit()
+
+        res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
+                follow_redirects=True)
+        assert 'You have already participated in this task' in res.data, res.data
+        assert 'Try with another one' in res.data, res.data
+        self.signout()

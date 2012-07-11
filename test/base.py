@@ -39,7 +39,8 @@ class Fixtures:
 
         info = {
             'total': 150,
-            'long_description': 'hello world'
+            'long_description': 'hello world',
+            'task_presenter': 'TaskPresenter'
             }
 
         app = model.App(

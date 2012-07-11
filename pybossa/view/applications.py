@@ -194,8 +194,37 @@ def details(short_name):
     else:
         return abort(404)
         #return render_template('/applications/app.html', app=None)
+@blueprint.route('/<short_name>/task/<int:task_id>')
+def task_presenter(short_name, task_id):
+    if (current_user.is_anonymous()):
+        flash("Ooops! You are an anonymous user and will not get any credit for your contributions. Sign in now!", "warning")
+    app = model.Session.query(model.App).filter(model.App.short_name == short_name).first()
+    #return render_template('/applications/presenter.html', app = app)
+    # Check if the user has submitted a task before
+    if (current_user.is_anonymous()):
+        if not request.remote_addr:
+            remote_addr="127.0.0.1"
+        else:
+            remote_addr = request.remote_addr
+        tr = model.Session.query(model.TaskRun)\
+                .filter(model.TaskRun.task_id==task_id)\
+                .filter(model.TaskRun.app_id==app.id)\
+                .filter(model.TaskRun.user_ip==remote_addr)
+
+    else:
+        tr = model.Session.query(model.TaskRun)\
+                .filter(model.TaskRun.task_id==task_id)\
+                .filter(model.TaskRun.app_id==app.id)\
+                .filter(model.TaskRun.user_id==current_user.id)
+
+    tr = tr.first()
+    if (tr == None):
+        return render_template('/applications/presenter.html', app = app)
+    else:
+        return render_template('/applications/task/done.html', app=app)
 
 @blueprint.route('/<short_name>/presenter')
+@blueprint.route('/<short_name>/newtask')
 def presenter(short_name):
     if (current_user.is_anonymous()):
         flash("Ooops! You are an anonymous user and will not get any credit for your contributions. Sign in now!", "warning")
