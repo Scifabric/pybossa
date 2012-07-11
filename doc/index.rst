@@ -33,6 +33,7 @@ understand how things fit together.
    overview 
    user/create-application
    user/create-application-tutorial
+   user/advance
 
 Developer Guide
 ================
