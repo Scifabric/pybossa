@@ -80,11 +80,12 @@ def oauth_authorized(resp):
         info = dict(twitter_token = twitter_token)
         user = model.Session.query(model.User)\
                 .filter_by(name=resp['screen_name']).first()
+
         if user is None:
             user = model.User(
                     fullname = resp['screen_name'],
                     name = resp['screen_name'],
-                    email_addr = 'None',
+                    email_addr = resp['screen_name'],
                     twitter_user_id = resp['user_id'],
                     info = info 
                     )
@@ -98,7 +99,7 @@ def oauth_authorized(resp):
 
     login_user(user, remember=True)
     flash("Welcome back %s" % user.fullname, 'success')
-    if (user.email_addr == "None"): request_email = True
+    if (user.email_addr == user.name): request_email = True
 
     if request_email:
         if first_login:

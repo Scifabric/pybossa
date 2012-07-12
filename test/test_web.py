@@ -515,21 +515,19 @@ class TestWeb:
         # This test assumes that the user allows Twitter to authenticate, returning
         # a valid resp. The only difference is a user object without a password
         # Register a user and sign out 
-        self.register()
-        self.signout()
-        # Get the user in the DB and update the email_addr to None
-        user = model.Session.query(model.User).get(1)
-        user.email_addr = "None"
-        # Update twitter_user_id
-        user.twitter_user_id = 1
-        model.Session.merge(user)
+        user = model.User(name="tester",passwd_hash="tester",email_addr="tester")
+        user.set_password('tester')
+        model.Session.add(user)
         model.Session.commit()
+        users = model.Session.query(model.User).all()
 
         # Sign in again and check the warning message
-        self.signin()
+        self.signin(username="tester",password="tester")
         res = self.app.get('/', follow_redirects = True)
         msg = "Please update your e-mail address in your profile page, right now it is empty!"
+        user = model.Session.query(model.User).get(1)
         assert msg in res.data, res.data
+
 
     def test_16_task_status_completed(self):
         """Test WEB Task Status Completed works"""

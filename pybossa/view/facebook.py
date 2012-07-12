@@ -71,7 +71,10 @@ def oauth_authorized(resp):
         info = dict(facebook_token=facebook_token)
         user = model.Session.query(model.User)\
                 .filter_by(name=me.data['username']).first()
-        if user is None:
+        email = model.Session.query(model.User)\
+                .filter_by(email_addr=me.data['email']).first()
+
+        if user is None and email is None:
             user = model.User(
                     fullname=me.data['name'],
                     name=me.data['username'],
@@ -82,7 +85,7 @@ def oauth_authorized(resp):
             model.Session.add(user)
             model.Session.commit()
         else:
-            flash(u'Sorry, there is already an account with the same user name.', 'error') 
+            flash(u'Sorry, there is already an account with the same user name or email.', 'error') 
             flash(u'You can create a new account and sign in', 'info')
             return redirect(url_for('account.register'))
 

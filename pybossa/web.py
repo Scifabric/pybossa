@@ -99,6 +99,10 @@ def remove_db_session():
 
 @app.context_processor
 def global_template_context():
+    if current_user.is_authenticated():
+        if current_user.email_addr == current_user.name or current_user.email_addr == "None":
+            flash("Please update your e-mail address in your profile page, right now it is empty!",'error')
+
     return dict(
         brand = app.config['BRAND'],
         title = app.config['TITLE'],
@@ -172,8 +176,6 @@ def home():
             'taskrun': 0,
             'user': 0
             }
-    if current_user.is_authenticated() and current_user.email_addr == "None":
-        flash("Please update your e-mail address in your profile page, right now it is empty!")
     return render_template('/home/index.html', stats = stats, frontPageApps = frontPageApps, threeApps = threeApps)
 
 @app.route("/about")

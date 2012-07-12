@@ -7,5 +7,7 @@ env/
 doc/_build
 *.un~
 *.wsgi
+*.noseids
+*.swo
 alembic.ini
 pybossa/templates/custom_footer.html
