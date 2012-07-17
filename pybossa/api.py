@@ -23,7 +23,7 @@ from sqlalchemy.exc import DatabaseError
 from pybossa.util import jsonpify, crossdomain
 import pybossa.model as model
 from pybossa.auth import require
-from pybossa.sched import get_default_task, get_random_task
+from pybossa.sched import get_default_task, get_random_task, get_incremental_task
 
 blueprint = Blueprint('api', __name__)
 
@@ -187,6 +187,7 @@ register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
 @jsonpify
 @blueprint.route('/app/<app_id>/newtask')
 def new_task(app_id):
+    ####### ToDo: implement a Strategy Pattern here! Look: http://stackoverflow.com/questions/963965
     # First check which SCHED scheme has to use this app
     app = model.Session.query(model.App).get(app_id)
     if (app.info.get('sched')):
@@ -208,6 +209,13 @@ def new_task(app_id):
         else:
             task = get_random_task(app_id, user_id=current_user.id)
 
+    if sched == 'incremental':
+        print "%s uses the %s scheduler" % (app.name,sched)
+        if current_user.is_anonymous():
+            task = get_incremental_task(app_id,user_ip=request.remote_addr)
+        else:
+            task = get_incremental_task(app_id, user_id=current_user.id)
+    
     # If there is a task for the user, return it
     if task:
         return Response(json.dumps(task.dictize()), mimetype="application/json")
