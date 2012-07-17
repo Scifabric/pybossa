@@ -21,6 +21,47 @@ import random
 
 def get_default_task(app_id, user_id=None, user_ip=None, n_answers=30):
     """Gets a new task for a given application"""
+    candidate_tasks = get_candidate_tasks(app_id, user_id, user_ip, n_answers)
+    total_remaining = len(candidate_tasks)
+    print "Available tasks %s " % total_remaining
+    if total_remaining == 0:
+        return None
+    rand = random.randrange(0, total_remaining)
+    out = candidate_tasks[rand]
+    return out
+
+
+def get_random_task(app_id, user_id=None, user_ip=None, n_answers=30):
+    """Returns a random task for the user"""
+    app = model.Session.query(model.App).get(app_id)
+    from random import choice
+    return choice(app.tasks)
+
+
+def get_incremental_task(app_id, user_id=None, user_ip=None, n_answers=30):
+    """Get a new task for a given application with its last given answer.
+       It is an important strategy when dealing with large tasks, as 
+       transcriptions"""
+    candidate_tasks = get_candidate_tasks(app_id, user_id, user_ip, n_answers)
+    total_remaining = len(candidate_tasks)
+    print "Available tasks %s " % total_remaining
+    if total_remaining == 0:
+        return None
+    rand = random.randrange(0, total_remaining)
+    task = candidate_tasks[rand]
+    #Find last answer for the task
+    q = model.Session.query(model.TaskRun)\
+            .filter(model.TaskRun.task_id == task.id)\
+            .order_by(model.TaskRun.finish_time.desc())
+    last_task_run = q.first()
+    if last_task_run:
+        task.info['last_answer'] = last_task_run.info['answer']
+        #ToDo As discussed in GitHub #53 it is necessary to create a lock in the task!
+    return task
+    
+
+def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30):
+    """Gets all available tasks for a given application and user"""
     # Get all pending tasks for the application
     tasks = model.Session.query(model.Task)\
             .filter(model.Task.app_id==app_id)\
@@ -69,18 +110,5 @@ def get_default_task(app_id, user_id=None, user_ip=None, n_answers=30):
             if n == 0:
                 candidate_tasks.append(t)
                 break
-    
-    total_remaining = len(candidate_tasks)
-    print "Available tasks %s " % total_remaining
-    if total_remaining == 0:
-        return None
-    rand = random.randrange(0, total_remaining)
-    out = candidate_tasks[rand]
-    return out
-
-
-def get_random_task(app_id, user_id=None, user_ip=None, n_answers=30):
-    """Returns a random task for the user"""
-    app = model.Session.query(model.App).get(app_id)
-    from random import choice
-    return choice(app.tasks)
+    return candidate_tasks
+ 
