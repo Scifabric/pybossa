@@ -124,7 +124,7 @@ class TestSCHED:
         
         # Check that we received a Task with answer
         assert data.get('info'), data
-        assert data.get('info').get('last_answer') == 'No'
+        assert data.get('info').get('last_answer').get('answer') == 'No'
 
         # Submit a second Answer as Anonimous
         tr = dict(
@@ -144,6 +144,6 @@ class TestSCHED:
         
         # Check that we received a Task with answer
         assert data.get('info'), data
-        assert data.get('info').get('last_answer') == 'No No'
+        assert data.get('info').get('last_answer').get('answer') == 'No No'
 
 

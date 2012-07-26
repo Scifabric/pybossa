@@ -55,7 +55,7 @@ def get_incremental_task(app_id, user_id=None, user_ip=None, n_answers=30):
             .order_by(model.TaskRun.finish_time.desc())
     last_task_run = q.first()
     if last_task_run:
-        task.info['last_answer'] = last_task_run.info['answer']
+        task.info['last_answer'] = last_task_run.info
         #ToDo As discussed in GitHub #53 it is necessary to create a lock in the task!
     return task
     
