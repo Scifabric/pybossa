@@ -85,7 +85,11 @@ def new():
                 )
             model.Session.add(application)
             model.Session.commit()
-            flash('Application created!','success')
+            flash('<i class="icon-ok"></i> Application created!','success')
+            flash('<i class="icon-bullhorn"></i> You can check the '\
+                   '<strong><a href="https://docs.pybossa.com">Guide and '\
+                   ' Documentation</a></strong> for adding tasks, '\
+                   ' a thumbnail, using PyBossa.JS, etc.', 'info')
             return redirect('/app/' + application.short_name)
         if request.method == 'POST' and not form.validate():
             flash('Please correct the errors', 'error')
