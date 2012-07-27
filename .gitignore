@@ -9,5 +9,6 @@ doc/_build
 *.wsgi
 *.noseids
 *.swo
+.DS_Store
 alembic.ini
 pybossa/templates/custom_footer.html
