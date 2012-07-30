@@ -1,0 +1,18 @@
+{% extends "/base.html" %}
+{% set active_page = "applications"  %}
+{% set active_app = app.short_name %}
+
+{% block content %}
+
+{{ app.info.tutorial | safe}}
+
+<div class="row">
+    <div class="span12">
+        <a href={{url_for('app.presenter', short_name = app.short_name)}}
+           class="btn btn-primary btn-large"> 
+           <i class="icon-thumbs-up"></i> 
+           Do some tasks!</a>
+    </div>
+</div>
+
+{% endblock %}
