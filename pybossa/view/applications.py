@@ -14,7 +14,7 @@
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response
-from flask import render_template
+from flask import render_template, make_response
 from flaskext.wtf import Form, IntegerField, TextField, BooleanField, validators, \
                          HiddenInput, TextAreaField
 from flaskext.login import login_required, current_user
@@ -234,10 +234,24 @@ def task_presenter(short_name, task_id):
 @blueprint.route('/<short_name>/presenter')
 @blueprint.route('/<short_name>/newtask')
 def presenter(short_name):
+    app = model.Session.query(model.App)\
+          .filter(model.App.short_name == short_name).first()
     if (current_user.is_anonymous()):
-        flash("Ooops! You are an anonymous user and will not get any credit for your contributions. Sign in now!", "warning")
-    app = model.Session.query(model.App).filter(model.App.short_name == short_name).first()
-    return render_template('/applications/presenter.html', app = app)
+        flash("Ooops! You are an anonymous user and will not get any credit "\
+              "for your contributions. Sign in now!", "warning")
+    if request.cookies.get( app.short_name + "tutorial") == None:
+        resp = make_response(render_template('/applications/tutorial.html', app = app))
+        resp.set_cookie( app.short_name + 'tutorial','seen')
+        return resp
+    else:
+        return render_template('/applications/presenter.html', app = app)
+
+@blueprint.route('/<short_name>/tutorial')
+def tutorial(short_name):
+    app = model.Session.query(model.App)\
+          .filter(model.App.short_name == short_name).first()
+    return render_template('/applications/tutorial.html', app = app)
+
 
 @blueprint.route('/<short_name>/<int:task_id>/results.json')
 def export(short_name, task_id):
