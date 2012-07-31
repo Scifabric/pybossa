@@ -144,6 +144,9 @@ class App(Base):
     long_tasks           = Column(Integer, default=0)
     #: Boolean integer (0,1) indicating that this App should be hidden from everyone but Administrators
     hidden              = Column(Integer, default=0)
+    #: Boolean integer (0,1) indicating that this App is featured and should
+    #: be displayed in the PyBossa front page
+    featured            = Column(Integer, default=0)
     #: owner (id)
     owner_id            = Column(Integer, ForeignKey('user.id'))
     
@@ -285,6 +288,8 @@ class User(Base, flaskext.login.UserMixin):
     #: api key
     api_key             = Column(String(length=36), default=make_uuid, unique=True)
     passwd_hash         = Column(Unicode(length=254), unique=True)
+    #: Adming flag Boolean Integer (0,1)
+    admin               = Column(Integer, default=0)
     #: TODO: find out ... bossa specific
     category            = Column(Integer)
     #: TODO: find out ...
