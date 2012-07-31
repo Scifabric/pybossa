@@ -145,6 +145,9 @@ class App(Base):
     long_tasks           = Column(Integer, default=0)
     #: Boolean integer (0,1) indicating that this App should be hidden from everyone but Administrators
     hidden              = Column(Integer, default=0)
+    #: Boolean integer (0,1) indicating that this App is featured and should
+    #: be displayed in the PyBossa front page
+    featured            = Column(Integer, default=0)
     #: owner (id)
     owner_id            = Column(Integer, ForeignKey('user.id'))
     
