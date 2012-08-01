@@ -58,8 +58,8 @@ class APIBase(MethodView):
                 for k in request.args.keys():
                     if k == 'limit':
                         limit = True
-                    if k != 'limit' and k != 'api_key' and request.args[k] != '':
-                        query = query.filter("%s = '%s'" % (k, request.args[k]))
+                    if k != 'limit' and k != 'api_key' and request.args[k] != '' and hasattr(self.__class__, k):
+                        query = query.filter("%s = '%s'" % (k, request.args[k].replace('\'', '\\\'')))
                 if limit:
                     query = query.limit(int(request.args['limit']))
                 else:
