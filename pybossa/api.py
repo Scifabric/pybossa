@@ -27,8 +27,10 @@ from pybossa.sched import get_default_task, get_random_task, get_incremental_tas
 
 blueprint = Blueprint('api', __name__)
 
+cors_headers = [ 'Content-Type', 'Authorization' ]
+
 @blueprint.route('/')
-@crossdomain(origin='*')
+@crossdomain(origin='*', headers=cors_headers)
 def index():
     return 'The PyBossa API'
 
@@ -39,8 +41,12 @@ class APIBase(MethodView):
     tasks, etc.
     """
 
+    @crossdomain(origin='*', headers=cors_headers)
+    def options(self):
+        return ''
+
     @jsonpify
-    @crossdomain(origin='*')
+    @crossdomain(origin='*', headers=cors_headers)
     def get(self, id):
         """
         Returns an item from the DB with the request.data JSON object or all the
@@ -78,7 +84,7 @@ class APIBase(MethodView):
             return Response(json.dumps({'error': "%s" % e.orig}), mimetype='application/json')
 
     @jsonpify
-    @crossdomain(origin='*')
+    @crossdomain(origin='*', headers=cors_headers)
     def post(self):
         """
         Adds an item to the DB with the request.data JSON object
@@ -95,7 +101,7 @@ class APIBase(MethodView):
         return json.dumps(inst.dictize())
 
     @jsonpify
-    @crossdomain(origin='*')
+    @crossdomain(origin='*', headers=cors_headers)
     def delete(self, id):
         """
         Deletes a single item from the DB
@@ -116,7 +122,7 @@ class APIBase(MethodView):
             return "", 204
 
     @jsonpify
-    @crossdomain(origin='*')
+    @crossdomain(origin='*', headers=cors_headers)
     def put(self, id):
         """
         Updates a single item in the DB
@@ -169,15 +175,15 @@ def register_api(view, endpoint, url, pk='id', pk_type='int'):
     blueprint.add_url_rule(url,
         view_func=view_func,
         defaults={pk: None},
-        methods=['GET']
+        methods=['GET', 'OPTIONS']
         )
     blueprint.add_url_rule(url,
         view_func=view_func,
-        methods=['POST']
+        methods=['POST', 'OPTIONS']
         )
     blueprint.add_url_rule('%s/<%s:%s>' % (url, pk_type, pk),
         view_func=view_func,
-        methods=['GET', 'PUT', 'DELETE']
+        methods=['GET', 'PUT', 'DELETE', 'OPTIONS']
         )
 
 register_api(ProjectAPI, 'api_app', '/app', pk='id', pk_type='int')
@@ -186,7 +192,7 @@ register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
 
 @jsonpify
 @blueprint.route('/app/<app_id>/newtask')
-@crossdomain(origin='*')
+@crossdomain(origin='*', headers=cors_headers)
 def new_task(app_id):
     ####### ToDo: implement a Strategy Pattern here! Look: http://stackoverflow.com/questions/963965
     # First check which SCHED scheme has to use this app
@@ -222,3 +228,4 @@ def new_task(app_id):
         return Response(json.dumps(task.dictize()), mimetype="application/json")
     else:
         return Response(json.dumps({}), mimetype="application/json")
+
