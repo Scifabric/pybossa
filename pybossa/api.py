@@ -186,6 +186,7 @@ register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
 
 @jsonpify
 @blueprint.route('/app/<app_id>/newtask')
+@crossdomain(origin='*')
 def new_task(app_id):
     ####### ToDo: implement a Strategy Pattern here! Look: http://stackoverflow.com/questions/963965
     # First check which SCHED scheme has to use this app
