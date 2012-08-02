@@ -203,7 +203,7 @@ def new_task(app_id):
         sched = 'default'
     # Now get a task using the app sched
     if sched == 'default':
-        print "%s uses the %s scheduler" % (app.name,sched)
+        # print "%s uses the %s scheduler" % (app.name,sched)
         if current_user.is_anonymous():
             task = get_default_task(app_id,user_ip=request.remote_addr)
         else:
@@ -217,7 +217,7 @@ def new_task(app_id):
             task = get_random_task(app_id, user_id=current_user.id)
 
     if sched == 'incremental':
-        print "%s uses the %s scheduler" % (app.name,sched)
+        # print "%s uses the %s scheduler" % (app.name,sched)
         if current_user.is_anonymous():
             task = get_incremental_task(app_id,user_ip=request.remote_addr)
         else:
