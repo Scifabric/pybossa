@@ -64,8 +64,13 @@ class APIBase(MethodView):
                 for k in request.args.keys():
                     if k == 'limit':
                         limit = True
-                    if k != 'limit' and k != 'api_key' and request.args[k] != '' and hasattr(self.__class__, k):
-                        query.filter(getattr(self.__class__, k) == request.args[k])
+                    if k != 'limit' and k != 'api_key':
+                        if not hasattr(self.__class__, k):
+                            return Response(json.dumps({
+                                'error': 'no such column: %s' % k}
+                                ), mimetype='application/json')
+                        query = query.filter(getattr(self.__class__, k) == request.args[k])
+
                 if limit:
                     query = query.limit(int(request.args['limit']))
                 else:

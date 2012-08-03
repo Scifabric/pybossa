@@ -94,6 +94,16 @@ class TestAPI:
             res = self.app.get("/api/%s?wrongfield=value" % endpoint)
             data = json.loads(res.data)
             assert "no such column: wrongfield" in data['error'], data
+    
+    def test_query_sql_injection(self):
+        q = '1%3D1;SELECT%20*%20FROM%20task%20WHERE%201=1'
+        res = self.app.get('/api/task?' + q)
+        data = json.loads(res.data)
+        assert "no such column: " in data['error'], data
+        q = 'app_id=1%3D1;SELECT%20*%20FROM%20task%20WHERE%201'
+        res = self.app.get('/api/task?' + q)
+        data = json.loads(res.data)
+        assert len(data) == 0
 
     def test_query_app(self):
         """Test API query for app endpoint works"""
