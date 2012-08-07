@@ -268,7 +268,7 @@ def presenter(short_name):
 
 @blueprint.route('/<short_name>/<int:task_id>/results.json')
 def export(short_name, task_id):
-    """Return a file will all the TaskRuns for a give Task"""
+    """Return a file with all the TaskRuns for a give Task"""
     task = model.Session.query(model.Task)\
             .filter(model.Task.id == task_id)\
             .first()
@@ -277,10 +277,10 @@ def export(short_name, task_id):
     return Response(json.dumps(results), mimetype='application/json')
 
 
-@blueprint.route('/featured')
-def featured():
-    """List featured apps of PyBossa"""
-    apps = model.Session.query(model.App)\
-            .filter(model.App.featured == 1)\
-            .all()
-    return render_template('/applications/featured.html', apps=apps)
+#@blueprint.route('/featured')
+#def featured():
+#    """List featured apps of PyBossa"""
+#    apps = model.Session.query(model.App)\
+#            .filter(model.App.featured == 1)\
+#            .all()
+#    return render_template('/applications/featured.html', apps=apps)

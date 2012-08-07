@@ -10,5 +10,6 @@ doc/_build
 *.noseids
 *.swo
 .DS_Store
+*.coverage
 alembic.ini
 pybossa/templates/custom_footer.html

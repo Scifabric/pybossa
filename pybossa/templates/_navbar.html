@@ -15,6 +15,10 @@
                 </a>
                 <ul class="dropdown-menu">
                     <li><a href="{{ url_for('account.profile') }}"><i class="icon icon-user"></i> Profile</a></li>
+                    {% if current_user.admin == 1 %}
+                  <li class="divider"></li>
+                    <li><a href="{{ url_for('admin.featured') }}"><i class="icon icon-cog"></i> Manage Applications</a></li>
+                    {% endif %}
                   <li class="divider"></li>
                   <li><a href="{{ url_for('account.signout') }}"><i class="icon icon-off"></i> Sign Out</a></li>
                 </ul>
