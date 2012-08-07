@@ -277,10 +277,10 @@ def export(short_name, task_id):
     return Response(json.dumps(results), mimetype='application/json')
 
 
-@blueprint.route('/featured')
-def featured():
-    """List featured apps of PyBossa"""
-    apps = model.Session.query(model.App)\
-            .filter(model.App.featured == 1)\
-            .all()
-    return render_template('/applications/featured.html', apps=apps)
+#@blueprint.route('/featured')
+#def featured():
+#    """List featured apps of PyBossa"""
+#    apps = model.Session.query(model.App)\
+#            .filter(model.App.featured == 1)\
+#            .all()
+#    return render_template('/applications/featured.html', apps=apps)
