@@ -20,7 +20,11 @@
 
 {% from "_formhelpers.html" import render_field %}
   <form method="post" class="form-horizontal" action="">
+    {% if auth.twitter or auth.facebook%}
     <legend>Or Sign in with your PyBossa account</legend>
+    {% else %}
+    <legend>Sign in with your PyBossa account</legend>
+    {% endif %}
       {{ render_field(form.username, placeholder="") }}
       {{ render_field(form.password, placeholder="") }}
     <div class="form-actions">
