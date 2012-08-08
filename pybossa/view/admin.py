@@ -32,6 +32,14 @@ import json
 blueprint = Blueprint('admin', __name__)
 
 
+@blueprint.route('/')
+@login_required
+@admin_required
+def index():
+    """List admin actions"""
+    return render_template('/admin/index.html')
+
+
 @blueprint.route('/featured')
 @blueprint.route('/featured/<int:app_id>', methods=['POST', 'DELETE'])
 @login_required
@@ -95,7 +103,6 @@ def users(user_id=None):
         if not found:
             flash("<strong>Ooops!</strong> We didn't find a user "\
                   "matching your query: <strong>%s</strong>" % form.user.data)
-            flash("Try with the Full name or his user or nick name", "info")
         return render_template('/admin/users.html', found=found, users=users,
                 title="Manage Admin Users", form=form)
 
