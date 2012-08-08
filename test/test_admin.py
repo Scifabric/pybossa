@@ -148,12 +148,41 @@ class TestAdmin:
 
     # Tests
 
-    def test_01_first_user_is_admin(self):
+    def test_00_first_user_is_admin(self):
         """Test ADMIN First Created user is admin works"""
         self.register()
         user = model.Session.query(model.User)\
                 .get(1)
         assert user.admin == 1, "User ID:1 should be admin, but it is not"
+
+    def test_01_admin_index(self):
+        """Test ADMIN index page works"""
+        self.register()
+        res = self.app.get("/admin", follow_redirects=True)
+        assert "Settings" in res.data,\
+                "There should be an index page for admin users and apps"
+        assert "Manage featured applications" in res.data,\
+                "There should be a button for managing apps"
+        assert "Manage admin users" in res.data,\
+                "There should be a button for managing users"
+
+    def test_01_admin_index_anonymous(self):
+        """Test ADMIN index page works as anonymous user"""
+        res = self.app.get("/admin", follow_redirects=True)
+        assert "Please sign in to access this page" in res.data,\
+                "The user should not be able to access this page"\
+                " but the returned status is %s" % res.data
+
+    def test_01_admin_index_authenticated(self):
+        """Test ADMIN index page works as signed in user"""
+        self.register()
+        self.signout()
+        self.register(username="tester2",
+                email="tester2@tester.com", password="tester")
+        res = self.app.get("/admin", follow_redirects=True)
+        assert "403 FORBIDDEN" in res.status,\
+                "The user should not be able to access this page"\
+                " but the returned status is %s" % res.status
 
     def test_02_second_user_is_not_admin(self):
         """Test ADMIN Second Created user is NOT admin works"""
