@@ -16,10 +16,16 @@
 from flask import Blueprint
 from flask import render_template
 from flask import request
-from flaskext.login import login_required
+from flask import abort
+from flask import flash
+from flask import redirect
+from flask import url_for
+from flaskext.login import login_required, current_user
+from flaskext.wtf import Form, TextField
 
 import pybossa.model as model
 from pybossa.util import admin_required
+from sqlalchemy import or_, func
 import json
 
 
@@ -44,12 +50,13 @@ def featured(app_id=None):
         tmp = model.Session.query(model.Featured)\
                 .filter(model.Featured.app_id == app_id)\
                 .first()
-        if (tmp == None): 
+        if (tmp == None):
             model.Session.add(f)
             model.Session.commit()
             return json.dumps(f.dictize())
         else:
-            return json.dumps({'error': 'App.id %s already in Featured table' % app_id})
+            return json.dumps({'error': 'App.id %s already in Featured table'\
+                    % app_id})
     if request.method == 'DELETE':
         f = model.Session.query(model.Featured)\
                 .filter(model.Featured.app_id == app_id)\
@@ -59,4 +66,72 @@ def featured(app_id=None):
             model.Session.commit()
             return "", 204
         else:
-            return json.dumps({'error': 'App.id %s is not in Featured table' % app_id})
+            return json.dumps({'error': 'App.id %s is not in Featured table'\
+                    % app_id})
+
+
+class SearchForm(Form):
+    user = TextField('User')
+
+
+@blueprint.route('/users', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def users(user_id=None):
+    """Manage users of PyBossa"""
+    form = SearchForm(request.form)
+    users = model.Session.query(model.User)\
+            .filter(model.User.admin == 1)\
+            .filter(model.User.id != current_user.id)\
+            .all()
+
+    if request.method == 'POST' and form.user.data:
+        query = '%' + form.user.data.lower() + '%'
+        found = model.Session.query(model.User)\
+                .filter(or_(func.lower(model.User.name).like(query),\
+                            func.lower(model.User.fullname).like(query)))\
+                .filter(model.User.id != current_user.id)\
+                .all()
+        if not found:
+            flash("<strong>Ooops!</strong> We didn't find a user "\
+                  "matching your query: <strong>%s</strong>" % form.user.data)
+            flash("Try with the Full name or his user or nick name", "info")
+        return render_template('/admin/users.html', found=found, users=users,
+                title="Manage Admin Users", form=form)
+
+    return render_template('/admin/users.html', found=[], users=users,
+            title="Manage Admin Users", form=form)
+
+
+@blueprint.route('/users/add/<int:user_id>')
+@login_required
+@admin_required
+def add_admin(user_id=None):
+    """Add admin flag for user_id"""
+    if user_id:
+        user = model.Session.query(model.User)\
+                .get(user_id)
+        if user:
+            user.admin = 1
+            model.Session.commit()
+            return redirect(url_for(".users"))
+        else:
+            return abort(404)
+
+
+@blueprint.route('/users/del/<int:user_id>')
+@login_required
+@admin_required
+def del_admin(user_id=None):
+    """Del admin flag for user_id"""
+    if user_id:
+        user = model.Session.query(model.User)\
+                .get(user_id)
+        if user:
+            user.admin = 0
+            model.Session.commit()
+            return redirect(url_for('.users'))
+        else:
+            return abort(404)
+    else:
+        return abort(404)
