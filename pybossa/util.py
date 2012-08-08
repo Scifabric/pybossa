@@ -39,7 +39,6 @@ def admin_required(f):
     """Checks if the user is and admin or not"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        print current_user
         if current_user.admin:
             return f(*args, **kwargs)
         else:
