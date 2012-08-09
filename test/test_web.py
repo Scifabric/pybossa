@@ -94,7 +94,7 @@ class TestWeb:
                     'name': name,
                     'short_name': short_name,
                     'description': description,
-                    'long_description': long_description
+                    'long_description': long_description,
                 }, follow_redirects=True)
         else:
             return self.app.get("/app/new", follow_redirects=True)
@@ -333,8 +333,11 @@ class TestWeb:
         """Test WEB applications index interface works"""
         # Check first without apps
         res = self.app.get('/app', follow_redirects=True)
+        assert "Applications" in res.data, res.data
+        assert "Featured" in res.data, res.data
+        assert "Published" in res.data, res.data
+        assert "Draft" in res.data, res.data
         assert "Create an application!" in res.data, res.data
-        assert "Available applications" in res.data, res.data
 
         self.register()
         self.new_application()
@@ -344,7 +347,7 @@ class TestWeb:
 
         res = self.app.get('/app/')
         assert self.html_title("Applications") in res.data, res.data
-        assert "Available applications" in res.data, res.data
+        assert "Applications" in res.data, res.data
         assert '/app/sampleapp' in res.data, res.data
 
     def test_07_index_one_app(self):
@@ -663,33 +666,73 @@ class TestWeb:
                 in res.data, res.data
         assert '0 of 10' in res.data, res.data
 
-    def test_19_app_index_without_task_sort(self):
-        """Test WEB Application Index Without Task tabbed browsing works"""
+    def test_19_app_index_categories(self):
+        """Test WEB Application Index categories works"""
         self.register()
         self.new_application()
         self.signout()
 
         res = self.app.get('app', follow_redirects=True)
-        assert "Available applications" in res.data, res.data
-        assert "With Tasks" in res.data, res.data
-        assert "Without Tasks" in res.data, res.data
-        assert "appsampleappWithoutTasks" in res.data, res.data
+        assert "Applications" in res.data, res.data
+        assert "Featured" in res.data, res.data
+        assert "Published" in res.data, res.data
+        assert "Draft" in res.data, res.data
 
-    def test_20_app_index_with_task_sort(self):
-        """Test WEB Application Index With Task tabbed browsing works"""
+    def test_20_app_index_published(self):
+        """Test WEB Application Index published works"""
         self.register()
         self.new_application()
         app = model.Session.query(model.App).first()
+        info = dict(task_presenter="some html")
+        app.info = info
+        model.Session.commit()
         task = model.Task(app_id=app.id, info={'n_answers': 10})
         model.Session.add(task)
         model.Session.commit()
         self.signout()
 
         res = self.app.get('app', follow_redirects=True)
-        assert "Available applications" in res.data, res.data
-        assert "With Tasks" in res.data, res.data
-        assert "Without Tasks" in res.data, res.data
-        assert "appsampleappWithTasks" in res.data, res.data
+        assert "Applications" in res.data, res.data
+        assert "Featured</h2>" not in res.data, res.data
+        assert "Published</h2>" in res.data, res.data
+        assert "Draft</h2>" not in res.data, res.data
+
+    def test_20_app_index_featured(self):
+        """Test WEB Application Index featured works"""
+        self.register()
+        self.new_application()
+        app = model.Session.query(model.App).first()
+        info = dict(task_presenter="some html")
+        app.info = info
+        model.Session.commit()
+
+        f = model.Featured()
+        f.app_id = app.id
+        model.Session.add(f)
+        model.Session.commit()
+
+        task = model.Task(app_id=app.id, info={'n_answers': 10})
+        model.Session.add(task)
+        model.Session.commit()
+        self.signout()
+
+        res = self.app.get('app', follow_redirects=True)
+        assert "Applications" in res.data, res.data
+        assert "Featured</h2>" in res.data, res.data
+        assert "Published</h2>" not in res.data, res.data
+        assert "Draft</h2>" not in res.data, res.data
+
+    def test_20_app_index_draft(self):
+        """Test WEB Application Index draft works"""
+        self.register()
+        self.new_application()
+        self.signout()
+
+        res = self.app.get('app', follow_redirects=True)
+        assert "Applications" in res.data, res.data
+        assert "Featured</h2>" not in res.data, res.data
+        assert "Published</h2>" not in res.data, res.data
+        assert "Draft</h2>" in res.data, res.data
 
     def test_21_get_specific_ongoing_task_anonymous(self):
         """Test WEB get specific ongoing task_id for
