@@ -27,6 +27,7 @@ import pybossa.model as model
 from pybossa.api import blueprint as api
 from pybossa.view.account import blueprint as account
 from pybossa.view.applications import blueprint as applications
+from pybossa.view.admin import blueprint as admin
 from pybossa.view.stats import blueprint as stats
 
 import random 
@@ -37,6 +38,7 @@ logger = logging.getLogger('pybossa')
 app.register_blueprint(api, url_prefix='/api')
 app.register_blueprint(account, url_prefix='/account')
 app.register_blueprint(applications, url_prefix='/app')
+app.register_blueprint(admin, url_prefix='/admin')
 app.register_blueprint(stats, url_prefix='/stats')
 
 
@@ -152,7 +154,13 @@ def home():
             'taskrun': taskrun_count,
             'user': user_count
             }
-        apps = model.Session.query(model.App).filter(model.App.hidden == 0).filter(model.App.tasks != None).all()
+
+        featured = model.Session.query(model.Featured).all()
+
+        apps = []
+        for f in featured:
+            apps.append(model.Session.query(model.App).get(f.app_id))
+
         threeApps = False
         if (len(apps) > 0):
             if (len(apps) == 1 or len(apps) == 2):

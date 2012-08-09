@@ -22,6 +22,7 @@ class Fixtures:
     api_key = 'tester'
     api_key_2 = 'tester-2'
     app_name = u'test-app'
+    password = u'tester'
 
     @classmethod
     def create(cls,sched='default'):
@@ -37,7 +38,11 @@ class Fixtures:
         app = Fixtures.create_app(info)
         app.owner = user
 
-        model.Session.add_all([user, user2, app])
+        model.Session.add(user)
+        model.Session.commit()
+        model.Session.add(user2)
+        model.Session.commit()
+        model.Session.add(app)
 
         task_info = {
             'n_answers': 10,
@@ -93,12 +98,14 @@ class Fixtures:
         user = model.User(
                 email_addr = cls.email_addr, 
                 name = cls.name, 
+                passwd_hash = cls.password,
                 fullname = cls.fullname, 
                 api_key = cls.api_key)
 
         user2 = model.User(
                 email_addr = cls.email_addr2, 
                 name = cls.name2, 
+                passwd_hash = cls.password + "2",
                 fullname = cls.fullname2, 
                 api_key=cls.api_key_2)
         
