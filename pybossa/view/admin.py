@@ -89,7 +89,7 @@ def users(user_id=None):
     """Manage users of PyBossa"""
     form = SearchForm(request.form)
     users = model.Session.query(model.User)\
-            .filter(model.User.admin == 1)\
+            .filter(model.User.admin == True)\
             .filter(model.User.id != current_user.id)\
             .all()
 
@@ -119,7 +119,7 @@ def add_admin(user_id=None):
         user = model.Session.query(model.User)\
                 .get(user_id)
         if user:
-            user.admin = 1
+            user.admin = True
             model.Session.commit()
             return redirect(url_for(".users"))
         else:
@@ -135,7 +135,7 @@ def del_admin(user_id=None):
         user = model.Session.query(model.User)\
                 .get(user_id)
         if user:
-            user.admin = 0
+            user.admin = False
             model.Session.commit()
             return redirect(url_for('.users'))
         else:

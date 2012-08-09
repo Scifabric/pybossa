@@ -24,7 +24,7 @@ import uuid
 from werkzeug import generate_password_hash, check_password_hash
 import flaskext.login
 from sqlalchemy import create_engine
-from sqlalchemy import Integer, Unicode, Float, UnicodeText, Text, String
+from sqlalchemy import Integer, Boolean, Unicode, Float, UnicodeText, Text, String
 from sqlalchemy.schema import Table, MetaData, Column, ForeignKey
 from sqlalchemy.orm import relationship, backref, class_mapper
 from sqlalchemy.ext.declarative import declarative_base
@@ -299,7 +299,7 @@ class User(Base, flaskext.login.UserMixin):
     api_key             = Column(String(length=36), default=make_uuid, unique=True)
     passwd_hash         = Column(Unicode(length=254), unique=True)
     #: Adming flag Boolean Integer (0,1)
-    admin               = Column(Integer, default=0)
+    admin               = Column(Boolean, default=False)
     #: TODO: find out ... bossa specific
     category            = Column(Integer)
     #: TODO: find out ...
@@ -336,5 +336,5 @@ class User(Base, flaskext.login.UserMixin):
 def make_admin(mapper, conn, target):
     users = conn.scalar('select count(*) from "user"')
     if users == 0:
-        target.admin = 1
+        target.admin = True
         print "User %s is the first one, so we make it an admin" % target.name

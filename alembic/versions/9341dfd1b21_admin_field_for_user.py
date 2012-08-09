@@ -15,7 +15,7 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('user', sa.Column('admin', sa.Integer, default=0))
+    op.add_column('user', sa.Column('admin', sa.Boolean, default=False))
 
 
 def downgrade():
