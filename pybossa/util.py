@@ -20,6 +20,7 @@ from flask import abort, request, make_response, current_app
 from functools import wraps
 from flaskext.wtf import Form, TextField, PasswordField, validators, ValidationError
 from flaskext.oauth import OAuth
+from flaskext.login import current_user
 from math import ceil
 
 def jsonpify(f):
@@ -32,6 +33,16 @@ def jsonpify(f):
             return current_app.response_class(content, mimetype='application/javascript')
         else:
             return f(*args, **kwargs)
+    return decorated_function
+
+def admin_required(f):
+    """Checks if the user is and admin or not"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if current_user.admin:
+            return f(*args, **kwargs)
+        else:
+            return abort(403)
     return decorated_function
 
 class Unique(object):
