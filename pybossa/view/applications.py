@@ -58,17 +58,30 @@ class AppForm(Form):
 @blueprint.route('/')
 def index():
     if require.app.read():
-        apps = model.Session.query(model.App).filter(model.App.hidden == 0)
+        apps = model.Session.query(model.App)\
+                .filter(model.App.hidden == 0)
+        featured = model.Session.query(model.Featured)\
+                .all()
+        apps_featured = []
         apps_with_tasks = []
         apps_without_tasks = []
         for a in apps:
-            if (len(a.tasks) > 0):
-                apps_with_tasks.append(a)
+            if (len(a.tasks) > 0) and (a.info.get("task_presenter")):
+                app_featured = False
+                for f in featured:
+                    if f.app_id == a.id:
+                        app_featured = True
+                        break
+                if app_featured:
+                    apps_featured.append(a)
+                else:
+                    apps_with_tasks.append(a)
             else:
                 apps_without_tasks.append(a)
 
         return render_template('/applications/index.html', \
                                 title="Applications",
+                                apps_featured=apps_featured,
                                 apps_with_tasks=apps_with_tasks,
                                 apps_without_tasks=apps_without_tasks)
     else:
@@ -275,12 +288,3 @@ def export(short_name, task_id):
 
     results = [tr.dictize() for tr in task.task_runs]
     return Response(json.dumps(results), mimetype='application/json')
-
-
-#@blueprint.route('/featured')
-#def featured():
-#    """List featured apps of PyBossa"""
-#    apps = model.Session.query(model.App)\
-#            .filter(model.App.featured == 1)\
-#            .all()
-#    return render_template('/applications/featured.html', apps=apps)

@@ -11,6 +11,18 @@ div.alert-messages {
   margin-top: 15px;
 }
 
+.app-featured {
+    opacity: 1.0
+}
+
+.app-published {
+    opacity: 0.9
+}
+
+.app-draft {
+    opacity: 0.6
+}
+
 #copyright, #okfn, #agplv3, #glyphicons {
     text-align: center;
 }

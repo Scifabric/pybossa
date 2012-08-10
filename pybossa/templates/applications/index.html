@@ -2,96 +2,105 @@
 {% set active_page = "applications" %}
 {% set active_app  = "all" %}
 
+{% macro show_app(app, class="") -%}
+<div class="row {{class}}">
+    <div class="span12 well">
+        <div class="row">
+            <div class="span2">
+                <ul class="thumbnails">
+                    <li>
+                    {% if app.info.thumbnail %}
+                    <img class="thumbnail" src="{{ app.info.thumbnail }}" style="max-width:100px; max-height:100px">
+                    {% else %}
+                    <img class="thumbnail" src="http://placehold.it/100x100">
+                    {% endif %}
+                    </li>
+                </ul> <!-- End of class=thumbnails -->
+            </div> <!-- End of span2 -->
+            <div id="data" class="span8">
+                <h2><a href="{{ url_for('app.details', short_name = app.short_name) }}">{{ app.name }}</a></h2>
+                <ul>
+                    <li><strong>Description</strong>: {{ app.description }}</li>
+                    <li><strong>Creation Date</strong>: {{ app.created[0:10] }}</li>
+                    {% if app.last_activity() != "None" %}
+                    <li><strong>Last Activity</strong>: {{ app.last_activity() }}</li>
+                    {% endif %}
+                    {% if app.owner.id == current_user.id %}
+                    <li><strong>Owner</strong>: Me</li>
+                    {% else %}
+                    <li><strong>Owner</strong>: {{ app.owner.name }}</li>
+                    {% endif %}
+                </ul>
+                {% if class != "app-draft" %}
+                <a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = app.short_name) }}"><i class="icon icon-white icon-ok"></i> Try it!</a>
+                {% endif %}
+            </div> <!-- end of id=data class=span8 -->
+        </div> <!--end of class=row -->
+    </div> <!-- end of class=span10 well -->
+</div><!-- end of class=row -->
+{%- endmacro %}
+
 {% block content %}
+
 <div class="row">
-  <div class="span12 well" style="text-align:center">
-    <a href="{{ url_for('app.new')}}" class="btn btn-large btn-inverse"><i class="icon-white icon-plus"></i> Create an application!</a>
-  </div>
+    <div class="span12">
+        <h1>Applications</h1>
+    </div>
+    <br/>
+    <div class="span12" style="font-size:16px">
+        <p>Here you can find a list of all registered applications in {{brand}}.</p>
+        <p>The applications can be sorted in three categories:</p>
+        <ul style="list-style:none">
+            <li><strong><i class="icon-star"></i> Featured:</strong> a special selection of the most interesting applications.</li>
+            <li><strong><i class="icon-th"></i> Published:</strong> all available applications.</li>
+            <li><strong><i class="icon-wrench"></i> Draft:</strong> the only applications where you <i>cannot contribute for the moment</i> (the owners have not published them yet).</li>
+        </ul>
+        <p>Therefore, pick up a published or featured application and help the project!</p>
+    </div>
 </div>
 
-<h1>Available applications</h1>
-<br/>
-  <div class="tabbable">
-      <ul class="nav nav-tabs">
-        <li class="active"><a href="#tab1" data-toggle="tab">With Tasks</a></li>
-        <li><a href="#tab2" data-toggle="tab">Without Tasks</a></li>
-      </ul>
-      <div class="tab-content">
-          <div class="tab-pane active" id="tab1">
-            {% for app in apps_with_tasks %}
-            <div id="app{{app.short_name}}WithTasks" class="row">
-                <div id="buttons" class="span10 well">
-                  <div id="img" class="row">
-                    <div class="span2">
-                        <ul class="thumbnails">
-                            <li>
-                              {% if app.info.thumbnail %}
-                                <img class="thumbnail" src="{{ app.info.thumbnail }}">
-                              {% else %}
-                                <img class="thumbnail" src="http://placehold.it/100x100">
-                              {% endif %}
-                            </li>
-                        </ul>
-                    </div>
-                    <div id="data" class="span8">
-                        <h2><a href="{{ url_for('app.details', short_name = app.short_name) }}">{{ app.name }}</a></h2>
-                      <ul>
-                        <li><strong>Description</strong>: {{ app.description }}</li>
-                        <li><strong>Creation Date</strong>: {{ app.created[0:10] }}</li>
-                        {% if app.last_activity() != "None" %}
-                        <li><strong>Last Activity</strong>: {{ app.last_activity() }}</li>
-                        {% endif %}
-                        {% if app.owner.id == current_user.id %}
-                        <li><strong>Owner</strong>: Me</li>
-                        {% else %}
-                        <li><strong>Owner</strong>: {{ app.owner.name }}</li>
-                        {% endif %}
-                        </ul>
-                        <a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = app.short_name) }}"><i class="icon icon-white icon-ok"></i> Do some tasks!</a>
-                    </div>
-                  </div>
-                </div>
-            </div>
-            {% endfor %}
-          </div>
-          <div class="tab-pane" id="tab2">
-            {% for app in apps_without_tasks %}
-            <div id="app{{ app.short_name }}WithoutTasks" class="row">
-                <div id="buttons" class="span10 well">
-                  <div id="img" class="row">
-                    <div class="span2">
-                        <ul class="thumbnails">
-                            <li>
-                              {% if app.info.thumbnail %}
-                                <img class="thumbnail" src="{{ app.info.thumbnail }}">
-                              {% else %}
-                                <img class="thumbnail" src="http://placehold.it/100x100">
-                              {% endif %}
-                            </li>
-                        </ul>
-                    </div>
-                    <div id="data" class="span8">
-                        <h2><a href="{{ url_for('app.details', short_name = app.short_name) }}">{{ app.name }}</a></h2>
-                      <ul>
-                        <li><strong>Description</strong>: {{ app.description }}</li>
-                        <li><strong>Creation Date</strong>: {{ app.created[0:10] }}</li>
-                        {% if app.last_activity() != "None" %}
-                        <li><strong>Last Activity</strong>: {{ app.last_activity() }}</li>
-                        {% endif %}
-                        {% if app.owner.id == current_user.id %}
-                        <li><strong>Owner</strong>: Me</li>
-                        {% else %}
-                        <li><strong>Owner</strong>: {{ app.owner.name }}</li>
-                        {% endif %}
-                        </ul>
-                    </div>
-                  </div>
-                </div>
-            </div>
-            {% endfor %}
-          </div>
+{% if apps_featured %}
+<div class="row app-featured">
+    <div class="span12">
+        <h2><i class="icon-star"></i> Featured</h2>
+    </div>
+</div>
 
-      </div>
-  </div>
+{% endif %}
+{% for app in apps_featured %}
+{{ show_app(app, class="app-featured") }}
+{% endfor %}
+
+
+{% if apps_with_tasks %}
+<div class="row app-published">
+    <div class="span12">
+        <h2><i class="icon-th"></i> Published</h2>
+    </div>
+</div>
+{% endif %}
+
+{% for app in apps_with_tasks %}
+{{ show_app(app, class="app-published") }}
+{% endfor %}
+
+{% if apps_without_tasks %}
+<div class="row app-draft">
+    <div class="span12">
+        <h2><i class="icon-wrench"></i> Draft</h2>
+    </div>
+</div>
+{% endif %}
+
+{% for app in apps_without_tasks %}
+{{ show_app(app, class="app-draft") }}
+{% endfor %}
+
+<div class="row">
+    <div class="span12 well" style="text-align:center">
+        <a href="{{ url_for('app.new')}}" class="btn btn-large btn-inverse"><i class="icon-white icon-plus"></i> Create an application!</a>
+    </div>
+</div>
+
 
 {% endblock %}
