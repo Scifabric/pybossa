@@ -746,8 +746,33 @@ class TestWeb:
         res = self.app.get('/app/%s/task/%s' % (app1.short_name,task2.id))
         assert "Error" in res.data, res.data
         assert "This task does not belong to %s" % app1.short_name in res.data, res.data
-        
 
+    def test_26_tutorial_signed_user(self):
+        """Test WEB tutorials work as signed in user"""
+        Fixtures.create()
+        app1 = model.Session.query(model.App).get(1)
+        app1.info = dict(tutorial="some help")
+        model.Session.commit()
+        self.register()
+        # First time accessing the app should redirect me to the tutorial
+        res = self.app.get('/app/test-app/newtask', follow_redirects=True)
+        assert "some help" in res.data,\
+                "There should be some tutorial for the application"
+        # Second time should give me a task, and not the tutorial
+        res = self.app.get('/app/test-app/newtask', follow_redirects=True)
+        assert "some help" not in res.data
 
-
-
+    def test_27_tutorial_anonymous_user(self):
+        """Test WEB tutorials work as an anonymous user"""
+        Fixtures.create()
+        app1 = model.Session.query(model.App).get(1)
+        app1.info = dict(tutorial="some help")
+        model.Session.commit()
+        self.register()
+        # First time accessing the app should redirect me to the tutorial
+        res = self.app.get('/app/test-app/newtask', follow_redirects=True)
+        assert "some help" in res.data,\
+                "There should be some tutorial for the application"
+        # Second time should give me a task, and not the tutorial
+        res = self.app.get('/app/test-app/newtask', follow_redirects=True)
+        assert "some help" not in res.data
