@@ -885,4 +885,29 @@ class TestWeb:
         # Second time should give me a task, and not the tutorial
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
         assert "some help" not in res.data
->>>>>>> Unit tests for the tutorial feature.
+
+    def test_28_non_tutorial_signed_user(self):
+        """Test WEB app without tutorial work as signed in user"""
+        Fixtures.create()
+        model.Session.commit()
+        self.register()
+        # First time accessing the app should redirect me to the tutorial
+        res = self.app.get('/app/test-app/newtask', follow_redirects=True)
+        assert "some help" not in res.data,\
+                "There should not be a tutorial for the application"
+        # Second time should give me a task, and not the tutorial
+        res = self.app.get('/app/test-app/newtask', follow_redirects=True)
+        assert "some help" not in res.data
+
+    def test_29_tutorial_anonymous_user(self):
+        """Test WEB app without tutorials work as an anonymous user"""
+        Fixtures.create()
+        model.Session.commit()
+        self.register()
+        # First time accessing the app should redirect me to the tutorial
+        res = self.app.get('/app/test-app/newtask', follow_redirects=True)
+        assert "some help" not in res.data,\
+                "There should not be a tutorial for the application"
+        # Second time should give me a task, and not the tutorial
+        res = self.app.get('/app/test-app/newtask', follow_redirects=True)
+        assert "some help" not in res.data
