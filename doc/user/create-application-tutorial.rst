@@ -134,7 +134,8 @@ the URL image link to include it in the **info** field (check createTask.py
 script as it has an example)::
 
   info = { 'thumbnail': http://hosting-service/thumbnail-name.png,
-           'task_presenter': template.html file
+           'task_presenter': template.html file,
+           'tutorial': tutorial.html
          }
 
 Presenting the Tasks to the user
@@ -153,6 +154,38 @@ HTML template, and take actions based on the users's answers.
   When a task is submitted by an authenticated user, the task will save his
   user_id. For anonymous users the submitted task will only have the user IP
   address.
+
+Creating a tutorial for the users
+=================================
+
+In general, users will like to have some feedback when accessing for the very
+first time your application. Usually, the overview page of your application
+will not be enought, so you can actually build a tutorial (a web page) that
+will explain to the volunteer how he can participate in the application.
+
+PyBossa will detect if the user is accessing for the very first time your
+application, so in that case, it will load the **tutorial** if your application
+has one.
+
+Adding a tutorial is really simple: you only have to create a file named
+**tutorial.html** and add it to the **info** object::
+
+  info = { 'thumbnail': http://hosting-service/thumbnail-name.png,
+           'task_presenter': template.html file,
+           'tutorial': tutorial.html
+         }
+
+The tutorial could have whatever you like: videos, nice animations, etc.
+PyBossa will render for you the header and the footer, so you only have to
+focus on the content. You can actually copy the template.html file and use it
+as a draft of your tutorial or just include a video of yourself explaining why 
+your project is important and how, as a volunteer, you can contribute.
+
+If your application has a tutorial, you can actually access it directly in this
+endpoint::
+
+  http://server/app/tutorial
+
 
 1. The HTML Skeleton
 --------------------
