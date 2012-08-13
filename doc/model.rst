@@ -82,11 +82,30 @@ List
 List domain objects::
      
     GET http://{pybossa-site-url}/api/{domain-object}
+    
+For example, you can get a list of registered applications like this::
+
+    GET http://{pybossa-site-url}/api/app
+
+Or a list of Tasks::
+
+    GET http://{pybossa-site-url}/api/task
+
+For a list of TaskRuns use::
+
+    GET http://{pybossa-site-url}/api/taskrun
+
+.. note::
+    By default PyBossa limits the list of items to 20. If you want to get more
+    items, use the keyword **limit=N** with **N** being a number to get that
+    amount.
 
 Get
 ~~~
 
-Get a specific domain object by id. Returns domain object.::
+Get a specific domain object by id (by default any GET action will return only
+20 objects, you can get more or less objects using the **limit** option).
+Returns domain object.::
 
     GET http://{pybossa-site-url}/api/{domain-object}/{id}[?api_key=API-KEY]
 
@@ -110,6 +129,9 @@ It is possible to limit the number of returned objects::
 
     GET http://{pybossa-site-url}/api/{domain-object}[?field1=value&limit=20]
 
+.. note::
+    By default all GET queries return a maximum of 20 objects unless the
+    **limit** keyword is used to get more: limit=50
 
 Create
 ~~~~~~
@@ -125,7 +147,7 @@ Create a domain object. Returns created domain object.::
 Update
 ~~~~~~
 
-Update a domain object (not yet implemented)::
+Update a domain object::
 
   PUT http://{pybossa-site-url}/api/{domain-object}/{id}[?api_key=API-KEY]
 
@@ -136,7 +158,7 @@ Update a domain object (not yet implemented)::
 Delete
 ~~~~~~
 
-Delete a domain object (not yet implemented)::
+Delete a domain object::
 
   DELETE http://{pybossa-site-url}/api/{domain-object}/{id}[?api_key=API-KEY]
 
@@ -150,5 +172,3 @@ Example Usage
 Create an Application object::
 
   curl -X POST -H "Content-Type:application/json" -s -d '{"name":"myapp", "info":{"xyz":1}}' 'http://localhost:5000/api/app?api_key=API-KEY'
-
-
