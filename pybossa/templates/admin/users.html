@@ -12,8 +12,15 @@
         </form>
     </div>
 </div>
+
+{% if found %}
+<div class="row">
+    <div class="span12">
+        <h1>Found Users</h1>
+    </div>
+</div>
+{% endif %}
 {% for user in found %}
-    <h1>Found Users</h1>
     <div class="row well">
         <div class="span2">
             <img src="{{user.email_addr | gravatar(size=90)}}">
