@@ -234,3 +234,46 @@ def new_task(app_id):
     else:
         return Response(json.dumps({}), mimetype="application/json")
 
+
+@jsonpify
+@blueprint.route('/app/<short_name>/userprogress')
+@blueprint.route('/app/<int:app_id>/userprogress')
+@crossdomain(origin='*', headers=cors_headers)
+def user_progress(app_id=None, short_name=None):
+    """Return a JSON object with two fields regarding the tasks for the user:
+        { 'done': 10,
+          'total: 100
+        }
+       This will mean that the user has done a 10% of the available tasks for
+       him
+    """
+    if app_id or short_name:
+        if short_name:
+            app = model.Session.query(model.App)\
+                    .filter(model.App.short_name == short_name)\
+                    .first()
+        if app_id:
+            app = model.Session.query(model.App)\
+                    .get(app_id)
+
+        if app:
+            if current_user.is_anonymous():
+                tr = model.Session.query(model.TaskRun)\
+                        .filter(model.TaskRun.app_id == app.id)\
+                        .filter(model.TaskRun.user_ip == request.remote_addr)\
+                        .all()
+            else:
+                tr = model.Session.query(model.TaskRun)\
+                        .filter(model.TaskRun.app_id == app.id)\
+                        .filter(model.TaskRun.user_id == current_user.id)\
+                        .all()
+            # Return
+            tmp = dict(
+                    done=len(tr),
+                    total=len(app.tasks)
+                    )
+            return Response(json.dumps(tmp), mimetype="application/json")
+        else:
+            return abort(404)
+    else:
+        return abort(404)
