@@ -31,7 +31,7 @@
               <li {% if active_page == "community"  %} class="active" {% endif %}><a href="{{ url_for('account.index')}}"><i class="icon-globe icon-white"></i> Community</a></li>
               <li {% if active_page == "leaderboard"  %} class="active" {% endif %}><a href="{{ url_for('stats.index')}}"><i class="icon-trophy icon-white"></i> Leaderboard</a></li>
               <li {% if active_page == "applications"  %} class="active" {% endif %}><a href="{{ url_for('app.index') }}"><i class="icon-th icon-white"></i> Applications </a></li>
-              <li><a href="http://docs.pybossa.com/"><i class="icon icon-white icon-book"></i> Guide and Documentation</a></li>
+              <li><a href="http://docs.pybossa.com/" target="_blank"><i class="icon icon-white icon-book"></i> Guide and Documentation</a></li>
               <li {% if active_page == "about"  %} class="active" {% endif %}><a href="{{ url_for('about')}}"><i class="icon icon-white icon-question-sign"></i> About</a></li>
             </ul>
             {% if current_user.is_anonymous() %}
