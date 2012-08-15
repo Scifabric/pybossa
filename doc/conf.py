@@ -12,6 +12,7 @@
 # serve to show the default.
 
 import sys, os
+import datetime
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -22,6 +23,16 @@ sys.path.insert(0, os.path.abspath('../'))
 
 # If your documentation needs a minimal Sphinx version, state it here.
 #needs_sphinx = '1.0'
+
+# Read the docs theme
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+if on_rtd:
+    html_theme = 'default'
+else:
+    html_theme = 'nature'
+
+# Year for copyright
+year = datetime.datetime.now().year
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
@@ -41,7 +52,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'PyBossa'
-copyright = u'2011, Citizen Cyberscience Centre and Open Knowledge Foundation'
+copyright = u'%s, Citizen Cyberscience Centre and Open Knowledge Foundation' %\
+        (year)
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -91,7 +103,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'nature'
+# html_theme = 'nature'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
