@@ -170,6 +170,8 @@ class App(Base):
     #: `TaskRun`s for this app.`
     task_runs = relationship('TaskRun', backref='app',
                              order_by='TaskRun.finish_time.desc()')
+    #: `Featured` or not for this app
+    featured = relationship('Featured', cascade='all, delete-orphan')
 
     #: Percentage of completed tasks based on Task.state
     #: (0 not done, 1 completed)
