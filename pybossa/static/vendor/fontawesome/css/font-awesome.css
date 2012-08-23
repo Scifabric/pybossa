@@ -22,26 +22,13 @@
 
     */
 @font-face {
-  font-family: 'FontAwesome';
-  src: url('/static/vendor/fontawesome/font/fontawesome-webfont.eot');
-  src: url('/static/vendor/fontawesome/font/fontawesome-webfont.eot?#iefix') format('eot'), url('/static/vendor/fontawesome/font/fontawesome-webfont.woff') format('woff'), url('/static/vendor/fontawesome/font/fontawesome-webfont.ttf') format('truetype'), url('/static/vendor/fontawesome/font/fontawesome-webfont.otf') format('opentype'), url('/static/vendor/fontawesome/font/fontawesome-webfont.svg#FontAwesome') format('svg');
+  font-family: "FontAwesome";
+  src: url('../font/fontawesome-webfont.eot');
+  src: url('../font/fontawesome-webfont.eot?#iefix') format('eot'), url('../font/fontawesome-webfont.woff') format('woff'), url('../font/fontawesome-webfont.ttf') format('truetype'), url('../font/fontawesome-webfont.svg#FontAwesome') format('svg');
   font-weight: normal;
   font-style: normal;
 }
-/* sprites.less reset */
-[class^="icon-"], [class*=" icon-"] {
-  display: inline;
-  width: auto;
-  height: auto;
-  line-height: inherit;
-  vertical-align: baseline;
-  background-image: none;
-  background-position: 0% 0%;
-  background-repeat: repeat;
-}
-li[class^="icon-"], li[class*=" icon-"] {
-  display: block;
-}
+
 /*  Font Awesome styles
     ------------------------------------------------------- */
 [class^="icon-"]:before, [class*=" icon-"]:before {
@@ -120,7 +107,7 @@ li[class^="icon-"].icon-large:before, li[class*=" icon-"].icon-large:before {
 .icon-play-circle:before          { content: "\f01d"; }
 .icon-repeat:before               { content: "\f01e"; }
 
-/* \f020 is not a valid unicode character. all shifted one down */
+/* \f020 doesn't work in Safari. all shifted one down */
 .icon-refresh:before              { content: "\f021"; }
 .icon-list-alt:before             { content: "\f022"; }
 .icon-lock:before                 { content: "\f023"; }

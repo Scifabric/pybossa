@@ -1,4 +1,4 @@
-    <div class="navbar navbar-fixed-top">
+   <div class="navbar navbar-inverse navbar-fixed-top">
       <div class="navbar-inner">
         <div class="container">
           <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
@@ -8,7 +8,7 @@
           </a>
           <a class="brand" href="/">{{ brand }}</a>
           {% if current_user.is_authenticated() %}
-                <div class="btn-group pull-right">
+                <div class="dropdown pull-right">
                 <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
                     <i class="icon-user"></i> {{ current_user.name }}
                   <span class="caret"></span>
@@ -25,7 +25,7 @@
                 </div>
           {% endif %}
 
-          <div class="nav-collapse">
+          <div class="nav-collapse collapse">
             <ul class="nav">
                 <li {% if active_page == "index"  %} class="active" {% endif %}> <a href="{{ url_for('home') }}"><i class="icon-home icon-white"></i> Home</a></li>
               <li {% if active_page == "community"  %} class="active" {% endif %}><a href="{{ url_for('account.index')}}"><i class="icon-globe icon-white"></i> Community</a></li>
@@ -47,4 +47,3 @@
         </div>
       </div>
     </div>
-

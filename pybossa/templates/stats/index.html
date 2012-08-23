@@ -30,25 +30,31 @@
             <div class="span5 well">
                 <h2>Most active volunteers</h2>
                 {% for item in top5Users %}
-                  <img src="{{ item.user.email_addr | gravatar(size=30)}}">
-                  <strong>{{ item.user.fullname }}</strong>
-                    <ul>
-                        <li>Total submitted tasks: {{ item.user.task_runs | length }}</li>
-                      {% if item.apps %}
-                      <li><strong>Collaborating in</strong>:</li>
-                        <ul>
-                            {% for app in item.apps %}
-                            {% if app.hidden %}
-                            <li>Hidden application</li>
-                            {% else %}
-                            <li><a href="{{ url_for('app.presenter', short_name = app.short_name) }}">{{ app.name }}</a></li>
-                            {% endif %}
-                            {% endfor %}
-                        </ul>
-                        {% endif %}
-                    </ul>
-                    {% if not loop.last %}
-                    <hr>
+                <div class="row">
+                    <div class="span1">
+                      <img class="img-polaroid" src="{{ item.user.email_addr | gravatar(size=60)}}">
+                    </div>
+                    <div class="span3">
+                        <strong>{{ item.user.fullname }}</strong>
+                          <ul>
+                              <li>Total submitted tasks: {{ item.user.task_runs | length }}</li>
+                            {% if item.apps %}
+                            <li><strong>Collaborating in</strong>:</li>
+                              <ul>
+                                  {% for app in item.apps %}
+                                  {% if app.hidden %}
+                                  <li>Hidden application</li>
+                                  {% else %}
+                                  <li><a href="{{ url_for('app.presenter', short_name = app.short_name) }}">{{ app.name }}</a></li>
+                                  {% endif %}
+                                  {% endfor %}
+                              </ul>
+                              {% endif %}
+                          </ul>
+                      </div><!-- end span3-->
+                  </div>
+                          {% if not loop.last %}
+                          <hr>
                     {% endif %}
                     {% endfor %}
             </div>
