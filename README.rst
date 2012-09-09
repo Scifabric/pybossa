@@ -22,46 +22,6 @@ Install
 
 See doc/install.rst or http://pybossa.readthedocs.org/en/latest/install.html
 
-Deploying
-=========
-
-ep.io
------
-
-For background see:
-http://notebook.okfn.org/2011/12/10/deploying-a-flask-app-on-ep-io/
-
-0. Set up as per ep.io instructions https://www.ep.io/docs/quickstart/flask/
-
-1. Create epio.ini file containing::
-
-    [wsgi]
-    entrypoint = pybossa.web:app
-    requirements = requirements.txt
-
-    [services]
-    postgres = true
-
-    [env]
-    PYBOSSA_SETTINGS = ../settings_epio.py
-
-2. Create .epio-app file containing single line::
-
-    pybossa
-
-3. Create .epioignore file e.g.::
-
-    *.egg-info
-    .*.swp
-    *.pyc
-    settings_local.py
-    doc/
- 
-4. Run the upload command::
-
-    epio upload
-
-
 Useful Links
 ============
 
