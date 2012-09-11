@@ -439,12 +439,15 @@ class TestAPI:
         tasks = model.Session.query(model.Task)\
                 .filter_by(app_id=app.id)
 
+        app_id = app.id
+
         # Create taskrun
         data = dict(
-            app_id=app.id,
+            app_id=app_id,
             task_id=tasks[0].id,
             info='my task result'
             )
+
         datajson = json.dumps(data)
 
         # anonymous user
@@ -458,17 +461,17 @@ class TestAPI:
         _id_anonymous = taskrun.id
         assert taskrun, taskrun
         assert taskrun.created, taskrun
-        assert taskrun.app_id == app.id, taskrun
+        assert_equal(taskrun.app_id, app_id), taskrun
 
         # create task run as authenticated user
         res = self.app.post('/api/taskrun?api_key=%s' % Fixtures.api_key,
             data=datajson
         )
         taskrun = model.Session.query(model.TaskRun)\
-                .filter_by(app_id=app.id)\
+                .filter_by(app_id=app_id)\
                 .all()[-1]
         _id = taskrun.id
-        assert taskrun.app_id == app.id, taskrun
+        assert taskrun.app_id == app_id, taskrun
         assert taskrun.user.name == Fixtures.name, taskrun
 
         ##########
@@ -532,7 +535,7 @@ class TestAPI:
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
         tasks = model.Session.query(model.Task)\
-                .filter_by(app_id=app.id)\
+                .filter_by(app_id=app_id)\
                 .all()
         assert tasks, tasks
 

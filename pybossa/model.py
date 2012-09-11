@@ -346,4 +346,4 @@ def make_admin(mapper, conn, target):
     users = conn.scalar('select count(*) from "user"')
     if users == 0:
         target.admin = True
-        print "User %s is the first one, so we make it an admin" % target.name
+        #print "User %s is the first one, so we make it an admin" % target.name

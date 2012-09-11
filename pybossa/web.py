@@ -77,9 +77,9 @@ def bind_db_engine():
     else:
         flash('You have not yet configured the database', 'error')
 
-@app.before_request
-def remove_db_session():
-    model.Session.remove()
+@app.teardown_request
+def teardown_request(exception):
+    model.Session.close()
 
 #@app.errorhandler(401)
 #@app.errorhandler(403)

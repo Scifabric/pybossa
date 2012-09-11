@@ -838,6 +838,8 @@ class TestWeb:
         model.rebuild_db()
         Fixtures.create()
         app1 = model.Session.query(model.App).get(1)
+        app1_short_name = app1.short_name
+
         model.Session.query(model.Task)\
                 .filter(model.Task.app_id == 1)\
                 .first()
@@ -849,11 +851,12 @@ class TestWeb:
         task2 = model.Session.query(model.Task)\
                 .filter(model.Task.app_id == 2)\
                 .first()
+        task2_id = task2.id
         self.signout()
 
-        res = self.app.get('/app/%s/task/%s' % (app1.short_name, task2.id))
+        res = self.app.get('/app/%s/task/%s' % (app1_short_name, task2_id))
         assert "Error" in res.data, res.data
-        assert "This task does not belong to %s" % app1.short_name\
+        assert "This task does not belong to %s" % app1_short_name\
                 in res.data, res.data
 
     def test_26_tutorial_signed_user(self):
