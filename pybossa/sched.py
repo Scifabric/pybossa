@@ -71,7 +71,7 @@ def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30):
     # Update state of uncompleted tasks if the len(TaskRuns) >= n_answers
     for t in tasks:
         if (t.info.get('n_answers')):
-            n_answers = t.info['n_answers']
+            n_answers = int(t.info['n_answers'])
         if (len(t.task_runs) >= n_answers):
                 t.state = "completed"
                 model.Session.merge(t)

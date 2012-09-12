@@ -595,7 +595,8 @@ class TestWeb:
         self.new_application()
 
         app = model.Session.query(model.App).first()
-        task = model.Task(app_id=app.id, info={'n_answers': 10})
+        # We use a string here to check that it works too
+        task = model.Task(app_id=app.id, info={'n_answers': '10'})
         model.Session.add(task)
         model.Session.commit()
 

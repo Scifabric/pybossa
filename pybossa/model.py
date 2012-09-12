@@ -253,7 +253,7 @@ class Task(Base):
         """Returns the percentage of Tasks that are completed"""
         n_answers = 30
         if (self.info.get('n_answers')):
-            n_answers = self.info['n_answers']
+            n_answers = int(self.info['n_answers'])
         if n_answers != 0:
             return float(len(self.task_runs)) / n_answers
         else:
