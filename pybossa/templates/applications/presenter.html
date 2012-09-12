@@ -4,6 +4,9 @@
 
 {% block content %}
 
+<script src="{{url_for('static', filename="js/pybossa/pybossa.js")}}" type="text/javascript"></script>
+<script src="{{url_for('static', filename="js/throbber/throbber.js")}}" type="text/javascript"></script>
+
 {{ app.info.task_presenter|safe}}
 
 {% endblock %}

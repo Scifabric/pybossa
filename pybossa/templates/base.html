@@ -17,16 +17,16 @@
     <![endif]-->
 
     <!-- our styles -->
-    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/style.css')}}">
 
     <!-- Bootstrap styles -->
-    <link rel="stylesheet" href="/static/vendor/bootstrap/2.1.0/bootstrap.min.css">
+    <link rel="stylesheet" href="{{url_for('static', filename='vendor/bootstrap/2.1.0/bootstrap.min.css')}}">
     <!-- FontAwesome goodies -->
-    <link rel="stylesheet" href="/static/vendor/fontawesome/css/font-awesome.css">
+    <link rel="stylesheet" href="{{url_for('static', filename='vendor/fontawesome/css/font-awesome.css')}}">
 
     <!-- Le javascript -->
-    <script type="text/javascript" src="/static/vendor/jquery.js"></script>
-    <script type="text/javascript" src="/static/vendor/bootstrap/2.1.0/bootstrap.js"></script>
+    <script type="text/javascript" src="{{url_for('static', filename='vendor/jquery.js')}}"></script>
+    <script type="text/javascript" src="{{url_for('static', filename='vendor/bootstrap/2.1.0/bootstrap.js')}}"></script>
  </head>
 
   <body>
