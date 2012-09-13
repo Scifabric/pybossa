@@ -21,14 +21,18 @@ import random
 
 def get_default_task(app_id, user_id=None, user_ip=None, n_answers=30):
     """Gets a new task for a given application"""
+    # Uncomment the next three lines to profile the sched function
+    #import timeit
+    #T = timeit.Timer(lambda: get_candidate_tasks2(app_id, user_id, user_ip, n_answers))
+    #print T.timeit(number=1)
     candidate_tasks = get_candidate_tasks(app_id, user_id, user_ip, n_answers)
     total_remaining = len(candidate_tasks)
-    print "Available tasks %s " % total_remaining
+    #print "Available tasks %s " % total_remaining
     if total_remaining == 0:
         return None
-    rand = random.randrange(0, total_remaining)
-    out = candidate_tasks[rand]
-    return out
+    #rand = random.randrange(0, total_remaining)
+    #out = candidate_tasks[rand]
+    return candidate_tasks[0]
 
 
 def get_random_task(app_id, user_id=None, user_ip=None, n_answers=30):
@@ -58,57 +62,56 @@ def get_incremental_task(app_id, user_id=None, user_ip=None, n_answers=30):
         task.info['last_answer'] = last_task_run.info
         #ToDo As discussed in GitHub #53 it is necessary to create a lock in the task!
     return task
-    
+
 
 def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30):
     """Gets all available tasks for a given application and user"""
     # Get all pending tasks for the application
+    offset = 0
+    candidate_tasks = []
     tasks = model.Session.query(model.Task)\
             .filter(model.Task.app_id==app_id)\
             .filter(model.Task.state!="completed")\
-            .all()
+            .limit(10)
 
-    # Update state of uncompleted tasks if the len(TaskRuns) >= n_answers
-    for t in tasks:
+    for t in tasks.offset(offset):
+        # Check if the task is completed or not
+        # DEPRECATED: t.info.n_answers will be removed
+        # DEPRECATED: so if your task has a different value for n_answers
+        # DEPRECATED: use t.n_answers instead
         if (t.info.get('n_answers')):
-            n_answers = int(t.info['n_answers'])
-        if (len(t.task_runs) >= n_answers):
+            t.n_answers = int(t.info['n_answers'])
+        # NEW WAY!
+        if t.n_answers == None:
+            t.n_answers = 30
+
+        if (len(t.task_runs) >= t.n_answers):
                 t.state = "completed"
                 model.Session.merge(t)
                 model.Session.commit()
-
-    # Get all pending tasks again after the update
-    tasks = model.Session.query(model.Task)\
-            .filter(model.Task.app_id==app_id)\
-            .filter(model.Task.state!="completed")
-
-    # Create a list of candidate_tasks
-    candidate_tasks = []
-    if user_id and not user_ip:
-        #print "Authenticated user"
-        for t in tasks:
-            n = model.Session.query(model.TaskRun)\
-                    .filter(model.TaskRun.app_id==app_id)\
-                    .filter(model.TaskRun.task_id==t.id)\
-                    .filter(model.TaskRun.user_id==user_id)\
-                    .count()
-            # The user has not participated in this task
-            if n == 0:
-                candidate_tasks.append(t)
-                break
-    else:
-        #print "Anonymous user"
-        if not user_ip:
-            user_ip = "127.0.0.1"
-        for t in tasks:
-            n = model.Session.query(model.TaskRun)\
+        else:
+            # Check if the user has participated in this task
+            if user_id and not user_ip:
+                participated = model.Session.query(model.TaskRun)\
+                        .filter(model.TaskRun.app_id==app_id)\
+                        .filter(model.TaskRun.task_id==t.id)\
+                        .filter(model.TaskRun.user_id==user_id)\
+                        .count()
+                # The user has not participated in this task
+                if not participated:
+                    candidate_tasks.append(t)
+                    break
+            else:
+                if not user_ip:
+                    user_ip = "127.0.0.1"
+                participated = model.Session.query(model.TaskRun)\
                         .filter(model.TaskRun.app_id==app_id)\
                         .filter(model.TaskRun.task_id==t.id)\
                         .filter(model.TaskRun.user_ip==user_ip)\
                         .count()
                 # The user has not participated in this task
-            if n == 0:
-                candidate_tasks.append(t)
-                break
+                if not participated:
+                    candidate_tasks.append(t)
+                    break
+        offset += 10
     return candidate_tasks
- 

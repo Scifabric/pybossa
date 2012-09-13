@@ -244,6 +244,8 @@ class Task(Base):
     #:       question: [is this a person]
     #:    }
     info = Column(JSONType, default=dict)
+    #: Number of answers or TaskRuns per task
+    n_answers = Column(Integer, default=30)
 
     ## Relationships
     #: `TaskRun`s for this task`
@@ -251,11 +253,12 @@ class Task(Base):
 
     def pct_status(self):
         """Returns the percentage of Tasks that are completed"""
-        n_answers = 30
+        # DEPRECATED: self.info.n_answers will be removed
+        # DEPRECATED: use self.t.n_answers instead
         if (self.info.get('n_answers')):
-            n_answers = int(self.info['n_answers'])
-        if n_answers != 0:
-            return float(len(self.task_runs)) / n_answers
+            self.n_answers = int(self.info['n_answers'])
+        if self.n_answers != 0 and self.n_answers != None:
+            return float(len(self.task_runs)) / self.n_answers
         else:
             return float(0)
 

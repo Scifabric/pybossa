@@ -159,7 +159,7 @@ class TestSCHED:
         # Check if there are 30 TaskRuns per Task
         tasks = model.Session.query(model.Task).filter_by(app_id=1).all()
         for t in tasks:
-            assert len(t.task_runs)==10, t.task_runs
+            assert len(t.task_runs)==10, len(t.task_runs)
         # Check that all the answers are from different IPs
         for t in tasks:
             for tr in t.task_runs:
