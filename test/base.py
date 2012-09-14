@@ -6,7 +6,7 @@ import pybossa.model as model
 
 _here = os.path.dirname(__file__)
 web.app.config['TESTING'] = True
-dburi = 'sqlite:///%s/test.db' % _here
+dburi = 'postgresql://rtester:rtester@localhost/pybossa_test'
 print dburi
 web.app.config['SQLALCHEMY_DATABASE_URI'] = dburi
 engine = model.create_engine(dburi)

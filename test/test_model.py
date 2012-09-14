@@ -6,6 +6,9 @@ class TestModel:
     def setup_class(self):
         model.rebuild_db()
 
+    def tearDown(self):
+        model.Session.remove()
+
     def test_all(self):
         """Test MODEL works"""
         username = u'test-user-1'

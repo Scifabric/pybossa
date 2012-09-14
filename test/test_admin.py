@@ -8,6 +8,9 @@ class TestAdmin:
         model.rebuild_db()
         #Fixtures.create()
 
+    def tearDown(self):
+        model.Session.remove()
+
     @classmethod
     def teardown_class(cls):
         model.rebuild_db()

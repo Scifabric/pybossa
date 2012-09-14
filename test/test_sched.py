@@ -16,6 +16,11 @@ class TestSCHED:
         Fixtures.create()
         self.endpoints = ['app', 'task', 'taskrun']
 
+
+    def tearDown(self):
+        model.Session.remove()
+
+
     @classmethod
     def teardown_class(cls):
         model.rebuild_db()
@@ -47,6 +52,7 @@ class TestSCHED:
         """Deletes all TaskRuns for a given app_id"""
         model.Session.query(model.TaskRun).filter_by(app_id=1).delete()
         model.Session.commit()
+        model.Session.remove()
 
     def register(self, method="POST", fullname="John Doe", username="johndoe", password="p4ssw0rd", password2=None, email=None):
         """Helper function to register and sign in a user"""
@@ -98,12 +104,13 @@ class TestSCHED:
         # Del previous TaskRuns
         self.delTaskRuns()
 
+
         assigned_tasks = []
-        # Get Task until scheduler returns None
+        # Get a Task until scheduler returns None
         res = self.app.get('api/app/1/newtask')
         data = json.loads(res.data)
         while (data.get('info')!=None):
-            # Check that we received a Task
+            # Check that we have received a Task
             assert data.get('info'),  data
 
             # Save the assigned task
@@ -120,7 +127,7 @@ class TestSCHED:
 
         # Check if we received the same number of tasks that the available ones
         tasks = model.Session.query(model.Task).filter_by(app_id=1).all()
-        assert len(assigned_tasks) == len(tasks), assigned_tasks
+        assert len(assigned_tasks) == len(tasks), len(assigned_tasks)
         # Check if all the assigned Task.id are equal to the available ones
         tasks = model.Session.query(model.Task).filter_by(app_id=1).all()
         for at in assigned_tasks:
@@ -229,7 +236,8 @@ class TestSCHED:
         self.delTaskRuns()
 
         assigned_tasks = []
-        for i in range(10):
+        # We need one extra loop to allow the scheduler to mark a task as completed
+        for i in range(11):
             self.register(fullname="johndoe"+str(i),username="johndoe"+str(i),password="johndoe"+str(i))
             print "Number of users %s" % len(model.Session.query(model.User).all())
             print "Giving answers as User: %s" % "johndoe"+str(i)

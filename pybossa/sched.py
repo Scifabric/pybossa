@@ -16,6 +16,7 @@
 #import json
 #from flask import Blueprint, request, url_for, flash, redirect, abort
 #from flask import abort, request, make_response, current_app
+from sqlalchemy.sql import not_
 import pybossa.model as model
 import random
 
@@ -23,15 +24,13 @@ def get_default_task(app_id, user_id=None, user_ip=None, n_answers=30):
     """Gets a new task for a given application"""
     # Uncomment the next three lines to profile the sched function
     #import timeit
-    #T = timeit.Timer(lambda: get_candidate_tasks2(app_id, user_id, user_ip, n_answers))
-    #print T.timeit(number=1)
+    #T = timeit.Timer(lambda: get_candidate_tasks(app_id, user_id, user_ip, n_answers))
+    #print "First algorithm: %s" % T.timeit(number=1)
     candidate_tasks = get_candidate_tasks(app_id, user_id, user_ip, n_answers)
     total_remaining = len(candidate_tasks)
     #print "Available tasks %s " % total_remaining
     if total_remaining == 0:
         return None
-    #rand = random.randrange(0, total_remaining)
-    #out = candidate_tasks[rand]
     return candidate_tasks[0]
 
 
@@ -66,16 +65,28 @@ def get_incremental_task(app_id, user_id=None, user_ip=None, n_answers=30):
 
 def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30):
     """Gets all available tasks for a given application and user"""
-    # Get all pending tasks for the application
-    offset = 0
-    candidate_tasks = []
-    tasks = model.Session.query(model.Task)\
-            .filter(model.Task.app_id==app_id)\
-            .filter(model.Task.state!="completed")\
-            .limit(10)
 
-    for t in tasks.offset(offset):
-        # Check if the task is completed or not
+    if user_id and not user_ip:
+        participated_tasks = model.Session.query(model.TaskRun.task_id)\
+                .filter_by(user_id=user_id)\
+                .filter_by(app_id=app_id)
+    else:
+        if not user_ip:
+            user_ip = "127.0.0.1"
+        participated_tasks = model.Session.query(model.TaskRun.task_id)\
+                .filter_by(user_ip=user_ip)\
+                .filter_by(app_id=app_id)
+
+    tasks = model.Session.query(model.Task)\
+            .filter(not_(model.Task.id.in_(participated_tasks.all())))\
+            .filter_by(app_id=app_id)\
+            .filter(model.Task.state!="completed")\
+            .limit(10)\
+            .all()
+
+    candidate_tasks = []
+
+    for t in tasks:
         # DEPRECATED: t.info.n_answers will be removed
         # DEPRECATED: so if your task has a different value for n_answers
         # DEPRECATED: use t.n_answers instead
@@ -90,28 +101,6 @@ def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30):
                 model.Session.merge(t)
                 model.Session.commit()
         else:
-            # Check if the user has participated in this task
-            if user_id and not user_ip:
-                participated = model.Session.query(model.TaskRun)\
-                        .filter(model.TaskRun.app_id==app_id)\
-                        .filter(model.TaskRun.task_id==t.id)\
-                        .filter(model.TaskRun.user_id==user_id)\
-                        .count()
-                # The user has not participated in this task
-                if not participated:
-                    candidate_tasks.append(t)
-                    break
-            else:
-                if not user_ip:
-                    user_ip = "127.0.0.1"
-                participated = model.Session.query(model.TaskRun)\
-                        .filter(model.TaskRun.app_id==app_id)\
-                        .filter(model.TaskRun.task_id==t.id)\
-                        .filter(model.TaskRun.user_ip==user_ip)\
-                        .count()
-                # The user has not participated in this task
-                if not participated:
-                    candidate_tasks.append(t)
-                    break
-        offset += 10
+            candidate_tasks.append(t)
+            break
     return candidate_tasks

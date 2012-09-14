@@ -14,6 +14,9 @@ class TestAPI:
         Fixtures.create()
         self.endpoints = ['app', 'task', 'taskrun']
 
+    def tearDown(self):
+        model.Session.remove()
+
     @classmethod
     def teardown_class(cls):
         model.rebuild_db()
@@ -132,6 +135,8 @@ class TestAPI:
             assert "no such column: wrongfield" in data['error'], data
 
     def test_query_sql_injection(self):
+        """Test API SQL Injection is not allowed works"""
+
         q = '1%3D1;SELECT%20*%20FROM%20task%20WHERE%201=1'
         res = self.app.get('/api/task?' + q)
         data = json.loads(res.data)
@@ -139,7 +144,8 @@ class TestAPI:
         q = 'app_id=1%3D1;SELECT%20*%20FROM%20task%20WHERE%201'
         res = self.app.get('/api/task?' + q)
         data = json.loads(res.data)
-        assert len(data) == 0
+        assert "invalid input syntax" in data['error'], data
+
 
     def test_query_app(self):
         """Test API query for app endpoint works"""
