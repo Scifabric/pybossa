@@ -2,47 +2,64 @@
 {% set active_page = "applications" %}
 {% set active_app  = "all" %}
 
+{% macro render_pagination(pagination) %}
+  <div class="pagination pagination-centered">
+      <ul>
+        {% if pagination.has_prev %}
+          <li>
+          <a href="{{ url_for_other_page(pagination.page - 1)
+            }}">&laquo; Prev tasks</a>
+          </li>
+        {% endif %}
+
+        {%- for page in pagination.iter_pages() %}
+          {% if page %}
+            {% if page != pagination.page %}
+            <li>
+              <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
+             </li>
+            {% else %}
+            <li class="active">
+                <a href="#">{{ page }}</a>
+            </li>  
+            {% endif %}
+          {% endif %}
+        {%- endfor %}
+        {% if pagination.has_next %}
+          <li>
+          <a href="{{ url_for_other_page(pagination.page + 1)
+            }}">Next tasks &raquo;</a>
+          </li>
+        {% endif %}
+    </ul>
+  </div>
+{% endmacro %}
+
+
 {% block content %}
 {% if app %}
   <div class="page-header">
     <h1>{{ app['name'] }}</h1>
   </div>
-  <div class="tabbable">
-      <ul class="nav nav-tabs">
+
+
         {% if app.long_description %}
-        <li class="active"><a href="#overview" data-toggle="tab">Overview</a></li>
-        <li><a href="#summary" data-toggle="tab">Summary</a></li>
-        <li><a href="#tasks" data-toggle="tab">Tasks</a></li>
-        {% else %}
-        <li class="active"><a href="#summary" data-toggle="tab">Summary</a></li>
-        <li><a href="#tasks" data-toggle="tab">Tasks</a></li>
-        {% endif %}
-      </ul>
-      <div class="tab-content">
-        {% if app.long_description %}
-        <div class="tab-pane active" id="overview">
-          {{ app.long_description|safe}}
-            {% if app.tasks | count > 0 %}
-              <div style="text-align:center">
-              {% if (app.completion_status()*100) < 100 %}
-                <a class="btn btn-large btn-primary" href="{{ url_for('app.presenter', short_name = app.short_name) }}"><i class="icon icon-white icon-ok"></i> Do some tasks!</a>
-              {% else %}
-                <a class="btn btn-large btn-primary" href="{{ url_for('app.presenter', short_name = app.short_name) }}"><i class="icon icon-white icon-ok"></i> Do some tasks!</a>
-              {% endif %}
-              </div>
-            {% endif %}
+        <div class="row">
+            <div class="span12">
+                {{ app.long_description|safe}}
+            </div>
         </div>
         {% endif %}
-        {% if app.long_description %}
-        <div class="tab-pane" id="summary">
-        {% else %}
-        <div class="tab-pane active" id="summary">
-        {% endif %}
-            <div class="span8">
+        <div class="row">
+            <div class="span12">
+              <h2>Summary</h2>
+              <hr>
+            </div>
+            <div class="span7">
               <ul>
-                <li><strong>Description</strong>: {{ app['description'] }}</li>
-                <li><strong>Creation Date</strong>: {{ app.created[0:10] }}</li>
-                <li><strong>Last Activity</strong>: {{ app.last_activity()}}</li>
+                <li><strong><i class="icon-info-sign"></i> Description</strong>: {{ app['description'] }}</li>
+                <li><strong><i class="icon-ok"></i> Creation Date</strong>: {{ app.created[0:10] }}</li>
+                <li><strong><i class="icon-time"></i> Last Activity</strong>: {{ app.last_activity()}}</li>
                 {% if not current_user.is_anonymous() %}
                 <li><strong>Hidden</strong>: {% if app.hidden == 1 %}
                     <i class="icon icon-eye-close"></i> Yes {% else %} 
@@ -51,8 +68,8 @@
                 {% endif %}
               </ul>
             </div>
-            <div class="span3">
-                <h4>Completed tasks 
+            <div class="span4">
+                <h4>Overall progress
                     <small>
                         {{ app.n_completed_tasks() }} of {{ app.tasks | count }}
                     </small>
@@ -70,52 +87,51 @@
                {% endif %}
             </div>
         </div>
-        <div class="tab-pane" id="tasks">
-            <div class="tabbable">
-                <ul class="nav nav-pills">
-                  <li class="active"><a href="#tab1" data-toggle="tab">Completed</a></li>
-                  <li><a href="#tab2" data-toggle="tab">On Going</a></li>
-                </ul>
-                <div class="tab-content">
-                  <div class="tab-pane active" id="tab1">
-                    {% for t in completed_tasks %}
-                    {% set task_pct = t.pct_status()*100 %}
+
+        {% block update %}{% endblock %}
+
+        <div class="row">
+            <div class="span12">
+                <h3>Tasks</h3>
+                <hr>
+            </div>
+                {% for t in tasks %}
+                {% set task_pct = t.pct_status()*100 %}
+                <div class="span12">
                     <div class="span3">
+                        {% if task_pct >= 100 %}
                           Task <span class="label label-success">#{{ t.id }}</span>
+                        {% else %}
+                          Task <span class="label label-info">#{{ t.id }}</span>
+                        {% endif %}
                           {{ t.task_runs | count }} of {{ t.info['n_answers'] | default('30')}}
                     </div>
-                    <div class="progress progress-success progress-striped span6"> 
-                            <div class="bar" style="width:{{ task_pct }}%;"></div>
-                    </div>
-                    <div class="span2">
+                        {% if task_pct >= 100 %}
+                        <div class="progress progress-success progress-striped span5"> 
+                                <div class="bar" style="width:{{ task_pct }}%;"></div>
+                        </div>
+                        {% else %}
+                        <div class="progress progress-info progress-striped span5"> 
+                                <div class="bar" style="width:{{ task_pct }}%;"></div>
+                        </div>
+                        {% endif %}
+                    <div class="span3">
+                        {% if task_pct >= 100 %}
                         <a class="btn btn-warning" href="{{ url_for('app.export', 
                             short_name=app.short_name,
-                            task_id=t.id) }}"> Export data</a>
+                            task_id=t.id) }}"><i class="icon-download"></i> Download results</a>
+                        {% endif %}
                     </div>
-                    {% else %}
-                    <p>Nothing yet! Wait a bit more and check the on going tasks!</p>
-                    {% endfor %}
-                  </div>
-                  <div class="tab-pane" id="tab2">
-                    {% for t in wip_tasks %}
-                    {% set task_pct = t.pct_status()*100 %}
-                    <div class="span3">
-                          Task <span class="label label-info">#{{ t.id }}</span>
-                          {{ t.task_runs | count }} of {{ t.info['n_answers'] | default('30')}}
-                    </div>
-                    <div class="progress progress-info progress-striped"> 
-                            <div class="bar" style="width:{{ task_pct }}%;"></div>
-                    </div>
-                    {% else %}
-                    <p>This applicationd does not have any available tasks yet.</p>
-                    {% endfor %}
-                  </div>
                 </div>
-            </div> <!-- /tabbable -->
+                {% endfor %}
+            </div>
         </div>
+  <div class="row">
+      <div class="span9 offset2">
+          {{ render_pagination(pagination) }}
+      </div>
   </div>
 
-  {% block update %}{% endblock %}
 
 {% else %}
   <div class="page-header">

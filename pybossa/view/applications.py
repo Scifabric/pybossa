@@ -23,6 +23,7 @@ from werkzeug.exceptions import HTTPException
 
 import pybossa.model as model
 from pybossa.util import Unique
+from pybossa.util import Pagination
 from pybossa.auth import require
 
 import json
@@ -192,44 +193,62 @@ def update(short_name):
         pass
 
 
-@blueprint.route('/<short_name>')
-def details(short_name):
+@blueprint.route('/<short_name>', defaults={'page': 1})
+@blueprint.route('/<short_name>/<int:page>')
+def details(short_name, page):
     application = model.Session.query(model.App).\
             filter(model.App.short_name == short_name).\
             first()
 
     if application:
         try:
-            #: Short tasks based
-            completed_tasks = []
-            wip_tasks = []
-            for t in application.tasks:
-                if t.pct_status() * 100 >= 100:
-                    completed_tasks.append(t)
-                else:
-                    wip_tasks.append(t)
+            if application.hidden:
+                return render_template('/applications/app.html')
 
             require.app.read(application)
             require.app.update(application)
+
+            per_page = 10
+            count = model.Session.query(model.Task)\
+                    .filter_by(app_id=application.id)\
+                    .count()
+            tasks = model.Session.query(model.Task)\
+                    .filter_by(app_id=application.id)\
+                    .limit(per_page)\
+                    .offset((page - 1) * per_page)\
+                    .all()
+
+            if not tasks and page != 1:
+                abort(404)
+
+            pagination = Pagination(page, per_page, count)
             return render_template('/applications/actions.html',
-                                    title="Application: %s" % application.name,
                                     app=application,
-                                    completed_tasks=completed_tasks,
-                                    wip_tasks=wip_tasks)
+                                    tasks=tasks,
+                                    title="Application: %s" % application.name,
+                                    pagination=pagination)
         except HTTPException:
-            # This exception is raised because the user is not authenticated or
-            # it has not privileges to edit/delte the application
-            if application.hidden == 0:
-                return render_template('/applications/app.html',
-                                    title="Application: %s" % application.name,
+            per_page = 10
+            count = model.Session.query(model.Task)\
+                    .filter_by(app_id=application.id)\
+                    .count()
+            tasks = model.Session.query(model.Task)\
+                    .filter_by(app_id=application.id)\
+                    .limit(per_page)\
+                    .offset((page - 1) * per_page)\
+                    .all()
+
+            if not tasks and page != 1:
+                abort(404)
+
+            pagination = Pagination(page, per_page, count)
+            return render_template('/applications/app.html',
                                     app=application,
-                                    completed_tasks=completed_tasks,
-                                    wip_tasks=wip_tasks)
-            else:
-                return render_template('/applications/app.html', app=None)
+                                    tasks=tasks,
+                                    title="Application: %s" % application.name,
+                                    pagination=pagination)
     else:
-        return abort(404)
-        #return render_template('/applications/app.html', app=None)
+        abort(404)
 
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
