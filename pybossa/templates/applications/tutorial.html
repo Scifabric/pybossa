@@ -7,11 +7,11 @@
 {{ app.info.tutorial | safe}}
 
 <div class="row">
-    <div class="span12">
-        <a href={{url_for('app.presenter', short_name = app.short_name)}}
+    <div class="span12" style="text-align:center;padding-top:20px;">
+        <a id="start" href={{url_for('app.presenter', short_name = app.short_name)}}
            class="btn btn-primary btn-large"> 
            <i class="icon-thumbs-up"></i> 
-           Do some tasks!</a>
+           Start contributing!</a>
     </div>
 </div>
 
