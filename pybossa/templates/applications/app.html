@@ -61,9 +61,11 @@
                 <li><strong><i class="icon-ok"></i> Creation Date</strong>: {{ app.created[0:10] }}</li>
                 <li><strong><i class="icon-time"></i> Last Activity</strong>: {{ app.last_activity()}}</li>
                 {% if not current_user.is_anonymous() %}
-                <li><strong>Hidden</strong>: {% if app.hidden == 1 %}
-                    <i class="icon icon-eye-close"></i> Yes {% else %} 
-                    <i class="icon icon-eye-open"></i> No {% endif %}
+                <li>{% if app.hidden == 1 %}
+                    <i class="icon icon-eye-close"></i> <strong>Hidden</strong>: Yes 
+                {% else %} 
+                    <i class="icon icon-eye-open"></i> <strong>Hidden</strong>: No 
+                {% endif %}
                 </li>
                 {% endif %}
               </ul>

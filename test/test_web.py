@@ -557,6 +557,19 @@ class TestWeb:
         res = self.app.get('/app/sampleapp', follow_redirects=True)
         assert "Sorry! This app does not exists." in res.data, res.data
 
+    def test_13a_hidden_applications_owner(self):
+        """Test WEB hidden applications are shown to their owners"""
+        self.register()
+        self.new_application()
+        self.update_application(new_hidden=True)
+
+        res = self.app.get('/app/', follow_redirects=True)
+        assert "Sample App" not in res.data, "Applications should be hidden in the index"
+
+        res = self.app.get('/app/sampleapp', follow_redirects=True)
+        assert "Sample App" in res.data, "Application should be shown to the owner"
+
+
     def test_14_delete_application(self):
         """Test WEB delete application works"""
         self.register()
