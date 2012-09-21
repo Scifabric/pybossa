@@ -57,6 +57,9 @@
             </div>
             <div class="span7">
               <ul>
+                {% if current_user.id == app.owner.id %}
+                <li><strong><i class="icon-cog"></i> ID</strong>: {{ app.id }}</li>
+                {% endif %}
                 <li><strong><i class="icon-info-sign"></i> Description</strong>: {{ app['description'] }}</li>
                 <li><strong><i class="icon-ok"></i> Creation Date</strong>: {{ app.created[0:10] }}</li>
                 <li><strong><i class="icon-time"></i> Last Activity</strong>: {{ app.last_activity()}}</li>

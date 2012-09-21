@@ -929,3 +929,26 @@ class TestWeb:
         # Second time should give me a task, and not the tutorial
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
         assert "some help" not in res.data
+
+
+    def test_30_app_id_owner(self):
+        """Test WEB application page shows the ID to the owner"""
+        self.register()
+        self.new_application()
+
+        res = self.app.get('/app/sampleapp', follow_redirects=True)
+        assert "Sample App" in res.data, "Application should be shown to the owner"
+        assert '<strong><i class="icon-cog"></i> ID</strong>: 1' in res.data,\
+                "Application ID should be shown to the owner"
+
+
+    def test_30_app_id_anonymous_user(self):
+        """Test WEB application page does not  show the ID to anonymous users"""
+        self.register()
+        self.new_application()
+        self.signout()
+
+        res = self.app.get('/app/sampleapp', follow_redirects=True)
+        assert "Sample App" in res.data, "Application name should be shown to users"
+        assert '<strong><i class="icon-cog"></i> ID</strong>: 1' not in res.data,\
+                "Application ID should be shown to the owner"
