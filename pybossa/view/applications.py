@@ -205,46 +205,16 @@ def details(short_name, page):
             require.app.read(application)
             require.app.update(application)
 
-            per_page = 10
-            count = model.Session.query(model.Task)\
-                    .filter_by(app_id=application.id)\
-                    .count()
-            tasks = model.Session.query(model.Task)\
-                    .filter_by(app_id=application.id)\
-                    .limit(per_page)\
-                    .offset((page - 1) * per_page)\
-                    .all()
-
-            if not tasks and page != 1:
-                abort(404)
-
-            pagination = Pagination(page, per_page, count)
             return render_template('/applications/actions.html',
                                     app=application,
-                                    tasks=tasks,
                                     title="Application: %s" % application.name,
-                                    pagination=pagination)
+                                    )
         except HTTPException:
             if not application.hidden:
-                per_page = 10
-                count = model.Session.query(model.Task)\
-                        .filter_by(app_id=application.id)\
-                        .count()
-                tasks = model.Session.query(model.Task)\
-                        .filter_by(app_id=application.id)\
-                        .limit(per_page)\
-                        .offset((page - 1) * per_page)\
-                        .all()
-
-                if not tasks and page != 1:
-                    abort(404)
-
-                pagination = Pagination(page, per_page, count)
                 return render_template('/applications/app.html',
                                         app=application,
-                                        tasks=tasks,
                                         title="Application: %s" % application.name,
-                                        pagination=pagination)
+                                        )
             else:
                 return render_template('/applications/app.html',
                         app=None)
@@ -324,3 +294,63 @@ def export(short_name, task_id):
 
     results = [tr.dictize() for tr in task.task_runs]
     return Response(json.dumps(results), mimetype='application/json')
+
+
+@blueprint.route('/<short_name>/tasks', defaults={'page': 1})
+@blueprint.route('/<short_name>/tasks/<int:page>')
+def tasks(short_name, page):
+    application = model.Session.query(model.App).\
+            filter(model.App.short_name == short_name).\
+            first()
+
+    if application:
+        try:
+            require.app.read(application)
+            require.app.update(application)
+
+            per_page = 10
+            count = model.Session.query(model.Task)\
+                    .filter_by(app_id=application.id)\
+                    .count()
+            tasks = model.Session.query(model.Task)\
+                    .filter_by(app_id=application.id)\
+                    .limit(per_page)\
+                    .offset((page - 1) * per_page)\
+                    .all()
+
+            if not tasks and page != 1:
+                abort(404)
+
+            pagination = Pagination(page, per_page, count)
+            return render_template('/applications/tasks.html',
+                                    app=application,
+                                    tasks=tasks,
+                                    title="Application: %s tasks" % application.name,
+                                    pagination=pagination)
+        except HTTPException:
+            if not application.hidden:
+                per_page = 10
+                count = model.Session.query(model.Task)\
+                        .filter_by(app_id=application.id)\
+                        .count()
+                tasks = model.Session.query(model.Task)\
+                        .filter_by(app_id=application.id)\
+                        .limit(per_page)\
+                        .offset((page - 1) * per_page)\
+                        .all()
+
+                if not tasks and page != 1:
+                    abort(404)
+
+                pagination = Pagination(page, per_page, count)
+                return render_template('/applications/tasks.html',
+                                        app=application,
+                                        tasks=tasks,
+                                        title="Application: %s tasks" % application.name,
+                                        pagination=pagination)
+            else:
+                return render_template('/applications/tasks.html',
+                        app=None)
+    else:
+        abort(404)
+

@@ -63,6 +63,8 @@
                 <li><strong><i class="icon-info-sign"></i> Description</strong>: {{ app['description'] }}</li>
                 <li><strong><i class="icon-ok"></i> Creation Date</strong>: {{ app.created[0:10] }}</li>
                 <li><strong><i class="icon-time"></i> Last Activity</strong>: {{ app.last_activity()}}</li>
+                <li><strong><i class="icon-cogs"></i> Overall progress</strong>: {{ app.completion_status()*100 }}% completed</li>
+                <li><strong><i class="icon-tasks"></i> <a href="{{url_for('app.tasks',short_name=app.short_name)}}">Tasks</strong></a></li>
                 {% if not current_user.is_anonymous() %}
                 <li>{% if app.hidden == 1 %}
                     <i class="icon icon-eye-close"></i> <strong>Hidden</strong>: Yes 
@@ -73,70 +75,9 @@
                 {% endif %}
               </ul>
             </div>
-            <div class="span4">
-                <h4>Overall progress
-                    <small>
-                        {{ app.n_completed_tasks() }} of {{ app.tasks | count }}
-                    </small>
-                </h4>
-
-              <div class="progress progress-info progress-striped"> 
-                      <div class="bar" style="width:{{ app.completion_status()*100 }}%;"></div>
-              </div>
-              {% if app.tasks | count > 0 %}
-                {% if (app.completion_status()*100) < 100 %}
-                <a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = app.short_name) }}"><i class="icon icon-white icon-ok"></i> Do some tasks!</a>
-                {% else %}
-                <a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = app.short_name) }}"><i class="icon icon-white icon-ok"></i> Do some tasks!</a>
-                {% endif %}
-               {% endif %}
-            </div>
         </div>
 
         {% block update %}{% endblock %}
-
-        <div class="row">
-            <div class="span12">
-                <h3>Tasks</h3>
-                <hr>
-            </div>
-                {% for t in tasks %}
-                {% set task_pct = t.pct_status()*100 %}
-                <div class="span12">
-                    <div class="span3">
-                        {% if task_pct >= 100 %}
-                          Task <span class="label label-success">#{{ t.id }}</span>
-                        {% else %}
-                          Task <span class="label label-info">#{{ t.id }}</span>
-                        {% endif %}
-                          {{ t.task_runs | count }} of {{ t.info['n_answers'] | default('30')}}
-                    </div>
-                        {% if task_pct >= 100 %}
-                        <div class="progress progress-success progress-striped span5"> 
-                                <div class="bar" style="width:{{ task_pct }}%;"></div>
-                        </div>
-                        {% else %}
-                        <div class="progress progress-info progress-striped span5"> 
-                                <div class="bar" style="width:{{ task_pct }}%;"></div>
-                        </div>
-                        {% endif %}
-                    <div class="span3">
-                        {% if task_pct >= 100 %}
-                        <a class="btn btn-warning" href="{{ url_for('app.export', 
-                            short_name=app.short_name,
-                            task_id=t.id) }}"><i class="icon-download"></i> Download results</a>
-                        {% endif %}
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-  <div class="row">
-      <div class="span9 offset2">
-          {{ render_pagination(pagination) }}
-      </div>
-  </div>
-
 
 {% else %}
   <div class="page-header">

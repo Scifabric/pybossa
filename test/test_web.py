@@ -476,6 +476,7 @@ class TestWeb:
         assert "Long desc" in res.data, res
         assert "Summary" in res.data, res
         assert "Overall progress" in res.data, res
+        assert "Tasks" in res.data, res
         assert "Edit the application" in res.data, res
         assert "Delete the application" in res.data, res
         self.signout()
@@ -486,6 +487,7 @@ class TestWeb:
         assert "Long desc" in res.data, res
         assert "Summary" in res.data, res
         assert "Overall progress" in res.data, res
+        assert "Tasks" in res.data, res
         assert "Edit the application" not in res.data, res
         assert "Delete the application" not in res.data, res
 
@@ -625,10 +627,8 @@ class TestWeb:
 
         app = model.Session.query(model.App).first()
 
-        res = self.app.get('app/' + app.short_name, follow_redirects=True)
+        res = self.app.get('app/' + app.short_name + "/tasks", follow_redirects=True)
         assert "Sample App" in res.data, res.data
-        assert "Overall progress" in res.data, res.data
-        assert "1 of 1" in res.data, res.data
         assert 'Task <span class="label label-success">#1</span>'\
                 in res.data, res.data
         assert '10 of 10' in res.data, res.data
@@ -673,10 +673,8 @@ class TestWeb:
 
         app = model.Session.query(model.App).first()
 
-        res = self.app.get('app/' + app.short_name, follow_redirects=True)
+        res = self.app.get('app/' + app.short_name + "/tasks", follow_redirects=True)
         assert "Sample App" in res.data, res.data
-        assert "Overall progress" in res.data, res.data
-        assert "0 of 1" in res.data, res.data
         assert 'Task <span class="label label-info">#1</span>'\
                 in res.data, res.data
         assert '0 of 10' in res.data, res.data
