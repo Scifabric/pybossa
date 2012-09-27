@@ -29,12 +29,20 @@ blueprint = Blueprint('stats', __name__)
 def index():
     """Get the last activity from users and apps"""
     # Get top 5 app ids
-    top5_active_app_ids = model.Session.query(model.TaskRun.app_id, func.count(model.TaskRun.id).label('total')).group_by(model.TaskRun.app_id).order_by('total DESC').limit(5).all()
+    top5_active_app_ids = model.Session\
+            .query(model.TaskRun.app_id, func.count(model.TaskRun.id).label('total'))\
+            .group_by(model.TaskRun.app_id)\
+            .order_by('total DESC')\
+            .limit(5)\
+            .all()
     apps = []
     # print top5_active_app_ids
     for id in top5_active_app_ids:
         if id[0] != None:
-            apps.append(model.Session.query(model.App).get(id[0]))
+            app = model.Session.query(model.App)\
+                    .get(id[0])
+            if not app.hidden:
+                apps.append(app)
 
     # Get top 5 user ids
     top5_active_user_ids = model.Session.query(model.TaskRun.user_id, func.count(model.TaskRun.id).label('total')).group_by(model.TaskRun.user_id).order_by('total DESC').limit(5).all()

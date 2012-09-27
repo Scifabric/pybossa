@@ -10,16 +10,16 @@
                 <h2>Most active applications</h2>
                 {% for app in apps %}
                   <h4>{{ app.name }}</h4>
-                    <ul>
+                    <ul style="list-style-type: none;">
                       {% if app.last_activity() == "None" %}
-                      <li><strong>Updated</strong>: Not yet</li>
+                      <li><strong><i class="icon-time"></i> Updated</strong>: Not yet</li>
                       {% else %}
-                      <li><strong>Updated</strong>: {{ app.last_activity() }}</li>
+                      <li><strong><i class="icon-time"></i> Updated</strong>: {{ app.last_activity() }}</li>
                       {% endif %}
                       {% if app.owner.id == current_user.id %}
-                      <li><strong>Owner</strong>: Me</li>
+                      <li><strong><i class="icon-user"></i> Owner</strong>: Me</li>
                       {% else %}
-                      <li><strong>Owner</strong>: {{ app.owner.name }}</li>
+                      <li><strong><i class="icon-user"></i> Owner</strong>: {{ app.owner.name }}</li>
                       {% endif %}
                     </ul>
                     {% if not loop.last %}
@@ -36,8 +36,8 @@
                     </div>
                     <div class="span3">
                         <strong>{{ item.user.fullname }}</strong>
-                          <ul>
-                              <li>Total submitted tasks: {{ item.user.task_runs | length }}</li>
+                          <ul style="list-style-type: none;">
+                              <li><i class="icon-tasks"></i> Total submitted tasks: {{ item.user.task_runs | length }}</li>
                             {% if item.apps %}
                             <li><strong>Collaborating in</strong>:</li>
                               <ul>
