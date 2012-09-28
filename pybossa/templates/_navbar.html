@@ -14,7 +14,7 @@
                   <span class="caret"></span>
                 </a>
                 <ul class="dropdown-menu">
-                    <li><a href="{{ url_for('account.profile') }}"><i class="icon icon-user"></i> Profile</a></li>
+                    <li><a href="{{ url_for('account.profile') }}"><i class="icon icon-user"></i> Account</a></li>
                     {% if current_user.admin == 1 %}
                   <li class="divider"></li>
                     <li><a href="{{ url_for('admin.index') }}"><i class="icon icon-cog"></i> Settings</a></li>

@@ -133,8 +133,35 @@ def register():
 @login_required
 def profile():
     user = model.Session.query(model.User).get(current_user.id)
+    apps_published = []
+    apps_draft = []
+    apps_contrib = []
+    # Sort the applications of the user
+    for a in user.apps:
+        if (len(a.tasks) > 0) and (a.info.get("task_presenter")):
+            apps_published.append(a)
+        else:
+            apps_draft.append(a)
 
-    return render_template('account/profile.html', title="Profile", user = user)
+    # Check in which application the user has participated
+    apps_contrib = model.Session.query(model.App)\
+            .join(model.App.task_runs)\
+            .filter(model.TaskRun.user_id==user.id)\
+            .distinct(model.TaskRun.app_id)\
+            .all()
+    for app in apps_contrib:
+        c = model.Session.query(model.TaskRun)\
+                .filter(model.TaskRun.app_id==app.id)\
+                .filter(model.TaskRun.user_id==user.id)\
+                .count()
+        app.c = c
+        print app.c
+
+    return render_template('account/profile.html', title="Profile",\
+            apps_published=apps_published,
+            apps_draft=apps_draft,
+            apps_contrib=apps_contrib,
+            user=user)
 
 @blueprint.route('/profile/update', methods = ['GET','POST'])
 @login_required

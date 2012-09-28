@@ -998,3 +998,23 @@ class TestWeb:
         assert "Sample App" in res.data, "Application name should be shown to users"
         assert '<strong><i class="icon-cog"></i> ID</strong>: 1' not in res.data,\
                 "Application ID should be shown to the owner"
+
+    def test_31_user_profile_progress(self):
+        """Test WEB user progress profile page works"""
+        self.register()
+        self.new_application()
+        app = model.Session.query(model.App).first()
+        task = model.Task(app_id=app.id, info={'n_answers': '10'})
+        model.Session.add(task)
+        model.Session.commit()
+        for i in range(10):
+            task_run = model.TaskRun(app_id=app.id, task_id=1, user_id=1,
+                                     info={'answer': 1})
+            model.Session.add(task_run)
+            model.Session.commit()
+            self.app.get('api/app/%s/newtask' % app.id)
+
+        res = self.app.get('account/profile', follow_redirects=True)
+        assert "Sample App" in res.data, res.data
+        assert "Contributed tasks: 10" in res.data, res.data
+        assert "Contribute!" in res.data, "There should be a Contribute button"

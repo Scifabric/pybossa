@@ -1,59 +1,98 @@
 {% extends "base.html" %}
 {% set active_page = "profile" %}
 
+{% macro render_twitter_btn(app) %}
+<a href="https://twitter.com/share" class="twitter-share-button" 
+    data-text="I've done {{app.c}} tasks for the @PyBossa project: {{app.name}}. Do you want to help? {{url_for('app.details',short_name=app.short_name,_external=True)}}"  
+    data-count="none">Tweet</a>
+    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+{% endmacro %}
+
+{% macro render_googlePlus_btn(app) %}
+<!-- Place this tag in your head or just before your close body tag. -->
+<script type="text/javascript" src="https://apis.google.com/js/plusone.js">
+  {parsetags: 'explicit'}
+</script>
+
+<!-- Place this tag where you want the +1 button to render. -->
+<div class="g-plusone" data-size="medium" data-annotation="none" data-href="{{url_for('app.details',short_name=app.short_name,_external=True)}}"></div>
+
+<!-- Place this render call where appropriate. -->
+<script type="text/javascript">gapi.plusone.go();</script>
+{% endmacro %}
+
 {% block content %}
 
 <div class="row">
     <div class="tabbable span2 well" style="padding: 8px 0;">
       <ul class="nav nav-list">
-          <li class="nav-header">{{ user.name }}</li>
-        <li class="active"><a href="#account" data-toggle="tab"><i class="icon-user"></i> Profile</a></li>
-        <li class="nav-header">Applications</li>
-        <li><a href="#apps" data-toggle="tab"><i class="icon-th-list"></i> List</a></li>
+        <li class="nav-header">{{ user.name }}</li>
+        <li class="active"><a href="#contributions" data-toggle="tab"><i class="icon-cog"></i> Progress</a></li>
+        <li><a href="#account" data-toggle="tab"><i class="icon-user"></i> Profile</a></li>
+        <li class="nav-header">My Applications</li>
+        <li><a href="#apps-published" data-toggle="tab"><i class="icon-th"></i> Published</a></li>
+        <li><a href="#apps-draft" data-toggle="tab"><i class="icon-wrench"></i> Draft</a></li>
       </ul>
     </div>
     <div class="tab-content span9">
-      <div class="tab-pane active well" id="account">
-        <div class="row ">
+      <div class="tab-pane  active" id="contributions">
+          <div class="row">
+              {% for app in apps_contrib %}
+              <div class="span4 well well-small">
+                  <div class="row">
+                      <div class="span1">
+                        {% if app.info.thumbnail %}
+                        <img class="img-polaroid" src="{{app.info.thumbnail}}">
+                        {% else %}
+                        <img class="img-polaroid" src="http://placehold.it/100x100">
+                        {% endif %}
+                      </div>
+                      <div class="span3">
+                            <p><strong>{{app.name}}</strong></p>
+                            <p><i class="icon-tasks"></i> Contributed tasks: {{app.c}}</p>
+                            {{ render_twitter_btn(app)}}
+                            {{ render_googlePlus_btn(app)}}
+                            <a class="btn btn-small btn-mini" style="padding:1px 6px; vertical-align:top" href="{{url_for('app.presenter', short_name=app.short_name)}}"><i class="icon-thumbs-up"></i> Contribute!</a>
+                      </div>
+                  </div>
+              </div>
+              {% endfor %}
+          </div>
+      </div>
+      <div class="tab-pane well well-small" id="account">
+        <div class="row">
           <div class="span2">
-              <ul class="thumbnails">
-                  <li>
-                    <img class="thumbnail" src="{{ user.email_addr | gravatar(size=80)}}">
-                  </li>
-              </ul>
+              <img class="img-polaroid" src="{{ user.email_addr | gravatar(size=130)}}">
           </div>
           <div class="span6">
-              <h2>{{ user.fullname }}</h2>
-              <h3>Nick: <small>{{ user.name }}</small></h3>
-              <h3>E-mail: <small>{{ user.email_addr }}</small></h3>
-              <h3>Joined: <small>{{ user.created[0:10] }}</small></h3>
-              <h3>API key: <small>{{ user.api_key }}</small></h3>
+              <h4>{{ user.fullname }}</h4>
+              <h5><i class="icon-user"></i> Nick: <small>{{ user.name }}</small></h5>
+              <h5><i class="icon-envelope"></i> E-mail: <small>{{ user.email_addr }}</small></h5>
+              <h5><i class="icon-time"></i> Joined: <small>{{ user.created[0:10] }}</small></h5>
+              <h5><i class="icon-key"></i> API key: <small>{{ user.api_key }}</small></h5>
               <div style="text-align:center">
                   <a href="{{ url_for('account.update_profile') }}" class="btn btn-large"><i class="icon icon-user"></i> Update your profile</a>
               </div>
           </div>
         </div>
       </div>
-      <div class="tab-pane" id="apps">
+      <div class="tab-pane" id="apps-published">
         <div id="app" class="row">
            <div id="actions" class="span8 well" style="text-align:center">
                <a href="{{ url_for('app.new') }}" class="btn btn-primary"><i class="icon-plus icon-white"></i> Create a new application</a>
            </div>
         </div>
-        {% for app in user.apps %}
-        <div id="app" class="row">
+        <!-- Published apps -->
+        {% for app in apps_published %}
+        <div id="published" class="row">
             <div id="buttons" class="span8 well">
               <div id="img" class="row">
                 <div class="span2">
-                    <ul class="thumbnails">
-                        <li>
-                            {% if app.info.thumbnail %}
-                                <img class="thumbnail" src="{{ app.info.thumbnail }}">
-                            {% else %}
-                                <img class="thumbnail" src="http://placehold.it/100x100">
-                            {% endif %}
-                        </li>
-                    </ul>
+                   {% if app.info.thumbnail %}
+                       <img class="img-polaroid" src="{{ app.info.thumbnail }}">
+                   {% else %}
+                       <img class="img-polaroid" src="http://placehold.it/100x100">
+                   {% endif %}
                 </div>
                 <div id="data" class="span6">
                   <h2>{{ app.name }}</h2>
@@ -71,12 +110,53 @@
                     </li>
                     </ul>
                     <a class="btn btn-inverse" href="{{ url_for('app.details', short_name=app.short_name)}}"><i class="icon-edit icon-white"></i> Manage the application</a>
-                </div>
+                </div><!-- end data-->
               </div>
             </div>
         </div>
         {% endfor %}
       </div>
+      <div class="tab-pane" id="apps-draft">
+        <div id="app" class="row">
+           <div id="actions" class="span8 well" style="text-align:center">
+               <a href="{{ url_for('app.new') }}" class="btn btn-primary"><i class="icon-plus icon-white"></i> Create a new application</a>
+           </div>
+        </div>
+        <!-- Published apps -->
+        {% for app in apps_draft %}
+        <div id="published" class="row">
+            <div id="buttons" class="span8 well">
+              <div id="img" class="row">
+                <div class="span2">
+                   {% if app.info.thumbnail %}
+                       <img class="img-polaroid" src="{{ app.info.thumbnail }}">
+                   {% else %}
+                       <img class="img-polaroid" src="http://placehold.it/100x100">
+                   {% endif %}
+                </div>
+                <div id="data" class="span6">
+                  <h2>{{ app.name }}</h2>
+                  <ul>
+                    <li><strong>Description:</strong> {{ app.description }}</li>
+                    <li><strong>Created:</strong> {{ app.created[0:10] }}</li>
+                    {% if app.last_activity() == "None" %}
+                    <li><strong>Last Submitted Task:</strong> Not yet</li>
+                    {% else %}
+                    <li><strong>Last Submitted Task:</strong> {{ app.last_activity() }}</li>
+                    {% endif %}
+                    <li><strong>Hidden</strong>: {% if app.hidden == 1 %}
+                        <i class="icon icon-eye-close"></i> Yes {% else %} 
+                        <i class="icon icon-eye-open"></i> No {% endif %}
+                    </li>
+                    </ul>
+                    <a class="btn btn-inverse" href="{{ url_for('app.details', short_name=app.short_name)}}"><i class="icon-edit icon-white"></i> Manage the application</a>
+                </div><!-- end data-->
+              </div>
+            </div>
+        </div>
+        {% endfor %}
       </div>
+
+    </div>
 </div>
 {% endblock %}
