@@ -69,13 +69,13 @@ class APIBase(MethodView):
                         query = query.filter(getattr(self.__class__, k) == request.args[k])
 
                 try:
-                    limit = int(request.args['limit'])
-                except ValueError:
+                    limit = min(10000, int(request.args.get('limit')))
+                except (ValueError, TypeError):
                     limit = 20
 
                 try:
-                    offset = int(request.args['offset'])
-                except ValueError:
+                    offset = int(request.args.get('offset'))
+                except (ValueError, TypeError):
                     offset = 0
 
                 query = query.limit(limit)
