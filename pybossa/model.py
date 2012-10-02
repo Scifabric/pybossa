@@ -135,7 +135,7 @@ class App(db.Model, DomainObject):
     #: description
     description = Column(Unicode(length=255))
     #: long description
-    long_description = Column(Unicode)
+    long_description = Column(UnicodeText)
     #: TODO: What is this?
     long_tasks = Column(Integer, default=0)
     #: Boolean integer (0,1) indicating that \
