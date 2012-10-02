@@ -335,6 +335,7 @@ class TestWeb:
                 in res.data, res
         assert "John Doe" in res.data, res
         assert "Save the changes" in res.data, res
+        assert '<a href="/account/profile" class="btn">Cancel</a>' in res.data, res
 
         res = self.update_profile(fullname="John Doe 2",
                                   email_addr="johndoe2@example.com")
