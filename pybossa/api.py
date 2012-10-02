@@ -60,22 +60,26 @@ class APIBase(MethodView):
             getattr(require, self.__class__.__name__.lower()).read()
             if id is None:
                 query = model.Session.query(self.__class__)
-                limit = False
                 for k in request.args.keys():
-                    if k == 'limit':
-                        limit = True
-                    if k != 'limit' and k != 'api_key':
+                    if k not in ['limit', 'offset', 'api_key']:
                         if not hasattr(self.__class__, k):
                             return Response(json.dumps({
                                 'error': 'no such column: %s' % k}
                                 ), mimetype='application/json')
                         query = query.filter(getattr(self.__class__, k) == request.args[k])
 
-                if limit:
-                    query = query.limit(int(request.args['limit']))
-                else:
-                    # By default limit all queries to 20 records
-                    query = query.limit(20)
+                try:
+                    limit = int(request.args['limit'])
+                except ValueError:
+                    limit = 20
+
+                try:
+                    offset = int(request.args['offset'])
+                except ValueError:
+                    offset = 0
+
+                query = query.limit(limit)
+                query = query.offset(offset)
                 items = [ x.dictize() for x in query.all() ]
                 return Response(json.dumps(items), mimetype='application/json')
             else:
