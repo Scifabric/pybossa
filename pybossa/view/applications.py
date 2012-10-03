@@ -238,7 +238,6 @@ def details(short_name, page):
 def import_task(short_name):
     application = model.Session.query(model.App)\
             .filter(model.App.short_name == short_name).first()
-<<<<<<< HEAD
     form = BulkTaskImportForm(request.form, csrf_enabled=False)
     if form.validate_on_submit():
         r = requests.get(form.csv_url.data)
