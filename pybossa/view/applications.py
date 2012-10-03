@@ -238,9 +238,24 @@ def import_task(short_name):
     form = BulkTaskImportForm(request.form, csrf_enabled=False)
     if form.validate_on_submit():
         r = requests.get(form.csv_url.data)
+        # TODO: Check if the file is actually CSV
+        # TODO: Check for request status and raise errors
         csvcontent = StringIO(r.content)
         csvreader = csv.DictReader(csvcontent)
-        # csvreader has dict with column name and value
+        # TODO: check for errors
+        fields = []
+        for row in csvreader:
+            task = model.Task()
+            fields = set(['state', 'quorum', 'calibration', 'priority_0',
+                    'n_answers']) & set(row.keys())
+            if len(fields) > 0:
+                for field in fields[:]:
+                    task.set(field, row[field])
+                    fields.remove(field)
+            task.info = json.dumps(row)
+            model.Session.add(task)
+            model.Session.commit()
+        flash('Tasks imported successfully!', 'success')
     return render_template('/applications/import.html',
             app=application, form=form)
 
