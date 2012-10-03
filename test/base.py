@@ -7,8 +7,8 @@ import pybossa.model as model
 _here = os.path.dirname(__file__)
 web.app.config['TESTING'] = True
 web.app.config['SQLALCHEMY_DATABASE_URI'] = web.app.config['SQLALCHEMY_DATABASE_TEST_URI']
-engine = model.create_engine(web.app.config['SQLALCHEMY_DATABASE_URI'])
-model.set_engine(engine)
+#engine = model.create_engine(web.app.config['SQLALCHEMY_DATABASE_URI'])
+#model.set_engine(engine)
 
 class Fixtures:
     fullname = u'T Tester'
