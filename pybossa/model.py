@@ -331,7 +331,11 @@ class User(Base, flaskext.login.UserMixin):
         self.passwd_hash = generate_password_hash(password)
 
     def check_password(self, password):
-        return check_password_hash(self.passwd_hash, password)
+        # OAuth users do not have a password
+        if self.passwd_hash:
+            return check_password_hash(self.passwd_hash, password)
+        else:
+            return False
 
     @classmethod
     def by_name(cls, name):

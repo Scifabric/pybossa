@@ -1019,3 +1019,20 @@ class TestWeb:
         assert "Sample App" in res.data, res.data
         assert "Contributed tasks: 10" in res.data, res.data
         assert "Contribute!" in res.data, "There should be a Contribute button"
+
+    def test_32_oauth_password(self):
+        """Test WEB user sign in without password works"""
+        user = model.User(
+                email_addr = "johndoe@johndoe.com", 
+                name = "johndoe", 
+                passwd_hash = None,
+                fullname = "John Doe", 
+                api_key = "api-key")
+        model.Session.add(user)
+        model.Session.commit()
+        
+        res = self.signin()
+        assert "Incorrect email/password" in res.data, res.data
+
+
+
