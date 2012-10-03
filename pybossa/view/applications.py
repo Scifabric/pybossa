@@ -70,7 +70,7 @@ def index():
     if require.app.read():
         apps = db.session.query(model.App)\
                 .filter(model.App.hidden == 0)
-        form = featured = model.Session.query(model.Featured)\
+        featured = model.Session.query(model.Featured)\
                 .all()
         apps_featured = []
         apps_with_tasks = []
