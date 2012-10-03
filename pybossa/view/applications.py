@@ -73,7 +73,7 @@ def index():
     if require.app.read():
         apps = db.session.query(model.App)\
                 .filter(model.App.hidden == 0)
-        featured = model.Session.query(model.Featured)\
+        form = featured = model.Session.query(model.Featured)\
                 .all()
         apps_featured = []
         apps_with_tasks = []
@@ -238,6 +238,7 @@ def details(short_name, page):
 def import_task(short_name):
     application = model.Session.query(model.App)\
             .filter(model.App.short_name == short_name).first()
+<<<<<<< HEAD
     form = BulkTaskImportForm(request.form, csrf_enabled=False)
     if form.validate_on_submit():
         r = requests.get(form.csv_url.data)
