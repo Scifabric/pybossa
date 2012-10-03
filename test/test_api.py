@@ -78,6 +78,15 @@ class TestAPI:
         data = json.loads(res.data)
         assert len(data) == 20, len(data)
 
+        res = self.app.get('/api/app?limit=10')
+        data = json.loads(res.data)
+        assert len(data) == 10, len(data)
+
+        res = self.app.get('/api/app?limit=10&offset=10')
+        data = json.loads(res.data)
+        assert len(data) == 10, len(data)
+        assert data[0].get('name')=='name9'
+
         res = self.app.get('/api/task')
         data = json.loads(res.data)
         assert len(data) == 20, len(data)
