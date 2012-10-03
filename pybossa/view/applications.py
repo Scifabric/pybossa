@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+import requests
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response
 from flask import render_template, make_response
 from flaskext.wtf import Form, IntegerField, TextField, BooleanField, \
@@ -57,12 +58,17 @@ class AppForm(Form):
     hidden = BooleanField('Hide?')
 
 
+class BulkTaskImportForm(Form):
+    csv_url = TextField('CSV URL', [validators.Required(message="You must "
+                "provide a URL"), validators.URL(message="Oops! That's not a"
+                "valid URL. You must provide a valid URL")])
+
 @blueprint.route('/')
 def index():
     if require.app.read():
         apps = db.session.query(model.App)\
                 .filter(model.App.hidden == 0)
-        featured = db.session.query(model.Featured)\
+        form = featured = model.Session.query(model.Featured)\
                 .all()
         apps_featured = []
         apps_with_tasks = []
@@ -221,6 +227,21 @@ def details(short_name, page):
                         app=None)
     else:
         abort(404)
+
+
+@blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
+def import_task(short_name):
+    application = model.Session.query(model.App)\
+            .filter(model.App.short_name == short_name).first()
+    form = BulkTaskImportForm()
+    if form.validate_on_submit():
+        print "here"
+        r = requests.get(form.csv_url.data)
+        import pdb; pdb.set_trace()
+        print r.text
+    return render_template('/applications/import.html',
+            app=application, form=form)
+
 
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
