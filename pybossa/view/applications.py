@@ -237,9 +237,13 @@ def import_task(short_name):
             .filter(model.App.short_name == short_name).first()
     form = BulkTaskImportForm(request.form, csrf_enabled=False)
     if form.validate_on_submit():
-        r = requests.get(form.csv_url.data)
+        r = requests.get(form.csv_url.data, allow_redirects=False)
+        if r.status_code != 200:
+            flash("Oops! It looks like you don't have permission to access"
+                  " that file!", 'error')
+            return render_template('/applications/import.html',
+                    app=application, form=form)
         # TODO: Check if the file is actually CSV
-        # TODO: Check for request status and raise errors
         csvcontent = StringIO(r.content)
         csvreader = csv.DictReader(csvcontent)
         # TODO: check for errors
