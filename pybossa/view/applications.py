@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+from StringIO import StringIO
+import csv
 import requests
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response
 from flask import render_template, make_response
@@ -233,12 +235,12 @@ def details(short_name, page):
 def import_task(short_name):
     application = model.Session.query(model.App)\
             .filter(model.App.short_name == short_name).first()
-    form = BulkTaskImportForm()
+    form = BulkTaskImportForm(request.form, csrf_enabled=False)
     if form.validate_on_submit():
-        print "here"
         r = requests.get(form.csv_url.data)
-        import pdb; pdb.set_trace()
-        print r.text
+        csvcontent = StringIO(r.content)
+        csvreader = csv.DictReader(csvcontent)
+        # csvreader has dict with column name and value
     return render_template('/applications/import.html',
             app=application, form=form)
 
