@@ -1,6 +1,11 @@
 import json
 
-from base import web, model, Fixtures, db
+from base import web, model, Fixtures
+from mock import patch
+from collections import namedtuple
+
+
+FakeRequest = namedtuple('FakeRequest', ['text', 'status_code'])
 
 
 class TestWeb:
@@ -1023,16 +1028,26 @@ class TestWeb:
     def test_32_oauth_password(self):
         """Test WEB user sign in without password works"""
         user = model.User(
-                email_addr = "johndoe@johndoe.com", 
-                name = "johndoe", 
+                email_addr = "johndoe@johndoe.com",
+                name = "johndoe",
                 passwd_hash = None,
-                fullname = "John Doe", 
+                fullname = "John Doe",
                 api_key = "api-key")
         db.session.add(user)
         db.session.commit()
-        
         res = self.signin()
         assert "Incorrect email/password" in res.data, res.data
 
-
+    @patch('pybossa.util.requests.get')
+    def test_33_bulk_import(self, Mock):
+        unauthorized_request = FakeRequest('Unauthorized', 403)
+        Mock.return_value = unauthorized_request
+        self.register()
+        self.new_application()
+        app = model.Session.query(model.App).first()
+        res = self.app.post(('/app/%s/import' % (app.short_name)), data={
+            'csv_url': 'http://myfakecsvurl.com',
+            }, follow_redirects=True)
+        print res.data
+        assert "Oops! It looks like you don't have permission to access that file!" in res.data
 
