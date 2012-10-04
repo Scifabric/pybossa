@@ -68,19 +68,6 @@ def url_for_other_page(page):
     return url_for(request.endpoint, **args)
 app.jinja_env.globals['url_for_other_page'] = url_for_other_page
 
-@app.before_request
-def bind_db_engine():
-    dburi = app.config.get('SQLALCHEMY_DATABASE_URI', '')
-    if dburi:
-        engine = model.create_engine(dburi)
-        model.set_engine(engine)
-    else:
-        flash('You have not yet configured the database', 'error')
-
-@app.teardown_request
-def teardown_request(exception):
-    model.Session.close()
-
 #@app.errorhandler(401)
 #@app.errorhandler(403)
 #@app.errorhandler(404)
@@ -116,11 +103,6 @@ def global_template_context():
 
 @login_manager.user_loader
 def load_user(username):
-    # HACK: this repetition is painful but seems that before_request not yet called
-    # TODO: maybe time to use Flask-SQLAlchemy
-    dburi = app.config.get('SQLALCHEMY_DATABASE_URI', '')
-    engine = model.create_engine(dburi)
-    model.set_engine(engine)
     return model.Session.query(model.User).filter_by(name=username).first()
 
 @app.before_request
@@ -131,9 +113,6 @@ def api_authentication():
     if 'Authorization' in request.headers:
         apikey = request.headers.get('Authorization')
     if apikey:
-        dburi = app.config.get('SQLALCHEMY_DATABASE_URI', '')
-        engine = model.create_engine(dburi)
-        model.set_engine(engine)
         user = model.Session.query(model.User).filter_by(api_key=apikey).first()
         ## HACK: 
         # login_user sets a session cookie which we really don't want.

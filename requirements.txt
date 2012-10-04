@@ -4,6 +4,7 @@ Flask-Login==0.1
 Flask-WTF==0.6
 Flask-Gravatar
 Flask-OAuth
+Flask-SQLAlchemy
 dateutils
 alembic
 psycopg2

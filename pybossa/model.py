@@ -23,39 +23,31 @@ import uuid
 
 from werkzeug import generate_password_hash, check_password_hash
 import flaskext.login
-from sqlalchemy import create_engine
 from sqlalchemy import BigInteger, Integer, Boolean, Unicode,\
         Float, UnicodeText, Text, String
 from sqlalchemy.schema import Table, MetaData, Column, ForeignKey
 from sqlalchemy.orm import relationship, backref, class_mapper
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import scoped_session, sessionmaker
 from sqlalchemy.types import MutableType, TypeDecorator
 from sqlalchemy import event
 
+from pybossa.core import db
 from pybossa.util import pretty_date
 
 log = logging.getLogger(__name__)
 
-Session = scoped_session(sessionmaker())
-
-
-def set_engine(engine):
-    Base.metadata.bind = engine
-
+Session = db.session
 
 def make_timestamp():
     now = datetime.datetime.now()
     return now.isoformat()
-
 
 def make_uuid():
     return str(uuid.uuid4())
 
 
 def rebuild_db():
-    Base.metadata.drop_all()
-    Base.metadata.create_all()
+    db.drop_all()
+    db.create_all()
 
 # =========================================
 # Basics
@@ -98,6 +90,7 @@ class StateEnum:
 
 
 class DomainObject(object):
+
     def dictize(self):
         out = {}
         for col in self.__table__.c:
@@ -124,13 +117,10 @@ class DomainObject(object):
         return repr
 
 
-Base = declarative_base(cls=DomainObject)
-
-
 # =========================================
 # Domain Objects
 
-class App(Base):
+class App(db.Model, DomainObject):
     '''A microtasking Application to which Tasks are associated.
     '''
     __tablename__ = 'app'
@@ -201,7 +191,7 @@ class App(Base):
             return "None"
 
 
-class Featured(Base):
+class Featured(db.Model, DomainObject):
     '''A Table with Featured Apps.
     '''
     __tablename__ = 'featured'
@@ -213,7 +203,7 @@ class Featured(Base):
     app_id = Column(Integer, ForeignKey('app.id'))
 
 
-class Task(Base):
+class Task(db.Model, DomainObject):
     '''An individual Task which can be performed by a user. A Task is
     associated to an App.
     '''
@@ -263,7 +253,7 @@ class Task(Base):
             return float(0)
 
 
-class TaskRun(Base):
+class TaskRun(db.Model, DomainObject):
     '''A run of a given task by a specific user.
     '''
     __tablename__ = 'task_run'
@@ -296,7 +286,7 @@ class TaskRun(Base):
     '''
 
 
-class User(Base, flaskext.login.UserMixin):
+class User(db.Model, DomainObject, flaskext.login.UserMixin):
     __tablename__ = 'user'
     id = Column(Integer, primary_key=True)
     #: created timestamp (automatically set)
@@ -354,3 +344,4 @@ def make_admin(mapper, conn, target):
     if users == 0:
         target.admin = True
         #print "User %s is the first one, so we make it an admin" % target.name
+
