@@ -14,7 +14,6 @@
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from StringIO import StringIO
-import csv
 import requests
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response
 from flask import render_template, make_response
@@ -25,9 +24,13 @@ from sqlalchemy.exc import UnboundExecutionError
 from werkzeug.exceptions import HTTPException
 
 import pybossa.model as model
+<<<<<<< HEAD
 from pybossa.core import db
 from pybossa.util import Unique
 from pybossa.util import Pagination
+=======
+from pybossa.util import Unique, Pagination, unicode_csv_reader
+>>>>>>> Use unicode_csv_reader
 from pybossa.auth import require
 
 import json
@@ -237,28 +240,26 @@ def import_task(short_name):
             .filter(model.App.short_name == short_name).first()
     form = BulkTaskImportForm(request.form, csrf_enabled=False)
     if form.validate_on_submit():
-        r = requests.get(form.csv_url.data, allow_redirects=False)
-        if r.status_code != 200:
+        r = requests.get(form.csv_url.data)
+        if r.status_code == 403:
             flash("Oops! It looks like you don't have permission to access"
                   " that file!", 'error')
             return render_template('/applications/import.html',
                     app=application, form=form)
         # TODO: Check if the file is actually CSV
-        csvcontent = StringIO(r.content)
-        csvreader = csv.DictReader(csvcontent)
+        csvcontent = StringIO(r.text)
+        csvreader = unicode_csv_reader(csvcontent)
         # TODO: check for errors
-        fields = []
+        headers = []
+        fields = set(['state', 'quorum', 'calibration', 'priority_0',
+                'n_answers'])
         for row in csvreader:
-            task = model.Task()
-            fields = set(['state', 'quorum', 'calibration', 'priority_0',
-                    'n_answers']) & set(row.keys())
-            if len(fields) > 0:
-                for field in fields[:]:
-                    task.set(field, row[field])
-                    fields.remove(field)
-            task.info = json.dumps(row)
-            model.Session.add(task)
-            model.Session.commit()
+            print row
+#            if len(fields) > 0:
+#                for field in fields[:]:
+#                    task.set(field, row[field])
+#                    fields.remove(field)
+#            task.info = json.dumps(row)
         flash('Tasks imported successfully!', 'success')
     return render_template('/applications/import.html',
             app=application, form=form)
