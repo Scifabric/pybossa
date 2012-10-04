@@ -254,27 +254,34 @@ def import_task(short_name):
         fields = set(['state', 'quorum', 'calibration', 'priority_0',
                 'n_answers'])
         field_header_index = []
-        for row in csvreader:
-            if not headers:
-                headers = row
-                if headers != list(set(headers)):
-                    # Duplicate header names
-                    pass
-                field_headers = set(headers) & fields
-                for field in field_headers:
-                    field_header_index.append(headers.index(field))
+        try:
+            for row in csvreader:
+                if not headers:
+                    headers = row
+                    if headers != list(set(headers)):
+                        # Duplicate header names
+                        pass
+                    field_headers = set(headers) & fields
+                    for field in field_headers:
+                        field_header_index.append(headers.index(field))
+                else:
+                    info = {}
+                    task = model.Task()
+                    for index, cell in enumerate(row):
+                        if index in field_header_index:
+                            setattr(task, headers[index], cell)
+                        else:
+                            info[headers[index]] = cell
+                    task.info = json.dumps(info)
+                    model.Session.add(task)
+                    model.Session.commit()
             else:
-                info = {}
-                task = model.Task()
-                for index, cell in enumerate(row):
-                    if index in field_header_index:
-                        setattr(task, headers[index], cell)
-                    else:
-                        info[headers[index]] = cell
-                task.info = json.dumps(info)
-                model.Session.add(task)
-                model.Session.commit()
-        flash('Tasks imported successfully!', 'success')
+                flash('Oops! Looks like that was an empty file!', 'error')
+                return render_template('/applications/import.html',
+                    app=application, form=form)
+            flash('Tasks imported successfully!', 'success')
+        except:
+            flash('Oops! Looks like there was an error with processing that file!', 'error')
     return render_template('/applications/import.html',
             app=application, form=form)
 
