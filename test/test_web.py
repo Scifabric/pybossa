@@ -1038,7 +1038,7 @@ class TestWeb:
         res = self.signin()
         assert "Incorrect email/password" in res.data, res.data
 
-    @patch('pybossa.util.requests.get')
+    @patch('pybossa.view.applications.requests.get')
     def test_33_bulk_import(self, Mock):
         unauthorized_request = FakeRequest('Unauthorized', 403)
         Mock.return_value = unauthorized_request
@@ -1048,6 +1048,5 @@ class TestWeb:
         res = self.app.post(('/app/%s/import' % (app.short_name)), data={
             'csv_url': 'http://myfakecsvurl.com',
             }, follow_redirects=True)
-        print res.data
         assert "Oops! It looks like you don't have permission to access that file!" in res.data
 
