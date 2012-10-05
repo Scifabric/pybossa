@@ -52,16 +52,16 @@ def admin_required(f):
 
 class Unique(object):
     """Validator that checks field uniqueness"""
-    def __init__(self, session, db, field, message=None):
+    def __init__(self, session, model, field, message=None):
         self.session = session
-        self.db = db
+        self.model = model
         self.field = field
         if not message:
             message = u'This item already exists'
         self.message = message
 
     def __call__(self, form, field):
-        check = self.session.query(self.db)\
+        check = self.session.query(self.model)\
                 .filter(self.field == field.data)\
                 .first()
         if 'id' in form:
@@ -146,20 +146,20 @@ def pretty_date(time=False):
         if second_diff < 120:
             return "a minute ago"
         if second_diff < 3600:
-            return str(second_diff / 60) + " minutes ago"
+            return ' '.join([str(second_diff / 60), "minutes ago"])
         if second_diff < 7200:
             return "an hour ago"
         if second_diff < 86400:
-            return str(second_diff / 3600) + " hours ago"
+            return ' '.join([str(second_diff / 3600), "hours ago"])
     if day_diff == 1:
         return "Yesterday"
     if day_diff < 7:
-        return str(day_diff) + " days ago"
+        return ' '.join([str(day_diff), "days ago"])
     if day_diff < 31:
-        return str(day_diff / 7) + " weeks ago"
+        return ' '.join([str(day_diff / 7), "weeks ago"])
     if day_diff < 365:
-        return str(day_diff / 30) + " months ago"
-    return str(day_diff / 365) + " years ago"
+        return ' '.join([str(day_diff / 30), "months ago"])
+    return ' '.join([str(day_diff / 365), "years ago"])
 
 
 class Pagination(object):
