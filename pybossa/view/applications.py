@@ -24,13 +24,8 @@ from sqlalchemy.exc import UnboundExecutionError
 from werkzeug.exceptions import HTTPException
 
 import pybossa.model as model
-<<<<<<< HEAD
 from pybossa.core import db
-from pybossa.util import Unique
-from pybossa.util import Pagination
-=======
 from pybossa.util import Unique, Pagination, unicode_csv_reader
->>>>>>> Use unicode_csv_reader
 from pybossa.auth import require
 
 import json
