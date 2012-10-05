@@ -248,7 +248,7 @@ def import_task(short_name):
                     app=application, form=form)
         if (not 'text/plain' in r.headers['content-type'] or not 'text/csv'
                 in r.headers['content-type']):
-            flash("Oops! That file doesn't look like a CSV file!", 'error')
+            flash("Oops! That file doesn't look like a CSV file.", 'error')
             return render_template('/applications/import.html',
                     app=application, form=form)
         csvcontent = StringIO(r.text)
