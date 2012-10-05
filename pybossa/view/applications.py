@@ -246,7 +246,11 @@ def import_task(short_name):
                   " that file!", 'error')
             return render_template('/applications/import.html',
                     app=application, form=form)
-        # TODO: Check if the file is actually CSV
+        if (not 'text/plain' in r.headers['content-type'] or not 'text/csv'
+                in r.headers['content-type']):
+            flash("Oops! That file doesn't look like a CSV file!", 'error')
+            return render_template('/applications/import.html',
+                    app=application, form=form)
         csvcontent = StringIO(r.text)
         csvreader = unicode_csv_reader(csvcontent)
         # TODO: check for errors
