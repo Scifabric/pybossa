@@ -1,15 +1,15 @@
 # This file is part of PyBOSSA.
-# 
+#
 # PyBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # PyBOSSA is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -22,12 +22,15 @@ from sqlalchemy.exc import DatabaseError
 
 from pybossa.util import jsonpify, crossdomain
 import pybossa.model as model
+from pybossa.core import db
 from pybossa.auth import require
-from pybossa.sched import get_default_task, get_random_task, get_incremental_task
+from pybossa.sched import get_default_task, get_random_task,\
+        get_incremental_task
 
 blueprint = Blueprint('api', __name__)
 
-cors_headers = [ 'Content-Type', 'Authorization' ]
+cors_headers = ['Content-Type', 'Authorization']
+
 
 @blueprint.route('/')
 @crossdomain(origin='*', headers=cors_headers)
@@ -49,8 +52,8 @@ class APIBase(MethodView):
     @crossdomain(origin='*', headers=cors_headers)
     def get(self, id):
         """
-        Returns an item from the DB with the request.data JSON object or all the
-        items if id == None
+        Returns an item from the DB with the request.data JSON object or all
+        the items if id == None
 
         :arg self: The class of the object to be retrieved
         :arg integer id: the ID of the object in the DB
@@ -59,7 +62,7 @@ class APIBase(MethodView):
         try:
             getattr(require, self.__class__.__name__.lower()).read()
             if id is None:
-                query = model.Session.query(self.__class__)
+                query = db.session.query(self.__class__)
                 for k in request.args.keys():
                     if k not in ['limit', 'offset', 'api_key']:
                         if not hasattr(self.__class__, k):
@@ -80,17 +83,19 @@ class APIBase(MethodView):
 
                 query = query.limit(limit)
                 query = query.offset(offset)
-                items = [ x.dictize() for x in query.all() ]
+                items = [x.dictize() for x in query.all()]
                 return Response(json.dumps(items), mimetype='application/json')
             else:
-                item = model.Session.query(self.__class__).get(id)
+                item = db.session.query(self.__class__).get(id)
                 if item is None:
                     abort(404)
                 else:
-                    return Response(json.dumps(item.dictize()), mimetype='application/json')
+                    return Response(json.dumps(item.dictize()),
+                            mimetype='application/json')
         #except ProgrammingError, e:
         except DatabaseError as e:
-            return Response(json.dumps({'error': "%s" % e.orig}), mimetype='application/json')
+            return Response(json.dumps({'error': "%s" % e.orig}),
+                    mimetype='application/json')
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
@@ -105,8 +110,8 @@ class APIBase(MethodView):
         inst = self.__class__(**data)
         getattr(require, self.__class__.__name__.lower()).create(inst)
         self._update_object(inst)
-        model.Session.add(inst)
-        model.Session.commit()
+        db.session.add(inst)
+        db.session.commit()
         return json.dumps(inst.dictize())
 
     @jsonpify
@@ -117,17 +122,18 @@ class APIBase(MethodView):
 
         :arg self: The class of the object to be deleted
         :arg integer id: the ID of the object in the DB
-        :returns: An HTTP status code based on the output of the action. 
+        :returns: An HTTP status code based on the output of the action.
 
         More info about HTTP status codes for this action `here
         <http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.7>`_.
         """
-        item = model.Session.query(self.__class__).get(id)
+        item = db.session.query(self.__class__).get(id)
         getattr(require, self.__class__.__name__.lower()).delete(item)
-        if (item == None): abort(404)
+        if (item is None):
+            abort(404)
         else:
-            model.Session.delete(item)
-            model.Session.commit()
+            db.session.delete(item)
+            db.session.commit()
             return "", 204
 
     @jsonpify
@@ -138,28 +144,29 @@ class APIBase(MethodView):
 
         :arg self: The class of the object to be updated
         :arg integer id: the ID of the object in the DB
-        :returns: An HTTP status code based on the output of the action. 
+        :returns: An HTTP status code based on the output of the action.
 
         More info about HTTP status codes for this action `here
         <http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6>`_.
         """
-        existing = model.Session.query(self.__class__).get(id)
+        existing = db.session.query(self.__class__).get(id)
         getattr(require, self.__class__.__name__.lower()).update(existing)
         data = json.loads(request.data)
         # may be missing the id as we allow partial updates
         data['id'] = id
         inst = self.__class__(**data)
-        if (existing == None):
+        if (existing is None):
             abort(404)
         else:
-            out = model.Session.merge(inst)
-            model.Session.commit()
+            db.session.merge(inst)
+            db.session.commit()
             return "", 200
-    
+
     def _update_object(self, data_dict):
         '''Method to be overriden in inheriting classes which wish to update
         data dict.'''
         pass
+
 
 class ProjectAPI(APIBase):
     __class__ = model.App
@@ -167,8 +174,10 @@ class ProjectAPI(APIBase):
     def _update_object(self, obj):
         obj.owner = current_user
 
+
 class TaskAPI(APIBase):
     __class__ = model.Task
+
 
 class TaskRunAPI(APIBase):
     __class__ = model.TaskRun
@@ -178,6 +187,7 @@ class TaskRunAPI(APIBase):
             obj.user = current_user
         else:
             obj.user_ip = request.remote_addr
+
 
 def register_api(view, endpoint, url, pk='id', pk_type='int'):
     view_func = view.as_view(endpoint)
@@ -199,13 +209,15 @@ register_api(ProjectAPI, 'api_app', '/app', pk='id', pk_type='int')
 register_api(TaskAPI, 'api_task', '/task', pk='id', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
 
+
 @jsonpify
 @blueprint.route('/app/<app_id>/newtask')
 @crossdomain(origin='*', headers=cors_headers)
 def new_task(app_id):
-    ####### ToDo: implement a Strategy Pattern here! Look: http://stackoverflow.com/questions/963965
+    # TODO: implement a Strategy Pattern here!
+    # Look: http://stackoverflow.com/questions/963965
     # First check which SCHED scheme has to use this app
-    app = model.Session.query(model.App).get(app_id)
+    app = db.session.query(model.App).get(app_id)
     if (app.info.get('sched')):
         sched = app.info['sched']
     else:
@@ -214,27 +226,28 @@ def new_task(app_id):
     if sched == 'default':
         # print "%s uses the %s scheduler" % (app.name,sched)
         if current_user.is_anonymous():
-            task = get_default_task(app_id,user_ip=request.remote_addr)
+            task = get_default_task(app_id, user_ip=request.remote_addr)
         else:
             task = get_default_task(app_id, user_id=current_user.id)
 
     if sched == 'random':
         # print "%s uses the %s scheduler" % (app.name,sched)
         if current_user.is_anonymous():
-            task = get_random_task(app_id,user_ip=request.remote_addr)
+            task = get_random_task(app_id, user_ip=request.remote_addr)
         else:
             task = get_random_task(app_id, user_id=current_user.id)
 
     if sched == 'incremental':
         # print "%s uses the %s scheduler" % (app.name,sched)
         if current_user.is_anonymous():
-            task = get_incremental_task(app_id,user_ip=request.remote_addr)
+            task = get_incremental_task(app_id, user_ip=request.remote_addr)
         else:
             task = get_incremental_task(app_id, user_id=current_user.id)
-    
+
     # If there is a task for the user, return it
     if task:
-        return Response(json.dumps(task.dictize()), mimetype="application/json")
+        return Response(json.dumps(task.dictize()),
+                mimetype="application/json")
     else:
         return Response(json.dumps({}), mimetype="application/json")
 
@@ -253,21 +266,21 @@ def user_progress(app_id=None, short_name=None):
     """
     if app_id or short_name:
         if short_name:
-            app = model.Session.query(model.App)\
+            app = db.session.query(model.App)\
                     .filter(model.App.short_name == short_name)\
                     .first()
         if app_id:
-            app = model.Session.query(model.App)\
+            app = db.session.query(model.App)\
                     .get(app_id)
 
         if app:
             if current_user.is_anonymous():
-                tr = model.Session.query(model.TaskRun)\
+                tr = db.session.query(model.TaskRun)\
                         .filter(model.TaskRun.app_id == app.id)\
                         .filter(model.TaskRun.user_ip == request.remote_addr)\
                         .all()
             else:
-                tr = model.Session.query(model.TaskRun)\
+                tr = db.session.query(model.TaskRun)\
                         .filter(model.TaskRun.app_id == app.id)\
                         .filter(model.TaskRun.user_id == current_user.id)\
                         .all()

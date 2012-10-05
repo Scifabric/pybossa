@@ -5,7 +5,7 @@ import random
 
 #from flaskext.login import login_user, logout_user, current_user
 
-from base import web, model, Fixtures
+from base import web, model, Fixtures, db
 from nose.tools import assert_equal
 
 
@@ -18,7 +18,7 @@ class TestSCHED:
 
 
     def tearDown(self):
-        model.Session.remove()
+        db.session.remove()
 
 
     @classmethod
@@ -50,9 +50,9 @@ class TestSCHED:
 
     def delTaskRuns(self, app_id=1):
         """Deletes all TaskRuns for a given app_id"""
-        model.Session.query(model.TaskRun).filter_by(app_id=1).delete()
-        model.Session.commit()
-        model.Session.remove()
+        db.session.query(model.TaskRun).filter_by(app_id=1).delete()
+        db.session.commit()
+        db.session.remove()
 
     def register(self, method="POST", fullname="John Doe", username="johndoe", password="p4ssw0rd", password2=None, email=None):
         """Helper function to register and sign in a user"""
@@ -120,16 +120,16 @@ class TestSCHED:
             tr = model.TaskRun(app_id=data['app_id'], task_id=data['id'], 
                                user_ip="127.0.0.1",
                                info={'answer': 'Yes'})
-            model.Session.add(tr)
-            model.Session.commit()
+            db.session.add(tr)
+            db.session.commit()
             res = self.app.get('api/app/1/newtask')
             data = json.loads(res.data)
 
         # Check if we received the same number of tasks that the available ones
-        tasks = model.Session.query(model.Task).filter_by(app_id=1).all()
+        tasks = db.session.query(model.Task).filter_by(app_id=1).all()
         assert len(assigned_tasks) == len(tasks), len(assigned_tasks)
         # Check if all the assigned Task.id are equal to the available ones
-        tasks = model.Session.query(model.Task).filter_by(app_id=1).all()
+        tasks = db.session.query(model.Task).filter_by(app_id=1).all()
         for at in assigned_tasks:
             assert self.isTask(at['id'],tasks), "Assigned Task not found in DB Tasks"
         # Check that there are no duplicated tasks
@@ -158,13 +158,13 @@ class TestSCHED:
                 tr = model.TaskRun(app_id=data['app_id'], task_id=data['id'], 
                                    user_ip="127.0.0." + str(i),
                                    info={'answer': 'Yes'})
-                model.Session.add(tr)
-                model.Session.commit()
+                db.session.add(tr)
+                db.session.commit()
                 res = self.app.get('api/app/1/newtask')
                 data = json.loads(res.data)
 
         # Check if there are 30 TaskRuns per Task
-        tasks = model.Session.query(model.Task).filter_by(app_id=1).all()
+        tasks = db.session.query(model.Task).filter_by(app_id=1).all()
         for t in tasks:
             assert len(t.task_runs)==10, len(t.task_runs)
         # Check that all the answers are from different IPs
@@ -220,10 +220,10 @@ class TestSCHED:
             data = json.loads(res.data)
 
         # Check if we received the same number of tasks that the available ones
-        tasks = model.Session.query(model.Task).filter_by(app_id=1).all()
+        tasks = db.session.query(model.Task).filter_by(app_id=1).all()
         assert len(assigned_tasks) == len(tasks), assigned_tasks
         # Check if all the assigned Task.id are equal to the available ones
-        tasks = model.Session.query(model.Task).filter_by(app_id=1).all()
+        tasks = db.session.query(model.Task).filter_by(app_id=1).all()
         for at in assigned_tasks:
             assert self.isTask(at['id'],tasks), "Assigned Task not found in DB Tasks"
         # Check that there are no duplicated tasks
@@ -239,7 +239,7 @@ class TestSCHED:
         # We need one extra loop to allow the scheduler to mark a task as completed
         for i in range(11):
             self.register(fullname="johndoe"+str(i),username="johndoe"+str(i),password="johndoe"+str(i))
-            print "Number of users %s" % len(model.Session.query(model.User).all())
+            print "Number of users %s" % len(db.session.query(model.User).all())
             print "Giving answers as User: %s" % "johndoe"+str(i)
             self.signin()
             # Get Task until scheduler returns None
@@ -267,7 +267,7 @@ class TestSCHED:
             self.signout()
 
         # Check if there are 30 TaskRuns per Task
-        tasks = model.Session.query(model.Task).filter_by(app_id=1).all()
+        tasks = db.session.query(model.Task).filter_by(app_id=1).all()
         for t in tasks:
             print len(t.task_runs)
             assert len(t.task_runs)==10, t.task_runs
@@ -324,8 +324,8 @@ class TestSCHED:
                     tr = model.TaskRun(app_id=data['app_id'], task_id=data['id'], 
                                        user_ip="127.0.0." + str(i),
                                        info={'answer': 'Yes'})
-                    model.Session.add(tr)
-                    model.Session.commit()
+                    db.session.add(tr)
+                    db.session.commit()
 
                 res = self.app.get('api/app/1/newtask')
                 data = json.loads(res.data)
@@ -333,7 +333,7 @@ class TestSCHED:
                 self.signout()
 
         # Check if there are 30 TaskRuns per Task
-        tasks = model.Session.query(model.Task).filter_by(app_id=1).all()
+        tasks = db.session.query(model.Task).filter_by(app_id=1).all()
         for t in tasks:
             print len(t.task_runs)
             assert len(t.task_runs)==10, t.task_runs
