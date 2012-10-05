@@ -1,5 +1,5 @@
 from base import web, model, Fixtures
-from nose.tools import assert_equal
+
 
 class TestAuthentication:
     @classmethod
@@ -16,4 +16,3 @@ class TestAuthentication:
         """Test AUTHENTICATION works"""
         res = self.app.get('/?api_key=%s' % Fixtures.api_key)
         assert 'checkpoint::logged-in::tester' in res.data, res.data
-

@@ -5,7 +5,7 @@ import random
 
 #from flaskext.login import login_user, logout_user, current_user
 
-from base import web, model, Fixtures
+from base import web, model, Fixtures, db
 from nose.tools import assert_equal
 
 
@@ -44,8 +44,8 @@ class TestSCHED:
 
     def delTaskRuns(self, app_id=1):
         """Deletes all TaskRuns for a given app_id"""
-        model.Session.query(model.TaskRun).filter_by(app_id=1).delete()
-        model.Session.commit()
+        db.session.query(model.TaskRun).filter_by(app_id=1).delete()
+        db.session.commit()
 
     def register(self, method="POST", fullname="John Doe", username="johndoe", password="p4ssw0rd", password2=None, email=None):
         """Helper function to register and sign in a user"""

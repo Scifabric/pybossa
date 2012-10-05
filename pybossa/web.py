@@ -1,28 +1,29 @@
 # This file is part of PyBOSSA.
-# 
+#
 # PyBOSSA is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # PyBOSSA is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 import logging
 import json
 
-from flask import Response, request, g, render_template, abort, flash, redirect, session, url_for
+from flask import Response, request, g, render_template,\
+        abort, flash, redirect, session, url_for
 from flaskext.login import login_user, logout_user, current_user
 from sqlalchemy.exc import UnboundExecutionError
 from werkzeug.exceptions import *
 
 import pybossa
-from pybossa.core import app, login_manager
+from pybossa.core import app, login_manager, db
 import pybossa.model as model
 from pybossa.api import blueprint as api
 from pybossa.view.account import blueprint as account
@@ -30,7 +31,7 @@ from pybossa.view.applications import blueprint as applications
 from pybossa.view.admin import blueprint as admin
 from pybossa.view.stats import blueprint as stats
 
-import random 
+import random
 
 logger = logging.getLogger('pybossa')
 
@@ -44,7 +45,8 @@ app.register_blueprint(stats, url_prefix='/stats')
 
 # Enable Twitter if available
 try:
-    if (app.config['TWITTER_CONSUMER_KEY'] and app.config['TWITTER_CONSUMER_SECRET']):
+    if (app.config['TWITTER_CONSUMER_KEY'] and
+            app.config['TWITTER_CONSUMER_SECRET']):
         from pybossa.view.twitter import blueprint as twitter
         app.register_blueprint(twitter, url_prefix='/twitter')
 except:
@@ -75,7 +77,7 @@ app.jinja_env.globals['url_for_other_page'] = url_for_other_page
 #@app.errorhandler(500)
 #def handle_exceptions(exc):
 #    """
-#    Re-format exceptions to JSON 
+#    Re-format exceptions to JSON
 #
 #    :arg error: The exception object
 #    :returns: The exception object in JSON format
@@ -86,35 +88,40 @@ app.jinja_env.globals['url_for_other_page'] = url_for_other_page
 #             }
 #    return json.dumps(output)
 
+
 @app.context_processor
 def global_template_context():
     if current_user.is_authenticated():
-        if current_user.email_addr == current_user.name or current_user.email_addr == "None":
-            flash("Please update your e-mail address in your profile page, right now it is empty!",'error')
+        if (current_user.email_addr == current_user.name or
+                current_user.email_addr == "None"):
+            flash("Please update your e-mail address in your profile page,"
+                  " right now it is empty!", 'error')
 
     return dict(
-        brand = app.config['BRAND'],
-        title = app.config['TITLE'],
-        copyright = app.config['COPYRIGHT'],
-        description = app.config['DESCRIPTION'],
-        version = pybossa.__version__,
-        current_user = current_user,
+        brand=app.config['BRAND'],
+        title=app.config['TITLE'],
+        copyright=app.config['COPYRIGHT'],
+        description=app.config['DESCRIPTION'],
+        version=pybossa.__version__,
+        current_user=current_user,
         )
+
 
 @login_manager.user_loader
 def load_user(username):
-    return model.Session.query(model.User).filter_by(name=username).first()
+    return db.session.query(model.User).filter_by(name=username).first()
+
 
 @app.before_request
 def api_authentication():
-    """ Attempt API authentication on a per-request basis. """
+    """ Attempt API authentication on a per-request basis."""
     apikey = request.args.get('api_key', None)
     from flask import _request_ctx_stack
     if 'Authorization' in request.headers:
         apikey = request.headers.get('Authorization')
     if apikey:
-        user = model.Session.query(model.User).filter_by(api_key=apikey).first()
-        ## HACK: 
+        user = db.session.query(model.User).filter_by(api_key=apikey).first()
+        ## HACK:
         # login_user sets a session cookie which we really don't want.
         # login_user(user)
         if user:
@@ -122,11 +129,14 @@ def api_authentication():
 
 @app.route('/')
 def home():
-    try: # in case we have not set up database yet
-        app_count = model.Session.query(model.App).filter(model.App.hidden == 0).count()
-        task_count = model.Session.query(model.Task).count()
-        taskrun_count = model.Session.query(model.TaskRun).count()
-        user_count = model.Session.query(model.User).count()
+    # in case we have not set up database yet
+    try:
+        app_count = db.session.query(model.App)\
+                .filter(model.App.hidden == 0)\
+                .count()
+        task_count = db.session.query(model.Task).count()
+        taskrun_count = db.session.query(model.TaskRun).count()
+        user_count = db.session.query(model.User).count()
         stats = {
             'app': app_count,
             'task': task_count,
@@ -134,21 +144,22 @@ def home():
             'user': user_count
             }
 
-        featured = model.Session.query(model.Featured).all()
+        featured = db.session.query(model.Featured).all()
 
         apps = []
         for f in featured:
-            apps.append(model.Session.query(model.App).get(f.app_id))
+            apps.append(db.session.query(model.App).get(f.app_id))
 
         threeApps = False
         if (len(apps) > 0):
             if (len(apps) == 1 or len(apps) == 2):
                 frontPageApps = apps
-                tmp = model.App( name = "Your application", description = "Could be here!")
+                tmp = model.App(name="Your application",
+                        description="Could be here!")
                 frontPageApps.append(tmp)
             else:
                 frontPageApps = []
-                for i in range(0,3):
+                for i in range(0, 3):
                     app = random.choice(apps)
                     apps.pop(apps.index(app))
                     frontPageApps.append(app)
@@ -163,7 +174,9 @@ def home():
             'taskrun': 0,
             'user': 0
             }
-    return render_template('/home/index.html', stats = stats, frontPageApps = frontPageApps, threeApps = threeApps)
+    return render_template('/home/index.html', stats=stats,
+            frontPageApps=frontPageApps, threeApps=threeApps)
+
 
 @app.route("/about")
 def about():
@@ -172,5 +185,5 @@ def about():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.NOTSET)
-    app.run(host=app.config['HOST'], port=app.config['PORT'], debug=app.config.get('DEBUG', True))
-
+    app.run(host=app.config['HOST'], port=app.config['PORT'],
+            debug=app.config.get('DEBUG', True))

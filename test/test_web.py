@@ -1,6 +1,6 @@
 import json
 
-from base import web, model, Fixtures
+from base import web, model, Fixtures, db
 
 
 class TestWeb:
@@ -10,7 +10,7 @@ class TestWeb:
         #Fixtures.create()
 
     def tearDown(self):
-        model.Session.remove()
+        db.session.remove()
 
     @classmethod
     def teardown_class(cls):
@@ -107,13 +107,13 @@ class TestWeb:
         tasks = []
         for i in range(0, 10):
             tasks.append(model.Task(app_id=appid, state='0', info={}))
-        model.Session.add_all(tasks)
-        model.Session.commit()
+        db.session.add_all(tasks)
+        db.session.commit()
 
     def delTaskRuns(self, app_id=1):
         """Deletes all TaskRuns for a given app_id"""
-        model.Session.query(model.TaskRun).filter_by(app_id=1).delete()
-        model.Session.commit()
+        db.session.query(model.TaskRun).filter_by(app_id=1).delete()
+        db.session.commit()
 
     def delete_application(self, method="POST", short_name="sampleapp"):
         """Helper function to create an application"""
@@ -163,17 +163,17 @@ class TestWeb:
         self.register()
         self.new_application()
 
-        app = model.Session.query(model.App).first()
+        app = db.session.query(model.App).first()
         # We use a string here to check that it works too
         task = model.Task(app_id=app.id, info={'n_answers': '10'})
-        model.Session.add(task)
-        model.Session.commit()
+        db.session.add(task)
+        db.session.commit()
 
         for i in range(10):
             task_run = model.TaskRun(app_id=app.id, task_id=1,
                                      info={'answer': 1})
-            model.Session.add(task_run)
-            model.Session.commit()
+            db.session.add(task_run)
+            db.session.commit()
             self.app.get('api/app/%s/newtask' % app.id)
 
         self.signout()
@@ -190,17 +190,17 @@ class TestWeb:
         self.register()
         self.new_application()
 
-        app = model.Session.query(model.App).first()
+        app = db.session.query(model.App).first()
         # We use a string here to check that it works too
         task = model.Task(app_id=app.id, info={'n_answers': '10'})
-        model.Session.add(task)
-        model.Session.commit()
+        db.session.add(task)
+        db.session.commit()
 
         for i in range(10):
             task_run = model.TaskRun(app_id=app.id, task_id=1,
                                      info={'answer': 1})
-            model.Session.add(task_run)
-            model.Session.commit()
+            db.session.add(task_run)
+            db.session.commit()
             self.app.get('api/app/%s/newtask' % app.id)
 
         self.update_application(new_hidden=True)
@@ -407,7 +407,7 @@ class TestWeb:
         # With one application in the system
         self.register()
         self.new_application()
-        apps = model.Session.query(model.App)\
+        apps = db.session.query(model.App)\
                 .all()
         assert len(apps) == 1,\
                 "There should be only 1 app, but there are %s" % len(apps)
@@ -418,8 +418,8 @@ class TestWeb:
             featured_apps.append(f)
         assert len(featured_apps) == 1,\
                 "There should be only 1 app, but there are %s" % len(apps)
-        model.Session.add_all(featured_apps)
-        model.Session.commit()
+        db.session.add_all(featured_apps)
+        db.session.commit()
         self.new_task(1)
         self.signout()
         res = self.app.get('/')
@@ -440,7 +440,7 @@ class TestWeb:
                              description="New description")
         self.new_task(2)
         self.signout()
-        apps = model.Session.query(model.App)\
+        apps = db.session.query(model.App)\
                 .all()
         assert len(apps) == 2,\
                 "There should be only 2 apps, but there are %s" % len(apps)
@@ -451,8 +451,8 @@ class TestWeb:
             featured_apps.append(f)
         assert len(featured_apps) == 2,\
                 "There should be only 2 app, but there are %s" % len(apps)
-        model.Session.add_all(featured_apps)
-        model.Session.commit()
+        db.session.add_all(featured_apps)
+        db.session.commit()
 
         res = self.app.get('/')
         assert "Featured applications" in res.data, res.data
@@ -482,7 +482,7 @@ class TestWeb:
                              description="Third description")
         self.new_task(3)
         self.signout()
-        apps = model.Session.query(model.App)\
+        apps = db.session.query(model.App)\
                 .all()
         assert len(apps) == 3,\
                 "There should be only 3 apps, but there are %s" % len(apps)
@@ -493,8 +493,8 @@ class TestWeb:
             featured_apps.append(f)
         assert len(featured_apps) == 3,\
                 "There should be only 3 app, but there are %s" % len(apps)
-        model.Session.add_all(featured_apps)
-        model.Session.commit()
+        db.session.add_all(featured_apps)
+        db.session.commit()
 
         res = self.app.get('/')
         assert "Featured applications" in res.data, res.data
@@ -642,16 +642,16 @@ class TestWeb:
         user = model.User(name="tester", passwd_hash="tester",
                           email_addr="tester")
         user.set_password('tester')
-        model.Session.add(user)
-        model.Session.commit()
-        model.Session.query(model.User).all()
+        db.session.add(user)
+        db.session.commit()
+        db.session.query(model.User).all()
 
         # Sign in again and check the warning message
         self.signin(username="tester", password="tester")
         res = self.app.get('/', follow_redirects=True)
         msg = "Please update your e-mail address in your profile page, " \
               "right now it is empty!"
-        user = model.Session.query(model.User).get(1)
+        user = db.session.query(model.User).get(1)
         assert msg in res.data, res.data
 
     def test_16_task_status_completed(self):
@@ -659,22 +659,22 @@ class TestWeb:
         self.register()
         self.new_application()
 
-        app = model.Session.query(model.App).first()
+        app = db.session.query(model.App).first()
         # We use a string here to check that it works too
         task = model.Task(app_id=app.id, info={'n_answers': '10'})
-        model.Session.add(task)
-        model.Session.commit()
+        db.session.add(task)
+        db.session.commit()
 
         for i in range(10):
             task_run = model.TaskRun(app_id=app.id, task_id=1,
                                      info={'answer': 1})
-            model.Session.add(task_run)
-            model.Session.commit()
+            db.session.add(task_run)
+            db.session.commit()
             self.app.get('api/app/%s/newtask' % app.id)
 
         self.signout()
 
-        app = model.Session.query(model.App).first()
+        app = db.session.query(model.App).first()
 
         res = self.app.get('app/' + app.short_name + "/tasks", follow_redirects=True)
         assert "Sample App" in res.data, res.data
@@ -688,20 +688,20 @@ class TestWeb:
         self.register()
         self.new_application()
 
-        app = model.Session.query(model.App).first()
+        app = db.session.query(model.App).first()
         task = model.Task(app_id=app.id, info={'n_answers': 10})
-        model.Session.add(task)
-        model.Session.commit()
+        db.session.add(task)
+        db.session.commit()
 
         for i in range(10):
             task_run = model.TaskRun(app_id=app.id, task_id=1,
                                      info={'answer': 1})
-            model.Session.add(task_run)
-            model.Session.commit()
+            db.session.add(task_run)
+            db.session.commit()
 
         self.signout()
 
-        app = model.Session.query(model.App).first()
+        app = db.session.query(model.App).first()
         res = self.app.get('app/%s/%s/results.json' % (app.id, 1),
                             follow_redirects=True)
         data = json.loads(res.data)
@@ -714,13 +714,13 @@ class TestWeb:
         self.register()
         self.new_application()
 
-        app = model.Session.query(model.App).first()
+        app = db.session.query(model.App).first()
         task = model.Task(app_id=app.id, info={'n_answers': 10})
-        model.Session.add(task)
-        model.Session.commit()
+        db.session.add(task)
+        db.session.commit()
         self.signout()
 
-        app = model.Session.query(model.App).first()
+        app = db.session.query(model.App).first()
 
         res = self.app.get('app/' + app.short_name + "/tasks", follow_redirects=True)
         assert "Sample App" in res.data, res.data
@@ -744,13 +744,13 @@ class TestWeb:
         """Test WEB Application Index published works"""
         self.register()
         self.new_application()
-        app = model.Session.query(model.App).first()
+        app = db.session.query(model.App).first()
         info = dict(task_presenter="some html")
         app.info = info
-        model.Session.commit()
+        db.session.commit()
         task = model.Task(app_id=app.id, info={'n_answers': 10})
-        model.Session.add(task)
-        model.Session.commit()
+        db.session.add(task)
+        db.session.commit()
         self.signout()
 
         res = self.app.get('app', follow_redirects=True)
@@ -763,19 +763,19 @@ class TestWeb:
         """Test WEB Application Index featured works"""
         self.register()
         self.new_application()
-        app = model.Session.query(model.App).first()
+        app = db.session.query(model.App).first()
         info = dict(task_presenter="some html")
         app.info = info
-        model.Session.commit()
+        db.session.commit()
 
         f = model.Featured()
         f.app_id = app.id
-        model.Session.add(f)
-        model.Session.commit()
+        db.session.add(f)
+        db.session.commit()
 
         task = model.Task(app_id=app.id, info={'n_answers': 10})
-        model.Session.add(task)
-        model.Session.commit()
+        db.session.add(task)
+        db.session.commit()
         self.signout()
 
         res = self.app.get('app', follow_redirects=True)
@@ -802,8 +802,8 @@ class TestWeb:
 
         Fixtures.create()
         self.delTaskRuns()
-        app = model.Session.query(model.App).first()
-        task = model.Session.query(model.Task)\
+        app = db.session.query(model.App).first()
+        task = db.session.query(model.Task)\
                 .filter(model.App.id == app.id)\
                 .first()
         res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
@@ -816,8 +816,8 @@ class TestWeb:
 
         model.rebuild_db()
         Fixtures.create()
-        app = model.Session.query(model.App).first()
-        task = model.Session.query(model.Task)\
+        app = db.session.query(model.App).first()
+        task = db.session.query(model.Task)\
                 .filter(model.App.id == app.id)\
                 .first()
 
@@ -826,14 +826,14 @@ class TestWeb:
                     task_id=task.id,
                     user_ip="127.0.0.1",
                     info={'answer': 1})
-            model.Session.add(task_run)
-            model.Session.commit()
+            db.session.add(task_run)
+            db.session.commit()
 
         ntask = model.Task(id=task.id, state='completed')
 
-        assert ntask not in model.Session
-        model.Session.merge(ntask)
-        model.Session.commit()
+        assert ntask not in db.session
+        db.session.merge(ntask)
+        db.session.commit()
 
         res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
                 follow_redirects=True)
@@ -848,8 +848,8 @@ class TestWeb:
         self.delTaskRuns()
         self.register()
         self.signin()
-        app = model.Session.query(model.App).first()
-        task = model.Session.query(model.Task)\
+        app = db.session.query(model.App).first()
+        task = db.session.query(model.Task)\
                 .filter(model.App.id == app.id)\
                 .first()
         res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
@@ -865,11 +865,11 @@ class TestWeb:
         Fixtures.create()
         self.register()
 
-        user = model.Session.query(model.User)\
+        user = db.session.query(model.User)\
                 .filter(model.User.name == 'johndoe')\
                 .first()
-        app = model.Session.query(model.App).first()
-        task = model.Session.query(model.Task)\
+        app = db.session.query(model.App).first()
+        task = db.session.query(model.Task)\
                 .filter(model.App.id == app.id)\
                 .first()
         for i in range(10):
@@ -877,15 +877,15 @@ class TestWeb:
                     task_id=task.id,
                     user_id=user.id,
                     info={'answer': 1})
-            model.Session.add(task_run)
-            model.Session.commit()
+            db.session.add(task_run)
+            db.session.commit()
             #self.app.get('api/app/%s/newtask' % app.id)
 
         ntask = model.Task(id=task.id, state='completed')
         #self.signin()
-        assert ntask not in model.Session
-        model.Session.merge(ntask)
-        model.Session.commit()
+        assert ntask not in db.session
+        db.session.merge(ntask)
+        db.session.commit()
 
         res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
                 follow_redirects=True)
@@ -899,18 +899,18 @@ class TestWeb:
 
         model.rebuild_db()
         Fixtures.create()
-        app1 = model.Session.query(model.App).get(1)
+        app1 = db.session.query(model.App).get(1)
         app1_short_name = app1.short_name
 
-        model.Session.query(model.Task)\
+        db.session.query(model.Task)\
                 .filter(model.Task.app_id == 1)\
                 .first()
 
         self.register()
         self.new_application()
-        app2 = model.Session.query(model.App).get(2)
+        app2 = db.session.query(model.App).get(2)
         self.new_task(app2.id)
-        task2 = model.Session.query(model.Task)\
+        task2 = db.session.query(model.Task)\
                 .filter(model.Task.app_id == 2)\
                 .first()
         task2_id = task2.id
@@ -924,9 +924,9 @@ class TestWeb:
     def test_26_tutorial_signed_user(self):
         """Test WEB tutorials work as signed in user"""
         Fixtures.create()
-        app1 = model.Session.query(model.App).get(1)
+        app1 = db.session.query(model.App).get(1)
         app1.info = dict(tutorial="some help")
-        model.Session.commit()
+        db.session.commit()
         self.register()
         # First time accessing the app should redirect me to the tutorial
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
@@ -939,9 +939,9 @@ class TestWeb:
     def test_27_tutorial_anonymous_user(self):
         """Test WEB tutorials work as an anonymous user"""
         Fixtures.create()
-        app1 = model.Session.query(model.App).get(1)
+        app1 = db.session.query(model.App).get(1)
         app1.info = dict(tutorial="some help")
-        model.Session.commit()
+        db.session.commit()
         self.register()
         # First time accessing the app should redirect me to the tutorial
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
@@ -954,7 +954,7 @@ class TestWeb:
     def test_28_non_tutorial_signed_user(self):
         """Test WEB app without tutorial work as signed in user"""
         Fixtures.create()
-        model.Session.commit()
+        db.session.commit()
         self.register()
         # First time accessing the app should redirect me to the tutorial
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
@@ -967,7 +967,7 @@ class TestWeb:
     def test_29_tutorial_anonymous_user(self):
         """Test WEB app without tutorials work as an anonymous user"""
         Fixtures.create()
-        model.Session.commit()
+        db.session.commit()
         self.register()
         # First time accessing the app should redirect me to the tutorial
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
@@ -1004,15 +1004,15 @@ class TestWeb:
         """Test WEB user progress profile page works"""
         self.register()
         self.new_application()
-        app = model.Session.query(model.App).first()
+        app = db.session.query(model.App).first()
         task = model.Task(app_id=app.id, info={'n_answers': '10'})
-        model.Session.add(task)
-        model.Session.commit()
+        db.session.add(task)
+        db.session.commit()
         for i in range(10):
             task_run = model.TaskRun(app_id=app.id, task_id=1, user_id=1,
                                      info={'answer': 1})
-            model.Session.add(task_run)
-            model.Session.commit()
+            db.session.add(task_run)
+            db.session.commit()
             self.app.get('api/app/%s/newtask' % app.id)
 
         res = self.app.get('account/profile', follow_redirects=True)
@@ -1028,8 +1028,8 @@ class TestWeb:
                 passwd_hash = None,
                 fullname = "John Doe", 
                 api_key = "api-key")
-        model.Session.add(user)
-        model.Session.commit()
+        db.session.add(user)
+        db.session.commit()
         
         res = self.signin()
         assert "Incorrect email/password" in res.data, res.data

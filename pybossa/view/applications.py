@@ -22,6 +22,7 @@ from sqlalchemy.exc import UnboundExecutionError
 from werkzeug.exceptions import HTTPException
 
 import pybossa.model as model
+from pybossa.core import db
 from pybossa.util import Unique
 from pybossa.util import Pagination
 from pybossa.auth import require
@@ -35,13 +36,13 @@ class AppForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
     name = TextField('Name', [validators.Required(),
                               Unique(
-                                  model.Session,
+                                  db.session,
                                   model.App,
                                   model.App.name,
                                   message="Name is already taken.")])
     short_name = TextField('Short Name', [validators.Required(),
                                           Unique(
-                                              model.Session,
+                                              db.session,
                                               model.App,
                                               model.App.short_name,
                                               message="Short Name is already \
@@ -59,9 +60,9 @@ class AppForm(Form):
 @blueprint.route('/')
 def index():
     if require.app.read():
-        apps = model.Session.query(model.App)\
+        apps = db.session.query(model.App)\
                 .filter(model.App.hidden == 0)
-        featured = model.Session.query(model.Featured)\
+        featured = db.session.query(model.Featured)\
                 .all()
         apps_featured = []
         apps_with_tasks = []
@@ -80,7 +81,7 @@ def index():
             else:
                 apps_without_tasks.append(a)
 
-        return render_template('/applications/index.html', \
+        return render_template('/applications/index.html',
                                 title="Applications",
                                 apps_featured=apps_featured,
                                 apps_with_tasks=apps_with_tasks,
@@ -103,17 +104,17 @@ def new():
                 hidden=int(form.hidden.data),
                 owner_id=current_user.id,
                 )
-            model.Session.add(application)
-            model.Session.commit()
+            db.session.add(application)
+            db.session.commit()
             flash('<i class="icon-ok"></i> Application created!', 'success')
-            flash('<i class="icon-bullhorn"></i> You can check the '\
-                   '<strong><a href="https://docs.pybossa.com">Guide and '\
-                   ' Documentation</a></strong> for adding tasks, '\
+            flash('<i class="icon-bullhorn"></i> You can check the '
+                   '<strong><a href="https://docs.pybossa.com">Guide and '
+                   ' Documentation</a></strong> for adding tasks, '
                    ' a thumbnail, using PyBossa.JS, etc.', 'info')
             return redirect('/app/' + application.short_name)
         if request.method == 'POST' and not form.validate():
             flash('Please correct the errors', 'error')
-        return render_template('applications/new.html', \
+        return render_template('applications/new.html',
                 title="New Application", form=form)
     else:
         abort(403)
@@ -122,18 +123,18 @@ def new():
 @blueprint.route('/<short_name>/delete', methods=['GET', 'POST'])
 @login_required
 def delete(short_name):
-    application = model.Session.query(model.App)\
+    application = db.session.query(model.App)\
             .filter(model.App.short_name == short_name).first()
     if require.app.delete(application):
             if request.method == 'GET':
                 return render_template('/applications/delete.html',
-                                        title="Delete Application: %s"\
+                                        title="Delete Application: %s"
                                               % application.name,
                                         app=application)
             else:
                 try:
-                    model.Session.delete(application)
-                    model.Session.commit()
+                    db.session.delete(application)
+                    db.session.commit()
                     flash('Application deleted!', 'success')
                     return redirect(url_for('account.profile'))
                 except UnboundExecutionError:
@@ -146,14 +147,14 @@ def delete(short_name):
 @login_required
 def update(short_name):
     try:
-        application = model.Session.query(model.App)\
+        application = db.session.query(model.App)\
                 .filter(model.App.short_name == short_name).first()
         if require.app.update(application):
             if request.method == 'GET':
                 form = AppForm(obj=application, csrf_enabled=False)
                 form.populate_obj(application)
                 return render_template('/applications/update.html',
-                                        title="Update the application: %s"\
+                                        title="Update the application: %s"
                                                % application.name,
                                         form=form,
                                         app=application)
@@ -174,16 +175,16 @@ def update(short_name):
                         hidden=hidden,
                         owner_id=current_user.id,
                         )
-                    application = model.Session.query(model.App)\
+                    application = db.session.query(model.App)\
                             .filter(model.App.short_name == short_name).first()
-                    model.Session.merge(new_application)
-                    model.Session.commit()
+                    db.session.merge(new_application)
+                    db.session.commit()
                     flash('Application updated!', 'success')
-                    return redirect(url_for('.details',\
+                    return redirect(url_for('.details',
                             short_name=new_application.short_name))
                 else:
                     flash('Please correct the errors', 'error')
-                    return render_template('/applications/update.html',\
+                    return render_template('/applications/update.html',
                                             form=form,
                                             title="Edit the application",
                                             app=application)
@@ -196,7 +197,7 @@ def update(short_name):
 @blueprint.route('/<short_name>', defaults={'page': 1})
 @blueprint.route('/<short_name>/<int:page>')
 def details(short_name, page):
-    application = model.Session.query(model.App).\
+    application = db.session.query(model.App).\
             filter(model.App.short_name == short_name).\
             first()
 
@@ -213,8 +214,8 @@ def details(short_name, page):
             if not application.hidden:
                 return render_template('/applications/app.html',
                                         app=application,
-                                        title="Application: %s" % application.name,
-                                        )
+                                        title="Application: %s" %
+                                        application.name)
             else:
                 return render_template('/applications/app.html',
                         app=None)
@@ -225,11 +226,11 @@ def details(short_name, page):
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
     if (current_user.is_anonymous()):
-        flash("Ooops! You are an anonymous user and will not get any credit "\
+        flash("Ooops! You are an anonymous user and will not get any credit "
               " for your contributions. Sign in now!", "warning")
-    app = model.Session.query(model.App)\
+    app = db.session.query(model.App)\
             .filter(model.App.short_name == short_name).first()
-    task = model.Session.query(model.Task).get(task_id)
+    task = db.session.query(model.Task).get(task_id)
     if (task.app_id == app.id):
         #return render_template('/applications/presenter.html', app = app)
         # Check if the user has submitted a task before
@@ -238,19 +239,19 @@ def task_presenter(short_name, task_id):
                 remote_addr = "127.0.0.1"
             else:
                 remote_addr = request.remote_addr
-            tr = model.Session.query(model.TaskRun)\
+            tr = db.session.query(model.TaskRun)\
                     .filter(model.TaskRun.task_id == task_id)\
                     .filter(model.TaskRun.app_id == app.id)\
                     .filter(model.TaskRun.user_ip == remote_addr)
 
         else:
-            tr = model.Session.query(model.TaskRun)\
+            tr = db.session.query(model.TaskRun)\
                     .filter(model.TaskRun.task_id == task_id)\
                     .filter(model.TaskRun.app_id == app.id)\
                     .filter(model.TaskRun.user_id == current_user.id)
 
         tr = tr.first()
-        if (tr == None):
+        if (tr is None):
             return render_template('/applications/presenter.html', app=app)
         else:
             return render_template('/applications/task/done.html', app=app)
@@ -261,13 +262,13 @@ def task_presenter(short_name, task_id):
 @blueprint.route('/<short_name>/presenter')
 @blueprint.route('/<short_name>/newtask')
 def presenter(short_name):
-    app = model.Session.query(model.App)\
+    app = db.session.query(model.App)\
           .filter(model.App.short_name == short_name).first()
     if (current_user.is_anonymous()):
-        flash("Ooops! You are an anonymous user and will not get any credit "\
+        flash("Ooops! You are an anonymous user and will not get any credit "
               "for your contributions. Sign in now!", "warning")
     if app.info.get("tutorial"):
-        if request.cookies.get(app.short_name + "tutorial") == None:
+        if request.cookies.get(app.short_name + "tutorial") is None:
             resp = make_response(render_template('/applications/tutorial.html',
                 app=app))
             resp.set_cookie(app.short_name + 'tutorial', 'seen')
@@ -280,7 +281,7 @@ def presenter(short_name):
 
 @blueprint.route('/<short_name>/tutorial')
 def tutorial(short_name):
-    app = model.Session.query(model.App)\
+    app = db.session.query(model.App)\
           .filter(model.App.short_name == short_name).first()
     return render_template('/applications/tutorial.html', app=app)
 
@@ -288,7 +289,7 @@ def tutorial(short_name):
 @blueprint.route('/<short_name>/<int:task_id>/results.json')
 def export(short_name, task_id):
     """Return a file with all the TaskRuns for a give Task"""
-    task = model.Session.query(model.Task)\
+    task = db.session.query(model.Task)\
             .filter(model.Task.id == task_id)\
             .first()
 
@@ -299,7 +300,7 @@ def export(short_name, task_id):
 @blueprint.route('/<short_name>/tasks', defaults={'page': 1})
 @blueprint.route('/<short_name>/tasks/<int:page>')
 def tasks(short_name, page):
-    application = model.Session.query(model.App).\
+    application = db.session.query(model.App).\
             filter(model.App.short_name == short_name).\
             first()
 
@@ -309,10 +310,10 @@ def tasks(short_name, page):
             require.app.update(application)
 
             per_page = 10
-            count = model.Session.query(model.Task)\
+            count = db.session.query(model.Task)\
                     .filter_by(app_id=application.id)\
                     .count()
-            tasks = model.Session.query(model.Task)\
+            tasks = db.session.query(model.Task)\
                     .filter_by(app_id=application.id)\
                     .limit(per_page)\
                     .offset((page - 1) * per_page)\
@@ -325,15 +326,16 @@ def tasks(short_name, page):
             return render_template('/applications/tasks.html',
                                     app=application,
                                     tasks=tasks,
-                                    title="Application: %s tasks" % application.name,
+                                    title="Application: %s tasks" %
+                                        application.name,
                                     pagination=pagination)
         except HTTPException:
             if not application.hidden:
                 per_page = 10
-                count = model.Session.query(model.Task)\
+                count = db.session.query(model.Task)\
                         .filter_by(app_id=application.id)\
                         .count()
-                tasks = model.Session.query(model.Task)\
+                tasks = db.session.query(model.Task)\
                         .filter_by(app_id=application.id)\
                         .limit(per_page)\
                         .offset((page - 1) * per_page)\
@@ -346,11 +348,11 @@ def tasks(short_name, page):
                 return render_template('/applications/tasks.html',
                                         app=application,
                                         tasks=tasks,
-                                        title="Application: %s tasks" % application.name,
+                                        title="Application: %s tasks" %
+                                            application.name,
                                         pagination=pagination)
             else:
                 return render_template('/applications/tasks.html',
                         app=None)
     else:
         abort(404)
-

@@ -1,5 +1,5 @@
 import json
-from base import web, model, Fixtures
+from base import web, model, Fixtures, db
 
 
 class TestAdmin:
@@ -9,7 +9,7 @@ class TestAdmin:
         #Fixtures.create()
 
     def tearDown(self):
-        model.Session.remove()
+        db.session.remove()
 
     @classmethod
     def teardown_class(cls):
@@ -106,13 +106,13 @@ class TestAdmin:
         tasks = []
         for i in range(0, 10):
             tasks.append(model.Task(app_id=appid, state='0', info={}))
-        model.Session.add_all(tasks)
-        model.Session.commit()
+        db.session.add_all(tasks)
+        db.session.commit()
 
     def delTaskRuns(self, app_id=1):
         """Deletes all TaskRuns for a given app_id"""
-        model.Session.query(model.TaskRun).filter_by(app_id=1).delete()
-        model.Session.commit()
+        db.session.query(model.TaskRun).filter_by(app_id=1).delete()
+        db.session.commit()
 
     def delete_application(self, method="POST", short_name="sampleapp"):
         """Helper function to create an application"""
@@ -154,7 +154,7 @@ class TestAdmin:
     def test_00_first_user_is_admin(self):
         """Test ADMIN First Created user is admin works"""
         self.register()
-        user = model.Session.query(model.User)\
+        user = db.session.query(model.User)\
                 .get(1)
         assert user.admin == 1, "User ID:1 should be admin, but it is not"
 
@@ -194,7 +194,7 @@ class TestAdmin:
         self.register(username="tester2",
                 email="tester2@tester.com", password="tester")
         self.signout()
-        user = model.Session.query(model.User)\
+        user = db.session.query(model.User)\
                 .get(2)
         assert user.admin == 0, "User ID: 2 should not be admin, but it is"
 

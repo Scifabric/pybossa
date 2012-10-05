@@ -17,6 +17,7 @@ from flask import Blueprint, request, url_for, flash, redirect, session
 from flaskext.login import login_user, current_user
 
 import pybossa.model as model
+from pybossa.core import db
 from pybossa.util import Facebook
 # Required to access the config parameters outside a context as we are using
 # Flask 0.8
@@ -50,7 +51,7 @@ def oauth_authorized(resp):
     next_url = request.args.get('next') or url_for('home')
     if resp is None:
         flash(u'You denied the request to sign in.', 'error')
-        flash(u'Reason: ' + request.args['error_reason'] +\
+        flash(u'Reason: ' + request.args['error_reason'] +
               ' ' + request.arts['error_description'], 'error')
         return redirect(next_url)
 
@@ -58,7 +59,7 @@ def oauth_authorized(resp):
     session['oauth_token'] = (resp['access_token'], '')
     me = facebook.oauth.get('/me')
 
-    user = model.Session.query(model.User)\
+    user = db.session.query(model.User)\
            .filter_by(facebook_user_id=me.data['id']).first()
 
     # user never signed on
@@ -69,9 +70,9 @@ def oauth_authorized(resp):
                 oauth_token=resp['access_token']
                 )
         info = dict(facebook_token=facebook_token)
-        user = model.Session.query(model.User)\
+        user = db.session.query(model.User)\
                 .filter_by(name=me.data['username']).first()
-        email = model.Session.query(model.User)\
+        email = db.session.query(model.User)\
                 .filter_by(email_addr=me.data['email']).first()
 
         if user is None and email is None:
@@ -82,10 +83,11 @@ def oauth_authorized(resp):
                     facebook_user_id=me.data['id'],
                     info=info
                     )
-            model.Session.add(user)
-            model.Session.commit()
+            db.session.add(user)
+            db.session.commit()
         else:
-            flash(u'Sorry, there is already an account with the same user name or email.', 'error') 
+            flash(u'Sorry, there is already an account with the same user name'
+                    'or email.', 'error')
             flash(u'You can create a new account and sign in', 'info')
             return redirect(url_for('account.register'))
 

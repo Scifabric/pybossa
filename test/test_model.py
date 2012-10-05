@@ -1,4 +1,4 @@
-from base import web, model
+from base import web, model, db
 import datetime
 
 class TestModel:
@@ -7,7 +7,7 @@ class TestModel:
         model.rebuild_db()
 
     def tearDown(self):
-        model.Session.remove()
+        db.session.remove()
 
     def test_all(self):
         """Test MODEL works"""
@@ -35,14 +35,14 @@ class TestModel:
         task.app = app
         task_run.task = task
         task_run.user = user
-        model.Session.add_all([user, app, task, task_run])
-        model.Session.commit()
+        db.session.add_all([user, app, task, task_run])
+        db.session.commit()
         app_id = app.id 
         user_id = user.id
 
-        model.Session.remove()
+        db.session.remove()
 
-        app = model.Session.query(model.App).get(app_id)
+        app = db.session.query(model.App).get(app_id)
         assert app.name == u'My New App', app
         # year would start with 201...
         assert app.created.startswith('201'), app.created
@@ -72,11 +72,11 @@ class TestModel:
     def test_user(self):
         """Test MODEL User works"""
         user = model.User(name=u'test-user', email_addr=u'test@xyz.org')
-        model.Session.add(user)
-        model.Session.commit()
+        db.session.add(user)
+        db.session.commit()
         user_id = user.id 
 
-        model.Session.remove()
+        db.session.remove()
         user = model.User.by_name(u'test-user')
         assert user, user
         assert len(user.api_key) == 36, user

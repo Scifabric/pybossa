@@ -3,6 +3,7 @@ import random
 
 import pybossa.web as web
 import pybossa.model as model
+from pybossa.core import db
 
 _here = os.path.dirname(__file__)
 web.app.config['TESTING'] = True
@@ -32,15 +33,15 @@ class Fixtures:
             'task_presenter': 'TaskPresenter',
             'sched': sched
             }
-        
+
         app = Fixtures.create_app(info)
         app.owner = user
 
-        model.Session.add(user)
-        model.Session.commit()
-        model.Session.add(user2)
-        model.Session.commit()
-        model.Session.add(app)
+        db.session.add(user)
+        db.session.commit()
+        db.session.add(user2)
+        db.session.commit()
+        db.session.add(app)
 
         task_info = {
             'n_answers': 10,
@@ -54,9 +55,9 @@ class Fixtures:
         # Create the task and taskruns for the first app
         for i in range (0,10):
              task, task_run = Fixtures.create_task_and_run(task_info, task_run_info, app, user,i)
-             model.Session.add_all([task, task_run])
-        model.Session.commit()
-        model.Session.remove()
+             db.session.add_all([task, task_run])
+        db.session.commit()
+        db.session.remove()
 
     @classmethod
     def create_2(cls,sched='default'):
@@ -72,7 +73,7 @@ class Fixtures:
         app = Fixtures.create_app(info)
         app.owner = user
 
-        model.Session.add_all([user, user2, app])
+        db.session.add_all([user, user2, app])
 
         task_info = {
             'n_answers': 10,
@@ -85,10 +86,10 @@ class Fixtures:
 
         # Create the task and taskruns for the first app
         task, task_run = Fixtures.create_task_and_run(task_info, task_run_info, app, user,1)
-        model.Session.add_all([task, task_run])
+        db.session.add_all([task, task_run])
 
-        model.Session.commit()
-        model.Session.remove()
+        db.session.commit()
+        db.session.remove()
 
 
     @classmethod
