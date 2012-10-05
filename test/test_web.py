@@ -1053,7 +1053,7 @@ class TestWeb:
 
 
     @patch('pybossa.view.applications.requests.get')
-    def test_33_bulk_import_non_html(self, Mock):
+    def test_34_bulk_import_non_html(self, Mock):
         html_request = FakeRequest('Not a CSV', 200, {'content-type': 'text/html'})
         Mock.return_value = html_request
         self.register()
@@ -1066,8 +1066,8 @@ class TestWeb:
 
 
     @patch('pybossa.view.applications.requests.get')
-    def test_33_bulk_import_non_html(self, Mock):
-        empty_file = FakeRequest('CSV,with,no,content\n', 200, {'content-type': 'text/html'})
+    def test_35_bulk_import_non_html(self, Mock):
+        empty_file = FakeRequest('CSV,with,no,content\n', 200, {'content-type': 'text/plain'})
         Mock.return_value = empty_file
         self.register()
         self.new_application()
@@ -1076,3 +1076,49 @@ class TestWeb:
             'csv_url': 'http://myfakecsvurl.com',
             }, follow_redirects=True)
         assert "Oops! It looks like the CSV file is empty." in res.data
+
+
+    @patch('pybossa.view.applications.requests.get')
+    def test_36_bulk_import_dup_header(self, Mock):
+        empty_file = FakeRequest('Foo,Bar,Foo\n1,2,3', 200, {'content-type': 'text/plain'})
+        Mock.return_value = empty_file
+        self.register()
+        self.new_application()
+        app = model.Session.query(model.App).first()
+        res = self.app.post(('/app/%s/import' % (app.short_name)), data={
+            'csv_url': 'http://myfakecsvurl.com',
+            }, follow_redirects=True)
+        assert "The CSV file you uploaded has two headers with the same name" in res.data
+
+
+    @patch('pybossa.view.applications.requests.get')
+    def test_37_bulk_import_no_column_names(self, Mock):
+        empty_file = FakeRequest('Foo,Bar,Baz\n1,2,3', 200, {'content-type': 'text/plain'})
+        Mock.return_value = empty_file
+        self.register()
+        self.new_application()
+        app = model.Session.query(model.App).first()
+        res = self.app.post(('/app/%s/import' % (app.short_name)), data={
+            'csv_url': 'http://myfakecsvurl.com',
+            }, follow_redirects=True)
+        task = model.Session.query(model.Task)\
+                .first()
+        assert '{"Baz": "3", "Foo": "1", "Bar": "2"}' == task.info
+        assert "Tasks imported successfully!" in res.data
+
+
+    @patch('pybossa.view.applications.requests.get')
+    def test_38_bulk_import_with_column_name(self, Mock):
+        empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3', 200, {'content-type': 'text/plain'})
+        Mock.return_value = empty_file
+        self.register()
+        self.new_application()
+        app = model.Session.query(model.App).first()
+        res = self.app.post(('/app/%s/import' % (app.short_name)), data={
+            'csv_url': 'http://myfakecsvurl.com',
+            }, follow_redirects=True)
+        task = model.Session.query(model.Task)\
+                .first()
+        assert '{"Foo": "1", "Bar": "2"}' == task.info
+        assert task.priority_0 == 3
+        assert "Tasks imported successfully!" in res.data
