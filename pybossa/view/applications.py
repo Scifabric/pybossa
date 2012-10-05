@@ -246,11 +246,12 @@ def import_task(short_name):
                   " that file!", 'error')
             return render_template('/applications/import.html',
                     app=application, form=form)
-        if (not 'text/plain' in r.headers['content-type'] or not 'text/csv'
+        if (not 'text/plain' in r.headers['content-type'] and not 'text/csv'
                 in r.headers['content-type']):
             flash("Oops! That file doesn't look like a CSV file.", 'error')
             return render_template('/applications/import.html',
                     app=application, form=form)
+        empty = True
         csvcontent = StringIO(r.text)
         csvreader = unicode_csv_reader(csvcontent)
         # TODO: check for errors
@@ -262,9 +263,11 @@ def import_task(short_name):
             for row in csvreader:
                 if not headers:
                     headers = row
-                    if headers != list(set(headers)):
-                        # Duplicate header names
-                        pass
+                    if len(headers) != len(set(headers)):
+                        flash('The CSV file you uploaded has two headers with'
+                              ' the same name.', 'error')
+                        return render_template('/applications/import.html',
+                            app=application, form=form)
                     field_headers = set(headers) & fields
                     for field in field_headers:
                         field_header_index.append(headers.index(field))
@@ -279,8 +282,9 @@ def import_task(short_name):
                     task.info = json.dumps(info)
                     model.Session.add(task)
                     model.Session.commit()
-            else:
-                flash('Oops! Looks like that was an empty file!', 'error')
+                    empty = False
+            if empty:
+                flash('Oops! It looks like the CSV file is empty.', 'error')
                 return render_template('/applications/import.html',
                     app=application, form=form)
             flash('Tasks imported successfully!', 'success')
