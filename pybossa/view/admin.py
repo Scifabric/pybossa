@@ -24,6 +24,7 @@ from flaskext.login import login_required, current_user
 from flaskext.wtf import Form, TextField
 
 import pybossa.model as model
+from pybossa.core import db
 from pybossa.util import admin_required
 from sqlalchemy import or_, func
 import json
@@ -47,34 +48,34 @@ def index():
 def featured(app_id=None):
     """List featured apps of PyBossa"""
     if request.method == 'GET':
-        apps = model.Session.query(model.App).all()
-        featured = model.Session.query(model.Featured).all()
+        apps = db.session.query(model.App).all()
+        featured = db.session.query(model.Featured).all()
         return render_template('/admin/applications.html', apps=apps,
                 featured=featured)
     if request.method == 'POST':
         f = model.Featured()
         f.app_id = app_id
         # Check if the app is already in this table
-        tmp = model.Session.query(model.Featured)\
+        tmp = db.session.query(model.Featured)\
                 .filter(model.Featured.app_id == app_id)\
                 .first()
-        if (tmp == None):
-            model.Session.add(f)
-            model.Session.commit()
+        if (tmp is None):
+            db.session.add(f)
+            db.session.commit()
             return json.dumps(f.dictize())
         else:
-            return json.dumps({'error': 'App.id %s already in Featured table'\
+            return json.dumps({'error': 'App.id %s already in Featured table'
                     % app_id})
     if request.method == 'DELETE':
-        f = model.Session.query(model.Featured)\
+        f = db.session.query(model.Featured)\
                 .filter(model.Featured.app_id == app_id)\
                 .first()
         if (f):
-            model.Session.delete(f)
-            model.Session.commit()
+            db.session.delete(f)
+            db.session.commit()
             return "", 204
         else:
-            return json.dumps({'error': 'App.id %s is not in Featured table'\
+            return json.dumps({'error': 'App.id %s is not in Featured table'
                     % app_id})
 
 
@@ -88,20 +89,20 @@ class SearchForm(Form):
 def users(user_id=None):
     """Manage users of PyBossa"""
     form = SearchForm(request.form)
-    users = model.Session.query(model.User)\
+    users = db.session.query(model.User)\
             .filter(model.User.admin == True)\
             .filter(model.User.id != current_user.id)\
             .all()
 
     if request.method == 'POST' and form.user.data:
         query = '%' + form.user.data.lower() + '%'
-        found = model.Session.query(model.User)\
-                .filter(or_(func.lower(model.User.name).like(query),\
+        found = db.session.query(model.User)\
+                .filter(or_(func.lower(model.User.name).like(query),
                             func.lower(model.User.fullname).like(query)))\
                 .filter(model.User.id != current_user.id)\
                 .all()
         if not found:
-            flash("<strong>Ooops!</strong> We didn't find a user "\
+            flash("<strong>Ooops!</strong> We didn't find a user "
                   "matching your query: <strong>%s</strong>" % form.user.data)
         return render_template('/admin/users.html', found=found, users=users,
                 title="Manage Admin Users", form=form)
@@ -116,11 +117,11 @@ def users(user_id=None):
 def add_admin(user_id=None):
     """Add admin flag for user_id"""
     if user_id:
-        user = model.Session.query(model.User)\
+        user = db.session.query(model.User)\
                 .get(user_id)
         if user:
             user.admin = True
-            model.Session.commit()
+            db.session.commit()
             return redirect(url_for(".users"))
         else:
             return abort(404)
@@ -132,11 +133,11 @@ def add_admin(user_id=None):
 def del_admin(user_id=None):
     """Del admin flag for user_id"""
     if user_id:
-        user = model.Session.query(model.User)\
+        user = db.session.query(model.User)\
                 .get(user_id)
         if user:
             user.admin = False
-            model.Session.commit()
+            db.session.commit()
             return redirect(url_for('.users'))
         else:
             return abort(404)

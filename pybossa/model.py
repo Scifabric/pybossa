@@ -35,7 +35,7 @@ from pybossa.util import pretty_date
 
 log = logging.getLogger(__name__)
 
-Session = db.session
+#Session = db.session
 
 def make_timestamp():
     now = datetime.datetime.now()
@@ -330,7 +330,7 @@ class User(db.Model, DomainObject, flaskext.login.UserMixin):
     @classmethod
     def by_name(cls, name):
         '''Lookup user by (user)name.'''
-        return Session.query(User).filter_by(name=name).first()
+        return db.session.query(User).filter_by(name=name).first()
 
     ## Relationships
     #: `Task`s for this user

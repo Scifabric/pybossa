@@ -3,7 +3,7 @@ import json
 
 from flaskext.login import current_user
 
-from base import web, model, Fixtures
+from base import web, model, Fixtures, db
 from nose.tools import assert_equal
 
 
@@ -15,7 +15,7 @@ class TestAPI:
         self.endpoints = ['app', 'task', 'taskrun']
 
     def tearDown(self):
-        model.Session.remove()
+        db.session.remove()
 
     @classmethod
     def teardown_class(cls):
@@ -69,10 +69,10 @@ class TestAPI:
             info = dict(a=0)
             task = model.Task(app_id=1, info=info)
             taskrun = model.TaskRun(app_id=1, task_id=1)
-            model.Session.add(app)
-            model.Session.add(task)
-            model.Session.add(taskrun)
-        model.Session.commit()
+            db.session.add(app)
+            db.session.add(task)
+            db.session.add(taskrun)
+        db.session.commit()
 
         res = self.app.get('/api/app')
         data = json.loads(res.data)
@@ -294,12 +294,12 @@ class TestAPI:
         res = self.app.post('/api/app?api_key=' + Fixtures.api_key,
             data=data,
         )
-        out = model.Session.query(model.App).filter_by(name=name).one()
+        out = db.session.query(model.App).filter_by(name=name).one()
         assert out, out
         assert_equal(out.short_name, 'xxxx-project'), out
         assert_equal(out.owner.name, 'tester')
         id_ = out.id
-        model.Session.remove()
+        db.session.remove()
 
         # test update
         data = {
@@ -323,7 +323,7 @@ class TestAPI:
             data=datajson
         )
         assert_equal(res.status, '200 OK', res.data)
-        out2 = model.Session.query(model.App).get(id_)
+        out2 = db.session.query(model.App).get(id_)
         assert_equal(out2.name, data['name'])
 
         # test delete
@@ -346,10 +346,10 @@ class TestAPI:
 
     def test_05_task_post(self):
         '''Test API Task creation and auth'''
-        user = model.Session.query(model.User)\
+        user = db.session.query(model.User)\
                 .filter_by(name=Fixtures.name)\
                 .one()
-        app = model.Session.query(model.App)\
+        app = db.session.query(model.App)\
                 .filter_by(owner_id=user.id)\
                 .one()
         data = dict(
@@ -385,7 +385,7 @@ class TestAPI:
         )
         assert res.data, res
         datajson = json.loads(res.data)
-        out = model.Session.query(model.Task)\
+        out = db.session.query(model.Task)\
                 .filter_by(id=datajson['id'])\
                 .one()
         assert out, out
@@ -419,7 +419,7 @@ class TestAPI:
             data=datajson
         )
         assert_equal(res.status, '200 OK', res.data)
-        out2 = model.Session.query(model.Task).get(id_)
+        out2 = db.session.query(model.Task).get(id_)
         assert_equal(out2.state, data['state'])
 
         ##########
@@ -441,17 +441,17 @@ class TestAPI:
                 (id_, Fixtures.api_key))
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
-        tasks = model.Session.query(model.Task)\
+        tasks = db.session.query(model.Task)\
                 .filter_by(app_id=app.id)\
                 .all()
         assert tasks, tasks
 
     def test_06_taskrun_post(self):
         """Test API TaskRun creation and auth"""
-        app = model.Session.query(model.App)\
+        app = db.session.query(model.App)\
                 .filter_by(short_name=Fixtures.app_name)\
                 .one()
-        tasks = model.Session.query(model.Task)\
+        tasks = db.session.query(model.Task)\
                 .filter_by(app_id=app.id)
 
         app_id = app.id
@@ -470,7 +470,7 @@ class TestAPI:
         res = self.app.post('/api/taskrun',
                 data=datajson)
 
-        taskrun = model.Session.query(model.TaskRun)\
+        taskrun = db.session.query(model.TaskRun)\
                 .filter_by(info=data['info'])\
                 .one()
         _id_anonymous = taskrun.id
@@ -482,7 +482,7 @@ class TestAPI:
         res = self.app.post('/api/taskrun?api_key=%s' % Fixtures.api_key,
             data=datajson
         )
-        taskrun = model.Session.query(model.TaskRun)\
+        taskrun = db.session.query(model.TaskRun)\
                 .filter_by(app_id=app_id)\
                 .all()[-1]
         _id = taskrun.id
@@ -500,7 +500,7 @@ class TestAPI:
         # No one can update anonymous TaskRuns
         res = self.app.put('/api/taskrun/%s' %\
                 _id_anonymous, data=datajson)
-        taskrun = model.Session.query(model.TaskRun)\
+        taskrun = db.session.query(model.TaskRun)\
                 .filter_by(id=_id_anonymous)\
                 .one()
         assert taskrun, taskrun
@@ -519,7 +519,7 @@ class TestAPI:
         res = self.app.put('/api/taskrun/%s?api_key=%s' %\
                 (_id, Fixtures.api_key), data=datajson)
         assert_equal(res.status, '200 OK', res.data)
-        out2 = model.Session.query(model.TaskRun).get(_id)
+        out2 = db.session.query(model.TaskRun).get(_id)
         assert_equal(out2.info, data['info'])
         assert_equal(out2.user.name, Fixtures.name)
 
@@ -549,14 +549,14 @@ class TestAPI:
                 (_id, Fixtures.api_key))
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
-        tasks = model.Session.query(model.Task)\
+        tasks = db.session.query(model.Task)\
                 .filter_by(app_id=app_id)\
                 .all()
         assert tasks, tasks
 
     def test_taskrun_newtask(self):
         """Test API App.new_task method and authentication"""
-        app = model.Session.query(model.App)\
+        app = db.session.query(model.App)\
                 .filter_by(short_name=Fixtures.app_name)\
                 .one()
 
@@ -578,8 +578,8 @@ class TestAPI:
         assert_equal(task['app_id'], app.id)
 
         # test wit no TaskRun items in the db
-        model.Session.query(model.TaskRun).delete()
-        model.Session.commit()
+        db.session.query(model.TaskRun).delete()
+        db.session.commit()
 
         # anonymous
         # test getting a new task
@@ -598,13 +598,13 @@ class TestAPI:
     def test_07_user_progress_anonymous(self):
         """Test API userprogress as anonymous works"""
         self.signout()
-        app = model.Session.query(model.App)\
+        app = db.session.query(model.App)\
                 .get(1)
-        tasks = model.Session.query(model.Task)\
+        tasks = db.session.query(model.Task)\
                 .filter(model.Task.app_id == app.id)\
                 .all()
 
-        taskruns = model.Session.query(model.TaskRun)\
+        taskruns = db.session.query(model.TaskRun)\
                 .filter(model.TaskRun.app_id == app.id)\
                 .filter(model.TaskRun.user_id == 1)\
                 .all()
@@ -626,8 +626,8 @@ class TestAPI:
                 user_id=1,
                 info={'answer': u'annakarenina'}
                 )
-        model.Session.add(tr)
-        model.Session.commit()
+        db.session.add(tr)
+        db.session.commit()
 
         res = self.app.get('/api/app/1/userprogress', follow_redirects=True)
         data = json.loads(res.data)
@@ -641,16 +641,16 @@ class TestAPI:
         """Test API userprogress as an authenticated user works"""
         self.register()
         self.signin()
-        user = model.Session.query(model.User)\
+        user = db.session.query(model.User)\
                 .filter(model.User.name == 'johndoe')\
                 .first()
-        app = model.Session.query(model.App)\
+        app = db.session.query(model.App)\
                 .get(1)
-        tasks = model.Session.query(model.Task)\
+        tasks = db.session.query(model.Task)\
                 .filter(model.Task.app_id == app.id)\
                 .all()
 
-        taskruns = model.Session.query(model.TaskRun)\
+        taskruns = db.session.query(model.TaskRun)\
                 .filter(model.TaskRun.app_id == app.id)\
                 .filter(model.TaskRun.user_id == user.id)\
                 .all()
@@ -672,8 +672,8 @@ class TestAPI:
                 user_id=user.id,
                 info={'answer': u'annakarenina'}
                 )
-        model.Session.add(tr)
-        model.Session.commit()
+        db.session.add(tr)
+        db.session.commit()
 
         res = self.app.get('/api/app/1/userprogress', follow_redirects=True)
         data = json.loads(res.data)
