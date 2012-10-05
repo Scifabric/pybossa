@@ -3,12 +3,14 @@ import json
 from base import web, model, Fixtures
 from mock import patch
 from collections import namedtuple
+from pybossa.core import db
 
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
 
 class TestWeb:
+
     def setUp(self):
         self.app = web.app.test_client()
         model.rebuild_db()
@@ -73,8 +75,8 @@ class TestWeb:
                     'id': id,
                     'fullname': fullname,
                     'name': name,
-                    'email_addr': email_addr
-                }, follow_redirects=True)
+                    'email_addr': email_addr},
+                follow_redirects=True)
         else:
             return self.app.get("/account/profile/update",
                                 follow_redirects=True)
@@ -189,7 +191,6 @@ class TestWeb:
         assert "Most active volunteers" in res.data, res
         assert "Sample App" in res.data, res
 
-
     def test_02a_stats_hidden_apps(self):
         """Test WEB leaderboard does not show hidden apps"""
         self.register()
@@ -216,7 +217,6 @@ class TestWeb:
         assert "Most active applications" in res.data, res
         assert "Most active volunteers" in res.data, res
         assert "Sample App" not in res.data, res
-
 
     def test_03_register(self):
         """Test WEB register user works"""
@@ -340,7 +340,8 @@ class TestWeb:
                 in res.data, res
         assert "John Doe" in res.data, res
         assert "Save the changes" in res.data, res
-        assert '<a href="/account/profile" class="btn">Cancel</a>' in res.data, res
+        assert '<a href="/account/profile" class="btn">Cancel</a>' in \
+                res.data, res
 
         res = self.update_profile(fullname="John Doe 2",
                                   email_addr="johndoe2@example.com")
@@ -597,7 +598,8 @@ class TestWeb:
                                       new_description="New description",
                                       new_long_description=u'New long desc',
                                       new_hidden=True)
-        #assert self.html_title("Application: New Sample App") in res.data, res.data
+        #assert self.html_title("Application: New Sample App")
+        #in res.data, res.data
         assert "Application updated!" in res.data, res
 
     def test_13_hidden_applications(self):
@@ -620,11 +622,12 @@ class TestWeb:
         self.update_application(new_hidden=True)
 
         res = self.app.get('/app/', follow_redirects=True)
-        assert "Sample App" not in res.data, "Applications should be hidden in the index"
+        assert "Sample App" not in res.data, ("Applications should be hidden"
+                                              "in the index")
 
         res = self.app.get('/app/sampleapp', follow_redirects=True)
-        assert "Sample App" in res.data, "Application should be shown to the owner"
-
+        assert "Sample App" in res.data, ("Application should be shown to"
+                                          "the owner")
 
     def test_14_delete_application(self):
         """Test WEB delete application works"""
@@ -681,7 +684,8 @@ class TestWeb:
 
         app = db.session.query(model.App).first()
 
-        res = self.app.get('app/' + app.short_name + "/tasks", follow_redirects=True)
+        res = self.app.get('app/%s/tasks' % (app.short_name),
+                           follow_redirects=True)
         assert "Sample App" in res.data, res.data
         assert 'Task <span class="label label-success">#1</span>'\
                 in res.data, res.data
@@ -727,7 +731,8 @@ class TestWeb:
 
         app = db.session.query(model.App).first()
 
-        res = self.app.get('app/' + app.short_name + "/tasks", follow_redirects=True)
+        res = self.app.get('app/%s/tasks' % (app.short_name),
+                           follow_redirects=True)
         assert "Sample App" in res.data, res.data
         assert 'Task <span class="label label-info">#1</span>'\
                 in res.data, res.data
@@ -982,28 +987,28 @@ class TestWeb:
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
         assert "some help" not in res.data
 
-
     def test_30_app_id_owner(self):
         """Test WEB application page shows the ID to the owner"""
         self.register()
         self.new_application()
 
         res = self.app.get('/app/sampleapp', follow_redirects=True)
-        assert "Sample App" in res.data, "Application should be shown to the owner"
+        assert "Sample App" in res.data, ("Application should be shown to "
+                                          "the owner")
         assert '<strong><i class="icon-cog"></i> ID</strong>: 1' in res.data,\
                 "Application ID should be shown to the owner"
 
-
     def test_30_app_id_anonymous_user(self):
-        """Test WEB application page does not  show the ID to anonymous users"""
+        """Test WEB application page does not show the ID to anonymous users"""
         self.register()
         self.new_application()
         self.signout()
 
         res = self.app.get('/app/sampleapp', follow_redirects=True)
-        assert "Sample App" in res.data, "Application name should be shown to users"
-        assert '<strong><i class="icon-cog"></i> ID</strong>: 1' not in res.data,\
-                "Application ID should be shown to the owner"
+        assert "Sample App" in res.data, ("Application name should be shown"
+                                          " to users")
+        assert '<strong><i class="icon-cog"></i> ID</strong>: 1' not in \
+            res.data, "Application ID should be shown to the owner"
 
     def test_31_user_profile_progress(self):
         """Test WEB user progress profile page works"""
@@ -1028,97 +1033,97 @@ class TestWeb:
     def test_32_oauth_password(self):
         """Test WEB user sign in without password works"""
         user = model.User(
-                email_addr = "johndoe@johndoe.com",
-                name = "johndoe",
-                passwd_hash = None,
-                fullname = "John Doe",
-                api_key = "api-key")
+                email_addr="johndoe@johndoe.com",
+                name="johndoe",
+                passwd_hash=None,
+                fullname="John Doe",
+                api_key="api-key")
         db.session.add(user)
         db.session.commit()
         res = self.signin()
         assert "Incorrect email/password" in res.data, res.data
 
-
     @patch('pybossa.view.applications.requests.get')
     def test_33_bulk_import_unauthorized(self, Mock):
-        unauthorized_request = FakeRequest('Unauthorized', 403, {'content-type': 'text/csv'})
+        unauthorized_request = FakeRequest('Unauthorized', 403,
+                                           {'content-type': 'text/csv'})
         Mock.return_value = unauthorized_request
         self.register()
         self.new_application()
-        app = model.Session.query(model.App).first()
+        app = db.session.query(model.App).first()
         res = self.app.post(('/app/%s/import' % (app.short_name)), data={
             'csv_url': 'http://myfakecsvurl.com',
             }, follow_redirects=True)
-        assert "Oops! It looks like you don't have permission to access that file!" in res.data
-
+        assert ("Oops! It looks like you don't have permission to access"
+                " that file!") in res.data
 
     @patch('pybossa.view.applications.requests.get')
     def test_34_bulk_import_non_html(self, Mock):
-        html_request = FakeRequest('Not a CSV', 200, {'content-type': 'text/html'})
+        html_request = FakeRequest('Not a CSV', 200,
+                                   {'content-type': 'text/html'})
         Mock.return_value = html_request
         self.register()
         self.new_application()
-        app = model.Session.query(model.App).first()
+        app = db.session.query(model.App).first()
         res = self.app.post(('/app/%s/import' % (app.short_name)), data={
             'csv_url': 'http://myfakecsvurl.com',
             }, follow_redirects=True)
         assert "Oops! That file doesn't look like a CSV file." in res.data
 
-
     @patch('pybossa.view.applications.requests.get')
     def test_35_bulk_import_non_html(self, Mock):
-        empty_file = FakeRequest('CSV,with,no,content\n', 200, {'content-type': 'text/plain'})
+        empty_file = FakeRequest('CSV,with,no,content\n', 200,
+                                 {'content-type': 'text/plain'})
         Mock.return_value = empty_file
         self.register()
         self.new_application()
-        app = model.Session.query(model.App).first()
+        app = db.session.query(model.App).first()
         res = self.app.post(('/app/%s/import' % (app.short_name)), data={
             'csv_url': 'http://myfakecsvurl.com',
             }, follow_redirects=True)
         assert "Oops! It looks like the CSV file is empty." in res.data
 
-
     @patch('pybossa.view.applications.requests.get')
     def test_36_bulk_import_dup_header(self, Mock):
-        empty_file = FakeRequest('Foo,Bar,Foo\n1,2,3', 200, {'content-type': 'text/plain'})
+        empty_file = FakeRequest('Foo,Bar,Foo\n1,2,3', 200,
+                                 {'content-type': 'text/plain'})
         Mock.return_value = empty_file
         self.register()
         self.new_application()
-        app = model.Session.query(model.App).first()
+        app = db.session.query(model.App).first()
         res = self.app.post(('/app/%s/import' % (app.short_name)), data={
             'csv_url': 'http://myfakecsvurl.com',
             }, follow_redirects=True)
-        assert "The CSV file you uploaded has two headers with the same name" in res.data
-
+        assert "The CSV file you uploaded has two headers with the same" \
+                " name" in res.data
 
     @patch('pybossa.view.applications.requests.get')
     def test_37_bulk_import_no_column_names(self, Mock):
-        empty_file = FakeRequest('Foo,Bar,Baz\n1,2,3', 200, {'content-type': 'text/plain'})
+        empty_file = FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
+                                 {'content-type': 'text/plain'})
         Mock.return_value = empty_file
         self.register()
         self.new_application()
-        app = model.Session.query(model.App).first()
+        app = db.session.query(model.App).first()
         res = self.app.post(('/app/%s/import' % (app.short_name)), data={
             'csv_url': 'http://myfakecsvurl.com',
             }, follow_redirects=True)
-        task = model.Session.query(model.Task)\
-                .first()
+        task = db.session.query(model.Task).first()
         assert '{"Baz": "3", "Foo": "1", "Bar": "2"}' == task.info
         assert "Tasks imported successfully!" in res.data
 
-
     @patch('pybossa.view.applications.requests.get')
     def test_38_bulk_import_with_column_name(self, Mock):
-        empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3', 200, {'content-type': 'text/plain'})
+        empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
+                                 {'content-type': 'text/plain'})
         Mock.return_value = empty_file
         self.register()
         self.new_application()
-        app = model.Session.query(model.App).first()
+        app = db.session.query(model.App).first()
         res = self.app.post(('/app/%s/import' % (app.short_name)), data={
             'csv_url': 'http://myfakecsvurl.com',
             }, follow_redirects=True)
-        task = model.Session.query(model.Task)\
-                .first()
+        task = db.session.query(model.Task).first()
         assert '{"Foo": "1", "Bar": "2"}' == task.info
         assert task.priority_0 == 3
         assert "Tasks imported successfully!" in res.data

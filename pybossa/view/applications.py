@@ -36,24 +36,13 @@ blueprint = Blueprint('app', __name__)
 class AppForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
     name = TextField('Name', [validators.Required(),
-                              Unique(
-                                  db.session,
-                                  model.App,
-                                  model.App.name,
-                                  message="Name is already taken.")])
+                Unique(db.session, model.App, model.App.name, message="Name "
+                "is already taken.")])
     short_name = TextField('Short Name', [validators.Required(),
-                                          Unique(
-                                              db.session,
-                                              model.App,
-                                              model.App.short_name,
-                                              message="Short Name is already \
-                                                      taken.")
-                                          ])
+                    Unique(db.session, model.App, model.App.short_name,
+                    message="Short Name is already taken.")])
     description = TextField('Description', [validators.Required(
-                                                        message="You must \
-                                                                provide a \
-                                                                description.")
-                                           ])
+                    message="You must provide a description.")])
     long_description = TextAreaField('Long Description')
     hidden = BooleanField('Hide?')
 
@@ -63,12 +52,13 @@ class BulkTaskImportForm(Form):
                 "provide a URL"), validators.URL(message="Oops! That's not a"
                 "valid URL. You must provide a valid URL")])
 
+
 @blueprint.route('/')
 def index():
     if require.app.read():
         apps = db.session.query(model.App)\
                 .filter(model.App.hidden == 0)
-        featured = model.Session.query(model.Featured)\
+        featured = db.session.query(model.Featured)\
                 .all()
         apps_featured = []
         apps_with_tasks = []
@@ -231,7 +221,7 @@ def details(short_name, page):
 
 @blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
 def import_task(short_name):
-    application = model.Session.query(model.App)\
+    application = db.session.query(model.App)\
             .filter(model.App.short_name == short_name).first()
     form = BulkTaskImportForm(request.form, csrf_enabled=False)
     if form.validate_on_submit():
@@ -275,8 +265,8 @@ def import_task(short_name):
                         else:
                             info[headers[index]] = cell
                     task.info = json.dumps(info)
-                    model.Session.add(task)
-                    model.Session.commit()
+                    db.session.add(task)
+                    db.session.commit()
                     empty = False
             if empty:
                 flash('Oops! It looks like the CSV file is empty.', 'error')
@@ -284,10 +274,10 @@ def import_task(short_name):
                     app=application, form=form)
             flash('Tasks imported successfully!', 'success')
         except:
-            flash('Oops! Looks like there was an error with processing that file!', 'error')
+            flash('Oops! Looks like there was an error with processing '
+                  'that file!', 'error')
     return render_template('/applications/import.html',
             app=application, form=form)
-
 
 
 @blueprint.route('/<short_name>/task/<int:task_id>')

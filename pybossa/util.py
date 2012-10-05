@@ -13,14 +13,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-import json
 from datetime import timedelta
 from functools import update_wrapper
 import csv
 from flask import abort, request, make_response, current_app
 from functools import wraps
-from flaskext.wtf import Form, TextField, PasswordField, validators,\
-    ValidationError
+from flaskext.wtf import ValidationError
 from flaskext.oauth import OAuth
 from flaskext.login import current_user
 from math import ceil
@@ -28,6 +26,7 @@ from math import ceil
 
 def jsonpify(f):
     """Wraps JSONified output for JSONP"""
+
     @wraps(f)
     def decorated_function(*args, **kwargs):
         callback = request.args.get('callback', False)
@@ -42,6 +41,7 @@ def jsonpify(f):
 
 def admin_required(f):
     """Checks if the user is and admin or not"""
+
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if current_user.admin:
@@ -53,6 +53,7 @@ def admin_required(f):
 
 class Unique(object):
     """Validator that checks field uniqueness"""
+
     def __init__(self, session, model, field, message=None):
         self.session = session
         self.model = model
@@ -94,6 +95,7 @@ def crossdomain(origin=None, methods=None, headers=None,
         return options_resp.headers['allow']
 
     def decorator(f):
+
         def wrapped_function(*args, **kwargs):
             if automatic_options and request.method == 'OPTIONS':
                 resp = current_app.make_default_options_response()
@@ -116,7 +118,7 @@ def crossdomain(origin=None, methods=None, headers=None,
     return decorator
 
 
-# From http://stackoverflow.com/questions/1551382/python-user-friendly-time-format
+# From http://stackoverflow.com/q/1551382
 def pretty_date(time=False):
     """
     Get a datetime object or a int() Epoch timestamp and return a
@@ -186,14 +188,13 @@ class Pagination(object):
                    right_edge=0):
         last = 0
         for num in xrange(1, self.pages + 1):
-            if num <= left_edge or \
-                    (num > self.page - left_current -1 and
-                     num < self.page + right_current) or \
-                     num > self.pages - right_edge:
-                         if last + 1 != num:
-                             yield None
-                         yield num
-                         last = num
+            if (num <= left_edge or (num > self.page - left_current -1 and
+                    num < self.page + right_current) or num > self.pages -
+                    right_edge):
+                if last + 1 != num:
+                    yield None
+                yield num
+                last = num
 
 
 class Twitter:
@@ -219,8 +220,7 @@ class Twitter:
             authorize_url='http://api.twitter.com/oauth/authenticate',
             # the consumer keys from the twitter application registry.
             consumer_key=c_k,  # app.config['TWITTER_CONSUMER_KEY'],
-            consumer_secret=c_s  # app.config['TWITTER_CONSUMER_KEY']
-        )
+            consumer_secret=c_s)  # app.config['TWITTER_CONSUMER_KEY']
 
 
 class Facebook:
@@ -234,8 +234,7 @@ class Facebook:
             authorize_url='https://www.facebook.com/dialog/oauth',
             consumer_key=c_k,  # app.config['FACEBOOK_APP_ID'],
             consumer_secret=c_s,  # app.config['FACEBOOK_APP_SECRET']
-            request_token_params={'scope': 'email'}
-        )
+            request_token_params={'scope': 'email'})
 
 
 def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
