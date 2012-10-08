@@ -258,7 +258,7 @@ def import_task(short_name):
                         field_header_index.append(headers.index(field))
                 else:
                     info = {}
-                    task = model.Task()
+                    task = model.Task(app=application)
                     for index, cell in enumerate(row):
                         if index in field_header_index:
                             setattr(task, headers[index], cell)
