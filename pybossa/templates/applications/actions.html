@@ -7,6 +7,7 @@
       <hr>
           <div class="span12" style="text-align:center">
               <a class="btn btn-info"   href="{{ url_for('app.update', short_name = app.short_name) }}"><i class="icon-edit icon-white"></i> Edit the application</a>
+              <a class="btn btn-info"   href="{{ url_for('app.import_task', short_name = app.short_name) }}"><i class="icon-tasks icon-white"></i> Import tasks</a>
               <a class="btn btn-danger" href="{{ url_for('app.delete', short_name = app.short_name) }}"><i class="icon-trash icon-white"></i> Delete the application</a>
           </div>
   </div>

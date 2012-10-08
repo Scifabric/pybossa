@@ -1,0 +1,22 @@
+{% extends "/base.html" %}
+{% set active_page = "applications" %}
+{% set active_app  = app.short_name %}
+
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+<div class="row">
+  <div class="span11 offset1">
+    <legend>Import Tasks</legend>
+    <form class="form-horizontal" method="post" action="{{ url_for('app.import_task', short_name=app.short_name) }}">
+      <fieldset>
+        {{ render_field(form.csv_url, class_="input-xlarge", placeholder="The URL of the CSV file") }}
+        <div class="form-actions">
+          <input type="submit" value="Import" class="btn btn-primary" />
+          <a href="{{ url_for('app.details', short_name=app.short_name) }}" class="btn">Cancel</a>
+        </div>
+      </fieldset>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
