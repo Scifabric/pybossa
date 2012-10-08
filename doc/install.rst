@@ -14,14 +14,11 @@ Pre-requisites:
 Install the code and requirements (you may wish to create a virtualenv first)::
 
   # get the source
-  git clone https://github.com/PyBossa/pybossa
+  git clone --recursive https://github.com/PyBossa/pybossa
   cd pybossa
   # [optional] create virtualenv first
   # virtualenv ~/{my-virtualenv}
   pip install -e .
-  # finally install pybossa.js as a git submodule
-  git submodule init
-  git submodule update
 
 .. note:
 
