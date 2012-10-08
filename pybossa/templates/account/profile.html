@@ -71,7 +71,7 @@
               <h5><i class="icon-time"></i> Joined: <small>{{ user.created[0:10] }}</small></h5>
               <h5><i class="icon-key"></i> API key: <small>{{ user.api_key }}</small></h5>
               <div style="text-align:center">
-                  <a href="#" class="btn btn-large"><i class="icon icon-lock"></i> Change your Password</a>
+                  <a href="{{ url_for('account.change_password') }}" class="btn btn-large"><i class="icon icon-lock"></i> Change your Password</a>
                   <a href="{{ url_for('account.update_profile') }}" class="btn btn-large"><i class="icon icon-user"></i> Update your profile</a>
               </div>
           </div>
