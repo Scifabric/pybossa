@@ -70,13 +70,15 @@ def signin():
 
     if request.method == 'POST' and not form.validate():
         flash('Please correct the errors', 'error')
-    auth = {'twitter': False, 'facebook': False}
+    auth = {'twitter': False, 'facebook': False, 'google': False}
     if current_user.is_anonymous():
         # If Twitter is enabled in config, show the Twitter Sign in button
         if ('twitter' in current_app.blueprints):
                 auth['twitter'] = True
         if ('facebook' in current_app.blueprints):
                 auth['facebook'] = True
+        if ('google' in current_app.blueprints):
+                auth['google'] = True
         return render_template('account/signin.html', title="Sign in",
                 form=form, auth=auth, next=request.args.get('next'))
     else:

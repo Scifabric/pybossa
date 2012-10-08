@@ -310,6 +310,8 @@ class User(db.Model, DomainObject, flaskext.login.UserMixin):
     twitter_user_id = Column(BigInteger, unique=True)
     # Facebook user_id field
     facebook_user_id = Column(BigInteger, unique=True)
+    # Google user_id field
+    google_user_id = Column(String, unique=True)
     #: arbitrary additional information about the user in a JSON dict.
     info = Column(JSONType, default=dict)
 
