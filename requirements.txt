@@ -8,3 +8,4 @@ Flask-SQLAlchemy
 dateutils
 alembic
 psycopg2
+requests
