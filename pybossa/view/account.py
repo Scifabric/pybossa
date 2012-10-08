@@ -224,3 +224,19 @@ def update_profile():
             return render_template('/account/update.html', form=form,
                                     title='Update your profile: %s' %
                                             current_user.fullname)
+
+
+class ChangePasswordForm(Form):
+    old_password = PasswordField('Old Password')
+    new_password = PasswordField('New Password',
+            [validators.Required(message="Password cannot be empty"),
+                validators.EqualTo('confirm', message='Passwords must match')])
+
+    confirm = PasswordField('Repeat Password')
+
+
+@blueprint.route('/profile/password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    form = ChangePasswordForm(request.form)
+    return render_template('/account/password.html', form=form)
