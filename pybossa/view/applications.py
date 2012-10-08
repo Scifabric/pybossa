@@ -13,6 +13,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+from StringIO import StringIO
+import requests
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response
 from flask import render_template, make_response
 from flaskext.wtf import Form, IntegerField, TextField, BooleanField, \
@@ -23,8 +25,7 @@ from werkzeug.exceptions import HTTPException
 
 import pybossa.model as model
 from pybossa.core import db
-from pybossa.util import Unique
-from pybossa.util import Pagination
+from pybossa.util import Unique, Pagination, unicode_csv_reader
 from pybossa.auth import require
 
 import json
@@ -35,26 +36,21 @@ blueprint = Blueprint('app', __name__)
 class AppForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
     name = TextField('Name', [validators.Required(),
-                              Unique(
-                                  db.session,
-                                  model.App,
-                                  model.App.name,
-                                  message="Name is already taken.")])
+                Unique(db.session, model.App, model.App.name, message="Name "
+                "is already taken.")])
     short_name = TextField('Short Name', [validators.Required(),
-                                          Unique(
-                                              db.session,
-                                              model.App,
-                                              model.App.short_name,
-                                              message="Short Name is already \
-                                                      taken.")
-                                          ])
+                    Unique(db.session, model.App, model.App.short_name,
+                    message="Short Name is already taken.")])
     description = TextField('Description', [validators.Required(
-                                                        message="You must \
-                                                                provide a \
-                                                                description.")
-                                           ])
+                    message="You must provide a description.")])
     long_description = TextAreaField('Long Description')
     hidden = BooleanField('Hide?')
+
+
+class BulkTaskImportForm(Form):
+    csv_url = TextField('CSV URL', [validators.Required(message="You must "
+                "provide a URL"), validators.URL(message="Oops! That's not a"
+                "valid URL. You must provide a valid URL")])
 
 
 @blueprint.route('/')
@@ -221,6 +217,68 @@ def details(short_name, page):
                         app=None)
     else:
         abort(404)
+
+
+@blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
+def import_task(short_name):
+    application = db.session.query(model.App)\
+            .filter(model.App.short_name == short_name).first()
+    form = BulkTaskImportForm(request.form, csrf_enabled=False)
+    if form.validate_on_submit():
+        r = requests.get(form.csv_url.data)
+        if r.status_code == 403:
+            flash("Oops! It looks like you don't have permission to access"
+                  " that file!", 'error')
+            return render_template('/applications/import.html',
+                    app=application, form=form)
+        if (not 'text/plain' in r.headers['content-type'] and not 'text/csv'
+                in r.headers['content-type']):
+            flash("Oops! That file doesn't look like a CSV file.", 'error')
+            return render_template('/applications/import.html',
+                    app=application, form=form)
+        empty = True
+        csvcontent = StringIO(r.text)
+        csvreader = unicode_csv_reader(csvcontent)
+        # TODO: check for errors
+        headers = []
+        fields = set(['state', 'quorum', 'calibration', 'priority_0',
+                'n_answers'])
+        field_header_index = []
+        try:
+            for row in csvreader:
+                if not headers:
+                    headers = row
+                    if len(headers) != len(set(headers)):
+                        flash('The CSV file you uploaded has two headers with'
+                              ' the same name.', 'error')
+                        return render_template('/applications/import.html',
+                            app=application, form=form)
+                    field_headers = set(headers) & fields
+                    for field in field_headers:
+                        field_header_index.append(headers.index(field))
+                else:
+                    info = {}
+                    task = model.Task(app=application)
+                    for index, cell in enumerate(row):
+                        if index in field_header_index:
+                            setattr(task, headers[index], cell)
+                        else:
+                            info[headers[index]] = cell
+                    task.info = json.dumps(info)
+                    db.session.add(task)
+                    db.session.commit()
+                    empty = False
+            if empty:
+                flash('Oops! It looks like the CSV file is empty.', 'error')
+                return render_template('/applications/import.html',
+                    app=application, form=form)
+            flash('Tasks imported successfully!', 'success')
+            return redirect(url_for('.details', short_name=application.short_name))
+        except:
+            flash('Oops! Looks like there was an error with processing '
+                  'that file!', 'error')
+    return render_template('/applications/import.html',
+            app=application, form=form)
 
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
