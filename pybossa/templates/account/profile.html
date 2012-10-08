@@ -2,8 +2,8 @@
 {% set active_page = "profile" %}
 
 {% macro render_twitter_btn(app) %}
-<a href="https://twitter.com/share" class="twitter-share-button" 
-    data-text="I've done {{app.c}} tasks for the @PyBossa project: {{app.name}}. Do you want to help? {{url_for('app.details',short_name=app.short_name,_external=True)}}"  
+<a href="https://twitter.com/share" class="twitter-share-button"
+    data-text="I've done {{app.c}} tasks for the @PyBossa project: {{app.name}}. Do you want to help? {{url_for('app.details',short_name=app.short_name,_external=True)}}"
     data-count="none">Tweet</a>
     <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
 {% endmacro %}
@@ -71,6 +71,7 @@
               <h5><i class="icon-time"></i> Joined: <small>{{ user.created[0:10] }}</small></h5>
               <h5><i class="icon-key"></i> API key: <small>{{ user.api_key }}</small></h5>
               <div style="text-align:center">
+                  <a href="#" class="btn btn-large"><i class="icon icon-lock"></i> Change your Password</a>
                   <a href="{{ url_for('account.update_profile') }}" class="btn btn-large"><i class="icon icon-user"></i> Update your profile</a>
               </div>
           </div>
@@ -105,7 +106,7 @@
                     <li><strong>Last Submitted Task:</strong> {{ app.last_activity() }}</li>
                     {% endif %}
                     <li><strong>Hidden</strong>: {% if app.hidden == 1 %}
-                        <i class="icon icon-eye-close"></i> Yes {% else %} 
+                        <i class="icon icon-eye-close"></i> Yes {% else %}
                         <i class="icon icon-eye-open"></i> No {% endif %}
                     </li>
                     </ul>
@@ -145,7 +146,7 @@
                     <li><strong>Last Submitted Task:</strong> {{ app.last_activity() }}</li>
                     {% endif %}
                     <li><strong>Hidden</strong>: {% if app.hidden == 1 %}
-                        <i class="icon icon-eye-close"></i> Yes {% else %} 
+                        <i class="icon icon-eye-close"></i> Yes {% else %}
                         <i class="icon icon-eye-open"></i> No {% endif %}
                     </li>
                     </ul>
