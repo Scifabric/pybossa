@@ -18,8 +18,9 @@ from functools import update_wrapper
 import csv
 from flask import abort, request, make_response, current_app
 from functools import wraps
-from flaskext.wtf import ValidationError
-from flaskext.oauth import OAuth
+from flaskext.wtf import Form, TextField, PasswordField, validators,\
+    ValidationError
+from flask_oauth import OAuth
 from flaskext.login import current_user
 from math import ceil
 
@@ -207,17 +208,17 @@ class Twitter:
             # unless absolute urls are used to make requests,
             # this will be added before all URLs. This is also true for
             # request_token_url and others.
-            base_url='http://api.twitter.com/1/',
+            base_url='https://api.twitter.com/1/',
             # where flask should look for new request tokens
-            request_token_url='http://api.twitter.com/oauth/request_token',
+            request_token_url='https://api.twitter.com/oauth/request_token',
             # where flask should exchange the token with the remote application
-            access_token_url='http://api.twitter.com/oauth/access_token',
+            access_token_url='https://api.twitter.com/oauth/access_token',
             # twitter knows two authorizatiom URLs. /authorize and
             # /authenticate. They mostly work the same, but for sign
             # on /authenticate is expected because this will give
             # the user a slightly different
             # user interface on the twitter side.
-            authorize_url='http://api.twitter.com/oauth/authenticate',
+            authorize_url='https://api.twitter.com/oauth/authenticate',
             # the consumer keys from the twitter application registry.
             consumer_key=c_k,  # app.config['TWITTER_CONSUMER_KEY'],
             consumer_secret=c_s)  # app.config['TWITTER_CONSUMER_KEY']
@@ -251,3 +252,20 @@ def utf_8_encoder(unicode_csv_data):
     # This code is taken from http://docs.python.org/library/csv.html#examples
     for line in unicode_csv_data:
         yield line.encode('utf-8')
+
+
+class Google:
+    oauth = OAuth()
+
+    def __init__(self, c_k, c_s):
+        self.oauth = self.oauth.remote_app('google',
+                base_url='https://www.google.com/accounts/',
+                authorize_url='https://accounts.google.com/o/oauth2/auth',
+                request_token_url=None,
+                request_token_params={'scope': 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+                                      'response_type': 'code'},
+                access_token_url='https://accounts.google.com/o/oauth2/token',
+                access_token_method='POST',
+                access_token_params={'grant_type': 'authorization_code'},
+                consumer_key=c_k,
+                consumer_secret=c_s)
