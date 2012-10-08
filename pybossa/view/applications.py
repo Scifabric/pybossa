@@ -273,6 +273,7 @@ def import_task(short_name):
                 return render_template('/applications/import.html',
                     app=application, form=form)
             flash('Tasks imported successfully!', 'success')
+            return redirect(url_for('.details', short_name=application.short_name))
         except:
             flash('Oops! Looks like there was an error with processing '
                   'that file!', 'error')
