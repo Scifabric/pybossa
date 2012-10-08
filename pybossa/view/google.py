@@ -22,6 +22,7 @@ from pybossa.util import Google
 # Flask 0.8
 # See http://goo.gl/tbhgF for more info
 from pybossa.core import app, db
+import requests
 
 # This blueprint will be activated in web.py if the FACEBOOK APP ID and SECRET
 # are available
@@ -49,9 +50,53 @@ def get_google_token():
         return (current_user.info['google_token']['oauth_token'], '')
 
 
+def manage_user(access_token, user_data, next_url):
+    """Manage the user after signin"""
+    # We have to store the oauth_token in the session to get the USER fields
+
+    print access_token
+    print user_data
+
+    user = db.session.query(model.User)\
+           .filter_by(google_user_id=user_data['id'])\
+           .first()
+
+    # user never signed on
+    if user is None:
+        google_token = dict(
+                oauth_token=access_token
+                )
+        info = dict(google_token=google_token)
+        user = db.session.query(model.User)\
+                .filter_by(fullname=user_data['name'])\
+                .first()
+
+        email = db.session.query(model.User)\
+                .filter_by(email_addr=user_data['email'])\
+                .first()
+
+        if user is None and email is None:
+            user = model.User(
+                    fullname=user_data['name'],
+                    name=user_data['name'],
+                    email_addr=user_data['email'],
+                    google_user_id=user_data['id'],
+                    info=info
+                    )
+            db.session.add(user)
+            db.session.commit()
+            return user
+        else:
+            return None
+    else:
+        return user
+
+
 @blueprint.route('/oauth_authorized')
 @google.oauth.authorized_handler
 def oauth_authorized(resp):
+    print "OAUTH authorized method called"
+    print resp
     next_url = request.args.get('state') or url_for('home')
 
     if resp is None or request.args.get('error'):
@@ -61,60 +106,28 @@ def oauth_authorized(resp):
                 return redirect(url_for('account.signin'))
         return redirect(next_url)
 
-    from urllib2 import Request, urlopen, URLError
-
     headers = {'Authorization': ' '.join(['OAuth', resp['access_token']])}
-    req = Request('https://www.googleapis.com/oauth2/v1/userinfo',
-            None, headers)
+    url = 'https://www.googleapis.com/oauth2/v1/userinfo'
     try:
-        res = urlopen(req)
-    except URLError, e:
+        r = requests.get(url, headers=headers)
+    except requests.exceptions.http_error:
         # Unauthorized - bad token
-        if e.code == 401:
+        if r.status_code == 401:
             return redirect(url_for('account.signin'))
-        return res.read()
+        return r.content
 
-    # We have to store the oauth_token in the session to get the USER fields
-    session['oauth_token'] = (resp['access_token'], '')
+    access_token = resp['access_token']
+    session['oauth_token'] = access_token
     import json
-    me = json.loads(res.read())
-
-    user = db.session.query(model.User)\
-           .filter_by(google_user_id=me['id'])\
-           .first()
-
-    # user never signed on
+    user_data = json.loads(r.content)
+    user = manage_user(access_token, user_data, next_url)
     if user is None:
-        google_token = dict(
-                oauth_token=resp['access_token']
-                )
-        info = dict(google_token=google_token)
-        user = db.session.query(model.User)\
-                .filter_by(fullname=me['name'])\
-                .first()
-
-        email = db.session.query(model.User)\
-                .filter_by(email_addr=me['email'])\
-                .first()
-
-        if user is None and email is None:
-            user = model.User(
-                    fullname=me['name'],
-                    name=me['name'],
-                    email_addr=me['email'],
-                    google_user_id=me['id'],
-                    info=info
-                    )
-            db.session.add(user)
-            db.session.commit()
-        else:
-            flash(u'Sorry, there is already an account with'
-                    ' the same user name or e-mail.',
-                    'error')
-            flash(u'You can create a new account and sign in', 'info')
-            return redirect(url_for('account.register'))
-
-    login_user(user, remember=True)
-    flash("Welcome back %s" % user.fullname, 'success')
-
-    return redirect(next_url)
+        flash(u'Sorry, there is already an account with'
+                ' the same user name or e-mail.',
+                'error')
+        flash(u'You can create a new account and sign in', 'info')
+        return redirect(url_for('account.register'))
+    else:
+        login_user(user, remember=True)
+        flash("Welcome back %s" % user.fullname, 'success')
+        return redirect(next_url)
