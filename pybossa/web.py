@@ -63,6 +63,18 @@ except Exception as inst:
     print inst
     print "Facebook singin disabled"
 
+# Enable Google if available
+try:
+    if (app.config['GOOGLE_CLIENT_ID'] and app.config['GOOGLE_CLIENT_SECRET']):
+        from pybossa.view.google import blueprint as google 
+        app.register_blueprint(google, url_prefix='/google')
+except Exception as inst:
+    print type(inst)
+    print inst.args
+    print inst
+    print "Google singin disabled"
+
+
 
 def url_for_other_page(page):
     args = request.view_args.copy()

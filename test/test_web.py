@@ -1045,6 +1045,7 @@ class TestWeb:
 
     @patch('pybossa.view.applications.requests.get')
     def test_33_bulk_import_unauthorized(self, Mock):
+        """Test WEB bulk import unauthorized works"""
         unauthorized_request = FakeRequest('Unauthorized', 403,
                                            {'content-type': 'text/csv'})
         Mock.return_value = unauthorized_request
@@ -1059,6 +1060,7 @@ class TestWeb:
 
     @patch('pybossa.view.applications.requests.get')
     def test_34_bulk_import_non_html(self, Mock):
+        """Test WEB bulk import non html works"""
         html_request = FakeRequest('Not a CSV', 200,
                                    {'content-type': 'text/html'})
         Mock.return_value = html_request
@@ -1072,6 +1074,7 @@ class TestWeb:
 
     @patch('pybossa.view.applications.requests.get')
     def test_35_bulk_import_non_html(self, Mock):
+        """Test WEB bulk import non html works"""
         empty_file = FakeRequest('CSV,with,no,content\n', 200,
                                  {'content-type': 'text/plain'})
         Mock.return_value = empty_file
@@ -1085,6 +1088,7 @@ class TestWeb:
 
     @patch('pybossa.view.applications.requests.get')
     def test_36_bulk_import_dup_header(self, Mock):
+        """Test WEB bulk import duplicate header works"""
         empty_file = FakeRequest('Foo,Bar,Foo\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
         Mock.return_value = empty_file
@@ -1099,6 +1103,7 @@ class TestWeb:
 
     @patch('pybossa.view.applications.requests.get')
     def test_37_bulk_import_no_column_names(self, Mock):
+        """Test WEB bulk import no column names works"""
         empty_file = FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
         Mock.return_value = empty_file
@@ -1114,6 +1119,7 @@ class TestWeb:
 
     @patch('pybossa.view.applications.requests.get')
     def test_38_bulk_import_with_column_name(self, Mock):
+        """Test WEB bulk import with column name works"""
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
         Mock.return_value = empty_file
@@ -1127,3 +1133,61 @@ class TestWeb:
         assert '{"Foo": "1", "Bar": "2"}' == task.info
         assert task.priority_0 == 3
         assert "Tasks imported successfully!" in res.data
+
+    def test_39_google_oauth_creation(self):
+        """Test WEB Google OAuth creation of user works"""
+        fake_response = {
+                u'access_token': u'access_token',
+                u'token_type': u'Bearer',
+                u'expires_in': 3600,
+                u'id_token': u'token'}
+
+        fake_user = {
+        u'family_name': u'Doe', u'name': u'John Doe',
+        u'picture': u'https://goo.gl/img.jpg',
+        u'locale': u'en',
+        u'gender': u'male',
+        u'email': u'john@gmail.com',
+        u'birthday': u'0000-01-15',
+        u'link': u'https://plus.google.com/id',
+        u'given_name': u'John',
+        u'id': u'111111111111111111111',
+        u'verified_email': True}
+
+        from pybossa.view import google
+        response_user = google.manage_user(fake_response['access_token'],
+                fake_user, None)
+
+        user = db.session.query(model.User)\
+                .get(1)
+
+        assert user.email_addr == response_user.email_addr, response_user
+
+    def test_40_google_oauth_creation(self):
+        """Test WEB Google OAuth detects same user name/email works"""
+        fake_response = {
+                u'access_token': u'access_token',
+                u'token_type': u'Bearer',
+                u'expires_in': 3600,
+                u'id_token': u'token'}
+
+        fake_user = {
+        u'family_name': u'Doe', u'name': u'John Doe',
+        u'picture': u'https://goo.gl/img.jpg',
+        u'locale': u'en',
+        u'gender': u'male',
+        u'email': u'john@gmail.com',
+        u'birthday': u'0000-01-15',
+        u'link': u'https://plus.google.com/id',
+        u'given_name': u'John',
+        u'id': u'111111111111111111111',
+        u'verified_email': True}
+
+        self.register()
+        self.signout()
+
+        from pybossa.view import google
+        response_user = google.manage_user(fake_response['access_token'],
+                fake_user, None)
+
+        assert response_user is None, response_user

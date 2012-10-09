@@ -1,0 +1,133 @@
+# This file is part of PyBOSSA.
+#
+# PyBOSSA is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# PyBOSSA is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+
+from flask import Blueprint, request, url_for, flash, redirect, session
+from flaskext.login import login_user, current_user
+
+import pybossa.model as model
+from pybossa.util import Google
+# Required to access the config parameters outside a context as we are using
+# Flask 0.8
+# See http://goo.gl/tbhgF for more info
+from pybossa.core import app, db
+import requests
+
+# This blueprint will be activated in web.py if the FACEBOOK APP ID and SECRET
+# are available
+blueprint = Blueprint('google', __name__)
+google = Google(app.config['GOOGLE_CLIENT_ID'],
+                    app.config['GOOGLE_CLIENT_SECRET'])
+
+
+@blueprint.route('/', methods=['GET', 'POST'])
+def login():
+    if request.args.get("next") or request.args.get('state'):
+        request_token_params = {'scope': 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+                'response_type': 'code',
+                'state': request.args.get("state")}
+        google.oauth.request_token_params = request_token_params
+    return google.oauth.authorize(callback=url_for('.oauth_authorized',
+            _external=True))
+
+
+@google.oauth.tokengetter
+def get_google_token():
+    if current_user.is_anonymous():
+        return session.get('oauth_token')
+    else:
+        return (current_user.info['google_token']['oauth_token'], '')
+
+
+def manage_user(access_token, user_data, next_url):
+    """Manage the user after signin"""
+    # We have to store the oauth_token in the session to get the USER fields
+
+    print access_token
+    print user_data
+
+    user = db.session.query(model.User)\
+           .filter_by(google_user_id=user_data['id'])\
+           .first()
+
+    # user never signed on
+    if user is None:
+        google_token = dict(
+                oauth_token=access_token
+                )
+        info = dict(google_token=google_token)
+        user = db.session.query(model.User)\
+                .filter_by(fullname=user_data['name'])\
+                .first()
+
+        email = db.session.query(model.User)\
+                .filter_by(email_addr=user_data['email'])\
+                .first()
+
+        if user is None and email is None:
+            user = model.User(
+                    fullname=user_data['name'],
+                    name=user_data['name'],
+                    email_addr=user_data['email'],
+                    google_user_id=user_data['id'],
+                    info=info
+                    )
+            db.session.add(user)
+            db.session.commit()
+            return user
+        else:
+            return None
+    else:
+        return user
+
+
+@blueprint.route('/oauth_authorized')
+@google.oauth.authorized_handler
+def oauth_authorized(resp):
+    print "OAUTH authorized method called"
+    print resp
+    next_url = request.args.get('state') or url_for('home')
+
+    if resp is None or request.args.get('error'):
+        flash(u'You denied the request to sign in.', 'error')
+        flash(u'Reason: ' + request.args['error'], 'error')
+        if request.args.get('error'):
+                return redirect(url_for('account.signin'))
+        return redirect(next_url)
+
+    headers = {'Authorization': ' '.join(['OAuth', resp['access_token']])}
+    url = 'https://www.googleapis.com/oauth2/v1/userinfo'
+    try:
+        r = requests.get(url, headers=headers)
+    except requests.exceptions.http_error:
+        # Unauthorized - bad token
+        if r.status_code == 401:
+            return redirect(url_for('account.signin'))
+        return r.content
+
+    access_token = resp['access_token']
+    session['oauth_token'] = access_token
+    import json
+    user_data = json.loads(r.content)
+    user = manage_user(access_token, user_data, next_url)
+    if user is None:
+        flash(u'Sorry, there is already an account with'
+                ' the same user name or e-mail.',
+                'error')
+        flash(u'You can create a new account and sign in', 'info')
+        return redirect(url_for('account.register'))
+    else:
+        login_user(user, remember=True)
+        flash("Welcome back %s" % user.fullname, 'success')
+        return redirect(next_url)
