@@ -5,6 +5,7 @@ import optparse
 import inspect
 
 import pybossa.model as model
+from pybossa.core import db
 import pybossa.web as web
 
 from alembic.config import Config
@@ -12,9 +13,7 @@ from alembic import command
 
 def db_create():
     '''Create the db'''
-    dburi = web.app.config['SQLALCHEMY_DATABASE_URI']
-    engine = model.create_engine(dburi)
-    model.Base.metadata.create_all(bind=engine)
+    db.create_all()
     # then, load the Alembic configuration and generate the
     # version table, "stamping" it with the most recent rev:
     alembic_cfg = Config("alembic.ini")
@@ -22,10 +21,8 @@ def db_create():
 
 def db_rebuild():
     '''Rebuild the db'''
-    dburi = web.app.config['SQLALCHEMY_DATABASE_URI']
-    engine = model.create_engine(dburi)
-    model.Base.metadata.drop_all(bind=engine)
-    model.Base.metadata.create_all(bind=engine)
+    db.drop_all()
+    db.create_all()
     # then, load the Alembic configuration and generate the
     # version table, "stamping" it with the most recent rev:
     alembic_cfg = Config("alembic.ini")
@@ -33,18 +30,15 @@ def db_rebuild():
 
 def fixtures():
     '''Create some fixtures!'''
-    dburi = web.app.config['SQLALCHEMY_DATABASE_URI']
-    engine = model.create_engine(dburi)
-    model.set_engine(engine)
     user = model.User(
         name=u'tester',
         email_addr=u'tester@tester.org',
         api_key='tester'
         )
     user.set_password(u'tester')
-    model.Session.add(user)
-    model.Session.commit()
-    
+    db.session.add(user)
+    db.session.commit()
+
 
 ## ==================================================
 ## Misc stuff for setting up a command line interface
