@@ -100,6 +100,12 @@ For a list of TaskRuns use::
     items, use the keyword **limit=N** with **N** being a number to get that
     amount.
 
+.. note::
+    You can use the keyword **offset=N** in any **GET** query to skip that many 
+    rows before beginning to get rows. If both **offset** and **limit** appear, 
+    then **offset** rows are skipped before starting to count the **limit** rows 
+    that are returned.
+
 Get
 ~~~
 

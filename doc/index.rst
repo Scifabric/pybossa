@@ -40,6 +40,11 @@ Developer Guide
 
 This section covers how to use or contribute to PyBossa as a developer.
 
+.. toctree::
+   :maxdepth: 2
+
+   developer
+
 Deploying PyBossa
 =================
 
