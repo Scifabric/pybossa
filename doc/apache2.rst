@@ -96,3 +96,40 @@ The content of this file is the following::
 Restart the web server and you should be able to see your PyBossa web
 application up and running in http://example.com
 
+Configuring a maintenance mode
+------------------------------
+
+The service will be updated from time to time, so in order to show the
+maintenance of your site, you can use the **pybossa-maintenance** template
+in the *contrib* folder to enable this mode.
+
+The solution is really simple, we set up a new virtual host that will redirect
+all the requests to the maintenance web page. The steps to use this solution
+are the following:
+
+ * Copy pybossa-maintenance to Apache2 **sites-available** folder
+ * Enable the Headers mod for Apache: a2enmod headers
+ * Restart Apache2
+
+Once you have set up the server, if you want to enable the **maintenance mode**
+all you have to do is run the following commands::
+
+  # a2dissite pybossa-site
+  # a2ensite pybossa-maintenance
+  # service apache2 reload
+
+As you can see, we first disable the current configuration for pybossa, then we 
+enable the redirections, and finally we force the server to re-read the
+configuration. 
+
+.. note::
+    Be sure to create a maintenance.html file in the **DocumentRoot** of your
+    Apache server, otherwise it will not work.
+
+To going into production mode again, just run the following commands::
+
+ # a2dissite pybossa-maintenance
+ # a2ensite pybossa-site
+ # service apache2 reload
+
+You can integrate this into your deployment system without too many problems.

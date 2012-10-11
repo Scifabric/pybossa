@@ -1,0 +1,12 @@
+<VirtualHost *:80>
+    DocumentRoot /var/www
+    DirectoryIndex maintenance.html
+
+    RewriteEngine on
+    
+    RewriteCond %{REQUEST_URI} !^/maintenance.html
+    RewriteRule ^.*$ maintenance.html [L,R]
+
+    Header set cache-control "max-age=0,must-revalidate,post-check=0,pre-check=0"
+    Header set Expires -1
+</VirtualHost>
