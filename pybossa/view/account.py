@@ -56,7 +56,7 @@ class LoginForm(Form):
 
 @blueprint.route('/signin', methods=['GET', 'POST'])
 def signin():
-    form = LoginForm(request.form)
+    form = LoginForm(request.form, csrf_enabled=False)
     if request.method == 'POST' and form.validate():
         password = form.password.data
         username = form.username.data
@@ -140,7 +140,7 @@ class UpdateProfileForm(Form):
 @blueprint.route('/register', methods=['GET', 'POST'])
 def register():
     # TODO: re-enable csrf
-    form = RegisterForm(request.form)
+    form = RegisterForm(request.form, csrf_enabled=False)
     if request.method == 'POST' and form.validate():
         account = model.User(
             fullname=form.fullname.data,
@@ -197,14 +197,14 @@ def profile():
 @blueprint.route('/profile/update', methods=['GET', 'POST'])
 @login_required
 def update_profile():
-    form = UpdateProfileForm(obj=current_user)
+    form = UpdateProfileForm(obj=current_user, csrf_enabled=False)
     form.populate_obj(current_user)
     if request.method == 'GET':
         return render_template('account/update.html',
                 title="Update your profile: %s" % current_user.fullname,
                 form=form)
     else:
-        form = UpdateProfileForm(request.form)
+        form = UpdateProfileForm(request.form, csrf_enabled=False)
         if form.validate():
             new_profile = model.User(
                     id=form.id.data,

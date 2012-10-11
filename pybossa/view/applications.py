@@ -90,7 +90,7 @@ def index():
 @login_required
 def new():
     if require.app.create():
-        form = AppForm(request.form)
+        form = AppForm(request.form, csrf_enabled=False)
         if request.method == 'POST' and form.validate():
             application = model.App(
                 name=form.name.data,
@@ -147,7 +147,7 @@ def update(short_name):
                 .filter(model.App.short_name == short_name).first()
         if require.app.update(application):
             if request.method == 'GET':
-                form = AppForm(obj=application)
+                form = AppForm(obj=application, csrf_enabled=False)
                 form.populate_obj(application)
                 return render_template('/applications/update.html',
                                         title="Update the application: %s"
@@ -156,7 +156,7 @@ def update(short_name):
                                         app=application)
 
             if request.method == 'POST':
-                form = AppForm(request.form)
+                form = AppForm(request.form, csrf_enabled=False)
                 if form.validate():
                     if form.hidden.data:
                         hidden = 1
@@ -223,7 +223,7 @@ def details(short_name, page):
 def import_task(short_name):
     application = db.session.query(model.App)\
             .filter(model.App.short_name == short_name).first()
-    form = BulkTaskImportForm(request.form)
+    form = BulkTaskImportForm(request.form, csrf_enabled=False)
     if form.validate_on_submit():
         r = requests.get(form.csv_url.data)
         if r.status_code == 403:
