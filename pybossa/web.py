@@ -114,6 +114,8 @@ def global_template_context():
         title=app.config['TITLE'],
         copyright=app.config['COPYRIGHT'],
         description=app.config['DESCRIPTION'],
+        terms_of_use=app.config['TERMSOFUSE'],
+        data_use=app.config['DATAUSE'],
         version=pybossa.__version__,
         current_user=current_user,
         )
