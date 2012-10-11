@@ -7,8 +7,7 @@ PyBossa is a python web application built using the Flask micro-framework.
 Pre-requisites:
 
   * Python >= 2.6, <3.0
-  * A database plus Python bindings (any database compatible with SQLAlchemy is fine
-    but current devs tend to use PostgreSQL)
+  * A database plus Python bindings for PostgreSQL
   * pip for installing python packages (e.g. on ubuntu python-pip)
 
 Install the code and requirements (you may wish to create a virtualenv first)::
@@ -19,12 +18,6 @@ Install the code and requirements (you may wish to create a virtualenv first)::
   # [optional] create virtualenv first
   # virtualenv ~/{my-virtualenv}
   pip install -e .
-
-.. note:
-
-   If you are using a database other than sqlite you will need to install an
-   appropriate connector library installed. For example, for Postgresql you
-   should install the psycopg2 library.
 
 Create a settings file and enter your SQLAlchemy DB URI (you can also override
 default settings as needed)::
@@ -57,4 +50,3 @@ Run the web server::
 Open in your web browser the following URL::
 
   http://localhost:5000
-
