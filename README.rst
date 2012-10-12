@@ -1,3 +1,6 @@
+.. image:: https://travis-ci.org/PyBossa/pybossa.png
+   :target: https://travis-ci.org/#!/PyBossa/pybossa
+
 PyBossa is an open source platform for crowd-sourcing online (volunteer)
 assistance to perform tasks that require human cognition, knowledge or
 intelligence (e.g. image classification, transcription, information location
