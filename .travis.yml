@@ -1,0 +1,13 @@
+language: python
+python:
+  - "2.6"
+  - "2.7"
+env: PYBOSSA_SETTINGS='../settings_test.py'
+install:
+  - python setup.py install
+before_script
+  - psql -c 'create database pybossa;' -U postgres
+script: nosetests
+notifications:
+  email: false
+  irc: "irc.freenode.net#pybossa"
