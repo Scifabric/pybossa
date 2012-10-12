@@ -1211,3 +1211,15 @@ class TestWeb:
             'confirm': "p4ssw0rd",
             }, follow_redirects=True)
         assert "Your current password doesn't match the one in our records" in res.data
+
+    def test_42_password_link(self):
+        """Test visibility of password change link"""
+        self.register()
+        res = self.app.get('/account/profile')
+        assert "Change your Password" in res.data
+        user = model.User.query.get(1)
+        user.twitter_user_id = 1234
+        db.session.add(user)
+        db.session.commit()
+        res = self.app.get('/account/profile')
+        assert "Change your Password" not in res.data
