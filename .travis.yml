@@ -9,5 +9,5 @@ before_script:
   - psql -c 'create database pybossa;' -U postgres
 script: nosetests
 notifications:
-  - email: false
-  - irc: "irc.freenode.net#pybossa"
+  email: false
+
