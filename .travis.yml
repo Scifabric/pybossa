@@ -10,4 +10,4 @@ before_script:
 script: nosetests
 notifications:
   email: false
-
+  irc: "irc.freenode.net#okfn-dev"
