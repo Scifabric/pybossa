@@ -13,3 +13,4 @@ doc/_build
 *.coverage
 alembic.ini
 pybossa/templates/custom_footer.html
+pybossa/templates/home/_other_projects.html

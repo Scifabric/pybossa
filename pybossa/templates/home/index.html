@@ -64,11 +64,7 @@
       <hr>
       <!-- Example row of columns -->
       <div class="row">
-        <div class="span4">
-          <h2>Get Started</h2>
-          <p>It's really simple to start contributing.</p>
-          <p><a href="{{ url_for('app.index') }}" class="btn">Start now &raquo;</a></p>
-        </div>
+        {% include 'home/_other_projects.html' ignore missing %}
         <div class="span4">
           <h2>Stats</h2>
           <ul>
@@ -77,14 +73,13 @@
             <li>Task count: {{ stats['task'] }}</li>
             <li>Task Run count: {{ stats['taskrun'] }}</li>
           </ul>
-          <p><a href="{{ url_for('stats.index') }}" class="btn">The Leaderboard &raquo;</a></p>
+          <p><a href="{{ url_for('stats.index') }}" class="btn"><i class="icon-trophy"></i> The Leaderboard &raquo;</a></p>
         </div>
         <div class="span4">
-          <h2>Why Contribute</h2>
+          <h2>Why Contribute?</h2>
           <ul>
             <li>Help advance research</li>
             <li>Everything is open and freely usable</li>
-            <li>Things computers can't do</li>
           </ul>
         </div>
       </div>
