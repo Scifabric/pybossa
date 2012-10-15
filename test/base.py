@@ -9,6 +9,7 @@ _here = os.path.dirname(__file__)
 web.app.config['TESTING'] = True
 web.app.config['CSRF_ENABLED'] = False
 web.app.config['SQLALCHEMY_DATABASE_URI'] = web.app.config['SQLALCHEMY_DATABASE_TEST_URI']
+web.app.config['CSRF_ENABLED'] = False
 #engine = model.create_engine(web.app.config['SQLALCHEMY_DATABASE_URI'])
 #model.set_engine(engine)
 
