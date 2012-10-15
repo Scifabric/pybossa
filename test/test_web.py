@@ -1192,7 +1192,6 @@ class TestWeb:
 
         assert response_user is None, response_user
 
-
     def test_41_password_change(self):
         """Test password changing"""
         password = "mehpassword"
