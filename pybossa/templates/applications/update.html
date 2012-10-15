@@ -10,6 +10,7 @@
     <form class="form-horizontal" method="post" action="{{ url_for('app.update', short_name = app.short_name) }}">
       <fieldset>
         {{form.id}}
+        {{ form.hidden_tag() }}
         {{ render_field(form.name, class_="input-xlarge", placeholder="The name of the application") }}
         {{ render_field(form.short_name, class_="input-xlarge", placeholder="Short name or slug for the application") }}
         {{ render_field(form.description, class_="input-xlarge", placeholder="Give some details about the application")}}

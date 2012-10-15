@@ -9,6 +9,7 @@
     <legend>Import Tasks</legend>
     <form class="form-horizontal" method="post" action="{{ url_for('app.import_task', short_name=app.short_name) }}">
       <fieldset>
+      {{ form.hidden_tag() }}
         {{ render_field(form.csv_url, class_="input-xlarge", placeholder="The URL of the CSV file") }}
         <div class="form-actions">
           <input type="submit" value="Import" class="btn btn-primary" />
