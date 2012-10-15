@@ -7,6 +7,7 @@
     <div class="span12">
         {% from "_formhelpers.html" import render_field %}
         <form class="form-search" method="POST">
+        {{ form.hidden_tag() }}
         <input id="user" name="user" type="text" class="input-large search-query" placeholder="Try with the full name or nick">
         <button type="submit" class="btn">Search</button>
         </form>
@@ -30,11 +31,11 @@
             <h4>{{user.name}}</h4>
             <h6>Member since: {{user.created[0:10]}}</h6>
             {% if user.admin %}
-            <a href="{{url_for('admin.del_admin', user_id=user.id)}}" class="btn btn-danger"> 
+            <a href="{{url_for('admin.del_admin', user_id=user.id)}}" class="btn btn-danger">
                 <i class="icon-remove"></i>
                 Remove from admin group</a>
             {% else %}
-            <a href="{{url_for('admin.add_admin', user_id=user.id)}}" class="btn btn-primary"> 
+            <a href="{{url_for('admin.add_admin', user_id=user.id)}}" class="btn btn-primary">
                 <i class="icon-plus"></i>
                 Add to admin group</a>
             {% endif %}
@@ -57,11 +58,11 @@
             <h4>{{user.name}}</h4>
             <h6>Member since: {{user.created[0:10]}}</h6>
             {% if user.admin %}
-            <a href="{{url_for('admin.del_admin', user_id=user.id)}}" class="btn btn-danger"> 
+            <a href="{{url_for('admin.del_admin', user_id=user.id)}}" class="btn btn-danger">
                 <i class="icon-remove"></i>
                 Remove from admin group</a>
             {% else %}
-            <a href="{{url_for('admin.add_admin', user_id=user.id)}}" class="btn btn-primary"> 
+            <a href="{{url_for('admin.add_admin', user_id=user.id)}}" class="btn btn-primary">
                 <i class="icon-plus"></i>
                 Add to admin group</a>
             {% endif %}

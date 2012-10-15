@@ -8,6 +8,7 @@
   <div class="span11 offset1">
     <legend>Create a new application</legend>
     <form class="form-horizontal" method="post" action="{{ url_for('app.new') }}">
+    {{ form.hidden_tag() }}
       <fieldset>
         {{ render_field(form.name, class_="input-xlarge", placeholder="The name of the application") }}
         {{ render_field(form.short_name, class_="input-xlarge", placeholder="Short name or slug for the application") }}
