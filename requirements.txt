@@ -9,3 +9,4 @@ dateutils
 alembic
 psycopg2
 requests
+itsdangerous

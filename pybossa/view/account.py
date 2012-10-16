@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+from itsdangerous import BadData
 from flask import Blueprint, request, url_for, flash, redirect, session, abort
 from flask import render_template, current_app
 from flaskext.login import login_required, login_user, logout_user,\
@@ -21,7 +22,7 @@ from flaskext.wtf import Form, TextField, PasswordField, validators,\
         ValidationError, IntegerField, HiddenInput
 
 import pybossa.model as model
-from pybossa.core import db
+from pybossa.core import db, signer
 from pybossa.util import Unique
 from pybossa.util import Pagination
 from pybossa.util import Twitter
@@ -251,3 +252,40 @@ def change_password():
     if request.method == 'POST' and not form.validate():
         flash('Please correct the errors', 'error')
     return render_template('/account/password.html', form=form)
+
+
+class ResetPasswordForm(Form):
+    new_password = PasswordField('New Password',
+            [validators.Required(message="Password cannot be empty"),
+                validators.EqualTo('confirm', message='Passwords must match')])
+    confirm = PasswordField('Repeat Password')
+
+
+@blueprint.route('/reset-password', methods=['GET', 'POST'])
+def reset_password():
+    key = request.args.get('key')
+    if key is None:
+        abort(403)
+    userdict = {}
+    try:
+        userdict = signer.loads(key, max_age=3600, salt='password-reset')
+    except BadData:
+        abort(403)
+    username = userdict.get('user')
+    if not username or not userdict.get('password'):
+        abort(403)
+    user = model.User.query.filter_by(name=username).first_or_404()
+    if user.passwd_hash != userdict.get('password'):
+        abort(403)
+    form = ChangePasswordForm(request.form)
+    if form.validate_on_submit():
+        user.set_password(form.new_password.data)
+        db.session.add(user)
+        db.session.commit()
+        login_user(user)
+        print "Changed password"
+        flash('You reset your password successfully!', 'success')
+        return redirect(url_for('.profile'))
+    if request.method == 'POST' and not form.validate():
+        flash('Please correct the errors', 'error')
+    return render_template('/account/password_forgot.html', form=form)

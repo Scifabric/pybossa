@@ -2,8 +2,9 @@ import json
 
 from base import web, model, Fixtures
 from mock import patch
+from itsdangerous import BadSignature
 from collections import namedtuple
-from pybossa.core import db
+from pybossa.core import db, signer
 
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
@@ -1233,3 +1234,38 @@ class TestWeb:
         res = self.app.get('account/register', follow_redirects=True)
         assert "http://okfn.org/terms-of-use/" in res.data, res.data
         assert "http://opendatacommons.org/licenses/by/" in res.data, res.data
+
+    @patch('pybossa.view.account.signer.loads')
+    def test_44_password_reset_key_errors(self, Mock):
+        """Test WEB password reset key errors are caught"""
+        self.register()
+        user = model.User.query.get(1)
+        userdict = {'user': user.name, 'password': user.passwd_hash}
+        fakeuserdict = {'user': user.name, 'password': 'wronghash'}
+        key = signer.dumps(userdict, salt='password-reset')
+        returns = [BadSignature('Fake Error'), BadSignature('Fake Error'), userdict,
+                   fakeuserdict, userdict]
+        def side_effects(*args, **kwargs):
+            result = returns.pop(0)
+            if isinstance(result, BadSignature):
+                raise result
+            return result
+        Mock.side_effect = side_effects
+        # Request with no key
+        res = self.app.get('/account/reset-password', follow_redirects=True)
+        assert 403 == res.status_code
+        # Request with invalid key
+        res = self.app.get('/account/reset-password?key=foo', follow_redirects=True)
+        assert 403 == res.status_code
+        # Request with key exception
+        res = self.app.get('/account/reset-password?key=%s' % (key), follow_redirects=True)
+        assert 403 == res.status_code
+        res = self.app.get('/account/reset-password?key=%s' % (key), follow_redirects=True)
+        assert 200 == res.status_code
+        res = self.app.get('/account/reset-password?key=%s' % (key), follow_redirects=True)
+        assert 403 == res.status_code
+        res = self.app.post('/account/reset-password?key=%s' % (key), data={
+                'new_password': 'p4ssw0rD',
+                'confirm': 'p4ssw0rD'
+                }, follow_redirects=True)
+        assert "You reset your password successfully!" in res.data
