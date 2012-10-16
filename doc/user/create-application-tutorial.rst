@@ -33,6 +33,14 @@ When you create the account, you will have to access your profile, and copy the
 application in PyBossa (only authenticated users can create applications and
 tasks, while everyone can collaborate solving the tasks).
 
+.. note:: 
+
+    Flickr Person Finder uses the **pybossa-client** module which simplifies a lot
+    accessing the PyBossa services and API endpoints. Therefore, you will need to
+    install the *pybossa-client* with **pip**::
+
+    $ pip install pybossa-client
+
 Creating the Application
 ========================
 
