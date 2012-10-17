@@ -132,4 +132,32 @@ To going into production mode again, just run the following commands::
  # a2ensite pybossa-site
  # service apache2 reload
 
-You can integrate this into your deployment system without too many problems.
+You can copy and paste the following BASH script for starting/stopping
+PyBossa with just one command::
+
+    
+    #!/bin/bash
+    
+    if [ $1 == "stop" ]
+    then
+            a2dissite pybossa-site
+            a2ensite maintenance
+            service apache2 reload
+    fi
+    
+    if [ $1 == "start" ]
+    then
+            a2dissite maintenance
+            a2ensite pybossa-site
+            service apache2 reload
+    fi
+
+Therefore, you can run::
+
+    $ sudo script-name stop
+
+To put PyBossa in maintenance mode, and::
+
+    $ sudo script-name start
+
+To start again PyBossa. You can integrate this into your deployment system without too many problems.
