@@ -264,7 +264,7 @@ def import_task(short_name):
                             setattr(task, headers[index], cell)
                         else:
                             info[headers[index]] = cell
-                    task.info = json.dumps(info)
+                    task.info = info
                     db.session.add(task)
                     db.session.commit()
                     empty = False
