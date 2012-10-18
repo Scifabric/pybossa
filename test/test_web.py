@@ -1114,7 +1114,7 @@ class TestWeb:
             'csv_url': 'http://myfakecsvurl.com',
             }, follow_redirects=True)
         task = db.session.query(model.Task).first()
-        assert '{"Baz": "3", "Foo": "1", "Bar": "2"}' == task.info
+        assert {u'Bar': u'2', u'Foo': u'1', u'Baz': u'3'} == task.info
         assert "Tasks imported successfully!" in res.data
 
     @patch('pybossa.view.applications.requests.get')
@@ -1130,7 +1130,7 @@ class TestWeb:
             'csv_url': 'http://myfakecsvurl.com',
             }, follow_redirects=True)
         task = db.session.query(model.Task).first()
-        assert '{"Foo": "1", "Bar": "2"}' == task.info
+        assert {u'Bar': u'2', u'Foo': u'1'} == task.info
         assert task.priority_0 == 3
         assert "Tasks imported successfully!" in res.data
 
