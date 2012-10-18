@@ -4,6 +4,7 @@ from base import web, model, Fixtures
 from mock import patch
 from itsdangerous import BadSignature
 from collections import namedtuple
+from flask import g
 from pybossa.core import db, signer
 
 
@@ -265,6 +266,9 @@ class TestWeb:
         res = self.register(password2='different')
         assert self.html_title("Register") in res.data, res
         assert "Passwords must match" in res.data, res
+
+        res = self.app.get('/account/signin')
+        assert 'Forgot Password' in res.data
 
     def test_04_signin_signout(self):
         """Test WEB sign in and sign out works"""
@@ -1269,3 +1273,16 @@ class TestWeb:
                 'confirm': 'p4ssw0rD'
                 }, follow_redirects=True)
         assert "You reset your password successfully!" in res.data
+
+    def test_45_password_reset_link(self):
+        """Test WEB password reset email form"""
+        res = self.app.post('/account/forgot-password', data={
+                'email': 'johndoe@example.com'
+                }, follow_redirects=True)
+        assert "This email doesn't seem to be associated with an account" in res.data
+
+        self.register()
+        res = self.app.post('/account/forgot-password', data={
+                'email': 'johndoe@example.com'
+                }, follow_redirects=True)
+        assert g.outbox[0].subject == 'Password Recovery'

@@ -288,4 +288,26 @@ def reset_password():
         return redirect(url_for('.profile'))
     if request.method == 'POST' and not form.validate():
         flash('Please correct the errors', 'error')
+    return render_template('/account/password_reset.html', form=form)
+
+
+class ForgotPasswordForm(Form):
+    email_addr = TextField('Email Address',
+            [validators.Length(min=3, max=35,
+                message="Email must be between 3 and 35 characters long"),
+                validators.Email(),
+            ])
+
+
+@blueprint.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    form = ForgotPasswordForm(request.form)
+    if form.validate_on_submit():
+        user = model.User.query.filter_by(email_addr=form.email_addr.data
+                ).first()
+        flash("We've send you email with account recovery instructions!",
+              'success')
+    if request.method == 'POST' and not form.validate():
+        flash('Something went wrong, please correct the errors on the '
+              'form', 'error')
     return render_template('/account/password_forgot.html', form=form)
