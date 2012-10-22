@@ -14,15 +14,17 @@
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from itsdangerous import BadData
+from markdown import markdown
 from flask import Blueprint, request, url_for, flash, redirect, session, abort
 from flask import render_template, current_app
 from flaskext.login import login_required, login_user, logout_user,\
         current_user
+from flask.ext.mail import Message
 from flaskext.wtf import Form, TextField, PasswordField, validators,\
         ValidationError, IntegerField, HiddenInput
 
 import pybossa.model as model
-from pybossa.core import db, signer
+from pybossa.core import db, signer, mail
 from pybossa.util import Unique
 from pybossa.util import Pagination
 from pybossa.util import Twitter
@@ -304,9 +306,37 @@ def forgot_password():
     form = ForgotPasswordForm(request.form)
     if form.validate_on_submit():
         user = model.User.query.filter_by(email_addr=form.email_addr.data
-                ).first()
-        flash("We've send you email with account recovery instructions!",
+               ).first()
+        if user and user.email_addr:
+            msg = Message(subject='Account Recovery',
+                          recipients=[user.email_addr])
+            if user.twitter_user_id:
+                msg.body = render_template(
+                                '/account/email/forgot_password_openid.md',
+                                user=user, account_name='Twitter')
+            elif user.facebook_user_id:
+                msg.body = render_template(
+                                '/account/email/forgot_password_openid.md',
+                                user=user, account_name='Facebook')
+            elif user.google_user_id:
+                msg.body = render_template(
+                                '/account/email/forgot_password_openid.md',
+                                user=user, account_name='Google')
+            else:
+                userdict = {'user': user.name, 'password': user.passwd_hash}
+                key = signer.dumps(userdict, salt='password-reset')
+                recovery_url = url_for('.reset_password', key=key, _external=True)
+                msg.body = render_template(
+                                '/account/email/forgot_password.md',
+                                user=user, recovery_url=recovery_url)
+            msg.html = markdown(msg.body)
+            mail.send(msg)
+            flash("We've send you email with account recovery instructions!",
               'success')
+        else:
+            flash("We don't have this email in our records. You may have"
+                  " signed up with a different email or used Twitter, "
+                  "Facebook, or Google to sign-in", 'error')
     if request.method == 'POST' and not form.validate():
         flash('Something went wrong, please correct the errors on the '
               'form', 'error')

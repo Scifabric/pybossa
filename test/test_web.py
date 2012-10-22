@@ -1,10 +1,9 @@
 import json
 
-from base import web, model, Fixtures
+from base import web, model, Fixtures, mail
 from mock import patch
 from itsdangerous import BadSignature
 from collections import namedtuple
-from flask import g
 from pybossa.core import db, signer
 
 
@@ -1277,12 +1276,18 @@ class TestWeb:
     def test_45_password_reset_link(self):
         """Test WEB password reset email form"""
         res = self.app.post('/account/forgot-password', data={
-                'email': 'johndoe@example.com'
+                'email_addr': 'johndoe@example.com'
                 }, follow_redirects=True)
-        assert "This email doesn't seem to be associated with an account" in res.data
+        assert ("We don't have this email in our records. You may have"
+               " signed up with a different email or used Twitter, "
+               "Facebook, or Google to sign-in") in res.data
 
         self.register()
-        res = self.app.post('/account/forgot-password', data={
-                'email': 'johndoe@example.com'
+        # TODO: This is a hack to get tests working. Documented method to
+        # supress mail sending doesn't seem to work
+        mail.suppress = True
+        with mail.record_messages() as outbox:
+            self.app.post('/account/forgot-password', data={
+                'email_addr': 'johndoe@example.com'
                 }, follow_redirects=True)
-        assert g.outbox[0].subject == 'Password Recovery'
+            assert outbox[0].subject == 'Account Recovery'

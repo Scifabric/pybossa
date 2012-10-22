@@ -5,6 +5,7 @@ Flask-WTF==0.6
 Flask-Gravatar
 Flask-OAuth
 Flask-SQLAlchemy
+Flask-Mail
 dateutils
 alembic
 psycopg2

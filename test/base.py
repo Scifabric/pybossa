@@ -3,7 +3,7 @@ import random
 
 import pybossa.web as web
 import pybossa.model as model
-from pybossa.core import db
+from pybossa.core import db, mail
 
 _here = os.path.dirname(__file__)
 web.app.config['TESTING'] = True
