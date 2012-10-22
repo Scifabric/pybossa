@@ -11,3 +11,4 @@ alembic
 psycopg2
 requests
 itsdangerous
+markdown
