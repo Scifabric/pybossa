@@ -1283,6 +1283,11 @@ class TestWeb:
                "Facebook, or Google to sign-in") in res.data
 
         self.register()
+        self.register(username='janedoe')
+        jane = model.User.query.get(2)
+        jane.twitter_user_id = 10
+        db.session.add(jane)
+        db.session.commit()
         # TODO: This is a hack to get tests working. Documented method to
         # supress mail sending doesn't seem to work
         mail.suppress = True
@@ -1290,4 +1295,10 @@ class TestWeb:
             self.app.post('/account/forgot-password', data={
                 'email_addr': 'johndoe@example.com'
                 }, follow_redirects=True)
-            assert outbox[0].subject == 'Account Recovery'
+            self.app.post('/account/forgot-password', data={
+                'email_addr': 'janedoe@example.com'
+                }, follow_redirects=True)
+            assert 'Click here to recover your account' in outbox[0].body
+            assert 'your Twitter account to ' in outbox[1].body
+
+
