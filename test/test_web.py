@@ -221,6 +221,9 @@ class TestWeb:
 
     def test_03_register(self):
         """Test WEB register user works"""
+        res = self.app.get('/account/signin')
+        assert 'Forgot Password' in res.data
+
         res = self.register(method="GET")
         # The output should have a mime-type: text/html
         assert res.mimetype == 'text/html', res
@@ -265,9 +268,6 @@ class TestWeb:
         res = self.register(password2='different')
         assert self.html_title("Register") in res.data, res
         assert "Passwords must match" in res.data, res
-
-        res = self.app.get('/account/signin')
-        assert 'Forgot Password' in res.data
 
     def test_04_signin_signout(self):
         """Test WEB sign in and sign out works"""
