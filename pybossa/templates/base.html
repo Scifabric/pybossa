@@ -15,7 +15,7 @@
     <link href="/static/vendor/bootstrap.min.css" rel="stylesheet" type="text/css">
     <link href="//netdna.bootstrapcdn.com/font-awesome/2.0/css/font-awesome.css" rel="stylesheet">
     <link href="/static/css/fonts/stylesheet.css" rel="stylesheet">
-    <link href="/static/css/css/styles.css" rel="stylesheet">
+    <link href="/static/css/styles.css" rel="stylesheet">
 
     <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
@@ -40,18 +40,30 @@
     {% include "_navbar.html" %}
 
     <div class="container">
-    <!-- We are Alpha yet! -->
-    <img src="{{ url_for('static', filename='img/ribbon-right.png')}}" class="visible-desktop" style="position:absolute; top:40px; right:0; border:0;">
-    <img src="{{ url_for('static', filename='img/ribbon-right.png')}}" class="visible-tablet visible-phone" style="position:absolute; top:50px; right:0; border:0;">
 
     {% include "_flash_messages.html" %}
 
     {% block content %}{% endblock %}
 
     <hr>
+    </div> <!-- /container -->
     <footer>
     {% include ['custom_footer.html', '_footer.html'] ignore missing %}
     </footer>
-    </div> <!-- /container -->
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script> <!-- Jquery -->
+    <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.1.1/js/bootstrap.min.js"></script> <!-- Bootstrap -->
+    <script>
+        $("a[rel=popover]").popover({
+            html: true,
+            animate: true,
+            trigger: 'click',
+            placement: 'top'
+        }).click(function(e) {
+            e.preventDefault()
+        });
+        </script>
   </body>
 </html>
