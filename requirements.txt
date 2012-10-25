@@ -9,3 +9,5 @@ dateutils
 alembic
 psycopg2
 requests
+raven
+blinker

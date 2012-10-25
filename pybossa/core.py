@@ -22,6 +22,8 @@ from flask.ext.sqlalchemy import SQLAlchemy
 
 from pybossa import default_settings as settings
 
+from raven.contrib.flask import Sentry
+
 def create_app():
     app = Flask(__name__)
     configure_app(app)
@@ -73,4 +75,5 @@ login_manager.login_view = "/account/signin"
 login_manager.login_message = u"Please sign in to access this page."
 app = create_app()
 db = SQLAlchemy(app)
-
+if app.config.get('SENTRY_DSN'):
+    sentr = Sentry(app)
