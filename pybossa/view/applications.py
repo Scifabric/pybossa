@@ -57,7 +57,7 @@ class BulkTaskImportForm(Form):
 @blueprint.route('/page/<int:page>')
 def index(page):
     if require.app.read():
-        per_page = 3 
+        per_page = 10 
         count = db.session.query(model.App)\
                 .filter(model.App.hidden == 0)\
                 .order_by(model.App.tasks.any().desc())\
