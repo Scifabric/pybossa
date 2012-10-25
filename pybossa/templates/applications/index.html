@@ -8,7 +8,7 @@
         {% if pagination.has_prev %}
           <li>
           <a href="{{ url_for_other_page(pagination.page - 1)
-            }}">&laquo; Prev</a>
+            }}">&laquo; Prev apps</a>
           </li>
         {% endif %}
 
@@ -28,7 +28,7 @@
         {% if pagination.has_next %}
           <li>
           <a href="{{ url_for_other_page(pagination.page + 1)
-            }}">Next &raquo;</a>
+            }}">Next apps &raquo;</a>
           </li>
         {% endif %}
     </ul>
@@ -92,13 +92,6 @@
         <p>Therefore, pick up a published or featured application and help the project!</p>
     </div>
 </div>
-
-<div class="row">
-    <div class="span9 offset2">
-        {{ render_pagination(pagination) }}
-    </div>
-</div>
-
 
 {% if apps_featured %}
 <div class="row app-featured">
