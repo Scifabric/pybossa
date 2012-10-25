@@ -57,7 +57,7 @@ class BulkTaskImportForm(Form):
 @blueprint.route('/page/<int:page>')
 def index(page):
     if require.app.read():
-        per_page = 3 
+        per_page = 12 
         count = db.session.query(model.App).count()
 
         apps = db.session.query(model.App)\
@@ -76,8 +76,14 @@ def index(page):
             apps_featured.append(db.session.query(model.App).get(f.app_id))
 
         for a in apps:
+            app_featured = False
             if (len(a.tasks) > 0) and (a.info.get("task_presenter")):
-                apps_with_tasks.append(a)
+                for f in featured:
+                    if f.app_id == a.id:
+                        app_featured = True
+                        break
+                if not app_featured:
+                    apps_with_tasks.append(a)
             else:
                 apps_without_tasks.append(a)
 
