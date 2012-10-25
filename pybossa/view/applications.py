@@ -53,11 +53,19 @@ class BulkTaskImportForm(Form):
                 "valid URL. You must provide a valid URL")])
 
 
-@blueprint.route('/')
-def index():
+@blueprint.route('/', defaults={'page':1})
+@blueprint.route('/page/<int:page>')
+def index(page):
     if require.app.read():
+        per_page = 10 
+        count = db.session.query(model.App).count()
+
         apps = db.session.query(model.App)\
-                .filter(model.App.hidden == 0)
+                .filter(model.App.hidden == 0)\
+                .limit(per_page)\
+                .offset((page-1)*per_page)\
+                .all()
+
         featured = db.session.query(model.Featured)\
                 .all()
         apps_featured = []
@@ -77,11 +85,13 @@ def index():
             else:
                 apps_without_tasks.append(a)
 
+        pagination = Pagination(page, per_page, count)
         return render_template('/applications/index.html',
                                 title="Applications",
                                 apps_featured=apps_featured,
                                 apps_with_tasks=apps_with_tasks,
-                                apps_without_tasks=apps_without_tasks)
+                                apps_without_tasks=apps_without_tasks,
+                                pagination=pagination)
     else:
         abort(403)
 
