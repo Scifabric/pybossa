@@ -15,21 +15,19 @@
               <li><a href="{{ url_for('about')}}">About</a></li>
             </ul>
           {% if current_user.is_authenticated() %}
-                <div class="dropdown nav secondary-nav pull-right">
-                <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                    <i class="icon-user"></i> {{ current_user.name }}
-                  <span class="caret"></span>
-                </a>
+            <ul class="nav secondary-nav pull-right">
+              <li><a href="#" data-toggle="dropdown" class="dropdown-toggle"><i class="icon icon-user"></i> {{ current_user.name }} <span class="caret"></span></a>
                 <ul class="dropdown-menu">
                     <li><a href="{{ url_for('account.profile') }}"><i class="icon icon-user"></i> Account</a></li>
                     {% if current_user.admin == 1 %}
-                  <li class="divider"></li>
+                    <li class="divider"></li>
                     <li><a href="{{ url_for('admin.index') }}"><i class="icon icon-cog"></i> Settings</a></li>
                     {% endif %}
-                  <li class="divider"></li>
+                    <li class="divider"></li>
                   <li><a href="{{ url_for('account.signout') }}"><i class="icon icon-off"></i> Sign Out</a></li>
                 </ul>
-                </div>
+              </li>
+            </ul>
           {% endif %}
 
             {% if current_user.is_anonymous() %}
@@ -42,56 +40,3 @@
         </div>
       </div>
     </div>
-
-<!--
-   <div class="navbar navbar-inverse navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
-          <a class="brand" href="/">{{ brand }}</a>
-          {% if current_user.is_authenticated() %}
-                <div class="dropdown pull-right">
-                <a class="btn dropdown-toggle" data-toggle="dropdown" href="#">
-                    <i class="icon-user"></i> {{ current_user.name }}
-                  <span class="caret"></span>
-                </a>
-                <ul class="dropdown-menu">
-                    <li><a href="{{ url_for('account.profile') }}"><i class="icon icon-user"></i> Account</a></li>
-                    {% if current_user.admin == 1 %}
-                  <li class="divider"></li>
-                    <li><a href="{{ url_for('admin.index') }}"><i class="icon icon-cog"></i> Settings</a></li>
-                    {% endif %}
-                  <li class="divider"></li>
-                  <li><a href="{{ url_for('account.signout') }}"><i class="icon icon-off"></i> Sign Out</a></li>
-                </ul>
-                </div>
-          {% endif %}
-
-          <div class="nav-collapse collapse">
-            <ul class="nav">
-              <li {% if active_page == "index"  %} class="active" {% endif %}> <a href="{{ url_for('home') }}"><i class="icon-home icon-white"></i> Home</a></li>
-              <li {% if active_page == "community"  %} class="active" {% endif %}><a href="{{ url_for('account.index')}}"><i class="icon-globe icon-white"></i> Community</a></li>
-              <li {% if active_page == "leaderboard"  %} class="active" {% endif %}><a href="{{ url_for('stats.index')}}"><i class="icon-trophy icon-white"></i> Leaderboard</a></li>
-              <li {% if active_page == "applications"  %} class="active" {% endif %}><a href="{{ url_for('app.index') }}"><i class="icon-th icon-white"></i> Applications </a></li>
-              <li><a href="http://docs.pybossa.com/" target="_blank"><i class="icon icon-white icon-book"></i> Guide and Documentation</a></li>
-              <li {% if active_page == "about"  %} class="active" {% endif %}><a href="{{ url_for('about')}}"><i class="icon icon-white icon-question-sign"></i> About</a></li>
-            </ul>
-            {% if current_user.is_anonymous() %}
-            <ul class="nav secondary-nav pull-right">
-              <li class="divider-vertical"></li>
-              <li class="">
-              <li>
-              <a href="{{ url_for('account.signin') }}"><i class="icon icon-white icon-signin"></i> Sign in</a>
-              </li>
-            </ul>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    -->
