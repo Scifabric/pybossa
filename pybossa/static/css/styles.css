@@ -139,7 +139,8 @@ body {
   color: #FFF;
   text-shadow: none;
 }
-.navbar .nav > li > a:hover {
+.navbar .nav > li > a:hover,
+.navbar .nav > li > a:focus {
   background-color: #a2d058;
   color: #FFF;
 }
@@ -151,9 +152,13 @@ body {
   box-shadow: none;
   color: #FFF;
 }
-.navbar .nav li.dropdown > .dropdown-toggle .caret {
+.nav .dropdown-toggle .caret,
+.nav .dropdown-toggle:hover .caret {
   border-bottom-color: #FFF;
   border-top-color: #FFF;
+}
+.dropdown-menu {
+	top:54px;
 }
 .navbar .nav > li > a .icon {
   font-size: 22px;
