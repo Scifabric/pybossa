@@ -9,6 +9,7 @@ SECRET_KEY = 'my-session-secret'
 
 SQLALCHEMY_DATABASE_URI = 'postgresql://tester:tester@localhost/pybossa'
 SQLALCHEMY_DATABASE_TEST_URI = 'postgresql://rtester:rtester@localhost/pybossa_test'
+ITSDANGEORUSKEY = 'its-dangerous-key'
 
 ## project configuration
 BRAND = 'PyBossa'
@@ -39,4 +40,12 @@ DATAUSE = 'http://opendatacommons.org/licenses/by/'
 ## Optional log level
 # import logging
 # LOG_LEVEL = logging.DEBUG
+
+## Mail setup
+MAIL_SERVER = 'localhost'
+MAIL_USERNAME = None
+MAIL_PASSWORD = None
+MAIL_PORT = 25
+MAIL_FAIL_SILENTLY = False
+DEFAULT_MAIL_SENDER = 'PyBossa Support <info@pybossa.com>'
 

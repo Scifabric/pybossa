@@ -1,9 +1,10 @@
 import json
 
-from base import web, model, Fixtures
+from base import web, model, Fixtures, mail
 from mock import patch
+from itsdangerous import BadSignature
 from collections import namedtuple
-from pybossa.core import db
+from pybossa.core import db, signer
 
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
@@ -220,6 +221,9 @@ class TestWeb:
 
     def test_03_register(self):
         """Test WEB register user works"""
+        res = self.app.get('/account/signin')
+        assert 'Forgot Password' in res.data
+
         res = self.register(method="GET")
         # The output should have a mime-type: text/html
         assert res.mimetype == 'text/html', res
@@ -1273,3 +1277,68 @@ class TestWeb:
         res = self.app.get('account/register', follow_redirects=True)
         assert "http://okfn.org/terms-of-use/" in res.data, res.data
         assert "http://opendatacommons.org/licenses/by/" in res.data, res.data
+
+    @patch('pybossa.view.account.signer.loads')
+    def test_44_password_reset_key_errors(self, Mock):
+        """Test WEB password reset key errors are caught"""
+        self.register()
+        user = model.User.query.get(1)
+        userdict = {'user': user.name, 'password': user.passwd_hash}
+        fakeuserdict = {'user': user.name, 'password': 'wronghash'}
+        key = signer.dumps(userdict, salt='password-reset')
+        returns = [BadSignature('Fake Error'), BadSignature('Fake Error'), userdict,
+                   fakeuserdict, userdict]
+        def side_effects(*args, **kwargs):
+            result = returns.pop(0)
+            if isinstance(result, BadSignature):
+                raise result
+            return result
+        Mock.side_effect = side_effects
+        # Request with no key
+        res = self.app.get('/account/reset-password', follow_redirects=True)
+        assert 403 == res.status_code
+        # Request with invalid key
+        res = self.app.get('/account/reset-password?key=foo', follow_redirects=True)
+        assert 403 == res.status_code
+        # Request with key exception
+        res = self.app.get('/account/reset-password?key=%s' % (key), follow_redirects=True)
+        assert 403 == res.status_code
+        res = self.app.get('/account/reset-password?key=%s' % (key), follow_redirects=True)
+        assert 200 == res.status_code
+        res = self.app.get('/account/reset-password?key=%s' % (key), follow_redirects=True)
+        assert 403 == res.status_code
+        res = self.app.post('/account/reset-password?key=%s' % (key), data={
+                'new_password': 'p4ssw0rD',
+                'confirm': 'p4ssw0rD'
+                }, follow_redirects=True)
+        assert "You reset your password successfully!" in res.data
+
+    def test_45_password_reset_link(self):
+        """Test WEB password reset email form"""
+        res = self.app.post('/account/forgot-password', data={
+                'email_addr': 'johndoe@example.com'
+                }, follow_redirects=True)
+        assert ("We don't have this email in our records. You may have"
+               " signed up with a different email or used Twitter, "
+               "Facebook, or Google to sign-in") in res.data
+
+        self.register()
+        self.register(username='janedoe')
+        jane = model.User.query.get(2)
+        jane.twitter_user_id = 10
+        db.session.add(jane)
+        db.session.commit()
+        # TODO: This is a hack to get tests working. Documented method to
+        # supress mail sending doesn't seem to work
+        mail.suppress = True
+        with mail.record_messages() as outbox:
+            self.app.post('/account/forgot-password', data={
+                'email_addr': 'johndoe@example.com'
+                }, follow_redirects=True)
+            self.app.post('/account/forgot-password', data={
+                'email_addr': 'janedoe@example.com'
+                }, follow_redirects=True)
+            assert 'Click here to recover your account' in outbox[0].body
+            assert 'your Twitter account to ' in outbox[1].body
+
+
