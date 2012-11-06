@@ -53,35 +53,51 @@ class BulkTaskImportForm(Form):
                 "valid URL. You must provide a valid URL")])
 
 
-@blueprint.route('/')
-def index():
+@blueprint.route('/', defaults={'page':1})
+@blueprint.route('/page/<int:page>')
+def index(page):
     if require.app.read():
+        per_page = 10 
+        count = db.session.query(model.App)\
+                .filter(model.App.hidden == 0)\
+                .order_by(model.App.tasks.any().desc())\
+                .count()
+
         apps = db.session.query(model.App)\
-                .filter(model.App.hidden == 0)
+                .filter(model.App.hidden == 0)\
+                .order_by(model.App.tasks.any().desc())\
+                .limit(per_page)\
+                .offset((page-1)*per_page)\
+                .all()
+
         featured = db.session.query(model.Featured)\
                 .all()
         apps_featured = []
         apps_with_tasks = []
         apps_without_tasks = []
+
+        for f in featured:
+            apps_featured.append(db.session.query(model.App).get(f.app_id))
+
         for a in apps:
+            app_featured = False
             if (len(a.tasks) > 0) and (a.info.get("task_presenter")):
-                app_featured = False
                 for f in featured:
                     if f.app_id == a.id:
                         app_featured = True
                         break
-                if app_featured:
-                    apps_featured.append(a)
-                else:
+                if not app_featured:
                     apps_with_tasks.append(a)
             else:
                 apps_without_tasks.append(a)
 
+        pagination = Pagination(page, per_page, count)
         return render_template('/applications/index.html',
                                 title="Applications",
                                 apps_featured=apps_featured,
                                 apps_with_tasks=apps_with_tasks,
-                                apps_without_tasks=apps_without_tasks)
+                                apps_without_tasks=apps_without_tasks,
+                                pagination=pagination)
     else:
         abort(403)
 

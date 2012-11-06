@@ -24,6 +24,8 @@ from flask.ext.sqlalchemy import SQLAlchemy
 
 from pybossa import default_settings as settings
 
+from raven.contrib.flask import Sentry
+
 def create_app():
     app = Flask(__name__)
     configure_app(app)
@@ -77,3 +79,5 @@ app = create_app()
 db = SQLAlchemy(app)
 mail = Mail(app)
 signer = URLSafeTimedSerializer(app.config['ITSDANGEORUSKEY'])
+if app.config.get('SENTRY_DSN'):
+    sentr = Sentry(app)

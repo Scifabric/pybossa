@@ -412,6 +412,46 @@ class TestWeb:
         assert "Applications" in res.data, res.data
         assert '/app/sampleapp' in res.data, res.data
 
+    def test_06_featured_apps(self):
+        """Test WEB application index shows featured apps in all the pages works"""
+        self.register()
+        self.new_application()
+        self.new_task(1)
+        for i in range(0,20):
+            app = model.App()
+            app.name = "App%s" % i
+            app.short_name = "app%s" % i
+            app.description = "desc%s" % i
+            app.owner_id = 1
+            app.info = dict(task_presenter="html")
+            db.session.add(app)
+
+        # Create one as featured
+        f = model.Featured()
+        f.app_id = 1
+        db.session.add(f)
+        db.session.commit()
+
+        # Add some tasks
+        self.new_task(2)
+        self.new_task(3)
+
+        # Page 1
+        for i in range(1,3):
+            res = self.app.get('/app/page/%s' % i, follow_redirects=True)
+            assert "Featured</h2>" in res.data, res.data
+            assert "app-featured" in res.data
+            assert "Sample App</a>" in res.data, res.data
+            assert "Draft</h2>" in res.data, res.data
+            assert "app-draft" in res.data, res.data
+            if (i == 1):
+                assert "Published</h2>" in res.data, res.data
+                assert "app-published" in res.data, res.data
+            else:
+                assert "Published</h2>" not in res.data, res.data
+                assert "app-published" not in res.data, res.data
+
+
     def test_07_index_one_app(self):
         """Test WEB index Featured for one registered application works"""
         # With one application in the system
