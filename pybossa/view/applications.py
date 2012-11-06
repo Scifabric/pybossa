@@ -27,6 +27,7 @@ import pybossa.model as model
 from pybossa.core import db
 from pybossa.util import Unique, Pagination, unicode_csv_reader
 from pybossa.auth import require
+from pybossa.model import App
 
 import json
 
@@ -135,41 +136,44 @@ def new():
 @blueprint.route('/<short_name>/delete', methods=['GET', 'POST'])
 @login_required
 def delete(short_name):
-    application = db.session.query(model.App)\
-            .filter(model.App.short_name == short_name).first()
-    if require.app.delete(application):
-            if request.method == 'GET':
-                return render_template('/applications/delete.html',
-                                        title="Delete Application: %s"
-                                              % application.name,
-                                        app=application)
-            else:
-                try:
-                    db.session.delete(application)
-                    db.session.commit()
-                    flash('Application deleted!', 'success')
-                    return redirect(url_for('account.profile'))
-                except UnboundExecutionError:
-                    pass
+    app = App.query.filter_by(short_name=short_name)\
+            .first()
+    if app:
+        if require.app.delete(app):
+                if request.method == 'GET':
+                    return render_template('/applications/delete.html',
+                                            title="Delete Application: %s"
+                                                  % app.name,
+                                            app=app)
+                else:
+                    try:
+                        db.session.delete(app)
+                        db.session.commit()
+                        flash('Application deleted!', 'success')
+                        return redirect(url_for('account.profile'))
+                    except UnboundExecutionError:
+                        pass
+        else:
+            abort(403)
     else:
-        abort(403)
+        abort(404)
 
 
 @blueprint.route('/<short_name>/update', methods=['GET', 'POST'])
 @login_required
 def update(short_name):
     try:
-        application = db.session.query(model.App)\
-                .filter(model.App.short_name == short_name).first()
-        if require.app.update(application):
+        app = App.query.filter_by(short_name=short_name)\
+                .first_or_404()
+        if require.app.update(app):
             if request.method == 'GET':
-                form = AppForm(obj=application)
-                form.populate_obj(application)
+                form = AppForm(obj=app)
+                form.populate_obj(app)
                 return render_template('/applications/update.html',
                                         title="Update the application: %s"
-                                               % application.name,
+                                               % app.name,
                                         form=form,
-                                        app=application)
+                                        app=app)
 
             if request.method == 'POST':
                 form = AppForm(request.form)
@@ -187,8 +191,8 @@ def update(short_name):
                         hidden=hidden,
                         owner_id=current_user.id,
                         )
-                    application = db.session.query(model.App)\
-                            .filter(model.App.short_name == short_name).first()
+                    app = App.query.filter_by(short_name=short_name)\
+                            .first_or_404()
                     db.session.merge(new_application)
                     db.session.commit()
                     flash('Application updated!', 'success')
@@ -199,7 +203,7 @@ def update(short_name):
                     return render_template('/applications/update.html',
                                             form=form,
                                             title="Edit the application",
-                                            app=application)
+                                            app=app)
         else:
             abort(403)
     except UnboundExecutionError:
@@ -237,8 +241,9 @@ def details(short_name, page):
 
 @blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
 def import_task(short_name):
-    application = db.session.query(model.App)\
-            .filter(model.App.short_name == short_name).first()
+    app = App.query.filter_by(short_name=short_name)\
+            .first_or_404()
+
     form = BulkTaskImportForm(request.form)
     if form.validate_on_submit():
         r = requests.get(form.csv_url.data)
@@ -246,12 +251,12 @@ def import_task(short_name):
             flash("Oops! It looks like you don't have permission to access"
                   " that file!", 'error')
             return render_template('/applications/import.html',
-                    app=application, form=form)
+                    app=app, form=form)
         if (not 'text/plain' in r.headers['content-type'] and not 'text/csv'
                 in r.headers['content-type']):
             flash("Oops! That file doesn't look like a CSV file.", 'error')
             return render_template('/applications/import.html',
-                    app=application, form=form)
+                    app=app, form=form)
         empty = True
         csvcontent = StringIO(r.text)
         csvreader = unicode_csv_reader(csvcontent)
@@ -268,13 +273,13 @@ def import_task(short_name):
                         flash('The CSV file you uploaded has two headers with'
                               ' the same name.', 'error')
                         return render_template('/applications/import.html',
-                            app=application, form=form)
+                            app=app, form=form)
                     field_headers = set(headers) & fields
                     for field in field_headers:
                         field_header_index.append(headers.index(field))
                 else:
                     info = {}
-                    task = model.Task(app=application)
+                    task = model.Task(app=app)
                     for index, cell in enumerate(row):
                         if index in field_header_index:
                             setattr(task, headers[index], cell)
@@ -287,14 +292,14 @@ def import_task(short_name):
             if empty:
                 flash('Oops! It looks like the CSV file is empty.', 'error')
                 return render_template('/applications/import.html',
-                    app=application, form=form)
+                    app=app, form=form)
             flash('Tasks imported successfully!', 'success')
-            return redirect(url_for('.details', short_name=application.short_name))
+            return redirect(url_for('.details', short_name=app.short_name))
         except:
             flash('Oops! Looks like there was an error with processing '
                   'that file!', 'error')
     return render_template('/applications/import.html',
-            app=application, form=form)
+            app=app, form=form)
 
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
@@ -302,8 +307,8 @@ def task_presenter(short_name, task_id):
     if (current_user.is_anonymous()):
         flash("Ooops! You are an anonymous user and will not get any credit "
               " for your contributions. Sign in now!", "warning")
-    app = db.session.query(model.App)\
-            .filter(model.App.short_name == short_name).first()
+    app = App.query.filter_by(short_name=short_name)\
+            .first_or_404()
     task = db.session.query(model.Task).get(task_id)
     if (task.app_id == app.id):
         #return render_template('/applications/presenter.html', app = app)
@@ -336,8 +341,8 @@ def task_presenter(short_name, task_id):
 @blueprint.route('/<short_name>/presenter')
 @blueprint.route('/<short_name>/newtask')
 def presenter(short_name):
-    app = db.session.query(model.App)\
-          .filter(model.App.short_name == short_name).first()
+    app = App.query.filter_by(short_name=short_name)\
+            .first_or_404()
     if (current_user.is_anonymous()):
         flash("Ooops! You are an anonymous user and will not get any credit "
               "for your contributions. Sign in now!", "warning")
@@ -355,40 +360,65 @@ def presenter(short_name):
 
 @blueprint.route('/<short_name>/tutorial')
 def tutorial(short_name):
-    app = db.session.query(model.App)\
-          .filter(model.App.short_name == short_name).first()
+    app = App.query.filter_by(short_name=short_name)\
+            .first_or_404()
     return render_template('/applications/tutorial.html', app=app)
 
 
 @blueprint.route('/<short_name>/<int:task_id>/results.json')
 def export(short_name, task_id):
     """Return a file with all the TaskRuns for a give Task"""
-    task = db.session.query(model.Task)\
-            .filter(model.Task.id == task_id)\
+    app = db.session.query(model.App)\
+            .filter(model.App.short_name == short_name)\
             .first()
+    if app:
+        task = db.session.query(model.Task)\
+                .filter(model.Task.id == task_id)\
+                .first()
 
-    results = [tr.dictize() for tr in task.task_runs]
-    return Response(json.dumps(results), mimetype='application/json')
+        results = [tr.dictize() for tr in task.task_runs]
+        return Response(json.dumps(results), mimetype='application/json')
+    else:
+        return abort(404)
 
 
 @blueprint.route('/<short_name>/tasks', defaults={'page': 1})
 @blueprint.route('/<short_name>/tasks/<int:page>')
 def tasks(short_name, page):
-    application = db.session.query(model.App).\
-            filter(model.App.short_name == short_name).\
-            first()
+    app = App.query.filter_by(short_name=short_name)\
+            .first_or_404()
+    try:
+        require.app.read(app)
+        require.app.update(app)
 
-    if application:
-        try:
-            require.app.read(application)
-            require.app.update(application)
+        per_page = 10
+        count = db.session.query(model.Task)\
+                .filter_by(app_id=app.id)\
+                .count()
+        tasks = db.session.query(model.Task)\
+                .filter_by(app_id=app.id)\
+                .limit(per_page)\
+                .offset((page - 1) * per_page)\
+                .all()
 
+        if not tasks and page != 1:
+            abort(404)
+
+        pagination = Pagination(page, per_page, count)
+        return render_template('/applications/tasks.html',
+                                app=app,
+                                tasks=tasks,
+                                title="Application: %s tasks" %
+                                    app.name,
+                                pagination=pagination)
+    except HTTPException:
+        if not app.hidden:
             per_page = 10
             count = db.session.query(model.Task)\
-                    .filter_by(app_id=application.id)\
+                    .filter_by(app_id=app.id)\
                     .count()
             tasks = db.session.query(model.Task)\
-                    .filter_by(app_id=application.id)\
+                    .filter_by(app_id=app.id)\
                     .limit(per_page)\
                     .offset((page - 1) * per_page)\
                     .all()
@@ -398,35 +428,11 @@ def tasks(short_name, page):
 
             pagination = Pagination(page, per_page, count)
             return render_template('/applications/tasks.html',
-                                    app=application,
+                                    app=app,
                                     tasks=tasks,
                                     title="Application: %s tasks" %
-                                        application.name,
+                                        app.name,
                                     pagination=pagination)
-        except HTTPException:
-            if not application.hidden:
-                per_page = 10
-                count = db.session.query(model.Task)\
-                        .filter_by(app_id=application.id)\
-                        .count()
-                tasks = db.session.query(model.Task)\
-                        .filter_by(app_id=application.id)\
-                        .limit(per_page)\
-                        .offset((page - 1) * per_page)\
-                        .all()
-
-                if not tasks and page != 1:
-                    abort(404)
-
-                pagination = Pagination(page, per_page, count)
-                return render_template('/applications/tasks.html',
-                                        app=application,
-                                        tasks=tasks,
-                                        title="Application: %s tasks" %
-                                            application.name,
-                                        pagination=pagination)
-            else:
-                return render_template('/applications/tasks.html',
-                        app=None)
-    else:
-        abort(404)
+        else:
+            return render_template('/applications/tasks.html',
+                    app=None)
