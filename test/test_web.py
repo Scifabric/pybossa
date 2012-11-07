@@ -391,6 +391,61 @@ class TestWeb:
         res = self.app.get('/app/nonapp')
         assert res.status == '404 NOT FOUND', res.status
 
+    def test_05b_get_nonexistant_app_newtask(self):
+        """Test WEB get non existant app newtask should return 404"""
+        res = self.app.get('/app/noapp/presenter', follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        res = self.app.get('/app/noapp/newtask', follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+
+    def test_05c_get_nonexistant_app_tutorial(self):
+        """Test WEB get non existant app tutorial should return 404"""
+        res = self.app.get('/app/noapp/tutorial', follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+
+    def test_05d_get_nonexistant_app_delete(self):
+        """Test WEB get non existant app delete should return 404"""
+        self.register()
+        # GET
+        res = self.app.get('/app/noapp/delete', follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.data
+        # POST
+        res = self.delete_application(short_name="noapp")
+        assert res.status == '404 NOT FOUND', res.status
+
+    def test_05d_get_nonexistant_app_update(self):
+        """Test WEB get non existant app update should return 404"""
+        self.register()
+        # GET
+        res = self.app.get('/app/noapp/update', follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        # POST
+        res = self.update_application(short_name="noapp")
+        assert res.status == '404 NOT FOUND', res.status
+
+    def test_05d_get_nonexistant_app_import(self):
+        """Test WEB get non existant app import should return 404"""
+        self.register()
+        # GET
+        res = self.app.get('/app/noapp/import', follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        # POST
+        res = self.app.post('/app/noapp/import', follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+
+    def test_05d_get_nonexistant_app_task(self):
+        """Test WEB get non existant app task should return 404"""
+        res = self.app.get('/app/noapp/task', follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        # Pagination
+        res = self.app.get('/app/noapp/task/25', follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+
+    def test_05d_get_nonexistant_app_results_json(self):
+        """Test WEB get non existant app results json should return 404"""
+        res = self.app.get('/app/noapp/24/results.json', follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+
     def test_06_applications(self):
         """Test WEB applications index interface works"""
         # Check first without apps
@@ -755,7 +810,7 @@ class TestWeb:
         self.signout()
 
         app = db.session.query(model.App).first()
-        res = self.app.get('app/%s/%s/results.json' % (app.id, 1),
+        res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
                             follow_redirects=True)
         data = json.loads(res.data)
         assert len(data) == 10, data
