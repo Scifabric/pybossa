@@ -20,8 +20,8 @@ See it in Action
 PyBossa powers http://pybossa.com/ - check it out!
 
 
-Install
-=======
+Installing and Upgrading
+========================
 
 See doc/install.rst or http://pybossa.readthedocs.org/en/latest/install.html
 

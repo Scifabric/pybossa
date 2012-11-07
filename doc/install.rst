@@ -50,3 +50,11 @@ Run the web server::
 Open in your web browser the following URL::
 
   http://localhost:5000
+
+Upgrading
+=========
+
+Do::
+
+  alembic upgrade head
+
