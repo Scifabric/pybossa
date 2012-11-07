@@ -3,7 +3,7 @@ SQLAlchemy==0.7.8
 Flask-Login==0.1
 Flask-WTF==0.6
 Flask-Gravatar
-Flask-OAuth
+Flask-OAuth==0.12
 Flask-SQLAlchemy
 Flask-Mail
 dateutils
