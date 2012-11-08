@@ -40,6 +40,14 @@
         <div class="row">
             <div class="span12 collapse in">
                 <h2>Tasks</h2>
+                <p>This page shows all the available tasks for this application.</p> 
+                <p>For each task, you can find the following information:
+                  <ul>
+                      <li><strong>Task </strong><span class="label label-info">#0000</span> This number identifies the task for the application and it is unique</li>
+                      <li><strong>0 of 30</strong>: The first number shows how many answers have been submitted for the task and the <a data-placement="top" rel="tooltip" href="#" data-original-title="This redundancy method will help to detect errors, typos, data forging, etc. when the task has been completed">second number</a> how many need to be obtained to mark the task as <strong>completed</strong>. </li>
+                      <li><strong>Progress Bar</strong>: The progress bar will the percentage that has been completed for the task.</li>
+                  </ul>
+                </p>
                 <ul class="breadcrumb">
                     <li><a href="{{url_for('app.details', short_name=app.short_name)}}">{{app.name}}</a> <span class="divider">/</span></li>
                     <li class="active">Tasks</li>
@@ -89,4 +97,7 @@
     <h1>Sorry! This app does not exists.</h1>
   </div>
 {% endif %}
+<script>
+    $("a[rel=tooltip]").tooltip();
+</script>
 {% endblock %}
