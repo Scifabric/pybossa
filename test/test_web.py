@@ -918,6 +918,8 @@ class TestWeb:
         res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
                 follow_redirects=True)
         assert 'TaskPresenter' in res.data, res.data
+        assert "?next=%2Fapp%2F" + app.short_name +"%2Ftask%2F" + str(task.id),\
+                res.data
 
     def test_22_get_specific_completed_task_anonymous(self):
         """Test WEB get specific completed task_id
@@ -1051,11 +1053,13 @@ class TestWeb:
         app1 = db.session.query(model.App).get(1)
         app1.info = dict(tutorial="some help")
         db.session.commit()
-        self.register()
+        #self.register()
         # First time accessing the app should redirect me to the tutorial
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
         assert "some help" in res.data,\
                 "There should be some tutorial for the application"
+        assert "?next=%2Fapp%2Ftest-app%2Ftutorial" in res.data,\
+                "There should be a link to Sign in and redirect to tutorial"
         # Second time should give me a task, and not the tutorial
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
         assert "some help" not in res.data
@@ -1395,5 +1399,3 @@ class TestWeb:
                 }, follow_redirects=True)
             assert 'Click here to recover your account' in outbox[0].body
             assert 'your Twitter account to ' in outbox[1].body
-
-
