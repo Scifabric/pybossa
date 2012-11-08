@@ -306,7 +306,9 @@ def import_task(short_name):
 def task_presenter(short_name, task_id):
     if (current_user.is_anonymous()):
         flash("Ooops! You are an anonymous user and will not get any credit "
-              " for your contributions. Sign in now!", "warning")
+              " for your contributions. <a href=\"" + url_for('account.signin',
+              next=url_for('app.task_presenter',short_name=short_name,task_id=task_id)) \
+              + "\">Sign in now!</a>", "warning")
     app = App.query.filter_by(short_name=short_name)\
             .first_or_404()
     task = db.session.query(model.Task).get(task_id)
@@ -343,18 +345,31 @@ def task_presenter(short_name, task_id):
 def presenter(short_name):
     app = App.query.filter_by(short_name=short_name)\
             .first_or_404()
-    if (current_user.is_anonymous()):
-        flash("Ooops! You are an anonymous user and will not get any credit "
-              "for your contributions. Sign in now!", "warning")
     if app.info.get("tutorial"):
         if request.cookies.get(app.short_name + "tutorial") is None:
+            if (current_user.is_anonymous()):
+                flash("Ooops! You are an anonymous user and will not get any credit "
+                        " for your contributions. <a href=\"" + url_for('account.signin',
+                            next=url_for('app.tutorial',short_name=short_name)) \
+                      + "\">Sign in now!</a>", "warning")
             resp = make_response(render_template('/applications/tutorial.html',
                 app=app))
             resp.set_cookie(app.short_name + 'tutorial', 'seen')
             return resp
         else:
+            if (current_user.is_anonymous()):
+                flash("Ooops! You are an anonymous user and will not get any credit "
+                        " for your contributions. <a href=\"" + url_for('account.signin',
+                            next=url_for('app.presenter',short_name=short_name)) \
+                      + "\">Sign in now!</a>", "warning")
             return render_template('/applications/presenter.html', app=app)
     else:
+        if (current_user.is_anonymous()):
+           flash("Ooops! You are an anonymous user and will not get any credit "
+                   " for your contributions. <a href=\"" + url_for('account.signin',
+                       next=url_for('app.presenter',short_name=short_name)) \
+                 + "\">Sign in now!</a>", "warning")
+
         return render_template('/applications/presenter.html', app=app)
 
 
