@@ -22,9 +22,13 @@ PORT = 5000
 SECRET = 'foobar'
 SECRET_KEY = 'my-session-secret'
 
+ITSDANGEORUSKEY = 'its-dangerous-key'
+
 ## project configuration
 BRAND = 'PyBossa'
 TITLE = 'PyBossa'
 COPYRIGHT = 'Set Your Institution'
 DESCRIPTION = 'Set the description in your config'
+TERMSOFUSE = 'http://okfn.org/terms-of-use/'
+DATAUSE = 'http://opendatacommons.org/licenses/by/'
 
