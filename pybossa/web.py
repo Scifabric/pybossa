@@ -113,6 +113,7 @@ def global_template_context():
     return dict(
         brand=app.config['BRAND'],
         title=app.config['TITLE'],
+        logo=app.config['LOGO'],
         copyright=app.config['COPYRIGHT'],
         description=app.config['DESCRIPTION'],
         terms_of_use=app.config['TERMSOFUSE'],
