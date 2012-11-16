@@ -142,21 +142,54 @@ def api_authentication():
         if user:
             _request_ctx_stack.top.user = user
 
+
 @app.route('/')
 def home():
     # in case we have not set up database yet
-    apps = db.session \
-           .query(model.TaskRun.app_id, func.count(model.TaskRun.app_id)) \
-           .group_by(model.TaskRun.app_id) \
-           .order_by(desc(func.count(model.TaskRun.app_id)))[:16]
-    blah = db.session.query(model.App).all()
-    len(blah[0].task_runs)
-    featured = db.session.query(model.Featured).all()
+    featured_ids = db.session.query(model.Featured).all()
 
+    featured = []
+    for f in featured_ids:
+        featured.append(db.session.query(model.App).get(f.app_id))
+
+    # top users and apps
+    # Get top 4 app ids
+    top_active_app_ids = db.session\
+            .query(model.TaskRun.app_id,
+                    func.count(model.TaskRun.id).label('total'))\
+            .group_by(model.TaskRun.app_id)\
+            .order_by('total DESC')\
+            .limit(4)\
+            .all()
+    top_apps = []
+    # print top5_active_app_ids
+    for id in top_active_app_ids:
+        if id[0] is not None:
+            app = db.session.query(model.App)\
+                    .get(id[0])
+            if not app.hidden:
+                top_apps.append(app)
+
+    # Get top 9 user ids
+    top_active_user_ids = db.session\
+            .query(model.TaskRun.user_id,
+                    func.count(model.TaskRun.id).label('total'))\
+            .group_by(model.TaskRun.user_id)\
+            .order_by('total DESC')\
+            .limit(9)\
+            .all()
+    top_users = []
+    for id in top_active_user_ids:
+        if id[0] is not None:
+            u = db.session.query(model.User).get(id[0])
+            tmp = dict(user=u, apps=[])
+            top_users.append(tmp)
     d = {
-        'apps': apps,
         'featured': featured,
+        'top_apps': top_apps,
+        'top_users': top_users
     }
+
     return render_template('/home/index.html', **d)
 
 
