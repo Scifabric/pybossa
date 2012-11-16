@@ -11,7 +11,7 @@
             <ul class="nav">
               <li><a href="{{ url_for('account.index')}}">Community</a></li>
               <li><a href="{{ url_for('app.index') }}">Applications</a></li>
-              <li><a href="#">Create</a></li>
+              <li><a href="{{ url_for('app.new') }}">Create</a></li>
               <li><a href="{{ url_for('about')}}">About</a></li>
             </ul>
           {% if current_user.is_authenticated() %}

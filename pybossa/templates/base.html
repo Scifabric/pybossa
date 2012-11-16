@@ -25,6 +25,9 @@
     <!-- Le fav and touch icons -->
     <link rel="shortcut icon" href="/static/img/favicon.ico">
 
+    <!-- Le javascript -->
+    <script type="text/javascript" src="{{url_for('static', filename='vendor/jquery.js')}}"></script>
+    <script type="text/javascript" src="{{url_for('static', filename='vendor/bootstrap/2.1.0/bootstrap.js')}}"></script>
     <!-- Google Analytics or similar solutions -->
     {% include '_ga.html' ignore missing %}
   </head>
@@ -53,8 +56,6 @@
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="http://code.jquery.com/jquery-latest.min.js" type="text/javascript"></script> <!-- Jquery -->
-    <script src="//netdna.bootstrapcdn.com/twitter-bootstrap/2.1.1/js/bootstrap.min.js"></script> <!-- Bootstrap -->
     <script>
         $("a[rel=popover]").popover({
             html: true,

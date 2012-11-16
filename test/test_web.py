@@ -164,7 +164,7 @@ class TestWeb:
         """Test WEB home page works"""
         res = self.app.get("/", follow_redirects=True)
         assert self.html_title() in res.data, res
-        assert "Create your own application" in res.data, res
+        assert "Create an App" in res.data, res
 
     def test_02_stats(self):
         """Test WEB leaderboard or stats page works"""
@@ -450,118 +450,6 @@ class TestWeb:
             else:
                 assert "Published</h2>" not in res.data, res.data
                 assert "app-published" not in res.data, res.data
-
-
-    def test_07_index_one_app(self):
-        """Test WEB index Featured for one registered application works"""
-        # With one application in the system
-        self.register()
-        self.new_application()
-        apps = db.session.query(model.App)\
-                .all()
-        assert len(apps) == 1,\
-                "There should be only 1 app, but there are %s" % len(apps)
-        featured_apps = []
-        for a in apps:
-            f = model.Featured()
-            f.app_id = a.id
-            featured_apps.append(f)
-        assert len(featured_apps) == 1,\
-                "There should be only 1 app, but there are %s" % len(apps)
-        db.session.add_all(featured_apps)
-        db.session.commit()
-        self.new_task(1)
-        self.signout()
-        res = self.app.get('/')
-        assert "Featured applications" in res.data, res.data
-        assert "Sample App" in res.data, res.data
-        assert "Try it!" in res.data, res.data
-        assert "Your application" in res.data, res.data
-        assert "Could be here!" in res.data, res.data
-        assert "Create an application!" in res.data, res.data
-
-    def test_08_index_two_apps(self):
-        """Test WEB index Featured for two registered applications works"""
-        # With one application in the system
-        self.register()
-        self.new_application()
-        self.new_task(1)
-        self.new_application(name="New App", short_name="newapp",
-                             description="New description")
-        self.new_task(2)
-        self.signout()
-        apps = db.session.query(model.App)\
-                .all()
-        assert len(apps) == 2,\
-                "There should be only 2 apps, but there are %s" % len(apps)
-        featured_apps = []
-        for a in apps:
-            f = model.Featured()
-            f.app_id = a.id
-            featured_apps.append(f)
-        assert len(featured_apps) == 2,\
-                "There should be only 2 app, but there are %s" % len(apps)
-        db.session.add_all(featured_apps)
-        db.session.commit()
-
-        res = self.app.get('/')
-        assert "Featured applications" in res.data, res.data
-        # First app
-        assert "Sample App" in res.data, res.data
-        assert "Description" in res.data, res.data
-        assert "Try it!" in res.data, res.data
-        # Second app
-        assert "New App" in res.data, res.data
-        assert "New description" in res.data, res.data
-        assert "Try it!" in res.data, res.data
-        # Create application demo
-        assert "Your application" in res.data, res.data
-        assert "Could be here!" in res.data, res.data
-        assert "Create an application!" in res.data, res.data
-
-    def test_09_index_three_apps(self):
-        """Test WEB index Featured for three registered applications works"""
-        # With one application in the system
-        self.register()
-        self.new_application()
-        self.new_task(1)
-        self.new_application(name="New App", short_name="newapp",
-                             description="New description")
-        self.new_task(2)
-        self.new_application(name="Third App", short_name="thirdapp",
-                             description="Third description")
-        self.new_task(3)
-        self.signout()
-        apps = db.session.query(model.App)\
-                .all()
-        assert len(apps) == 3,\
-                "There should be only 3 apps, but there are %s" % len(apps)
-        featured_apps = []
-        for a in apps:
-            f = model.Featured()
-            f.app_id = a.id
-            featured_apps.append(f)
-        assert len(featured_apps) == 3,\
-                "There should be only 3 app, but there are %s" % len(apps)
-        db.session.add_all(featured_apps)
-        db.session.commit()
-
-        res = self.app.get('/')
-        assert "Featured applications" in res.data, res.data
-        # First app
-        assert "Sample App" in res.data, res.data
-        assert "Description" in res.data, res.data
-        assert "Try it!" in res.data, res.data
-        # Second app
-        assert "New App" in res.data, res.data
-        assert "New description" in res.data, res.data
-        assert "Try it!" in res.data, res.data
-        # Create application demo
-        assert "Third App" in res.data, res.data
-        assert "Third description" in res.data, res.data
-        assert "Try it!" in res.data, res.data
-        # Big black button
-        assert "Create your own application" in res.data, res.data
 
     def test_10_get_application(self):
         """Test WEB application URL/<short_name> works"""
