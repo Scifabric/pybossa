@@ -161,8 +161,12 @@ def pretty_date(time=False):
         return ' '.join([str(day_diff), "days ago"])
     if day_diff < 31:
         return ' '.join([str(day_diff / 7), "weeks ago"])
+    if day_diff < 60:
+        return ' '.join([str(day_diff / 30), "month ago"])
     if day_diff < 365:
         return ' '.join([str(day_diff / 30), "months ago"])
+    if day_diff < (365 * 2):
+        return ' '.join([str(day_diff / 365), "year ago"])
     return ' '.join([str(day_diff / 365), "years ago"])
 
 
