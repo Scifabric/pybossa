@@ -4,6 +4,7 @@ GOOGLE_CLIENT_SECRET = ''
 TERMSOFUSE = 'http://okfn.org/terms-of-use/'
 DATAUSE = 'http://opendatacommons.org/licenses/by/'
 ITSDANGEORUSKEY = 'its-dangerous-key'
+LOGO = 'logo.png'
 MAIL_SERVER = 'localhost'
 MAIL_USERNAME = None
 MAIL_PASSWORD = None
