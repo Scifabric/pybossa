@@ -25,6 +25,18 @@ Installing and Upgrading
 
 See doc/install.rst or http://pybossa.readthedocs.org/en/latest/install.html
 
+Running Tests
+=============
+
+Set SQLALCHEMY_DATABASE_TEST_URI e.g.::
+
+  SQLALCHEMY_DATABASE_URI = 'postgres://pybossa:pass@localhost/pybossa'
+
+Then run the tests (requires nose)::
+
+  nosetests -v test/
+
+
 Useful Links
 ============
 
