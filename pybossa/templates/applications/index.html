@@ -47,7 +47,7 @@
                     {% if app.info.thumbnail %}
                     <img class="thumbnail" src="{{ app.info.thumbnail }}" style="max-width:100px; max-height:100px">
                     {% else %}
-                    <img class="thumbnail" src="{{url_for('static', filename='img/placeholder.png')}}" style="max-width=100px;">
+                    <img class="thumbnail" src="{{url_for('static', filename='img/placeholder.png')}}" style="max-width:100px;">
                     {% endif %}
                     </li>
                 </ul> <!-- End of class=thumbnails -->
