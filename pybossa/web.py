@@ -160,7 +160,7 @@ def home():
                     func.count(model.TaskRun.id).label('total'))\
             .group_by(model.TaskRun.app_id)\
             .order_by('total DESC')\
-            .limit(4)\
+            .limit(5)\
             .all()
     top_apps = []
     # print top5_active_app_ids
