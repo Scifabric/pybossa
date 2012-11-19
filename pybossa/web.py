@@ -177,7 +177,7 @@ def home():
                     func.count(model.TaskRun.id).label('total'))\
             .group_by(model.TaskRun.user_id)\
             .order_by('total DESC')\
-            .limit(9)\
+            .limit(10)\
             .all()
     top_users = []
     for id in top_active_user_ids:
