@@ -169,7 +169,14 @@ class App(db.Model, DomainObject):
         """Returns the percentage of submitted Tasks Runs done"""
         total = 0
         for t in self.tasks:
-            total = total + t.n_answers
+            if (t.n_answers is not None):
+                total = total + t.n_answers
+            else:
+                # Deprecated!
+                if t.info.get('n_answers'):
+                    total = total + int(t.info.get('n_answers'))
+                else:
+                    total = total + 30 # default value
         if len(self.tasks) != 0:
             return float(len(self.task_runs)) / total
         else:
