@@ -1,86 +1,105 @@
 {% extends "base.html" %}
 
 {% block content %}
-      <div class="hero-unit">
-        <h1>Welcome to {{ title }}!</h1>
-        <p>{{description|safe}}</p>
-        <p><a class="btn btn-primary btn-large" href="{{ url_for('app.index') }}">Start contributing now &raquo;</a></p>
+      <div class="banner">
+        <div class="row">
+          <div class="span4">
+              <h1>{{ brand }}</h1>
+            <p>Online assistance in performing tasks that require human cognition, knowledge or intelligence such as image classification, transcription, geocoding and more!</p>
+            <ul>
+              <li>Help advance research</li>
+              <li>Everything is open and freely usable</li>
+              <li>Things computers can't do</li>
+            </ul>
+          </div>
+          <div class="span8">
+            <ul class="featured">
+                {% for f in featured %}
+                <li><a href={{ url_for('app.details', short_name=f.short_name)}}>
+                    {% if f.info.thumbnail %}
+                    <img src="{{f.info.thumbnail}}">
+                    {% endif %}
+                    <h3>{{f.name}}</h3>
+                    <span class="label label-info">Info</span>
+                    </a>
+                </li>
+                {% endfor %}
+                {% for number in range(18 - featured|count) %}
+                <li></li>
+                {% endfor %}
+            </ul>
+          </div>
+        </div>
       </div>
 
-      {% if frontPageApps %}
-      <div class="row">
-          <div class="span12" style="text-align:center">
-              <h1>Featured applications</h1>
-              <br/>
+      <section class="grey get-started">
+        <div class="row">
+          <div class="span4">
+              <h2><i class="icon-play-circle"></i> Get Started</h2>
+            <p>It's really simple to start contributing.</p>
           </div>
-      </div>
-      {% endif %}
-      <div class="row">
-          {% for app in frontPageApps %}
-            <div class="span4">
-                <div class="row">
-                    <div class="span1">
-                        <ul class="thumbnails">
-                            <li class="span1">
-                                <div class="thumbnail">
-                                    {% if app.info.thumbnail %}
-                                    <img src="{{ app.info.thumbnail }}">
-                                    {% else %}
-                                    <img src="{{url_for('static', filename='img/app.png')}}">
-                                    {% endif %}
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="span3">
-                        {% if app.name == "Your application" and app.description == "Could be here!" %}
-                        <h4>{{ app.name }}</h4>
-                        <h5>{{ app.description }}</h5>
-                        <a href="{{ url_for('app.new')}}" class="btn btn-mini btn-inverse"><i class="icon-white icon-plus"></i> Create an application!</a>
-                        {% else %}
-                        <h4>
-                            <a href="{{ url_for('app.details', short_name = app.short_name) }}">
-                                {{ app.name }}
-                            </a>
-                        </h4>
-                        <h5>{{ app.description }}</h5>
-                        <a href="{{ url_for('app.presenter', short_name = app.short_name )}}" class="btn btn-mini btn-primary"><i class="icon-white icon-play-circle"></i> Try it!</a>
-                        {% endif %}
-                    </div>
-                </div>
+          <div class="span8">
+              <a href="{{url_for('app.index')}}" class="btn btn-info btn-large"><i class="icon-ok-sign"></i> Start Contributing</a> <a href="{{url_for('app.new')}}" class="btn btn-primary btn-large"><i class="icon-plus-sign"></i> Create an App</a>
+          </div>
+      </section>
+      
+      <section>
+        <h2><i class="icon-th"></i> Most Active Applications</h2>
+        <div class="row">
+          {% for app in top_apps %}
+          <div class="span3">
+            <div class="app box">
+                {% if app.info.thumbnail %}
+                <a href="{{url_for('app.details', short_name=app.short_name)}}" class="image" style="background-image:url({{app.info.thumbnail}})"></a>
+                {% else %}
+                <a href="{{url_for('app.details', short_name=app.short_name)}}" class="image" style="background-image:url({{url_for('static',filename='placeholder.png')}})"></a>
+                {% endif %}
+                <h3>{{app.name}}</h3>
+                <p>{{app.description}}</p>
+                <p><a href="{{url_for('app.details',short_name=app.short_name)}}" class="btn btn-mini btn-info">Info</a> <a href="{{url_for('app.presenter',short_name=app.short_name)}}" class="btn btn-mini btn-primary">Start</a></p>
             </div>
-          {% endfor %}
-      </div>
-      {% if threeApps or frontPageApps | count == 0 %}
-      <div class="row">
-          <div class="span12" style="text-align:center; padding-top:15px;">
-              <a class="btn btn-large btn-inverse" href="{{ url_for('app.new') }}">
-                  <i class="icon icon-white icon-plus"></i> 
-                  Create your own application!
-              </a>
           </div>
-      </div>
-      {% endif %}
-      <hr>
-      <!-- Example row of columns -->
-      <div class="row">
-        {% include 'home/_other_projects.html' ignore missing %}
-        <div class="span4">
-          <h2>Stats</h2>
-          <ul>
-            <li>App count: {{ stats['app'] }}</li>
-            <li>User count: {{ stats['user'] }}</li>
-            <li>Task count: {{ stats['task'] }}</li>
-            <li>Task Run count: {{ stats['taskrun'] }}</li>
-          </ul>
-          <p><a href="{{ url_for('stats.index') }}" class="btn"><i class="icon-trophy"></i> The Leaderboard &raquo;</a></p>
+          {% endfor %}
+          {% for i in range(4-top_apps|count)%}
+          <div class="span3">
+            <div class="app box">
+                <a href="#" class="image" style="background-image:url({{url_for('static',filename='img/placeholder.png')}})"></a>
+                <h3>Your application</h3>
+                <p>could be here!</p>
+                <p><a href="{{url_for('app.new')}}" class="btn btn-mini btn-primary">Create an app</a></p>
+            </div>
+          </div>
+          {% endfor %}
         </div>
-        <div class="span4">
-          <h2>Why Contribute?</h2>
-          <ul>
-            <li>Help advance research</li>
-            <li>Everything is open and freely usable</li>
-          </ul>
-        </div>
-      </div>
+      </section>
+      
+      <section class="grey">
+        <h2><i class="icon-group"></i> Most Active Volunteers</h2>
+        <ul class="users">
+            {% for item in top_users %}
+          <li>
+            <a data-content="
+                <strong>Joined:</strong> {{item.user.created[0:10]}} 
+                <br/>
+                <strong>Submitted Tasks:</strong> {{item.user.task_runs|length}}
+                " rel="popover" data-original-title="<strong>{{item.user.fullname}}</strong>">
+                <img src="{{item.user.email_addr|gravatar(size=90)}}">
+           </a>
+           <span class="label label-success">{{item.user.task_runs|length}}</span> <small>Tasks</small>
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+<script>
+$("a[rel=popover]").popover({
+        html: true,
+        animate: true,
+        trigger: 'hover',
+        position: 'above'
+                }).click(function(e) {
+                        e.preventDefault()
+                        });
+
+</script>
+
 {% endblock %}

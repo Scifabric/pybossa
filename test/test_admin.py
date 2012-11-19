@@ -226,7 +226,7 @@ class TestAdmin:
         self.new_application()
         # The application is in the system but not in the front page
         res = self.app.get('/', follow_redirects=True)
-        assert "Create your own application!" in res.data,\
+        assert "Create an App" in res.data,\
             "The application should not be listed in the front page"\
             " as it is not featured"
         res = self.app.get('/admin/featured', follow_redirects=True)
@@ -260,7 +260,7 @@ class TestAdmin:
         self.new_application()
         # The application is in the system but not in the front page
         res = self.app.get('/', follow_redirects=True)
-        assert "Create your own application!" in res.data,\
+        assert "Create an App" in res.data,\
             "The application should not be listed in the front page"\
             " as it is not featured"
         res = self.app.get('/admin/featured', follow_redirects=True)
@@ -285,7 +285,7 @@ class TestAdmin:
         self.signout()
         # The application is in the system but not in the front page
         res = self.app.get('/', follow_redirects=True)
-        assert "Create your own application!" in res.data,\
+        assert "Create an App" in res.data,\
             "The application should not be listed in the front page"\
             " as it is not featured"
         res = self.app.get('/admin/featured', follow_redirects=True)

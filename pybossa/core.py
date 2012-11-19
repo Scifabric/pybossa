@@ -73,7 +73,7 @@ def setup_logging(app):
         logger.addHandler(file_handler)
 
 login_manager = LoginManager()
-login_manager.login_view = "/account/signin"
+login_manager.login_view = 'account.signin'
 login_manager.login_message = u"Please sign in to access this page."
 app = create_app()
 db = SQLAlchemy(app)
