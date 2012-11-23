@@ -31,4 +31,5 @@ COPYRIGHT = 'Set Your Institution'
 DESCRIPTION = 'Set the description in your config'
 TERMSOFUSE = 'http://okfn.org/terms-of-use/'
 DATAUSE = 'http://opendatacommons.org/licenses/by/'
+LOGO = ''
 
