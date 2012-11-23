@@ -21,6 +21,19 @@ import pybossa.model as model
 from pybossa.core import db
 import random
 
+def new_task(app_id, user_id=None, user_ip=None):
+    '''Get a new task by calling the appropriate scheduler function.
+    '''
+    app = db.session.query(model.App).get(app_id)
+    sched_map = {
+        'default': get_depth_first_task,
+        'breath_first': get_breadth_first_task,
+        'depth_first': get_depth_first_task,
+        'random': get_random_task,
+        'incremental': get_incremental_task
+        }
+    sched = sched_map.get(app.info.get('sched'), sched_map['default'])
+    return sched(app_id, user_id, user_ip)
 
 def get_default_task(app_id, user_id=None, user_ip=None, n_answers=30):
     return get_depth_first_task(app_id, user_id, user_ip, n_answers=30)
