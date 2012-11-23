@@ -23,11 +23,13 @@ import random
 
 
 def get_default_task(app_id, user_id=None, user_ip=None, n_answers=30):
-    """Gets a new task for a given application
-    
-    The default scheduler returns tasks that have not been done by the current
-    user and which have the the least number of task runs.
+    return get_depth_first_task(app_id, user_id, user_ip, n_answers=30)
 
+
+def get_breadth_first_task(app_id, user_id=None, user_ip=None, n_answers=30):
+    """Gets a new task which have the least number of task runs (excluding the
+    current user).
+    
     Note that it **ignores** the number of answers limit for efficiency reasons
     (this is not a big issue as all it means is that you may end up with some
     tasks run more than is strictly needed!)
@@ -68,6 +70,21 @@ ORDER BY taskcount ASC limit 1 ;
     # if total_remaining == 0:
     #    return None
     # return candidate_tasks[0]
+
+
+def get_depth_first_task(app_id, user_id=None, user_ip=None, n_answers=30):
+    """Gets a new task for a given application"""
+    # Uncomment the next three lines to profile the sched function
+    #import timeit
+    #T = timeit.Timer(lambda: get_candidate_tasks(app_id, user_id,
+    #                  user_ip, n_answers))
+    #print "First algorithm: %s" % T.timeit(number=1)
+    candidate_tasks = get_candidate_tasks(app_id, user_id, user_ip, n_answers)
+    total_remaining = len(candidate_tasks)
+    #print "Available tasks %s " % total_remaining
+    if total_remaining == 0:
+        return None
+    return candidate_tasks[0]
 
 
 def get_random_task(app_id, user_id=None, user_ip=None, n_answers=30):
