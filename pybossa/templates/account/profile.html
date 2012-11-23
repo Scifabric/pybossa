@@ -44,7 +44,7 @@
                         {% if app.info.thumbnail %}
                         <img class="img-polaroid" src="{{app.info.thumbnail}}">
                         {% else %}
-                        <img class="img-polaroid" src="{{url_for('static', filename='img/app.png')}}">
+                        <img class="img-polaroid" src="{{url_for('static', filename='img/placeholder.png')}}" style="max-width:100px">
                         {% endif %}
                       </div>
                       <div class="span3">
@@ -94,7 +94,7 @@
                    {% if app.info.thumbnail %}
                        <img class="img-polaroid" src="{{ app.info.thumbnail }}">
                    {% else %}
-                   <img class="img-polaroid" src="{{url_for('static', filename='img/app.png')}}">
+                   <img class="img-polaroid" src="{{url_for('static', filename='img/placeholder.png')}}" style="max-width:100px;">
                    {% endif %}
                 </div>
                 <div id="data" class="span6">
@@ -134,7 +134,7 @@
                    {% if app.info.thumbnail %}
                        <img class="img-polaroid" src="{{ app.info.thumbnail }}">
                    {% else %}
-                       <img class="img-polaroid" src="{{url_for('static', filename='img/app.png')}}">
+                       <img class="img-polaroid" src="{{url_for('static', filename='img/placeholder.png')}}" style="max-width:100px;">
                    {% endif %}
                 </div>
                 <div id="data" class="span6">

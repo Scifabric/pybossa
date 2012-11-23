@@ -166,13 +166,19 @@ class App(db.Model, DomainObject):
     #: Percentage of completed tasks based on Task.state
     #: (0 not done, 1 completed)
     def completion_status(self):
-        """Returns the percentage of Tasks that are completed"""
-        completed = 0
+        """Returns the percentage of submitted Tasks Runs done"""
+        total = 0
         for t in self.tasks:
-            if t.state == "completed":
-                completed += 1
+            if (t.n_answers is not None):
+                total = total + t.n_answers
+            else:
+                # Deprecated!
+                if t.info.get('n_answers'):
+                    total = total + int(t.info.get('n_answers'))
+                else:
+                    total = total + 30 # default value
         if len(self.tasks) != 0:
-            return float(completed) / len(self.tasks)
+            return float(len(self.task_runs)) / total
         else:
             return float(0)
 

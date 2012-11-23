@@ -20,6 +20,7 @@ from flask import Response, request, g, render_template,\
         abort, flash, redirect, session, url_for
 from flaskext.login import login_user, logout_user, current_user
 from sqlalchemy.exc import UnboundExecutionError
+from sqlalchemy import func, desc
 from werkzeug.exceptions import *
 
 import pybossa
@@ -66,7 +67,7 @@ except Exception as inst:
 # Enable Google if available
 try:
     if (app.config['GOOGLE_CLIENT_ID'] and app.config['GOOGLE_CLIENT_SECRET']):
-        from pybossa.view.google import blueprint as google 
+        from pybossa.view.google import blueprint as google
         app.register_blueprint(google, url_prefix='/google')
 except Exception as inst:
     print type(inst)
@@ -112,6 +113,7 @@ def global_template_context():
     return dict(
         brand=app.config['BRAND'],
         title=app.config['TITLE'],
+        logo=app.config['LOGO'],
         copyright=app.config['COPYRIGHT'],
         description=app.config['DESCRIPTION'],
         terms_of_use=app.config['TERMSOFUSE'],
@@ -141,55 +143,55 @@ def api_authentication():
         if user:
             _request_ctx_stack.top.user = user
 
+
 @app.route('/')
 def home():
     # in case we have not set up database yet
-    try:
-        app_count = db.session.query(model.App)\
-                .filter(model.App.hidden == 0)\
-                .count()
-        task_count = db.session.query(model.Task).count()
-        taskrun_count = db.session.query(model.TaskRun).count()
-        user_count = db.session.query(model.User).count()
-        stats = {
-            'app': app_count,
-            'task': task_count,
-            'taskrun': taskrun_count,
-            'user': user_count
-            }
+    featured_ids = db.session.query(model.Featured).all()
 
-        featured = db.session.query(model.Featured).all()
+    featured = []
+    for f in featured_ids:
+        featured.append(db.session.query(model.App).get(f.app_id))
 
-        apps = []
-        for f in featured:
-            apps.append(db.session.query(model.App).get(f.app_id))
+    # top users and apps
+    # Get top 4 app ids
+    top_active_app_ids = db.session\
+            .query(model.TaskRun.app_id,
+                    func.count(model.TaskRun.id).label('total'))\
+            .group_by(model.TaskRun.app_id)\
+            .order_by('total DESC')\
+            .limit(5)\
+            .all()
+    top_apps = []
+    # print top5_active_app_ids
+    for id in top_active_app_ids:
+        if id[0] is not None:
+            app = db.session.query(model.App)\
+                    .get(id[0])
+            if not app.hidden:
+                top_apps.append(app)
 
-        threeApps = False
-        if (len(apps) > 0):
-            if (len(apps) == 1 or len(apps) == 2):
-                frontPageApps = apps
-                tmp = model.App(name="Your application",
-                        description="Could be here!")
-                frontPageApps.append(tmp)
-            else:
-                frontPageApps = []
-                for i in range(0, 3):
-                    app = random.choice(apps)
-                    apps.pop(apps.index(app))
-                    frontPageApps.append(app)
-                    threeApps = True
-        else:
-            frontPageApps = []
+    # Get top 9 user ids
+    top_active_user_ids = db.session\
+            .query(model.TaskRun.user_id,
+                    func.count(model.TaskRun.id).label('total'))\
+            .group_by(model.TaskRun.user_id)\
+            .order_by('total DESC')\
+            .limit(10)\
+            .all()
+    top_users = []
+    for id in top_active_user_ids:
+        if id[0] is not None:
+            u = db.session.query(model.User).get(id[0])
+            tmp = dict(user=u, apps=[])
+            top_users.append(tmp)
+    d = {
+        'featured': featured,
+        'top_apps': top_apps,
+        'top_users': top_users
+    }
 
-    except UnboundExecutionError:
-        stats = {
-            'app': 0,
-            'task': 0,
-            'taskrun': 0,
-            'user': 0
-            }
-    return render_template('/home/index.html', stats=stats,
-            frontPageApps=frontPageApps, threeApps=threeApps)
+    return render_template('/home/index.html', **d)
 
 
 @app.route("/about")
