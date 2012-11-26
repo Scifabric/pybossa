@@ -6,6 +6,8 @@ import random
 #from flaskext.login import login_user, logout_user, current_user
 
 from base import web, model, Fixtures, db
+from pybossa import sched
+
 from nose.tools import assert_equal
 
 
@@ -16,15 +18,12 @@ class TestSCHED:
         Fixtures.create()
         self.endpoints = ['app', 'task', 'taskrun']
 
-
     def tearDown(self):
         db.session.remove()
-
 
     @classmethod
     def teardown_class(cls):
         model.rebuild_db()
-
 
     def isTask(self, task_id, tasks):
         """Returns True if the task_id is in tasks list"""
@@ -344,4 +343,64 @@ class TestSCHED:
                     assert self.isUnique(tr.user_id,t.task_runs), "There are two or more Answers from same User ID"
                 else:
                     assert self.isUnique(tr.user_ip,t.task_runs), "There are two or more Answers from same User IP"
+
+
+class TestGetBreadthFirst:
+    @classmethod
+    def teardown_class(cls):
+        model.rebuild_db()
+
+    def tearDown(self):
+        db.session.remove()
+
+    def delTaskRuns(self, app_id=1):
+        """Deletes all TaskRuns for a given app_id"""
+        db.session.query(model.TaskRun).filter_by(app_id=1).delete()
+        db.session.commit()
+        db.session.remove()
+
+    def test_get_default_task_anonymous(self):
+        self._test_get_breadth_first_task()
+
+    def test_get_breadth_first_task_user(self):
+        user = Fixtures.create_users()[0]
+        self._test_get_breadth_first_task(user)
+
+    def _test_get_breadth_first_task(self, user=None):
+        self.delTaskRuns()
+        if user:
+            short_name = 'xyzuser'
+        else:
+            short_name = 'xyznouser'
+        app = model.App(short_name=short_name)
+        task = model.Task(app=app, state = '0', info={})
+        task2 = model.Task(app=app, state = '0', info={})
+        db.session.add(app)
+        db.session.add(task)
+        db.session.add(task2)
+        db.session.commit()
+        taskid = task.id
+        appid = app.id
+        # give task2 a bunch of runs
+        for idx in range(2):
+            self._add_task_run(task2)
+
+        # now check we get task without task runs
+        out = sched.get_breadth_first_task(appid)
+        assert out.id == taskid, out
+
+        self._add_task_run(task)
+        out = sched.get_breadth_first_task(appid)
+        assert out.id == taskid, out
+
+        # now add 2 more taskruns. We now have 3 and 2 task runs per task
+        self._add_task_run(task)
+        self._add_task_run(task)
+        out = sched.get_breadth_first_task(appid)
+        assert out.id == task2.id, out
+
+    def _add_task_run(self, task, user=None):
+        tr = model.TaskRun(task=task, user=user)
+        db.session.add(tr)
+        db.session.commit()
 
