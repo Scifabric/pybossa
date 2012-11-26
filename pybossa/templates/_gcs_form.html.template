@@ -1,0 +1,9 @@
+<form class="navbar-form" style="padding-top:20px;" action="/search">
+      <input type="hidden" name="cx" value="partner-pub-XXXXXXXX:YYYYY"/>
+      <input type="hidden" name="cof" value="FORID:10" />
+      <input type="hidden" name="ie" value="ISO-8859-1" />
+      <div class="input-append">
+      <input type="text" name="q" size="21" class="input-small" placeholder="Search"  />
+      <span class="add-on"><i class="icon-search" style="color:black"></i></span>
+      </div>
+</form>

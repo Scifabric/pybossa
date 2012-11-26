@@ -199,6 +199,11 @@ def about():
     """Render the about template"""
     return render_template("/home/about.html")
 
+@app.route("/search")
+def search():
+    """Render search results page"""
+    return render_template("/home/search.html")
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.NOTSET)
     app.run(host=app.config['HOST'], port=app.config['PORT'],
