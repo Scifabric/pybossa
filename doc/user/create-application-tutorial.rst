@@ -193,7 +193,7 @@ Creating a tutorial for the users
 
 In general, users will like to have some feedback when accessing for the very
 first time your application. Usually, the overview page of your application
-will not be enought, so you can actually build a tutorial (a web page) that
+will not be enough, so you can actually build a tutorial (a web page) that
 will explain to the volunteer how he can participate in the application.
 
 PyBossa will detect if the user is accessing for the very first time your
@@ -201,12 +201,16 @@ application, so in that case, it will load the **tutorial** if your application
 has one.
 
 Adding a tutorial is really simple: you only have to create a file named
-**tutorial.html** and add it to the **info** object::
+**tutorial.html** and load the content of the file to the **info** object::
 
   info = { 'thumbnail': http://hosting-service/thumbnail-name.png,
            'task_presenter': template.html file,
-           'tutorial': tutorial.html
+           'tutorial': '<div class="row"><div class="span12"><h1>Tutorial</h1>...</div></div>'
          }
+
+The **createTasks.py** file will detect if you have file called
+**tutorial.html** and in that case, load the contents automatically for you in
+the **info** JSON object.
 
 The tutorial could have whatever you like: videos, nice animations, etc.
 PyBossa will render for you the header and the footer, so you only have to
