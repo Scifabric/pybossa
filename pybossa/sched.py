@@ -16,13 +16,76 @@
 #import json
 #from flask import Blueprint, request, url_for, flash, redirect, abort
 #from flask import abort, request, make_response, current_app
-from sqlalchemy.sql import not_
+from sqlalchemy.sql import not_, text
 import pybossa.model as model
 from pybossa.core import db
 import random
 
+def new_task(app_id, user_id=None, user_ip=None):
+    '''Get a new task by calling the appropriate scheduler function.
+    '''
+    app = db.session.query(model.App).get(app_id)
+    sched_map = {
+        'default': get_depth_first_task,
+        'breath_first': get_breadth_first_task,
+        'depth_first': get_depth_first_task,
+        'random': get_random_task,
+        'incremental': get_incremental_task
+        }
+    sched = sched_map.get(app.info.get('sched'), sched_map['default'])
+    return sched(app_id, user_id, user_ip)
 
 def get_default_task(app_id, user_id=None, user_ip=None, n_answers=30):
+    return get_depth_first_task(app_id, user_id, user_ip, n_answers=30)
+
+
+def get_breadth_first_task(app_id, user_id=None, user_ip=None, n_answers=30):
+    """Gets a new task which have the least number of task runs (excluding the
+    current user).
+    
+    Note that it **ignores** the number of answers limit for efficiency reasons
+    (this is not a big issue as all it means is that you may end up with some
+    tasks run more than is strictly needed!)
+
+    NB: current algorithm has the draw-back that it will allocate tasks to a
+    user which the user has already done if that task has the least number of
+    performances (excluding that done by the user). To fix this is possible but
+    would be costly as we'd need to find all tasks the user has done and
+    exclude those task ids explicitly.
+    """
+    # Uncomment the next three lines to profile the sched function
+    #import timeit
+    #T = timeit.Timer(lambda: get_candidate_tasks(app_id, user_id,
+    #                  user_ip, n_answers))
+    #print "First algorithm: %s" % T.timeit(number=1)
+
+    sql = text('''
+SELECT task.id, count(task_run.task_id) AS taskcount from task
+LEFT JOIN task_run ON (task.id = task_run.task_id)
+WHERE task.app_id = :app_id AND
+(task_run.user_id IS NULL OR task_run.user_id != :user_id OR task_run.id IS NULL)
+GROUP BY task.id
+ORDER BY taskcount ASC limit 1 ;
+''')
+    # results will be list of (taskid, count)
+    tasks = db.engine.execute(sql, app_id=app_id, user_id=user_id)
+    # ignore n_answers for the present - we will just keep going once we've
+    # done as many as we need
+    # tasks = [ x[0] for x in tasks if x[1] < n_answers ]
+    tasks = [ x[0] for x in tasks ]
+    if tasks:
+        return db.session.query(model.Task).get(tasks[0])
+    else:
+        return None
+    # candidate_tasks = get_candidate_tasks(app_id, user_id, user_ip, n_answers)
+    # total_remaining = len(candidate_tasks)
+    #print "Available tasks %s " % total_remaining
+    # if total_remaining == 0:
+    #    return None
+    # return candidate_tasks[0]
+
+
+def get_depth_first_task(app_id, user_id=None, user_ip=None, n_answers=30):
     """Gets a new task for a given application"""
     # Uncomment the next three lines to profile the sched function
     #import timeit
@@ -50,7 +113,6 @@ def get_incremental_task(app_id, user_id=None, user_ip=None, n_answers=30):
        transcriptions"""
     candidate_tasks = get_candidate_tasks(app_id, user_id, user_ip, n_answers)
     total_remaining = len(candidate_tasks)
-    print "Available tasks %s " % total_remaining
     if total_remaining == 0:
         return None
     rand = random.randrange(0, total_remaining)
