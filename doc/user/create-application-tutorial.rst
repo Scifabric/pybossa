@@ -26,7 +26,7 @@ server.
 
 .. note::
 
-   You can use http://pybossa.com for testing. 
+   You can use http://crowdcrafting.org for testing. 
 
 When you create the account, you will have to access your profile, and copy the
 **API-KEY** that has been generated for you. This **API-KEY** allows you to create the
@@ -65,6 +65,29 @@ The following section gives more details about how to use the script.
     If you are running a PyBossa server locally, you can omit the URL parameter
     as by default it uses the URL http://localhost:5000
 
+Configuring the name, short name, thumbnail, etc.
+=================================================
+
+The Flickr Person Finder provides a file called: **app.json** that has the
+following content::
+
+    {
+        "name": "Flickr Person Finder",
+        "short_name": "flickrperson",
+        "thumbnail": "http://img37.imageshack.us/img37/156/flickrpersonthumbnail.png",
+        "description": "Image pattern recognition",
+        "question": "Do you see a human in this photo?"
+    }
+
+You will need to modify the **name** and **short_name** fiels in order to
+create an application in crowdcrafting.org, as there is already an application
+registered with those values.
+
+You can re-use the other fields if you want. **Description** will be the text
+shown in the application listing page, and the **question** field is the
+question that will be shown to the users when they collaborate with your
+project.
+
 Creating the Tasks and Application
 ==================================
 
@@ -102,7 +125,9 @@ And saved into the task field **info** of the task model. As Flickr only
 publishes the latest 20 uploaded photos in their public feed, the script will
 create only 20 tasks in PyBossa.
 
-In order to create the application and its tasks, run the following script::
+Finally the script will read the **app.json** file to create the application
+and associated tasks. In order to create the application and its tasks, 
+run the following script::
 
   python createTasks.py -u http://PYBOSSA-SERVER -k API-KEY -c
 
@@ -147,7 +172,7 @@ CSS properties that this framework provides.
 
 The long description is shown in the application home page::
 
- http://pybossa.com/app/flickrperson
+ http://crowdcrafting.org/app/flickrperson
 
 If you want to modify the description you have two options:
 
@@ -163,13 +188,19 @@ It is possible also to add a nice icon for the application. By default PyBossa
 will render a 100x100 pixels empty thumbnail for those applications that do not
 provide it. If you want to add an icon you only have to upload the thumbnail of
 size 100x100 pixels to a hosting service like Flickr, ImageShack, etc. and use
-the URL image link to include it in the **info** field (check createTask.py
-script as it has an example)::
+the URL image link to include it in the **info** field. 
 
-  info = { 'thumbnail': http://hosting-service/thumbnail-name.png,
-           'task_presenter': template.html file,
-           'tutorial': tutorial.html
-         }
+In order to include a thumbnail all you have to do is to modify the
+**app.json** file and include the full URL where the icon is hosted:
+
+    {
+        "name": "Flickr Person Finder",
+        "short_name": "flickrperson",
+        "thumbnail": "http://img37.imageshack.us/img37/156/flickrpersonthumbnail.png",
+        "description": "Image pattern recognition",
+        "question": "Do you see a human in this photo?"
+    }
+
 
 Presenting the Tasks to the user
 ================================
@@ -420,7 +451,7 @@ answer for the current task.
 
 In order to see the answers from the volunteers, you can open in your web
 browser the file **results.html**. The web page should show a chart pie with
-answers from the server http://pybossa.com but you can modify the file
+answers from the server http://crowdcrafting.org but you can modify the file
 **results.js** to poll your own server data.
 ¬                                                                                    
 The results page shows the number of answers from the volunteers for a given
