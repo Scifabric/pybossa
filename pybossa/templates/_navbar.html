@@ -13,7 +13,9 @@
               <li><a href="{{ url_for('app.index') }}">Applications</a></li>
               <li><a href="{{ url_for('app.new') }}">Create</a></li>
               <li><a href="{{ url_for('about')}}">About</a></li>
+              {% include '_gcs_form.html' ignore missing %}
             </ul>
+
           {% if current_user.is_authenticated() %}
             <ul class="nav secondary-nav pull-right">
               <li><a href="#" data-toggle="dropdown" class="dropdown-toggle"><i class="icon icon-user"></i> {{ current_user.name }} <span class="caret"></span></a>
@@ -35,7 +37,6 @@
               <li><a href="{{ url_for('account.signin') }}"><i class="icon icon-white icon-signin"></i> Sign in</a></li>
             </ul>
             {% endif %}
-
           </div><!--/.nav-collapse -->
         </div>
       </div>
