@@ -7,7 +7,7 @@ def read(app=None):
     return True
 
 def update(app):
-    if not current_user.is_anonymous() and app.owner_id == current_user.id:
+    if not current_user.is_anonymous() and (app.owner_id == current_user.id or current_user.admin == 1):
         return True
     else:
         return False
