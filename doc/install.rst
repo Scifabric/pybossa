@@ -59,7 +59,7 @@ Do::
   alembic upgrade head
 
 
-Google Analitics
+Google Analytics
 ================
 
 PyBossa provides an easy way to integrate Google Analytics with your PyBossa
