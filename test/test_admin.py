@@ -414,3 +414,38 @@ class TestAdmin:
         res = self.app.get("/admin/users/del/2", follow_redirects=True)
         assert res.status == "403 FORBIDDEN",\
             "This action should be forbidden, not enought privileges"
+
+    def test_16_admin_update_app(self):
+        """Test ADMIN can update an app that belongs to another user"""
+        self.register()
+        self.signout()
+        self.register(fullname="Juan Jose", username="juan",
+                email="juan@juan.com", password="juan")
+        self.new_application()
+        self.signout()
+        # Sign in with the root user
+        self.signin()
+        res = self.update_application(method="GET")
+        assert "Update the application" in res.data,\
+            "The app should be updated by admin users"
+        res = self.update_application(new_name="Root",
+                new_short_name="rootsampleapp")
+        res = self.app.get('/app/rootsampleapp', follow_redirects=True)
+        assert "Root" in res.data, "The app should be updated by admin users"
+
+    def test_17_admin_delete_app(self):
+        """Test ADMIN can delete an app that belongs to another user"""
+        self.register()
+        self.signout()
+        self.register(fullname="Juan Jose", username="juan",
+                email="juan@juan.com", password="juan")
+        self.new_application()
+        self.signout()
+        # Sign in with the root user
+        self.signin()
+        res = self.delete_application(method="GET")
+        assert "Yes, delete it" in res.data,\
+            "The app should be deleted by admin users"
+        res = self.delete_application()
+        assert "Application deleted!" in res.data,\
+                "The app should be deleted by admin users"
