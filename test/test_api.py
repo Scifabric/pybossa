@@ -331,18 +331,59 @@ class TestAPI:
         res = self.app.delete('/api/app/%s' % id_,
             data=data
         )
-        assert_equal(res.status, '403 FORBIDDEN',\
+        assert_equal(res.status, '403 FORBIDDEN',
                 'Anonymous should not be allowed to delete')
         ### real user but not allowed as not owner!
-        res = self.app.delete('/api/app/%s?api_key=%s' %\
+        res = self.app.delete('/api/app/%s?api_key=%s' %
                 (id_, Fixtures.api_key_2), data=datajson)
-        assert_equal(res.status, '401 UNAUTHORIZED',\
+        assert_equal(res.status, '401 UNAUTHORIZED',
                 'Should not be able to delete apps of others')
 
+        res = self.app.delete('/api/app/%s?api_key=%s' %
+                (id_, Fixtures.api_key), data=datajson)
+
+        assert_equal(res.status, '204 NO CONTENT', res.data)
+
+    def test_04_admin_app_post(self):
+        """Test API App update/delete for ADMIN users"""
+        name = u'XXXX Project'
+        data = dict(
+            name=name,
+            short_name='xxxx-project',
+            long_description=u'<div id="longdescription">\
+                               Long Description</div>')
+        data = json.dumps(data)
+        # now a real user (we use the second api_key as first user is an admin)
+        res = self.app.post('/api/app?api_key=' + Fixtures.api_key_2,
+            data=data,
+        )
+        out = db.session.query(model.App).filter_by(name=name).one()
+        assert out, out
+        assert_equal(out.short_name, 'xxxx-project'), out
+        assert_equal(out.owner.name, 'tester-2')
+        id_ = out.id
+        db.session.remove()
+
+        # test update
+        data = {
+            'name': 'My New Title'
+            }
+        datajson = json.dumps(data)
+        ### admin user but not owner!
+        res = self.app.put('/api/app/%s?api_key=%s' % (id_, Fixtures.api_key),
+            data=datajson
+        )
+        assert_equal(res.status, '200 OK', res.data)
+        out2 = db.session.query(model.App).get(id_)
+        assert_equal(out2.name, data['name'])
+
+        # test delete
+        ### real user  not owner!
         res = self.app.delete('/api/app/%s?api_key=%s' %\
                 (id_, Fixtures.api_key), data=datajson)
 
         assert_equal(res.status, '204 NO CONTENT', res.data)
+
 
     def test_05_task_post(self):
         '''Test API Task creation and auth'''
