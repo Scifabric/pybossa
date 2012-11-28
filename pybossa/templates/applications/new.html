@@ -5,22 +5,57 @@
 {% block content %}
 {% from "_formhelpers.html" import render_field %}
 <div class="row">
-  <div class="span11 offset1">
+    <div class="span12">
+        <h1>Creating an application</h1>
+        <p class="lead">You can create an application re-using one of the available <strong>templates</strong> and the <strong>API</strong>
+    </div>
+</div>
+<div class="row">
+    <div class="span4">
+        <h2><i class="icon-picture"></i> Image pattern reconigtion</h2> 
+        <h3>Classify the contents of a picture</h3>
+        <a target="_blank" href="http://github.com/PyBossa/app-flickrperson" class="btn-info btn"><i class="icon-github"></i> Template</a>
+        <a target="_blank" href="http://docs.pybossa.com/en/latest/user/create-application-tutorial.html" class="btn-primary btn"><i class="icon-book"></i> Documentation</a>
+    </div>
+    <div class="span4">
+        <h2><i class="icon-globe"></i>Geo-coding</h2> 
+        <h3>Use web mapping tools</h3>
+        <a target="_blank" href="http://github.com/PyBossa/app-geocoding" class="btn-info btn"><i class="icon-github"></i> Template</a>
+        <a target="_blank" href="http://docs.pybossa.com/en/latest/user/create-application-tutorial.html" class="btn-primary btn"><i class="icon-book"></i> Documentation</a>
+    </div>
+    <div class="span4">
+        <h2><i class="icon-pencil"></i>Transcribing documents</h2> 
+        <h3>Transcribe PDF documents</h3>
+        <a target="_blank" href="http://github.com/PyBossa/pdftranscribe" class="btn-info btn"><i class="icon-github"></i> Template</a>
+        <a target="_blank" href="http://docs.pybossa.com/en/latest/user/create-application-tutorial.html" class="btn-primary btn"><i class="icon-book"></i> Documentation</a>
+    </div>
+</div>
+<div class="row">
+    <div class="span12">
+        <hr>
+        <button type="button" class="btn" data-toggle="collapse" data-target="#app-form"> 
+            <i class="icon-plus-sign"></i>
+            Or using a web form and a CSV file importer for the tasks
+        </button>
+    </div>
+</div>
+<div id="app-form" class="row collapse out"> 
+    <div class="span12">
     <legend>Create a new application</legend>
     <form class="form-horizontal" method="post" action="{{ url_for('app.new') }}">
-    {{ form.hidden_tag() }}
-      <fieldset>
-        {{ render_field(form.name, class_="input-xlarge", placeholder="The name of the application") }}
-        {{ render_field(form.short_name, class_="input-xlarge", placeholder="Short name or slug for the application") }}
-        {{ render_field(form.description, class_="input-xlarge", placeholder="Give some details about the application")}}
-        {{ render_field(form.long_description, class_="input-xlarge", placeholder="Explain the application (you can use HTML code!)")}}
-        {{ render_field(form.hidden)}}
-        <div class="form-actions">
-          <input type="submit" value="Create the application" class="btn btn-primary" />
-          <a href="{{url_for('account.profile')}}" class="btn">Cancel</a>
-        </div>
-      </fieldset>
+        {{ form.hidden_tag() }}
+        <fieldset>
+            {{ render_field(form.name, class_="input-xlarge", placeholder="The name of the application") }}
+            {{ render_field(form.short_name, class_="input-xlarge", placeholder="Short name or slug for the application") }}
+            {{ render_field(form.description, class_="input-xlarge", placeholder="Give some details about the application")}}
+            {{ render_field(form.long_description, class_="input-xlarge", placeholder="Explain the application (you can use HTML code!)")}}
+            {{ render_field(form.hidden)}}
+            <div class="form-actions">
+                <input type="submit" value="Create the application" class="btn btn-primary" />
+                <a href="{{url_for('account.profile')}}" class="btn">Cancel</a>
+            </div>
+        </fieldset>
     </form>
-  </div>
+    </div>
 </div>
 {% endblock %}
