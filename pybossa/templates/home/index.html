@@ -13,6 +13,8 @@
                 <li><a href={{ url_for('app.details', short_name=f.short_name)}}>
                     {% if f.info.thumbnail %}
                     <img src="{{f.info.thumbnail}}">
+                    {% else %}
+                    <img src="{{url_for('static', filename="img/placeholder.png")}}">
                     {% endif %}
                     <h3>{{f.name}}</h3>
                     <span class="label label-info">Info</span>
