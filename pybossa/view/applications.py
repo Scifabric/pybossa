@@ -412,6 +412,7 @@ def tasks(short_name, page):
                 .count()
         tasks = db.session.query(model.Task)\
                 .filter_by(app_id=app.id)\
+                .order_by(model.Task.id)\
                 .limit(per_page)\
                 .offset((page - 1) * per_page)\
                 .all()
@@ -434,6 +435,7 @@ def tasks(short_name, page):
                     .count()
             tasks = db.session.query(model.Task)\
                     .filter_by(app_id=app.id)\
+                    .order_by(model.Task.id)\
                     .limit(per_page)\
                     .offset((page - 1) * per_page)\
                     .all()
