@@ -136,7 +136,7 @@ class App(db.Model, DomainObject):
     description = Column(Unicode(length=255))
     #: long description
     long_description = Column(UnicodeText)
-    #: TODO: What is this?
+    ## TODO: What is this?
     long_tasks = Column(Integer, default=0)
     #: Boolean integer (0,1) indicating that \
     #: this App should be hidden from everyone but Administrators
@@ -151,7 +151,16 @@ class App(db.Model, DomainObject):
     time_limit = Column(Integer, default=0)
     calibration_frac = Column(Float, default=0)
     bolt_course_id = Column(Integer, default=0)
-    #: Standard JSON blob for additional data
+    #: Standard JSON blob for additional data. This field also
+    #: stores information used by PyBossa, such as the app thumbnail, 
+    #: the schedule mode, and the task presenter.
+    #: 
+    #:    {
+    #:       task_presenter: [html/javascript],
+    #:       thumbnail: [url to the thumbnail image]
+    #:       sched: [scheduling mode]
+    #:    }
+    #:
     info = Column(JSONType, default=dict)
 
     ## Relationships
@@ -239,6 +248,10 @@ class Task(db.Model, DomainObject):
     #:       url: [image-url],
     #:       question: [is this a person]
     #:    }
+    #:
+    #: This field also stores values used by PyBossa, most notably
+    #: the number of answers ("n_answers") needed for this task to be 
+    #: considered complete.
     info = Column(JSONType, default=dict)
     #: Number of answers or TaskRuns per task
     n_answers = Column(Integer, default=30)
