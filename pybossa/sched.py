@@ -135,18 +135,21 @@ def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30):
     if user_id and not user_ip:
         participated_tasks = db.session.query(model.TaskRun.task_id)\
                 .filter_by(user_id=user_id)\
-                .filter_by(app_id=app_id)
+                .filter_by(app_id=app_id)\
+                .order_by(model.TaskRun.task_id)
     else:
         if not user_ip:
             user_ip = "127.0.0.1"
         participated_tasks = db.session.query(model.TaskRun.task_id)\
                 .filter_by(user_ip=user_ip)\
-                .filter_by(app_id=app_id)
+                .filter_by(app_id=app_id)\
+                .order_by(model.TaskRun.task_id)
 
     tasks = db.session.query(model.Task)\
             .filter(not_(model.Task.id.in_(participated_tasks.all())))\
             .filter_by(app_id=app_id)\
             .filter(model.Task.state != "completed")\
+            .order_by(model.Task.id)\
             .limit(10)\
             .all()
 
@@ -156,6 +159,7 @@ def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30):
         # DEPRECATED: t.info.n_answers will be removed
         # DEPRECATED: so if your task has a different value for n_answers
         # DEPRECATED: use t.n_answers instead
+        print t.id
         if (t.info.get('n_answers')):
             t.n_answers = int(t.info['n_answers'])
         # NEW WAY!
