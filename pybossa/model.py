@@ -169,14 +169,14 @@ class App(db.Model, DomainObject):
         """Returns the percentage of submitted Tasks Runs done"""
         total = 0
         for t in self.tasks:
-            if (t.n_answers is not None):
-                total = total + t.n_answers
+            # Deprecated!
+            if t.info.get('n_answers'):
+                total = total + int(t.info.get('n_answers'))
             else:
-                # Deprecated!
-                if t.info.get('n_answers'):
-                    total = total + int(t.info.get('n_answers'))
+                if (t.n_answers is not None):
+                    total = total + t.n_answers
                 else:
-                    total = total + 30 # default value
+                    total = total + 30
         if len(self.tasks) != 0:
             return float(len(self.task_runs)) / total
         else:
@@ -352,4 +352,3 @@ def make_admin(mapper, conn, target):
     if users == 0:
         target.admin = True
         #print "User %s is the first one, so we make it an admin" % target.name
-
