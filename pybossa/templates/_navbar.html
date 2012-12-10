@@ -13,12 +13,11 @@
               <li><a href="{{ url_for('app.index') }}">Applications</a></li>
               <li><a href="{{ url_for('app.new') }}">Create</a></li>
               <li><a href="{{ url_for('about')}}">About</a></li>
-              <li>{% include '_gcs_form.html' ignore missing %}</li>
             </ul>
-
+            {% include '_gcs_form.html' ignore missing %}
           {% if current_user.is_authenticated() %}
             <ul class="nav secondary-nav pull-right">
-              <li><a href="#" data-toggle="dropdown" class="dropdown-toggle"><i class="icon icon-user"></i> {{ current_user.name }} <span class="caret"></span></a>
+              <li><a href="#" data-toggle="dropdown" class="dropdown-toggle"><i class="icon icon-user"></i> {{ current_user.name | truncate(8,true) }} <span class="caret"></span></a>
                 <ul class="dropdown-menu">
                     <li><a href="{{ url_for('account.profile') }}"><i class="icon icon-user"></i> Account</a></li>
                     {% if current_user.admin == 1 %}
