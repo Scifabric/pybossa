@@ -248,10 +248,6 @@ class Task(db.Model, DomainObject):
     #:       url: [image-url],
     #:       question: [is this a person]
     #:    }
-    #:
-    #: This field also stores values used by PyBossa, most notably
-    #: the number of answers ("n_answers") needed for this task to be 
-    #: considered complete.
     info = Column(JSONType, default=dict)
     #: Number of answers or TaskRuns per task
     n_answers = Column(Integer, default=30)
