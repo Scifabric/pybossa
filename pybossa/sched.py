@@ -21,25 +21,23 @@ import pybossa.model as model
 from pybossa.core import db
 import random
 
-def new_task(app_id, user_id=None, user_ip=None):
+
+def new_task(app_id, user_id=None, user_ip=None, offset=0):
     '''Get a new task by calling the appropriate scheduler function.
     '''
     app = db.session.query(model.App).get(app_id)
     sched_map = {
         'default': get_depth_first_task,
-        'breath_first': get_breadth_first_task,
+        'breadth_first': get_breadth_first_task,
         'depth_first': get_depth_first_task,
         'random': get_random_task,
         'incremental': get_incremental_task
         }
     sched = sched_map.get(app.info.get('sched'), sched_map['default'])
-    return sched(app_id, user_id, user_ip)
-
-def get_default_task(app_id, user_id=None, user_ip=None, n_answers=30):
-    return get_depth_first_task(app_id, user_id, user_ip, n_answers=30)
+    return sched(app_id, user_id, user_ip, offset=offset)
 
 
-def get_breadth_first_task(app_id, user_id=None, user_ip=None, n_answers=30):
+def get_breadth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
     """Gets a new task which have the least number of task runs (excluding the
     current user).
     
@@ -73,6 +71,7 @@ ORDER BY taskcount ASC limit 1 ;
     # done as many as we need
     # tasks = [ x[0] for x in tasks if x[1] < n_answers ]
     tasks = [ x[0] for x in tasks ]
+    print len(tasks)
     if tasks:
         return db.session.query(model.Task).get(tasks[0])
     else:
@@ -85,33 +84,39 @@ ORDER BY taskcount ASC limit 1 ;
     # return candidate_tasks[0]
 
 
-def get_depth_first_task(app_id, user_id=None, user_ip=None, n_answers=30):
+def get_depth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
     """Gets a new task for a given application"""
     # Uncomment the next three lines to profile the sched function
     #import timeit
     #T = timeit.Timer(lambda: get_candidate_tasks(app_id, user_id,
     #                  user_ip, n_answers))
     #print "First algorithm: %s" % T.timeit(number=1)
-    candidate_tasks = get_candidate_tasks(app_id, user_id, user_ip, n_answers)
+    candidate_tasks = get_candidate_tasks(app_id, user_id, user_ip, n_answers, offset=offset)
     total_remaining = len(candidate_tasks)
     #print "Available tasks %s " % total_remaining
     if total_remaining == 0:
         return None
-    return candidate_tasks[0]
+    if (offset == 0):
+        return candidate_tasks[0]
+    else:
+        if (offset < len(candidate_tasks)):
+            return candidate_tasks[offset]
+        else:
+            return None
 
 
-def get_random_task(app_id, user_id=None, user_ip=None, n_answers=30):
+def get_random_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
     """Returns a random task for the user"""
     app = db.session.query(model.App).get(app_id)
     from random import choice
     return choice(app.tasks)
 
 
-def get_incremental_task(app_id, user_id=None, user_ip=None, n_answers=30):
+def get_incremental_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
     """Get a new task for a given application with its last given answer.
        It is an important strategy when dealing with large tasks, as
        transcriptions"""
-    candidate_tasks = get_candidate_tasks(app_id, user_id, user_ip, n_answers)
+    candidate_tasks = get_candidate_tasks(app_id, user_id, user_ip, n_answers, offset=0)
     total_remaining = len(candidate_tasks)
     if total_remaining == 0:
         return None
@@ -129,9 +134,10 @@ def get_incremental_task(app_id, user_id=None, user_ip=None, n_answers=30):
     return task
 
 
-def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30):
+def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
     """Gets all available tasks for a given application and user"""
 
+    print "Using offset = %s" % offset
     if user_id and not user_ip:
         participated_tasks = db.session.query(model.TaskRun.task_id)\
                 .filter_by(user_id=user_id)\
@@ -159,7 +165,7 @@ def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30):
         # DEPRECATED: t.info.n_answers will be removed
         # DEPRECATED: so if your task has a different value for n_answers
         # DEPRECATED: use t.n_answers instead
-        print t.id
+        #print t.id
         if (t.info.get('n_answers')):
             t.n_answers = int(t.info['n_answers'])
         # NEW WAY!
@@ -172,5 +178,6 @@ def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30):
                 db.session.commit()
         else:
             candidate_tasks.append(t)
-            break
+            if (offset == 0):
+                break
     return candidate_tasks

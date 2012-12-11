@@ -344,6 +344,57 @@ class TestSCHED:
                 else:
                     assert self.isUnique(tr.user_ip,t.task_runs), "There are two or more Answers from same User IP"
 
+    def test_task_preloading(self):
+        """Test TASK Pre-loading works"""
+        # Del previous TaskRuns
+        self.delTaskRuns()
+
+        # Register
+        self.register()
+        self.signin()
+
+        assigned_tasks = []
+        # Get Task until scheduler returns None
+        res = self.app.get('api/app/1/newtask')
+        task1 = json.loads(res.data)
+        # Check that we received a Task
+        assert task1.get('info'),  task1
+        # Pre-load the next task for the user
+        res = self.app.get('api/app/1/newtask?offset=1')
+        task2 = json.loads(res.data)
+        # Check that we received a Task
+        assert task2.get('info'),  task2
+        # Check that both tasks are different
+        assert task1.get('id') != task2.get('id'), "Tasks should be different"
+        ## Save the assigned task
+        assigned_tasks.append(task1)
+        assigned_tasks.append(task2)
+
+        # Submit an Answer for the assigned and pre-loaded task
+        for t in assigned_tasks:
+            tr = dict(
+                    app_id=t['app_id'],
+                    task_id=t['id'],
+                    info={'answer': 'No'}
+                    )
+            tr = json.dumps(tr)
+
+            self.app.post('/api/taskrun', data=tr)
+        # Get two tasks again
+        res = self.app.get('api/app/1/newtask')
+        task3 = json.loads(res.data)
+        # Check that we received a Task
+        assert task3.get('info'),  task1
+        # Pre-load the next task for the user
+        res = self.app.get('api/app/1/newtask?offset=1')
+        task4 = json.loads(res.data)
+        # Check that we received a Task
+        assert task4.get('info'),  task2
+        # Check that both tasks are different
+        assert task3.get('id') != task4.get('id'), "Tasks should be different"
+        assert task1.get('id') != task3.get('id'), "Tasks should be different"
+        assert task2.get('id') != task4.get('id'), "Tasks should be different"
+
 
 class TestGetBreadthFirst:
     @classmethod
@@ -403,4 +454,3 @@ class TestGetBreadthFirst:
         tr = model.TaskRun(task=task, user=user)
         db.session.add(tr)
         db.session.commit()
-
