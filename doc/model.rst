@@ -172,6 +172,22 @@ Delete a domain object::
     Some DELETE actions may require to authenticate & authorize the request. Use the
     ?api_key arguement to pass the **API-KEY**.
 
+Requesting a new task for current user
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can request a new task for the current user (anonymous or authenticated)
+by::
+
+    GET http://{pybossa-site-url}/api/{app.id}/newtask
+
+This will return a domain Task object in JSON format if there is a task
+available for the user, otherwise it will return **None**.
+
+.. note::
+    Some applications will want to pre-load the next task for the current user.
+    This is possible by passing the argument **?offset=1** to the **newtask**
+    endpoint.
+
 Example Usage
 -------------
 
