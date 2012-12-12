@@ -80,6 +80,7 @@ class APIBase(MethodView):
                 except (ValueError, TypeError):
                     offset = 0
 
+                query = query.order_by(self.__class__.id)
                 query = query.limit(limit)
                 query = query.offset(offset)
                 items = [x.dictize() for x in query.all()]
