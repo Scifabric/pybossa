@@ -63,7 +63,7 @@ LEFT JOIN task_run ON (task.id = task_run.task_id)
 WHERE task.app_id = :app_id AND
 (task_run.user_id IS NULL OR task_run.user_id != :user_id OR task_run.id IS NULL)
 GROUP BY task.id
-ORDER BY taskcount ASC limit 1 ;
+ORDER BY taskcount ASC limit 10 ;
 ''')
     # results will be list of (taskid, count)
     tasks = db.engine.execute(sql, app_id=app_id, user_id=user_id)
@@ -73,7 +73,13 @@ ORDER BY taskcount ASC limit 1 ;
     tasks = [ x[0] for x in tasks ]
     print len(tasks)
     if tasks:
-        return db.session.query(model.Task).get(tasks[0])
+        if (offset==0):
+            return db.session.query(model.Task).get(tasks[0])
+        else:
+            if (offset < len(tasks)):
+                return db.session.query(model.Task).get(tasks[offset])
+            else:
+                return None
     else:
         return None
     # candidate_tasks = get_candidate_tasks(app_id, user_id, user_ip, n_answers)

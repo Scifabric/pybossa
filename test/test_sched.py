@@ -394,6 +394,10 @@ class TestSCHED:
         assert task3.get('id') != task4.get('id'), "Tasks should be different"
         assert task1.get('id') != task3.get('id'), "Tasks should be different"
         assert task2.get('id') != task4.get('id'), "Tasks should be different"
+        # Check that a big offset returns None
+        res = self.app.get('api/app/1/newtask?offset=11')
+        print json.loads(res.data)
+        assert json.loads(res.data)=={}, res.data
 
 
 class TestGetBreadthFirst:
@@ -439,6 +443,15 @@ class TestGetBreadthFirst:
         # now check we get task without task runs
         out = sched.get_breadth_first_task(appid)
         assert out.id == taskid, out
+
+        # now check that offset works
+        out1 = sched.get_breadth_first_task(appid)
+        out2 = sched.get_breadth_first_task(appid,offset=1)
+        assert out1.id != out2.id, out
+
+        # asking for a bigger offset (max 10)
+        out2 = sched.get_breadth_first_task(appid,offset=11)
+        assert out2 is None, out
 
         self._add_task_run(task)
         out = sched.get_breadth_first_task(appid)
