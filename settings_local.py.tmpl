@@ -50,9 +50,9 @@ MAIL_PORT = 25
 MAIL_FAIL_SILENTLY = False
 DEFAULT_MAIL_SENDER = 'PyBossa Support <info@pybossa.com>'
 
-## Cache setup. By default it will use SimpleCache 
-## If you want to use memcached install python-memcached (pip install python-memcached)
-#CACHE_TYPE = 'memcached'
+## Cache setup. By default it is disabled, you can use "simple" or "memcached"
+## Check the documentation for further details on flask-cache
+CACHE_TYPE = 'null'
 ### Cache setup. By default it will use SimpleCache 
 ## If you want to use memcached install python-memcached (pip install python-memcached)
 #CACHE_TYPE = 'memcached'
