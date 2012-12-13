@@ -14,3 +14,6 @@ doc/_build
 alembic.ini
 pybossa/templates/custom_footer.html
 pybossa/templates/home/_other_projects.html
+_ga.html
+_gcs.html
+_gcs_form.html

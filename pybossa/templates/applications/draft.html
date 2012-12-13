@@ -24,20 +24,20 @@
 </div>
 
 {% if apps %}
-<div class="row app-published">
+<div class="row app-draft">
     <div class="span12">
-        <h2><i class="icon-th"></i> Published: <small>{{pagination.total_count}} applications in this category</small></h2>
+        <h2><i class="icon-wrench"></i> Draft: <small>{{pagination.total_count}} apps in this category</small></h2>
     </div>
 </div>
 {% endif %}
 
 {% for app in apps %}
-{{ helper.show_app(app, "app-published", current_user) }}
+{{ helper.show_app(app, "app-draft", current_user) }}
 {% endfor %}
 
 <div class="row">
     <div class="span9 offset2" style="text-align:center">
-        <a class="btn btn-small" href="{{url_for('app.draft')}}"><i class="icon-wrench"></i> Check also the draft applications</a>
+        <a class="btn btn-small" href="{{url_for('app.index')}}"><i class="icon-th"></i> Check also the published applications</a>
     </div>
     <div class="span9 offset2">
         {{ helper.render_pagination(pagination) }}
@@ -50,7 +50,4 @@
         <a href="{{ url_for('app.new')}}" class="btn btn-large btn-inverse"><i class="icon-white icon-plus"></i> Create an application!</a>
     </div>
 </div>
-
-
-
 {% endblock %}

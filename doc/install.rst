@@ -58,6 +58,21 @@ Do::
 
   alembic upgrade head
 
+Enabling a Cache
+================
+
+PyBossa comes with a Cache system (based on `flask-cache <http://packages.python.org/Flask-Cache/>`_) that it is
+disabled by default. If you want to start caching some pages of the PyBossa server, you
+only have to modify your settings and change the following value from::
+
+    CACHE_TYPE = 'null'
+
+to::
+
+    CACHE_TYPE = 'simple'
+
+The cache also supports other configurations, so please, check the official
+documentation of `flask-cache <http://packages.python.org/Flask-Cache/>`_.
 
 Google Analytics
 ================
