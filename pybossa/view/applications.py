@@ -21,10 +21,11 @@ from flaskext.wtf import Form, IntegerField, TextField, BooleanField, \
                          validators, HiddenInput, TextAreaField
 from flaskext.login import login_required, current_user
 from sqlalchemy.exc import UnboundExecutionError
+from sqlalchemy.sql import text
 from werkzeug.exceptions import HTTPException
 
 import pybossa.model as model
-from pybossa.core import db
+from pybossa.core import db, cache
 from pybossa.util import Unique, Pagination, unicode_csv_reader
 from pybossa.auth import require
 from pybossa.model import App
@@ -32,7 +33,6 @@ from pybossa.model import App
 import json
 
 blueprint = Blueprint('app', __name__)
-
 
 class AppForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
@@ -56,48 +56,62 @@ class BulkTaskImportForm(Form):
 
 @blueprint.route('/', defaults={'page':1})
 @blueprint.route('/page/<int:page>')
+@cache.cached(timeout=60*5)
 def index(page):
     if require.app.read():
-        per_page = 10 
-        count = db.session.query(model.App)\
-                .filter(model.App.hidden == 0)\
-                .order_by(model.App.tasks.any().desc())\
-                .count()
+        per_page = 5
 
-        apps = db.session.query(model.App)\
-                .filter(model.App.hidden == 0)\
-                .order_by(model.App.tasks.any().desc())\
-                .limit(per_page)\
-                .offset((page-1)*per_page)\
-                .all()
+        sql = text('''
+select count(*) from app where (app.id IN (select distinct on (task.app_id) task.app_id from task where task.app_id is not null)) and (app.info LIKE('%task_presenter%'));''')
+        results = db.engine.execute(sql)
+        for row in results:
+            count = row[0]
 
-        featured = db.session.query(model.Featured)\
-                .all()
-        apps_featured = []
-        apps_with_tasks = []
-        apps_without_tasks = []
+        sql = text('''
+select id from app where (app.id IN (select distinct on (task.app_id) task.app_id from task where task.app_id is not null)) and (app.info LIKE('%task_presenter%')) order by (app.name) offset(:offset) limit(:limit);''')
 
-        for f in featured:
-            apps_featured.append(db.session.query(model.App).get(f.app_id))
+        offset = (page - 1) * per_page
+        results = db.engine.execute(sql, limit=per_page, offset=offset)
+        apps = [db.session.query(model.App).get(row[0]) for row in results]
 
-        for a in apps:
-            app_featured = False
-            if (len(a.tasks) > 0) and (a.info.get("task_presenter")):
-                for f in featured:
-                    if f.app_id == a.id:
-                        app_featured = True
-                        break
-                if not app_featured:
-                    apps_with_tasks.append(a)
-            else:
-                apps_without_tasks.append(a)
+        for app in apps:
+            if db.session.query(model.Featured).filter_by(app_id=app.id).first():
+                app.info['featured'] = True
 
         pagination = Pagination(page, per_page, count)
         return render_template('/applications/index.html',
                                 title="Applications",
-                                apps_featured=apps_featured,
-                                apps_with_tasks=apps_with_tasks,
-                                apps_without_tasks=apps_without_tasks,
+                                apps=apps,
+                                pagination=pagination)
+    else:
+        abort(403)
+
+@blueprint.route('/draft', defaults={'page':1})
+@blueprint.route('/draft/page/<int:page>')
+def draft(page):
+    if require.app.read():
+        per_page = 5
+
+        sql = text('''
+select count(*) from app where app.info not like ('%task_presenter%');''')
+        results = db.engine.execute(sql)
+        for row in results:
+            count = row[0]
+
+        print count
+
+        sql = text('''
+select id from app where app.info not like ('%task_presenter%') order by (app.name) offset(:offset) limit(:limit);''')
+
+        offset = (page - 1) * per_page
+        results = db.engine.execute(sql, limit=per_page, offset=offset)
+        apps = [db.session.query(model.App).get(row[0]) for row in results]
+
+        pagination = Pagination(page, per_page, count)
+        return render_template('/applications/draft.html',
+                                title="Applications",
+                                apps=apps,
+                                count=count,
                                 pagination=pagination)
     else:
         abort(403)

@@ -16,11 +16,13 @@
 import os
 import logging
 from itsdangerous import URLSafeTimedSerializer
-from flask import Flask
+from flask import Flask, url_for
 from flaskext.login import LoginManager, current_user
 from flaskext.gravatar import Gravatar
 from flask.ext.mail import Mail
 from flask.ext.sqlalchemy import SQLAlchemy
+#from flask.ext.debugtoolbar import DebugToolbarExtension
+from flask.ext.cache import Cache
 
 from pybossa import default_settings as settings
 
@@ -76,6 +78,12 @@ login_manager = LoginManager()
 login_manager.login_view = 'account.signin'
 login_manager.login_message = u"Please sign in to access this page."
 app = create_app()
+
+cache = Cache(config=app.config)
+
+cache.init_app(app)
+
+#toolbar = DebugToolbarExtension(app)
 db = SQLAlchemy(app)
 mail = Mail(app)
 signer = URLSafeTimedSerializer(app.config['ITSDANGEORUSKEY'])

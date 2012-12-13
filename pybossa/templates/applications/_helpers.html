@@ -1,0 +1,76 @@
+{% macro render_pagination(pagination) %}
+  <div class="pagination pagination-centered">
+      <ul>
+        {% if pagination.has_prev %}
+          <li>
+          <a href="{{ url_for_other_page(pagination.page - 1)
+            }}">&laquo; Prev apps</a>
+          </li>
+        {% endif %}
+
+        {%- for page in pagination.iter_pages() %}
+          {% if page %}
+            {% if page != pagination.page %}
+            <li>
+              <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
+             </li>
+            {% else %}
+            <li class="active">
+                <a href="#">{{ page }}</a>
+            </li>  
+            {% endif %}
+          {% endif %}
+        {%- endfor %}
+        {% if pagination.has_next %}
+          <li>
+          <a href="{{ url_for_other_page(pagination.page + 1)
+            }}">Next apps &raquo;</a>
+          </li>
+        {% endif %}
+    </ul>
+  </div>
+{% endmacro %}
+
+
+{% macro show_app(app, class="", current_user) -%}
+<div class="row {{class}}">
+    <div class="span12 well">
+        <h2>{% if app.info.featured %} <i class="icon-star"></i>{% endif %}<a href="{{ url_for('app.details', short_name = app.short_name) }}">{{ app.name }}</a></h2>
+        {% if app.info.featured %}
+        <div class="pull-right">
+            <span class="badge badge-success"> featured </span>
+        </div>
+        {% endif %}
+        <div class="row">
+            <div class="span2">
+                <ul class="thumbnails">
+                    <li>
+                    {% if app.info.thumbnail %}
+                    <img class="thumbnail" src="{{ app.info.thumbnail }}" style="max-width:100px; max-height:100px">
+                    {% else %}
+                    <img class="thumbnail" src="{{url_for('static', filename='img/placeholder.png')}}" style="max-width:100px;">
+                    {% endif %}
+                    </li>
+                </ul> <!-- End of class=thumbnails -->
+            </div> <!-- End of span2 -->
+            <div id="data" class="span8">
+                <p style="margin:0"><strong><i class="icon-info-sign"></i> Description</strong>: {{ app['description'] }}</p>
+                <p style="margin:0"><strong><i class="icon-ok"></i> Creation Date</strong>: {{ app.created[0:10] }}</p>
+                {% if app.last_activity() != "None" %}
+                <p style="margin:0"><strong><i class="icon-time"></i> Last Activity</strong>: {{ app.last_activity()}}</p>
+                {% endif %}
+                <p style="margin:0"><strong><i class="icon-cogs"></i> Overall progress</strong>: {{ ( app.completion_status()*100 ) | round(2, 'floor') }}% completed</p>
+                {% if app.owner.id == current_user.id %}
+                <p style="margin:0"><strong><i class="icon-user"></i> Owner</strong>: Me</p>
+                {% else %}
+                <p style="margin:0"><strong><i class="icon-user"></i> Owner</strong>: {{ app.owner.name }}</p>
+                {% endif %}
+                {% if class != "app-draft" %}
+                <p style="margin:0"><a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = app.short_name) }}"><i class="icon icon-white icon-ok"></i> Try it!</a></p>
+                {% endif %}
+            </div> <!-- end of id=data class=span8 -->
+        </div> <!--end of class=row -->
+    </div> <!-- end of class=span10 well -->
+</div><!-- end of class=row -->
+{%- endmacro %}
+
