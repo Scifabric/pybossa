@@ -62,13 +62,13 @@ def index(page):
         per_page = 5
 
         sql = text('''
-select count(*) from app where (app.id IN (select distinct on (task.app_id) task.app_id from task where task.app_id is not null)) and (app.info LIKE('%task_presenter%'));''')
+select count(*) from app where (app.id IN (select distinct on (task.app_id) task.app_id from task where task.app_id is not null)) and (app.hidden = 0) and (app.info LIKE('%task_presenter%'));''')
         results = db.engine.execute(sql)
         for row in results:
             count = row[0]
 
         sql = text('''
-select id from app where (app.id IN (select distinct on (task.app_id) task.app_id from task where task.app_id is not null)) and (app.info LIKE('%task_presenter%')) order by (app.name) offset(:offset) limit(:limit);''')
+select id from app where (app.id IN (select distinct on (task.app_id) task.app_id from task where task.app_id is not null)) and (app.hidden = 0) and (app.info LIKE('%task_presenter%')) order by (app.name) offset(:offset) limit(:limit);''')
 
         offset = (page - 1) * per_page
         results = db.engine.execute(sql, limit=per_page, offset=offset)
@@ -93,7 +93,7 @@ def draft(page):
         per_page = 5
 
         sql = text('''
-select count(*) from app where app.info not like ('%task_presenter%');''')
+select count(*) from app where app.info not like ('%task_presenter%') and (app.hidden = 0);''')
         results = db.engine.execute(sql)
         for row in results:
             count = row[0]
@@ -101,7 +101,7 @@ select count(*) from app where app.info not like ('%task_presenter%');''')
         print count
 
         sql = text('''
-select id from app where app.info not like ('%task_presenter%') order by (app.name) offset(:offset) limit(:limit);''')
+select id from app where app.info not like ('%task_presenter%')  and (app.hidden = 0) order by (app.name) offset(:offset) limit(:limit);''')
 
         offset = (page - 1) * per_page
         results = db.engine.execute(sql, limit=per_page, offset=offset)
