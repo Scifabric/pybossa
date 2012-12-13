@@ -24,7 +24,7 @@ from flaskext.wtf import Form, TextField, PasswordField, validators,\
         ValidationError, IntegerField, HiddenInput
 
 import pybossa.model as model
-from pybossa.core import db, signer, mail
+from pybossa.core import db, signer, mail, cache
 from pybossa.util import Unique
 from pybossa.util import Pagination
 from pybossa.util import Twitter
@@ -36,6 +36,7 @@ blueprint = Blueprint('account', __name__)
 
 @blueprint.route('/', defaults={'page': 1})
 @blueprint.route('/page/<int:page>')
+@cache.cached(timeout=50)
 def index(page):
     per_page = 24
     count = db.session.query(model.User).count()

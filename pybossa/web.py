@@ -24,7 +24,7 @@ from sqlalchemy import func, desc
 from werkzeug.exceptions import *
 
 import pybossa
-from pybossa.core import app, login_manager, db
+from pybossa.core import app, login_manager, db, cache
 import pybossa.model as model
 from pybossa.api import blueprint as api
 from pybossa.view.account import blueprint as account
@@ -42,7 +42,6 @@ app.register_blueprint(account, url_prefix='/account')
 app.register_blueprint(applications, url_prefix='/app')
 app.register_blueprint(admin, url_prefix='/admin')
 app.register_blueprint(stats, url_prefix='/stats')
-
 
 # Enable Twitter if available
 try:
@@ -199,6 +198,7 @@ def home():
 
 
 @app.route("/about")
+@cache.cached(timeout=50)
 def about():
     """Render the about template"""
     return render_template("/home/about.html")

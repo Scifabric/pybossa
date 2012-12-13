@@ -5,6 +5,7 @@ from mock import patch
 from itsdangerous import BadSignature
 from collections import namedtuple
 from pybossa.core import db, signer
+from sqlalchemy.sql import text
 
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
@@ -14,6 +15,7 @@ class TestWeb:
 
     def setUp(self):
         self.app = web.app.test_client()
+        #self.app.cache = web.cache.config['CACHE_TYPE']='nothingThatWillWork'
         model.rebuild_db()
         #Fixtures.create()
 
@@ -231,7 +233,7 @@ class TestWeb:
 
         res = self.register()
         assert self.html_title() in res.data, res
-        assert "Thanks for signing-up" in res.data, res
+        assert "Thanks for signing-up" in res.data, res.data
 
         res = self.register()
         assert self.html_title("Register") in res.data, res
@@ -456,55 +458,27 @@ class TestWeb:
         assert "Draft" in res.data, res.data
         assert "Create an application!" in res.data, res.data
 
-        self.register()
-        self.new_application()
-        self.new_task(1)
+        Fixtures.create()
 
-        self.signout()
-
-        res = self.app.get('/app/')
+        res = self.app.get('/app', follow_redirects=True)
         assert self.html_title("Applications") in res.data, res.data
         assert "Applications" in res.data, res.data
-        assert '/app/sampleapp' in res.data, res.data
+        assert '/app/test-app' in res.data, res.data
 
     def test_06_featured_apps(self):
         """Test WEB application index shows featured apps in all the pages works"""
-        self.register()
-        self.new_application()
-        self.new_task(1)
-        for i in range(0,20):
-            app = model.App()
-            app.name = "App%s" % i
-            app.short_name = "app%s" % i
-            app.description = "desc%s" % i
-            app.owner_id = 1
-            app.info = dict(task_presenter="html")
-            db.session.add(app)
+        Fixtures.create()
 
-        # Create one as featured
         f = model.Featured()
-        f.app_id = 1
+        f.app_id=1
         db.session.add(f)
         db.session.commit()
 
-        # Add some tasks
-        self.new_task(2)
-        self.new_task(3)
-
-        # Page 1
-        for i in range(1,3):
-            res = self.app.get('/app/page/%s' % i, follow_redirects=True)
-            assert "Featured</h2>" in res.data, res.data
-            assert "app-featured" in res.data
-            assert "Sample App</a>" in res.data, res.data
-            assert "Draft</h2>" in res.data, res.data
-            assert "app-draft" in res.data, res.data
-            if (i == 1):
-                assert "Published</h2>" in res.data, res.data
-                assert "app-published" in res.data, res.data
-            else:
-                assert "Published</h2>" not in res.data, res.data
-                assert "app-published" not in res.data, res.data
+        res = self.app.get('/app', follow_redirects=True)
+        assert self.html_title("Applications") in res.data, res.data
+        assert "Applications" in res.data, res.data
+        assert '/app/test-app' in res.data, res.data
+        assert '<h2> <i class="icon-star"></i><a href="/app/test-app">My New App</a></h2>' in res.data, res.data
 
     def test_10_get_application(self):
         """Test WEB application URL/<short_name> works"""
@@ -752,34 +726,9 @@ class TestWeb:
 
         res = self.app.get('app', follow_redirects=True)
         assert "Applications" in res.data, res.data
-        assert "Featured</h2>" not in res.data, res.data
-        assert "Published</h2>" in res.data, res.data
-        assert "Draft</h2>" not in res.data, res.data
-
-    def test_20_app_index_featured(self):
-        """Test WEB Application Index featured works"""
-        self.register()
-        self.new_application()
-        app = db.session.query(model.App).first()
-        info = dict(task_presenter="some html")
-        app.info = info
-        db.session.commit()
-
-        f = model.Featured()
-        f.app_id = app.id
-        db.session.add(f)
-        db.session.commit()
-
-        task = model.Task(app_id=app.id, info={'n_answers': 10})
-        db.session.add(task)
-        db.session.commit()
-        self.signout()
-
-        res = self.app.get('app', follow_redirects=True)
-        assert "Applications" in res.data, res.data
-        assert "Featured</h2>" in res.data, res.data
-        assert "Published</h2>" not in res.data, res.data
-        assert "Draft</h2>" not in res.data, res.data
+        assert "app-published" in res.data, res.data
+        assert "app-draft" not in res.data, res.data
+        assert "Sample App" in res.data, res.data
 
     def test_20_app_index_draft(self):
         """Test WEB Application Index draft works"""
@@ -787,11 +736,11 @@ class TestWeb:
         self.new_application()
         self.signout()
 
-        res = self.app.get('app', follow_redirects=True)
+        res = self.app.get('/app/draft', follow_redirects=True)
         assert "Applications" in res.data, res.data
-        assert "Featured</h2>" not in res.data, res.data
-        assert "Published</h2>" not in res.data, res.data
-        assert "Draft</h2>" in res.data, res.data
+        assert "app-published" not in res.data, res.data
+        assert "app-draft" in res.data, res.data
+        assert "Sample App" in res.data, res.data
 
     def test_21_get_specific_ongoing_task_anonymous(self):
         """Test WEB get specific ongoing task_id for
