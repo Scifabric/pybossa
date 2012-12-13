@@ -74,6 +74,21 @@ to::
 The cache also supports other configurations, so please, check the official
 documentation of `flask-cache <http://packages.python.org/Flask-Cache/>`_.
 
+Customizing the Layout and Front Page text
+==========================================
+
+PyBossa allows you to override two items:
+
+ * **Front Page Text**
+ * **Footer**
+
+If you want to override those items, you have to create a folder named
+**custom** and place it in the **template** dir. Then for overriding:
+
+ * **The Front Page Text**: create a file named  **front_page_text.html** and write there some HTML.
+ * **The Footer**: create a file named  **_footer.html**, and write some HTML.
+
+
 Google Analytics
 ================
 

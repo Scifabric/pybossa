@@ -5,12 +5,7 @@
         <div class="row">
           <div class="span4">
               <h1>{{ brand }}</h1>
-            <p>Online assistance in performing tasks that require human cognition, knowledge or intelligence such as image classification, transcription, geocoding and more!</p>
-            <ul>
-              <li>Help advance research</li>
-              <li>Everything is open and freely usable</li>
-              <li>Things computers can't do</li>
-            </ul>
+              {% include ['custom/front_page_text.html', 'home/_pybossa_text.html'] ignore missing %}
           </div>
           <div class="span8">
             <ul class="featured">
