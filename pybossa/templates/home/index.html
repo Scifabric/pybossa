@@ -76,11 +76,11 @@
             <a data-content="
                 <strong>Joined:</strong> {{item.user.created[0:10]}} 
                 <br/>
-                <strong>Submitted Tasks:</strong> {{item.user.task_runs|length}}
+                <strong>Submitted Tasks:</strong> {{item.task_runs}}
                 " rel="popover" data-original-title="<strong>{{item.user.fullname}}</strong>">
                 <img src="{{item.user.email_addr|gravatar(size=90)}}">
            </a>
-           <span class="label label-success">{{item.user.task_runs|length}}</span> <small>Tasks</small>
+           <span class="label label-success">{{item.task_runs}}</span> <small>Tasks</small>
           </li>
           {% endfor %}
         </ul>

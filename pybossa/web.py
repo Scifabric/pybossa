@@ -31,6 +31,7 @@ from pybossa.view.account import blueprint as account
 from pybossa.view.applications import blueprint as applications
 from pybossa.view.admin import blueprint as admin
 from pybossa.view.stats import blueprint as stats
+from pybossa.util import get_top_apps, get_top_users, get_featured_apps
 
 import random
 
@@ -149,49 +150,15 @@ def api_authentication():
 
 @app.route('/')
 def home():
-    # in case we have not set up database yet
-    featured_ids = db.session.query(model.Featured).all()
 
-    featured = []
-    for f in featured_ids:
-        featured.append(db.session.query(model.App).get(f.app_id))
+    featured = get_featured_apps(db, model)
+    top_apps  = get_top_apps(db, model)
+    top_users = get_top_users(db, model)
 
-    # top users and apps
-    # Get top 4 app ids
-    top_active_app_ids = db.session\
-            .query(model.TaskRun.app_id,
-                    func.count(model.TaskRun.id).label('total'))\
-            .group_by(model.TaskRun.app_id)\
-            .order_by('total DESC')\
-            .limit(5)\
-            .all()
-    top_apps = []
-    # print top5_active_app_ids
-    for id in top_active_app_ids:
-        if id[0] is not None:
-            app = db.session.query(model.App)\
-                    .get(id[0])
-            if not app.hidden:
-                top_apps.append(app)
-
-    # Get top 9 user ids
-    top_active_user_ids = db.session\
-            .query(model.TaskRun.user_id,
-                    func.count(model.TaskRun.id).label('total'))\
-            .group_by(model.TaskRun.user_id)\
-            .order_by('total DESC')\
-            .limit(10)\
-            .all()
-    top_users = []
-    for id in top_active_user_ids:
-        if id[0] is not None:
-            u = db.session.query(model.User).get(id[0])
-            tmp = dict(user=u, apps=[])
-            top_users.append(tmp)
     d = {
         'featured': featured,
         'top_apps': top_apps,
-        'top_users': top_users
+        'top_users': top_users,
     }
 
     return render_template('/home/index.html', **d)
