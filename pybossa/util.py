@@ -23,6 +23,8 @@ from flaskext.wtf import Form, TextField, PasswordField, validators,\
 from flask_oauth import OAuth
 from flaskext.login import current_user
 from math import ceil
+from sqlalchemy.sql import func
+from pybossa.core import cache
 
 
 def jsonpify(f):
@@ -273,3 +275,53 @@ class Google:
                 access_token_params={'grant_type': 'authorization_code'},
                 consumer_key=c_k,
                 consumer_secret=c_s)
+
+
+@cache.cached(timeout=60*5, key_prefix='top_apps')
+def get_top_apps(db, model):
+    """Return top 5 apps"""
+    top_active_app_ids = db.session\
+            .query(model.TaskRun.app_id,
+                    func.count(model.TaskRun.id).label('total'))\
+            .group_by(model.TaskRun.app_id)\
+            .order_by('total DESC')\
+            .limit(5)\
+            .all()
+    # print top5_active_app_ids
+    top_apps = []
+    for id in top_active_app_ids:
+        if id[0] is not None:
+            app = db.session.query(model.App)\
+                    .get(id[0])
+            if not app.hidden:
+                top_apps.append(app)
+    return top_apps
+
+
+@cache.cached(timeout=60*5, key_prefix='top_users')
+def get_top_users(db, model):
+    """Return top users"""
+    top_active_user_ids = db.session\
+            .query(model.TaskRun.user_id,
+                    func.count(model.TaskRun.id).label('total'))\
+            .group_by(model.TaskRun.user_id)\
+            .order_by('total DESC')\
+            .limit(10)\
+            .all()
+    top_users = []
+    for id in top_active_user_ids:
+        if id[0] is not None:
+            u = db.session.query(model.User).get(id[0])
+            tmp = dict(user=u, apps=[], task_runs=len(u.task_runs))
+            top_users.append(tmp)
+    return top_users
+
+@cache.cached(timeout=60*5, key_prefix='featured_apps')
+def get_featured_apps(db, model):
+    """Return featured apps"""
+    # in case we have not set up database yet
+    featured_ids = db.session.query(model.Featured).all()
+    featured = []
+    for f in featured_ids:
+        featured.append(db.session.query(model.App).get(f.app_id))
+    return featured
