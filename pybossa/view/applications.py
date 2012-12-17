@@ -29,6 +29,7 @@ from pybossa.core import db, cache
 from pybossa.util import Unique, Pagination, unicode_csv_reader
 from pybossa.auth import require
 from pybossa.model import App
+from pybossa.cache import apps as cached_apps
 
 import json
 
@@ -56,27 +57,11 @@ class BulkTaskImportForm(Form):
 
 @blueprint.route('/', defaults={'page':1})
 @blueprint.route('/page/<int:page>')
-@cache.cached(timeout=60*5)
 def index(page):
     if require.app.read():
         per_page = 5
 
-        sql = text('''
-select count(*) from app where (app.id IN (select distinct on (task.app_id) task.app_id from task where task.app_id is not null)) and (app.hidden = 0) and (app.info LIKE('%task_presenter%'));''')
-        results = db.engine.execute(sql)
-        for row in results:
-            count = row[0]
-
-        sql = text('''
-select id from app where (app.id IN (select distinct on (task.app_id) task.app_id from task where task.app_id is not null)) and (app.hidden = 0) and (app.info LIKE('%task_presenter%')) order by (app.name) offset(:offset) limit(:limit);''')
-
-        offset = (page - 1) * per_page
-        results = db.engine.execute(sql, limit=per_page, offset=offset)
-        apps = [db.session.query(model.App).get(row[0]) for row in results]
-
-        for app in apps:
-            if db.session.query(model.Featured).filter_by(app_id=app.id).first():
-                app.info['featured'] = True
+        apps, count = cached_apps.get_published(page, per_page)
 
         pagination = Pagination(page, per_page, count)
         return render_template('/applications/index.html',
@@ -92,20 +77,7 @@ def draft(page):
     if require.app.read():
         per_page = 5
 
-        sql = text('''
-select count(*) from app where app.info not like ('%task_presenter%') and (app.hidden = 0);''')
-        results = db.engine.execute(sql)
-        for row in results:
-            count = row[0]
-
-        print count
-
-        sql = text('''
-select id from app where app.info not like ('%task_presenter%')  and (app.hidden = 0) order by (app.name) offset(:offset) limit(:limit);''')
-
-        offset = (page - 1) * per_page
-        results = db.engine.execute(sql, limit=per_page, offset=offset)
-        apps = [db.session.query(model.App).get(row[0]) for row in results]
+        apps, count = cached_apps.get_draft(page, per_page)
 
         pagination = Pagination(page, per_page, count)
         return render_template('/applications/draft.html',
@@ -133,6 +105,7 @@ def new():
                 )
             db.session.add(application)
             db.session.commit()
+            # Clean cache
             flash('<i class="icon-ok"></i> Application created!', 'success')
             flash('<i class="icon-bullhorn"></i> You can check the '
                    '<strong><a href="https://docs.pybossa.com">Guide and '
@@ -161,6 +134,8 @@ def delete(short_name):
                                             app=app)
                 else:
                     try:
+                        # Clean cache
+                        cache.delete_memoized(cached_apps.format_app, app)
                         db.session.delete(app)
                         db.session.commit()
                         flash('Application deleted!', 'success')
