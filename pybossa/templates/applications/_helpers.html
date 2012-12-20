@@ -56,14 +56,14 @@
             <div id="data" class="span8">
                 <p style="margin:0"><strong><i class="icon-info-sign"></i> Description</strong>: {{ app['description'] }}</p>
                 <p style="margin:0"><strong><i class="icon-ok"></i> Creation Date</strong>: {{ app.created[0:10] }}</p>
-                {% if app.last_activity() != "None" %}
-                <p style="margin:0"><strong><i class="icon-time"></i> Last Activity</strong>: {{ app.last_activity()}}</p>
+                {% if app.info.last_activity != "None" %}
+                <p style="margin:0"><strong><i class="icon-time"></i> Last Activity</strong>: {{ app.info.last_activity}}</p>
                 {% endif %}
-                <p style="margin:0"><strong><i class="icon-cogs"></i> Overall progress</strong>: {{ ( app.completion_status()*100 ) | round(2, 'floor') }}% completed</p>
-                {% if app.owner.id == current_user.id %}
+                <p style="margin:0"><strong><i class="icon-cogs"></i> Overall progress</strong>: {{ app.info.overall_progress | round(2, 'floor') }}% completed</p>
+                {% if app.owner_id == current_user.id %}
                 <p style="margin:0"><strong><i class="icon-user"></i> Owner</strong>: Me</p>
                 {% else %}
-                <p style="margin:0"><strong><i class="icon-user"></i> Owner</strong>: {{ app.owner.name }}</p>
+                <p style="margin:0"><strong><i class="icon-user"></i> Owner</strong>: {{ app.info.owner }}</p>
                 {% endif %}
                 {% if class != "app-draft" %}
                 <p style="margin:0"><a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = app.short_name) }}"><i class="icon icon-white icon-ok"></i> Try it!</a></p>

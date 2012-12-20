@@ -31,9 +31,9 @@ from pybossa.view.account import blueprint as account
 from pybossa.view.applications import blueprint as applications
 from pybossa.view.admin import blueprint as admin
 from pybossa.view.stats import blueprint as stats
-from pybossa.util import get_top_apps, get_top_users, get_featured_apps
+from pybossa.cache import apps as cached_apps
+from pybossa.cache import users as cached_users
 
-import random
 
 logger = logging.getLogger('pybossa')
 
@@ -150,15 +150,11 @@ def api_authentication():
 
 @app.route('/')
 def home():
-
-    featured = get_featured_apps(db, model)
-    top_apps  = get_top_apps(db, model)
-    top_users = get_top_users(db, model)
-
+    """ Render home page with the cached apps and users"""
     d = {
-        'featured': featured,
-        'top_apps': top_apps,
-        'top_users': top_users,
+        'featured': cached_apps.get_featured(),
+        'top_apps': cached_apps.get_top(),
+        'top_users': cached_users.get_top(),
     }
 
     return render_template('/home/index.html', **d)
