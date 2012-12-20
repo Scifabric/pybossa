@@ -18,34 +18,39 @@ from pybossa.core import db
 from pybossa.model import Featured, App, TaskRun
 from pybossa.util import pretty_date
 
-@cache.memoize(timeout=60*5)
+# 15 minutes to cache this items
+@cache.memoize(timeout=60*15)
+def format_top_featured_app(app_id):
+    """Format app for template"""
+    app = db.session.query(App).get(app_id)
+    if not app.hidden:
+        return app
+    else:
+        return None
+
 def get_featured():
     """Return featured apps"""
-    # in case we have not set up database yet
     featured_ids = db.session.query(Featured).all()
     featured = []
     for f in featured_ids:
-        featured.append(db.session.query(App).get(f.app_id))
+        app = format_top_featured_app(f.app_id)
+        if app:
+            featured.append(app)
     return featured
 
-@cache.memoize(timeout=60*5)
-def get_top(n=5):
-    """Return top n=5 apps"""
-    top_active_app_ids = db.session\
-            .query(TaskRun.app_id,
-                    func.count(TaskRun.id).label('total'))\
-            .group_by(TaskRun.app_id)\
-            .order_by('total DESC')\
-            .limit(n)\
-            .all()
-    # print top5_active_app_ids
+def get_top(n=4):
+    """Return top n=4 apps"""
+    sql = text('''
+    SELECT app_id, count(*) AS total FROM task_run WHERE app_id IS NOT NULL GROUP BY
+    app_id ORDER BY total DESC LIMIT :limit;
+    ''')
+
+    results = db.engine.execute(sql, limit=n)
     top_apps = []
-    for id in top_active_app_ids:
-        if id[0] is not None:
-            app = db.session.query(App)\
-                    .get(id[0])
-            if not app.hidden:
-                top_apps.append(app)
+    for row in results:
+        app = format_top_featured_app(row[0])
+        if app:
+            top_apps.append(app)
     return top_apps
 
 @cache.memoize(timeout=60*5)
