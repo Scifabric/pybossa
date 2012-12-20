@@ -17,12 +17,14 @@ from pybossa.core import cache
 from pybossa.core import db
 from pybossa.model import User, TaskRun
 
+
 # Cache the users for at least 15 minutes
-@cache.memoize(timeout=60*15)
+@cache.memoize(timeout=60 * 15)
 def format_top_user(user_id):
     """Format the user for the template"""
     user = db.session.query(User).get(user_id)
-    return dict(user=user, apps=[], task_runs=len(user.task_runs)) 
+    return dict(user=user, apps=[], task_runs=len(user.task_runs))
+
 
 def get_top(n=10):
     """Return the n=10 top users"""
