@@ -39,7 +39,7 @@
         </button>
     </div>
 </div>
-<div id="app-form" class="row collapse out"> 
+<div id="app-form" class="row {% if not errors %} collapse out {% endif %}"> 
     <div class="span12">
     <legend>Create a new application</legend>
     <form class="form-horizontal" method="post" action="{{ url_for('app.new') }}">
