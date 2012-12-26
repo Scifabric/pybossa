@@ -92,6 +92,7 @@ def draft(page):
 @blueprint.route('/new', methods=['GET', 'POST'])
 @login_required
 def new():
+    errors = False
     if require.app.create():
         form = AppForm(request.form)
         if request.method == 'POST' and form.validate():
@@ -114,8 +115,9 @@ def new():
             return redirect('/app/' + application.short_name)
         if request.method == 'POST' and not form.validate():
             flash('Please correct the errors', 'error')
+            errors = True
         return render_template('applications/new.html',
-                title="New Application", form=form)
+                title="New Application", form=form, errors=errors)
     else:
         abort(403)
 
