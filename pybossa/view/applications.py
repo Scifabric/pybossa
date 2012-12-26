@@ -48,6 +48,10 @@ class AppForm(Form):
     long_description = TextAreaField('Long Description')
     hidden = BooleanField('Hide?')
 
+class TaskPresenterForm(Form):
+    id = IntegerField(label=None, widget=HiddenInput())
+    task_presenter = TextAreaField('', [validators.Required()])
+
 
 class BulkTaskImportForm(Form):
     csv_url = TextField('CSV URL', [validators.Required(message="You must "
@@ -120,6 +124,34 @@ def new():
                 title="New Application", form=form, errors=errors)
     else:
         abort(403)
+
+@blueprint.route('/<short_name>/taskpresenter', methods=['GET', 'POST'])
+@login_required
+def taskpresenter(short_name):
+    errors = False
+    app = App.query.filter_by(short_name=short_name)\
+            .first()
+    if app:
+        if require.app.update(app):
+            form = TaskPresenterForm(request.form)
+            if request.method == 'POST' and form.validate():
+                app.info['task_presenter'] = form.task_presenter.data
+                db.session.add(app)
+                db.session.commit()
+                # Clean cache
+                flash('<i class="icon-ok"></i> Task presenter added!', 'success')
+                return redirect('/app/' + app.short_name)
+            if request.method == 'POST' and not form.validate():
+                flash('Please correct the errors', 'error')
+                errors = True
+            if request.method == 'GET':
+                form.task_presenter.data = app.info['task_presenter']
+                return render_template('applications/task_presenter_editor.html',
+                        title="Application Task Presenter", form=form, app=app, errors=errors)
+        else:
+            abort(403)
+    else:
+        abort(404)
 
 
 @blueprint.route('/<short_name>/delete', methods=['GET', 'POST'])

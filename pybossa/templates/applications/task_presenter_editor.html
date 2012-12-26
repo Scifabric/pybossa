@@ -1,0 +1,64 @@
+{% extends "/base.html" %}
+{% set active_page = "applications" %}
+{% set active_app  = "new" %}
+
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+<script src="{{url_for('static', filename='vendor/codemirror/codemirror.js')}}"></script>
+<link rel="stylesheet" href="{{url_for('static', filename='vendor/codemirror/codemirror.css')}}"/>
+<script src="{{url_for('static', filename='vendor/codemirror/mode/xml/xml.js')}}"></script>
+<script src="{{url_for('static', filename='vendor/codemirror/mode/javascript/javascript.js')}}"></script>
+<script src="{{url_for('static', filename='vendor/codemirror/mode/css/css.js')}}"></script>
+<script src="{{url_for('static', filename='vendor/codemirror/mode/htmlmixed/htmlmixed.js')}}"></script>
+<style>
+    iframe {
+        width: 100%;
+        height: 320px;
+    }
+    .CodeMirror {
+        width: 460px;
+      }
+</style>
+<div class="row">
+    <div class="span6">
+    <legend>Task Presenter</legend>
+    <form class="form-inline" method="post" action="{{ url_for('app.taskpresenter', short_name=app.short_name) }}">
+        {{ form.hidden_tag() }}
+        <fieldset>
+            {{ render_field(form.task_presenter)}}
+            <div class="form-actions">
+                <input type="submit" value="Update the application task presenter" class="btn btn-primary" />
+                <a href="{{url_for('app.details', short_name=app.short_name, page=1)}}" class="btn">Cancel</a>
+            </div>
+        </fieldset>
+    </form>
+    </div>
+    <div class="span6">
+        <legend>View</legend>
+        <iframe id="preview" frameBorder="0"></iframe>
+    </div>
+</div>
+<script>
+    var delay;
+    var editor = CodeMirror.fromTextArea(document.getElementById('task_presenter'), {
+        mode:'text/html',
+        lineNumbers: true,
+        autofocus: true,
+        value: "<h1>Your HTML/JS code goes here</h1>",
+    });
+    editor.on("change", function(){
+        clearTimeout(delay);
+        delay = setTimeout(updatePreview, 300);
+    });
+
+    function updatePreview() {
+        var previewFrame = document.getElementById('preview');
+        var preview =  previewFrame.contentDocument ||  previewFrame.contentWindow.document;
+        preview.open();
+        preview.write(editor.getValue());
+        preview.close();
+    }
+    setTimeout(updatePreview, 300);
+</script>
+
+{% endblock %}
