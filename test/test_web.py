@@ -993,7 +993,9 @@ class TestWeb:
         app = db.session.query(model.App).first()
         res = self.app.post(('/app/%s/import' % (app.short_name)), data={
             'data_url': 'http://myfakecsvurl.com',
+            'formtype': 'csv',
             }, follow_redirects=True)
+        print res.data
         assert ("Oops! It looks like you don't have permission to access"
                 " that file!") in res.data
 
@@ -1008,6 +1010,7 @@ class TestWeb:
         app = db.session.query(model.App).first()
         res = self.app.post(('/app/%s/import' % (app.short_name)), data={
             'data_url': 'http://myfakecsvurl.com',
+            'formtype': 'csv',
             }, follow_redirects=True)
         assert "Oops! That file doesn't look like a CSV file." in res.data
 
@@ -1022,6 +1025,7 @@ class TestWeb:
         app = db.session.query(model.App).first()
         res = self.app.post(('/app/%s/import' % (app.short_name)), data={
             'data_url': 'http://myfakecsvurl.com',
+            'formtype': 'csv',
             }, follow_redirects=True)
         assert "Oops! It looks like the CSV file is empty." in res.data
 
@@ -1036,6 +1040,7 @@ class TestWeb:
         app = db.session.query(model.App).first()
         res = self.app.post(('/app/%s/import' % (app.short_name)), data={
             'data_url': 'http://myfakecsvurl.com',
+            'formtype': 'csv',
             }, follow_redirects=True)
         assert "The CSV file you uploaded has two headers with the same" \
                 " name" in res.data
@@ -1051,6 +1056,7 @@ class TestWeb:
         app = db.session.query(model.App).first()
         res = self.app.post(('/app/%s/import' % (app.short_name)), data={
             'data_url': 'http://myfakecsvurl.com',
+            'formtype': 'csv',
             }, follow_redirects=True)
         task = db.session.query(model.Task).first()
         assert {u'Bar': u'2', u'Foo': u'1', u'Baz': u'3'} == task.info
@@ -1067,6 +1073,7 @@ class TestWeb:
         app = db.session.query(model.App).first()
         res = self.app.post(('/app/%s/import' % (app.short_name)), data={
             'data_url': 'http://myfakecsvurl.com',
+            'formtype': 'csv',
             }, follow_redirects=True)
         task = db.session.query(model.Task).first()
         assert {u'Bar': u'2', u'Foo': u'1'} == task.info

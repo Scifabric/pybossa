@@ -265,11 +265,14 @@ def import_task(short_name):
 
     form = BulkTaskImportForm(request.form)
     if form.validate_on_submit():
-        if form.formtype == 'googledocs':
+        if form.formtype.data == 'googledocs':
             dataurl = ''.join([form.data_url.data, '&output=csv'])
-        elif form.formtype == 'csv':
+        elif form.formtype.data == 'csv':
             dataurl = form.data_url.data
         else:
+            print ">>>>>>>>>>>>>>>>>"
+            print form.formtype.data
+            print ">>>>>>>>>>>>>>>>>"
             flash("Oops! It looks like there was some problem with the form "
                   "submission", 'error')
             return render_template('/applications/import.html',
