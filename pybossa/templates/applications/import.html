@@ -6,11 +6,26 @@
 {% from "_formhelpers.html" import render_field %}
 <div class="row">
   <div class="span11 offset1">
-    <legend>Import Tasks</legend>
+    <legend>Import tasks from a Google Docs Spreadsheet</legend>
     <form class="form-horizontal" method="post" action="{{ url_for('app.import_task', short_name=app.short_name) }}">
       <fieldset>
       {{ form.hidden_tag() }}
-        {{ render_field(form.csv_url, class_="input-xlarge", placeholder="The URL of the CSV file") }}
+        <span class="help-inline">Please provide a URL to a Google Docs Spreadsheet with data for {{ active_app }}. For more information, please look at <a href="http://pybossa.readthedocs.org/en/latest/user/create-application.html#via-the-web-interface" target="_blank">the documentation.</a></span>
+        {{ form.formtype(value='googledocs') }}
+        {{ render_field(form.data_url, class_="input-xlarge", placeholder="The URL of the Google Docs Spreadsheet") }}
+        <div class="form-actions">
+          <input type="submit" value="Import" class="btn btn-primary" />
+          <a href="{{ url_for('app.details', short_name=app.short_name) }}" class="btn">Cancel</a>
+        </div>
+      </fieldset>
+    </form>
+    <legend>Import tasks from CSV</legend>
+    <form class="form-horizontal" method="post" action="{{ url_for('app.import_task', short_name=app.short_name) }}">
+      <fieldset>
+      {{ form.hidden_tag() }}
+        <span class="help-inline">Please provide a URL to a CSV file with data for {{ active_app }}. For more information, please look at <a href="http://pybossa.readthedocs.org/en/latest/user/create-application.html#via-the-web-interface" target="_blank">the documentation.</a></span>
+        {{ form.formtype(value='csv') }}
+        {{ render_field(form.data_url, class_="input-xlarge", placeholder="The URL of the CSV file") }}
         <div class="form-actions">
           <input type="submit" value="Import" class="btn btn-primary" />
           <a href="{{ url_for('app.details', short_name=app.short_name) }}" class="btn">Cancel</a>

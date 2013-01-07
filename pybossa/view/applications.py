@@ -57,11 +57,10 @@ class TaskPresenterForm(Form):
 
 
 class BulkTaskImportForm(Form):
-    csv_url = TextField('CSV URL',
-                        [validators.Required(message="You must provide a URL"),
-                         validators.URL(
-                             message="Oops! That's not a valid URL. You must \
-                             provide a valid URL")])
+    data_url = TextField('URL', [validators.Required(message="You must "
+                "provide a URL"), validators.URL(message="Oops! That's not a"
+                "valid URL. You must provide a valid URL")])
+    formtype = TextField(label='formtype', widget=HiddenInput())
 
 
 @blueprint.route('/', defaults={'page': 1})
@@ -266,7 +265,16 @@ def import_task(short_name):
 
     form = BulkTaskImportForm(request.form)
     if form.validate_on_submit():
-        r = requests.get(form.csv_url.data)
+        if form.formtype == 'googledocs':
+            dataurl = ''.join([form.data_url.data, '&output=csv'])
+        elif form.formtype == 'csv':
+            dataurl = form.data_url.data
+        else:
+            flash("Oops! It looks like there was some problem with the form "
+                  "submission", 'error')
+            return render_template('/applications/import.html',
+                    app=app, form=form)
+        r = requests.get(dataurl)
         if r.status_code == 403:
             flash("Oops! It looks like you don't have permission to access"
                   " that file!", 'error')
