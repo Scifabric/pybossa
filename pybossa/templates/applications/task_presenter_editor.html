@@ -22,10 +22,10 @@
 <div class="row">
     <div class="span6">
     <legend>Task Presenter</legend>
-    <form class="form-inline" method="post" action="{{ url_for('app.taskpresenter', short_name=app.short_name) }}">
+    <form class="form-inline" method="post" action="{{ url_for('app.task_presenter_editor', short_name=app.short_name) }}">
         {{ form.hidden_tag() }}
         <fieldset>
-            {{ render_field(form.task_presenter)}}
+            {{ render_field(form.editor)}}
             <div class="form-actions">
                 <input type="submit" value="Update the application task presenter" class="btn btn-primary" />
                 <a href="{{url_for('app.details', short_name=app.short_name, page=1)}}" class="btn">Cancel</a>
@@ -40,11 +40,10 @@
 </div>
 <script>
     var delay;
-    var editor = CodeMirror.fromTextArea(document.getElementById('task_presenter'), {
+    var editor = CodeMirror.fromTextArea(document.getElementById('editor'), {
         mode:'text/html',
         lineNumbers: true,
         autofocus: true,
-        value: "<h1>Your HTML/JS code goes here</h1>",
     });
     editor.on("change", function(){
         clearTimeout(delay);
@@ -60,5 +59,4 @@
     }
     setTimeout(updatePreview, 300);
 </script>
-
 {% endblock %}
