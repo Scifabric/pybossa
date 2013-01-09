@@ -5,7 +5,6 @@ from mock import patch
 from itsdangerous import BadSignature
 from collections import namedtuple
 from pybossa.core import db, signer
-from sqlalchemy.sql import text
 
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
@@ -1236,3 +1235,36 @@ class TestWeb:
                 }, follow_redirects=True)
             assert 'Click here to recover your account' in outbox[0].body
             assert 'your Twitter account to ' in outbox[1].body
+
+    def test_46_task_presenter_editor_exists(self):
+        """Test WEB task presenter editor is an option"""
+        self.register()
+        self.new_application()
+        res = self.app.get('/app/sampleapp', follow_redirects=True)
+        assert "Edit the task presenter" in res.data, \
+            "Task Presenter Editor should be an option"
+
+    def test_47_task_presenter_editor_loads(self):
+        """Test WEB task presenter editor loads"""
+        self.register()
+        self.new_application()
+        res = self.app.get('/app/sampleapp/taskpresentereditor',
+                           follow_redirects=True)
+        assert "var editor" in res.data, "CodeMirror Editor not found"
+        assert "Task Presenter" in res.data, "CodeMirror Editor not found"
+        assert "View" in res.data, "CodeMirror View not found"
+
+    def test_48_task_presenter_editor_works(self):
+        """Test WEB task presenter editor works"""
+        self.register()
+        self.new_application()
+        app = db.session.query(model.App).first()
+        assert not app.info.get('task_presenter'), \
+                "Task Presenter should be empty"
+        res = self.app.post('/app/sampleapp/taskpresentereditor',
+                            data={'editor': 'Some HTML code!'},
+                            follow_redirects=True)
+        assert "Sample App" in res.data, "Does not return to app details"
+        app = db.session.query(model.App).first()
+        assert app.info['task_presenter'] == 'Some HTML code!', \
+                "Task Presenter failed to update"
