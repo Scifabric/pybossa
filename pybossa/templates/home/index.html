@@ -52,7 +52,7 @@
                 <a href="{{url_for('app.details', short_name=app.short_name)}}" class="image" style="background-image:url({{url_for('static',filename='placeholder.png')}})"></a>
                 {% endif %}
                 <h3>{{app.name}}</h3>
-                <p>{{app.description}}</p>
+                <p>{{app.description | truncate(32, true)}}</p>
                 <p><a href="{{url_for('app.details',short_name=app.short_name)}}" class="btn btn-mini btn-info">Info</a> <a href="{{url_for('app.presenter',short_name=app.short_name)}}" class="btn btn-mini btn-primary">Start</a></p>
             </div>
           </div>
