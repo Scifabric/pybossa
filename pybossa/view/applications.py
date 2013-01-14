@@ -51,7 +51,6 @@ class AppForm(Form):
     hidden = BooleanField('Hide?')
 
 
-<<<<<<< HEAD
 class TaskPresenterForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
     editor = TextAreaField('', [validators.Required()])
@@ -280,20 +279,12 @@ def import_task(short_name):
             flash("Oops! It looks like you don't have permission to access"
                   " that file!", 'error')
             return render_template('/applications/import.html',
-<<<<<<< HEAD
-                                   app=app, form=form)
-=======
                     app=app, csvform=csvform, gdform=gdform)
->>>>>>> Update the form and tests
         if (not 'text/plain' in r.headers['content-type'] and not 'text/csv'
                 in r.headers['content-type']):
             flash("Oops! That file doesn't look like the right file.", 'error')
             return render_template('/applications/import.html',
-<<<<<<< HEAD
-                                   app=app, form=form)
-=======
                     app=app, csvform=csvform, gdform=gdform)
->>>>>>> Update the form and tests
         empty = True
         csvcontent = StringIO(r.text)
         csvreader = unicode_csv_reader(csvcontent)
@@ -310,11 +301,7 @@ def import_task(short_name):
                         flash('The file you uploaded has two headers with'
                               ' the same name.', 'error')
                         return render_template('/applications/import.html',
-<<<<<<< HEAD
-                                               app=app, form=form)
-=======
                             app=app, csvform=csvform, gdform=gdform)
->>>>>>> Update the form and tests
                     field_headers = set(headers) & fields
                     for field in field_headers:
                         field_header_index.append(headers.index(field))
@@ -333,22 +320,14 @@ def import_task(short_name):
             if empty:
                 flash('Oops! It looks like the file is empty.', 'error')
                 return render_template('/applications/import.html',
-<<<<<<< HEAD
-                                       app=app, form=form)
-=======
                     app=app, csvform=csvform, gdform=gdform)
->>>>>>> Update the form and tests
             flash('Tasks imported successfully!', 'success')
             return redirect(url_for('.details', short_name=app.short_name))
         except:
             flash('Oops! Looks like there was an error with processing '
                   'that file!', 'error')
     return render_template('/applications/import.html',
-<<<<<<< HEAD
-                           app=app, form=form)
-=======
             app=app, csvform=csvform, gdform=gdform)
->>>>>>> Update the form and tests
 
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
