@@ -51,16 +51,20 @@ class AppForm(Form):
     hidden = BooleanField('Hide?')
 
 
+<<<<<<< HEAD
 class TaskPresenterForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
     editor = TextAreaField('', [validators.Required()])
 
 
-class BulkTaskImportForm(Form):
-    data_url = TextField('URL', [validators.Required(message="You must "
+class BulkTaskCSVImportForm(Form):
+    csv_url = TextField('URL', [validators.Required(message="You must "
                 "provide a URL"), validators.URL(message="Oops! That's not a"
-                "valid URL. You must provide a valid URL")])
-    formtype = TextField(label='formtype', widget=HiddenInput())
+                " valid URL. You must provide a valid URL")])
+class BulkTaskGDImportForm(Form):
+    googledocs_url = TextField('URL', [validators.Required(message="You must "
+                "provide a URL"), validators.URL(message="Oops! That's not a"
+                " valid URL. You must provide a valid URL")])
 
 
 @blueprint.route('/', defaults={'page': 1})
@@ -263,31 +267,33 @@ def details(short_name, page):
 def import_task(short_name):
     app = App.query.filter_by(short_name=short_name).first_or_404()
 
-    form = BulkTaskImportForm(request.form)
-    if form.validate_on_submit():
-        if form.formtype.data == 'googledocs':
-            dataurl = ''.join([form.data_url.data, '&output=csv'])
-        elif form.formtype.data == 'csv':
-            dataurl = form.data_url.data
-        else:
-            print ">>>>>>>>>>>>>>>>>"
-            print form.formtype.data
-            print ">>>>>>>>>>>>>>>>>"
-            flash("Oops! It looks like there was some problem with the form "
-                  "submission", 'error')
-            return render_template('/applications/import.html',
-                    app=app, form=form)
+    dataurl = None
+    csvform = BulkTaskCSVImportForm(request.form)
+    gdform = BulkTaskGDImportForm(request.form)
+    if 'csv_url' in request.form and csvform.validate_on_submit():
+        dataurl = csvform.csv_url.data
+    elif 'googledocs_url' in request.form and gdform.validate_on_submit():
+        dataurl = ''.join([gdform.googledocs_url.data, '&output=csv'])
+    if dataurl:
         r = requests.get(dataurl)
         if r.status_code == 403:
             flash("Oops! It looks like you don't have permission to access"
                   " that file!", 'error')
             return render_template('/applications/import.html',
+<<<<<<< HEAD
                                    app=app, form=form)
+=======
+                    app=app, csvform=csvform, gdform=gdform)
+>>>>>>> Update the form and tests
         if (not 'text/plain' in r.headers['content-type'] and not 'text/csv'
                 in r.headers['content-type']):
-            flash("Oops! That file doesn't look like a CSV file.", 'error')
+            flash("Oops! That file doesn't look like the right file.", 'error')
             return render_template('/applications/import.html',
+<<<<<<< HEAD
                                    app=app, form=form)
+=======
+                    app=app, csvform=csvform, gdform=gdform)
+>>>>>>> Update the form and tests
         empty = True
         csvcontent = StringIO(r.text)
         csvreader = unicode_csv_reader(csvcontent)
@@ -301,10 +307,14 @@ def import_task(short_name):
                 if not headers:
                     headers = row
                     if len(headers) != len(set(headers)):
-                        flash('The CSV file you uploaded has two headers with'
+                        flash('The file you uploaded has two headers with'
                               ' the same name.', 'error')
                         return render_template('/applications/import.html',
+<<<<<<< HEAD
                                                app=app, form=form)
+=======
+                            app=app, csvform=csvform, gdform=gdform)
+>>>>>>> Update the form and tests
                     field_headers = set(headers) & fields
                     for field in field_headers:
                         field_header_index.append(headers.index(field))
@@ -321,16 +331,24 @@ def import_task(short_name):
                     db.session.commit()
                     empty = False
             if empty:
-                flash('Oops! It looks like the CSV file is empty.', 'error')
+                flash('Oops! It looks like the file is empty.', 'error')
                 return render_template('/applications/import.html',
+<<<<<<< HEAD
                                        app=app, form=form)
+=======
+                    app=app, csvform=csvform, gdform=gdform)
+>>>>>>> Update the form and tests
             flash('Tasks imported successfully!', 'success')
             return redirect(url_for('.details', short_name=app.short_name))
         except:
             flash('Oops! Looks like there was an error with processing '
                   'that file!', 'error')
     return render_template('/applications/import.html',
+<<<<<<< HEAD
                            app=app, form=form)
+=======
+            app=app, csvform=csvform, gdform=gdform)
+>>>>>>> Update the form and tests
 
 
 @blueprint.route('/<short_name>/task/<int:task_id>')

@@ -992,7 +992,7 @@ class TestWeb:
         self.new_application()
         app = db.session.query(model.App).first()
         res = self.app.post(('/app/%s/import' % (app.short_name)), data={
-            'data_url': 'http://myfakecsvurl.com',
+            'csv_url': 'http://myfakecsvurl.com',
             'formtype': 'csv',
             }, follow_redirects=True)
         print res.data
@@ -1009,10 +1009,9 @@ class TestWeb:
         self.new_application()
         app = db.session.query(model.App).first()
         res = self.app.post(('/app/%s/import' % (app.short_name)), data={
-            'data_url': 'http://myfakecsvurl.com',
-            'formtype': 'csv',
+            'csv_url': 'http://myfakecsvurl.com',
             }, follow_redirects=True)
-        assert "Oops! That file doesn't look like a CSV file." in res.data
+        assert "Oops! That file doesn't look like the right file." in res.data
 
     @patch('pybossa.view.applications.requests.get')
     def test_35_bulk_import_non_html(self, Mock):
@@ -1024,10 +1023,10 @@ class TestWeb:
         self.new_application()
         app = db.session.query(model.App).first()
         res = self.app.post(('/app/%s/import' % (app.short_name)), data={
-            'data_url': 'http://myfakecsvurl.com',
+            'csv_url': 'http://myfakecsvurl.com',
             'formtype': 'csv',
             }, follow_redirects=True)
-        assert "Oops! It looks like the CSV file is empty." in res.data
+        assert "Oops! It looks like the file is empty." in res.data
 
     @patch('pybossa.view.applications.requests.get')
     def test_36_bulk_import_dup_header(self, Mock):
@@ -1039,10 +1038,10 @@ class TestWeb:
         self.new_application()
         app = db.session.query(model.App).first()
         res = self.app.post(('/app/%s/import' % (app.short_name)), data={
-            'data_url': 'http://myfakecsvurl.com',
+            'csv_url': 'http://myfakecsvurl.com',
             'formtype': 'csv',
             }, follow_redirects=True)
-        assert "The CSV file you uploaded has two headers with the same" \
+        assert "The file you uploaded has two headers with the same" \
                 " name" in res.data
 
     @patch('pybossa.view.applications.requests.get')
@@ -1055,7 +1054,7 @@ class TestWeb:
         self.new_application()
         app = db.session.query(model.App).first()
         res = self.app.post(('/app/%s/import' % (app.short_name)), data={
-            'data_url': 'http://myfakecsvurl.com',
+            'csv_url': 'http://myfakecsvurl.com',
             'formtype': 'csv',
             }, follow_redirects=True)
         task = db.session.query(model.Task).first()
@@ -1072,7 +1071,7 @@ class TestWeb:
         self.new_application()
         app = db.session.query(model.App).first()
         res = self.app.post(('/app/%s/import' % (app.short_name)), data={
-            'data_url': 'http://myfakecsvurl.com',
+            'csv_url': 'http://myfakecsvurl.com',
             'formtype': 'csv',
             }, follow_redirects=True)
         task = db.session.query(model.Task).first()
