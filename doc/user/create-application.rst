@@ -119,17 +119,17 @@ importer. You have to do the following:
 
     1. Navigate to your application's page.
     2. Click on **Import Tasks**, right next to **Edit the Application**.
-    3. Provide a URL to the CSV file.  If you're trying to import from a
-       Google Spreadsheet, add **&output=csv** to the end of the URL and
-       ensure the file is accessible to everyone with link or is public.
+    3. Provide a URL to a Google Docs Spreadsheet or a CSV file.  If you're
+       trying to import from a Google Spreadsheet, ensure the file is
+       accessible to everyone with link or is public.
 
 .. note::
 
-   Your CSV file must contain a header row. All the fields in the CSV will be
-   serialized to json and stored in the **info** field. If your field name is
-   one of **state**, **quorum**, **calibration**, **priority_0**, or
-   **n_answers**, it will be saved in the respective columns. Your spreadsheet
-   must be visible to public or everyone with URL.
+   Your spreadsheet/CSV file must contain a header row. All the fields in the
+   CSV will be    serialized to json and stored in the **info** field. If
+   your field name is one of **state**, **quorum**, **calibration**,
+   **priority_0**, or **n_answers**, it will be saved in the respective
+   columns. Your spreadsheet must be visible to public or everyone with URL.
 
 Via the API
 -----------
