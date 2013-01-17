@@ -78,9 +78,11 @@ class TestAdmin:
         return self.app.get('/account/signout', follow_redirects=True)
 
     def new_application(self, method="POST", name="Sample App",
-            short_name="sampleapp", description="Description",
-            long_description=u'<div id="long_desc">Long desc</div>',
-            hidden=False):
+                        short_name="sampleapp", description="Description",
+                        thumbnail='An Icon link',
+                        long_description=u'<div id="long_desc">Long desc</div>',
+                        sched='default',
+                        hidden=False):
         """Helper function to create an application"""
         if method == "POST":
             if hidden:
@@ -88,7 +90,9 @@ class TestAdmin:
                     'name': name,
                     'short_name': short_name,
                     'description': description,
+                    'thumbnail': thumbnail,
                     'long_description': long_description,
+                    'sched': sched,
                     'hidden': hidden,
                 }, follow_redirects=True)
             else:
@@ -96,7 +100,9 @@ class TestAdmin:
                     'name': name,
                     'short_name': short_name,
                     'description': description,
-                    'long_description': long_description
+                    'thumbnail': thumbnail,
+                    'long_description': long_description,
+                    'sched': sched,
                 }, follow_redirects=True)
         else:
             return self.app.get("/app/new", follow_redirects=True)
@@ -126,28 +132,38 @@ class TestAdmin:
     def update_application(self, method="POST", short_name="sampleapp", id=1,
                            new_name="Sample App", new_short_name="sampleapp",
                            new_description="Description",
+                           new_thumbnail="New Icon link",
                            new_long_description="Long desc",
+                           new_sched="random",
                            new_hidden=False):
         """Helper function to create an application"""
         if method == "POST":
             if new_hidden:
-                return self.app.post("/app/%s/update" % short_name, data={
-                        'id': id,
-                        'name': new_name,
-                        'short_name': new_short_name,
-                        'description': new_description,
-                        'hidden': new_hidden,
-                    }, follow_redirects=True)
+                return self.app.post("/app/%s/update" % short_name,
+                                     data={
+                                         'id': id,
+                                         'name': new_name,
+                                         'short_name': new_short_name,
+                                         'description': new_description,
+                                         'thumbnail': new_thumbnail,
+                                         'long_description': new_long_description,
+                                         'sched': new_sched,
+                                         'hidden': new_hidden},
+                                     follow_redirects=True)
             else:
                 return self.app.post("/app/%s/update" % short_name, data={
                         'id': id,
                         'name': new_name,
                         'short_name': new_short_name,
+                        'thumbnail': new_thumbnail,
+                        'long_description': new_long_description,
+                        'sched': new_sched,
                         'description': new_description,
                     }, follow_redirects=True)
         else:
             return self.app.get("/app/%s/update" % short_name,
                                 follow_redirects=True)
+
 
     # Tests
 
