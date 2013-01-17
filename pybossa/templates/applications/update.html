@@ -14,7 +14,9 @@
         {{ render_field(form.name, class_="input-xlarge", placeholder="The name of the application") }}
         {{ render_field(form.short_name, class_="input-xlarge", placeholder="Short name or slug for the application") }}
         {{ render_field(form.description, class_="input-xlarge", placeholder="Give some details about the application")}}
+        {{ render_field(form.thumbnail, class_="input-xlarge", placeholder="Paste the direct link to your app icon")}}
         {{ render_field(form.long_description, class_="input-xlarge", placeholder="Explain the application (you can use HTML code!)")}}
+        {{ render_field(form.sched, placeholder="Task scheduler for your app")}}
         {{ render_field(form.hidden)}}
         <div class="form-actions">
           <input type="submit" value="Save the changes" class="btn btn-primary" />
