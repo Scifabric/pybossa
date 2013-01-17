@@ -155,9 +155,9 @@ class App(db.Model, DomainObject):
     calibration_frac = Column(Float, default=0)
     bolt_course_id = Column(Integer, default=0)
     #: Standard JSON blob for additional data. This field also
-    #: stores information used by PyBossa, such as the app thumbnail, 
+    #: stores information used by PyBossa, such as the app thumbnail,
     #: the schedule mode, and the task presenter.
-    #: 
+    #:
     #:    {
     #:       task_presenter: [html/javascript],
     #:       thumbnail: [url to the thumbnail image]
@@ -168,9 +168,10 @@ class App(db.Model, DomainObject):
 
     ## Relationships
     #: `Task`s for this app.`
-    tasks = relationship('Task', backref='app')
+    tasks = relationship('Task', cascade='all, delete-orphan', backref='app')
     #: `TaskRun`s for this app.`
     task_runs = relationship('TaskRun', backref='app',
+                             cascade='all, delete-orphan',
                              order_by='TaskRun.finish_time.desc()')
     #: `Featured` or not for this app
     featured = relationship('Featured', cascade='all, delete-orphan')
@@ -257,7 +258,7 @@ class Task(db.Model, DomainObject):
 
     ## Relationships
     #: `TaskRun`s for this task`
-    task_runs = relationship('TaskRun', backref='task')
+    task_runs = relationship('TaskRun', cascade='all, delete-orphan', backref='task')
 
     def pct_status(self):
         """Returns the percentage of Tasks that are completed"""
