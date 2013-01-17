@@ -1,8 +1,20 @@
-{% macro render_field(field) %}
+{% macro render_field(field, addon, prepend) %}
     <div class="control-group {% if field.errors %} error {% endif %}">
         {{ field.label(class="control-label") }}
         <div class="controls">
-            {{field(**kwargs)}}
+            {% if addon %}
+            <div class="{% if prepend %}input-prepend{%else%}input-append{%endif%}">
+                {% if prepend %}
+                <span class="add-on">{{addon|safe}}</span>
+                {{field(**kwargs)}}
+                {% else %}
+                {{field(**kwargs)}}
+                <span class="add-on">{{addon|safe}}</span>
+                {% endif %}
+            </div>
+            {% else %}
+                {{field(**kwargs)}}
+                {% endif %}
             {% if field.errors %}
                 {% for error in field.errors %}
                 <span class="help-inline">{{ error }}</span>
@@ -10,6 +22,4 @@
             {% endif %}
         </div>
     </div>
-
 {% endmacro %}
-

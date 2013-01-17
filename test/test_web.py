@@ -28,7 +28,7 @@ class TestWeb:
     # Helper functions
     def html_title(self, title=None):
         """Helper function to create an HTML title"""
-        if title == None:
+        if title is None:
             return "<title>PyBossa</title>"
         else:
             return "<title>PyBossa &middot; %s</title>" % title
@@ -41,13 +41,14 @@ class TestWeb:
         if email is None:
             email = username + '@example.com'
         if method == "POST":
-            return self.app.post('/account/register', data={
-                'fullname': fullname,
-                'username': username,
-                'email_addr': email,
-                'password': password,
-                'confirm': password2,
-                }, follow_redirects=True)
+            return self.app.post('/account/register',
+                                 data={
+                                     'fullname': fullname,
+                                     'username': username,
+                                     'email_addr': email,
+                                     'password': password,
+                                     'confirm': password2},
+                                 follow_redirects=True)
         else:
             return self.app.get('/account/register', follow_redirects=True)
 
@@ -55,13 +56,12 @@ class TestWeb:
                next=None):
         """Helper function to sign in current user"""
         url = '/account/signin'
-        if next != None:
+        if next is not None:
             url = url + '?next=' + next
         if method == "POST":
-            return self.app.post(url, data={
-                    'username': username,
-                    'password': password,
-                    }, follow_redirects=True)
+            return self.app.post(url, data={'username': username,
+                                            'password': password},
+                                 follow_redirects=True)
         else:
             return self.app.get(url, follow_redirects=True)
 
@@ -73,12 +73,12 @@ class TestWeb:
                        name="johndoe", email_addr="johndoe@example.com"):
         """Helper function to update the profile of users"""
         if (method == "POST"):
-            return self.app.post("/account/profile/update", data={
-                    'id': id,
-                    'fullname': fullname,
-                    'name': name,
-                    'email_addr': email_addr},
-                follow_redirects=True)
+            return self.app.post("/account/profile/update",
+                                 data={'id': id,
+                                       'fullname': fullname,
+                                       'name': name,
+                                       'email_addr': email_addr},
+                                 follow_redirects=True)
         else:
             return self.app.get("/account/profile/update",
                                 follow_redirects=True)
@@ -88,9 +88,11 @@ class TestWeb:
         return self.app.get('/account/signout', follow_redirects=True)
 
     def new_application(self, method="POST", name="Sample App",
-            short_name="sampleapp", description="Description",
-            long_description=u'<div id="long_desc">Long desc</div>',
-            hidden=False):
+                        short_name="sampleapp", description="Description",
+                        thumbnail='An Icon link',
+                        long_description=u'<div id="long_desc">Long desc</div>',
+                        sched='default',
+                        hidden=False):
         """Helper function to create an application"""
         if method == "POST":
             if hidden:
@@ -98,7 +100,9 @@ class TestWeb:
                     'name': name,
                     'short_name': short_name,
                     'description': description,
+                    'thumbnail': thumbnail,
                     'long_description': long_description,
+                    'sched': sched,
                     'hidden': hidden,
                 }, follow_redirects=True)
             else:
@@ -106,7 +110,9 @@ class TestWeb:
                     'name': name,
                     'short_name': short_name,
                     'description': description,
+                    'thumbnail': thumbnail,
                     'long_description': long_description,
+                    'sched': sched,
                 }, follow_redirects=True)
         else:
             return self.app.get("/app/new", follow_redirects=True)
@@ -136,23 +142,32 @@ class TestWeb:
     def update_application(self, method="POST", short_name="sampleapp", id=1,
                            new_name="Sample App", new_short_name="sampleapp",
                            new_description="Description",
+                           new_thumbnail="New Icon link",
                            new_long_description="Long desc",
+                           new_sched="random",
                            new_hidden=False):
         """Helper function to create an application"""
         if method == "POST":
             if new_hidden:
-                return self.app.post("/app/%s/update" % short_name, data={
-                        'id': id,
-                        'name': new_name,
-                        'short_name': new_short_name,
-                        'description': new_description,
-                        'hidden': new_hidden,
-                    }, follow_redirects=True)
+                return self.app.post("/app/%s/update" % short_name,
+                                     data={
+                                         'id': id,
+                                         'name': new_name,
+                                         'short_name': new_short_name,
+                                         'description': new_description,
+                                         'thumbnail': new_thumbnail,
+                                         'long_description': new_long_description,
+                                         'sched': new_sched,
+                                         'hidden': new_hidden},
+                                     follow_redirects=True)
             else:
                 return self.app.post("/app/%s/update" % short_name, data={
                         'id': id,
                         'name': new_name,
                         'short_name': new_short_name,
+                        'thumbnail': new_thumbnail,
+                        'long_description': new_long_description,
+                        'sched': new_sched,
                         'description': new_description,
                     }, follow_redirects=True)
         else:
@@ -196,7 +211,9 @@ class TestWeb:
     def test_02a_stats_hidden_apps(self):
         """Test WEB leaderboard does not show hidden apps"""
         self.register()
-        self.new_application()
+
+        res = self.new_application()
+        print res.data
 
         app = db.session.query(model.App).first()
         # We use a string here to check that it works too
@@ -539,6 +556,17 @@ class TestWeb:
                 in res.data, res
         assert "Application created!" in res.data, res
 
+        app = db.session.query(model.App).first()
+        assert app.name == 'Sample App', 'Different names %s' % app.name
+        assert app.short_name == 'sampleapp', \
+            'Different names %s' % app.short_name
+        assert app.info['thumbnail'] == 'An Icon link', \
+            "Thumbnail should be the same: %s" % app.info['thumbnail']
+        assert app.info['sched'] == 'default', \
+            "Scheduler should be the same: %s" % app.info['thumbnail']
+        assert app.long_description == '<div id="long_desc">Long desc</div>', \
+            "Long desc should be the same: %s" % app.long_description
+
     def test_12_update_application(self):
         """Test WEB update application works"""
         self.register()
@@ -556,11 +584,24 @@ class TestWeb:
         res = self.update_application(new_name="New Sample App",
                                       new_short_name="newshortname",
                                       new_description="New description",
-                                      new_long_description=u'New long desc',
+                                      new_thumbnail="New Icon Link",
+                                      new_long_description='New long desc',
+                                      new_sched="random",
                                       new_hidden=True)
-        #assert self.html_title("Application: New Sample App")
-        #in res.data, res.data
+        app = db.session.query(model.App).first()
         assert "Application updated!" in res.data, res
+        assert app.name == "New Sample App", \
+                "App name not updated %s" % app.name
+        assert app.short_name == "newshortname", \
+                "App short name not updated %s" % app.short_name
+        assert app.description == "New description", \
+                "App description not updated %s" % app.description
+        assert app.info['thumbnail'] == "New Icon Link", \
+                "App thumbnail not updated %s" % app.icon['thumbnail']
+        assert app.long_description == "New long desc", \
+                "App long description not updated %s" % app.long_description
+        assert app.hidden == True, \
+                "App hidden not updated %s" % app.hidden
 
     def test_13_hidden_applications(self):
         """Test WEB hidden application works"""
