@@ -18,7 +18,7 @@ import requests
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response
 from flask import render_template, make_response
 from flaskext.wtf import Form, IntegerField, TextField, BooleanField, \
-    validators, HiddenInput, TextAreaField
+    SelectField, validators, HiddenInput, TextAreaField
 from flaskext.login import login_required, current_user
 from werkzeug.exceptions import HTTPException
 
@@ -47,7 +47,13 @@ class AppForm(Form):
     description = TextField('Description',
                             [validators.Required(
                                 message="You must provide a description.")])
+    thumbnail = TextField('Icon Link')
     long_description = TextAreaField('Long Description')
+    sched = SelectField('Scheduler',
+                        choices=[('default', 'Default'),
+                                 ('breadth_first', 'Breadth First'),
+                                 ('depth_first', 'Depth First'),
+                                 ('random', 'Random')],)
     hidden = BooleanField('Hide?')
 
 
@@ -108,12 +114,21 @@ def new():
     if require.app.create():
         form = AppForm(request.form)
         if request.method == 'POST' and form.validate():
+            info = {}
+            # Add the info items
+            if form.thumbnail.data:
+                info['thumbnail'] = form.thumbnail.data
+            if form.sched.data:
+                info['sched'] = form.sched.data
+
             application = model.App(name=form.name.data,
                                     short_name=form.short_name.data,
                                     description=form.description.data,
                                     long_description=form.long_description.data,
                                     hidden=int(form.hidden.data),
-                                    owner_id=current_user.id,)
+                                    owner_id=current_user.id,
+                                    info=info,)
+
             db.session.add(application)
             db.session.commit()
             # Clean cache
@@ -199,6 +214,14 @@ def update(short_name):
         if request.method == 'GET':
             form = AppForm(obj=app)
             form.populate_obj(app)
+            if app.info.get('thumbnail'):
+                form.thumbnail.data = app.info['thumbnail']
+            if app.info.get('sched'):
+                for s in form.sched.choices:
+                    if app.info['sched'] == s[0]:
+                        form.sched.data = s[0]
+                        break
+
             return render_template('/applications/update.html',
                                    title="Update the application: %s"
                                    % app.name,
@@ -212,12 +235,21 @@ def update(short_name):
                     hidden = 1
                 else:
                     hidden = 0
+
+                info = {}
+                # Add the info items
+                if form.thumbnail.data:
+                    info['thumbnail'] = form.thumbnail.data
+                if form.sched.data:
+                    info['sched'] = form.sched.data
+
                 new_application = model.App(id=form.id.data,
                                             name=form.name.data,
                                             short_name=form.short_name.data,
                                             description=form.description.data,
                                             long_description=form.long_description.data,
                                             hidden=hidden,
+                                            info=info,
                                             owner_id=current_user.id,)
                 app = App.query.filter_by(short_name=short_name).first_or_404()
                 db.session.merge(new_application)

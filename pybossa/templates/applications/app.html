@@ -55,6 +55,13 @@
               <h2>Summary</h2>
               <hr>
             </div>
+            <div class="span2">
+                {% if app.info.thumbnail %}
+                <img class="img-polaroid span2" src="{{app.info.thumbnail}}"/>
+                {% else %}
+                <img class="img-polaroid span2" src="{{url_for('static', filename='img/placeholder.png')}}"/>
+                {% endif %}
+            </div>
             <div class="span7">
               <ul style="list-style-type: none; font-size: 16px;">
                 {% if current_user.id == app.owner.id %}
