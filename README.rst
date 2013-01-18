@@ -23,7 +23,7 @@ and `ForestWatchers.net <http://forestwatchers.net>`_
 Installing and Upgrading
 ========================
 
-See `installation instructions <http://pybossa.readthedocs.org/en/latest/install.html>`_.
+See `installation instructions <http://docs.pybossa.com/en/latest/install.html>`_.
 
 Running Tests
 =============
