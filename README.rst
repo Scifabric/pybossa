@@ -17,13 +17,13 @@ crowd-source human problem-solving skills!
 See it in Action
 ================
 
-PyBossa powers http://pybossa.com/ - check it out!
-
+PyBossa powers `CrowdCrafting.org <http://crowdcrafting.org/>`_ 
+and `ForestWatchers.net <http://forestwatchers.net>`_
 
 Installing and Upgrading
 ========================
 
-See doc/install.rst or http://pybossa.readthedocs.org/en/latest/install.html
+See `installation instructions <http://pybossa.readthedocs.org/en/latest/install.html>`_.
 
 Running Tests
 =============
@@ -40,8 +40,8 @@ Then run the tests (requires nose)::
 Useful Links
 ============
 
-* Documentation: http://pybossa.readthedocs.org/
-* Mailing List http://lists.okfn.org/mailman/listinfo/open-science-dev
+* `Documentation <http://docs.pybossa.com/>`_
+* `Mailing List <http://lists.okfn.org/mailman/listinfo/open-science-dev>`_
 
 
 Authors
