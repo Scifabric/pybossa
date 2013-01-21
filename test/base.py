@@ -21,16 +21,19 @@ class Fixtures:
     fullname2 = u'T Tester 2'
     email_addr = u'tester@tester.com'
     email_addr2 = u'tester-2@tester.com'
+    root_addr = u'root@root.com'
     name = u'tester'
     name2 = u'tester-2'
+    root_name = u'root'
     api_key = 'tester'
     api_key_2 = 'tester-2'
+    root_api_key = 'root'
     app_name = u'test-app'
     password = u'tester'
 
     @classmethod
     def create(cls,sched='default'):
-        user,user2 = Fixtures.create_users()
+        root, user,user2 = Fixtures.create_users()
 
         info = {
             'total': 150,
@@ -42,6 +45,8 @@ class Fixtures:
         app = Fixtures.create_app(info)
         app.owner = user
 
+        db.session.add(root)
+        db.session.commit()
         db.session.add(user)
         db.session.commit()
         db.session.add(user2)
@@ -66,7 +71,7 @@ class Fixtures:
 
     @classmethod
     def create_2(cls,sched='default'):
-        user,user2 = Fixtures.create_users()
+        root, user,user2 = Fixtures.create_users()
 
         info = {
             'total': 150,
@@ -78,7 +83,7 @@ class Fixtures:
         app = Fixtures.create_app(info)
         app.owner = user
 
-        db.session.add_all([user, user2, app])
+        db.session.add_all([root, user, user2, app])
 
         task_info = {
             'n_answers': 10,
@@ -99,6 +104,13 @@ class Fixtures:
 
     @classmethod
     def create_users(cls):
+        root = model.User(
+                email_addr = cls.root_addr,
+                name = cls.root_name,
+                passwd_hash = cls.password + 'root',
+                fullname = cls.fullname,
+                api_key = cls.root_api_key)
+
         user = model.User(
                 email_addr = cls.email_addr,
                 name = cls.name,
@@ -113,7 +125,7 @@ class Fixtures:
                 fullname = cls.fullname2,
                 api_key=cls.api_key_2)
 
-        return user,user2
+        return root, user, user2
 
     @classmethod
     def create_app(cls,info):
