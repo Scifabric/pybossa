@@ -39,9 +39,14 @@ tasks, while everyone can collaborate solving the tasks).
 
     Flickr Person Finder uses the **pybossa-client** module which simplifies a lot
     accessing the PyBossa services and API endpoints. Therefore, you will need to
-    install the *pybossa-client* with **pip**::
+    install the *pybossa-client* with `pip --a python installer packager <http://pypi.python.org/pypi/pip>`_::
 
     $ pip install pybossa-client
+
+.. note::
+    
+    If you need to install **pip** in your system, check `the official
+    documentation. <http://www.pip-installer.org/en/latest/installing.html>`_
 
 Creating the Application
 ========================
