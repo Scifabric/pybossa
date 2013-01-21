@@ -57,11 +57,12 @@ There two possible ways for creating an application:
     see a section named **applications** list. In that section you will be able
     to create an application using the web interface.
   * Using the **RestFUL API**: you can check the source code of the
-    createTasks.py script for more details about creating an application using
-    the API.
+    `createTasks.py script <https://github.com/PyBossa/app-flickrperson/blob/master/createTasks.py>`_ 
+    for more details about creating an application using the API.
 
 For this tutorial we are going to use the second option, the *RestFUL API* via
-the *createTasks.py* script. This script has two mandatory arguments:
+the `createTasks.py script <https://github.com/PyBossa/app-flickrperson/blob/master/createTasks.py>`_. 
+This script has two mandatory arguments:
 
     * the URL of the PyBossa server, and 
     * an API-KEY to authenticate you in the PyBossa server. 
@@ -98,12 +99,11 @@ project.
 Creating the Tasks and Application
 ==================================
 
-The createTasks.py_ script has a full example about how to create
+The `createTasks.py script <https://github.com/PyBossa/app-flickrperson/blob/master/createTasks.py>`_
+has a full example about how to create
 an application and several tasks for the application. PyBossa will deliver the
 tasks for the users (authenticated and anonymous ones) and store the submitted
 answers in the PyBossa data base.
-
-.. _createTasks.py: https://github.com/PyBossa/app-flickrperson/blob/master/createTasks.py
 
 The script gets the latest 20 published photos from the public Flickr feed and
 saves the *link* of the Flickr web page publishing the photo, as well as the 
@@ -161,7 +161,7 @@ the data when you will analyze it, you can specify it in the task JSON object::
 In this case the **n_answers** field will make the scheduler to obtain for
 a given task 100 different task runs or answers from different users.
 
-The **createTask.py** script has a command line argument that allows you to
+The `createTasks.py script <https://github.com/PyBossa/app-flickrperson/blob/master/createTasks.py>`_ has a command line argument that allows you to
 change the number of task runs that you want per task. Check the source code
 for more information.
 
@@ -254,7 +254,7 @@ tasks and saving the answers from the users: <script></script>.
 
 .. _file: https://github.com/PyBossa/app-flickrperson/blob/master/app-flickrperson/template.html
 
-This template file will be used by the **createTasks.py** script to send the
+This template file will be used by the `createTasks.py <https://github.com/PyBossa/app-flickrperson/blob/master/createTasks.py>`_ script to send the
 template as part of the JSON object that will create the application. 
 
 .. note::
@@ -710,7 +710,8 @@ Adding a tutorial is really simple: you only have to create a file named
            'tutorial': '<div class="row"><div class="span12"><h1>Tutorial</h1>...</div></div>'
          }
 
-The **createTasks.py** file will detect if you have file called
+The `createTasks.py <https://github.com/PyBossa/app-flickrperson/blob/master/createTasks.py>`_ 
+file will detect if you have file called
 **tutorial.html** and in that case, load the contents automatically for you in
 the **info** JSON object.
 
