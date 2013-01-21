@@ -358,7 +358,7 @@ class TestAPI:
         data = {'name': 'My New Title'}
         datajson = json.dumps(data)
         ### admin user but not owner!
-        url = '/api/app/%s?api_key=%s' % (id_, Fixtures.api_key)
+        url = '/api/app/%s?api_key=%s' % (id_, Fixtures.root_api_key)
         res = self.app.put(url, data=datajson)
 
         assert_equal(res.status, '200 OK', res.data)
@@ -367,7 +367,7 @@ class TestAPI:
 
         # test delete
         ### real user  not owner!
-        url = '/api/app/%s?api_key=%s' % (id_, Fixtures.api_key)
+        url = '/api/app/%s?api_key=%s' % (id_, Fixtures.root_api_key)
         res = self.app.delete(url, data=datajson)
 
         assert_equal(res.status, '204 NO CONTENT', res.data)
@@ -382,6 +382,8 @@ class TestAPI:
                 .one()
         data = dict(app_id=app.id, state='0', info='my task data')
         data = json.dumps(data)
+        root_data = dict(app_id=app.id, state='0', info='my root task data')
+        root_data = json.dumps(root_data)
 
         ########
         # POST #
@@ -413,12 +415,27 @@ class TestAPI:
         assert_equal(out.app_id, app.id)
         id_ = out.id
 
+        # now the root user
+        res = self.app.post('/api/task?api_key=' + Fixtures.root_api_key,
+                            data=root_data)
+        assert res.data, res
+        datajson = json.loads(res.data)
+        out = db.session.query(model.Task)\
+                .filter_by(id=datajson['id'])\
+                .one()
+        assert out, out
+        assert_equal(out.info, 'my root task data'), out
+        assert_equal(out.app_id, app.id)
+        root_id_ = out.id
+
+
         ##########
         # UPDATE #
         ##########
-
         data = {'state': '1'}
         datajson = json.dumps(data)
+        root_data = {'state': '4'}
+        root_datajson = json.dumps(root_data)
 
         ## anonymous
         res = self.app.put('/api/task/%s' % id_, data=data)
@@ -437,10 +454,17 @@ class TestAPI:
         out2 = db.session.query(model.Task).get(id_)
         assert_equal(out2.state, data['state'])
 
+        ### root
+        res = self.app.put('/api/task/%s?api_key=%s' % (root_id_, Fixtures.root_api_key),
+                           data=root_datajson)
+        assert_equal(res.status, '200 OK', res.data)
+        out2 = db.session.query(model.Task).get(root_id_)
+        assert_equal(out2.state, root_data['state'])
+
+
         ##########
         # DELETE #
         ##########
-
         ## anonymous
         res = self.app.delete('/api/task/%s' % id_)
         error_msg = 'Anonymous should not be allowed to update'
@@ -454,6 +478,11 @@ class TestAPI:
 
         #### real user
         url = '/api/task/%s?api_key=%s' % (id_, Fixtures.api_key)
+        res = self.app.delete(url)
+        assert_equal(res.status, '204 NO CONTENT', res.data)
+
+        #### root user
+        url = '/api/task/%s?api_key=%s' % (root_id_, Fixtures.root_api_key)
         res = self.app.delete(url)
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
@@ -520,6 +549,7 @@ class TestAPI:
         assert_equal(taskrun.user, None)
         error_msg = 'Should not be allowed to update'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
+
         # real user but not allowed as not owner!
         url = '/api/taskrun/%s?api_key=%s' % (_id, Fixtures.api_key_2)
         res = self.app.put(url, data=datajson)
@@ -528,6 +558,14 @@ class TestAPI:
 
         # real user
         url = '/api/taskrun/%s?api_key=%s' % (_id, Fixtures.api_key)
+        res = self.app.put(url, data=datajson)
+        assert_equal(res.status, '200 OK', res.data)
+        out2 = db.session.query(model.TaskRun).get(_id)
+        assert_equal(out2.info, data['info'])
+        assert_equal(out2.user.name, Fixtures.name)
+
+        # root user
+        url = '/api/taskrun/%s?api_key=%s' % (_id, Fixtures.root_api_key)
         res = self.app.put(url, data=datajson)
         assert_equal(res.status, '200 OK', res.data)
         out2 = db.session.query(model.TaskRun).get(_id)
@@ -546,7 +584,7 @@ class TestAPI:
         ### real user but not allowed to delete anonymous TaskRuns
         url = '/api/taskrun/%s?api_key=%s' % (_id_anonymous, Fixtures.api_key)
         res = self.app.delete(url)
-        error_msg = 'Anonymous should not be allowed ' \
+        error_msg = 'Authenticated user should not be allowed ' \
                     'to delete anonymous TaskRuns'
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
@@ -565,6 +603,13 @@ class TestAPI:
                   .filter_by(app_id=app_id)\
                   .all()
         assert tasks, tasks
+
+        ### root
+        url = '/api/taskrun/%s?api_key=%s' % (_id_anonymous, Fixtures.root_api_key)
+        res = self.app.delete(url)
+        print res.data
+        error_msg = 'Admin should be able to delete TaskRuns of others'
+        assert_equal(res.status, '204 NO CONTENT', error_msg)
 
     def test_taskrun_newtask(self):
         """Test API App.new_task method and authentication"""
@@ -615,9 +660,10 @@ class TestAPI:
                   .filter(model.Task.app_id == app.id)\
                   .all()
 
+        # User ID = 2 because, the 1 is the root user
         taskruns = db.session.query(model.TaskRun)\
                      .filter(model.TaskRun.app_id == app.id)\
-                     .filter(model.TaskRun.user_id == 1)\
+                     .filter(model.TaskRun.user_id == 2)\
                      .all()
 
         res = self.app.get('/api/app/1/userprogress', follow_redirects=True)
@@ -627,7 +673,8 @@ class TestAPI:
         assert len(tasks) == data['total'], error_msg
 
         error_msg = "The reported number of done tasks is wrong"
-        assert len(taskruns) == data['done'], error_msg
+        print len(taskruns)
+        assert len(taskruns) == data['done'], data
 
         res = self.app.get('/api/app/1/newtask')
         data = json.loads(res.data)
