@@ -128,7 +128,7 @@ Creating the Tasks and Application
 The `createTasks.py script <https://github.com/PyBossa/app-flickrperson/blob/master/createTasks.py>`_
 has a full example about how to create
 an application and several tasks for the application. PyBossa will deliver the
-tasks for the users (authenticated and anonymous ones) and store the submitted
+tasks for the users (authenticated and anonymous ones) and store the submittedd
 answers in the PyBossa data base.
 
 The script gets the latest 20 published photos from the public Flickr feed and
@@ -168,7 +168,7 @@ run the following script::
 Number of answers or task runs per task
 =======================================
 
-PyBossa by default will send a task to different users (authenticated an
+PyBossa by default will send a task to different users (authenticated and
 anonymous users) until 30 different task runs are obtained for each task. 
 
 The scheduler does not allow that one user will submit two or more answers for
