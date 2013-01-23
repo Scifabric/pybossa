@@ -49,7 +49,7 @@ class AppForm(Form):
                                 message="You must provide a description.")])
     thumbnail = TextField('Icon Link')
     long_description = TextAreaField('Long Description')
-    sched = SelectField('Scheduler',
+    sched = SelectField('Task Scheduler',
                         choices=[('default', 'Default'),
                                  ('breadth_first', 'Breadth First'),
                                  ('depth_first', 'Depth First'),
