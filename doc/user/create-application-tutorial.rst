@@ -146,7 +146,7 @@ For example:
     Flickr creates from the original image different cropped versions of the
     image. It uses a pattern to distinguish them: **_m** for medium size,
     and **_b** for the big ones. There are more options, so if you need more
-    help in this matter, check the official Flickr documentation.
+    help in this matter, check the official `Flickr documentation <http://www.flickr.com/services/api/>`_.
 
 Those three variables (Link URL_m and URL_b) will be stored in a JSON object::
 
