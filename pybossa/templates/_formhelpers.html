@@ -1,6 +1,12 @@
-{% macro render_field(field, addon, prepend) %}
+{% macro render_field(field, addon, prepend, tooltip) %}
     <div class="control-group {% if field.errors %} error {% endif %}">
+        {% if tooltip %}
+        {{ field.label(class="control-label", style='width:148px') }}
+        <div style="float:left; padding-top:5px;margin-bottom:5px;font-size:18px;">
+            &nbsp;<i rel="tooltip" data-title="{{tooltip|safe}}" class="icon-question-sign"></i></div>
+        {% else %}
         {{ field.label(class="control-label") }}
+        {% endif %}
         <div class="controls">
             {% if addon %}
             <div class="{% if prepend %}input-prepend{%else%}input-append{%endif%}">
