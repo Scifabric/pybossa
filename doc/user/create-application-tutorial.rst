@@ -76,7 +76,7 @@ The following section gives more details about how to use the script.
 Configuring the name, short name, thumbnail, etc.
 =================================================
 
-The Flickr Person Finder provides a file called: **app.json** that has the
+The Flickr Person Finder provides a file called: `app.json <https://github.com/PyBossa/app-flickrperson/blob/master/app.json>`_  that has the
 following content::
 
     {
@@ -132,7 +132,7 @@ And saved into the task field **info** of the task model. As Flickr only
 publishes the latest 20 uploaded photos in their public feed, the script will
 create only 20 tasks in PyBossa.
 
-Finally the script will read the **app.json** file to create the application
+Finally the script will read the `app.json <https://github.com/PyBossa/app-flickrperson/blob/master/app.json>`_ file to create the application
 and associated tasks. In order to create the application and its tasks, 
 run the following script::
 
@@ -202,7 +202,8 @@ If you want to add an icon you only have to upload the thumbnail of
 size 100x100 pixels to a hosting service like Flickr, Imgur, ImageShack, etc. 
 
 In order to include a thumbnail all you have to do is to modify the
-**app.json** file and paste the direct link to the icon in the **thumbnail**
+`app.json <https://github.com/PyBossa/app-flickrperson/blob/master/app.json>`_
+file and paste the direct link to the icon in the **thumbnail**
 field::
 
     {
