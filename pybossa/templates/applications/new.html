@@ -50,8 +50,8 @@
             {{ render_field(form.description, class_="span4", placeholder="Give some details about the application")}}
             {{ render_field(form.thumbnail, class_="span4", placeholder="Paste the direct link to your app icon")}}
             {{ render_field(form.long_description, class_="span4", placeholder="Explain the application (you can use HTML code!)")}}
-            {{ render_field(form.sched, class_="span4", placeholder="Task scheduler for your app", prepend="$", tooltip="This is the sched", addon="?")}}
-            {{ render_field(form.hidden)}}
+            {{ render_field(form.sched, class_="span4", placeholder="Task scheduler for your app", tooltip="Select how to distribute the tasks")}}
+            {{ render_field(form.hidden, tooltip="Do you want to hide your app?")}}
             <div class="form-actions">
                 <input type="submit" value="Create the application" class="btn btn-primary" />
                 <a href="{{url_for('account.profile')}}" class="btn">Cancel</a>
@@ -62,5 +62,6 @@
 </div>
 <script>
     $("span[rel='tooltip']").tooltip();
+    $("i[rel='tooltip']").tooltip();
 </script>
 {% endblock %}
