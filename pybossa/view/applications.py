@@ -236,12 +236,16 @@ def update(short_name):
                 else:
                     hidden = 0
 
-                info = {}
+                new_info = {}
                 # Add the info items
+                app = App.query.filter_by(short_name=short_name).first_or_404()
                 if form.thumbnail.data:
-                    info['thumbnail'] = form.thumbnail.data
+                    new_info['thumbnail'] = form.thumbnail.data
                 if form.sched.data:
-                    info['sched'] = form.sched.data
+                    new_info['sched'] = form.sched.data
+
+                # Merge info object
+                info = dict(app.info.items() + new_info.items())
 
                 new_application = model.App(id=form.id.data,
                                             name=form.name.data,
