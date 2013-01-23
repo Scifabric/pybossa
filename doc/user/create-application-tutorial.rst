@@ -73,6 +73,32 @@ The following section gives more details about how to use the script.
     If you are running a PyBossa server locally, you can omit the URL parameter
     as by default it uses the URL http://localhost:5000
 
+Cloning the Flickr Person Finder source code
+--------------------------------------------
+
+In order to follow the tutorial, you will need to clone the `Flickr Person
+Finder public Github Repository <http://github.com/PyBossa/app-flickrperson>`_
+so you will have a local copy of the required files to create the application
+and tasks using the API.
+
+If you are new to Github and the GIT software, we recommend you to take this
+`free and on-line course <http://try.github.com>`_ (it will take you only
+15 minutes!) where you will learn the basics, which are the main concepts that
+you will need for cloning the demo app repository.
+
+If you prefer to skip the course and take it in a later stage, the commands
+that you need to clone the repository are::
+
+    git clone git://github.com/PyBossa/app-flickrperson.git
+
+After running that command a new folder named **app-flickrperson** will be
+created from where you run the command. If you don't like the command line, you
+can try the free `MAC <http://mac.github.com/>`_ or 
+`Windows <http://windows.github.com/>`_ Github applications. If you use a GNU/Linux
+OS there are several GUI for git, `search in your distribution packages system
+<http://packages.ubuntu.com/search?suite=quantal&section=all&arch=any&keywords=git+gui&searchon=all>`_.
+
+
 Configuring the name, short name, thumbnail, etc.
 =================================================
 
