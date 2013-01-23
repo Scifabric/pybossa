@@ -1315,3 +1315,38 @@ class TestWeb:
         app = db.session.query(model.App).first()
         assert app.info['task_presenter'] == 'Some HTML code!', \
                 "Task Presenter failed to update"
+
+    def test_48_update_app_info(self):
+        """Test WEB app update/edit works keeping previous info values"""
+        self.register()
+        self.new_application()
+        app = db.session.query(model.App).first()
+        assert not app.info.get('task_presenter'), \
+                "Task Presenter should be empty"
+        res = self.app.post('/app/sampleapp/taskpresentereditor',
+                            data={'editor': 'Some HTML code!'},
+                            follow_redirects=True)
+        assert "Sample App" in res.data, "Does not return to app details"
+        app = db.session.query(model.App).first()
+        for i in range(10):
+            key = "key_%s" % i
+            app.info[key] = i
+        db.session.add(app)
+        db.session.commit()
+        _info = app.info
+
+        self.update_application()
+        app = db.session.query(model.App).first()
+        print app.info
+        print _info
+        for key in _info:
+            assert key in app.info.keys(), \
+                "The key %s is lost and it should be here" % key
+        assert app.name == "Sample App", "The app has not been updated"
+        error_msg = "The app description has not been updated"
+        assert app.description == "Description", error_msg
+        error_msg = "The app icon has not been updated"
+        assert app.info['thumbnail'] == "New Icon link", error_msg
+        error_msg = "The app long description has not been updated"
+        assert app.long_description == "Long desc", error_msg
+        assert app.info['sched'] == "random", "The app sched has not been updated"
