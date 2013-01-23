@@ -45,12 +45,12 @@
     <form class="form-horizontal" method="post" action="{{ url_for('app.new') }}">
         {{ form.hidden_tag() }}
         <fieldset>
-            {{ render_field(form.name, class_="input-xlarge", placeholder="The name of the application") }}
-            {{ render_field(form.short_name, class_="input-xlarge", placeholder="Short name or slug for the application") }}
-            {{ render_field(form.description, class_="input-xlarge", placeholder="Give some details about the application")}}
-            {{ render_field(form.thumbnail, class_="input-xlarge", placeholder="Paste the direct link to your app icon")}}
-            {{ render_field(form.long_description, class_="input-xlarge", placeholder="Explain the application (you can use HTML code!)")}}
-            {{ render_field(form.sched, placeholder="Task scheduler for your app")}}
+            {{ render_field(form.name, class_="span4", placeholder="The name of the application") }}
+            {{ render_field(form.short_name, class_="span4", placeholder="Short name or slug for the application") }}
+            {{ render_field(form.description, class_="span4", placeholder="Give some details about the application")}}
+            {{ render_field(form.thumbnail, class_="span4", placeholder="Paste the direct link to your app icon")}}
+            {{ render_field(form.long_description, class_="span4", placeholder="Explain the application (you can use HTML code!)")}}
+            {{ render_field(form.sched, class_="span4", placeholder="Task scheduler for your app", prepend="$", tooltip="This is the sched", addon="?")}}
             {{ render_field(form.hidden)}}
             <div class="form-actions">
                 <input type="submit" value="Create the application" class="btn btn-primary" />
@@ -60,4 +60,7 @@
     </form>
     </div>
 </div>
+<script>
+    $("span[rel='tooltip']").tooltip();
+</script>
 {% endblock %}
