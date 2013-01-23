@@ -171,8 +171,9 @@ Number of answers or task runs per task
 PyBossa by default will send a task to different users (authenticated and
 anonymous users) until 30 different task runs are obtained for each task. 
 
-The scheduler does not allow that one user will submit two or more answers for
-the same task (for anonymous users PyBossa uses the IP).
+The scheduler does not allow the same user to submit more than one answer for 
+any task (even 'anonymous' users who are not logged in, are recognised via 
+their IP address).
 
 This value, 30 answers, can be changed for each task without problems. If you want
 to improve the quality of the results for one task and get more confidence on
