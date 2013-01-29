@@ -185,8 +185,7 @@ the data when you will analyze it, you can specify it in the task JSON object::
         'n_answers': 100
     }
 
-In this case the **n_answers** field will make the scheduler to obtain for
-a given task 100 different task runs or answers from different users.
+In this case the **n_answers** field will make the scheduler try and obtain 100 different answers from different users for each task.
 
 The `createTasks.py script <https://github.com/PyBossa/app-flickrperson/blob/master/createTasks.py>`_ has a command line argument that allows you to
 change the number of task runs that you want per task. Check the source code
