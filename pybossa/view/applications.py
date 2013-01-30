@@ -170,7 +170,13 @@ def task_presenter_editor(short_name):
                 if app.info.get('task_presenter'):
                     form.editor.data = app.info['task_presenter']
                 else:
-                    form.editor.data = "<h1>Write your code here!<h1>"
+                    script = "<script>\n"
+                    script += "// Your JavaScript\n"
+                    script += "pybossa.taskLoaded(function(task, deferred){\n\t//  Load your task\n});\n"
+                    script += "pybossa.presentTask(function(task, deferred){\n\t// Present task\n});\n"
+                    script += "pybossa.run('%s');\n" % app.short_name
+                    script += "</script>"
+                    form.editor.data = "<h1>Write here the HTML for your app<h1>\n" + script
                 flash('Your code will be <em>automagically</em> rendered in \
                       the <strong>view section</strong>', 'info')
                 return render_template('applications/task_presenter_editor.html',
@@ -254,7 +260,7 @@ def update(short_name):
                                             long_description=form.long_description.data,
                                             hidden=hidden,
                                             info=info,
-                                            owner_id=current_user.id,)
+                                            owner_id=app.owner_id,)
                 app = App.query.filter_by(short_name=short_name).first_or_404()
                 db.session.merge(new_application)
                 db.session.commit()

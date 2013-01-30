@@ -449,6 +449,12 @@ class TestAdmin:
         res = self.app.get('/app/rootsampleapp', follow_redirects=True)
         assert "Root" in res.data, "The app should be updated by admin users"
 
+        app = db.session.query(model.App)\
+                .filter_by(short_name="rootsampleapp").first()
+        juan = db.session.query(model.User).filter_by(name="juan").first()
+        assert app.owner_id == juan.id, "Owner_id should be: %s" % juan.id
+        assert app.owner_id != 1, "The owner should be not updated"
+
     def test_17_admin_delete_app(self):
         """Test ADMIN can delete an app that belongs to another user"""
         self.register()
