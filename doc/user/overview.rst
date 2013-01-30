@@ -3,7 +3,7 @@ Creating an Application
 ====================================
 
 Readers may wish to start with the :doc:`Step by step tutorial on creating an
-Application <create-application-tutorial>` which walks through creating a
+Application <tutorial>` which walks through creating a
 simple photo classification application.
 
 1. Creating the Application itself
@@ -127,7 +127,7 @@ that you will create.
 
 We recommend to read the 
 :doc:`Step by step tutorial on
-creating an Application <create-application-tutorial>`, as you will understand
+creating an Application <tutorial>`, as you will understand
 how to create the task presenter, which is basically adding some HTML skeleton
 to load the task data, input fields to get the answer of the users, and some
 JavaScript to make it to work.
@@ -271,7 +271,7 @@ with your own editor, or using the PyBossa interface (see previous section).
 
 We recommend to read the 
 :doc:`Step by step tutorial on
-creating an Application <create-application-tutorial>`, as you will understand
+creating an Application <tutorial>`, as you will understand
 how to create the task presenter, which is basically adding some HTML skeleton
 to load the task data, input fields to get the answer of the users, and some
 JavaScript to make it to work.
@@ -283,5 +283,5 @@ JavaScript to make it to work.
 If you want to learn more about the whole process of creating an application,
 please, see the detailed example of creating an application in the
 :doc:`Step by step tutorial on
-creating an Application <create-application-tutorial>`.
+creating an Application <tutorial>`.
 

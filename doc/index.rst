@@ -31,8 +31,8 @@ understand how things fit together.
    :maxdepth: 2
 
    overview 
-   user/create-application
-   user/create-application-tutorial
+   user/overview
+   user/tutorial
    user/advance
 
 Developer Guide
