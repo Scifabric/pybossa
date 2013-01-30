@@ -153,3 +153,45 @@ And the **_gcs_form.html** will be like this::
 
 After these steps, your site will be indexed by Google and Google Custom Search
 will be working, providing for your users a search tool.
+
+Global Announcements for the users
+==================================
+
+Sometimes you will need to send a message to all your users while they are
+browsing the server. For example, an scheduled shutdown for installing new
+hardware.
+
+PyBossa provides a general solution for these announcements via the
+`settings_local.py.tmpl <https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl>`_ 
+configuration file. The announcement feature allows
+you to send messages to the following type of users:
+
+ * **Authenticated users**, basically all the registered users in the server.
+ * **Admin users**, all the users that are admins/root in the server.
+ * **Application owners**, all the users that have created one or more
+   applications in the server.
+
+Therefore, let's say that you want to warn all your admins that a new
+configuration will be deployed in your system. In this case, all you have to do
+is to modify the **ANNOUNCEMENT** variable to display the message for the given
+type of users:
+
+.. code-block:: python
+    
+    ANNOUNCEMENT = {'root': 'Your secret message'}
+    
+
+There is an example of the **ANNOUNCEMENT** variable in the
+`settings_local.py.tmpl <https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl>`_ 
+file, so you can easily adapt it for your own server. Basically, the
+announcement variable has a **key** and an associated **message**. The
+supported keys are:
+
+ * **admin**: for admin users
+ * **user**: for all the registered users (even admins)
+ * **owner**: for all registered users that have one or more applications
+
+.. note::
+    
+    You can use a mix of messages at the same time without problems, so for
+    example you can display a message for Admins and Owners at the same time.

@@ -11,4 +11,4 @@ MAIL_PASSWORD = None
 MAIL_PORT = 25
 MAIL_FAIL_SILENTLY = False
 DEFAULT_MAIL_SENDER = 'PyBossa Support <info@pybossa.com>'
-ANNOUNCEMENT = {'root': 'Root Message', 'user': 'User Message', 'owner': 'Owner Message'}
+ANNOUNCEMENT = {'admin': 'Root Message', 'user': 'User Message', 'owner': 'Owner Message'}
