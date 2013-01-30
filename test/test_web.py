@@ -1350,3 +1350,46 @@ class TestWeb:
         error_msg = "The app long description has not been updated"
         assert app.long_description == "Long desc", error_msg
         assert app.info['sched'] == "random", "The app sched has not been updated"
+
+    def test_49_announcement_messages(self):
+        """Test WEB announcement messages works"""
+        self.register()
+        res = self.app.get("/", follow_redirects=True)
+        error_msg = "There should be a message for the root user"
+        assert "Root Message" in res.data, error_msg
+        error_msg = "There should be a message for the user"
+        assert "User Message" in res.data, error_msg
+        error_msg = "There should not be an owner message"
+        assert "Owner Message" not in res.data, error_msg
+        # Now make the user an app owner
+        self.new_application()
+        res = self.app.get("/", follow_redirects=True)
+        error_msg = "There should be a message for the root user"
+        assert "Root Message" in res.data, error_msg
+        error_msg = "There should be a message for the user"
+        assert "User Message" in res.data, error_msg
+        error_msg = "There should be an owner message"
+        assert "Owner Message" in res.data, error_msg
+        self.signout()
+
+        # Register another user
+        self.register(method="POST", fullname="Jane Doe", username="janedoe",
+                      password="janedoe", password2="janedoe",
+                      email="jane@jane.com")
+        res = self.app.get("/", follow_redirects=True)
+        error_msg = "There should not be a message for the root user"
+        assert "Root Message" not in res.data, error_msg
+        error_msg = "There should be a message for the user"
+        assert "User Message" in res.data, error_msg
+        error_msg = "There should not be an owner message"
+        assert "Owner Message" not in res.data, error_msg
+        self.signout()
+
+        # Now as an anonymous user
+        res = self.app.get("/", follow_redirects=True)
+        error_msg = "There should not be a message for the root user"
+        assert "Root Message" not in res.data, error_msg
+        error_msg = "There should not be a message for the user"
+        assert "User Message" not in res.data, error_msg
+        error_msg = "There should not be an owner message"
+        assert "Owner Message" not in res.data, error_msg
