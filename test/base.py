@@ -12,6 +12,9 @@ web.app.config['SQLALCHEMY_DATABASE_URI'] = web.app.config['SQLALCHEMY_DATABASE_
 web.app.config['CSRF_ENABLED'] = False
 web.cache.config['CACHE_TYPE'] = 'null'
 web.cache.config['TESTING'] = True
+web.app.config['ANNOUNCEMENT'] = {'admin': 'Root Message',
+                                  'user': 'User Message',
+                                  'owner': 'Owner Message'}
 cache.init_app(web.app)
 #engine = model.create_engine(web.app.config['SQLALCHEMY_DATABASE_URI'])
 #model.set_engine(engine)
