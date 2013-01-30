@@ -114,6 +114,18 @@ def global_template_context():
             flash("Please update your e-mail address in your profile page,"
                   " right now it is empty!", 'error')
 
+    # Announcement sections
+    if app.config.get('ANNOUNCEMENT'):
+        announcement = app.config['ANNOUNCEMENT']
+        if current_user.is_authenticated():
+            for key in announcement.keys():
+                if key == 'admin' and current_user.admin:
+                    flash(announcement[key], 'info')
+                if key == 'owner' and len(current_user.apps) != 0:
+                    flash(announcement[key], 'info')
+                if key == 'user':
+                    flash(announcement[key], 'info')
+
     return dict(
         brand=app.config['BRAND'],
         title=app.config['TITLE'],
