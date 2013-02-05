@@ -21,6 +21,9 @@ from flaskext.wtf import Form, IntegerField, TextField, BooleanField, \
     SelectField, validators, HiddenInput, TextAreaField
 from flaskext.login import login_required, current_user
 from werkzeug.exceptions import HTTPException
+from werkzeug import Headers
+import os
+import csv
 
 import pybossa.model as model
 from pybossa.core import db, cache
@@ -524,3 +527,80 @@ def tasks(short_name, page):
                                    pagination=pagination)
         else:
             return render_template('/applications/tasks.html', app=None)
+
+
+@blueprint.route('/<short_name>/export')
+def export_to(short_name):
+    """Export Tasks and TaskRuns in the given format"""
+    app = db.session.query(model.App).filter_by(short_name=short_name).first()
+    if request.args.get('format') and request.args.get('type'):
+        if request.args.get('format') == 'json':
+            if request.args.get('type') == 'task':
+                def gen_json_tasks():
+                    n = db.session.query(model.Task)\
+                          .filter_by(app_id=app.id).count()
+                    i = 0
+                    yield "["
+                    for t in db.session.query(model.Task)\
+                               .filter_by(app_id=app.id).yield_per(20):
+                        i += 1
+                        if (i != n):
+                            yield json.dumps(t.dictize()) + ", "
+                        else:
+                            yield json.dumps(t.dictize())
+
+                    yield "]"
+                return Response(gen_json_tasks(), mimetype='application/json')
+            if request.args.get('type') == 'task_run':
+                def gen_json_task_runs():
+                    n = db.session.query(model.TaskRun)\
+                                  .filter_by(app_id=app.id).count()
+                    i = 0
+                    yield "["
+                    for tr in db.session.query(model.TaskRun)\
+                               .filter_by(app_id=app.id).yield_per(20):
+                        i += 1
+                        if (i != n):
+                            yield json.dumps(tr.dictize()) + ", "
+                        else:
+                            yield json.dumps(tr.dictize())
+
+                    yield "]"
+                return Response(gen_json_task_runs(),
+                                mimetype='application/json')
+        if request.args.get('format') == 'csv':
+            if request.args.get('type') == 'task':
+                out = StringIO.StringIO()
+                writer = csv.writer(out)
+                t = db.session.query(model.Task)\
+                      .filter_by(app_id=app.id)\
+                      .first()
+                writer.writerow(t.info.keys())
+                #yield out.getvalue()
+                def get_csv_task():
+                    for t in db.session.query(model.Task)\
+                               .filter_by(app_id=app.id)\
+                               .yield_per(1):
+                        writer.writerow(t.info.values())
+                    yield out.getvalue()
+                return Response(get_csv_task(), mimetype='text/csv')
+            if request.args.get('type') == 'task_run':
+                out = StringIO.StringIO()
+                writer = csv.writer(out)
+                tr = db.session.query(model.TaskRun)\
+                      .filter_by(app_id=app.id)\
+                      .first()
+                if (type(tr.info) == dict):
+                    writer.writerow(tr.info.keys())
+                def get_csv_task():
+                    for tr in db.session.query(model.TaskRun)\
+                               .filter_by(app_id=app.id)\
+                               .yield_per(1):
+                        if (type(tr.info) == dict):
+                            writer.writerow(tr.info.values())
+                        else:
+                            writer.writerow([tr.info])
+                    yield out.getvalue()
+                return Response(get_csv_task(), mimetype='text/csv')
+    else:
+        return render_template('/applications/export.html', app=app)

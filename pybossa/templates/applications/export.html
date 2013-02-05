@@ -1,0 +1,32 @@
+{% extends "/base.html" %}
+{% set active_page = "applications" %}
+{% set active_app  = "all" %}
+
+{% block content %}
+<div class="row">
+    <div class="span3" style="padding: 8px 0;">
+            <ul class="nav nav-list bs-docs-sidenav affix-top">
+                <li><a href="#"><i class="icon-chevron-right"></i> Info</a></li>
+                <li><a href="#"><i class="icon-chevron-right"></i> Contribute</a></li>
+                <li class="active"><a href="#"><i class="icon-chevron-right"></i> Export Task & Taskruns</a></li>
+                <li><a href="#"><i class="icon-chevron-right"></i> Settings</a></li>
+            </ul>
+    </div>
+    <div id="body" class="span9">
+        <h1>{{app.name}}: Export Tasks and TaskRuns</h1>
+        <div class="row-fluid">
+            <div id="csv" class="span6">
+                <h2>Export in CSV format</h2>
+                <a href={{url_for('app.export_to', short_name=app.short_name, type='task', format='csv')}} class="btn btn-large">Tasks</a>
+                <a href={{url_for('app.export_to', short_name=app.short_name, type='task_run', format='csv')}} class="btn btn-large">Task Runs</a>
+            </div>
+            <div id="json" class="span6">
+                <h2>Export in JSON format</h2>
+                <a href={{url_for('app.export_to', short_name=app.short_name, type='task', format='json')}} class="btn btn-large">Tasks</a>
+                <a href={{url_for('app.export_to', short_name=app.short_name, type='task_run', format='json')}} class="btn btn-large">Task Runs</a>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
