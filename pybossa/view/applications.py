@@ -570,7 +570,7 @@ def export_to(short_name):
                                 mimetype='application/json')
         if request.args.get('format') == 'csv':
             if request.args.get('type') == 'task':
-                out = StringIO.StringIO()
+                out = StringIO()
                 writer = csv.writer(out)
                 t = db.session.query(model.Task)\
                       .filter_by(app_id=app.id)\
@@ -585,7 +585,7 @@ def export_to(short_name):
                     yield out.getvalue()
                 return Response(get_csv_task(), mimetype='text/csv')
             if request.args.get('type') == 'task_run':
-                out = StringIO.StringIO()
+                out = StringIO()
                 writer = csv.writer(out)
                 tr = db.session.query(model.TaskRun)\
                       .filter_by(app_id=app.id)\
@@ -597,7 +597,10 @@ def export_to(short_name):
                                .filter_by(app_id=app.id)\
                                .yield_per(1):
                         if (type(tr.info) == dict):
-                            writer.writerow(tr.info.values())
+                            line = [unicode(s).encode("utf-8", 'ignore') for s in tr.info.values()]
+                            print line
+                            #writer.writerow([str(s).encode("utf-8", 'ignore') for s in tr.info.values()])
+                            writer.writerow(line)
                         else:
                             writer.writerow([tr.info])
                     yield out.getvalue()
