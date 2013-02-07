@@ -33,10 +33,9 @@ google = Google(app.config['GOOGLE_CLIENT_ID'],
 
 @blueprint.route('/', methods=['GET', 'POST'])
 def login():
-    if request.args.get("next") or request.args.get('state'):
+    if request.args.get("next"):
         request_token_params = {'scope': 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
-                'response_type': 'code',
-                'state': request.args.get("state")}
+                'response_type': 'code'}
         google.oauth.request_token_params = request_token_params
     return google.oauth.authorize(callback=url_for('.oauth_authorized',
             _external=True))
@@ -95,9 +94,8 @@ def manage_user(access_token, user_data, next_url):
 @blueprint.route('/oauth_authorized')
 @google.oauth.authorized_handler
 def oauth_authorized(resp):
-    print "OAUTH authorized method called"
-    print resp
-    next_url = request.args.get('state') or url_for('home')
+    #print "OAUTH authorized method called"
+    next_url = url_for('home')
 
     if resp is None or request.args.get('error'):
         flash(u'You denied the request to sign in.', 'error')

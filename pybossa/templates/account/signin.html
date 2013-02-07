@@ -18,7 +18,7 @@
   <a href="{{ url_for('facebook.login', next=next) }}" class="btn btn-primary"><i class="icon-facebook"></i> Sign in with Facebook</a>
   {% endif %}
   {% if auth.google %}
-  <a href="{{ url_for('google.login', state=next) }}" class="btn btn-warning"><i class="icon-google-plus"></i> Sign in with Google</a>
+  <a href="{{ url_for('google.login') }}" class="btn btn-warning"><i class="icon-google-plus"></i> Sign in with Google</a>
   {% endif %}
 {% else %}
   {% if auth.twitter %}
