@@ -12,48 +12,16 @@ python (hence the name!). It can be used for any distributed tasks application
 but was initially developed to help scientists and other researchers
 crowd-source human problem-solving skills!
 
+The documentation is organized as follows:
+
+.. toctree::
+   :maxdepth: 1
+
+   build_with_pybossa
+   installing_pybossa
+
+
 .. _BOSSA: http://bossa.berkeley.edu/
-
-User Guide
-==========
-
-This section covers how to use PyBossa from the perspective of a PyBossa
-end-user such as:
-
-  * Creators and managers of a specific PyBossa microtasking application
-  * The administrator of a PyBossa deployment
-    
-We suggest starting by taking a quick look at the overview of the PyBossa
-system as this will introduce you to a few pieces of terminology and help you
-understand how things fit together.
-
-.. toctree::
-   :maxdepth: 2
-
-   overview 
-   user/overview
-   user/tutorial
-   user/advance
-
-Developer Guide
-================
-
-This section covers how to use or contribute to PyBossa as a developer.
-
-.. toctree::
-   :maxdepth: 2
-
-   developer
-
-Deploying PyBossa
-=================
-
-This section covers how you can deploy PyBossa in your web server.
-
-.. toctree::
-   :maxdepth: 2
-
-   apache2
 
 Useful Links
 ------------
@@ -63,28 +31,9 @@ Useful Links
 * User stories: http://science.okfnpad.org/pybossa-userstories
 * General etherpad: http://science.okfnpad.org/pybossa
 
-Overview and API
-----------------
-
-.. toctree::
-   :maxdepth: 2
-   
-   overview
-   model
-
-Installing
-----------
-
-.. toctree::
-   :maxdepth: 2
-
-   install
-
-
 Indices and tables
 ==================
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-

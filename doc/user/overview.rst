@@ -1,103 +1,128 @@
-====================================
-Creating an Application
-====================================
+=============================================
+Quick overview: Creating your own Application
+=============================================
 
-Readers may wish to start with the :doc:`Step by step tutorial on creating an
+This is a short guide about how you can create an application in a PyBossa
+server. Readers may wish to start with the :doc:`Step by step tutorial on creating an
 Application <tutorial>` which walks through creating a
-simple photo classification application.
-
-1. Creating the Application itself
-==================================
+simple photo classification application if they want to understand all the
+details about how you create an application.
 
 First of all we have to create an application for the project. An application
 represents a set of tasks that have to be resolved by people, so an application
 will have the following items:
 
     1. **Name**,
-    2. **Short name** or **slug**,
+    2. **Short name** or **slug**, and
     3. **Description** and
-    4. **Task Presenter**
 
 The **slug** or **short name** is a shortcut for accessing the application via
 the web (short urls like this http://domain.com/app/slug).
 
-The **description** is the question that the volunteers will have to solve.
-Thus, it should be a direct question like: Do you see a human in this photo?
+The **description** is a short sentence that will be used to describe your
+application.
 
-Finally, the **task presenter**. This field contains the HTML and JS that your
-application will be using to present the tasks to the users and save the
-answers in the server.
+An application can be created using two different methods:
 
-In the following following sub-sections there is an explanation of the two
-available methods to create an application:
-
-    1. via the web interface, or
-    2. via the API.
+* :ref:`web-interface`, or
+* :ref:`api-interface`.
 
 
-Via the Web Interface
----------------------
+.. _web-interface:
+
+Using the Web Interface
+=======================
 
 Creating an application using the web interface involves three steps:
 
-    1. Create the application
-    2. Import the tasks using a CSV file
-    3. Create the task presenter for the users
+    1. Create the application,
+    2. Import the tasks using the *simple built-in* :ref:`task-creator` 
+       (uploading a CSV file or Google Spreadsheet link exported
+       as CSV), and
+    3. Write the :ref:`task-presenter` for the users.
 
 Creating the application
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 In order to create an application in PyBossa via the web interface you have to:
 
-    1. Sign in into your PyBossa server (or create an account).
-    2. Click in **create** link of the top bar and click again in the button
-       named: **Or using a web form and a CSV file importer for the tasks**.
-    3. After clicking in the previous button, you will have to fill in a form
-       with the following information:
-         1. **Name**: the full name of your application, i.e. Flickr Person
-            Finder
-         2. **Short Name**: the *slug* or short name used in the URL for
-            accessing your application, i.e. *flickrperson*.
-         3. **Description**: A **short** description of the application, i.e.
-            *Image pattern recognition*.
-         4. **Long Description**: A *long* description where you can use HTML
-            to format the description of your application. This field is
-            usually used to provide information about the application, the
-            developer, the researcher group or institutions involved in the
-            application, etc.
-         5. **Hide**: Click in this field if you want to hide the application.
-    4. Once you have filled all the fields, click in the **Create the
-       application** button, and you will have created your first application.
+1. Sign in into your PyBossa server (or create an account)
+
+.. image:: http://i.imgur.com/WQuEVqL.png
+   :alt: PyBossa sign in
+   :width: 100%
+
+PyBossa supports Twitter, Facebook and Google sign in methods, or if you prefer
+you can create your account within the PyBossa server. Check the following
+figure:
+
+.. image:: http://i.imgur.com/g4mFENC.png
+    :alt: PyBossa sign in methods
+
+2. Click in **create** link of the top bar and click again in the button
+   named: **Or using a web form and a CSV file importer for the tasks**.
+
+3. After clicking in the previous button, you will have to fill in a form
+   with the following information:
+     1. **Name**: the full name of your application, i.e. Flickr Person
+        Finder
+     2. **Short Name**: the *slug* or short name used in the URL for
+        accessing your application, i.e. *flickrperson*.
+     3. **Description**: A **short** description of the application, i.e.
+        *Image pattern recognition*.
+     4. **Long Description**: A *long* description where you can use HTML
+        to format the description of your application. This field is
+        usually used to provide information about the application, the
+        developer, the researcher group or institutions involved in the
+        application, etc.
+     5. **Hide**: Click in this field if you want to hide the application.
+
+.. image:: http://i.imgur.com/FcP6uzd.png 
+    :alt: PyBossa Create link
+
+4. Once you have filled all the fields, click in the **Create the
+   application** button, and you will have created your first application.
 
 Once you have created the application, you should be able to see it in your
-profile page.
+profile page under the draft section:
 
-Importing the tasks via the CSV file importer
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. image:: http://i.imgur.com/8NxKIg5.png 
+    :alt: PyBossa apps created by you
 
-Tasks can be imported from a CSV file or a Google Spreadsheet via the bulk
-importer. You have to do the following:
+Importing the tasks via the built-in CSV Task Creator
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    1. Navigate to your application's page.
-    2. Click on **Import Tasks**, right next to **Edit the Application**.
-    3. Provide a URL to a Google Docs Spreadsheet or a CSV file.  If you're
-       trying to import from a Google Spreadsheet, ensure the file is
-       accessible to everyone with link or is public.
+Tasks can be imported from a CSV file or a Google Spreadsheet via the simple
+built-in :ref:`task-creator`. You have to do the following:
+
+1. Navigate to your application's page (you can directly access it using
+       the *slug* application name: http://server/app/slug).
+
+.. image:: http://i.imgur.com/giAcfQd.png
+    
+2. Click on **Import Tasks**, right next to **Edit the Application**.
+
+.. image:: http://i.imgur.com/0MLPFN9.png
+
+3. Provide a URL to a Google Docs Spreadsheet or a CSV file.  If you're
+   trying to import from a Google Spreadsheet, ensure the file is
+   accessible to everyone with link or is public.
 
 .. note::
 
    Your spreadsheet/CSV file must contain a header row. All the fields in the
-   CSV will be    serialized to JSON and stored in the **info** field. If
+   CSV will be serialized to JSON and stored in the **info** field. If
    your field name is one of **state**, **quorum**, **calibration**,
    **priority_0**, or **n_answers**, it will be saved in the respective
    columns. Your spreadsheet must be visible to public or everyone with URL.
+
 
 Creating the Task Presenter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Once you have the application and the tasks in the server, you can start
-working with the Task Presenter, which will be the application that will get
-the tasks of your application, present them to the volunteer and save the
+working with the :ref:`task-presenter`, which will be the web application that 
+will get the tasks of your application, present them to the volunteer and save the
 answers provided by the users.
 
 If you have followed all the steps described in this section, you will be
@@ -114,16 +139,30 @@ application managing options in this URL::
     application.
 
 Another way for accessing your application (or applications) is clicking in
-your user name and select the *Account* item from the drop down menu, and then 
+your *user name* and select the *Account* item from the drop down menu, and then 
 click in the left bar: **My Applications** Published or Draft ones. From there
-you will be able to manage your applications.
+you will be able to manage your applications:
+
+.. image:: http://i.imgur.com/1tAon2D.png
+    :alt: PyBossa User Account
 
 Once you have chosen your application, you can add the task presenter by
 clicking in the button named **Edit the task presenter**. 
 
+.. image:: http://i.imgur.com/giAcfQd.png
+
 After clicking in this button, a new web page will be shown where you can
 basically type the code required for getting the tasks and load them into a DOM
 that you will create.
+
+
+.. image:: http://i.imgur.com/SxdTzGZ.png
+
+After saving it, you will be able to access your app using the slug, or under
+your account in the *Published* applications section:
+
+.. image:: http://i.imgur.com/O5R1sUl.png 
+    :alt: Application Published
 
 We recommend to read the 
 :doc:`Step by step tutorial on
@@ -132,14 +171,16 @@ how to create the task presenter, which is basically adding some HTML skeleton
 to load the task data, input fields to get the answer of the users, and some
 JavaScript to make it to work.
 
+.. _api-interface:
 
-Via the API
------------
+
+Using the API
+=============
 Creating an application using the API involves also three steps:
 
-    1. Create the application
-    2. Create the tasks 
-    3. Create the task presenter for the users
+    1. Create the application,
+    2. Create the :ref:`task-creator`, and 
+    3. Create the :ref:`task-presenter` for the users.
 
 Creating the application
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -148,7 +189,7 @@ You can create an application via the API URL **/api/app** with a POST request.
 
 You have to provide the following information about the application and convert
 it to a JSON object (the actual values are taken from the `Flickr Person demo
-application <http://app-flickrperson.rtfd.org>`_)::
+application <http://github.com/PyBossa/app-flickrperson>`_)::
 
   name = u'Flickr Person Finder'
   short_name = u'FlickrPerson'
@@ -196,7 +237,7 @@ tasks to an application that you own.
 For PyBossa all the tasks are JSON objects with a field named **info** where
 the owners of the application can add any JSON object that will represent
 a task for their application. For example, using again the `Flickr Person demo application
-<http://app-flickrperson.rtfd.org>`_ example, we need to create a JSON object
+<http://github.com/PyBossa/app-flickrperson>`_ example, we need to create a JSON object
 that should have the link to the photo that we want to identify:
 
 .. code-block:: python
@@ -221,6 +262,13 @@ The **info** field is a free-form field that can be populated with any
 structure. If your application needs more fields, you can add them and use the
 format that best fits your needs.
 
+These steps are usually coded in the :ref:`task-creator`. The Flickr Person
+Finder applications provides a template for the :ref:`task-creator` that can
+be re-used without any problems. Check the createTasks.py_ script for further
+details.
+
+.. _createTasks.py: https://github.com/PyBossa/app-flickrperson/blob/master/createTasks.py
+
 .. note::
 
     **The API request has to be authenticated and authorized**.
@@ -236,24 +284,25 @@ format that best fits your needs.
 
 One of the benefits of using the API is that you can create tasks polling other
 web services like Flickr, where you can basically use an API. Once we have
-created the tasks, we will need to create the task presenter for the
+created the tasks, we will need to create the :ref:`task-presenter` for the
 application.
 
 
 Creating the Task Presenter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-The **Task Presenter** is usually a template of HTML+JS that will present the
+The :ref:`task-presenter` is usually a template of HTML and JavaScript that will present the
 tasks to the users, and save the answers in the database. The `Flickr Person demo
-application <http://app-flickrperson.rtfd.org>`_ provides a simple template
+application <http://github.com/PyBossa/app-flickersperson>`_ provides a simple template
 which has a <div> to load the input files, in this case the photo, and another
 <div> to load the action buttons that the users will be able to to press to
-answer the question and save it in the database. Please, check the `Flickr Person demo
-application documentation <http://app-flickrperson.rtfd.org>`_ for more details
-about the **task presenter**.
+answer the question and save it in the database. Please, check the :doc:`user/tutorial` for more details
+about the :ref:`task-presenter`.
 
 As we will be using the API for creating the task presenter, we will basically
-have to create an HTML file, read it, and post it into PyBossa using the API.
+have to create an HTML file in our computer, read it from a script, and post 
+it into PyBossa using the API.
+
 Once the presenter has been posted to the application, you can edit it locally
 with your own editor, or using the PyBossa interface (see previous section).
 
@@ -275,13 +324,3 @@ creating an Application <tutorial>`, as you will understand
 how to create the task presenter, which is basically adding some HTML skeleton
 to load the task data, input fields to get the answer of the users, and some
 JavaScript to make it to work.
-
-
-2. Step by step tutorial on creating an application
-===================================================
-
-If you want to learn more about the whole process of creating an application,
-please, see the detailed example of creating an application in the
-:doc:`Step by step tutorial on
-creating an Application <tutorial>`.
-

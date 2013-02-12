@@ -1,7 +1,14 @@
-============================================
-ADVANCE: Using the task ID with FlickrPerson
-============================================
+===============================================
+DEPRECATED: Using the task ID with FlickrPerson
+===============================================
 
+.. note:: 
+    This documentation is deprecated. The new PyBossa.JS_ library, will do
+    automatically all the described elements in this page for your application,
+    simplifying your code. The :doc:`tutorial` uses the new PyBossa.JS
+    version and explain how to use it. Please, upgrade your application.
+
+.. _PyBossa.JS: https://github.com/PyBossa/pybossa.js/
 PyBossa features a new endpoint system that allows every application to load
 a specific Task for a given application.
 
@@ -12,8 +19,8 @@ The following URL is available for every application::
 The new endpoint is the same one as the **presenter** one, so the template.html
 should take care of using this new endpoint using some JavaScript.
 
-New Work Flow
-=============
+DEPRECATED: New Work Flow
+=========================
 
 This new endpoint opens the possibility to use the following work flow:
 
@@ -28,8 +35,8 @@ This new endpoint opens the possibility to use the following work flow:
 Therefore, while this new work flow is more powerful, the owner of the
 application will have to code a bit more for loading the tasks in its own URL
 
-Checking if the application has to load a Task or request a new one
-===================================================================
+DEPRECATED: Checking if the application has to load a Task or request a new one
+===============================================================================
 
 The following code shows how any PyBossa application can check if it has to
 load a specific task, or request a new one for the user using PyBossa.JS::
@@ -66,8 +73,8 @@ The code checks if after requesting a new Task, nothing is returned, then the
 presenter should be shown with a message telling the user that he has
 participated in all the available tasks.
 
-Loading the specific task
-=========================
+DEPRECATED: Loading the specific task
+=====================================
 
 Once the application has obtained a task for the user, the function loadTask
 will be called::
@@ -106,8 +113,8 @@ task question will be empty.
 
 Finally, we will have to load a new task after the user has saved the answer.
 
-Requesting a new task after saving an answer
-============================================
+DEPRECATED: Requesting a new task after saving an answer
+========================================================
 
 When the user submits a task, the previous code requested a new task directly
 from the same page, however we have to do it in a different way.

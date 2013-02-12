@@ -1,6 +1,6 @@
-===================================
-Application Tutorial: Flickr Person
-===================================
+====================
+Application Tutorial
+====================
 
 This tutorial is based in the demo application **Flickr Person** (`source code`_) provided with
 PyBossa. This demo application is a simple microtasking application where users have to
@@ -11,8 +11,8 @@ answers are: *Yes, No* and *I don't know*.
 
 The demo application Flickr Person has two main components:
 
-  * The **Task Creator**: a Python script that creates the tasks in PyBossa, and
-  * the **Task Presenter**: an HTML + Javascript structure that will show the tasks 
+  * The :ref:`task-creator` a Python script that creates the tasks in PyBossa, and
+  * the :ref:`task-presenter`: an HTML + Javascript structure that will show the tasks 
     to the users and save their answers.
 
 Both items use the PyBossa API.
@@ -31,6 +31,9 @@ server.
 When you create the account, you will have to access your profile, and copy the
 `API-KEY that has been generated for you <http://crowdcrafting.org/account/profile>`_ 
 (in the **profile** sub-section of the left menu). 
+
+.. image:: http://i.imgur.com/tygQd0w.png
+
 This **API-KEY** allows you to create the
 application in PyBossa (only authenticated users can create applications and
 tasks, while everyone can collaborate solving the tasks).
@@ -53,14 +56,14 @@ Creating the Application
 
 There two possible ways for creating an application:
 
-  * Using the **web interface**: click in your user name, and you will
+  * :ref:`web-interface`: click in your user name, and you will
     see a section named **applications** list. In that section you will be able
     to create an application using the web interface.
-  * Using the **RestFUL API**: you can check the source code of the
+  * :ref:`api-interface`: you can check the source code of the
     `createTasks.py script <https://github.com/PyBossa/app-flickrperson/blob/master/createTasks.py>`_ 
     for more details about creating an application using the API.
 
-For this tutorial we are going to use the second option, the *RestFUL API* via
+For this tutorial we are going to use the second option, the :doc:`../api` via
 the `createTasks.py script <https://github.com/PyBossa/app-flickrperson/blob/master/createTasks.py>`_. 
 This script has two mandatory arguments:
 
@@ -80,6 +83,8 @@ In order to follow the tutorial, you will need to clone the `Flickr Person
 Finder public Github Repository <http://github.com/PyBossa/app-flickrperson>`_
 so you will have a local copy of the required files to create the application
 and tasks using the API.
+
+.. image:: http://i.imgur.com/CYPnPft.png
 
 If you are new to Github and the GIT software, we recommend you to take this
 `free and on-line course <http://try.github.com>`_ (it will take you only
