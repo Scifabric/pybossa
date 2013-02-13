@@ -37,6 +37,12 @@ Install the code and requirements (you may wish to create a virtualenv first)::
   # virtualenv ~/{my-virtualenv}
   pip install -e .
 
+.. note::
+    Vim_ editor is a very popular text editor in GNU/Linux systems, however it
+    may be difficult for some people if you have never used it before. Thus, if
+    you want to try another and much simpler editor for editing the
+    configuration files you can use the `GNU Nano`_ editor.
+
 Create a settings file and enter your SQLAlchemy DB URI (you can also override
 default settings as needed)::
 
@@ -44,7 +50,11 @@ default settings as needed)::
   # now edit ...
   vim settings_local.py
 
-.. note:
+.. _Vim: http://www.vim.org/
+.. _`GNU Nano`: http://www.nano-editor.org/
+
+
+.. note::
 
   Alternatively, if you want your config elsewhere or with different name::
 
