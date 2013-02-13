@@ -10,6 +10,24 @@ Pre-requisites:
   * A database plus Python bindings for PostgreSQL
   * pip for installing python packages (e.g. on ubuntu python-pip)
 
+.. note::
+
+    We recommend to install PyBossa using a `virtualenv`_ as it will create a an
+    isolated Python environment, helping you to manage different dependencies and
+    versions without having to deal with root permissions in your server machine.
+
+    virtualenv_ creates an environment that has its own installation directories, 
+    that doesn't share libraries with other virtualenv environments (and 
+    optionally doesn't access the globally installed libraries either).
+
+    
+    You can install the software if you want at the system level if you have root
+    privileges, however this may lead to broken dependencies in the OS for all your
+    Python packages, so if possible, avoid this solution and use the virtualenv_
+    solution.
+
+.. _virtualenv: http://pypi.python.org/pypi/virtualenv
+
 Install the code and requirements (you may wish to create a virtualenv first)::
 
   # get the source

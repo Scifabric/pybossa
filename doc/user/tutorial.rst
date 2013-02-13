@@ -38,6 +38,27 @@ This **API-KEY** allows you to create the
 application in PyBossa (only authenticated users can create applications and
 tasks, while everyone can collaborate solving the tasks).
 
+.. note::
+
+    The Flickr Person Finder demo application uses the third party libraries
+    that need to be installed in your system before proceeding. For this
+    reason, we recommend you to configure a `virtualenv`_  for the application 
+    as it will create a an isolated Python environment in a folder, 
+    helping you to manage different dependencies and
+    versions without having to deal with root permissions in your server machine.
+
+    virtualenv_ creates an environment that has its own installation directories, 
+    that doesn't share libraries with other virtualenv environments (and 
+    optionally doesn't access the globally installed libraries either).
+    
+    You can install the software if you want at the system level if you have root
+    privileges, however this may lead to broken dependencies in the OS for all your
+    Python packages, so if possible, avoid this solution and use the virtualenv_
+    solution.
+
+.. _virtualenv: http://pypi.python.org/pypi/virtualenv
+
+
 .. note:: 
 
     Flickr Person Finder uses the **pybossa-client** module which simplifies a lot
