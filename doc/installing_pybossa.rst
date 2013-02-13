@@ -10,6 +10,7 @@ for your company, organization or institution using a GNU/Linux server.
 
    install
    apache2
+   customizing
 
 
 Contributing to the PyBossa development
