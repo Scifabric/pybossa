@@ -73,6 +73,7 @@ Enable the site::
     sudo a2ensite pybossa-site
 
 And restart the server::
+
  $ sudo /etc/init.d/apache2 restart
 
 Creating the pybossa.wsgi file
