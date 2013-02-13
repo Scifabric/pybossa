@@ -31,7 +31,7 @@ restart the web server::
 Creating a Virtual Host for running PyBossa
 -------------------------------------------
 
-Now you have to copy and adapt the following files to your local PyBossa
+Now you have to copy and adapt the following files from your local PyBossa
 installation:
 
  * contrib/apache2/pybossa-site
@@ -68,10 +68,11 @@ Once you have adapted the PATH in that file, copy it into the folder::
 
  /etc/apache2/sites-available
 
-Then, you will only need to activate the **mod vhost_alias** if PyBossa is
-going to be run as a Virtual Host::
+Enable the site::
 
- $ sudo a2enmod vhost_aliases
+    sudo a2ensite pybossa-site
+
+And restart the server::
  $ sudo /etc/init.d/apache2 restart
 
 Creating the pybossa.wsgi file
