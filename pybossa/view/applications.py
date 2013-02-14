@@ -585,7 +585,9 @@ def export_to(short_name):
                         for t in db.session.query(model.Task)\
                                    .filter_by(app_id=app.id)\
                                    .yield_per(1):
-                            writer.writerow(t.info.values())
+                            line = [unicode(s).encode("utf-8", 'ignore')
+                                    for s in t.info.values()]
+                            writer.writerow(line)
                         yield out.getvalue()
                     return Response(get_csv_task(), mimetype='text/csv')
                 else:
