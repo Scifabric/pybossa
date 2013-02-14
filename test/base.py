@@ -31,7 +31,8 @@ class Fixtures:
     api_key = 'tester'
     api_key_2 = 'tester-2'
     root_api_key = 'root'
-    app_name = u'test-app'
+    app_name = u'My New App'
+    app_short_name = u'test-app'
     password = u'tester'
 
     @classmethod
@@ -133,8 +134,8 @@ class Fixtures:
     @classmethod
     def create_app(cls,info):
         app = model.App(
-                name = u'My New App',
-                short_name = cls.app_name,
+                name = cls.app_name,
+                short_name = cls.app_short_name,
                 description = u'description',
                 hidden = 0,
                 info = info

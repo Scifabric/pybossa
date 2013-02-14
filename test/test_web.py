@@ -1,10 +1,13 @@
 import json
+import csv
+import StringIO
 
 from base import web, model, Fixtures, mail
 from mock import patch
 from itsdangerous import BadSignature
 from collections import namedtuple
 from pybossa.core import db, signer
+from pybossa.util import unicode_csv_reader
 
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
@@ -1393,3 +1396,140 @@ class TestWeb:
         assert "User Message" not in res.data, error_msg
         error_msg = "There should not be an owner message"
         assert "Owner Message" not in res.data, error_msg
+
+    def test_50_export_task_json(self):
+        """Test WEB export Tasks to JSON works"""
+        Fixtures.create()
+        # First test for a non-existant app
+        uri = '/app/somethingnotexists/export'
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        # Now get the tasks in JSON format
+        uri = "/app/somethingnotexists/export?type=task&format=json"
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+
+        # Now with a real app
+        uri = '/app/%s/export' % Fixtures.app_short_name
+        res = self.app.get(uri, follow_redirects=True)
+        heading = "%s: Export Tasks and TaskRuns" % Fixtures.app_name
+        assert heading in res.data, "Export page should be available\n %s" % res.data
+        # Now test that a 404 is raised when an arg is invalid
+        uri = "/app/%s/export?type=ask&format=json" % Fixtures.app_short_name
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        uri = "/app/%s/export?type=task&format=gson" % Fixtures.app_short_name
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        uri = "/app/%s/export?format=json" % Fixtures.app_short_name
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        uri = "/app/%s/export?type=task" % Fixtures.app_short_name
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+
+        # Now get the tasks in JSON format
+        uri = "/app/%s/export?type=task&format=json" % Fixtures.app_short_name
+        res = self.app.get(uri, follow_redirects=True)
+        exported_tasks = json.loads(res.data)
+        app = db.session.query(model.App)\
+                .filter_by(short_name=Fixtures.app_short_name)\
+                .first()
+        err_msg = "The number of exported tasks is different from App Tasks"
+        assert len(exported_tasks) == len(app.tasks), err_msg
+
+    def test_51_export_taskruns_json(self):
+        """Test WEB export Task Runs to JSON works"""
+        Fixtures.create()
+        # First test for a non-existant app
+        uri = '/app/somethingnotexists/export'
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        # Now get the tasks in JSON format
+        uri = "/app/somethingnotexists/export?type=taskrun&format=json"
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+
+        # Now with a real app
+        uri = '/app/%s/export' % Fixtures.app_short_name
+        res = self.app.get(uri, follow_redirects=True)
+        heading = "%s: Export Tasks and TaskRuns" % Fixtures.app_name
+        assert heading in res.data, "Export page should be available\n %s" % res.data
+        # Now get the tasks in JSON format
+        uri = "/app/%s/export?type=task_run&format=json" % Fixtures.app_short_name
+        res = self.app.get(uri, follow_redirects=True)
+        exported_task_runs = json.loads(res.data)
+        app = db.session.query(model.App)\
+                .filter_by(short_name=Fixtures.app_short_name)\
+                .first()
+        err_msg = "The number of exported task runs is different from App Tasks"
+        assert len(exported_task_runs) == len(app.task_runs), err_msg
+
+    def test_52_export_task_csv(self):
+        """Test WEB export Tasks to CSV works"""
+        Fixtures.create()
+        # First test for a non-existant app
+        uri = '/app/somethingnotexists/export'
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        # Now get the tasks in JSON format
+        uri = "/app/somethingnotexists/export?type=task&format=csv"
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+
+        # Now with a real app
+        uri = '/app/%s/export' % Fixtures.app_short_name
+        res = self.app.get(uri, follow_redirects=True)
+        heading = "%s: Export Tasks and TaskRuns" % Fixtures.app_name
+        assert heading in res.data, "Export page should be available\n %s" % res.data
+        # Now get the tasks in JSON format
+        uri = "/app/%s/export?type=task&format=csv" % Fixtures.app_short_name
+        res = self.app.get(uri, follow_redirects=True)
+        csv_content = StringIO.StringIO(res.data)
+        csvreader = unicode_csv_reader(csv_content)
+        app = db.session.query(model.App)\
+                .filter_by(short_name=Fixtures.app_short_name)\
+                .first()
+        exported_tasks = []
+        n = 0
+        for row in csvreader:
+            if n != 0:
+                exported_tasks.append(row)
+            n = n + 1
+        err_msg = "The number of exported tasks is different from App Tasks"
+        assert len(exported_tasks) == len(app.tasks), err_msg
+
+    def test_53_export_task_runs_csv(self):
+        """Test WEB export Task Runs to CSV works"""
+        Fixtures.create()
+        # First test for a non-existant app
+        uri = '/app/somethingnotexists/export'
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        # Now get the tasks in JSON format
+        uri = "/app/somethingnotexists/export?type=tas&format=csv"
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+
+        # Now with a real app
+        uri = '/app/%s/export' % Fixtures.app_short_name
+        res = self.app.get(uri, follow_redirects=True)
+        heading = "%s: Export Tasks and TaskRuns" % Fixtures.app_name
+        assert heading in res.data, "Export page should be available\n %s" % res.data
+        # Now get the tasks in JSON format
+        uri = "/app/%s/export?type=task_run&format=csv" % Fixtures.app_short_name
+        res = self.app.get(uri, follow_redirects=True)
+        csv_content = StringIO.StringIO(res.data)
+        csvreader = unicode_csv_reader(csv_content)
+        app = db.session.query(model.App)\
+                .filter_by(short_name=Fixtures.app_short_name)\
+                .first()
+        exported_task_runs = []
+        n = 0
+        for row in csvreader:
+            if n != 0:
+                exported_task_runs.append(row)
+            n = n + 1
+        err_msg = "The number of exported task runs is different \
+                   from App Tasks Runs"
+        assert len(exported_task_runs) == len(app.task_runs), err_msg

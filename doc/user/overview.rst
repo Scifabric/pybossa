@@ -296,7 +296,7 @@ tasks to the users, and save the answers in the database. The `Flickr Person dem
 application <http://github.com/PyBossa/app-flickersperson>`_ provides a simple template
 which has a <div> to load the input files, in this case the photo, and another
 <div> to load the action buttons that the users will be able to to press to
-answer the question and save it in the database. Please, check the :doc:`user/tutorial` for more details
+answer the question and save it in the database. Please, check the :doc:`tutorial` for more details
 about the :ref:`task-presenter`.
 
 As we will be using the API for creating the task presenter, we will basically
