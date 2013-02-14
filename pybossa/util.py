@@ -15,7 +15,7 @@
 
 from datetime import timedelta
 from functools import update_wrapper
-import csv
+import csv, codecs, cStringIO
 from flask import abort, request, make_response, current_app
 from functools import wraps
 from flaskext.wtf import Form, TextField, PasswordField, validators,\
@@ -23,6 +23,7 @@ from flaskext.wtf import Form, TextField, PasswordField, validators,\
 from flask_oauth import OAuth
 from flaskext.login import current_user
 from math import ceil
+import json
 
 
 def jsonpify(f):
@@ -273,3 +274,39 @@ class Google:
                 access_token_params={'grant_type': 'authorization_code'},
                 consumer_key=c_k,
                 consumer_secret=c_s)
+
+
+class UnicodeWriter:
+    """
+    A CSV writer which will write rows to CSV file "f",
+    which is encoded in the given encoding.
+    """
+
+    def __init__(self, f, dialect=csv.excel, encoding="utf-8", **kwds):
+        # Redirect output to a queue
+        self.queue = cStringIO.StringIO()
+        self.writer = csv.writer(self.queue, dialect=dialect, **kwds)
+        self.stream = f
+        self.encoder = codecs.getincrementalencoder(encoding)()
+
+    def writerow(self, row):
+        line = []
+        for s in row:
+            if (type(s) == dict):
+                line.append(json.dumps(s))
+            else:
+                line.append(str(s).encode("utf-8"))
+        self.writer.writerow(line)
+        # Fetch UTF-8 output from the queue ...
+        data = self.queue.getvalue()
+        data = data.decode("utf-8")
+        # ... and reencode it into the target encoding
+        data = self.encoder.encode(data)
+        # write to the target stream
+        self.stream.write(data)
+        # empty queue
+        self.queue.truncate(0)
+
+    def writerows(self, rows):
+        for row in rows:
+            self.writerow(row)

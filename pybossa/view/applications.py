@@ -28,7 +28,7 @@ import csv
 import pybossa.model as model
 from pybossa.core import db, cache
 from pybossa.model import App
-from pybossa.util import Unique, Pagination, unicode_csv_reader
+from pybossa.util import Unique, Pagination, unicode_csv_reader, UnicodeWriter
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
 
@@ -574,7 +574,8 @@ def export_to(short_name):
             # Export Tasks to CSV
             if request.args.get('type') == 'task':
                 out = StringIO()
-                writer = csv.writer(out)
+                #writer = csv.writer(out)
+                writer = UnicodeWriter(out)
                 t = db.session.query(model.Task)\
                       .filter_by(app_id=app.id)\
                       .first()
@@ -585,9 +586,7 @@ def export_to(short_name):
                         for t in db.session.query(model.Task)\
                                    .filter_by(app_id=app.id)\
                                    .yield_per(1):
-                            line = [unicode(s).encode("utf-8", 'ignore')
-                                    for s in t.info.values()]
-                            writer.writerow(line)
+                            writer.writerow(t.info.values())
                         yield out.getvalue()
                     return Response(get_csv_task(), mimetype='text/csv')
                 else:
@@ -600,7 +599,7 @@ def export_to(short_name):
             # Export Task Runs to CSV
             elif request.args.get('type') == 'task_run':
                 out = StringIO()
-                writer = csv.writer(out)
+                writer = UnicodeWriter(out)
                 tr = db.session.query(model.TaskRun)\
                        .filter_by(app_id=app.id)\
                        .first()
@@ -613,9 +612,7 @@ def export_to(short_name):
                                     .filter_by(app_id=app.id)\
                                     .yield_per(1):
                             if (type(tr.info) == dict):
-                                line = [unicode(s).encode("utf-8", 'ignore')
-                                        for s in tr.info.values()]
-                                writer.writerow(line)
+                                writer.writerow(tr.info.values())
                             else:
                                 writer.writerow([tr.info])
                         yield out.getvalue()
