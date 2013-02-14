@@ -780,16 +780,61 @@ endpoint::
   http://server/app/tutorial
   
 
-Downloading the obtained results
+Exporting the obtained results
 ================================
 
-When a task has been completed, in other words, when a task has collected the
-number of answers specified by the task (**n_answers** = 30 by default),
-a **brown button** with the text **Download results** will pop up, and if you
+You can export all the available tasks and task runs for your application in 
+two different formats:
+
+* JSON_, an open standard designed for human-readable data interchange, or 
+* CSV_,  a file that stores tabular data (numbers and text) in plain-text form
+  and that can be opened with almost any spreadsheet software.
+
+.. _JSON: http://en.wikipedia.org/wiki/JSON
+.. _CSV: http://en.wikipedia.org/wiki/Comma-separated_values
+
+For exporting the data, all you have to do is to visit the following URL in
+your web-browser::
+
+    http://PYBOSSA-SERVER/app/slug/export
+
+You will find a simple interface that will allow you to export the Tasks and
+Task Runs in the two mentioned formats
+
+.. image:: http://i.imgur.com/T27CLvm.png
+
+For the JSON_ format, you will get all the output in the web browser, so you
+will have to save the created page afterwords:
+
+.. image:: http://i.imgur.com/vBDWLeb.png
+
+While for the CSV_ format, you will get a CSV file that will be automatically
+saved in your computer:
+
+.. image:: http://i.imgur.com/zVZCYW8.png
+
+The previous methods will download all the tasks and task runs, **even if they
+are not completed**. When a task has been completed, in other words, when a 
+task has collected the number of answers specified by the task 
+(**n_answers** = 30 by default), a **brown button** with the text 
+**Download results** will pop up, and if you 
 click it all the answers for the given task will be shown in JSON format.
 
-If your application has a lot of tasks, you should could download the results
-using the API. For example, you could write a small script that gets the list
+You can check which tasks are completed, going to the application URL::
+
+    http://PYBOSSA-SERVER/app/slug
+
+And clicking in the **Tasks** link in the **Summary Section**
+
+.. image:: http://i.imgur.com/Lu1q3K4.png
+
+Then you will see which tasks are completed, and which ones you can download in
+JSON_ format:
+
+.. image:: http://i.imgur.com/hTgkR3U.png
+
+You could download the results
+also using the API. For example, you could write a small script that gets the list
 of tasks that have been completed using this url::
 
     GET http://PYBOSSA-SERVER/api/task?state=completed

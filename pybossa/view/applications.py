@@ -21,12 +21,15 @@ from flaskext.wtf import Form, IntegerField, TextField, BooleanField, \
     SelectField, validators, HiddenInput, TextAreaField
 from flaskext.login import login_required, current_user
 from werkzeug.exceptions import HTTPException
+from werkzeug import Headers
+import os
+import csv
 
 import pybossa.model as model
 from pybossa.core import db, cache
+from pybossa.model import App
 from pybossa.util import Unique, Pagination, unicode_csv_reader
 from pybossa.auth import require
-from pybossa.model import App
 from pybossa.cache import apps as cached_apps
 
 import json
@@ -524,3 +527,107 @@ def tasks(short_name, page):
                                    pagination=pagination)
         else:
             return render_template('/applications/tasks.html', app=None)
+
+
+@blueprint.route('/<short_name>/export')
+def export_to(short_name):
+    """Export Tasks and TaskRuns in the given format"""
+    app = App.query.filter_by(short_name=short_name).first_or_404()
+    if request.args.get('format') and request.args.get('type'):
+        if request.args.get('format') == 'json':
+            if request.args.get('type') == 'task':
+                def gen_json_tasks():
+                    n = db.session.query(model.Task)\
+                          .filter_by(app_id=app.id).count()
+                    i = 0
+                    yield "["
+                    for t in db.session.query(model.Task)\
+                               .filter_by(app_id=app.id).yield_per(1):
+                        i += 1
+                        if (i != n):
+                            yield json.dumps(t.dictize()) + ", "
+                        else:
+                            yield json.dumps(t.dictize())
+
+                    yield "]"
+                return Response(gen_json_tasks(), mimetype='application/json')
+            elif request.args.get('type') == 'task_run':
+                def gen_json_task_runs():
+                    n = db.session.query(model.TaskRun)\
+                                  .filter_by(app_id=app.id).count()
+                    i = 0
+                    yield "["
+                    for tr in db.session.query(model.TaskRun)\
+                                .filter_by(app_id=app.id).yield_per(1):
+                        i += 1
+                        if (i != n):
+                            yield json.dumps(tr.dictize()) + ", "
+                        else:
+                            yield json.dumps(tr.dictize())
+
+                    yield "]"
+                return Response(gen_json_task_runs(),
+                                mimetype='application/json')
+            else:
+                return abort(404)
+        elif request.args.get('format') == 'csv':
+            # Export Tasks to CSV
+            if request.args.get('type') == 'task':
+                out = StringIO()
+                writer = csv.writer(out)
+                t = db.session.query(model.Task)\
+                      .filter_by(app_id=app.id)\
+                      .first()
+                if t is not None:
+                    writer.writerow(t.info.keys())
+
+                    def get_csv_task():
+                        for t in db.session.query(model.Task)\
+                                   .filter_by(app_id=app.id)\
+                                   .yield_per(1):
+                            writer.writerow(t.info.values())
+                        yield out.getvalue()
+                    return Response(get_csv_task(), mimetype='text/csv')
+                else:
+                    msg = "Oops, the application does not have tasks to \
+                           export, if you are the owner add some tasks"
+                    flash(msg, 'info')
+                    return render_template('/applications/export.html',
+                                           app=app)
+
+            # Export Task Runs to CSV
+            elif request.args.get('type') == 'task_run':
+                out = StringIO()
+                writer = csv.writer(out)
+                tr = db.session.query(model.TaskRun)\
+                       .filter_by(app_id=app.id)\
+                       .first()
+                if tr is not None:
+                    if (type(tr.info) == dict):
+                        writer.writerow(tr.info.keys())
+
+                    def get_csv_task_run():
+                        for tr in db.session.query(model.TaskRun)\
+                                    .filter_by(app_id=app.id)\
+                                    .yield_per(1):
+                            if (type(tr.info) == dict):
+                                line = [unicode(s).encode("utf-8", 'ignore')
+                                        for s in tr.info.values()]
+                                writer.writerow(line)
+                            else:
+                                writer.writerow([tr.info])
+                        yield out.getvalue()
+                    return Response(get_csv_task_run(), mimetype='text/csv')
+                else:
+                    msg = "Oops, there are no Task Runs yet to export, invite \
+                           some users to participate"
+                    flash(msg, 'info')
+                    return render_template('/applications/export.html', app=app)
+            else:
+                abort(404)
+        else:
+            abort(404)
+    elif len(request.args) >= 1:
+        abort(404)
+    else:
+        return render_template('/applications/export.html', app=app)
