@@ -536,3 +536,58 @@ ul.users li a {
   top: auto;
   bottom: 270px;
 }
+/* Desktop large
+------------------------- */
+@media (min-width: 1200px) {
+  .bs-docs-sidenav {
+    width: 220px;
+  }
+  .bs-docs-sidenav.affix {
+    top: auto;
+  }
+
+}
+
+/* Desktop
+------------------------- */
+@media (max-width: 980px) {
+  /* Unfloat brand */
+  /* When affixed, space properly */
+  .bs-docs-sidenav {
+    top: 0;
+    width: 220px;
+    margin-top: 0px;
+    margin-right: 0;
+  }
+  .bs-docs-sidenav.affix {
+    top: auto;
+  }
+}
+
+/* Tablet to desktop
+------------------------- */
+@media (min-width: 768px) and (max-width: 979px) {
+  /* Adjust sidenav width */
+  .bs-docs-sidenav {
+    width: 166px;
+    margin-top: 0px;
+  }
+  .bs-docs-sidenav.affix {
+    top: auto;
+  }
+}
+
+/* Tablet
+------------------------- */
+@media (max-width: 767px) {
+  /* Sidenav */
+  .bs-docs-sidenav {
+    width: auto;
+    margin-bottom: 20px;
+  }
+  .bs-docs-sidenav.affix {
+    position: static;
+    width: auto;
+    top: auto;
+  }
+}

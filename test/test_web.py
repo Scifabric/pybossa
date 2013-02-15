@@ -475,7 +475,6 @@ class TestWeb:
         assert "Featured" in res.data, res.data
         assert "Published" in res.data, res.data
         assert "Draft" in res.data, res.data
-        assert "Create an application!" in res.data, res.data
 
         Fixtures.create()
 
@@ -497,7 +496,7 @@ class TestWeb:
         assert self.html_title("Applications") in res.data, res.data
         assert "Applications" in res.data, res.data
         assert '/app/test-app' in res.data, res.data
-        assert '<h2> <i class="icon-star"></i><a href="/app/test-app">My New App</a></h2>' in res.data, res.data
+        assert '<h2><a href="/app/test-app">My New App</a></h2>' in res.data, res.data
 
     def test_10_get_application(self):
         """Test WEB application URL/<short_name> works"""

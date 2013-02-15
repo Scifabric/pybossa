@@ -28,7 +28,7 @@ def format_top_featured_app(app_id):
     else:
         return None
 
-def get_featured():
+def get_featured_front_page():
     """Return featured apps"""
     featured_ids = db.session.query(Featured).all()
     featured = []
@@ -97,6 +97,24 @@ def format_app(app):
         app.info['featured'] = True
     return app
 
+def get_featured(page=1, per_page=5):
+    """Return a list of featured apps with a pagination"""
+
+    sql = text('''select count(*) from featured;''')
+    results = db.engine.execute(sql)
+    for row in results:
+        count = row[0]
+
+    sql = text('''select app_id from featured offset(:offset) limit(:limit);''')
+
+    offset = (page - 1) * per_page
+    results = db.engine.execute(sql, limit=per_page, offset=offset)
+    apps = []
+    for row in results:
+        app = db.session.query(App).get(row[0])
+        apps.append(format_app(app))
+    return apps, count
+
 def get_published(page=1, per_page=5):
     """Return a list of apps with a pagination"""
 
@@ -113,7 +131,7 @@ select id from app where (app.id IN (select distinct on (task.app_id) task.app_i
     results = db.engine.execute(sql, limit=per_page, offset=offset)
     apps = []
     for row in results:
-        app = db.session.query(App).get(row[0]) 
+        app = db.session.query(App).get(row[0])
         apps.append(format_app(app))
     return apps, count
 
@@ -123,10 +141,10 @@ def get_draft(page=1, per_page=5):
     results = db.engine.execute(sql)
     for row in results:
         count = row[0]
-    
+
     sql = text('''
     select id from app where app.info not like ('%task_presenter%')  and (app.hidden = 0) order by (app.name) offset(:offset) limit(:limit);''')
-    
+
     offset = (page - 1) * per_page
     results = db.engine.execute(sql, limit=per_page, offset=offset)
     apps = []

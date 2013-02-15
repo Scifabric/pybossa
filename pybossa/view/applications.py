@@ -78,6 +78,29 @@ class BulkTaskGDImportForm(Form):
 @blueprint.route('/', defaults={'page': 1})
 @blueprint.route('/page/<int:page>')
 def index(page):
+    """By default show the Featured apps"""
+    if require.app.read():
+        per_page = 5
+
+        apps, count = cached_apps.get_featured(page, per_page)
+
+        if apps:
+            pagination = Pagination(page, per_page, count)
+            return render_template('/applications/index.html',
+                                   title="Applications",
+                                   apps=apps,
+                                   pagination=pagination,
+                                   app_type='app-featured')
+        else:
+            return redirect(url_for('.published'))
+    else:
+        abort(403)
+
+
+@blueprint.route('/published', defaults={'page': 1})
+@blueprint.route('/published/page/<int:page>')
+def published(page):
+    """Show the Published apps"""
     if require.app.read():
         per_page = 5
 
@@ -87,7 +110,9 @@ def index(page):
         return render_template('/applications/index.html',
                                title="Applications",
                                apps=apps,
-                               pagination=pagination)
+                               count=count,
+                               pagination=pagination,
+                               app_type='app-published')
     else:
         abort(403)
 
@@ -101,11 +126,12 @@ def draft(page):
         apps, count = cached_apps.get_draft(page, per_page)
 
         pagination = Pagination(page, per_page, count)
-        return render_template('/applications/draft.html',
+        return render_template('/applications/index.html',
                                title="Applications",
                                apps=apps,
                                count=count,
-                               pagination=pagination)
+                               pagination=pagination,
+                               app_type='app-draft')
     else:
         abort(403)
 
