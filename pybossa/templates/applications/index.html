@@ -15,18 +15,18 @@
     </div>
     <div class="span9">
         {% if apps %}
-            {% if app_type=="featured"%} 
+            {% if app_type=="app-featured"%} 
             <h1>
                 <i class="icon-star"></i> {{pagination.total_count}} Featured Applications
             </h1>
             <h2>A special selection of the most interesting applications</h2>
             {% endif %}
-            {% if app_type=="published"%} 
+            {% if app_type=="app-published"%} 
             <h1>
                 <i class="icon-th"></i> {{pagination.total_count}} Published Applications</h1>
             <h2>All available applications</h2>
             {% endif %}
-            {% if app_type=="draft"%} 
+            {% if app_type=="app-draft"%} 
             <h1>
                 <i class="icon-wrench"></i> {{pagination.total_count}} Draft Applications
             </h1>
