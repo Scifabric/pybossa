@@ -545,7 +545,10 @@ ul.users li a {
   .bs-docs-sidenav.affix {
     top: auto;
   }
-
+  .big-modal {
+      width: 1000px;
+      margin-left:-500px;
+  }
 }
 
 /* Desktop
@@ -562,6 +565,11 @@ ul.users li a {
   .bs-docs-sidenav.affix {
     top: auto;
   }
+  .big-modal {
+      width: 800px;
+      margin-left:-400px;
+      margin-top: -60%;
+  }
 }
 
 /* Tablet to desktop
@@ -574,6 +582,11 @@ ul.users li a {
   }
   .bs-docs-sidenav.affix {
     top: auto;
+  }
+  .big-modal {
+      width: 600px;
+      margin-left:-300px;
+      margin-top: -60%;
   }
 }
 

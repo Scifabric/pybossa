@@ -507,33 +507,23 @@ class TestWeb:
         res = self.app.get('/app/sampleapp', follow_redirects=True)
         assert self.html_title("Application: Sample App")\
                 in res.data, res
-        assert "Long desc" in res.data, res
-        assert "Summary" in res.data, res
-        assert "Overall progress" in res.data, res
-        assert "Tasks" in res.data, res
-        assert "Edit the application" in res.data, res
-        assert "Delete the application" in res.data, res
+        err_msg = "There should be a contribute button"
+        assert "Start Contributing Now" in res.data, err_msg
+        assert "Settings" in res.data, "Ownwer should see Settings"
         self.signout()
 
         # Now as an anonymous user
         res = self.app.get('/app/sampleapp', follow_redirects=True)
         assert self.html_title("Application: Sample App") in res.data, res
-        assert "Long desc" in res.data, res
-        assert "Summary" in res.data, res
-        assert "Overall progress" in res.data, res
-        assert "Tasks" in res.data, res
-        assert "Edit the application" not in res.data, res
-        assert "Delete the application" not in res.data, res
+        assert "Start Contributing Now" in res.data, err_msg
+        assert "Settings" not in res.data, "Anonymous should not see Settings"
 
         # Now with a different user
         self.register(fullname="Perico Palotes", username="perico")
         res = self.app.get('/app/sampleapp', follow_redirects=True)
         assert self.html_title("Application: Sample App") in res.data, res
-        assert "Long desc" in res.data, res
-        assert "Summary" in res.data, res
-        assert "Overall progress" in res.data, res
-        assert "Edit the application" not in res.data, res
-        assert "Delete the application" not in res.data, res
+        assert "Start Contributing Now" in res.data, err_msg
+        assert "Settings" not in res.data, "User should not see Settings"
 
     def test_11_create_application(self):
         """Test WEB create an application works"""
@@ -970,11 +960,11 @@ class TestWeb:
         assert "some help" not in res.data
 
     def test_30_app_id_owner(self):
-        """Test WEB application page shows the ID to the owner"""
+        """Test WEB application settings page shows the ID to the owner"""
         self.register()
         self.new_application()
 
-        res = self.app.get('/app/sampleapp', follow_redirects=True)
+        res = self.app.get('/app/sampleapp/settings', follow_redirects=True)
         assert "Sample App" in res.data, ("Application should be shown to "
                                           "the owner")
         assert '<strong><i class="icon-cog"></i> ID</strong>: 1' in res.data,\
@@ -1289,7 +1279,7 @@ class TestWeb:
         """Test WEB task presenter editor is an option"""
         self.register()
         self.new_application()
-        res = self.app.get('/app/sampleapp', follow_redirects=True)
+        res = self.app.get('/app/sampleapp/settings', follow_redirects=True)
         assert "Edit the task presenter" in res.data, \
             "Task Presenter Editor should be an option"
 
@@ -1301,7 +1291,7 @@ class TestWeb:
                            follow_redirects=True)
         assert "var editor" in res.data, "CodeMirror Editor not found"
         assert "Task Presenter" in res.data, "CodeMirror Editor not found"
-        assert "View" in res.data, "CodeMirror View not found"
+        assert "Task Presenter Preview" in res.data, "CodeMirror View not found"
 
     def test_48_task_presenter_editor_works(self):
         """Test WEB task presenter editor works"""
@@ -1411,7 +1401,7 @@ class TestWeb:
         # Now with a real app
         uri = '/app/%s/export' % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
-        heading = "%s: Export Tasks and TaskRuns" % Fixtures.app_name
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now test that a 404 is raised when an arg is invalid
         uri = "/app/%s/export?type=ask&format=json" % Fixtures.app_short_name
@@ -1452,7 +1442,7 @@ class TestWeb:
         # Now with a real app
         uri = '/app/%s/export' % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
-        heading = "%s: Export Tasks and TaskRuns" % Fixtures.app_name
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in JSON format
         uri = "/app/%s/export?type=task_run&format=json" % Fixtures.app_short_name
@@ -1479,7 +1469,7 @@ class TestWeb:
         # Now with a real app
         uri = '/app/%s/export' % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
-        heading = "%s: Export Tasks and TaskRuns" % Fixtures.app_name
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in JSON format
         uri = "/app/%s/export?type=task&format=csv" % Fixtures.app_short_name
@@ -1513,7 +1503,7 @@ class TestWeb:
         # Now with a real app
         uri = '/app/%s/export' % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
-        heading = "%s: Export Tasks and TaskRuns" % Fixtures.app_name
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in JSON format
         uri = "/app/%s/export?type=task_run&format=csv" % Fixtures.app_short_name

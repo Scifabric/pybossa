@@ -1,18 +1,16 @@
 {% extends "/base.html" %}
 {% set active_page = "applications" %}
 {% set active_app  = "all" %}
+{% import "applications/_helpers.html" as helper %}
 
 {% block content %}
 <div class="row">
     <div class="span3" style="padding: 8px 0;">
-            <ul class="nav nav-list bs-docs-sidenav affix-top">
-                <li><a href="{{url_for('app.details', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Info</a></li>
-                <li><a href="{{url_for('app.presenter', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Contribute</a></li>
-                <li class="active"><a href="#"><i class="icon-chevron-right"></i> Export Task & Taskruns</a></li>
-            </ul>
+        {{ helper.render_app_local_nav(app, "export", current_user) }}
     </div>
-    <div id="body" class="span9">
-        <h1>{{app.name}}: Export Tasks and TaskRuns</h1>
+    <div id="body" class="span9" style="min-height:400px;">
+        <h1><strong>{{app.name}}</strong>: Export All Tasks and Task Runs</h1>
+        <p>You can export and download <strong>all the available</strong> Tasks and Task Runs (the submitted answers by the users) in CSV or JSON formats.</p>
         <div class="row-fluid">
             <div id="csv" class="span6">
                 <h2>Export in CSV format</h2>

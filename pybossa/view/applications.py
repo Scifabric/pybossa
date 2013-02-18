@@ -191,7 +191,7 @@ def task_presenter_editor(short_name):
                 db.session.commit()
                 # Clean cache
                 flash('<i class="icon-ok"></i> Task presenter added!', 'success')
-                return redirect('/app/' + app.short_name)
+                return redirect(url_for('.settings', short_name=app.short_name))
             if request.method == 'POST' and not form.validate():
                 flash('Please correct the errors', 'error')
                 errors = True
@@ -329,6 +329,32 @@ def details(short_name, page):
                                        application.name)
             else:
                 return render_template('/applications/app.html', app=None)
+    else:
+        abort(404)
+
+@blueprint.route('/<short_name>/settings')
+@login_required
+def settings(short_name):
+    application = db.session.query(model.App)\
+                    .filter(model.App.short_name == short_name)\
+                    .first()
+
+    if application:
+        try:
+            require.app.read(application)
+            require.app.update(application)
+
+            return render_template('/applications/settings.html',
+                                   app=application,
+                                   title="Application: %s" % application.name)
+        except HTTPException:
+            if not application.hidden:
+                return render_template('/applications/app.html',
+                                       app=application,
+                                       title="Application: %s" %
+                                       application.name)
+            else:
+                return render_template('/applications/settings.html', app=None)
     else:
         abort(404)
 
