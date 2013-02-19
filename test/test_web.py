@@ -540,7 +540,7 @@ class TestWeb:
         res = self.register()
 
         res = self.new_application(method="GET")
-        assert self.html_title("New Application") in res.data, res
+        assert self.html_title("Create an Application") in res.data, res
         assert "Create the application" in res.data, res
 
         res = self.new_application()
@@ -566,7 +566,7 @@ class TestWeb:
 
         # Get the Update App web page
         res = self.update_application(method="GET")
-        assert self.html_title("Update the application: Sample App")\
+        assert self.html_title("Application: Sample App &middot; Update")\
                 in res.data, res
         assert 'input id="id" name="id" type="hidden" value="1"'\
                 in res.data, res
@@ -627,7 +627,7 @@ class TestWeb:
         self.register()
         self.new_application()
         res = self.delete_application(method="GET")
-        assert self.html_title("Delete Application: Sample App")\
+        assert self.html_title("Application: Sample App &middot; Delete")\
                 in res.data, res
         assert "No, do not delete it" in res.data, res
 
