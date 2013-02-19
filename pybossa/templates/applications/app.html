@@ -10,11 +10,12 @@
         {{ helper.render_app_local_nav(app, 'info', current_user) }}
     </div>
     <!-- Application -->
-    <div class="span9">
+    <div class="span9" style="min-height:400px">
         <h1><strong>{{ app.name }}</strong></h1>
         {% if app.long_description %}
             {{ app.long_description|safe}}
         {% endif %}
+        <hr>
         <a href="{{ url_for('app.presenter', short_name=app.short_name)}}" class="btn btn-large btn-primary"><i class="icon-thumbs-up"></i> Start Contributing Now!</a>
     </div>
     {% else %}

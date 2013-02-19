@@ -801,7 +801,7 @@ your web-browser::
 You will find a simple interface that will allow you to export the Tasks and
 Task Runs in the two mentioned formats
 
-.. image:: http://i.imgur.com/T27CLvm.png
+.. image:: http://i.imgur.com/zqPkMST.png
 
 For the JSON_ format, you will get all the output in the web browser, so you
 will have to save the created page afterwords:
