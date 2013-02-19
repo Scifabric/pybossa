@@ -1,51 +1,29 @@
 {% extends "/base.html" %}
-{% set active_page = "applications" %}
-{% set active_app  = "all" %}
+{% set active_page = "profile" %}
+{% set active_link = "admin" %}
+{% from "account/_helpers.html" import render_account_local_nav %}
+{% from "applications/_helpers.html" import render_app_summary %}
 
 {% block content %}
-<h1>Manage Featured applications</h1>
-{% include "admin/js/featured_apps.js" %}
-{% for app in apps %}
-<div  class="row">
-    <div id="buttons" class="span10 well">
-      <div id="img" class="row">
-        <div class="span2">
-            <ul class="thumbnails">
-                <li>
-                  {% if app.info.thumbnail %}
-                    <img class="thumbnail" src="{{ app.info.thumbnail }}">
-                  {% else %}
-                    <img class="thumbnail" src="{{url_for('static', filename='img/placeholder.png')}}" style="max-width:100px;">
-                  {% endif %}
-                </li>
-            </ul>
-        </div>
-        <div id="data" class="span8">
-            <h2>
-                <a href="{{ url_for('app.details', short_name = app.short_name) }}">{{ app.name }}</a>
-            </h2>
-          <ul>
-            <li><strong>Description</strong>: {{ app.description }}</li>
-            <li><strong>Creation Date</strong>: {{ app.created[0:10] }}</li>
-            {% if app.last_activity() != "None" %}
-            <li><strong>Last Activity</strong>: {{ app.last_activity() }}</li>
-            {% endif %}
-            {% if app.owner.id == current_user.id %}
-            <li><strong>Owner</strong>: Me</li>
-            {% else %}
-            <li><strong>Owner</strong>: {{ app.owner.name }}</li>
-            {% endif %}
-            </ul>
-                {% for f in featured if f.app_id == app.id %}
-                <button id="appBtn{{app.id}}" class="btn btn-large btn-primary active" data-toggle="button" onclick="toggle({{app.id}})">
-                        <i id="app{{app.id}}" class="icon-star"></i> Featured!</button>
-                {% else %}
-                        <button id="appBtn{{app.id}}" class="btn btn-large btn-primary" data-toggle="button" onclick="toggle({{app.id}})">
-                        <i id="app{{app.id}}" class="icon-star-empty"></i> Featured!</button>
-                {% endfor %}
-        </div>
-      </div>
+<div class="row">
+    <div class="span3">
+        {{ render_account_local_nav(current_user, active_link) }}
+    </div>
+    <div class="span9">
+        <h1><strong>Admin Site:</strong> Manage featured applications</h1>
+    {% include "admin/js/featured_apps.js" %}
+    {% for app in apps %}
+    <h2><a href="{{url_for('app.details', short_name=app.short_name) }}">{{app.name}}</a></h2>
+    {{ render_app_summary(app, current_user) }}
+    {% for f in featured if f.app_id == app.id %}
+    <button id="appBtn{{app.id}}" class="btn btn-primary active" data-toggle="button" onclick="toggle({{app.id}})">
+            <i id="app{{app.id}}" class="icon-star"></i> Featured!</button>
+    {% else %}
+            <button id="appBtn{{app.id}}" class="btn btn-primary" data-toggle="button" onclick="toggle({{app.id}})">
+            <i id="app{{app.id}}" class="icon-star-empty"></i> Featured!</button>
+    {% endfor %}
+    <hr>
+    {% endfor %}
     </div>
 </div>
-{% endfor %}
 {% endblock %}

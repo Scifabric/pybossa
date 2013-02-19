@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% set active_page = "profile" %}
+{% set active_link = "applications" %}
+{% import "account/_helpers.html" as helper %}
+{% import "applications/_helpers.html" as app_helper %}
+
+{% block content %}
+<div class="row">
+    <div class="span3">
+        {{ helper.render_account_local_nav(current_user, active_link) }}
+    </div>
+    <div class="span9" style="min-height:400px">
+        <h1><strong>{{ current_user.fullname }}'s</strong>: Applications</h1>
+        {% if apps_published or apps_draft %}
+            {% if apps_published %}
+            <h2>Published</h2>
+            {% for app in apps_published %}
+            <div class="well well-small">
+                <h3><a href="{{url_for('app.details', short_name=app.short_name)}}">{{app.name}}</a></h3>
+            {{ app_helper.render_app_summary(app, current_user) }}
+            </div>
+            {% endfor %}
+            {% endif %}
+            {% if apps_draft %}
+            <h2>Draft</h2>
+            {% for app in apps_draft %}
+            <div class="well well-small">
+                <h3><a href="{{url_for('app.details', short_name=app.short_name)}}">{{app.name}}</a></h3>
+            {{ app_helper.render_app_summary(app, current_user) }}
+            </div>
+            {% endfor %}
+            {% endif %}
+        {% else %}
+            <h2>You have not created an application</h2>
+            <a href="{{url_for('app.new')}}" class="btn btn-primary">Create an Application</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

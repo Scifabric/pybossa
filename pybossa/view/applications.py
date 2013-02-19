@@ -78,6 +78,29 @@ class BulkTaskGDImportForm(Form):
 @blueprint.route('/', defaults={'page': 1})
 @blueprint.route('/page/<int:page>')
 def index(page):
+    """By default show the Featured apps"""
+    if require.app.read():
+        per_page = 5
+
+        apps, count = cached_apps.get_featured(page, per_page)
+
+        if apps:
+            pagination = Pagination(page, per_page, count)
+            return render_template('/applications/index.html',
+                                   title="Applications",
+                                   apps=apps,
+                                   pagination=pagination,
+                                   app_type='app-featured')
+        else:
+            return redirect(url_for('.published'))
+    else:
+        abort(403)
+
+
+@blueprint.route('/published', defaults={'page': 1})
+@blueprint.route('/published/page/<int:page>')
+def published(page):
+    """Show the Published apps"""
     if require.app.read():
         per_page = 5
 
@@ -87,7 +110,9 @@ def index(page):
         return render_template('/applications/index.html',
                                title="Applications",
                                apps=apps,
-                               pagination=pagination)
+                               count=count,
+                               pagination=pagination,
+                               app_type='app-published')
     else:
         abort(403)
 
@@ -101,11 +126,12 @@ def draft(page):
         apps, count = cached_apps.get_draft(page, per_page)
 
         pagination = Pagination(page, per_page, count)
-        return render_template('/applications/draft.html',
+        return render_template('/applications/index.html',
                                title="Applications",
                                apps=apps,
                                count=count,
-                               pagination=pagination)
+                               pagination=pagination,
+                               app_type='app-draft')
     else:
         abort(403)
 
@@ -145,7 +171,7 @@ def new():
             flash('Please correct the errors', 'error')
             errors = True
         return render_template('applications/new.html',
-                               title="New Application",
+                               title="Create an Application",
                                form=form, errors=errors)
     else:
         abort(403)
@@ -157,6 +183,7 @@ def task_presenter_editor(short_name):
     errors = False
     app = App.query.filter_by(short_name=short_name).first()
     if app:
+        title = "Application: %s &middot; Task Presenter Editor" % app.name
         if require.app.update(app):
             form = TaskPresenterForm(request.form)
             if request.method == 'POST' and form.validate():
@@ -165,7 +192,7 @@ def task_presenter_editor(short_name):
                 db.session.commit()
                 # Clean cache
                 flash('<i class="icon-ok"></i> Task presenter added!', 'success')
-                return redirect('/app/' + app.short_name)
+                return redirect(url_for('.settings', short_name=app.short_name))
             if request.method == 'POST' and not form.validate():
                 flash('Please correct the errors', 'error')
                 errors = True
@@ -183,7 +210,7 @@ def task_presenter_editor(short_name):
                 flash('Your code will be <em>automagically</em> rendered in \
                       the <strong>view section</strong>', 'info')
                 return render_template('applications/task_presenter_editor.html',
-                                       title="Application Task Presenter Editor",
+                                       title=title,
                                        form=form, app=app, errors=errors)
         else:
             abort(403)
@@ -196,11 +223,11 @@ def task_presenter_editor(short_name):
 def delete(short_name):
     app = App.query.filter_by(short_name=short_name).first()
     if app:
+        title = "Application: %s &middot; Delete" % app.name
         if require.app.delete(app):
             if request.method == 'GET':
                 return render_template('/applications/delete.html',
-                                       title="Delete Application: %s"
-                                       % app.name,
+                                       title=title,
                                        app=app)
             else:
                 # Clean cache
@@ -220,6 +247,7 @@ def delete(short_name):
 def update(short_name):
     app = App.query.filter_by(short_name=short_name).first_or_404()
     if require.app.update(app):
+        title = "Application: %s &middot; Update" % app.name
         if request.method == 'GET':
             form = AppForm(obj=app)
             form.populate_obj(app)
@@ -232,8 +260,7 @@ def update(short_name):
                         break
 
             return render_template('/applications/update.html',
-                                   title="Update the application: %s"
-                                   % app.name,
+                                   title=title,
                                    form=form,
                                    app=app)
 
@@ -274,35 +301,63 @@ def update(short_name):
                 flash('Please correct the errors', 'error')
                 return render_template('/applications/update.html',
                                        form=form,
-                                       title="Edit the application",
+                                       title=title,
                                        app=app)
     else:
         abort(403)
 
 
-@blueprint.route('/<short_name>', defaults={'page': 1})
-@blueprint.route('/<short_name>/<int:page>')
-def details(short_name, page):
+@blueprint.route('/<short_name>')
+def details(short_name):
+    app = db.session.query(model.App)\
+                    .filter(model.App.short_name == short_name)\
+                    .first()
+    if app:
+        title = "Application: %s" % app.name
+        try:
+            require.app.read(app)
+            require.app.update(app)
+
+            return render_template('/applications/actions.html',
+                                   app=app,
+                                   title=title)
+        except HTTPException:
+            if not app.hidden:
+                return render_template('/applications/app.html',
+                                       app=app,
+                                       title=title)
+            else:
+                return render_template('/applications/app.html',
+                                       title="Application not found",
+                                       app=None)
+    else:
+        abort(404)
+
+@blueprint.route('/<short_name>/settings')
+@login_required
+def settings(short_name):
     application = db.session.query(model.App)\
                     .filter(model.App.short_name == short_name)\
                     .first()
 
     if application:
+        title = "Application: %s &middot; Settings" % application.name
         try:
             require.app.read(application)
             require.app.update(application)
 
-            return render_template('/applications/actions.html',
+            return render_template('/applications/settings.html',
                                    app=application,
-                                   title="Application: %s" % application.name)
+                                   title=title)
         except HTTPException:
             if not application.hidden:
                 return render_template('/applications/app.html',
                                        app=application,
-                                       title="Application: %s" %
-                                       application.name)
+                                       title=title)
             else:
-                return render_template('/applications/app.html', app=None)
+                return render_template('/applications/settings.html',
+                                       title="Not found",
+                                       app=None)
     else:
         abort(404)
 
@@ -310,6 +365,7 @@ def details(short_name, page):
 @blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
 def import_task(short_name):
     app = App.query.filter_by(short_name=short_name).first_or_404()
+    title = "Applications: %s &middot; Import Tasks" % app.name
 
     dataurl = None
     csvform = BulkTaskCSVImportForm(request.form)
@@ -324,12 +380,18 @@ def import_task(short_name):
             flash("Oops! It looks like you don't have permission to access"
                   " that file!", 'error')
             return render_template('/applications/import.html',
-                    app=app, csvform=csvform, gdform=gdform)
+                                   title=title,
+                                   app=app,
+                                   csvform=csvform,
+                                   gdform=gdform)
         if (not 'text/plain' in r.headers['content-type'] and not 'text/csv'
                 in r.headers['content-type']):
             flash("Oops! That file doesn't look like the right file.", 'error')
             return render_template('/applications/import.html',
-                    app=app, csvform=csvform, gdform=gdform)
+                                   title=title,
+                                   app=app,
+                                   csvform=csvform,
+                                   gdform=gdform)
         empty = True
         csvcontent = StringIO(r.text)
         csvreader = unicode_csv_reader(csvcontent)
@@ -346,7 +408,10 @@ def import_task(short_name):
                         flash('The file you uploaded has two headers with'
                               ' the same name.', 'error')
                         return render_template('/applications/import.html',
-                            app=app, csvform=csvform, gdform=gdform)
+                                               title=title,
+                                               app=app,
+                                               csvform=csvform,
+                                               gdform=gdform)
                     field_headers = set(headers) & fields
                     for field in field_headers:
                         field_header_index.append(headers.index(field))
@@ -365,14 +430,20 @@ def import_task(short_name):
             if empty:
                 flash('Oops! It looks like the file is empty.', 'error')
                 return render_template('/applications/import.html',
-                    app=app, csvform=csvform, gdform=gdform)
+                                       title=title,
+                                       app=app,
+                                       csvform=csvform,
+                                       gdform=gdform)
             flash('Tasks imported successfully!', 'success')
             return redirect(url_for('.details', short_name=app.short_name))
         except:
             flash('Oops! Looks like there was an error with processing '
                   'that file!', 'error')
     return render_template('/applications/import.html',
-            app=app, csvform=csvform, gdform=gdform)
+                           title=title,
+                           app=app,
+                           csvform=csvform,
+                           gdform=gdform)
 
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
@@ -385,6 +456,10 @@ def task_presenter(short_name, task_id):
               + "\">Sign in now!</a>", "warning")
     app = App.query.filter_by(short_name=short_name).first_or_404()
     task = db.session.query(model.Task).get(task_id)
+    if app:
+        title = "Application: %s &middot; Contribute" % app.name
+    else:
+        title = "Application not found"
     if (task.app_id == app.id):
         #return render_template('/applications/presenter.html', app = app)
         # Check if the user has submitted a task before
@@ -406,11 +481,14 @@ def task_presenter(short_name, task_id):
 
         tr = tr.first()
         if (tr is None):
-            return render_template('/applications/presenter.html', app=app)
+            return render_template('/applications/presenter.html',
+                                   title=title, app=app)
         else:
-            return render_template('/applications/task/done.html', app=app)
+            return render_template('/applications/task/done.html',
+                                   title=title, app=app)
     else:
-        return render_template('/applications/task/wrong.html', app=app)
+        return render_template('/applications/task/wrong.html',
+                               title=title, app=app)
 
 
 @blueprint.route('/<short_name>/presenter')
@@ -418,6 +496,10 @@ def task_presenter(short_name, task_id):
 def presenter(short_name):
     app = App.query.filter_by(short_name=short_name)\
         .first_or_404()
+    if app:
+        title = "Application: %s &middot; Contribute" % app.name
+    else:
+        title = "Application not found"
     if app.info.get("tutorial"):
         if request.cookies.get(app.short_name + "tutorial") is None:
             if (current_user.is_anonymous()):
@@ -428,7 +510,8 @@ def presenter(short_name):
                                            short_name=short_name))
                       + "\">Sign in now!</a>", "warning")
             resp = make_response(render_template('/applications/tutorial.html',
-                                 app=app))
+                                                 title=title,
+                                                 app=app))
             resp.set_cookie(app.short_name + 'tutorial', 'seen')
             return resp
         else:
@@ -439,7 +522,9 @@ def presenter(short_name):
                               next=url_for('app.presenter',
                                            short_name=short_name))
                       + "\">Sign in now!</a>", "warning")
-            return render_template('/applications/presenter.html', app=app)
+            return render_template('/applications/presenter.html',
+                                   title=title,
+                                   app=app)
     else:
         if (current_user.is_anonymous()):
             flash("Ooops! You are an anonymous user and will not get any"
@@ -449,13 +534,19 @@ def presenter(short_name):
                                        short_name=short_name))
                   + "\">Sign in now!</a>", "warning")
 
-        return render_template('/applications/presenter.html', app=app)
+        return render_template('/applications/presenter.html',
+                               title=title,
+                               app=app)
 
 
 @blueprint.route('/<short_name>/tutorial')
 def tutorial(short_name):
     app = App.query.filter_by(short_name=short_name).first_or_404()
-    return render_template('/applications/tutorial.html', app=app)
+    if app:
+        title = "Application: %s &middot; Tutorial" % app.name
+    else:
+        title = "Application not found"
+    return render_template('/applications/tutorial.html', title=title, app=app)
 
 
 @blueprint.route('/<short_name>/<int:task_id>/results.json')
@@ -464,6 +555,7 @@ def export(short_name, task_id):
     app = db.session.query(model.App)\
             .filter(model.App.short_name == short_name)\
             .first()
+
     if app:
         task = db.session.query(model.Task)\
                  .filter(model.Task.id == task_id)\
@@ -479,6 +571,10 @@ def export(short_name, task_id):
 @blueprint.route('/<short_name>/tasks/<int:page>')
 def tasks(short_name, page):
     app = App.query.filter_by(short_name=short_name).first_or_404()
+    if app:
+        title = "Application: %s &middot; Tasks" % app.name
+    else:
+        title = "Application not found"
     try:
         require.app.read(app)
         require.app.update(app)
@@ -501,7 +597,7 @@ def tasks(short_name, page):
         return render_template('/applications/tasks.html',
                                app=app,
                                tasks=app_tasks,
-                               title="Application: %s tasks" % app.name,
+                               title=title,
                                pagination=pagination)
     except HTTPException:
         if not app.hidden:
@@ -523,16 +619,22 @@ def tasks(short_name, page):
             return render_template('/applications/tasks.html',
                                    app=app,
                                    tasks=app_tasks,
-                                   title="Application: %s tasks" % app.name,
+                                   title=title,
                                    pagination=pagination)
         else:
-            return render_template('/applications/tasks.html', app=None)
+            return render_template('/applications/tasks.html',
+                                   title="Application not found",
+                                   app=None)
 
 
 @blueprint.route('/<short_name>/export')
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
     app = App.query.filter_by(short_name=short_name).first_or_404()
+    if app:
+        title = "Application: %s &middot; Export" % app.name
+    else:
+        title = "Application not found"
     if request.args.get('format') and request.args.get('type'):
         if request.args.get('format') == 'json':
             if request.args.get('type') == 'task':
@@ -594,6 +696,7 @@ def export_to(short_name):
                            export, if you are the owner add some tasks"
                     flash(msg, 'info')
                     return render_template('/applications/export.html',
+                                           title=title,
                                            app=app)
 
             # Export Task Runs to CSV
@@ -621,7 +724,9 @@ def export_to(short_name):
                     msg = "Oops, there are no Task Runs yet to export, invite \
                            some users to participate"
                     flash(msg, 'info')
-                    return render_template('/applications/export.html', app=app)
+                    return render_template('/applications/export.html',
+                                           title=title,
+                                           app=app)
             else:
                 abort(404)
         else:
@@ -629,4 +734,6 @@ def export_to(short_name):
     elif len(request.args) >= 1:
         abort(404)
     else:
-        return render_template('/applications/export.html', app=app)
+        return render_template('/applications/export.html',
+                               title=title,
+                               app=app)

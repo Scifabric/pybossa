@@ -331,8 +331,6 @@ class TestWeb:
         assert self.html_title("Profile") in res.data, res
         assert "John Doe" in res.data, res
         assert "johndoe@example.com" in res.data, res
-        assert "API key" in res.data, res
-        assert "Create a new application" in res.data, res
 
         # Log out
         res = self.signout()
@@ -349,7 +347,6 @@ class TestWeb:
         res = self.signin(next='%2Faccount%2Fprofile')
         assert self.html_title("Profile") in res.data, res
         assert "Welcome back John Doe" in res.data, res
-        assert "API key" in res.data, res
 
     def test_05_update_user_profile(self):
         """Test WEB update user profile"""
@@ -365,7 +362,7 @@ class TestWeb:
                 in res.data, res
         assert "John Doe" in res.data, res
         assert "Save the changes" in res.data, res
-        assert '<a href="/account/profile" class="btn">Cancel</a>' in \
+        assert '<a href="/account/profile/settings" class="btn">Cancel</a>' in \
                 res.data, res
 
         res = self.update_profile(fullname="John Doe 2",
@@ -475,7 +472,6 @@ class TestWeb:
         assert "Featured" in res.data, res.data
         assert "Published" in res.data, res.data
         assert "Draft" in res.data, res.data
-        assert "Create an application!" in res.data, res.data
 
         Fixtures.create()
 
@@ -497,7 +493,7 @@ class TestWeb:
         assert self.html_title("Applications") in res.data, res.data
         assert "Applications" in res.data, res.data
         assert '/app/test-app' in res.data, res.data
-        assert '<h2> <i class="icon-star"></i><a href="/app/test-app">My New App</a></h2>' in res.data, res.data
+        assert '<h2><a href="/app/test-app">My New App</a></h2>' in res.data, res.data
 
     def test_10_get_application(self):
         """Test WEB application URL/<short_name> works"""
@@ -508,33 +504,23 @@ class TestWeb:
         res = self.app.get('/app/sampleapp', follow_redirects=True)
         assert self.html_title("Application: Sample App")\
                 in res.data, res
-        assert "Long desc" in res.data, res
-        assert "Summary" in res.data, res
-        assert "Overall progress" in res.data, res
-        assert "Tasks" in res.data, res
-        assert "Edit the application" in res.data, res
-        assert "Delete the application" in res.data, res
+        err_msg = "There should be a contribute button"
+        assert "Start Contributing Now" in res.data, err_msg
+        assert "Settings" in res.data, "Ownwer should see Settings"
         self.signout()
 
         # Now as an anonymous user
         res = self.app.get('/app/sampleapp', follow_redirects=True)
         assert self.html_title("Application: Sample App") in res.data, res
-        assert "Long desc" in res.data, res
-        assert "Summary" in res.data, res
-        assert "Overall progress" in res.data, res
-        assert "Tasks" in res.data, res
-        assert "Edit the application" not in res.data, res
-        assert "Delete the application" not in res.data, res
+        assert "Start Contributing Now" in res.data, err_msg
+        assert "Settings" not in res.data, "Anonymous should not see Settings"
 
         # Now with a different user
         self.register(fullname="Perico Palotes", username="perico")
         res = self.app.get('/app/sampleapp', follow_redirects=True)
         assert self.html_title("Application: Sample App") in res.data, res
-        assert "Long desc" in res.data, res
-        assert "Summary" in res.data, res
-        assert "Overall progress" in res.data, res
-        assert "Edit the application" not in res.data, res
-        assert "Delete the application" not in res.data, res
+        assert "Start Contributing Now" in res.data, err_msg
+        assert "Settings" not in res.data, "User should not see Settings"
 
     def test_11_create_application(self):
         """Test WEB create an application works"""
@@ -551,7 +537,7 @@ class TestWeb:
         res = self.register()
 
         res = self.new_application(method="GET")
-        assert self.html_title("New Application") in res.data, res
+        assert self.html_title("Create an Application") in res.data, res
         assert "Create the application" in res.data, res
 
         res = self.new_application()
@@ -577,7 +563,7 @@ class TestWeb:
 
         # Get the Update App web page
         res = self.update_application(method="GET")
-        assert self.html_title("Update the application: Sample App")\
+        assert self.html_title("Application: Sample App &middot; Update")\
                 in res.data, res
         assert 'input id="id" name="id" type="hidden" value="1"'\
                 in res.data, res
@@ -638,7 +624,7 @@ class TestWeb:
         self.register()
         self.new_application()
         res = self.delete_application(method="GET")
-        assert self.html_title("Delete Application: Sample App")\
+        assert self.html_title("Application: Sample App &middot; Delete")\
                 in res.data, res
         assert "No, do not delete it" in res.data, res
 
@@ -971,11 +957,11 @@ class TestWeb:
         assert "some help" not in res.data
 
     def test_30_app_id_owner(self):
-        """Test WEB application page shows the ID to the owner"""
+        """Test WEB application settings page shows the ID to the owner"""
         self.register()
         self.new_application()
 
-        res = self.app.get('/app/sampleapp', follow_redirects=True)
+        res = self.app.get('/app/sampleapp/settings', follow_redirects=True)
         assert "Sample App" in res.data, ("Application should be shown to "
                                           "the owner")
         assert '<strong><i class="icon-cog"></i> ID</strong>: 1' in res.data,\
@@ -1204,13 +1190,13 @@ class TestWeb:
     def test_42_password_link(self):
         """Test visibility of password change link"""
         self.register()
-        res = self.app.get('/account/profile')
+        res = self.app.get('/account/profile/settings')
         assert "Change your Password" in res.data
         user = model.User.query.get(1)
         user.twitter_user_id = 1234
         db.session.add(user)
         db.session.commit()
-        res = self.app.get('/account/profile')
+        res = self.app.get('/account/profile/settings')
         assert "Change your Password" not in res.data
 
     def test_43_terms_of_use_and_data(self):
@@ -1290,7 +1276,7 @@ class TestWeb:
         """Test WEB task presenter editor is an option"""
         self.register()
         self.new_application()
-        res = self.app.get('/app/sampleapp', follow_redirects=True)
+        res = self.app.get('/app/sampleapp/settings', follow_redirects=True)
         assert "Edit the task presenter" in res.data, \
             "Task Presenter Editor should be an option"
 
@@ -1302,7 +1288,7 @@ class TestWeb:
                            follow_redirects=True)
         assert "var editor" in res.data, "CodeMirror Editor not found"
         assert "Task Presenter" in res.data, "CodeMirror Editor not found"
-        assert "View" in res.data, "CodeMirror View not found"
+        assert "Task Presenter Preview" in res.data, "CodeMirror View not found"
 
     def test_48_task_presenter_editor_works(self):
         """Test WEB task presenter editor works"""
@@ -1412,7 +1398,7 @@ class TestWeb:
         # Now with a real app
         uri = '/app/%s/export' % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
-        heading = "%s: Export Tasks and TaskRuns" % Fixtures.app_name
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now test that a 404 is raised when an arg is invalid
         uri = "/app/%s/export?type=ask&format=json" % Fixtures.app_short_name
@@ -1453,7 +1439,7 @@ class TestWeb:
         # Now with a real app
         uri = '/app/%s/export' % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
-        heading = "%s: Export Tasks and TaskRuns" % Fixtures.app_name
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in JSON format
         uri = "/app/%s/export?type=task_run&format=json" % Fixtures.app_short_name
@@ -1480,7 +1466,7 @@ class TestWeb:
         # Now with a real app
         uri = '/app/%s/export' % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
-        heading = "%s: Export Tasks and TaskRuns" % Fixtures.app_name
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in JSON format
         uri = "/app/%s/export?type=task&format=csv" % Fixtures.app_short_name
@@ -1514,7 +1500,7 @@ class TestWeb:
         # Now with a real app
         uri = '/app/%s/export' % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
-        heading = "%s: Export Tasks and TaskRuns" % Fixtures.app_name
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in JSON format
         uri = "/app/%s/export?type=task_run&format=csv" % Fixtures.app_short_name

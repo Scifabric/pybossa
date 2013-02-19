@@ -164,7 +164,7 @@ def api_authentication():
 def home():
     """ Render home page with the cached apps and users"""
     d = {
-        'featured': cached_apps.get_featured(),
+        'featured': cached_apps.get_featured_front_page(),
         'top_apps': cached_apps.get_top(),
         'top_users': cached_users.get_top(),
     }

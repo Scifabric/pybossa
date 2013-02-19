@@ -95,10 +95,14 @@ Importing the tasks via the built-in CSV Task Creator
 Tasks can be imported from a CSV file or a Google Spreadsheet via the simple
 built-in :ref:`task-creator`. You have to do the following:
 
-1. Navigate to your application's page (you can directly access it using
-       the *slug* application name: http://server/app/slug).
+1. Navigate to your application's page (you can directly access it using 
+   the *slug* application name: http://server/app/slug).
 
-.. image:: http://i.imgur.com/giAcfQd.png
+.. image:: http://i.imgur.com/98o4ixD.png
+
+2. Click in the **Settings** section -on the left side local navigation menu:
+
+.. image:: http://i.imgur.com/Ay3Q6Hu.png
     
 2. Click on **Import Tasks**, right next to **Edit the Application**.
 
@@ -147,16 +151,21 @@ you will be able to manage your applications:
     :alt: PyBossa User Account
 
 Once you have chosen your application, you can add the task presenter by
-clicking in the button named **Edit the task presenter**. 
+clicking in the **Settings** local navigation link, and then in the 
+button named **Edit the task presenter**. 
 
-.. image:: http://i.imgur.com/giAcfQd.png
+.. image:: http://i.imgur.com/Ay3Q6Hu.png
 
 After clicking in this button, a new web page will be shown where you can
 basically type the code required for getting the tasks and load them into a DOM
 that you will create.
 
+.. image:: http://i.imgur.com/Z2myJrU.png
 
-.. image:: http://i.imgur.com/SxdTzGZ.png
+Click in the **Preview button** to get an idea about how it will look like your
+:ref:`task-presenter`.
+
+.. image:: http://i.imgur.com/daRJyLa.png
 
 After saving it, you will be able to access your app using the slug, or under
 your account in the *Published* applications section:
