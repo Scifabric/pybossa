@@ -331,8 +331,6 @@ class TestWeb:
         assert self.html_title("Profile") in res.data, res
         assert "John Doe" in res.data, res
         assert "johndoe@example.com" in res.data, res
-        assert "API key" in res.data, res
-        assert "Create a new application" in res.data, res
 
         # Log out
         res = self.signout()
@@ -349,7 +347,6 @@ class TestWeb:
         res = self.signin(next='%2Faccount%2Fprofile')
         assert self.html_title("Profile") in res.data, res
         assert "Welcome back John Doe" in res.data, res
-        assert "API key" in res.data, res
 
     def test_05_update_user_profile(self):
         """Test WEB update user profile"""
@@ -365,7 +362,7 @@ class TestWeb:
                 in res.data, res
         assert "John Doe" in res.data, res
         assert "Save the changes" in res.data, res
-        assert '<a href="/account/profile" class="btn">Cancel</a>' in \
+        assert '<a href="/account/profile/settings" class="btn">Cancel</a>' in \
                 res.data, res
 
         res = self.update_profile(fullname="John Doe 2",
@@ -1193,13 +1190,13 @@ class TestWeb:
     def test_42_password_link(self):
         """Test visibility of password change link"""
         self.register()
-        res = self.app.get('/account/profile')
+        res = self.app.get('/account/profile/settings')
         assert "Change your Password" in res.data
         user = model.User.query.get(1)
         user.twitter_user_id = 1234
         db.session.add(user)
         db.session.commit()
-        res = self.app.get('/account/profile')
+        res = self.app.get('/account/profile/settings')
         assert "Change your Password" not in res.data
 
     def test_43_terms_of_use_and_data(self):

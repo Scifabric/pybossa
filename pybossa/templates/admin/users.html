@@ -1,72 +1,38 @@
 {% extends "base.html" %}
-{% set active_page = "users" %}
+{% set active_page = "profile" %}
+{% set active_link = "admin" %}
+{% from "account/_helpers.html" import render_account_local_nav %}
+{% from "admin/_helpers.html" import render_admin_user %}
 
 {% block content %}
 
 <div class="row">
-    <div class="span12">
+    <div class="span3">
+        {{ render_account_local_nav(current_user, active_link) }}
+    </div>
+    <div class="span9">
+        <h1><strong>Admin Site:</strong> Manage Admin Users</h1>
         {% from "_formhelpers.html" import render_field %}
         <form class="form-search" method="POST">
         {{ form.hidden_tag() }}
+        <div class="input-append">
         <input id="user" name="user" type="text" class="input-large search-query" placeholder="Try with the full name or nick">
-        <button type="submit" class="btn">Search</button>
+        <button type="submit" class="btn"><i class="icon-search"></i> Search</button>
+        </div>
         </form>
-    </div>
-</div>
+        {% if found %}
+        <h2>Found Users</h2>
+        {% for user in found %}
+        {{ render_admin_user(user) }}
+        {% endfor %}
+        {% endif %}
 
-{% if found %}
-<div class="row">
-    <div class="span12">
-        <h1>Found Users</h1>
+        {% if users %}
+        <h1>Current Users with Admin privileges</h1>
+        {% for user in users %}
+        {{ render_admin_user(user) }}
+        {% endfor %}
+        {% endif %}
     </div>
 </div>
-{% endif %}
-{% for user in found %}
-    <div class="row well">
-        <div class="span2">
-            <img src="{{user.email_addr | gravatar(size=90)}}">
-        </div>
-        <div class="span8">
-            <h3>{{user.fullname}}</h3>
-            <h4>{{user.name}}</h4>
-            <h6>Member since: {{user.created[0:10]}}</h6>
-            {% if user.admin %}
-            <a href="{{url_for('admin.del_admin', user_id=user.id)}}" class="btn btn-danger">
-                <i class="icon-remove"></i>
-                Remove from admin group</a>
-            {% else %}
-            <a href="{{url_for('admin.add_admin', user_id=user.id)}}" class="btn btn-primary">
-                <i class="icon-plus"></i>
-                Add to admin group</a>
-            {% endif %}
-        </div>
-    </div>
-{% endfor %}
-
-<div class="row">
-    <div class="span12">
-        <h1>List of Admin Users</h1>
-    </div>
-</div>
-{% for user in users %}
-    <div class="row well">
-        <div class="span2">
-            <img src="{{user.email_addr | gravatar(size=90)}}">
-        </div>
-        <div class="span8">
-            <h3>{{user.fullname}}</h3>
-            <h4>{{user.name}}</h4>
-            <h6>Member since: {{user.created[0:10]}}</h6>
-            {% if user.admin %}
-            <a href="{{url_for('admin.del_admin', user_id=user.id)}}" class="btn btn-danger">
-                <i class="icon-remove"></i>
-                Remove from admin group</a>
-            {% else %}
-            <a href="{{url_for('admin.add_admin', user_id=user.id)}}" class="btn btn-primary">
-                <i class="icon-plus"></i>
-                Add to admin group</a>
-            {% endif %}
-        </div>
-    </div>
-{% endfor %}
 {% endblock %}

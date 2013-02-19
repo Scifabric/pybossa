@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% set active_page = "profile" %}
+{% set active_link = "settings" %}
+{% import "account/_helpers.html" as helper %}
+
+{% block content %}
+<div class="row">
+    <div class="span3">
+        {{ helper.render_account_local_nav(current_user, active_link) }} 
+    </div>
+    <div class="span9">
+        <h1><strong>User</strong>: {{ user.fullname }}</h1>
+        {{ helper.render_user_profile(current_user, "settings") }}
+        <a href="{{ url_for('account.update_profile') }}" class="btn btn-large"><i class="icon icon-user"></i> Update your profile</a>
+        {% if(not (user.twitter_user_id or user.facebook_user_id or user.google_user_id)) %}
+        <a href="{{ url_for('account.change_password') }}" class="btn btn-large"><i class="icon icon-lock"></i> Change your Password</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

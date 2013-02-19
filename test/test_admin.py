@@ -215,11 +215,11 @@ class TestAdmin:
         assert user.admin == 0, "User ID: 2 should not be admin, but it is"
 
     def test_03_admin_featured_apps_as_admin(self):
-        """Test ADMIN featured apps works ad an admin user"""
+        """Test ADMIN featured apps works as an admin user"""
         self.register()
         self.signin()
         res = self.app.get('/admin/featured', follow_redirects=True)
-        assert "Manage Featured applications" in res.data, res.data
+        assert "Manage featured applications" in res.data, res.data
 
     def test_04_admin_featured_apps_as_anonymous(self):
         """Test ADMIN featured apps works as an anonymous user"""
@@ -323,13 +323,14 @@ class TestAdmin:
         """Test ADMIN users works as an admin user"""
         self.register()
         res = self.app.get('/admin/users', follow_redirects=True)
-        assert "List of Admin Users" in res.data, res.data
+        assert "Manage Admin Users" in res.data, res.data
 
     def test_10_admin_user_not_listed(self):
         """Test ADMIN users does not list himself works"""
         self.register()
         res = self.app.get('/admin/users', follow_redirects=True)
-        assert "List of Admin Users" in res.data, res.data
+        assert "Manage Admin Users" in res.data, res.data
+        assert "Current Users with Admin privileges" not in res.data, res.data
         assert "John" not in res.data, res.data
 
     def test_11_admin_user_not_listed_in_search(self):
@@ -337,7 +338,8 @@ class TestAdmin:
         self.register()
         data = {'user': 'john'}
         res = self.app.post('/admin/users', data=data, follow_redirects=True)
-        assert "List of Admin Users" in res.data, res.data
+        assert "Manage Admin Users" in res.data, res.data
+        assert "Current Users with Admin privileges" not in res.data, res.data
         assert "John" not in res.data, res.data
 
     def test_12_admin_user_search(self):
@@ -386,12 +388,12 @@ class TestAdmin:
         self.signin()
         # Add user.id=2 to admin group
         res = self.app.get("/admin/users/add/2", follow_redirects=True)
-        assert "List of Admin Users" in res.data
+        assert "Current Users with Admin privileges" in res.data
         assert "Juan Jose" in res.data,\
                 "User.id=2 should be listed as an admin"
         # Remove user.id=2 from admin group
         res = self.app.get("/admin/users/del/2", follow_redirects=True)
-        assert "List of Admin Users" in res.data
+        assert "Current Users with Admin privileges" not in res.data
         assert "Juan Jose" not in res.data,\
                 "User.id=2 should be listed as an admin"
 
