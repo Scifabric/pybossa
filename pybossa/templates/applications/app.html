@@ -1,94 +1,27 @@
 {% extends "/base.html" %}
 {% set active_page = "applications" %}
 {% set active_app  = "all" %}
-
-{% macro render_pagination(pagination) %}
-  <div class="pagination pagination-centered">
-      <ul>
-        {% if pagination.has_prev %}
-          <li>
-          <a href="{{ url_for_other_page(pagination.page - 1)
-            }}">&laquo; Prev tasks</a>
-          </li>
-        {% endif %}
-
-        {%- for page in pagination.iter_pages() %}
-          {% if page %}
-            {% if page != pagination.page %}
-            <li>
-              <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
-             </li>
-            {% else %}
-            <li class="active">
-                <a href="#">{{ page }}</a>
-            </li>  
-            {% endif %}
-          {% endif %}
-        {%- endfor %}
-        {% if pagination.has_next %}
-          <li>
-          <a href="{{ url_for_other_page(pagination.page + 1)
-            }}">Next tasks &raquo;</a>
-          </li>
-        {% endif %}
-    </ul>
-  </div>
-{% endmacro %}
-
+{% import "applications/_helpers.html" as helper %}
 
 {% block content %}
-{% if app %}
-  <div class="page-header">
-    <h1>{{ app['name'] }}</h1>
-  </div>
-
-
+<div class="row">
+    {% if app %}
+    <div class="span3">
+        {{ helper.render_app_local_nav(app, 'info', current_user) }}
+    </div>
+    <!-- Application -->
+    <div class="span9" style="min-height:400px">
+        <h1><strong>{{ app.name }}</strong></h1>
         {% if app.long_description %}
-        <div class="row">
-            <div class="span12">
-                {{ app.long_description|safe}}
-            </div>
-        </div>
+            {{ app.long_description|safe}}
         {% endif %}
-        <div class="row">
-            <div class="span12">
-              <h2>Summary</h2>
-              <hr>
-            </div>
-            <div class="span2">
-                {% if app.info.thumbnail %}
-                <img class="img-polaroid span2" src="{{app.info.thumbnail}}"/>
-                {% else %}
-                <img class="img-polaroid span2" src="{{url_for('static', filename='img/placeholder.png')}}"/>
-                {% endif %}
-            </div>
-            <div class="span7">
-              <ul style="list-style-type: none; font-size: 16px;">
-                {% if current_user.id == app.owner.id %}
-                <li><strong><i class="icon-cog"></i> ID</strong>: {{ app.id }}</li>
-                {% endif %}
-                <li><strong><i class="icon-info-sign"></i> Description</strong>: {{ app['description'] }}</li>
-                <li><strong><i class="icon-ok"></i> Creation Date</strong>: {{ app.created[0:10] }}</li>
-                <li><strong><i class="icon-time"></i> Last Activity</strong>: {{ app.last_activity()}}</li>
-                <li><strong><i class="icon-cogs"></i> Overall progress</strong>: {{ ( app.completion_status()*100 ) | round(2, 'floor') }}% completed</li>
-                <li><strong><i class="icon-tasks"></i> <a href="{{url_for('app.tasks',short_name=app.short_name)}}">Tasks</strong></a> ({{ app.tasks | count }})</li>
-                {% if not current_user.is_anonymous() %}
-                <li>{% if app.hidden == 1 %}
-                    <i class="icon icon-eye-close"></i> <strong>Hidden</strong>: Yes 
-                {% else %} 
-                    <i class="icon icon-eye-open"></i> <strong>Hidden</strong>: No 
-                {% endif %}
-                </li>
-                {% endif %}
-              </ul>
-            </div>
-        </div>
-
-        {% block update %}{% endblock %}
-
-{% else %}
-  <div class="page-header">
-    <h1>Sorry! This app does not exists.</h1>
-  </div>
+        <hr>
+        <a href="{{ url_for('app.presenter', short_name=app.short_name)}}" class="btn btn-large btn-primary"><i class="icon-thumbs-up"></i> Start Contributing Now!</a>
+    </div>
+    {% else %}
+    <div class="page-header">
+        <h1>Sorry! This app does not exists.</h1>
+    </div>
 {% endif %}
+</div>
 {% endblock %}

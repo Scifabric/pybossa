@@ -1,53 +1,42 @@
 {% extends "/base.html" %}
 {% set active_page = "applications" %}
-{% set active_app  = "all" %}
 
 {% import "applications/_helpers.html" as helper %}
 
 {% block content %}
 
 <div class="row">
-    <div class="span12">
-        <h1>Applications</h1>
+    <div class="span3">
+            <ul data-spy="affix" data-offset-top="200px" class="nav nav-list bs-docs-sidenav affix-top">
+                <li {% if app_type=="app-featured"%}class="active"{% endif %}><a href="{{url_for('app.index')}}"><i class="icon-chevron-right"></i> Featured</a></li>
+                <li {% if app_type=="app-published"%}class="active"{% endif %}><a href="{{url_for('app.published')}}"><i class="icon-chevron-right"></i> Published</a></li>
+                <li {% if app_type=="app-draft"%}class="active"{% endif %}><a href="{{url_for('app.draft')}}"><i class="icon-chevron-right"></i> Draft</a></li>
+            </ul>
     </div>
-    <br/>
-    <div class="span12" style="font-size:16px">
-        <p>Here you can find a list of all registered applications in {{brand}}.</p>
-        <p>The applications can be sorted in three categories:</p>
-        <ul style="list-style:none">
-            <li><strong><i class="icon-star"></i> Featured:</strong> a special selection of the most interesting applications.</li>
-            <li><strong><i class="icon-th"></i> Published:</strong> all available applications.</li>
-            <li><strong><i class="icon-wrench"></i> Draft:</strong> the only applications where you <i>cannot contribute for the moment</i> (the owners have not published them yet).</li>
-        </ul>
-        <p>Therefore, pick up a published or featured application and help the project!</p>
-    </div>
-</div>
-
-{% if apps %}
-<div class="row app-published">
-    <div class="span12">
-        <h2><i class="icon-th"></i> Published: <small>{{pagination.total_count}} applications in this category</small></h2>
-    </div>
-</div>
-{% endif %}
-
-{% for app in apps %}
-{{ helper.show_app(app, "app-published", current_user) }}
-{% endfor %}
-
-<div class="row">
-    <div class="span9 offset2" style="text-align:center">
-        <a class="btn btn-small" href="{{url_for('app.draft')}}"><i class="icon-wrench"></i> Check also the draft applications</a>
-    </div>
-    <div class="span9 offset2">
-        {{ helper.render_pagination(pagination) }}
-    </div>
-</div>
-
-
-<div class="row">
-    <div class="span12 well" style="text-align:center">
-        <a href="{{ url_for('app.new')}}" class="btn btn-large btn-inverse"><i class="icon-white icon-plus"></i> Create an application!</a>
+    <div class="span9">
+        {% if apps %}
+            {% if app_type=="app-featured"%} 
+            <h1>
+                <i class="icon-star"></i> {{pagination.total_count}} Featured Applications
+            </h1>
+            <h2>A special selection of the most interesting applications</h2>
+            {% endif %}
+            {% if app_type=="app-published"%} 
+            <h1>
+                <i class="icon-th"></i> {{pagination.total_count}} Published Applications</h1>
+            <h2>All available applications</h2>
+            {% endif %}
+            {% if app_type=="app-draft"%} 
+            <h1>
+                <i class="icon-wrench"></i> {{pagination.total_count}} Draft Applications
+            </h1>
+            <h2>Work in progress applications <em>you can not contribute yet</em></h2>
+            {% endif %}
+            {% for app in apps %}
+            {{ helper.show_app(app, app_type, current_user) }}
+            {% endfor %}
+            {{ helper.render_pagination(pagination) }}
+        {% endif %}
     </div>
 </div>
 {% endblock %}

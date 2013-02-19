@@ -24,6 +24,7 @@ from flaskext.wtf import Form, TextField, PasswordField, validators, \
         ValidationError, IntegerField, HiddenInput
 
 import pybossa.model as model
+from pybossa.model import User
 from pybossa.core import db, signer, mail, cache
 from pybossa.util import Unique
 from pybossa.util import Pagination
@@ -200,7 +201,6 @@ def profile():
               .filter(model.TaskRun.user_id == user.id)\
               .count()
         app.c = c
-        print app.c
 
     return render_template('account/profile.html', title="Profile",
                            apps_published=apps_published,
@@ -208,6 +208,34 @@ def profile():
                            apps_contrib=apps_contrib,
                            user=user)
 
+
+@blueprint.route('/profile/applications')
+@login_required
+def applications():
+    user = User.query.get_or_404(current_user.id)
+    apps_published = []
+    apps_draft = []
+    # Sort the applications of the user
+    for a in user.apps:
+        if (len(a.tasks) > 0) and (a.info.get("task_presenter")):
+            apps_published.append(a)
+        else:
+            apps_draft.append(a)
+
+    print apps_published
+    return render_template('account/applications.html',
+                           title="Applications",
+                           apps_published=apps_published,
+                           apps_draft=apps_draft)
+
+@blueprint.route('/profile/settings')
+@login_required
+def settings():
+    user = User.query.get_or_404(current_user.id)
+    title = "User: %s &middot; Settings" % user.fullname
+    return render_template('account/settings.html',
+                           title=title,
+                           user=user)
 
 @blueprint.route('/profile/update', methods=['GET', 'POST'])
 @login_required

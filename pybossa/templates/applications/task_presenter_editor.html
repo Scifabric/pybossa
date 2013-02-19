@@ -1,6 +1,6 @@
 {% extends "/base.html" %}
 {% set active_page = "applications" %}
-{% set active_app  = "new" %}
+{% import "applications/_helpers.html" as helper %}
 
 {% block content %}
 {% from "_formhelpers.html" import render_field %}
@@ -16,26 +16,39 @@
         height: 320px;
     }
     .CodeMirror {
-        width: 460px;
+        width: 700px;
       }
 </style>
 <div class="row">
-    <div class="span6">
-    <legend>Task Presenter</legend>
-    <form class="form-inline" method="post" action="{{ url_for('app.task_presenter_editor', short_name=app.short_name) }}">
-        {{ form.hidden_tag() }}
-        <fieldset>
-            {{ render_field(form.editor)}}
-            <div class="form-actions">
-                <input type="submit" value="Update the application task presenter" class="btn btn-primary" />
-                <a href="{{url_for('app.details', short_name=app.short_name, page=1)}}" class="btn">Cancel</a>
-            </div>
-        </fieldset>
-    </form>
+    <div class="span3">
+        {{ helper.render_app_local_nav(app, 'settings', current_user) }}
     </div>
-    <div class="span6">
-        <legend>View</legend>
+    <div class="span9">
+        <legend>Task Presenter</legend>
+        <form class="form-inline" method="post" action="{{ url_for('app.task_presenter_editor', short_name=app.short_name) }}">
+            {{ form.hidden_tag() }}
+            <fieldset>
+                {{ render_field(form.editor)}}
+                <div class="form-actions">
+                    <input type="submit" value="Update the application task presenter" class="btn btn-primary" />
+                    <a href="#" class="btn btn-preview" value="preview">Preview the task presenter</a>
+                    <a href="{{url_for('app.settings', short_name=app.short_name)}}" class="btn">Cancel</a>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+</div>
+
+<div id="modal-preview" class="modal hide big-modal">
+    <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h2><strong>{{app.name}}</strong>: Task Presenter Preview</h2>
+    </div>
+    <div class="modal-body">
         <iframe id="preview" frameBorder="0"></iframe>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
     </div>
 </div>
 <script>
@@ -45,10 +58,6 @@
         lineNumbers: true,
         autofocus: true,
     });
-    editor.on("change", function(){
-        clearTimeout(delay);
-        delay = setTimeout(updatePreview, 300);
-    });
 
     function updatePreview() {
         var previewFrame = document.getElementById('preview');
@@ -57,6 +66,9 @@
         preview.write(editor.getValue());
         preview.close();
     }
-    setTimeout(updatePreview, 300);
+    $(".btn-preview").off('click').on('click', function(){
+        updatePreview();
+        $("#modal-preview").modal('show');
+    });
 </script>
 {% endblock %}

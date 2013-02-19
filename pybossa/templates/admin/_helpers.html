@@ -1,0 +1,20 @@
+{% macro render_admin_user(user) %}
+<div class="row-fluid well well-small">
+    <div class="span2">
+        <img class="img-polaroid" src="{{user.email_addr | gravatar(size=100)}}">
+    </div>
+    <div class="span10">
+        <h2>{{user.fullname}} <small>(nick: {{user.name}})</small></h2>
+        <h3>Member since: {{user.created[0:10]}}</h3>
+        {% if user.admin %}
+        <a href="{{url_for('admin.del_admin', user_id=user.id)}}" class="btn btn-danger">
+            <i class="icon-remove"></i>
+            Remove from admin group</a>
+        {% else %}
+        <a href="{{url_for('admin.add_admin', user_id=user.id)}}" class="btn btn-primary">
+            <i class="icon-plus"></i>
+            Add to admin group</a>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}
