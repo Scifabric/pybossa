@@ -541,8 +541,7 @@ class TestWeb:
         assert "Create the application" in res.data, res
 
         res = self.new_application()
-        assert self.html_title("Application: %s" % "Sample App")\
-                in res.data, res
+        assert "<strong>Sample App</strong>: Settings" in res.data, res
         assert "Application created!" in res.data, res
 
         app = db.session.query(model.App).first()
