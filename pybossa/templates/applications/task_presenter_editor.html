@@ -24,7 +24,8 @@
         {{ helper.render_app_local_nav(app, 'settings', current_user) }}
     </div>
     <div class="span9">
-        <legend>Task Presenter</legend>
+        <!-- Task Presenter Editor -->
+        <h1><strong>{{app.name}}</strong>: Task Presenter Editor <a class="btn btn-large pull-right" href="http://docs.pybossa.com/en/latest/overview.html#task-presenter"><i class="icon-book"></i> Help</a></h1>
         <form class="form-inline" method="post" action="{{ url_for('app.task_presenter_editor', short_name=app.short_name) }}">
             {{ form.hidden_tag() }}
             <fieldset>

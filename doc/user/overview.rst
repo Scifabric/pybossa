@@ -83,11 +83,10 @@ figure:
 4. Once you have filled all the fields, click in the **Create the
    application** button, and you will have created your first application.
 
-Once you have created the application, you should be able to see it in your
-profile page under the draft section:
+Once you have created the application, you should will be redirected to the
+**settings** application page:
 
-.. image:: http://i.imgur.com/8NxKIg5.png 
-    :alt: PyBossa apps created by you
+.. image:: http://i.imgur.com/Ay3Q6Hu.png
 
 Importing the tasks via the built-in CSV Task Creator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -106,7 +105,7 @@ built-in :ref:`task-creator`. You have to do the following:
     
 2. Click on **Import Tasks**, right next to **Edit the Application**.
 
-.. image:: http://i.imgur.com/0MLPFN9.png
+.. image:: http://i.imgur.com/aU0A9gL.png
 
 3. Provide a URL to a Google Docs Spreadsheet or a CSV file.  If you're
    trying to import from a Google Spreadsheet, ensure the file is
@@ -157,8 +156,13 @@ button named **Edit the task presenter**.
 .. image:: http://i.imgur.com/Ay3Q6Hu.png
 
 After clicking in this button, a new web page will be shown where you can
-basically type the code required for getting the tasks and load them into a DOM
-that you will create.
+choose a template to start coding your application, so you don't have to
+actually start from scratch. 
+
+.. image:: http://i.imgur.com/Xmq7qTq.png
+
+After choosing one of the templates, you will be able to adapt it to fit your
+application needs in a web text editor.
 
 .. image:: http://i.imgur.com/Z2myJrU.png
 
@@ -170,7 +174,7 @@ Click in the **Preview button** to get an idea about how it will look like your
 After saving it, you will be able to access your app using the slug, or under
 your account in the *Published* applications section:
 
-.. image:: http://i.imgur.com/O5R1sUl.png 
+.. image:: http://i.imgur.com/mI0erQI.png
     :alt: Application Published
 
 We recommend to read the 
