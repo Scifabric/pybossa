@@ -1,12 +1,12 @@
 {% extends "/base.html" %}
 {% set active_page = "applications" %}
 {% set active_link = "settings" %}
-{% import "account/_helpers.html" as helper %}
+{% import "applications/_helpers.html" as helper %}
 
 {% block content %}
 <div class="row">
     <div class="span3">
-        {{ helper.render_account_local_nav(current_user, active_link) }}
+        {{ helper.render_app_local_nav(app, active_link, current_user) }}
     </div>
     <div class="span9">
         {% include "applications/snippets/options.html" %}

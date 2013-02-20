@@ -150,15 +150,15 @@ def new():
             if form.sched.data:
                 info['sched'] = form.sched.data
 
-            application = model.App(name=form.name.data,
-                                    short_name=form.short_name.data,
-                                    description=form.description.data,
-                                    long_description=form.long_description.data,
-                                    hidden=int(form.hidden.data),
-                                    owner_id=current_user.id,
-                                    info=info,)
+            app = model.App(name=form.name.data,
+                            short_name=form.short_name.data,
+                            description=form.description.data,
+                            long_description=form.long_description.data,
+                            hidden=int(form.hidden.data),
+                            owner_id=current_user.id,
+                            info=info,)
 
-            db.session.add(application)
+            db.session.add(app)
             db.session.commit()
             # Clean cache
             flash('<i class="icon-ok"></i> Application created!', 'success')
@@ -166,7 +166,7 @@ def new():
                   '<strong><a href="https://docs.pybossa.com">Guide and '
                   ' Documentation</a></strong> for adding tasks, '
                   ' a thumbnail, using PyBossa.JS, etc.', 'info')
-            return redirect('/app/' + application.short_name)
+            return redirect(url_for('.settings', short_name=app.short_name))
         if request.method == 'POST' and not form.validate():
             flash('Please correct the errors', 'error')
             errors = True
