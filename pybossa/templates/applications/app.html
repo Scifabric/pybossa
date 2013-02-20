@@ -11,7 +11,13 @@
     </div>
     <!-- Application -->
     <div class="span9" style="min-height:400px">
-        <h1><img class="img-polaroid" src="{{app.info.thumbnail}}" style="max-width:60px;"> <strong>{{ app.name }}</strong></h1>
+        <h1>
+        {% if app.info.thumbnail %}
+            <img class="img-polaroid" src="{{app.info.thumbnail}}" style="max-width:60px;" onerror="imgError(this);"> 
+        {% else %}
+            <img class="img-polaroid" src="{{url_for('static', filename='img/placeholder.png')}}" style="max-width:60px;" onerror="imgError(this);"> 
+        {% endif %}
+        <strong>{{ app.name }}</strong></h1>
         <hr>
         <h2><i class="icon-cogs"></i> Overall progress</strong>: {{ ( app.completion_status()*100 ) | round(2, 'floor') }}% completed
         <a href="{{ url_for('app.presenter', short_name=app.short_name)}}" class="btn btn-primary pull-right"><i class="icon-thumbs-up" style="color:white;"></i> Start Contributing Now!</a>
@@ -28,4 +34,5 @@
     </div>
 {% endif %}
 </div>
+{{ helper.broken_image() }}
 {% endblock %}
