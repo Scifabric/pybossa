@@ -47,7 +47,7 @@
 <div class="row-fluid">
     <div class="span2">
         {% if app.info.thumbnail %}
-        <img class="img-polaroid" src="{{app.info.thumbnail}}"/>
+        <img class="img-polaroid" src="{{app.info.thumbnail}}" onerror="imgError(this);"/>
         {% else %}
         <img class="img-polaroid" src="{{url_for('static', filename='img/placeholder.png')}}"/>
         {% endif %}
@@ -81,7 +81,7 @@
     <div class="row-fluid">
         <div class="span3">
             {% if app.info.thumbnail %}
-            <img class="thumbnail" src="{{ app.info.thumbnail }}" style="max-width:100px; max-height:100px">
+            <img class="thumbnail" src="{{ app.info.thumbnail }}" style="max-width:100px; max-height:100px" onerror="imgError(this);">
             {% else %}
             <img class="thumbnail" src="{{url_for('static', filename='img/placeholder.png')}}" style="max-width:100px;">
             {% endif %}
