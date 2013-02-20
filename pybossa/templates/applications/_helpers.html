@@ -105,3 +105,13 @@
     </div> <!--end of class=row -->
 </div><!-- end of class=row -->
 {%- endmacro %}
+
+{% macro broken_image() %}
+<script>
+function imgError(image) {
+    image.onerror = "";
+    image.src = "{{url_for('static', filename='img/placeholder.png')}}";
+    return true;
+}
+</script>
+{% endmacro %}
