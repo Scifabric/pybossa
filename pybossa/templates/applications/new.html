@@ -1,47 +1,16 @@
 {% extends "/base.html" %}
 {% set active_page = "create" %}
-{% set active_app  = "new" %}
+{% set active_link  = "applications" %}
+{% import "account/_helpers.html" as helper %}
 
 {% block content %}
 {% from "_formhelpers.html" import render_field %}
-<div class="row">
-    <div class="span12">
-        <h1>Creating an application</h1>
-        <p class="lead">You can create an application re-using one of the available <strong>templates</strong> and the <strong>API</strong>
+<div id="app-form" class="row"> 
+    <div class="span3">
+        {{ helper.render_account_local_nav(current_user, active_link) }}
     </div>
-</div>
-<div class="row">
-    <div class="span4">
-        <h2><i class="icon-picture"></i> Image pattern reconigtion</h2> 
-        <h3>Classify the contents of a picture</h3>
-        <a target="_blank" href="http://github.com/PyBossa/app-flickrperson" class="btn-info btn"><i class="icon-github"></i> Template</a>
-        <a target="_blank" href="http://docs.pybossa.com/en/latest/user/create-application-tutorial.html" class="btn-primary btn"><i class="icon-book"></i> Documentation</a>
-    </div>
-    <div class="span4">
-        <h2><i class="icon-globe"></i>Geo-coding</h2> 
-        <h3>Use web mapping tools</h3>
-        <a target="_blank" href="http://github.com/PyBossa/app-geocoding" class="btn-info btn"><i class="icon-github"></i> Template</a>
-        <a target="_blank" href="http://docs.pybossa.com/en/latest/user/create-application-tutorial.html" class="btn-primary btn"><i class="icon-book"></i> Documentation</a>
-    </div>
-    <div class="span4">
-        <h2><i class="icon-pencil"></i>Transcribing documents</h2> 
-        <h3>Transcribe PDF documents</h3>
-        <a target="_blank" href="http://github.com/PyBossa/pdftranscribe" class="btn-info btn"><i class="icon-github"></i> Template</a>
-        <a target="_blank" href="http://docs.pybossa.com/en/latest/user/create-application-tutorial.html" class="btn-primary btn"><i class="icon-book"></i> Documentation</a>
-    </div>
-</div>
-<div class="row">
-    <div class="span12">
-        <hr>
-        <button type="button" class="btn" data-toggle="collapse" data-target="#app-form"> 
-            <i class="icon-plus-sign"></i>
-            Or using a web form and a CSV file importer for the tasks
-        </button>
-    </div>
-</div>
-<div id="app-form" class="row {% if not errors %} collapse out {% endif %}"> 
-    <div class="span12">
-    <legend>Create a new application</legend>
+    <div class="span9">
+        <h1><strong>Application</strong>: Create a new application</h1>
     <form class="form-horizontal" method="post" action="{{ url_for('app.new') }}">
         {{ form.hidden_tag() }}
         <fieldset>

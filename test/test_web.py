@@ -1286,9 +1286,16 @@ class TestWeb:
         self.new_application()
         res = self.app.get('/app/sampleapp/taskpresentereditor',
                            follow_redirects=True)
-        assert "var editor" in res.data, "CodeMirror Editor not found"
-        assert "Task Presenter" in res.data, "CodeMirror Editor not found"
-        assert "Task Presenter Preview" in res.data, "CodeMirror View not found"
+        err_msg = "Task Presenter options not found"
+        assert "Task Presenter Editor" in res.data, err_msg
+        err_msg = "Basic template not found"
+        assert "The most basic template" in res.data, err_msg
+        err_msg = "Image Pattern Recognition not found"
+        assert "Flickr Person Finder template" in res.data, err_msg
+        err_msg = "Geo-coding"
+        assert "Urban Park template" in res.data, err_msg
+        err_msg = "Transcribing documents"
+        assert "PDF transcription template" in res.data, err_msg
 
     def test_48_task_presenter_editor_works(self):
         """Test WEB task presenter editor works"""
@@ -1297,6 +1304,11 @@ class TestWeb:
         app = db.session.query(model.App).first()
         assert not app.info.get('task_presenter'), \
                 "Task Presenter should be empty"
+        res = self.app.get('/app/sampleapp/taskpresentereditor?template=basic',
+                           follow_redirects=True)
+        assert "var editor" in res.data, "CodeMirror Editor not found"
+        assert "Task Presenter" in res.data, "CodeMirror Editor not found"
+        assert "Task Presenter Preview" in res.data, "CodeMirror View not found"
         res = self.app.post('/app/sampleapp/taskpresentereditor',
                             data={'editor': 'Some HTML code!'},
                             follow_redirects=True)
@@ -1519,3 +1531,4 @@ class TestWeb:
         err_msg = "The number of exported task runs is different \
                    from App Tasks Runs"
         assert len(exported_task_runs) == len(app.task_runs), err_msg
+
