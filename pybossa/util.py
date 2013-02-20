@@ -295,7 +295,7 @@ class UnicodeWriter:
             if (type(s) == dict):
                 line.append(json.dumps(s))
             else:
-                line.append(str(s).encode("utf-8"))
+                line.append(unicode(s).encode("utf-8"))
         self.writer.writerow(line)
         # Fetch UTF-8 output from the queue ...
         data = self.queue.getvalue()
