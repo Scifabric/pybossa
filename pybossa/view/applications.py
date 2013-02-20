@@ -62,7 +62,7 @@ class AppForm(Form):
 
 class TaskPresenterForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
-    editor = TextAreaField('', [validators.Required()])
+    editor = TextAreaField('')
 
 
 class BulkTaskCSVImportForm(Form):
@@ -150,15 +150,15 @@ def new():
             if form.sched.data:
                 info['sched'] = form.sched.data
 
-            application = model.App(name=form.name.data,
-                                    short_name=form.short_name.data,
-                                    description=form.description.data,
-                                    long_description=form.long_description.data,
-                                    hidden=int(form.hidden.data),
-                                    owner_id=current_user.id,
-                                    info=info,)
+            app = model.App(name=form.name.data,
+                            short_name=form.short_name.data,
+                            description=form.description.data,
+                            long_description=form.long_description.data,
+                            hidden=int(form.hidden.data),
+                            owner_id=current_user.id,
+                            info=info,)
 
-            db.session.add(application)
+            db.session.add(app)
             db.session.commit()
             # Clean cache
             flash('<i class="icon-ok"></i> Application created!', 'success')
@@ -166,7 +166,7 @@ def new():
                   '<strong><a href="https://docs.pybossa.com">Guide and '
                   ' Documentation</a></strong> for adding tasks, '
                   ' a thumbnail, using PyBossa.JS, etc.', 'info')
-            return redirect('/app/' + application.short_name)
+            return redirect(url_for('.settings', short_name=app.short_name))
         if request.method == 'POST' and not form.validate():
             flash('Please correct the errors', 'error')
             errors = True
@@ -190,28 +190,41 @@ def task_presenter_editor(short_name):
                 app.info['task_presenter'] = form.editor.data
                 db.session.add(app)
                 db.session.commit()
-                # Clean cache
                 flash('<i class="icon-ok"></i> Task presenter added!', 'success')
                 return redirect(url_for('.settings', short_name=app.short_name))
             if request.method == 'POST' and not form.validate():
                 flash('Please correct the errors', 'error')
                 errors = True
+
             if request.method == 'GET':
                 if app.info.get('task_presenter'):
                     form.editor.data = app.info['task_presenter']
                 else:
-                    script = "<script>\n"
-                    script += "// Your JavaScript\n"
-                    script += "pybossa.taskLoaded(function(task, deferred){\n\t//  Load your task\n});\n"
-                    script += "pybossa.presentTask(function(task, deferred){\n\t// Present task\n});\n"
-                    script += "pybossa.run('%s');\n" % app.short_name
-                    script += "</script>"
-                    form.editor.data = "<h1>Write here the HTML for your app<h1>\n" + script
-                flash('Your code will be <em>automagically</em> rendered in \
-                      the <strong>view section</strong>', 'info')
+                    if request.args.get('template'):
+                        tmpl_uri = "applications/snippets/%s.html" % request.args.get('template')
+                        tmpl = render_template(tmpl_uri, app=app)
+                        form.editor.data = tmpl
+                        flash('Your code will be <em>automagically</em> rendered in \
+                              the <strong>preview section</strong>. Click in the preview button!', 'info')
+                    else:
+                        msg = '<strong>Note</strong> You will need to upload \
+                               the tasks using the <a href="' + \
+                                url_for('app.import_task',
+                                        short_name=app.short_name) + \
+                                '">CSV importer</a> or download the app \
+                                bundle and run the <strong>createTasks.py\
+                                </strong> script in your \
+                                computer'
+                        flash(msg, 'info')
+                        return render_template(
+                            'applications/task_presenter_options.html',
+                            title=title,
+                            app=app)
                 return render_template('applications/task_presenter_editor.html',
                                        title=title,
-                                       form=form, app=app, errors=errors)
+                                       form=form,
+                                       app=app,
+                                       errors=errors)
         else:
             abort(403)
     else:
