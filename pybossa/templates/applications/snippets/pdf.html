@@ -43,13 +43,13 @@
       <!-- Answer buttons -->
       <div id="answer" class="span8" style="text-align:center;">
           <div class="btn-group" style="padding-bottom:5px;">
-          <button class="btn" onclick="zoom(0)"><i class="icon icon-white icon-undo"></i></button>
-          <button class="btn" onclick="zoom(1)"><i class="icon icon-white icon-zoom-in"></i></button>
-          <button class="btn" onclick="zoom(-1)"><i class="icon icon-white icon-zoom-out"></i></button>
+          <button class="btn btn-zoom" value=0><i class="icon icon-white icon-undo"></i></button>
+          <button class="btn btn-zoom" value=1><i class="icon icon-white icon-zoom-in"></i></button>
+          <button class="btn btn-zoom" value=-1><i class="icon icon-white icon-zoom-out"></i></button>
           </div>
-          <div id="viewport" style="width:620px;height:755px;overflow:auto;">
-            <canvas id="the-canvas" style="border:1px solid black;"></canvas>
-          </div>
+          <!--<div id="viewport" style="width:620px;height:755px;overflow:auto;">
+              <canvas id="the-canvas"></canvas>
+          </div>-->
      </div>
   <div id="question" class="span4">
       <p>You are working now on task: <span id="task-id" class="label label-warning">#</span></p>
@@ -63,7 +63,7 @@
           <form class="form-inline">
               <textarea id="text" rows="10" style="width:100%;"></textarea>
           </form>
-          <button class="btn" onclick="submitTask()">Submit transcription!</button>
+          <button class="btn btn-submit">Submit transcription!</button>
       </div>
   </div>
 
@@ -81,68 +81,56 @@
 // Disable workers to avoid yet another cross-origin issue (workers need the URL of
 // the script to be loaded, and currently do not allow cross-origin scripts)
 //
-$('#viewport').dragscrollable({dragSelector:'#the-canvas' });
 PDFJS.disableWorker = true;
-
-var pdfDoc = null,
-    pageNum = 1,
-    scale = 0.9,
-    canvas = document.getElementById('the-canvas'),
-    ctx = canvas.getContext('2d');
 
 //
 // Get page info from document, resize canvas accordingly, and render page
 //
-function renderPage(num) {
+function renderPage(task) {
   // Using promise to fetch the page
-  pdfDoc.getPage(num).then(function(page) {
-    var viewport = page.getViewport(scale);
-    canvas.height = viewport.height;
-    canvas.width = viewport.width;
+  task.pdfDoc.getPage(task.pageNum).then(function(page) {
+    var viewport = page.getViewport(task.scale);
+    task.canvas.height = viewport.height;
+    task.canvas.width = viewport.width;
 
     // Render PDF page into canvas context
     var renderContext = {
-      canvasContext: ctx,
+      canvasContext: task.ctx,
       viewport: viewport
     };
     page.render(renderContext);
   });
-
-  // Update page counters
-  //document.getElementById('page_num').textContent = pageNum;
-  //document.getElementById('page_count').textContent = pdfDoc.numPages;
 }
 
-function zoom(v) {
+function zoom(task, v) {
 
-    pdfDoc.getPage(pageNum).then(function(page){
+    task.pdfDoc.getPage(task.pageNum).then(function(page){
         if (v==1) {
-            scale = scale + 0.1;
-            if (scale >= 2) {
-                scale = 2;
+            task.scale = task.scale + 0.1;
+            if (task.scale >= 2) {
+                task.scale = 2;
             }
         }
         if (v==-1) {
-            scale = scale - 0.1;
-            if (scale <= 0) {
-                scale = 0.1;
+            task.scale = task.scale - 0.1;
+            if (task.scale <= 0) {
+                task.scale = 0.1;
             }
         }
         if (v==0) {
-            scale = 0.8;
+            task.scale = 0.8;
         }
-        var viewport = page.getViewport(scale + 0.1);
-        canvas.height = viewport.height;
-        canvas.width = viewport.width;
+        var viewport = page.getViewport(task.scale + 0.1);
+        task.canvas.height = viewport.height;
+        task.canvas.width = viewport.width;
 
 
         // Render PDF page into canvas context
         var renderContext = {
-          canvasContext: ctx,
+          canvasContext: task.ctx,
           viewport: viewport
         };
         page.render(renderContext);
-        //$("#the-canvas").draggable({containment:'#dragContainer', cursor: 'move', scroll: false});
     });
 
 }
@@ -150,81 +138,25 @@ function zoom(v) {
 //
 // Go to previous page
 //
-function goPrevious() {
-  if (pageNum <= 1)
+function goPrevious(task) {
+  if (task.pageNum <= 1)
     return;
-  pageNum--;
-  renderPage(pageNum);
+  task.pageNum--;
+  renderPage(task);
 }
 
 //
 // Go to next page
 //
-function goNext() {
-  if (pageNum >= pdfDoc.numPages)
+function goNext(task) {
+  if (task.pageNum >= task.pdfDoc.numPages)
     return;
-  pageNum++;
-  renderPage(pageNum);
-}
-
-
-
-// Function to load the TaskRun data into the HTML skeleton
-function loadData( data ) {
-    // Uncomment next line for debugging purposes
-    //console.log( data );
-    if ( !$.isEmptyObject(data.task) ) {
-        $("#question h1").text(data.question);
-        $("#task-id").text(data.task.id);
-        $("#photo-link").attr("href", data.task.info.link);
-        $("#photo").attr("src",data.task.info.url_m);
-    }
-    else {
-        $(".skeleton").hide();
-        $("#finish").fadeIn();
-    }
-}
-
-function loadTask( task_id ) {
-    // Uncomment next line for debugging purposes
-    //console.log( data );
-    var t = $.ajax({
-        url: '/api/task/'+task_id,
-        dataType: 'json'
-    });
-    t.done( function (task) {
-        if ( !$.isEmptyObject(task) ) {
-            if (task.state=='completed') {
-                $('#answer').hide();
-                $('#taskcompleted').show();
-            }
-            loadUserProgress();
-            $("#question h1").text(task.info.question);
-            $("#task-id").text(task.id);
-            pageNum = task.info.page;
-            //
-            // NOTE: 
-            // Modifying the URL below to another server will likely *NOT* work. Because of browser
-            // security restrictions, we have to use a file server with special headers
-            // (CORS) - most servers don't support cross-origin browser requests.
-            var url = task.info.pdf_url;
-            //
-            // Asynchronously download PDF as an ArrayBuffer
-            //
-            PDFJS.getDocument(url).then(function getPdfHelloWorld(_pdfDoc) {
-              pdfDoc = _pdfDoc;
-              renderPage(pageNum);
-            });
-        }
-        else {
-            $(".skeleton").hide();
-            $("#finish").fadeIn();
-        }
-    });
+  task.pageNum++;
+  renderPage(task);
 }
 
 function loadUserProgress() {
-    pybossa.userProgress('{{app.short_name}}').done(function(data){
+    pybossa.userProgress('pdftranscribe').done(function(data){
         var pct = Math.round((data.done*100)/data.total);
         $("#progress").css("width", pct.toString() +"%");
         $("#progress").attr("title", pct.toString() + "% completed!");
@@ -234,43 +166,72 @@ function loadUserProgress() {
     });
 }
 
-// Function to submit and save the TaskRun in PyBossa
-function submitTask() {
-    // Get the task-id
-    var taskid = $("#task-id").text();
-    var answer = $("textarea#text").val();
-    console.log(answer);
-    // Save the task
-    pybossa.saveTask(taskid, answer).done( function( data ) {
-        // Uncoment next line for debugging purposes
-        //console.log("Answer saved!");
-        // FadeIn & Out the success div feedback
-        $("#success").fadeIn();
-        setTimeout(function() { $("#success").fadeOut() }, 2000);
-        // Load a new task
-        //pybossa.newTask("flickrperson").done( function( data ){ loadData( data ) });
-        window.location.pathname = "/app/{{app.short_name}}/newtask";
-    });
-}
-
-// Check if the user is loading directly a task or requesting a new one
-var taskId = pybossa.getCurrentTaskId(window.location.pathname);
-
-if (taskId){
-    // The user is loading directly a task, so load then input data
-    loadTask(taskId);
-}
-else {
-    // The user is requesting a new task, so get a new one
-    pybossa.newTask("{{app.short_name}}").done( function( data ) { 
-
-        if ( !$.isEmptyObject(data.task) ) {
-            window.location.pathname = "/app/{{app.short_name}}/task/" + data.task.id;
+pybossa.taskLoaded(function(task, deferred){
+    if ( !$.isEmptyObject(task) ) {
+        if (task.state=='completed') {
+            $('#answer').hide();
+            $('#taskcompleted').show();
         }
-        else {
+        // NOTE: 
+        // Modifying the URL below to another server will likely *NOT* work. Because of browser
+        // security restrictions, we have to use a file server with special headers
+        // (CORS) - most servers don't support cross-origin browser requests.
+        // Asynchronously download PDF as an ArrayBuffer
+        var canvas = $("<canvas/>", {"id": "canvas_" + task.id});
+        canvas.css("border", "1px solid black");
+        var viewport = $("<div/>", {"id": "viewport_" + task.id});
+        viewport.css("width",  "620px");
+        viewport.css("height", "755px");
+        viewport.css("overflow", "auto");
+        viewport.css("display", "none");
+        viewport.append(canvas);
+        $("#answer").append(viewport);
+        
+        $('#viewport_' + task.id).dragscrollable({dragSelector:'#canvas_' + task.id});
+        task.canvas = document.getElementById('canvas_' + task.id);
+        task.ctx = document.getElementById("canvas_" + task.id).getContext('2d');
+        task.scale = 0.9;
+        task.pageNum = task.info.page;
+
+        PDFJS.getDocument(task.info.pdf_url).then(function getPdfHelloWorld(_pdfDoc) {
+          task.pdfDoc = _pdfDoc;
+          deferred.resolve(task);
+        });
+    }
+    else {
+        $(".skeleton").hide();
+        $("#finish").fadeIn();
+        deferred.resolve(task);
+    }
+
+});
+
+pybossa.presentTask(function(task, deferred){
+    if ( !$.isEmptyObject(task) ) {
+            loadUserProgress();
+            $("#viewport_" + task.id).show();
+            renderPage(task);
+            $("#question h1").text(task.info.question);
+            $("#task-id").text(task.id);
+            $(".btn-zoom").off('click').on('click', function(evt){
+                console.log($(evt.target).attr("value"));
+                zoom(task, parseInt($(evt.target).attr("value")));
+            });
+            $(".btn-submit").off('click').on('click', function(){
+                var answer = $("textarea#text").val();
+                $("#viewport_" + task.id).hide();
+                pybossa.saveTask(task.id, answer).done(function(data){
+                    deferred.resolve();
+                    $("#success").fadeIn();
+                    setTimeout(function() { $("#success").fadeOut() }, 2000);
+                })
+            });
+    }
+    else {
             $(".skeleton").hide();
             $("#finish").fadeIn();
-        }
-    });
-}
+    }
+});
+
+pybossa.run('{{app.short_name}}');
 </script>
