@@ -149,6 +149,8 @@ you will be able to manage your applications:
 .. image:: http://i.imgur.com/1tAon2D.png
     :alt: PyBossa User Account
 
+.. image:: http://i.imgur.com/abu0SsT.png
+
 Once you have chosen your application, you can add the task presenter by
 clicking in the **Settings** local navigation link, and then in the 
 button named **Edit the task presenter**. 
@@ -174,7 +176,7 @@ Click in the **Preview button** to get an idea about how it will look like your
 After saving it, you will be able to access your app using the slug, or under
 your account in the *Published* applications section:
 
-.. image:: http://i.imgur.com/mI0erQI.png
+.. image:: http://i.imgur.com/REnOlX0.png
     :alt: Application Published
 
 We recommend to read the 

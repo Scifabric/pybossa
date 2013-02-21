@@ -1,11 +1,11 @@
 {% macro render_account_local_nav(current_user, active_link) -%}
 <ul data-spy="affix" data-offset-top="200px" class="nav nav-list bs-docs-sidenav affix-top">
-    <li {% if active_link=="profile"%}class="active"{% endif %}><a href="{{url_for('account.profile')}}"><i class="icon-chevron-right"></i> Profile</a></li>
-    <li {% if active_link=="applications"%}class="active"{% endif %}><a href="{{url_for('account.applications')}}"><i class="icon-chevron-right"></i> Applications</a></li>
+    <li {% if active_link=="profile"%}class="active"{% endif %}><a href="{{url_for('account.profile')}}"><i class="icon-chevron-right"></i> My Profile</a></li>
+    <li {% if active_link=="applications"%}class="active"{% endif %}><a href="{{url_for('account.applications')}}"><i class="icon-chevron-right"></i> My Applications</a></li>
     {% if current_user.admin %}
     <li {% if active_link=="admin"%}class="active"{% endif %}><a href="{{url_for('admin.index')}}"><i class="icon-chevron-right"></i> Admin Site</a></li>
     {% endif %}
-    <li {% if active_link=="settings"%}class="active"{% endif %}><a href="{{url_for('account.settings')}}"><i class="icon-chevron-right"></i> Settings</a></li>
+    <li {% if active_link=="settings"%}class="active"{% endif %}><a href="{{url_for('account.settings')}}"><i class="icon-chevron-right"></i> My Settings</a></li>
 </ul>
 {% endmacro %}
 
