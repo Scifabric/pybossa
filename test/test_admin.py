@@ -443,6 +443,9 @@ class TestAdmin:
         self.signout()
         # Sign in with the root user
         self.signin()
+        res = self.app.get('/app/sampleapp/settings')
+        err_msg = "Admin users should be able to get the settings page for any app"
+        assert res.status == "200 OK", err_msg
         res = self.update_application(method="GET")
         assert "Update the application" in res.data,\
             "The app should be updated by admin users"
