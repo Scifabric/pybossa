@@ -1537,3 +1537,29 @@ class TestWeb:
                    from App Tasks Runs"
         assert len(exported_task_runs) == len(app.task_runs), err_msg
 
+    def test_54_import_tasks(self):
+        """Test WEB import Task templates should work"""
+        self.register()
+        self.new_application()
+        # Without tasks, there should be a template
+        res = self.app.get('/app/sampleapp/import', follow_redirects=True)
+        err_msg = "There should be a Basic template"
+        assert "template=basic" in res.data, err_msg
+        err_msg = "There should be an Image template"
+        assert "template=image" in res.data, err_msg
+        err_msg = "There should be a Map template"
+        assert "template=map" in res.data, err_msg
+        err_msg = "There should be a PDF template"
+        assert "template=pdf" in res.data, err_msg
+        # With tasks
+        self.new_task(1)
+        res = self.app.get('/app/sampleapp/import', follow_redirects=True)
+        err_msg = "There should load directly the basic template"
+        err_msg = "There should not be a Basic template"
+        assert "template=basic" not in res.data, err_msg
+        err_msg = "There should not be an Image template"
+        assert "template=image" not in res.data, err_msg
+        err_msg = "There should not be a Map template"
+        assert "template=map" not in res.data, err_msg
+        err_msg = "There should not be a PDF template"
+        assert "template=pdf" not in res.data, err_msg
