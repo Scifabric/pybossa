@@ -103,11 +103,16 @@ built-in :ref:`task-creator`. You have to do the following:
 
 .. image:: http://i.imgur.com/Ay3Q6Hu.png
     
-2. Click on **Import Tasks**, right next to **Edit the Application**.
+3. Click on **Import Tasks**, right next to **Edit the Application** and you
+   will see 4 different options:
+
+.. image:: http://i.imgur.com/8FtW0lU.png
+
+The **Basic** template, allows you to upload your own CSV file:
 
 .. image:: http://i.imgur.com/aU0A9gL.png
 
-3. Provide a URL to a Google Docs Spreadsheet or a CSV file.  If you're
+4. Where you will have to provide a URL to a Google Docs Spreadsheet or a CSV file.  If you're
    trying to import from a Google Spreadsheet, ensure the file is
    accessible to everyone with link or is public.
 
@@ -118,6 +123,27 @@ built-in :ref:`task-creator`. You have to do the following:
    your field name is one of **state**, **quorum**, **calibration**,
    **priority_0**, or **n_answers**, it will be saved in the respective
    columns. Your spreadsheet must be visible to public or everyone with URL.
+
+The other three options provide a Google Docs URL to a public spreadsheet, 
+that you can automatically import for your application (the URL will
+automatically copy and pasted into the input field for importing the tasks). 
+By using these templates, you'll be able to learn the structure of the tasks,
+and directly re-use the :ref:`task-presenter` templates that know the structure
+(name of the columns) for presenting the task. 
+
+Additionally, you can re-use the templates by downloading the CSV files from
+Google Docs, or even copying them to your own Google Drive account (click in
+*File* -> *Make a copy* in the Google Doc Spreadsheet). The
+available templates are the following:
+
+* `Image Pattern Recognition`_
+* `Geo-coding`_ and
+* `PDF transcription`_. 
+
+.. _`Image Pattern Recognition`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE&usp=sharing#gid=0
+.. _`Geo-coding`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc&usp=sharing
+.. _`PDF transcription`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE&usp=sharing
+
 
 
 Creating the Task Presenter
