@@ -406,7 +406,7 @@ class TestWeb:
 
     def test_05a_get_nonexistant_app(self):
         """Test WEB get not existant app should return 404"""
-        res = self.app.get('/app/nonapp')
+        res = self.app.get('/app/nonapp', follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
 
     def test_05b_get_nonexistant_app_newtask(self):
@@ -493,7 +493,7 @@ class TestWeb:
         assert self.html_title("Applications") in res.data, res.data
         assert "Applications" in res.data, res.data
         assert '/app/test-app' in res.data, res.data
-        assert '<h2><a href="/app/test-app">My New App</a></h2>' in res.data, res.data
+        assert '<h2><a href="/app/test-app/">My New App</a></h2>' in res.data, res.data
 
     def test_10_get_application(self):
         """Test WEB application URL/<short_name> works"""

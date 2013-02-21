@@ -320,7 +320,7 @@ def update(short_name):
         abort(403)
 
 
-@blueprint.route('/<short_name>')
+@blueprint.route('/<short_name>/')
 def details(short_name):
     app = db.session.query(model.App)\
                     .filter(model.App.short_name == short_name)\
