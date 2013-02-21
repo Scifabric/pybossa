@@ -142,11 +142,10 @@ application managing options in this URL::
     application.
 
 Another way for accessing your application (or applications) is clicking in
-your *user name* and select the *Account* item from the drop down menu, and then 
-click in the left bar: **My Applications** Published or Draft ones. From there
-you will be able to manage your applications:
+your *user name* and select the *My Applications* item from the drop down menu.
+From there you will be able to manage your applications:
 
-.. image:: http://i.imgur.com/1tAon2D.png
+.. image:: http://i.imgur.com/nH9u2nk.png
     :alt: PyBossa User Account
 
 .. image:: http://i.imgur.com/abu0SsT.png

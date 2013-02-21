@@ -363,14 +363,7 @@ def settings(short_name):
                                    app=application,
                                    title=title)
         except HTTPException:
-            if not application.hidden:
-                return render_template('/applications/app.html',
-                                       app=application,
-                                       title=title)
-            else:
-                return render_template('/applications/settings.html',
-                                       title="Not found",
-                                       app=None)
+            return abort(403)
     else:
         abort(404)
 

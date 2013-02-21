@@ -506,21 +506,27 @@ class TestWeb:
                 in res.data, res
         err_msg = "There should be a contribute button"
         assert "Start Contributing Now" in res.data, err_msg
-        assert "Settings" in res.data, "Ownwer should see Settings"
+
+        res = self.app.get('/app/sampleapp/settings', follow_redirects=True)
+        assert res.status == '200 OK', res.status
         self.signout()
 
         # Now as an anonymous user
         res = self.app.get('/app/sampleapp', follow_redirects=True)
         assert self.html_title("Application: Sample App") in res.data, res
         assert "Start Contributing Now" in res.data, err_msg
-        assert "Settings" not in res.data, "Anonymous should not see Settings"
+        res = self.app.get('/app/sampleapp/settings', follow_redirects=True)
+        assert res.status == '200 OK', res.status
+        err_msg = "Anonymous user should be redirected to sign in page"
+        assert "Please sign in to access this page" in res.data, err_msg
 
         # Now with a different user
         self.register(fullname="Perico Palotes", username="perico")
         res = self.app.get('/app/sampleapp', follow_redirects=True)
         assert self.html_title("Application: Sample App") in res.data, res
         assert "Start Contributing Now" in res.data, err_msg
-        assert "Settings" not in res.data, "User should not see Settings"
+        res = self.app.get('/app/sampleapp/settings')
+        assert res.status == '403 FORBIDDEN', res.status
 
     def test_11_create_application(self):
         """Test WEB create an application works"""

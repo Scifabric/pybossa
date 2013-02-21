@@ -19,7 +19,9 @@
             <ul class="nav secondary-nav pull-right">
               <li {% if active_page == 'profile' %} class="active" {% endif %}><a href="#" data-toggle="dropdown" class="dropdown-toggle"><i class="icon icon-user"></i> {{ current_user.name | truncate(8,true) }} <span class="caret"></span></a>
                 <ul class="dropdown-menu">
-                    <li><a href="{{ url_for('account.profile') }}"><i class="icon icon-user"></i> Profile</a></li>
+                    <li><a href="{{ url_for('account.profile') }}"><i class="icon icon-user"></i> My Profile</a></li>
+                    <li><a href="{{ url_for('account.applications') }}"><i class="icon icon-th-large"></i> My Applications</a></li>
+                    <li><a href="{{ url_for('account.settings') }}"><i class="icon icon-cog"></i> My Settings</a></li>
                     {% if current_user.admin == 1 %}
                     <li class="divider"></li>
                     <li><a href="{{ url_for('admin.index') }}"><i class="icon icon-cog"></i> Admin Site</a></li>
