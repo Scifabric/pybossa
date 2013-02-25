@@ -53,9 +53,9 @@ def index(page):
 
 
 class LoginForm(Form):
-    username = TextField('Username',
+    email = TextField('E-mail',
                          [validators.Required(
-                             message="The username is required")])
+                             message="The e-mail is required")])
 
     password = PasswordField('Password',
                              [validators.Required(
@@ -67,14 +67,32 @@ def signin():
     form = LoginForm(request.form)
     if request.method == 'POST' and form.validate():
         password = form.password.data
-        username = form.username.data
-        user = model.User.by_name(username)
+        email = form.email.data
+        user = model.User.query.filter_by(email_addr=email).first()
         if user and user.check_password(password):
             login_user(user, remember=True)
             flash("Welcome back %s" % user.fullname, 'success')
             return redirect(request.args.get("next") or url_for("home"))
+        elif user:
+            if user.info.get('facebook_token'):
+                msg =  "It seems like you used your Facebook account to sign up."
+                msg += " You can try and sign in by clicking in the Facebook button."
+                flash(msg, 'info')
+            elif user.info.get('google_token'):
+                msg =  "It seems like you used your Google account to sign up."
+                msg += " You can try and sign in by clicking in the Google button."
+                flash(msg, 'info')
+            elif user.info.get('twitter_token'):
+                msg =  "It seems like you used your Twitter account to sign up."
+                msg += " You can try and sign in by clicking in the Twitter button."
+                flash(msg, 'info')
+            else:
+                msg = "Ooops, Incorrect email/password"
+                flash(msg, 'info')
+                return redirect(url_for('account.forgot_password'))
         else:
-            flash('Incorrect email/password', 'error')
+            flash(u"Ooops, we didn't find you in the system, did you sign in?",
+                  'info')
 
     if request.method == 'POST' and not form.validate():
         flash('Please correct the errors', 'error')

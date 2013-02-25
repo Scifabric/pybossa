@@ -34,7 +34,8 @@ facebook = Facebook(app.config['FACEBOOK_APP_ID'],
 @blueprint.route('/', methods=['GET', 'POST'])
 def login():
     return facebook.oauth.authorize(callback=url_for('.oauth_authorized',
-            next=request.args.get("next"), _external=True))
+                                                     next=request.args.get("next"),
+                                                     _external=True))
 
 
 @facebook.oauth.tokengetter
@@ -56,52 +57,71 @@ def oauth_authorized(resp):
         return redirect(next_url)
 
     # We have to store the oauth_token in the session to get the USER fields
+    access_token = resp['access_token']
     session['oauth_token'] = (resp['access_token'], '')
-    me = facebook.oauth.get('/me')
+    user_data = facebook.oauth.get('/me').data
 
-    user = db.session.query(model.User)\
-           .filter_by(facebook_user_id=me.data['id']).first()
-
-    # user never signed on
-    first_login = False
+    user = manage_user(access_token, user_data, next_url)
     if user is None:
-        first_login = True
-        facebook_token = dict(
-                oauth_token=resp['access_token']
-                )
+        # Give a hint for the user
+        user = db.session.query(model.User)\
+                 .filter_by(email_addr=user_data.data['email'])\
+                 .first()
+        msg = u'Sorry, there is already an account with the same e-mail.'
+        if user.info.get('google_token'):
+            msg += " It seems like you signed up with your Google account."
+            msg += "<br/>You can try and sign in by clicking in the Google button."
+            flash(msg, 'info')
+            return redirect(url_for('account.signin'))
+        elif user.info.get('twitter_token'):
+            msg += " It seems like you signed up with your Twitter account."
+            msg += "<br/>You can try and sign in by clicking in the Twitter button."
+            flash(msg, 'info')
+            return redirect(url_for('account.signin'))
+        else:
+            msg += " It seems that you created an account locally in %s." % app.config['BRAND']
+            msg += " <br/>You can reset your password if you don't remember it."
+            flash(msg, 'info')
+            return redirect(url_for('account.forgot_password'))
+    else:
+        first_login = False
+        login_user(user, remember=True)
+        flash("Welcome back %s" % user.fullname, 'success')
+        request_email = False
+        if (user.email_addr == "None"):
+            request_email = True
+        if request_email:
+            if first_login:
+                flash("This is your first login, please add a valid e-mail")
+            else:
+                flash("Please update your e-mail address in your profile page")
+            return redirect(url_for('account.update_profile'))
+        return redirect(next_url)
+
+
+def manage_user(access_token, user_data, next_url):
+    """Manage the user after signin"""
+    user = db.session.query(model.User)\
+             .filter_by(facebook_user_id=user_data['id']).first()
+
+    if user is None:
+        facebook_token = dict(oauth_token=access_token)
         info = dict(facebook_token=facebook_token)
         user = db.session.query(model.User)\
-                .filter_by(name=me.data['username']).first()
+                 .filter_by(name=user_data['username']).first()
         email = db.session.query(model.User)\
-                .filter_by(email_addr=me.data['email']).first()
+                  .filter_by(email_addr=user_data['email']).first()
 
         if user is None and email is None:
-            user = model.User(
-                    fullname=me.data['name'],
-                    name=me.data['username'],
-                    email_addr=me.data['email'],
-                    facebook_user_id=me.data['id'],
-                    info=info
-                    )
+            user = model.User(fullname=user_data['name'],
+                              name=user_data['username'],
+                              email_addr=user_data['email'],
+                              facebook_user_id=user_data['id'],
+                              info=info)
             db.session.add(user)
             db.session.commit()
+            return user
         else:
-            flash(u'Sorry, there is already an account with the same user name'
-                    'or email.', 'error')
-            flash(u'You can create a new account and sign in', 'info')
-            return redirect(url_for('account.register'))
-
-    login_user(user, remember=True)
-    flash("Welcome back %s" % user.fullname, 'success')
-    request_email = False
-    if (user.email_addr == "None"):
-        request_email = True
-
-    if request_email:
-        if first_login:
-            flash("This is your first login, please add a valid e-mail")
-        else:
-            flash("Please update your e-mail address in your profile page")
-        return redirect(url_for('account.update_profile'))
-
-    return redirect(next_url)
+            return None
+    else:
+        return user
