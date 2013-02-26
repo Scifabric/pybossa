@@ -8,7 +8,7 @@ from itsdangerous import BadSignature
 from collections import namedtuple
 from pybossa.core import db, signer
 from pybossa.util import unicode_csv_reader
-
+from pybossa.util import get_user_signup_method
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
@@ -1672,3 +1672,30 @@ class TestWeb:
         assert "template=map" not in res.data, err_msg
         err_msg = "There should not be a PDF template"
         assert "template=pdf" not in res.data, err_msg
+
+    def test_55_facebook_account_warning(self):
+        """Test WEB Facebook OAuth user gets a hint to sign in"""
+        user = model.User(fullname='John',
+                          name='john',
+                          email_addr='john@john.com',
+                          info={})
+
+        user.info = dict(facebook_token=u'facebook')
+        msg, method = get_user_signup_method(user)
+        err_msg = "Should return 'facebook' but returned %s" % method
+        assert method == 'facebook', err_msg
+
+        user.info = dict(google_token=u'google')
+        msg, method = get_user_signup_method(user)
+        err_msg = "Should return 'google' but returned %s" % method
+        assert method == 'google', err_msg
+
+        user.info = dict(twitter_token=u'twitter')
+        msg, method = get_user_signup_method(user)
+        err_msg = "Should return 'twitter' but returned %s" % method
+        assert method == 'twitter', err_msg
+
+        user.info = {}
+        msg, method = get_user_signup_method(user)
+        err_msg = "Should return 'local' but returned %s" % method
+        assert method == 'local', err_msg

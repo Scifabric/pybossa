@@ -75,7 +75,7 @@ def signin():
             flash("Welcome back %s" % user.fullname, 'success')
             return redirect(request.args.get("next") or url_for("home"))
         elif user:
-            msg, url, method = get_user_signup_method(user)
+            msg, method = get_user_signup_method(user)
             if method == 'local':
                 msg = "Ooops, Incorrect email/password"
                 flash(msg, 'error')

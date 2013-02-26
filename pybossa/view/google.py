@@ -118,9 +118,12 @@ def oauth_authorized(resp):
         user = db.session.query(model.User)\
                  .filter_by(email_addr=user_data['email'])\
                  .first()
-        msg, url, method = get_user_signup_method(user)
+        msg, method = get_user_signup_method(user)
         flash(msg, 'info')
-        return redirect(url)
+        if method == 'local':
+            return redirect(url_for('account.forgot_password'))
+        else:
+            return redirect(url_for('account.signin'))
     else:
         login_user(user, remember=True)
         flash("Welcome back %s" % user.fullname, 'success')
