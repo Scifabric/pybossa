@@ -16,7 +16,7 @@
 from datetime import timedelta
 from functools import update_wrapper
 import csv, codecs, cStringIO
-from flask import abort, request, make_response, current_app
+from flask import abort, request, make_response, current_app, url_for
 from functools import wraps
 from flaskext.wtf import Form, TextField, PasswordField, validators,\
     ValidationError
@@ -310,3 +310,27 @@ class UnicodeWriter:
     def writerows(self, rows):
         for row in rows:
             self.writerow(row)
+
+def get_user_signup_method(user):
+    """Return which OAuth sign up method the user used"""
+    msg = u'Sorry, there is already an account with the same e-mail.'
+    # Google
+    if user.info.get('google_token'):
+        msg += " <strong>It seems like you signed up with your Google account.</strong>"
+        msg += "<br/>You can try and sign in by clicking in the Google button."
+        return (msg, url_for('account.signin'), 'google')
+    # Facebook
+    elif user.info.get('facebook_token'):
+        msg += " <strong>It seems like you signed up with your Facebook account.</strong>"
+        msg += "<br/>You can try and sign in by clicking in the Facebook button."
+        return (msg, url_for('account.signin'), 'facebook')
+    # Twitter
+    elif user.info.get('twitter_token'):
+        msg += " <strong>It seems like you signed up with your Twitter account.</strong>"
+        msg += "<br/>You can try and sign in by clicking in the Twitter button."
+        return (msg, url_for('account.signin'), 'twitter')
+    # Local account
+    else:
+        msg += " <strong>It seems that you created an account locally.</strong>"
+        msg += " <br/>You can reset your password if you don't remember it."
+        return (msg, url_for('account.forgot_password'), 'local')

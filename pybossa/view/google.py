@@ -17,7 +17,7 @@ from flask import Blueprint, request, url_for, flash, redirect, session
 from flaskext.login import login_user, current_user
 
 import pybossa.model as model
-from pybossa.util import Google
+from pybossa.util import Google, get_user_signup_method
 # Required to access the config parameters outside a context as we are using
 # Flask 0.8
 # See http://goo.gl/tbhgF for more info
@@ -118,22 +118,9 @@ def oauth_authorized(resp):
         user = db.session.query(model.User)\
                  .filter_by(email_addr=user_data['email'])\
                  .first()
-        msg = u'Sorry, there is already an account with the same e-mail.'
-        if user.info.get('facebook_token'):
-            msg += " It seems like you signed up with your Facebook account."
-            msg += "<br/>You can try and sign in by clicking in the Facebook button."
-            flash(msg, 'info')
-            return  redirect(url_for('account.signin'))
-        elif user.info.get('twitter_token'):
-            msg += " It seems like you signed up with your Twitter account."
-            msg += "<br/>You can try and sign in by clicking in the Twitter button."
-            flash(msg, 'info')
-            return  redirect(url_for('account.signin'))
-        else:
-            msg += " It seems that you created an account locally in %s." % app.config['BRAND']
-            msg += "<br/>You can reset your password if you don't remember it."
-            flash(msg, 'info')
-            return redirect(url_for('account.forgot_password'))
+        msg, url, method = get_user_signup_method(user)
+        flash(msg, 'info')
+        return redirect(url)
     else:
         login_user(user, remember=True)
         flash("Welcome back %s" % user.fullname, 'success')

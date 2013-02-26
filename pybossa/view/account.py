@@ -30,6 +30,7 @@ from pybossa.util import Unique
 from pybossa.util import Pagination
 from pybossa.util import Twitter
 from pybossa.util import Facebook
+from pybossa.util import get_user_signup_method
 
 
 blueprint = Blueprint('account', __name__)
@@ -74,22 +75,12 @@ def signin():
             flash("Welcome back %s" % user.fullname, 'success')
             return redirect(request.args.get("next") or url_for("home"))
         elif user:
-            if user.info.get('facebook_token'):
-                msg =  "It seems like you used your Facebook account to sign up."
-                msg += " You can try and sign in by clicking in the Facebook button."
-                flash(msg, 'info')
-            elif user.info.get('google_token'):
-                msg =  "It seems like you used your Google account to sign up."
-                msg += " You can try and sign in by clicking in the Google button."
-                flash(msg, 'info')
-            elif user.info.get('twitter_token'):
-                msg =  "It seems like you used your Twitter account to sign up."
-                msg += " You can try and sign in by clicking in the Twitter button."
-                flash(msg, 'info')
-            else:
+            msg, url, method = get_user_signup_method(user)
+            if method == 'local':
                 msg = "Ooops, Incorrect email/password"
+                flash(msg, 'error')
+            else:
                 flash(msg, 'info')
-                return redirect(url_for('account.forgot_password'))
         else:
             flash(u"Ooops, we didn't find you in the system, did you sign in?",
                   'info')

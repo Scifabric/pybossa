@@ -324,6 +324,7 @@ class TestWeb:
         # Real user but wrong password or username
         msg = "Ooops, Incorrect email/password"
         res = self.signin(password='wrongpassword')
+        print res.data
         assert msg in  res.data, res
 
         res = self.signin()
