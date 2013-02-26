@@ -8,7 +8,7 @@ from itsdangerous import BadSignature
 from collections import namedtuple
 from pybossa.core import db, signer
 from pybossa.util import unicode_csv_reader
-
+from pybossa.util import get_user_signup_method
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
@@ -55,14 +55,14 @@ class TestWeb:
         else:
             return self.app.get('/account/register', follow_redirects=True)
 
-    def signin(self, method="POST", username="johndoe", password="p4ssw0rd",
+    def signin(self, method="POST", email="johndoe@example.com", password="p4ssw0rd",
                next=None):
         """Helper function to sign in current user"""
         url = '/account/signin'
         if next is not None:
             url = url + '?next=' + next
         if method == "POST":
-            return self.app.post(url, data={'username': username,
+            return self.app.post(url, data={'email': email,
                                             'password': password},
                                  follow_redirects=True)
         else:
@@ -300,27 +300,32 @@ class TestWeb:
         assert self.html_title("Sign in") in res.data, res.data
         assert "Sign in" in res.data, res.data
 
-        res = self.signin(username='')
+        res = self.signin(email='')
         assert "Please correct the errors" in  res.data, res
-        assert "The username is required" in res.data, res
+        assert "The e-mail is required" in res.data, res
 
         res = self.signin(password='')
         assert "Please correct the errors" in  res.data, res
         assert "You must provide a password" in res.data, res
 
-        res = self.signin(username='', password='')
+        res = self.signin(email='', password='')
         assert "Please correct the errors" in  res.data, res
-        assert "The username is required" in res.data, res
+        assert "The e-mail is required" in res.data, res
         assert "You must provide a password" in res.data, res
 
-        res = self.signin(username='wrongusername')
-        assert "Incorrect email/password" in  res.data, res
+        # Non-existant user
+        msg = "Ooops, we didn't find you in the system, did you sign in?"
+        res = self.signin(email='wrongemail')
+        assert msg in  res.data, res.data
 
+        res = self.signin(email='wrongemail', password='wrongpassword')
+        assert msg in  res.data, res
+
+        # Real user but wrong password or username
+        msg = "Ooops, Incorrect email/password"
         res = self.signin(password='wrongpassword')
-        assert "Incorrect email/password" in  res.data, res
-
-        res = self.signin(username='wrongusername', password='wrongpassword')
-        assert "Incorrect email/password" in  res.data, res
+        print res.data
+        assert msg in  res.data, res
 
         res = self.signin()
         assert self.html_title() in res.data, res
@@ -380,7 +385,7 @@ class TestWeb:
         assert "Your profile has been updated!" in res.data, res
         assert "Please sign in to access this page" in res.data, res
 
-        res = self.signin(method="POST", username="johndoe2",
+        res = self.signin(method="POST", email="johndoe2@example.com",
                           password="p4ssw0rd",
                           next="%2Faccount%2Fprofile")
         assert "Welcome back John Doe 2" in res.data, res
@@ -650,7 +655,7 @@ class TestWeb:
         db.session.query(model.User).all()
 
         # Sign in again and check the warning message
-        self.signin(username="tester", password="tester")
+        self.signin(email="tester", password="tester")
         res = self.app.get('/', follow_redirects=True)
         msg = "Please update your e-mail address in your profile page, " \
               "right now it is empty!"
@@ -1015,7 +1020,7 @@ class TestWeb:
         db.session.add(user)
         db.session.commit()
         res = self.signin()
-        assert "Incorrect email/password" in res.data, res.data
+        assert "Ooops, we didn't find you in the system, did you sign in?" in res.data, res.data
 
     @patch('pybossa.view.applications.requests.get')
     def test_33_bulk_import_unauthorized(self, Mock):
@@ -1168,6 +1173,110 @@ class TestWeb:
 
         from pybossa.view import google
         response_user = google.manage_user(fake_response['access_token'],
+                fake_user, None)
+
+        assert response_user is None, response_user
+
+    def test_39_facebook_oauth_creation(self):
+        """Test WEB Facebook OAuth creation of user works"""
+        fake_response = {
+                u'access_token': u'access_token',
+                u'token_type': u'Bearer',
+                u'expires_in': 3600,
+                u'id_token': u'token'}
+
+        fake_user = {u'username': u'teleyinex',
+                     u'first_name': u'John',
+                     u'last_name': u'Doe',
+                     u'verified': True,
+                     u'name': u'John Doe',
+                     u'locale': u'en_US',
+                     u'gender': u'male',
+                     u'email': u'johndoe@example.com',
+                     u'quotes': u'"quote',
+                     u'link': u'http://www.facebook.com/johndoe',
+                     u'timezone': 1,
+                     u'updated_time': u'2011-11-11T12:33:52+0000',
+                     u'id': u'11111'}
+
+        from pybossa.view import facebook
+        response_user = facebook.manage_user(fake_response['access_token'],
+                fake_user, None)
+
+        user = db.session.query(model.User)\
+                .get(1)
+
+        assert user.email_addr == response_user.email_addr, response_user
+
+    def test_40_facebook_oauth_creation(self):
+        """Test WEB Facebook OAuth detects same user name/email works"""
+        fake_response = {
+                u'access_token': u'access_token',
+                u'token_type': u'Bearer',
+                u'expires_in': 3600,
+                u'id_token': u'token'}
+
+        fake_user = {u'username': u'teleyinex',
+                     u'first_name': u'John',
+                     u'last_name': u'Doe',
+                     u'verified': True,
+                     u'name': u'John Doe',
+                     u'locale': u'en_US',
+                     u'gender': u'male',
+                     u'email': u'johndoe@example.com',
+                     u'quotes': u'"quote',
+                     u'link': u'http://www.facebook.com/johndoe',
+                     u'timezone': 1,
+                     u'updated_time': u'2011-11-11T12:33:52+0000',
+                     u'id': u'11111'}
+
+        self.register()
+        self.signout()
+
+        from pybossa.view import google
+        response_user = google.manage_user(fake_response['access_token'],
+                fake_user, None)
+
+        assert response_user is None, response_user
+
+    def test_39_twitter_oauth_creation(self):
+        """Test WEB Twitter OAuth creation of user works"""
+        fake_response = {
+            u'access_token': {u'oauth_token': u'oauth_token',
+                              u'oauth_token_secret': u'oauth_token_secret'},
+            u'token_type': u'Bearer',
+            u'expires_in': 3600,
+            u'id_token': u'token'}
+
+        fake_user = {u'screen_name': u'johndoe',
+                     u'user_id': u'11111'}
+
+        from pybossa.view import twitter
+        response_user = twitter.manage_user(fake_response['access_token'],
+                fake_user, None)
+
+        user = db.session.query(model.User)\
+                .get(1)
+
+        assert user.email_addr == response_user.email_addr, response_user
+
+    def test_40_twitter_oauth_creation(self):
+        """Test WEB Twitter OAuth detects same user name/email works"""
+        fake_response = {
+            u'access_token': {u'oauth_token': u'oauth_token',
+                              u'oauth_token_secret': u'oauth_token_secret'},
+            u'token_type': u'Bearer',
+            u'expires_in': 3600,
+            u'id_token': u'token'}
+
+        fake_user = {u'screen_name': u'johndoe',
+                     u'user_id': u'11111'}
+
+        self.register()
+        self.signout()
+
+        from pybossa.view import twitter
+        response_user = twitter.manage_user(fake_response['access_token'],
                 fake_user, None)
 
         assert response_user is None, response_user
@@ -1563,3 +1672,30 @@ class TestWeb:
         assert "template=map" not in res.data, err_msg
         err_msg = "There should not be a PDF template"
         assert "template=pdf" not in res.data, err_msg
+
+    def test_55_facebook_account_warning(self):
+        """Test WEB Facebook OAuth user gets a hint to sign in"""
+        user = model.User(fullname='John',
+                          name='john',
+                          email_addr='john@john.com',
+                          info={})
+
+        user.info = dict(facebook_token=u'facebook')
+        msg, method = get_user_signup_method(user)
+        err_msg = "Should return 'facebook' but returned %s" % method
+        assert method == 'facebook', err_msg
+
+        user.info = dict(google_token=u'google')
+        msg, method = get_user_signup_method(user)
+        err_msg = "Should return 'google' but returned %s" % method
+        assert method == 'google', err_msg
+
+        user.info = dict(twitter_token=u'twitter')
+        msg, method = get_user_signup_method(user)
+        err_msg = "Should return 'twitter' but returned %s" % method
+        assert method == 'twitter', err_msg
+
+        user.info = {}
+        msg, method = get_user_signup_method(user)
+        err_msg = "Should return 'local' but returned %s" % method
+        assert method == 'local', err_msg

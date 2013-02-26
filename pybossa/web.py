@@ -50,7 +50,10 @@ try:
             app.config['TWITTER_CONSUMER_SECRET']):
         from pybossa.view.twitter import blueprint as twitter
         app.register_blueprint(twitter, url_prefix='/twitter')
-except:
+except Exception as inst:
+    print type(inst)
+    print inst.args
+    print inst
     print "Twitter singin disabled"
 
 # Enable Facebook if available

@@ -41,7 +41,7 @@ class TestAdmin:
         else:
             return self.app.get('/account/register', follow_redirects=True)
 
-    def signin(self, method="POST", username="johndoe", password="p4ssw0rd",
+    def signin(self, method="POST", email="johndoe@example.com", password="p4ssw0rd",
                next=None):
         """Helper function to sign in current user"""
         url = '/account/signin'
@@ -49,7 +49,7 @@ class TestAdmin:
             url = url + '?next=' + next
         if method == "POST":
             return self.app.post(url, data={
-                    'username': username,
+                    'email': email,
                     'password': password,
                     }, follow_redirects=True)
         else:
@@ -354,6 +354,7 @@ class TestAdmin:
         self.signin()
         data = {'user': 'juan'}
         res = self.app.post('/admin/users', data=data, follow_redirects=True)
+        print res.data
         assert "Juan Jose" in res.data, "username should be searchable"
         # Check with uppercase
         data = {'user': 'JUAN'}
@@ -423,7 +424,7 @@ class TestAdmin:
         self.register(fullname="Juan Jose2", username="juan2",
                 email="juan2@juan.com", password="juan2")
         self.signout()
-        self.signin(username="juan2", password="juan2")
+        self.signin(email="juan2@juan.com", password="juan2")
         # Add user.id=2 to admin group
         res = self.app.get("/admin/users/add/2", follow_redirects=True)
         assert res.status == "403 FORBIDDEN",\
