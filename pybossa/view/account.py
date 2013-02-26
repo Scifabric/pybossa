@@ -30,6 +30,7 @@ from pybossa.util import Unique
 from pybossa.util import Pagination
 from pybossa.util import Twitter
 from pybossa.util import Facebook
+from pybossa.util import get_user_signup_method
 
 
 blueprint = Blueprint('account', __name__)
@@ -53,9 +54,9 @@ def index(page):
 
 
 class LoginForm(Form):
-    username = TextField('Username',
+    email = TextField('E-mail',
                          [validators.Required(
-                             message="The username is required")])
+                             message="The e-mail is required")])
 
     password = PasswordField('Password',
                              [validators.Required(
@@ -67,14 +68,22 @@ def signin():
     form = LoginForm(request.form)
     if request.method == 'POST' and form.validate():
         password = form.password.data
-        username = form.username.data
-        user = model.User.by_name(username)
+        email = form.email.data
+        user = model.User.query.filter_by(email_addr=email).first()
         if user and user.check_password(password):
             login_user(user, remember=True)
             flash("Welcome back %s" % user.fullname, 'success')
             return redirect(request.args.get("next") or url_for("home"))
+        elif user:
+            msg, method = get_user_signup_method(user)
+            if method == 'local':
+                msg = "Ooops, Incorrect email/password"
+                flash(msg, 'error')
+            else:
+                flash(msg, 'info')
         else:
-            flash('Incorrect email/password', 'error')
+            flash(u"Ooops, we didn't find you in the system, did you sign in?",
+                  'info')
 
     if request.method == 'POST' and not form.validate():
         flash('Please correct the errors', 'error')

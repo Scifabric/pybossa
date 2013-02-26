@@ -17,7 +17,7 @@ from flask import Blueprint, request, url_for, flash, redirect, session
 from flaskext.login import login_user, current_user
 
 import pybossa.model as model
-from pybossa.util import Google
+from pybossa.util import Google, get_user_signup_method
 # Required to access the config parameters outside a context as we are using
 # Flask 0.8
 # See http://goo.gl/tbhgF for more info
@@ -28,17 +28,18 @@ import requests
 # are available
 blueprint = Blueprint('google', __name__)
 google = Google(app.config['GOOGLE_CLIENT_ID'],
-                    app.config['GOOGLE_CLIENT_SECRET'])
+                app.config['GOOGLE_CLIENT_SECRET'])
 
 
 @blueprint.route('/', methods=['GET', 'POST'])
 def login():
     if request.args.get("next"):
-        request_token_params = {'scope': 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
-                'response_type': 'code'}
+        request_token_params = {
+            'scope': 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+            'response_type': 'code'}
         google.oauth.request_token_params = request_token_params
     return google.oauth.authorize(callback=url_for('.oauth_authorized',
-            _external=True))
+                                  _external=True))
 
 
 @google.oauth.tokengetter
@@ -53,35 +54,28 @@ def manage_user(access_token, user_data, next_url):
     """Manage the user after signin"""
     # We have to store the oauth_token in the session to get the USER fields
 
-    print access_token
-    print user_data
-
     user = db.session.query(model.User)\
-           .filter_by(google_user_id=user_data['id'])\
-           .first()
+             .filter_by(google_user_id=user_data['id'])\
+             .first()
 
     # user never signed on
     if user is None:
-        google_token = dict(
-                oauth_token=access_token
-                )
+        google_token = dict(oauth_token=access_token)
         info = dict(google_token=google_token)
         user = db.session.query(model.User)\
-                .filter_by(fullname=user_data['name'])\
-                .first()
+                 .filter_by(fullname=user_data['name'])\
+                 .first()
 
         email = db.session.query(model.User)\
-                .filter_by(email_addr=user_data['email'])\
-                .first()
+                  .filter_by(email_addr=user_data['email'])\
+                  .first()
 
         if user is None and email is None:
-            user = model.User(
-                    fullname=user_data['name'],
-                    name=user_data['name'],
-                    email_addr=user_data['email'],
-                    google_user_id=user_data['id'],
-                    info=info
-                    )
+            user = model.User(fullname=user_data['name'],
+                              name=user_data['name'],
+                              email_addr=user_data['email'],
+                              google_user_id=user_data['id'],
+                              info=info)
             db.session.add(user)
             db.session.commit()
             return user
@@ -120,11 +114,16 @@ def oauth_authorized(resp):
     user_data = json.loads(r.content)
     user = manage_user(access_token, user_data, next_url)
     if user is None:
-        flash(u'Sorry, there is already an account with'
-                ' the same user name or e-mail.',
-                'error')
-        flash(u'You can create a new account and sign in', 'info')
-        return redirect(url_for('account.register'))
+        # Give a hint for the user
+        user = db.session.query(model.User)\
+                 .filter_by(email_addr=user_data['email'])\
+                 .first()
+        msg, method = get_user_signup_method(user)
+        flash(msg, 'info')
+        if method == 'local':
+            return redirect(url_for('account.forgot_password'))
+        else:
+            return redirect(url_for('account.signin'))
     else:
         login_user(user, remember=True)
         flash("Welcome back %s" % user.fullname, 'success')

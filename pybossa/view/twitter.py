@@ -13,14 +13,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from flask import Blueprint, request, url_for, flash, redirect, session
-from flask import render_template 
-from flaskext.login import login_required, login_user, logout_user, current_user
+from flask import Blueprint, request, url_for, flash, redirect
+from flaskext.login import login_user, current_user
 
 import pybossa.model as model
 from pybossa.core import db
-from pybossa.util import Unique
-from pybossa.util import Twitter
+from pybossa.util import Twitter, get_user_signup_method
 # Required to access the config parameters outside a
 # context as we are using Flask 0.8
 # See http://goo.gl/tbhgF for more info
@@ -31,13 +29,13 @@ from pybossa.core import app
 # are available
 blueprint = Blueprint('twitter', __name__)
 twitter = Twitter(app.config['TWITTER_CONSUMER_KEY'],
-        app.config['TWITTER_CONSUMER_SECRET'])
+                  app.config['TWITTER_CONSUMER_SECRET'])
 
 
 @blueprint.route('/', methods=['GET', 'POST'])
 def login():
     return twitter.oauth.authorize(callback=url_for('.oauth_authorized',
-            next=request.args.get("next")))
+                                                    next=request.args.get("next")))
 
 
 @twitter.oauth.tokengetter
@@ -47,6 +45,38 @@ def get_twitter_token():
     else:
         return((current_user.info['twitter_token']['oauth_token'],
                current_user.info['twitter_token']['oauth_token_secret']))
+
+
+def manage_user(access_token, user_data, next_url):
+    """Manage the user after signin"""
+    # Twitter API does not provide a way
+    # to get the e-mail so we will ask for it
+    # only the first time
+    user = db.session.query(model.User)\
+             .filter_by(twitter_user_id=user_data['user_id'])\
+             .first()
+
+    if user is None:
+        twitter_token = dict(oauth_token=access_token['oauth_token'],
+                             oauth_token_secret=access_token['oauth_token_secret'])
+        info = dict(twitter_token=twitter_token)
+        user = db.session.query(model.User)\
+                 .filter_by(name=user_data['screen_name'])\
+                 .first()
+
+        if user is None:
+            user = model.User(fullname=user_data['screen_name'],
+                              name=user_data['screen_name'],
+                              email_addr=user_data['screen_name'],
+                              twitter_user_id=user_data['user_id'],
+                              info=info)
+            db.session.add(user)
+            db.session.commit()
+            return user
+        else:
+            return None
+    else:
+        return user
 
 
 @blueprint.route('/oauth-authorized')
@@ -70,51 +100,35 @@ def oauth_authorized(resp):
         flash(u'You denied the request to sign in.', 'error')
         return redirect(next_url)
 
-    user = db.session.query(model.User)\
-            .filter_by(twitter_user_id=resp['user_id'])\
-            .first()
+    access_token = dict(oauth_token=resp['oauth_token'],
+                        oauth_token_secret=resp['oauth_token_secret'])
 
-    # user never signed on
-    # Twitter API does not provide a way
-    # to get the e-mail so we will ask for it
-    # only the first time
-    request_email = False
-    first_login = False
+    user_data = dict(screen_name=resp['screen_name'],
+                     user_id=resp['user_id'])
+
+    user = manage_user(access_token, user_data, next_url)
+
     if user is None:
-        request_email = True
-        first_login = True
-        twitter_token = dict(
-                oauth_token=resp['oauth_token'],
-                oauth_token_secret=resp['oauth_token_secret']
-                )
-        info = dict(twitter_token=twitter_token)
         user = db.session.query(model.User)\
-                .filter_by(name=resp['screen_name'])\
-                .first()
-
-        if user is None:
-            user = model.User(
-                    fullname=resp['screen_name'],
-                    name=resp['screen_name'],
-                    email_addr=resp['screen_name'],
-                    twitter_user_id=resp['user_id'],
-                    info=info)
-            db.session.add(user)
-            db.session.commit()
+                 .filter_by(name=user_data['screen_name'])\
+                 .first()
+        msg, method = get_user_signup_method(user)
+        flash(msg, 'info')
+        if method == 'local':
+            return redirect(url_for('account.forgot_password'))
         else:
-            flash(u'Sorry, there is already an account with'
-                    'the same user name.', 'error')
-            flash(u'You can create a new account and sign in', 'info')
-            return redirect(url_for('account.register'))
-
-    login_user(user, remember=True)
-    flash("Welcome back %s" % user.fullname, 'success')
-    if (user.email_addr == user.name):
-        request_email = True
-    if request_email:
-        if first_login:
-            flash("This is your first login, please add a valid e-mail")
-        else:
-            flash("Please update your e-mail address in your profile page")
-        return redirect(url_for('account.update_profile'))
-    return redirect(next_url)
+            return redirect(url_for('account.signin'))
+    else:
+        first_login = False
+        request_email = False
+        login_user(user, remember=True)
+        flash("Welcome back %s" % user.fullname, 'success')
+        if (user.email_addr == user.name):
+            request_email = True
+        if request_email:
+            if first_login:
+                flash("This is your first login, please add a valid e-mail")
+            else:
+                flash("Please update your e-mail address in your profile page")
+            return redirect(url_for('account.update_profile'))
+        return redirect(next_url)
