@@ -17,7 +17,7 @@
         <form class="form-horizontal" method="post" action="{{ url_for('app.delete_tasks', short_name = app.short_name) }}">
         <h3><strong>Are you sure you want to delete ALL the application tasks and associated task runs?</strong></h3>
         <div class="form-actions">
-          <input type="submit" class="btn btn-small" value="Yes, delete all the tasks and associated task runs"/>
+          <input type="submit" class="btn btn-small" value="Yes"/>
           <a href="{{ url_for('app.settings', short_name = app.short_name) }}" class="btn btn-large btn-primary">No, do not delete anything!</a>
         </div>
     </div>

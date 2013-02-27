@@ -114,6 +114,7 @@ class Fixtures:
                 passwd_hash = cls.password + 'root',
                 fullname = cls.fullname,
                 api_key = cls.root_api_key)
+        root.set_password(cls.password + 'root')
 
         user = model.User(
                 email_addr = cls.email_addr,
@@ -122,12 +123,16 @@ class Fixtures:
                 fullname = cls.fullname,
                 api_key = cls.api_key)
 
+        user.set_password(cls.password)
+
         user2 = model.User(
                 email_addr = cls.email_addr2,
                 name = cls.name2,
                 passwd_hash = cls.password + "2",
                 fullname = cls.fullname2,
                 api_key=cls.api_key_2)
+
+        user2.set_password(cls.password)
 
         return root, user, user2
 
