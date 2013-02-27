@@ -1744,3 +1744,27 @@ class TestWeb:
         err_msg = "Admin should get 200 in POST"
         assert res.status_code == 200, err_msg
 
+    def test_57_reset_api_key(self):
+        """Test WEB reset api key works"""
+        url = "/account/profile/resetapikey"
+        # Anonymous user
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "Anonymous user should be redirected for authentication"
+        assert "Please sign in to access this page" in res.data, err_msg
+        res = self.app.post(url, follow_redirects=True)
+        assert "Please sign in to access this page" in res.data, err_msg
+
+        # Authenticated user
+        self.register()
+        user = db.session.query(model.User).get(1)
+        api_key = user.api_key
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "Authenticated user should get access to reset api key page"
+        assert res.status_code == 200, err_msg
+        assert "Reset API Key" in res.data, err_msg
+        res = self.app.post(url, follow_redirects=True)
+        err_msg = "Authenticated user should be able to reset his api key"
+        assert res.status_code == 200, err_msg
+        user = db.session.query(model.User).get(1)
+        err_msg = "New generated API key should be different from old one"
+        assert api_key != user.api_key, err_msg
