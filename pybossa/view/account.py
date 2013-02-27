@@ -396,3 +396,23 @@ def forgot_password():
         flash('Something went wrong, please correct the errors on the '
               'form', 'error')
     return render_template('/account/password_forgot.html', form=form)
+
+
+@blueprint.route('/profile/resetapikey', methods=['GET', 'POST'])
+@login_required
+def reset_api_key():
+    """Reset API-KEY for user"""
+    if current_user.is_authenticated():
+        title = "User: %s &middot; Settings - Reset API KEY" % current_user.fullname
+        if request.method == 'GET':
+            return render_template('account/reset-api-key.html',
+                                   title=title)
+        else:
+            user = db.session.query(model.User).get(current_user.id)
+            user.api_key = model.make_uuid()
+            db.session.commit()
+            msg = 'New API-KEY generated'
+            flash(msg, 'success')
+            return redirect(url_for('account.settings'))
+    else:
+        return abort(403)
