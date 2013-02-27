@@ -86,7 +86,7 @@ figure:
 Once you have created the application, you should will be redirected to the
 **settings** application page:
 
-.. image:: http://i.imgur.com/Ay3Q6Hu.png
+.. image:: http://i.imgur.com/AeBAy7q.png
 
 Importing the tasks via the built-in CSV Task Creator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -101,10 +101,10 @@ built-in :ref:`task-creator`. You have to do the following:
 
 2. Click in the **Settings** section -on the left side local navigation menu:
 
-.. image:: http://i.imgur.com/Ay3Q6Hu.png
+.. image:: http://i.imgur.com/AeBAy7q.png
     
-3. Click on **Import Tasks**, right next to **Edit the Application** and you
-   will see 4 different options:
+3. Scroll down a bit to the **Task Settings** and  click on the **Import Tasks** 
+   button. After clicking on it you will see 4 different options:
 
 .. image:: http://i.imgur.com/8FtW0lU.png
 
@@ -144,7 +144,34 @@ available templates are the following:
 .. _`Geo-coding`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc&usp=sharing
 .. _`PDF transcription`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE&usp=sharing
 
+Flushing all the tasks
+~~~~~~~~~~~~~~~~~~~~~~
 
+The application settings gives you an option to automatically **delete all the
+tasks and associated task runs** from your application.
+
+.. note::
+    **This action cannot be un-done, so please, be sure that you want to actually
+    delete all the tasks.**
+
+If you are sure that you want to flush all the tasks and task runs for your
+application, go to the application page (http://server/app/slug/) and click in
+the **Settings** option of the left local navigation menu:
+
+.. image:: http://i.imgur.com/AeBAy7q.png
+
+Then, you will see that there is a sub section called: **Task Settings** and
+a button with the label: **Delete the tasks**. Click in that button and a new
+page will be shown:
+
+.. image:: http://i.imgur.com/EKs3wE3.png
+    :width:100%
+
+As you can see, a **red warning alert** is shown, warning you that if you click
+in the **yes** button, you will be deleting not only the application tasks, but
+also the answers (task runs) that you have recollected for your application. Be
+sure before proceeding that you want to delete all the tasks. After clicking in
+the **yes** button, you will see that all the tasks have been flushed.
 
 Creating the Task Presenter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -175,12 +202,13 @@ From there you will be able to manage your applications:
     :alt: PyBossa User Account
 
 .. image:: http://i.imgur.com/abu0SsT.png
+    :width: 100%
 
-Once you have chosen your application, you can add the task presenter by
-clicking in the **Settings** local navigation link, and then in the 
-button named **Edit the task presenter**. 
+Once you have chosen your application, you can add :ref:`task-presenter` by
+clicking in the **Settings** local navigation link, and then under the sub
+section *Application Settings* click in the button named **Edit the task presenter**. 
 
-.. image:: http://i.imgur.com/Ay3Q6Hu.png
+.. image:: http://i.imgur.com/AeBAy7q.png
 
 After clicking in this button, a new web page will be shown where you can
 choose a template to start coding your application, so you don't have to
@@ -192,17 +220,20 @@ After choosing one of the templates, you will be able to adapt it to fit your
 application needs in a web text editor.
 
 .. image:: http://i.imgur.com/Z2myJrU.png
+    :width: 100%
 
 Click in the **Preview button** to get an idea about how it will look like your
 :ref:`task-presenter`.
 
 .. image:: http://i.imgur.com/daRJyLa.png
+    :width: 100%
 
 After saving it, you will be able to access your app using the slug, or under
 your account in the *Published* applications section:
 
 .. image:: http://i.imgur.com/REnOlX0.png
     :alt: Application Published
+    :width: 100%
 
 We recommend to read the 
 :doc:`Step by step tutorial on
