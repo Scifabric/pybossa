@@ -658,6 +658,30 @@ def tasks(short_name, page):
                                    app=None)
 
 
+@blueprint.route('/<short_name>/tasks/delete', methods=['GET', 'POST'])
+@login_required
+def delete_tasks(short_name):
+    """Delete ALL the tasks for a given application"""
+    app = App.query.filter_by(short_name=short_name).first_or_404()
+    try:
+        require.app.read(app)
+        require.app.update(app)
+        if request.method == 'GET':
+            title = "Application Tasks: %s &middot; Delete" % app.name
+            return render_template('applications/tasks/delete.html',
+                                   app=app,
+                                   title=title)
+        else:
+            for task in app.tasks:
+                db.session.delete(task)
+            db.session.commit()
+            msg = "All the tasks and associated task runs have been deleted"
+            flash(msg, 'success')
+            return redirect(url_for('.settings', short_name=app.short_name))
+    except HTTPException:
+        return abort(403)
+
+
 @blueprint.route('/<short_name>/export')
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
