@@ -477,3 +477,19 @@ class TestAdmin:
         res = self.delete_application()
         assert "Application deleted!" in res.data,\
                 "The app should be deleted by admin users"
+
+    def test_18_admin_delete_tasks(self):
+        """Test ADMIN can delete an app's tasks that belongs to another user"""
+        # Admin
+        Fixtures.create()
+        tasks = db.session.query(model.Task).filter_by(app_id=1).all()
+        assert len(tasks) > 0, "len(app.tasks) > 0"
+        res = self.signin(email=u'root@root.com', password=u'tester' + 'root')
+        res = self.app.get('/app/test-app/tasks/delete', follow_redirects=True)
+        err_msg = "Admin user should get 200 in GET"
+        assert res.status_code == 200, err_msg
+        res = self.app.post('/app/test-app/tasks/delete', follow_redirects=True)
+        err_msg = "Admin should get 200 in POST"
+        assert res.status_code == 200, err_msg
+        tasks = db.session.query(model.Task).filter_by(app_id=1).all()
+        assert len(tasks) == 0, "len(app.tasks) != 0"

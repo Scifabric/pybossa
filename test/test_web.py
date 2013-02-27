@@ -1699,3 +1699,48 @@ class TestWeb:
         msg, method = get_user_signup_method(user)
         err_msg = "Should return 'local' but returned %s" % method
         assert method == 'local', err_msg
+
+    def test_56_delete_tasks(self):
+        """Test WEB delete tasks works"""
+        Fixtures.create()
+        # Anonymous user
+        res = self.app.get('/app/test-app/tasks/delete', follow_redirects=True)
+        err_msg = "Anonymous user should be redirected for authentication"
+        assert "Please sign in to access this page" in res.data, err_msg
+        err_msg = "Anonymous user should not be allowed to delete tasks"
+        res = self.app.post('/app/test-app/tasks/delete', follow_redirects=True)
+        err_msg = "Anonymous user should not be allowed to delete tasks"
+        assert "Please sign in to access this page" in res.data, err_msg
+
+        # Authenticated user but not owner
+        self.register()
+        res = self.app.get('/app/test-app/tasks/delete', follow_redirects=True)
+        err_msg = "Authenticated user but not owner should get 403 FORBIDDEN in GET"
+        assert res.status == '403 FORBIDDEN', err_msg
+        res = self.app.post('/app/test-app/tasks/delete', follow_redirects=True)
+        err_msg = "Authenticated user but not owner should get 403 FORBIDDEN in POST"
+        assert res.status == '403 FORBIDDEN', err_msg
+        self.signout()
+
+        # Owner
+        tasks = db.session.query(model.Task).filter_by(app_id=1).all()
+        res = self.signin(email=u'tester@tester.com', password=u'tester')
+        res = self.app.get('/app/test-app/tasks/delete', follow_redirects=True)
+        err_msg = "Owner user should get 200 in GET"
+        assert res.status == '200 OK', err_msg
+        assert len(tasks) > 0, "len(app.tasks) > 0"
+        res = self.app.post('/app/test-app/tasks/delete', follow_redirects=True)
+        err_msg = "Owner should get 200 in POST"
+        assert res.status == '200 OK', err_msg
+        tasks = db.session.query(model.Task).filter_by(app_id=1).all()
+        assert len(tasks) == 0, "len(app.tasks) != 0"
+
+        # Admin
+        res = self.signin(email=u'root@root.com', password=u'tester' + 'root')
+        res = self.app.get('/app/test-app/tasks/delete', follow_redirects=True)
+        err_msg = "Admin user should get 200 in GET"
+        assert res.status_code == 200, err_msg
+        res = self.app.post('/app/test-app/tasks/delete', follow_redirects=True)
+        err_msg = "Admin should get 200 in POST"
+        assert res.status_code == 200, err_msg
+
