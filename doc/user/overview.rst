@@ -231,7 +231,7 @@ Click in the **Preview button** to get an idea about how it will look like your
 After saving it, you will be able to access your app using the slug, or under
 your account in the *Published* applications section:
 
-.. image:: http://i.imgur.com/REnOlX0.png
+.. image:: http://i.imgur.com/BXtsCba.png
     :alt: Application Published
     :width: 100%
 

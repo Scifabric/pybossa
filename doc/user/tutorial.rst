@@ -28,11 +28,15 @@ server.
 
    You can use http://crowdcrafting.org for testing. 
 
-When you create the account, you will have to access your profile, and copy the
-`API-KEY that has been generated for you <http://crowdcrafting.org/account/profile>`_ 
-(in the **profile** sub-section of the left menu). 
+When you create an account, you will have access to your profile by clicking on your 
+name, and then in the **My Settings** option:
 
-.. image:: http://i.imgur.com/tygQd0w.png
+.. image:: http://i.imgur.com/nH9u2nk.png
+
+Then, you will be able to copy the
+`API-KEY that has been generated for you <http://crowdcrafting.org/account/profile>`_ 
+
+.. image:: http://i.imgur.com/aTooi6Q.png
 
 This **API-KEY** allows you to create the
 application in PyBossa (only authenticated users can create applications and
