@@ -5,7 +5,7 @@
 
 {% block content %}
 
-<div class="row">
+<div class="row-fluid">
     <div class="span3">
         {{ helper.render_account_local_nav(current_user, active_link) }}
     </div>
@@ -17,20 +17,17 @@
         <h2>Your Contributions</h2>
         {% for app in apps_contrib %}
         <div class="row-fluid well well-small">
-            <div class="span2">
+            <div class="span3">
               {% if app.info.thumbnail %}
               <img class="img-polaroid" src="{{app.info.thumbnail}}" style="max-width:100px">
               {% else %}
               <img class="img-polaroid" src="{{url_for('static', filename='img/placeholder.png')}}" style="max-width:100px">
               {% endif %}
             </div>
-            <div class="span7">
+            <div class="span9">
                 <h2><a href="{{url_for('app.details', short_name=app.short_name)}}">{{app.name}}</a></h2>
-                  <p><i class="icon-tasks"></i> Contributed tasks: {{app.c}}</p>
-                  {{ helper.render_twitter_btn(app)}}
-                  {{ helper.render_googlePlus_btn(app)}}
-                  <br/>
-                  <a class="btn" style="padding:1px 6px; vertical-align:top" href="{{url_for('app.presenter', short_name=app.short_name)}}"><i class="icon-thumbs-up"></i> Contribute!</a>
+                  <p><i class="icon-tasks"></i> You have contributed <strong>{{app.n_task_runs}}</strong> tasks</p>
+                  <a class="btn btn-primary" href="{{url_for('app.presenter', short_name=app.short_name)}}"><i class="icon-thumbs-up"></i> Contribute!</a>
             </div>
         </div><!-- end row-fluid -->
         {% endfor %}

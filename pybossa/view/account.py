@@ -15,6 +15,7 @@
 
 from itsdangerous import BadData
 from markdown import markdown
+import json
 
 from flask import Blueprint, request, url_for, flash, redirect, session, abort
 from flask import render_template, current_app
@@ -23,6 +24,7 @@ from flask.ext.mail import Message
 from flaskext.wtf import Form, TextField, PasswordField, validators, \
         ValidationError, IntegerField, HiddenInput
 
+from sqlalchemy.sql import func, text
 import pybossa.model as model
 from pybossa.model import User
 from pybossa.core import db, signer, mail, cache
@@ -188,32 +190,24 @@ def register():
 @login_required
 def profile():
     user = db.session.query(model.User).get(current_user.id)
-    apps_published = []
-    apps_draft = []
-    apps_contrib = []
-    # Sort the applications of the user
-    for a in user.apps:
-        if (len(a.tasks) > 0) and (a.info.get("task_presenter")):
-            apps_published.append(a)
-        else:
-            apps_draft.append(a)
 
-    # Check in which application the user has participated
-    apps_contrib = db.session.query(model.App)\
-                     .join(model.App.task_runs)\
-                     .filter(model.TaskRun.user_id == user.id)\
-                     .distinct(model.TaskRun.app_id)\
-                     .all()
-    for app in apps_contrib:
-        c = db.session.query(model.TaskRun)\
-              .filter(model.TaskRun.app_id == app.id)\
-              .filter(model.TaskRun.user_id == user.id)\
-              .count()
-        app.c = c
+    sql = text('''
+               SELECT app.name, app.short_name, app.info, COUNT(*) as n_task_runs
+               FROM task_run JOIN app ON
+               (task_run.app_id=app.id) WHERE task_run.user_id=:user_id
+               GROUP BY app.name, app.short_name, app.info
+               ORDER BY n_task_runs DESC;''')
+
+    # results will have the following format (app.name, app.short_name, n_task_runs)
+    results = db.engine.execute(sql, user_id=current_user.id)
+
+    apps_contrib = []
+    for row in results:
+        app = dict(name=row.name, short_name=row.short_name,
+                   info=json.loads(row.info), n_task_runs=row.n_task_runs)
+        apps_contrib.append(app)
 
     return render_template('account/profile.html', title="Profile",
-                           apps_published=apps_published,
-                           apps_draft=apps_draft,
                            apps_contrib=apps_contrib,
                            user=user)
 
@@ -224,14 +218,26 @@ def applications():
     user = User.query.get_or_404(current_user.id)
     apps_published = []
     apps_draft = []
-    # Sort the applications of the user
-    for a in user.apps:
-        if (len(a.tasks) > 0) and (a.info.get("task_presenter")):
-            apps_published.append(a)
-        else:
-            apps_draft.append(a)
 
-    print apps_published
+    sql = text('''
+               SELECT app.name, app.short_name, app.description,
+               app.info, count(task.app_id) as n_tasks
+               FROM app LEFT OUTER JOIN task ON (task.app_id=app.id)
+               WHERE app.owner_id=:user_id GROUP BY app.name, app.short_name,
+               app.description,
+               app.info;''')
+
+    results = db.engine.execute(sql, user_id=user.id)
+    for row in results:
+        app = dict(name=row.name, short_name=row.short_name,
+                   description=row.description,
+                   info=json.loads(row.info), n_tasks=row.n_tasks,
+                  )
+        if app['n_tasks'] > 0:
+            apps_published.append(app)
+        else:
+            apps_draft.append(app)
+
     return render_template('account/applications.html',
                            title="Applications",
                            apps_published=apps_published,

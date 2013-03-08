@@ -75,6 +75,24 @@
 </div>
 {% endmacro %}
 
+{% macro render_app_short_summary(app, current_user) -%}
+<div class="row-fluid well well-small">
+    <div class="span3">
+        {% if app.info.thumbnail %}
+        <img class="img-polaroid" src="{{app.info.thumbnail}}" onerror="imgError(this);" style="max-width:100px"/>
+        {% else %}
+        <img class="img-polaroid" src="{{url_for('static', filename='img/placeholder.png')}}" style="max-width:100px"/>
+        {% endif %}
+    </div>
+    <div class="span9">
+        <h2><a href="{{url_for('app.settings', short_name=app.short_name)}}">{{app.name}}</a></h2>
+        <p>{{ app['description'] }}</p>
+        <a class="btn btn-inverse" href="{{url_for('app.settings', short_name=app.short_name)}}"><i class="icon-wrench"></i> Settings</a>
+    </div>
+</div>
+{% endmacro %}
+
+
 {% macro show_app(app, class="", current_user) -%}
 <div class="row-fluid {{class}} well">
     <h2><a href="{{ url_for('app.details', short_name = app.short_name) }}">{{ app.name }}</a></h2>
