@@ -207,6 +207,24 @@ def profile():
                    info=json.loads(row.info), n_task_runs=row.n_task_runs)
         apps_contrib.append(app)
 
+    # Rank
+    # See: https://gist.github.com/tokumine/1583695
+    sql = text('''
+               WITH global_rank AS (
+                    WITH scores AS (
+                        SELECT user_id, COUNT(*) AS score FROM task_run
+                        WHERE user_id IS NOT NULL GROUP BY user_id)
+                    SELECT user_id, score, rank() OVER (ORDER BY score desc)
+                    FROM scores)
+               SELECT * from global_rank WHERE user_id=:user_id;
+               ''')
+
+    results = db.engine.execute(sql, user_id=current_user.id)
+    for row in results:
+        user.rank = row.rank
+        user.score = row.score
+
+    user.total = db.session.query(model.User).count()
     return render_template('account/profile.html', title="Profile",
                            apps_contrib=apps_contrib,
                            user=user)

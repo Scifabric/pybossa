@@ -38,7 +38,7 @@
     <div class="span9">
         <h2><i class="icon-user"></i> Nick: <small>{{ user.name }}</small></h2>
         <h2><i class="icon-envelope"></i> E-mail: <small>{{ user.email_addr }}</small></h2>
-        <h2><i class="icon-time"></i> Joined: <small>{{ user.created[0:10] }}</small></h2>
+        <h2><i class="icon-trophy"></i> Rank: <small>{{ user.rank }} of {{user.total}} with a Score of {{user.score}} contributed tasks</small></h2>
         {% if settings %}
         <h2><i class="icon-key"></i> API key: <small>{{ user.api_key }}</small></h2>
         {% else %}
