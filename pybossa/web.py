@@ -42,7 +42,7 @@ app.register_blueprint(api, url_prefix='/api')
 app.register_blueprint(account, url_prefix='/account')
 app.register_blueprint(applications, url_prefix='/app')
 app.register_blueprint(admin, url_prefix='/admin')
-app.register_blueprint(stats, url_prefix='/stats')
+app.register_blueprint(stats, url_prefix='/leaderboard')
 
 # Enable Twitter if available
 try:

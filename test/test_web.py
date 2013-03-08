@@ -198,6 +198,7 @@ class TestWeb:
 
         for i in range(10):
             task_run = model.TaskRun(app_id=app.id, task_id=1,
+                                     user_id=1,
                                      info={'answer': 1})
             db.session.add(task_run)
             db.session.commit()
@@ -205,40 +206,9 @@ class TestWeb:
 
         self.signout()
 
-        res = self.app.get('/stats', follow_redirects=True)
-        assert self.html_title("Leaderboard") in res.data, res
-        assert "Most active applications" in res.data, res
-        assert "Most active volunteers" in res.data, res
-        assert "Sample App" in res.data, res
-
-    def test_02a_stats_hidden_apps(self):
-        """Test WEB leaderboard does not show hidden apps"""
-        self.register()
-
-        res = self.new_application()
-        print res.data
-
-        app = db.session.query(model.App).first()
-        # We use a string here to check that it works too
-        task = model.Task(app_id=app.id, info={'n_answers': '10'})
-        db.session.add(task)
-        db.session.commit()
-
-        for i in range(10):
-            task_run = model.TaskRun(app_id=app.id, task_id=1,
-                                     info={'answer': 1})
-            db.session.add(task_run)
-            db.session.commit()
-            self.app.get('api/app/%s/newtask' % app.id)
-
-        self.update_application(new_hidden=True)
-        self.signout()
-
-        res = self.app.get('/stats', follow_redirects=True)
-        assert self.html_title("Leaderboard") in res.data, res
-        assert "Most active applications" in res.data, res
-        assert "Most active volunteers" in res.data, res
-        assert "Sample App" not in res.data, res
+        res = self.app.get('/leaderboard', follow_redirects=True)
+        assert self.html_title("Community Leaderboard") in res.data, res
+        assert "John Doe" in res.data, res.data
 
     def test_03_register(self):
         """Test WEB register user works"""

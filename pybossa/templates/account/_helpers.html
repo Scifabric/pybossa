@@ -39,7 +39,7 @@
         <h2><i class="icon-user"></i> Nick: <small>{{ user.name }}</small></h2>
         <h2><i class="icon-envelope"></i> E-mail: <small>{{ user.email_addr }}</small></h2>
         {% if user.rank %}
-        <h2><i class="icon-trophy"></i> Rank: <small>{{ user.rank }} of {{user.total}} with a Score of {{user.score}} contributed tasks</small></h2>
+        <h2><i class="icon-trophy"></i> Rank: <small><a href="{{url_for('stats.index')}}">{{ user.rank }} of {{user.total}} with a Score of {{user.score}} contributed tasks</a></small></h2>
         {% else %}
         <h2><i class="icon-time"></i> Joined: <small>{{ user.created[0:10]}}</small></h2>
         {% endif %}

@@ -18,6 +18,7 @@ from flask import render_template
 from flaskext.wtf import Form, IntegerField, TextField, BooleanField, validators, HiddenInput
 from flaskext.login import login_required, current_user
 from sqlalchemy.exc import UnboundExecutionError
+from sqlalchemy.sql import func, text
 from sqlalchemy import func
 
 import pybossa.model as model
@@ -30,42 +31,46 @@ blueprint = Blueprint('stats', __name__)
 @blueprint.route('/')
 def index():
     """Get the last activity from users and apps"""
-    # Get top 5 app ids
-    top5_active_app_ids = db.session\
-            .query(model.TaskRun.app_id,
-                    func.count(model.TaskRun.id).label('total'))\
-            .group_by(model.TaskRun.app_id)\
-            .order_by('total DESC')\
-            .limit(5)\
-            .all()
-    apps = []
-    # print top5_active_app_ids
-    for id in top5_active_app_ids:
-        if id[0] is not None:
-            app = db.session.query(model.App)\
-                    .get(id[0])
-            if not app.hidden:
-                apps.append(app)
+    # Top 20 users
+    limit = 20
+    sql = text('''
+               WITH global_rank AS (
+                    WITH scores AS (
+                        SELECT user_id, COUNT(*) AS score FROM task_run
+                        WHERE user_id IS NOT NULL GROUP BY user_id)
+                    SELECT user_id, score, rank() OVER (ORDER BY score desc)
+                    FROM scores)
+               SELECT rank, id, fullname, email_addr, score FROM global_rank
+               JOIN public."user" on (user_id=public."user".id) ORDER BY rank
+               LIMIT :limit;
+               ''')
 
-    # Get top 5 user ids
-    top5_active_user_ids = db.session\
-            .query(model.TaskRun.user_id,
-                    func.count(model.TaskRun.id).label('total'))\
-            .group_by(model.TaskRun.user_id)\
-            .order_by('total DESC')\
-            .limit(5)\
-            .all()
-    top5Users = []
-    for id in top5_active_user_ids:
-        if id[0] is not None:
-            u = db.session.query(model.User).get(id[0])
-            # userApps =  db.session.query(model.App).join(db.TaskRun)\
-            #                               .filter(model.TaskRun.user_id == u.id)
-            #                               .all()
+    results = db.engine.execute(sql, limit=20)
 
-            tmp = dict(user=u, apps=[])
+    top_users = []
+    user_in_top = False
+    if current_user.is_authenticated():
+        for user in results:
+            if (user.id == current_user.id):
+                user_in_top = True
+            top_users.append(user)
+        if not user_in_top:
+            sql = text('''
+                       WITH global_rank AS (
+                            WITH scores AS (
+                                SELECT user_id, COUNT(*) AS score FROM task_run
+                                WHERE user_id IS NOT NULL GROUP BY user_id)
+                            SELECT user_id, score, rank() OVER (ORDER BY score desc)
+                            FROM scores)
+                       SELECT rank, id, fullname, email_addr, score FROM global_rank
+                       JOIN public."user" on (user_id=public."user".id)
+                       WHERE user_id=:user_id ORDER BY rank;
+                       ''')
+            user_rank = db.engine.execute(sql, user_id=current_user.id)
+            for row in user_rank:
+                top_users.append(row)
+    else:
+        top_users = results
 
-            top5Users.append(tmp)
-
-    return render_template('/stats/index.html', title="Leaderboard",
-            apps=apps, top5Users=top5Users)
+    return render_template('/stats/index.html', title="Community Leaderboard",
+                           top_users=top_users)
