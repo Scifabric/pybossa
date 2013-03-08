@@ -1006,7 +1006,7 @@ class TestWeb:
 
         res = self.app.get('account/profile', follow_redirects=True)
         assert "Sample App" in res.data, res.data
-        assert "Contributed tasks: 10" in res.data, res.data
+        assert "You have contributed <strong>10</strong> tasks" in res.data, res.data
         assert "Contribute!" in res.data, "There should be a Contribute button"
 
     def test_32_oauth_password(self):
