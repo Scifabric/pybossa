@@ -28,7 +28,7 @@ from sqlalchemy import BigInteger, Integer, Boolean, Unicode,\
 from sqlalchemy.schema import Table, MetaData, Column, ForeignKey
 from sqlalchemy.orm import relationship, backref, class_mapper
 from sqlalchemy.types import MutableType, TypeDecorator
-from sqlalchemy import event
+from sqlalchemy import event, text
 
 from pybossa.core import db
 from pybossa.util import pretty_date
@@ -180,20 +180,21 @@ class App(db.Model, DomainObject):
     #: (0 not done, 1 completed)
     def completion_status(self):
         """Returns the percentage of submitted Tasks Runs done"""
-        total = 0
-        for t in self.tasks:
-            # Deprecated!
-            if t.info.get('n_answers'):
-                total = total + int(t.info.get('n_answers'))
+        sql = text('''SELECT COUNT(task_id) FROM task_run WHERE app_id=:app_id''')
+        results = db.engine.execute(sql, app_id=self.id)
+        for row in results:
+            n_task_runs = float(row[0])
+        sql = text('''SELECT SUM(n_answers) FROM task WHERE app_id=:app_id''')
+        results = db.engine.execute(sql, app_id=self.id)
+        for row in results:
+            if row[0] is None:
+                n_expected_task_runs = float(30 * n_task_runs)
             else:
-                if (t.n_answers is not None):
-                    total = total + t.n_answers
-                else:
-                    total = total + 30
-        if len(self.tasks) != 0:
-            return float(len(self.task_runs)) / total
-        else:
-            return float(0)
+                n_expected_task_runs = float(row[0])
+        pct = float(0)
+        if n_expected_task_runs != 0:
+            pct = n_task_runs / n_expected_task_runs
+        return pct
 
     def n_completed_tasks(self):
         """Returns the number of Tasks that are completed"""
@@ -204,10 +205,14 @@ class App(db.Model, DomainObject):
         return completed
 
     def last_activity(self):
-        if (len(self.task_runs) >= 1):
-            return pretty_date(self.task_runs[0].finish_time)
-        else:
-            return "None"
+        sql = text('''SELECT finish_time FROM task_run WHERE app_id=:app_id
+                   ORDER BY finish_time DESC LIMIT 1''')
+        results = db.engine.execute(sql, app_id=self.id)
+        for row in results:
+            if row is not None:
+                return pretty_date(row[0])
+            else:
+                return None
 
 
 class Featured(db.Model, DomainObject):
