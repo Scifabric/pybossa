@@ -12,31 +12,20 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
-from sqlalchemy.sql import func
+from sqlalchemy.sql import func, text
 from pybossa.core import cache
 from pybossa.core import db
 from pybossa.model import User, TaskRun
 
 
-# Cache the users for at least 15 minutes
-@cache.memoize(timeout=60 * 15)
-def format_top_user(user_id):
-    """Format the user for the template"""
-    user = db.session.query(User).get(user_id)
-    return dict(user=user, apps=[], task_runs=len(user.task_runs))
-
-
 def get_top(n=10):
     """Return the n=10 top users"""
-    top_active_user_ids = db.session\
-            .query(TaskRun.user_id,
-                    func.count(TaskRun.id).label('total'))\
-            .group_by(TaskRun.user_id)\
-            .order_by('total DESC')\
-            .limit(n)\
-            .all()
+    sql = text('''SELECT "user".id, "user".fullname, "user".email_addr,
+               "user".created, COUNT(task_run.id) AS task_runs from task_run, "user"
+               WHERE "user".id=task_run.user_id group by "user".id
+               ORDER BY task_runs DESC LIMIT :limit''')
+    results = db.engine.execute(sql, limit=n)
     top_users = []
-    for id in top_active_user_ids:
-        if id[0]:
-            top_users.append(format_top_user(id[0]))
+    for row in results:
+        top_users.append(row)
     return top_users

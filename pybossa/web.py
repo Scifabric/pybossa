@@ -164,6 +164,7 @@ def api_authentication():
 
 
 @app.route('/')
+@cache.cached(timeout=50)
 def home():
     """ Render home page with the cached apps and users"""
     d = {

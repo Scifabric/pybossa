@@ -18,6 +18,8 @@ from pybossa.core import db
 from pybossa.model import Featured, App, TaskRun
 from pybossa.util import pretty_date
 
+import json
+
 # 15 minutes to cache this items
 @cache.memoize(timeout=60*15)
 def format_top_featured_app(app_id):
@@ -30,27 +32,34 @@ def format_top_featured_app(app_id):
 
 def get_featured_front_page():
     """Return featured apps"""
-    featured_ids = db.session.query(Featured).all()
+    sql = text('''SELECT app.id, app.name, app.short_name, app.info FROM
+               app, featured where app.id=featured.app_id and app.hidden=0''')
+    results = db.engine.execute(sql)
     featured = []
-    for f in featured_ids:
-        app = format_top_featured_app(f.app_id)
-        if app:
-            featured.append(app)
+    for row in results:
+        app = dict(name=row.name, short_name=row.short_name,
+                   info=dict(json.loads(row.info)))
+        featured.append(app)
     return featured
 
 def get_top(n=4):
     """Return top n=4 apps"""
     sql = text('''
-    SELECT app_id, count(*) AS total FROM task_run WHERE app_id IS NOT NULL GROUP BY
-    app_id ORDER BY total DESC LIMIT :limit;
+    SELECT app.id, app.name, app.short_name, app.description, app.info,
+    count(app_id) AS total FROM task_run, app WHERE app_id IS NOT NULL AND
+    app.id=app_id GROUP BY app.id ORDER BY total DESC LIMIT :limit;
     ''')
 
     results = db.engine.execute(sql, limit=n)
     top_apps = []
     for row in results:
-        app = format_top_featured_app(row[0])
-        if app:
-            top_apps.append(app)
+        app = dict(name=row.name, short_name=row.short_name,
+                   description=row.description,
+                   info=json.loads(row.info))
+        top_apps.append(app)
+    #    app = format_top_featured_app(row[0])
+    #    if app:
+    #        top_apps.append(app)
     return top_apps
 
 
