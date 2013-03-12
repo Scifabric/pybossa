@@ -421,15 +421,17 @@ def import_task(short_name):
                                        app=app,
                                        csvform=csvform,
                                        gdform=gdform)
-            empty = True
+
             csvcontent = StringIO(r.text)
             csvreader = unicode_csv_reader(csvcontent)
             # TODO: check for errors
-            headers = []
-            fields = set(['state', 'quorum', 'calibration', 'priority_0',
-                          'n_answers'])
-            field_header_index = []
             try:
+                headers = []
+                fields = set(['state', 'quorum', 'calibration', 'priority_0',
+                              'n_answers'])
+                field_header_index = []
+                empty = True
+
                 for row in csvreader:
                     if not headers:
                         headers = row
