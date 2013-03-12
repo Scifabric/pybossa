@@ -104,7 +104,7 @@ def n_featured():
         count = row[0]
     return count
 
-@cache.cached(key_prefix="featured_apps")
+@cache.memoize(timeout=50)
 def get_featured(page=1, per_page=5):
     """Return a list of featured apps with a pagination"""
 
