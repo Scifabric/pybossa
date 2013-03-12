@@ -244,7 +244,7 @@ def delete(short_name):
                                        app=app)
             else:
                 # Clean cache
-                cache.delete_memoized(cached_apps.format_app, app)
+                cached_apps.clean(app.id)
                 db.session.delete(app)
                 db.session.commit()
                 flash('Application deleted!', 'success')

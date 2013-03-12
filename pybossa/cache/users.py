@@ -17,7 +17,7 @@ from pybossa.core import cache
 from pybossa.core import db
 from pybossa.model import User, TaskRun
 
-
+@cache.cached(key_prefix="front_page_top_users")
 def get_top(n=10):
     """Return the n=10 top users"""
     sql = text('''SELECT "user".id, "user".fullname, "user".email_addr,

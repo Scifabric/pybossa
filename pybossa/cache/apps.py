@@ -20,16 +20,7 @@ from pybossa.util import pretty_date
 
 import json
 
-# 15 minutes to cache this items
-@cache.memoize(timeout=60*15)
-def format_top_featured_app(app_id):
-    """Format app for template"""
-    app = db.session.query(App).get(app_id)
-    if not app.hidden:
-        return app
-    else:
-        return None
-
+@cache.cached(key_prefix="front_page_featured_apps")
 def get_featured_front_page():
     """Return featured apps"""
     sql = text('''SELECT app.id, app.name, app.short_name, app.info FROM
@@ -42,6 +33,8 @@ def get_featured_front_page():
         featured.append(app)
     return featured
 
+
+@cache.cached(key_prefix="front_page_top_apps")
 def get_top(n=4):
     """Return top n=4 apps"""
     sql = text('''
@@ -57,9 +50,6 @@ def get_top(n=4):
                    description=row.description,
                    info=json.loads(row.info))
         top_apps.append(app)
-    #    app = format_top_featured_app(row[0])
-    #    if app:
-    #        top_apps.append(app)
     return top_apps
 
 
@@ -89,79 +79,180 @@ def n_completed_tasks(app):
     return completed
 
 @cache.memoize(timeout=60*5)
-def last_activity(app):
+def last_activity(app_id):
     sql = text('''SELECT finish_time FROM task_run WHERE app_id=:app_id
                ORDER BY finish_time DESC LIMIT 1''')
-    results = db.engine.execute(sql, app_id=app.id)
+    results = db.engine.execute(sql, app_id=app_id)
+    for row in results:
+        if row is not None:
+            print pretty_date(row[0])
+            return pretty_date(row[0])
+        else:
+            return None
+
+@cache.memoize()
+def overall_progress(app_id):
+    sql = text('''SELECT COUNT(task_id) FROM task_run WHERE app_id=:app_id''')
+    results = db.engine.execute(sql, app_id=app_id)
+    for row in results:
+        n_task_runs = float(row[0])
+    sql = text('''SELECT SUM(n_answers) FROM task WHERE app_id=:app_id''')
+    results = db.engine.execute(sql, app_id=app_id)
+    for row in results:
+        if row[0] is None:
+            n_expected_task_runs = float(30 * n_task_runs)
+        else:
+            n_expected_task_runs = float(row[0])
+    pct = float(0)
+    if n_expected_task_runs != 0:
+        pct = n_task_runs / n_expected_task_runs
+    return pct*100
+
+
+@cache.memoize()
+def last_activity(app_id):
+    sql = text('''SELECT finish_time FROM task_run WHERE app_id=:app_id
+               ORDER BY finish_time DESC LIMIT 1''')
+    results = db.engine.execute(sql, app_id=app_id)
     for row in results:
         if row is not None:
             return pretty_date(row[0])
         else:
             return None
 
-@cache.memoize(timeout=60*5)
-def format_app(app):
-    """Ads an app to the cache"""
-    app.info['last_activity'] = last_activity(app)
-    app.info['overall_progress'] = completion_status(app)*100
-    app.info['owner'] = app.owner.name
-    if db.session.query(Featured).filter_by(app_id=app.id).first():
-        app.info['featured'] = True
-    return app
-
-def get_featured(page=1, per_page=5):
-    """Return a list of featured apps with a pagination"""
-
+@cache.cached(key_prefix="number_featured_apps")
+def n_featured():
+    """Return number of featured apps"""
     sql = text('''select count(*) from featured;''')
     results = db.engine.execute(sql)
     for row in results:
         count = row[0]
+    return count
 
-    sql = text('''select app_id from featured offset(:offset) limit(:limit);''')
+@cache.cached(key_prefix="featured_apps")
+def get_featured(page=1, per_page=5):
+    """Return a list of featured apps with a pagination"""
 
+    count = n_featured()
+
+    sql = text('''SELECT app.id, app.name, app.short_name, app.info, app.created,
+               "user".fullname AS owner FROM app, featured, "user"
+               WHERE app.id=featured.app_id AND app.hidden=0
+               AND "user".id=app.owner_id GROUP BY app.id, "user".id
+               OFFSET(:offset) LIMIT(:limit);
+               ''')
     offset = (page - 1) * per_page
     results = db.engine.execute(sql, limit=per_page, offset=offset)
     apps = []
     for row in results:
-        app = db.session.query(App).get(row[0])
-        apps.append(format_app(app))
+        app = dict(name=row.name, short_name=row.short_name,
+                   created=row.name,
+                   overall_progress=overall_progress(row.id),
+                   last_activity=last_activity(row.id),
+                   owner=row.owner,
+                   info=dict(json.loads(row.info)))
+        apps.append(app)
     return apps, count
 
+@cache.cached(key_prefix="number_published_apps")
+def n_published():
+    """Return number of published apps"""
+    sql = text('''
+               WITH published_apps as
+               (SELECT app.id FROM app, task WHERE
+               app.id=task.app_id AND app.hidden=0 AND app.info
+               LIKE('%task_presenter%') GROUP BY app.id)
+               SELECT COUNT(id) FROM published_apps;
+               ''')
+    results = db.engine.execute(sql)
+    for row in results:
+        count = row[0]
+    return count
+
+@cache.cached(key_prefix="published_apps")
 def get_published(page=1, per_page=5):
     """Return a list of apps with a pagination"""
 
-    sql = text('''
-select count(*) from app where (app.id IN (select distinct on (task.app_id) task.app_id from task where task.app_id is not null)) and (app.hidden = 0) and (app.info LIKE('%task_presenter%'));''')
-    results = db.engine.execute(sql)
-    for row in results:
-        count = row[0]
+    count = n_published()
 
     sql = text('''
-select id from app where (app.id IN (select distinct on (task.app_id) task.app_id from task where task.app_id is not null)) and (app.hidden = 0) and (app.info LIKE('%task_presenter%')) order by (app.name) offset(:offset) limit(:limit);''')
+               SELECT app.id, app.name, app.short_name, app.description,
+               app.info, app.created, "user".fullname AS owner
+               FROM app, task, "user" WHERE
+               app.id=task.app_id AND app.info LIKE('%task_presenter%')
+               AND app.hidden=0
+               AND "user".id=app.owner_id
+               GROUP BY app.id, "user".id ORDER BY app.name
+               OFFSET :offset
+               LIMIT :limit;''')
 
     offset = (page - 1) * per_page
     results = db.engine.execute(sql, limit=per_page, offset=offset)
     apps = []
     for row in results:
-        app = db.session.query(App).get(row[0])
-        apps.append(format_app(app))
+        app = dict(name=row.name, short_name=row.short_name,
+                   created=row.created,
+                   description=row.description,
+                   owner=row.owner,
+                   last_activity=last_activity(row.id),
+                   overall_progress=overall_progress(row.id),
+                   info=dict(json.loads(row.info)))
+        apps.append(app)
     return apps, count
 
+@cache.cached(key_prefix="number_draft_apps")
+def n_draft():
+    """Return number of draft applications"""
+    sql = text('''
+               SELECT count(app.id) FROM app
+               LEFT JOIN task on app.id=task.app_id
+               WHERE task.app_id IS NULL AND app.info NOT LIKE('%task_presenter%')
+               AND app.hidden=0;''')
+
+    results = db.engine.execute(sql)
+    for row in results:
+        count = row[0]
+    return count
+
+@cache.cached(key_prefix="draft_apps")
 def get_draft(page=1, per_page=5):
-    sql = text('''
-    select count(*) from app where app.info not like ('%task_presenter%') and (app.hidden = 0);''')
-    results = db.engine.execute(sql)
-    for row in results:
-        count = row[0]
+    """Return list of draft applications"""
+
+    count = n_draft()
 
     sql = text('''
-    select id from app where app.info not like ('%task_presenter%')  and (app.hidden = 0) order by (app.name) offset(:offset) limit(:limit);''')
+               SELECT app.id, app.name, app.short_name, app.created,
+               app.description, app.info, "user".fullname as owner
+               FROM "user", app LEFT JOIN task ON app.id=task.app_id
+               WHERE task.app_id IS NULL AND app.info NOT LIKE('%task_presenter%')
+               AND app.hidden=0
+               AND app.owner_id="user".id
+               OFFSET :offset
+               LIMIT :limit;''')
 
     offset = (page - 1) * per_page
     results = db.engine.execute(sql, limit=per_page, offset=offset)
     apps = []
     for row in results:
-        app = db.session.query(App).get(row[0])
-        apps.append(format_app(app))
-
+        app = dict(name=row.name, short_name=row.short_name,
+                       created=row.created,
+                       description=row.description,
+                       owner=row.owner,
+                       last_activity=last_activity(row.id),
+                       overall_progress=overall_progress(row.id),
+                       info=dict(json.loads(row.info)))
+        apps.append(app)
     return apps, count
+
+def clean(app_id):
+    """Clean all items in cache"""
+    cache.delete('front_page_featured_apps')
+    cache.delete('front_page_top_apps')
+    cache.delete('number_featured_apps')
+    cache.delete('number_published_apps')
+    cache.delete('number_draft_apps')
+    cache.delete('featured_apps')
+    cache.delete('published_apps')
+    cache.delete('draft_apps')
+    cache.delete_memoized(last_activity, app_id)
+    cache.delete_memoized(overall_progress, app_id)
