@@ -378,28 +378,31 @@ def import_task(short_name):
     dataurl = None
     csvform = BulkTaskCSVImportForm(request.form)
     gdform = BulkTaskGDImportForm(request.form)
+
     if app.tasks or (request.args.get('template') or request.method == 'POST'):
-        if request.args.get('template') == 'image':
-            gdform.googledocs_url.data = \
-                    "https://docs.google.com/spreadsheet/ccc" \
-                    "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE" \
-                    "&usp=sharing"
-        elif request.args.get('template') == 'map':
-            gdform.googledocs_url.data = \
-                    "https://docs.google.com/spreadsheet/ccc" \
-                    "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc" \
-                    "&usp=sharing"
-        elif request.args.get('template') == 'pdf':
-            gdform.googledocs_url.data = \
-                    "https://docs.google.com/spreadsheet/ccc" \
-                    "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE" \
-                    "&usp=sharing"
-        else:
-            pass
+
+        googledocs_urls = [
+            ('image',  "https://docs.google.com/spreadsheet/ccc" \
+                 "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE" \
+                 "&usp=sharing"),
+            ('map', "https://docs.google.com/spreadsheet/ccc" \
+                 "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc" \
+                 "&usp=sharing"),
+            ('pdf', "https://docs.google.com/spreadsheet/ccc" \
+                 "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE" \
+                 "&usp=sharing")
+            ]
+
+        template = request.args.get('template')
+        for template_id, googledocs_url in googledocs_urls:
+            if template == template_id:
+                gdform.googledocs_url.data = googledocs_url
+
         if 'csv_url' in request.form and csvform.validate_on_submit():
             dataurl = csvform.csv_url.data
         elif 'googledocs_url' in request.form and gdform.validate_on_submit():
             dataurl = ''.join([gdform.googledocs_url.data, '&output=csv'])
+
         if dataurl:
             print "dataurl found"
             r = requests.get(dataurl)
