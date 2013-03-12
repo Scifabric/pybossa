@@ -397,6 +397,7 @@ def import_task(short_name):
         for template_id, googledocs_url in googledocs_urls:
             if template == template_id:
                 gdform.googledocs_url.data = googledocs_url
+                break
 
         if 'csv_url' in request.form and csvform.validate_on_submit():
             dataurl = csvform.csv_url.data
