@@ -245,6 +245,12 @@ class TestAdmin:
         assert "Create an App" in res.data,\
             "The application should not be listed in the front page"\
             " as it is not featured"
+        # Only apps that have been published can be featured
+        self.new_task(1)
+        app = db.session.query(model.App).get(1)
+        app.info = dict(task_presenter="something")
+        db.session.add(app)
+        db.session.commit()
         res = self.app.get('/admin/featured', follow_redirects=True)
         assert "Sample App" in res.data, res.data
         assert "Featured" in res.data, res.data

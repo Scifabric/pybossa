@@ -2,7 +2,7 @@
 {% set active_page = "profile" %}
 {% set active_link = "admin" %}
 {% from "account/_helpers.html" import render_account_local_nav %}
-{% from "applications/_helpers.html" import render_app_summary %}
+{% from "applications/_helpers.html" import render_app_short_summary %}
 
 {% block content %}
 <div class="row">
@@ -13,15 +13,14 @@
         <h1><strong>Admin Site:</strong> Manage featured applications</h1>
     {% include "admin/js/featured_apps.js" %}
     {% for app in apps %}
-    <h2><a href="{{url_for('app.details', short_name=app.short_name) }}">{{app.name}}</a></h2>
-    {{ render_app_summary(app, current_user) }}
-    {% for f in featured if f.app_id == app.id %}
+    {{ render_app_short_summary(app, current_user) }}
+    {% if app.featured == app.id %}
     <button id="appBtn{{app.id}}" class="btn btn-primary active" data-toggle="button" onclick="toggle({{app.id}})">
             <i id="app{{app.id}}" class="icon-star"></i> Featured!</button>
     {% else %}
             <button id="appBtn{{app.id}}" class="btn btn-primary" data-toggle="button" onclick="toggle({{app.id}})">
             <i id="app{{app.id}}" class="icon-star-empty"></i> Featured!</button>
-    {% endfor %}
+    {% endif %}
     <hr>
     {% endfor %}
     </div>

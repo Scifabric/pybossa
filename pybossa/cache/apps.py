@@ -28,7 +28,7 @@ def get_featured_front_page():
     results = db.engine.execute(sql)
     featured = []
     for row in results:
-        app = dict(name=row.name, short_name=row.short_name,
+        app = dict(id=row.id, name=row.name, short_name=row.short_name,
                    info=dict(json.loads(row.info)))
         featured.append(app)
     return featured
@@ -144,7 +144,7 @@ def n_published():
         count = row[0]
     return count
 
-@cache.cached(key_prefix="published_apps")
+@cache.memoize(timeout=50)
 def get_published(page=1, per_page=5):
     """Return a list of apps with a pagination"""
 
@@ -152,12 +152,14 @@ def get_published(page=1, per_page=5):
 
     sql = text('''
                SELECT app.id, app.name, app.short_name, app.description,
-               app.info, app.created, "user".fullname AS owner
-               FROM app, task, "user" WHERE
+               app.info, app.created, "user".fullname AS owner,
+               featured.app_id as featured
+               FROM task, "user", app LEFT OUTER JOIN featured ON app.id=featured.app_id
+               WHERE
                app.id=task.app_id AND app.info LIKE('%task_presenter%')
                AND app.hidden=0
                AND "user".id=app.owner_id
-               GROUP BY app.id, "user".id ORDER BY app.name
+               GROUP BY app.id, "user".id, featured.id ORDER BY app.name
                OFFSET :offset
                LIMIT :limit;''')
 
@@ -165,10 +167,12 @@ def get_published(page=1, per_page=5):
     results = db.engine.execute(sql, limit=per_page, offset=offset)
     apps = []
     for row in results:
-        app = dict(name=row.name, short_name=row.short_name,
+        app = dict(id=row.id,
+                   name=row.name, short_name=row.short_name,
                    created=row.created,
                    description=row.description,
                    owner=row.owner,
+                   featured=row.featured,
                    last_activity=last_activity(row.id),
                    overall_progress=overall_progress(row.id),
                    info=dict(json.loads(row.info)))
@@ -189,7 +193,7 @@ def n_draft():
         count = row[0]
     return count
 
-@cache.cached(key_prefix="draft_apps")
+@cache.memoize(timeout=50)
 def get_draft(page=1, per_page=5):
     """Return list of draft applications"""
 
@@ -209,13 +213,13 @@ def get_draft(page=1, per_page=5):
     results = db.engine.execute(sql, limit=per_page, offset=offset)
     apps = []
     for row in results:
-        app = dict(name=row.name, short_name=row.short_name,
-                       created=row.created,
-                       description=row.description,
-                       owner=row.owner,
-                       last_activity=last_activity(row.id),
-                       overall_progress=overall_progress(row.id),
-                       info=dict(json.loads(row.info)))
+        app = dict(id=row.id, name=row.name, short_name=row.short_name,
+                   created=row.created,
+                   description=row.description,
+                   owner=row.owner,
+                   last_activity=last_activity(row.id),
+                   overall_progress=overall_progress(row.id),
+                   info=dict(json.loads(row.info)))
         apps.append(app)
     return apps, count
 
@@ -227,9 +231,9 @@ def reset():
     cache.delete('number_featured_apps')
     cache.delete('number_published_apps')
     cache.delete('number_draft_apps')
-    cache.delete('featured_apps')
-    cache.delete('published_apps')
-    cache.delete('draft_apps')
+    cache.delete_memoized(get_published)
+    cache.delete_memoized(get_featured)
+    cache.delete_memoized(get_draft)
 
 
 def clean(app_id):
@@ -237,4 +241,3 @@ def clean(app_id):
     reset()
     cache.delete_memoized(last_activity, app_id)
     cache.delete_memoized(overall_progress, app_id)
-
