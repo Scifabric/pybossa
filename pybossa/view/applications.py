@@ -370,6 +370,38 @@ def settings(short_name):
         abort(404)
 
 
+def import_tasks(app, csvreader):
+    headers = []
+    fields = set(['state', 'quorum', 'calibration', 'priority_0',
+                  'n_answers'])
+    field_header_index = []
+    empty = True
+
+    for row in csvreader:
+        if not headers:
+            headers = row
+            if len(headers) != len(set(headers)):
+                raise CSVImportException('The file you uploaded has two headers with'
+                                         ' the same name.')
+            field_headers = set(headers) & fields
+            for field in field_headers:
+                field_header_index.append(headers.index(field))
+        else:
+            info = {}
+            task = model.Task(app=app)
+            for idx, cell in enumerate(row):
+                if idx in field_header_index:
+                    setattr(task, headers[idx], cell)
+                else:
+                    info[headers[idx]] = cell
+            task.info = info
+            db.session.add(task)
+            db.session.commit()
+            empty = False
+    if empty:
+        raise CSVImportException('Oops! It looks like the file is empty.')
+
+
 @blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
 def import_task(short_name):
     app = App.query.filter_by(short_name=short_name).first_or_404()
@@ -426,35 +458,7 @@ def import_task(short_name):
             csvreader = unicode_csv_reader(csvcontent)
             # TODO: check for errors
             try:
-                headers = []
-                fields = set(['state', 'quorum', 'calibration', 'priority_0',
-                              'n_answers'])
-                field_header_index = []
-                empty = True
-
-                for row in csvreader:
-                    if not headers:
-                        headers = row
-                        if len(headers) != len(set(headers)):
-                            raise CSVImportException('The file you uploaded has two headers with'
-                                  ' the same name.')
-                        field_headers = set(headers) & fields
-                        for field in field_headers:
-                            field_header_index.append(headers.index(field))
-                    else:
-                        info = {}
-                        task = model.Task(app=app)
-                        for idx, cell in enumerate(row):
-                            if idx in field_header_index:
-                                setattr(task, headers[idx], cell)
-                            else:
-                                info[headers[idx]] = cell
-                        task.info = info
-                        db.session.add(task)
-                        db.session.commit()
-                        empty = False
-                if empty:
-                    raise CSVImportException('Oops! It looks like the file is empty.')
+                import_tasks(app, csvreader)
                 flash('Tasks imported successfully!', 'success')
                 return redirect(url_for('.details', short_name=app.short_name))
             except CSVImportException, err_msg:
