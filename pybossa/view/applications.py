@@ -402,17 +402,15 @@ def import_task(short_name):
         if dataurl:
             print "dataurl found"
             r = requests.get(dataurl)
-            if r.status_code == 403:
-                flash("Oops! It looks like you don't have permission to access"
-                      " that file!", 'error')
-                return render_template('/applications/import.html',
-                                       title=title,
-                                       app=app,
-                                       csvform=csvform,
-                                       gdform=gdform)
-            if (not 'text/plain' in r.headers['content-type'] and not 'text/csv'
+            try:
+                if r.status_code == 403:
+                    raise CSVImportException("Oops! It looks like you don't have permission to access"
+                                             " that file!", 'error')
+                if (not 'text/plain' in r.headers['content-type'] and not 'text/csv'
                     in r.headers['content-type']):
-                flash("Oops! That file doesn't look like the right file.", 'error')
+                    raise CSVImportException("Oops! That file doesn't look like the right file.", 'error')
+            except CSVImportException, err_msg:
+                flash(err_msg, 'error')
                 return render_template('/applications/import.html',
                                        title=title,
                                        app=app,
