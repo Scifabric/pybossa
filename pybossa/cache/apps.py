@@ -53,31 +53,6 @@ def get_top(n=4):
     return top_apps
 
 
-@cache.memoize(timeout=60 * 5)
-def completion_status(app):
-    """Returns the percentage of submitted Tasks Runs done"""
-    sql = text('''SELECT COUNT(task_id) FROM task_run WHERE app_id=:app_id''')
-    results = db.engine.execute(sql, app_id=app.id)
-    for row in results:
-        n_task_runs = float(row[0])
-    sql = text('''SELECT SUM(n_answers) FROM task WHERE app_id=:app_id''')
-    results = db.engine.execute(sql, app_id=app.id)
-    for row in results:
-        if row[0] is None:
-            n_expected_task_runs = float(30 * n_task_runs)
-        else:
-            n_expected_task_runs = float(row[0])
-    pct = float(0)
-    if n_expected_task_runs != 0:
-        pct = n_task_runs / n_expected_task_runs
-    return pct
-
-@cache.memoize(timeout=60*5)
-def n_completed_tasks(app):
-    """Returns the number of Tasks that are completed"""
-    completed = db.session.query(model.Task).filter_by(state="completed").count()
-    return completed
-
 @cache.memoize(timeout=60*5)
 def last_activity(app_id):
     sql = text('''SELECT finish_time FROM task_run WHERE app_id=:app_id
@@ -244,8 +219,9 @@ def get_draft(page=1, per_page=5):
         apps.append(app)
     return apps, count
 
-def clean(app_id):
-    """Clean all items in cache"""
+
+def reset():
+    """Clean the cache"""
     cache.delete('front_page_featured_apps')
     cache.delete('front_page_top_apps')
     cache.delete('number_featured_apps')
@@ -254,5 +230,11 @@ def clean(app_id):
     cache.delete('featured_apps')
     cache.delete('published_apps')
     cache.delete('draft_apps')
+
+
+def clean(app_id):
+    """Clean all items in cache"""
+    reset()
     cache.delete_memoized(last_activity, app_id)
     cache.delete_memoized(overall_progress, app_id)
+

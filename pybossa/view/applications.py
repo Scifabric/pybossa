@@ -158,6 +158,7 @@ def new():
                             owner_id=current_user.id,
                             info=info,)
 
+            cached_apps.reset()
             db.session.add(app)
             db.session.commit()
             # Clean cache
