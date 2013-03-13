@@ -11,10 +11,10 @@
     </div>
     <div class="span9">
         <h1><strong>{{current_user.fullname}}</strong></h1>
-        <h2>Your Profile</h2>
+        <h2>{{ _('Your Profile') }}</h2>
         {{ helper.render_user_profile(current_user) }} 
         <hr>
-        <h2>Your Contributions</h2>
+        <h2>{{ _('Your Contributions') }}</h2>
         {% for app in apps_contrib %}
         <div class="row-fluid well well-small">
             <div class="span2">
@@ -26,11 +26,11 @@
             </div>
             <div class="span7">
                 <h2><a href="{{url_for('app.details', short_name=app.short_name)}}">{{app.name}}</a></h2>
-                  <p><i class="icon-tasks"></i> Contributed tasks: {{app.c}}</p>
+                  <p><i class="icon-tasks"></i> {{ _('Contributed tasks:') }} {{app.c}}</p>
                   {{ helper.render_twitter_btn(app)}}
                   {{ helper.render_googlePlus_btn(app)}}
                   <br/>
-                  <a class="btn" style="padding:1px 6px; vertical-align:top" href="{{url_for('app.presenter', short_name=app.short_name)}}"><i class="icon-thumbs-up"></i> Contribute!</a>
+                  <a class="btn" style="padding:1px 6px; vertical-align:top" href="{{url_for('app.presenter', short_name=app.short_name)}}"><i class="icon-thumbs-up"></i> {{ _('Contribute!') }}</a>
             </div>
         </div><!-- end row-fluid -->
         {% endfor %}

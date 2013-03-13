@@ -4,7 +4,7 @@
         {% if pagination.has_prev %}
           <li>
           <a href="{{ url_for_other_page(pagination.page - 1)
-              }}">&laquo; Prev {{handle}}</a>
+              }}">{{ _('&laquo; Prev') }} {{handle}}</a>
           </li>
         {% endif %}
 
@@ -24,7 +24,7 @@
         {% if pagination.has_next %}
           <li>
           <a href="{{ url_for_other_page(pagination.page + 1)
-              }}">Next {{handle}}&raquo;</a>
+              }}">{{ _('Next') }} {{handle}}</a>
           </li>
         {% endif %}
     </ul>
@@ -57,16 +57,16 @@
         {% if current_user.id == app.owner.id %}
         <li><strong><i class="icon-cog"></i> ID</strong>: {{ app.id }}</li>
         {% endif %}
-        <li><strong><i class="icon-info-sign"></i> Description</strong>: {{ app['description'] }}</li>
-        <li><strong><i class="icon-ok"></i> Creation Date</strong>: {{ app.created[0:10] }}</li>
-        <li><strong><i class="icon-time"></i> Last Activity</strong>: {{ app.last_activity()}}</li>
-        <li><strong><i class="icon-cogs"></i> Overall progress</strong>: {{ ( app.completion_status()*100 ) | round(2, 'floor') }}% completed</li>
+        <li><strong><i class="icon-info-sign"></i> {{ _('Description') }}</strong>: {{ app['description'] }}</li>
+        <li><strong><i class="icon-ok"></i> {{ _('Creation Date') }}</strong>: {{ app.created[0:10] }}</li>
+        <li><strong><i class="icon-time"></i> {{ _('Last Activity') }}</strong>: {{ app.last_activity()}}</li>
+        <li><strong><i class="icon-cogs"></i> {{ _('Overall progress') }}</strong>: {{ ( app.completion_status()*100 ) | round(2, 'floor') }}% {{ _('completed') }}</li>
         <li><strong><i class="icon-tasks"></i> <a href="{{url_for('app.tasks',short_name=app.short_name)}}">Tasks</strong></a> ({{ app.tasks | count }})</li>
         {% if not current_user.is_anonymous() %}
         <li>{% if app.hidden == 1 %}
-            <i class="icon icon-eye-close"></i> <strong>Hidden</strong>: Yes 
+            <i class="icon icon-eye-close"></i> <strong>{{ _('Hidden') }}</strong>: {{ _('Yes') }}
         {% else %} 
-            <i class="icon icon-eye-open"></i> <strong>Hidden</strong>: No 
+            <i class="icon icon-eye-open"></i> <strong>Hidden</strong>: {{ _('No') }}
         {% endif %}
         </li>
         {% endif %}
@@ -87,19 +87,19 @@
             {% endif %}
         </div> <!-- End of span2 -->
         <div id="data" class="span6">
-            <p style="margin:0"><strong><i class="icon-info-sign"></i> Description</strong>: {{ app['description'] }}</p>
-            <p style="margin:0"><strong><i class="icon-ok"></i> Creation Date</strong>: {{ app.created[0:10] }}</p>
+            <p style="margin:0"><strong><i class="icon-info-sign"></i> {{ _('Description') }}</strong>: {{ app['description'] }}</p>
+            <p style="margin:0"><strong><i class="icon-ok"></i> {{ _('Creation Date') }}</strong>: {{ app.created[0:10] }}</p>
             {% if app.info.last_activity != "None" %}
-            <p style="margin:0"><strong><i class="icon-time"></i> Last Activity</strong>: {{ app.info.last_activity}}</p>
+            <p style="margin:0"><strong><i class="icon-time"></i> {{ _('Last Activity') }}</strong>: {{ app.info.last_activity}}</p>
             {% endif %}
-            <p style="margin:0"><strong><i class="icon-cogs"></i> Overall progress</strong>: {{ app.info.overall_progress | round(2, 'floor') }}% completed</p>
+            <p style="margin:0"><strong><i class="icon-cogs"></i> {{ _('Overall progress') }}</strong>: {{ app.info.overall_progress | round(2, 'floor') }}% completed</p>
             {% if app.owner_id == current_user.id %}
-            <p style="margin:0"><strong><i class="icon-user"></i> Owner</strong>: Me</p>
+            <p style="margin:0"><strong><i class="icon-user"></i> {{ _('Owner') }}</strong>: {{ _('Me') }}</p>
             {% else %}
-            <p style="margin:0"><strong><i class="icon-user"></i> Owner</strong>: {{ app.info.owner }}</p>
+            <p style="margin:0"><strong><i class="icon-user"></i> {{ _('Owner') }}</strong>: {{ app.info.owner }}</p>
             {% endif %}
             {% if class != "app-draft" %}
-            <p style="margin:0"><a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = app.short_name) }}"><i class="icon icon-white icon-ok"></i> Try it!</a></p>
+            <p style="margin:0"><a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = app.short_name) }}"><i class="icon icon-white icon-ok"></i> {{ _('Try it!') }}</a></p>
             {% endif %}
         </div> <!-- end of id=data class=span8 -->
     </div> <!--end of class=row -->

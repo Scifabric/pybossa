@@ -10,7 +10,7 @@
         {{ helper.render_account_local_nav(current_user, active_link) }}
     </div>
     <div class="span9">
-        <h1><strong>Application</strong>: Create a new application</h1>
+        <h1><strong>{{ _('Application') }}</strong>: {{ _('Create a new application') }}</h1>
     <form class="form-horizontal" method="post" action="{{ url_for('app.new') }}">
         {{ form.hidden_tag() }}
         <fieldset>
@@ -22,8 +22,8 @@
             {{ render_field(form.sched, class_="span4", placeholder="Task scheduler for your app", tooltip="Select how to distribute the tasks")}}
             {{ render_field(form.hidden, tooltip="Do you want to hide your app?")}}
             <div class="form-actions">
-                <input type="submit" value="Create the application" class="btn btn-primary" />
-                <a href="{{url_for('account.profile')}}" class="btn">Cancel</a>
+                <input type="submit" value={{ _('Create the application') }} class="btn btn-primary" />
+                <a href="{{url_for('account.profile')}}" class="btn">{{ _('Cancel') }}</a>
             </div>
         </fieldset>
     </form>

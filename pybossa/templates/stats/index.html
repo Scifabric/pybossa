@@ -12,14 +12,14 @@
                   <h4>{{ app.name }}</h4>
                     <ul style="list-style-type: none;">
                       {% if app.last_activity() == "None" %}
-                      <li><strong><i class="icon-time"></i> Updated</strong>: Not yet</li>
+                      <li><strong><i class="icon-time"></i> {{ _('Updated') }}</strong>: {{ _('Not yet') }}</li>
                       {% else %}
-                      <li><strong><i class="icon-time"></i> Updated</strong>: {{ app.last_activity() }}</li>
+                      <li><strong><i class="icon-time"></i> {{ _('Updated') }}</strong>: {{ app.last_activity() }}</li>
                       {% endif %}
                       {% if app.owner.id == current_user.id %}
-                      <li><strong><i class="icon-user"></i> Owner</strong>: Me</li>
+                      <li><strong><i class="icon-user"></i> {{ _('Owner') }}</strong>: {{ _('Me') }}</li>
                       {% else %}
-                      <li><strong><i class="icon-user"></i> Owner</strong>: {{ app.owner.name }}</li>
+                      <li><strong><i class="icon-user"></i> {{ _('Owner') }}</strong>: {{ app.owner.name }}</li>
                       {% endif %}
                     </ul>
                     {% if not loop.last %}
@@ -37,13 +37,13 @@
                     <div class="span3">
                         <strong>{{ item.user.fullname }}</strong>
                           <ul style="list-style-type: none;">
-                              <li><i class="icon-tasks"></i> Total submitted tasks: {{ item.user.task_runs | length }}</li>
+                              <li><i class="icon-tasks"></i> {{ _('Total submitted tasks') }}: {{ item.user.task_runs | length }}</li>
                             {% if item.apps %}
-                            <li><strong>Collaborating in</strong>:</li>
+                            <li><strong>{{ _('Collaborating in') }}</strong>:</li>
                               <ul>
                                   {% for app in item.apps %}
                                   {% if app.hidden %}
-                                  <li>Hidden application</li>
+                                  <li>{{ _('Hidden application') }}</li>
                                   {% else %}
                                   <li><a href="{{ url_for('app.presenter', short_name = app.short_name) }}">{{ app.name }}</a></li>
                                   {% endif %}

@@ -11,13 +11,13 @@
         {{ render_account_local_nav(current_user, active_link) }}
     </div>
     <div class="span9">
-        <h1><strong>Admin Site:</strong> Manage Admin Users</h1>
+        <h1><strong>{{ _('Admin Site') }}:</strong> {{ _('Manage Admin Users') }}</h1>
         {% from "_formhelpers.html" import render_field %}
         <form class="form-search" method="POST">
         {{ form.hidden_tag() }}
         <div class="input-append">
-        <input id="user" name="user" type="text" class="input-large search-query" placeholder="Try with the full name or nick">
-        <button type="submit" class="btn"><i class="icon-search"></i> Search</button>
+        <input id="user" name="user" type="text" class="input-large search-query" placeholder={{ _('Try with the full name or nick') }}>
+        <button type="submit" class="btn"><i class="icon-search"></i> {{ _('Search') }}</button>
         </div>
         </form>
         {% if found %}
@@ -28,7 +28,7 @@
         {% endif %}
 
         {% if users %}
-        <h1>Current Users with Admin privileges</h1>
+        <h1>{{ _('Current Users with Admin privileges') }}</h1>
         {% for user in users %}
         {{ render_admin_user(user) }}
         {% endfor %}

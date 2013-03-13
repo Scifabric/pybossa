@@ -12,21 +12,21 @@
     </div>
     <br/>
     <div class="span12" style="font-size:16px">
-        <p>Here you can find a list of all registered applications in {{brand}}.</p>
-        <p>The applications can be sorted in three categories:</p>
+        <p>{{ _('Here you can find a list of all registered applications in') }} {{brand}}.</p>
+        <p>{{ _('The applications can be sorted in three categories:') }}</p>
         <ul style="list-style:none">
-            <li><strong><i class="icon-star"></i> Featured:</strong> a special selection of the most interesting applications.</li>
-            <li><strong><i class="icon-th"></i> Published:</strong> all available applications.</li>
-            <li><strong><i class="icon-wrench"></i> Draft:</strong> the only applications where you <i>cannot contribute for the moment</i> (the owners have not published them yet).</li>
+            <li><strong><i class="icon-star"></i> {{ _('Featured') }}:</strong> {{ _('a special selection of the most interesting applications.') }}</li>
+            <li><strong><i class="icon-th"></i> {{ _('Published') }}:</strong> {{ _('all available applications.') }}</li>
+            <li><strong><i class="icon-wrench"></i> {{ _('Draft') }}:</strong> {{ _('the only applications where you') }}  <i>{{ _('cannot contribute for the moment') }}</i> ({{ _('the owners have not published them yet') }}).</li>
         </ul>
-        <p>Therefore, pick up a published or featured application and help the project!</p>
+        <p>{{ _('Therefore, pick up a published or featured application and help the project!') }}</p>
     </div>
 </div>
 
 {% if apps %}
 <div class="row app-draft">
     <div class="span12">
-        <h2><i class="icon-wrench"></i> Draft: <small>{{pagination.total_count}} apps in this category</small></h2>
+        <h2><i class="icon-wrench"></i> Draft: <small>{{pagination.total_count}} {{ _('apps in this category') }}</small></h2>
     </div>
 </div>
 {% endif %}
@@ -37,7 +37,7 @@
 
 <div class="row">
     <div class="span9 offset2" style="text-align:center">
-        <a class="btn btn-small" href="{{url_for('app.index')}}"><i class="icon-th"></i> Check also the published applications</a>
+        <a class="btn btn-small" href="{{url_for('app.index')}}"><i class="icon-th"></i> {{ _('Check also the published applications') }}</a>
     </div>
     <div class="span9 offset2">
         {{ helper.render_pagination(pagination) }}
@@ -47,7 +47,7 @@
 
 <div class="row">
     <div class="span12 well" style="text-align:center">
-        <a href="{{ url_for('app.new')}}" class="btn btn-large btn-inverse"><i class="icon-white icon-plus"></i> Create an application!</a>
+        <a href="{{ url_for('app.new')}}" class="btn btn-large btn-inverse"><i class="icon-white icon-plus"></i> {{ _('Create an application!') }}</a>
     </div>
 </div>
 {% endblock %}
