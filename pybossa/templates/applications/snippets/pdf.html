@@ -10,31 +10,31 @@
     <div class="span6 offset2" style="height:50px">
         <div id="success" class="alert alert-success" style="display:none;">
             <a class="close">×</a>
-            <strong>Well done!</strong> Your answer has been saved</strong>
+            <strong>{{ _('Well done!') }}</strong> {{ _('Your answer has been saved') }}</strong>
     </div>
     <div id="taskcompleted" class="alert alert-info" style="display:none;">
-        <strong>The task has been completed!</strong> Thanks a lot!</strong>
+        <strong>{{ _('The task has been completed!') }}</strong> {{ _('Thanks a lot!') }}</strong>
 </div>
 
 <div id="finish" class="alert alert-success" style="display:none;">
-    <strong>Congratulations!</strong> You have participated in all available tasks!</strong>
+    <strong>{{ _('Congratulations!') }}</strong> {{ _('You have participated in all available tasks!') }}</strong>
 <br/>
 <div class="alert-actions">
-    <a class="btn small" href="/">Go back</a>
-    <a class="btn small" href="/app">or, Check other applications</a>
+    <a class="btn small" href="/">{{ _('Go back') }}</a>
+    <a class="btn small" href="/app">{{ _('or, Check other applications') }}</a>
 </div>
     </div>
     <div id="error" class="alert alert-error" style="display:none;">
 <a class="close">×</a>
-<strong>Error!</strong> Something went wrong, please contact the site administrators</strong>
+<strong>{{ _('Error!') }}</strong> {{ _('Something went wrong, please contact the site administrators') }}</strong>
     </div>
   </div> <!-- End Success and Error Messages for the user -->
 </div>
 
 <div class="row skeleton">
     <div id="question" class="span12">
-      <h1>Question</h1>
-      <span class="label label-info"><i class="icon icon-bullhorn"></i> Important</span> <strong>This is just a demo application. You can re-use the code to create your own application.</strong>
+      <h1>{{ _('Question') }}</h1>
+      <span class="label label-info"><i class="icon icon-bullhorn"></i> {{ _('Important') }}</span> <strong>{{ _('This is just a demo application. You can re-use the code to create your own application.') }}</strong>
       <hr>
     </div>
 </div>
@@ -52,8 +52,8 @@
           </div>-->
      </div>
   <div id="question" class="span4">
-      <p>You are working now on task: <span id="task-id" class="label label-warning">#</span></p>
-      <p>You have completed: <span id="done" class="label label-info"></span> tasks from
+      <p>{{ _(' You are working now on task') }}: <span id="task-id" class="label label-warning">#</span></p>
+      <p>{{ _('You have completed') }}: <span id="done" class="label label-info"></span> {{ _('tasks from') }}
       <span id="total" class="label label-inverse"></span></p>
       <div class="progress progress-striped">
           <div id="progress" rel="tooltip" title="#" class="bar" style="width: 0%;"></div>
@@ -63,7 +63,7 @@
           <form class="form-inline">
               <textarea id="text" rows="10" style="width:100%;"></textarea>
           </form>
-          <button class="btn btn-submit">Submit transcription!</button>
+          <button class="btn btn-submit">{{ _('Submit transcription!') }}</button>
       </div>
   </div>
 

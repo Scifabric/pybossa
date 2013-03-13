@@ -36,11 +36,12 @@
         <img class="img-polaroid" src="{{ user.email_addr | gravatar(size=164)}}">
     </div>
     <div class="span9">
-        <h2><i class="icon-user"></i> Nick: <small>{{ user.name }}</small></h2>
-        <h2><i class="icon-envelope"></i> E-mail: <small>{{ user.email_addr }}</small></h2>
-        <h2><i class="icon-time"></i> Joined: <small>{{ user.created[0:10] }}</small></h2>
+        <h2><i class="icon-user"></i> {{ _('Nick') }}: <small>{{ user.name }}</small></h2>
+        <h2><i class="icon-user"></i> {{ _('Language') }}: <small>{{ user.language }}</small></h2>
+        <h2><i class="icon-envelope"></i> {{ _('E-mail') }}: <small>{{ user.email_addr }}</small></h2>
+        <h2><i class="icon-time"></i> {{ _('Joined') }}: <small>{{ user.created[0:10] }}</small></h2>
         {% if settings %}
-        <h2><i class="icon-key"></i> API key: <small>{{ user.api_key }}</small></h2>
+        <h2><i class="icon-key"></i> {{ _('API key') }}: <small>{{ user.api_key }}</small></h2>
         {% else %}
         <a href="{{ url_for('account.settings') }}" class="btn btn-primary"><i class="icon icon-user"></i> {{ _('Edit your profile') }}</a>
         {% endif %}
