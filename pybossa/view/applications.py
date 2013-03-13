@@ -791,7 +791,10 @@ def stats(short_name):
     """Returns App Stats"""
     app = db.session.query(model.App).filter_by(short_name=short_name).first()
     title="Application: %s &middot; Stats" % app.name
-    cached_apps.stats_summary(app.id)
+    dates_stats, hours_stats, users_stats = cached_apps.get_stats(app.id)
+    print dates_stats
+    print hours_stats
+    print users_stats
     return render_template('/applications/stats.html',
                            title=title,
                            userStats=None,

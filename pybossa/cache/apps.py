@@ -22,6 +22,8 @@ import json
 import string
 import operator
 import datetime
+import time
+from datetime import timedelta
 
 STATS_TIMEOUT=50
 
@@ -306,7 +308,7 @@ def stats_dates(app_id):
                 dates_auth[date] += 1
             else:
                 dates_auth[date] = 1
-    return dates, dates_anon, dates_auth
+    return dates, dates_n_tasks, dates_anon, dates_auth
 
 @cache.memoize(timeout=STATS_TIMEOUT)
 def stats_hours(app_id):
@@ -349,7 +351,7 @@ def stats_hours(app_id):
                 hours_auth[hour] += 1
                 if (hours_auth[hour] > max_hours_auth):
                     max_hours_auth = hours_auth[hour]
-    return hours,  hours_anon, hours_auth,
+    return hours,  hours_anon, hours_auth, max_hours, max_hours_anon, max_hours_auth
 
 
 @cache.memoize(timeout=STATS_TIMEOUT)
@@ -358,7 +360,7 @@ def stats_summary(app_id):
     tasks = get_tasks(app_id)
     hours, hours_anon, hours_auth  = stats_hours(app_id)
     users, anon_users, auth_users = stats_users(app_id)
-    dates, dates_anon, dates_auth = stats_dates(app_id)
+    dates, dates_n_tasks, dates_anon, dates_auth = stats_dates(app_id)
 
     n_answers_per_task = []
     for t in tasks:
@@ -381,17 +383,226 @@ def stats_summary(app_id):
     print "To complete all the tasks at a pace of %s per day, the app will need %s days" % (avg_answers_per_day, required_days_to_finish)
 
 
+@cache.memoize(timeout=STATS_TIMEOUT)
+def stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
+                       dates_anon, dates_auth):
+    """Format dates stats into a JSON format"""
+    dayNewStats    = dict(label="Anon + Auth",   values=[])
+    dayAvgAnswers    = dict(label="Expected Answers",   values=[])
+    dayEstimates    = dict(label="Estimation",   values=[])
+    dayTotalStats  = dict(label="Total", disabled="True", values=[])
+    dayNewAnonStats  = dict(label="Anonymous", values=[])
+    dayNewAuthStats  = dict(label="Authenticated", values=[])
+
+    total = 0
+    for d in sorted(dates.keys()):
+        # JavaScript expects miliseconds since EPOCH
+        # New answers per day
+        dayNewStats['values'].append(
+                [int(
+                    time.mktime(time.strptime( d, "%Y-%m-%d"))*1000
+                    ),
+                dates[d]])
+
+        dayAvgAnswers['values'].append(
+                [int(
+                    time.mktime(time.strptime( d, "%Y-%m-%d"))*1000
+                    ),
+                dates_n_tasks[d]])
+
+        # Total answers per day
+        total = total + dates[d]
+        dayTotalStats['values'].append(
+                [int(
+                    time.mktime(time.strptime( d, "%Y-%m-%d"))*1000
+                    ),
+                total])
+
+        # Anonymous answers per day
+        if d in (dates_anon.keys()):
+            dayNewAnonStats['values'].append(
+                    [int(
+                        time.mktime(time.strptime( d, "%Y-%m-%d"))*1000
+                        ),
+                    dates_anon[d]])
+        else:
+            dayNewAnonStats['values'].append(
+                    [int(
+                        time.mktime(time.strptime( d, "%Y-%m-%d"))*1000
+                        ),
+                    0])
+
+        # Authenticated answers per day
+        if d in (dates_auth.keys()):
+            dayNewAuthStats['values'].append(
+                    [int(
+                        time.mktime(time.strptime( d, "%Y-%m-%d"))*1000
+                        ),
+                    dates_auth[d]])
+        else:
+            dayNewAuthStats['values'].append(
+                    [int(
+                        time.mktime(time.strptime( d, "%Y-%m-%d"))*1000
+                        ),
+                    0])
+
+    for d in sorted(dates_estimate.keys()):
+        dayEstimates['values'].append(
+                [int(
+                    time.mktime(time.strptime( d, "%Y-%m-%d"))*1000
+                    ),
+                dates_estimate[d]])
+
+        dayAvgAnswers['values'].append(
+                [int(
+                    time.mktime(time.strptime( d, "%Y-%m-%d"))*1000
+                    ),
+                dates_n_tasks.values()[0]])
 
 
+    return dayNewStats, dayAvgAnswers, dayEstimates, dayTotalStats, \
+            dayNewAnonStats, dayNewAuthStats
 
 
+@cache.memoize(timeout=STATS_TIMEOUT)
+def stats_format_hours(app_id, hours, hours_anon, hours_auth,
+                       max_hours, max_hours_anon, max_hours_auth):
+    """Format hours stats into a JSON format"""
+    hourNewStats    = dict(label="Anon + Auth", disabled="True", values=[], max=0)
+    hourNewAnonStats  = dict(label="Anonymous", values=[], max=0)
+    hourNewAuthStats  = dict(label="Authenticated", values=[], max=0)
+
+    hourNewStats['max'] = max_hours
+    hourNewAnonStats['max'] = max_hours_anon
+    hourNewAuthStats['max'] = max_hours_auth
+
+    for h in sorted(hours.keys()):
+        # New answers per hour
+        #hourNewStats['values'].append(dict(x=int(h), y=hours[h], size=hours[h]*10))
+        if (hours[h] != 0):
+            hourNewStats['values'].append([int(h), hours[h], (hours[h]*5)/max_hours])
+        else:
+            hourNewStats['values'].append([int(h), hours[h], 0])
+
+        # New Anonymous answers per hour
+        if h in hours_anon.keys():
+            #hourNewAnonStats['values'].append(dict(x=int(h), y=hours[h], size=hours_anon[h]*10))
+            if (hours_anon[h] != 0):
+                hourNewAnonStats['values'].append([int(h), hours_anon[h], (hours_anon[h]*5)/max_hours])
+            else:
+                hourNewAnonStats['values'].append([int(h), hours_anon[h],0 ])
+
+        # New Authenticated answers per hour
+        if h in hours_auth.keys():
+            #hourNewAuthStats['values'].append(dict(x=int(h), y=hours[h], size=hours_auth[h]*10))
+            if (hours_auth[h] != 0):
+                hourNewAuthStats['values'].append([int(h), hours_auth[h], (hours_auth[h]*5)/max_hours])
+            else:
+                hourNewAuthStats['values'].append([int(h), hours_auth[h], 0])
+    return hourNewStats, hourNewAnonStats, hourNewAuthStats
 
 
+@cache.memoize(timeout=STATS_TIMEOUT)
+def stats_format_users(app_id, users, anon_users, auth_users):
+    """Format User Stats into JSON"""
+    userStats = dict(label="User Statistics", values=[])
+    userAnonStats = dict(label="Anonymous Users", values=[], top5=[], locs=[])
+    userAuthStats = dict(label="Authenticated Users", values=[], top5=[])
+
+    # Count total number of answers for users
+    anonymous = 0
+    authenticated = 0
+    for e in users:
+        if e == -1:
+            anonymous += 1
+        else:
+            authenticated += 1
+
+    userStats['values'].append(dict(label="Anonymous", value=[0, anonymous]))
+    userStats['values'].append(dict(label="Authenticated", value=[0, authenticated]))
+    from collections import Counter
+    c_anon_users = Counter(anon_users)
+    c_auth_users = Counter(auth_users)
+
+    for u in list(c_anon_users):
+        userAnonStats['values']\
+                .append(dict(label=u, value=c_anon_users[u]))
+
+    for u in list(c_auth_users):
+        userAuthStats['values']\
+                .append(dict(label=u, value=c_auth_users[u]))
+
+    # Get location for Anonymous users
+    import pygeoip
+    gi = pygeoip.GeoIP('dat/GeoIP.dat')
+    gic = pygeoip.GeoIP('dat/GeoLiteCity.dat')
+    top5_anon = []
+    top5_auth = []
+    loc_anon = []
+    for u in c_anon_users.most_common(5):
+        loc = gic.record_by_addr(u[0])
+        if (len(loc.keys()) == 0):
+            loc['latitude'] = 0
+            loc['longitude'] = 0
+        top5_anon.append(dict(ip=u[0],loc=loc, tasks=u[1]))
+
+    for u in c_anon_users.items():
+        loc = gic.record_by_addr(u[0])
+        if (len(loc.keys()) == 0):
+            loc['latitude'] = 0
+            loc['longitude'] = 0
+        loc_anon.append(dict(ip=u[0],loc=loc, tasks=u[1]))
+
+    for u in c_auth_users.most_common(5):
+        top5_auth.append(dict(id=u[0], tasks=u[1]))
+
+    userAnonStats['top5'] = top5_anon
+    userAnonStats['locs'] = loc_anon
+    userAuthStats['top5'] = top5_auth
+
+    return userStats, userAnonStats, userAuthStats
 
 
+@cache.memoize(timeout=STATS_TIMEOUT)
+def get_stats(app_id):
+    """Return the stats a given app"""
+    tasks = get_tasks(app_id)
+    hours, hours_anon, hours_auth, max_hours, \
+            max_hours_anon, max_hours_auth = stats_hours(app_id)
+    users, anon_users, auth_users = stats_users(app_id)
+    dates, dates_n_tasks, dates_anon, dates_auth = stats_dates(app_id)
 
+    n_answers_per_task = []
+    for t in tasks:
+        n_answers_per_task.append(t.n_answers)
+    avg = sum(n_answers_per_task)/len(tasks)
+    total_n_tasks = len(tasks)
 
+    sorted_answers = sorted(dates.iteritems(), key=operator.itemgetter(0))
+    if len(sorted_answers) > 0:
+        last_day = datetime.datetime.strptime( sorted_answers[-1][0], "%Y-%m-%d")
+    total_answers = sum(dates.values())
+    if len(dates) > 0:
+        avg_answers_per_day = total_answers/len(dates)
+    required_days_to_finish = ((avg*total_n_tasks)-total_answers)/avg_answers_per_day
 
+    pace = total_answers
+
+    dates_estimate = {}
+    for i in range(0, required_days_to_finish + 2):
+        tmp = last_day + timedelta(days=(i))
+        tmp_str = tmp.date().strftime('%Y-%m-%d')
+        dates_estimate[tmp_str] = pace
+        pace = pace + avg_answers_per_day
+
+    dates_stats = stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
+                       dates_anon, dates_auth)
+
+    hours_stats = stats_format_hours(app_id, hours, hours_anon, hours_auth,
+                       max_hours, max_hours_anon, max_hours_auth)
+
+    users_stats = stats_format_users(app_id, users, anon_users, auth_users)
+    return dates_stats, hours_stats, users_stats
 
 
 def reset():
