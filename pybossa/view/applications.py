@@ -53,22 +53,17 @@ class AppForm(Form):
                                    message=gettext(u'Short Name is already taken.') )])
     description = TextField(gettext(u'Description'),
                             [validators.Required(
-<<<<<<< HEAD
                                 message=gettext(u'You must provide a description.') )])
     thumbnail = TextField(gettext(u'Icon Link'))
-=======
-                                message="You must provide a description.")])
-    thumbnail = TextField('Icon Link')
-    allow_anonymous_contributors = SelectField('Allow Anonymous Contributors',
+    allow_anonymous_contributors = SelectField( gettext(u'Allow Anonymous Contributors'),
                                                choices=[('True', 'Yes'),
                                                         ('False', 'No')])
->>>>>>> 429bc3879503564db0c15495b1de5355c997caf1
-    long_description = TextAreaField('Long Description')
+    long_description = TextAreaField(gettext(u'Long Description'))
     sched = SelectField(gettext(u'Task Scheduler'),
-                        choices=[('default', 'Default'),
-                                 ('breadth_first', 'Breadth First'),
-                                 ('depth_first', 'Depth First'),
-                                 ('random', 'Random')],)
+                        choices=[('default', gettext(u'Default')),
+                                 ('breadth_first', gettext(u'Breadth First')),
+                                 ('depth_first', gettext(u'Depth First')),
+                                 ('random', gettext(u'Random'))],)
     hidden = BooleanField(gettext(u'Hide?'))
 
 
@@ -78,7 +73,6 @@ class TaskPresenterForm(Form):
 
 
 class BulkTaskCSVImportForm(Form):
-<<<<<<< HEAD
     csv_url = TextField(gettext(u'URL'), [validators.Required(message=gettext(u'You must ') +
                 gettext(u'provide a URL')), validators.URL(message=gettext(u'Oops! That\'s not a') +
                 gettext(' valid URL. You must provide a valid URL') )])
@@ -86,22 +80,11 @@ class BulkTaskGDImportForm(Form):
     googledocs_url = TextField(gettext(u'URL'), [validators.Required(message=gettext(u'You must ') +
                 gettext(u'provide a URL')), validators.URL(message=gettext(u'Oops! That\'s not a') +
                 gettext(u'valid URL. You must provide a valid URL') )])
-=======
-    msg_required = "You must provide a URL"
-    msg_url = "Oops! That's not a valid URL. You must provide a valid URL"
+    msg_required = gettext(u'You must provide a URL')
+    msg_url = gettext(u'Oops! That\'s not a valid URL. You must provide a valid URL')
     csv_url = TextField('URL',
                         [validators.Required(message=msg_required),
                          validators.URL(message=msg_url)])
-
-
-class BulkTaskGDImportForm(Form):
-    msg_required = "You must provide a URL"
-    msg_url = "Oops! That's not a valid URL. You must provide a valid URL"
-    googledocs_url = TextField('URL',
-                               [validators.Required(message=msg_required),
-                                   validators.URL(message=msg_url)])
->>>>>>> 429bc3879503564db0c15495b1de5355c997caf1
-
 
 @blueprint.route('/', defaults={'page': 1})
 @blueprint.route('/page/<int:page>')
