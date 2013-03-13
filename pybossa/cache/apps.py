@@ -40,7 +40,8 @@ def get_top(n=4):
     sql = text('''
     SELECT app.id, app.name, app.short_name, app.description, app.info,
     count(app_id) AS total FROM task_run, app WHERE app_id IS NOT NULL AND
-    app.id=app_id GROUP BY app.id ORDER BY total DESC LIMIT :limit;
+    app.id=app_id GROUP BY app.id, app.name, app.short_name,
+    app.description, app.info ORDER BY total DESC LIMIT :limit;
     ''')
 
     results = db.engine.execute(sql, limit=n)
@@ -113,7 +114,9 @@ def get_featured(page=1, per_page=5):
     sql = text('''SELECT app.id, app.name, app.short_name, app.info, app.created,
                "user".fullname AS owner FROM app, featured, "user"
                WHERE app.id=featured.app_id AND app.hidden=0
-               AND "user".id=app.owner_id GROUP BY app.id, "user".id
+               AND "user".id=app.owner_id GROUP BY app.id, 
+               app.name, app.short_name, app.info, app.created,
+               "user".id, "user".fullname
                OFFSET(:offset) LIMIT(:limit);
                ''')
     offset = (page - 1) * per_page
@@ -159,7 +162,10 @@ def get_published(page=1, per_page=5):
                app.id=task.app_id AND app.info LIKE('%task_presenter%')
                AND app.hidden=0
                AND "user".id=app.owner_id
-               GROUP BY app.id, "user".id, featured.id ORDER BY app.name
+               GROUP BY app.id, featured.app_id, 
+               app.name, app.short_name, app.description,
+               app.info, app.created, "user".id, "user".fullname, 
+               featured.id ORDER BY app.name
                OFFSET :offset
                LIMIT :limit;''')
 

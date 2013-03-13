@@ -22,7 +22,8 @@ def get_top(n=10):
     """Return the n=10 top users"""
     sql = text('''SELECT "user".id, "user".fullname, "user".email_addr,
                "user".created, COUNT(task_run.id) AS task_runs from task_run, "user"
-               WHERE "user".id=task_run.user_id group by "user".id
+               WHERE "user".id=task_run.user_id group by "user".id,
+               "user".fullname, "user".email_addr, "user".created
                ORDER BY task_runs DESC LIMIT :limit''')
     results = db.engine.execute(sql, limit=n)
     top_users = []
