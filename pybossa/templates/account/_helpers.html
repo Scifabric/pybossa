@@ -36,27 +36,27 @@
         <img class="img-polaroid" src="{{ user.email_addr | gravatar(size=164)}}">
     </div>
     <div class="span9">
-        <h2><i class="icon-user"></i> Nick: <small>{{ user.name }}</small></h2>
+        <h2><i class="icon-user"></i> {{ _('Nick') }}: <small>{{ user.name }}</small></h2>
         {% if private %}
-        <h2><i class="icon-envelope"></i> E-mail: <small>{{ user.email_addr }}</small></h2>
+        <h2><i class="icon-envelope"></i> {{ _('E-mail') }}: <small>{{ user.email_addr }}</small></h2>
         {% endif %}
         {% if user.rank %}
-        <h2><i class="icon-trophy"></i> Rank: <small>
+        <h2><i class="icon-trophy"></i> {{ _('Rank') }}: <small>
                 {% if private %}
                 <a href="{{url_for('leaderboard.index')}}">
                 {% endif %}
-                {{ user.rank }} of {{user.total}} with a Score of {{user.score}} contributed tasks
+                {{ user.rank }} {{ _('of') }} {{user.total}} {{ _('with a Score of') }} {{user.score}} {{ _('contributed tasks') }}
                 {% if private %}</a>{% endif %}
                 </small>
         </h2>
         {% else %}
-        <h2><i class="icon-trophy"></i> Rank: <small>The user has not contributed a task yet</small></h2>
+        <h2><i class="icon-trophy"></i> {{ _('Rank') }}: <small>{{ _('The user has not contributed a task yet') }}</small></h2>
         {% endif %}
         {% if not private %}
-        <h2><i class="icon-time"></i> Joined: <small>{{ user.created[0:10]}}</small></h2>
+        <h2><i class="icon-time"></i> {{ _('Joined') }}: <small>{{ user.created[0:10]}}</small></h2>
         {% endif %}
         {% if settings %}
-        <h2><i class="icon-key"></i> API key: <small>{{ user.api_key }}</small></h2>
+        <h2><i class="icon-key"></i> {{ _('API key') }}: <small>{{ user.api_key }}</small></h2>
         {% endif %}
         {% if private %}
         <a href="{{ url_for('account.public_profile', name=user.name) }}" class="btn btn-inverse"><i class="icon icon-globe"></i> {{ _('See your public profile') }}</a>

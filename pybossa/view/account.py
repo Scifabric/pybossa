@@ -23,7 +23,8 @@ from flaskext.login import login_required, login_user, logout_user, current_user
 from flask.ext.mail import Message
 from flaskext.babel import gettext, ngettext
 from flaskext.wtf import Form, TextField, PasswordField, validators, \
-        ValidationError, IntegerField, HiddenInput
+        ValidationError, IntegerField, HiddenInput, SelectField
+from settings_languages import LANGUAGES
 
 from sqlalchemy.sql import func, text
 import pybossa.model as model
@@ -144,7 +145,10 @@ class RegisterForm(Form):
 
     confirm = PasswordField(gettext('Repeat Password'))
 
+    language = SelectField(u'Select your language', choices=[('en', 'English'), ('es_ES', 'Spanish')])
+    #language = SelectField(u'Select your language', choices = LANGUAGES() )
 
+#from settings_languages import LANGUAGES
 class UpdateProfileForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
 
@@ -167,6 +171,8 @@ class UpdateProfileForm(Form):
                             Unique(db.session, model.User,
                                    model.User.email_addr, err_msg_2)])
 
+    language = SelectField(u'Select your language', choices=[('en', 'English'), ('es_ES', 'Spanish')])
+    #language = SelectField(u'Select your language', choices = LANGUAGES() )
 
 @blueprint.route('/register', methods=['GET', 'POST'])
 def register():
@@ -175,7 +181,8 @@ def register():
     if request.method == 'POST' and form.validate():
         account = model.User(fullname=form.fullname.data,
                              name=form.username.data,
-                             email_addr=form.email_addr.data)
+                             email_addr=form.email_addr.data,
+                             language=form.language.data)
         account.set_password(form.password.data)
         db.session.add(account)
         db.session.commit()
@@ -288,7 +295,8 @@ def update_profile():
             new_profile = model.User(id=form.id.data,
                                      fullname=form.fullname.data,
                                      name=form.name.data,
-                                     email_addr=form.email_addr.data)
+                                     email_addr=form.email_addr.data,
+                                     language=form.language.data)
             db.session.query(model.User)\
               .filter(model.User.id == current_user.id)\
               .first()

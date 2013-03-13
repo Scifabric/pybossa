@@ -9,16 +9,16 @@
         {{ helper.render_app_local_nav(app, active_link, current_user) }}
     </div>
     <div class="span9">
-        <h1><strong>{{app.name}}</strong>: Delete all Tasks and Task Runs</h1>
+        <h1><strong>{{app.name}}</strong>: {{ _('Delete all Tasks and Task Runs') }}</h1>
         <div class="alert alert-danger">
-            <strong>Danger Zone!</strong> If you delete all the tasks and task runs they will be gone forever!<br/><strong>You cannot undo this action!</strong>
+            <strong>{{ _('Danger Zone!') }}</strong> {{ _('If you delete all the tasks and task runs they will be gone forever!') }}<br/><strong>{{ '(You cannot undo this action!') }}</strong>
         </div>
         {{ helper.render_app_summary(app, current_user) }}
         <form class="form-horizontal" method="post" action="{{ url_for('app.delete_tasks', short_name = app.short_name) }}">
-        <h3><strong>Are you sure you want to delete ALL the application tasks and associated task runs?</strong></h3>
+        <h3><strong>{{ _('Are you sure you want to delete ALL the application tasks and associated task runs?') }}</strong></h3>
         <div class="form-actions">
           <input type="submit" class="btn btn-small" value="Yes"/>
-          <a href="{{ url_for('app.settings', short_name = app.short_name) }}" class="btn btn-large btn-primary">No, do not delete anything!</a>
+          <a href="{{ url_for('app.settings', short_name = app.short_name) }}" class="btn btn-large btn-primary">{{ _('No, do not delete anything!') }}</a>
         </div>
     </div>
 </div>

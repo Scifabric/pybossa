@@ -17,6 +17,7 @@
             {{ form.hidden_tag() }}
             {{ render_field(form.fullname, placeholder= _('my full name') ) }}
             {{ render_field(form.name, placeholder= _('myusername') ) }}
+            {{ render_field(form.language ) }}
             {{ render_field(form.email_addr, placeholder= _('hello@mywebsite.org') ) }}
             <div>
                 <img src="{{ current_user.email_addr | gravatar(size=25)}}">
