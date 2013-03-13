@@ -15,10 +15,15 @@
 from sqlalchemy.sql import func, text
 from pybossa.core import cache
 from pybossa.core import db
-from pybossa.model import Featured, App, TaskRun
+from pybossa.model import Featured, App, TaskRun, Task
 from pybossa.util import pretty_date
 
 import json
+import string
+import operator
+import datetime
+
+STATS_TIMEOUT=50
 
 @cache.cached(key_prefix="front_page_featured_apps")
 def get_featured_front_page():
@@ -222,6 +227,171 @@ def get_draft(page=1, per_page=5):
                    info=dict(json.loads(row.info)))
         apps.append(app)
     return apps, count
+
+
+@cache.memoize(timeout=STATS_TIMEOUT)
+def get_task_runs(app_id):
+    """Return all the Task Runs for a given app_id"""
+    task_runs = db.session.query(TaskRun).filter_by(app_id=app_id).all()
+    return task_runs
+
+
+@cache.memoize(timeout=STATS_TIMEOUT)
+def get_tasks(app_id):
+    """Return all the tasks for a given app_id"""
+    tasks = db.session.query(Task).filter_by(app_id=app_id).all()
+    return tasks
+
+
+@cache.memoize(timeout=STATS_TIMEOUT)
+def stats_users(app_id):
+    """Return users's stats for a given app_id"""
+    task_runs = get_task_runs(app_id)
+    users = []
+    auth_users = []
+    anon_users = []
+    for tr in task_runs:
+        if (tr.user_id is None):
+            users.append(-1)
+            anon_users.append(tr.user_ip)
+        else:
+            users.append(tr.user_id)
+            auth_users.append(tr.user_id)
+    return users, anon_users, auth_users
+
+
+@cache.memoize(timeout=STATS_TIMEOUT)
+def stats_dates(app_id):
+    dates = {}
+    dates_anon = {}
+    dates_auth = {}
+    dates_n_tasks = {}
+    dates_estimate = {}
+
+    n_answers_per_task = []
+    avg = 0
+
+    tasks = get_tasks(app_id)
+    task_runs = get_task_runs(app_id)
+
+    for t in tasks:
+        n_answers_per_task.append(t.n_answers)
+    avg = sum(n_answers_per_task)/len(tasks)
+    total_n_tasks = len(tasks)
+
+    for tr in task_runs:
+        # Data for dates
+        date, hour = string.split(tr.finish_time, "T")
+        tr.finish_time = string.split(tr.finish_time, '.')[0]
+        hour = string.split(hour,":")[0]
+
+        # Dates
+        if date in dates.keys():
+            dates[date] +=1
+        else:
+            dates[date] = 1
+
+        if date in dates_n_tasks.keys():
+            dates_n_tasks[date] = total_n_tasks * avg
+        else:
+            dates_n_tasks[date] = total_n_tasks * avg
+
+        if tr.user_id is None:
+            if date in dates_anon.keys():
+                dates_anon[date] += 1
+            else:
+                dates_anon[date] = 1
+        else:
+            if date in dates_auth.keys():
+                dates_auth[date] += 1
+            else:
+                dates_auth[date] = 1
+    return dates, dates_anon, dates_auth
+
+@cache.memoize(timeout=STATS_TIMEOUT)
+def stats_hours(app_id):
+    hours = {}
+    hours_anon = {}
+    hours_auth = {}
+    max_hours = 0
+    max_hours_anon = 0
+    max_hours_auth = 0
+
+
+    tasks = get_tasks(app_id)
+    task_runs = get_task_runs(app_id)
+
+    # initialize hours keys
+    for i in range(0,24):
+        hours[u'%s' % i]=0
+        hours_anon[u'%s' % i]=0
+        hours_auth[u'%s' % i]=0
+
+    for tr in task_runs:
+        # Hours
+        date, hour = string.split(tr.finish_time, "T")
+        tr.finish_time = string.split(tr.finish_time, '.')[0]
+        hour = string.split(hour,":")[0]
+
+        if hour in hours.keys():
+            hours[hour] += 1
+            if (hours[hour] > max_hours):
+                max_hours = hours[hour]
+
+        if tr.user_id is None:
+            if hour in hours_anon.keys():
+                hours_anon[hour] += 1
+                if (hours_anon[hour] > max_hours_anon):
+                    max_hours_anon = hours_anon[hour]
+
+        else:
+            if hour in hours_auth.keys():
+                hours_auth[hour] += 1
+                if (hours_auth[hour] > max_hours_auth):
+                    max_hours_auth = hours_auth[hour]
+    return hours,  hours_anon, hours_auth,
+
+
+@cache.memoize(timeout=STATS_TIMEOUT)
+def stats_summary(app_id):
+    """Prints a small stats summary for the given app"""
+    tasks = get_tasks(app_id)
+    hours, hours_anon, hours_auth  = stats_hours(app_id)
+    users, anon_users, auth_users = stats_users(app_id)
+    dates, dates_anon, dates_auth = stats_dates(app_id)
+
+    n_answers_per_task = []
+    for t in tasks:
+        n_answers_per_task.append(t.n_answers)
+    avg = sum(n_answers_per_task)/len(tasks)
+    total_n_tasks = len(tasks)
+
+    print "total days used: %s" % len(dates)
+    sorted_answers = sorted(dates.iteritems(), key=operator.itemgetter(0))
+    if len(sorted_answers) > 0:
+        last_day = datetime.datetime.strptime( sorted_answers[-1][0], "%Y-%m-%d")
+    print last_day
+    total_answers = sum(dates.values())
+    if len(dates) > 0:
+        avg_answers_per_day = total_answers/len(dates)
+    required_days_to_finish = ((avg*total_n_tasks)-total_answers)/avg_answers_per_day
+    print "total number of required answers: %s" % (avg*total_n_tasks)
+    print "total number of received answers: %s" % total_answers
+    print "avg number of answers per day: %s" % avg_answers_per_day
+    print "To complete all the tasks at a pace of %s per day, the app will need %s days" % (avg_answers_per_day, required_days_to_finish)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def reset():

@@ -785,3 +785,14 @@ def export_to(short_name):
         return render_template('/applications/export.html',
                                title=title,
                                app=app)
+
+@blueprint.route('/<short_name>/stats')
+def stats(short_name):
+    """Returns App Stats"""
+    app = db.session.query(model.App).filter_by(short_name=short_name).first()
+    title="Application: %s &middot; Stats" % app.name
+    cached_apps.stats_summary(app.id)
+    return render_template('/applications/stats.html',
+                           title=title,
+                           userStats=None,
+                           app=app)
