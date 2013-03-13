@@ -46,12 +46,16 @@
                 {% if private %}
                 <a href="{{url_for('leaderboard.index')}}">
                 {% endif %}
-                {{ user.rank }} of {{user.total}} with a Score of {{user.score}} contributed tasks
+                {{ user.rank }} {{ _('of') }} {{user.total}} {{ _('with a Score of') }} {{user.score}} {{ _('contributed tasks') }}
                 {% if private %}</a>{% endif %}
                 </small>
         </h2>
         {% else %}
+<<<<<<< HEAD
         <h2><i class="icon-trophy"></i> {{ _('Rank') }}: <small>The user has not contributed a task yet</small></h2>
+=======
+        <h2><i class="icon-trophy"></i> {{ _('Rank') }}: <small>{{ _('The user has not contributed a task yet') }}</small></h2>
+>>>>>>> User: New column in database and in the view
         {% endif %}
         {% if not private %}
         <h2><i class="icon-time"></i> {{ _('Joined') }}: <small>{{ user.created[0:10]}}</small></h2>
