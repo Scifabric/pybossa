@@ -20,6 +20,7 @@ from flask import render_template, make_response
 from flaskext.wtf import Form, IntegerField, TextField, BooleanField, \
     SelectField, validators, HiddenInput, TextAreaField
 from flaskext.login import login_required, current_user
+from flaskext.babel import gettext, ngettext
 from werkzeug.exceptions import HTTPException
 
 import pybossa.model as model
@@ -42,28 +43,28 @@ class CSVImportException(Exception):
 
 class AppForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
-    name = TextField('Name',
+    name = TextField(gettext(u'Namex'),
                      [validators.Required(),
                       Unique(db.session, model.App, model.App.name,
-                             message="Name is already taken.")])
-    short_name = TextField('Short Name',
+                             message=gettext(u'Name is already taken.') )])
+    short_name = TextField( gettext(u'Short Name'),
                            [validators.Required(),
                             Unique(db.session, model.App, model.App.short_name,
-                                   message="Short Name is already taken.")])
-    description = TextField('Description',
+                                   message=gettext(u'Short Name is already taken.') )])
+    description = TextField(gettext(u'Description'),
                             [validators.Required(
-                                message="You must provide a description.")])
+                                message=gettext(u'You must provide a description.'))])
     thumbnail = TextField('Icon Link')
-    allow_anonymous_contributors = SelectField('Allow Anonymous Contributors',
-                                               choices=[('True', 'Yes'),
-                                                        ('False', 'No')])
+    allow_anonymous_contributors = SelectField(gettext(u'Allow Anonymous Contributors'),
+                                               choices=[('True', gettext(u'Yes')),
+                                                        ('False', gettext(u'No'))])
     long_description = TextAreaField('Long Description')
-    sched = SelectField('Task Scheduler',
-                        choices=[('default', 'Default'),
-                                 ('breadth_first', 'Breadth First'),
-                                 ('depth_first', 'Depth First'),
-                                 ('random', 'Random')],)
-    hidden = BooleanField('Hide?')
+    sched = SelectField(gettext(u'Task Scheduler'),
+                        choices=[('default', gettext(u'Default')),
+                                 ('breadth_first', gettext(u'Breadth First')),
+                                 ('depth_first', gettext(u'Depth First')),
+                                 ('random', gettext(u'Random'))],)
+    hidden = BooleanField(gettext(u'Hide?'))
 
 
 class TaskPresenterForm(Form):
@@ -72,16 +73,16 @@ class TaskPresenterForm(Form):
 
 
 class BulkTaskCSVImportForm(Form):
-    msg_required = "You must provide a URL"
-    msg_url = "Oops! That's not a valid URL. You must provide a valid URL"
+    msg_required = gettext(u'You must provide a URL')
+    msg_url = gettext(u'Oops! That\'s not a valid URL. You must provide a valid URL')
     csv_url = TextField('URL',
                         [validators.Required(message=msg_required),
                          validators.URL(message=msg_url)])
 
 
 class BulkTaskGDImportForm(Form):
-    msg_required = "You must provide a URL"
-    msg_url = "Oops! That's not a valid URL. You must provide a valid URL"
+    msg_required = gettext(u'You must provide a URL')
+    msg_url = gettext(u'Oops! That\'s not a valid URL. You must provide a valid URL')
     googledocs_url = TextField('URL',
                                [validators.Required(message=msg_required),
                                    validators.URL(message=msg_url)])

@@ -100,7 +100,6 @@ def url_for_other_page(page):
     return url_for(request.endpoint, **args)
 app.jinja_env.globals['url_for_other_page'] = url_for_other_page
 
-
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
@@ -154,7 +153,6 @@ def global_template_context():
         version=pybossa.__version__,
         current_user=current_user,
         )
-
 
 @login_manager.user_loader
 def load_user(username):

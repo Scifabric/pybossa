@@ -21,6 +21,7 @@ from flask import flash
 from flask import redirect
 from flask import url_for
 from flaskext.login import login_required, current_user
+from flaskext.babel import gettext, ngettext
 from flaskext.wtf import Form, TextField
 
 import pybossa.model as model
@@ -104,8 +105,8 @@ def users(user_id=None):
                 .filter(model.User.id != current_user.id)\
                 .all()
         if not found:
-            flash("<strong>Ooops!</strong> We didn't find a user "
-                  "matching your query: <strong>%s</strong>" % form.user.data)
+            flash("<strong>" + gettext(u'Ooops!') + "</strong> " + gettext(u'We didn\'t find a user') + 
+                  gettext(u'matching your query')+ ": <strong>%s</strong>" % form.user.data)
         return render_template('/admin/users.html', found=found, users=users,
                 title="Manage Admin Users", form=form)
 
