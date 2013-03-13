@@ -375,14 +375,14 @@
                                 <thead>
                                     <tr>
                                         <th>#</th>
-                                        <th>PyBossa User ID</th>
+                                        <th>User</th>
                                         <th>Tasks</th>
                                     </tr>
                                 </thead>
                             {% for u in userStats.authenticated.top5 %}
                                 <tr>
                                     <th>{{loop.index}}</th>
-                                    <th>{{u.id}}</th>
+                                    <th>{{u.fullname}}</th>
                                     <th>{{u.tasks}}</th>
                                 </tr>
                             {% endfor %}

@@ -554,7 +554,11 @@ def stats_format_users(app_id, users, anon_users, auth_users):
         loc_anon.append(dict(ip=u[0],loc=loc, tasks=u[1]))
 
     for u in c_auth_users.most_common(5):
-        top5_auth.append(dict(id=u[0], tasks=u[1]))
+        sql = text('''SELECT fullname from "user" where id=:id;''')
+        results = db.engine.execute(sql, id=u[0])
+        for row in results:
+            fullname = row.fullname
+        top5_auth.append(dict(fullname=fullname, tasks=u[1]))
 
     userAnonStats['top5'] = top5_anon
     userAnonStats['locs'] = loc_anon
