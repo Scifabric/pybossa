@@ -20,6 +20,7 @@ from flask import render_template, make_response
 from flaskext.wtf import Form, IntegerField, TextField, BooleanField, \
     SelectField, validators, HiddenInput, TextAreaField
 from flaskext.login import login_required, current_user
+from flaskext.babel import gettext, ngettext
 from werkzeug.exceptions import HTTPException
 from werkzeug import Headers
 import os
@@ -39,25 +40,25 @@ blueprint = Blueprint('app', __name__)
 
 class AppForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
-    name = TextField('Name',
+    name = TextField(gettext(u'Namex'),
                      [validators.Required(),
                       Unique(db.session, model.App, model.App.name,
-                             message="Name is already taken.")])
-    short_name = TextField('Short Name',
+                             message=gettext(u'Name is already taken.') )])
+    short_name = TextField( gettext(u'Short Name'),
                            [validators.Required(),
                             Unique(db.session, model.App, model.App.short_name,
-                                   message="Short Name is already taken.")])
-    description = TextField('Description',
+                                   message=gettext(u'Short Name is already taken.') )])
+    description = TextField(gettext(u'Description'),
                             [validators.Required(
-                                message="You must provide a description.")])
-    thumbnail = TextField('Icon Link')
+                                message=gettext(u'You must provide a description.') )])
+    thumbnail = TextField(gettext(u'Icon Link'))
     long_description = TextAreaField('Long Description')
-    sched = SelectField('Task Scheduler',
+    sched = SelectField(gettext(u'Task Scheduler'),
                         choices=[('default', 'Default'),
                                  ('breadth_first', 'Breadth First'),
                                  ('depth_first', 'Depth First'),
                                  ('random', 'Random')],)
-    hidden = BooleanField('Hide?')
+    hidden = BooleanField(gettext(u'Hide?'))
 
 
 class TaskPresenterForm(Form):
@@ -66,13 +67,13 @@ class TaskPresenterForm(Form):
 
 
 class BulkTaskCSVImportForm(Form):
-    csv_url = TextField('URL', [validators.Required(message="You must "
-                "provide a URL"), validators.URL(message="Oops! That's not a"
-                " valid URL. You must provide a valid URL")])
+    csv_url = TextField(gettext(u'URL'), [validators.Required(message=gettext(u'You must ') +
+                gettext(u'provide a URL')), validators.URL(message=gettext(u'Oops! That\'s not a') +
+                gettext(' valid URL. You must provide a valid URL') )])
 class BulkTaskGDImportForm(Form):
-    googledocs_url = TextField('URL', [validators.Required(message="You must "
-                "provide a URL"), validators.URL(message="Oops! That's not a"
-                " valid URL. You must provide a valid URL")])
+    googledocs_url = TextField(gettext(u'URL'), [validators.Required(message=gettext(u'You must ') +
+                gettext(u'provide a URL')), validators.URL(message=gettext(u'Oops! That\'s not a') +
+                gettext(u'valid URL. You must provide a valid URL') )])
 
 
 @blueprint.route('/', defaults={'page': 1})
