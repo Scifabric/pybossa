@@ -413,23 +413,21 @@ def import_task(short_name):
 
     if app.tasks or (request.args.get('template') or request.method == 'POST'):
 
-        googledocs_urls = [
-            ('image',  "https://docs.google.com/spreadsheet/ccc" \
-                 "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE" \
-                 "&usp=sharing"),
-            ('map', "https://docs.google.com/spreadsheet/ccc" \
-                 "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc" \
-                 "&usp=sharing"),
-            ('pdf', "https://docs.google.com/spreadsheet/ccc" \
+        googledocs_urls = {
+            'image': "https://docs.google.com/spreadsheet/ccc" \
+                "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE" \
+                "&usp=sharing",
+            'map': "https://docs.google.com/spreadsheet/ccc" \
+                "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc" \
+                "&usp=sharing",
+            'pdf': "https://docs.google.com/spreadsheet/ccc" \
                  "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE" \
-                 "&usp=sharing")
-            ]
+                 "&usp=sharing"
+            }
 
         template = request.args.get('template')
-        for template_id, googledocs_url in googledocs_urls:
-            if template == template_id:
-                gdform.googledocs_url.data = googledocs_url
-                break
+        if template in googledocs_urls:
+            gdform.googledocs_url.data = googledocs_urls[template]
 
         if 'csv_url' in request.form and csvform.validate_on_submit():
             dataurl = csvform.csv_url.data
