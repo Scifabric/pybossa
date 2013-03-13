@@ -460,8 +460,8 @@ def stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
                 dates_n_tasks.values()[0]])
 
 
-    return dayNewStats, dayAvgAnswers, dayEstimates, dayTotalStats, \
-            dayNewAnonStats, dayNewAuthStats
+    return dayNewStats, dayNewAnonStats, dayNewAuthStats, \
+            dayTotalStats, dayAvgAnswers, dayEstimates
 
 
 @cache.memoize(timeout=STATS_TIMEOUT)
@@ -560,7 +560,8 @@ def stats_format_users(app_id, users, anon_users, auth_users):
     userAnonStats['locs'] = loc_anon
     userAuthStats['top5'] = top5_auth
 
-    return userStats, userAnonStats, userAuthStats
+    return dict(users=userStats, anon=userAnonStats, auth=userAuthStats,
+                n_anon=anonymous, n_auth=authenticated)
 
 
 @cache.memoize(timeout=STATS_TIMEOUT)
@@ -602,6 +603,7 @@ def get_stats(app_id):
                        max_hours, max_hours_anon, max_hours_auth)
 
     users_stats = stats_format_users(app_id, users, anon_users, auth_users)
+    print users_stats['n_anon']
     return dates_stats, hours_stats, users_stats
 
 

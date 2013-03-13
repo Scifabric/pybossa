@@ -792,10 +792,29 @@ def stats(short_name):
     app = db.session.query(model.App).filter_by(short_name=short_name).first()
     title="Application: %s &middot; Stats" % app.name
     dates_stats, hours_stats, users_stats = cached_apps.get_stats(app.id)
-    print dates_stats
-    print hours_stats
-    print users_stats
+    anon_pct_taskruns = int((users_stats['n_anon']*100)/(users_stats['n_anon']+users_stats['n_auth']))
+    userStats=dict(
+        anonymous=dict(
+            users=len(users_stats['anon']['values']),
+            taskruns=users_stats['n_anon'],
+            pct_taskruns=anon_pct_taskruns,
+            top5=users_stats['anon']['top5']),
+        authenticated=dict(
+            users=len(users_stats['auth']['values']),
+            taskruns=users_stats['n_auth'],
+            pct_taskruns=100-anon_pct_taskruns,
+            top5=users_stats['auth']['top5']),
+    )
+
+    tmp = dict(userStats=users_stats['users'],
+                 userAnonStats=users_stats['anon'],
+                 userAuthStats=users_stats['auth'],
+                 dayStats=dates_stats,
+                 hourStats=hours_stats)
+
+
     return render_template('/applications/stats.html',
                            title=title,
-                           userStats=None,
+                           appStats=json.dumps(tmp),
+                           userStats=userStats,
                            app=app)
