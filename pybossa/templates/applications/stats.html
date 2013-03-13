@@ -20,6 +20,11 @@
 <script>
     var appStats = {{appStats|safe}};
 </script>
+<div class="row">
+    <div class="span3">
+        {{helper.render_app_local_nav(app, 'stats', current_user)}}
+    </div>
+    <div class="span9">
         <div class="container-fluid">
             <div id="heading" class="row-fluid">
                 {% if app.info.thumbnail %}
@@ -27,11 +32,11 @@
                     <img src="{{app.info.thumbnail}}"/>
                 </div>
                 <div class="span8">
-                    <h1>Stats for application: <strong>{{app.name}}</strong></h1>
+                    <h1><strong>{{app.name}}</strong>: Stats</h1>
                 </div>
                 {% else %}
                 <div class="span12">
-                    <h1 >Stats for application: <small>{{app.name}}</small></h1>
+                    <h1><small>{{app.name}}</small>: Stats</h1>
                 </div>
                 {% endif %}
             </div>
@@ -271,10 +276,10 @@
                 <div id="dist-anon" class="span12  well">
                     <h2>Details about Anonymous Users</h2>
                     <div class="row-fluid">
-                        <div class="span6">
+                        <div class="span12">
                             <p><strong>{{userStats.anonymous.users}} </strong> have <strong>participated</strong>.</p>
                             {% if userStats.anonymous.top5 %}
-                            <h4>Top 5 users</h4>
+                            <h3>Top 5 users</h3>
                             <table class="table table-hover table-bordered table-striped">
                                 <thead>
                                     <tr>
@@ -297,7 +302,7 @@
                             </table>
                             {% endif %}
                         </div>
-                        <div id="userAnonStats" class="span4"  style='height:400px;width:400px'>
+                        <div id="userAnonStats" class="span12"  style='height:400px'>
                         </div>
                         <script>
                         (function(){
@@ -314,7 +319,7 @@
                             HtmlText: false,
                             xaxis   : {showLabels: false},
                             yaxis   : {showLabels: false},
-                            legend  : {postion: 'nw'}
+                            legend  : {postion: 'se'}
                         });
                         })();
                         </script>
@@ -362,10 +367,10 @@
                 <div id="dist-auth" class="span12  well">
                     <h2>Details about Authenticated Users</h2>
                     <div class="row-fluid">
-                        <div class="span6">
+                        <div class="span12">
                             <p><strong>{{userStats.authenticated.users}} </strong> have <strong>participated</strong>.</p>
                             {% if userStats.authenticated.top5 %}
-                            <h4>Top 5 users</h4>
+                            <h3>Top 5 users</h3>
                             <table class="table table-hover table-bordered table-striped">
                                 <thead>
                                     <tr>
@@ -384,7 +389,7 @@
                             </table>
                             {% endif %}
                         </div>
-                        <div id="userAuthStats" class="span4" style='height:400px;width:400px'>
+                        <div id="userAuthStats" class="span12" style='height:400px'>
                         </div>
                         <script>
                         (function(){
@@ -410,4 +415,6 @@
             </div>
             <!-- END Auth User Stats CARD -->
         </div>
+    </div>
+</div>
 {% endblock %}
