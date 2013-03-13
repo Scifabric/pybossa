@@ -86,14 +86,13 @@
            <span class="label label-success">{{item.task_runs}}</span> <small>{{ _('Tasks') }}</small>
 =======
           <a href="{{url_for('account.public_profile', name=user.name)}}" data-content="
-                <strong>Joined:</strong> {{user.created[0:10]}} 
+                <strong>{{ _('Joined') }}:</strong> {{user.created[0:10]}} 
                 <br/>
-                <strong>Submitted Tasks:</strong> {{user.task_runs}}
+                <strong>{{ _('Submitted Tasks') }}:</strong> {{user.task_runs}}
                 " rel="popover" data-original-title="<strong>{{user.fullname}}</strong>">
                 <img src="{{user.email_addr|gravatar(size=90)}}">
            </a>
-           <span class="label label-success">{{user.task_runs}}</span> <small>Tasks</small>
->>>>>>> 429bc3879503564db0c15495b1de5355c997caf1
+           <span class="label label-success">{{user.task_runs}}</span> <small>{{ _('Tasks') }}</small>
           </li>
           {% endfor %}
         </ul>

@@ -20,6 +20,7 @@
     {% else %}
             <button id="appBtn{{app.id}}" class="btn btn-primary" data-toggle="button" onclick="toggle({{app.id}})">
             <i id="app{{app.id}}" class="icon-star-empty"></i> {{ _('Featured!') }}</button>    
+    {% endif %}
     <hr>
     {% endfor %}
     </div>
