@@ -228,7 +228,7 @@
                                         <th>Percentage</th>
                                     </tr>
                                 </thead>
-                            {% for k in userStats.keys() %}
+                            {% for k in userStats.keys() if k != 'geo' %}
                                 <tr>
                                     <th>{{k | capitalize}}</th>
                                     <th>{{userStats[k].taskruns}}</th>
