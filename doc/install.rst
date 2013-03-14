@@ -7,7 +7,7 @@ PyBossa is a python web application built using the Flask micro-framework.
 Pre-requisites:
 
   * Python >= 2.6, <3.0
-  * A database plus Python bindings for PostgreSQL
+  * A database plus Python bindings for PostgreSQL version 9.1
   * pip for installing python packages (e.g. on ubuntu python-pip)
 
 .. note::
