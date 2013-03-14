@@ -790,7 +790,7 @@ def export_to(short_name):
 def stats(short_name):
     """Returns App Stats"""
     app = db.session.query(model.App).filter_by(short_name=short_name).first()
-    title="Application: %s &middot; Stats" % app.name
+    title="Application: %s &middot; Statistics" % app.name
     dates_stats, hours_stats, users_stats = cached_apps.get_stats(app.id)
     anon_pct_taskruns = int((users_stats['n_anon']*100)/(users_stats['n_anon']+users_stats['n_auth']))
     userStats=dict(

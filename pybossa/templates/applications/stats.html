@@ -32,11 +32,11 @@
                     <img src="{{app.info.thumbnail}}"/>
                 </div>
                 <div class="span8">
-                    <h1><strong>{{app.name}}</strong>: Stats</h1>
+                    <h1><strong>{{app.name}}</strong>: Statistics</h1>
                 </div>
                 {% else %}
                 <div class="span12">
-                    <h1><small>{{app.name}}</small>: Stats</h1>
+                    <h1><small>{{app.name}}</small>: Statistics</h1>
                 </div>
                 {% endif %}
             </div>
@@ -277,7 +277,7 @@
                     <h2>Details about Anonymous Users</h2>
                     <div class="row-fluid">
                         <div class="span12">
-                            <p><strong>{{userStats.anonymous.users}} </strong> have <strong>participated</strong>.</p>
+                            <p><i class="icon-group"></i> <strong>{{userStats.anonymous.users}} </strong> anonymous users have <strong>participated</strong></p>
                             {% if userStats.anonymous.top5 %}
                             <h3>Top 5 users</h3>
                             <table class="table table-hover table-bordered table-striped">
@@ -327,7 +327,7 @@
                     <div class="row-fluid">
                         <div class="span12">
                             <div id="map" style="height:250px;"></div>
-                            <p>This page includes GeoLite data created by MaxMind, available from
+                            <p class="note">This page includes GeoLite data created by MaxMind, available from
                             <a href="http://www.maxmind.com">http://www.maxmind.com</a></p>
                         </div>
                         <script>
@@ -368,7 +368,7 @@
                     <h2>Details about Authenticated Users</h2>
                     <div class="row-fluid">
                         <div class="span12">
-                            <p><strong>{{userStats.authenticated.users}} </strong> have <strong>participated</strong>.</p>
+                            <p><i class="icon-group"></i> <strong>{{userStats.authenticated.users}}</strong> authenticated users have <strong>participated</strong>.</p>
                             {% if userStats.authenticated.top5 %}
                             <h3>Top 5 users</h3>
                             <table class="table table-hover table-bordered table-striped">
