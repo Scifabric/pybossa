@@ -15,7 +15,7 @@
 
 from StringIO import StringIO
 import requests
-from flask import Blueprint, request, url_for, flash, redirect, abort, Response
+from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, make_response
 from flaskext.wtf import Form, IntegerField, TextField, BooleanField, \
     SelectField, validators, HiddenInput, TextAreaField
@@ -794,10 +794,12 @@ def show_stats(short_name):
     """Returns App Stats"""
     app = db.session.query(model.App).filter_by(short_name=short_name).first()
     title = "Application: %s &middot; Statistics" % app.name
-    dates_stats, hours_stats, users_stats = stats.get_stats(app.id)
+    dates_stats, hours_stats, users_stats = stats.get_stats(app.id,
+                                                            current_app.config['GEO'])
     anon_pct_taskruns = int((users_stats['n_anon'] * 100) /
                             (users_stats['n_anon'] + users_stats['n_auth']))
     userStats = dict(
+        geo=current_app.config['GEO'],
         anonymous=dict(
             users=len(users_stats['anon']['values']),
             taskruns=users_stats['n_anon'],

@@ -278,7 +278,7 @@
                     <div class="row-fluid">
                         <div class="span12">
                             <p><i class="icon-group"></i> <strong>{{userStats.anonymous.users}} </strong> anonymous users have <strong>participated</strong></p>
-                            {% if userStats.anonymous.top5 %}
+                            {% if userStats.anonymous.top5 and userStats.geo %}
                             <h3>Top 5 users</h3>
                             <table class="table table-hover table-bordered table-striped">
                                 <thead>
@@ -322,6 +322,7 @@
                         })();
                         </script>
                     </div>
+                    {% if userStats.geo %}
                     <div class="row-fluid">
                         <div class="span12">
                             <div id="map" style="height:250px;"></div>
@@ -356,6 +357,7 @@
                             })();
                         </script>
                     </div>
+                    {% endif %}
                 </div>
             </div>
             <!-- END Anon User Stats CARD -->

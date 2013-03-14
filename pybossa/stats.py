@@ -18,6 +18,7 @@ from pybossa.core import db
 from pybossa.model import TaskRun, Task
 
 import string
+import pygeoip
 import operator
 import datetime
 import time
@@ -39,6 +40,21 @@ def get_tasks(app_id):
     """Return all the tasks for a given app_id"""
     tasks = db.session.query(Task).filter_by(app_id=app_id).all()
     return tasks
+
+
+@cache.memoize(timeout=STATS_TIMEOUT)
+def get_avg_n_tasks(app_id):
+    """Return the average number of answers expected per task,
+    and the number of tasks"""
+    sql = text('''SELECT COUNT(task.id) as n_tasks,
+               AVG(task.n_answers) AS "avg" FROM task
+               WHERE task.app_id=:app_id;''')
+
+    results = db.engine.execute(sql, app_id=app_id)
+    for row in results:
+        avg = float(row.avg)
+        total_n_tasks = row.n_tasks
+    return avg, total_n_tasks
 
 
 @cache.memoize(timeout=STATS_TIMEOUT)
@@ -77,18 +93,10 @@ def stats_dates(app_id):
     dates_anon = {}
     dates_auth = {}
     dates_n_tasks = {}
-    avg = 0
 
     task_runs = get_task_runs(app_id)
 
-    sql = text('''SELECT COUNT(task.id) as n_tasks,
-               AVG(task.n_answers) AS "avg" FROM task
-               WHERE task.app_id=:app_id;''')
-
-    results = db.engine.execute(sql, app_id=app_id)
-    for row in results:
-        avg = float(row.avg)
-        total_n_tasks = row.n_tasks
+    avg, total_n_tasks = get_avg_n_tasks(app_id)
 
     for tr in task_runs:
         # Data for dates
@@ -159,7 +167,7 @@ def stats_hours(app_id):
                 hours_auth[hour] += 1
                 if (hours_auth[hour] > max_hours_auth):
                     max_hours_auth = hours_auth[hour]
-    return hours,  hours_anon, hours_auth, max_hours, max_hours_anon, max_hours_auth
+    return hours, hours_anon, hours_auth, max_hours, max_hours_anon, max_hours_auth
 
 
 @cache.memoize(timeout=STATS_TIMEOUT)
@@ -262,25 +270,14 @@ def stats_format_hours(app_id, hours, hours_anon, hours_auth,
 
 
 @cache.memoize(timeout=STATS_TIMEOUT)
-def stats_format_users(app_id, users, anon_users, auth_users):
+def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
     """Format User Stats into JSON"""
     userStats = dict(label="User Statistics", values=[])
     userAnonStats = dict(label="Anonymous Users", values=[], top5=[], locs=[])
     userAuthStats = dict(label="Authenticated Users", values=[], top5=[])
 
-    # Count total number of answers for users
-    anonymous = 0
-    authenticated = 0
-    anonymous = users['n_anon']
-    authenticated = users['n_auth']
-    #for e in users:
-    #    if e == -1:
-    #        anonymous += 1
-    #    else:
-    #        authenticated += 1
-
-    userStats['values'].append(dict(label="Anonymous", value=[0, anonymous]))
-    userStats['values'].append(dict(label="Authenticated", value=[0, authenticated]))
+    userStats['values'].append(dict(label="Anonymous", value=[0, users['n_anon']]))
+    userStats['values'].append(dict(label="Authenticated", value=[0, users['n_auth']]))
     from collections import Counter
     c_anon_users = Counter(anon_users)
     c_auth_users = Counter(auth_users)
@@ -292,20 +289,27 @@ def stats_format_users(app_id, users, anon_users, auth_users):
         userAuthStats['values'].append(dict(label=u, value=c_auth_users[u]))
 
     # Get location for Anonymous users
-    import pygeoip
-    gic = pygeoip.GeoIP('dat/GeoLiteCity.dat')
     top5_anon = []
     top5_auth = []
     loc_anon = []
+    # Check if the GeoLiteCity.dat exists
+    if geo:
+        gic = pygeoip.GeoIP('dat/GeoLiteCity.dat')
     for u in c_anon_users.most_common(5):
-        loc = gic.record_by_addr(u[0])
+        if geo:
+            loc = gic.record_by_addr(u[0])
+        else:
+            loc = {}
         if (len(loc.keys()) == 0):
             loc['latitude'] = 0
             loc['longitude'] = 0
         top5_anon.append(dict(ip=u[0], loc=loc, tasks=u[1]))
 
     for u in c_anon_users.items():
-        loc = gic.record_by_addr(u[0])
+        if geo:
+            loc = gic.record_by_addr(u[0])
+        else:
+            loc = {}
         if (len(loc.keys()) == 0):
             loc['latitude'] = 0
             loc['longitude'] = 0
@@ -323,23 +327,18 @@ def stats_format_users(app_id, users, anon_users, auth_users):
     userAuthStats['top5'] = top5_auth
 
     return dict(users=userStats, anon=userAnonStats, auth=userAuthStats,
-                n_anon=anonymous, n_auth=authenticated)
+                n_anon=users['n_anon'], n_auth=users['n_auth'])
 
 
 @cache.memoize(timeout=STATS_TIMEOUT)
-def get_stats(app_id):
+def get_stats(app_id, geo=False):
     """Return the stats a given app"""
-    tasks = get_tasks(app_id)
     hours, hours_anon, hours_auth, max_hours, \
         max_hours_anon, max_hours_auth = stats_hours(app_id)
     users, anon_users, auth_users = stats_users(app_id)
     dates, dates_n_tasks, dates_anon, dates_auth = stats_dates(app_id)
 
-    n_answers_per_task = []
-    for t in tasks:
-        n_answers_per_task.append(t.n_answers)
-    avg = sum(n_answers_per_task) / len(tasks)
-    total_n_tasks = len(tasks)
+    avg, total_n_tasks = get_avg_n_tasks(app_id)
 
     sorted_answers = sorted(dates.iteritems(), key=operator.itemgetter(0))
     if len(sorted_answers) > 0:
@@ -352,7 +351,7 @@ def get_stats(app_id):
     pace = total_answers
 
     dates_estimate = {}
-    for i in range(0, required_days_to_finish + 2):
+    for i in range(0, int(required_days_to_finish) + 2):
         tmp = last_day + timedelta(days=(i))
         tmp_str = tmp.date().strftime('%Y-%m-%d')
         dates_estimate[tmp_str] = pace
@@ -364,5 +363,5 @@ def get_stats(app_id):
     hours_stats = stats_format_hours(app_id, hours, hours_anon, hours_auth,
                                      max_hours, max_hours_anon, max_hours_auth)
 
-    users_stats = stats_format_users(app_id, users, anon_users, auth_users)
+    users_stats = stats_format_users(app_id, users, anon_users, auth_users, geo)
     return dates_stats, hours_stats, users_stats
