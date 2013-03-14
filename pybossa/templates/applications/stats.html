@@ -284,7 +284,6 @@
                                 <thead>
                                     <tr>
                                         <th>#</th>
-                                        <th>IP Address</th>
                                         <th>Country</th>
                                         <th>City</th>
                                         <th>Tasks</th>
@@ -293,7 +292,6 @@
                             {% for u in userStats.anonymous.top5 %}
                                 <tr>
                                     <th>{{loop.index}}</th>
-                                    <th>{{u.ip}}</th>
                                     <th>{{u.loc.country_name}}</th>
                                     <th>{{u.loc.city}}</th>
                                     <th>{{u.tasks}}</th>
@@ -308,11 +306,11 @@
                         (function(){
                         var container = document.getElementById('userAnonStats');
                         var graph = Flotr.draw(container, [
-                            {data:[[0, appStats.userAnonStats['top5'][0]['tasks'] ]],  label:appStats.userAnonStats['top5'][0]['ip']},
-                            {data:[[0, appStats.userAnonStats['top5'][1]['tasks'] ]],  label:appStats.userAnonStats['top5'][1]['ip']}, 
-                            {data:[[0, appStats.userAnonStats['top5'][2]['tasks'] ]],  label:appStats.userAnonStats['top5'][2]['ip']}, 
-                            {data:[[0, appStats.userAnonStats['top5'][3]['tasks'] ]],  label:appStats.userAnonStats['top5'][3]['ip']}, 
-                            {data:[[0, appStats.userAnonStats['top5'][4]['tasks'] ]],  label:appStats.userAnonStats['top5'][4]['ip']}], 
+                            {data:[[0, appStats.userAnonStats['top5'][0]['tasks'] ]],  label:'User 1'},
+                            {data:[[0, appStats.userAnonStats['top5'][1]['tasks'] ]],  label:'User 2'}, 
+                            {data:[[0, appStats.userAnonStats['top5'][2]['tasks'] ]],  label:'User 3'}, 
+                            {data:[[0, appStats.userAnonStats['top5'][3]['tasks'] ]],  label:'User 4'}, 
+                            {data:[[0, appStats.userAnonStats['top5'][4]['tasks'] ]],  label:'User 5'}], 
                             {
                             pie     : {show: true, explode: 5},
                             grid    : {verticalLines: false, horizontalLines: false, outlineWidth: 0},
@@ -395,11 +393,11 @@
                         (function(){
                         var container = document.getElementById('userAuthStats');
                         var graph = Flotr.draw(container, [
-                            {data:[[0, appStats.userAuthStats['top5'][0]['tasks'] ]],  label:appStats.userAuthStats['top5'][0]['id']},
-                            {data:[[0, appStats.userAuthStats['top5'][1]['tasks'] ]],  label:appStats.userAuthStats['top5'][1]['id']}, 
-                            {data:[[0, appStats.userAuthStats['top5'][2]['tasks'] ]],  label:appStats.userAuthStats['top5'][2]['id']}, 
-                            {data:[[0, appStats.userAuthStats['top5'][3]['tasks'] ]],  label:appStats.userAuthStats['top5'][3]['id']}, 
-                            {data:[[0, appStats.userAuthStats['top5'][4]['tasks'] ]],  label:appStats.userAuthStats['top5'][4]['id']}], 
+                            {data:[[0, appStats.userAuthStats['top5'][0]['tasks'] ]],  label:appStats.userAuthStats['top5'][0]['fullname']},
+                            {data:[[0, appStats.userAuthStats['top5'][1]['tasks'] ]],  label:appStats.userAuthStats['top5'][1]['fullname']}, 
+                            {data:[[0, appStats.userAuthStats['top5'][2]['tasks'] ]],  label:appStats.userAuthStats['top5'][2]['fullname']}, 
+                            {data:[[0, appStats.userAuthStats['top5'][3]['tasks'] ]],  label:appStats.userAuthStats['top5'][3]['fullname']}, 
+                            {data:[[0, appStats.userAuthStats['top5'][4]['tasks'] ]],  label:appStats.userAuthStats['top5'][4]['fullname']}], 
                             {
                             pie     : {show: true, explode: 5},
                             grid    : {verticalLines: false, horizontalLines: false, outlineWidth: 0},
