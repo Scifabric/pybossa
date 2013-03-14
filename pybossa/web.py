@@ -80,7 +80,8 @@ except Exception as inst:
     print "Google singin disabled"
 
 # Check if app stats page can generate the map
-if not os.path.exists('dat/GeoLiteCity.dat'):
+geolite = app.root_path + '/../dat/GeoLiteCity.dat'
+if not os.path.exists(geolite):
     app.config['GEO'] = False
     print("GeoLiteCity.dat file not found")
     print("App page stats web map disabled")
