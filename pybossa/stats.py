@@ -44,17 +44,30 @@ def get_tasks(app_id):
 @cache.memoize(timeout=STATS_TIMEOUT)
 def stats_users(app_id):
     """Return users's stats for a given app_id"""
-    task_runs = get_task_runs(app_id)
-    users = []
+    users = {}
     auth_users = []
     anon_users = []
-    for tr in task_runs:
-        if (tr.user_id is None):
-            users.append(-1)
-            anon_users.append(tr.user_ip)
-        else:
-            users.append(tr.user_id)
-            auth_users.append(tr.user_id)
+
+    # Get Authenticated Users
+    sql = text('''SELECT DISTINCT(task_run.user_id) AS user_id FROM task_run
+               WHERE task_run.user_id IS NOT NULL AND
+               task_run.user_ip IS NULL AND
+               task_run.app_id=:app_id;''')
+    results = db.engine.execute(sql, app_id=app_id)
+    for row in results:
+        auth_users.append(row.user_id)
+    users['n_auth'] = len(auth_users)
+
+    # Get Anonymous Users
+    sql = text('''SELECT DISTINCT(task_run.user_ip) AS user_ip FROM task_run
+               WHERE task_run.user_ip IS NOT NULL AND
+               task_run.user_id IS NULL AND
+               task_run.app_id=:app_id;''')
+    results = db.engine.execute(sql, app_id=app_id)
+    for row in results:
+        anon_users.append(row.user_ip)
+    users['n_anon'] = len(anon_users)
+
     return users, anon_users, auth_users
 
 
@@ -257,11 +270,13 @@ def stats_format_users(app_id, users, anon_users, auth_users):
     # Count total number of answers for users
     anonymous = 0
     authenticated = 0
-    for e in users:
-        if e == -1:
-            anonymous += 1
-        else:
-            authenticated += 1
+    anonymous = users['n_anon']
+    authenticated = users['n_auth']
+    #for e in users:
+    #    if e == -1:
+    #        anonymous += 1
+    #    else:
+    #        authenticated += 1
 
     userStats['values'].append(dict(label="Anonymous", value=[0, anonymous]))
     userStats['values'].append(dict(label="Authenticated", value=[0, authenticated]))
