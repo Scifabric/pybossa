@@ -163,17 +163,25 @@ def get_published(page=1, per_page=5):
     count = n_published()
 
     sql = text('''
-               SELECT app.id, app.name, app.short_name, app.description,
-               app.info, app.created, "user".fullname AS owner,
-               featured.app_id as featured
-               FROM task, "user", app LEFT OUTER JOIN featured ON app.id=featured.app_id
-               WHERE
-               app.id=task.app_id AND app.info LIKE('%task_presenter%')
-               AND app.hidden=0
-               AND "user".id=app.owner_id
-               GROUP BY app.id, "user".id, featured.id ORDER BY app.name
-               OFFSET :offset
-               LIMIT :limit;''')
+    SELECT t.id, app.name, app.short_name, app.description, app.info, 
+           app.created, "user".fullname AS owner, 
+           featured.app_id AS featured 
+    FROM (
+      SELECT app.id, "user".id As user_id 
+      FROM app 
+        JOIN task ON app.id = task.app_id 
+        JOIN "user" ON "user".id = app.owner_id 
+        LEFT JOIN featured ON app.id = featured.app_id 
+      WHERE app.info LIKE('%task_presenter%')
+        AND app.hidden=0 
+      GROUP BY app.id, "user".id, featured.id
+    ) AS t 
+    LEFT JOIN app USING (id) 
+    LEFT JOIN "user" ON "user".id = app.owner_id 
+    LEFT JOIN featured ON app.id = featured.app_id 
+    ORDER BY app.name 
+    OFFSET :offset LIMIT :limit;
+    ''')
 
     offset = (page - 1) * per_page
     results = db.engine.execute(sql, limit=per_page, offset=offset)
