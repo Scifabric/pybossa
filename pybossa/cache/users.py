@@ -26,7 +26,7 @@ def get_top(n=10):
     FROM (
       SELECT "user".id, COUNT(task_run.id) AS task_runs 
       FROM task_run 
-      LEFT JOIN "user" ON "user".id = task_run.user_id 
+      JOIN "user" ON "user".id = task_run.user_id 
       GROUP BY "user".id ORDER BY task_runs LIMIT :limit
     ) AS t 
     LEFT JOIN "user" USING (id);
