@@ -42,7 +42,8 @@ def get_top(n=4):
     FROM (SELECT app.id, count(app_id) AS total FROM task_run
             LEFT JOIN app ON app_id = app.id 
           GROUP BY app.id 
-          ORDER BY total DESC LIMIT :limit) AS t
+          ORDER BY total DESC LIMIT :limit
+          ) AS t
       LEFT JOIN app USING (id);
     ''')
 
@@ -122,7 +123,8 @@ def get_featured(page=1, per_page=5):
         LEFT JOIN featured ON app.id = featured.app_id 
         LEFT JOIN "user" ON "user".id = app.owner_id 
       WHERE app.hidden = 0 
-      GROUP BY app.id, "user".id OFFSET(:offset) LIMIT(:limit)) as t 
+      GROUP BY app.id, "user".id OFFSET(:offset) LIMIT(:limit)
+    ) AS t 
     LEFT JOIN app USING (id) 
     LEFT JOIN "user" ON t.user_id = app.owner_id;
                ''')
