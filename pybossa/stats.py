@@ -12,6 +12,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+from flask import current_app
 from sqlalchemy.sql import text
 from pybossa.core import cache
 from pybossa.core import db
@@ -309,8 +310,9 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
     top5_auth = []
     loc_anon = []
     # Check if the GeoLiteCity.dat exists
+    geolite = current_app.root_path + '/../dat/GeoLiteCity.dat'
     if geo:
-        gic = pygeoip.GeoIP('dat/GeoLiteCity.dat')
+        gic = pygeoip.GeoIP(geolite)
     for u in c_anon_users.most_common(5):
         if geo:
             loc = gic.record_by_addr(u[0])
