@@ -15,10 +15,17 @@
 from sqlalchemy.sql import func, text
 from pybossa.core import cache
 from pybossa.core import db
-from pybossa.model import Featured, App, TaskRun
+from pybossa.model import Featured, App, TaskRun, Task
 from pybossa.util import pretty_date
 
 import json
+import string
+import operator
+import datetime
+import time
+from datetime import timedelta
+
+STATS_TIMEOUT=50
 
 @cache.cached(key_prefix="front_page_featured_apps")
 def get_featured_front_page():

@@ -1,0 +1,22 @@
+{% extends "/base.html" %}
+{% set active_page = "applications" %}
+{% set active_app  = "all" %}
+{% import "applications/_helpers.html" as helper %}
+
+{% block content %}
+<div class="row" style="min-height:400px;">
+    <div class="span3">
+        {{helper.render_app_local_nav(app, 'stats', current_user)}}
+    </div>
+    <div class="span9">
+        <h1>
+        {% if app.info.thumbnail %}
+            <img class="img-polaroid" src="{{app.info.thumbnail}}" style="max-width:60px;" onerror="imgError(this);"> 
+        {% else %}
+            <img class="img-polaroid" src="{{url_for('static', filename='img/placeholder.png')}}" style="max-width:60px;" onerror="imgError(this);"> 
+        {% endif %}
+        <strong>{{ app.name }}</strong>: Statistics</h1>
+        <span class="alert alert-warning"><strong>Ooops</strong> Sorry, the application does not have Tasks to process and show some statistics</span>
+    </div>
+</div>
+{% endblock %}

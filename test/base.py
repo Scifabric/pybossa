@@ -149,7 +149,7 @@ class Fixtures:
 
     @classmethod
     def create_task_and_run(cls,task_info, task_run_info, app, user, order):
-        task = model.Task(app_id = 1, state = '0', info = task_info)
+        task = model.Task(app_id = 1, state = '0', info = task_info, n_answers=10)
         task.app = app
         # Taskruns will be assigned randomly to a signed user or an anonymous one
         if random.randint(0,1) == 1:

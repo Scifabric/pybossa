@@ -1,0 +1,110 @@
+html,
+body {
+    background-color:#efeeee;
+}
+
+h1 {
+    font-weight:normal;
+    margin:0px;
+}
+
+.alert-info {
+    background-color: #2681c0;
+    border:none;
+    color: #FFF;
+    text-shadow:none;
+}
+.alert-info .close {
+    color: #FFFFFF;
+    opacity: 1.0;
+    text-shadow: none;
+}
+
+#heading {
+    margin-top:30px;
+    margin-bottom:20px;
+}
+#heading .span1 img {
+    -webkit-border-radius: 3px;
+  -moz-border-radius: 3px;
+  border-radius: 3px;
+}
+[id*="card"] .well {
+    background-color:#FFF;
+}
+[id*="card"] .well h2 {
+    background-color:#d4d3d3;
+    margin: -19px -19px 30px;
+    padding:10px 20px;
+    font-size:18px;
+    font-weight: bold;
+    line-height:normal;
+    -webkit-border-top-left-radius: 4px;
+    -webkit-border-top-right-radius: 4px;
+    -moz-border-radius-topleft: 4px;
+    -moz-border-radius-topright: 4px;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+[id*="card"] .well h2 small {
+    float: right;
+    font-size: 14px;
+    color: #6C6B6B;
+    background-image: url(/static/img/info-icon.png);
+    background-repeat: no-repeat;
+    background-position: left center;
+    padding-left:25px;
+    height:20px;
+    line-height:20px;
+}
+
+[id*="card"] h3 {
+    font-weight: bold;
+}
+
+[id*="card"] p {
+    font-size: 18px;
+}
+
+[id*="card"] .note {
+    font-size: 10px;
+}
+
+.table-hover tbody tr:hover td,
+.table-hover tbody tr:hover th {
+    background-color: rgb(200,200,200);
+}
+
+a.pybossa {
+    display:inline-block;
+    position:absolute;
+    top:30px;
+    right:30px;
+    opacity:0.1;
+}
+a.pybossa:hover {
+    opacity:0.3;
+}
+
+/* Desktop */
+@media (min-width: 768px) { 
+  h1 {
+        font-size:24px;
+    }
+  #heading [class*="span"]:nth-of-type(2) {
+        margin-left:0px;
+    }
+    #heading .span1 {
+        width:54px;
+    }
+    #heading .span1 img {
+        max-width:44px;
+    }
+}
+/* Landscape phones and down */
+@media (max-width: 480px) {
+    a.pybossa {
+        position:relative;
+        margin:30px;
+    }
+}

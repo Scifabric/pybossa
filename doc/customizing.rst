@@ -319,4 +319,29 @@ And the **_gcs_form.html** will be like this::
 After these steps, your site will be indexed by Google and Google Custom Search
 will be working, providing for your users a search tool.
 
+Adding web maps for application statistics
+==========================================
 
+PyBossa creates for each application a statistics page, where the creators of
+the application and the volunteers can check the top 5 anonymous and
+authenticated users, an estimation of time about when all the tasks will be
+completed, etc.
+
+One interesting feature of the statistics page is that it can generate a web
+map showing the location of the anonymous volunteers that have been
+participating in the application. By default the maps are disabled, because you
+will need to download the GeoLiteCity DAT file database that will be use for
+generating the maps.
+
+GeoLite_ is a free geolocatication database from MaxMind that they release
+under a `Creative Commons Attribution-ShareAlike 3.0 Uported License`_. You can
+download the required file: GeoLite City from this page_. Once you have
+downloaded the file, all you have to do is to uncompress it and place it in the
+folder **/dat** of the pybossa root folder.
+
+After copying the file, all you have to do to start creating the maps is to
+restart the server.
+
+.. _GeoLite: http://dev.maxmind.com/geoip/geolite
+.. _`Creative Commons Attribution-ShareAlike 3.0 Uported License`: http://creativecommons.org/licenses/by-sa/3.0/
+.. _page: http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
