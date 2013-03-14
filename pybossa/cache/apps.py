@@ -38,9 +38,13 @@ def get_featured_front_page():
 def get_top(n=4):
     """Return top n=4 apps"""
     sql = text('''
-    SELECT app.id, app.name, app.short_name, app.description, app.info,
-    count(app_id) AS total FROM task_run, app WHERE app_id IS NOT NULL AND
-    app.id=app_id GROUP BY app.id ORDER BY total DESC LIMIT :limit;
+    SELECT t.id, app.name, app.short_name, app.description, app.info, t.total
+    FROM (SELECT app.id, count(app_id) AS total FROM task_run
+            LEFT JOIN app ON app_id = app.id 
+          GROUP BY app.id 
+          ORDER BY total DESC LIMIT :limit
+          ) AS t
+      LEFT JOIN app USING (id);
     ''')
 
     results = db.engine.execute(sql, limit=n)
@@ -110,11 +114,19 @@ def get_featured(page=1, per_page=5):
 
     count = n_featured()
 
-    sql = text('''SELECT app.id, app.name, app.short_name, app.info, app.created,
-               "user".fullname AS owner FROM app, featured, "user"
-               WHERE app.id=featured.app_id AND app.hidden=0
-               AND "user".id=app.owner_id GROUP BY app.id, "user".id
-               OFFSET(:offset) LIMIT(:limit);
+    sql = text('''
+    SELECT t.id, app.name, app.short_name, app.info, app.created, 
+      "user".fullname AS owner 
+    FROM (
+      SELECT app.id, "user".id as user_id 
+      FROM app 
+        LEFT JOIN featured ON app.id = featured.app_id 
+        LEFT JOIN "user" ON "user".id = app.owner_id 
+      WHERE app.hidden = 0 
+      GROUP BY app.id, "user".id OFFSET(:offset) LIMIT(:limit)
+    ) AS t 
+    LEFT JOIN app USING (id) 
+    LEFT JOIN "user" ON t.user_id = app.owner_id;
                ''')
     offset = (page - 1) * per_page
     results = db.engine.execute(sql, limit=per_page, offset=offset)
@@ -151,17 +163,25 @@ def get_published(page=1, per_page=5):
     count = n_published()
 
     sql = text('''
-               SELECT app.id, app.name, app.short_name, app.description,
-               app.info, app.created, "user".fullname AS owner,
-               featured.app_id as featured
-               FROM task, "user", app LEFT OUTER JOIN featured ON app.id=featured.app_id
-               WHERE
-               app.id=task.app_id AND app.info LIKE('%task_presenter%')
-               AND app.hidden=0
-               AND "user".id=app.owner_id
-               GROUP BY app.id, "user".id, featured.id ORDER BY app.name
-               OFFSET :offset
-               LIMIT :limit;''')
+    SELECT t.id, app.name, app.short_name, app.description, app.info, 
+           app.created, "user".fullname AS owner, 
+           featured.app_id AS featured 
+    FROM (
+      SELECT app.id, "user".id As user_id 
+      FROM app 
+        JOIN task ON app.id = task.app_id 
+        JOIN "user" ON "user".id = app.owner_id 
+        LEFT JOIN featured ON app.id = featured.app_id 
+      WHERE app.info LIKE('%task_presenter%')
+        AND app.hidden=0 
+      GROUP BY app.id, "user".id, featured.id
+    ) AS t 
+    LEFT JOIN app USING (id) 
+    LEFT JOIN "user" ON "user".id = app.owner_id 
+    LEFT JOIN featured ON app.id = featured.app_id 
+    ORDER BY app.name 
+    OFFSET :offset LIMIT :limit;
+    ''')
 
     offset = (page - 1) * per_page
     results = db.engine.execute(sql, limit=per_page, offset=offset)
