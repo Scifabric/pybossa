@@ -66,24 +66,39 @@ def stats_users(app_id):
     anon_users = []
 
     # Get Authenticated Users
-    sql = text('''SELECT DISTINCT(task_run.user_id) AS user_id FROM task_run
+    sql = text('''SELECT task_run.user_id AS user_id FROM task_run
                WHERE task_run.user_id IS NOT NULL AND
                task_run.user_ip IS NULL AND
                task_run.app_id=:app_id;''')
     results = db.engine.execute(sql, app_id=app_id)
     for row in results:
         auth_users.append(row.user_id)
-    users['n_auth'] = len(auth_users)
+
+    sql = text('''SELECT count(distinct(task_run.user_id)) AS user_id FROM task_run
+               WHERE task_run.user_id IS NOT NULL AND
+               task_run.user_ip IS NULL AND
+               task_run.app_id=:app_id;''')
+    results = db.engine.execute(sql, app_id=app_id)
+    for row in results:
+        users['n_auth'] = row[0]
 
     # Get Anonymous Users
-    sql = text('''SELECT DISTINCT(task_run.user_ip) AS user_ip FROM task_run
+    sql = text('''SELECT task_run.user_ip AS user_ip FROM task_run
                WHERE task_run.user_ip IS NOT NULL AND
                task_run.user_id IS NULL AND
                task_run.app_id=:app_id;''')
     results = db.engine.execute(sql, app_id=app_id)
     for row in results:
         anon_users.append(row.user_ip)
-    users['n_anon'] = len(anon_users)
+
+    sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip)) AS user_ip FROM task_run
+               WHERE task_run.user_ip IS NOT NULL AND
+               task_run.user_id IS NULL AND
+               task_run.app_id=:app_id;''')
+    results = db.engine.execute(sql, app_id=app_id)
+
+    for row in results:
+        users['n_anon'] = row[0]
 
     return users, anon_users, auth_users
 
