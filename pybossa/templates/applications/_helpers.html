@@ -37,6 +37,7 @@
     <li {% if active_link=="contribute"%}class="active"{% endif %}><a href="{{url_for('app.presenter', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Contribute</a></li>
     <li {% if active_link=="export"%}class="active"{% endif %}><a href="{{url_for('app.export_to', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Export Tasks and Task Runs</a></li>
     <li {% if active_link=="tasks"%}class="active"{% endif %}><a href="{{url_for('app.tasks', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Tasks</a></li>
+    <li {% if active_link=="stats"%}class="active"{% endif %}><a href="{{url_for('app.show_stats', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Statistics</a></li>
     {% if ( current_user.is_authenticated() and current_user.id == app.owner.id ) or current_user.admin %}
     <li {% if active_link=="settings"%}class="active"{% endif %}><a href="{{url_for('app.settings', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Settings</a></li>
     {% endif %}
