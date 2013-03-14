@@ -77,17 +77,18 @@ def stats_dates(app_id):
     dates_anon = {}
     dates_auth = {}
     dates_n_tasks = {}
-
-    n_answers_per_task = []
     avg = 0
 
-    tasks = get_tasks(app_id)
     task_runs = get_task_runs(app_id)
 
-    for t in tasks:
-        n_answers_per_task.append(t.n_answers)
-    avg = sum(n_answers_per_task) / len(tasks)
-    total_n_tasks = len(tasks)
+    sql = text('''SELECT COUNT(task.id) as n_tasks,
+               AVG(task.n_answers) AS "avg" FROM task
+               WHERE task.app_id=:app_id;''')
+
+    results = db.engine.execute(sql, app_id=app_id)
+    for row in results:
+        avg = float(row.avg)
+        total_n_tasks = row.n_tasks
 
     for tr in task_runs:
         # Data for dates
