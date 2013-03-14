@@ -19,3 +19,4 @@ pybossa/templates/custom/*
 _ga.html
 _gcs.html
 _gcs_form.html
+dat/GeoLiteCity.dat
