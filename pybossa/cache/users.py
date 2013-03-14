@@ -20,10 +20,16 @@ from pybossa.model import User, TaskRun
 @cache.cached(key_prefix="front_page_top_users")
 def get_top(n=10):
     """Return the n=10 top users"""
-    sql = text('''SELECT "user".id, "user".fullname, "user".email_addr,
-               "user".created, COUNT(task_run.id) AS task_runs from task_run, "user"
-               WHERE "user".id=task_run.user_id group by "user".id
-               ORDER BY task_runs DESC LIMIT :limit''')
+    sql = text('''
+    SELECT t.id, "user".fullname, "user".email_addr, 
+      "user".created, t.task_runs 
+    FROM (
+      SELECT "user".id, COUNT(task_run.id) AS task_runs 
+      FROM task_run 
+      LEFT JOIN "user" ON "user".id = task_run.user_id 
+      GROUP BY "user".id ORDER BY task_runs LIMIT :limit) as t 
+    LEFT JOIN "user" USING (id)''')
+
     results = db.engine.execute(sql, limit=n)
     top_users = []
     for row in results:
