@@ -17,12 +17,13 @@ from flask import Blueprint
 from flask import render_template
 from sqlalchemy.sql import text
 
-from pybossa.core import db
+from pybossa.core import db, cache
 from pybossa.cache import apps as cached_apps
 
 blueprint = Blueprint('stats', __name__)
 
 
+@cache.cached(timeout=300)
 @blueprint.route('/')
 def index():
     """Return Global Statistics for the site"""
