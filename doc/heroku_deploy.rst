@@ -8,37 +8,25 @@ Instructions to heroku deploy
 These instructions are specific to heroku:
 
 $ heroku create pybossa_instance_name -s cedar
-$ heroku addons:add shared-database
-$ git submodule init
-$ git submodule update
+$ git remote add heroku git@heroku.com:pybossa_instance_name.git
+$ heroku addons:add heroku-postgresql
 
-Configure alembic.ini
+Adding a PostgreSQL addon will generate some output, in which Heroku will
+emit a string like as HEROKU_POSTGRESQL_(colour)_URL. You can run
 
-$ cp alembic.ini.template alembic.ini
-$ heroku config | grep SHARED_DATABASE_URL
+$ heroku config
 
-use the SHARED_DATABASE_URL value for sqlalchemy.url
+To see what colour-code your database received. You must run
 
-$ vi alembic.ini
+$ heroku pg:promote HEROKU_POSTGRESQL_(colour)_URL
 
-settings_local.py should get this from os.environment but double check it in case of error
+To make this the primary database for your app. The Heroku integration
+in PyBossa depends on your having done this.
 
-$ git add settings_local.py alembic.ini -f
-$ git commit -m 'initial setup'
 $ git push heroku master
 
 $ heroku run "python cli.py db_create"
 $ heroku ps:scale web=1
 $ heroku open (should take some time on the first run)
 $ heroku logs 
-
-test, etc
-
-Heroku adds another upstream repo to your local repo. To any change there, always remember to git push heroku master (or your branch)
-
-Enjoy
-
-
-gleicon (http://github.com/gleicon)
-
 
