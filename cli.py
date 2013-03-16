@@ -12,7 +12,12 @@ from alembic.config import Config
 from alembic import command
 
 def setup_alembic_config():
-    alembic_cfg = Config("alembic.ini")
+    if "DATABASE_URL" not in os.environ:
+        alembic_cfg = Config("alembic.ini")
+    else:
+        alembic_cfg = Config()
+        alembic_cfg.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
+        alembic_cfg.set_main_option("script_location", "alembic")
     command.stamp(alembic_cfg, "head")
 
 def db_create():
