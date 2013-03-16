@@ -30,9 +30,8 @@ from pybossa import default_settings as settings
 from raven.contrib.flask import Sentry
 
 def create_app():
-    heroku = Heroku()
     app = Flask(__name__)
-    heroku.init_app(app)
+    heroku = Heroku(app)
     configure_app(app)
     setup_error_email(app)
     setup_logging(app)
