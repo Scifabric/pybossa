@@ -16,6 +16,7 @@
 import os
 import logging
 import json
+import os
 
 from flask import Response, request, g, render_template,\
         abort, flash, redirect, session, url_for
@@ -79,6 +80,14 @@ except Exception as inst:
     print inst
     print "Google singin disabled"
 
+# Check if app stats page can generate the map
+geolite = app.root_path + '/../dat/GeoLiteCity.dat'
+if not os.path.exists(geolite):
+    app.config['GEO'] = False
+    print("GeoLiteCity.dat file not found")
+    print("App page stats web map disabled")
+else:
+    app.config['GEO'] = True
 
 
 def url_for_other_page(page):

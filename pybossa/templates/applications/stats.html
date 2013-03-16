@@ -1,0 +1,409 @@
+{% extends "/base.html" %}
+{% set active_page = "applications" %}
+{% set active_app  = "all" %}
+{% import "applications/_helpers.html" as helper %}
+
+{% block content %}
+<!-- Leaflet maps -->
+<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4/leaflet.css" />
+ <!--[if lte IE 8]>
+     <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.4/leaflet.ie.css" />
+ <![endif]-->
+<!-- Default Style -->
+<script src="http://cdn.leafletjs.com/leaflet-0.4/leaflet.js"></script>
+<link href="{{url_for('static', filename='css/stats/MarkerCluster.css')}}" rel="stylesheet" type="text/css">
+<link href="{{url_for('static', filename='css/stats/MarkerCluster.Default.css')}}" rel="stylesheet" type="text/css">
+<link href="{{url_for('static', filename='css/stats/stats.css')}}" rel="stylesheet" type="text/css">
+<script src="http://cdn.leafletjs.com/leaflet-0.4/leaflet.js"></script>
+<script src="{{url_for('static', filename='js/stats/flotr2.min.js')}}" type="text/javascript"></script>
+<script src="{{url_for('static', filename='js/stats/leaflet.markercluster.js')}}" type="text/javascript"></script>
+<script>
+    var appStats = {{appStats|safe}};
+</script>
+<div class="row">
+    <div class="span3">
+        {{helper.render_app_local_nav(app, 'stats', current_user)}}
+    </div>
+    <div class="span9">
+        <h1>
+        {% if app.info.thumbnail %}
+            <img class="img-polaroid" src="{{app.info.thumbnail}}" style="max-width:60px;" onerror="imgError(this);"> 
+        {% else %}
+            <img class="img-polaroid" src="{{url_for('static', filename='img/placeholder.png')}}" style="max-width:60px;" onerror="imgError(this);"> 
+        {% endif %}
+        <strong>{{ app.name }}</strong>: Statistics</h1>
+        <br/>
+
+            {% if private %}
+            <div class="row-fluid">
+                <div class="alert alert-info">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    <strong>Important:</strong> Data have been <strong>anonymized!</strong>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Hour Stats CARD -->
+            <div id="card" class="row-fluid">
+                <div class="span12  well">
+                    <h2>Distribution of Answers per Hour</h2>
+                    <div id="hourStats" style="margin:0;height:500px;">
+                    </div>
+                    <script>
+                    (function(){
+                    function answersPerHour(obj) {
+                        return (parseInt(obj.y) + " answers were submitted at " + parseInt(obj.x) + " hours");
+                    }
+
+                    function hours(obj) {
+                        return (parseInt(obj) + ":00");
+                    }
+                    var container = document.getElementById('hourStats');
+                    var graph = Flotr.draw(container, [{data: appStats.hourStats[1]['values'], label:appStats.hourStats[1]['label']},{ data:appStats.hourStats[2]['values'],label:appStats.hourStats[2]['label'] }], {
+                        bubbles : {show: true, baseRadius:5},
+                        xaxis   : {min: 0, max:24, tickFormatter: hours},
+                        yaxis   : {min: 0, max:_.max(appStats.hourStats[0])},
+                        mouse   : {track: true, trackFormatter: answersPerHour},
+                        HtmlText: false,
+                        legend  : {postion: 'nw'}
+                    });
+                    })();
+                    </script>
+                </div>
+            </div>
+            <!-- END Hour Stats CARD -->
+
+            <!-- Day Stats Total CARD -->
+            <div id="card" class="row-fluid">
+                <div  class="span12  well">
+                    <h2>Total Answers per day <small> select an area to zoom, click to reset the chart</small></h2>
+                    <div id="dayStatsTotal" style="margin:0;height:500px;"></div>
+                    <script>
+                    (function(){
+                    function date(obj) {
+                        var d = new Date(parseInt( obj ));
+                        var year = d.getFullYear();
+                        var month = d.getMonth() + 1;
+                        var day = d.getDate();
+                        return(year + "-" + month + '-' + day)
+                    }
+                    function answersPerDay(obj) {
+                        return ("Total answers: " + parseInt(obj.y));
+                    }
+                    var options = {
+                        xaxis   : {mode:'time'},
+                        yaxis   : {max: appStats.dayStats[4]['values'][0][1] + 100},
+                        mouse   : {track: true, trackFormatter: answersPerDay},
+                        HtmlText: false,
+                        legend  : {postion: 'nw'},
+                        selection: {
+                            mode: 'x',
+                            fps: 30
+                        }
+                    };
+
+                    var dayStatsTotalContainer = document.getElementById('dayStatsTotal');
+
+                    function drawGraph(opts) {
+                        // Clone the options, so the 'options' variable always keeps intact.
+                        var o = Flotr._.extend(Flotr._.clone(options), opts || {});
+                        
+                        // Return a new graph.
+                        return Flotr.draw(
+                        dayStatsTotalContainer, [{ data:appStats.dayStats[3]['values'],label:appStats.dayStats[3]['label']}, { data:appStats.dayStats[4]['values'],label:appStats.dayStats[4]['label']} , { data:appStats.dayStats[5]['values'],label:appStats.dayStats[5]['label']}], o);
+                    }
+                        
+                        // Actually draw the graph.
+                        graph = drawGraph();
+                        
+                        // Hook into the 'flotr:select' event.
+                        Flotr.EventAdapter.observe(dayStatsTotalContainer, 'flotr:select', function(area) {
+                        
+                            // Draw graph with new area
+                            graph = drawGraph({
+                                xaxis: {
+                                    mode: 'time',
+                                    min: area.x1,
+                                    max: area.x2
+                                },
+                                yaxis: {
+                                    min: area.y1,
+                                    max: area.y2
+                                }
+                            });
+                        });
+
+                        // When graph is clicked, draw the graph with default area.
+                        Flotr.EventAdapter.observe(dayStatsTotalContainer, 'flotr:click', function() {
+                            drawGraph();
+                        });
+                    })();
+                    </script>
+                </div>
+            </div>
+            <!-- END Day Stats CARD -->
+
+
+            <!-- Day Stats CARD -->
+            <div id="card" class="row-fluid">
+                <div  class="span12  well">
+                    <h2>Answers per day <small> select an area to zoom, click to reset the chart</small></h2>
+                    <div id="dayStats" style="margin:0;height:500px;"></div>
+                    <script>
+                    (function(){
+                    function date(obj) {
+                        var d = new Date(parseInt( obj ));
+                        var year = d.getFullYear();
+                        var month = d.getMonth() + 1;
+                        var day = d.getDate();
+                        return(year + "-" + month + '-' + day)
+                    }
+                    function answersPerDay(obj) {
+                        return (parseInt(obj.y) + " answers were submitted this day " + date(obj.x));
+                    }
+                    var options = {
+                        xaxis   : {mode:'time'},
+                        mouse   : {track: true, trackFormatter: answersPerDay},
+                        HtmlText: false,
+                        legend  : {postion: 'nw'},
+                        selection: {
+                            mode: 'x',
+                            fps: 30
+                        }
+                    };
+
+                    var dayStatsContainer = document.getElementById('dayStats');
+
+                    function drawGraph(opts) {
+                        // Clone the options, so the 'options' variable always keeps intact.
+                        var o = Flotr._.extend(Flotr._.clone(options), opts || {});
+                        
+                        // Return a new graph.
+                        return Flotr.draw(
+                        dayStatsContainer, [{data: appStats.dayStats[1]['values'], label:appStats.dayStats[1]['label']},{ data:appStats.dayStats[2]['values'],label:appStats.dayStats[2]['label'] }, { data:appStats.dayStats[0]['values'],label:appStats.dayStats[0]['label']} ], o);
+                    }
+                        
+                        // Actually draw the graph.
+                        graph = drawGraph();
+                        
+                        // Hook into the 'flotr:select' event.
+                        Flotr.EventAdapter.observe(dayStatsContainer, 'flotr:select', function(area) {
+                        
+                            // Draw graph with new area
+                            graph = drawGraph({
+                                xaxis: {
+                                    mode: 'time',
+                                    min: area.x1,
+                                    max: area.x2
+                                },
+                                yaxis: {
+                                    min: area.y1,
+                                    max: area.y2
+                                }
+                            });
+                        });
+
+                        // When graph is clicked, draw the graph with default area.
+                        Flotr.EventAdapter.observe(dayStatsContainer, 'flotr:click', function() {
+                            drawGraph();
+                        });
+                    })();
+                    </script>
+                </div>
+            </div>
+            <!-- END Day Stats CARD -->
+
+
+            <!-- Number of answers CARD -->
+            <div id="card" class="row-fluid">
+                <div id="dist-answers" class="span12  well">
+                    <h2>Distribution of Answers</h2>
+                    <div class="row-fluid">
+                        <div class="span6">
+                            <table class="table table-hover table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Tasks</th>
+                                        <th>Percentage</th>
+                                    </tr>
+                                </thead>
+                            {% for k in userStats.keys() if k != 'geo' %}
+                                <tr>
+                                    <th>{{k | capitalize}}</th>
+                                    <th>{{userStats[k].taskruns}}</th>
+                                    <th>{{userStats[k].pct_taskruns}} %</th>
+                                </tr>
+                            {% endfor %}
+                            </table>
+
+                        </div>
+                        <div id="userAnsStats" class="span4" style="height: 250px; width:250px;">
+                        </div>
+                        <script>
+                        (function(){
+                        var container = document.getElementById('userAnsStats');
+                        var graph = Flotr.draw(container, [
+                            {data:[appStats.userStats['values'][0]['value']], label:appStats.userStats['values'][0]['label']},
+                            {data:[appStats.userStats['values'][1]['value']],  label:appStats.userStats['values'][1]['label']}], 
+                            {
+                            pie     : {show: true, explode: 2},
+                            grid    : {verticalLines: false, horizontalLines: false, outlineWidth: 0},
+                            HtmlText: false,
+                            xaxis   : {showLabels: false},
+                            yaxis   : {showLabels: false},
+                            legend  : {postion: 'nw'}
+                        });
+                        })();
+                        </script>
+                    </div>
+                </div>
+            </div>
+            <!-- END Number of Answers Stats CARD -->
+
+            <!-- Anon User Stats CARD -->
+            <div id="card" class="row-fluid">
+                <div id="dist-anon" class="span12  well">
+                    <h2>Details about Anonymous Users</h2>
+                    <div class="row-fluid">
+                        <div class="span12">
+                            <p><i class="icon-group"></i> <strong>{{userStats.anonymous.users}} </strong> anonymous users have <strong>participated</strong></p>
+                            {% if userStats.anonymous.top5 and userStats.geo %}
+                            <h3>Top 5 users</h3>
+                            <table class="table table-hover table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Country</th>
+                                        <th>City</th>
+                                        <th>Tasks</th>
+                                    </tr>
+                                </thead>
+                            {% for u in userStats.anonymous.top5 %}
+                                <tr>
+                                    <th>{{loop.index}}</th>
+                                    <th>{{u.loc.country_name}}</th>
+                                    <th>{{u.loc.city}}</th>
+                                    <th>{{u.tasks}}</th>
+                                </tr>
+                            {% endfor %}
+                            </table>
+                            {% endif %}
+                        </div>
+                        <div id="userAnonStats" class="span12"  style='height:400px'>
+                        </div>
+                        <script>
+                        (function(){
+                        var container = document.getElementById('userAnonStats');
+                        var graph = Flotr.draw(container, [
+                            {data:[[0, appStats.userAnonStats['top5'][0]['tasks'] ]],  label:'User 1'},
+                            {data:[[0, appStats.userAnonStats['top5'][1]['tasks'] ]],  label:'User 2'}, 
+                            {data:[[0, appStats.userAnonStats['top5'][2]['tasks'] ]],  label:'User 3'}, 
+                            {data:[[0, appStats.userAnonStats['top5'][3]['tasks'] ]],  label:'User 4'}, 
+                            {data:[[0, appStats.userAnonStats['top5'][4]['tasks'] ]],  label:'User 5'}], 
+                            {
+                            pie     : {show: true, explode: 5},
+                            grid    : {verticalLines: false, horizontalLines: false, outlineWidth: 0},
+                            HtmlText: false,
+                            xaxis   : {showLabels: false},
+                            yaxis   : {showLabels: false},
+                            legend  : {postion: 'se'}
+                        });
+                        })();
+                        </script>
+                    </div>
+                    {% if userStats.geo %}
+                    <div class="row-fluid">
+                        <div class="span12">
+                            <div id="map" style="height:250px;"></div>
+                            <p class="note">This page includes GeoLite data created by MaxMind, available from
+                            <a href="http://www.maxmind.com">http://www.maxmind.com</a></p>
+                        </div>
+                        <script>
+                            (function(){
+                            var map = L.map('map');
+                            map.fitWorld();
+                            map.setZoom(1);
+                            var url = 'http://{s}.tile.cloudmade.com/f9ed30886bf3454691669c63a45490f4/997/256/{z}/{x}/{y}.png'
+                            L.tileLayer(url, 
+                                {
+                                attribution: 'Map data Cloudmade.com &copy;',
+                                maxZoom: 18,
+                                minZoom:1
+                                }).addTo(map);
+
+                            var i = 0;
+                            var locations = appStats.userAnonStats.locs;
+                            var l = locations.length;
+                            var markers = new L.MarkerClusterGroup();
+                            for (i;i<l;i++) {
+                                if (locations[i].loc != null) {
+                                    var lat = parseFloat(locations[i].loc.latitude);
+                                    var lng = parseFloat(locations[i].loc.longitude);
+                                    markers.addLayer(L.marker([lat,lng]));
+                                }
+                            }
+                            map.addLayer(markers);
+                            })();
+                        </script>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            <!-- END Anon User Stats CARD -->
+
+            <!-- Auth User Stats CARD -->
+            <div id="card" class="row-fluid">
+                <div id="dist-auth" class="span12  well">
+                    <h2>Details about Authenticated Users</h2>
+                    <div class="row-fluid">
+                        <div class="span12">
+                            <p><i class="icon-group"></i> <strong>{{userStats.authenticated.users}}</strong> authenticated users have <strong>participated</strong>.</p>
+                            {% if userStats.authenticated.top5 %}
+                            <h3>Top 5 users</h3>
+                            <table class="table table-hover table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>User</th>
+                                        <th>Tasks</th>
+                                    </tr>
+                                </thead>
+                            {% for u in userStats.authenticated.top5 %}
+                                <tr>
+                                    <th>{{loop.index}}</th>
+                                    <th>{{u.fullname}}</th>
+                                    <th>{{u.tasks}}</th>
+                                </tr>
+                            {% endfor %}
+                            </table>
+                            {% endif %}
+                        </div>
+                        <div id="userAuthStats" class="span12" style='height:400px'>
+                        </div>
+                        <script>
+                        (function(){
+                        var container = document.getElementById('userAuthStats');
+                        var graph = Flotr.draw(container, [
+                            {data:[[0, appStats.userAuthStats['top5'][0]['tasks'] ]],  label:appStats.userAuthStats['top5'][0]['fullname']},
+                            {data:[[0, appStats.userAuthStats['top5'][1]['tasks'] ]],  label:appStats.userAuthStats['top5'][1]['fullname']}, 
+                            {data:[[0, appStats.userAuthStats['top5'][2]['tasks'] ]],  label:appStats.userAuthStats['top5'][2]['fullname']}, 
+                            {data:[[0, appStats.userAuthStats['top5'][3]['tasks'] ]],  label:appStats.userAuthStats['top5'][3]['fullname']}, 
+                            {data:[[0, appStats.userAuthStats['top5'][4]['tasks'] ]],  label:appStats.userAuthStats['top5'][4]['fullname']}], 
+                            {
+                            pie     : {show: true, explode: 5},
+                            grid    : {verticalLines: false, horizontalLines: false, outlineWidth: 0},
+                            HtmlText: false,
+                            xaxis   : {showLabels: false},
+                            yaxis   : {showLabels: false},
+                            legend  : {postion: 'nw'}
+                        });
+                        })();
+                        </script>
+                    </div>
+                </div>
+            </div>
+            <!-- END Auth User Stats CARD -->
+        </div>
+</div>
+{% endblock %}
