@@ -1,5 +1,4 @@
 from __future__ import with_statement
-import os
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 from logging.config import fileConfig
@@ -11,11 +10,6 @@ config = context.config
 # Interpret the config file for Python logging. 
 # This line sets up loggers basically.
 fileConfig(config.config_file_name)
-
-if 'DATABASE_URL' in os.environ:
-    # assume we are running under Heroku
-    config.set_section_option('alembic', 'sqlalchemy.url',
-                              os.environ['DATABASE_URL'])
 
 # add your model's MetaData object here
 # for 'autogenerate' support

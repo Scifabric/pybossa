@@ -15,9 +15,17 @@ def setup_alembic_config():
     if "DATABASE_URL" not in os.environ:
         alembic_cfg = Config("alembic.ini")
     else:
-        alembic_cfg = Config()
-        alembic_cfg.set_main_option("sqlalchemy.url", os.environ["DATABASE_URL"])
-        alembic_cfg.set_main_option("script_location", "alembic")
+        dynamic_filename = "alembic-heroku.ini"
+        with file("alembic.ini.template") as f:
+            with file(dynamic_filename, "w") as conf:
+                for line in f.readlines():
+                    if line.startswith("sqlalchemy.url"):
+                        conf.write("sqlalchemy.url = %s\n" % 
+                                   os.environ['DATABASE_URL'])
+                    else:
+                        conf.write(line)
+        alembic_cfg = Config(dynamic_filename)
+
     command.stamp(alembic_cfg, "head")
 
 def db_create():
