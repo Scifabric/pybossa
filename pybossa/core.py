@@ -23,13 +23,16 @@ from flask.ext.mail import Mail
 from flask.ext.sqlalchemy import SQLAlchemy
 #from flask.ext.debugtoolbar import DebugToolbarExtension
 from flask.ext.cache import Cache
+from flask.ext.heroku import Heroku
 
 from pybossa import default_settings as settings
 
 from raven.contrib.flask import Sentry
 
 def create_app():
+    heroku = Heroku()
     app = Flask(__name__)
+    heroku.init_app(app)
     configure_app(app)
     setup_error_email(app)
     setup_logging(app)
