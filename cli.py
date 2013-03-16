@@ -11,13 +11,16 @@ import pybossa.web as web
 from alembic.config import Config
 from alembic import command
 
+def setup_alembic_config():
+    alembic_cfg = Config("alembic.ini")
+    command.stamp(alembic_cfg, "head")
+
 def db_create():
     '''Create the db'''
     db.create_all()
     # then, load the Alembic configuration and generate the
     # version table, "stamping" it with the most recent rev:
-    alembic_cfg = Config("alembic.ini")
-    command.stamp(alembic_cfg,"head")
+    setup_alembic_config()
 
 def db_rebuild():
     '''Rebuild the db'''
@@ -25,8 +28,7 @@ def db_rebuild():
     db.create_all()
     # then, load the Alembic configuration and generate the
     # version table, "stamping" it with the most recent rev:
-    alembic_cfg = Config("alembic.ini")
-    command.stamp(alembic_cfg,"head")
+    setup_alembic_config()
 
 def fixtures():
     '''Create some fixtures!'''
