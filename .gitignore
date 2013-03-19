@@ -12,6 +12,7 @@ doc/_build
 .DS_Store
 *.coverage
 alembic.ini
+alembic-heroku.ini
 pybossa/templates/custom_footer.html
 pybossa/templates/home/_other_projects.html
 pybossa/templates/home/custom_text.html

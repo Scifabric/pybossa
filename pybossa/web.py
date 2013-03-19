@@ -13,6 +13,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import logging
 import json
 import os
@@ -194,7 +195,14 @@ def search():
     """Render search results page"""
     return render_template("/home/search.html")
 
+def get_port():
+    port = os.environ.get('PORT', '')
+    if port.isdigit():
+        return int(port)
+    else:
+        return app.config['PORT']
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.NOTSET)
-    app.run(host=app.config['HOST'], port=app.config['PORT'],
+    app.run(host=app.config['HOST'], port=get_port(),
             debug=app.config.get('DEBUG', True))

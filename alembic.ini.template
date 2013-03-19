@@ -7,6 +7,8 @@ script_location = alembic
 # template used to generate migration files
 # file_template = %%(rev)s_%%(slug)s
 
+# under Heroku, the line below needs to be inferred from
+# the environment
 sqlalchemy.url = postgresql://tester:tester@localhost/pybossa
 
 # Logging configuration

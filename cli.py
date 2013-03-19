@@ -11,13 +11,29 @@ import pybossa.web as web
 from alembic.config import Config
 from alembic import command
 
+def setup_alembic_config():
+    if "DATABASE_URL" not in os.environ:
+        alembic_cfg = Config("alembic.ini")
+    else:
+        dynamic_filename = "alembic-heroku.ini"
+        with file("alembic.ini.template") as f:
+            with file(dynamic_filename, "w") as conf:
+                for line in f.readlines():
+                    if line.startswith("sqlalchemy.url"):
+                        conf.write("sqlalchemy.url = %s\n" % 
+                                   os.environ['DATABASE_URL'])
+                    else:
+                        conf.write(line)
+        alembic_cfg = Config(dynamic_filename)
+
+    command.stamp(alembic_cfg, "head")
+
 def db_create():
     '''Create the db'''
     db.create_all()
     # then, load the Alembic configuration and generate the
     # version table, "stamping" it with the most recent rev:
-    alembic_cfg = Config("alembic.ini")
-    command.stamp(alembic_cfg,"head")
+    setup_alembic_config()
 
 def db_rebuild():
     '''Rebuild the db'''
@@ -25,8 +41,7 @@ def db_rebuild():
     db.create_all()
     # then, load the Alembic configuration and generate the
     # version table, "stamping" it with the most recent rev:
-    alembic_cfg = Config("alembic.ini")
-    command.stamp(alembic_cfg,"head")
+    setup_alembic_config()
 
 def fixtures():
     '''Create some fixtures!'''
