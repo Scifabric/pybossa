@@ -57,8 +57,38 @@ def index():
     for row in results:
         n_task_runs = row.n_task_runs
 
-    # TODO: Most active apps in last 24 hours
-    # TODO: Most active users in last 24 hours
+    # Top 5 Most active apps in last 24 hours
+    sql = text('''SELECT app.id, app.name, app.short_name, app.info,
+               COUNT(task_run.app_id) AS n_answers FROM app, task_run
+               WHERE app.id=task_run.app_id
+               AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
+               AND DATE(task_run.finish_time) <= NOW()
+               GROUP BY app.id
+               ORDER BY n_answers DESC;''')
+
+    results = db.engine.execute(sql, limit=5)
+    top5_apps_24_hours = []
+    for row in results:
+        tmp = dict(id=row.id, name=row.name, short_name=row.short_name,
+                   info=dict(json.loads(row.info)), n_answers=row.n_answers)
+        top5_apps_24_hours.append(tmp)
+
+    # Top 5 Most active users in last 24 hours
+    sql = text('''SELECT "user".id, "user".fullname,
+               COUNT(task_run.app_id) AS n_answers FROM "user", task_run
+               WHERE "user".id=task_run.user_id
+               AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
+               AND DATE(task_run.finish_time) <= NOW()
+               GROUP BY "user".id
+               ORDER BY n_answers DESC;''')
+
+    results = db.engine.execute(sql, limit=5)
+    top5_users_24_hours = []
+    for row in results:
+        user = dict(id=row.id, fullname=row.fullname,
+                    n_answers=row.n_answers)
+        print user
+        top5_users_24_hours.append(user)
 
     stats = dict(n_total_users=n_total_users, n_auth=n_auth, n_anon=n_anon,
                  n_published_apps=n_published_apps,
@@ -86,4 +116,6 @@ def index():
                            users=json.dumps(users),
                            apps=json.dumps(apps),
                            tasks=json.dumps(tasks),
+                           top5_users_24_hours=top5_users_24_hours,
+                           top5_apps_24_hours=top5_apps_24_hours,
                            stats=stats)
