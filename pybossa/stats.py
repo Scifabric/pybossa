@@ -67,13 +67,17 @@ def stats_users(app_id):
     anon_users = []
 
     # Get Authenticated Users
-    sql = text('''SELECT task_run.user_id AS user_id FROM task_run
+    sql = text('''SELECT task_run.user_id AS user_id,
+               COUNT(task_run.id) as n_tasks FROM task_run
                WHERE task_run.user_id IS NOT NULL AND
                task_run.user_ip IS NULL AND
-               task_run.app_id=:app_id;''')
+               task_run.app_id=:app_id
+               GROUP BY task_run.user_id ORDER BY n_tasks DESC
+               LIMIT 5;''')
     results = db.engine.execute(sql, app_id=app_id)
+
     for row in results:
-        auth_users.append(row.user_id)
+        auth_users.append([row.user_id, row.n_tasks])
 
     sql = text('''SELECT count(distinct(task_run.user_id)) AS user_id FROM task_run
                WHERE task_run.user_id IS NOT NULL AND
@@ -84,13 +88,17 @@ def stats_users(app_id):
         users['n_auth'] = row[0]
 
     # Get Anonymous Users
-    sql = text('''SELECT task_run.user_ip AS user_ip FROM task_run
+    sql = text('''SELECT task_run.user_ip AS user_ip,
+               COUNT(task_run.id) as n_tasks FROM task_run
                WHERE task_run.user_ip IS NOT NULL AND
                task_run.user_id IS NULL AND
-               task_run.app_id=:app_id;''')
+               task_run.app_id=:app_id
+               GROUP BY task_run.user_ip ORDER BY n_tasks DESC
+               LIMIT 5;''')
     results = db.engine.execute(sql, app_id=app_id)
+
     for row in results:
-        anon_users.append(row.user_ip)
+        anon_users.append([row.user_ip, row.n_tasks])
 
     sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip)) AS user_ip FROM task_run
                WHERE task_run.user_ip IS NOT NULL AND
@@ -158,9 +166,9 @@ def stats_hours(app_id):
 
     # initialize hours keys
     for i in range(0, 24):
-        hours[u'%s' % i] = 0
-        hours_anon[u'%s' % i] = 0
-        hours_auth[u'%s' % i] = 0
+        hours[str(i).zfill(2)] = 0
+        hours_anon[str(i).zfill(2)] = 0
+        hours_auth[str(i).zfill(2)] = 0
 
     for tr in task_runs:
         # Hours
@@ -295,15 +303,12 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
 
     userStats['values'].append(dict(label="Anonymous", value=[0, users['n_anon']]))
     userStats['values'].append(dict(label="Authenticated", value=[0, users['n_auth']]))
-    from collections import Counter
-    c_anon_users = Counter(anon_users)
-    c_auth_users = Counter(auth_users)
 
-    for u in list(c_anon_users):
-        userAnonStats['values'].append(dict(label=u, value=c_anon_users[u]))
+    for u in anon_users:
+        userAnonStats['values'].append(dict(label=u[0], value=[u[1]]))
 
-    for u in list(c_auth_users):
-        userAuthStats['values'].append(dict(label=u, value=c_auth_users[u]))
+    for u in auth_users:
+        userAuthStats['values'].append(dict(label=u[0], value=[u[1]]))
 
     # Get location for Anonymous users
     top5_anon = []
@@ -313,7 +318,7 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
     geolite = current_app.root_path + '/../dat/GeoLiteCity.dat'
     if geo:
         gic = pygeoip.GeoIP(geolite)
-    for u in c_anon_users.most_common(5):
+    for u in anon_users:
         if geo:
             loc = gic.record_by_addr(u[0])
         else:
@@ -323,7 +328,7 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
             loc['longitude'] = 0
         top5_anon.append(dict(ip=u[0], loc=loc, tasks=u[1]))
 
-    for u in c_anon_users.items():
+    for u in anon_users:
         if geo:
             loc = gic.record_by_addr(u[0])
         else:
@@ -333,7 +338,7 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
             loc['longitude'] = 0
         loc_anon.append(dict(ip=u[0], loc=loc, tasks=u[1]))
 
-    for u in c_auth_users.most_common(5):
+    for u in auth_users:
         sql = text('''SELECT fullname from "user" where id=:id;''')
         results = db.engine.execute(sql, id=u[0])
         for row in results:

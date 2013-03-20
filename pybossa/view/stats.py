@@ -12,65 +12,109 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
-
-from flask import Blueprint, request, url_for, flash, redirect, abort
+import json
+from flask import Blueprint
 from flask import render_template
-from flaskext.wtf import Form, IntegerField, TextField, BooleanField, validators, HiddenInput
-from flaskext.login import login_required, current_user
-from sqlalchemy.exc import UnboundExecutionError
-from sqlalchemy.sql import func, text
-from sqlalchemy import func
+from sqlalchemy.sql import text
 
-import pybossa.model as model
-from pybossa.core import db
-from pybossa.auth import require
+from pybossa.core import db, cache
+from pybossa.cache import apps as cached_apps
 
 blueprint = Blueprint('stats', __name__)
 
 
+@cache.cached(timeout=300)
 @blueprint.route('/')
 def index():
-    """Get the last activity from users and apps"""
-    # Top 20 users
-    limit = 20
-    sql = text('''
-               WITH global_rank AS (
-                    WITH scores AS (
-                        SELECT user_id, COUNT(*) AS score FROM task_run
-                        WHERE user_id IS NOT NULL GROUP BY user_id)
-                    SELECT user_id, score, rank() OVER (ORDER BY score desc)
-                    FROM scores)
-               SELECT rank, id, fullname, email_addr, score FROM global_rank
-               JOIN public."user" on (user_id=public."user".id) ORDER BY rank
-               LIMIT :limit;
-               ''')
+    """Return Global Statistics for the site"""
 
-    results = db.engine.execute(sql, limit=20)
+    title = "Global Statistics"
+    sql = text('''SELECT COUNT("user".id) AS n_auth FROM "user";''')
+    results = db.engine.execute(sql)
+    for row in results:
+        n_auth = row.n_auth
 
-    top_users = []
-    user_in_top = False
-    if current_user.is_authenticated():
-        for user in results:
-            if (user.id == current_user.id):
-                user_in_top = True
-            top_users.append(user)
-        if not user_in_top:
-            sql = text('''
-                       WITH global_rank AS (
-                            WITH scores AS (
-                                SELECT user_id, COUNT(*) AS score FROM task_run
-                                WHERE user_id IS NOT NULL GROUP BY user_id)
-                            SELECT user_id, score, rank() OVER (ORDER BY score desc)
-                            FROM scores)
-                       SELECT rank, id, fullname, email_addr, score FROM global_rank
-                       JOIN public."user" on (user_id=public."user".id)
-                       WHERE user_id=:user_id ORDER BY rank;
-                       ''')
-            user_rank = db.engine.execute(sql, user_id=current_user.id)
-            for row in user_rank:
-                top_users.append(row)
-    else:
-        top_users = results
+    sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip))
+               AS n_anon FROM task_run;''')
 
-    return render_template('/stats/index.html', title="Community Leaderboard",
-                           top_users=top_users)
+    results = db.engine.execute(sql)
+    for row in results:
+        n_anon = row.n_anon
+
+    n_total_users = n_anon + n_auth
+
+    n_published_apps = cached_apps.n_published()
+    n_draft_apps = cached_apps.n_draft()
+    n_total_apps = n_published_apps + n_draft_apps
+
+    sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task''')
+    results = db.engine.execute(sql)
+    for row in results:
+        n_tasks = row.n_tasks
+
+    sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run''')
+    results = db.engine.execute(sql)
+    for row in results:
+        n_task_runs = row.n_task_runs
+
+    # Top 5 Most active apps in last 24 hours
+    sql = text('''SELECT app.id, app.name, app.short_name, app.info,
+               COUNT(task_run.app_id) AS n_answers FROM app, task_run
+               WHERE app.id=task_run.app_id
+               AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
+               AND DATE(task_run.finish_time) <= NOW()
+               GROUP BY app.id
+               ORDER BY n_answers DESC;''')
+
+    results = db.engine.execute(sql, limit=5)
+    top5_apps_24_hours = []
+    for row in results:
+        tmp = dict(id=row.id, name=row.name, short_name=row.short_name,
+                   info=dict(json.loads(row.info)), n_answers=row.n_answers)
+        top5_apps_24_hours.append(tmp)
+
+    # Top 5 Most active users in last 24 hours
+    sql = text('''SELECT "user".id, "user".fullname,
+               COUNT(task_run.app_id) AS n_answers FROM "user", task_run
+               WHERE "user".id=task_run.user_id
+               AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
+               AND DATE(task_run.finish_time) <= NOW()
+               GROUP BY "user".id
+               ORDER BY n_answers DESC;''')
+
+    results = db.engine.execute(sql, limit=5)
+    top5_users_24_hours = []
+    for row in results:
+        user = dict(id=row.id, fullname=row.fullname,
+                    n_answers=row.n_answers)
+        top5_users_24_hours.append(user)
+
+    stats = dict(n_total_users=n_total_users, n_auth=n_auth, n_anon=n_anon,
+                 n_published_apps=n_published_apps,
+                 n_draft_apps=n_draft_apps,
+                 n_total_apps=n_total_apps,
+                 n_tasks=n_tasks,
+                 n_task_runs=n_task_runs)
+
+    users = dict(label="User Statistics",
+                 values=[
+                     dict(label='Anonymous', value=[0, n_anon]),
+                     dict(label='Authenticated', value=[0, n_auth])])
+
+    apps = dict(label="Apps Statistics",
+                values=[
+                    dict(label='Published', value=[0, n_published_apps]),
+                    dict(label='Draft', value=[0, n_draft_apps])])
+
+    tasks = dict(label="Task and Task Run Statistics",
+                 values=[
+                     dict(label='Tasks', value=[0, n_tasks]),
+                     dict(label='Answers', value=[1, n_task_runs])])
+
+    return render_template('/stats/global.html', title=title,
+                           users=json.dumps(users),
+                           apps=json.dumps(apps),
+                           tasks=json.dumps(tasks),
+                           top5_users_24_hours=top5_users_24_hours,
+                           top5_apps_24_hours=top5_apps_24_hours,
+                           stats=stats)
