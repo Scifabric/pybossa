@@ -140,9 +140,21 @@ available templates are the following:
 * `Geo-coding`_ and
 * `PDF transcription`_. 
 
+.. note::
+
+    You can also upload your own CSV files to free web hosting services like
+    DropBox_ or `Ubuntu One`_. You will only need to copy the file to the
+    **public** folder of the chosen service in your own computer
+    (i.e. DropbBox Public folder) and then copy the public link created by the 
+    service. Once you have the public link, all you need in order to import the 
+    tasks is to paste it in the input box of the section **From a CSV file**.
+
+
 .. _`Image Pattern Recognition`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE&usp=sharing#gid=0
 .. _`Geo-coding`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc&usp=sharing
 .. _`PDF transcription`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE&usp=sharing
+.. _`DropBox`: http://www.dropbox.com
+.. _`Ubuntu One`: http://one.ubuntu.com
 
 Flushing all the tasks
 ~~~~~~~~~~~~~~~~~~~~~~
