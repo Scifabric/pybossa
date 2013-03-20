@@ -1745,3 +1745,11 @@ class TestWeb:
         res = self.app.get(url, follow_redirects=True)
         err_msg = "There should be a Global Statistics page of the project"
         assert "General Statistics" in res.data, err_msg
+
+    def test_59_help_api(self):
+        """Test WEB help api page exists"""
+        Fixtures.create()
+        url = "/help/api"
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "There should be a help api.html page"
+        assert "API Help" in res.data, err_msg

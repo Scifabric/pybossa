@@ -50,10 +50,19 @@
 
     {% block content %}{% endblock %}
 
-    <hr>
     </div> <!-- /container -->
     <footer>
     {% include ['custom/_footer.html', '_footer.html'] ignore missing %}
+    <div class="container">
+        <div class="row">
+            <div class="span12">
+                <ul>
+                    <li><strong>Resources</strong></li>
+                    <li><i class="icon-link"></i> <a href="{{url_for('help.api')}}">API</api></li>
+                </ul>
+            </div>
+        </div>
+    </div>
     </footer>
     <!-- Le javascript
     ================================================== -->
