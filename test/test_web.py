@@ -1738,3 +1738,10 @@ class TestWeb:
         user = db.session.query(model.User).get(1)
         err_msg = "New generated API key should be different from old one"
         assert api_key != user.api_key, err_msg
+
+    def test_58_global_stats(self):
+        """Test WEB global stats of the site works"""
+        url = "/stats"
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "There should be a Global Statistics page of the project"
+        assert "General Statistics" in res.data, err_msg

@@ -14,16 +14,21 @@
                 <li>It’s a 100% open-source</li>
                 <li>Unlike, say, “mechanical turk” style projects, PyBossa is not designed to handle payment or money — it is designed to support volunteer-driven projects.
                 </li>
-                <li>It’s designed as a platform and framework for developing deploying crowd-sourcing and microtasking apps rather than being a crowd-sourcing application itself. Individual crowd-sourcing apps are written as simple snippets of Javascript and HTML which are then deployed on a PyBossa instance (such as PyBossa.com). This way one can easily develop custom apps while using the PyBossa platform to store your data, manage users, and handle workflow.</li>
+                <li>It’s designed as a platform and framework for developing deploying crowd-sourcing and microtasking apps rather than being a crowd-sourcing application itself. Individual crowd-sourcing apps are written as simple snippets of Javascript and HTML which are then deployed on a PyBossa instance (such as <a href="http://crowdcrafting.org">CrowdCrafting.org</a>). This way one can easily develop custom apps while using the PyBossa platform to store your data, manage users, and handle workflow.</li>
             </ul> 
             </p>
 
             <p>
-            You can read more about the architecture in the <a href="http://docs.pybossa.com/en/latest/overview.html">PyBossa Documentation</a> and follow the <a href="http://docs.pybossa.com/en/latest/user/create-application.html">step-by-step tutorial to create your own apps.</a>.
+            You can read more about the architecture in the <a href="http://docs.pybossa.com/">PyBossa Documentation</a> and follow the <a href="http://docs.pybossa.com/en/latest/user/tutorial.html">step-by-step tutorial to create your own apps.</a>.
             </p>
 
-            <br/>
-            <h2>Contact information</h2>
+            <h1>Statistics</h1>
+            <p>
+            PyBossa provides individual statistics for every application in the system, as well as a <a href="{{url_for('stats.index')}}">general overview about the system like total number of users, tasks, etc</a>. 
+            </p>
+            <a href="{{url_for('stats.index')}}" class="btn btn-primary"><i class="icon-dashboard"></i> Check the global statistics</a>
+
+            <h1>Contact information</h1>
             <ul>
                 <li>For more info, send us an e-mail to: <a href="mailto:info@pybossa.com">info@pybossa.com</a> or <a class="btn" href="http://twitter.com/pybossa"><i class="icon-twitter"></i> Follow us on Twitter!</a></li>
                 <li>E-mail list: <a href="http://lists.okfn.org/mailman/listinfo/okfn-labs">okfn-labs@lists.okfn.org</a>.</li>                

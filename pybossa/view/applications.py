@@ -802,12 +802,12 @@ def show_stats(short_name):
         userStats = dict(
             geo=current_app.config['GEO'],
             anonymous=dict(
-                users=len(users_stats['anon']['values']),
+                users=users_stats['n_anon'],
                 taskruns=users_stats['n_anon'],
                 pct_taskruns=anon_pct_taskruns,
                 top5=users_stats['anon']['top5']),
             authenticated=dict(
-                users=len(users_stats['auth']['values']),
+                users=users_stats['n_auth'],
                 taskruns=users_stats['n_auth'],
                 pct_taskruns=100 - anon_pct_taskruns,
                 top5=users_stats['auth']['top5']))

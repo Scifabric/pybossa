@@ -49,20 +49,30 @@ class TestAdmin:
         with self.app.test_request_context('/'):
             hours, hours_anon, hours_auth, max_hours,\
                 max_hours_anon, max_hours_auth = stats.stats_hours(1)
+            print hours
             for i in range(0, 24):
                 # There should be only 10 answers at current hour
-                if str(i) == hour:
-                    assert hours[str(i)] == 10, "There should be 10 answers"
+                if str(i).zfill(2) == hour:
+                    err_msg = "At time %s there should be 10 answers" \
+                              "but there are %s" % (str(i).zfill(2),
+                                                    hours[str(i).zfill(2)])
+                    assert hours[str(i).zfill(2)] == 10, "There should be 10 answers"
                 else:
-                    assert hours[str(i)] == 0, "There should be 0 answers"
+                    err_msg = "At time %s there should be 0 answers" \
+                              "but there are %s" % (str(i).zfill(2),
+                                                    hours[str(i).zfill(2)])
+                    assert hours[str(i).zfill(2)] == 0, err_msg
 
-                if str(i) == hour:
+                if str(i).zfill(2) == hour:
                     tmp = (hours_anon[hour] + hours_auth[hour])
                     assert tmp == 10, "There should be 10 answers"
                 else:
-                    tmp = (hours_anon[str(i)] + hours_auth[str(i)])
+                    tmp = (hours_anon[str(i).zfill(2)] + hours_auth[str(i).zfill(2)])
                     assert tmp == 0, "There should be 0 answers"
-            err_msg = "It should be 10, as all answer are done in the same hour"
+            err_msg = "It should be 10, as all answers are submitted in the same hour"
+            tr = db.session.query(model.TaskRun).all()
+            for t in tr:
+                print t.finish_time
             assert max_hours == 10, err_msg
             assert (max_hours_anon + max_hours_auth) == 10, err_msg
 
@@ -105,6 +115,8 @@ class TestAdmin:
             for item in hours_stats:
                 if item['label'] == 'Anon + Auth':
                     max_hours = item['max']
+                    print item
+                    assert item['max'] == 10, item['max']
                     assert item['max'] == 10, "Max hours value should be 10"
                     for i in item['values']:
                         if i[0] == hour:
