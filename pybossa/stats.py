@@ -166,9 +166,9 @@ def stats_hours(app_id):
 
     # initialize hours keys
     for i in range(0, 24):
-        hours[u'%s' % i] = 0
-        hours_anon[u'%s' % i] = 0
-        hours_auth[u'%s' % i] = 0
+        hours[str(i).zfill(2)] = 0
+        hours_anon[str(i).zfill(2)] = 0
+        hours_auth[str(i).zfill(2)] = 0
 
     for tr in task_runs:
         # Hours

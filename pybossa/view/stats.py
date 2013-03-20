@@ -87,7 +87,6 @@ def index():
     for row in results:
         user = dict(id=row.id, fullname=row.fullname,
                     n_answers=row.n_answers)
-        print user
         top5_users_24_hours.append(user)
 
     stats = dict(n_total_users=n_total_users, n_auth=n_auth, n_anon=n_anon,
@@ -105,7 +104,7 @@ def index():
     apps = dict(label="Apps Statistics",
                 values=[
                     dict(label='Published', value=[0, n_published_apps]),
-                    dict(label='Authenticated', value=[0, n_draft_apps])])
+                    dict(label='Draft', value=[0, n_draft_apps])])
 
     tasks = dict(label="Task and Task Run Statistics",
                  values=[

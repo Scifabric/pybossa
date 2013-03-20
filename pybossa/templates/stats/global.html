@@ -36,6 +36,9 @@ h3 > small {
                                 <li>{{user.fullname}} with {{user.n_answers}} contributed answers</li>
                                 {% endfor %}
                                 </ol>
+                            {% else %}
+                            <hr>
+                            <h4>No active users in the last 24 hours</h4>
                             {% endif %}
                         </div>
                         <div id="users" class="span6" style="height:400px;"></div>
@@ -52,12 +55,10 @@ h3 > small {
                                 HtmlText: false,
                                 xaxis   : {showLabels: false},
                                 yaxis   : {showLabels: false},
-                                legend  : {postion: 'nw'}
+                                legend  : {position: 'se'}
                             });
                         })();
-                        
                         </script>
-
                     </div>
                 </div>
             </div>
@@ -80,6 +81,9 @@ h3 > small {
                                 <li><a href="{{url_for('app.details', short_name=app.short_name)}}">{{app.name}}</a></li>
                                 {% endfor %}
                                 </ol>
+                            {% else %}
+                            <hr>
+                            <h4>No active application in the last 24 hours</h4>
                             {% endif %}
                         </div>
                         <div id="apps" class="span6" style="height:400px;"></div>
@@ -96,7 +100,7 @@ h3 > small {
                                 HtmlText: false,
                                 xaxis   : {showLabels: false},
                                 yaxis   : {showLabels: false},
-                                legend  : {postion: 'nw'}
+                                legend  : {position: 'se'}
                             });
                         })();
                         
@@ -125,11 +129,10 @@ h3 > small {
                                 {data:[data['values'][1]['value']],  label:data['values'][1]['label']}], 
                                 {
                                 bars : {show: true},
-                                grid    : {verticalLines: true, horizontalLines: true, outlineWidth: 0},
-                                HtmlText: false,
-                                xaxis   : {showLabels: false},
+                                grid    : {verticalLines: true, horizontalLines: true},
+                                xaxis   : {showLabels: false, autoscale: true, autoscaleMargin:1},
                                 yaxis   : {showLabels: true, min:0, autoscaleMargin:1},
-                                legend  : {postion: 'nw'}
+                                legend  : {position: 'ne'}
                             });
                         })();
                         
