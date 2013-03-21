@@ -21,3 +21,13 @@ _ga.html
 _gcs.html
 _gcs_form.html
 dat/GeoLiteCity.dat
+.ropeproject/
+doc/_themes/
+pybossa/static/globe/
+pybossa/static/img/sloan.png
+pybossa/static/img/sloan.png.png
+pybossa/static/img/world.jpg
+pybossa/static/js/d3.layout.cloud.js
+pybossa/static/js/d3.v2.min.js
+pybossa/static/js/raphael-min.js
+pybossa/static/openlayers/

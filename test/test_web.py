@@ -1286,7 +1286,7 @@ class TestWeb:
     def test_43_terms_of_use_and_data(self):
         """Test WEB terms of use is working"""
         res = self.app.get('account/signin', follow_redirects=True)
-        assert "http://okfn.org/terms-of-use/" in res.data, res.data
+        assert "/help/terms-of-use" in res.data, res.data
         assert "http://opendatacommons.org/licenses/by/" in res.data, res.data
 
         res = self.app.get('account/register', follow_redirects=True)

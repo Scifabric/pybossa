@@ -605,15 +605,19 @@ ul.users li a {
   }
 }
 
-footer ul {
+body > footer {
+    margin-top: 10px;
+}
+
+body > footer ul {
     color: rgb(205, 205, 205);
     list-style: none;
 }
 
-footer li > a {
+body > footer li > a {
     color: rgb(205, 205, 205);
 }
 
-footer li > a:hover {
+body > footer li > a:hover {
     color: rgb(205, 205, 205);
 }
