@@ -345,3 +345,11 @@ restart the server.
 .. _GeoLite: http://dev.maxmind.com/geoip/geolite
 .. _`Creative Commons Attribution-ShareAlike 3.0 Uported License`: http://creativecommons.org/licenses/by-sa/3.0/
 .. _page: http://geolite.maxmind.com/download/geoip/database/GeoLiteCity.dat.gz
+
+Using your own Terms of Use
+===========================
+
+PyBossa has a default Terms of Service page that you can customize to fit your
+institutional needs. In the case that you want to not use the default one,
+please, create a **_tos.html** file in the **custom** folder (you can find it
+in the templates folder.
