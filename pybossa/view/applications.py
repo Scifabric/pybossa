@@ -26,7 +26,7 @@ import pybossa.model as model
 import pybossa.stats as stats
 
 from pybossa.core import db
-from pybossa.model import App
+from pybossa.model import App, Task
 from pybossa.util import Unique, Pagination, unicode_csv_reader, UnicodeWriter
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
@@ -483,18 +483,26 @@ def import_task(short_name):
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
+    app = App.query.filter_by(short_name=short_name).first_or_404()
+    task = Task.query.filter_by(id=task_id).first_or_404()
+
+    if not app.allow_anonymous_contributors and current_user.is_anonymous():
+        msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
+               application" % app.name
+        flash(msg, 'warning')
+        return redirect(url_for('account.signin',
+                        next=url_for('.presenter', short_name=app.short_name)))
     if (current_user.is_anonymous()):
         flash("Ooops! You are an anonymous user and will not get any credit "
               " for your contributions. <a href=\"" + url_for('account.signin',
               next=url_for('app.task_presenter', short_name=short_name,
                            task_id=task_id))
               + "\">Sign in now!</a>", "warning")
-    app = App.query.filter_by(short_name=short_name).first_or_404()
-    task = db.session.query(model.Task).get(task_id)
     if app:
         title = "Application: %s &middot; Contribute" % app.name
     else:
         title = "Application not found"
+
     if (task.app_id == app.id):
         #return render_template('/applications/presenter.html', app = app)
         # Check if the user has submitted a task before
@@ -531,10 +539,14 @@ def task_presenter(short_name, task_id):
 def presenter(short_name):
     app = App.query.filter_by(short_name=short_name)\
         .first_or_404()
-    if app:
-        title = "Application: %s &middot; Contribute" % app.name
-    else:
-        title = "Application not found"
+    title = "Application &middot; %s &middot; Contribute" % app.name
+    if not app.allow_anonymous_contributors and current_user.is_anonymous():
+        msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
+               application" % app.name
+        flash(msg, 'warning')
+        return redirect(url_for('account.signin',
+                        next=url_for('.presenter', short_name=app.short_name)))
+
     if app.info.get("tutorial"):
         if request.cookies.get(app.short_name + "tutorial") is None:
             if (current_user.is_anonymous()):
