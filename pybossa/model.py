@@ -139,6 +139,8 @@ class App(db.Model, DomainObject):
     description = Column(Unicode(length=255))
     #: long description
     long_description = Column(UnicodeText)
+    #: Allow anonymous contributors to participate in the application tasks
+    allow_anonymous_contributors = Column(Boolean, default=True)
     ## TODO: What is this?
     long_tasks = Column(Integer, default=0)
     #: Boolean integer (0,1) indicating that \

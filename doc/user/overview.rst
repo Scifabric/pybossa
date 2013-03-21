@@ -70,6 +70,18 @@ figure:
         accessing your application, i.e. *flickrperson*.
      3. **Description**: A **short** description of the application, i.e.
         *Image pattern recognition*.
+     4. **Icon Link**: A URL with the icon that you want to use in your
+        application.
+     5. **Allow Anonymous Contributors**: By default anonymous and
+        authenticated users can participate in all the applications, however
+        you can change it to only allow authenticated volunteers to
+        participate. 
+     6. **Task Scheduler**: The task scheduler is in charge in distributing the
+        tasks within the volunteers crowd. By default, the system will send the
+        same task to all the users until a minimum of 30 answers are obtained
+        for each task, then it will start sending the next task of your
+        application. You can change it to **breadth first** if you want to send
+        to every user a different task every time.
      4. **Long Description**: A *long* description where you can use HTML
         to format the description of your application. This field is
         usually used to provide information about the application, the
@@ -77,7 +89,7 @@ figure:
         application, etc.
      5. **Hide**: Click in this field if you want to hide the application.
 
-.. image:: http://i.imgur.com/FcP6uzd.png 
+.. image:: http://i.imgur.com/MdNRUnK.png
     :alt: PyBossa Create link
 
 4. Once you have filled all the fields, click in the **Create the

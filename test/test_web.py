@@ -93,6 +93,7 @@ class TestWeb:
     def new_application(self, method="POST", name="Sample App",
                         short_name="sampleapp", description="Description",
                         thumbnail='An Icon link',
+                        allow_anonymous_contributors='True',
                         long_description=u'<div id="long_desc">Long desc</div>',
                         sched='default',
                         hidden=False):
@@ -104,6 +105,7 @@ class TestWeb:
                     'short_name': short_name,
                     'description': description,
                     'thumbnail': thumbnail,
+                    'allow_anonymou_contributors': allow_anonymous_contributors,
                     'long_description': long_description,
                     'sched': sched,
                     'hidden': hidden,
@@ -114,6 +116,7 @@ class TestWeb:
                     'short_name': short_name,
                     'description': description,
                     'thumbnail': thumbnail,
+                    'allow_anonymous_contributors': allow_anonymous_contributors,
                     'long_description': long_description,
                     'sched': sched,
                 }, follow_redirects=True)
@@ -146,6 +149,7 @@ class TestWeb:
                            new_name="Sample App", new_short_name="sampleapp",
                            new_description="Description",
                            new_thumbnail="New Icon link",
+                           new_allow_anonymous_contributors="False",
                            new_long_description="Long desc",
                            new_sched="random",
                            new_hidden=False):
@@ -159,6 +163,7 @@ class TestWeb:
                                          'short_name': new_short_name,
                                          'description': new_description,
                                          'thumbnail': new_thumbnail,
+                                         'allow_anonymous_contributors': new_allow_anonymous_contributors,
                                          'long_description': new_long_description,
                                          'sched': new_sched,
                                          'hidden': new_hidden},
@@ -169,6 +174,7 @@ class TestWeb:
                         'name': new_name,
                         'short_name': new_short_name,
                         'thumbnail': new_thumbnail,
+                        'allow_anonymous_contributors': new_allow_anonymous_contributors,
                         'long_description': new_long_description,
                         'sched': new_sched,
                         'description': new_description,
@@ -1753,3 +1759,41 @@ class TestWeb:
         res = self.app.get(url, follow_redirects=True)
         err_msg = "There should be a help api.html page"
         assert "API Help" in res.data, err_msg
+
+    def test_69_allow_anonymous_contributors(self):
+        """Test WEB allow anonymous contributors works"""
+        Fixtures.create()
+        app = db.session.query(model.App).first()
+        url = '/app/%s/newtask' % app.short_name
+
+        # All users are allowed to participate by default
+        # As Anonymous user
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "The anonymous user should be able to participate"
+        assert app.name in res.data, err_msg
+
+        # As registered user
+        self.register()
+        self.signin()
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "The anonymous user should be able to participate"
+        assert app.name in res.data, err_msg
+        self.signout()
+
+        # Now only allow authenticated users
+        app.allow_anonymous_contributors = False
+        db.session.add(app)
+        db.session.commit()
+
+        # As Anonymous user
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "User should be redirected to sign in"
+        msg = "Oops! You have to sign in to participate in <strong>%s</strong>" % app.name
+        assert msg in res.data, err_msg
+
+        # As registered user
+        res = self.signin()
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "The authenticated user should be able to participate"
+        assert app.name in res.data, err_msg
+        self.signout()
