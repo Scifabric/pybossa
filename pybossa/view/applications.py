@@ -54,6 +54,9 @@ class AppForm(Form):
                             [validators.Required(
                                 message="You must provide a description.")])
     thumbnail = TextField('Icon Link')
+    allow_anonymous_contributors = SelectField('Allow Anonymous Contributors',
+                                               choices=[('True', 'Yes'),
+                                                        ('False', 'No')])
     long_description = TextAreaField('Long Description')
     sched = SelectField('Task Scheduler',
                         choices=[('default', 'Default'),
@@ -315,7 +318,8 @@ def update(short_name):
                                             long_description=form.long_description.data,
                                             hidden=hidden,
                                             info=info,
-                                            owner_id=app.owner_id,)
+                                            owner_id=app.owner_id,
+                                            allow_anonymous_contributors=form.allow_anonymous_contributors.data)
                 app = App.query.filter_by(short_name=short_name).first_or_404()
                 db.session.merge(new_application)
                 db.session.commit()
