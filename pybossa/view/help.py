@@ -30,3 +30,9 @@ def api():
         app_id = None
     return render_template('help/api.html', title="Help: API",
                            app_id=app_id)
+
+
+@blueprint.route('/license')
+def license():
+    """Render help/license page"""
+    return render_template('help/license.html', title='Help: Licenses')
