@@ -21,14 +21,11 @@ from flaskext.wtf import Form, IntegerField, TextField, BooleanField, \
     SelectField, validators, HiddenInput, TextAreaField
 from flaskext.login import login_required, current_user
 from werkzeug.exceptions import HTTPException
-from werkzeug import Headers
-import os
-import csv
 
 import pybossa.model as model
 import pybossa.stats as stats
 
-from pybossa.core import db, cache
+from pybossa.core import db
 from pybossa.model import App
 from pybossa.util import Unique, Pagination, unicode_csv_reader, UnicodeWriter
 from pybossa.auth import require
@@ -38,7 +35,10 @@ import json
 
 blueprint = Blueprint('app', __name__)
 
-class CSVImportException(Exception): pass
+
+class CSVImportException(Exception):
+    pass
+
 
 class AppForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
@@ -69,13 +69,19 @@ class TaskPresenterForm(Form):
 
 
 class BulkTaskCSVImportForm(Form):
-    csv_url = TextField('URL', [validators.Required(message="You must "
-                "provide a URL"), validators.URL(message="Oops! That's not a"
-                " valid URL. You must provide a valid URL")])
+    msg_required = "You must provide a URL"
+    msg_url = "Oops! That's not a valid URL. You must provide a valid URL"
+    csv_url = TextField('URL',
+                        [validators.Required(message=msg_required),
+                         validators.URL(message=msg_url)])
+
+
 class BulkTaskGDImportForm(Form):
-    googledocs_url = TextField('URL', [validators.Required(message="You must "
-                "provide a URL"), validators.URL(message="Oops! That's not a"
-                " valid URL. You must provide a valid URL")])
+    msg_required = "You must provide a URL"
+    msg_url = "Oops! That's not a valid URL. You must provide a valid URL"
+    googledocs_url = TextField('URL',
+                               [validators.Required(message=msg_required),
+                                   validators.URL(message=msg_url)])
 
 
 @blueprint.route('/', defaults={'page': 1})
@@ -205,20 +211,22 @@ def task_presenter_editor(short_name):
                     form.editor.data = app.info['task_presenter']
                 else:
                     if request.args.get('template'):
-                        tmpl_uri = "applications/snippets/%s.html" % request.args.get('template')
+                        tmpl_uri = "applications/snippets/%s.html" \
+                                   % request.args.get('template')
                         tmpl = render_template(tmpl_uri, app=app)
                         form.editor.data = tmpl
-                        flash('Your code will be <em>automagically</em> rendered in \
-                              the <strong>preview section</strong>. Click in the preview button!', 'info')
+                        msg = 'Your code will be <em>automagically</em> rendered in \
+                              the <strong>preview section</strong>. Click in the \
+                              preview button!'
+                        flash(msg, 'info')
                     else:
-                        msg = '<strong>Note</strong> You will need to upload \
-                               the tasks using the <a href="' + \
-                                url_for('app.import_task',
-                                        short_name=app.short_name) + \
-                                '">CSV importer</a> or download the app \
-                                bundle and run the <strong>createTasks.py\
-                                </strong> script in your \
-                                computer'
+                        msg = '<strong>Note</strong> You will need to upload ' \
+                              'the tasks using the <a href="%s">' \
+                              'CSV importer</a> or download the app ' \
+                              'bundle and run the <strong>createTasks.py ' \
+                              '</strong> script in your ' \
+                              'computer' % url_for('app.import_task',
+                                                   short_name=app.short_name)
                         flash(msg, 'info')
                         return render_template(
                             'applications/task_presenter_options.html',
@@ -350,6 +358,7 @@ def details(short_name):
     else:
         abort(404)
 
+
 @blueprint.route('/<short_name>/settings')
 @login_required
 def settings(short_name):
@@ -416,16 +425,15 @@ def import_task(short_name):
     if app.tasks or (request.args.get('template') or request.method == 'POST'):
 
         googledocs_urls = {
-            'image': "https://docs.google.com/spreadsheet/ccc" \
-                "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE" \
-                "&usp=sharing",
-            'map': "https://docs.google.com/spreadsheet/ccc" \
-                "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc" \
-                "&usp=sharing",
-            'pdf': "https://docs.google.com/spreadsheet/ccc" \
-                 "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE" \
-                 "&usp=sharing"
-            }
+            'image': "https://docs.google.com/spreadsheet/ccc"
+                     "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE"
+                     "&usp=sharing",
+            'map': "https://docs.google.com/spreadsheet/ccc"
+                   "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc"
+                   "&usp=sharing",
+            'pdf': "https://docs.google.com/spreadsheet/ccc"
+                   "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE"
+                   "&usp=sharing"}
 
         template = request.args.get('template')
         if template in googledocs_urls:
@@ -443,9 +451,10 @@ def import_task(short_name):
                 if r.status_code == 403:
                     raise CSVImportException("Oops! It looks like you don't have permission to access"
                                              " that file!", 'error')
-                if (not 'text/plain' in r.headers['content-type'] and not 'text/csv'
-                    in r.headers['content-type']):
-                    raise CSVImportException("Oops! That file doesn't look like the right file.", 'error')
+                if ((not 'text/plain' in r.headers['content-type']) and
+                   (not 'text/csv' in r.headers['content-type'])):
+                    msg = "Oops! That file doesn't look like the right file."
+                    raise CSVImportException(msg, 'error')
 
                 csvcontent = StringIO(r.text)
                 csvreader = unicode_csv_reader(csvcontent)
@@ -457,8 +466,8 @@ def import_task(short_name):
             except CSVImportException, err_msg:
                 flash(err_msg, 'error')
             except:
-                flash('Oops! Looks like there was an error with processing '
-                      'that file!', 'error')
+                msg = 'Oops! Looks like there was an error with processing that file!'
+                flash(msg, 'error')
         return render_template('/applications/import.html',
                                title=title,
                                app=app,
@@ -466,10 +475,10 @@ def import_task(short_name):
                                gdform=gdform)
     else:
         return render_template('/applications/import_options.html',
-                        title=title,
-                        app=app,
-                        csvform=csvform,
-                        gdform=gdform)
+                               title=title,
+                               app=app,
+                               csvform=csvform,
+                               gdform=gdform)
 
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
@@ -794,7 +803,7 @@ def show_stats(short_name):
     """Returns App Stats"""
     app = db.session.query(model.App).filter_by(short_name=short_name).first()
     title = "Application: %s &middot; Statistics" % app.name
-    if len(app.tasks)>0 and len(app.task_runs)>0:
+    if len(app.tasks) > 0 and len(app.task_runs) > 0:
         dates_stats, hours_stats, users_stats = stats.get_stats(app.id,
                                                                 current_app.config['GEO'])
         anon_pct_taskruns = int((users_stats['n_anon'] * 100) /
