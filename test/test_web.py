@@ -1759,3 +1759,41 @@ class TestWeb:
         res = self.app.get(url, follow_redirects=True)
         err_msg = "There should be a help api.html page"
         assert "API Help" in res.data, err_msg
+
+    def test_69_allow_anonymous_contributors(self):
+        """Test WEB allow anonymous contributors works"""
+        Fixtures.create()
+        app = db.session.query(model.App).first()
+        url = '/app/%s/newtask' % app.short_name
+
+        # All users are allowed to participate by default
+        # As Anonymous user
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "The anonymous user should be able to participate"
+        assert app.name in res.data, err_msg
+
+        # As registered user
+        self.register()
+        self.signin()
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "The anonymous user should be able to participate"
+        assert app.name in res.data, err_msg
+        self.signout()
+
+        # Now only allow authenticated users
+        app.allow_anonymous_contributors = False
+        db.session.add(app)
+        db.session.commit()
+
+        # As Anonymous user
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "User should be redirected to sign in"
+        msg = "Oops! You have to sign in to participate in <strong>%s</strong>" % app.name
+        assert msg in res.data, err_msg
+
+        # As registered user
+        res = self.signin()
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "The authenticated user should be able to participate"
+        assert app.name in res.data, err_msg
+        self.signout()
