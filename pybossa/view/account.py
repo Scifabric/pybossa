@@ -444,7 +444,7 @@ def reset_api_key():
 
 
 @blueprint.route('/<name>/')
-def user_profile(name):
+def public_profile(name):
     """Render the public user profile"""
     user, apps, apps_created = cached_users.get_user_summary(name)
     if user:

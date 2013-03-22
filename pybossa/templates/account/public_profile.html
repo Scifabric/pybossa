@@ -15,9 +15,11 @@
             {{render_grid_apps(apps_created, "Created Applications")}}
         </section>
         {% endif %}
+        {% if apps %}
         <section id="contributed-apps" style="margin-top:10px;">
             {{render_grid_apps(apps, "Contributions")}}
         </section>
+        {% endif %}
     </div>
 </div>
 

@@ -13,8 +13,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 from sqlalchemy.sql import text
-from pybossa.core import cache
-from pybossa.core import db
+from pybossa.core import cache, db
 import json
 
 
@@ -38,15 +37,17 @@ def get_user_summary(name):
     sql = text('''
                SELECT "user".id, "user".name, "user".fullname, "user".created,
                "user".email_addr, COUNT(task_run.user_id) AS n_answers
-               FROM "user", task_run
-               WHERE task_run.user_id="user".id AND "user".name=:name
+               FROM "user" LEFT OUTER JOIN task_run ON "user".id=task_run.user_id
+               WHERE "user".name=:name
                GROUP BY "user".id;
                ''')
     results = db.engine.execute(sql, name=name)
+    user = dict()
     for row in results:
         user = dict(id=row.id, name=row.name, fullname=row.fullname, created=row.created,
                     email_addr=row.email_addr, n_answers=row.n_answers)
 
+    print user
     # Rank
     # See: https://gist.github.com/tokumine/1583695
     sql = text('''

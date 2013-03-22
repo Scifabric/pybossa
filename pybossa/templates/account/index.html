@@ -43,7 +43,7 @@
       <ul class="thumbnails">
       {% for account in accounts %}
       <li> 
-      <a href="#" class="thumbnail" rel='popover' title="<strong>{{account['fullname']}}</strong>" data-content="
+      <a href="{{url_for('account.public_profile', name=account.name)}}" class="thumbnail" rel='popover' title="<strong>{{account['fullname']}}</strong>" data-content="
               <ul style='list-style-type:none; margin-left:0px;'>
                 <li><strong><i class='icon-calendar'></i> Joined</strong> {{account['created'][0:10]}}</li>
                 <li><strong><i class='icon-tasks'></i> Contributed Tasks</strong> {{ account.task_runs | count }}</li>
@@ -79,9 +79,7 @@ $("a[rel=popover]").popover({
         animate: true,
         trigger: 'hover',
         placement: 'bottom'
-                }).click(function(e) {
-                        e.preventDefault()
-                        });
+                });
 
 </script>
 {% endblock %}
