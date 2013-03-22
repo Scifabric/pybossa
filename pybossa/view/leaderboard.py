@@ -40,7 +40,7 @@ def index():
                         WHERE user_id IS NOT NULL GROUP BY user_id)
                     SELECT user_id, score, rank() OVER (ORDER BY score desc)
                     FROM scores)
-               SELECT rank, id, fullname, email_addr, score FROM global_rank
+               SELECT rank, id, name, fullname, email_addr, score FROM global_rank
                JOIN public."user" on (user_id=public."user".id) ORDER BY rank
                LIMIT :limit;
                ''')
@@ -62,7 +62,7 @@ def index():
                                 WHERE user_id IS NOT NULL GROUP BY user_id)
                             SELECT user_id, score, rank() OVER (ORDER BY score desc)
                             FROM scores)
-                       SELECT rank, id, fullname, email_addr, score FROM global_rank
+                       SELECT rank, id, name, fullname, email_addr, score FROM global_rank
                        JOIN public."user" on (user_id=public."user".id)
                        WHERE user_id=:user_id ORDER BY rank;
                        ''')

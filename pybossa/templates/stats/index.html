@@ -19,13 +19,13 @@
             {% if user.fullname == current_user.fullname %}
                 <tr class="success">
                     <td><strong>{{user.rank}}</strong></td>
-                    <td><strong>{{user.fullname}}</strong></td>
+                    <td><strong><a href="{{url_for('account.public_profile', name=user.name)}}">{{user.fullname}}</a></strong></td>
                     <td><strong>{{user.score}}</strong></td>
                 </tr> 
             {% else %}
                 <tr>
                     <td>{{user.rank}}</td>
-                    <td>{{user.fullname}}</td>
+                    <td><strong><a href="{{url_for('account.public_profile', name=user.name)}}">{{user.fullname}}</a></strong></td>
                     <td>{{user.score}}</td>
                 </tr> 
             {%endif%}

@@ -33,6 +33,7 @@ from pybossa.util import Pagination
 from pybossa.util import Twitter
 from pybossa.util import Facebook
 from pybossa.util import get_user_signup_method
+from pybossa.cache import users as cached_users
 
 
 blueprint = Blueprint('account', __name__)
@@ -440,3 +441,18 @@ def reset_api_key():
             return redirect(url_for('account.settings'))
     else:
         return abort(403)
+
+
+@blueprint.route('/<name>/')
+def public_profile(name):
+    """Render the public user profile"""
+    user, apps, apps_created = cached_users.get_user_summary(name)
+    if user:
+        title = "%s &middot; User Profile" % user['fullname']
+        return render_template('/account/public_profile.html',
+                               title=title,
+                               user=user,
+                               apps=apps,
+                               apps_created=apps_created)
+    else:
+        abort(404)
