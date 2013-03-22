@@ -75,7 +75,7 @@
         <ul class="users">
             {% for user in top_users %}
           <li>
-            <a data-content="
+          <a href="{{url_for('account.public_profile', name=user.name)}}" data-content="
                 <strong>Joined:</strong> {{user.created[0:10]}} 
                 <br/>
                 <strong>Submitted Tasks:</strong> {{user.task_runs}}
@@ -93,10 +93,7 @@ $("a[rel=popover]").popover({
         animation: true,
         trigger: 'hover',
         placement: 'top'
-                }).click(function(e) {
-                        e.preventDefault()
-                        });
-
+                });
 </script>
 
 {% endblock %}

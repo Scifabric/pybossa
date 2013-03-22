@@ -20,7 +20,7 @@ import json
 @cache.cached(key_prefix="front_page_top_users")
 def get_top(n=10):
     """Return the n=10 top users"""
-    sql = text('''SELECT "user".id, "user".fullname, "user".email_addr,
+    sql = text('''SELECT "user".id, "user".name, "user".fullname, "user".email_addr,
                "user".created, COUNT(task_run.id) AS task_runs from task_run, "user"
                WHERE "user".id=task_run.user_id group by "user".id
                ORDER BY task_runs DESC LIMIT :limit''')
