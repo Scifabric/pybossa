@@ -47,7 +47,7 @@ def get_top(n=4):
     sql = text('''
     SELECT app.id, app.name, app.short_name, app.description, app.info,
     count(app_id) AS total FROM task_run, app WHERE app_id IS NOT NULL AND
-    app.id=app_id GROUP BY app.id ORDER BY total DESC LIMIT :limit;
+    app.id=app_id AND app.hidden=0 GROUP BY app.id ORDER BY total DESC LIMIT :limit;
     ''')
 
     results = db.engine.execute(sql, limit=n)
