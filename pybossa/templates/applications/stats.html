@@ -372,7 +372,7 @@
                             {% for u in userStats.authenticated.top5 %}
                                 <tr>
                                     <th>{{loop.index}}</th>
-                                    <th>{{u.fullname}}</th>
+                                    <th><a href="{{url_for('account.public_profile', name=u.name)}}">{{u.fullname}}</a></th>
                                     <th>{{u.tasks}}</th>
                                 </tr>
                             {% endfor %}
