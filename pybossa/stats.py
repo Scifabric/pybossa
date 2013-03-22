@@ -339,11 +339,12 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
         loc_anon.append(dict(ip=u[0], loc=loc, tasks=u[1]))
 
     for u in auth_users:
-        sql = text('''SELECT fullname from "user" where id=:id;''')
+        sql = text('''SELECT name, fullname from "user" where id=:id;''')
         results = db.engine.execute(sql, id=u[0])
         for row in results:
             fullname = row.fullname
-        top5_auth.append(dict(fullname=fullname, tasks=u[1]))
+            name = row.name
+        top5_auth.append(dict(name=name, fullname=fullname, tasks=u[1]))
 
     userAnonStats['top5'] = top5_anon
     userAnonStats['locs'] = loc_anon

@@ -1797,3 +1797,18 @@ class TestWeb:
         err_msg = "The authenticated user should be able to participate"
         assert app.name in res.data, err_msg
         self.signout()
+
+    def test_70_public_user_profile(self):
+        """Test WEB public user profile works"""
+        Fixtures.create()
+
+        # Should work as an anonymous user
+        url = '/account/%s/' % Fixtures.name
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "There should be a public profile page for the user"
+        assert Fixtures.fullname in res.data, err_msg
+
+        # Should work as an authenticated user
+        self.signin()
+        res = self.app.get(url, follow_redirects=True)
+        assert Fixtures.fullname in res.data, err_msg

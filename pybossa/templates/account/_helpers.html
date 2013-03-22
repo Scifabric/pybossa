@@ -30,22 +30,36 @@
 {% endmacro %}
 
 
-{% macro render_user_profile(user, settings) %}
+{% macro render_user_profile(user, settings, private=True) %}
 <div class="row-fluid">
     <div class="span3">
         <img class="img-polaroid" src="{{ user.email_addr | gravatar(size=164)}}">
     </div>
     <div class="span9">
         <h2><i class="icon-user"></i> Nick: <small>{{ user.name }}</small></h2>
+        {% if private %}
         <h2><i class="icon-envelope"></i> E-mail: <small>{{ user.email_addr }}</small></h2>
+        {% endif %}
         {% if user.rank %}
-        <h2><i class="icon-trophy"></i> Rank: <small><a href="{{url_for('stats.index')}}">{{ user.rank }} of {{user.total}} with a Score of {{user.score}} contributed tasks</a></small></h2>
+        <h2><i class="icon-trophy"></i> Rank: <small>
+                {% if private %}
+                <a href="{{url_for('leaderboard.index')}}">
+                {% endif %}
+                {{ user.rank }} of {{user.total}} with a Score of {{user.score}} contributed tasks
+                {% if private %}</a>{% endif %}
+                </small>
+        </h2>
         {% else %}
+        <h2><i class="icon-trophy"></i> Rank: <small>The user has not contributed a task yet</small></h2>
+        {% endif %}
+        {% if not private %}
         <h2><i class="icon-time"></i> Joined: <small>{{ user.created[0:10]}}</small></h2>
         {% endif %}
         {% if settings %}
         <h2><i class="icon-key"></i> API key: <small>{{ user.api_key }}</small></h2>
-        {% else %}
+        {% endif %}
+        {% if private %}
+        <a href="{{ url_for('account.public_profile', name=user.name) }}" class="btn btn-inverse"><i class="icon icon-globe"></i> See your public profile</a>
         <a href="{{ url_for('account.settings') }}" class="btn btn-primary"><i class="icon icon-user"></i> Edit your profile</a>
         {% endif %}
     </div>
