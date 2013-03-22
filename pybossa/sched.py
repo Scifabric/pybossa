@@ -26,21 +26,25 @@ def new_task(app_id, user_id=None, user_ip=None, offset=0):
     '''Get a new task by calling the appropriate scheduler function.
     '''
     app = db.session.query(model.App).get(app_id)
-    sched_map = {
-        'default': get_depth_first_task,
-        'breadth_first': get_breadth_first_task,
-        'depth_first': get_depth_first_task,
-        'random': get_random_task,
-        'incremental': get_incremental_task
-        }
-    sched = sched_map.get(app.info.get('sched'), sched_map['default'])
-    return sched(app_id, user_id, user_ip, offset=offset)
+    if not app.allow_anonymous_contributors and user_id is None:
+        error = model.Task(info=dict(error="This application does not allow anonymous contributors"))
+        return error
+    else:
+        sched_map = {
+            'default': get_depth_first_task,
+            'breadth_first': get_breadth_first_task,
+            'depth_first': get_depth_first_task,
+            'random': get_random_task,
+            'incremental': get_incremental_task
+            }
+        sched = sched_map.get(app.info.get('sched'), sched_map['default'])
+        return sched(app_id, user_id, user_ip, offset=offset)
 
 
 def get_breadth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
     """Gets a new task which have the least number of task runs (excluding the
     current user).
-    
+
     Note that it **ignores** the number of answers limit for efficiency reasons
     (this is not a big issue as all it means is that you may end up with some
     tasks run more than is strictly needed!)

@@ -39,7 +39,7 @@ class TestAPI:
         else:
             return self.app.get('/account/register', follow_redirects=True)
 
-    def signin(self, method="POST", username="johndoe", password="p4ssw0rd",
+    def signin(self, method="POST", email="johndoe@example.com", password="p4ssw0rd",
                next=None):
         """Helper function to sign in current user"""
         url = '/account/signin'
@@ -47,7 +47,7 @@ class TestAPI:
             url = url + '?next=' + next
         if method == "POST":
             return self.app.post(url,
-                                 data={'username': username,
+                                 data={'email': email,
                                        'password': password},
                                  follow_redirects=True)
         else:
@@ -775,3 +775,65 @@ class TestAPI:
                    .filter_by(task_id=t['id'])\
                    .all()
             assert len(tr) == 0, "There should not be any task run for task"
+
+    def test_11_allow_anonymous_contributors(self):
+        """Test API allow anonymous contributors works"""
+        app = db.session.query(model.App).first()
+
+        # All users are allowed to participate by default
+        # As Anonymous user
+        url = '/api/app/%s/newtask' % app.id
+        res = self.app.get(url, follow_redirects=True)
+        task = json.loads(res.data)
+        err_msg = "The task.app_id is different from the app.id"
+        assert task['app_id'] == app.id, err_msg
+        err_msg = "There should not be an error message"
+        assert task['info'].get('error') is None, err_msg
+        err_msg = "There should be a question"
+        assert task['info'].get('question') == 'My random question', err_msg
+
+        # As registered user
+        self.register()
+        self.signin()
+        url = '/api/app/%s/newtask' % app.id
+        res = self.app.get(url, follow_redirects=True)
+        task = json.loads(res.data)
+        err_msg = "The task.app_id is different from the app.id"
+        assert task['app_id'] == app.id, err_msg
+        err_msg = "There should not be an error message"
+        assert task['info'].get('error') is None, err_msg
+        err_msg = "There should be a question"
+        assert task['info'].get('question') == 'My random question', err_msg
+        self.signout()
+
+        # Now only allow authenticated users
+        app.allow_anonymous_contributors = False
+        db.session.add(app)
+        db.session.commit()
+
+        # As Anonymous user
+        url = '/api/app/%s/newtask' % app.id
+        res = self.app.get(url, follow_redirects=True)
+        task = json.loads(res.data)
+        err_msg = "The task.app_id should be null"
+        print task
+        assert task['app_id'] is None, err_msg
+        err_msg = "There should be an error message"
+        err = "This application does not allow anonymous contributors"
+        assert task['info'].get('error') == err, err_msg
+        err_msg = "There should not be a question"
+        assert task['info'].get('question') is None, err_msg
+
+        # As registered user
+        res = self.signin()
+        print res.data
+        url = '/api/app/%s/newtask' % app.id
+        res = self.app.get(url, follow_redirects=True)
+        task = json.loads(res.data)
+        err_msg = "The task.app_id is different from the app.id"
+        assert task['app_id'] == app.id, err_msg
+        err_msg = "There should not be an error message"
+        assert task['info'].get('error') is None, err_msg
+        err_msg = "There should be a question"
+        assert task['info'].get('question') == 'My random question', err_msg
+        self.signout()
