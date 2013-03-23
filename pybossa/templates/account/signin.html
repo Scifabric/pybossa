@@ -3,19 +3,10 @@
 {% block content %}
 <p style="padding-top:5px;">
 <p style="padding-top:5px;">
-<<<<<<< HEAD
 <span class="label label-warning"><i class="icon-bullhorn"></i> {{ _('Note') }}</span>
-    {{ _('By click the') }} <strong>{{ _('Sign in button') }}</strong> {{ _('below you are agreeing to the') }}
-    <a target="blank" href={{terms_of_use | safe}}>{{ _('terms of use') }} </a> {{ _('and') }}
+    {{ _('By click the') }} <strong>{{ _('Sign in button') }}</strong> {{ _('below you are agreeing to
+    the') }} <a href={{url_for('help.tos')}}>{{ _('terms of use') }}</a> {{ _('and') }}
     <a href={{data_use | safe}}>{{ _('data') }}</a>.
-=======
-<span class="label label-warning"><i class="icon-bullhorn"></i> Note</span>
-    By click the <strong>Sign in button</strong> below you are agreeing to
-    the <a href={{url_for('help.tos')}}>terms of use</a> and
-    <a href={{data_use | safe}}>data</a>.
->>>>>>> 429bc3879503564db0c15495b1de5355c997caf1
-</p>
-
 </p>
 {% if next is not none%}
   {% if auth.twitter %}
