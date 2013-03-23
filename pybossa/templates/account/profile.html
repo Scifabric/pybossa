@@ -26,16 +26,8 @@
             </div>
             <div class="span9">
                 <h2><a href="{{url_for('app.details', short_name=app.short_name)}}">{{app.name}}</a></h2>
-<<<<<<< HEAD
-                  <p><i class="icon-tasks"></i> {{ _('Contributed tasks:') }} {{app.c}}</p>
-                  {{ helper.render_twitter_btn(app)}}
-                  {{ helper.render_googlePlus_btn(app)}}
-                  <br/>
-                  <a class="btn" style="padding:1px 6px; vertical-align:top" href="{{url_for('app.presenter', short_name=app.short_name)}}"><i class="icon-thumbs-up"></i> {{ _('Contribute!') }}</a>
-=======
-                  <p><i class="icon-tasks"></i> You have contributed <strong>{{app.n_task_runs}}</strong> tasks</p>
-                  <a class="btn btn-primary" href="{{url_for('app.presenter', short_name=app.short_name)}}"><i class="icon-thumbs-up"></i> Contribute!</a>
->>>>>>> 429bc3879503564db0c15495b1de5355c997caf1
+                  <p><i class="icon-tasks"></i> {{ _('You have contributed') }} <strong>{{app.n_task_runs}}</strong> {{ _('tasks') }}</p>
+                  <a class="btn btn-primary" href="{{url_for('app.presenter', short_name=app.short_name)}}"><i class="icon-thumbs-up"></i> {{ _('Contribute!') }}</a>
             </div>
         </div><!-- end row-fluid -->
         {% endfor %}
