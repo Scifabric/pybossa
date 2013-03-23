@@ -58,18 +58,11 @@
         {% if current_user.id == app.owner.id %}
         <li><strong><i class="icon-cog"></i> ID</strong>: {{ app.id }}</li>
         {% endif %}
-<<<<<<< HEAD
         <li><strong><i class="icon-info-sign"></i> {{ _('Description') }}</strong>: {{ app['description'] }}</li>
-        <li><strong><i class="icon-ok"></i> {{ _('Creation Date') }}</strong>: {{ app.created[0:10] }}</li>
+        <li><strong><i class="icon-ok"></i> { _('Creation Date') }}</strong>: {{ app.created[0:10] }}</li>
         <li><strong><i class="icon-time"></i> {{ _('Last Activity') }}</strong>: {{ app.last_activity()}}</li>
-        <li><strong><i class="icon-cogs"></i> {{ _('Overall progress') }}</strong>: {{ ( app.completion_status()*100 ) | round(2, 'floor') }}% {{ _('completed') }}</li>
-=======
-        <li><strong><i class="icon-info-sign"></i> Description</strong>: {{ app['description'] }}</li>
-        <li><strong><i class="icon-ok"></i> Creation Date</strong>: {{ app.created[0:10] }}</li>
-        <li><strong><i class="icon-time"></i> Last Activity</strong>: {{ app.last_activity()}}</li>
-        <li><strong><i class="icon-cogs"></i> Overall progress</strong>: {{ ( app.completion_status() * 100) | round(2, 'floor') }}% completed</li>
->>>>>>> 429bc3879503564db0c15495b1de5355c997caf1
-        <li><strong><i class="icon-tasks"></i> <a href="{{url_for('app.tasks',short_name=app.short_name)}}">Tasks</strong></a> ({{ app.tasks | count }})</li>
+        <li><strong><i class="icon-cogs"></i> {{ _('Overall progress') }}</strong>: {{ ( app.completion_status() * 100) | round(2, 'floor') }}% { _('completed') }}</li>
+        <li><strong><i class="icon-tasks"></i> <a href="{{url_for('app.tasks',short_name=app.short_name)}}">{{ _('Tasks') }}</strong></a> ({{ app.tasks | count }})</li>
         {% if not current_user.is_anonymous() %}
         <li>{% if app.hidden == 1 %}
             <i class="icon icon-eye-close"></i> <strong>{{ _('Hidden') }}</strong>: {{ _('Yes') }}
@@ -116,23 +109,13 @@
             <p style="margin:0"><strong><i class="icon-info-sign"></i> {{ _('Description') }}</strong>: {{ app['description'] }}</p>
             <p style="margin:0"><strong><i class="icon-ok"></i> {{ _('Creation Date') }}</strong>: {{ app.created[0:10] }}</p>
             {% if app.info.last_activity != "None" %}
-<<<<<<< HEAD
-            <p style="margin:0"><strong><i class="icon-time"></i> {{ _('Last Activity') }}</strong>: {{ app.info.last_activity}}</p>
+            <p style="margin:0"><strong><i class="icon-time"></i> {{ _('Last Activity') }}</strong>: {{ app.last_activity}}</p>
             {% endif %}
-            <p style="margin:0"><strong><i class="icon-cogs"></i> {{ _('Overall progress') }}</strong>: {{ app.info.overall_progress | round(2, 'floor') }}% completed</p>
+            <p style="margin:0"><strong><i class="icon-cogs"></i> {{ _('Overall progress') }}</strong>: {{ app.overall_progress | round(2, 'floor') }}% completed</p>
             {% if app.owner_id == current_user.id %}
-            <p style="margin:0"><strong><i class="icon-user"></i> {{ _('Owner') }}</strong>: {{ _('Me') }}</p>
+            <p style="margin:0"><strong><i class="icon-user"></i> {{ _('Created by') }}</strong>: {{ _('Me') }}</p>
             {% else %}
-            <p style="margin:0"><strong><i class="icon-user"></i> {{ _('Owner') }}</strong>: {{ app.info.owner }}</p>
-=======
-            <p style="margin:0"><strong><i class="icon-time"></i> Last Activity</strong>: {{ app.last_activity}}</p>
-            {% endif %}
-            <p style="margin:0"><strong><i class="icon-cogs"></i> Overall progress</strong>: {{ app.overall_progress | round(2, 'floor') }}% completed</p>
-            {% if app.owner_id == current_user.id %}
-            <p style="margin:0"><strong><i class="icon-user"></i> Created by</strong>: Me</p>
-            {% else %}
-            <p style="margin:0"><strong><i class="icon-user"></i> Created by</strong>: {{ app.owner }}</p>
->>>>>>> 429bc3879503564db0c15495b1de5355c997caf1
+            <p style="margin:0"><strong><i class="icon-user"></i> {{ _('Created by') }}</strong>: {{ app.owner }}</p>
             {% endif %}
             {% if class != "app-draft" %}
             <p style="margin:0"><a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = app.short_name) }}"><i class="icon icon-white icon-ok"></i> {{ _('Try it!') }}</a></p>
