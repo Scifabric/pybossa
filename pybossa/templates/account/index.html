@@ -38,11 +38,7 @@
 
 <div class="row">
   <div class="span9 offset2">
-<<<<<<< HEAD
-      <h1>{{ _('Community') }}<small>{{total}} {{ _('registered users') }}</small></h1>
-=======
-      <h1>Community <small>{{total}} registered users</small><a class="pull-right btn btn-primary" href="{{url_for('leaderboard.index')}}"><i class="icon-trophy" style="color:white"></i> Leaderboard</a></h1>
->>>>>>> 429bc3879503564db0c15495b1de5355c997caf1
+      <h1>Community <small>{{total}} {{ _('registered users') }}</small><a class="pull-right btn btn-primary" href="{{url_for('leaderboard.index')}}"><i class="icon-trophy" style="color:white"></i> {{ _('Leaderboard') }}</a></h1>
       {% if accounts %}
       <ul class="thumbnails">
       {% for account in accounts %}
