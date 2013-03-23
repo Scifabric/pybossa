@@ -17,7 +17,7 @@ h3 > small {
 
 <div class="row-fluid">
     <div class="span12">
-        <h1><strong>{{brand}}</strong>: General Statistics</h1>
+        <h1><strong>{{brand}}</strong>: {{ _('General Statistics') }}</h1>
         <br/>
             <!-- Users Stats CARD -->
             <div id="card" class="row-fluid">
@@ -25,20 +25,20 @@ h3 > small {
                     <h2>Users</h2>
                     <div class="row-fluid">
                         <div class="span6">
-                            <h3>Anonymous users: <small>{{stats.n_anon}}</small></h3>
-                            <h3>Authenticated users: <small>{{stats.n_auth}}</small></h3>
-                            <h3>Total: {{stats.n_total_users}}</h3>
+                            <h3>{{ _('Anonymous users') }}: <small>{{stats.n_anon}}</small></h3>
+                            <h3>{{ _('Authenticated users') }}: <small>{{stats.n_auth}}</small></h3>
+                            <h3>{{ _('Total') }}: {{stats.n_total_users}}</h3>
                             {% if top5_users_24_hours %}
                             <hr>
-                            <h4>Top 5 Users in the last 24 hours</h4>
+                            <h4>{{ _('Top 5 Users in the last 24 hours') }}</h4>
                                 <ol>
                                 {% for user in top5_users_24_hours %}
-                                <li>{{user.fullname}} with {{user.n_answers}} contributed answers</li>
+                                <li>{{user.fullname}} {{ _('with') }} {{user.n_answers}} {{ _('contributed answers') }}</li>
                                 {% endfor %}
                                 </ol>
                             {% else %}
                             <hr>
-                            <h4>No active users in the last 24 hours</h4>
+                            <h4>{{ _('No active users in the last 24 hours') }}</h4>
                             {% endif %}
                         </div>
                         <div id="users" class="span6" style="height:400px;"></div>
@@ -67,15 +67,15 @@ h3 > small {
             <!-- Apps Stats CARD -->
             <div id="card" class="row-fluid">
                 <div id="appStats" class="span12 well">
-                    <h2>Applications</h2>
+                    <h2>{{ _('Applications') }}</h2>
                     <div class="row-fluid">
                         <div class="span6">
-                            <h3>Published Applications: <small>{{stats.n_published_apps}}</small></h3>
-                            <h3>Draft Applications: <small>{{stats.n_draft_apps}}</small></h3>
-                            <h3>Total: {{stats.n_total_apps}}</h3>
+                            <h3>{{ _('Published Applications') }}: <small>{{stats.n_published_apps}}</small></h3>
+                            <h3>{{ _('Draft Applications') }}: <small>{{stats.n_draft_apps}}</small></h3>
+                            <h3>{{ _('Total') }}: {{stats.n_total_apps}}</h3>
                             {% if top5_apps_24_hours %}
                             <hr>
-                            <h4>Top 5 applications in the last 24 hours</h4>
+                            <h4>{{ _('Top 5 applications in the last 24 hours') }}</h4>
                                 <ol>
                                 {% for app in top5_apps_24_hours %}
                                 <li><a href="{{url_for('app.details', short_name=app.short_name)}}">{{app.name}}</a></li>
@@ -83,7 +83,7 @@ h3 > small {
                                 </ol>
                             {% else %}
                             <hr>
-                            <h4>No active application in the last 24 hours</h4>
+                            <h4>{{ _'(No active application in the last 24 hours') }}</h4>
                             {% endif %}
                         </div>
                         <div id="apps" class="span6" style="height:400px;"></div>
@@ -113,11 +113,11 @@ h3 > small {
             <!-- Apps Task and TaskRuns CARD -->
             <div id="card" class="row-fluid">
                 <div id="taskStats" class="span12 well">
-                    <h2>Tasks and Answers</h2>
+                    <h2>{{ _('Tasks and Answers') }}</h2>
                     <div class="row-fluid">
                         <div class="span6">
-                            <h3>Number of Tasks: <small>{{stats.n_tasks}}</small></h3>
-                            <h3>Number of Task Runs: <small>{{stats.n_task_runs}}</small></h3>
+                            <h3>{{ _('Number of Tasks') }}: <small>{{stats.n_tasks}}</small></h3>
+                            <h3>{ _('Number of Task Runs') }}: <small>{{stats.n_task_runs}}</small></h3>
                         </div>
                         <div id="tasks" class="span6" style="height:400px;"></div>
                      <script>
