@@ -13,8 +13,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
 import logging
 import json
+import os
 
 from flask import Response, request, g, render_template,\
         abort, flash, redirect, session, url_for
@@ -30,7 +32,9 @@ from pybossa.api import blueprint as api
 from pybossa.view.account import blueprint as account
 from pybossa.view.applications import blueprint as applications
 from pybossa.view.admin import blueprint as admin
+from pybossa.view.leaderboard import blueprint as leaderboard
 from pybossa.view.stats import blueprint as stats
+from pybossa.view.help import blueprint as help
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import users as cached_users
 
@@ -42,7 +46,9 @@ app.register_blueprint(api, url_prefix='/api')
 app.register_blueprint(account, url_prefix='/account')
 app.register_blueprint(applications, url_prefix='/app')
 app.register_blueprint(admin, url_prefix='/admin')
+app.register_blueprint(leaderboard, url_prefix='/leaderboard')
 app.register_blueprint(stats, url_prefix='/stats')
+app.register_blueprint(help, url_prefix='/help')
 
 # Enable Twitter if available
 try:
@@ -78,6 +84,14 @@ except Exception as inst:
     print inst
     print "Google singin disabled"
 
+# Check if app stats page can generate the map
+geolite = app.root_path + '/../dat/GeoLiteCity.dat'
+if not os.path.exists(geolite):
+    app.config['GEO'] = False
+    print("GeoLiteCity.dat file not found")
+    print("App page stats web map disabled")
+else:
+    app.config['GEO'] = True
 
 
 def url_for_other_page(page):
@@ -174,7 +188,6 @@ def home():
 
 
 @app.route("/about")
-@cache.cached(timeout=50)
 def about():
     """Render the about template"""
     return render_template("/home/about.html")
@@ -184,7 +197,14 @@ def search():
     """Render search results page"""
     return render_template("/home/search.html")
 
+def get_port():
+    port = os.environ.get('PORT', '')
+    if port.isdigit():
+        return int(port)
+    else:
+        return app.config['PORT']
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.NOTSET)
-    app.run(host=app.config['HOST'], port=app.config['PORT'],
+    app.run(host=app.config['HOST'], port=get_port(),
             debug=app.config.get('DEBUG', True))

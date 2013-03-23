@@ -27,8 +27,8 @@
       <form class="form-horizontal" method="post" action="{{ url_for('app.import_task', short_name=app.short_name) }}">
         <fieldset>
         {{ csvform.hidden_tag() }}
-        <span class="help-inline">{{ _('Please provide a URL to a CSV file with data for')}} {{ active_app }}.<br/> {{ _('For more information, please look at') }} <a href="http://pybossa.readthedocs.org/en/latest/user/create-application.html#via-the-web-interface" target="_blank">{{ _('the documentation') }}.</a></span>
-          {{ render_field(csvform.csv_url, class_="input-xlarge", placeholder={{ _('The URL of the CSV file')}} }}
+        <span class="help-inline">{{ _('Please provide a URL (i.e. DropBox, Box, Ubuntu One, etc. public link) to a CSV file with data for') }} {{ active_app }}.<br/> {{ _('For more information, please look at') }} <a href="http://docs.pybossa.com/en/latest/user/overview.html#importing-the-tasks-via-the-built-in-csv-task-creator" target="_blank">{{ _('the documentation') }}.</a></span>
+          {{ render_field(csvform.csv_url, class_="input-xlarge", placeholder="The URL of the CSV file") }}
           <div class="form-actions">
             <input type="submit" value="Import" class="btn btn-primary" />
             <a href="{{ url_for('app.settings', short_name=app.short_name) }}" class="btn">{{ _('Cancel') }} }</a>

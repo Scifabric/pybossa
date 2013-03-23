@@ -50,10 +50,31 @@
 
     {% block content %}{% endblock %}
 
-    <hr>
     </div> <!-- /container -->
     <footer>
     {% include ['custom/_footer.html', '_footer.html'] ignore missing %}
+    <div class="container">
+        <div class="row">
+            <div class="span4">
+                <ul>
+                    <li><strong>Resources</strong></li>
+                    <li><i class="icon-link"></i> <a href="http://docs.pybossa.com">Docs</a></li>
+                    <li><i class="icon-link"></i> <a href="{{url_for('help.api')}}">API</a></li>
+                    <li><i class="icon-link"></i> <a href="{{url_for('help.tos')}}">Terms of Use</a></li>
+
+                </ul>
+            </div>
+            <div class="span4">
+                <ul>
+                    <li><strong>Licenses</strong></li>
+                    <li><i class="icon-link"></i> <a href="{{url_for('help.license')}}">Overview</a></li>
+                    <li><i class="icon-link"></i> <a href="{{url_for('help.license', _anchor='applications')}}">Applications</a></li>
+                    <li><i class="icon-link"></i> <a href="{{url_for('help.license', _anchor='data')}}">Data</a></li>
+                    <li><i class="icon-link"></i> <a href="{{url_for('help.license', _anchor='content')}}">Content</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
     </footer>
     <!-- Le javascript
     ================================================== -->

@@ -93,6 +93,7 @@ class TestWeb:
     def new_application(self, method="POST", name="Sample App",
                         short_name="sampleapp", description="Description",
                         thumbnail='An Icon link',
+                        allow_anonymous_contributors='True',
                         long_description=u'<div id="long_desc">Long desc</div>',
                         sched='default',
                         hidden=False):
@@ -104,6 +105,7 @@ class TestWeb:
                     'short_name': short_name,
                     'description': description,
                     'thumbnail': thumbnail,
+                    'allow_anonymou_contributors': allow_anonymous_contributors,
                     'long_description': long_description,
                     'sched': sched,
                     'hidden': hidden,
@@ -114,6 +116,7 @@ class TestWeb:
                     'short_name': short_name,
                     'description': description,
                     'thumbnail': thumbnail,
+                    'allow_anonymous_contributors': allow_anonymous_contributors,
                     'long_description': long_description,
                     'sched': sched,
                 }, follow_redirects=True)
@@ -146,6 +149,7 @@ class TestWeb:
                            new_name="Sample App", new_short_name="sampleapp",
                            new_description="Description",
                            new_thumbnail="New Icon link",
+                           new_allow_anonymous_contributors="False",
                            new_long_description="Long desc",
                            new_sched="random",
                            new_hidden=False):
@@ -159,6 +163,7 @@ class TestWeb:
                                          'short_name': new_short_name,
                                          'description': new_description,
                                          'thumbnail': new_thumbnail,
+                                         'allow_anonymous_contributors': new_allow_anonymous_contributors,
                                          'long_description': new_long_description,
                                          'sched': new_sched,
                                          'hidden': new_hidden},
@@ -169,6 +174,7 @@ class TestWeb:
                         'name': new_name,
                         'short_name': new_short_name,
                         'thumbnail': new_thumbnail,
+                        'allow_anonymous_contributors': new_allow_anonymous_contributors,
                         'long_description': new_long_description,
                         'sched': new_sched,
                         'description': new_description,
@@ -198,6 +204,7 @@ class TestWeb:
 
         for i in range(10):
             task_run = model.TaskRun(app_id=app.id, task_id=1,
+                                     user_id=1,
                                      info={'answer': 1})
             db.session.add(task_run)
             db.session.commit()
@@ -205,40 +212,9 @@ class TestWeb:
 
         self.signout()
 
-        res = self.app.get('/stats', follow_redirects=True)
-        assert self.html_title("Leaderboard") in res.data, res
-        assert "Most active applications" in res.data, res
-        assert "Most active volunteers" in res.data, res
-        assert "Sample App" in res.data, res
-
-    def test_02a_stats_hidden_apps(self):
-        """Test WEB leaderboard does not show hidden apps"""
-        self.register()
-
-        res = self.new_application()
-        print res.data
-
-        app = db.session.query(model.App).first()
-        # We use a string here to check that it works too
-        task = model.Task(app_id=app.id, info={'n_answers': '10'})
-        db.session.add(task)
-        db.session.commit()
-
-        for i in range(10):
-            task_run = model.TaskRun(app_id=app.id, task_id=1,
-                                     info={'answer': 1})
-            db.session.add(task_run)
-            db.session.commit()
-            self.app.get('api/app/%s/newtask' % app.id)
-
-        self.update_application(new_hidden=True)
-        self.signout()
-
-        res = self.app.get('/stats', follow_redirects=True)
-        assert self.html_title("Leaderboard") in res.data, res
-        assert "Most active applications" in res.data, res
-        assert "Most active volunteers" in res.data, res
-        assert "Sample App" not in res.data, res
+        res = self.app.get('/leaderboard', follow_redirects=True)
+        assert self.html_title("Community Leaderboard") in res.data, res
+        assert "John Doe" in res.data, res.data
 
     def test_03_register(self):
         """Test WEB register user works"""
@@ -1006,7 +982,7 @@ class TestWeb:
 
         res = self.app.get('account/profile', follow_redirects=True)
         assert "Sample App" in res.data, res.data
-        assert "Contributed tasks: 10" in res.data, res.data
+        assert "You have contributed <strong>10</strong> tasks" in res.data, res.data
         assert "Contribute!" in res.data, "There should be a Contribute button"
 
     def test_32_oauth_password(self):
@@ -1316,7 +1292,7 @@ class TestWeb:
     def test_43_terms_of_use_and_data(self):
         """Test WEB terms of use is working"""
         res = self.app.get('account/signin', follow_redirects=True)
-        assert "http://okfn.org/terms-of-use/" in res.data, res.data
+        assert "/help/terms-of-use" in res.data, res.data
         assert "http://opendatacommons.org/licenses/by/" in res.data, res.data
 
         res = self.app.get('account/register', follow_redirects=True)
@@ -1768,3 +1744,71 @@ class TestWeb:
         user = db.session.query(model.User).get(1)
         err_msg = "New generated API key should be different from old one"
         assert api_key != user.api_key, err_msg
+
+    def test_58_global_stats(self):
+        """Test WEB global stats of the site works"""
+        url = "/stats"
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "There should be a Global Statistics page of the project"
+        assert "General Statistics" in res.data, err_msg
+
+    def test_59_help_api(self):
+        """Test WEB help api page exists"""
+        Fixtures.create()
+        url = "/help/api"
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "There should be a help api.html page"
+        assert "API Help" in res.data, err_msg
+
+    def test_69_allow_anonymous_contributors(self):
+        """Test WEB allow anonymous contributors works"""
+        Fixtures.create()
+        app = db.session.query(model.App).first()
+        url = '/app/%s/newtask' % app.short_name
+
+        # All users are allowed to participate by default
+        # As Anonymous user
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "The anonymous user should be able to participate"
+        assert app.name in res.data, err_msg
+
+        # As registered user
+        self.register()
+        self.signin()
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "The anonymous user should be able to participate"
+        assert app.name in res.data, err_msg
+        self.signout()
+
+        # Now only allow authenticated users
+        app.allow_anonymous_contributors = False
+        db.session.add(app)
+        db.session.commit()
+
+        # As Anonymous user
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "User should be redirected to sign in"
+        msg = "Oops! You have to sign in to participate in <strong>%s</strong>" % app.name
+        assert msg in res.data, err_msg
+
+        # As registered user
+        res = self.signin()
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "The authenticated user should be able to participate"
+        assert app.name in res.data, err_msg
+        self.signout()
+
+    def test_70_public_user_profile(self):
+        """Test WEB public user profile works"""
+        Fixtures.create()
+
+        # Should work as an anonymous user
+        url = '/account/%s/' % Fixtures.name
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "There should be a public profile page for the user"
+        assert Fixtures.fullname in res.data, err_msg
+
+        # Should work as an authenticated user
+        self.signin()
+        res = self.app.get(url, follow_redirects=True)
+        assert Fixtures.fullname in res.data, err_msg

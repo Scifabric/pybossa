@@ -19,11 +19,15 @@
             </p>
 
             <p>
-            {{ _('You can read more about the architecture in the <a href="http://docs.pybossa.com/en/latest/overview.html">PyBossa Documentation</a> and follow the <a href="http://docs.pybossa.com/en/latest/user/create-application.html">step-by-step tutorial to create your own apps.') }}</a>.
+            {{ _('You can read more about the architecture in the') }} <a href="http://docs.pybossa.com/">{{ _('PyBossa Documentation') }}</a> {{ _('and follow the') }} <a href="http://docs.pybossa.com/en/latest/user/tutorial.html">{{ _('step-by-step tutorial to create your own apps') }}.</a>.
             </p>
+            <h1>{{ _('Statistics') }}</h1>
+            <p>
+            {{ _('PyBossa provides individual statistics for every application in the system, as well as a') }} <a href="{{url_for('stats.index')}}">{{ _('general overview about the system like total number of users, tasks, etc') }}</a>. 
+            </p>
+            <a href="{{url_for('stats.index')}}" class="btn btn-primary"><i class="icon-dashboard"></i> {{ _('Check the global statistics') }}</a>
 
-            <br/>
-            <h2>{{ _('Contact information') }}</h2>
+            <h1>{{ _('Contact information') }}</h1>
             <ul>
                 <li>{{ _('For more info, send us an e-mail to: ') }}<a href="mailto:info@pybossa.com">info@pybossa.com</a> or <a class="btn" href="http://twitter.com/pybossa"><i class="icon-twitter"></i>{{ _('Follow us on Twitter!') }}</a></li>
                 <li>{{ _('E-mail list: ') }}<a href="http://lists.okfn.org/mailman/listinfo/okfn-labs">okfn-labs@lists.okfn.org</a>.</li>                

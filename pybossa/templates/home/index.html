@@ -73,8 +73,9 @@
       <section class="grey">
         <h2><i class="icon-group"></i>{{ _('Most Active Volunteers') }}</h2>
         <ul class="users">
-            {% for item in top_users %}
+            {% for user in top_users %}
           <li>
+<<<<<<< HEAD
             <a data-content="
                 <strong>{{ _('Joined:') }}</strong> {{item.user.created[0:10]}} 
                 <br/>
@@ -83,6 +84,16 @@
                 <img src="{{item.user.email_addr|gravatar(size=90)}}">
            </a>
            <span class="label label-success">{{item.task_runs}}</span> <small>{{ _('Tasks') }}</small>
+=======
+          <a href="{{url_for('account.public_profile', name=user.name)}}" data-content="
+                <strong>Joined:</strong> {{user.created[0:10]}} 
+                <br/>
+                <strong>Submitted Tasks:</strong> {{user.task_runs}}
+                " rel="popover" data-original-title="<strong>{{user.fullname}}</strong>">
+                <img src="{{user.email_addr|gravatar(size=90)}}">
+           </a>
+           <span class="label label-success">{{user.task_runs}}</span> <small>Tasks</small>
+>>>>>>> 429bc3879503564db0c15495b1de5355c997caf1
           </li>
           {% endfor %}
         </ul>
@@ -93,10 +104,7 @@ $("a[rel=popover]").popover({
         animation: true,
         trigger: 'hover',
         placement: 'top'
-                }).click(function(e) {
-                        e.preventDefault()
-                        });
-
+                });
 </script>
 
 {% endblock %}

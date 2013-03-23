@@ -80,6 +80,7 @@ class TestAdmin:
     def new_application(self, method="POST", name="Sample App",
                         short_name="sampleapp", description="Description",
                         thumbnail='An Icon link',
+                        allow_anonymous_contributors='True',
                         long_description=u'<div id="long_desc">Long desc</div>',
                         sched='default',
                         hidden=False):
@@ -91,6 +92,7 @@ class TestAdmin:
                     'short_name': short_name,
                     'description': description,
                     'thumbnail': thumbnail,
+                    'allow_anonymous_contributors': allow_anonymous_contributors,
                     'long_description': long_description,
                     'sched': sched,
                     'hidden': hidden,
@@ -101,6 +103,7 @@ class TestAdmin:
                     'short_name': short_name,
                     'description': description,
                     'thumbnail': thumbnail,
+                    'allow_anonymous_contributors': allow_anonymous_contributors,
                     'long_description': long_description,
                     'sched': sched,
                 }, follow_redirects=True)
@@ -133,6 +136,7 @@ class TestAdmin:
                            new_name="Sample App", new_short_name="sampleapp",
                            new_description="Description",
                            new_thumbnail="New Icon link",
+                           new_allow_anonymous_contributors="False",
                            new_long_description="Long desc",
                            new_sched="random",
                            new_hidden=False):
@@ -146,6 +150,7 @@ class TestAdmin:
                                          'short_name': new_short_name,
                                          'description': new_description,
                                          'thumbnail': new_thumbnail,
+                                         'allow_anonymous_contributors': new_allow_anonymous_contributors,
                                          'long_description': new_long_description,
                                          'sched': new_sched,
                                          'hidden': new_hidden},
@@ -156,6 +161,7 @@ class TestAdmin:
                         'name': new_name,
                         'short_name': new_short_name,
                         'thumbnail': new_thumbnail,
+                        'allow_anonymous_contributors': new_allow_anonymous_contributors,
                         'long_description': new_long_description,
                         'sched': new_sched,
                         'description': new_description,
@@ -245,6 +251,12 @@ class TestAdmin:
         assert "Create an App" in res.data,\
             "The application should not be listed in the front page"\
             " as it is not featured"
+        # Only apps that have been published can be featured
+        self.new_task(1)
+        app = db.session.query(model.App).get(1)
+        app.info = dict(task_presenter="something")
+        db.session.add(app)
+        db.session.commit()
         res = self.app.get('/admin/featured', follow_redirects=True)
         assert "Sample App" in res.data, res.data
         assert "Featured" in res.data, res.data
