@@ -604,3 +604,20 @@ ul.users li a {
     top: auto;
   }
 }
+
+body > footer {
+    margin-top: 10px;
+}
+
+body > footer ul {
+    color: rgb(205, 205, 205);
+    list-style: none;
+}
+
+body > footer li > a {
+    color: rgb(205, 205, 205);
+}
+
+body > footer li > a:hover {
+    color: rgb(205, 205, 205);
+}

@@ -15,20 +15,19 @@
 
 from StringIO import StringIO
 import requests
-from flask import Blueprint, request, url_for, flash, redirect, abort, Response
+from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, make_response
 from flaskext.wtf import Form, IntegerField, TextField, BooleanField, \
     SelectField, validators, HiddenInput, TextAreaField
 from flaskext.login import login_required, current_user
 from flaskext.babel import gettext, ngettext
 from werkzeug.exceptions import HTTPException
-from werkzeug import Headers
-import os
-import csv
 
 import pybossa.model as model
-from pybossa.core import db, cache
-from pybossa.model import App
+import pybossa.stats as stats
+
+from pybossa.core import db
+from pybossa.model import App, Task
 from pybossa.util import Unique, Pagination, unicode_csv_reader, UnicodeWriter
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
@@ -36,6 +35,10 @@ from pybossa.cache import apps as cached_apps
 import json
 
 blueprint = Blueprint('app', __name__)
+
+
+class CSVImportException(Exception):
+    pass
 
 
 class AppForm(Form):
@@ -50,8 +53,16 @@ class AppForm(Form):
                                    message=gettext(u'Short Name is already taken.') )])
     description = TextField(gettext(u'Description'),
                             [validators.Required(
+<<<<<<< HEAD
                                 message=gettext(u'You must provide a description.') )])
     thumbnail = TextField(gettext(u'Icon Link'))
+=======
+                                message="You must provide a description.")])
+    thumbnail = TextField('Icon Link')
+    allow_anonymous_contributors = SelectField('Allow Anonymous Contributors',
+                                               choices=[('True', 'Yes'),
+                                                        ('False', 'No')])
+>>>>>>> 429bc3879503564db0c15495b1de5355c997caf1
     long_description = TextAreaField('Long Description')
     sched = SelectField(gettext(u'Task Scheduler'),
                         choices=[('default', 'Default'),
@@ -67,6 +78,7 @@ class TaskPresenterForm(Form):
 
 
 class BulkTaskCSVImportForm(Form):
+<<<<<<< HEAD
     csv_url = TextField(gettext(u'URL'), [validators.Required(message=gettext(u'You must ') +
                 gettext(u'provide a URL')), validators.URL(message=gettext(u'Oops! That\'s not a') +
                 gettext(' valid URL. You must provide a valid URL') )])
@@ -74,6 +86,21 @@ class BulkTaskGDImportForm(Form):
     googledocs_url = TextField(gettext(u'URL'), [validators.Required(message=gettext(u'You must ') +
                 gettext(u'provide a URL')), validators.URL(message=gettext(u'Oops! That\'s not a') +
                 gettext(u'valid URL. You must provide a valid URL') )])
+=======
+    msg_required = "You must provide a URL"
+    msg_url = "Oops! That's not a valid URL. You must provide a valid URL"
+    csv_url = TextField('URL',
+                        [validators.Required(message=msg_required),
+                         validators.URL(message=msg_url)])
+
+
+class BulkTaskGDImportForm(Form):
+    msg_required = "You must provide a URL"
+    msg_url = "Oops! That's not a valid URL. You must provide a valid URL"
+    googledocs_url = TextField('URL',
+                               [validators.Required(message=msg_required),
+                                   validators.URL(message=msg_url)])
+>>>>>>> 429bc3879503564db0c15495b1de5355c997caf1
 
 
 @blueprint.route('/', defaults={'page': 1})
@@ -159,6 +186,7 @@ def new():
                             owner_id=current_user.id,
                             info=info,)
 
+            cached_apps.reset()
             db.session.add(app)
             db.session.commit()
             # Clean cache
@@ -202,20 +230,22 @@ def task_presenter_editor(short_name):
                     form.editor.data = app.info['task_presenter']
                 else:
                     if request.args.get('template'):
-                        tmpl_uri = "applications/snippets/%s.html" % request.args.get('template')
+                        tmpl_uri = "applications/snippets/%s.html" \
+                                   % request.args.get('template')
                         tmpl = render_template(tmpl_uri, app=app)
                         form.editor.data = tmpl
-                        flash('Your code will be <em>automagically</em> rendered in \
-                              the <strong>preview section</strong>. Click in the preview button!', 'info')
+                        msg = 'Your code will be <em>automagically</em> rendered in \
+                              the <strong>preview section</strong>. Click in the \
+                              preview button!'
+                        flash(msg, 'info')
                     else:
-                        msg = '<strong>Note</strong> You will need to upload \
-                               the tasks using the <a href="' + \
-                                url_for('app.import_task',
-                                        short_name=app.short_name) + \
-                                '">CSV importer</a> or download the app \
-                                bundle and run the <strong>createTasks.py\
-                                </strong> script in your \
-                                computer'
+                        msg = '<strong>Note</strong> You will need to upload ' \
+                              'the tasks using the <a href="%s">' \
+                              'CSV importer</a> or download the app ' \
+                              'bundle and run the <strong>createTasks.py ' \
+                              '</strong> script in your ' \
+                              'computer' % url_for('app.import_task',
+                                                   short_name=app.short_name)
                         flash(msg, 'info')
                         return render_template(
                             'applications/task_presenter_options.html',
@@ -245,7 +275,7 @@ def delete(short_name):
                                        app=app)
             else:
                 # Clean cache
-                cache.delete_memoized(cached_apps.format_app, app)
+                cached_apps.clean(app.id)
                 db.session.delete(app)
                 db.session.commit()
                 flash('Application deleted!', 'success')
@@ -304,7 +334,8 @@ def update(short_name):
                                             long_description=form.long_description.data,
                                             hidden=hidden,
                                             info=info,
-                                            owner_id=app.owner_id,)
+                                            owner_id=app.owner_id,
+                                            allow_anonymous_contributors=form.allow_anonymous_contributors.data)
                 app = App.query.filter_by(short_name=short_name).first_or_404()
                 db.session.merge(new_application)
                 db.session.commit()
@@ -347,6 +378,7 @@ def details(short_name):
     else:
         abort(404)
 
+
 @blueprint.route('/<short_name>/settings')
 @login_required
 def settings(short_name):
@@ -369,6 +401,38 @@ def settings(short_name):
         abort(404)
 
 
+def import_tasks(app, csvreader):
+    headers = []
+    fields = set(['state', 'quorum', 'calibration', 'priority_0',
+                  'n_answers'])
+    field_header_index = []
+    empty = True
+
+    for row in csvreader:
+        if not headers:
+            headers = row
+            if len(headers) != len(set(headers)):
+                raise CSVImportException('The file you uploaded has two headers with'
+                                         ' the same name.')
+            field_headers = set(headers) & fields
+            for field in field_headers:
+                field_header_index.append(headers.index(field))
+        else:
+            info = {}
+            task = model.Task(app=app)
+            for idx, cell in enumerate(row):
+                if idx in field_header_index:
+                    setattr(task, headers[idx], cell)
+                else:
+                    info[headers[idx]] = cell
+            task.info = info
+            db.session.add(task)
+            db.session.commit()
+            empty = False
+    if empty:
+        raise CSVImportException('Oops! It looks like the file is empty.')
+
+
 @blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
 def import_task(short_name):
     app = App.query.filter_by(short_name=short_name).first_or_404()
@@ -377,94 +441,53 @@ def import_task(short_name):
     dataurl = None
     csvform = BulkTaskCSVImportForm(request.form)
     gdform = BulkTaskGDImportForm(request.form)
+
     if app.tasks or (request.args.get('template') or request.method == 'POST'):
-        if request.args.get('template') == 'image':
-            gdform.googledocs_url.data = \
-                    "https://docs.google.com/spreadsheet/ccc" \
-                    "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE" \
-                    "&usp=sharing"
-        elif request.args.get('template') == 'map':
-            gdform.googledocs_url.data = \
-                    "https://docs.google.com/spreadsheet/ccc" \
-                    "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc" \
-                    "&usp=sharing"
-        elif request.args.get('template') == 'pdf':
-            gdform.googledocs_url.data = \
-                    "https://docs.google.com/spreadsheet/ccc" \
-                    "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE" \
-                    "&usp=sharing"
-        else:
-            pass
+
+        googledocs_urls = {
+            'image': "https://docs.google.com/spreadsheet/ccc"
+                     "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE"
+                     "&usp=sharing",
+            'map': "https://docs.google.com/spreadsheet/ccc"
+                   "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc"
+                   "&usp=sharing",
+            'pdf': "https://docs.google.com/spreadsheet/ccc"
+                   "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE"
+                   "&usp=sharing"}
+
+        template = request.args.get('template')
+        if template in googledocs_urls:
+            gdform.googledocs_url.data = googledocs_urls[template]
+
         if 'csv_url' in request.form and csvform.validate_on_submit():
             dataurl = csvform.csv_url.data
         elif 'googledocs_url' in request.form and gdform.validate_on_submit():
             dataurl = ''.join([gdform.googledocs_url.data, '&output=csv'])
+
         if dataurl:
             print "dataurl found"
-            r = requests.get(dataurl)
-            if r.status_code == 403:
-                flash("Oops! It looks like you don't have permission to access"
-                      " that file!", 'error')
-                return render_template('/applications/import.html',
-                                       title=title,
-                                       app=app,
-                                       csvform=csvform,
-                                       gdform=gdform)
-            if (not 'text/plain' in r.headers['content-type'] and not 'text/csv'
-                    in r.headers['content-type']):
-                flash("Oops! That file doesn't look like the right file.", 'error')
-                return render_template('/applications/import.html',
-                                       title=title,
-                                       app=app,
-                                       csvform=csvform,
-                                       gdform=gdform)
-            empty = True
-            csvcontent = StringIO(r.text)
-            csvreader = unicode_csv_reader(csvcontent)
-            # TODO: check for errors
-            headers = []
-            fields = set(['state', 'quorum', 'calibration', 'priority_0',
-                          'n_answers'])
-            field_header_index = []
             try:
-                for row in csvreader:
-                    if not headers:
-                        headers = row
-                        if len(headers) != len(set(headers)):
-                            flash('The file you uploaded has two headers with'
-                                  ' the same name.', 'error')
-                            return render_template('/applications/import.html',
-                                                   title=title,
-                                                   app=app,
-                                                   csvform=csvform,
-                                                   gdform=gdform)
-                        field_headers = set(headers) & fields
-                        for field in field_headers:
-                            field_header_index.append(headers.index(field))
-                    else:
-                        info = {}
-                        task = model.Task(app=app)
-                        for idx, cell in enumerate(row):
-                            if idx in field_header_index:
-                                setattr(task, headers[idx], cell)
-                            else:
-                                info[headers[idx]] = cell
-                        task.info = info
-                        db.session.add(task)
-                        db.session.commit()
-                        empty = False
-                if empty:
-                    flash('Oops! It looks like the file is empty.', 'error')
-                    return render_template('/applications/import.html',
-                                           title=title,
-                                           app=app,
-                                           csvform=csvform,
-                                           gdform=gdform)
+                r = requests.get(dataurl)
+                if r.status_code == 403:
+                    raise CSVImportException("Oops! It looks like you don't have permission to access"
+                                             " that file!", 'error')
+                if ((not 'text/plain' in r.headers['content-type']) and
+                   (not 'text/csv' in r.headers['content-type'])):
+                    msg = "Oops! That file doesn't look like the right file."
+                    raise CSVImportException(msg, 'error')
+
+                csvcontent = StringIO(r.text)
+                csvreader = unicode_csv_reader(csvcontent)
+
+                # TODO: check for errors
+                import_tasks(app, csvreader)
                 flash('Tasks imported successfully!', 'success')
                 return redirect(url_for('.details', short_name=app.short_name))
+            except CSVImportException, err_msg:
+                flash(err_msg, 'error')
             except:
-                flash('Oops! Looks like there was an error with processing '
-                      'that file!', 'error')
+                msg = 'Oops! Looks like there was an error with processing that file!'
+                flash(msg, 'error')
         return render_template('/applications/import.html',
                                title=title,
                                app=app,
@@ -472,26 +495,34 @@ def import_task(short_name):
                                gdform=gdform)
     else:
         return render_template('/applications/import_options.html',
-                        title=title,
-                        app=app,
-                        csvform=csvform,
-                        gdform=gdform)
+                               title=title,
+                               app=app,
+                               csvform=csvform,
+                               gdform=gdform)
 
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
+    app = App.query.filter_by(short_name=short_name).first_or_404()
+    task = Task.query.filter_by(id=task_id).first_or_404()
+
+    if not app.allow_anonymous_contributors and current_user.is_anonymous():
+        msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
+               application" % app.name
+        flash(msg, 'warning')
+        return redirect(url_for('account.signin',
+                        next=url_for('.presenter', short_name=app.short_name)))
     if (current_user.is_anonymous()):
         flash("Ooops! You are an anonymous user and will not get any credit "
               " for your contributions. <a href=\"" + url_for('account.signin',
               next=url_for('app.task_presenter', short_name=short_name,
                            task_id=task_id))
               + "\">Sign in now!</a>", "warning")
-    app = App.query.filter_by(short_name=short_name).first_or_404()
-    task = db.session.query(model.Task).get(task_id)
     if app:
         title = "Application: %s &middot; Contribute" % app.name
     else:
         title = "Application not found"
+
     if (task.app_id == app.id):
         #return render_template('/applications/presenter.html', app = app)
         # Check if the user has submitted a task before
@@ -528,10 +559,14 @@ def task_presenter(short_name, task_id):
 def presenter(short_name):
     app = App.query.filter_by(short_name=short_name)\
         .first_or_404()
-    if app:
-        title = "Application: %s &middot; Contribute" % app.name
-    else:
-        title = "Application not found"
+    title = "Application &middot; %s &middot; Contribute" % app.name
+    if not app.allow_anonymous_contributors and current_user.is_anonymous():
+        msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
+               application" % app.name
+        flash(msg, 'warning')
+        return redirect(url_for('account.signin',
+                        next=url_for('.presenter', short_name=app.short_name)))
+
     if app.info.get("tutorial"):
         if request.cookies.get(app.short_name + "tutorial") is None:
             if (current_user.is_anonymous()):
@@ -791,5 +826,45 @@ def export_to(short_name):
         abort(404)
     else:
         return render_template('/applications/export.html',
+                               title=title,
+                               app=app)
+
+
+@blueprint.route('/<short_name>/stats')
+def show_stats(short_name):
+    """Returns App Stats"""
+    app = db.session.query(model.App).filter_by(short_name=short_name).first()
+    title = "Application: %s &middot; Statistics" % app.name
+    if len(app.tasks) > 0 and len(app.task_runs) > 0:
+        dates_stats, hours_stats, users_stats = stats.get_stats(app.id,
+                                                                current_app.config['GEO'])
+        anon_pct_taskruns = int((users_stats['n_anon'] * 100) /
+                                (users_stats['n_anon'] + users_stats['n_auth']))
+        userStats = dict(
+            geo=current_app.config['GEO'],
+            anonymous=dict(
+                users=users_stats['n_anon'],
+                taskruns=users_stats['n_anon'],
+                pct_taskruns=anon_pct_taskruns,
+                top5=users_stats['anon']['top5']),
+            authenticated=dict(
+                users=users_stats['n_auth'],
+                taskruns=users_stats['n_auth'],
+                pct_taskruns=100 - anon_pct_taskruns,
+                top5=users_stats['auth']['top5']))
+
+        tmp = dict(userStats=users_stats['users'],
+                   userAnonStats=users_stats['anon'],
+                   userAuthStats=users_stats['auth'],
+                   dayStats=dates_stats,
+                   hourStats=hours_stats)
+
+        return render_template('/applications/stats.html',
+                               title=title,
+                               appStats=json.dumps(tmp),
+                               userStats=userStats,
+                               app=app)
+    else:
+        return render_template('/applications/non_stats.html',
                                title=title,
                                app=app)

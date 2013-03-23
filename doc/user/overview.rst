@@ -70,6 +70,18 @@ figure:
         accessing your application, i.e. *flickrperson*.
      3. **Description**: A **short** description of the application, i.e.
         *Image pattern recognition*.
+     4. **Icon Link**: A URL with the icon that you want to use in your
+        application.
+     5. **Allow Anonymous Contributors**: By default anonymous and
+        authenticated users can participate in all the applications, however
+        you can change it to only allow authenticated volunteers to
+        participate. 
+     6. **Task Scheduler**: The task scheduler is in charge in distributing the
+        tasks within the volunteers crowd. By default, the system will send the
+        same task to all the users until a minimum of 30 answers are obtained
+        for each task, then it will start sending the next task of your
+        application. You can change it to **breadth first** if you want to send
+        to every user a different task every time.
      4. **Long Description**: A *long* description where you can use HTML
         to format the description of your application. This field is
         usually used to provide information about the application, the
@@ -77,7 +89,7 @@ figure:
         application, etc.
      5. **Hide**: Click in this field if you want to hide the application.
 
-.. image:: http://i.imgur.com/FcP6uzd.png 
+.. image:: http://i.imgur.com/MdNRUnK.png
     :alt: PyBossa Create link
 
 4. Once you have filled all the fields, click in the **Create the
@@ -140,9 +152,21 @@ available templates are the following:
 * `Geo-coding`_ and
 * `PDF transcription`_. 
 
+.. note::
+
+    You can also upload your own CSV files to free web hosting services like
+    DropBox_ or `Ubuntu One`_. You will only need to copy the file to the
+    **public** folder of the chosen service in your own computer
+    (i.e. DropbBox Public folder) and then copy the public link created by the 
+    service. Once you have the public link, all you need in order to import the 
+    tasks is to paste it in the input box of the section **From a CSV file**.
+
+
 .. _`Image Pattern Recognition`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE&usp=sharing#gid=0
 .. _`Geo-coding`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc&usp=sharing
 .. _`PDF transcription`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE&usp=sharing
+.. _`DropBox`: http://www.dropbox.com
+.. _`Ubuntu One`: http://one.ubuntu.com
 
 Flushing all the tasks
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -231,7 +255,7 @@ Click in the **Preview button** to get an idea about how it will look like your
 After saving it, you will be able to access your app using the slug, or under
 your account in the *Published* applications section:
 
-.. image:: http://i.imgur.com/REnOlX0.png
+.. image:: http://i.imgur.com/BXtsCba.png
     :alt: Application Published
     :width: 100%
 

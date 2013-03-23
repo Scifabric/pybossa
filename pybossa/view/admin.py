@@ -25,8 +25,9 @@ from flaskext.babel import gettext, ngettext
 from flaskext.wtf import Form, TextField
 
 import pybossa.model as model
-from pybossa.core import db
+from pybossa.core import db, cache
 from pybossa.util import admin_required
+from pybossa.cache import apps as cached_apps
 from sqlalchemy import or_, func
 import json
 
@@ -48,12 +49,12 @@ def index():
 @admin_required
 def featured(app_id=None):
     """List featured apps of PyBossa"""
+    n_published = cached_apps.n_published()
     if request.method == 'GET':
-        apps = db.session.query(model.App).all()
-        featured = db.session.query(model.Featured).all()
-        return render_template('/admin/applications.html', apps=apps,
-                featured=featured)
+        apps, n_published = cached_apps.get_published(page=1, per_page=n_published)
+        return render_template('/admin/applications.html', apps=apps)
     if request.method == 'POST':
+        cached_apps.reset()
         f = model.Featured()
         f.app_id = app_id
         # Check if the app is already in this table
@@ -68,6 +69,7 @@ def featured(app_id=None):
             return json.dumps({'error': 'App.id %s already in Featured table'
                     % app_id})
     if request.method == 'DELETE':
+        cached_apps.reset()
         f = db.session.query(model.Featured)\
                 .filter(model.Featured.app_id == app_id)\
                 .first()

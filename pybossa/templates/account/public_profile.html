@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% set active_page = "account" %}
+{% import "account/_helpers.html" as helper %}
+{% from "applications/_helpers.html" import render_grid_apps %}
+
+{% block content %}
+<div class="row">
+    <div class="span12">
+        <section id="user-data">
+            <h1><strong>{{user.fullname}}</strong></h1>
+            {{ helper.render_user_profile(user, settings=False, private=False) }}
+        </section>
+        {% if apps_created %}
+        <section id="created-apps" style="margin-top:10px;">
+            {{render_grid_apps(apps_created, "Created Applications")}}
+        </section>
+        {% endif %}
+        {% if apps %}
+        <section id="contributed-apps" style="margin-top:10px;">
+            {{render_grid_apps(apps, "Contributions")}}
+        </section>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

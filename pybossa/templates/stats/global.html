@@ -1,0 +1,147 @@
+{% extends "/base.html" %}
+{% set active_page = "leaderboard" %}
+{% set active_app  = "all" %}
+
+{% block content %}
+<link href="{{url_for('static', filename='css/stats/stats.css')}}" rel="stylesheet" type="text/css">
+<script src="{{url_for('static', filename='js/stats/flotr2.min.js')}}" type="text/javascript"></script>
+<style>
+h3 {
+    font-size: 20px;
+}
+
+h3 > small {
+    font-size: 20px;
+}
+</style>
+
+<div class="row-fluid">
+    <div class="span12">
+        <h1><strong>{{brand}}</strong>: General Statistics</h1>
+        <br/>
+            <!-- Users Stats CARD -->
+            <div id="card" class="row-fluid">
+                <div id="userStats" class="span12 well">
+                    <h2>Users</h2>
+                    <div class="row-fluid">
+                        <div class="span6">
+                            <h3>Anonymous users: <small>{{stats.n_anon}}</small></h3>
+                            <h3>Authenticated users: <small>{{stats.n_auth}}</small></h3>
+                            <h3>Total: {{stats.n_total_users}}</h3>
+                            {% if top5_users_24_hours %}
+                            <hr>
+                            <h4>Top 5 Users in the last 24 hours</h4>
+                                <ol>
+                                {% for user in top5_users_24_hours %}
+                                <li>{{user.fullname}} with {{user.n_answers}} contributed answers</li>
+                                {% endfor %}
+                                </ol>
+                            {% else %}
+                            <hr>
+                            <h4>No active users in the last 24 hours</h4>
+                            {% endif %}
+                        </div>
+                        <div id="users" class="span6" style="height:400px;"></div>
+                        <script>
+                        (function(){
+                            var data = {{users|safe}};
+                            var container = document.getElementById('users');
+                            var graph = Flotr.draw(container, [
+                                {data:[data['values'][0]['value']], label:data['values'][0]['label']},
+                                {data:[data['values'][1]['value']],  label:data['values'][1]['label']}], 
+                                {
+                                pie     : {show: true, explode: 2},
+                                grid    : {verticalLines: false, horizontalLines: false, outlineWidth: 0},
+                                HtmlText: false,
+                                xaxis   : {showLabels: false},
+                                yaxis   : {showLabels: false},
+                                legend  : {position: 'se'}
+                            });
+                        })();
+                        </script>
+                    </div>
+                </div>
+            </div>
+            <!-- END Users Stats CARD -->
+
+            <!-- Apps Stats CARD -->
+            <div id="card" class="row-fluid">
+                <div id="appStats" class="span12 well">
+                    <h2>Applications</h2>
+                    <div class="row-fluid">
+                        <div class="span6">
+                            <h3>Published Applications: <small>{{stats.n_published_apps}}</small></h3>
+                            <h3>Draft Applications: <small>{{stats.n_draft_apps}}</small></h3>
+                            <h3>Total: {{stats.n_total_apps}}</h3>
+                            {% if top5_apps_24_hours %}
+                            <hr>
+                            <h4>Top 5 applications in the last 24 hours</h4>
+                                <ol>
+                                {% for app in top5_apps_24_hours %}
+                                <li><a href="{{url_for('app.details', short_name=app.short_name)}}">{{app.name}}</a></li>
+                                {% endfor %}
+                                </ol>
+                            {% else %}
+                            <hr>
+                            <h4>No active application in the last 24 hours</h4>
+                            {% endif %}
+                        </div>
+                        <div id="apps" class="span6" style="height:400px;"></div>
+                     <script>
+                        (function(){
+                            var data = {{apps|safe}};
+                            var container = document.getElementById('apps');
+                            var graph = Flotr.draw(container, [
+                                {data:[data['values'][0]['value']], label:data['values'][0]['label']},
+                                {data:[data['values'][1]['value']],  label:data['values'][1]['label']}], 
+                                {
+                                pie     : {show: true, explode: 2},
+                                grid    : {verticalLines: false, horizontalLines: false, outlineWidth: 0},
+                                HtmlText: false,
+                                xaxis   : {showLabels: false},
+                                yaxis   : {showLabels: false},
+                                legend  : {position: 'se'}
+                            });
+                        })();
+                        
+                        </script>
+                    </div>
+                </div>
+            </div>
+            <!-- END Users Stats CARD -->
+
+            <!-- Apps Task and TaskRuns CARD -->
+            <div id="card" class="row-fluid">
+                <div id="taskStats" class="span12 well">
+                    <h2>Tasks and Answers</h2>
+                    <div class="row-fluid">
+                        <div class="span6">
+                            <h3>Number of Tasks: <small>{{stats.n_tasks}}</small></h3>
+                            <h3>Number of Task Runs: <small>{{stats.n_task_runs}}</small></h3>
+                        </div>
+                        <div id="tasks" class="span6" style="height:400px;"></div>
+                     <script>
+                        (function(){
+                            var data = {{tasks|safe}};
+                            var container = document.getElementById('tasks');
+                            var graph = Flotr.draw(container, [
+                                {data:[data['values'][0]['value']], label:data['values'][0]['label']},
+                                {data:[data['values'][1]['value']],  label:data['values'][1]['label']}], 
+                                {
+                                bars : {show: true},
+                                grid    : {verticalLines: true, horizontalLines: true},
+                                xaxis   : {showLabels: false, autoscale: true, autoscaleMargin:1},
+                                yaxis   : {showLabels: true, min:0, autoscaleMargin:1},
+                                legend  : {position: 'ne'}
+                            });
+                        })();
+                        
+                        </script>
+                    </div>
+                </div>
+            </div>
+            <!-- END Users Stats CARD -->
+
+    </div>
+</div>
+{% endblock %}

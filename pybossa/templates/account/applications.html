@@ -15,19 +15,13 @@
             {% if apps_published %}
             <h2>{{ _('Published') }}</h2>
             {% for app in apps_published %}
-            <div class="well well-small">
-                <h3><a href="{{url_for('app.details', short_name=app.short_name)}}">{{app.name}}</a></h3>
-            {{ app_helper.render_app_summary(app, current_user) }}
-            </div>
+            {{ app_helper.render_app_short_summary(app, current_user) }}
             {% endfor %}
             {% endif %}
             {% if apps_draft %}
             <h2>{{ _('Draft') }}</h2>
             {% for app in apps_draft %}
-            <div class="well well-small">
-                <h3><a href="{{url_for('app.details', short_name=app.short_name)}}">{{app.name}}</a></h3>
-            {{ app_helper.render_app_summary(app, current_user) }}
-            </div>
+            {{ app_helper.render_app_short_summary(app, current_user) }}
             {% endfor %}
             {% endif %}
         {% else %}

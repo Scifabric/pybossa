@@ -1,0 +1,5 @@
+Please, if you want to provide in the application statistics page a web map showing 
+the location of the volunteers as well as a table with the Country and City, you need
+to download the GeoLite Free Database and save it here.
+
+You can download it from this link: http://dev.maxmind.com/geoip/geolite

@@ -6,8 +6,8 @@ PyBossa is a python web application built using the Flask micro-framework.
 
 Pre-requisites:
 
-  * Python >= 2.6, <3.0
-  * A database plus Python bindings for PostgreSQL
+  * Python >= 2.7, <3.0
+  * A database plus Python bindings for PostgreSQL version 9.1
   * pip for installing python packages (e.g. on ubuntu python-pip)
 
 .. note::
@@ -214,8 +214,8 @@ second one will perform the migration.
 Enabling a Cache
 ================
 
-PyBossa comes with a Cache system (based on `flask-cache <http://packages.python.org/Flask-Cache/>`_) that it is
-disabled by default. If you want to start caching some pages of the PyBossa server, you
+PyBossa comes with a Cache system (based on `flask-cache <http://packages.python.org/Flask-Cache/>`_) 
+that it is disabled by default. If you want to start caching some pages of the PyBossa server, you
 only have to modify your settings and change the following value from::
 
     CACHE_TYPE = 'null'
@@ -226,3 +226,9 @@ to::
 
 The cache also supports other configurations, so please, check the official
 documentation of `flask-cache <http://packages.python.org/Flask-Cache/>`_.
+
+.. note::
+   **Important**: We highly recommend you to enable the cache, as it will boost
+   the performance of the server caching SQL queries as well as page views. If
+   you have lots of applications with hundreds of tasks, you should enable it.
+

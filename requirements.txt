@@ -15,3 +15,5 @@ markdown
 raven
 blinker
 flask-cache
+flask-heroku
+pygeoip

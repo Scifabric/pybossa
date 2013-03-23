@@ -5,6 +5,7 @@
 {% block content %}
 <div class="row">
     <div class="span12">
+<<<<<<< HEAD
         <div class="row">
             <div class="span5 well">
                 <h2>Most active applications</h2>
@@ -59,5 +60,35 @@
                     {% endfor %}
             </div>
         </div>
+=======
+        <h1><i class="icon-trophy"></i> <strong>Community Leaderboard</strong></h1>
+        <table class="table table-striped table-bordered table-hover table-condensed">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Name</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for user in top_users %}
+            {% if user.fullname == current_user.fullname %}
+                <tr class="success">
+                    <td><strong>{{user.rank}}</strong></td>
+                    <td><strong><a href="{{url_for('account.public_profile', name=user.name)}}">{{user.fullname}}</a></strong></td>
+                    <td><strong>{{user.score}}</strong></td>
+                </tr> 
+            {% else %}
+                <tr>
+                    <td>{{user.rank}}</td>
+                    <td><strong><a href="{{url_for('account.public_profile', name=user.name)}}">{{user.fullname}}</a></strong></td>
+                    <td>{{user.score}}</td>
+                </tr> 
+            {%endif%}
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+>>>>>>> 429bc3879503564db0c15495b1de5355c997caf1
 </div>
 {% endblock %}

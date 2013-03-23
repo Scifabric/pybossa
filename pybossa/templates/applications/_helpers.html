@@ -37,6 +37,7 @@
     <li {% if active_link=="contribute"%}class="active"{% endif %}><a href="{{url_for('app.presenter', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Contribute</a></li>
     <li {% if active_link=="export"%}class="active"{% endif %}><a href="{{url_for('app.export_to', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Export Tasks and Task Runs</a></li>
     <li {% if active_link=="tasks"%}class="active"{% endif %}><a href="{{url_for('app.tasks', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Tasks</a></li>
+    <li {% if active_link=="stats"%}class="active"{% endif %}><a href="{{url_for('app.show_stats', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Statistics</a></li>
     {% if ( current_user.is_authenticated() and current_user.id == app.owner.id ) or current_user.admin %}
     <li {% if active_link=="settings"%}class="active"{% endif %}><a href="{{url_for('app.settings', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Settings</a></li>
     {% endif %}
@@ -57,10 +58,17 @@
         {% if current_user.id == app.owner.id %}
         <li><strong><i class="icon-cog"></i> ID</strong>: {{ app.id }}</li>
         {% endif %}
+<<<<<<< HEAD
         <li><strong><i class="icon-info-sign"></i> {{ _('Description') }}</strong>: {{ app['description'] }}</li>
         <li><strong><i class="icon-ok"></i> {{ _('Creation Date') }}</strong>: {{ app.created[0:10] }}</li>
         <li><strong><i class="icon-time"></i> {{ _('Last Activity') }}</strong>: {{ app.last_activity()}}</li>
         <li><strong><i class="icon-cogs"></i> {{ _('Overall progress') }}</strong>: {{ ( app.completion_status()*100 ) | round(2, 'floor') }}% {{ _('completed') }}</li>
+=======
+        <li><strong><i class="icon-info-sign"></i> Description</strong>: {{ app['description'] }}</li>
+        <li><strong><i class="icon-ok"></i> Creation Date</strong>: {{ app.created[0:10] }}</li>
+        <li><strong><i class="icon-time"></i> Last Activity</strong>: {{ app.last_activity()}}</li>
+        <li><strong><i class="icon-cogs"></i> Overall progress</strong>: {{ ( app.completion_status() * 100) | round(2, 'floor') }}% completed</li>
+>>>>>>> 429bc3879503564db0c15495b1de5355c997caf1
         <li><strong><i class="icon-tasks"></i> <a href="{{url_for('app.tasks',short_name=app.short_name)}}">Tasks</strong></a> ({{ app.tasks | count }})</li>
         {% if not current_user.is_anonymous() %}
         <li>{% if app.hidden == 1 %}
@@ -74,6 +82,24 @@
     </div>
 </div>
 {% endmacro %}
+
+{% macro render_app_short_summary(app, current_user) -%}
+<div class="row-fluid well well-small">
+    <div class="span3">
+        {% if app.info.thumbnail %}
+        <img class="img-polaroid" src="{{app.info.thumbnail}}" onerror="imgError(this);" style="max-width:100px"/>
+        {% else %}
+        <img class="img-polaroid" src="{{url_for('static', filename='img/placeholder.png')}}" style="max-width:100px"/>
+        {% endif %}
+    </div>
+    <div class="span9">
+        <h2><a href="{{url_for('app.settings', short_name=app.short_name)}}">{{app.name}}</a></h2>
+        <p>{{ app['description'] }}</p>
+        <a class="btn btn-inverse" href="{{url_for('app.settings', short_name=app.short_name)}}"><i class="icon-wrench"></i> Settings</a>
+    </div>
+</div>
+{% endmacro %}
+
 
 {% macro show_app(app, class="", current_user) -%}
 <div class="row-fluid {{class}} well">
@@ -90,6 +116,7 @@
             <p style="margin:0"><strong><i class="icon-info-sign"></i> {{ _('Description') }}</strong>: {{ app['description'] }}</p>
             <p style="margin:0"><strong><i class="icon-ok"></i> {{ _('Creation Date') }}</strong>: {{ app.created[0:10] }}</p>
             {% if app.info.last_activity != "None" %}
+<<<<<<< HEAD
             <p style="margin:0"><strong><i class="icon-time"></i> {{ _('Last Activity') }}</strong>: {{ app.info.last_activity}}</p>
             {% endif %}
             <p style="margin:0"><strong><i class="icon-cogs"></i> {{ _('Overall progress') }}</strong>: {{ app.info.overall_progress | round(2, 'floor') }}% completed</p>
@@ -97,6 +124,15 @@
             <p style="margin:0"><strong><i class="icon-user"></i> {{ _('Owner') }}</strong>: {{ _('Me') }}</p>
             {% else %}
             <p style="margin:0"><strong><i class="icon-user"></i> {{ _('Owner') }}</strong>: {{ app.info.owner }}</p>
+=======
+            <p style="margin:0"><strong><i class="icon-time"></i> Last Activity</strong>: {{ app.last_activity}}</p>
+            {% endif %}
+            <p style="margin:0"><strong><i class="icon-cogs"></i> Overall progress</strong>: {{ app.overall_progress | round(2, 'floor') }}% completed</p>
+            {% if app.owner_id == current_user.id %}
+            <p style="margin:0"><strong><i class="icon-user"></i> Created by</strong>: Me</p>
+            {% else %}
+            <p style="margin:0"><strong><i class="icon-user"></i> Created by</strong>: {{ app.owner }}</p>
+>>>>>>> 429bc3879503564db0c15495b1de5355c997caf1
             {% endif %}
             {% if class != "app-draft" %}
             <p style="margin:0"><a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = app.short_name) }}"><i class="icon icon-white icon-ok"></i> {{ _('Try it!') }}</a></p>
@@ -114,4 +150,33 @@ function imgError(image) {
     return true;
 }
 </script>
+{% endmacro %}
+
+{% macro render_grid_apps(apps, title) %}
+    <div class="banner">
+        <div class="row-fluid">
+            <div class="span4">
+                <h1>{{title}}</h1>
+            </div>
+            <div class="span8">
+              <ul class="featured">
+                  {% for app in apps %}
+                  <li><a href={{ url_for('app.details', short_name=app.short_name)}}>
+                      {% if app.info.thumbnail %}
+                      <img src="{{app.info.thumbnail}}" style="min-height:100px; min-width:100px;">
+                      {% else %}
+                      <img src="{{url_for('static', filename="img/placeholder.dark.png")}}">
+                      {% endif %}
+                      <h3>{{app.name}}</h3>
+                      <span class="label label-info">Info</span>
+                      </a>
+                  </li>
+                  {% endfor %}
+                  {% for number in range(18 - apps |count) %}
+                  <li></li>
+                  {% endfor %}
+              </ul>
+            </div>
+        </div>
+    </div>
 {% endmacro %}
