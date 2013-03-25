@@ -762,12 +762,10 @@ def export_to(short_name):
     def gen_json(table):
         n = db.session.query(table)\
             .filter_by(app_id=app.id).count()
-        i = 0
         sep = ", "
         yield "["
-        for tr in db.session.query(table)\
-                .filter_by(app_id=app.id).yield_per(1):
-            i += 1
+        for i, tr in enumerate(db.session.query(table)\
+                .filter_by(app_id=app.id).yield_per(1), 1):
             item = json.dumps(tr.dictize())
             if (i == n):
                 sep = ""
