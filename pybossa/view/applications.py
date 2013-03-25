@@ -809,12 +809,13 @@ def export_to(short_name):
                 t = db.session.query(model.Task)\
                       .filter_by(app_id=app.id)\
                       .first()
+                get_csv = get_csv_task
                 test = lambda x: True
                 if t is not None:
                     if test(t):
                         writer.writerow(t.info.keys())
 
-                    return Response(get_csv_task(out, writer), mimetype='text/csv')
+                    return Response(get_csv(out, writer), mimetype='text/csv')
                 else:
                     msg = "Oops, the application does not have tasks to \
                            export, if you are the owner add some tasks"
@@ -829,12 +830,13 @@ def export_to(short_name):
                 t = db.session.query(model.TaskRun)\
                        .filter_by(app_id=app.id)\
                        .first()
+                get_csv = get_csv_task_run
                 test = lambda x: type(x.info) == dict
                 if t is not None:
                     if test(t):
                         writer.writerow(t.info.keys())
 
-                    return Response(get_csv_task_run(out, writer), mimetype='text/csv')
+                    return Response(get_csv(out, writer), mimetype='text/csv')
                 else:
                     msg = "Oops, there are no Task Runs yet to export, invite \
                            some users to participate"
