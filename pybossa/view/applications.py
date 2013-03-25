@@ -452,6 +452,9 @@ def import_task(short_name):
             'image': "https://docs.google.com/spreadsheet/ccc"
                      "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE"
                      "&usp=sharing",
+            'sound': "https://docs.google.com/spreadsheet/ccc"
+                     "?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc"
+                     "&usp=sharing",
             'map': "https://docs.google.com/spreadsheet/ccc"
                    "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc"
                    "&usp=sharing",
@@ -515,7 +518,8 @@ def import_task(short_name):
 
         if template == 'epicollect':
             return render_template(tmpl, title=title, app=app, epiform=epiform)
-        elif template == 'image' or template == 'map' or template == 'pdf':
+        elif (template == 'image' or template == 'map'
+              or template == 'pdf' or template == 'sound'):
             return render_template(tmpl, title=title, app=app, gdform=gdform)
         else:
             return render_template(tmpl, title=title, app=app,
