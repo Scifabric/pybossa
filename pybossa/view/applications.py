@@ -793,9 +793,9 @@ def export_to(short_name):
         yield out.getvalue()
 
     if request.args.get('format') and request.args.get('type'):
+        ty = request.args.get('type')
         if request.args.get('format') == 'json':
             tables = {"task": model.Task, "task_run": model.TaskRun}
-            ty = request.args.get('type')
             try:
                 table = tables[ty]
             except KeyError:
@@ -815,7 +815,6 @@ def export_to(short_name):
                     "Oops, there are no Task Runs yet to export, invite \
                            some users to participate")
                 }
-            ty = request.args.get('type')
             try:
                 table, get_csv, test, msg = types[ty]
             except:
