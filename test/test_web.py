@@ -999,7 +999,7 @@ class TestWeb:
         assert "Ooops, we didn't find you in the system, did you sign in?" in res.data, res.data
 
     @patch('pybossa.view.applications.requests.get')
-    def test_33_bulk_import_unauthorized(self, Mock):
+    def test_33_bulk_csv_import_unauthorized(self, Mock):
         """Test WEB bulk import unauthorized works"""
         unauthorized_request = FakeRequest('Unauthorized', 403,
                                            {'content-type': 'text/csv'})
@@ -1012,11 +1012,11 @@ class TestWeb:
             'formtype': 'csv',
             }, follow_redirects=True)
         print res.data
-        assert ("Oops! It looks like you don't have permission to access"
-                " that file!") in res.data
+        msg = "Oops! It looks like you don't have permission to access that file"
+        assert msg in res.data
 
     @patch('pybossa.view.applications.requests.get')
-    def test_34_bulk_import_non_html(self, Mock):
+    def test_34_bulk_csv_import_non_html(self, Mock):
         """Test WEB bulk import non html works"""
         html_request = FakeRequest('Not a CSV', 200,
                                    {'content-type': 'text/html'})
@@ -1030,7 +1030,7 @@ class TestWeb:
         assert "Oops! That file doesn't look like the right file." in res.data
 
     @patch('pybossa.view.applications.requests.get')
-    def test_35_bulk_import_non_html(self, Mock):
+    def test_35_bulk_csv_import_non_html(self, Mock):
         """Test WEB bulk import non html works"""
         empty_file = FakeRequest('CSV,with,no,content\n', 200,
                                  {'content-type': 'text/plain'})
@@ -1042,10 +1042,11 @@ class TestWeb:
             'csv_url': 'http://myfakecsvurl.com',
             'formtype': 'csv',
             }, follow_redirects=True)
+        #print res.data
         assert "Oops! It looks like the file is empty." in res.data
 
     @patch('pybossa.view.applications.requests.get')
-    def test_36_bulk_import_dup_header(self, Mock):
+    def test_36_bulk_csv_import_dup_header(self, Mock):
         """Test WEB bulk import duplicate header works"""
         empty_file = FakeRequest('Foo,Bar,Foo\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
@@ -1061,7 +1062,7 @@ class TestWeb:
                 " name" in res.data
 
     @patch('pybossa.view.applications.requests.get')
-    def test_37_bulk_import_no_column_names(self, Mock):
+    def test_37_bulk_csv_import_no_column_names(self, Mock):
         """Test WEB bulk import no column names works"""
         empty_file = FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
@@ -1078,7 +1079,7 @@ class TestWeb:
         assert "Tasks imported successfully!" in res.data
 
     @patch('pybossa.view.applications.requests.get')
-    def test_38_bulk_import_with_column_name(self, Mock):
+    def test_38_bulk_csv_import_with_column_name(self, Mock):
         """Test WEB bulk import with column name works"""
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
@@ -1812,3 +1813,62 @@ class TestWeb:
         self.signin()
         res = self.app.get(url, follow_redirects=True)
         assert Fixtures.fullname in res.data, err_msg
+
+    @patch('pybossa.view.applications.requests.get')
+    def test_33_bulk_epicollect_import_unauthorized(self, Mock):
+        """Test WEB bulk import unauthorized works"""
+        unauthorized_request = FakeRequest('Unauthorized', 403,
+                                           {'content-type': 'application/json'})
+        Mock.return_value = unauthorized_request
+        self.register()
+        self.new_application()
+        app = db.session.query(model.App).first()
+        res = self.app.post(('/app/%s/import' % (app.short_name)), data={
+            'epicollect_project': 'fakeproject',
+            'epicollect_form': 'fakeform',
+            'formtype': 'json',
+            }, follow_redirects=True)
+        print res.data
+        msg = "Oops! It looks like you don't have permission to access the " \
+              "EpiCollect Plus project"
+        assert msg in res.data
+
+    @patch('pybossa.view.applications.requests.get')
+    def test_34_bulk_epicollect_import_non_html(self, Mock):
+        """Test WEB bulk import non html works"""
+        html_request = FakeRequest('Not an application/json', 200,
+                                   {'content-type': 'text/html'})
+        Mock.return_value = html_request
+        self.register()
+        self.new_application()
+        app = db.session.query(model.App).first()
+        res = self.app.post(('/app/%s/import' % (app.short_name)), data={
+            'epicollect_project': 'fakeproject',
+            'epicollect_form': 'fakeform',
+            'formtype': 'json',
+            }, follow_redirects=True)
+        print res.data
+        assert "Oops! That project and form do not look like the right one." in res.data
+
+    @patch('pybossa.view.applications.requests.get')
+    def test_34_bulk_epicollect_import_json(self, Mock):
+        """Test WEB bulk import json works"""
+        data = [dict(DeviceID=23)]
+        html_request = FakeRequest(json.dumps(data), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
+        self.register()
+        self.new_application()
+        app = db.session.query(model.App).first()
+        res = self.app.post(('/app/%s/import' % (app.short_name)),
+                            data={'epicollect_project': 'fakeproject',
+                                  'epicollect_form': 'fakeform',
+                                  'formtype': 'json'},
+                            follow_redirects=True)
+
+        err_msg = "Tasks should be imported"
+        #print res.data
+        assert "Tasks imported successfully!" in res.data, err_msg
+        tasks = db.session.query(model.Task).filter_by(app_id=app.id).all()
+        err_msg = "The imported task from EpiCollect is wrong"
+        assert tasks[0].info['DeviceID'] == 23, err_msg

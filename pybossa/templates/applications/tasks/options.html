@@ -14,9 +14,25 @@
     </div>
     <div class="span6">
         <div class="well">
+            <h2><i class="icon-external-link"></i> EpiCollect Plus Project</h2> 
+            <h3>Use an EpiCollect Plus project</h3>
+            <p><a href="{{url_for('app.import_task', short_name=app.short_name, template='epicollect')}}" class="btn btn-inverse">Use an EpiCollect Plus project</a></p>
+        </div>
+    </div>
+</div>
+<div class="row-fluid">
+    <div class="span6">
+        <div class="well">
             <h2><i class="icon-picture"></i> Image Pattern Recognition</h2> 
             <h3>Re-use the Flickr Person Finder task template</h3>
             <p><a href="{{url_for('app.import_task', short_name=app.short_name, template='image')}}" class="btn btn-inverse">Use the Image Task template</a></p>
+        </div>
+    </div>
+    <div class="span6">
+        <div class="well">
+            <h2><i class="icon-music"></i> Sound Pattern Recognition</h2> 
+            <h3>Re-use the SoundCloud task template</h3>
+            <p><a href="{{url_for('app.import_task', short_name=app.short_name, template='sound')}}" class="btn btn-inverse">Use the Sound Task template</a></p>
         </div>
     </div>
 </div>

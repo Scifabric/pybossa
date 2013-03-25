@@ -116,9 +116,9 @@ built-in :ref:`task-creator`. You have to do the following:
 .. image:: http://i.imgur.com/AeBAy7q.png
     
 3. Scroll down a bit to the **Task Settings** and  click on the **Import Tasks** 
-   button. After clicking on it you will see 4 different options:
+   button. After clicking on it you will see 6 different options:
 
-.. image:: http://i.imgur.com/8FtW0lU.png
+.. image:: http://i.imgur.com/wyGxV4s.png
 
 The **Basic** template, allows you to upload your own CSV file:
 
@@ -149,6 +149,7 @@ Google Docs, or even copying them to your own Google Drive account (click in
 available templates are the following:
 
 * `Image Pattern Recognition`_
+* `Sound Pattern Recognition`_
 * `Geo-coding`_ and
 * `PDF transcription`_. 
 
@@ -163,10 +164,68 @@ available templates are the following:
 
 
 .. _`Image Pattern Recognition`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE&usp=sharing#gid=0
+.. _`Sound Pattern Recognition`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc#gid=0
 .. _`Geo-coding`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc&usp=sharing
 .. _`PDF transcription`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE&usp=sharing
 .. _`DropBox`: http://www.dropbox.com
 .. _`Ubuntu One`: http://one.ubuntu.com
+
+
+Importing the tasks from an EpiCollect Plus Public Project
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+EpiCollect_ provides a web application for the generation of forms and freely hosted
+project websites (using Google's AppEngine) for many kinds of mobile data 
+collection projects.
+
+Data can be collected using multiple mobile phones running either the Android 
+Operating system or the iPhone (using the EpiCollect mobile app) and all data can 
+be synchronised from the phones and viewed centrally (using Google Maps) via the 
+Project website or directly on the phones.
+
+EpiCollect_ can help you to recollect data samples according to a form that
+could include multimedia like photos. Moreover, EpiCollect_ can geolocate the data 
+sample as it supports the built-in GPS that all modern smartphones have. 
+
+For example, you can create
+an EpiCollect_ project where the form will ask the user to take a picture of
+a lake, geo-locate it automatically via the smartphone built-in GPS and upload
+the picture to the EpiCollect_ server. If the user does not have Internet
+access at that moment, the user will be able to synchronize the data afterwards
+i.e. when the user has access to an Internet WIFI hotspot.
+
+PyBossa can automatically import data from a public EpiCollect_ Plus project
+that you own or that it is publicly available in the EpiCollect_ web site and
+help you to validate, analyze, etc. the data that have been obtained via
+EpiCollect.
+
+If you want to import the data points submitted to a **public** EpiCollect_
+project, you will have to follow the next steps:
+
+1. Navigate to your application's page (you can directly access it using 
+   the *slug* application name: http://server/app/slug).
+
+.. image:: http://i.imgur.com/98o4ixD.png
+
+2. Click in the **Settings** section -on the left side local navigation menu:
+
+.. image:: http://i.imgur.com/AeBAy7q.png
+    
+3. Scroll down a bit to the **Task Settings** and  click on the **Import Tasks** 
+   button. After clicking on it you will see 6 different options:
+
+.. image:: http://i.imgur.com/wyGxV4s.png
+
+4. Click in the second one: **Use an EpiCollect Project**
+
+5. Then, type the **name of the EpiCollect project** and the name of the
+   **form** that you want to import, and click in the import button
+
+.. image:: http://i.imgur.com/bCuTtl0.png
+
+All the data points should be imported now in your application.
+
+.. _`EpiCollect`: http://plus.epicollect.net
 
 Flushing all the tasks
 ~~~~~~~~~~~~~~~~~~~~~~
