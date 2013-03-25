@@ -16,12 +16,10 @@
 import os
 import logging
 from itsdangerous import URLSafeTimedSerializer
-from flask import Flask, url_for
+from flask import Flask, url_for, session
 from flaskext.login import LoginManager, current_user
 from flaskext.gravatar import Gravatar
 from flask.ext.mail import Mail
-import flask.ext.babel
-from flask.ext.babel import Babel, gettext, ngettext
 from settings_languages import LANGUAGES 
 from flask.ext.sqlalchemy import SQLAlchemy
 #from flask.ext.debugtoolbar import DebugToolbarExtension
@@ -30,6 +28,11 @@ from flask.ext.heroku import Heroku
 
 from pybossa import default_settings as settings
 from raven.contrib.flask import Sentry
+
+import flask.ext.babel
+from flask.ext.babel import Babel, gettext, ngettext
+
+
 
 def create_app():
     app = Flask(__name__)
@@ -47,7 +50,9 @@ def create_app():
 
     @babel.localeselector
     def get_locale():
-        return flask.request.accept_languages.best_match(LANGUAGES.keys())
+        #return flask.request.accept_languages.best_match(LANGUAGES.keys())
+        lang = session.get('lang', flask.request.accept_languages.best_match(['en', 'es_ES']))
+        return lang
 
     return app
 

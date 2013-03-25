@@ -39,6 +39,7 @@ from pybossa.cache import apps as cached_apps
 from pybossa.cache import users as cached_users
 
 
+
 logger = logging.getLogger('pybossa')
 
 # other views ...
@@ -185,6 +186,13 @@ def home():
     }
 
     return render_template('/home/index.html', **d)
+
+@app.route("/lang/<lang>")
+def change_lang(lang):
+    """ Change de current language of the page"""
+    session['lang'] = lang
+    session.update()
+    return redirect(request.headers.get('Referer') or url_for('.home'))
 
 
 @app.route("/about")
