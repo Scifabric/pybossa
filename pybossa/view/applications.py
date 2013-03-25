@@ -774,14 +774,7 @@ def export_to(short_name):
 
                     yield "]"
 
-
-    if request.args.get('format') and request.args.get('type'):
-        if request.args.get('format') == 'json':
-            if request.args.get('type') == 'task':
-                
-                return Response(gen_json_tasks(), mimetype='application/json')
-            elif request.args.get('type') == 'task_run':
-                def gen_json_task_runs():
+    def gen_json_task_runs():
                     n = db.session.query(model.TaskRun)\
                                   .filter_by(app_id=app.id).count()
                     i = 0
@@ -795,6 +788,13 @@ def export_to(short_name):
                             yield json.dumps(tr.dictize())
 
                     yield "]"
+
+    if request.args.get('format') and request.args.get('type'):
+        if request.args.get('format') == 'json':
+            if request.args.get('type') == 'task':
+                
+                return Response(gen_json_tasks(), mimetype='application/json')
+            elif request.args.get('type') == 'task_run':
                 return Response(gen_json_task_runs(),
                                 mimetype='application/json')
             else:
