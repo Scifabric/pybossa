@@ -43,7 +43,8 @@ class CSVImportException(Exception):
 
 class AppForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
-    name = TextField(gettext(u'Namex'),
+    name = TextField(gettext(u'Name'),
+
                      [validators.Required(),
                       Unique(db.session, model.App, model.App.name,
                              message=gettext(u'Name is already taken.') )])

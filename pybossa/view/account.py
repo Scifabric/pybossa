@@ -21,10 +21,8 @@ from flask import Blueprint, request, url_for, flash, redirect, session, abort
 from flask import render_template, current_app
 from flaskext.login import login_required, login_user, logout_user, current_user
 from flask.ext.mail import Message
-from flaskext.babel import gettext, ngettext
 from flaskext.wtf import Form, TextField, PasswordField, validators, \
         ValidationError, IntegerField, HiddenInput, SelectField
-from settings_languages import LANGUAGES
 
 from sqlalchemy.sql import func, text
 import pybossa.model as model
@@ -36,6 +34,8 @@ from pybossa.util import Twitter
 from pybossa.util import Facebook
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
+from flaskext.babel import gettext, ngettext
+from settings_languages import LANGUAGES
 
 
 blueprint = Blueprint('account', __name__)
@@ -59,13 +59,13 @@ def index(page):
 
 
 class LoginForm(Form):
-    email = TextField(gettext('E-mail'),
+    email = TextField(gettext(u'E-mail'),
                          [validators.Required(
-                             message=gettext('The e-mail is required') )])
+                             message=gettext(u'The e-mail is required'))])
 
-    password = PasswordField(gettext('Password'),
+    password = PasswordField(gettext(u'Password'),
                              [validators.Required(
-                                 message=gettext('You must provide a password'))])
+                                 message=gettext(u'You must provide a password'))])
 
 
 @blueprint.route('/signin', methods=['GET', 'POST'])
@@ -77,21 +77,23 @@ def signin():
         user = model.User.query.filter_by(email_addr=email).first()
         if user and user.check_password(password):
             login_user(user, remember=True)
-            flash("%s %s" % (gettext('Welcome Back'),user.fullname), 'success')
+            session['lang'] = user.language
+            session.update()
+            flash("Welcome back %s" % user.fullname, 'success')
             return redirect(request.args.get("next") or url_for("home"))
         elif user:
             msg, method = get_user_signup_method(user)
             if method == 'local':
-                msg = gettext('Ooops, Incorrect email/password')
+                msg = gettext(u'Ooops, Incorrect email/password')
                 flash(msg, 'error')
             else:
                 flash(msg, 'info')
         else:
-            flash(gettext('Ooops, we didn\'t find you in the system, did you sign in?'),
+            flash(gettext(u'Ooops, we didn\'t find you in the system, did you sign in?'),
                   'info')
 
     if request.method == 'POST' and not form.validate():
-        flash(gettext('Please correct the errors'), 'error')
+        flash(gettext(u'Please correct the errors'), 'error')
     auth = {'twitter': False, 'facebook': False, 'google': False}
     if current_user.is_anonymous():
         # If Twitter is enabled in config, show the Twitter Sign in button
@@ -113,66 +115,62 @@ def signin():
 @blueprint.route('/signout')
 def signout():
     logout_user()
-    flash(gettext('You are now signed out'), 'success')
+    flash(gettext(u'You are now signed out'), 'success')
     return redirect(url_for('home'))
 
 
 class RegisterForm(Form):
-    err_msg = gettext('Full name must be between 3 and 35 characters long')
-    fullname = TextField(gettext('Full name'),
+    err_msg = gettext(u'Full name must be between 3 and 35 characters long')
+    fullname = TextField(gettext(u'Full name'),
                          [validators.Length(min=3, max=35, message=err_msg)])
 
-    err_msg = gettext('User name must be between 3 and 35 characters long')
-    err_msg_2 = gettext('The user name is already taken')
-    username = TextField(gettext('User name'),
+    err_msg = gettext(u'User name must be between 3 and 35 characters long')
+    err_msg_2 = gettext(u'The user name is already taken')
+    username = TextField(gettext(u'User name'),
                          [validators.Length(min=3, max=35, message=err_msg),
                           Unique(db.session, model.User,
                                  model.User.name, err_msg_2)])
 
-    err_msg = gettext('Email must be between 3 and 35 characters long')
-    err_msg_2 = gettext('Email is already taken')
-    email_addr = TextField(gettext('Email Address'),
+    err_msg = gettext(u'Email must be between 3 and 35 characters long')
+    err_msg_2 = gettext(u'Email is already taken')
+    email_addr = TextField(gettext(u'Email Address'),
                            [validators.Length(min=3, max=35, message=err_msg),
                             validators.Email(),
                             Unique(db.session, model.User,
                                    model.User.email_addr, err_msg_2)])
 
-    err_msg = gettext('Password cannot be empty')
-    err_msg_2 = gettext('Passwords must match')
-    password = PasswordField(gettext('New Password'),
+    err_msg = gettext(u'Password cannot be empty')
+    err_msg_2 = gettext(u'Passwords must match')
+    password = PasswordField(gettext(u'New Password'),
                              [validators.Required(err_msg),
                               validators.EqualTo('confirm', err_msg_2)])
 
-    confirm = PasswordField(gettext('Repeat Password'))
-
+    confirm = PasswordField(gettext(u'Repeat Password'))
     language = SelectField(u'Select your language', choices=[('en', 'English'), ('es_ES', 'Spanish')])
-    #language = SelectField(u'Select your language', choices = LANGUAGES() )
 
-#from settings_languages import LANGUAGES
 class UpdateProfileForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
 
-    err_msg = gettext('Full name must be between 3 and 35 characters long')
-    fullname = TextField(gettext('Full name'),
+    err_msg = gettext(u'Full name must be between 3 and 35 characters long')
+    fullname = TextField(gettext(u'Full name'),
                          [validators.Length(min=3, max=35, message=err_msg)])
 
-    err_msg = gettext('User name must be between 3 and 35 characters long')
-    err_msg_2 = gettext('The user name is already taken')
-    name = TextField(gettext('User name'),
+    err_msg = gettext(u'User name must be between 3 and 35 characters long')
+    err_msg_2 = gettext(u'The user name is already taken')
+    name = TextField(gettext(u'User name'),
                      [validators.Length(min=3, max=35, message=err_msg),
                       Unique(db.session, model.User, model.User.name,
                              err_msg_2)])
 
-    err_msg = gettext('Email must be between 3 and 35 characters long')
-    err_msg_2 = gettext('Email is already taken')
-    email_addr = TextField(gettext('Email Address'),
+    err_msg = gettext(u'Email must be between 3 and 35 characters long')
+    err_msg_2 = gettext(u'Email is already taken')
+    email_addr = TextField(gettext(u'Email Address'),
                            [validators.Length(min=3, max=35, message=err_msg),
                             validators.Email(),
                             Unique(db.session, model.User,
                                    model.User.email_addr, err_msg_2)])
 
     language = SelectField(u'Select your language', choices=[('en', 'English'), ('es_ES', 'Spanish')])
-    #language = SelectField(u'Select your language', choices = LANGUAGES() )
 
 @blueprint.route('/register', methods=['GET', 'POST'])
 def register():
@@ -181,16 +179,15 @@ def register():
     if request.method == 'POST' and form.validate():
         account = model.User(fullname=form.fullname.data,
                              name=form.username.data,
-                             email_addr=form.email_addr.data,
-                             language=form.language.data)
+                             email_addr=form.email_addr.data)
         account.set_password(form.password.data)
         db.session.add(account)
         db.session.commit()
         login_user(account, remember=True)
-        flash(gettext('Thanks for signing-up'), 'success')
+        flash(gettext(u'Thanks for signing-up'), 'success')
         return redirect(url_for('home'))
     if request.method == 'POST' and not form.validate():
-        flash(gettext('Please correct the errors'), 'error')
+        flash('Please correct the errors', 'error')
     return render_template('account/register.html',
                            title="Register", form=form)
 
@@ -274,7 +271,7 @@ def applications():
 @login_required
 def settings():
     user = User.query.get_or_404(current_user.id)
-    title = "%s: %s &middot; %s" % (gettext(u'User'), user.fullname, gettext(u'Settings'))
+    title = "User: %s &middot; Settings" % user.fullname
     return render_template('account/settings.html',
                            title=title,
                            user=user)
@@ -285,7 +282,7 @@ def update_profile():
     form = UpdateProfileForm(obj=current_user)
     form.populate_obj(current_user)
     if request.method == 'GET':
-        title_msg = "%s: %s" % (gettext('Update your profiles'),current_user.fullname)
+        title_msg = "Update your profile: %s" % current_user.fullname
         return render_template('account/update.html',
                                title=title_msg,
                                form=form)
@@ -302,11 +299,11 @@ def update_profile():
               .first()
             db.session.merge(new_profile)
             db.session.commit()
-            flash(gettext('Your profile has been updated!'), 'success')
+            flash(gettext(u'Your profile has been updated!'), 'success')
             return redirect(url_for('.profile'))
         else:
-            flash(gettext('Please correct the errors'), 'error')
-            title_msg = '%s: %s' % (gettext('Update your profile'), current_user.fullname)
+            flash(gettext(u'Please correct the errors'), 'error')
+            title_msg = 'Update your profile: %s' % current_user.fullname
             return render_template('/account/update.html', form=form,
                                    title=title_msg)
 
@@ -314,12 +311,12 @@ def update_profile():
 class ChangePasswordForm(Form):
     current_password = PasswordField(gettext(u'Old Password'))
 
-    err_msg = gettext('Password cannot be empty')
-    err_msg_2 = gettext('Passwords must match')
-    new_password = PasswordField(gettext('New Password'),
+    err_msg = gettext(u'Password cannot be empty')
+    err_msg_2 = gettext(u'Passwords must match')
+    new_password = PasswordField(gettext(u'New Password'),
                                  [validators.Required(err_msg),
                                   validators.EqualTo('confirm', err_msg_2)])
-    confirm = PasswordField(gettext('Repeat Password'))
+    confirm = PasswordField(gettext(u'Repeat Password'))
 
 
 @blueprint.route('/profile/password', methods=['GET', 'POST'])
@@ -332,23 +329,23 @@ def change_password():
             user.set_password(form.new_password.data)
             db.session.add(user)
             db.session.commit()
-            flash(gettext('Yay, you changed your password succesfully!'), 'success')
+            flash(gettext(u'Yay, you changed your password succesfully!'), 'success')
             return redirect(url_for('.profile'))
         else:
-            msg = gettext('Your current password doesn\'t match the one in our records')
+            msg = gettext(u'Your current password doesn\'t match the one in our records')
             flash(msg, 'error')
     if request.method == 'POST' and not form.validate():
-        flash(gettext('Please correct the errors'), 'error')
+        flash(gettext(u'Please correct the errors'), 'error')
     return render_template('/account/password.html', form=form)
 
 
 class ResetPasswordForm(Form):
-    err_msg = gettext('Password cannot be empty')
-    err_msg_2 = gettext('Passwords must match')
-    new_password = PasswordField(gettext('New Password'),
+    err_msg = gettext(u'Password cannot be empty')
+    err_msg_2 = gettext(u'Passwords must match')
+    new_password = PasswordField(gettext(u'New Password'),
                                  [validators.Required(err_msg),
                                   validators.EqualTo('confirm', err_msg_2)])
-    confirm = PasswordField(gettext('Repeat Password'))
+    confirm = PasswordField(gettext(u'Repeat Password'))
 
 
 @blueprint.route('/reset-password', methods=['GET', 'POST'])
@@ -373,17 +370,17 @@ def reset_password():
         db.session.add(user)
         db.session.commit()
         login_user(user)
-        print gettext('Changed password')
-        flash(gettext('You reset your password successfully!'), 'success')
+        print "Changed password"
+        flash(gettext(u'You reset your password successfully!'), 'success')
         return redirect(url_for('.profile'))
     if request.method == 'POST' and not form.validate():
-        flash(gettext('Please correct the errors'), 'error')
+        flash(gettext(u'Please correct the errors'), 'error')
     return render_template('/account/password_reset.html', form=form)
 
 
 class ForgotPasswordForm(Form):
-    err_msg = gettext('Email must be between 3 and 35 characters long')
-    email_addr = TextField(gettext('Email Address'),
+    err_msg = gettext(u'Email must be between 3 and 35 characters long')
+    email_addr = TextField(gettext(u'Email Address'),
                            [validators.Length(min=3, max=35, message=err_msg),
                             validators.Email()])
 
@@ -396,7 +393,7 @@ def forgot_password():
                     .filter_by(email_addr=form.email_addr.data)\
                     .first()
         if user and user.email_addr:
-            msg = Message(subject=gettext('Account Recovery'),
+            msg = Message(subject='Account Recovery',
                           recipients=[user.email_addr])
             if user.twitter_user_id:
                 msg.body = render_template(
@@ -423,12 +420,12 @@ def forgot_password():
             flash(gettext('We\'ve send you email with account recovery instructions!'),
                   'success')
         else:
-            flash(gettext('We don\'t have this email in our records. You may have'
-                  ' signed up with a different email or used Twitter, '
-                  'Facebook, or Google to sign-in'), 'error')
+            flash(gettext(u'We don\'t have this email in our records. You may have') +
+                  gettext(u' signed up with a different email or used Twitter, ') +
+                  gettext(u'Facebook, or Google to sign-in'), 'error')
     if request.method == 'POST' and not form.validate():
-        flash(gettext('Something went wrong, please correct the errors on the '
-              'form'), 'error')
+        flash(gettext(u'Something went wrong, please correct the errors on the ') +
+              gettext(u'form'), 'error')
     return render_template('/account/password_forgot.html', form=form)
 
 
@@ -437,7 +434,7 @@ def forgot_password():
 def reset_api_key():
     """Reset API-KEY for user"""
     if current_user.is_authenticated():
-        title = "%s: %s &middot; %s" % (gettext(u'User'), current_user.fullname, gettext(u'Settings - Reset API KEY'))
+        title = "User: %s &middot; Settings - Reset API KEY" % current_user.fullname
         if request.method == 'GET':
             return render_template('account/reset-api-key.html',
                                    title=title)
@@ -445,15 +442,13 @@ def reset_api_key():
             user = db.session.query(model.User).get(current_user.id)
             user.api_key = model.make_uuid()
             db.session.commit()
-            msg = gettext('New API-KEY generated')
+            msg = gettext(u'New API-KEY generated')
             flash(msg, 'success')
             return redirect(url_for('account.settings'))
     else:
         return abort(403)
 
 
-<<<<<<< HEAD
-=======
 @blueprint.route('/<name>/')
 def public_profile(name):
     """Render the public user profile"""
@@ -467,4 +462,3 @@ def public_profile(name):
                                apps_created=apps_created)
     else:
         abort(404)
->>>>>>> 429bc3879503564db0c15495b1de5355c997caf1
