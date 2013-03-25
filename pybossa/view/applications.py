@@ -789,13 +789,28 @@ def export_to(short_name):
 
                     yield "]"
 
+    def gen_json(table):
+        n = db.session.query(table)\
+            .filter_by(app_id=app.id).count()
+        i = 0
+        yield "["
+        for tr in db.session.query(table)\
+                .filter_by(app_id=app.id).yield_per(1):
+            i += 1
+            if (i != n):
+                yield json.dumps(tr.dictize()) + ", "
+            else:
+                yield json.dumps(tr.dictize())
+                
+            yield "]"
+
     if request.args.get('format') and request.args.get('type'):
         if request.args.get('format') == 'json':
             if request.args.get('type') == 'task':
-                
-                return Response(gen_json_tasks(), mimetype='application/json')
+                return Response(gen_json(model.Task), 
+                                mimetype='application/json')
             elif request.args.get('type') == 'task_run':
-                return Response(gen_json_task_runs(),
+                return Response(gen_json(model.TaskRun),
                                 mimetype='application/json')
             else:
                 return abort(404)
