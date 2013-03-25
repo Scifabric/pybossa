@@ -759,36 +759,6 @@ def export_to(short_name):
     else:
         title = "Application not found"
 
-    def gen_json_tasks():
-                    n = db.session.query(model.Task)\
-                          .filter_by(app_id=app.id).count()
-                    i = 0
-                    yield "["
-                    for t in db.session.query(model.Task)\
-                               .filter_by(app_id=app.id).yield_per(1):
-                        i += 1
-                        if (i != n):
-                            yield json.dumps(t.dictize()) + ", "
-                        else:
-                            yield json.dumps(t.dictize())
-
-                    yield "]"
-
-    def gen_json_task_runs():
-                    n = db.session.query(model.TaskRun)\
-                                  .filter_by(app_id=app.id).count()
-                    i = 0
-                    yield "["
-                    for tr in db.session.query(model.TaskRun)\
-                                .filter_by(app_id=app.id).yield_per(1):
-                        i += 1
-                        if (i != n):
-                            yield json.dumps(tr.dictize()) + ", "
-                        else:
-                            yield json.dumps(tr.dictize())
-
-                    yield "]"
-
     def gen_json(table):
         n = db.session.query(table)\
             .filter_by(app_id=app.id).count()
