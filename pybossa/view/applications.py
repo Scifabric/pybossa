@@ -763,16 +763,15 @@ def export_to(short_name):
         n = db.session.query(table)\
             .filter_by(app_id=app.id).count()
         i = 0
+        sep = ", "
         yield "["
         for tr in db.session.query(table)\
                 .filter_by(app_id=app.id).yield_per(1):
             i += 1
             item = json.dumps(tr.dictize())
-            if (i != n):
-                yield item + ", "
-            else:
-                yield item
-                
+            if (i == n):
+                sep = ""
+            yield item + sep
         yield "]"
 
     def handle_task(writer, t):
