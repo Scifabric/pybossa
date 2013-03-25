@@ -792,6 +792,22 @@ def export_to(short_name):
                 writer.writerow([tr.info])
         yield out.getvalue()
 
+    def handle_task(writer, t):
+        writer.writerow(t.info.values())
+
+    def handle_task_run(writer, t):
+        if (type(t.info) == dict):
+            writer.writerow(t.info.values())
+        else:
+            writer.writerow([t.info])
+
+    def get_csv(out, writer, table, handle_row):
+        for tr in db.session.query(table)\
+                .filter_by(app_id=app.id)\
+                .yield_per(1):
+            handle_row(writer, tr)
+        yield out.getvalue()
+
     if request.args.get('format') and request.args.get('type'):
         ty = request.args.get('type')
         if request.args.get('format') == 'json':
@@ -805,18 +821,18 @@ def export_to(short_name):
             # Export Task(/Runs) to CSV
             types = {
                 "task": (
-                    model.Task, get_csv_task, 
+                    model.Task, handle_task,
                     (lambda x: True),
                     "Oops, the application does not have tasks to \
                            export, if you are the owner add some tasks"),
                 "task_run": (
-                    model.TaskRun, get_csv_task_run,
+                    model.TaskRun, handle_task_run,
                     (lambda x: type(x.info) == dict),
                     "Oops, there are no Task Runs yet to export, invite \
                            some users to participate")
                 }
             try:
-                table, get_csv, test, msg = types[ty]
+                table, handle_row, test, msg = types[ty]
             except KeyError:
                 return abort(404)
 
@@ -829,7 +845,7 @@ def export_to(short_name):
                 if test(t):
                     writer.writerow(t.info.keys())
 
-                return Response(get_csv(out, writer, table), 
+                return Response(get_csv(out, writer, table, handle_row), 
                                 mimetype='text/csv')
             else:
                 flash(msg, 'info')
