@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2013-03-13 17:06+0100\n"
+"POT-Creation-Date: 2013-03-25 16:51+0100\n"
 "PO-Revision-Date: 2013-03-08 12:16+0100\n"
 "Last-Translator: Carlos Val<carlos.val@bifi.es>\n"
 "Language-Team: es_ES <LL@li.org>\n"
@@ -17,13 +17,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 0.9.6\n"
 
-#: core.py:90
+#: core.py:97
 msgid "Please sign in to access this page."
 msgstr "Por favor, identifíquese para acceder a esta página"
 
-#: templates/_navbar.html:12 templates/account/index.html:41
+#: templates/_navbar.html:12 templates/account/index.html:40
 msgid "Community"
-msgstr "Comunidad "
+msgstr "Comunidad"
 
 #: templates/_navbar.html:13 templates/account/applications.html:13
 msgid "Applications"
@@ -59,7 +59,19 @@ msgstr ""
 msgid "Sign Out"
 msgstr "Salir"
 
-#: templates/_navbar.html:38 templates/account/signin.html:47
+#: templates/_navbar.html:38
+msgid "Language"
+msgstr "Idioma"
+
+#: templates/_navbar.html:40
+msgid "English"
+msgstr ""
+
+#: templates/_navbar.html:41
+msgid "Spanish"
+msgstr ""
+
+#: templates/_navbar.html:43 templates/account/signin.html:45
 msgid "Sign in"
 msgstr "Entrar"
 
@@ -84,22 +96,47 @@ msgid "Nick"
 msgstr "Nombre"
 
 #: templates/account/_helpers.html:40
-msgid "Language"
+msgid " Language"
 msgstr "Idioma"
 
-#: templates/account/_helpers.html:41 view/account.py:61
+#: templates/account/_helpers.html:42 view/account.py:62
 msgid "E-mail"
 msgstr "Correo Electrónico"
 
-#: templates/account/_helpers.html:42 templates/account/index.html:48
+#: templates/account/_helpers.html:45 templates/account/_helpers.html:54
+#: templates/stats/index.html:12
+msgid "Rank"
+msgstr ""
+
+#: templates/account/_helpers.html:49
+msgid "of"
+msgstr ""
+
+#: templates/account/_helpers.html:49
+msgid "with a Score of"
+msgstr ""
+
+#: templates/account/_helpers.html:49
+msgid "contributed tasks"
+msgstr "Tareas Aportadas:"
+
+#: templates/account/_helpers.html:54
+msgid "The user has not contributed a task yet"
+msgstr "No puedes contribuir todavía"
+
+#: templates/account/_helpers.html:57 templates/home/index.html:87
 msgid "Joined"
 msgstr "Unido"
 
-#: templates/account/_helpers.html:44 templates/account/view.html:8
+#: templates/account/_helpers.html:60 templates/account/view.html:8
 msgid "API key"
 msgstr "Clave API"
 
-#: templates/account/_helpers.html:46
+#: templates/account/_helpers.html:63
+msgid "See your public profile"
+msgstr "Actualiza tu perfil"
+
+#: templates/account/_helpers.html:64
 msgid "Edit your profile"
 msgstr "Actualiza tu perfil"
 
@@ -108,16 +145,16 @@ msgstr "Actualiza tu perfil"
 msgid "Published"
 msgstr "Publicados"
 
-#: templates/account/applications.html:25 templates/applications/draft.html:20
+#: templates/account/applications.html:22 templates/applications/draft.html:20
 #: templates/applications/index.html:13
 msgid "Draft"
 msgstr "Enviados"
 
-#: templates/account/applications.html:34
+#: templates/account/applications.html:28
 msgid "You have not created an application"
 msgstr "No has creado una aplicación todavía"
 
-#: templates/account/applications.html:35
+#: templates/account/applications.html:29
 msgid "Create an Application"
 msgstr " Crea una Aplicación"
 
@@ -129,45 +166,54 @@ msgstr "Anterior"
 msgid "Next &raquo;"
 msgstr "Siguiente"
 
-#: templates/account/index.html:41
+#: templates/account/index.html:40
 msgid "registered users"
 msgstr "usuario registrados"
 
-#: templates/account/index.html:49
-msgid " Contributed Tasks"
-msgstr "Tareas contribuida"
+#: templates/account/index.html:40
+msgid "Leaderboard"
+msgstr ""
 
-#: templates/account/index.html:51
-msgid "Owner of"
-msgstr "Propietario de"
+#: templates/account/password.html:13
+msgid "Change your Password"
+msgstr "Cambia tu Contraseña"
+
+#: templates/account/password.html:18
+msgid "my current password"
+msgstr "Resetea tu Contraseña"
+
+#: templates/account/password.html:19 templates/account/password_forgot.html:10
+#: templates/account/password_reset.html:10
+msgid "my new password"
+msgstr "Resetea tu Contraseña"
+
+#: templates/account/password.html:20 templates/account/password_reset.html:11
+msgid "my new password again"
+msgstr "Resetea tu Contraseña"
+
+#: templates/account/password.html:22
+msgid "Save the Changes"
+msgstr "Guardar los cambios"
+
+#: templates/account/password.html:23 templates/account/password_forgot.html:13
+#: templates/account/password_reset.html:14 templates/account/register.html:26
+#: templates/account/signin.html:46 templates/account/update.html:30
+#: templates/applications/import.html:22 templates/applications/import.html:34
+#: templates/applications/new.html:27
+#: templates/applications/task_presenter_editor.html:36
+msgid "Cancel"
+msgstr "Cancelar"
 
 #: templates/account/password_forgot.html:6
 #: templates/account/password_reset.html:6
 msgid "Reset your Password"
 msgstr "Resetea tu Contraseña"
 
-#: templates/account/password_forgot.html:10
-#: templates/account/password_reset.html:10
-msgid "my new password"
-msgstr "Resetea tu Contraseña"
-
 #: templates/account/password_forgot.html:12
 msgid "Reset my Password"
 msgstr "Resetea tu Contraseña"
 
-#: templates/account/password_forgot.html:13
-#: templates/account/password_reset.html:14 templates/account/register.html:26
-#: templates/account/signin.html:48 templates/account/update.html:29
-#: templates/applications/new.html:26
-#: templates/applications/task_presenter_editor.html:36
-msgid "Cancel"
-msgstr "Cancelar"
-
-#: templates/account/password_reset.html:11
-msgid "my new password again"
-msgstr "Resetea tu Contraseña"
-
-#: templates/account/password_reset.html:13 templates/account/update.html:28
+#: templates/account/password_reset.html:13 templates/account/update.html:29
 msgid "Save the changes"
 msgstr "Guardar los cambios"
 
@@ -180,15 +226,20 @@ msgid "Your Contributions"
 msgstr "Tus Aportaciones"
 
 #: templates/account/profile.html:29
-msgid "Contributed tasks:"
-msgstr "Tareas Aportadas:"
+msgid "You have contributed"
+msgstr "No puedes contribuir todavía"
 
-#: templates/account/profile.html:33
+#: templates/account/profile.html:29
+msgid "tasks"
+msgstr "tareas"
+
+#: templates/account/profile.html:30
 msgid "Contribute!"
 msgstr "Contribuye!"
 
-#: templates/account/register.html:6
-msgid " Note"
+#: templates/account/register.html:6 templates/account/reset-api-key.html:14
+#: templates/account/signin.html:6 templates/account/update.html:26
+msgid "Note"
 msgstr "Nota"
 
 #: templates/account/register.html:7 templates/account/signin.html:7
@@ -199,7 +250,7 @@ msgstr "haciendo click en"
 msgid "Create account button"
 msgstr " Crea una cuenta nueva"
 
-#: templates/account/register.html:9 templates/account/signin.html:7
+#: templates/account/register.html:9
 msgid "below you are agreeing to the"
 msgstr "a continuación aceptas la"
 
@@ -227,7 +278,7 @@ msgstr "Nombre"
 msgid "myusername"
 msgstr "nombre"
 
-#: templates/account/register.html:20 templates/account/update.html:20
+#: templates/account/register.html:20 templates/account/update.html:21
 msgid "hello@mywebsite.org"
 msgstr ""
 
@@ -238,11 +289,6 @@ msgstr "Resetea tu Contraseña"
 #: templates/account/reset-api-key.html:12
 msgid " Reset API Key"
 msgstr "Restablecer cuenta API"
-
-#: templates/account/reset-api-key.html:14 templates/account/signin.html:6
-#: templates/account/update.html:25
-msgid "Note"
-msgstr "Nota"
 
 #: templates/account/reset-api-key.html:14
 msgid ""
@@ -261,7 +307,6 @@ msgid "No, do not reset the API key!"
 msgstr "No, no quiero restablecer mi clave API"
 
 #: templates/account/settings.html:14 templates/account/update.html:13
-#: view/account.py:308
 msgid "Update your profile"
 msgstr "Actualiza tu perfil"
 
@@ -277,51 +322,57 @@ msgstr "Cambia tu Contraseña"
 msgid "Sign in button"
 msgstr "Entrar por boton"
 
-#: templates/account/signin.html:15 templates/account/signin.html:25
+#: templates/account/signin.html:7
+msgid ""
+"below you are agreeing to\n"
+"    the"
+msgstr "a continuación aceptas la"
+
+#: templates/account/signin.html:13 templates/account/signin.html:23
 msgid "Sign in with Twitter"
 msgstr "Entrar por Twitter"
 
-#: templates/account/signin.html:18 templates/account/signin.html:28
+#: templates/account/signin.html:16 templates/account/signin.html:26
 msgid "Sign in with Facebook"
 msgstr "Entrar por Facebook"
 
-#: templates/account/signin.html:21 templates/account/signin.html:31
+#: templates/account/signin.html:19 templates/account/signin.html:29
 msgid "Sign in with Google"
 msgstr "Entrar con Google"
 
-#: templates/account/signin.html:40
+#: templates/account/signin.html:38
 msgid "Or Sign in with your PyBossa account"
 msgstr "O Introduce con tu contraseña de PyBossa"
 
-#: templates/account/signin.html:42
+#: templates/account/signin.html:40
 msgid "Sign in with your PyBossa account"
 msgstr "Introduce tu contraseña de PyBossa"
 
-#: templates/account/signin.html:54
+#: templates/account/signin.html:52
 msgid " Create a new account!"
 msgstr " Crea una cuenta nueva!"
 
-#: templates/account/signin.html:55
+#: templates/account/signin.html:53
 msgid "Forgot Password"
 msgstr "Olvidaste la contraseña"
 
-#: templates/account/update.html:23
+#: templates/account/update.html:24
 msgid "Change your avatar at Gravatar.com"
 msgstr "Cambia tu perfil en Gravatar.com"
 
-#: templates/account/update.html:23
+#: templates/account/update.html:24
 msgid "We are using"
 msgstr "Estamos usando"
 
-#: templates/account/update.html:25
+#: templates/account/update.html:26
 msgid "If you change your"
 msgstr "Si tu cambias tu"
 
-#: templates/account/update.html:25
+#: templates/account/update.html:26
 msgid "user name"
 msgstr "nombre"
 
-#: templates/account/update.html:25
+#: templates/account/update.html:26
 msgid "you will be asked to sign in again."
 msgstr "te será preguntado después denuevo"
 
@@ -369,9 +420,9 @@ msgstr "Añadir al grupo administradores"
 msgid "Manage featured applications"
 msgstr " Crea una Aplicación"
 
-#: templates/admin/applications.html:20 templates/admin/applications.html:23
+#: templates/admin/applications.html:19 templates/admin/applications.html:22
 msgid "Featured!"
-msgstr "¡Destacado!"
+msgstr "Características"
 
 #: templates/admin/index.html:21
 msgid "Manage admin users"
@@ -397,55 +448,89 @@ msgstr "Usuario actual con privilegios de administrador"
 msgid "Next"
 msgstr "Siguiente"
 
-#: templates/applications/_helpers.html:60
-#: templates/applications/_helpers.html:90 view/applications.py:51
+#: templates/applications/_helpers.html:36
+#: templates/applications/_helpers.html:154 templates/home/index.html:20
+msgid "Info"
+msgstr "Información"
+
+#: templates/applications/_helpers.html:37
+#: templates/applications/presenter.html:10
+msgid "Contribute"
+msgstr "Contribuye"
+
+#: templates/applications/_helpers.html:38
+msgid "Export Tasks and Task Runs"
+msgstr "Exportar todas las tareas"
+
+#: templates/applications/_helpers.html:39
+#: templates/applications/_helpers.html:65
+#: templates/applications/export.html:17 templates/applications/export.html:22
+#: templates/home/index.html:85 templates/home/index.html:93
+msgid "Tasks"
+msgstr "tareas"
+
+#: templates/applications/_helpers.html:40 templates/home/about.html:25
+msgid "Statistics"
+msgstr ""
+
+#: templates/applications/_helpers.html:42
+#: templates/applications/_helpers.html:91
+#: templates/applications/settings.html:14
+msgid "Settings"
+msgstr "Configuración"
+
+#: templates/applications/_helpers.html:59
+msgid "ID"
+msgstr ""
+
+#: templates/applications/_helpers.html:61
+#: templates/applications/_helpers.html:109 view/applications.py:55
 msgid "Description"
 msgstr "Pregunta"
 
-#: templates/applications/_helpers.html:61
-#: templates/applications/_helpers.html:91
-msgid "Creation Date"
-msgstr "Fecha Creación"
-
-#: templates/applications/_helpers.html:62
-#: templates/applications/_helpers.html:93
+#: templates/applications/_helpers.html:63
+#: templates/applications/_helpers.html:112
 msgid "Last Activity"
 msgstr "última Actividad"
 
-#: templates/applications/_helpers.html:63
-#: templates/applications/_helpers.html:95
+#: templates/applications/_helpers.html:64
+#: templates/applications/_helpers.html:114
 msgid "Overall progress"
 msgstr "Proceso Global"
 
-#: templates/applications/_helpers.html:63
+#: templates/applications/_helpers.html:64
 msgid "completed"
 msgstr "completado"
 
-#: templates/applications/_helpers.html:67
+#: templates/applications/_helpers.html:68
+#: templates/applications/_helpers.html:70
 msgid "Hidden"
 msgstr "Oculto"
 
-#: templates/applications/_helpers.html:67
-#: templates/applications/snippets/image.html:40
+#: templates/applications/_helpers.html:68
+#: templates/applications/snippets/image.html:40 view/applications.py:60
 msgid "Yes"
 msgstr "Si"
 
-#: templates/applications/_helpers.html:69
-#: templates/applications/snippets/image.html:42
+#: templates/applications/_helpers.html:70
+#: templates/applications/snippets/image.html:42 view/applications.py:61
 msgid "No"
 msgstr "No"
 
-#: templates/applications/_helpers.html:97
-#: templates/applications/_helpers.html:99 templates/stats/index.html:20
-#: templates/stats/index.html:22
-msgid "Owner"
-msgstr "Propietario"
+#: templates/applications/_helpers.html:110
+msgid "Creation Date"
+msgstr "Fecha Creación"
 
-#: templates/applications/_helpers.html:97 templates/stats/index.html:20
+#: templates/applications/_helpers.html:116
+#: templates/applications/_helpers.html:118
+msgid "Created by"
+msgstr "Crear"
+
+#: templates/applications/_helpers.html:116
 msgid "Me"
 msgstr "Yo"
 
-#: templates/applications/_helpers.html:102
+#: templates/applications/_helpers.html:121
 msgid "Try it!"
 msgstr "¡Pruebalo!"
 
@@ -459,7 +544,7 @@ msgstr "Aplicaciones Mas Activas"
 msgid "Edit the task presenter"
 msgstr "Editar la tarea ..."
 
-#: templates/applications/actions.html:11
+#: templates/applications/actions.html:11 templates/applications/import.html:13
 #: templates/applications/settings.html:24
 msgid "Import tasks"
 msgstr "Importar Tareas"
@@ -568,14 +653,35 @@ msgstr ""
 " Tareas y tareas ejecutadas \\(las respuestas enviadas por los "
 "usuarios\\) en CSV o en formato JSON."
 
-#: templates/applications/export.html:17 templates/applications/export.html:22
-#: templates/home/index.html:85
-msgid "Tasks"
-msgstr "tareas"
-
 #: templates/applications/export.html:18 templates/applications/export.html:23
 msgid "Task Runs"
 msgstr "Ejecución de la tarea"
+
+#: templates/applications/import.html:14
+msgid "From a Google Docs Spreadsheet"
+msgstr ""
+
+#: templates/applications/import.html:18
+msgid "Please provide a URL to a Google Docs Spreadsheet with data for"
+msgstr ""
+
+#: templates/applications/import.html:18 templates/applications/import.html:30
+msgid "For more information, please look at"
+msgstr ""
+
+#: templates/applications/import.html:18 templates/applications/import.html:30
+msgid "the documentation"
+msgstr ""
+
+#: templates/applications/import.html:26
+msgid "From a CSV file"
+msgstr ""
+
+#: templates/applications/import.html:30
+msgid ""
+"Please provide a URL \\(i.e. DropBox, Box, Ubuntu One, etc. public "
+"link\\) to a CSV file with data for"
+msgstr ""
 
 #: templates/applications/index.html:20
 msgid "Featured Applications"
@@ -613,17 +719,9 @@ msgstr "Aplicaciones"
 msgid "Create a new application"
 msgstr " Crea una Aplicación"
 
-#: templates/applications/new.html:25
+#: templates/applications/new.html:26
 msgid "Create the application"
 msgstr " Crea una Aplicación"
-
-#: templates/applications/presenter.html:10
-msgid "Contribute"
-msgstr "Contribuye"
-
-#: templates/applications/settings.html:14 view/account.py:276
-msgid "Settings"
-msgstr "Configuración"
 
 #: templates/applications/settings.html:16
 msgid "Application Settings"
@@ -941,7 +1039,7 @@ msgstr "Completad"
 msgid "Submit transcription!"
 msgstr "¡Envio de transcipción!"
 
-#: templates/applications/task/done.html:8 view/admin.py:106
+#: templates/applications/task/done.html:8 view/admin.py:108
 msgid "Ooops!"
 msgstr ""
 
@@ -1010,7 +1108,7 @@ msgstr "PyBossa es diferente a los proyectos existes:"
 
 #: templates/home/about.html:14
 #, python-format
-msgid "It\\u2019s a 100% open-source"
+msgid "It\\u2019s a 100%% open-source"
 msgstr ""
 
 #: templates/home/about.html:15
@@ -1029,9 +1127,7 @@ msgid ""
 "crowd-sourcing and microtasking apps rather than being a crowd-sourcing "
 "application itself. Individual crowd-sourcing apps are written as simple "
 "snippets of Javascript and HTML which are then deployed on a PyBossa "
-"instance (such as PyBossa.com). This way one can easily develop custom "
-"apps while using the PyBossa platform to store your data, manage users, "
-"and handle workflow."
+"instance \\(such as_"
 msgstr ""
 "Esta diseñado como una plataforma y un marco para el desarrollo de la "
 "implementación crowd-sourcing y microtasking de aplicaciónes en lugar de "
@@ -1041,47 +1137,65 @@ msgstr ""
 " datos de usuario y de la aplicación ayudando a manejar el flujo de "
 "trabajo."
 
-#: templates/home/about.html:22
+#: templates/home/about.html:17
 msgid ""
-"You can read more about the architecture in the <a "
-"href=\"http://docs.pybossa.com/en/latest/overview.html\">PyBossa "
-"Documentation</a> and follow the <a "
-"href=\"http://docs.pybossa.com/en/latest/user/create-application.html"
-"\">step-by-step tutorial to create your own apps."
+"This way one can easily develop custom apps while using the PyBossa "
+"platform to store your data, manage users, and handle workflow"
 msgstr ""
-"Puedes encontrar más información sobre la arquitectura en <a "
-"href=\"http://docs.pybossa.com/en/latest/overview.html\">Documentación "
-"PyBossa </a>  y seguir la <a "
-"href=\"http://docs.pybossa.com/en/latest/user/create-"
-"application.html\">guía de crear tú propia aplicacion paso a paso.</a>"
 
-#: templates/home/about.html:26
+#: templates/home/about.html:22
+msgid "You can read more about the architecture in the"
+msgstr ""
+
+#: templates/home/about.html:22
+msgid "PyBossa Documentation"
+msgstr ""
+
+#: templates/home/about.html:22
+msgid "and follow the"
+msgstr ""
+
+#: templates/home/about.html:22
+msgid "step-by-step tutorial to create your own apps"
+msgstr ""
+
+#: templates/home/about.html:27
+msgid ""
+" PyBossa provides individual statistics for every application in the "
+"system, as well as a"
+msgstr ""
+
+#: templates/home/about.html:27
+msgid "general overview about the system like total number of users, tasks, etc"
+msgstr ""
+
+#: templates/home/about.html:29
+msgid "Check the global statistics"
+msgstr ""
+
+#: templates/home/about.html:31
 msgid "Contact information"
 msgstr "Información del contacto"
 
-#: templates/home/about.html:28
+#: templates/home/about.html:33
 msgid "For more info, send us an e-mail to: "
 msgstr "Para más información, envía un correo a: "
 
-#: templates/home/about.html:28
+#: templates/home/about.html:33
 msgid "Follow us on Twitter!"
 msgstr "Siguenos en Twitter!"
 
-#: templates/home/about.html:29
+#: templates/home/about.html:34
 msgid "E-mail list: "
 msgstr "Lista de correo: "
 
-#: templates/home/about.html:30
+#: templates/home/about.html:35
 msgid "Report any bug, issue or improvement:"
 msgstr "Envía cualquier bug, cuestión o mejora:"
 
-#: templates/home/about.html:32
+#: templates/home/about.html:37
 msgid "Github Issues"
 msgstr "Github"
-
-#: templates/home/index.html:20
-msgid "Info"
-msgstr "Información"
 
 #: templates/home/index.html:35
 msgid "Get Started"
@@ -1131,238 +1245,216 @@ msgstr "Unidos:"
 msgid "Submitted Tasks:"
 msgstr "Tareas Enviadas:"
 
+#: templates/home/index.html:89
+msgid "Submitted Tasks"
+msgstr "Tareas Enviadas:"
+
 #: templates/home/search.html:7
 msgid "Search Results"
 msgstr "Buscar Resultados"
 
-#: templates/stats/index.html:15 templates/stats/index.html:17
-msgid "Updated"
-msgstr "Actualizado"
+#: templates/stats/index.html:8
+msgid "Community Leaderboard"
+msgstr ""
 
-#: templates/stats/index.html:15
-msgid "Not yet"
-msgstr "Todavía no"
+#: templates/stats/index.html:13 view/applications.py:46
+msgid "Name"
+msgstr "Nombre"
 
-#: templates/stats/index.html:40
-msgid "Total submitted tasks"
-msgstr "Tareas Enviadas:"
+#: templates/stats/index.html:14
+msgid "Score"
+msgstr ""
 
-#: templates/stats/index.html:42
-msgid "Collaborating in"
-msgstr "Colaborar en"
-
-#: templates/stats/index.html:46
-msgid "Hidden application"
-msgstr "Aplicación oculta"
-
-#: view/account.py:63
+#: view/account.py:64
 msgid "The e-mail is required"
 msgstr "El correo electrónico es necesario"
 
-#: view/account.py:65
+#: view/account.py:66
 msgid "Password"
 msgstr "Contraseña"
 
-#: view/account.py:67
+#: view/account.py:68
 msgid "You must provide a password"
 msgstr "Debes de introducir una contraseña"
 
-#: view/account.py:79
-msgid "Welcome Back"
-msgstr "Bienvenido de nuevo"
-
-#: view/account.py:84
+#: view/account.py:87
 msgid "Ooops, Incorrect email/password"
 msgstr "Ooops, Incorrecto correo o contraseña"
 
-#: view/account.py:89
+#: view/account.py:92
 msgid "Ooops, we didn't find you in the system, did you sign in?"
 msgstr ""
 "Ooops, no podemos encontrarte en el sistema, ¿Estas seguro que te diste "
 "de alta?"
 
-#: view/account.py:93 view/account.py:192 view/account.py:307
-#: view/account.py:340 view/account.py:379
+#: view/account.py:96 view/account.py:305 view/account.py:338
+#: view/account.py:377
 msgid "Please correct the errors"
 msgstr "Por favor corrija los errores"
 
-#: view/account.py:115
+#: view/account.py:118
 msgid "You are now signed out"
 msgstr "Estas fuera del sistema"
 
-#: view/account.py:120 view/account.py:154
+#: view/account.py:123 view/account.py:154
 msgid "Full name must be between 3 and 35 characters long"
 msgstr "El Nombre completo debe de tener entre 3 y 35 caracteres de longitud"
 
-#: view/account.py:121 view/account.py:155
+#: view/account.py:124 view/account.py:155
 msgid "Full name"
 msgstr "Nombre"
 
-#: view/account.py:124 view/account.py:158
+#: view/account.py:127 view/account.py:158
 msgid "User name must be between 3 and 35 characters long"
 msgstr "El nombre de usuario debe de tener entre 3 y 35 caracteres de longitud"
 
-#: view/account.py:125 view/account.py:159
+#: view/account.py:128 view/account.py:159
 msgid "The user name is already taken"
 msgstr "El nombre ya esta utilizado"
 
-#: view/account.py:126 view/account.py:160
+#: view/account.py:129 view/account.py:160
 msgid "User name"
 msgstr "Nombre"
 
-#: view/account.py:131 view/account.py:165 view/account.py:384
+#: view/account.py:134 view/account.py:165 view/account.py:382
 msgid "Email must be between 3 and 35 characters long"
 msgstr "El correo electrónico debe de tener entre 3 y 35 caracteres de lontitud"
 
-#: view/account.py:132 view/account.py:166
+#: view/account.py:135 view/account.py:166
 msgid "Email is already taken"
 msgstr "El correo electrónico ya esta utilizado"
 
-#: view/account.py:133 view/account.py:167 view/account.py:385
+#: view/account.py:136 view/account.py:167 view/account.py:383
 msgid "Email Address"
 msgstr "Correo Electŕonico"
 
-#: view/account.py:139 view/account.py:316 view/account.py:345
+#: view/account.py:142 view/account.py:314 view/account.py:343
 msgid "Password cannot be empty"
 msgstr "La contraseña no puede estar vacía"
 
-#: view/account.py:140 view/account.py:317 view/account.py:346
+#: view/account.py:143 view/account.py:315 view/account.py:344
 msgid "Passwords must match"
 msgstr "Las contraseñas no coiniciden"
 
-#: view/account.py:141 view/account.py:318 view/account.py:347
+#: view/account.py:144 view/account.py:316 view/account.py:345
 msgid "New Password"
 msgstr "Cambia tu Contraseña"
 
-#: view/account.py:145 view/account.py:321 view/account.py:350
+#: view/account.py:148 view/account.py:319 view/account.py:348
 msgid "Repeat Password"
 msgstr "Resetea tu Contraseña"
 
-#: view/account.py:189
+#: view/account.py:187
 msgid "Thanks for signing-up"
 msgstr "Gracias por darte de alta"
 
-#: view/account.py:276 view/account.py:439
-msgid "User"
-msgstr "Nombre"
-
-#: view/account.py:287
-msgid "Update your profiles"
-msgstr "Actualiza tu perfil"
-
-#: view/account.py:304
+#: view/account.py:302
 msgid "Your profile has been updated!"
 msgstr "Tu perfíl ha sido actualizado"
 
-#: view/account.py:314
+#: view/account.py:312
 msgid "Old Password"
 msgstr "Cambia tu Contraseña"
 
-#: view/account.py:334
+#: view/account.py:332
 msgid "Yay, you changed your password succesfully!"
 msgstr "¡El cambio de contraseña de ha realizado con éxito!"
 
-#: view/account.py:337
+#: view/account.py:335
 msgid "Your current password doesn't match the one in our records"
 msgstr ""
 "La contraseña introducida no coincide con la registrada en nuestros "
 "sistemas"
 
-#: view/account.py:375
-msgid "Changed password"
-msgstr "Cambia tu Contraseña"
-
-#: view/account.py:376
+#: view/account.py:374
 msgid "You reset your password successfully!"
 msgstr "Resetea tu Contraseña"
 
-#: view/account.py:398
-msgid "Account Recovery"
-msgstr "Recuperación de cuenta"
-
-#: view/account.py:422
+#: view/account.py:420
 msgid "We've send you email with account recovery instructions!"
 msgstr "Hemos mandado un correo con tu contraseña e instrucciones de recuperación"
 
-#: view/account.py:425
-msgid ""
-"We don't have this email in our records. You may have signed up with a "
-"different email or used Twitter, Facebook, or Google to sign-in"
+#: view/account.py:423
+msgid "We don't have this email in our records. You may have"
 msgstr ""
 
-#: view/account.py:429
-msgid "Something went wrong, please correct the errors on the form"
+#: view/account.py:424
+msgid " signed up with a different email or used Twitter, "
+msgstr ""
+
+#: view/account.py:425
+msgid "Facebook, or Google to sign-in"
+msgstr ""
+
+#: view/account.py:427
+msgid "Something went wrong, please correct the errors on the "
 msgstr "Algo fue mal, corrija los errores en el formulario"
 
-#: view/account.py:439
-msgid "Settings - Reset API KEY"
-msgstr "Configuración - Restablece la clave API"
+#: view/account.py:428
+msgid "form"
+msgstr ""
 
-#: view/account.py:447
+#: view/account.py:445
 msgid "New API-KEY generated"
 msgstr "Nueva clave API generada"
 
-#: view/admin.py:106
+#: view/admin.py:108
 msgid "We didn't find a user"
 msgstr "No podemos encontrar este usuario"
 
-#: view/admin.py:107
+#: view/admin.py:109
 msgid "matching your query"
 msgstr "ejecutando tu consulta"
 
-#: view/applications.py:43
-msgid "Namex"
-msgstr "Nombre"
-
-#: view/applications.py:46
+#: view/applications.py:50
 msgid "Name is already taken."
 msgstr "El nombre ya esta utiliado"
 
-#: view/applications.py:47
+#: view/applications.py:51
 msgid "Short Name"
 msgstr "Nombre"
 
-#: view/applications.py:50
+#: view/applications.py:54
 msgid "Short Name is already taken."
 msgstr "El nombre corto esta ya utilizado"
 
-#: view/applications.py:53
+#: view/applications.py:57
 msgid "You must provide a description."
 msgstr "Debes de completar una descripción"
 
-#: view/applications.py:54
-msgid "Icon Link"
-msgstr "Entrar"
+#: view/applications.py:59
+msgid "Allow Anonymous Contributors"
+msgstr ""
 
-#: view/applications.py:56
+#: view/applications.py:63
 msgid "Task Scheduler"
 msgstr "Calendario de tareas"
 
-#: view/applications.py:61
+#: view/applications.py:64
+msgid "Default"
+msgstr ""
+
+#: view/applications.py:65
+msgid "Breadth First"
+msgstr ""
+
+#: view/applications.py:66
+msgid "Depth First"
+msgstr ""
+
+#: view/applications.py:67
+msgid "Random"
+msgstr "y"
+
+#: view/applications.py:68
 msgid "Hide?"
 msgstr "¿Ocultar"
 
-#: view/applications.py:70 view/applications.py:74
-msgid "URL"
-msgstr "URL"
+#: view/applications.py:77
+msgid "You must provide a URL"
+msgstr "Debes de introducir una contraseña"
 
-#: view/applications.py:70 view/applications.py:74
-msgid "You must "
-msgstr "Debes"
-
-#: view/applications.py:71 view/applications.py:75
-msgid "provide a URL"
-msgstr "introducir una URL"
-
-#: view/applications.py:71 view/applications.py:75
-msgid "Oops! That's not a"
-msgstr "¿Oops! Esto no corresponde a "
-
-#: view/applications.py:72
-msgid " valid URL. You must provide a valid URL"
+#: view/applications.py:78
+msgid "Oops! That's not a valid URL. You must provide a valid URL"
 msgstr "una dirección valida URL. Debes de introducir una dirección URL valida"
-
-#: view/applications.py:76
-msgid "valid URL. You must provide a valid URL"
-msgstr "direccion URL valida. Debes de introducir una dirección URL válida"
 

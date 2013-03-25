@@ -41,13 +41,13 @@
       {% if accounts %}
       <ul class="thumbnails">
       {% for account in accounts %}
-      <li> 
-      <a href="{{url_for('account.public_profile', name=account.name)}}" class="thumbnail" rel='popover' title="<strong>{{account['fullname']}}</strong>" data-content="
+      <li>
+        <a href="{{url_for('account.public_profile', name=account.name)}}" class="thumbnail" rel='popover' title="<strong>{{account['fullname']}}</strong>" data-content="
               <ul style='list-style-type:none; margin-left:0px;'>
-                <li><strong><i class='icon-calendar'></i>{{ _('Joined') }}</strong> {{account['created'][0:10]}}</li>
-                <li><strong><i class='icon-tasks'></i>{{ _(' Contributed Tasks') }}</strong> {{ account.task_runs | count }}</li>
+                <li><strong><i class='icon-calendar'></i> Joined</strong> {{account['created'][0:10]}}</li>
+                <li><strong><i class='icon-tasks'></i> Contributed Tasks</strong> {{ account.task_runs | count }}</li>
                 {% if account.apps %}
-                <li><strong><i class='icon-certificate'></i> {{ _('Owner of') }}</strong>
+                <li><strong><i class='icon-certificate'></i> Owner of</strong>
                   <ul style='list-style-type:none'>
                       {% for app in account.apps %}
                       <li><i class='icon-chevron-right'></i> {{ app.name | truncate(18, true)}}</li>
