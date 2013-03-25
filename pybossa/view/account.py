@@ -63,7 +63,7 @@ class LoginForm(Form):
                          [validators.Required(
                              message=gettext(u'The e-mail is required'))])
 
-    password = PasswordField(gettext(u'Password'),
+    password = PasswordField(gettext(u'Password')  ,
                              [validators.Required(
                                  message=gettext(u'You must provide a password'))])
 
