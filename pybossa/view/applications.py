@@ -817,7 +817,7 @@ def export_to(short_name):
                 }
             try:
                 table, get_csv, test, msg = types[ty]
-            except:
+            except KeyError:
                 return abort(404)
 
             out = StringIO()
