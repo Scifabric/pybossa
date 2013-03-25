@@ -1,0 +1,1368 @@
+# Spanish (Spain) translations for PROJECT.
+# Copyright (C) 2013 ORGANIZATION
+# This file is distributed under the same license as the PROJECT project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2013.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: PROJECT VERSION\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2013-03-13 17:06+0100\n"
+"PO-Revision-Date: 2013-03-08 12:16+0100\n"
+"Last-Translator: Carlos Val<carlos.val@bifi.es>\n"
+"Language-Team: es_ES <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 0.9.6\n"
+
+#: core.py:90
+msgid "Please sign in to access this page."
+msgstr "Por favor, identifíquese para acceder a esta página"
+
+#: templates/_navbar.html:12 templates/account/index.html:41
+msgid "Community"
+msgstr "Comunidad "
+
+#: templates/_navbar.html:13 templates/account/applications.html:13
+msgid "Applications"
+msgstr "Aplicaciones"
+
+#: templates/_navbar.html:14
+msgid "Create"
+msgstr "Crear"
+
+#: templates/_navbar.html:15 templates/home/about.html:7
+msgid "About"
+msgstr "Acerca"
+
+#: templates/_navbar.html:22 templates/account/_helpers.html:3
+msgid "My Profile"
+msgstr "Actualiza tu perfil"
+
+#: templates/_navbar.html:23 templates/account/_helpers.html:4
+msgid "My Applications"
+msgstr "Aplicaciones"
+
+#: templates/_navbar.html:24 templates/account/_helpers.html:8
+msgid "My Settings"
+msgstr "Mis Preferencias"
+
+#: templates/_navbar.html:27 templates/account/_helpers.html:6
+#: templates/admin/applications.html:13 templates/admin/index.html:12
+#: templates/admin/users.html:14
+msgid "Admin Site"
+msgstr ""
+
+#: templates/_navbar.html:30
+msgid "Sign Out"
+msgstr "Salir"
+
+#: templates/_navbar.html:38 templates/account/signin.html:47
+msgid "Sign in"
+msgstr "Entrar"
+
+#: templates/account/_helpers.html:14
+msgid "I've done"
+msgstr "Hecho"
+
+#: templates/account/_helpers.html:14
+msgid "tasks for the @PyBossa project:"
+msgstr "tareas para el proyecto @PyBossa:"
+
+#: templates/account/_helpers.html:14
+msgid "Do you want to help?"
+msgstr "¿Quieres ayudarnos?"
+
+#: templates/account/_helpers.html:15
+msgid "Tweet"
+msgstr ""
+
+#: templates/account/_helpers.html:39
+msgid "Nick"
+msgstr "Nombre"
+
+#: templates/account/_helpers.html:40
+msgid "Language"
+msgstr "Idioma"
+
+#: templates/account/_helpers.html:41 view/account.py:61
+msgid "E-mail"
+msgstr "Correo Electrónico"
+
+#: templates/account/_helpers.html:42 templates/account/index.html:48
+msgid "Joined"
+msgstr "Unido"
+
+#: templates/account/_helpers.html:44 templates/account/view.html:8
+msgid "API key"
+msgstr "Clave API"
+
+#: templates/account/_helpers.html:46
+msgid "Edit your profile"
+msgstr "Actualiza tu perfil"
+
+#: templates/account/applications.html:16 templates/applications/draft.html:19
+#: templates/applications/index.html:12
+msgid "Published"
+msgstr "Publicados"
+
+#: templates/account/applications.html:25 templates/applications/draft.html:20
+#: templates/applications/index.html:13
+msgid "Draft"
+msgstr "Enviados"
+
+#: templates/account/applications.html:34
+msgid "You have not created an application"
+msgstr "No has creado una aplicación todavía"
+
+#: templates/account/applications.html:35
+msgid "Create an Application"
+msgstr " Crea una Aplicación"
+
+#: templates/account/index.html:10 templates/applications/_helpers.html:7
+msgid "&laquo; Prev"
+msgstr "Anterior"
+
+#: templates/account/index.html:30
+msgid "Next &raquo;"
+msgstr "Siguiente"
+
+#: templates/account/index.html:41
+msgid "registered users"
+msgstr "usuario registrados"
+
+#: templates/account/index.html:49
+msgid " Contributed Tasks"
+msgstr "Tareas contribuida"
+
+#: templates/account/index.html:51
+msgid "Owner of"
+msgstr "Propietario de"
+
+#: templates/account/password_forgot.html:6
+#: templates/account/password_reset.html:6
+msgid "Reset your Password"
+msgstr "Resetea tu Contraseña"
+
+#: templates/account/password_forgot.html:10
+#: templates/account/password_reset.html:10
+msgid "my new password"
+msgstr "Resetea tu Contraseña"
+
+#: templates/account/password_forgot.html:12
+msgid "Reset my Password"
+msgstr "Resetea tu Contraseña"
+
+#: templates/account/password_forgot.html:13
+#: templates/account/password_reset.html:14 templates/account/register.html:26
+#: templates/account/signin.html:48 templates/account/update.html:29
+#: templates/applications/new.html:26
+#: templates/applications/task_presenter_editor.html:36
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: templates/account/password_reset.html:11
+msgid "my new password again"
+msgstr "Resetea tu Contraseña"
+
+#: templates/account/password_reset.html:13 templates/account/update.html:28
+msgid "Save the changes"
+msgstr "Guardar los cambios"
+
+#: templates/account/profile.html:14
+msgid "Your Profile"
+msgstr "Actualiza tu perfil"
+
+#: templates/account/profile.html:17
+msgid "Your Contributions"
+msgstr "Tus Aportaciones"
+
+#: templates/account/profile.html:29
+msgid "Contributed tasks:"
+msgstr "Tareas Aportadas:"
+
+#: templates/account/profile.html:33
+msgid "Contribute!"
+msgstr "Contribuye!"
+
+#: templates/account/register.html:6
+msgid " Note"
+msgstr "Nota"
+
+#: templates/account/register.html:7 templates/account/signin.html:7
+msgid "By click the"
+msgstr "haciendo click en"
+
+#: templates/account/register.html:8
+msgid "Create account button"
+msgstr " Crea una cuenta nueva"
+
+#: templates/account/register.html:9 templates/account/signin.html:7
+msgid "below you are agreeing to the"
+msgstr "a continuación aceptas la"
+
+#: templates/account/register.html:10 templates/account/signin.html:8
+msgid "terms of use"
+msgstr "terminos de uso"
+
+#: templates/account/register.html:10 templates/account/signin.html:8
+msgid "and"
+msgstr "y"
+
+#: templates/account/register.html:11 templates/account/signin.html:9
+msgid "data"
+msgstr "datos"
+
+#: templates/account/register.html:14 templates/account/register.html:25
+msgid "Create an account"
+msgstr " Crea una cuenta nueva!"
+
+#: templates/account/register.html:18 templates/account/update.html:18
+msgid "my full name"
+msgstr "Nombre"
+
+#: templates/account/register.html:19 templates/account/update.html:19
+msgid "myusername"
+msgstr "nombre"
+
+#: templates/account/register.html:20 templates/account/update.html:20
+msgid "hello@mywebsite.org"
+msgstr ""
+
+#: templates/account/register.html:22 templates/account/register.html:23
+msgid "my secret password"
+msgstr "Resetea tu Contraseña"
+
+#: templates/account/reset-api-key.html:12
+msgid " Reset API Key"
+msgstr "Restablecer cuenta API"
+
+#: templates/account/reset-api-key.html:14 templates/account/signin.html:6
+#: templates/account/update.html:25
+msgid "Note"
+msgstr "Nota"
+
+#: templates/account/reset-api-key.html:14
+msgid ""
+" If you reset the API key, you will need to use the new generated key for"
+" any API call."
+msgstr ""
+" Si restableces tu cuenta API, necesitarás generar una nueva para "
+"cualquier llamada API"
+
+#: templates/account/reset-api-key.html:17
+msgid "Do you want to reset your personal API Key?"
+msgstr "¿Quieres restablecer tu clave personal API?"
+
+#: templates/account/reset-api-key.html:20
+msgid "No, do not reset the API key!"
+msgstr "No, no quiero restablecer mi clave API"
+
+#: templates/account/settings.html:14 templates/account/update.html:13
+#: view/account.py:308
+msgid "Update your profile"
+msgstr "Actualiza tu perfil"
+
+#: templates/account/settings.html:15
+msgid "Reset the API Key"
+msgstr "Restablecer la clave API"
+
+#: templates/account/settings.html:17
+msgid " Change your Password"
+msgstr "Cambia tu Contraseña"
+
+#: templates/account/signin.html:7
+msgid "Sign in button"
+msgstr "Entrar por boton"
+
+#: templates/account/signin.html:15 templates/account/signin.html:25
+msgid "Sign in with Twitter"
+msgstr "Entrar por Twitter"
+
+#: templates/account/signin.html:18 templates/account/signin.html:28
+msgid "Sign in with Facebook"
+msgstr "Entrar por Facebook"
+
+#: templates/account/signin.html:21 templates/account/signin.html:31
+msgid "Sign in with Google"
+msgstr "Entrar con Google"
+
+#: templates/account/signin.html:40
+msgid "Or Sign in with your PyBossa account"
+msgstr "O Introduce con tu contraseña de PyBossa"
+
+#: templates/account/signin.html:42
+msgid "Sign in with your PyBossa account"
+msgstr "Introduce tu contraseña de PyBossa"
+
+#: templates/account/signin.html:54
+msgid " Create a new account!"
+msgstr " Crea una cuenta nueva!"
+
+#: templates/account/signin.html:55
+msgid "Forgot Password"
+msgstr "Olvidaste la contraseña"
+
+#: templates/account/update.html:23
+msgid "Change your avatar at Gravatar.com"
+msgstr "Cambia tu perfil en Gravatar.com"
+
+#: templates/account/update.html:23
+msgid "We are using"
+msgstr "Estamos usando"
+
+#: templates/account/update.html:25
+msgid "If you change your"
+msgstr "Si tu cambias tu"
+
+#: templates/account/update.html:25
+msgid "user name"
+msgstr "nombre"
+
+#: templates/account/update.html:25
+msgid "you will be asked to sign in again."
+msgstr "te será preguntado después denuevo"
+
+#: templates/account/view.html:11
+msgid "Your collections"
+msgstr "Tus colleciones"
+
+#: templates/account/view.html:13
+msgid "You have no collections yet. "
+msgstr "No tienes colecciones todavía."
+
+#: templates/account/view.html:13
+msgid "Create one!"
+msgstr "Crea una!"
+
+#: templates/account/view.html:17
+msgid "records"
+msgstr "registros"
+
+#: templates/account/view.html:18
+msgid "Edit the metadata"
+msgstr "Editar los metadatos"
+
+#: templates/account/view.html:18
+msgid "of this collection"
+msgstr "de esta colección"
+
+#: templates/account/view.html:20
+msgid "Refresh"
+msgstr "Actualizar"
+
+#: templates/account/view.html:20
+msgid "this collection (overwrites local changes)"
+msgstr "esta coleccion (sobreescribe cambios locales)"
+
+#: templates/admin/_helpers.html:12
+msgid "Remove from admin group"
+msgstr "Borrar del grupo de administradores"
+
+#: templates/admin/_helpers.html:16
+msgid "Add to admin group"
+msgstr "Añadir al grupo administradores"
+
+#: templates/admin/applications.html:13 templates/admin/index.html:16
+msgid "Manage featured applications"
+msgstr " Crea una Aplicación"
+
+#: templates/admin/applications.html:20 templates/admin/applications.html:23
+msgid "Featured!"
+msgstr "¡Destacado!"
+
+#: templates/admin/index.html:21
+msgid "Manage admin users"
+msgstr "Organizar usuarios administradores"
+
+#: templates/admin/users.html:14
+msgid "Manage Admin Users"
+msgstr "Organizar usuarios administradores"
+
+#: templates/admin/users.html:19
+msgid "Try with the full name or nick"
+msgstr "Intentalo con tu nombre completo"
+
+#: templates/admin/users.html:20
+msgid "Search"
+msgstr "Buscar"
+
+#: templates/admin/users.html:31
+msgid "Current Users with Admin privileges"
+msgstr "Usuario actual con privilegios de administrador"
+
+#: templates/applications/_helpers.html:27
+msgid "Next"
+msgstr "Siguiente"
+
+#: templates/applications/_helpers.html:60
+#: templates/applications/_helpers.html:90 view/applications.py:51
+msgid "Description"
+msgstr "Pregunta"
+
+#: templates/applications/_helpers.html:61
+#: templates/applications/_helpers.html:91
+msgid "Creation Date"
+msgstr "Fecha Creación"
+
+#: templates/applications/_helpers.html:62
+#: templates/applications/_helpers.html:93
+msgid "Last Activity"
+msgstr "última Actividad"
+
+#: templates/applications/_helpers.html:63
+#: templates/applications/_helpers.html:95
+msgid "Overall progress"
+msgstr "Proceso Global"
+
+#: templates/applications/_helpers.html:63
+msgid "completed"
+msgstr "completado"
+
+#: templates/applications/_helpers.html:67
+msgid "Hidden"
+msgstr "Oculto"
+
+#: templates/applications/_helpers.html:67
+#: templates/applications/snippets/image.html:40
+msgid "Yes"
+msgstr "Si"
+
+#: templates/applications/_helpers.html:69
+#: templates/applications/snippets/image.html:42
+msgid "No"
+msgstr "No"
+
+#: templates/applications/_helpers.html:97
+#: templates/applications/_helpers.html:99 templates/stats/index.html:20
+#: templates/stats/index.html:22
+msgid "Owner"
+msgstr "Propietario"
+
+#: templates/applications/_helpers.html:97 templates/stats/index.html:20
+msgid "Me"
+msgstr "Yo"
+
+#: templates/applications/_helpers.html:102
+msgid "Try it!"
+msgstr "¡Pruebalo!"
+
+#: templates/applications/actions.html:9
+#: templates/applications/settings.html:18
+msgid "Edit the application details"
+msgstr "Aplicaciones Mas Activas"
+
+#: templates/applications/actions.html:10
+#: templates/applications/settings.html:23
+msgid "Edit the task presenter"
+msgstr "Editar la tarea ..."
+
+#: templates/applications/actions.html:11
+#: templates/applications/settings.html:24
+msgid "Import tasks"
+msgstr "Importar Tareas"
+
+#: templates/applications/actions.html:12
+#: templates/applications/settings.html:19
+msgid "Delete the application"
+msgstr " Crea una Aplicación"
+
+#: templates/applications/app.html:23
+msgid "Start Contributing Now!"
+msgstr " Empieza a Contribuir"
+
+#: templates/applications/app.html:33 templates/applications/delete.html:28
+#: templates/applications/settings.html:31
+msgid "Sorry! This app does not exists."
+msgstr "¡Lo siento! Esta aplicación no existe."
+
+#: templates/applications/delete.html:14
+msgid "Danger Zone!"
+msgstr "Zona Peligrosa!"
+
+#: templates/applications/delete.html:14
+msgid "If you delete the application and its tasks, it will be gone forever!"
+msgstr "Si borrar la aplicacion y sus tarea no se podra revertir"
+
+#: templates/applications/delete.html:19
+msgid ""
+"Are you sure you want to delete this application and all its tasks and "
+"associated task runs?"
+msgstr ""
+"¿Estas seguro que quieres borrar esta aplicación y sus tareas asociadas a"
+" esta tarea?"
+
+#: templates/applications/delete.html:22
+msgid "No, do not delete it!"
+msgstr "No no quiero borrarlas"
+
+#: templates/applications/draft.html:15
+msgid "Here you can find a list of all registered applications in"
+msgstr "Aqui podras encontrar una lista de todas las tareas registradas"
+
+#: templates/applications/draft.html:16
+msgid "The applications can be sorted in three categories:"
+msgstr "Las aplicaciones deben de estar ordenadas en tres categorías:"
+
+#: templates/applications/draft.html:18 templates/applications/index.html:11
+msgid "Featured"
+msgstr "Características"
+
+#: templates/applications/draft.html:18
+msgid "a special selection of the most interesting applications."
+msgstr "una selección especial de las más interesantes aplicaciones"
+
+#: templates/applications/draft.html:19
+msgid "all available applications."
+msgstr "todas las aplicaciones disponibles"
+
+#: templates/applications/draft.html:20
+msgid "the only applications where you"
+msgstr "solo las aplicaciones donde estas tu"
+
+#: templates/applications/draft.html:20
+msgid "cannot contribute for the moment"
+msgstr "no puedes contribuir en este momento"
+
+#: templates/applications/draft.html:20
+msgid "the owners have not published them yet"
+msgstr "los propietarios no han publicado nada todavía"
+
+#: templates/applications/draft.html:22
+msgid ""
+"Therefore, pick up a published or featured application and help the "
+"project!"
+msgstr "Por lo tanto, selecciona una aplicación publicada y ayuda en el proyecto"
+
+#: templates/applications/draft.html:29
+msgid "apps in this category"
+msgstr "aplicaciones en esta categoría"
+
+#: templates/applications/draft.html:40
+msgid "Check also the published applications"
+msgstr "Comprueba las aplicaciones publicadas"
+
+#: templates/applications/draft.html:50
+msgid "Create an application!"
+msgstr " Crea una Aplicación"
+
+#: templates/applications/export.html:12
+msgid "Export All Tasks and Task Runs"
+msgstr "Exportar todas las tareas"
+
+#: templates/applications/export.html:13
+msgid "You can export and download"
+msgstr "Exportar tareas y descargarlas"
+
+#: templates/applications/export.html:13
+msgid "all the available"
+msgstr "todas las disponibles"
+
+#: templates/applications/export.html:13
+msgid ""
+"Tasks and Task Runs \\(the submitted answers by the users\\) in CSV or "
+"JSON formats."
+msgstr ""
+" Tareas y tareas ejecutadas \\(las respuestas enviadas por los "
+"usuarios\\) en CSV o en formato JSON."
+
+#: templates/applications/export.html:17 templates/applications/export.html:22
+#: templates/home/index.html:85
+msgid "Tasks"
+msgstr "tareas"
+
+#: templates/applications/export.html:18 templates/applications/export.html:23
+msgid "Task Runs"
+msgstr "Ejecución de la tarea"
+
+#: templates/applications/index.html:20
+msgid "Featured Applications"
+msgstr " Crea una Aplicación"
+
+#: templates/applications/index.html:22
+msgid "A special selection of the most interesting applications"
+msgstr "Selección especial de las más interesantes aplicaciones"
+
+#: templates/applications/index.html:26
+msgid "Published Applications"
+msgstr "Aplicaciones Publicadas"
+
+#: templates/applications/index.html:27
+msgid "All available applications"
+msgstr "Aplicaciones Mas Activas"
+
+#: templates/applications/index.html:31
+msgid "Draft Applications"
+msgstr " Crea una Aplicación"
+
+#: templates/applications/index.html:33
+msgid "Work in progress applications"
+msgstr "Ejecución en progreso del trabajo"
+
+#: templates/applications/index.html:33
+msgid "you can not contribute yet"
+msgstr "No puedes contribuir todavía"
+
+#: templates/applications/new.html:13
+msgid "Application"
+msgstr "Aplicaciones"
+
+#: templates/applications/new.html:13
+msgid "Create a new application"
+msgstr " Crea una Aplicación"
+
+#: templates/applications/new.html:25
+msgid "Create the application"
+msgstr " Crea una Aplicación"
+
+#: templates/applications/presenter.html:10
+msgid "Contribute"
+msgstr "Contribuye"
+
+#: templates/applications/settings.html:14 view/account.py:276
+msgid "Settings"
+msgstr "Configuración"
+
+#: templates/applications/settings.html:16
+msgid "Application Settings"
+msgstr "Aplicaciones"
+
+#: templates/applications/settings.html:21
+msgid "Task Settings"
+msgstr "Configuración de Tareas"
+
+#: templates/applications/settings.html:25
+msgid "Delete the tasks"
+msgstr "Borras las tareas"
+
+#: templates/applications/task_presenter_editor.html:28
+msgid "Task Presenter Editor"
+msgstr "Editor de la tarea actual"
+
+#: templates/applications/task_presenter_editor.html:28
+msgid "Help"
+msgstr "Ayuda"
+
+#: templates/applications/task_presenter_editor.html:34
+msgid "Update the application task presenter"
+msgstr "Actualiza la tarea de la aplicación actual"
+
+#: templates/applications/task_presenter_editor.html:35
+msgid "Preview the task presenter"
+msgstr "Avance de la tarea actual"
+
+#: templates/applications/task_presenter_editor.html:45
+msgid "&times;"
+msgstr "veces"
+
+#: templates/applications/task_presenter_editor.html:46
+msgid "Task Presenter Preview"
+msgstr "Avance de la tarea actual"
+
+#: templates/applications/task_presenter_editor.html:52
+msgid "Close"
+msgstr "Cerrar"
+
+#: templates/applications/snippets/basic.html:3
+msgid "Write here your HTML Task Presenter"
+msgstr "Escribe aqui tu presentacón de la tarea en HTML"
+
+#: templates/applications/snippets/image.html:6
+#: templates/applications/snippets/map.html:20
+#: templates/applications/snippets/pdf.html:13
+msgid "Well done!"
+msgstr "Bien hecho!"
+
+#: templates/applications/snippets/image.html:6
+#: templates/applications/snippets/map.html:20
+#: templates/applications/snippets/pdf.html:13
+msgid "Your answer has been saved"
+msgstr "Tu respuesta ha sido guardada"
+
+#: templates/applications/snippets/image.html:10
+msgid "Loading next task..."
+msgstr "Cargando la proxima tarea..."
+
+#: templates/applications/snippets/image.html:13
+#: templates/applications/snippets/map.html:24
+#: templates/applications/snippets/pdf.html:16
+msgid "The task has been completed!"
+msgstr "La tarea ha sido completada!"
+
+#: templates/applications/snippets/image.html:13
+#: templates/applications/snippets/map.html:24
+#: templates/applications/snippets/pdf.html:16
+msgid "Thanks a lot!"
+msgstr "Gracias!"
+
+#: templates/applications/snippets/image.html:16
+#: templates/applications/snippets/map.html:32
+#: templates/applications/snippets/pdf.html:20
+msgid "Congratulations!"
+msgstr "Felicidades"
+
+#: templates/applications/snippets/image.html:16
+#: templates/applications/snippets/map.html:32
+#: templates/applications/snippets/pdf.html:20
+msgid "You have participated in all available tasks!"
+msgstr "Has participado en todas las tareas disponibles!"
+
+#: templates/applications/snippets/image.html:19
+#: templates/applications/snippets/map.html:35
+#: templates/applications/snippets/pdf.html:23
+msgid "Go back"
+msgstr "Atras"
+
+#: templates/applications/snippets/image.html:25
+#: templates/applications/snippets/map.html:42
+#: templates/applications/snippets/pdf.html:29
+#: templates/applications/task/wrong.html:8
+msgid "Error!"
+msgstr "Error!"
+
+#: templates/applications/snippets/image.html:25
+#: templates/applications/snippets/map.html:42
+#: templates/applications/snippets/pdf.html:29
+msgid "Something went wrong, please contact the site administrators"
+msgstr "Algo fue mal, por favor contacte con los administradores"
+
+#: templates/applications/snippets/image.html:44
+msgid "I don't know"
+msgstr "No lo se"
+
+#: templates/applications/snippets/image.html:47
+msgid "You are working now on task:"
+msgstr "Estas trabajando ahora en la tarea:"
+
+#: templates/applications/snippets/image.html:48
+msgid "You have completed:"
+msgstr "Has completado:"
+
+#: templates/applications/snippets/image.html:48
+#: templates/applications/snippets/pdf.html:56
+msgid "tasks from"
+msgstr "tareas de"
+
+#: templates/applications/snippets/image.html:60
+msgid "Show comments"
+msgstr "Mostrar comentarios"
+
+#: templates/applications/snippets/image.html:61
+msgid "Hide comments"
+msgstr "Ocultar comentarios"
+
+#: templates/applications/snippets/image.html:92
+msgid "Please enable JavaScript to view the"
+msgstr "Por favor, actualiza tu visión JavaScript de "
+
+#: templates/applications/snippets/image.html:92
+msgid "comments powered by Disqus."
+msgstr "comentarios gracias a Disqus."
+
+#: templates/applications/snippets/map.html:28
+msgid "Loading task..."
+msgstr "Cargando tarea..."
+
+#: templates/applications/snippets/map.html:36
+#: templates/applications/snippets/pdf.html:24
+msgid "or, Check other applications"
+msgstr " Crea una Aplicación"
+
+#: templates/applications/snippets/map.html:47
+msgid "Sorry!"
+msgstr "Lo siento!"
+
+#: templates/applications/snippets/map.html:47
+msgid "Your web browser does not support the application."
+msgstr "Tu navegador no soporta la aplicación"
+
+#: templates/applications/snippets/map.html:49
+msgid "Please, try with another application"
+msgstr "Por favor, intentalo con otra aplicación"
+
+#: templates/applications/snippets/map.html:58
+#: templates/applications/snippets/pdf.html:36
+msgid "Question"
+msgstr "Pregunta"
+
+#: templates/applications/snippets/map.html:59
+msgid "City"
+msgstr "Ciudad"
+
+#: templates/applications/snippets/map.html:61
+msgid "Add an Urban Park Marker"
+msgstr "Añade un Urban Park Marker"
+
+#: templates/applications/snippets/map.html:63
+msgid "I do not see an urban park"
+msgstr "No puedo ver un urban park"
+
+#: templates/applications/snippets/map.html:64
+msgid "City not found!"
+msgstr "¡Ciudad no encontrada!"
+
+#: templates/applications/snippets/map.html:66
+msgid "Task"
+msgstr "tareas"
+
+#: templates/applications/snippets/map.html:68
+msgid "Urban park position"
+msgstr "Posición en Urban park"
+
+#: templates/applications/snippets/map.html:68
+msgid "Longitude"
+msgstr "Longitud"
+
+#: templates/applications/snippets/map.html:69
+msgid "Latitude"
+msgstr "Latitud"
+
+#: templates/applications/snippets/map.html:72
+msgid "Save these coordinates for the urban park"
+msgstr "Guardar estas coordenadas para el urban park"
+
+#: templates/applications/snippets/options.html:4
+#: templates/applications/tasks/options.html:4
+msgid "Use one of the following available"
+msgstr "Usa uno de los siguientes disponibles"
+
+#: templates/applications/snippets/options.html:4
+#: templates/applications/tasks/options.html:4
+msgid "templates"
+msgstr "plantillas"
+
+#: templates/applications/snippets/options.html:4
+msgid "for your application"
+msgstr "para tu aplicación"
+
+#: templates/applications/snippets/options.html:12
+#: templates/applications/snippets/options.html:21
+#: templates/applications/snippets/options.html:33
+#: templates/applications/snippets/options.html:43
+msgid "Complexity"
+msgstr "Complejidad"
+
+#: templates/applications/snippets/options.html:13
+#: templates/applications/snippets/options.html:22
+#: templates/applications/snippets/options.html:34
+#: templates/applications/snippets/options.html:44
+msgid "Skills"
+msgstr "Habilidades"
+
+#: templates/applications/snippets/options.html:13
+#: templates/applications/snippets/options.html:22
+msgid "HTML and JavaScript"
+msgstr "HTML y JavaScript"
+
+#: templates/applications/snippets/options.html:14
+#: templates/applications/tasks/options.html:12
+msgid "Use the Basic template"
+msgstr "Usa las plantillas básicas"
+
+#: templates/applications/snippets/options.html:19
+#: templates/applications/tasks/options.html:17
+msgid "Image Pattern Recognition"
+msgstr "Reconocimiento de Imágenes por patrón"
+
+#: templates/applications/snippets/options.html:20
+msgid "Re-use the Flickr Person Finder template"
+msgstr "Reutiliza la plantilla de encontrar personas en Flick"
+
+#: templates/applications/snippets/options.html:23
+msgid "Use the Image template"
+msgstr "Usa la plantilla de Imágenes"
+
+#: templates/applications/snippets/options.html:24
+#: templates/applications/snippets/options.html:36
+#: templates/applications/snippets/options.html:46
+msgid "Download the template and work locally"
+msgstr "Descarga la plantilla y trabaja localmente"
+
+#: templates/applications/snippets/options.html:31
+#: templates/applications/tasks/options.html:26
+msgid "Geo-coding"
+msgstr ""
+
+#: templates/applications/snippets/options.html:32
+msgid "Re-use the Urban Park template"
+msgstr "Reutiliza la plantilla Urban Park"
+
+#: templates/applications/snippets/options.html:34
+msgid "HTML, JavaScript and Geo expertise"
+msgstr "HTML, JavaScript y pericia Geo"
+
+#: templates/applications/snippets/options.html:35
+#: templates/applications/tasks/options.html:28
+msgid "Use the Mapping template"
+msgstr "Usa la plantilla Mappping"
+
+#: templates/applications/snippets/options.html:41
+#: templates/applications/tasks/options.html:33
+msgid "Transcribing documents"
+msgstr "Transcribe documentos"
+
+#: templates/applications/snippets/options.html:42
+#: templates/applications/tasks/options.html:34
+msgid "Re-use the PDF transcription template"
+msgstr "Reutiliza la plantilla de transcripción PDF"
+
+#: templates/applications/snippets/options.html:44
+msgid "HTML, JavaScript and Server side"
+msgstr "HTML, JavaScript y Servidor"
+
+#: templates/applications/snippets/options.html:45
+#: templates/applications/tasks/options.html:35
+msgid "Use the Transcription template"
+msgstr "Usa la plantilla Transciption"
+
+#: templates/applications/snippets/pdf.html:37
+msgid "Important"
+msgstr "Importante"
+
+#: templates/applications/snippets/pdf.html:37
+msgid ""
+"This is just a demo application. You can re-use the code to create your "
+"own application."
+msgstr ""
+"Esta es solo una aplicacion de demostración. Puedes utilizar el codigo "
+"para crear tu propia aplicación"
+
+#: templates/applications/snippets/pdf.html:55
+msgid " You are working now on task"
+msgstr "Estas trabajando ahora en una tarea"
+
+#: templates/applications/snippets/pdf.html:56
+msgid "You have completed"
+msgstr "Completad"
+
+#: templates/applications/snippets/pdf.html:66
+msgid "Submit transcription!"
+msgstr "¡Envio de transcipción!"
+
+#: templates/applications/task/done.html:8 view/admin.py:106
+msgid "Ooops!"
+msgstr ""
+
+#: templates/applications/task/done.html:8
+msgid "You have already participated in this task."
+msgstr "Has participado ya en esta tarea."
+
+#: templates/applications/task/done.html:9
+#: templates/applications/task/wrong.html:9
+msgid "Try with another one"
+msgstr "Prueba con otra"
+
+#: templates/applications/task/wrong.html:8
+msgid "This task does not belong to"
+msgstr "Esta tarea no te pertenece"
+
+#: templates/applications/tasks/options.html:3
+msgid "Import Tasks"
+msgstr "Importar tareas"
+
+#: templates/applications/tasks/options.html:4
+msgid "to import tasks"
+msgstr "a tareas importantes"
+
+#: templates/applications/tasks/options.html:10
+msgid "Basic"
+msgstr "Basico"
+
+#: templates/applications/tasks/options.html:11
+msgid "Provide your own CSV format file"
+msgstr "Provee tu propio archivo en formato CSV"
+
+#: templates/applications/tasks/options.html:18
+msgid "Re-use the Flickr Person Finder task template"
+msgstr "Reutiliza las tareas de la plantilla Flick Person Finder"
+
+#: templates/applications/tasks/options.html:19
+msgid "Use the Image Task template"
+msgstr "Usa la plantilla de Imágenes"
+
+#: templates/applications/tasks/options.html:27
+msgid "Re-use the Urban Park Task template"
+msgstr "Reuiliza la plantilla de Urban Park"
+
+#: templates/home/about.html:9
+msgid ""
+"PyBossa is a free, open-source crowd-sourcing and micro-tasking platform."
+" It enables people to create and run projects that utilise online "
+"assistance in performing tasks that require human cognition such as image"
+" classification, transcription, geocoding and more. PyBossa is there to "
+"help researchers, civic hackers and developers to create projects where "
+"anyone around the world with some time, interest and an internet "
+"connection can contribute."
+msgstr ""
+"Pybossa es gratis, de código abierto crowd-sourcing y plantaforma micro-"
+"tarea. Permite crear y ejecutar proyectos que utilizan Internet "
+"utilizando tareas que requeiren la participación humana como la imágen. "
+"También permite la clasificación, codificación geográfica y más. PyBossa "
+"esta aquí para ayudar a los investigadores hackers cívicos y desarrollos "
+"para crear proyectos donde cualquier persona alrededor del mundo, con un "
+"poco de tiempo, interés y una conexión a internet pueda contribuir."
+
+#: templates/home/about.html:12
+msgid "PyBossa is different to existing efforts:"
+msgstr "PyBossa es diferente a los proyectos existes:"
+
+#: templates/home/about.html:14
+#, python-format
+msgid "It\\u2019s a 100% open-source"
+msgstr ""
+
+#: templates/home/about.html:15
+msgid ""
+"Unlike, say, “mechanical turk” style projects, PyBossa is not designed to"
+" handle payment or money — it is designed to support volunteer-driven "
+"projects."
+msgstr ""
+"A diferencia de los proyectos estilo \"Mechanical Turk\", Pybossa no esta"
+" diseñado para utilizar dinero sino para apoyar proyectos de "
+"voluntariado."
+
+#: templates/home/about.html:17
+msgid ""
+"It\\u2019s designed as a platform and framework for developing deploying "
+"crowd-sourcing and microtasking apps rather than being a crowd-sourcing "
+"application itself. Individual crowd-sourcing apps are written as simple "
+"snippets of Javascript and HTML which are then deployed on a PyBossa "
+"instance (such as PyBossa.com). This way one can easily develop custom "
+"apps while using the PyBossa platform to store your data, manage users, "
+"and handle workflow."
+msgstr ""
+"Esta diseñado como una plataforma y un marco para el desarrollo de la "
+"implementación crowd-sourcing y microtasking de aplicaciónes en lugar de "
+"ser un crowd-sourcing en sí. La aplicaciones se escriben como piezas de "
+"JavaScript o HTML que luego se implementan en PyBossa. De esta manera el "
+"entorno es fácilmente personalizado. Las aplicaciones PyBossa guardan los"
+" datos de usuario y de la aplicación ayudando a manejar el flujo de "
+"trabajo."
+
+#: templates/home/about.html:22
+msgid ""
+"You can read more about the architecture in the <a "
+"href=\"http://docs.pybossa.com/en/latest/overview.html\">PyBossa "
+"Documentation</a> and follow the <a "
+"href=\"http://docs.pybossa.com/en/latest/user/create-application.html"
+"\">step-by-step tutorial to create your own apps."
+msgstr ""
+"Puedes encontrar más información sobre la arquitectura en <a "
+"href=\"http://docs.pybossa.com/en/latest/overview.html\">Documentación "
+"PyBossa </a>  y seguir la <a "
+"href=\"http://docs.pybossa.com/en/latest/user/create-"
+"application.html\">guía de crear tú propia aplicacion paso a paso.</a>"
+
+#: templates/home/about.html:26
+msgid "Contact information"
+msgstr "Información del contacto"
+
+#: templates/home/about.html:28
+msgid "For more info, send us an e-mail to: "
+msgstr "Para más información, envía un correo a: "
+
+#: templates/home/about.html:28
+msgid "Follow us on Twitter!"
+msgstr "Siguenos en Twitter!"
+
+#: templates/home/about.html:29
+msgid "E-mail list: "
+msgstr "Lista de correo: "
+
+#: templates/home/about.html:30
+msgid "Report any bug, issue or improvement:"
+msgstr "Envía cualquier bug, cuestión o mejora:"
+
+#: templates/home/about.html:32
+msgid "Github Issues"
+msgstr "Github"
+
+#: templates/home/index.html:20
+msgid "Info"
+msgstr "Información"
+
+#: templates/home/index.html:35
+msgid "Get Started"
+msgstr "Comienzar"
+
+#: templates/home/index.html:36
+msgid "It's really simple to start contributing."
+msgstr "Es muy simple empezar a participar."
+
+#: templates/home/index.html:39
+msgid " Start Contributing"
+msgstr " Empieza a participar"
+
+#: templates/home/index.html:39
+msgid "Create an App"
+msgstr " Crea una Aplicación"
+
+#: templates/home/index.html:44
+msgid "Most Active Applications"
+msgstr "Aplicaciones Mas Activas"
+
+#: templates/home/index.html:56
+msgid "Start"
+msgstr "Comenzar"
+
+#: templates/home/index.html:64
+msgid "Your application"
+msgstr "Tu aplicación"
+
+#: templates/home/index.html:65
+msgid "could be here!"
+msgstr "puede estar aquí!"
+
+#: templates/home/index.html:66
+msgid "Create an app"
+msgstr "Crear una apliación"
+
+#: templates/home/index.html:74
+msgid "Most Active Volunteers"
+msgstr "Voluntarios más activos"
+
+#: templates/home/index.html:79
+msgid "Joined:"
+msgstr "Unidos:"
+
+#: templates/home/index.html:81
+msgid "Submitted Tasks:"
+msgstr "Tareas Enviadas:"
+
+#: templates/home/search.html:7
+msgid "Search Results"
+msgstr "Buscar Resultados"
+
+#: templates/stats/index.html:15 templates/stats/index.html:17
+msgid "Updated"
+msgstr "Actualizado"
+
+#: templates/stats/index.html:15
+msgid "Not yet"
+msgstr "Todavía no"
+
+#: templates/stats/index.html:40
+msgid "Total submitted tasks"
+msgstr "Tareas Enviadas:"
+
+#: templates/stats/index.html:42
+msgid "Collaborating in"
+msgstr "Colaborar en"
+
+#: templates/stats/index.html:46
+msgid "Hidden application"
+msgstr "Aplicación oculta"
+
+#: view/account.py:63
+msgid "The e-mail is required"
+msgstr "El correo electrónico es necesario"
+
+#: view/account.py:65
+msgid "Password"
+msgstr "Contraseña"
+
+#: view/account.py:67
+msgid "You must provide a password"
+msgstr "Debes de introducir una contraseña"
+
+#: view/account.py:79
+msgid "Welcome Back"
+msgstr "Bienvenido de nuevo"
+
+#: view/account.py:84
+msgid "Ooops, Incorrect email/password"
+msgstr "Ooops, Incorrecto correo o contraseña"
+
+#: view/account.py:89
+msgid "Ooops, we didn't find you in the system, did you sign in?"
+msgstr ""
+"Ooops, no podemos encontrarte en el sistema, ¿Estas seguro que te diste "
+"de alta?"
+
+#: view/account.py:93 view/account.py:192 view/account.py:307
+#: view/account.py:340 view/account.py:379
+msgid "Please correct the errors"
+msgstr "Por favor corrija los errores"
+
+#: view/account.py:115
+msgid "You are now signed out"
+msgstr "Estas fuera del sistema"
+
+#: view/account.py:120 view/account.py:154
+msgid "Full name must be between 3 and 35 characters long"
+msgstr "El Nombre completo debe de tener entre 3 y 35 caracteres de longitud"
+
+#: view/account.py:121 view/account.py:155
+msgid "Full name"
+msgstr "Nombre"
+
+#: view/account.py:124 view/account.py:158
+msgid "User name must be between 3 and 35 characters long"
+msgstr "El nombre de usuario debe de tener entre 3 y 35 caracteres de longitud"
+
+#: view/account.py:125 view/account.py:159
+msgid "The user name is already taken"
+msgstr "El nombre ya esta utilizado"
+
+#: view/account.py:126 view/account.py:160
+msgid "User name"
+msgstr "Nombre"
+
+#: view/account.py:131 view/account.py:165 view/account.py:384
+msgid "Email must be between 3 and 35 characters long"
+msgstr "El correo electrónico debe de tener entre 3 y 35 caracteres de lontitud"
+
+#: view/account.py:132 view/account.py:166
+msgid "Email is already taken"
+msgstr "El correo electrónico ya esta utilizado"
+
+#: view/account.py:133 view/account.py:167 view/account.py:385
+msgid "Email Address"
+msgstr "Correo Electŕonico"
+
+#: view/account.py:139 view/account.py:316 view/account.py:345
+msgid "Password cannot be empty"
+msgstr "La contraseña no puede estar vacía"
+
+#: view/account.py:140 view/account.py:317 view/account.py:346
+msgid "Passwords must match"
+msgstr "Las contraseñas no coiniciden"
+
+#: view/account.py:141 view/account.py:318 view/account.py:347
+msgid "New Password"
+msgstr "Cambia tu Contraseña"
+
+#: view/account.py:145 view/account.py:321 view/account.py:350
+msgid "Repeat Password"
+msgstr "Resetea tu Contraseña"
+
+#: view/account.py:189
+msgid "Thanks for signing-up"
+msgstr "Gracias por darte de alta"
+
+#: view/account.py:276 view/account.py:439
+msgid "User"
+msgstr "Nombre"
+
+#: view/account.py:287
+msgid "Update your profiles"
+msgstr "Actualiza tu perfil"
+
+#: view/account.py:304
+msgid "Your profile has been updated!"
+msgstr "Tu perfíl ha sido actualizado"
+
+#: view/account.py:314
+msgid "Old Password"
+msgstr "Cambia tu Contraseña"
+
+#: view/account.py:334
+msgid "Yay, you changed your password succesfully!"
+msgstr "¡El cambio de contraseña de ha realizado con éxito!"
+
+#: view/account.py:337
+msgid "Your current password doesn't match the one in our records"
+msgstr ""
+"La contraseña introducida no coincide con la registrada en nuestros "
+"sistemas"
+
+#: view/account.py:375
+msgid "Changed password"
+msgstr "Cambia tu Contraseña"
+
+#: view/account.py:376
+msgid "You reset your password successfully!"
+msgstr "Resetea tu Contraseña"
+
+#: view/account.py:398
+msgid "Account Recovery"
+msgstr "Recuperación de cuenta"
+
+#: view/account.py:422
+msgid "We've send you email with account recovery instructions!"
+msgstr "Hemos mandado un correo con tu contraseña e instrucciones de recuperación"
+
+#: view/account.py:425
+msgid ""
+"We don't have this email in our records. You may have signed up with a "
+"different email or used Twitter, Facebook, or Google to sign-in"
+msgstr ""
+
+#: view/account.py:429
+msgid "Something went wrong, please correct the errors on the form"
+msgstr "Algo fue mal, corrija los errores en el formulario"
+
+#: view/account.py:439
+msgid "Settings - Reset API KEY"
+msgstr "Configuración - Restablece la clave API"
+
+#: view/account.py:447
+msgid "New API-KEY generated"
+msgstr "Nueva clave API generada"
+
+#: view/admin.py:106
+msgid "We didn't find a user"
+msgstr "No podemos encontrar este usuario"
+
+#: view/admin.py:107
+msgid "matching your query"
+msgstr "ejecutando tu consulta"
+
+#: view/applications.py:43
+msgid "Namex"
+msgstr "Nombre"
+
+#: view/applications.py:46
+msgid "Name is already taken."
+msgstr "El nombre ya esta utiliado"
+
+#: view/applications.py:47
+msgid "Short Name"
+msgstr "Nombre"
+
+#: view/applications.py:50
+msgid "Short Name is already taken."
+msgstr "El nombre corto esta ya utilizado"
+
+#: view/applications.py:53
+msgid "You must provide a description."
+msgstr "Debes de completar una descripción"
+
+#: view/applications.py:54
+msgid "Icon Link"
+msgstr "Entrar"
+
+#: view/applications.py:56
+msgid "Task Scheduler"
+msgstr "Calendario de tareas"
+
+#: view/applications.py:61
+msgid "Hide?"
+msgstr "¿Ocultar"
+
+#: view/applications.py:70 view/applications.py:74
+msgid "URL"
+msgstr "URL"
+
+#: view/applications.py:70 view/applications.py:74
+msgid "You must "
+msgstr "Debes"
+
+#: view/applications.py:71 view/applications.py:75
+msgid "provide a URL"
+msgstr "introducir una URL"
+
+#: view/applications.py:71 view/applications.py:75
+msgid "Oops! That's not a"
+msgstr "¿Oops! Esto no corresponde a "
+
+#: view/applications.py:72
+msgid " valid URL. You must provide a valid URL"
+msgstr "una dirección valida URL. Debes de introducir una dirección URL valida"
+
+#: view/applications.py:76
+msgid "valid URL. You must provide a valid URL"
+msgstr "direccion URL valida. Debes de introducir una dirección URL válida"
+

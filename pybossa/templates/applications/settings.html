@@ -11,24 +11,24 @@
     </div>
     <!-- Application -->
     <div class="span9">
-        <h1><strong>{{ app.name }}</strong>: Settings</h1>
+        <h1><strong>{{ app.name }}</strong>: {{ _('Settings') }}</h1>
         {{ helper.render_app_summary(app, current_user) }}
-        <h2>Application Settings</h2>
+        <h2>{{ _('Application Settings') }}</h2>
         <div class="btn-group">
-            <a class="btn"   href="{{ url_for('app.update', short_name = app.short_name) }}"><i class="icon-edit icon-white"></i> Edit the application details</a>
-            <a class="btn" href="{{ url_for('app.delete', short_name = app.short_name) }}"><i class="icon-trash icon-white"></i> Delete the application</a>
+            <a class="btn"   href="{{ url_for('app.update', short_name = app.short_name) }}"><i class="icon-edit icon-white"></i> {{ _('Edit the application details') }}</a>
+            <a class="btn" href="{{ url_for('app.delete', short_name = app.short_name) }}"><i class="icon-trash icon-white"></i> {{ _('Delete the application') }}</a>
         </div>
-        <h2>Task Settings</h2>
+        <h2>{{ _('Task Settings') }}</h2>
         <div class="btn-group">
-            <a class="btn"   href="{{ url_for('app.task_presenter_editor', short_name = app.short_name) }}"><i class="icon-edit icon-white"></i> Edit the task presenter</a>
-            <a class="btn"   href="{{ url_for('app.import_task', short_name = app.short_name) }}"><i class="icon-tasks icon-white"></i> Import tasks</a>
-            <a class="btn" href="{{ url_for('app.delete_tasks', short_name = app.short_name) }}"><i class="icon-trash icon-white"></i> Delete the tasks</a>
+            <a class="btn"   href="{{ url_for('app.task_presenter_editor', short_name = app.short_name) }}"><i class="icon-edit icon-white"></i> {{ _('Edit the task presenter') }}</a>
+            <a class="btn"   href="{{ url_for('app.import_task', short_name = app.short_name) }}"><i class="icon-tasks icon-white"></i> {{ _('Import tasks') }} </a>
+            <a class="btn" href="{{ url_for('app.delete_tasks', short_name = app.short_name) }}"><i class="icon-trash icon-white"></i> {{ _('Delete the tasks') }}</a>
         </div>
 
     </div>
     {% else %}
     <div class="page-header">
-        <h1>Sorry! This app does not exists.</h1>
+        <h1>{{ _('Sorry! This app does not exists.') }}</h1>
     </div>
 {% endif %}
 </div>

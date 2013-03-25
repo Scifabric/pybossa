@@ -17,36 +17,36 @@
     <div class="span8 offset2" style="height:50px">
         <!-- Success alert box -->
         <div id="success" class="alert alert-success" style="display:none;">
-            <a class="close">×</a><strong>Well done!</strong> Your answer has been saved
+            <a class="close">×</a><strong>{{ _('Well done!') }}</strong> {{ _('Your answer has been saved') }}
         </div>
         <!-- Task completed alert box -->
         <div id="taskcompleted" class="alert alert-info" style="display:none;">
-            <strong>The task has been completed!</strong> Thanks a lot!
+            <strong>{{ _('The task has been completed!') }}</strong> {{ _('Thanks a lot!') }}
         </div>
         <!-- Task loading alert box -->
         <div id="loadingTask" class="alert alert-info">
-            <strong>Loading task...</strong>
+            <strong>{{ _('Loading task...') }}</strong>
         </div>
         <!-- Task completed alert box -->
         <div id="finish" class="alert alert-success" style="display:none;">
-            <strong>Congratulations!</strong> You have participated in all available tasks!
+            <strong>{{ _('Congratulations!') }}</strong> {{ _('You have participated in all available tasks!') }}
             <br/>
             <div class="alert-actions">
-                <a class="btn small" href="/">Go back</a>
-                <a class="btn small" href="/app">or, Check other applications</a>
+                <a class="btn small" href="/">{{ _('Go back') }}</a>
+                <a class="btn small" href="/app">{{ _('or, Check other applications') }}</a>
             </div>
         </div>
         <!-- Error alert box -->
         <div id="error" class="alert alert-error" style="display:none;">
             <a class="close">×</a>
-            <strong>Error!</strong> Something went wrong, please contact the site administrators
+            <strong>{{ _('Error!') }}</strong> {{ _('Something went wrong, please contact the site administrators') }}
         </div>
         <!-- Old Browser alert box -->
         <div id="oldBrowser" class="alert alert-info" style="display:none;">
             <a class="close">×</a>
-            <p><strong>Sorry!</strong> Your web browser does not support the application.<p>
+            <p><strong>{{ _('Sorry!') }}</strong> {{ _('Your web browser does not support the application.') }}<p>
             <div class="alert-actions">
-<a c    lass="btn small" href="/app">Please, try with another application</a>
+<a c    lass="btn small" href="/app">{{ _('Please, try with another application') }}</a>
             </div>
         </div>
     </div><!-- End of span8 offset2-->
@@ -55,21 +55,21 @@
 <div class="row">
   <div class="skeleton span11 offset1">
     <div id="question">
-      <h1>Question</h1>
-      <h3 id="city">City</h3>
+      <h1>{{ _('Question') }}</h1>
+      <h3 id="city">{{ _('City') }}</h3>
       <button id="point" class="btn btn-inverse">
-          <i class="icon icon-white icon-map-marker"></i> Add an Urban Park Marker 
+          <i class="icon icon-white icon-map-marker"></i> {{ _('Add an Urban Park Marker') }} 
       </button>
-      <button id="noPark" class="btn btn-submit">I do not see an urban park</button>
-      <button id="noCity" class="btn btn-submit" style="display:none;">City not found!</button>
+      <button id="noPark" class="btn btn-submit">{{ _('I do not see an urban park') }}</button>
+      <button id="noCity" class="btn btn-submit" style="display:none;">{{ _('City not found!') }}</button>
 
-      <p>Task: <span id="task-id" class="label label-warning">#</span></p>
+      <p>{{ _('Task') }}: <span id="task-id" class="label label-warning">#</span></p>
       <div id="map"></div>
-      <i class="icon-map-marker"></i> Urban park position: <strong> Longitude:</strong> <span id="lon"></span>, 
-      <strong>Latitude:</strong> <span id="lat"></span>
+      <i class="icon-map-marker"></i> {{ _('Urban park position') }}: <strong> {{ _('Longitude') }}:</strong> <span id="lon"></span>, 
+      <strong>{{ _('Latitude') }}:</strong> <span id="lat"></span>
     </div>
     <div id="answer">
-        <button id="answerbtn" class="btn btn-success btn-submit"><i class="icon-check icon-white"></i> Save these coordinates for the urban park</button>
+        <button id="answerbtn" class="btn btn-success btn-submit"><i class="icon-check icon-white"></i> {{ _('Save these coordinates for the urban park') }}</button>
     </div>
   </div>
 </div>

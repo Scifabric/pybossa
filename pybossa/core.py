@@ -20,13 +20,15 @@ from flask import Flask, url_for
 from flaskext.login import LoginManager, current_user
 from flaskext.gravatar import Gravatar
 from flask.ext.mail import Mail
+import flask.ext.babel
+from flask.ext.babel import Babel, gettext, ngettext
+from settings_languages import LANGUAGES 
 from flask.ext.sqlalchemy import SQLAlchemy
 #from flask.ext.debugtoolbar import DebugToolbarExtension
 from flask.ext.cache import Cache
 from flask.ext.heroku import Heroku
 
 from pybossa import default_settings as settings
-
 from raven.contrib.flask import Sentry
 
 def create_app():
@@ -39,6 +41,14 @@ def create_app():
     login_manager.setup_app(app)
     # Set up Gravatar for users
     gravatar = Gravatar(app, size = 100, rating = 'g', default = 'mm', force_default = False, force_lower = False)
+
+    # Setup extensions
+    babel = Babel(app)
+
+    @babel.localeselector
+    def get_locale():
+        return flask.request.accept_languages.best_match(LANGUAGES.keys())
+
     return app
 
 def configure_app(app):
@@ -79,7 +89,7 @@ def setup_logging(app):
 
 login_manager = LoginManager()
 login_manager.login_view = 'account.signin'
-login_manager.login_message = u"Please sign in to access this page."
+login_manager.login_message = gettext(u'Please sign in to access this page.')
 app = create_app()
 
 cache = Cache(config=app.config)
