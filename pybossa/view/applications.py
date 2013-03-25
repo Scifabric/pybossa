@@ -802,7 +802,7 @@ def export_to(short_name):
                 return abort(404)
             return Response(gen_json(table), mimetype='application/json')
         elif request.args.get('format') == 'csv':
-            # Export Tasks to CSV
+            # Export Task(/Runs) to CSV
             if request.args.get('type') == 'task':
                 out = StringIO()
                 writer = UnicodeWriter(out)
@@ -823,7 +823,6 @@ def export_to(short_name):
                                            title=title,
                                            app=app)
 
-            # Export Task Runs to CSV
             elif request.args.get('type') == 'task_run':
                 out = StringIO()
                 writer = UnicodeWriter(out)
