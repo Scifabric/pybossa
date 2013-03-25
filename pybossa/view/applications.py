@@ -775,23 +775,6 @@ def export_to(short_name):
                 
         yield "]"
 
-    def get_csv_task(out, writer, table):
-        for t in db.session.query(table)\
-                .filter_by(app_id=app.id)\
-                .yield_per(1):
-            writer.writerow(t.info.values())
-        yield out.getvalue()
-
-    def get_csv_task_run(out, writer, table):
-        for tr in db.session.query(table)\
-                .filter_by(app_id=app.id)\
-                .yield_per(1):
-            if (type(tr.info) == dict):
-                writer.writerow(tr.info.values())
-            else:
-                writer.writerow([tr.info])
-        yield out.getvalue()
-
     def handle_task(writer, t):
         writer.writerow(t.info.values())
 
