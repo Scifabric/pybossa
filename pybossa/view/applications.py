@@ -219,41 +219,44 @@ def task_presenter_editor(short_name):
         db.session.commit()
         flash('<i class="icon-ok"></i> Task presenter added!', 'success')
         return redirect(url_for('.settings', short_name=app.short_name))
+
     if request.method == 'POST' and not form.validate():
         flash('Please correct the errors', 'error')
         errors = True
 
-    if request.method == 'GET':
-        if app.info.get('task_presenter'):
-            form.editor.data = app.info['task_presenter']
+    if request.method != 'GET':
+        return
+
+    if app.info.get('task_presenter'):
+        form.editor.data = app.info['task_presenter']
+    else:
+        if request.args.get('template'):
+            tmpl_uri = "applications/snippets/%s.html" \
+                % request.args.get('template')
+            tmpl = render_template(tmpl_uri, app=app)
+            form.editor.data = tmpl
+            msg = 'Your code will be <em>automagically</em> rendered in \
+                      the <strong>preview section</strong>. Click in the \
+                      preview button!'
+            flash(msg, 'info')
         else:
-            if request.args.get('template'):
-                tmpl_uri = "applications/snippets/%s.html" \
-                    % request.args.get('template')
-                tmpl = render_template(tmpl_uri, app=app)
-                form.editor.data = tmpl
-                msg = 'Your code will be <em>automagically</em> rendered in \
-                           the <strong>preview section</strong>. Click in the \
-                          preview button!'
-                flash(msg, 'info')
-            else:
-                msg = '<strong>Note</strong> You will need to upload ' \
-                    'the tasks using the <a href="%s">' \
-                    'CSV importer</a> or download the app ' \
-                    'bundle and run the <strong>createTasks.py ' \
-                    '</strong> script in your ' \
-                    'computer' % url_for('app.import_task',
-                                         short_name=app.short_name)
-                flash(msg, 'info')
-                return render_template(
-                    'applications/task_presenter_options.html',
-                    title=title,
-                    app=app)
-        return render_template('applications/task_presenter_editor.html',
-                               title=title,
-                               form=form,
-                               app=app,
-                               errors=errors)
+            msg = '<strong>Note</strong> You will need to upload ' \
+                'the tasks using the <a href="%s">' \
+                'CSV importer</a> or download the app ' \
+                'bundle and run the <strong>createTasks.py ' \
+                '</strong> script in your ' \
+                'computer' % url_for('app.import_task',
+                                     short_name=app.short_name)
+            flash(msg, 'info')
+            return render_template(
+                'applications/task_presenter_options.html',
+                title=title,
+                app=app)
+    return render_template('applications/task_presenter_editor.html',
+                           title=title,
+                           form=form,
+                           app=app,
+                           errors=errors)
 
 
 @blueprint.route('/<short_name>/delete', methods=['GET', 'POST'])
