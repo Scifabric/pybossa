@@ -32,6 +32,7 @@ from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
 
 import json
+import sys
 
 blueprint = Blueprint('app', __name__)
 
@@ -474,6 +475,7 @@ def import_task(short_name):
         if dataurl:
             try:
                 r = requests.get(dataurl)
+
                 if 'csv_url' in request.form or 'googledocs_url' in request.form:
                     if r.status_code == 403:
                         msg = "Oops! It looks like you don't have permission to access" \
@@ -495,14 +497,17 @@ def import_task(short_name):
                               " the EpiCollect Plus project"
                         raise BulkImportException(msg, 'error')
                     if not 'application/json' in r.headers['content-type']:
-                        msg = "Oops! That project doesn't look like the right one."
+                        msg = "Oops! That project and form do not look like the right one."
                         raise BulkImportException(msg, 'error')
-                    import_epicollect_tasks(app, r.json())
+                    import_epicollect_tasks(app, json.loads(r.text))
                 flash('Tasks imported successfully!', 'success')
-                return redirect(url_for('.details', short_name=app.short_name))
+                return redirect(url_for('.settings', short_name=app.short_name))
             except BulkImportException, err_msg:
                 flash(err_msg, 'error')
-            except:
+            except Exception as inst:
+                print type(inst)
+                print inst.args
+                print inst
                 msg = 'Oops! Looks like there was an error with processing that file!'
                 flash(msg, 'error')
 
