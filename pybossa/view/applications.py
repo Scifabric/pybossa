@@ -806,7 +806,8 @@ def export_to(short_name):
             if request.args.get('type') == 'task':
                 out = StringIO()
                 writer = UnicodeWriter(out)
-                t = db.session.query(model.Task)\
+                table = model.Task
+                t = db.session.query(table)\
                       .filter_by(app_id=app.id)\
                       .first()
                 get_csv = get_csv_task
@@ -827,7 +828,8 @@ def export_to(short_name):
             elif request.args.get('type') == 'task_run':
                 out = StringIO()
                 writer = UnicodeWriter(out)
-                t = db.session.query(model.TaskRun)\
+                table = model.TaskRun
+                t = db.session.query(table)\
                        .filter_by(app_id=app.id)\
                        .first()
                 get_csv = get_csv_task_run
