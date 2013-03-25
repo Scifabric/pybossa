@@ -788,7 +788,6 @@ def export_to(short_name):
             # Export Tasks to CSV
             if request.args.get('type') == 'task':
                 out = StringIO()
-                #writer = csv.writer(out)
                 writer = UnicodeWriter(out)
                 t = db.session.query(model.Task)\
                       .filter_by(app_id=app.id)\
