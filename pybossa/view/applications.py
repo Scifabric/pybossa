@@ -775,15 +775,15 @@ def export_to(short_name):
                 
         yield "]"
 
-    def get_csv_task(out, writer):
-        for t in db.session.query(model.Task)\
+    def get_csv_task(out, writer, table):
+        for t in db.session.query(table)\
                 .filter_by(app_id=app.id)\
                 .yield_per(1):
             writer.writerow(t.info.values())
         yield out.getvalue()
 
-    def get_csv_task_run(out, writer):
-        for tr in db.session.query(model.TaskRun)\
+    def get_csv_task_run(out, writer, table):
+        for tr in db.session.query(table)\
                 .filter_by(app_id=app.id)\
                 .yield_per(1):
             if (type(tr.info) == dict):
@@ -829,7 +829,8 @@ def export_to(short_name):
                 if test(t):
                     writer.writerow(t.info.keys())
 
-                return Response(get_csv(out, writer), mimetype='text/csv')
+                return Response(get_csv(out, writer, table), 
+                                mimetype='text/csv')
             else:
                 flash(msg, 'info')
                 return render_template('/applications/export.html',
