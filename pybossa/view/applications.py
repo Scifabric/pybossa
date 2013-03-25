@@ -209,7 +209,9 @@ def task_presenter_editor(short_name):
         abort(404)
     else:
         title = "Application: %s &middot; Task Presenter Editor" % app.name
-        if require.app.update(app):
+        if not require.app.update(app):
+            abort(403)
+        else:
             form = TaskPresenterForm(request.form)
             if request.method == 'POST' and form.validate():
                 app.info['task_presenter'] = form.editor.data
@@ -252,8 +254,6 @@ def task_presenter_editor(short_name):
                                        form=form,
                                        app=app,
                                        errors=errors)
-        else:
-            abort(403)
 
 
 @blueprint.route('/<short_name>/delete', methods=['GET', 'POST'])
