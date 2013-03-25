@@ -809,8 +809,10 @@ def export_to(short_name):
                 t = db.session.query(model.Task)\
                       .filter_by(app_id=app.id)\
                       .first()
+                test = lambda x: True
                 if t is not None:
-                    writer.writerow(t.info.keys())
+                    if test(t):
+                        writer.writerow(t.info.keys())
 
                     return Response(get_csv_task(out, writer), mimetype='text/csv')
                 else:
@@ -828,8 +830,9 @@ def export_to(short_name):
                 tr = db.session.query(model.TaskRun)\
                        .filter_by(app_id=app.id)\
                        .first()
+                test = lambda x: type(x.info) == dict
                 if tr is not None:
-                    if (type(tr.info) == dict):
+                    if test(tr):
                         writer.writerow(tr.info.keys())
 
                     return Response(get_csv_task_run(out, writer), mimetype='text/csv')
