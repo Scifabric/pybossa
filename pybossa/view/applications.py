@@ -767,12 +767,13 @@ def export_to(short_name):
         for tr in db.session.query(table)\
                 .filter_by(app_id=app.id).yield_per(1):
             i += 1
+            item = json.dumps(tr.dictize())
             if (i != n):
-                yield json.dumps(tr.dictize()) + ", "
+                yield item + ", "
             else:
-                yield json.dumps(tr.dictize())
+                yield item
                 
-            yield "]"
+        yield "]"
 
     if request.args.get('format') and request.args.get('type'):
         if request.args.get('format') == 'json':
