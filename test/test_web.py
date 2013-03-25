@@ -1012,8 +1012,8 @@ class TestWeb:
             'formtype': 'csv',
             }, follow_redirects=True)
         print res.data
-        assert ("Oops! It looks like you don't have permission to access"
-                " that file!") in res.data
+        msg = "Oops! It looks like you don't have permission to access that file"
+        assert msg in res.data
 
     @patch('pybossa.view.applications.requests.get')
     def test_34_bulk_import_non_html(self, Mock):
@@ -1042,6 +1042,7 @@ class TestWeb:
             'csv_url': 'http://myfakecsvurl.com',
             'formtype': 'csv',
             }, follow_redirects=True)
+        #print res.data
         assert "Oops! It looks like the file is empty." in res.data
 
     @patch('pybossa.view.applications.requests.get')
