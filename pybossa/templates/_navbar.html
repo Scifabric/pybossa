@@ -35,6 +35,11 @@
 
             {% if current_user.is_anonymous() %}
             <ul class="nav secondary-nav pull-right">
+              <li class="active" ><a href="#" data-toggle="dropdown" class="dropdown-toggle"><i class="icon icon-user"></i> {{ _('Language') }} <span class="caret"></span></a>
+                <ul class="dropdown-menu">
+                    <li><a href="{{ url_for('change_lang', lang="en") }}"><i class="icon icon-user"></i> {{ _('English') }}</a></li>
+                    <li><a href="{{ url_for('change_lang', lang="es") }}"><i class="icon icon-user"></i> {{ _('Spanish') }}</a></li>
+                </ul>
               <li><a href="{{ url_for('account.signin') }}"><i class="icon icon-white icon-signin"></i> {{ _('Sign in') }}</a></li>
             </ul>
             {% endif %}
