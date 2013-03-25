@@ -827,13 +827,13 @@ def export_to(short_name):
             elif request.args.get('type') == 'task_run':
                 out = StringIO()
                 writer = UnicodeWriter(out)
-                tr = db.session.query(model.TaskRun)\
+                t = db.session.query(model.TaskRun)\
                        .filter_by(app_id=app.id)\
                        .first()
                 test = lambda x: type(x.info) == dict
-                if tr is not None:
-                    if test(tr):
-                        writer.writerow(tr.info.keys())
+                if t is not None:
+                    if test(t):
+                        writer.writerow(t.info.keys())
 
                     return Response(get_csv_task_run(out, writer), mimetype='text/csv')
                 else:
