@@ -758,10 +758,8 @@ def export_to(short_name):
         title = "Application: %s &middot; Export" % app.name
     else:
         title = "Application not found"
-    if request.args.get('format') and request.args.get('type'):
-        if request.args.get('format') == 'json':
-            if request.args.get('type') == 'task':
-                def gen_json_tasks():
+
+    def gen_json_tasks():
                     n = db.session.query(model.Task)\
                           .filter_by(app_id=app.id).count()
                     i = 0
@@ -775,6 +773,12 @@ def export_to(short_name):
                             yield json.dumps(t.dictize())
 
                     yield "]"
+
+
+    if request.args.get('format') and request.args.get('type'):
+        if request.args.get('format') == 'json':
+            if request.args.get('type') == 'task':
+                
                 return Response(gen_json_tasks(), mimetype='application/json')
             elif request.args.get('type') == 'task_run':
                 def gen_json_task_runs():
