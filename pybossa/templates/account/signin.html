@@ -8,8 +8,6 @@
     {{ _('the') }} <a href={{url_for('help.tos')}}>{{ _('terms of use') }}</a> {{ _('and') }}
     <a href={{data_use | safe}}>data</a>.
 </p>
-
-</p>
 {% if next is not none%}
   {% if auth.twitter %}
   <a href="{{ url_for('twitter.login', next=next) }}" class="btn btn-info"><i class="icon-twitter"></i> {{ _('Sign in with Twitter') }}</a>
