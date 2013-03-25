@@ -32,11 +32,12 @@ from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
 
 import json
+import sys
 
 blueprint = Blueprint('app', __name__)
 
 
-class CSVImportException(Exception):
+class BulkImportException(Exception):
     pass
 
 
@@ -85,6 +86,15 @@ class BulkTaskGDImportForm(Form):
     googledocs_url = TextField('URL',
                                [validators.Required(message=msg_required),
                                    validators.URL(message=msg_url)])
+
+
+class BulkTaskEpiCollectPlusImportForm(Form):
+    msg_required = "You must provide an EpiCollect Plus project name"
+    msg_form_required = "You must provide a Form name for the project"
+    epicollect_project = TextField('Project Name',
+                               [validators.Required(message=msg_required)])
+    epicollect_form = TextField('Form name',
+                               [validators.Required(message=msg_required)])
 
 
 @blueprint.route('/', defaults={'page': 1})
@@ -385,7 +395,7 @@ def settings(short_name):
         abort(404)
 
 
-def import_tasks(app, csvreader):
+def import_csv_tasks(app, csvreader):
     headers = []
     fields = set(['state', 'quorum', 'calibration', 'priority_0',
                   'n_answers'])
@@ -393,10 +403,11 @@ def import_tasks(app, csvreader):
     empty = True
 
     for row in csvreader:
+        print row
         if not headers:
             headers = row
             if len(headers) != len(set(headers)):
-                raise CSVImportException('The file you uploaded has two headers with'
+                raise BulkImportException('The file you uploaded has two headers with'
                                          ' the same name.')
             field_headers = set(headers) & fields
             for field in field_headers:
@@ -414,7 +425,15 @@ def import_tasks(app, csvreader):
             db.session.commit()
             empty = False
     if empty:
-        raise CSVImportException('Oops! It looks like the file is empty.')
+        raise BulkImportException('Oops! It looks like the file is empty.')
+
+
+def import_epicollect_tasks(app, data):
+    for d in data:
+        task = model.Task(app=app)
+        task.info = d
+        db.session.add(task)
+    db.session.commit()
 
 
 @blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
@@ -425,12 +444,16 @@ def import_task(short_name):
     dataurl = None
     csvform = BulkTaskCSVImportForm(request.form)
     gdform = BulkTaskGDImportForm(request.form)
+    epiform = BulkTaskEpiCollectPlusImportForm(request.form)
 
     if app.tasks or (request.args.get('template') or request.method == 'POST'):
 
         googledocs_urls = {
             'image': "https://docs.google.com/spreadsheet/ccc"
                      "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE"
+                     "&usp=sharing",
+            'sound': "https://docs.google.com/spreadsheet/ccc"
+                     "?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc"
                      "&usp=sharing",
             'map': "https://docs.google.com/spreadsheet/ccc"
                    "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc"
@@ -440,6 +463,7 @@ def import_task(short_name):
                    "&usp=sharing"}
 
         template = request.args.get('template')
+
         if template in googledocs_urls:
             gdform.googledocs_url.data = googledocs_urls[template]
 
@@ -447,36 +471,60 @@ def import_task(short_name):
             dataurl = csvform.csv_url.data
         elif 'googledocs_url' in request.form and gdform.validate_on_submit():
             dataurl = ''.join([gdform.googledocs_url.data, '&output=csv'])
+        elif 'epicollect_project' in request.form and epiform.validate_on_submit():
+            dataurl = 'http://plus.epicollect.net/%s/%s.json' % \
+                      (epiform.epicollect_project.data, epiform.epicollect_form.data)
 
         if dataurl:
-            print "dataurl found"
             try:
                 r = requests.get(dataurl)
-                if r.status_code == 403:
-                    raise CSVImportException("Oops! It looks like you don't have permission to access"
-                                             " that file!", 'error')
-                if ((not 'text/plain' in r.headers['content-type']) and
-                   (not 'text/csv' in r.headers['content-type'])):
-                    msg = "Oops! That file doesn't look like the right file."
-                    raise CSVImportException(msg, 'error')
 
-                csvcontent = StringIO(r.text)
-                csvreader = unicode_csv_reader(csvcontent)
+                if 'csv_url' in request.form or 'googledocs_url' in request.form:
+                    if r.status_code == 403:
+                        msg = "Oops! It looks like you don't have permission to access" \
+                              " that file"
+                        raise BulkImportException(msg, 'error')
+                    if ((not 'text/plain' in r.headers['content-type']) and
+                       (not 'text/csv' in r.headers['content-type'])):
+                        msg = "Oops! That file doesn't look like the right file."
+                        raise BulkImportException(msg, 'error')
 
-                # TODO: check for errors
-                import_tasks(app, csvreader)
+                    csvcontent = StringIO(r.text)
+                    csvreader = unicode_csv_reader(csvcontent)
+                    import_csv_tasks(app, csvreader)
+
+                    # TODO: check for errors
+                elif 'epicollect_project' in request.form:
+                    if r.status_code == 403:
+                        msg = "Oops! It looks like you don't have permission to access" \
+                              " the EpiCollect Plus project"
+                        raise BulkImportException(msg, 'error')
+                    if not 'application/json' in r.headers['content-type']:
+                        msg = "Oops! That project and form do not look like the right one."
+                        raise BulkImportException(msg, 'error')
+                    import_epicollect_tasks(app, json.loads(r.text))
                 flash('Tasks imported successfully!', 'success')
-                return redirect(url_for('.details', short_name=app.short_name))
-            except CSVImportException, err_msg:
+                return redirect(url_for('.settings', short_name=app.short_name))
+            except BulkImportException, err_msg:
                 flash(err_msg, 'error')
-            except:
+            except Exception as inst:
+                print type(inst)
+                print inst.args
+                print inst
                 msg = 'Oops! Looks like there was an error with processing that file!'
                 flash(msg, 'error')
-        return render_template('/applications/import.html',
-                               title=title,
-                               app=app,
-                               csvform=csvform,
-                               gdform=gdform)
+
+        tmpl = '/applications/import.html'
+
+        if template == 'epicollect':
+            return render_template(tmpl, title=title, app=app, epiform=epiform)
+        elif (template == 'image' or template == 'map'
+              or template == 'pdf' or template == 'sound'):
+            return render_template(tmpl, title=title, app=app, gdform=gdform)
+        else:
+            return render_template(tmpl, title=title, app=app,
+                                   csvform=csvform,
+                                   gdform=gdform)
     else:
         return render_template('/applications/import_options.html',
                                title=title,
