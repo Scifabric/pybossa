@@ -788,16 +788,19 @@ def export_to(short_name):
             handle_row(writer, tr)
         yield out.getvalue()
 
-    if request.args.get('format') and request.args.get('type'):
-        ty = request.args.get('type')
-        if request.args.get('format') == 'json':
+    ty = request.args.get('type')
+    fmt = request.args.get('format')
+    if fmt and ty:
+        if fmt not in ["json", "csv"]:
+            abort(404)
+        if fmt == 'json':
             tables = {"task": model.Task, "task_run": model.TaskRun}
             try:
                 table = tables[ty]
             except KeyError:
                 return abort(404)
             return Response(gen_json(table), mimetype='application/json')
-        elif request.args.get('format') == 'csv':
+        elif fmt == 'csv':
             # Export Task(/Runs) to CSV
             types = {
                 "task": (
@@ -832,8 +835,6 @@ def export_to(short_name):
                 return render_template('/applications/export.html',
                                        title=title,
                                        app=app)
-        else:
-            abort(404)
     elif len(request.args) >= 1:
         abort(404)
     else:
