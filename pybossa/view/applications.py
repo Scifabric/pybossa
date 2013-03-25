@@ -803,51 +803,39 @@ def export_to(short_name):
             return Response(gen_json(table), mimetype='application/json')
         elif request.args.get('format') == 'csv':
             # Export Task(/Runs) to CSV
-            if request.args.get('type') == 'task':
-                out = StringIO()
-                writer = UnicodeWriter(out)
-                table = model.Task
-                t = db.session.query(table)\
-                      .filter_by(app_id=app.id)\
-                      .first()
-                get_csv = get_csv_task
-                test = lambda x: True
-                if t is not None:
-                    if test(t):
-                        writer.writerow(t.info.keys())
+            types = {
+                "task": (
+                    model.Task, get_csv_task, 
+                    (lambda x: True),
+                    "Oops, the application does not have tasks to \
+                           export, if you are the owner add some tasks"),
+                "task_run": (
+                    model.TaskRun, get_csv_task_run,
+                    (lambda x: type(x.info) == dict),
+                    "Oops, there are no Task Runs yet to export, invite \
+                           some users to participate")
+                }
+            ty = request.args.get('type')
+            try:
+                table, get_csv, test, msg = types[ty]
+            except:
+                return abort(404)
 
-                    return Response(get_csv(out, writer), mimetype='text/csv')
-                else:
-                    msg = "Oops, the application does not have tasks to \
-                           export, if you are the owner add some tasks"
-                    flash(msg, 'info')
-                    return render_template('/applications/export.html',
-                                           title=title,
-                                           app=app)
+            out = StringIO()
+            writer = UnicodeWriter(out)
+            t = db.session.query(table)\
+                .filter_by(app_id=app.id)\
+                .first()
+            if t is not None:
+                if test(t):
+                    writer.writerow(t.info.keys())
 
-            elif request.args.get('type') == 'task_run':
-                out = StringIO()
-                writer = UnicodeWriter(out)
-                table = model.TaskRun
-                t = db.session.query(table)\
-                       .filter_by(app_id=app.id)\
-                       .first()
-                get_csv = get_csv_task_run
-                test = lambda x: type(x.info) == dict
-                if t is not None:
-                    if test(t):
-                        writer.writerow(t.info.keys())
-
-                    return Response(get_csv(out, writer), mimetype='text/csv')
-                else:
-                    msg = "Oops, there are no Task Runs yet to export, invite \
-                           some users to participate"
-                    flash(msg, 'info')
-                    return render_template('/applications/export.html',
-                                           title=title,
-                                           app=app)
+                return Response(get_csv(out, writer), mimetype='text/csv')
             else:
-                abort(404)
+                flash(msg, 'info')
+                return render_template('/applications/export.html',
+                                       title=title,
+                                       app=app)
         else:
             abort(404)
     elif len(request.args) >= 1:
