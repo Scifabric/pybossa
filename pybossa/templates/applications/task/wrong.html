@@ -5,8 +5,8 @@
 {% block content %}
 
 <div class="alert alert-danger">
-    <strong>Error!</strong> This task does not belong to {{app.short_name}}.
-        <a class="btn small btn-primary" href={{url_for('app.presenter', short_name=app.short_name)}}> <i class="icon icon-random"></i> Try with another one</a>
+    <strong>{{ _('Error!') }}</strong> {{ _('This task does not belong to') }} {{app.short_name}}.
+        <a class="btn small btn-primary" href={{url_for('app.presenter', short_name=app.short_name)}}> <i class="icon icon-random"></i> {{ _('Try with another one') }}</a>
 </div>
 
 {% endblock %}

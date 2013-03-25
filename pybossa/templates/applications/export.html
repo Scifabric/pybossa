@@ -9,18 +9,18 @@
         {{ helper.render_app_local_nav(app, "export", current_user) }}
     </div>
     <div id="body" class="span9" style="min-height:400px;">
-        <h1><strong>{{app.name}}</strong>: Export All Tasks and Task Runs</h1>
-        <p>You can export and download <strong>all the available</strong> Tasks and Task Runs (the submitted answers by the users) in CSV or JSON formats.</p>
+        <h1><strong>{{app.name}}</strong>: {{ _('Export All Tasks and Task Runs') }}</h1>
+        <p>{{ _('You can export and download') }} <strong>{{ _('all the available') }}</strong> {{ _('Tasks and Task Runs \(the submitted answers by the users\) in CSV or JSON formats.') }}</p>
         <div class="row-fluid">
             <div id="csv" class="span6">
                 <h2>Export in CSV format</h2>
-                <a href={{url_for('app.export_to', short_name=app.short_name, type='task', format='csv')}} class="btn btn-large">Tasks</a>
-                <a href={{url_for('app.export_to', short_name=app.short_name, type='task_run', format='csv')}} class="btn btn-large">Task Runs</a>
+                <a href={{url_for('app.export_to', short_name=app.short_name, type='task', format='csv')}} class="btn btn-large">{{ _('Tasks') }}</a>
+                <a href={{url_for('app.export_to', short_name=app.short_name, type='task_run', format='csv')}} class="btn btn-large">{{ _('Task Runs') }}</a>
             </div>
             <div id="json" class="span6">
                 <h2>Export in JSON format</h2>
-                <a href={{url_for('app.export_to', short_name=app.short_name, type='task', format='json')}} class="btn btn-large">Tasks</a>
-                <a href={{url_for('app.export_to', short_name=app.short_name, type='task_run', format='json')}} class="btn btn-large">Task Runs</a>
+                <a href={{url_for('app.export_to', short_name=app.short_name, type='task', format='json')}} class="btn btn-large">{{ _('Tasks') }}</a>
+                <a href={{url_for('app.export_to', short_name=app.short_name, type='task_run', format='json')}} class="btn btn-large">{{ _('Task Runs') }}</a>
 
             </div>
         </div>

@@ -10,23 +10,23 @@
         {{ helper.render_account_local_nav(current_user, active_link) }}
     </div>
     <div class="span9" style="min-height:400px">
-        <h1><strong>{{ current_user.fullname }}'s</strong>: Applications</h1>
+        <h1><strong>{{ current_user.fullname }}'s</strong>: {{ _('Applications') }}</h1>
         {% if apps_published or apps_draft %}
             {% if apps_published %}
-            <h2>Published</h2>
+            <h2>{{ _('Published') }}</h2>
             {% for app in apps_published %}
             {{ app_helper.render_app_short_summary(app, current_user) }}
             {% endfor %}
             {% endif %}
             {% if apps_draft %}
-            <h2>Draft</h2>
+            <h2>{{ _('Draft') }}</h2>
             {% for app in apps_draft %}
             {{ app_helper.render_app_short_summary(app, current_user) }}
             {% endfor %}
             {% endif %}
         {% else %}
-            <h2>You have not created an application</h2>
-            <a href="{{url_for('app.new')}}" class="btn btn-primary">Create an Application</a>
+            <h2>{{ _('You have not created an application') }}</h2>
+            <a href="{{url_for('app.new')}}" class="btn btn-primary">{{ _('Create an Application') }}</a>
         {% endif %}
     </div>
 </div>
