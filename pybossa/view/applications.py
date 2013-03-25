@@ -777,14 +777,13 @@ def export_to(short_name):
 
     if request.args.get('format') and request.args.get('type'):
         if request.args.get('format') == 'json':
-            if request.args.get('type') == 'task':
-                return Response(gen_json(model.Task), 
-                                mimetype='application/json')
-            elif request.args.get('type') == 'task_run':
-                return Response(gen_json(model.TaskRun),
-                                mimetype='application/json')
-            else:
+            tables = {"task": model.Task, "task_run": model.TaskRun}
+            ty = request.args.get('type')
+            try:
+                table = tables[ty]
+            except KeyError:
                 return abort(404)
+            return Response(gen_json(table), mimetype='application/json')
         elif request.args.get('format') == 'csv':
             # Export Tasks to CSV
             if request.args.get('type') == 'task':
