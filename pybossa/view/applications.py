@@ -775,6 +775,23 @@ def export_to(short_name):
                 
         yield "]"
 
+    def get_csv_task(out, writer):
+                        for t in db.session.query(model.Task)\
+                                   .filter_by(app_id=app.id)\
+                                   .yield_per(1):
+                            writer.writerow(t.info.values())
+                        yield out.getvalue()
+
+    def get_csv_task_run(out, writer):
+                        for tr in db.session.query(model.TaskRun)\
+                                    .filter_by(app_id=app.id)\
+                                    .yield_per(1):
+                            if (type(tr.info) == dict):
+                                writer.writerow(tr.info.values())
+                            else:
+                                writer.writerow([tr.info])
+                        yield out.getvalue()
+
     if request.args.get('format') and request.args.get('type'):
         if request.args.get('format') == 'json':
             tables = {"task": model.Task, "task_run": model.TaskRun}
@@ -795,13 +812,7 @@ def export_to(short_name):
                 if t is not None:
                     writer.writerow(t.info.keys())
 
-                    def get_csv_task():
-                        for t in db.session.query(model.Task)\
-                                   .filter_by(app_id=app.id)\
-                                   .yield_per(1):
-                            writer.writerow(t.info.values())
-                        yield out.getvalue()
-                    return Response(get_csv_task(), mimetype='text/csv')
+                    return Response(get_csv_task(out, writer), mimetype='text/csv')
                 else:
                     msg = "Oops, the application does not have tasks to \
                            export, if you are the owner add some tasks"
@@ -821,16 +832,7 @@ def export_to(short_name):
                     if (type(tr.info) == dict):
                         writer.writerow(tr.info.keys())
 
-                    def get_csv_task_run():
-                        for tr in db.session.query(model.TaskRun)\
-                                    .filter_by(app_id=app.id)\
-                                    .yield_per(1):
-                            if (type(tr.info) == dict):
-                                writer.writerow(tr.info.values())
-                            else:
-                                writer.writerow([tr.info])
-                        yield out.getvalue()
-                    return Response(get_csv_task_run(), mimetype='text/csv')
+                    return Response(get_csv_task_run(out, writer), mimetype='text/csv')
                 else:
                     msg = "Oops, there are no Task Runs yet to export, invite \
                            some users to participate"
