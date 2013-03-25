@@ -776,21 +776,21 @@ def export_to(short_name):
         yield "]"
 
     def get_csv_task(out, writer):
-                        for t in db.session.query(model.Task)\
-                                   .filter_by(app_id=app.id)\
-                                   .yield_per(1):
-                            writer.writerow(t.info.values())
-                        yield out.getvalue()
+        for t in db.session.query(model.Task)\
+                .filter_by(app_id=app.id)\
+                .yield_per(1):
+            writer.writerow(t.info.values())
+        yield out.getvalue()
 
     def get_csv_task_run(out, writer):
-                        for tr in db.session.query(model.TaskRun)\
-                                    .filter_by(app_id=app.id)\
-                                    .yield_per(1):
-                            if (type(tr.info) == dict):
-                                writer.writerow(tr.info.values())
-                            else:
-                                writer.writerow([tr.info])
-                        yield out.getvalue()
+        for tr in db.session.query(model.TaskRun)\
+                .filter_by(app_id=app.id)\
+                .yield_per(1):
+            if (type(tr.info) == dict):
+                writer.writerow(tr.info.values())
+            else:
+                writer.writerow([tr.info])
+        yield out.getvalue()
 
     if request.args.get('format') and request.args.get('type'):
         if request.args.get('format') == 'json':
