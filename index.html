@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% set active_page = "community"  %}
+
+{% macro render_pagination(pagination) %}
+  <div class="pagination pagination-centered">
+      <ul>
+        {% if pagination.has_prev %}
+          <li>
+          <a href="{{ url_for_other_page(pagination.page - 1)
+            }}">&laquo; Prev</a>
+          </li>
+        {% endif %}
+
+        {%- for page in pagination.iter_pages() %}
+          {% if page %}
+            {% if page != pagination.page %}
+            <li>
+              <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
+             </li>
+            {% else %}
+            <li class="active">
+                <a href="#">{{ page }}</a>
+            </li>  
+            {% endif %}
+          {% endif %}
+        {%- endfor %}
+        {% if pagination.has_next %}
+          <li>
+          <a href="{{ url_for_other_page(pagination.page + 1)
+            }}">Next &raquo;</a>
+          </li>
+        {% endif %}
+    </ul>
+  </div>
+{% endmacro %}
+
+{% block content %}
+
+<div class="row">
+  <div class="span9 offset2">
+      <h1>Community <small>{{total}} registered users</small><a class="pull-right btn btn-primary" href="{{url_for('leaderboard.index')}}"><i class="icon-trophy" style="color:white"></i> Leaderboard</a></h1>
+      {% if accounts %}
+      <ul class="thumbnails">
+      {% for account in accounts %}
+      <li> 
+      <a href="{{url_for('account.public_profile', name=account.name)}}" class="thumbnail" rel='popover' title="<strong>{{account['fullname']}}</strong>" data-content="
+              <ul style='list-style-type:none; margin-left:0px;'>
+                <li><strong><i class='icon-calendar'></i> Joined</strong> {{account['created'][0:10]}}</li>
+                <li><strong><i class='icon-tasks'></i> Contributed Tasks</strong> {{ account.task_runs | count }}</li>
+                {% if account.apps %}
+                <li><strong><i class='icon-certificate'></i> Owner of</strong>
+                  <ul style='list-style-type:none'>
+                      {% for app in account.apps %}
+                      <li><i class='icon-chevron-right'></i> {{ app.name | truncate(18, true)}}</li>
+                      {% endfor %}
+                  </ul>
+                </li>
+                {% endif %}
+              </ul>
+              ">
+                <img src="{{account['email_addr'] | gravatar(size=90)}}">
+        </a>
+      </li>
+      {% endfor %}
+      </ul>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row">
+    <div class="span9 offset2">
+        {{ render_pagination(pagination) }}
+    </div>
+</div>
+
+<script>
+$("a[rel=popover]").popover({
+        html: true,
+        animate: true,
+        trigger: 'hover',
+        placement: 'bottom'
+                });
+
+</script>
+{% endblock %}
