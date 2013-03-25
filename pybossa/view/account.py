@@ -452,6 +452,8 @@ def reset_api_key():
         return abort(403)
 
 
+<<<<<<< HEAD
+=======
 @blueprint.route('/<name>/')
 def public_profile(name):
     """Render the public user profile"""
@@ -465,3 +467,4 @@ def public_profile(name):
                                apps_created=apps_created)
     else:
         abort(404)
+>>>>>>> 429bc3879503564db0c15495b1de5355c997caf1

@@ -37,6 +37,7 @@
     </div>
     <div class="span9">
         <h2><i class="icon-user"></i> {{ _('Nick') }}: <small>{{ user.name }}</small></h2>
+        <h2><i class="icon-user"></i> {{ _(' Language') }}: <small>{{ user.language }}</small></h2>
         {% if private %}
         <h2><i class="icon-envelope"></i> {{ _('E-mail') }}: <small>{{ user.email_addr }}</small></h2>
         {% endif %}

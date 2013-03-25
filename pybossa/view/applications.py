@@ -80,14 +80,6 @@ class BulkTaskCSVImportForm(Form):
                          validators.URL(message=msg_url)])
 
 
-class BulkTaskGDImportForm(Form):
-    msg_required = gettext(u'You must provide a URL')
-    msg_url = gettext(u'Oops! That\'s not a valid URL. You must provide a valid URL')
-    googledocs_url = TextField('URL',
-                               [validators.Required(message=msg_required),
-                                   validators.URL(message=msg_url)])
-
-
 @blueprint.route('/', defaults={'page': 1})
 @blueprint.route('/page/<int:page>')
 def index(page):
