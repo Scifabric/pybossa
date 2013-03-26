@@ -481,6 +481,7 @@ def import_task(short_name):
         "title": title,
         "app": app,
         "csvform": csvform,
+        "epiform": epiform,
         "gdform": gdform
         }
 
@@ -538,7 +539,6 @@ def import_task(short_name):
 
         # these del()s are completely redundant
         if template == 'epicollect':
-            template_args["epiform"] = epiform
             del(template_args["csvform"])
             del(template_args["gdform"])
         elif template in googledocs_urls:
