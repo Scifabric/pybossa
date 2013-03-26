@@ -479,14 +479,18 @@ def import_task(short_name):
         if template in googledocs_urls:
             gdform.googledocs_url.data = googledocs_urls[template]
 
-        if 'csv_url' in request.form and csvform.validate_on_submit():
-            dataurl = csvform.csv_url.data
-        elif 'googledocs_url' in request.form and gdform.validate_on_submit():
-            dataurl = ''.join([gdform.googledocs_url.data, '&output=csv'])
-        elif 'epicollect_project' in request.form and epiform.validate_on_submit():
-            dataurl = 'http://plus.epicollect.net/%s/%s.json' % \
+        def get_data_url():
+            if 'csv_url' in request.form and csvform.validate_on_submit():
+                return csvform.csv_url.data
+            elif 'googledocs_url' in request.form and gdform.validate_on_submit():
+                return ''.join([gdform.googledocs_url.data, '&output=csv'])
+            elif 'epicollect_project' in request.form and epiform.validate_on_submit():
+                return 'http://plus.epicollect.net/%s/%s.json' % \
                       (epiform.epicollect_project.data, epiform.epicollect_form.data)
+            else:
+                return None
 
+        dataurl = get_data_url()
         if dataurl:
             try:
                 r = requests.get(dataurl)
