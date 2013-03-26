@@ -1817,7 +1817,7 @@ class TestWeb:
         assert Fixtures.fullname in res.data, err_msg
 
     @patch('pybossa.view.applications.requests.get')
-    def test_33_bulk_epicollect_import_unauthorized(self, Mock):
+    def test_71_bulk_epicollect_import_unauthorized(self, Mock):
         """Test WEB bulk import unauthorized works"""
         unauthorized_request = FakeRequest('Unauthorized', 403,
                                            {'content-type': 'application/json'})
@@ -1836,7 +1836,7 @@ class TestWeb:
         assert msg in res.data
 
     @patch('pybossa.view.applications.requests.get')
-    def test_34_bulk_epicollect_import_non_html(self, Mock):
+    def test_72_bulk_epicollect_import_non_html(self, Mock):
         """Test WEB bulk import non html works"""
         html_request = FakeRequest('Not an application/json', 200,
                                    {'content-type': 'text/html'})
@@ -1853,7 +1853,7 @@ class TestWeb:
         assert "Oops! That project and form do not look like the right one." in res.data
 
     @patch('pybossa.view.applications.requests.get')
-    def test_34_bulk_epicollect_import_json(self, Mock):
+    def test_73_bulk_epicollect_import_json(self, Mock):
         """Test WEB bulk import json works"""
         data = [dict(DeviceID=23)]
         html_request = FakeRequest(json.dumps(data), 200,
