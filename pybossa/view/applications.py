@@ -761,102 +761,83 @@ def export_to(short_name):
         title = "Application: %s &middot; Export" % app.name
     else:
         title = "Application not found"
-    if request.args.get('format') and request.args.get('type'):
-        if request.args.get('format') == 'json':
-            if request.args.get('type') == 'task':
-                def gen_json_tasks():
-                    n = db.session.query(model.Task)\
-                          .filter_by(app_id=app.id).count()
-                    i = 0
-                    yield "["
-                    for t in db.session.query(model.Task)\
-                               .filter_by(app_id=app.id).yield_per(1):
-                        i += 1
-                        if (i != n):
-                            yield json.dumps(t.dictize()) + ", "
-                        else:
-                            yield json.dumps(t.dictize())
 
-                    yield "]"
-                return Response(gen_json_tasks(), mimetype='application/json')
-            elif request.args.get('type') == 'task_run':
-                def gen_json_task_runs():
-                    n = db.session.query(model.TaskRun)\
-                                  .filter_by(app_id=app.id).count()
-                    i = 0
-                    yield "["
-                    for tr in db.session.query(model.TaskRun)\
-                                .filter_by(app_id=app.id).yield_per(1):
-                        i += 1
-                        if (i != n):
-                            yield json.dumps(tr.dictize()) + ", "
-                        else:
-                            yield json.dumps(tr.dictize())
+    def gen_json(table):
+        n = db.session.query(table)\
+            .filter_by(app_id=app.id).count()
+        sep = ", "
+        yield "["
+        for i, tr in enumerate(db.session.query(table)\
+                .filter_by(app_id=app.id).yield_per(1), 1):
+            item = json.dumps(tr.dictize())
+            if (i == n):
+                sep = ""
+            yield item + sep
+        yield "]"
 
-                    yield "]"
-                return Response(gen_json_task_runs(),
-                                mimetype='application/json')
-            else:
+    def handle_task(writer, t):
+        writer.writerow(t.info.values())
+
+    def handle_task_run(writer, t):
+        if (type(t.info) == dict):
+            writer.writerow(t.info.values())
+        else:
+            writer.writerow([t.info])
+
+    def get_csv(out, writer, table, handle_row):
+        for tr in db.session.query(table)\
+                .filter_by(app_id=app.id)\
+                .yield_per(1):
+            handle_row(writer, tr)
+        yield out.getvalue()
+
+    ty = request.args.get('type')
+    fmt = request.args.get('format')
+    if fmt and ty:
+        if fmt not in ["json", "csv"]:
+            abort(404)
+        if fmt == 'json':
+            tables = {"task": model.Task, "task_run": model.TaskRun}
+            try:
+                table = tables[ty]
+            except KeyError:
                 return abort(404)
-        elif request.args.get('format') == 'csv':
-            # Export Tasks to CSV
-            if request.args.get('type') == 'task':
-                out = StringIO()
-                #writer = csv.writer(out)
-                writer = UnicodeWriter(out)
-                t = db.session.query(model.Task)\
-                      .filter_by(app_id=app.id)\
-                      .first()
-                if t is not None:
+            return Response(gen_json(table), mimetype='application/json')
+        elif fmt == 'csv':
+            # Export Task(/Runs) to CSV
+            types = {
+                "task": (
+                    model.Task, handle_task,
+                    (lambda x: True),
+                    "Oops, the application does not have tasks to \
+                           export, if you are the owner add some tasks"),
+                "task_run": (
+                    model.TaskRun, handle_task_run,
+                    (lambda x: type(x.info) == dict),
+                    "Oops, there are no Task Runs yet to export, invite \
+                           some users to participate")
+                }
+            try:
+                table, handle_row, test, msg = types[ty]
+            except KeyError:
+                return abort(404)
+
+            out = StringIO()
+            writer = UnicodeWriter(out)
+            t = db.session.query(table)\
+                .filter_by(app_id=app.id)\
+                .first()
+            if t is not None:
+                if test(t):
                     writer.writerow(t.info.keys())
 
-                    def get_csv_task():
-                        for t in db.session.query(model.Task)\
-                                   .filter_by(app_id=app.id)\
-                                   .yield_per(1):
-                            writer.writerow(t.info.values())
-                        yield out.getvalue()
-                    return Response(get_csv_task(), mimetype='text/csv')
-                else:
-                    msg = "Oops, the application does not have tasks to \
-                           export, if you are the owner add some tasks"
-                    flash(msg, 'info')
-                    return render_template('/applications/export.html',
-                                           title=title,
-                                           app=app)
-
-            # Export Task Runs to CSV
-            elif request.args.get('type') == 'task_run':
-                out = StringIO()
-                writer = UnicodeWriter(out)
-                tr = db.session.query(model.TaskRun)\
-                       .filter_by(app_id=app.id)\
-                       .first()
-                if tr is not None:
-                    if (type(tr.info) == dict):
-                        writer.writerow(tr.info.keys())
-
-                    def get_csv_task_run():
-                        for tr in db.session.query(model.TaskRun)\
-                                    .filter_by(app_id=app.id)\
-                                    .yield_per(1):
-                            if (type(tr.info) == dict):
-                                writer.writerow(tr.info.values())
-                            else:
-                                writer.writerow([tr.info])
-                        yield out.getvalue()
-                    return Response(get_csv_task_run(), mimetype='text/csv')
-                else:
-                    msg = "Oops, there are no Task Runs yet to export, invite \
-                           some users to participate"
-                    flash(msg, 'info')
-                    return render_template('/applications/export.html',
-                                           title=title,
-                                           app=app)
+                return Response(get_csv(out, writer, table, handle_row), 
+                                mimetype='text/csv')
             else:
-                abort(404)
-        else:
-            abort(404)
+                flash(msg, 'info')
+                return render_template('/applications/export.html',
+                                       title=title,
+                                       app=app)
     elif len(request.args) >= 1:
         abort(404)
     else:
