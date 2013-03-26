@@ -531,8 +531,7 @@ def import_task(short_name):
 
         if template == 'epicollect':
             template_args["epiform"] = epiform
-        elif (template == 'image' or template == 'map'
-              or template == 'pdf' or template == 'sound'):
+        elif template in googledocs_urls:
             template_args["gdform"] = gdform
         else:
             template_args["gdform"] = gdform
