@@ -462,6 +462,11 @@ def import_task(short_name):
     gdform = BulkTaskGDImportForm(request.form)
     epiform = BulkTaskEpiCollectPlusImportForm(request.form)
 
+    template_args = {
+        "title": title,
+        "app": app
+        }
+
     if not (app.tasks or (request.args.get('template') or 
                           request.method == 'POST')):
         return render_template('/applications/import_options.html',
@@ -523,11 +528,6 @@ def import_task(short_name):
                 flash(msg, 'error')
 
         tmpl = '/applications/import.html'
-
-        template_args = {
-            "title": title,
-            "app": app
-            }
 
         if template == 'epicollect':
             template_args["epiform"] = epiform
