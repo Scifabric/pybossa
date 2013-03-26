@@ -524,15 +524,21 @@ def import_task(short_name):
 
         tmpl = '/applications/import.html'
 
+        template_args = {
+            "title": title,
+            "app": app
+            }
+
         if template == 'epicollect':
-            return render_template(tmpl, title=title, app=app, epiform=epiform)
+            template_args["epiform"] = epiform
         elif (template == 'image' or template == 'map'
               or template == 'pdf' or template == 'sound'):
-            return render_template(tmpl, title=title, app=app, gdform=gdform)
+            template_args["gdform"] = gdform
         else:
-            return render_template(tmpl, title=title, app=app,
-                                   csvform=csvform,
-                                   gdform=gdform)
+            template_args["gdform"] = gdform
+            template_args["csvform"] = csvform
+
+        return render_template(tmpl, **template_args)
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
