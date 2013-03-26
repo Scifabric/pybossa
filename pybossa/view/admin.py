@@ -22,9 +22,10 @@ from flask import redirect
 from flask import url_for
 from flaskext.login import login_required, current_user
 from flaskext.wtf import Form, TextField
+from flaskext.babel import lazy_gettext
 
 import pybossa.model as model
-from pybossa.core import db, cache
+from pybossa.core import db
 from pybossa.util import admin_required
 from pybossa.cache import apps as cached_apps
 from sqlalchemy import or_, func
@@ -66,23 +67,23 @@ def featured(app_id=None):
             return json.dumps(f.dictize())
         else:
             return json.dumps({'error': 'App.id %s already in Featured table'
-                    % app_id})
+                               % app_id})
     if request.method == 'DELETE':
         cached_apps.reset()
         f = db.session.query(model.Featured)\
-                .filter(model.Featured.app_id == app_id)\
-                .first()
+              .filter(model.Featured.app_id == app_id)\
+              .first()
         if (f):
             db.session.delete(f)
             db.session.commit()
             return "", 204
         else:
             return json.dumps({'error': 'App.id %s is not in Featured table'
-                    % app_id})
+                               % app_id})
 
 
 class SearchForm(Form):
-    user = TextField('User')
+    user = TextField(lazy_gettext('User'))
 
 
 @blueprint.route('/users', methods=['GET', 'POST'])
@@ -92,25 +93,25 @@ def users(user_id=None):
     """Manage users of PyBossa"""
     form = SearchForm(request.form)
     users = db.session.query(model.User)\
-            .filter(model.User.admin == True)\
-            .filter(model.User.id != current_user.id)\
-            .all()
+              .filter(model.User.admin == True)\
+              .filter(model.User.id != current_user.id)\
+              .all()
 
     if request.method == 'POST' and form.user.data:
         query = '%' + form.user.data.lower() + '%'
         found = db.session.query(model.User)\
-                .filter(or_(func.lower(model.User.name).like(query),
-                            func.lower(model.User.fullname).like(query)))\
-                .filter(model.User.id != current_user.id)\
-                .all()
+                  .filter(or_(func.lower(model.User.name).like(query),
+                              func.lower(model.User.fullname).like(query)))\
+                  .filter(model.User.id != current_user.id)\
+                  .all()
         if not found:
             flash("<strong>Ooops!</strong> We didn't find a user "
                   "matching your query: <strong>%s</strong>" % form.user.data)
         return render_template('/admin/users.html', found=found, users=users,
-                title="Manage Admin Users", form=form)
+                               title=lazy_gettext("Manage Admin Users"), form=form)
 
     return render_template('/admin/users.html', found=[], users=users,
-            title="Manage Admin Users", form=form)
+                           title=lazy_gettext("Manage Admin Users"), form=form)
 
 
 @blueprint.route('/users/add/<int:user_id>')
@@ -120,7 +121,7 @@ def add_admin(user_id=None):
     """Add admin flag for user_id"""
     if user_id:
         user = db.session.query(model.User)\
-                .get(user_id)
+                 .get(user_id)
         if user:
             user.admin = True
             db.session.commit()
@@ -136,7 +137,7 @@ def del_admin(user_id=None):
     """Del admin flag for user_id"""
     if user_id:
         user = db.session.query(model.User)\
-                .get(user_id)
+                 .get(user_id)
         if user:
             user.admin = False
             db.session.commit()

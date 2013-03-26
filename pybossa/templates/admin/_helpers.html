@@ -9,11 +9,11 @@
         {% if user.admin %}
         <a href="{{url_for('admin.del_admin', user_id=user.id)}}" class="btn btn-danger">
             <i class="icon-remove"></i>
-            Remove from admin group</a>
+            {{ _('Remove from admin group') }}</a>
         {% else %}
         <a href="{{url_for('admin.add_admin', user_id=user.id)}}" class="btn btn-primary">
             <i class="icon-plus"></i>
-            Add to admin group</a>
+            {{ _('Add to admin group') }}</a>
         {% endif %}
     </div>
 </div>
