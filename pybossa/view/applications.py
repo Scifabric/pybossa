@@ -464,7 +464,9 @@ def import_task(short_name):
 
     template_args = {
         "title": title,
-        "app": app
+        "app": app,
+        "csvform": csvform,
+        "gdform": gdform
         }
 
     if not (app.tasks or (request.args.get('template') or 
@@ -529,13 +531,13 @@ def import_task(short_name):
 
         tmpl = '/applications/import.html'
 
+        # these del()s are completely redundant
         if template == 'epicollect':
             template_args["epiform"] = epiform
+            del(template_args["csvform"])
+            del(template_args["gdform"])
         elif template in googledocs_urls:
-            template_args["gdform"] = gdform
-        else:
-            template_args["gdform"] = gdform
-            template_args["csvform"] = csvform
+            del(template_args["csvform"])
 
         return render_template(tmpl, **template_args)
 
