@@ -102,10 +102,6 @@ def url_for_other_page(page):
 app.jinja_env.globals['url_for_other_page'] = url_for_other_page
 
 
-@babel.localeselector
-def get_locale():
-    lang = session.get('lang', request.accept_languages.best_match(['en', 'es']))
-    return lang
 
 
 @app.errorhandler(404)

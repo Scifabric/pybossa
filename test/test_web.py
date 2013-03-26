@@ -73,13 +73,14 @@ class TestWeb:
         return self.app.get("/account/profile", follow_redirects=True)
 
     def update_profile(self, method="POST", id=1, fullname="John Doe",
-                       name="johndoe", email_addr="johndoe@example.com"):
+                       name="johndoe", locale="es", email_addr="johndoe@example.com"):
         """Helper function to update the profile of users"""
         if (method == "POST"):
             return self.app.post("/account/profile/update",
                                  data={'id': id,
                                        'fullname': fullname,
                                        'name': name,
+                                       'locale': locale,
                                        'email_addr': email_addr},
                                  follow_redirects=True)
         else:
@@ -347,9 +348,10 @@ class TestWeb:
                 res.data, res
 
         res = self.update_profile(fullname="John Doe 2",
-                                  email_addr="johndoe2@example.com")
-        assert self.html_title("Profile") in res.data, res
-        assert "Your profile has been updated!" in res.data, res
+                                  email_addr="johndoe2@example.com",
+                                  locale="en")
+        assert self.html_title("Profile") in res.data, res.data
+        assert "Your profile has been updated!" in res.data, res.data
         assert "John Doe 2" in res.data, res
         assert "johndoe" in res.data, res
         assert "johndoe2@example.com" in res.data, res
