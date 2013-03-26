@@ -205,55 +205,58 @@ def new():
 def task_presenter_editor(short_name):
     errors = False
     app = App.query.filter_by(short_name=short_name).first()
-    if app:
-        title = "Application: %s &middot; Task Presenter Editor" % app.name
-        if require.app.update(app):
-            form = TaskPresenterForm(request.form)
-            if request.method == 'POST' and form.validate():
-                app.info['task_presenter'] = form.editor.data
-                db.session.add(app)
-                db.session.commit()
-                flash('<i class="icon-ok"></i> Task presenter added!', 'success')
-                return redirect(url_for('.settings', short_name=app.short_name))
-            if request.method == 'POST' and not form.validate():
-                flash('Please correct the errors', 'error')
-                errors = True
-
-            if request.method == 'GET':
-                if app.info.get('task_presenter'):
-                    form.editor.data = app.info['task_presenter']
-                else:
-                    if request.args.get('template'):
-                        tmpl_uri = "applications/snippets/%s.html" \
-                                   % request.args.get('template')
-                        tmpl = render_template(tmpl_uri, app=app)
-                        form.editor.data = tmpl
-                        msg = 'Your code will be <em>automagically</em> rendered in \
-                              the <strong>preview section</strong>. Click in the \
-                              preview button!'
-                        flash(msg, 'info')
-                    else:
-                        msg = '<strong>Note</strong> You will need to upload ' \
-                              'the tasks using the <a href="%s">' \
-                              'CSV importer</a> or download the app ' \
-                              'bundle and run the <strong>createTasks.py ' \
-                              '</strong> script in your ' \
-                              'computer' % url_for('app.import_task',
-                                                   short_name=app.short_name)
-                        flash(msg, 'info')
-                        return render_template(
-                            'applications/task_presenter_options.html',
-                            title=title,
-                            app=app)
-                return render_template('applications/task_presenter_editor.html',
-                                       title=title,
-                                       form=form,
-                                       app=app,
-                                       errors=errors)
-        else:
-            abort(403)
-    else:
+    if not app:
         abort(404)
+
+    title = "Application: %s &middot; Task Presenter Editor" % app.name
+    if not require.app.update(app):
+        abort(403)
+
+    form = TaskPresenterForm(request.form)
+    if request.method == 'POST' and form.validate():
+        app.info['task_presenter'] = form.editor.data
+        db.session.add(app)
+        db.session.commit()
+        flash('<i class="icon-ok"></i> Task presenter added!', 'success')
+        return redirect(url_for('.settings', short_name=app.short_name))
+
+    if request.method == 'POST' and not form.validate():
+        flash('Please correct the errors', 'error')
+        errors = True
+
+    if request.method != 'GET':
+        return
+
+    if app.info.get('task_presenter'):
+        form.editor.data = app.info['task_presenter']
+    else:
+        if request.args.get('template'):
+            tmpl_uri = "applications/snippets/%s.html" \
+                % request.args.get('template')
+            tmpl = render_template(tmpl_uri, app=app)
+            form.editor.data = tmpl
+            msg = 'Your code will be <em>automagically</em> rendered in \
+                      the <strong>preview section</strong>. Click in the \
+                      preview button!'
+            flash(msg, 'info')
+        else:
+            msg = '<strong>Note</strong> You will need to upload ' \
+                'the tasks using the <a href="%s">' \
+                'CSV importer</a> or download the app ' \
+                'bundle and run the <strong>createTasks.py ' \
+                '</strong> script in your ' \
+                'computer' % url_for('app.import_task',
+                                     short_name=app.short_name)
+            flash(msg, 'info')
+            return render_template(
+                'applications/task_presenter_options.html',
+                title=title,
+                app=app)
+    return render_template('applications/task_presenter_editor.html',
+                           title=title,
+                           form=form,
+                           app=app,
+                           errors=errors)
 
 
 @blueprint.route('/<short_name>/delete', methods=['GET', 'POST'])
@@ -435,103 +438,116 @@ def import_epicollect_tasks(app, data):
         db.session.add(task)
     db.session.commit()
 
+googledocs_urls = {
+    'image': "https://docs.google.com/spreadsheet/ccc"
+             "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE"
+             "&usp=sharing",
+    'sound': "https://docs.google.com/spreadsheet/ccc"
+             "?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc"
+             "&usp=sharing",
+    'map': "https://docs.google.com/spreadsheet/ccc"
+           "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc"
+           "&usp=sharing",
+    'pdf': "https://docs.google.com/spreadsheet/ccc"
+           "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE"
+           "&usp=sharing"}
+
+def get_data_url(**kwargs):
+    csvform = kwargs["csvform"]
+    gdform = kwargs["gdform"]
+    epiform = kwargs["epiform"]
+
+    if 'csv_url' in request.form and csvform.validate_on_submit():
+        return csvform.csv_url.data
+    elif 'googledocs_url' in request.form and gdform.validate_on_submit():
+        return ''.join([gdform.googledocs_url.data, '&output=csv'])
+    elif 'epicollect_project' in request.form and epiform.validate_on_submit():
+        return 'http://plus.epicollect.net/%s/%s.json' % \
+            (epiform.epicollect_project.data, epiform.epicollect_form.data)
+    else:
+        return None
+
+def get_csv_data_from_request(app, r):
+    if r.status_code == 403:
+        msg = "Oops! It looks like you don't have permission to access" \
+            " that file"
+        raise BulkImportException(msg, 'error')
+    if ((not 'text/plain' in r.headers['content-type']) and
+        (not 'text/csv' in r.headers['content-type'])):
+        msg = "Oops! That file doesn't look like the right file."
+        raise BulkImportException(msg, 'error')
+    
+    csvcontent = StringIO(r.text)
+    csvreader = unicode_csv_reader(csvcontent)
+    return import_csv_tasks(app, csvreader)
+
+def get_epicollect_data_from_request(app, r):
+    if r.status_code == 403:
+        msg = "Oops! It looks like you don't have permission to access" \
+            " the EpiCollect Plus project"
+        raise BulkImportException(msg, 'error')
+    if not 'application/json' in r.headers['content-type']:
+        msg = "Oops! That project and form do not look like the right one."
+        raise BulkImportException(msg, 'error')
+    return import_epicollect_tasks(app, json.loads(r.text))
 
 @blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
 def import_task(short_name):
     app = App.query.filter_by(short_name=short_name).first_or_404()
     title = "Applications: %s &middot; Import Tasks" % app.name
 
-    dataurl = None
+    data_handlers = [
+        ('csv_url', get_csv_data_from_request),
+        ('googledocs_url', get_csv_data_from_request),
+        ('epicollect_project', get_epicollect_data_from_request)
+        ]
+
     csvform = BulkTaskCSVImportForm(request.form)
     gdform = BulkTaskGDImportForm(request.form)
     epiform = BulkTaskEpiCollectPlusImportForm(request.form)
 
-    if app.tasks or (request.args.get('template') or request.method == 'POST'):
+    template_args = {
+        "title": title,
+        "app": app,
+        "csvform": csvform,
+        "epiform": epiform,
+        "gdform": gdform
+        }
 
-        googledocs_urls = {
-            'image': "https://docs.google.com/spreadsheet/ccc"
-                     "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE"
-                     "&usp=sharing",
-            'sound': "https://docs.google.com/spreadsheet/ccc"
-                     "?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc"
-                     "&usp=sharing",
-            'map': "https://docs.google.com/spreadsheet/ccc"
-                   "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc"
-                   "&usp=sharing",
-            'pdf': "https://docs.google.com/spreadsheet/ccc"
-                   "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE"
-                   "&usp=sharing"}
-
-        template = request.args.get('template')
-
-        if template in googledocs_urls:
-            gdform.googledocs_url.data = googledocs_urls[template]
-
-        if 'csv_url' in request.form and csvform.validate_on_submit():
-            dataurl = csvform.csv_url.data
-        elif 'googledocs_url' in request.form and gdform.validate_on_submit():
-            dataurl = ''.join([gdform.googledocs_url.data, '&output=csv'])
-        elif 'epicollect_project' in request.form and epiform.validate_on_submit():
-            dataurl = 'http://plus.epicollect.net/%s/%s.json' % \
-                      (epiform.epicollect_project.data, epiform.epicollect_form.data)
-
-        if dataurl:
-            try:
-                r = requests.get(dataurl)
-
-                if 'csv_url' in request.form or 'googledocs_url' in request.form:
-                    if r.status_code == 403:
-                        msg = "Oops! It looks like you don't have permission to access" \
-                              " that file"
-                        raise BulkImportException(msg, 'error')
-                    if ((not 'text/plain' in r.headers['content-type']) and
-                       (not 'text/csv' in r.headers['content-type'])):
-                        msg = "Oops! That file doesn't look like the right file."
-                        raise BulkImportException(msg, 'error')
-
-                    csvcontent = StringIO(r.text)
-                    csvreader = unicode_csv_reader(csvcontent)
-                    import_csv_tasks(app, csvreader)
-
-                    # TODO: check for errors
-                elif 'epicollect_project' in request.form:
-                    if r.status_code == 403:
-                        msg = "Oops! It looks like you don't have permission to access" \
-                              " the EpiCollect Plus project"
-                        raise BulkImportException(msg, 'error')
-                    if not 'application/json' in r.headers['content-type']:
-                        msg = "Oops! That project and form do not look like the right one."
-                        raise BulkImportException(msg, 'error')
-                    import_epicollect_tasks(app, json.loads(r.text))
-                flash('Tasks imported successfully!', 'success')
-                return redirect(url_for('.settings', short_name=app.short_name))
-            except BulkImportException, err_msg:
-                flash(err_msg, 'error')
-            except Exception as inst:
-                print type(inst)
-                print inst.args
-                print inst
-                msg = 'Oops! Looks like there was an error with processing that file!'
-                flash(msg, 'error')
-
-        tmpl = '/applications/import.html'
-
-        if template == 'epicollect':
-            return render_template(tmpl, title=title, app=app, epiform=epiform)
-        elif (template == 'image' or template == 'map'
-              or template == 'pdf' or template == 'sound'):
-            return render_template(tmpl, title=title, app=app, gdform=gdform)
-        else:
-            return render_template(tmpl, title=title, app=app,
-                                   csvform=csvform,
-                                   gdform=gdform)
-    else:
+    template = request.args.get('template')
+    if not (app.tasks or template or request.method == 'POST'):
         return render_template('/applications/import_options.html',
-                               title=title,
-                               app=app,
-                               csvform=csvform,
-                               gdform=gdform)
+                               **template_args)
 
+    if template in googledocs_urls:
+        gdform.googledocs_url.data = googledocs_urls[template]
+    
+    return _import_task(app, template_args, data_handlers)
+
+def _import_task(app, template_args, data_handlers):
+    dataurl = get_data_url(**template_args)
+
+    def render_forms():
+        tmpl = '/applications/import.html'    
+        return render_template(tmpl, **template_args)
+
+    if not dataurl:
+        return render_forms()
+
+    try:
+        r = requests.get(dataurl)
+        for form_id, handler in data_handlers:
+            if form_id in request.form:
+                handler(app, r)
+                break
+        flash('Tasks imported successfully!', 'success')
+        return redirect(url_for('.settings', short_name=app.short_name))
+    except BulkImportException, err_msg:
+        flash(err_msg, 'error')
+    except Exception as inst:
+        msg = 'Oops! Looks like there was an error with processing that file!'
+        flash(msg, 'error')
+    return render_forms()
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
