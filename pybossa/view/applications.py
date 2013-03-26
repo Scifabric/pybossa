@@ -499,31 +499,33 @@ def import_task(short_name):
         if dataurl:
             try:
                 r = requests.get(dataurl)
-
                 if 'csv_url' in request.form or 'googledocs_url' in request.form:
-                    if r.status_code == 403:
-                        msg = "Oops! It looks like you don't have permission to access" \
-                              " that file"
-                        raise BulkImportException(msg, 'error')
-                    if ((not 'text/plain' in r.headers['content-type']) and
-                       (not 'text/csv' in r.headers['content-type'])):
-                        msg = "Oops! That file doesn't look like the right file."
-                        raise BulkImportException(msg, 'error')
+                    def get_csv_data_from_request():
+                        if r.status_code == 403:
+                            msg = "Oops! It looks like you don't have permission to access" \
+                                " that file"
+                            raise BulkImportException(msg, 'error')
+                        if ((not 'text/plain' in r.headers['content-type']) and
+                            (not 'text/csv' in r.headers['content-type'])):
+                            msg = "Oops! That file doesn't look like the right file."
+                            raise BulkImportException(msg, 'error')
 
-                    csvcontent = StringIO(r.text)
-                    csvreader = unicode_csv_reader(csvcontent)
-                    import_csv_tasks(app, csvreader)
-
+                        csvcontent = StringIO(r.text)
+                        csvreader = unicode_csv_reader(csvcontent)
+                        import_csv_tasks(app, csvreader)
+                    get_data_from_request()
                     # TODO: check for errors
                 elif 'epicollect_project' in request.form:
-                    if r.status_code == 403:
-                        msg = "Oops! It looks like you don't have permission to access" \
-                              " the EpiCollect Plus project"
-                        raise BulkImportException(msg, 'error')
-                    if not 'application/json' in r.headers['content-type']:
-                        msg = "Oops! That project and form do not look like the right one."
-                        raise BulkImportException(msg, 'error')
-                    import_epicollect_tasks(app, json.loads(r.text))
+                    def get_epicollect_data_from_request():
+                        if r.status_code == 403:
+                            msg = "Oops! It looks like you don't have permission to access" \
+                                " the EpiCollect Plus project"
+                            raise BulkImportException(msg, 'error')
+                        if not 'application/json' in r.headers['content-type']:
+                            msg = "Oops! That project and form do not look like the right one."
+                            raise BulkImportException(msg, 'error')
+                        import_epicollect_tasks(app, json.loads(r.text))
+                    get_epicollect_data_from_request()
                 flash('Tasks imported successfully!', 'success')
                 return redirect(url_for('.settings', short_name=app.short_name))
             except BulkImportException, err_msg:
