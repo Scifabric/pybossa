@@ -530,7 +530,9 @@ def import_task(short_name):
 
     try:
         r = requests.get(dataurl)
-        if 'csv_url' in request.form or 'googledocs_url' in request.form:
+        if 'csv_url' in request.form:
+            get_data_from_request(app, r)
+        elif 'googledocs_url' in request.form:
             get_data_from_request(app, r)
         elif 'epicollect_project' in request.form:
             get_epicollect_data_from_request(app, r)
