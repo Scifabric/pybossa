@@ -513,31 +513,31 @@ def import_task(short_name):
                           request.method == 'POST')):
         return render_template('/applications/import_options.html',
                                **template_args)
-    else:
-        template = request.args.get('template')
 
-        if template in googledocs_urls:
-            gdform.googledocs_url.data = googledocs_urls[template]
+    template = request.args.get('template')
 
-        dataurl = get_data_url(**template_args)
-        if dataurl:
-            try:
-                r = requests.get(dataurl)
-                if 'csv_url' in request.form or 'googledocs_url' in request.form:
-                    get_data_from_request(app, r)
-                elif 'epicollect_project' in request.form:
-                    get_epicollect_data_from_request(app, r)
-                flash('Tasks imported successfully!', 'success')
-                return redirect(url_for('.settings', short_name=app.short_name))
-            except BulkImportException, err_msg:
-                flash(err_msg, 'error')
-            except Exception as inst:
-                msg = 'Oops! Looks like there was an error with processing that file!'
-                flash(msg, 'error')
+    if template in googledocs_urls:
+        gdform.googledocs_url.data = googledocs_urls[template]
 
-        tmpl = '/applications/import.html'
+    dataurl = get_data_url(**template_args)
+    if dataurl:
+        try:
+            r = requests.get(dataurl)
+            if 'csv_url' in request.form or 'googledocs_url' in request.form:
+                get_data_from_request(app, r)
+            elif 'epicollect_project' in request.form:
+                get_epicollect_data_from_request(app, r)
+            flash('Tasks imported successfully!', 'success')
+            return redirect(url_for('.settings', short_name=app.short_name))
+        except BulkImportException, err_msg:
+            flash(err_msg, 'error')
+        except Exception as inst:
+            msg = 'Oops! Looks like there was an error with processing that file!'
+            flash(msg, 'error')
 
-        return render_template(tmpl, **template_args)
+    tmpl = '/applications/import.html'
+    
+    return render_template(tmpl, **template_args)
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
