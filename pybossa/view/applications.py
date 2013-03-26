@@ -449,8 +449,13 @@ def import_task(short_name):
     gdform = BulkTaskGDImportForm(request.form)
     epiform = BulkTaskEpiCollectPlusImportForm(request.form)
 
-    if app.tasks or (request.args.get('template') or request.method == 'POST'):
-
+    if not (app.tasks or (request.args.get('template') or request.method == 'POST')):
+        return render_template('/applications/import_options.html',
+                               title=title,
+                               app=app,
+                               csvform=csvform,
+                               gdform=gdform)
+    else:
         googledocs_urls = {
             'image': "https://docs.google.com/spreadsheet/ccc"
                      "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE"
@@ -528,13 +533,6 @@ def import_task(short_name):
             return render_template(tmpl, title=title, app=app,
                                    csvform=csvform,
                                    gdform=gdform)
-    else:
-        return render_template('/applications/import_options.html',
-                               title=title,
-                               app=app,
-                               csvform=csvform,
-                               gdform=gdform)
-
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
