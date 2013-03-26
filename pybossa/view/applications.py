@@ -531,9 +531,6 @@ def import_task(short_name):
             except BulkImportException, err_msg:
                 flash(err_msg, 'error')
             except Exception as inst:
-                print type(inst)
-                print inst.args
-                print inst
                 msg = 'Oops! Looks like there was an error with processing that file!'
                 flash(msg, 'error')
 
