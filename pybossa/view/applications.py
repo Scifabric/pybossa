@@ -496,6 +496,12 @@ def import_task(short_name):
     app = App.query.filter_by(short_name=short_name).first_or_404()
     title = "Applications: %s &middot; Import Tasks" % app.name
 
+    data_handlers = [
+        ('csv_url', get_csv_data_from_request),
+        ('googledocs_url', get_csv_data_from_request),
+        ('epicollect_project', get_epicollect_data_from_request)
+        ]
+
     dataurl = None
     csvform = BulkTaskCSVImportForm(request.form)
     gdform = BulkTaskGDImportForm(request.form)
@@ -528,11 +534,6 @@ def import_task(short_name):
     if not dataurl:
         return render_forms()
 
-    data_handlers = [
-        ('csv_url', get_data_from_request),
-        ('googledocs_url', get_data_from_request),
-        ('epicollect_project', get_epicollect_data_from_request)
-        ]
 
     try:
         r = requests.get(dataurl)
