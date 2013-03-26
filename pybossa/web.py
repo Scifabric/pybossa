@@ -26,7 +26,7 @@ from sqlalchemy import func, desc
 from werkzeug.exceptions import *
 
 import pybossa
-from pybossa.core import app, login_manager, db, cache
+from pybossa.core import app, login_manager, db, cache, babel
 import pybossa.model as model
 from pybossa.api import blueprint as api
 from pybossa.view.account import blueprint as account
@@ -99,6 +99,12 @@ def url_for_other_page(page):
     args['page'] = page
     return url_for(request.endpoint, **args)
 app.jinja_env.globals['url_for_other_page'] = url_for_other_page
+
+
+@babel.localeselector
+def get_locale():
+    lang = session.get('lang', request.accept_languages.best_match(['en', 'es']))
+    return lang
 
 
 @app.errorhandler(404)

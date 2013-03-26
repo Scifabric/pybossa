@@ -24,10 +24,12 @@ from flask.ext.sqlalchemy import SQLAlchemy
 #from flask.ext.debugtoolbar import DebugToolbarExtension
 from flask.ext.cache import Cache
 from flask.ext.heroku import Heroku
+from flask.ext.babel import Babel
 
 from pybossa import default_settings as settings
 
 from raven.contrib.flask import Sentry
+
 
 def create_app():
     app = Flask(__name__)
@@ -40,6 +42,7 @@ def create_app():
     # Set up Gravatar for users
     gravatar = Gravatar(app, size = 100, rating = 'g', default = 'mm', force_default = False, force_lower = False)
     return app
+
 
 def configure_app(app):
     app.config.from_object(settings)
@@ -92,3 +95,5 @@ mail = Mail(app)
 signer = URLSafeTimedSerializer(app.config['ITSDANGEORUSKEY'])
 if app.config.get('SENTRY_DSN'):
     sentr = Sentry(app)
+
+babel = Babel(app)
