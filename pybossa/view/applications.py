@@ -462,7 +462,8 @@ def import_task(short_name):
     gdform = BulkTaskGDImportForm(request.form)
     epiform = BulkTaskEpiCollectPlusImportForm(request.form)
 
-    if not (app.tasks or (request.args.get('template') or request.method == 'POST')):
+    if not (app.tasks or (request.args.get('template') or 
+                          request.method == 'POST')):
         return render_template('/applications/import_options.html',
                                title=title,
                                app=app,
