@@ -537,13 +537,6 @@ def import_task(short_name):
 
         tmpl = '/applications/import.html'
 
-        # these del()s are completely redundant
-        if template == 'epicollect':
-            del(template_args["csvform"])
-            del(template_args["gdform"])
-        elif template in googledocs_urls:
-            del(template_args["csvform"])
-
         return render_template(tmpl, **template_args)
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
