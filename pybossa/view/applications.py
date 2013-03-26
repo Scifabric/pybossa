@@ -502,7 +502,6 @@ def import_task(short_name):
         ('epicollect_project', get_epicollect_data_from_request)
         ]
 
-    dataurl = None
     csvform = BulkTaskCSVImportForm(request.form)
     gdform = BulkTaskGDImportForm(request.form)
     epiform = BulkTaskEpiCollectPlusImportForm(request.form)
@@ -524,7 +523,10 @@ def import_task(short_name):
 
     if template in googledocs_urls:
         gdform.googledocs_url.data = googledocs_urls[template]
+    
+    return _import_task(app, template_args, data_handlers)
 
+def _import_task(app, template_args, data_handlers):
     dataurl = get_data_url(**template_args)
 
     def render_forms():
@@ -533,7 +535,6 @@ def import_task(short_name):
 
     if not dataurl:
         return render_forms()
-
 
     try:
         r = requests.get(dataurl)
