@@ -514,12 +514,10 @@ def import_task(short_name):
         "gdform": gdform
         }
 
-    if not (app.tasks or (request.args.get('template') or 
-                          request.method == 'POST')):
+    template = request.args.get('template')
+    if not (app.tasks or template or request.method == 'POST'):
         return render_template('/applications/import_options.html',
                                **template_args)
-
-    template = request.args.get('template')
 
     if template in googledocs_urls:
         gdform.googledocs_url.data = googledocs_urls[template]
