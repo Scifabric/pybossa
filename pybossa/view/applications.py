@@ -472,10 +472,7 @@ def import_task(short_name):
     if not (app.tasks or (request.args.get('template') or 
                           request.method == 'POST')):
         return render_template('/applications/import_options.html',
-                               title=title,
-                               app=app,
-                               csvform=csvform,
-                               gdform=gdform)
+                               **template_args)
     else:
         template = request.args.get('template')
 
