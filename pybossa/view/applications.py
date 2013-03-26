@@ -541,7 +541,7 @@ def import_task(short_name):
         except Exception as inst:
             msg = 'Oops! Looks like there was an error with processing that file!'
             flash(msg, 'error')
-        render_forms()
+        return render_forms()
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
