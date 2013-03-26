@@ -438,6 +438,19 @@ def import_epicollect_tasks(app, data):
         db.session.add(task)
     db.session.commit()
 
+googledocs_urls = {
+    'image': "https://docs.google.com/spreadsheet/ccc"
+             "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE"
+             "&usp=sharing",
+    'sound': "https://docs.google.com/spreadsheet/ccc"
+             "?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc"
+             "&usp=sharing",
+    'map': "https://docs.google.com/spreadsheet/ccc"
+           "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc"
+           "&usp=sharing",
+    'pdf': "https://docs.google.com/spreadsheet/ccc"
+           "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE"
+           "&usp=sharing"}
 
 @blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
 def import_task(short_name):
@@ -456,20 +469,6 @@ def import_task(short_name):
                                csvform=csvform,
                                gdform=gdform)
     else:
-        googledocs_urls = {
-            'image': "https://docs.google.com/spreadsheet/ccc"
-                     "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE"
-                     "&usp=sharing",
-            'sound': "https://docs.google.com/spreadsheet/ccc"
-                     "?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc"
-                     "&usp=sharing",
-            'map': "https://docs.google.com/spreadsheet/ccc"
-                   "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc"
-                   "&usp=sharing",
-            'pdf': "https://docs.google.com/spreadsheet/ccc"
-                   "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE"
-                   "&usp=sharing"}
-
         template = request.args.get('template')
 
         if template in googledocs_urls:
