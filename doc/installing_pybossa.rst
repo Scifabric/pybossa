@@ -11,6 +11,7 @@ for your company, organization or institution using a GNU/Linux server.
    install
    apache2
    customizing
+   translating
 
 
 Contributing to the PyBossa development

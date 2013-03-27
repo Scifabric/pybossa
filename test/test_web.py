@@ -73,13 +73,14 @@ class TestWeb:
         return self.app.get("/account/profile", follow_redirects=True)
 
     def update_profile(self, method="POST", id=1, fullname="John Doe",
-                       name="johndoe", email_addr="johndoe@example.com"):
+                       name="johndoe", locale="es", email_addr="johndoe@example.com"):
         """Helper function to update the profile of users"""
         if (method == "POST"):
             return self.app.post("/account/profile/update",
                                  data={'id': id,
                                        'fullname': fullname,
                                        'name': name,
+                                       'locale': locale,
                                        'email_addr': email_addr},
                                  follow_redirects=True)
         else:
@@ -290,7 +291,7 @@ class TestWeb:
         assert "You must provide a password" in res.data, res
 
         # Non-existant user
-        msg = "Ooops, we didn't find you in the system, did you sign in?"
+        msg = "Ooops, we didn't find you in the system"
         res = self.signin(email='wrongemail')
         assert msg in  res.data, res.data
 
@@ -347,9 +348,10 @@ class TestWeb:
                 res.data, res
 
         res = self.update_profile(fullname="John Doe 2",
-                                  email_addr="johndoe2@example.com")
-        assert self.html_title("Profile") in res.data, res
-        assert "Your profile has been updated!" in res.data, res
+                                  email_addr="johndoe2@example.com",
+                                  locale="en")
+        assert self.html_title("Profile") in res.data, res.data
+        assert "Your profile has been updated!" in res.data, res.data
         assert "John Doe 2" in res.data, res
         assert "johndoe" in res.data, res
         assert "johndoe2@example.com" in res.data, res
@@ -357,6 +359,7 @@ class TestWeb:
         # Updating the username field forces the user to re-log in
         res = self.update_profile(fullname="John Doe 2",
                                   email_addr="johndoe2@example.com",
+                                  locale="en",
                                   name="johndoe2")
         assert "Your profile has been updated!" in res.data, res
         assert "Please sign in to access this page" in res.data, res
@@ -364,7 +367,7 @@ class TestWeb:
         res = self.signin(method="POST", email="johndoe2@example.com",
                           password="p4ssw0rd",
                           next="%2Faccount%2Fprofile")
-        assert "Welcome back John Doe 2" in res.data, res
+        assert "Welcome back John Doe 2" in res.data, res.data
         assert "John Doe 2" in res.data, res
         assert "johndoe2" in res.data, res
         assert "johndoe2@example.com" in res.data, res
@@ -624,6 +627,7 @@ class TestWeb:
         #  without a password
         #  Register a user and sign out
         user = model.User(name="tester", passwd_hash="tester",
+                          fullname="tester",
                           email_addr="tester")
         user.set_password('tester')
         db.session.add(user)
@@ -908,10 +912,9 @@ class TestWeb:
         #self.register()
         # First time accessing the app should redirect me to the tutorial
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
+        print res.data
         assert "some help" in res.data,\
                 "There should be some tutorial for the application"
-        assert "?next=%2Fapp%2Ftest-app%2Ftutorial" in res.data,\
-                "There should be a link to Sign in and redirect to tutorial"
         # Second time should give me a task, and not the tutorial
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
         assert "some help" not in res.data
@@ -996,7 +999,7 @@ class TestWeb:
         db.session.add(user)
         db.session.commit()
         res = self.signin()
-        assert "Ooops, we didn't find you in the system, did you sign in?" in res.data, res.data
+        assert "Ooops, we didn't find you in the system" in res.data, res.data
 
     @patch('pybossa.view.applications.requests.get')
     def test_33_bulk_csv_import_unauthorized(self, Mock):
@@ -1288,7 +1291,7 @@ class TestWeb:
         db.session.add(user)
         db.session.commit()
         res = self.app.get('/account/profile/settings')
-        assert "Change your Password" not in res.data
+        assert "Change your Password" not in res.data, res.data
 
     def test_43_terms_of_use_and_data(self):
         """Test WEB terms of use is working"""
@@ -1815,7 +1818,7 @@ class TestWeb:
         assert Fixtures.fullname in res.data, err_msg
 
     @patch('pybossa.view.applications.requests.get')
-    def test_33_bulk_epicollect_import_unauthorized(self, Mock):
+    def test_71_bulk_epicollect_import_unauthorized(self, Mock):
         """Test WEB bulk import unauthorized works"""
         unauthorized_request = FakeRequest('Unauthorized', 403,
                                            {'content-type': 'application/json'})
@@ -1834,7 +1837,7 @@ class TestWeb:
         assert msg in res.data
 
     @patch('pybossa.view.applications.requests.get')
-    def test_34_bulk_epicollect_import_non_html(self, Mock):
+    def test_72_bulk_epicollect_import_non_html(self, Mock):
         """Test WEB bulk import non html works"""
         html_request = FakeRequest('Not an application/json', 200,
                                    {'content-type': 'text/html'})
@@ -1851,7 +1854,7 @@ class TestWeb:
         assert "Oops! That project and form do not look like the right one." in res.data
 
     @patch('pybossa.view.applications.requests.get')
-    def test_34_bulk_epicollect_import_json(self, Mock):
+    def test_73_bulk_epicollect_import_json(self, Mock):
         """Test WEB bulk import json works"""
         data = [dict(DeviceID=23)]
         html_request = FakeRequest(json.dumps(data), 200,

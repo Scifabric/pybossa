@@ -17,3 +17,4 @@ blinker
 flask-cache
 flask-heroku
 pygeoip
+flask-babel

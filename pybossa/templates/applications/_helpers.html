@@ -4,7 +4,7 @@
         {% if pagination.has_prev %}
           <li>
           <a href="{{ url_for_other_page(pagination.page - 1)
-              }}">&laquo; Prev {{handle}}</a>
+              }}">&laquo; {{_('Prev')}} {{handle}}</a>
           </li>
         {% endif %}
 
@@ -24,7 +24,7 @@
         {% if pagination.has_next %}
           <li>
           <a href="{{ url_for_other_page(pagination.page + 1)
-              }}">Next {{handle}}&raquo;</a>
+              }}">{{_('Next')}} {{handle}}&raquo;</a>
           </li>
         {% endif %}
     </ul>
@@ -33,13 +33,13 @@
 
 {% macro render_app_local_nav(app, active_link, current_user) -%}
 <ul data-spy="affix" data-offset-top="200px" class="nav nav-list bs-docs-sidenav affix-top">
-    <li {% if active_link=="info"%}class="active"{% endif %}><a href="{{url_for('app.details', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Info</a></li>
-    <li {% if active_link=="contribute"%}class="active"{% endif %}><a href="{{url_for('app.presenter', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Contribute</a></li>
-    <li {% if active_link=="export"%}class="active"{% endif %}><a href="{{url_for('app.export_to', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Export Tasks and Task Runs</a></li>
-    <li {% if active_link=="tasks"%}class="active"{% endif %}><a href="{{url_for('app.tasks', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Tasks</a></li>
-    <li {% if active_link=="stats"%}class="active"{% endif %}><a href="{{url_for('app.show_stats', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Statistics</a></li>
+    <li {% if active_link=="info"%}class="active"{% endif %}><a href="{{url_for('app.details', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> {{_('Info')}}</a></li>
+    <li {% if active_link=="contribute"%}class="active"{% endif %}><a href="{{url_for('app.presenter', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> {{_('Contribute')}}</a></li>
+    <li {% if active_link=="export"%}class="active"{% endif %}><a href="{{url_for('app.export_to', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> {{_('Export Tasks and Task Runs')}}</a></li>
+    <li {% if active_link=="tasks"%}class="active"{% endif %}><a href="{{url_for('app.tasks', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> {{_('Tasks')}}</a></li>
+    <li {% if active_link=="stats"%}class="active"{% endif %}><a href="{{url_for('app.show_stats', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> {{_('Statistics')}}</a></li>
     {% if ( current_user.is_authenticated() and current_user.id == app.owner.id ) or current_user.admin %}
-    <li {% if active_link=="settings"%}class="active"{% endif %}><a href="{{url_for('app.settings', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Settings</a></li>
+    <li {% if active_link=="settings"%}class="active"{% endif %}><a href="{{url_for('app.settings', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> {{_('Settings')}}</a></li>
     {% endif %}
 </ul>
 {% endmacro %}
@@ -56,18 +56,18 @@
     <div class="span8">
       <ul style="list-style-type: none; font-size: 16px;">
         {% if current_user.id == app.owner.id %}
-        <li><strong><i class="icon-cog"></i> ID</strong>: {{ app.id }}</li>
+        <li><strong><i class="icon-cog"></i> {{ _('ID') }}</strong>: {{ app.id }}</li>
         {% endif %}
-        <li><strong><i class="icon-info-sign"></i> Description</strong>: {{ app['description'] }}</li>
-        <li><strong><i class="icon-ok"></i> Creation Date</strong>: {{ app.created[0:10] }}</li>
-        <li><strong><i class="icon-time"></i> Last Activity</strong>: {{ app.last_activity()}}</li>
-        <li><strong><i class="icon-cogs"></i> Overall progress</strong>: {{ ( app.completion_status() * 100) | round(2, 'floor') }}% completed</li>
-        <li><strong><i class="icon-tasks"></i> <a href="{{url_for('app.tasks',short_name=app.short_name)}}">Tasks</strong></a> ({{ app.tasks | count }})</li>
+        <li><strong><i class="icon-info-sign"></i> {{ _('Description') }}</strong>: {{ app['description'] }}</li>
+        <li><strong><i class="icon-ok"></i> { _('Creation Date') }}</strong>: {{ app.created[0:10] }}</li>
+        <li><strong><i class="icon-time"></i> {{ _('Last Activity') }}</strong>: {{ app.last_activity()}}</li>
+        <li><strong><i class="icon-cogs"></i> {{ _('Overall progress') }}</strong>: {{ ( app.completion_status() * 100) | round(2, 'floor') }}% {{ _('completed') }}</li>
+        <li><strong><i class="icon-tasks"></i> <a href="{{url_for('app.tasks',short_name=app.short_name)}}">{{ _('Tasks') }}</strong></a> ({{ app.tasks | count }})</li>
         {% if not current_user.is_anonymous() %}
         <li>{% if app.hidden == 1 %}
-            <i class="icon icon-eye-close"></i> <strong>Hidden</strong>: Yes 
+            <i class="icon icon-eye-close"></i> <strong>{{ _('Hidden') }}</strong>: {{ _('Yes') }}
         {% else %} 
-            <i class="icon icon-eye-open"></i> <strong>Hidden</strong>: No 
+            <i class="icon icon-eye-open"></i> <strong>{{ _('Hidden') }}</strong>: {{ _('No') }}
         {% endif %}
         </li>
         {% endif %}
@@ -88,7 +88,7 @@
     <div class="span9">
         <h2><a href="{{url_for('app.settings', short_name=app.short_name)}}">{{app.name}}</a></h2>
         <p>{{ app['description'] }}</p>
-        <a class="btn btn-inverse" href="{{url_for('app.settings', short_name=app.short_name)}}"><i class="icon-wrench"></i> Settings</a>
+        <a class="btn btn-inverse" href="{{url_for('app.settings', short_name=app.short_name)}}"><i class="icon-wrench"></i> {{ _('Settings') }}</a>
     </div>
 </div>
 {% endmacro %}
@@ -104,21 +104,21 @@
             {% else %}
             <img class="thumbnail" src="{{url_for('static', filename='img/placeholder.png')}}" style="max-width:100px;">
             {% endif %}
-        </div> <!-- End of span2 -->
-        <div id="data" class="span6">
-            <p style="margin:0"><strong><i class="icon-info-sign"></i> Description</strong>: {{ app['description'] }}</p>
-            <p style="margin:0"><strong><i class="icon-ok"></i> Creation Date</strong>: {{ app.created[0:10] }}</p>
-            {% if app.info.last_activity != "None" %}
-            <p style="margin:0"><strong><i class="icon-time"></i> Last Activity</strong>: {{ app.last_activity}}</p>
+        </div> <!-- End of span3 -->
+        <div id="data" class="span9">
+            <p style="margin:0"><strong><i class="icon-info-sign"></i> {{ _('Description') }}</strong>: {{ app.description }}</p>
+            <p style="margin:0"><strong><i class="icon-ok"></i> {{ _('Creation Date') }}</strong>: {{ app.created[0:10] }}</p>
+            {% if app.last_activity != None %}
+            <p style="margin:0"><strong><i class="icon-time"></i> {{ _('Last Activity') }}</strong>: {{ app.last_activity}}</p>
             {% endif %}
-            <p style="margin:0"><strong><i class="icon-cogs"></i> Overall progress</strong>: {{ app.overall_progress | round(2, 'floor') }}% completed</p>
+            <p style="margin:0"><strong><i class="icon-cogs"></i> {{ _('Overall progress') }}</strong>: {{ app.overall_progress | round(2, 'floor') }}% completed</p>
             {% if app.owner_id == current_user.id %}
-            <p style="margin:0"><strong><i class="icon-user"></i> Created by</strong>: Me</p>
+            <p style="margin:0"><strong><i class="icon-user"></i> {{ _('Created by') }}</strong>: {{ _('Me') }}</p>
             {% else %}
-            <p style="margin:0"><strong><i class="icon-user"></i> Created by</strong>: {{ app.owner }}</p>
+            <p style="margin:0"><strong><i class="icon-user"></i> {{ _('Created by') }}</strong>: {{ app.owner }}</p>
             {% endif %}
             {% if class != "app-draft" %}
-            <p style="margin:0"><a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = app.short_name) }}"><i class="icon icon-white icon-ok"></i> Try it!</a></p>
+            <p style="margin:0"><a class="btn btn-primary" href="{{ url_for('app.presenter', short_name = app.short_name) }}"><i class="icon icon-white icon-ok"></i> {{ _('Try it!') }}</a></p>
             {% endif %}
         </div> <!-- end of id=data class=span8 -->
     </div> <!--end of class=row -->
@@ -151,7 +151,7 @@ function imgError(image) {
                       <img src="{{url_for('static', filename="img/placeholder.dark.png")}}">
                       {% endif %}
                       <h3>{{app.name}}</h3>
-                      <span class="label label-info">Info</span>
+                      <span class="label label-info">{{ _('Info') }}</span>
                       </a>
                   </li>
                   {% endfor %}

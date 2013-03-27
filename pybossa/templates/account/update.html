@@ -10,23 +10,24 @@
         {{ helper.render_account_local_nav(current_user, active_link) }}
     </div>
     <div class="span9">
-        <h1><strong>{{current_user.fullname}}</strong>: Update your profile</h1>
+        <h1><strong>{{current_user.fullname}}</strong>: {{ _('Update your profile') }}</h1>
         <form method="post" class="form-horizontal" action="{{ url_for('account.update_profile') }}">
             <fieldset>
             {{ form.id }}
             {{ form.hidden_tag() }}
-            {{ render_field(form.fullname, placeholder="my full name") }}
-            {{ render_field(form.name, placeholder="myusername") }}
-            {{ render_field(form.email_addr, placeholder="hello@mywebsite.org") }}
+            {{ render_field(form.fullname, placeholder= _('my full name') ) }}
+            {{ render_field(form.name, placeholder= _('myusername') ) }}
+            {{ render_field(form.email_addr, placeholder= _('hello@mywebsite.org') ) }}
+            {{ render_field(form.locale) }}
             <div>
                 <img src="{{ current_user.email_addr | gravatar(size=25)}}">
-                <a href="http://www.gravatar.com">Change your avatar at Gravatar.com</a>. We are using {{current_user.email_addr}}
+                <a href="http://www.gravatar.com">{{ _('Change your avatar at Gravatar.com') }}</a>. {{ _('We are using') }} {{current_user.email_addr}}
                 <hr>
-                <span class="label label-warning"><i class="icon icon-white icon-star"></i> Note</span> If you change your <strong>user name</strong> you will be asked to sign in again.
+                <span class="label label-warning"><i class="icon icon-white icon-star"></i> {{ _('Note') }}</span> {{ _('If you change your') }} <strong>{{ _('user name') }}</strong> {{ _('you will be asked to sign in again.') }}
             </div>
             <div class="form-actions">
-              <input type="submit" value="Save the changes" class="btn btn-primary btn-large" />
-              <a href="{{ url_for('account.settings') }}" class="btn">Cancel</a>
+              <input type="submit" value="{{ _('Save the changes') }}" class="btn btn-primary btn-large" />
+              <a href="{{ url_for('account.settings') }}" class="btn">{{ _('Cancel') }}</a>
             </div>
             </fieldset>
         </form>

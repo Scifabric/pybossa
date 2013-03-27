@@ -36,6 +36,8 @@ def get_user_summary(name):
     # Get USER
     sql = text('''
                SELECT "user".id, "user".name, "user".fullname, "user".created,
+               "user".api_key, "user".twitter_user_id, "user".facebook_user_id,
+               "user".google_user_id,
                "user".email_addr, COUNT(task_run.user_id) AS n_answers
                FROM "user" LEFT OUTER JOIN task_run ON "user".id=task_run.user_id
                WHERE "user".name=:name
@@ -44,10 +46,13 @@ def get_user_summary(name):
     results = db.engine.execute(sql, name=name)
     user = dict()
     for row in results:
-        user = dict(id=row.id, name=row.name, fullname=row.fullname, created=row.created,
+        user = dict(id=row.id, name=row.name, fullname=row.fullname,
+                    created=row.created, api_key=row.api_key,
+                    twitter_user_id=row.twitter_user_id,
+                    google_user_id=row.google_user_id,
+                    facebook_user_id=row.facebook_user_id,
                     email_addr=row.email_addr, n_answers=row.n_answers)
 
-    print user
     # Rank
     # See: https://gist.github.com/tokumine/1583695
     sql = text('''

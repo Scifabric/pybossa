@@ -9,12 +9,12 @@
         {{ helper.render_account_local_nav(current_user, active_link) }} 
     </div>
     <div class="span9">
-        <h1><strong>User</strong>: {{ user.fullname }}</h1>
-        {{ helper.render_user_profile(current_user, "settings") }}
-        <a href="{{ url_for('account.update_profile') }}" class="btn btn-large"><i class="icon icon-user"></i> Update your profile</a>
-        <a href="{{ url_for('account.reset_api_key') }}" class="btn btn-large"><i class="icon icon-key"></i> Reset the API Key</a>
+        <h1><strong>{{_('User')}}</strong>: {{ user.fullname }}</h1>
+        {{ helper.render_user_profile(user, "settings") }}
+        <a href="{{ url_for('account.update_profile') }}" class="btn btn-large"><i class="icon icon-user"></i> {{ _('Update your profile') }}</a>
+        <a href="{{ url_for('account.reset_api_key') }}" class="btn btn-large"><i class="icon icon-key"></i> {{ _('Reset the API Key') }}</a>
         {% if(not (user.twitter_user_id or user.facebook_user_id or user.google_user_id)) %}
-        <a href="{{ url_for('account.change_password') }}" class="btn btn-large"><i class="icon icon-lock"></i> Change your Password</a>
+        <a href="{{ url_for('account.change_password') }}" class="btn btn-large"><i class="icon icon-lock"></i> {{ _(' Change your Password') }}</a>
         {% endif %}
     </div>
 </div>
