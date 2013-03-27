@@ -1290,7 +1290,7 @@ class TestWeb:
         db.session.add(user)
         db.session.commit()
         res = self.app.get('/account/profile/settings')
-        assert "Change your Password" not in res.data
+        assert "Change your Password" not in res.data, res.data
 
     def test_43_terms_of_use_and_data(self):
         """Test WEB terms of use is working"""

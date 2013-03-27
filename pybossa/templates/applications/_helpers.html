@@ -104,11 +104,11 @@
             {% else %}
             <img class="thumbnail" src="{{url_for('static', filename='img/placeholder.png')}}" style="max-width:100px;">
             {% endif %}
-        </div> <!-- End of span2 -->
-        <div id="data" class="span6">
-            <p style="margin:0"><strong><i class="icon-info-sign"></i> {{ _('Description') }}</strong>: {{ app['description'] }}</p>
+        </div> <!-- End of span3 -->
+        <div id="data" class="span9">
+            <p style="margin:0"><strong><i class="icon-info-sign"></i> {{ _('Description') }}</strong>: {{ app.description }}</p>
             <p style="margin:0"><strong><i class="icon-ok"></i> {{ _('Creation Date') }}</strong>: {{ app.created[0:10] }}</p>
-            {% if app.info.last_activity != "None" %}
+            {% if app.last_activity != None %}
             <p style="margin:0"><strong><i class="icon-time"></i> {{ _('Last Activity') }}</strong>: {{ app.last_activity}}</p>
             {% endif %}
             <p style="margin:0"><strong><i class="icon-cogs"></i> {{ _('Overall progress') }}</strong>: {{ app.overall_progress | round(2, 'floor') }}% completed</p>
