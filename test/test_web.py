@@ -626,6 +626,7 @@ class TestWeb:
         #  without a password
         #  Register a user and sign out
         user = model.User(name="tester", passwd_hash="tester",
+                          fullname="tester",
                           email_addr="tester")
         user.set_password('tester')
         db.session.add(user)
