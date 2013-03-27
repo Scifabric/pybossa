@@ -7,7 +7,7 @@
         {% if pagination.has_prev %}
           <li>
           <a href="{{ url_for_other_page(pagination.page - 1)
-            }}">&laquo; Prev</a>
+            }}">&laquo; {{_('Prev')}}</a>
           </li>
         {% endif %}
 
@@ -27,7 +27,7 @@
         {% if pagination.has_next %}
           <li>
           <a href="{{ url_for_other_page(pagination.page + 1)
-            }}">Next &raquo;</a>
+            }}">{{_('Next')}} &raquo;</a>
           </li>
         {% endif %}
     </ul>
@@ -38,7 +38,7 @@
 
 <div class="row">
   <div class="span9 offset2">
-      <h1>Community <small>{{total}} registered users</small><a class="pull-right btn btn-primary" href="{{url_for('leaderboard.index')}}"><i class="icon-trophy" style="color:white"></i> Leaderboard</a></h1>
+      <h1>{{ _('Community') }} <small>{{total}} {{ _('registered users') }}</small><a class="pull-right btn btn-primary" href="{{url_for('leaderboard.index')}}"><i class="icon-trophy" style="color:white"></i> {{ _('Leaderboard') }}</a></h1>
       {% if accounts %}
       <ul class="thumbnails">
       {% for account in accounts %}

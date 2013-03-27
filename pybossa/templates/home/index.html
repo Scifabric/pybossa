@@ -17,7 +17,7 @@
                     <img src="{{url_for('static', filename="img/placeholder.dark.png")}}">
                     {% endif %}
                     <h3>{{f.name}}</h3>
-                    <span class="label label-info">Info</span>
+                    <span class="label label-info">{{ _('Info') }}</span>
                     </a>
                 </li>
                 {% endfor %}
@@ -32,16 +32,16 @@
       <section class="grey get-started">
         <div class="row">
           <div class="span4">
-              <h2><i class="icon-play-circle"></i> Get Started</h2>
-            <p>It's really simple to start contributing.</p>
+              <h2><i class="icon-play-circle"></i> {{ _('Get Started') }}</h2>
+            <p>{{ _('It\'s really simple to start contributing.') }}</p>
           </div>
           <div class="span8">
-              <a href="{{url_for('app.index')}}" class="btn btn-info btn-large"><i class="icon-ok-sign"></i> Start Contributing</a> <a href="{{url_for('app.new')}}" class="btn btn-primary btn-large"><i class="icon-plus-sign"></i> Create an App</a>
+              <a href="{{url_for('app.index')}}" class="btn btn-info btn-large"><i class="icon-ok-sign"></i>{{ _(' Start Contributing') }}</a> <a href="{{url_for('app.new')}}" class="btn btn-primary btn-large"><i class="icon-plus-sign"></i> {{ _('Create an App') }}</a>
           </div>
       </section>
       
       <section>
-        <h2><i class="icon-th"></i> Most Active Applications</h2>
+        <h2><i class="icon-th"></i>{{ _('Most Active Applications') }}</h2>
         <div class="row">
           {% for app in top_apps %}
           <div class="span3">
@@ -53,7 +53,7 @@
                 {% endif %}
                 <h3>{{app.name | truncate(20, true)}}</h3>
                 <p>{{app.description | truncate(32, true)}}</p>
-                <p><a href="{{url_for('app.details',short_name=app.short_name)}}" class="btn btn-mini btn-info">Info</a> <a href="{{url_for('app.presenter',short_name=app.short_name)}}" class="btn btn-mini btn-primary">Start</a></p>
+                <p><a href="{{url_for('app.details',short_name=app.short_name)}}" class="btn btn-mini btn-info">Info</a> <a href="{{url_for('app.presenter',short_name=app.short_name)}}" class="btn btn-mini btn-primary">{{ _('Start') }}</a></p>
             </div>
           </div>
           {% endfor %}
@@ -61,9 +61,9 @@
           <div class="span3">
             <div class="app box">
                 <a href="#" class="image" style="background-image:url({{url_for('static',filename='img/placeholder.png')}})"></a>
-                <h3>Your application</h3>
-                <p>could be here!</p>
-                <p><a href="{{url_for('app.new')}}" class="btn btn-mini btn-primary">Create an app</a></p>
+                <h3>{{ _('Your application') }}</h3>
+                <p>{{ _('could be here!') }}</p>
+                <p><a href="{{url_for('app.new')}}" class="btn btn-mini btn-primary">{{ _('Create an app') }}</a></p>
             </div>
           </div>
           {% endfor %}
@@ -71,18 +71,18 @@
       </section>
       
       <section class="grey">
-        <h2><i class="icon-group"></i> Most Active Volunteers</h2>
+        <h2><i class="icon-group"></i>{{ _('Most Active Volunteers') }}</h2>
         <ul class="users">
             {% for user in top_users %}
           <li>
           <a href="{{url_for('account.public_profile', name=user.name)}}" data-content="
-                <strong>Joined:</strong> {{user.created[0:10]}} 
+                <strong>{{_('Joined')}}:</strong> {{user.created[0:10]}} 
                 <br/>
-                <strong>Submitted Tasks:</strong> {{user.task_runs}}
+                <strong>{{_('Submitted Tasks')}}:</strong> {{user.task_runs}}
                 " rel="popover" data-original-title="<strong>{{user.fullname}}</strong>">
                 <img src="{{user.email_addr|gravatar(size=90)}}">
            </a>
-           <span class="label label-success">{{user.task_runs}}</span> <small>Tasks</small>
+           <span class="label label-success">{{user.task_runs}}</span> <small>{{_('Tasks')}}</small>
           </li>
           {% endfor %}
         </ul>
@@ -95,5 +95,4 @@ $("a[rel=popover]").popover({
         placement: 'top'
                 });
 </script>
-
 {% endblock %}

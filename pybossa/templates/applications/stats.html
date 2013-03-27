@@ -31,14 +31,14 @@
         {% else %}
             <img class="img-polaroid" src="{{url_for('static', filename='img/placeholder.png')}}" style="max-width:60px;" onerror="imgError(this);"> 
         {% endif %}
-        <strong>{{ app.name }}</strong>: Statistics</h1>
+        <strong>{{ app.name }}</strong>: {{_('Statistics')}}</h1>
         <br/>
 
             {% if private %}
             <div class="row-fluid">
                 <div class="alert alert-info">
                     <button type="button" class="close" data-dismiss="alert">&times;</button>
-                    <strong>Important:</strong> Data have been <strong>anonymized!</strong>
+                    <strong>{{_('Important')}}:</strong> {{_('Data have been')}} <strong>{{_('anonymized')}}!</strong>
                 </div>
             </div>
             {% endif %}
@@ -46,7 +46,7 @@
             <!-- Hour Stats CARD -->
             <div id="card" class="row-fluid">
                 <div class="span12  well">
-                    <h2>Distribution of Answers per Hour</h2>
+                    <h2>{{_('Distribution of Answers per Hour')}}</h2>
                     <div id="hourStats" style="margin:0;height:500px;">
                     </div>
                     <script>
@@ -76,7 +76,7 @@
             <!-- Day Stats Total CARD -->
             <div id="card" class="row-fluid">
                 <div  class="span12  well">
-                    <h2>Total Answers per day <small> select an area to zoom, click to reset the chart</small></h2>
+                    <h2>{{_('Total Answers per day')}} <small> {{_('select an area to zoom, click to reset the chart')}}</small></h2>
                     <div id="dayStatsTotal" style="margin:0;height:500px;"></div>
                     <script>
                     (function(){
@@ -147,7 +147,7 @@
             <!-- Day Stats CARD -->
             <div id="card" class="row-fluid">
                 <div  class="span12  well">
-                    <h2>Answers per day <small> select an area to zoom, click to reset the chart</small></h2>
+                    <h2>{{_('Answers per day')}} <small> {{_('select an area to zoom, click to reset the chart')}}</small></h2>
                     <div id="dayStats" style="margin:0;height:500px;"></div>
                     <script>
                     (function(){
@@ -159,7 +159,7 @@
                         return(year + "-" + month + '-' + day)
                     }
                     function answersPerDay(obj) {
-                        return (parseInt(obj.y) + " answers were submitted this day " + date(obj.x));
+                        return (parseInt(obj.y) + " {{_('answers were submitted this day')}} " + date(obj.x));
                     }
                     var options = {
                         xaxis   : {mode:'time'},
@@ -217,15 +217,15 @@
             <!-- Number of answers CARD -->
             <div id="card" class="row-fluid">
                 <div id="dist-answers" class="span12  well">
-                    <h2>Distribution of Answers</h2>
+                    <h2>{{_('Distribution of Answers')}}</h2>
                     <div class="row-fluid">
                         <div class="span6">
                             <table class="table table-hover table-bordered table-striped">
                                 <thead>
                                     <tr>
-                                        <th>User</th>
-                                        <th>Tasks</th>
-                                        <th>Percentage</th>
+                                        <th>{{_('User')}}</th>
+                                        <th>{{_('Tasks')}}</th>
+                                        <th>{{_('Percentage')}}</th>
                                     </tr>
                                 </thead>
                             {% for k in userStats.keys() if k != 'geo' %}
@@ -264,19 +264,19 @@
             <!-- Anon User Stats CARD -->
             <div id="card" class="row-fluid">
                 <div id="dist-anon" class="span12  well">
-                    <h2>Details about Anonymous Users</h2>
+                    <h2>{{_('Details about Anonymous Users')}}</h2>
                     <div class="row-fluid">
                         <div class="span12">
-                            <p><i class="icon-group"></i> <strong>{{userStats.anonymous.users}} </strong> anonymous users have <strong>participated</strong></p>
+                            <p><i class="icon-group"></i> <strong>{{userStats.anonymous.users}} </strong> {{_('anonymous users have')}} <strong>{{_('participated')}}</strong></p>
                             {% if userStats.anonymous.top5 and userStats.geo %}
                             <h3>Top 5 users</h3>
                             <table class="table table-hover table-bordered table-striped">
                                 <thead>
                                     <tr>
                                         <th>#</th>
-                                        <th>Country</th>
-                                        <th>City</th>
-                                        <th>Tasks</th>
+                                        <th>{{_('Country')}}</th>
+                                        <th>{{_('City')}}</th>
+                                        <th>{{_('Tasks')}}</th>
                                     </tr>
                                 </thead>
                             {% for u in userStats.anonymous.top5 %}
@@ -296,11 +296,11 @@
                         (function(){
                         var container = document.getElementById('userAnonStats');
                         var graph = Flotr.draw(container, [
-                            {data:[[0, appStats.userAnonStats['top5'][0]['tasks'] ]],  label:'User 1'},
-                            {data:[[0, appStats.userAnonStats['top5'][1]['tasks'] ]],  label:'User 2'}, 
-                            {data:[[0, appStats.userAnonStats['top5'][2]['tasks'] ]],  label:'User 3'}, 
-                            {data:[[0, appStats.userAnonStats['top5'][3]['tasks'] ]],  label:'User 4'}, 
-                            {data:[[0, appStats.userAnonStats['top5'][4]['tasks'] ]],  label:'User 5'}], 
+                            {data:[[0, appStats.userAnonStats['top5'][0]['tasks'] ]],  label:'{{_('User')}} 1'},
+                            {data:[[0, appStats.userAnonStats['top5'][1]['tasks'] ]],  label:'{{_('User')}} 2'}, 
+                            {data:[[0, appStats.userAnonStats['top5'][2]['tasks'] ]],  label:'{{_('User')}} 3'}, 
+                            {data:[[0, appStats.userAnonStats['top5'][3]['tasks'] ]],  label:'{{_('User')}} 4'}, 
+                            {data:[[0, appStats.userAnonStats['top5'][4]['tasks'] ]],  label:'{{_('User')}} 5'}], 
                             {
                             pie     : {show: true, explode: 5},
                             grid    : {verticalLines: false, horizontalLines: false, outlineWidth: 0},
@@ -316,7 +316,7 @@
                     <div class="row-fluid">
                         <div class="span12">
                             <div id="map" style="height:250px;"></div>
-                            <p class="note">This page includes GeoLite data created by MaxMind, available from
+                            <p class="note">{{_('This page includes GeoLite data created by MaxMind, available from')}}
                             <a href="http://www.maxmind.com">http://www.maxmind.com</a></p>
                         </div>
                         <script>
@@ -355,18 +355,18 @@
             <!-- Auth User Stats CARD -->
             <div id="card" class="row-fluid">
                 <div id="dist-auth" class="span12  well">
-                    <h2>Details about Authenticated Users</h2>
+                    <h2>{{_('Details about Authenticated Users')}}</h2>
                     <div class="row-fluid">
                         <div class="span12">
-                            <p><i class="icon-group"></i> <strong>{{userStats.authenticated.users}}</strong> authenticated users have <strong>participated</strong>.</p>
+                            <p><i class="icon-group"></i> <strong>{{userStats.authenticated.users}}</strong> {{_('authenticated users have')}} <strong>{{_('participated')}}</strong>.</p>
                             {% if userStats.authenticated.top5 %}
-                            <h3>Top 5 users</h3>
+                            <h3>{{_('Top 5 users')}}</h3>
                             <table class="table table-hover table-bordered table-striped">
                                 <thead>
                                     <tr>
                                         <th>#</th>
-                                        <th>User</th>
-                                        <th>Tasks</th>
+                                        <th>{{_('User')}}</th>
+                                        <th>{{_('Tasks')}}</th>
                                     </tr>
                                 </thead>
                             {% for u in userStats.authenticated.top5 %}

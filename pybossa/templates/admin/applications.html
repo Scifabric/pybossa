@@ -10,16 +10,16 @@
         {{ render_account_local_nav(current_user, active_link) }}
     </div>
     <div class="span9">
-        <h1><strong>Admin Site:</strong> Manage featured applications</h1>
+        <h1><strong>{{ _('Admin Site') }} :</strong> {{ _('Manage featured applications') }}</h1>
     {% include "admin/js/featured_apps.js" %}
     {% for app in apps %}
     {{ render_app_short_summary(app, current_user) }}
     {% if app.featured == app.id %}
     <button id="appBtn{{app.id}}" class="btn btn-primary active" data-toggle="button" onclick="toggle({{app.id}})">
-            <i id="app{{app.id}}" class="icon-star"></i> Featured!</button>
+            <i id="app{{app.id}}" class="icon-star"></i> {{ _('Featured!') }}</button>
     {% else %}
             <button id="appBtn{{app.id}}" class="btn btn-primary" data-toggle="button" onclick="toggle({{app.id}})">
-            <i id="app{{app.id}}" class="icon-star-empty"></i> Featured!</button>
+            <i id="app{{app.id}}" class="icon-star-empty"></i> {{_('Featured!')}}</button>
     {% endif %}
     <hr>
     {% endfor %}

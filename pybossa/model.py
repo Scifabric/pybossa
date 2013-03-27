@@ -323,6 +323,8 @@ class User(db.Model, DomainObject, flaskext.login.UserMixin):
     name = Column(Unicode(length=254), unique=True)
     #: full name
     fullname = Column(Unicode(length=500))
+    #: locale
+    locale = Column(Unicode(length=254))
     #: api key
     api_key = Column(String(length=36), default=make_uuid, unique=True)
     passwd_hash = Column(Unicode(length=254), unique=True)

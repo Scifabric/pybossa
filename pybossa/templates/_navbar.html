@@ -9,25 +9,25 @@
           <a class="brand" href="{{ url_for('home') }}"><img src="{{url_for('static',filename='img/' + logo)}}" alt="{{brand}}"></a>
           <div class="nav-collapse collapse">
             <ul class="nav">
-              <li {% if active_page == 'community' %} class="active" {% endif %}><a href="{{ url_for('account.index')}}">Community</a></li>
-              <li {% if active_page == 'applications' %} class="active" {% endif %}><a href="{{ url_for('app.index') }}">Applications</a></li>
-              <li {% if active_page == 'create' %} class="active" {% endif %}><a href="{{ url_for('app.new') }}">Create</a></li>
-              <li {% if active_page == 'about' %} class="active" {% endif %}><a href="{{ url_for('about')}}">About</a></li>
+              <li {% if active_page == 'community' %} class="active" {% endif %}><a href="{{ url_for('account.index')}}">{{ _('Community') }}</a></li>
+              <li {% if active_page == 'applications' %} class="active" {% endif %}><a href="{{ url_for('app.index') }}">{{ _('Applications') }}</a></li>
+              <li {% if active_page == 'create' %} class="active" {% endif %}><a href="{{ url_for('app.new') }}">{{ _('Create') }}</a></li>
+              <li {% if active_page == 'about' %} class="active" {% endif %}><a href="{{ url_for('about')}}">{{ _('About') }}</a></li>
             </ul>
             {% include '_gcs_form.html' ignore missing %}
           {% if current_user.is_authenticated() %}
             <ul class="nav secondary-nav pull-right">
               <li {% if active_page == 'profile' %} class="active" {% endif %}><a href="#" data-toggle="dropdown" class="dropdown-toggle"><i class="icon icon-user"></i> {{ current_user.name | truncate(8,true) }} <span class="caret"></span></a>
                 <ul class="dropdown-menu">
-                    <li><a href="{{ url_for('account.profile') }}"><i class="icon icon-user"></i> My Profile</a></li>
-                    <li><a href="{{ url_for('account.applications') }}"><i class="icon icon-th-large"></i> My Applications</a></li>
-                    <li><a href="{{ url_for('account.settings') }}"><i class="icon icon-cog"></i> My Settings</a></li>
+                    <li><a href="{{ url_for('account.profile') }}"><i class="icon icon-user"></i> {{ _('My Profile') }}</a></li>
+                    <li><a href="{{ url_for('account.applications') }}"><i class="icon icon-th-large"></i> {{ _('My Applications') }}</a></li>
+                    <li><a href="{{ url_for('account.settings') }}"><i class="icon icon-cog"></i> {{ _('My Settings') }}</a></li>
                     {% if current_user.admin == 1 %}
                     <li class="divider"></li>
-                    <li><a href="{{ url_for('admin.index') }}"><i class="icon icon-cog"></i> Admin Site</a></li>
+                    <li><a href="{{ url_for('admin.index') }}"><i class="icon icon-cog"></i> {{ _('Admin Site') }}</a></li>
                     {% endif %}
                     <li class="divider"></li>
-                  <li><a href="{{ url_for('account.signout') }}"><i class="icon icon-off"></i> Sign Out</a></li>
+                  <li><a href="{{ url_for('account.signout') }}"><i class="icon icon-off"></i> {{ _('Sign Out') }}</a></li>
                 </ul>
               </li>
             </ul>
@@ -35,7 +35,7 @@
 
             {% if current_user.is_anonymous() %}
             <ul class="nav secondary-nav pull-right">
-              <li><a href="{{ url_for('account.signin') }}"><i class="icon icon-white icon-signin"></i> Sign in</a></li>
+              <li><a href="{{ url_for('account.signin') }}"><i class="icon icon-white icon-signin"></i> {{ _('Sign in') }}</a></li>
             </ul>
             {% endif %}
           </div><!--/.nav-collapse -->
