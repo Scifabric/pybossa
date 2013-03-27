@@ -275,7 +275,7 @@ def delete(short_name):
                 cached_apps.clean(app.id)
                 db.session.delete(app)
                 db.session.commit()
-                flash('Application deleted!', 'success')
+                flash(lazy_gettext('Application deleted!'), 'success')
                 return redirect(url_for('account.profile'))
         else:
             abort(403)
@@ -606,12 +606,10 @@ def presenter(short_name):
     if app.info.get("tutorial"):
         if request.cookies.get(app.short_name + "tutorial") is None:
             if (current_user.is_anonymous()):
-                flash("Ooops! You are an anonymous user and will not get any"
-                      " credit for your contributions. <a href=\"" +
-                      url_for('account.signin',
-                              next=url_for('app.tutorial',
-                                           short_name=short_name))
-                      + "\">Sign in now!</a>", "warning")
+                msg_1 = lazy_gettext("Ooops! You are an anonymous user and will not \
+                                     get any credit for your contributions. Sign in \
+                                     now!")
+                flash(msg_1, "warning")
             resp = make_response(render_template('/applications/tutorial.html',
                                                  title=title,
                                                  app=app))
@@ -619,24 +617,20 @@ def presenter(short_name):
             return resp
         else:
             if (current_user.is_anonymous()):
-                flash("Ooops! You are an anonymous user and will not get any"
-                      "credit for your contributions. <a href=\"" +
-                      url_for('account.signin',
-                              next=url_for('app.presenter',
-                                           short_name=short_name))
-                      + "\">Sign in now!</a>", "warning")
+                msg_1 = lazy_gettext("Ooops! You are an anonymous user and will not \
+                                     get any credit for your contributions. Sign in \
+                                     now!")
+                flash(msg_1, "warning")
             return render_template('/applications/presenter.html',
                                    title=title,
                                    app=app)
     else:
         if (current_user.is_anonymous()):
-            flash("Ooops! You are an anonymous user and will not get any"
-                  "credit for your contributions. <a href=\"" +
-                  url_for('account.signin',
-                          next=url_for('app.presenter',
-                                       short_name=short_name))
-                  + "\">Sign in now!</a>", "warning")
-
+            if (current_user.is_anonymous()):
+                msg_1 = lazy_gettext("Ooops! You are an anonymous user and will not \
+                                     get any credit for your contributions. Sign in \
+                                     now!")
+                flash(msg_1, "warning")
         return render_template('/applications/presenter.html',
                                title=title,
                                app=app)
