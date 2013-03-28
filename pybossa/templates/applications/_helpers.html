@@ -33,13 +33,13 @@
 
 {% macro render_app_local_nav(app, active_link, current_user) -%}
 <ul data-spy="affix" data-offset-top="200px" class="nav nav-list bs-docs-sidenav affix-top">
-    <li {% if active_link=="info"%}class="active"{% endif %}><a href="{{url_for('app.details', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Info</a></li>
-    <li {% if active_link=="contribute"%}class="active"{% endif %}><a href="{{url_for('app.presenter', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Contribute</a></li>
-    <li {% if active_link=="export"%}class="active"{% endif %}><a href="{{url_for('app.export_to', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Export Tasks and Task Runs</a></li>
-    <li {% if active_link=="tasks"%}class="active"{% endif %}><a href="{{url_for('app.tasks', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Tasks</a></li>
-    <li {% if active_link=="stats"%}class="active"{% endif %}><a href="{{url_for('app.show_stats', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Statistics</a></li>
+    <li {% if active_link=="info"%}class="active"{% endif %}><a href="{{url_for('app.details', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> {{_('Info')}}</a></li>
+    <li {% if active_link=="contribute"%}class="active"{% endif %}><a href="{{url_for('app.presenter', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> {{_('Contribute')}}</a></li>
+    <li {% if active_link=="export"%}class="active"{% endif %}><a href="{{url_for('app.export_to', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> {{_('Export Tasks and Task Runs')}}</a></li>
+    <li {% if active_link=="tasks"%}class="active"{% endif %}><a href="{{url_for('app.tasks', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> {{_('Tasks')}}</a></li>
+    <li {% if active_link=="stats"%}class="active"{% endif %}><a href="{{url_for('app.show_stats', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> {{_('Statistics')}}</a></li>
     {% if ( current_user.is_authenticated() and current_user.id == app.owner.id ) or current_user.admin %}
-    <li {% if active_link=="settings"%}class="active"{% endif %}><a href="{{url_for('app.settings', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> Settings</a></li>
+    <li {% if active_link=="settings"%}class="active"{% endif %}><a href="{{url_for('app.settings', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> {{_('Settings')}}</a></li>
     {% endif %}
 </ul>
 {% endmacro %}

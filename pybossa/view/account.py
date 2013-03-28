@@ -76,21 +76,23 @@ def signin():
         user = model.User.query.filter_by(email_addr=email).first()
         if user and user.check_password(password):
             login_user(user, remember=True)
-            flash("Welcome back %s" % user.fullname, 'success')
+            msg_1 = lazy_gettext("Welcome back") + " " + user.fullname
+            flash(msg_1, 'success')
             return redirect(request.args.get("next") or url_for("home"))
         elif user:
             msg, method = get_user_signup_method(user)
             if method == 'local':
-                msg = "Ooops, Incorrect email/password"
+                msg = lazy_gettext("Ooops, Incorrect email/password")
                 flash(msg, 'error')
             else:
                 flash(msg, 'info')
         else:
-            flash(u"Ooops, we didn't find you in the system, did you sign in?",
-                  'info')
+            msg = lazy_gettext("Ooops, we didn't find you in the system, \
+                               did you sign in?")
+            flash(msg, 'info')
 
     if request.method == 'POST' and not form.validate():
-        flash('Please correct the errors', 'error')
+        flash(lazy_gettext('Please correct the errors'), 'error')
     auth = {'twitter': False, 'facebook': False, 'google': False}
     if current_user.is_anonymous():
         # If Twitter is enabled in config, show the Twitter Sign in button
@@ -112,7 +114,7 @@ def signin():
 @blueprint.route('/signout')
 def signout():
     logout_user()
-    flash('You are now signed out', 'success')
+    flash(lazy_gettext('You are now signed out'), 'success')
     return redirect(url_for('home'))
 
 

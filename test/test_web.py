@@ -291,7 +291,7 @@ class TestWeb:
         assert "You must provide a password" in res.data, res
 
         # Non-existant user
-        msg = "Ooops, we didn't find you in the system, did you sign in?"
+        msg = "Ooops, we didn't find you in the system"
         res = self.signin(email='wrongemail')
         assert msg in  res.data, res.data
 
@@ -359,6 +359,7 @@ class TestWeb:
         # Updating the username field forces the user to re-log in
         res = self.update_profile(fullname="John Doe 2",
                                   email_addr="johndoe2@example.com",
+                                  locale="en",
                                   name="johndoe2")
         assert "Your profile has been updated!" in res.data, res
         assert "Please sign in to access this page" in res.data, res
@@ -366,7 +367,7 @@ class TestWeb:
         res = self.signin(method="POST", email="johndoe2@example.com",
                           password="p4ssw0rd",
                           next="%2Faccount%2Fprofile")
-        assert "Welcome back John Doe 2" in res.data, res
+        assert "Welcome back John Doe 2" in res.data, res.data
         assert "John Doe 2" in res.data, res
         assert "johndoe2" in res.data, res
         assert "johndoe2@example.com" in res.data, res
@@ -911,10 +912,9 @@ class TestWeb:
         #self.register()
         # First time accessing the app should redirect me to the tutorial
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
+        print res.data
         assert "some help" in res.data,\
                 "There should be some tutorial for the application"
-        assert "?next=%2Fapp%2Ftest-app%2Ftutorial" in res.data,\
-                "There should be a link to Sign in and redirect to tutorial"
         # Second time should give me a task, and not the tutorial
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
         assert "some help" not in res.data
@@ -999,7 +999,7 @@ class TestWeb:
         db.session.add(user)
         db.session.commit()
         res = self.signin()
-        assert "Ooops, we didn't find you in the system, did you sign in?" in res.data, res.data
+        assert "Ooops, we didn't find you in the system" in res.data, res.data
 
     @patch('pybossa.view.applications.requests.get')
     def test_33_bulk_csv_import_unauthorized(self, Mock):

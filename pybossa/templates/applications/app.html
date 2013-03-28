@@ -19,7 +19,7 @@
         {% endif %}
         <strong>{{ app.name }}</strong></h1>
         <hr>
-        <h2><i class="icon-cogs"></i> Overall progress</strong>: {{ ( app.completion_status()*100 ) | round(2, 'floor') }}% completed
+        <h2><i class="icon-cogs"></i> {{_('Overall progress')}}</strong>: {{ ( app.completion_status()*100 ) | round(2, 'floor') }}% {{_('completed')}}
         <a href="{{ url_for('app.presenter', short_name=app.short_name)}}" class="btn btn-primary pull-right"><i class="icon-thumbs-up" style="color:white;"></i> {{ _('Start Contributing Now!') }}</a>
         </h2>
         {% if app.long_description %}
