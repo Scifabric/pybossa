@@ -529,7 +529,9 @@ def import_task(short_name):
         tmpl = '/applications/import.html'    
         return render_template(tmpl, **template_args)
 
-    if dataurl:
+    if not dataurl:
+        return render_forms()
+    else:
         try:
             r = requests.get(dataurl)
             if 'csv_url' in request.form or 'googledocs_url' in request.form:
@@ -543,7 +545,7 @@ def import_task(short_name):
         except Exception as inst:
             msg = 'Oops! Looks like there was an error with processing that file!'
             flash(lazy_gettext(msg), 'error')
-    render_forms()
+        render_forms()
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
