@@ -14,16 +14,16 @@
     <form class="form-horizontal" method="post" action="{{ url_for('app.new') }}">
         {{ form.hidden_tag() }}
         <fieldset>
-            {{ render_field(form.name, class_="span4", placeholder="The name of the application") }}
-            {{ render_field(form.short_name, class_="span4", placeholder="Short name or slug for the application") }}
-            {{ render_field(form.description, class_="span4", placeholder="Give some details about the application")}}
-            {{ render_field(form.thumbnail, class_="span4", placeholder="Paste the direct link to your app icon")}}
+            {{ render_field(form.name, class_="span4", placeholder= _('The name of the application')) }}
+            {{ render_field(form.short_name, class_="span4", placeholder=_('Short name or slug for the application')) }}
+            {{ render_field(form.description, class_="span4", placeholder=_('Give some details about the application'))}}
+            {{ render_field(form.thumbnail, class_="span4", placeholder=_('Paste the direct link to your app icon'))}}
             {{ render_field(form.allow_anonymous_contributors, class_="span4")}}
-            {{ render_field(form.long_description, class_="span4", placeholder="Explain the application (you can use HTML code!)")}}
-            {{ render_field(form.sched, class_="span4", placeholder="Task scheduler for your app", tooltip="Select how to distribute the tasks")}}
-            {{ render_field(form.hidden, tooltip="Do you want to hide your app?")}}
+            {{ render_field(form.long_description, class_="span4", placeholder=_('Explain the application (you can use HTML code!)'))}}
+            {{ render_field(form.sched, class_="span4", placeholder="Task scheduler for your app", tooltip=_('Select how to distribute the tasks'))}}
+            {{ render_field(form.hidden, tooltip=_('Do you want to hide your app?'))}}
             <div class="form-actions">
-                <input type="submit" value="Create the application" text={{ _('Create the application') }} class="btn btn-primary" />
+                <input type="submit" value={{_('Create the application')}} class="btn btn-primary" />
                 <a href="{{url_for('account.profile')}}" class="btn">{{_('Cancel')}}</a>
             </div>
         </fieldset>

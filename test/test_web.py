@@ -626,6 +626,7 @@ class TestWeb:
         #  without a password
         #  Register a user and sign out
         user = model.User(name="tester", passwd_hash="tester",
+                          fullname="tester",
                           email_addr="tester")
         user.set_password('tester')
         db.session.add(user)
@@ -1290,7 +1291,7 @@ class TestWeb:
         db.session.add(user)
         db.session.commit()
         res = self.app.get('/account/profile/settings')
-        assert "Change your Password" not in res.data
+        assert "Change your Password" not in res.data, res.data
 
     def test_43_terms_of_use_and_data(self):
         """Test WEB terms of use is working"""

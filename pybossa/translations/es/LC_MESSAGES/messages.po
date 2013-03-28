@@ -7,9 +7,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2013-03-26 18:23+0100\n"
+"POT-Creation-Date: 2013-03-27 10:19+0100\n"
 "PO-Revision-Date: 2013-03-26 18:24+0100\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Last-Translator: Daniel Lombraña González <teleyinex@gmail.com>\n"
 "Language-Team: es <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "MIME-Version: 1.0\n"
@@ -21,7 +21,12 @@ msgstr ""
 msgid ""
 "Please update your e-mail address in your profile page, right now it is "
 "empty!"
-msgstr ""
+msgstr "Por favor, actualiza tu cuenta de correo electrónico en la página de tu perfil,
+ahora mismo no tienes ningún correo asociado!"
+
+#: templates/_gcs_form.html:6 templates/admin/users.html:20
+msgid "Search"
+msgstr "Búsqueda"
 
 #: templates/_navbar.html:12 templates/account/index.html:41
 msgid "Community"
@@ -43,7 +48,7 @@ msgstr "Acerca"
 
 #: templates/_navbar.html:22 templates/account/_helpers.html:3
 msgid "My Profile"
-msgstr "Mi perfíl"
+msgstr "Mi perfil"
 
 #: templates/_navbar.html:23 templates/account/_helpers.html:4
 msgid "My Applications"
@@ -51,7 +56,7 @@ msgstr "Mis Aplicaciones"
 
 #: templates/_navbar.html:24 templates/account/_helpers.html:8
 msgid "My Settings"
-msgstr "Mi Configuración"
+msgstr "Mis Preferencias"
 
 #: templates/_navbar.html:27 templates/account/_helpers.html:6
 #: templates/admin/applications.html:13 templates/admin/users.html:14
@@ -72,7 +77,7 @@ msgstr "Recursos"
 
 #: templates/base.html:61
 msgid "Docs"
-msgstr "Documentos"
+msgstr "Documentación"
 
 #: templates/base.html:63
 msgid "Terms of Use"
@@ -112,47 +117,47 @@ msgstr "Tweet"
 
 #: templates/account/_helpers.html:39
 msgid "Nick"
-msgstr "Nick"
+msgstr "Nombre de Usuario"
 
 #: templates/account/_helpers.html:41 view/account.py:61
 msgid "E-mail"
 msgstr "Correo Electrónico"
 
-#: templates/account/_helpers.html:44 templates/account/_helpers.html:53
+#: templates/account/_helpers.html:44 templates/account/_helpers.html:57
 msgid "Rank"
 msgstr "Clasificación"
 
-#: templates/account/_helpers.html:48
+#: templates/account/_helpers.html:49
 msgid "of"
 msgstr "de"
 
-#: templates/account/_helpers.html:48
+#: templates/account/_helpers.html:49
 msgid "with a Score of"
 msgstr "con un marcador de"
 
-#: templates/account/_helpers.html:48
+#: templates/account/_helpers.html:49
 msgid "contributed tasks"
 msgstr "tareas contribuidas"
 
-#: templates/account/_helpers.html:53
+#: templates/account/_helpers.html:57
 msgid "The user has not contributed a task yet"
 msgstr "El usuario no ha contribuido tareas todavía"
 
-#: templates/account/_helpers.html:56 templates/home/index.html:79
+#: templates/account/_helpers.html:60 templates/home/index.html:79
 msgid "Joined"
 msgstr "Se ha unido"
 
-#: templates/account/_helpers.html:59
+#: templates/account/_helpers.html:63
 msgid "API key"
 msgstr "Clave API"
 
-#: templates/account/_helpers.html:62
+#: templates/account/_helpers.html:66
 msgid "See your public profile"
-msgstr "Comprueba tu perfíl público"
+msgstr "Comprueba tu perfil público"
 
-#: templates/account/_helpers.html:63
+#: templates/account/_helpers.html:67
 msgid "Edit your profile"
-msgstr "Edita tu perfíl"
+msgstr "Edita tu perfil"
 
 #: templates/account/applications.html:16 templates/applications/index.html:12
 msgid "Published"
@@ -192,9 +197,9 @@ msgstr "Cambia tu contraseña"
 
 #: templates/account/password.html:18
 msgid "my current password"
-msgstr "my contraseña actual"
+msgstr "mi contraseña actual"
 
-#: templates/account/password.html:19 templates/account/password_forgot.html:10
+#: templates/account/password.html:19
 msgid "my new password"
 msgstr "mi nueva contraseña"
 
@@ -218,13 +223,17 @@ msgstr "Cancelar"
 msgid "Reset your Password"
 msgstr "Reiniciar tu contraseña"
 
+#: templates/account/password_forgot.html:10
+msgid "my e-mail"
+msgstr "mi correo electrónico"
+
 #: templates/account/password_forgot.html:12
 msgid "Reset my Password"
 msgstr "Reiniciar my contraseña"
 
 #: templates/account/profile.html:14
 msgid "Your Profile"
-msgstr "Tu perfíl"
+msgstr "Tu perfil"
 
 #: templates/account/profile.html:17
 msgid "Your Contributions"
@@ -249,7 +258,7 @@ msgstr "Nota"
 
 #: templates/account/register.html:7 templates/account/signin.html:7
 msgid "By click the"
-msgstr "Haciendo click en"
+msgstr "Haciendo click en el"
 
 #: templates/account/register.html:8
 msgid "Create account button"
@@ -300,8 +309,8 @@ msgid ""
 " If you reset the API key, you will need to use the new generated key for"
 " any API call."
 msgstr ""
-" Si reinicias la API key, necesitarás utilizar la nueva clave para cualquier"
-" llamada a la API"
+" Si reinicias la clave API, necesitarás utilizar la nueva clave para "
+"cualquier llamada a la API"
 
 #: templates/account/reset-api-key.html:17
 msgid "Do you want to reset your personal API Key?"
@@ -311,9 +320,13 @@ msgstr "Quieres reiniciar tu clave personal de la API?"
 msgid "No, do not reset the API key!"
 msgstr "No, no quiero reiniciar mi clave API!"
 
+#: templates/account/settings.html:12 view/admin.py:86
+msgid "User"
+msgstr "Usuario"
+
 #: templates/account/settings.html:14 templates/account/update.html:13
 msgid "Update your profile"
-msgstr "Actualiza tu perfíl"
+msgstr "Actualiza tu perfil"
 
 #: templates/account/settings.html:15
 msgid "Reset the API Key"
@@ -331,9 +344,7 @@ msgstr "Botón de Inicio de Sesión"
 msgid ""
 "below you are agreeing to\n"
 "    the"
-msgstr ""
-"debajo estás aceptando a\n"
-"    los"
+msgstr "de debajo aceptas los"
 
 #: templates/account/signin.html:13 templates/account/signin.html:23
 msgid "Sign in with Twitter"
@@ -357,11 +368,11 @@ msgstr "Inicia sesión con tu cuenta de PyBossa"
 
 #: templates/account/signin.html:52
 msgid " Create a new account!"
-msgstr " Crea una nueva cuenta!"
+msgstr " Únete ya!"
 
 #: templates/account/signin.html:53
 msgid "Forgot Password"
-msgstr "Olvidé mi Contraseña"
+msgstr "¿Has olvidado tu contraseña?"
 
 #: templates/account/update.html:24
 msgid "Change your avatar at Gravatar.com"
@@ -415,10 +426,6 @@ msgstr "Organizar los Administradores"
 msgid "Try with the full name or nick"
 msgstr "Inténtalo con el nombre completo o nombre de usuario"
 
-#: templates/admin/users.html:20
-msgid "Search"
-msgstr "Búsqueda"
-
 #: templates/admin/users.html:31
 msgid "Current Users with Admin privileges"
 msgstr "Usuarios con privilegios de administrador"
@@ -435,7 +442,7 @@ msgstr "Descripción"
 #: templates/applications/_helpers.html:63
 #: templates/applications/_helpers.html:112
 msgid "Last Activity"
-msgstr "Última Actividad"
+msgstr "Actualizada"
 
 #: templates/applications/_helpers.html:64
 #: templates/applications/_helpers.html:114
@@ -457,11 +464,11 @@ msgstr "Tareas"
 msgid "Hidden"
 msgstr "Oculta"
 
-#: templates/applications/_helpers.html:68
+#: templates/applications/_helpers.html:68 view/applications.py:60
 msgid "Yes"
 msgstr "Sí"
 
-#: templates/applications/_helpers.html:70
+#: templates/applications/_helpers.html:70 view/applications.py:61
 msgid "No"
 msgstr "No"
 
@@ -472,12 +479,12 @@ msgstr "Configuración"
 
 #: templates/applications/_helpers.html:110
 msgid "Creation Date"
-msgstr "Fecha de Creación"
+msgstr "Creada"
 
 #: templates/applications/_helpers.html:116
 #: templates/applications/_helpers.html:118
 msgid "Created by"
-msgstr "Creado por"
+msgstr "Creada por"
 
 #: templates/applications/_helpers.html:116
 msgid "Me"
@@ -485,7 +492,7 @@ msgstr "Yo"
 
 #: templates/applications/_helpers.html:121
 msgid "Try it!"
-msgstr "Pruébala!"
+msgstr "Participa!"
 
 #: templates/applications/_helpers.html:154 templates/home/index.html:20
 msgid "Info"
@@ -513,7 +520,7 @@ msgstr "Borra la aplicación"
 
 #: templates/applications/app.html:23
 msgid "Start Contributing Now!"
-msgstr "Empieza a contribuir ya!"
+msgstr "Participa!"
 
 #: templates/applications/app.html:33 templates/applications/delete.html:28
 #: templates/applications/settings.html:31
@@ -536,157 +543,192 @@ msgstr ""
 
 #: templates/applications/delete.html:22
 msgid "No, do not delete it!"
-msgstr ""
+msgstr "No, no la borres!"
 
 #: templates/applications/export.html:12
 msgid "Export All Tasks and Task Runs"
-msgstr ""
+msgstr "Exportar Todas las Tareas y Respuestas"
 
 #: templates/applications/export.html:13
 msgid "You can export and download"
-msgstr ""
+msgstr "Puedes exportar y descargar"
 
 #: templates/applications/export.html:13
 msgid "all the available"
-msgstr ""
+msgstr "todas las"
 
 #: templates/applications/export.html:13
 msgid ""
 "Tasks and Task Runs \\(the submitted answers by the users\\) in CSV or "
 "JSON formats."
-msgstr ""
+msgstr "Tareas y Repuestas (enviadas por los usuarios) en el formato CSV o JSON"
 
 #: templates/applications/export.html:18 templates/applications/export.html:23
 msgid "Task Runs"
-msgstr ""
+msgstr "Respuestas"
 
 #: templates/applications/import.html:15
 msgid "From a Google Docs Spreadsheet"
-msgstr ""
+msgstr "Desde una hoja de cálcula de Google Docs"
 
 #: templates/applications/import.html:19
 msgid "Please provide a URL to a Google Docs Spreadsheet with data for"
 msgstr ""
+"Por favor, proporciona una URL de una hoja de cálculo de Google con datos"
+" para"
 
 #: templates/applications/import.html:19 templates/applications/import.html:33
 #: templates/applications/import.html:47
 msgid "For more information, please look at"
-msgstr ""
+msgstr "Para más información, por favor consulta"
 
 #: templates/applications/import.html:19 templates/applications/import.html:33
 #: templates/applications/import.html:47
 msgid "the documentation"
-msgstr ""
+msgstr "la documentación"
 
 #: templates/applications/import.html:29
 msgid "From a CSV file"
-msgstr ""
+msgstr "Desde un fichero CSV"
 
 #: templates/applications/import.html:33
 msgid ""
 "Please provide a URL (i.e. DropBox, Box, Ubuntu One, etc. public link) to"
 " a CSV file with data for"
 msgstr ""
+"Por favor proporciona un enlace (por ejemplo un enlace público de "
+"DropBox,\"\n"
+"\" Box, Ubuntu One, etc.) de un fichero CSV con datos para"
 
 #: templates/applications/import.html:36 templates/applications/import.html:51
 msgid "Import"
-msgstr ""
+msgstr "Importar"
 
 #: templates/applications/import.html:43
 msgid "From an EpiCollect Plus project"
-msgstr ""
+msgstr "Desde un proyecto EpiCollect Plus"
 
 #: templates/applications/import.html:47
 msgid "Please provide an EpiCollect Plus project name to import its data for"
 msgstr ""
+"Por favor proporciona el nombre de un proyecto EpiCollect Plus para "
+"importar sus datos para"
 
 #: templates/applications/index.html:11
 msgid "Featured"
-msgstr ""
+msgstr "Portada"
 
 #: templates/applications/index.html:20
 msgid "Featured Applications"
-msgstr ""
+msgstr "Aplicaciones en Portada"
 
 #: templates/applications/index.html:22
 msgid "A special selection of the most interesting applications"
-msgstr ""
+msgstr "Una selección especial de las aplicaciones más interesantes"
 
 #: templates/applications/index.html:26
 msgid "Published Applications"
-msgstr ""
+msgstr "Aplicaciones Publicadas"
 
 #: templates/applications/index.html:27
 msgid "All available applications"
-msgstr ""
+msgstr "Todas las aplicaciones disponibles"
 
 #: templates/applications/index.html:31
 msgid "Draft Applications"
-msgstr ""
+msgstr "Aplicaciones Borrador"
 
 #: templates/applications/index.html:33
 msgid "Work in progress applications"
-msgstr ""
+msgstr "Aplicaciones en desarrollo"
 
 #: templates/applications/index.html:33
 msgid "you can not contribute yet"
-msgstr ""
+msgstr "todavía no puedes participar en ellas"
 
 #: templates/applications/new.html:13
 msgid "Application"
-msgstr ""
+msgstr "Aplicación"
 
 #: templates/applications/new.html:13
 msgid "Create a new application"
-msgstr ""
+msgstr "Crear una nueva aplicación"
+
+#: templates/applications/new.html:17
+msgid "The name of the application"
+msgstr "El nombre de la aplicación"
+
+#: templates/applications/new.html:18
+msgid "Short name or slug for the application"
+msgstr "El nombre corto o slug de la aplicación"
+
+#: templates/applications/new.html:19
+msgid "Give some details about the application"
+msgstr "Da algunos detalles sobre la aplicación"
+
+#: templates/applications/new.html:20
+msgid "Paste the direct link to your app icon"
+msgstr "Pega el enlace directo al icono de tu aplicación"
+
+#: templates/applications/new.html:22
+msgid "Explain the application (you can use HTML code!)"
+msgstr "Explica la aplicación (puedes usar HTML!)"
+
+#: templates/applications/new.html:23
+msgid "Select how to distribute the tasks"
+msgstr "Elige cómo quieres distribuir las tareas"
+
+#: templates/applications/new.html:24
+msgid "Do you want to hide your app?"
+msgstr "¿Quieres ocultar la aplicación?"
 
 #: templates/applications/new.html:26
 msgid "Create the application"
-msgstr ""
+msgstr "Crear una aplicación"
 
 #: templates/applications/presenter.html:10
 msgid "Contribute"
-msgstr ""
+msgstr "Contribuir"
 
 #: templates/applications/settings.html:16
 msgid "Application Settings"
-msgstr ""
+msgstr "Configuración de la Aplicación"
 
 #: templates/applications/settings.html:21
 msgid "Task Settings"
-msgstr ""
+msgstr "Configuración de las Tareas"
 
 #: templates/applications/settings.html:25
 msgid "Delete the tasks"
-msgstr ""
+msgstr "Eliminar las Tareas"
 
 #: templates/applications/task_presenter_editor.html:28
 msgid "Task Presenter Editor"
-msgstr ""
+msgstr "Editor del Presentador de Tareas"
 
 #: templates/applications/task_presenter_editor.html:28
 msgid "Help"
-msgstr ""
+msgstr "Ayuda"
 
 #: templates/applications/task_presenter_editor.html:34
 msgid "Update the application task presenter"
-msgstr ""
+msgstr "Actualizar el presentador de las tareas"
 
 #: templates/applications/task_presenter_editor.html:35
 msgid "Preview the task presenter"
-msgstr ""
+msgstr "Vista preliminar del presentador de tareas"
 
 #: templates/applications/task_presenter_editor.html:45
 msgid "&times;"
-msgstr ""
+msgstr "&times;"
 
 #: templates/applications/task_presenter_editor.html:46
 msgid "Task Presenter Preview"
-msgstr ""
+msgstr "Vista preliminar del Presentador de Tareas"
 
 #: templates/applications/task_presenter_editor.html:52
 msgid "Close"
-msgstr ""
+msgstr "Cerrar"
 
 #: templates/home/about.html:9
 msgid ""
@@ -698,15 +740,24 @@ msgid ""
 "anyone around the world with some time, interest and an internet "
 "connection can contribute."
 msgstr ""
+"PyBossa es una plataforma de código abierto y gratuita para el crowd-"
+"sourcing ylas micro-tareas. La plataforma permite la creación y ejecución"
+" de proyectos en losque se requiera la ayuda del conocimiento humano para"
+" resolver tareas como por ejemplola clasificación de imágenes, "
+"transcripción de documentos, geolocalización, etc. PyBossaes una "
+"herramienta que pretende ayudar a investigadores, hackers cívicos y "
+"desarrolladoresa crear proyectos en los que cualquier persona del mundo "
+"pueda contribuir si tiene unaconexión a Internet e interés en elr "
+"proyecto."
 
 #: templates/home/about.html:12
 msgid "PyBossa is different to existing efforts:"
-msgstr ""
+msgstr "PyBossa es diferente a los proyectos existentes porque:"
 
 #: templates/home/about.html:14
 #, python-format
 msgid "It\\u2019s a 100%% open-source"
-msgstr ""
+msgstr "Es 100%% código libre"
 
 #: templates/home/about.html:15
 msgid ""
@@ -714,6 +765,11 @@ msgid ""
 " handle payment or money — it is designed to support volunteer-driven "
 "projects."
 msgstr ""
+"A diferencia de otros proyectos tipo, por ejemplo “mechanical turk”, "
+"PyBossa\"\n"
+"\"PyBossa no está diseñado para manejar pagos o dinero — está diseñado "
+"para dar soporte\"\n"
+"\" a proyectos orientados alrededor de la comunidad de voluntarios."
 
 #: templates/home/about.html:17
 msgid ""
@@ -723,122 +779,136 @@ msgid ""
 "snippets of Javascript and HTML which are then deployed on a PyBossa "
 "instance \\(such as_"
 msgstr ""
+"Está diseñado como una plataforma para el desarrollo y lanzamiento \"\n"
+"\"de aplicaciones de micro-tareas y/o crowdsourcing más que como siend "
+"una aplicación\"\n"
+"\"en si misma. Las aplicaciones individuales se crean escribiendo "
+"pequeños programas\"\n"
+"\"de Javascript y HTML que son posteriormente lanzados como instancias "
+"(como por ejemplo"
 
 #: templates/home/about.html:17
 msgid ""
 "This way one can easily develop custom apps while using the PyBossa "
 "platform to store your data, manage users, and handle workflow"
 msgstr ""
+"De esta forma, se pueden desarrollar aplicaciones personalizadas "
+"mientras\"\n"
+"\"se utiliza la plataforma PyBossa para almacenar los datos, manejar los "
+"usuarios,\"\n"
+"\" y el flujo de trabajo"
 
 #: templates/home/about.html:22
 msgid "You can read more about the architecture in the"
-msgstr ""
+msgstr "Puedes leer más sobre la arquitectura en la"
 
 #: templates/home/about.html:22
 msgid "PyBossa Documentation"
-msgstr ""
+msgstr "documentación de PyBossa"
 
 #: templates/home/about.html:22
 msgid "and follow the"
-msgstr ""
+msgstr "y seguir el"
 
 #: templates/home/about.html:22
 msgid "step-by-step tutorial to create your own apps"
-msgstr ""
+msgstr "tutorial paso a paso para crear tus propias aplicaciones"
 
 #: templates/home/about.html:25
 msgid "Statistics"
-msgstr ""
+msgstr "Estadísticas"
 
 #: templates/home/about.html:27
 msgid ""
 " PyBossa provides individual statistics for every application in the "
 "system, as well as a"
 msgstr ""
+"PyBossa proporciona estadísticas individuales para cada aplicación \"\n"
+"\" así como también para"
 
 #: templates/home/about.html:27
 msgid "general overview about the system like total number of users, tasks, etc"
-msgstr ""
+msgstr "todo el sistema: número total de usuarios, tareas, etc."
 
 #: templates/home/about.html:29
 msgid "Check the global statistics"
-msgstr ""
+msgstr "Ver las estadísticas globales"
 
 #: templates/home/about.html:31
 msgid "Contact information"
-msgstr ""
+msgstr "Información de Contacto"
 
 #: templates/home/about.html:33
 msgid "For more info, send us an e-mail to: "
-msgstr ""
+msgstr "Para más información, envíanos un correo electrónico a: "
 
 #: templates/home/about.html:33
 msgid "Follow us on Twitter!"
-msgstr ""
+msgstr "Síguenos en Twitter!"
 
 #: templates/home/about.html:34
 msgid "E-mail list: "
-msgstr ""
+msgstr "Lista de correo:"
 
 #: templates/home/about.html:35
 msgid "Report any bug, issue or improvement:"
-msgstr ""
+msgstr "Envíanos cualquier error, fallo o sugerencia:"
 
 #: templates/home/about.html:37
 msgid "Github Issues"
-msgstr ""
+msgstr "Github Issues"
 
 #: templates/home/index.html:35
 msgid "Get Started"
-msgstr ""
+msgstr "Comenzar"
 
 #: templates/home/index.html:36
 msgid "It's really simple to start contributing."
-msgstr ""
+msgstr "Es muy sencillo participar."
 
 #: templates/home/index.html:39
 msgid " Start Contributing"
-msgstr ""
+msgstr " Únete y Participa"
 
 #: templates/home/index.html:39
 msgid "Create an App"
-msgstr ""
+msgstr "Crea una Aplicación"
 
 #: templates/home/index.html:44
 msgid "Most Active Applications"
-msgstr ""
+msgstr "Aplicaciónes más Activas"
 
 #: templates/home/index.html:56
 msgid "Start"
-msgstr ""
+msgstr "Comenzar"
 
 #: templates/home/index.html:64
 msgid "Your application"
-msgstr ""
+msgstr "Tu aplicación"
 
 #: templates/home/index.html:65
 msgid "could be here!"
-msgstr ""
+msgstr "podría estar aquí!"
 
 #: templates/home/index.html:66
 msgid "Create an app"
-msgstr ""
+msgstr "Crear una aplicación"
 
 #: templates/home/index.html:74
 msgid "Most Active Volunteers"
-msgstr ""
+msgstr "Voluntarios más Activos"
 
 #: templates/home/index.html:81
 msgid "Submitted Tasks"
-msgstr ""
+msgstr "Respuestas Contribuidas"
 
 #: templates/home/search.html:7
 msgid "Search Results"
-msgstr ""
+msgstr "Buscar Resultados"
 
 #: view/account.py:63
 msgid "The e-mail is required"
-msgstr ""
+msgstr "El correo electrónico es obligatorio"
 
 #: view/account.py:65
 msgid "Password"
@@ -846,259 +916,270 @@ msgstr "Contraseña"
 
 #: view/account.py:67
 msgid "You must provide a password"
-msgstr ""
+msgstr "Debe proporcionar una contraseña"
 
 #: view/account.py:120 view/account.py:151
 msgid "Full name must be between 3 and 35 characters long"
-msgstr ""
+msgstr "Nombre y Apellidos debe contenter entre 3 y 35 caracteres"
 
 #: view/account.py:121 view/account.py:152
 msgid "Full name"
-msgstr ""
+msgstr "Nombre y Apellidos"
 
 #: view/account.py:124 view/account.py:155
 msgid "User name must be between 3 and 35 characters long"
-msgstr ""
+msgstr "El nombre de usuario debe tener entre 3 y 35 caracteres"
 
 #: view/account.py:125 view/account.py:156
 msgid "The user name is already taken"
-msgstr ""
+msgstr "El nombre de usuario ya está registrado"
 
 #: view/account.py:126 view/account.py:157
 msgid "User name"
-msgstr ""
+msgstr "Nombre de usuario"
 
-#: view/account.py:131 view/account.py:162 view/account.py:393
+#: view/account.py:131 view/account.py:162 view/account.py:394
 msgid "Email must be between 3 and 35 characters long"
-msgstr ""
+msgstr "El correo debe tener entre 3 y 35 caracteres"
 
 #: view/account.py:132 view/account.py:163
 msgid "Email is already taken"
-msgstr ""
+msgstr "El correo electrónico ya está registrado"
 
-#: view/account.py:133 view/account.py:164 view/account.py:394
+#: view/account.py:133 view/account.py:164 view/account.py:395
 msgid "Email Address"
-msgstr ""
+msgstr "Correo Electrónico"
 
-#: view/account.py:139 view/account.py:326 view/account.py:355
+#: view/account.py:139 view/account.py:327 view/account.py:356
 msgid "Password cannot be empty"
-msgstr ""
+msgstr "La contraseña no puede estara vacía"
 
-#: view/account.py:140 view/account.py:327 view/account.py:356
+#: view/account.py:140 view/account.py:328 view/account.py:357
 msgid "Passwords must match"
-msgstr ""
+msgstr "Las contraseñas deben coincidir"
 
-#: view/account.py:141 view/account.py:328 view/account.py:357
+#: view/account.py:141 view/account.py:329 view/account.py:358
 msgid "New Password"
-msgstr ""
+msgstr "Nueva Contraseña"
 
-#: view/account.py:145 view/account.py:331 view/account.py:360
+#: view/account.py:145 view/account.py:332 view/account.py:361
 msgid "Repeat Password"
-msgstr ""
+msgstr "Repita la Contraseña"
 
 #: view/account.py:170
 msgid "Default Language"
-msgstr ""
+msgstr "Idioma por Defecto"
 
 #: view/account.py:177
 msgid "English"
-msgstr ""
+msgstr "Inglés"
 
 #: view/account.py:179
 msgid "Spanish"
-msgstr ""
+msgstr "Español"
 
 #: view/account.py:197
 msgid "Thanks for signing-up"
-msgstr ""
+msgstr "Gracias por registrarse"
 
-#: view/account.py:200 view/account.py:317 view/account.py:350
-#: view/account.py:388 view/applications.py:196 view/applications.py:222
+#: view/account.py:200 view/account.py:318 view/account.py:351
+#: view/account.py:389 view/applications.py:196 view/applications.py:222
 #: view/applications.py:343
 msgid "Please correct the errors"
-msgstr ""
+msgstr "Por favor, corrija los siguientes errores"
 
 #: view/account.py:202
 msgid "Register"
-msgstr ""
+msgstr "Registrarse"
 
 #: view/account.py:244
 msgid "Profile"
-msgstr ""
+msgstr "Perfíl"
 
-#: view/account.py:314
+#: view/account.py:315
 msgid "Your profile has been updated!"
-msgstr ""
+msgstr "Su perfil ha sido actualizado"
 
-#: view/account.py:344
+#: view/account.py:325
+msgid "Old Password"
+msgstr "Contraseña Antigua"
+
+#: view/account.py:345
 msgid "Yay, you changed your password succesfully!"
-msgstr ""
+msgstr "Genial, has cambiado tu contraseña!"
 
-#: view/account.py:347
+#: view/account.py:348
 msgid "Your current password doesn't match the one in our records"
-msgstr ""
+msgstr "La contraseña actual no coincide con la que tenemos en nuestro sistema"
 
-#: view/account.py:385
+#: view/account.py:386
 msgid "You reset your password successfully!"
-msgstr ""
+msgstr "Has reiniciado la contraseña satisfactoriamente!"
 
-#: view/account.py:431
+#: view/account.py:432
 msgid "We've send you email with account recovery instructions!"
 msgstr ""
+"Te hemos enviado un correo electrónico con instrucciones para recuperar "
+"la cuenta!"
 
-#: view/account.py:434
+#: view/account.py:435
 msgid ""
 "We don't have this email in our records. You may have signed up with a "
 "different email or used Twitter, Facebook, or Google to sign-in"
 msgstr ""
+"No encontramos este correo electrónico en nuestros registros. Puede que  "
+"te registraras con un correo diferente o utilizaras Twitter, Facebook o  "
+"Google para iniciar sesión"
 
-#: view/account.py:438
+#: view/account.py:439
 msgid "Something went wrong, please correct the errors on the form"
-msgstr ""
+msgstr "Algo ha ido mal, por favor corrige los errores del formulario"
 
-#: view/account.py:456
+#: view/account.py:457
 msgid "New API-KEY generated"
-msgstr ""
-
-#: view/admin.py:86
-msgid "User"
-msgstr ""
+msgstr "Nueva clave API creada"
 
 #: view/applications.py:47
 msgid "Name"
-msgstr ""
+msgstr "Nombre"
 
 #: view/applications.py:51
 msgid "Short Name"
-msgstr ""
+msgstr "Nombre Corto"
 
 #: view/applications.py:54
 msgid "Short Name is already taken."
-msgstr ""
+msgstr "El Nombre Corto ya está registrado"
 
 #: view/applications.py:57
 msgid "You must provide a description."
-msgstr ""
+msgstr "Debes proporcionar una descripción."
 
 #: view/applications.py:58
 msgid "Icon Link"
-msgstr ""
+msgstr "Enlace del icono"
 
 #: view/applications.py:59
 msgid "Allow Anonymous Contributors"
-msgstr ""
+msgstr "Permitir Voluntarios Anónimos"
 
 #: view/applications.py:62
 msgid "Long Description"
-msgstr ""
+msgstr "Descripción Larga"
 
 #: view/applications.py:63
 msgid "Task Scheduler"
-msgstr ""
+msgstr "Gestor de Tareas"
 
 #: view/applications.py:64
 msgid "Default"
-msgstr ""
+msgstr "Estándar"
 
 #: view/applications.py:65
 msgid "Breadth First"
-msgstr ""
+msgstr "Búsqueda en Anchura"
 
 #: view/applications.py:66
 msgid "Depth First"
-msgstr ""
+msgstr "Búsqueda en Profundidad"
 
 #: view/applications.py:67
 msgid "Random"
-msgstr ""
+msgstr "Aleatorio"
 
 #: view/applications.py:68
 msgid "Hide?"
-msgstr ""
+msgstr "Ocultar?"
 
 #: view/applications.py:77 view/applications.py:85
 msgid "You must provide a URL"
-msgstr ""
+msgstr "Debes proporcionar un enlace"
 
 #: view/applications.py:78 view/applications.py:86
 msgid "Oops! That's not a valid URL. You must provide a valid URL"
-msgstr ""
+msgstr "Uy! Ese enlace no es válido. Debes proporcionar uno correcto"
 
 #: view/applications.py:79 view/applications.py:87
 msgid "URL"
-msgstr ""
+msgstr "URL"
 
 #: view/applications.py:93
 msgid "You must provide an EpiCollect Plus project name"
-msgstr ""
+msgstr "Debes proporcionar el nombre de un proyecto EpiCollect Plus"
 
 #: view/applications.py:94
 msgid "You must provide a Form name for the project"
-msgstr ""
+msgstr "Debes proporcionar el nombre del Formulario del Proyecto"
 
 #: view/applications.py:95
 msgid "Project Name"
-msgstr ""
+msgstr "Nombre del Proyecto"
 
 #: view/applications.py:97
 msgid "Form name"
-msgstr ""
+msgstr "Nombre del Formulario"
 
 #: view/applications.py:188
 msgid "Application created!"
-msgstr ""
+msgstr "Aplicación creada!"
 
 #: view/applications.py:190
 msgid "You can check the "
-msgstr ""
+msgstr "Puedes comprobar la"
 
 #: view/applications.py:191
 msgid "Guide and  Documentation"
-msgstr ""
+msgstr "Guía y  Documentación"
 
 #: view/applications.py:192
 msgid "for adding tasks,  a thumbnail, using PyBossa.JS, etc."
-msgstr ""
+msgstr "para añadir tareas, un icono, utilizando PyBossa.JS, etc."
 
 #: view/applications.py:218
 msgid "Task presenter added!"
-msgstr ""
+msgstr "Presentador de Tareas añadido!"
 
 #: view/applications.py:339
 msgid "Application updated!"
-msgstr ""
+msgstr "Aplicación actualizada!"
 
 #: view/applications.py:413
 msgid "The file you uploaded has two headers with the same name."
-msgstr ""
+msgstr "El fichero que has subido tiene dos cabeceras con el mismo nombre."
 
 #: view/applications.py:431
 msgid "Oops! It looks like the file is empty."
-msgstr ""
+msgstr "Uy! Parece que el fichero está vacío."
 
 #: view/applications.py:492
 msgid "Oops! That file doesn't look like the right file."
-msgstr ""
+msgstr "Uy! Ese fichero no parece que sea el correcto."
 
 #: view/applications.py:509
 msgid "Tasks imported successfully!"
-msgstr ""
+msgstr "Tareas importadas satisfactoriamente!"
 
 #: view/applications.py:551
 msgid ""
 "Ooops! You are an anonymous user and will not get any credit  for your "
 "contributions."
 msgstr ""
+"Uy! Eres un usuario anónimo y no vas a obtener ningún reconocimiento por "
+"tus contribuciones."
 
 #: view/applications.py:813
 msgid ""
 "Oops, the application does not have tasks to                            "
 "export, if you are the owner add some tasks"
 msgstr ""
+"Uy, la aplicación no tiene tareas que exportar, si eres el dueño de la "
+"aplicación añade alguna"
 
 #: view/applications.py:818
 msgid ""
 "Oops, there are no Task Runs yet to export, invite"
 "                            some users to participate"
 msgstr ""
+"Uy, no hay ninguna respuesta que exportar, invita a algunos voluntarios a"
+" participar"
 

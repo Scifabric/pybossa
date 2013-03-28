@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2013-03-26 18:23+0100\n"
+"POT-Creation-Date: 2013-03-27 10:19+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,6 +21,10 @@ msgstr ""
 msgid ""
 "Please update your e-mail address in your profile page, right now it is "
 "empty!"
+msgstr ""
+
+#: templates/_gcs_form.html:6 templates/admin/users.html:20
+msgid "Search"
 msgstr ""
 
 #: templates/_navbar.html:12 templates/account/index.html:41
@@ -118,39 +122,39 @@ msgstr ""
 msgid "E-mail"
 msgstr ""
 
-#: templates/account/_helpers.html:44 templates/account/_helpers.html:53
+#: templates/account/_helpers.html:44 templates/account/_helpers.html:57
 msgid "Rank"
 msgstr ""
 
-#: templates/account/_helpers.html:48
+#: templates/account/_helpers.html:49
 msgid "of"
 msgstr ""
 
-#: templates/account/_helpers.html:48
+#: templates/account/_helpers.html:49
 msgid "with a Score of"
 msgstr ""
 
-#: templates/account/_helpers.html:48
+#: templates/account/_helpers.html:49
 msgid "contributed tasks"
 msgstr ""
 
-#: templates/account/_helpers.html:53
+#: templates/account/_helpers.html:57
 msgid "The user has not contributed a task yet"
 msgstr ""
 
-#: templates/account/_helpers.html:56 templates/home/index.html:79
+#: templates/account/_helpers.html:60 templates/home/index.html:79
 msgid "Joined"
 msgstr ""
 
-#: templates/account/_helpers.html:59
+#: templates/account/_helpers.html:63
 msgid "API key"
 msgstr ""
 
-#: templates/account/_helpers.html:62
+#: templates/account/_helpers.html:66
 msgid "See your public profile"
 msgstr ""
 
-#: templates/account/_helpers.html:63
+#: templates/account/_helpers.html:67
 msgid "Edit your profile"
 msgstr ""
 
@@ -194,7 +198,7 @@ msgstr ""
 msgid "my current password"
 msgstr ""
 
-#: templates/account/password.html:19 templates/account/password_forgot.html:10
+#: templates/account/password.html:19
 msgid "my new password"
 msgstr ""
 
@@ -216,6 +220,10 @@ msgstr ""
 
 #: templates/account/password_forgot.html:6
 msgid "Reset your Password"
+msgstr ""
+
+#: templates/account/password_forgot.html:10
+msgid "my e-mail"
 msgstr ""
 
 #: templates/account/password_forgot.html:12
@@ -307,6 +315,10 @@ msgstr ""
 
 #: templates/account/reset-api-key.html:20
 msgid "No, do not reset the API key!"
+msgstr ""
+
+#: templates/account/settings.html:12 view/admin.py:86
+msgid "User"
 msgstr ""
 
 #: templates/account/settings.html:14 templates/account/update.html:13
@@ -411,10 +423,6 @@ msgstr ""
 msgid "Try with the full name or nick"
 msgstr ""
 
-#: templates/admin/users.html:20
-msgid "Search"
-msgstr ""
-
 #: templates/admin/users.html:31
 msgid "Current Users with Admin privileges"
 msgstr ""
@@ -453,11 +461,11 @@ msgstr ""
 msgid "Hidden"
 msgstr ""
 
-#: templates/applications/_helpers.html:68
+#: templates/applications/_helpers.html:68 view/applications.py:60
 msgid "Yes"
 msgstr ""
 
-#: templates/applications/_helpers.html:70
+#: templates/applications/_helpers.html:70 view/applications.py:61
 msgid "No"
 msgstr ""
 
@@ -634,6 +642,34 @@ msgstr ""
 
 #: templates/applications/new.html:13
 msgid "Create a new application"
+msgstr ""
+
+#: templates/applications/new.html:17
+msgid "The name of the application"
+msgstr ""
+
+#: templates/applications/new.html:18
+msgid "Short name or slug for the application"
+msgstr ""
+
+#: templates/applications/new.html:19
+msgid "Give some details about the application"
+msgstr ""
+
+#: templates/applications/new.html:20
+msgid "Paste the direct link to your app icon"
+msgstr ""
+
+#: templates/applications/new.html:22
+msgid "Explain the application (you can use HTML code!)"
+msgstr ""
+
+#: templates/applications/new.html:23
+msgid "Select how to distribute the tasks"
+msgstr ""
+
+#: templates/applications/new.html:24
+msgid "Do you want to hide your app?"
 msgstr ""
 
 #: templates/applications/new.html:26
@@ -864,7 +900,7 @@ msgstr ""
 msgid "User name"
 msgstr ""
 
-#: view/account.py:131 view/account.py:162 view/account.py:393
+#: view/account.py:131 view/account.py:162 view/account.py:394
 msgid "Email must be between 3 and 35 characters long"
 msgstr ""
 
@@ -872,23 +908,23 @@ msgstr ""
 msgid "Email is already taken"
 msgstr ""
 
-#: view/account.py:133 view/account.py:164 view/account.py:394
+#: view/account.py:133 view/account.py:164 view/account.py:395
 msgid "Email Address"
 msgstr ""
 
-#: view/account.py:139 view/account.py:326 view/account.py:355
+#: view/account.py:139 view/account.py:327 view/account.py:356
 msgid "Password cannot be empty"
 msgstr ""
 
-#: view/account.py:140 view/account.py:327 view/account.py:356
+#: view/account.py:140 view/account.py:328 view/account.py:357
 msgid "Passwords must match"
 msgstr ""
 
-#: view/account.py:141 view/account.py:328 view/account.py:357
+#: view/account.py:141 view/account.py:329 view/account.py:358
 msgid "New Password"
 msgstr ""
 
-#: view/account.py:145 view/account.py:331 view/account.py:360
+#: view/account.py:145 view/account.py:332 view/account.py:361
 msgid "Repeat Password"
 msgstr ""
 
@@ -908,8 +944,8 @@ msgstr ""
 msgid "Thanks for signing-up"
 msgstr ""
 
-#: view/account.py:200 view/account.py:317 view/account.py:350
-#: view/account.py:388 view/applications.py:196 view/applications.py:222
+#: view/account.py:200 view/account.py:318 view/account.py:351
+#: view/account.py:389 view/applications.py:196 view/applications.py:222
 #: view/applications.py:343
 msgid "Please correct the errors"
 msgstr ""
@@ -922,42 +958,42 @@ msgstr ""
 msgid "Profile"
 msgstr ""
 
-#: view/account.py:314
+#: view/account.py:315
 msgid "Your profile has been updated!"
 msgstr ""
 
-#: view/account.py:344
+#: view/account.py:325
+msgid "Old Password"
+msgstr ""
+
+#: view/account.py:345
 msgid "Yay, you changed your password succesfully!"
 msgstr ""
 
-#: view/account.py:347
+#: view/account.py:348
 msgid "Your current password doesn't match the one in our records"
 msgstr ""
 
-#: view/account.py:385
+#: view/account.py:386
 msgid "You reset your password successfully!"
 msgstr ""
 
-#: view/account.py:431
+#: view/account.py:432
 msgid "We've send you email with account recovery instructions!"
 msgstr ""
 
-#: view/account.py:434
+#: view/account.py:435
 msgid ""
 "We don't have this email in our records. You may have signed up with a "
 "different email or used Twitter, Facebook, or Google to sign-in"
 msgstr ""
 
-#: view/account.py:438
+#: view/account.py:439
 msgid "Something went wrong, please correct the errors on the form"
 msgstr ""
 
-#: view/account.py:456
+#: view/account.py:457
 msgid "New API-KEY generated"
-msgstr ""
-
-#: view/admin.py:86
-msgid "User"
 msgstr ""
 
 #: view/applications.py:47

@@ -118,6 +118,7 @@ def get_featured(page=1, per_page=5):
     count = n_featured()
 
     sql = text('''SELECT app.id, app.name, app.short_name, app.info, app.created,
+               app.description,
                "user".fullname AS owner FROM app, featured, "user"
                WHERE app.id=featured.app_id AND app.hidden=0
                AND "user".id=app.owner_id GROUP BY app.id, "user".id
@@ -128,7 +129,7 @@ def get_featured(page=1, per_page=5):
     apps = []
     for row in results:
         app = dict(id=row.id, name=row.name, short_name=row.short_name,
-                   created=row.name,
+                   created=row.created, description=row.description,
                    overall_progress=overall_progress(row.id),
                    last_activity=last_activity(row.id),
                    owner=row.owner,

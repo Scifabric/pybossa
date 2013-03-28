@@ -45,7 +45,11 @@
                 {% if private %}
                 <a href="{{url_for('leaderboard.index')}}">
                 {% endif %}
+                {% if not settings %}
                 {{ user.rank }} {{_('of')}} {{user.total}} {{ _('with a Score of')}} {{user.score}} {{ _('contributed tasks')}}
+                {% else %}
+                {{ user.rank }}
+                {% endif %}
                 {% if private %}</a>{% endif %}
                 </small>
         </h2>
@@ -58,7 +62,7 @@
         {% if settings %}
         <h2><i class="icon-key"></i> {{ _('API key') }}: <small>{{ user.api_key }}</small></h2>
         {% endif %}
-        {% if private %}
+        {% if private and not settings%}
         <a href="{{ url_for('account.public_profile', name=user.name) }}" class="btn btn-inverse"><i class="icon icon-globe"></i> {{ _('See your public profile') }}</a>
         <a href="{{ url_for('account.settings') }}" class="btn btn-primary"><i class="icon icon-user"></i> {{ _('Edit your profile') }}</a>
         {% endif %}

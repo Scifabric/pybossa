@@ -57,8 +57,8 @@ class AppForm(Form):
                                 message=lazy_gettext("You must provide a description."))])
     thumbnail = TextField(lazy_gettext('Icon Link'))
     allow_anonymous_contributors = SelectField(lazy_gettext('Allow Anonymous Contributors'),
-                                               choices=[('True', 'Yes'),
-                                                        ('False', 'No')])
+                                               choices=[('True', lazy_gettext('Yes')),
+                                                        ('False', lazy_gettext('No'))])
     long_description = TextAreaField(lazy_gettext('Long Description'))
     sched = SelectField(lazy_gettext('Task Scheduler'),
                         choices=[('default', lazy_gettext('Default')),

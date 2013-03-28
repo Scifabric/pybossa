@@ -280,8 +280,9 @@ def applications():
 @blueprint.route('/profile/settings')
 @login_required
 def settings():
-    user = User.query.get_or_404(current_user.id)
-    title = "User: %s &middot; Settings" % user.fullname
+    #user = User.query.get_or_404(current_user.id)
+    user, apps, apps_created = cached_users.get_user_summary(current_user.name)
+    title = "User: %s &middot; Settings" % user['fullname']
     return render_template('account/settings.html',
                            title=title,
                            user=user)
@@ -321,7 +322,7 @@ def update_profile():
 
 
 class ChangePasswordForm(Form):
-    current_password = PasswordField('Old Password')
+    current_password = PasswordField(lazy_gettext('Old Password'))
 
     err_msg = lazy_gettext("Password cannot be empty")
     err_msg_2 = lazy_gettext("Passwords must match")
