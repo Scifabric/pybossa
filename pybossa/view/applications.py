@@ -456,6 +456,21 @@ googledocs_urls = {
            "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE"
            "&usp=sharing"}
 
+def get_data_url(**kwargs):
+    csvform = kwargs["csvform"]
+    gdform = kwargs["gdform"]
+    epiform = kwargs["epiform"]
+
+    if 'csv_url' in request.form and csvform.validate_on_submit():
+        return csvform.csv_url.data
+    elif 'googledocs_url' in request.form and gdform.validate_on_submit():
+        return ''.join([gdform.googledocs_url.data, '&output=csv'])
+    elif 'epicollect_project' in request.form and epiform.validate_on_submit():
+        return 'http://plus.epicollect.net/%s/%s.json' % \
+            (epiform.epicollect_project.data, epiform.epicollect_form.data)
+    else:
+        return None
+
 @blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
 def import_task(short_name):
     app = App.query.filter_by(short_name=short_name).first_or_404()
@@ -470,6 +485,7 @@ def import_task(short_name):
         "title": title,
         "app": app,
         "csvform": csvform,
+        "epiform": epiform,
         "gdform": gdform
         }
 
@@ -483,14 +499,7 @@ def import_task(short_name):
         if template in googledocs_urls:
             gdform.googledocs_url.data = googledocs_urls[template]
 
-        if 'csv_url' in request.form and csvform.validate_on_submit():
-            dataurl = csvform.csv_url.data
-        elif 'googledocs_url' in request.form and gdform.validate_on_submit():
-            dataurl = ''.join([gdform.googledocs_url.data, '&output=csv'])
-        elif 'epicollect_project' in request.form and epiform.validate_on_submit():
-            dataurl = 'http://plus.epicollect.net/%s/%s.json' % \
-                      (epiform.epicollect_project.data, epiform.epicollect_form.data)
-
+        dataurl = get_data_url(**template_args)
         if dataurl:
             try:
                 r = requests.get(dataurl)
@@ -531,14 +540,6 @@ def import_task(short_name):
                 flash(lazy_gettext(msg), 'error')
 
         tmpl = '/applications/import.html'
-
-        # these del()s are completely redundant
-        if template == 'epicollect':
-            template_args["epiform"] = epiform
-            del(template_args["csvform"])
-            del(template_args["gdform"])
-        elif template in googledocs_urls:
-            del(template_args["csvform"])
 
         return render_template(tmpl, **template_args)
 
