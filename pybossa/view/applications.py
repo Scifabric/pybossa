@@ -471,6 +471,30 @@ def get_data_url(**kwargs):
     else:
         return None
 
+def get_csv_data_from_request(app, r):
+    if r.status_code == 403:
+        msg = "Oops! It looks like you don't have permission to access" \
+            " that file"
+        raise BulkImportException(lazy_gettext(msg), 'error')
+    if ((not 'text/plain' in r.headers['content-type']) and
+        (not 'text/csv' in r.headers['content-type'])):
+        msg = lazy_gettext("Oops! That file doesn't look like the right file.")
+        raise BulkImportException(msg, 'error')
+    
+    csvcontent = StringIO(r.text)
+    csvreader = unicode_csv_reader(csvcontent)
+    return import_csv_tasks(app, csvreader)
+
+def get_epicollect_data_from_request(app, r):
+    if r.status_code == 403:
+        msg = "Oops! It looks like you don't have permission to access" \
+            " the EpiCollect Plus project"
+        raise BulkImportException(lazy_gettext(msg), 'error')
+    if not 'application/json' in r.headers['content-type']:
+        msg = "Oops! That project and form do not look like the right one."
+        raise BulkImportException(lazy_gettext(msg), 'error')
+    return import_epicollect_tasks(app, json.loads(r.text))
+
 @blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
 def import_task(short_name):
     app = App.query.filter_by(short_name=short_name).first_or_404()
@@ -504,32 +528,9 @@ def import_task(short_name):
             try:
                 r = requests.get(dataurl)
                 if 'csv_url' in request.form or 'googledocs_url' in request.form:
-                    def get_csv_data_from_request():
-                        if r.status_code == 403:
-                            msg = "Oops! It looks like you don't have permission to access" \
-                                " that file"
-                            raise BulkImportException(lazy_gettext(msg), 'error')
-                        if ((not 'text/plain' in r.headers['content-type']) and
-                            (not 'text/csv' in r.headers['content-type'])):
-                            msg = lazy_gettext("Oops! That file doesn't look like the right file.")
-                            raise BulkImportException(msg, 'error')
-
-                        csvcontent = StringIO(r.text)
-                        csvreader = unicode_csv_reader(csvcontent)
-                        import_csv_tasks(app, csvreader)
-                    get_data_from_request()
-                    # TODO: check for errors
+                    get_data_from_request(app, r)
                 elif 'epicollect_project' in request.form:
-                    def get_epicollect_data_from_request():
-                        if r.status_code == 403:
-                            msg = "Oops! It looks like you don't have permission to access" \
-                                " the EpiCollect Plus project"
-                            raise BulkImportException(lazy_gettext(msg), 'error')
-                        if not 'application/json' in r.headers['content-type']:
-                            msg = "Oops! That project and form do not look like the right one."
-                            raise BulkImportException(lazy_gettext(msg), 'error')
-                        import_epicollect_tasks(app, json.loads(r.text))
-                    get_epicollect_data_from_request()
+                    get_epicollect_data_from_request(app, r)
                 flash(lazy_gettext('Tasks imported successfully!'), 'success')
                 return redirect(url_for('.settings', short_name=app.short_name))
             except BulkImportException, err_msg:
