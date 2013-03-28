@@ -500,7 +500,12 @@ def import_task(short_name):
     app = App.query.filter_by(short_name=short_name).first_or_404()
     title = "Applications: %s &middot; Import Tasks" % app.name
 
-    dataurl = None
+    data_handlers = [
+        ('csv_url', get_csv_data_from_request),
+        ('googledocs_url', get_csv_data_from_request),
+        ('epicollect_project', get_epicollect_data_from_request)
+        ]
+
     csvform = BulkTaskCSVImportForm(request.form)
     gdform = BulkTaskGDImportForm(request.form)
     epiform = BulkTaskEpiCollectPlusImportForm(request.form)
@@ -513,16 +518,17 @@ def import_task(short_name):
         "gdform": gdform
         }
 
-    if not (app.tasks or (request.args.get('template') or 
-                          request.method == 'POST')):
+    template = request.args.get('template')
+    if not (app.tasks or template or request.method == 'POST'):
         return render_template('/applications/import_options.html',
                                **template_args)
 
-    template = request.args.get('template')
-
     if template in googledocs_urls:
         gdform.googledocs_url.data = googledocs_urls[template]
+    
+    return _import_task(app, template_args, data_handlers)
 
+def _import_task(app, template_args, data_handlers):
     dataurl = get_data_url(**template_args)
 
     def render_forms():
@@ -531,12 +537,6 @@ def import_task(short_name):
 
     if not dataurl:
         return render_forms()
-
-    data_handlers = [
-        ('csv_url', get_data_from_request),
-        ('googledocs_url', get_data_from_request),
-        ('epicollect_project', get_epicollect_data_from_request)
-        ]
 
     try:
         r = requests.get(dataurl)
