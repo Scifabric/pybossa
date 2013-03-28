@@ -531,21 +531,21 @@ def import_task(short_name):
 
     if not dataurl:
         return render_forms()
-    else:
-        try:
-            r = requests.get(dataurl)
-            if 'csv_url' in request.form or 'googledocs_url' in request.form:
-                get_data_from_request(app, r)
-            elif 'epicollect_project' in request.form:
-                get_epicollect_data_from_request(app, r)
-            flash(lazy_gettext('Tasks imported successfully!'), 'success')
-            return redirect(url_for('.settings', short_name=app.short_name))
-        except BulkImportException, err_msg:
-            flash(err_msg, 'error')
-        except Exception as inst:
-            msg = 'Oops! Looks like there was an error with processing that file!'
-            flash(lazy_gettext(msg), 'error')
-        return render_forms()
+
+    try:
+        r = requests.get(dataurl)
+        if 'csv_url' in request.form or 'googledocs_url' in request.form:
+            get_data_from_request(app, r)
+        elif 'epicollect_project' in request.form:
+            get_epicollect_data_from_request(app, r)
+        flash(lazy_gettext('Tasks imported successfully!'), 'success')
+        return redirect(url_for('.settings', short_name=app.short_name))
+    except BulkImportException, err_msg:
+        flash(err_msg, 'error')
+    except Exception as inst:
+        msg = 'Oops! Looks like there was an error with processing that file!'
+        flash(lazy_gettext(msg), 'error')
+    return render_forms()
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
