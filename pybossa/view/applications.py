@@ -532,14 +532,18 @@ def import_task(short_name):
     if not dataurl:
         return render_forms()
 
+    data_handlers = [
+        ('csv_url', get_data_from_request),
+        ('googledocs_url', get_data_from_request),
+        ('epicollect_project', get_epicollect_data_from_request)
+        ]
+
     try:
         r = requests.get(dataurl)
-        if 'csv_url' in request.form:
-            get_data_from_request(app, r)
-        elif 'googledocs_url' in request.form:
-            get_data_from_request(app, r)
-        elif 'epicollect_project' in request.form:
-            get_epicollect_data_from_request(app, r)
+        for form_id, handler in data_handlers:
+            if form_id in request.form:
+                handler(app, r)
+                break
         flash(lazy_gettext('Tasks imported successfully!'), 'success')
         return redirect(url_for('.settings', short_name=app.short_name))
     except BulkImportException, err_msg:
