@@ -20,6 +20,7 @@ from flask import render_template, make_response
 from flaskext.wtf import Form, IntegerField, TextField, BooleanField, \
     SelectField, validators, HiddenInput, TextAreaField
 from flaskext.login import login_required, current_user
+from flaskext.babel import lazy_gettext
 from werkzeug.exceptions import HTTPException
 
 import pybossa.model as model
@@ -43,7 +44,7 @@ class BulkImportException(Exception):
 
 class AppForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
-    name = TextField('Name',
+    name = TextField(lazy_gettext('Name'),
                      [validators.Required(),
                       Unique(db.session, model.App, model.App.name,
                              message="Name is already taken.")])
@@ -831,7 +832,7 @@ def export_to(short_name):
                 if test(t):
                     writer.writerow(t.info.keys())
 
-                return Response(get_csv(out, writer, table, handle_row), 
+                return Response(get_csv(out, writer, table, handle_row),
                                 mimetype='text/csv')
             else:
                 flash(msg, 'info')

@@ -9,15 +9,15 @@
         {{ helper.render_account_local_nav(current_user, active_link) }}
     </div>
     <div class="span9">
-        <h1><strong>{{current_user.fullname}}</strong>: Reset API Key</h1>
+        <h1><strong>{{current_user.fullname}}</strong>: {{ _(' Reset API Key') }}</h1>
         <div class="alert alert-warning">
-            <strong>Note</strong> If you reset the API key, you will need to use the new generated key for any API call.
+            <strong>{{ _('Note') }}</strong>{{ _(' If you reset the API key, you will need to use the new generated key for any API call.') }}
         </div>
         <form class="form-horizontal" method="post" action="{{ url_for('account.reset_api_key')}}">
-        <h3><strong>Do you want to reset your personal API Key?</strong></h3>
+        <h3><strong>{{ _('Do you want to reset your personal API Key?') }}</strong></h3>
         <div class="form-actions">
           <input type="submit" class="btn btn-small" value="Yes"/>
-          <a href="{{ url_for('account.settings') }}" class="btn btn-large btn-primary">No, do not reset the API key!</a>
+          <a href="{{ url_for('account.settings') }}" class="btn btn-large btn-primary">{{ _('No, do not reset the API key!') }}</a>
         </div>
     </div>
 </div>

@@ -3,32 +3,30 @@
 {% block content %}
 <p style="padding-top:5px;">
 <p style="padding-top:5px;">
-<span class="label label-warning"><i class="icon-bullhorn"></i> Note</span>
-    By click the <strong>Sign in button</strong> below you are agreeing to
-    the <a href={{url_for('help.tos')}}>terms of use</a> and
-    <a href={{data_use | safe}}>data</a>.
-</p>
-
+<span class="label label-warning"><i class="icon-bullhorn"></i> {{ _('Note') }}</span>
+    {{ _('By click the') }} <strong>{{ _('Sign in button') }}</strong> {{ _('below you are agreeing to
+    the') }} <a href={{url_for('help.tos')}}>{{ _('terms of use') }}</a> {{ _('and') }}
+    <a href={{data_use | safe}}>{{ _('data') }}</a>.
 </p>
 {% if next is not none%}
   {% if auth.twitter %}
-  <a href="{{ url_for('twitter.login', next=next) }}" class="btn btn-info"><i class="icon-twitter"></i> Sign in with Twitter</a>
+  <a href="{{ url_for('twitter.login', next=next) }}" class="btn btn-info"><i class="icon-twitter"></i> {{ _('Sign in with Twitter') }}</a>
   {% endif %}
   {% if auth.facebook %}
-  <a href="{{ url_for('facebook.login', next=next) }}" class="btn btn-primary"><i class="icon-facebook"></i> Sign in with Facebook</a>
+  <a href="{{ url_for('facebook.login', next=next) }}" class="btn btn-primary"><i class="icon-facebook"></i> {{ _('Sign in with Facebook') }}</a>
   {% endif %}
   {% if auth.google %}
-  <a href="{{ url_for('google.login') }}" class="btn btn-warning"><i class="icon-google-plus"></i> Sign in with Google</a>
+  <a href="{{ url_for('google.login') }}" class="btn btn-warning"><i class="icon-google-plus"></i> {{ _('Sign in with Google') }}</a>
   {% endif %}
 {% else %}
   {% if auth.twitter %}
-  <a href="{{ url_for('twitter.login') }}" class="btn btn-info"><i class="icon-twitter"></i> Sign in with Twitter</a>
+  <a href="{{ url_for('twitter.login') }}" class="btn btn-info"><i class="icon-twitter"></i> {{ _('Sign in with Twitter') }}</a>
   {% endif %}
   {% if auth.facebook %}
-  <a href="{{ url_for('facebook.login') }}" class="btn btn-primary"><i class="icon-facebook"></i> Sign in with Facebook</a>
+  <a href="{{ url_for('facebook.login') }}" class="btn btn-primary"><i class="icon-facebook"></i> {{ _('Sign in with Facebook') }}</a>
   {% endif %}
   {% if auth.google %}
-  <a href="{{ url_for('google.login') }}" class="btn btn-warning"><i class="icon-google-plus"></i> Sign in with Google</a>
+  <a href="{{ url_for('google.login') }}" class="btn btn-warning"><i class="icon-google-plus"></i> {{ _('Sign in with Google') }}</a>
   {% endif %}
 {% endif %}
 <hr>
@@ -37,22 +35,22 @@
   <form method="post" class="form-horizontal" action="">
     {{ form.hidden_tag() }}
     {% if auth.twitter or auth.facebook%}
-    <legend>Or Sign in with your PyBossa account</legend>
+    <legend>{{ _('Or Sign in with your PyBossa account') }}</legend>
     {% else %}
-    <legend>Sign in with your PyBossa account</legend>
+    <legend>{{ _('Sign in with your PyBossa account') }}</legend>
     {% endif %}
       {{ render_field(form.email, placeholder="") }}
       {{ render_field(form.password, placeholder="") }}
     <div class="form-actions">
-      <input type="submit" value="Sign in" class="btn btn-primary btn-large" />
-      <input type="reset" value="Cancel" class="btn" />
+      <input type="submit" value="{{ _('Sign in') }}" class="btn btn-primary btn-large" />
+      <input type="reset" value="{{ _('Cancel') }}" class="btn" />
     </div>
   </form>
 
 <div class="row">
     <div class="span12" style="text-align:center">
-        <a href="{{ url_for('account.register') }}" class="btn btn-success"><i class="icon icon-white icon-user"></i> Create a new account!</a>
-        <a href="{{ url_for('account.forgot_password') }}" class="btn btn-success">Forgot Password</a>
+        <a href="{{ url_for('account.register') }}" class="btn btn-success"><i class="icon icon-white icon-user"></i>{{ _(' Create a new account!') }}</a>
+        <a href="{{ url_for('account.forgot_password') }}" class="btn btn-success">{{ _('Forgot Password') }}</a>
     </div>
 </div>
 {% endblock %}
