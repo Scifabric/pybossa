@@ -442,6 +442,19 @@ def import_epicollect_tasks(app, data):
         db.session.add(task)
     db.session.commit()
 
+googledocs_urls = {
+    'image': "https://docs.google.com/spreadsheet/ccc"
+             "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE"
+             "&usp=sharing",
+    'sound': "https://docs.google.com/spreadsheet/ccc"
+             "?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc"
+             "&usp=sharing",
+    'map': "https://docs.google.com/spreadsheet/ccc"
+           "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc"
+           "&usp=sharing",
+    'pdf': "https://docs.google.com/spreadsheet/ccc"
+           "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE"
+           "&usp=sharing"}
 
 @blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
 def import_task(short_name):
@@ -453,27 +466,18 @@ def import_task(short_name):
     gdform = BulkTaskGDImportForm(request.form)
     epiform = BulkTaskEpiCollectPlusImportForm(request.form)
 
-    if not (app.tasks or (request.args.get('template') or request.method == 'POST')):
-        return render_template('/applications/import_options.html',
-                               title=title,
-                               app=app,
-                               csvform=csvform,
-                               gdform=gdform)
-    else:
-        googledocs_urls = {
-            'image': "https://docs.google.com/spreadsheet/ccc"
-                     "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE"
-                     "&usp=sharing",
-            'sound': "https://docs.google.com/spreadsheet/ccc"
-                     "?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc"
-                     "&usp=sharing",
-            'map': "https://docs.google.com/spreadsheet/ccc"
-                   "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc"
-                   "&usp=sharing",
-            'pdf': "https://docs.google.com/spreadsheet/ccc"
-                   "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE"
-                   "&usp=sharing"}
+    template_args = {
+        "title": title,
+        "app": app,
+        "csvform": csvform,
+        "gdform": gdform
+        }
 
+    if not (app.tasks or (request.args.get('template') or 
+                          request.method == 'POST')):
+        return render_template('/applications/import_options.html',
+                               **template_args)
+    else:
         template = request.args.get('template')
 
         if template in googledocs_urls:
@@ -528,15 +532,15 @@ def import_task(short_name):
 
         tmpl = '/applications/import.html'
 
+        # these del()s are completely redundant
         if template == 'epicollect':
-            return render_template(tmpl, title=title, app=app, epiform=epiform)
-        elif (template == 'image' or template == 'map'
-              or template == 'pdf' or template == 'sound'):
-            return render_template(tmpl, title=title, app=app, gdform=gdform)
-        else:
-            return render_template(tmpl, title=title, app=app,
-                                   csvform=csvform,
-                                   gdform=gdform)
+            template_args["epiform"] = epiform
+            del(template_args["csvform"])
+            del(template_args["gdform"])
+        elif template in googledocs_urls:
+            del(template_args["csvform"])
+
+        return render_template(tmpl, **template_args)
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
