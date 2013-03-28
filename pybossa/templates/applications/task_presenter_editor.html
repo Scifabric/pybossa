@@ -25,15 +25,15 @@
     </div>
     <div class="span9">
         <!-- Task Presenter Editor -->
-        <h1><strong>{{app.name}}</strong>: Task Presenter Editor <a class="btn btn-large pull-right" href="http://docs.pybossa.com/en/latest/overview.html#task-presenter"><i class="icon-book"></i> Help</a></h1>
+        <h1><strong>{{app.name}}</strong>: {{ _('Task Presenter Editor') }} <a class="btn btn-large pull-right" href="http://docs.pybossa.com/en/latest/overview.html#task-presenter"><i class="icon-book"></i> {{ _('Help') }}</a></h1>
         <form class="form-inline" method="post" action="{{ url_for('app.task_presenter_editor', short_name=app.short_name) }}">
             {{ form.hidden_tag() }}
             <fieldset>
                 {{ render_field(form.editor)}}
                 <div class="form-actions">
-                    <input type="submit" value="Update the application task presenter" class="btn btn-primary" />
-                    <a href="#" class="btn btn-preview" value="preview">Preview the task presenter</a>
-                    <a href="{{url_for('app.settings', short_name=app.short_name)}}" class="btn">Cancel</a>
+                    <input type="submit" value={{ _('Update the application task presenter') }} class="btn btn-primary" />
+                    <a href="#" class="btn btn-preview" value="preview">{{ _('Preview the task presenter') }}</a>
+                    <a href="{{url_for('app.settings', short_name=app.short_name)}}" class="btn">{{ _('Cancel') }}</a>
                 </div>
             </fieldset>
         </form>
@@ -42,14 +42,14 @@
 
 <div id="modal-preview" class="modal hide big-modal">
     <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h2><strong>{{app.name}}</strong>: Task Presenter Preview</h2>
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">{{ _('&times;') }}</button>
+        <h2><strong>{{app.name}}</strong>: {{ _('Task Presenter Preview') }}</h2>
     </div>
     <div class="modal-body">
         <iframe id="preview" frameBorder="0"></iframe>
     </div>
     <div class="modal-footer">
-        <button class="btn" data-dismiss="modal" aria-hidden="true">Close</button>
+        <button class="btn" data-dismiss="modal" aria-hidden="true">{{ _('Close') }}</button>
     </div>
 </div>
 <script>

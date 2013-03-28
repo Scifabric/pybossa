@@ -22,13 +22,13 @@ from flask import render_template, current_app
 from flaskext.login import login_required, login_user, logout_user, current_user
 from flask.ext.mail import Message
 from flaskext.wtf import Form, TextField, PasswordField, validators, \
-        ValidationError, IntegerField, HiddenInput
+        ValidationError, IntegerField, HiddenInput, SelectField
 
 from flaskext.babel import lazy_gettext
 from sqlalchemy.sql import func, text
 import pybossa.model as model
 from pybossa.model import User
-from pybossa.core import db, signer, mail, cache
+from pybossa.core import db, signer, mail, cache, get_locale
 from pybossa.util import Unique
 from pybossa.util import Pagination
 from pybossa.util import Twitter
@@ -167,6 +167,19 @@ class UpdateProfileForm(Form):
                             Unique(db.session, model.User,
                                    model.User.email_addr, err_msg_2)])
 
+    locale = SelectField(lazy_gettext('Default Language'))
+
+    def set_locales(self, locales):
+        """Fill the locale.choices"""
+        choices = []
+        for locale in locales:
+            if locale == 'en':
+                lang = lazy_gettext("English")
+            if locale == 'es':
+                lang = lazy_gettext("Spanish")
+            choices.append((locale, lang))
+        self.locale.choices = choices
+
 
 @blueprint.route('/register', methods=['GET', 'POST'])
 def register():
@@ -177,6 +190,7 @@ def register():
                              name=form.username.data,
                              email_addr=form.email_addr.data)
         account.set_password(form.password.data)
+        account.locale = get_locale()
         db.session.add(account)
         db.session.commit()
         login_user(account, remember=True)
@@ -276,6 +290,7 @@ def settings():
 @login_required
 def update_profile():
     form = UpdateProfileForm(obj=current_user)
+    form.set_locales(current_app.config['LOCALES'])
     form.populate_obj(current_user)
     if request.method == 'GET':
         title_msg = "Update your profile: %s" % current_user.fullname
@@ -284,11 +299,13 @@ def update_profile():
                                form=form)
     else:
         form = UpdateProfileForm(request.form)
+        form.set_locales(current_app.config['LOCALES'])
         if form.validate():
             new_profile = model.User(id=form.id.data,
                                      fullname=form.fullname.data,
                                      name=form.name.data,
-                                     email_addr=form.email_addr.data)
+                                     email_addr=form.email_addr.data,
+                                     locale=form.locale.data)
             db.session.query(model.User)\
               .filter(model.User.id == current_user.id)\
               .first()

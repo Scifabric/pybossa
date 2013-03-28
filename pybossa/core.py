@@ -16,7 +16,7 @@
 import os
 import logging
 from itsdangerous import URLSafeTimedSerializer
-from flask import Flask, url_for
+from flask import Flask, url_for, session, request
 from flaskext.login import LoginManager, current_user
 from flaskext.gravatar import Gravatar
 from flask.ext.mail import Mail
@@ -97,3 +97,15 @@ if app.config.get('SENTRY_DSN'):
     sentr = Sentry(app)
 
 babel = Babel(app)
+
+
+@babel.localeselector
+def get_locale():
+    if current_user.is_authenticated():
+        lang = current_user.locale
+    else:
+        lang = session.get('lang',
+                           request.accept_languages.best_match(app.config['LOCALES']))
+    if lang is None:
+        lang = 'en'
+    return lang

@@ -73,13 +73,14 @@ class TestWeb:
         return self.app.get("/account/profile", follow_redirects=True)
 
     def update_profile(self, method="POST", id=1, fullname="John Doe",
-                       name="johndoe", email_addr="johndoe@example.com"):
+                       name="johndoe", locale="es", email_addr="johndoe@example.com"):
         """Helper function to update the profile of users"""
         if (method == "POST"):
             return self.app.post("/account/profile/update",
                                  data={'id': id,
                                        'fullname': fullname,
                                        'name': name,
+                                       'locale': locale,
                                        'email_addr': email_addr},
                                  follow_redirects=True)
         else:
@@ -347,9 +348,10 @@ class TestWeb:
                 res.data, res
 
         res = self.update_profile(fullname="John Doe 2",
-                                  email_addr="johndoe2@example.com")
-        assert self.html_title("Profile") in res.data, res
-        assert "Your profile has been updated!" in res.data, res
+                                  email_addr="johndoe2@example.com",
+                                  locale="en")
+        assert self.html_title("Profile") in res.data, res.data
+        assert "Your profile has been updated!" in res.data, res.data
         assert "John Doe 2" in res.data, res
         assert "johndoe" in res.data, res
         assert "johndoe2@example.com" in res.data, res
@@ -1815,7 +1817,7 @@ class TestWeb:
         assert Fixtures.fullname in res.data, err_msg
 
     @patch('pybossa.view.applications.requests.get')
-    def test_33_bulk_epicollect_import_unauthorized(self, Mock):
+    def test_71_bulk_epicollect_import_unauthorized(self, Mock):
         """Test WEB bulk import unauthorized works"""
         unauthorized_request = FakeRequest('Unauthorized', 403,
                                            {'content-type': 'application/json'})
@@ -1834,7 +1836,7 @@ class TestWeb:
         assert msg in res.data
 
     @patch('pybossa.view.applications.requests.get')
-    def test_34_bulk_epicollect_import_non_html(self, Mock):
+    def test_72_bulk_epicollect_import_non_html(self, Mock):
         """Test WEB bulk import non html works"""
         html_request = FakeRequest('Not an application/json', 200,
                                    {'content-type': 'text/html'})
@@ -1851,7 +1853,7 @@ class TestWeb:
         assert "Oops! That project and form do not look like the right one." in res.data
 
     @patch('pybossa.view.applications.requests.get')
-    def test_34_bulk_epicollect_import_json(self, Mock):
+    def test_73_bulk_epicollect_import_json(self, Mock):
         """Test WEB bulk import json works"""
         data = [dict(DeviceID=23)]
         html_request = FakeRequest(json.dumps(data), 200,

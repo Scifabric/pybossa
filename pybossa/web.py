@@ -21,6 +21,7 @@ import os
 from flask import Response, request, g, render_template,\
         abort, flash, redirect, session, url_for
 from flaskext.login import login_user, logout_user, current_user
+from flaskext.babel import lazy_gettext
 from sqlalchemy.exc import UnboundExecutionError
 from sqlalchemy import func, desc
 from werkzeug.exceptions import *
@@ -101,10 +102,6 @@ def url_for_other_page(page):
 app.jinja_env.globals['url_for_other_page'] = url_for_other_page
 
 
-@babel.localeselector
-def get_locale():
-    lang = session.get('lang', request.accept_languages.best_match(['en', 'es']))
-    return lang
 
 
 @app.errorhandler(404)
@@ -134,8 +131,8 @@ def global_template_context():
     if current_user.is_authenticated():
         if (current_user.email_addr == current_user.name or
                 current_user.email_addr == "None"):
-            flash("Please update your e-mail address in your profile page,"
-                  " right now it is empty!", 'error')
+            flash(lazy_gettext("Please update your e-mail address in your profile page,"
+                  " right now it is empty!"), 'error')
 
     # Announcement sections
     if app.config.get('ANNOUNCEMENT'):
