@@ -524,6 +524,11 @@ def import_task(short_name):
         gdform.googledocs_url.data = googledocs_urls[template]
 
     dataurl = get_data_url(**template_args)
+
+    def render_forms():
+        tmpl = '/applications/import.html'    
+        return render_template(tmpl, **template_args)
+
     if dataurl:
         try:
             r = requests.get(dataurl)
@@ -538,10 +543,7 @@ def import_task(short_name):
         except Exception as inst:
             msg = 'Oops! Looks like there was an error with processing that file!'
             flash(lazy_gettext(msg), 'error')
-
-    tmpl = '/applications/import.html'
-    
-    return render_template(tmpl, **template_args)
+    render_forms()
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
