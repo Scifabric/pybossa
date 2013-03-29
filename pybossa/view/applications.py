@@ -324,8 +324,6 @@ def update(short_name):
         return redirect(url_for('.details',
                                 short_name=new_application.short_name))
 
-
-
     if require.app.update(app):
         title = "Application: %s &middot; Update" % app.name
         if request.method == 'GET':
