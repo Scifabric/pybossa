@@ -309,15 +309,17 @@ def update(short_name):
         # Merge info object
         info = dict(app.info.items() + new_info.items())
 
-        new_application = model.App(id=form.id.data,
-                                    name=form.name.data,
-                                    short_name=form.short_name.data,
-                                    description=form.description.data,
-                                    long_description=form.long_description.data,
-                                    hidden=hidden,
-                                    info=info,
-                                    owner_id=app.owner_id,
-                                    allow_anonymous_contributors=form.allow_anonymous_contributors.data)
+        new_application = model.App(
+            id=form.id.data,
+            name=form.name.data,
+            short_name=form.short_name.data,
+            description=form.description.data,
+            long_description=form.long_description.data,
+            hidden=hidden,
+            info=info,
+            owner_id=app.owner_id,
+            allow_anonymous_contributors=form.allow_anonymous_contributors.data
+            )
         app = App.query.filter_by(short_name=short_name).first_or_404()
         db.session.merge(new_application)
         db.session.commit()
