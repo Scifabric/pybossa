@@ -589,10 +589,7 @@ def task_presenter(short_name, task_id):
     #return render_template('/applications/presenter.html', app = app)
     # Check if the user has submitted a task before
     if (current_user.is_anonymous()):
-        if not request.remote_addr:
-            remote_addr = "127.0.0.1"
-        else:
-            remote_addr = request.remote_addr
+        remote_addr = request.remote_addr or "127.0.0.1"
         tr = db.session.query(model.TaskRun)\
             .filter(model.TaskRun.task_id == task_id)\
             .filter(model.TaskRun.app_id == app.id)\
