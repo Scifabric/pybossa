@@ -778,7 +778,13 @@ def export_to(short_name):
 
     ty = request.args.get('type')
     fmt = request.args.get('format')
-    if fmt and ty:
+    if not (fmt and ty):
+        if len(request.args) >= 1:
+            abort(404)
+        return render_template('/applications/export.html',
+                               title=title,
+                               app=app)
+    else:
         if fmt not in ["json", "csv"]:
             abort(404)
         if fmt == 'json':
@@ -823,12 +829,6 @@ def export_to(short_name):
                 return render_template('/applications/export.html',
                                        title=title,
                                        app=app)
-    elif len(request.args) >= 1:
-        abort(404)
-    else:
-        return render_template('/applications/export.html',
-                               title=title,
-                               app=app)
 
 
 @blueprint.route('/<short_name>/stats')
