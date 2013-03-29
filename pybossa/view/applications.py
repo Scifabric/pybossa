@@ -655,20 +655,18 @@ def tasks(short_name, page):
         title = "Application: %s &middot; Tasks" % app.name
     else:
         title = "Application not found"
-    try:
-        require.app.read(app)
-        require.app.update(app)
 
+    def respond():
         per_page = 10
         count = db.session.query(model.Task)\
-                  .filter_by(app_id=app.id)\
-                  .count()
+            .filter_by(app_id=app.id)\
+            .count()
         app_tasks = db.session.query(model.Task)\
-                      .filter_by(app_id=app.id)\
-                      .order_by(model.Task.id)\
-                      .limit(per_page)\
-                      .offset((page - 1) * per_page)\
-                      .all()
+            .filter_by(app_id=app.id)\
+            .order_by(model.Task.id)\
+            .limit(per_page)\
+            .offset((page - 1) * per_page)\
+            .all()
 
         if not app_tasks and page != 1:
             abort(404)
@@ -679,32 +677,17 @@ def tasks(short_name, page):
                                tasks=app_tasks,
                                title=title,
                                pagination=pagination)
+
+    try:
+        require.app.read(app)
+        require.app.update(app)
+        return respond()
     except HTTPException:
         if not app.hidden:
-            per_page = 10
-            count = db.session.query(model.Task)\
-                      .filter_by(app_id=app.id)\
-                      .count()
-            app_tasks = db.session.query(model.Task)\
-                          .filter_by(app_id=app.id)\
-                          .order_by(model.Task.id)\
-                          .limit(per_page)\
-                          .offset((page - 1) * per_page)\
-                          .all()
-
-            if not app_tasks and page != 1:
-                abort(404)
-
-            pagination = Pagination(page, per_page, count)
-            return render_template('/applications/tasks.html',
-                                   app=app,
-                                   tasks=app_tasks,
-                                   title=title,
-                                   pagination=pagination)
-        else:
-            return render_template('/applications/tasks.html',
-                                   title="Application not found",
-                                   app=None)
+            return respond()
+        return render_template('/applications/tasks.html',
+                               title="Application not found",
+                               app=None)
 
 
 @blueprint.route('/<short_name>/tasks/delete', methods=['GET', 'POST'])
