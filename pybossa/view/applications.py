@@ -558,21 +558,27 @@ def task_presenter(short_name, task_id):
     app = App.query.filter_by(short_name=short_name).first_or_404()
     task = Task.query.filter_by(id=task_id).first_or_404()
 
-    if not app.allow_anonymous_contributors and current_user.is_anonymous():
-        msg = ("Oops! You have to sign in to participate in "
-               "<strong>%s</strong>"
-               "application" % app.name)
-        flash(lazy_gettext(msg), 'warning')
-        return redirect(url_for('account.signin',
-                        next=url_for('.presenter', short_name=app.short_name)))
-    if (current_user.is_anonymous()):
-        msg_1 = lazy_gettext("Ooops! You are an anonymous user and will not "
-                             "get any credit"
-                             " for your contributions.")
-        flash(msg_1 + "<a href=\"" + url_for('account.signin',
-              next=url_for('app.task_presenter', short_name=short_name,
-                           task_id=task_id))
-              + "\">Sign in now!</a>", "warning")
+    if current_user.is_anonymous():
+        if not app.allow_anonymous_contributors:
+            msg = ("Oops! You have to sign in to participate in "
+                   "<strong>%s</strong>"
+                   "application" % app.name)
+            flash(lazy_gettext(msg), 'warning')
+            return redirect(url_for(
+                    'account.signin',
+                    next=url_for('.presenter', short_name=app.short_name)))
+        else:
+            msg_1 = lazy_gettext(
+                "Ooops! You are an anonymous user and will not "
+                "get any credit"
+                " for your contributions.")
+            flash(msg_1 + "<a href=\"" + url_for(
+                    'account.signin',
+                    next=url_for(
+                        'app.task_presenter', 
+                        short_name=short_name,
+                        task_id=task_id))
+                  + "\">Sign in now!</a>", "warning")
     if app:
         title = "Application: %s &middot; Contribute" % app.name
     else:
