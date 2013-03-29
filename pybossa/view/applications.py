@@ -500,31 +500,32 @@ def import_task(short_name):
     app = App.query.filter_by(short_name=short_name).first_or_404()
     title = "Applications: %s &middot; Import Tasks" % app.name
 
-    data_handlers = [
-        ('csv_url', get_csv_data_from_request),
-        ('googledocs_url', get_csv_data_from_request),
-        ('epicollect_project', get_epicollect_data_from_request)
-        ]
+    importer_forms = [
+        ('csv_url', get_csv_data_from_request,
+         'csvform', BulkTaskCSVImportForm),
+        ('googledocs_url', get_csv_data_from_request
+         'gdform', BulkTaskGDImportForm),
+        ('epicollect_project', get_epicollect_data_from_request
+         'epiform', BulkTaskEpiCollectPlusImportForm)
+        ]        
 
-    csvform = BulkTaskCSVImportForm(request.form)
-    gdform = BulkTaskGDImportForm(request.form)
-    epiform = BulkTaskEpiCollectPlusImportForm(request.form)
+    data_handlers = [(argname, handler) for argname, handler in importer_forms]
 
     template_args = {
         "title": title,
-        "app": app,
-        "csvform": csvform,
-        "epiform": epiform,
-        "gdform": gdform
+        "app": app
         }
 
+    forms = [(form_name, cls) for _, _, form_name, cls in importer_forms]
+    template_args.add(dict(forms))
+    
     template = request.args.get('template')
     if not (app.tasks or template or request.method == 'POST'):
         return render_template('/applications/import_options.html',
                                **template_args)
 
     if template in googledocs_urls:
-        gdform.googledocs_url.data = googledocs_urls[template]
+        template_args["gdform"].googledocs_url.data = googledocs_urls[template]
     
     return _import_task(app, template_args, data_handlers)
 
