@@ -752,59 +752,63 @@ def export_to(short_name):
             handle_row(writer, tr)
         yield out.getvalue()
 
+    def respond_json(ty):
+        tables = {"task": model.Task, "task_run": model.TaskRun}
+        try:
+            table = tables[ty]
+        except KeyError:
+            return abort(404)
+        return Response(gen_json(table), mimetype='application/json')
+
+    def respond_csv(ty):
+        # Export Task(/Runs) to CSV
+        types = {
+            "task": (
+                model.Task, handle_task,
+                (lambda x: True),
+                lazy_gettext(
+                    "Oops, the application does not have tasks to \
+                           export, if you are the owner add some tasks")),
+            "task_run": (
+                model.TaskRun, handle_task_run,
+                (lambda x: type(x.info) == dict),
+                lazy_gettext(
+                    "Oops, there are no Task Runs yet to export, invite \
+                           some users to participate"))
+            }
+        try:
+            table, handle_row, test, msg = types[ty]
+        except KeyError:
+            return abort(404)
+
+        out = StringIO()
+        writer = UnicodeWriter(out)
+        t = db.session.query(table)\
+            .filter_by(app_id=app.id)\
+            .first()
+        if t is not None:
+            if test(t):
+                writer.writerow(t.info.keys())
+
+            return Response(get_csv(out, writer, table, handle_row),
+                                mimetype='text/csv')
+        else:
+            flash(msg, 'info')
+            return render_template('/applications/export.html',
+                                   title=title,
+                                   app=app)
+
     ty = request.args.get('type')
     fmt = request.args.get('format')
-    if fmt and ty:
-        if fmt not in ["json", "csv"]:
+    if not (fmt and ty):
+        if len(request.args) >= 1:
             abort(404)
-        if fmt == 'json':
-            tables = {"task": model.Task, "task_run": model.TaskRun}
-            try:
-                table = tables[ty]
-            except KeyError:
-                return abort(404)
-            return Response(gen_json(table), mimetype='application/json')
-        elif fmt == 'csv':
-            # Export Task(/Runs) to CSV
-            types = {
-                "task": (
-                    model.Task, handle_task,
-                    (lambda x: True),
-                    lazy_gettext("Oops, the application does not have tasks to \
-                           export, if you are the owner add some tasks")),
-                "task_run": (
-                    model.TaskRun, handle_task_run,
-                    (lambda x: type(x.info) == dict),
-                    lazy_gettext("Oops, there are no Task Runs yet to export, invite \
-                           some users to participate"))
-                }
-            try:
-                table, handle_row, test, msg = types[ty]
-            except KeyError:
-                return abort(404)
-
-            out = StringIO()
-            writer = UnicodeWriter(out)
-            t = db.session.query(table)\
-                .filter_by(app_id=app.id)\
-                .first()
-            if t is not None:
-                if test(t):
-                    writer.writerow(t.info.keys())
-
-                return Response(get_csv(out, writer, table, handle_row),
-                                mimetype='text/csv')
-            else:
-                flash(msg, 'info')
-                return render_template('/applications/export.html',
-                                       title=title,
-                                       app=app)
-    elif len(request.args) >= 1:
-        abort(404)
-    else:
         return render_template('/applications/export.html',
                                title=title,
                                app=app)
+    if fmt not in ["json", "csv"]:
+        abort(404)
+    return {"json": respond_json, "csv": respond_csv}[fmt](ty)
 
 
 @blueprint.route('/<short_name>/stats')
