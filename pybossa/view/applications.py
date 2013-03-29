@@ -153,6 +153,12 @@ def new():
     if not require.app.create():
         abort(403)
     form = AppForm(request.form)
+
+    def respond(errors):
+        return render_template('applications/new.html',
+                        title=lazy_gettext("Create an Application"),
+                        form=form, errors=errors)
+
     if request.method == 'POST' and form.validate():
         info = {}
         # Add the info items
@@ -187,9 +193,7 @@ def new():
     if request.method == 'POST' and not form.validate():
         flash(lazy_gettext('Please correct the errors'), 'error')
         errors = True
-    return render_template('applications/new.html',
-                           title=lazy_gettext("Create an Application"),
-                           form=form, errors=errors)
+    return respond(errors)
 
 
 @blueprint.route('/<short_name>/taskpresentereditor', methods=['GET', 'POST'])
