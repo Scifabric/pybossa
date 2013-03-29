@@ -624,11 +624,11 @@ def presenter(short_name):
            get any credit for your contributions. Sign in \
            now!"
 
-    def respond():
+    def respond(tmpl):
         if (current_user.is_anonymous()):
             msg_1 = lazy_gettext(msg)
             flash(msg_1, "warning")
-        resp = make_response(render_template('/applications/presenter.html',
+        resp = make_response(render_template(tmpl,
                                              title=title,
                                              app=app))
         return resp
@@ -644,9 +644,9 @@ def presenter(short_name):
             resp.set_cookie(app.short_name + 'tutorial', 'seen')
             return resp
         else:
-            return respond()
+            return respond('/applications/presenter.html')
     else:
-        return respond()
+        return respond('/applications/presenter.html')
 
 @blueprint.route('/<short_name>/tutorial')
 def tutorial(short_name):
