@@ -267,25 +267,22 @@ def task_presenter_editor(short_name):
 @login_required
 def delete(short_name):
     app = App.query.filter_by(short_name=short_name).first()
-    if app:
-        title = "Application: %s &middot; Delete" % app.name
-        if require.app.delete(app):
-            if request.method == 'GET':
-                return render_template('/applications/delete.html',
-                                       title=title,
-                                       app=app)
-            else:
-                # Clean cache
-                cached_apps.clean(app.id)
-                db.session.delete(app)
-                db.session.commit()
-                flash(lazy_gettext('Application deleted!'), 'success')
-                return redirect(url_for('account.profile'))
-        else:
-            abort(403)
-    else:
+    if not app:
         abort(404)
 
+    title = "Application: %s &middot; Delete" % app.name
+    if not require.app.delete(app):
+        abort(403)
+    if request.method == 'GET':
+        return render_template('/applications/delete.html',
+                                   title=title,
+                                   app=app)
+    # Clean cache
+    cached_apps.clean(app.id)
+    db.session.delete(app)
+    db.session.commit()
+    flash(lazy_gettext('Application deleted!'), 'success')
+    return redirect(url_for('account.profile'))
 
 @blueprint.route('/<short_name>/update', methods=['GET', 'POST'])
 @login_required
