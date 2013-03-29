@@ -776,6 +776,14 @@ def export_to(short_name):
             handle_row(writer, tr)
         yield out.getvalue()
 
+    def respond_json(ty):
+        tables = {"task": model.Task, "task_run": model.TaskRun}
+        try:
+            table = tables[ty]
+        except KeyError:
+            return abort(404)
+        return Response(gen_json(table), mimetype='application/json')
+
     ty = request.args.get('type')
     fmt = request.args.get('format')
     if not (fmt and ty):
@@ -788,12 +796,7 @@ def export_to(short_name):
         if fmt not in ["json", "csv"]:
             abort(404)
         if fmt == 'json':
-            tables = {"task": model.Task, "task_run": model.TaskRun}
-            try:
-                table = tables[ty]
-            except KeyError:
-                return abort(404)
-            return Response(gen_json(table), mimetype='application/json')
+            return respond_json(ty)
         elif fmt == 'csv':
             # Export Task(/Runs) to CSV
             types = {
