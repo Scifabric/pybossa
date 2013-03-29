@@ -271,20 +271,19 @@ def delete(short_name):
         abort(404)
 
     title = "Application: %s &middot; Delete" % app.name
-    if require.app.delete(app):
-        if request.method == 'GET':
-            return render_template('/applications/delete.html',
+    if not require.app.delete(app):
+        abort(403)
+    if request.method == 'GET':
+        return render_template('/applications/delete.html',
                                    title=title,
                                    app=app)
-        else:
-            # Clean cache
-            cached_apps.clean(app.id)
-            db.session.delete(app)
-            db.session.commit()
-            flash(lazy_gettext('Application deleted!'), 'success')
-            return redirect(url_for('account.profile'))
     else:
-        abort(403)
+        # Clean cache
+        cached_apps.clean(app.id)
+        db.session.delete(app)
+        db.session.commit()
+        flash(lazy_gettext('Application deleted!'), 'success')
+        return redirect(url_for('account.profile'))
 
 @blueprint.route('/<short_name>/update', methods=['GET', 'POST'])
 @login_required
