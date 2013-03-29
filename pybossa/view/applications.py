@@ -613,6 +613,8 @@ def presenter(short_name):
     app = App.query.filter_by(short_name=short_name)\
         .first_or_404()
     title = "Application &middot; %s &middot; Contribute" % app.name
+    template_args = {"app": app, "title": title}
+
     if not app.allow_anonymous_contributors and current_user.is_anonymous():
         msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
                application" % app.name
@@ -620,38 +622,24 @@ def presenter(short_name):
         return redirect(url_for('account.signin',
                         next=url_for('.presenter', short_name=app.short_name)))
 
-    if app.info.get("tutorial"):
-        if request.cookies.get(app.short_name + "tutorial") is None:
-            if (current_user.is_anonymous()):
-                msg_1 = lazy_gettext("Ooops! You are an anonymous user and will not \
-                                     get any credit for your contributions. Sign in \
-                                     now!")
-                flash(msg_1, "warning")
-            resp = make_response(render_template('/applications/tutorial.html',
-                                                 title=title,
-                                                 app=app))
-            resp.set_cookie(app.short_name + 'tutorial', 'seen')
-            return resp
-        else:
-            if (current_user.is_anonymous()):
-                msg_1 = lazy_gettext("Ooops! You are an anonymous user and will not \
-                                     get any credit for your contributions. Sign in \
-                                     now!")
-                flash(msg_1, "warning")
-            return render_template('/applications/presenter.html',
-                                   title=title,
-                                   app=app)
-    else:
-        if (current_user.is_anonymous()):
-            if (current_user.is_anonymous()):
-                msg_1 = lazy_gettext("Ooops! You are an anonymous user and will not \
-                                     get any credit for your contributions. Sign in \
-                                     now!")
-                flash(msg_1, "warning")
-        return render_template('/applications/presenter.html',
-                               title=title,
-                               app=app)
+    msg = "Ooops! You are an anonymous user and will not \
+           get any credit for your contributions. Sign in \
+           now!"
 
+    def respond(tmpl):
+        if (current_user.is_anonymous()):
+            msg_1 = lazy_gettext(msg)
+            flash(msg_1, "warning")
+        resp = make_response(render_template(tmpl, **template_args))
+        return resp
+
+    if app.info.get("tutorial") and \
+            request.cookies.get(app.short_name + "tutorial") is None:
+        resp = respond('/applications/tutorial.html')
+        resp.set_cookie(app.short_name + 'tutorial', 'seen')
+        return resp
+    else:
+        return respond('/applications/presenter.html')
 
 @blueprint.route('/<short_name>/tutorial')
 def tutorial(short_name):
