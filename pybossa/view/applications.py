@@ -572,13 +572,14 @@ def task_presenter(short_name, task_id):
                 "Ooops! You are an anonymous user and will not "
                 "get any credit"
                 " for your contributions.")
-            flash(msg_1 + "<a href=\"" + url_for(
-                    'account.signin',
-                    next=url_for(
-                        'app.task_presenter', 
-                        short_name=short_name,
-                        task_id=task_id))
-                  + "\">Sign in now!</a>", "warning")
+            next_url = url_for(
+                'app.task_presenter', 
+                short_name=short_name,
+                task_id=task_id)
+            url = url_for(
+                'account.signin',
+                next=next_url)
+            flash(msg_1 + "<a href=\"" + url + "\">Sign in now!</a>", "warning")
     if app:
         title = "Application: %s &middot; Contribute" % app.name
     else:
