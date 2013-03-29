@@ -620,12 +620,13 @@ def presenter(short_name):
         return redirect(url_for('account.signin',
                         next=url_for('.presenter', short_name=app.short_name)))
 
+    msg = "Ooops! You are an anonymous user and will not \
+           get any credit for your contributions. Sign in \
+           now!"
     if app.info.get("tutorial"):
         if request.cookies.get(app.short_name + "tutorial") is None:
             if (current_user.is_anonymous()):
-                msg_1 = lazy_gettext("Ooops! You are an anonymous user and will not \
-                                     get any credit for your contributions. Sign in \
-                                     now!")
+                msg_1 = lazy_gettext(msg)
                 flash(msg_1, "warning")
             resp = make_response(render_template('/applications/tutorial.html',
                                                  title=title,
@@ -634,9 +635,7 @@ def presenter(short_name):
             return resp
         else:
             if (current_user.is_anonymous()):
-                msg_1 = lazy_gettext("Ooops! You are an anonymous user and will not \
-                                     get any credit for your contributions. Sign in \
-                                     now!")
+                msg_1 = lazy_gettext(msg)
                 flash(msg_1, "warning")
             return render_template('/applications/presenter.html',
                                    title=title,
@@ -644,9 +643,7 @@ def presenter(short_name):
     else:
         if (current_user.is_anonymous()):
             if (current_user.is_anonymous()):
-                msg_1 = lazy_gettext("Ooops! You are an anonymous user and will not \
-                                     get any credit for your contributions. Sign in \
-                                     now!")
+                msg_1 = lazy_gettext(msg)
                 flash(msg_1, "warning")
         return render_template('/applications/presenter.html',
                                title=title,
