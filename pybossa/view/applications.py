@@ -351,11 +351,9 @@ def details(short_name):
 
         return render_template('/applications/actions.html', **template_args)
     except HTTPException:
-        if not app.hidden:
-            return render_template('/applications/app.html', **template_args)
-        else:
+        if app.hidden:
             template_args = {"app": None, "title": "Application not found"}
-            return render_template('/applications/app.html', **template_args)
+        return render_template('/applications/app.html', **template_args)
 
 
 @blueprint.route('/<short_name>/settings')
