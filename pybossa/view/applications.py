@@ -293,10 +293,7 @@ def update(short_name):
     app = App.query.filter_by(short_name=short_name).first_or_404()
 
     def handle_valid_form(form):
-        if form.hidden.data:
-            hidden = 1
-        else:
-            hidden = 0
+        hidden = int(form.hidden.data)
 
         new_info = {}
         # Add the info items
