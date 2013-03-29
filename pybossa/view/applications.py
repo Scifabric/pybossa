@@ -583,33 +583,32 @@ def task_presenter(short_name, task_id):
     def respond(tmpl):
         return render_template(tmpl, **template_args)
 
-    if (task.app_id == app.id):
-        #return render_template('/applications/presenter.html', app = app)
-        # Check if the user has submitted a task before
-        if (current_user.is_anonymous()):
-            if not request.remote_addr:
-                remote_addr = "127.0.0.1"
-            else:
-                remote_addr = request.remote_addr
-            tr = db.session.query(model.TaskRun)\
-                   .filter(model.TaskRun.task_id == task_id)\
-                   .filter(model.TaskRun.app_id == app.id)\
-                   .filter(model.TaskRun.user_ip == remote_addr)
-
-        else:
-            tr = db.session.query(model.TaskRun)\
-                   .filter(model.TaskRun.task_id == task_id)\
-                   .filter(model.TaskRun.app_id == app.id)\
-                   .filter(model.TaskRun.user_id == current_user.id)
-
-        tr = tr.first()
-        if (tr is None):
-            return respond('/applications/presenter.html')
-        else:
-            return respond('/applications/task/done.html')
-    else:
+    if not (task.app_id == app.id):
         return respond('/applications/task/wrong.html')
 
+    #return render_template('/applications/presenter.html', app = app)
+    # Check if the user has submitted a task before
+    if (current_user.is_anonymous()):
+        if not request.remote_addr:
+            remote_addr = "127.0.0.1"
+        else:
+            remote_addr = request.remote_addr
+        tr = db.session.query(model.TaskRun)\
+            .filter(model.TaskRun.task_id == task_id)\
+            .filter(model.TaskRun.app_id == app.id)\
+            .filter(model.TaskRun.user_ip == remote_addr)
+
+    else:
+        tr = db.session.query(model.TaskRun)\
+            .filter(model.TaskRun.task_id == task_id)\
+            .filter(model.TaskRun.app_id == app.id)\
+            .filter(model.TaskRun.user_id == current_user.id)
+
+    tr = tr.first()
+    if (tr is None):
+        return respond('/applications/presenter.html')
+    else:
+        return respond('/applications/task/done.html')
 
 @blueprint.route('/<short_name>/presenter')
 @blueprint.route('/<short_name>/newtask')
