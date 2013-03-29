@@ -342,20 +342,16 @@ def update(short_name):
                         form.sched.data = s[0]
                         break
 
-            return render_template('/applications/update.html',
-                                   title=title,
-                                   form=form,
-                                   app=app)
-
         if request.method == 'POST':
             form = AppForm(request.form)
             if form.validate():
                 return handle_valid_form(form)
             flash(lazy_gettext('Please correct the errors'), 'error')
-            return render_template('/applications/update.html',
-                                   form=form,
-                                   title=title,
-                                   app=app)
+
+        return render_template('/applications/update.html',
+                               form=form,
+                               title=title,
+                               app=app)
     else:
         abort(403)
 
