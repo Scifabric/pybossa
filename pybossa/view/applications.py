@@ -499,6 +499,7 @@ def get_epicollect_data_from_request(app, r):
 def import_task(short_name):
     app = App.query.filter_by(short_name=short_name).first_or_404()
     title = "Applications: %s &middot; Import Tasks" % app.name
+    template_args = {"title": title, "app": app}
 
     importer_forms = [
         ('csv_url', get_csv_data_from_request,
@@ -510,11 +511,6 @@ def import_task(short_name):
         ]        
 
     data_handlers = [(argname, handler) for argname, handler in importer_forms]
-
-    template_args = {
-        "title": title,
-        "app": app
-        }
 
     forms = [(form_name, cls) for _, _, form_name, cls in importer_forms]
     template_args.add(dict(forms))
