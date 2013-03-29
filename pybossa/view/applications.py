@@ -369,19 +369,19 @@ def settings(short_name):
                     .filter(model.App.short_name == short_name)\
                     .first()
 
-    if application:
-        title = "Application: %s &middot; Settings" % application.name
-        try:
-            require.app.read(application)
-            require.app.update(application)
-
-            return render_template('/applications/settings.html',
-                                   app=application,
-                                   title=title)
-        except HTTPException:
-            return abort(403)
-    else:
+    if not application:
         abort(404)
+        
+    title = "Application: %s &middot; Settings" % application.name
+    try:
+        require.app.read(application)
+        require.app.update(application)
+
+        return render_template('/applications/settings.html',
+                               app=application,
+                               title=title)
+    except HTTPException:
+        return abort(403)
 
 
 def import_csv_tasks(app, csvreader):
