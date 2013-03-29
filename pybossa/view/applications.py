@@ -149,7 +149,6 @@ def draft(page):
 @blueprint.route('/new', methods=['GET', 'POST'])
 @login_required
 def new():
-    errors = False
     if not require.app.create():
         abort(403)
     form = AppForm(request.form)
@@ -160,12 +159,11 @@ def new():
                         form=form, errors=errors)
 
     if request.method != 'POST':
-        return respond(errors)
+        return respond(False)
 
     if not form.validate():
         flash(lazy_gettext('Please correct the errors'), 'error')
-        errors = True
-        return respond(errors)
+        return respond(True)
     else:
         info = {}
         # Add the info items
