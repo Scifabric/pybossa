@@ -120,14 +120,12 @@ def index(page):
         abort(403)
 
 
-@blueprint.route('/published', defaults={'page': 1})
-@blueprint.route('/published/page/<int:page>')
-def published(page):
-    """Show the Published apps"""
+def app_index(page, lookup, app_type):
+    """Show apps of app_type"""
     if require.app.read():
         per_page = 5
 
-        apps, count = cached_apps.get_published(page, per_page)
+        apps, count = lookup(page, per_page)
 
         pagination = Pagination(page, per_page, count)
         return render_template('/applications/index.html',
@@ -135,28 +133,23 @@ def published(page):
                                apps=apps,
                                count=count,
                                pagination=pagination,
-                               app_type='app-published')
+                               app_type=app_type)
     else:
         abort(403)
+
+
+@blueprint.route('/published', defaults={'page': 1})
+@blueprint.route('/published/page/<int:page>')
+def published(page):
+    """Show the Published apps"""
+    return app_index(page, cached_apps.get_published, 'app-published')
 
 
 @blueprint.route('/draft', defaults={'page': 1})
 @blueprint.route('/draft/page/<int:page>')
 def draft(page):
-    if require.app.read():
-        per_page = 5
-
-        apps, count = cached_apps.get_draft(page, per_page)
-
-        pagination = Pagination(page, per_page, count)
-        return render_template('/applications/index.html',
-                               title=lazy_gettext("Applications"),
-                               apps=apps,
-                               count=count,
-                               pagination=pagination,
-                               app_type='app-draft')
-    else:
-        abort(403)
+    """Show the Draft apps"""
+    return app_index(page, cached_apps.get_draft, 'app-draft')
 
 
 @blueprint.route('/new', methods=['GET', 'POST'])
