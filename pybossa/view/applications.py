@@ -291,6 +291,42 @@ def delete(short_name):
 @login_required
 def update(short_name):
     app = App.query.filter_by(short_name=short_name).first_or_404()
+
+    def handle_valid_form(form):
+        if form.hidden.data:
+            hidden = 1
+        else:
+            hidden = 0
+
+        new_info = {}
+        # Add the info items
+        app = App.query.filter_by(short_name=short_name).first_or_404()
+        if form.thumbnail.data:
+            new_info['thumbnail'] = form.thumbnail.data
+        if form.sched.data:
+            new_info['sched'] = form.sched.data
+
+        # Merge info object
+        info = dict(app.info.items() + new_info.items())
+
+        new_application = model.App(id=form.id.data,
+                                    name=form.name.data,
+                                    short_name=form.short_name.data,
+                                    description=form.description.data,
+                                    long_description=form.long_description.data,
+                                    hidden=hidden,
+                                    info=info,
+                                    owner_id=app.owner_id,
+                                    allow_anonymous_contributors=form.allow_anonymous_contributors.data)
+        app = App.query.filter_by(short_name=short_name).first_or_404()
+        db.session.merge(new_application)
+        db.session.commit()
+        flash(lazy_gettext('Application updated!'), 'success')
+        return redirect(url_for('.details',
+                                short_name=new_application.short_name))
+
+
+
     if require.app.update(app):
         title = "Application: %s &middot; Update" % app.name
         if request.method == 'GET':
@@ -312,37 +348,7 @@ def update(short_name):
         if request.method == 'POST':
             form = AppForm(request.form)
             if form.validate():
-                if form.hidden.data:
-                    hidden = 1
-                else:
-                    hidden = 0
-
-                new_info = {}
-                # Add the info items
-                app = App.query.filter_by(short_name=short_name).first_or_404()
-                if form.thumbnail.data:
-                    new_info['thumbnail'] = form.thumbnail.data
-                if form.sched.data:
-                    new_info['sched'] = form.sched.data
-
-                # Merge info object
-                info = dict(app.info.items() + new_info.items())
-
-                new_application = model.App(id=form.id.data,
-                                            name=form.name.data,
-                                            short_name=form.short_name.data,
-                                            description=form.description.data,
-                                            long_description=form.long_description.data,
-                                            hidden=hidden,
-                                            info=info,
-                                            owner_id=app.owner_id,
-                                            allow_anonymous_contributors=form.allow_anonymous_contributors.data)
-                app = App.query.filter_by(short_name=short_name).first_or_404()
-                db.session.merge(new_application)
-                db.session.commit()
-                flash(lazy_gettext('Application updated!'), 'success')
-                return redirect(url_for('.details',
-                                        short_name=new_application.short_name))
+                return handle_valid_form(form)
             else:
                 flash(lazy_gettext('Please correct the errors'), 'error')
                 return render_template('/applications/update.html',
