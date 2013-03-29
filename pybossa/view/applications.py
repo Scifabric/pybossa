@@ -351,12 +351,11 @@ def update(short_name):
             form = AppForm(request.form)
             if form.validate():
                 return handle_valid_form(form)
-            else:
-                flash(lazy_gettext('Please correct the errors'), 'error')
-                return render_template('/applications/update.html',
-                                       form=form,
-                                       title=title,
-                                       app=app)
+            flash(lazy_gettext('Please correct the errors'), 'error')
+            return render_template('/applications/update.html',
+                                   form=form,
+                                   title=title,
+                                   app=app)
     else:
         abort(403)
 
