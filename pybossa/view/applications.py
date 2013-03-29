@@ -643,15 +643,14 @@ def export(short_name, task_id):
             .filter(model.App.short_name == short_name)\
             .first()
 
-    if app:
-        task = db.session.query(model.Task)\
-                 .filter(model.Task.id == task_id)\
-                 .first()
-
-        results = [tr.dictize() for tr in task.task_runs]
-        return Response(json.dumps(results), mimetype='application/json')
-    else:
+    if not app:
         return abort(404)
+    task = db.session.query(model.Task)\
+        .filter(model.Task.id == task_id)\
+        .first()
+
+    results = [tr.dictize() for tr in task.task_runs]
+    return Response(json.dumps(results), mimetype='application/json')
 
 
 @blueprint.route('/<short_name>/tasks', defaults={'page': 1})
