@@ -588,18 +588,16 @@ def task_presenter(short_name, task_id):
 
     #return render_template('/applications/presenter.html', app = app)
     # Check if the user has submitted a task before
+
+    tr_search = db.session.query(model.TaskRun)\
+            .filter(model.TaskRun.task_id == task_id)\
+            .filter(model.TaskRun.app_id == app.id)
+
     if (current_user.is_anonymous()):
         remote_addr = request.remote_addr or "127.0.0.1"
-        tr = db.session.query(model.TaskRun)\
-            .filter(model.TaskRun.task_id == task_id)\
-            .filter(model.TaskRun.app_id == app.id)\
-            .filter(model.TaskRun.user_ip == remote_addr)
-
+        tr = tr_search.filter(model.TaskRun.user_ip == remote_addr)
     else:
-        tr = db.session.query(model.TaskRun)\
-            .filter(model.TaskRun.task_id == task_id)\
-            .filter(model.TaskRun.app_id == app.id)\
-            .filter(model.TaskRun.user_id == current_user.id)
+        tr = tr_search.filter(model.TaskRun.user_id == current_user.id)
 
     tr_first = tr.first()
     if tr_first is None:
