@@ -504,9 +504,9 @@ def import_task(short_name):
     importer_forms = [
         ('csv_url', get_csv_data_from_request,
          'csvform', BulkTaskCSVImportForm),
-        ('googledocs_url', get_csv_data_from_request
+        ('googledocs_url', get_csv_data_from_request,
          'gdform', BulkTaskGDImportForm),
-        ('epicollect_project', get_epicollect_data_from_request
+        ('epicollect_project', get_epicollect_data_from_request,
          'epiform', BulkTaskEpiCollectPlusImportForm)
         ]        
 
