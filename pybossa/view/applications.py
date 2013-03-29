@@ -229,16 +229,7 @@ def task_presenter_editor(short_name):
     if app.info.get('task_presenter'):
         form.editor.data = app.info['task_presenter']
     else:
-        if request.args.get('template'):
-            tmpl_uri = "applications/snippets/%s.html" \
-                % request.args.get('template')
-            tmpl = render_template(tmpl_uri, app=app)
-            form.editor.data = tmpl
-            msg = 'Your code will be <em>automagically</em> rendered in \
-                      the <strong>preview section</strong>. Click in the \
-                      preview button!'
-            flash(lazy_gettext(msg), 'info')
-        else:
+        if not request.args.get('template'):
             msg = '<strong>Note</strong> You will need to upload ' \
                 'the tasks using the <a href="%s">' \
                 'CSV importer</a> or download the app ' \
@@ -251,6 +242,15 @@ def task_presenter_editor(short_name):
                 'applications/task_presenter_options.html',
                 title=title,
                 app=app)
+        else:
+            tmpl_uri = "applications/snippets/%s.html" \
+                % request.args.get('template')
+            tmpl = render_template(tmpl_uri, app=app)
+            form.editor.data = tmpl
+            msg = 'Your code will be <em>automagically</em> rendered in \
+                      the <strong>preview section</strong>. Click in the \
+                      preview button!'
+            flash(lazy_gettext(msg), 'info')
     return render_template('applications/task_presenter_editor.html',
                            title=title,
                            form=form,
