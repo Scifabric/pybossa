@@ -604,8 +604,8 @@ def task_presenter(short_name, task_id):
             .filter(model.TaskRun.app_id == app.id)\
             .filter(model.TaskRun.user_id == current_user.id)
 
-    tr = tr.first()
-    if (tr is None):
+    tr_first = tr.first()
+    if tr_first is None:
         return respond('/applications/presenter.html')
     else:
         return respond('/applications/task/done.html')
