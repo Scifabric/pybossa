@@ -109,15 +109,15 @@ def index(page):
         
     apps, count = cached_apps.get_featured(page, per_page)
 
-    if apps:
-        pagination = Pagination(page, per_page, count)
-        return render_template('/applications/index.html',
-                               title=lazy_gettext("Applications"),
-                               apps=apps,
-                               pagination=pagination,
-                               app_type='app-featured')
-    else:
+    if not apps:
         return redirect(url_for('.published'))
+
+    pagination = Pagination(page, per_page, count)
+    return render_template('/applications/index.html',
+                           title=lazy_gettext("Applications"),
+                           apps=apps,
+                           pagination=pagination,
+                           app_type='app-featured')
 
 
 def app_index(page, lookup, app_type):
