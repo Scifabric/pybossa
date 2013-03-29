@@ -832,10 +832,8 @@ def export_to(short_name):
                                app=app)
     if fmt not in ["json", "csv"]:
         abort(404)
-    if fmt == 'json':
-        return respond_json(ty)
-    elif fmt == 'csv':
-        return respond_csv(ty)
+    return {"json": respond_json, "csv": respond_csv}[fmt](ty)
+
 
 @blueprint.route('/<short_name>/stats')
 def show_stats(short_name):
