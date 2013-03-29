@@ -784,6 +784,44 @@ def export_to(short_name):
             return abort(404)
         return Response(gen_json(table), mimetype='application/json')
 
+    def respond_csv(ty):
+        # Export Task(/Runs) to CSV
+        types = {
+            "task": (
+                model.Task, handle_task,
+                (lambda x: True),
+                lazy_gettext(
+                    "Oops, the application does not have tasks to \
+                           export, if you are the owner add some tasks")),
+            "task_run": (
+                model.TaskRun, handle_task_run,
+                (lambda x: type(x.info) == dict),
+                lazy_gettext(
+                    "Oops, there are no Task Runs yet to export, invite \
+                           some users to participate"))
+            }
+        try:
+            table, handle_row, test, msg = types[ty]
+        except KeyError:
+            return abort(404)
+
+        out = StringIO()
+        writer = UnicodeWriter(out)
+        t = db.session.query(table)\
+            .filter_by(app_id=app.id)\
+            .first()
+        if t is not None:
+            if test(t):
+                writer.writerow(t.info.keys())
+
+            return Response(get_csv(out, writer, table, handle_row),
+                                mimetype='text/csv')
+        else:
+            flash(msg, 'info')
+            return render_template('/applications/export.html',
+                                   title=title,
+                                   app=app)
+
     ty = request.args.get('type')
     fmt = request.args.get('format')
     if not (fmt and ty):
@@ -798,41 +836,7 @@ def export_to(short_name):
         if fmt == 'json':
             return respond_json(ty)
         elif fmt == 'csv':
-            # Export Task(/Runs) to CSV
-            types = {
-                "task": (
-                    model.Task, handle_task,
-                    (lambda x: True),
-                    lazy_gettext("Oops, the application does not have tasks to \
-                           export, if you are the owner add some tasks")),
-                "task_run": (
-                    model.TaskRun, handle_task_run,
-                    (lambda x: type(x.info) == dict),
-                    lazy_gettext("Oops, there are no Task Runs yet to export, invite \
-                           some users to participate"))
-                }
-            try:
-                table, handle_row, test, msg = types[ty]
-            except KeyError:
-                return abort(404)
-
-            out = StringIO()
-            writer = UnicodeWriter(out)
-            t = db.session.query(table)\
-                .filter_by(app_id=app.id)\
-                .first()
-            if t is not None:
-                if test(t):
-                    writer.writerow(t.info.keys())
-
-                return Response(get_csv(out, writer, table, handle_row),
-                                mimetype='text/csv')
-            else:
-                flash(msg, 'info')
-                return render_template('/applications/export.html',
-                                       title=title,
-                                       app=app)
-
+            return respond_csv(ty)
 
 @blueprint.route('/<short_name>/stats')
 def show_stats(short_name):
