@@ -559,8 +559,9 @@ def task_presenter(short_name, task_id):
     task = Task.query.filter_by(id=task_id).first_or_404()
 
     if not app.allow_anonymous_contributors and current_user.is_anonymous():
-        msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
-               application" % app.name
+        msg = ("Oops! You have to sign in to participate in "
+               "<strong>%s</strong>"
+               "application" % app.name)
         flash(lazy_gettext(msg), 'warning')
         return redirect(url_for('account.signin',
                         next=url_for('.presenter', short_name=app.short_name)))
