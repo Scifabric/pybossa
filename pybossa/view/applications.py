@@ -102,22 +102,22 @@ class BulkTaskEpiCollectPlusImportForm(Form):
 @blueprint.route('/page/<int:page>')
 def index(page):
     """By default show the Featured apps"""
-    if require.app.read():
-        per_page = 5
-
-        apps, count = cached_apps.get_featured(page, per_page)
-
-        if apps:
-            pagination = Pagination(page, per_page, count)
-            return render_template('/applications/index.html',
-                                   title=lazy_gettext("Applications"),
-                                   apps=apps,
-                                   pagination=pagination,
-                                   app_type='app-featured')
-        else:
-            return redirect(url_for('.published'))
-    else:
+    if not require.app.read():
         abort(403)
+
+    per_page = 5
+        
+    apps, count = cached_apps.get_featured(page, per_page)
+
+    if apps:
+        pagination = Pagination(page, per_page, count)
+        return render_template('/applications/index.html',
+                               title=lazy_gettext("Applications"),
+                               apps=apps,
+                               pagination=pagination,
+                               app_type='app-featured')
+    else:
+        return redirect(url_for('.published'))
 
 
 def app_index(page, lookup, app_type):
