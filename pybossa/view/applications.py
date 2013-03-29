@@ -164,37 +164,37 @@ def new():
     if not form.validate():
         flash(lazy_gettext('Please correct the errors'), 'error')
         return respond(True)
-    else:
-        info = {}
-        # Add the info items
-        if form.thumbnail.data:
-            info['thumbnail'] = form.thumbnail.data
-        if form.sched.data:
-            info['sched'] = form.sched.data
 
-        app = model.App(name=form.name.data,
-                        short_name=form.short_name.data,
-                        description=form.description.data,
-                        long_description=form.long_description.data,
-                        hidden=int(form.hidden.data),
-                        owner_id=current_user.id,
-                        info=info,)
+    info = {}
+    # Add the info items
+    if form.thumbnail.data:
+        info['thumbnail'] = form.thumbnail.data
+    if form.sched.data:
+        info['sched'] = form.sched.data
 
-        cached_apps.reset()
-        db.session.add(app)
-        db.session.commit()
-        # Clean cache
-        msg_1 = lazy_gettext('Application created!')
-        flash('<i class="icon-ok"></i> ' + msg_1, 'success')
-        flash('<i class="icon-bullhorn"></i> ' + 
-              lazy_gettext('You can check the ') +
-              '<strong><a href="https://docs.pybossa.com">' + 
-              lazy_gettext('Guide and Documentation') + 
-              '</a></strong> ' + 
-              lazy_gettext(
-                'for adding tasks, a thumbnail, using PyBossa.JS, etc.'), 
-              'info')
-        return redirect(url_for('.settings', short_name=app.short_name))
+    app = model.App(name=form.name.data,
+                    short_name=form.short_name.data,
+                    description=form.description.data,
+                    long_description=form.long_description.data,
+                    hidden=int(form.hidden.data),
+                    owner_id=current_user.id,
+                    info=info,)
+
+    cached_apps.reset()
+    db.session.add(app)
+    db.session.commit()
+    # Clean cache
+    msg_1 = lazy_gettext('Application created!')
+    flash('<i class="icon-ok"></i> ' + msg_1, 'success')
+    flash('<i class="icon-bullhorn"></i> ' + 
+          lazy_gettext('You can check the ') +
+          '<strong><a href="https://docs.pybossa.com">' + 
+          lazy_gettext('Guide and Documentation') + 
+          '</a></strong> ' + 
+          lazy_gettext(
+            'for adding tasks, a thumbnail, using PyBossa.JS, etc.'), 
+          'info')
+    return redirect(url_for('.settings', short_name=app.short_name))
 
 
 @blueprint.route('/<short_name>/taskpresentereditor', methods=['GET', 'POST'])
