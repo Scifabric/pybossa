@@ -277,13 +277,12 @@ def delete(short_name):
         return render_template('/applications/delete.html',
                                    title=title,
                                    app=app)
-    else:
-        # Clean cache
-        cached_apps.clean(app.id)
-        db.session.delete(app)
-        db.session.commit()
-        flash(lazy_gettext('Application deleted!'), 'success')
-        return redirect(url_for('account.profile'))
+    # Clean cache
+    cached_apps.clean(app.id)
+    db.session.delete(app)
+    db.session.commit()
+    flash(lazy_gettext('Application deleted!'), 'success')
+    return redirect(url_for('account.profile'))
 
 @blueprint.route('/<short_name>/update', methods=['GET', 'POST'])
 @login_required
