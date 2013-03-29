@@ -159,7 +159,10 @@ def new():
                         title=lazy_gettext("Create an Application"),
                         form=form, errors=errors)
 
-    if request.method == 'POST' and form.validate():
+    if request.method != 'POST':
+        return respond(errors)
+
+    if form.validate():
         info = {}
         # Add the info items
         if form.thumbnail.data:
@@ -190,10 +193,10 @@ def new():
                 'for adding tasks, a thumbnail, using PyBossa.JS, etc.'), 
               'info')
         return redirect(url_for('.settings', short_name=app.short_name))
-    if request.method == 'POST' and not form.validate():
+    else:
         flash(lazy_gettext('Please correct the errors'), 'error')
         errors = True
-    return respond(errors)
+        return respond(errors)
 
 
 @blueprint.route('/<short_name>/taskpresentereditor', methods=['GET', 'POST'])
