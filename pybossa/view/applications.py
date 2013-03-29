@@ -510,7 +510,7 @@ def import_task(short_name):
          'epiform', BulkTaskEpiCollectPlusImportForm)
         ]        
 
-    data_handlers = [(argname, handler) for argname, handler in importer_forms]
+    data_handlers = [(name, handler) for name, handler, _, _ in importer_forms]
 
     forms = [(form_name, cls) for _, _, form_name, cls in importer_forms]
     template_args.update(dict(forms))
