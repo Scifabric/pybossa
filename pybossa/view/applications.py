@@ -242,15 +242,15 @@ def task_presenter_editor(short_name):
                 'applications/task_presenter_options.html',
                 title=title,
                 app=app)
-        else:
-            tmpl_uri = "applications/snippets/%s.html" \
-                % request.args.get('template')
-            tmpl = render_template(tmpl_uri, app=app)
-            form.editor.data = tmpl
-            msg = 'Your code will be <em>automagically</em> rendered in \
+
+        tmpl_uri = "applications/snippets/%s.html" \
+            % request.args.get('template')
+        tmpl = render_template(tmpl_uri, app=app)
+        form.editor.data = tmpl
+        msg = 'Your code will be <em>automagically</em> rendered in \
                       the <strong>preview section</strong>. Click in the \
                       preview button!'
-            flash(lazy_gettext(msg), 'info')
+        flash(lazy_gettext(msg), 'info')
     return render_template('applications/task_presenter_editor.html',
                            title=title,
                            form=form,
