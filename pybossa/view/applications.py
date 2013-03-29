@@ -555,54 +555,59 @@ def task_presenter(short_name, task_id):
     app = App.query.filter_by(short_name=short_name).first_or_404()
     task = Task.query.filter_by(id=task_id).first_or_404()
 
-    if not app.allow_anonymous_contributors and current_user.is_anonymous():
-        msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
-               application" % app.name
-        flash(lazy_gettext(msg), 'warning')
-        return redirect(url_for('account.signin',
-                        next=url_for('.presenter', short_name=app.short_name)))
-    if (current_user.is_anonymous()):
-        msg_1 = lazy_gettext("Ooops! You are an anonymous user and will not get any credit "
-                             " for your contributions.")
-        flash(msg_1 + "<a href=\"" + url_for('account.signin',
-              next=url_for('app.task_presenter', short_name=short_name,
-                           task_id=task_id))
-              + "\">Sign in now!</a>", "warning")
+    if current_user.is_anonymous():
+        if not app.allow_anonymous_contributors:
+            msg = ("Oops! You have to sign in to participate in "
+                   "<strong>%s</strong>"
+                   "application" % app.name)
+            flash(lazy_gettext(msg), 'warning')
+            return redirect(url_for(
+                    'account.signin',
+                    next=url_for('.presenter', short_name=app.short_name)))
+        else:
+            msg_1 = lazy_gettext(
+                "Ooops! You are an anonymous user and will not "
+                "get any credit"
+                " for your contributions.")
+            next_url = url_for(
+                'app.task_presenter', 
+                short_name=short_name,
+                task_id=task_id)
+            url = url_for(
+                'account.signin',
+                next=next_url)
+            flash(msg_1 + "<a href=\"" + url + "\">Sign in now!</a>", "warning")
     if app:
         title = "Application: %s &middot; Contribute" % app.name
     else:
         title = "Application not found"
 
-    if (task.app_id == app.id):
-        #return render_template('/applications/presenter.html', app = app)
-        # Check if the user has submitted a task before
-        if (current_user.is_anonymous()):
-            if not request.remote_addr:
-                remote_addr = "127.0.0.1"
-            else:
-                remote_addr = request.remote_addr
-            tr = db.session.query(model.TaskRun)\
-                   .filter(model.TaskRun.task_id == task_id)\
-                   .filter(model.TaskRun.app_id == app.id)\
-                   .filter(model.TaskRun.user_ip == remote_addr)
+    template_args = {"app": app, "title": title}
 
-        else:
-            tr = db.session.query(model.TaskRun)\
-                   .filter(model.TaskRun.task_id == task_id)\
-                   .filter(model.TaskRun.app_id == app.id)\
-                   .filter(model.TaskRun.user_id == current_user.id)
+    def respond(tmpl):
+        return render_template(tmpl, **template_args)
 
-        tr = tr.first()
-        if (tr is None):
-            return render_template('/applications/presenter.html',
-                                   title=title, app=app)
-        else:
-            return render_template('/applications/task/done.html',
-                                   title=title, app=app)
+    if not (task.app_id == app.id):
+        return respond('/applications/task/wrong.html')
+
+    #return render_template('/applications/presenter.html', app = app)
+    # Check if the user has submitted a task before
+
+    tr_search = db.session.query(model.TaskRun)\
+            .filter(model.TaskRun.task_id == task_id)\
+            .filter(model.TaskRun.app_id == app.id)
+
+    if current_user.is_anonymous():
+        remote_addr = request.remote_addr or "127.0.0.1"
+        tr = tr_search.filter(model.TaskRun.user_ip == remote_addr)
     else:
-        return render_template('/applications/task/wrong.html',
-                               title=title, app=app)
+        tr = tr_search.filter(model.TaskRun.user_id == current_user.id)
 
+    tr_first = tr.first()
+    if tr_first is None:
+        return respond('/applications/presenter.html')
+    else:
+        return respond('/applications/task/done.html')
 
 @blueprint.route('/<short_name>/presenter')
 @blueprint.route('/<short_name>/newtask')
