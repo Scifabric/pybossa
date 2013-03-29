@@ -623,6 +623,15 @@ def presenter(short_name):
     msg = "Ooops! You are an anonymous user and will not \
            get any credit for your contributions. Sign in \
            now!"
+
+    def respond():
+        if (current_user.is_anonymous()):
+            msg_1 = lazy_gettext(msg)
+            flash(msg_1, "warning")
+        return render_template('/applications/presenter.html',
+                               title=title,
+                               app=app)
+
     if app.info.get("tutorial"):
         if request.cookies.get(app.short_name + "tutorial") is None:
             if (current_user.is_anonymous()):
@@ -634,20 +643,9 @@ def presenter(short_name):
             resp.set_cookie(app.short_name + 'tutorial', 'seen')
             return resp
         else:
-            if (current_user.is_anonymous()):
-                msg_1 = lazy_gettext(msg)
-                flash(msg_1, "warning")
-            return render_template('/applications/presenter.html',
-                                   title=title,
-                                   app=app)
+            return respond()
     else:
-        if (current_user.is_anonymous()):
-            msg_1 = lazy_gettext(msg)
-            flash(msg_1, "warning")
-        return render_template('/applications/presenter.html',
-                               title=title,
-                               app=app)
-
+        return respond()
 
 @blueprint.route('/<short_name>/tutorial')
 def tutorial(short_name):
