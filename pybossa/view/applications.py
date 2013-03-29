@@ -122,20 +122,20 @@ def index(page):
 
 def app_index(page, lookup, app_type):
     """Show apps of app_type"""
-    if require.app.read():
-        per_page = 5
-
-        apps, count = lookup(page, per_page)
-
-        pagination = Pagination(page, per_page, count)
-        return render_template('/applications/index.html',
-                               title=lazy_gettext("Applications"),
-                               apps=apps,
-                               count=count,
-                               pagination=pagination,
-                               app_type=app_type)
-    else:
+    if not require.app.read():
         abort(403)
+
+    per_page = 5
+
+    apps, count = lookup(page, per_page)
+
+    pagination = Pagination(page, per_page, count)
+    return render_template('/applications/index.html',
+                           title=lazy_gettext("Applications"),
+                           apps=apps,
+                           count=count,
+                           pagination=pagination,
+                           app_type=app_type)
 
 
 @blueprint.route('/published', defaults={'page': 1})
