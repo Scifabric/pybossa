@@ -326,29 +326,29 @@ def update(short_name):
 
     if not require.app.update(app):
         abort(403)
-    else:
-        title = "Application: %s &middot; Update" % app.name
-        if request.method == 'GET':
-            form = AppForm(obj=app)
-            form.populate_obj(app)
-            if app.info.get('thumbnail'):
-                form.thumbnail.data = app.info['thumbnail']
-            if app.info.get('sched'):
-                for s in form.sched.choices:
-                    if app.info['sched'] == s[0]:
-                        form.sched.data = s[0]
-                        break
 
-        if request.method == 'POST':
-            form = AppForm(request.form)
-            if form.validate():
-                return handle_valid_form(form)
-            flash(lazy_gettext('Please correct the errors'), 'error')
+    title = "Application: %s &middot; Update" % app.name
+    if request.method == 'GET':
+        form = AppForm(obj=app)
+        form.populate_obj(app)
+        if app.info.get('thumbnail'):
+            form.thumbnail.data = app.info['thumbnail']
+        if app.info.get('sched'):
+            for s in form.sched.choices:
+                if app.info['sched'] == s[0]:
+                    form.sched.data = s[0]
+                    break
 
-        return render_template('/applications/update.html',
-                               form=form,
-                               title=title,
-                               app=app)
+    if request.method == 'POST':
+        form = AppForm(request.form)
+        if form.validate():
+            return handle_valid_form(form)
+        flash(lazy_gettext('Please correct the errors'), 'error')
+
+    return render_template('/applications/update.html',
+                           form=form,
+                           title=title,
+                           app=app)
 
 
 @blueprint.route('/<short_name>/')
