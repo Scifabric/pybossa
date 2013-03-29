@@ -565,7 +565,8 @@ def task_presenter(short_name, task_id):
         return redirect(url_for('account.signin',
                         next=url_for('.presenter', short_name=app.short_name)))
     if (current_user.is_anonymous()):
-        msg_1 = lazy_gettext("Ooops! You are an anonymous user and will not get any credit "
+        msg_1 = lazy_gettext("Ooops! You are an anonymous user and will not "
+                             "get any credit"
                              " for your contributions.")
         flash(msg_1 + "<a href=\"" + url_for('account.signin',
               next=url_for('app.task_presenter', short_name=short_name,
