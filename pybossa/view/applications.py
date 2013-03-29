@@ -863,36 +863,38 @@ def show_stats(short_name):
     """Returns App Stats"""
     app = db.session.query(model.App).filter_by(short_name=short_name).first()
     title = "Application: %s &middot; Statistics" % app.name
-    if len(app.tasks) > 0 and len(app.task_runs) > 0:
-        dates_stats, hours_stats, users_stats = stats.get_stats(app.id,
-                                                                current_app.config['GEO'])
-        anon_pct_taskruns = int((users_stats['n_anon'] * 100) /
-                                (users_stats['n_anon'] + users_stats['n_auth']))
-        userStats = dict(
-            geo=current_app.config['GEO'],
-            anonymous=dict(
-                users=users_stats['n_anon'],
-                taskruns=users_stats['n_anon'],
-                pct_taskruns=anon_pct_taskruns,
-                top5=users_stats['anon']['top5']),
-            authenticated=dict(
-                users=users_stats['n_auth'],
-                taskruns=users_stats['n_auth'],
-                pct_taskruns=100 - anon_pct_taskruns,
-                top5=users_stats['auth']['top5']))
 
-        tmp = dict(userStats=users_stats['users'],
-                   userAnonStats=users_stats['anon'],
-                   userAuthStats=users_stats['auth'],
-                   dayStats=dates_stats,
-                   hourStats=hours_stats)
-
-        return render_template('/applications/stats.html',
-                               title=title,
-                               appStats=json.dumps(tmp),
-                               userStats=userStats,
-                               app=app)
-    else:
+    if not (len(app.tasks) > 0 and len(app.task_runs) > 0):
         return render_template('/applications/non_stats.html',
                                title=title,
                                app=app)
+
+    dates_stats, hours_stats, users_stats = stats.get_stats(
+        app.id,
+        current_app.config['GEO'])
+    anon_pct_taskruns = int((users_stats['n_anon'] * 100) /
+                            (users_stats['n_anon'] + users_stats['n_auth']))
+    userStats = dict(
+        geo=current_app.config['GEO'],
+        anonymous=dict(
+            users=users_stats['n_anon'],
+            taskruns=users_stats['n_anon'],
+            pct_taskruns=anon_pct_taskruns,
+            top5=users_stats['anon']['top5']),
+        authenticated=dict(
+            users=users_stats['n_auth'],
+            taskruns=users_stats['n_auth'],
+            pct_taskruns=100 - anon_pct_taskruns,
+            top5=users_stats['auth']['top5']))
+
+    tmp = dict(userStats=users_stats['users'],
+               userAnonStats=users_stats['anon'],
+               userAuthStats=users_stats['auth'],
+               dayStats=dates_stats,
+               hourStats=hours_stats)
+
+    return render_template('/applications/stats.html',
+                           title=title,
+                           appStats=json.dumps(tmp),
+                           userStats=userStats,
+                           app=app)
