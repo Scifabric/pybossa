@@ -628,9 +628,10 @@ def presenter(short_name):
         if (current_user.is_anonymous()):
             msg_1 = lazy_gettext(msg)
             flash(msg_1, "warning")
-        return render_template('/applications/presenter.html',
-                               title=title,
-                               app=app)
+        resp = make_response(render_template('/applications/presenter.html',
+                                             title=title,
+                                             app=app))
+        return resp
 
     if app.info.get("tutorial"):
         if request.cookies.get(app.short_name + "tutorial") is None:
