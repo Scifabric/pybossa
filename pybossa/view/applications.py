@@ -340,26 +340,20 @@ def details(short_name):
     app = db.session.query(model.App)\
                     .filter(model.App.short_name == short_name)\
                     .first()
-    if app:
-        title = "Application: %s" % app.name
-        try:
-            require.app.read(app)
-            require.app.update(app)
-
-            return render_template('/applications/actions.html',
-                                   app=app,
-                                   title=title)
-        except HTTPException:
-            if not app.hidden:
-                return render_template('/applications/app.html',
-                                       app=app,
-                                       title=title)
-            else:
-                return render_template('/applications/app.html',
-                                       title="Application not found",
-                                       app=None)
-    else:
+    if not app:
         abort(404)
+    title = "Application: %s" % app.name
+
+    template_args = {"app": app, "title": title}
+    try:
+        require.app.read(app)
+        require.app.update(app)
+
+        return render_template('/applications/actions.html', **template_args)
+    except HTTPException:
+        if app.hidden:
+            template_args = {"app": None, "title": "Application not found"}
+        return render_template('/applications/app.html', **template_args)
 
 
 @blueprint.route('/<short_name>/settings')
