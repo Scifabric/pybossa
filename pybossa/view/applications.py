@@ -642,9 +642,8 @@ def presenter(short_name):
                                    app=app)
     else:
         if (current_user.is_anonymous()):
-            if (current_user.is_anonymous()):
-                msg_1 = lazy_gettext(msg)
-                flash(msg_1, "warning")
+            msg_1 = lazy_gettext(msg)
+            flash(msg_1, "warning")
         return render_template('/applications/presenter.html',
                                title=title,
                                app=app)
