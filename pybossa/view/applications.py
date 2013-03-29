@@ -102,61 +102,48 @@ class BulkTaskEpiCollectPlusImportForm(Form):
 @blueprint.route('/page/<int:page>')
 def index(page):
     """By default show the Featured apps"""
-    if require.app.read():
-        per_page = 5
+    return app_index(page, cached_apps.get_featured, 'app-featured',
+                     True, False)
 
-        apps, count = cached_apps.get_featured(page, per_page)
 
-        if apps:
-            pagination = Pagination(page, per_page, count)
-            return render_template('/applications/index.html',
-                                   title=lazy_gettext("Applications"),
-                                   apps=apps,
-                                   pagination=pagination,
-                                   app_type='app-featured')
-        else:
-            return redirect(url_for('.published'))
-    else:
+def app_index(page, lookup, app_type, fallback, use_count):
+    """Show apps of app_type"""
+    if not require.app.read():
         abort(403)
+
+    per_page = 5
+
+    apps, count = lookup(page, per_page)
+
+    if fallback and not apps:
+        return redirect(url_for('.published'))
+
+    pagination = Pagination(page, per_page, count)
+    template_args = {
+        "apps": apps,
+        "title": lazy_gettext("Applications"),
+        "pagination": pagination,
+        "app_type": app_type
+        }
+    if use_count:
+        template_args.update({"count": count})
+    return render_template('/applications/index.html', **template_args)
 
 
 @blueprint.route('/published', defaults={'page': 1})
 @blueprint.route('/published/page/<int:page>')
 def published(page):
     """Show the Published apps"""
-    if require.app.read():
-        per_page = 5
-
-        apps, count = cached_apps.get_published(page, per_page)
-
-        pagination = Pagination(page, per_page, count)
-        return render_template('/applications/index.html',
-                               title=lazy_gettext("Applications"),
-                               apps=apps,
-                               count=count,
-                               pagination=pagination,
-                               app_type='app-published')
-    else:
-        abort(403)
+    return app_index(page, cached_apps.get_published, 'app-published', 
+                     False, True)
 
 
 @blueprint.route('/draft', defaults={'page': 1})
 @blueprint.route('/draft/page/<int:page>')
 def draft(page):
-    if require.app.read():
-        per_page = 5
-
-        apps, count = cached_apps.get_draft(page, per_page)
-
-        pagination = Pagination(page, per_page, count)
-        return render_template('/applications/index.html',
-                               title=lazy_gettext("Applications"),
-                               apps=apps,
-                               count=count,
-                               pagination=pagination,
-                               app_type='app-draft')
-    else:
-        abort(403)
+    """Show the Draft apps"""
+    return app_index(page, cached_apps.get_draft, 'app-draft', 
+                     False, True)
 
 
 @blueprint.route('/new', methods=['GET', 'POST'])
