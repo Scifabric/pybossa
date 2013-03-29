@@ -578,6 +578,11 @@ def task_presenter(short_name, task_id):
     else:
         title = "Application not found"
 
+    template_args = {"app": app, "title": title}
+
+    def respond(tmpl):
+        return render_template(tmpl, **template_args)
+
     if (task.app_id == app.id):
         #return render_template('/applications/presenter.html', app = app)
         # Check if the user has submitted a task before
@@ -599,14 +604,11 @@ def task_presenter(short_name, task_id):
 
         tr = tr.first()
         if (tr is None):
-            return render_template('/applications/presenter.html',
-                                   title=title, app=app)
+            return respond('/applications/presenter.html')
         else:
-            return render_template('/applications/task/done.html',
-                                   title=title, app=app)
+            return respond('/applications/task/done.html')
     else:
-        return render_template('/applications/task/wrong.html',
-                               title=title, app=app)
+        return respond('/applications/task/wrong.html')
 
 
 @blueprint.route('/<short_name>/presenter')
