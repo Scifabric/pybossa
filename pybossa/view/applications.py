@@ -513,7 +513,7 @@ def import_task(short_name):
     data_handlers = [(argname, handler) for argname, handler in importer_forms]
 
     forms = [(form_name, cls) for _, _, form_name, cls in importer_forms]
-    template_args.add(dict(forms))
+    template_args.update(dict(forms))
     
     template = request.args.get('template')
     if not (app.tasks or template or request.method == 'POST'):
