@@ -635,7 +635,7 @@ def presenter(short_name):
 
     if app.info.get("tutorial") and \
             request.cookies.get(app.short_name + "tutorial") is None:
-        resp = respond('/applications/tutorial.html', **template_args)
+        resp = respond('/applications/tutorial.html')
         resp.set_cookie(app.short_name + 'tutorial', 'seen')
         return resp
     else:
