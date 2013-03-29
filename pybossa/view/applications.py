@@ -109,7 +109,8 @@ def index(page):
         
     apps, count = cached_apps.get_featured(page, per_page)
 
-    if not apps:
+    fallback = True
+    if fallback and not apps:
         return redirect(url_for('.published'))
 
     pagination = Pagination(page, per_page, count)
@@ -128,6 +129,10 @@ def app_index(page, lookup, app_type):
     per_page = 5
 
     apps, count = lookup(page, per_page)
+
+    fallback = False
+    if fallback and not apps:
+        return redirect(url_for('.published'))
 
     pagination = Pagination(page, per_page, count)
     return render_template('/applications/index.html',
