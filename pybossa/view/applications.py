@@ -121,7 +121,7 @@ def index(page):
                            app_type='app-featured')
 
 
-def app_index(page, lookup, app_type):
+def app_index(page, lookup, app_type, fallback):
     """Show apps of app_type"""
     if not require.app.read():
         abort(403)
@@ -130,7 +130,6 @@ def app_index(page, lookup, app_type):
 
     apps, count = lookup(page, per_page)
 
-    fallback = False
     if fallback and not apps:
         return redirect(url_for('.published'))
 
@@ -147,14 +146,14 @@ def app_index(page, lookup, app_type):
 @blueprint.route('/published/page/<int:page>')
 def published(page):
     """Show the Published apps"""
-    return app_index(page, cached_apps.get_published, 'app-published')
+    return app_index(page, cached_apps.get_published, 'app-published', False)
 
 
 @blueprint.route('/draft', defaults={'page': 1})
 @blueprint.route('/draft/page/<int:page>')
 def draft(page):
     """Show the Draft apps"""
-    return app_index(page, cached_apps.get_draft, 'app-draft')
+    return app_index(page, cached_apps.get_draft, 'app-draft', False)
 
 
 @blueprint.route('/new', methods=['GET', 'POST'])
