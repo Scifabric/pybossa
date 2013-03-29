@@ -593,7 +593,7 @@ def task_presenter(short_name, task_id):
             .filter(model.TaskRun.task_id == task_id)\
             .filter(model.TaskRun.app_id == app.id)
 
-    if (current_user.is_anonymous()):
+    if current_user.is_anonymous():
         remote_addr = request.remote_addr or "127.0.0.1"
         tr = tr_search.filter(model.TaskRun.user_ip == remote_addr)
     else:
