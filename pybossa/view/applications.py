@@ -357,111 +357,6 @@ def settings(short_name):
         return abort(403)
 
 
-def import_csv_tasks(app, csvreader):
-    headers = []
-    fields = set(['state', 'quorum', 'calibration', 'priority_0',
-                  'n_answers'])
-    field_header_index = []
-    empty = True
-
-    for row in csvreader:
-        print row
-        if not headers:
-            headers = row
-            if len(headers) != len(set(headers)):
-                msg = lazy_gettext('The file you uploaded has two headers with the same name.')
-                raise importer.BulkImportException(msg)
-            field_headers = set(headers) & fields
-            for field in field_headers:
-                field_header_index.append(headers.index(field))
-        else:
-            info = {}
-            task = model.Task(app=app)
-            for idx, cell in enumerate(row):
-                if idx in field_header_index:
-                    setattr(task, headers[idx], cell)
-                else:
-                    info[headers[idx]] = cell
-            task.info = info
-            db.session.add(task)
-            db.session.commit()
-            empty = False
-    if empty:
-        raise importer.BulkImportException(lazy_gettext('Oops! It looks like the file is empty.'))
-
-
-def import_epicollect_tasks(app, data):
-    for d in data:
-        task = model.Task(app=app)
-        task.info = d
-        db.session.add(task)
-    db.session.commit()
-
-googledocs_urls = {
-    'image': "https://docs.google.com/spreadsheet/ccc"
-             "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE"
-             "&usp=sharing",
-    'sound': "https://docs.google.com/spreadsheet/ccc"
-             "?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc"
-             "&usp=sharing",
-    'map': "https://docs.google.com/spreadsheet/ccc"
-           "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc"
-           "&usp=sharing",
-    'pdf': "https://docs.google.com/spreadsheet/ccc"
-           "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE"
-           "&usp=sharing"}
-
-
-def get_data_url_for_csv(form):
-    return form.csv_url.data
-
-def get_data_url_for_gdocs(form):
-    return ''.join([form.googledocs_url.data, '&output=csv'])
-
-def get_data_url_for_epicollect(form):
-    return 'http://plus.epicollect.net/%s/%s.json' % \
-        (form.epicollect_project.data, form.epicollect_form.data)
-
-
-def get_csv_data_from_request(app, r):
-    if r.status_code == 403:
-        msg = "Oops! It looks like you don't have permission to access" \
-            " that file"
-        raise importer.BulkImportException(lazy_gettext(msg), 'error')
-    if ((not 'text/plain' in r.headers['content-type']) and
-       (not 'text/csv' in r.headers['content-type'])):
-        msg = lazy_gettext("Oops! That file doesn't look like the right file.")
-        raise importer.BulkImportException(msg, 'error')
-
-    csvcontent = StringIO(r.text)
-    csvreader = unicode_csv_reader(csvcontent)
-    return import_csv_tasks(app, csvreader)
-
-
-def get_epicollect_data_from_request(app, r):
-    if r.status_code == 403:
-        msg = "Oops! It looks like you don't have permission to access" \
-            " the EpiCollect Plus project"
-        raise importer.BulkImportException(lazy_gettext(msg), 'error')
-    if not 'application/json' in r.headers['content-type']:
-        msg = "Oops! That project and form do not look like the right one."
-        raise importer.BulkImportException(lazy_gettext(msg), 'error')
-    return import_epicollect_tasks(app, json.loads(r.text))
-
-def handle_import_from_csv(app, form):
-    dataurl = get_data_url_for_csv(form)
-    r = requests.get(dataurl)
-    return get_csv_data_from_request(app, r)
-
-def handle_import_from_gdocs(app, form):
-    dataurl = get_data_url_for_gdocs(form)
-    r = requests.get(dataurl)
-    return get_csv_data_from_request(app, r)
-
-def handle_import_from_epicollect(app, form):
-    dataurl = get_data_url_for_epicollect(form)
-    r = requests.get(dataurl)
-    return get_epicollect_data_from_request(app, r)
 
 @blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
 def import_task(short_name):
@@ -469,20 +364,12 @@ def import_task(short_name):
     title = "Applications: %s &middot; Import Tasks" % app.name
     template_args = {"title": title, "app": app}
 
-    importer_forms = [
-        ('csv_url', handle_import_from_csv,
-         'csvform', importer.BulkTaskCSVImportForm, "csv"),        
-        ('googledocs_url', handle_import_from_gdocs,
-         'gdform', importer.BulkTaskGDImportForm, "gdocs"),
-        ('epicollect_project', handle_import_from_epicollect,
-         'epiform', importer.BulkTaskEpiCollectPlusImportForm, "epicollect")]
-
     data_handlers = dict([
             (t, (name, handler, form_name))
-            for name, handler, form_name, _, t in importer_forms])
+            for name, handler, form_name, _, t in importer.importer_forms])
     forms = [
         (form_name, cls(request.form)) 
-        for _, _, form_name, cls, _ in importer_forms]
+        for _, _, form_name, cls, _ in importer.importer_forms]
 
     template_args.update(dict(forms))
 
@@ -495,7 +382,7 @@ def import_task(short_name):
     if template =='gdocs':
         mode = request.args.get('mode')
         if mode is not None:
-            template_args["gdform"].googledocs_url.data = googledocs_urls[mode]
+            template_args["gdform"].googledocs_url.data = importer.googledocs_urls[mode]
 
     # in future, we shall pass an identifier of the form/template used,
     # which we can receive here, and use for a dictionary lookup, rather than
