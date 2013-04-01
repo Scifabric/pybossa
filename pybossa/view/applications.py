@@ -471,21 +471,18 @@ def import_task(short_name):
 
     importer_forms = [
         ('csv_url', handle_import_from_csv,
-         'csvform', importer.BulkTaskCSVImportForm, "csv",
-         get_data_url_for_csv),        
+         'csvform', importer.BulkTaskCSVImportForm, "csv"),        
         ('googledocs_url', handle_import_from_gdocs,
-         'gdform', importer.BulkTaskGDImportForm, "gdocs",
-         get_data_url_for_gdocs),
+         'gdform', importer.BulkTaskGDImportForm, "gdocs"),
         ('epicollect_project', handle_import_from_epicollect,
-         'epiform', importer.BulkTaskEpiCollectPlusImportForm, "epicollect",
-         get_data_url_for_epicollect)]
+         'epiform', importer.BulkTaskEpiCollectPlusImportForm, "epicollect")]
 
     data_handlers = dict([
-            (t, (name, handler, form_name, get_data_url))
-            for name, handler, form_name, _, t, get_data_url in importer_forms])
+            (t, (name, handler, form_name))
+            for name, handler, form_name, _, t in importer_forms])
     forms = [
         (form_name, cls(request.form)) 
-        for _, _, form_name, cls, _, _ in importer_forms]
+        for _, _, form_name, cls, _ in importer_forms]
 
     template_args.update(dict(forms))
 
@@ -495,17 +492,18 @@ def import_task(short_name):
         return render_template('/applications/import_options.html',
                                **template_args)
 
-    # By default all the forms are enabled. If a specific template is requested
-    # enable it and disable the rest of them
     if template =='gdocs':
         mode = request.args.get('mode')
         if mode is not None:
             template_args["gdform"].googledocs_url.data = googledocs_urls[mode]
 
+    # in future, we shall pass an identifier of the form/template used,
+    # which we can receive here, and use for a dictionary lookup, rather than
+    # this search mechanism
     form = None
     handler = None
     for k, v in data_handlers.iteritems():
-        field_id, handler, form_name, get_data_url = v
+        field_id, handler, form_name = v
         if field_id in request.form:
             form = template_args[form_name]
             template = k
@@ -518,12 +516,10 @@ def import_task(short_name):
     if not (form and form.validate_on_submit()):
         return render_forms()
 
-    return _import_task(app,
-                        handler, form, get_data_url, render_forms)
+    return _import_task(app, handler, form, render_forms)
 
 
-def _import_task(app, handler, form, get_data_url,
-                 render_forms):
+def _import_task(app, handler, form, render_forms):
     try:
         handler(app, form)
         flash(lazy_gettext('Tasks imported successfully!'), 'success')
