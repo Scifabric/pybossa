@@ -412,12 +412,22 @@ googledocs_urls = {
            "&usp=sharing"}
 
 
-def get_data_url(form):
-    if 'csv_url' in request.form and form.validate_on_submit():
+def get_data_url_for_csv(form):
+    if form.validate_on_submit():
         return form.csv_url.data
-    elif 'googledocs_url' in request.form and form.validate_on_submit():
+    else:
+        return None
+
+
+def get_data_url_for_gdocs(form):
+    if form.validate_on_submit():
         return ''.join([form.googledocs_url.data, '&output=csv'])
-    elif 'epicollect_project' in request.form and form.validate_on_submit():
+    else:
+        return None
+
+
+def get_data_url_for_epicollect(form):
+    if form.validate_on_submit():
         return 'http://plus.epicollect.net/%s/%s.json' % \
             (form.epicollect_project.data, form.epicollect_form.data)
     else:
@@ -458,18 +468,21 @@ def import_task(short_name):
 
     importer_forms = [
         ('csv_url', get_csv_data_from_request,
-         'csvform', importer.BulkTaskCSVImportForm, "csv"),        
+         'csvform', importer.BulkTaskCSVImportForm, "csv",
+         get_data_url_for_csv),        
         ('googledocs_url', get_csv_data_from_request,
-         'gdform', importer.BulkTaskGDImportForm, "gdocs"),
+         'gdform', importer.BulkTaskGDImportForm, "gdocs",
+         get_data_url_for_gdocs),
         ('epicollect_project', get_epicollect_data_from_request,
-         'epiform', importer.BulkTaskEpiCollectPlusImportForm, "epicollect")]
+         'epiform', importer.BulkTaskEpiCollectPlusImportForm, "epicollect",
+         get_data_url_for_epicollect)]
 
     data_handlers = dict([
-            (t, (name, handler, form_name))
-            for name, handler, form_name, _, t in importer_forms])
+            (t, (name, handler, form_name, get_data_url))
+            for name, handler, form_name, _, t, get_data_url in importer_forms])
     forms = [
         (form_name, cls(request.form)) 
-        for _, _, form_name, cls, _ in importer_forms]
+        for _, _, form_name, cls, _, _ in importer_forms]
 
     template_args.update(dict(forms))
 
@@ -489,15 +502,16 @@ def import_task(short_name):
     form = None
     handler = None
     for k, v in data_handlers.iteritems():
-        field_id, handler, form_name = v
+        field_id, handler, form_name, get_data_url = v
         if field_id in request.form:
             form = template_args[form_name]
             break
 
-    return _import_task(app, template, template_args, handler, form)
+    return _import_task(app, template, template_args, 
+                        handler, form, get_data_url)
 
 
-def _import_task(app, template, template_args, handler, form):
+def _import_task(app, template, template_args, handler, form, get_data_url):
     dataurl = get_data_url(form)
 
     def render_forms():
