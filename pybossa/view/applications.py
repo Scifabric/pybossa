@@ -33,12 +33,9 @@ from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
 
 import json
+import importer
 
 blueprint = Blueprint('app', __name__)
-
-
-class BulkImportException(Exception):
-    pass
 
 
 class AppForm(Form):
@@ -70,31 +67,6 @@ class AppForm(Form):
 class TaskPresenterForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
     editor = TextAreaField('')
-
-
-class BulkTaskCSVImportForm(Form):
-    msg_required = lazy_gettext("You must provide a URL")
-    msg_url = lazy_gettext("Oops! That's not a valid URL. You must provide a valid URL")
-    csv_url = TextField(lazy_gettext('URL'),
-                        [validators.Required(message=msg_required),
-                         validators.URL(message=msg_url)])
-
-
-class BulkTaskGDImportForm(Form):
-    msg_required = lazy_gettext("You must provide a URL")
-    msg_url = lazy_gettext("Oops! That's not a valid URL. You must provide a valid URL")
-    googledocs_url = TextField(lazy_gettext('URL'),
-                               [validators.Required(message=msg_required),
-                                   validators.URL(message=msg_url)])
-
-
-class BulkTaskEpiCollectPlusImportForm(Form):
-    msg_required = lazy_gettext("You must provide an EpiCollect Plus project name")
-    msg_form_required = lazy_gettext("You must provide a Form name for the project")
-    epicollect_project = TextField(lazy_gettext('Project Name'),
-                                   [validators.Required(message=msg_required)])
-    epicollect_form = TextField(lazy_gettext('Form name'),
-                                [validators.Required(message=msg_required)])
 
 
 @blueprint.route('/', defaults={'page': 1})
@@ -398,7 +370,7 @@ def import_csv_tasks(app, csvreader):
             headers = row
             if len(headers) != len(set(headers)):
                 msg = lazy_gettext('The file you uploaded has two headers with the same name.')
-                raise BulkImportException(msg)
+                raise importer.BulkImportException(msg)
             field_headers = set(headers) & fields
             for field in field_headers:
                 field_header_index.append(headers.index(field))
@@ -415,7 +387,7 @@ def import_csv_tasks(app, csvreader):
             db.session.commit()
             empty = False
     if empty:
-        raise BulkImportException(lazy_gettext('Oops! It looks like the file is empty.'))
+        raise importer.BulkImportException(lazy_gettext('Oops! It looks like the file is empty.'))
 
 
 def import_epicollect_tasks(app, data):
@@ -460,11 +432,11 @@ def get_csv_data_from_request(app, r):
     if r.status_code == 403:
         msg = "Oops! It looks like you don't have permission to access" \
             " that file"
-        raise BulkImportException(lazy_gettext(msg), 'error')
+        raise importer.BulkImportException(lazy_gettext(msg), 'error')
     if ((not 'text/plain' in r.headers['content-type']) and
        (not 'text/csv' in r.headers['content-type'])):
         msg = lazy_gettext("Oops! That file doesn't look like the right file.")
-        raise BulkImportException(msg, 'error')
+        raise importer.BulkImportException(msg, 'error')
 
     csvcontent = StringIO(r.text)
     csvreader = unicode_csv_reader(csvcontent)
@@ -475,10 +447,10 @@ def get_epicollect_data_from_request(app, r):
     if r.status_code == 403:
         msg = "Oops! It looks like you don't have permission to access" \
             " the EpiCollect Plus project"
-        raise BulkImportException(lazy_gettext(msg), 'error')
+        raise importer.BulkImportException(lazy_gettext(msg), 'error')
     if not 'application/json' in r.headers['content-type']:
         msg = "Oops! That project and form do not look like the right one."
-        raise BulkImportException(lazy_gettext(msg), 'error')
+        raise importer.BulkImportException(lazy_gettext(msg), 'error')
     return import_epicollect_tasks(app, json.loads(r.text))
 
 
@@ -490,11 +462,11 @@ def import_task(short_name):
 
     importer_forms = [
         ('csv_url', get_csv_data_from_request,
-         'csvform', BulkTaskCSVImportForm),
+         'csvform', importer.BulkTaskCSVImportForm),
         ('googledocs_url', get_csv_data_from_request,
-         'gdform', BulkTaskGDImportForm),
+         'gdform', importer.BulkTaskGDImportForm),
         ('epicollect_project', get_epicollect_data_from_request,
-         'epiform', BulkTaskEpiCollectPlusImportForm)]
+         'epiform', importer.BulkTaskEpiCollectPlusImportForm)]
 
     data_handlers = [
         (name, handler) 
@@ -515,7 +487,8 @@ def import_task(short_name):
     # enable it and disable the rest of them
     if template =='gdocs':
         mode = request.args.get('mode')
-        template_args["gdform"].googledocs_url.data = googledocs_urls[mode]
+        if mode is not None:
+            template_args["gdform"].googledocs_url.data = googledocs_urls[mode]
 
     return _import_task(app, template, template_args, data_handlers)
 
@@ -538,7 +511,7 @@ def _import_task(app, template, template_args, data_handlers):
                 break
         flash(lazy_gettext('Tasks imported successfully!'), 'success')
         return redirect(url_for('.settings', short_name=app.short_name))
-    except BulkImportException, err_msg:
+    except importer.BulkImportException, err_msg:
         flash(err_msg, 'error')
     except Exception as inst:
         print inst
