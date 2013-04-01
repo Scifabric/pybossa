@@ -497,6 +497,9 @@ def import_task(short_name):
         if mode is not None:
             template_args["gdform"].googledocs_url.data = googledocs_urls[mode]
 
+    # in future, we shall pass an identifier of the form/template used,
+    # which we can receive here, and use for a dictionary lookup, rather than
+    # this search mechanism
     form = None
     handler = None
     for k, v in data_handlers.iteritems():
