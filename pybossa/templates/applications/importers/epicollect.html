@@ -1,0 +1,31 @@
+{% extends "/base.html" %}
+{% set active_page = "applications" %}
+{% set active_app  = app.short_name %}
+{% import "applications/_helpers.html" as helper %}
+
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+<div class="row">
+    <div class="span3">
+        {{ helper.render_app_local_nav(app, 'settings', current_user)}}
+    </div>
+    <div class="span9">
+        <h1><strong>{{app.name}}</strong>: {{_('Import tasks')}}</h1>
+      {% if epiform %}
+      <h2>{{_('From an EpiCollect Plus project')}}</h2>
+      <form class="form-horizontal" method="post" action="{{ url_for('app.import_task', short_name=app.short_name) }}">
+        <fieldset>
+        {{ epiform.hidden_tag() }}
+        <span class="help-inline">{{_('Please provide an EpiCollect Plus project name to import its data for')}} {{ active_app }}.<br/> {{_('For more information, please look at')}} <a href="http://docs.pybossa.com/en/latest/user/overview.html#importing-the-tasks-via-the-built-in-csv-task-creator" target="_blank">{{_('the documentation')}}.</a></span>
+          {{ render_field(epiform.epicollect_project, class_="input-block-level", placeholder="The name of the public EpiCollect Plus project") }}
+          {{ render_field(epiform.epicollect_form, class_="input-block-level", placeholder="The name of the project's form") }}
+          <div class="form-actions">
+            <input type="submit" value="{{_('Import')}}" class="btn btn-primary" />
+            <a href="{{ url_for('app.settings', short_name=app.short_name) }}" class="btn">{{_('Cancel')}}</a>
+          </div>
+        </fieldset>
+      </form>
+      {% endif %}
+    </div>
+</div>
+{% endblock %}
