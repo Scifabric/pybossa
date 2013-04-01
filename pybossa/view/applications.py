@@ -486,16 +486,18 @@ def import_task(short_name):
         if mode is not None:
             template_args["gdform"].googledocs_url.data = googledocs_urls[mode]
 
-    return _import_task(app, template, template_args, data_handlers)
-
-
-def _import_task(app, template, template_args, data_handlers):
+    form = None
     for k, v in data_handlers.iteritems():
         field_id, _, form_name = v
         print field_id
         if field_id in request.form:
             form = template_args[form_name]
             break
+
+    return _import_task(app, template, template_args, data_handlers, form)
+
+
+def _import_task(app, template, template_args, data_handlers, form):
     dataurl = get_data_url(form)
 
     def render_forms():
