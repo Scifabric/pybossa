@@ -500,15 +500,24 @@ def import_task(short_name):
 
     forms = [(form_name, cls(request.form))
              for _, _, form_name, cls in importer_forms]
+
     template_args.update(dict(forms))
 
     template = request.args.get('template')
+
     if not (app.tasks or template or request.method == 'POST'):
         return render_template('/applications/import_options.html',
                                **template_args)
 
-    if template in googledocs_urls:
+    # By default all the forms are enabled. If a specific template is requested
+    # enable it and disable the rest of them
+    if template == 'epicollect':
+        template_args['gdform'] = None
+        template_args['csvform'] = None
+    elif template in googledocs_urls:
         template_args["gdform"].googledocs_url.data = googledocs_urls[template]
+        template_args["csvform"] = None
+        template_args["epiform"] = None
 
     return _import_task(app, template_args, data_handlers)
 
