@@ -501,7 +501,7 @@ def import_task(short_name):
         tmpl = '/applications/importers/%s.html' % template
         return render_template(tmpl, **template_args)
 
-    if not (form and form.validate()):
+    if not (form and form.validate_on_submit()):
         return render_forms()
 
     return _import_task(app, template, template_args, 
