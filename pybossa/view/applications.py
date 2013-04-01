@@ -518,12 +518,10 @@ def import_task(short_name):
     if not (form and form.validate_on_submit()):
         return render_forms()
 
-    return _import_task(app,
-                        handler, form, get_data_url, render_forms)
+    return _import_task(app, handler, form, render_forms)
 
 
-def _import_task(app, handler, form, get_data_url,
-                 render_forms):
+def _import_task(app, handler, form, render_forms):
     try:
         handler(app, form)
         flash(lazy_gettext('Tasks imported successfully!'), 'success')
