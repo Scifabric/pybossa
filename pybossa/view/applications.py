@@ -412,18 +412,14 @@ googledocs_urls = {
            "&usp=sharing"}
 
 
-def get_data_url(**kwargs):
-    csvform = kwargs["csvform"]
-    gdform = kwargs["gdform"]
-    epiform = kwargs["epiform"]
-
-    if 'csv_url' in request.form and csvform.validate_on_submit():
-        return csvform.csv_url.data
-    elif 'googledocs_url' in request.form and gdform.validate_on_submit():
-        return ''.join([gdform.googledocs_url.data, '&output=csv'])
-    elif 'epicollect_project' in request.form and epiform.validate_on_submit():
+def get_data_url(form):
+    if 'csv_url' in request.form and form.validate_on_submit():
+        return form.csv_url.data
+    elif 'googledocs_url' in request.form and form.validate_on_submit():
+        return ''.join([form.googledocs_url.data, '&output=csv'])
+    elif 'epicollect_project' in request.form and form.validate_on_submit():
         return 'http://plus.epicollect.net/%s/%s.json' % \
-            (epiform.epicollect_project.data, epiform.epicollect_form.data)
+            (form.epicollect_project.data, form.epicollect_form.data)
     else:
         return None
 
@@ -462,24 +458,24 @@ def import_task(short_name):
 
     importer_forms = [
         ('csv_url', get_csv_data_from_request,
-         'csvform', importer.BulkTaskCSVImportForm),
+         'csvform', importer.BulkTaskCSVImportForm, "csv"),        
         ('googledocs_url', get_csv_data_from_request,
-         'gdform', importer.BulkTaskGDImportForm),
+         'gdform', importer.BulkTaskGDImportForm, "gdocs"),
         ('epicollect_project', get_epicollect_data_from_request,
-         'epiform', importer.BulkTaskEpiCollectPlusImportForm)]
+         'epiform', importer.BulkTaskEpiCollectPlusImportForm, "epicollect")]
 
-    data_handlers = [
-        (name, handler) 
-        for name, handler, _, _ in importer_forms]
+    data_handlers = dict([
+            (t, (name, handler, form_name))
+            for name, handler, form_name, _, t in importer_forms])
     forms = [
         (form_name, cls(request.form)) 
-        for _, _, form_name, cls in importer_forms]
+        for _, _, form_name, cls, _ in importer_forms]
 
     template_args.update(dict(forms))
 
     template = request.args.get('template')
 
-    if not (app.tasks or template or request.method == 'POST'):
+    if not (template or request.method == 'POST'):
         return render_template('/applications/import_options.html',
                                **template_args)
 
@@ -490,11 +486,19 @@ def import_task(short_name):
         if mode is not None:
             template_args["gdform"].googledocs_url.data = googledocs_urls[mode]
 
-    return _import_task(app, template, template_args, data_handlers)
+    form = None
+    handler = None
+    for k, v in data_handlers.iteritems():
+        field_id, handler, form_name = v
+        if field_id in request.form:
+            form = template_args[form_name]
+            break
+
+    return _import_task(app, template, template_args, handler, form)
 
 
-def _import_task(app, template, template_args, data_handlers):
-    dataurl = get_data_url(**template_args)
+def _import_task(app, template, template_args, handler, form):
+    dataurl = get_data_url(form)
 
     def render_forms():
         tmpl = '/applications/importers/%s.html' % template
@@ -505,10 +509,7 @@ def _import_task(app, template, template_args, data_handlers):
 
     try:
         r = requests.get(dataurl)
-        for form_id, handler in data_handlers:
-            if form_id in request.form:
-                handler(app, r)
-                break
+        handler(app, r)
         flash(lazy_gettext('Tasks imported successfully!'), 'success')
         return redirect(url_for('.settings', short_name=app.short_name))
     except importer.BulkImportException, err_msg:
