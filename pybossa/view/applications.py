@@ -369,7 +369,7 @@ def import_task(short_name):
             for name, handler, form_name, _, t in importer.importer_forms])
     forms = [
         (form_name, cls(request.form)) 
-        for _, _, form_name, cls, _ in importer_forms]
+        for _, _, form_name, cls, _ in importer.importer_forms]
 
     template_args.update(dict(forms))
 
