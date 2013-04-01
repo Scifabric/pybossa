@@ -510,9 +510,8 @@ def import_task(short_name):
 
 def _import_task(app, template, template_args, handler, form, get_data_url,
                  render_forms):
-    dataurl = get_data_url(form)
-
     try:
+        dataurl = get_data_url(form)
         r = requests.get(dataurl)
         handler(app, r)
         flash(lazy_gettext('Tasks imported successfully!'), 'success')
