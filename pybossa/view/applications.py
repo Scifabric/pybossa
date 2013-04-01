@@ -448,6 +448,20 @@ def get_epicollect_data_from_request(app, r):
         raise importer.BulkImportException(lazy_gettext(msg), 'error')
     return import_epicollect_tasks(app, json.loads(r.text))
 
+def handle_import_from_csv(app, form):
+    dataurl = get_data_url_for_csv(form)
+    r = requests.get(dataurl)
+    return get_csv_data_from_request(app, r)
+
+def handle_import_from_gdocs(app, form):
+    dataurl = get_data_url_for_gdocs(form)
+    r = requests.get(dataurl)
+    return get_csv_data_from_request(app, r)
+
+def handle_import_from_epicollect(app, form):
+    dataurl = get_data_url_for_epicollect(form)
+    r = requests.get(dataurl)
+    return get_epicollect_data_from_request(app, r)
 
 @blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
 def import_task(short_name):
@@ -456,13 +470,13 @@ def import_task(short_name):
     template_args = {"title": title, "app": app}
 
     importer_forms = [
-        ('csv_url', get_csv_data_from_request,
+        ('csv_url', handle_import_from_csv,
          'csvform', importer.BulkTaskCSVImportForm, "csv",
          get_data_url_for_csv),        
-        ('googledocs_url', get_csv_data_from_request,
+        ('googledocs_url', handle_import_from_gdocs,
          'gdform', importer.BulkTaskGDImportForm, "gdocs",
          get_data_url_for_gdocs),
-        ('epicollect_project', get_epicollect_data_from_request,
+        ('epicollect_project', handle_import_from_epicollect,
          'epiform', importer.BulkTaskEpiCollectPlusImportForm, "epicollect",
          get_data_url_for_epicollect)]
 
@@ -511,9 +525,7 @@ def import_task(short_name):
 def _import_task(app, handler, form, get_data_url,
                  render_forms):
     try:
-        dataurl = get_data_url(form)
-        r = requests.get(dataurl)
-        handler(app, r)
+        handler(app, form)
         flash(lazy_gettext('Tasks imported successfully!'), 'success')
         return redirect(url_for('.settings', short_name=app.short_name))
     except importer.BulkImportException, err_msg:
