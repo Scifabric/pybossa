@@ -33,7 +33,6 @@ from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
 
 import json
-import sys
 
 blueprint = Blueprint('app', __name__)
 
@@ -93,9 +92,9 @@ class BulkTaskEpiCollectPlusImportForm(Form):
     msg_required = lazy_gettext("You must provide an EpiCollect Plus project name")
     msg_form_required = lazy_gettext("You must provide a Form name for the project")
     epicollect_project = TextField(lazy_gettext('Project Name'),
-                               [validators.Required(message=msg_required)])
+                                   [validators.Required(message=msg_required)])
     epicollect_form = TextField(lazy_gettext('Form name'),
-                               [validators.Required(message=msg_required)])
+                                [validators.Required(message=msg_required)])
 
 
 @blueprint.route('/', defaults={'page': 1})
@@ -123,8 +122,8 @@ def app_index(page, lookup, app_type, fallback, use_count):
         "apps": apps,
         "title": lazy_gettext("Applications"),
         "pagination": pagination,
-        "app_type": app_type
-        }
+        "app_type": app_type}
+
     if use_count:
         template_args.update({"count": count})
     return render_template('/applications/index.html', **template_args)
@@ -134,7 +133,7 @@ def app_index(page, lookup, app_type, fallback, use_count):
 @blueprint.route('/published/page/<int:page>')
 def published(page):
     """Show the Published apps"""
-    return app_index(page, cached_apps.get_published, 'app-published', 
+    return app_index(page, cached_apps.get_published, 'app-published',
                      False, True)
 
 
@@ -142,7 +141,7 @@ def published(page):
 @blueprint.route('/draft/page/<int:page>')
 def draft(page):
     """Show the Draft apps"""
-    return app_index(page, cached_apps.get_draft, 'app-draft', 
+    return app_index(page, cached_apps.get_draft, 'app-draft',
                      False, True)
 
 
@@ -155,8 +154,8 @@ def new():
 
     def respond(errors):
         return render_template('applications/new.html',
-                        title=lazy_gettext("Create an Application"),
-                        form=form, errors=errors)
+                               title=lazy_gettext("Create an Application"),
+                               form=form, errors=errors)
 
     if request.method != 'POST':
         return respond(False)
@@ -186,13 +185,12 @@ def new():
     # Clean cache
     msg_1 = lazy_gettext('Application created!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')
-    flash('<i class="icon-bullhorn"></i> ' + 
+    flash('<i class="icon-bullhorn"></i> ' +
           lazy_gettext('You can check the ') +
-          '<strong><a href="https://docs.pybossa.com">' + 
-          lazy_gettext('Guide and Documentation') + 
-          '</a></strong> ' + 
-          lazy_gettext(
-            'for adding tasks, a thumbnail, using PyBossa.JS, etc.'), 
+          '<strong><a href="https://docs.pybossa.com">' +
+          lazy_gettext('Guide and Documentation') +
+          '</a></strong> ' +
+          lazy_gettext('for adding tasks, a thumbnail, using PyBossa.JS, etc.'),
           'info')
     return redirect(url_for('.settings', short_name=app.short_name))
 
@@ -270,14 +268,15 @@ def delete(short_name):
         abort(403)
     if request.method == 'GET':
         return render_template('/applications/delete.html',
-                                   title=title,
-                                   app=app)
+                               title=title,
+                               app=app)
     # Clean cache
     cached_apps.clean(app.id)
     db.session.delete(app)
     db.session.commit()
     flash(lazy_gettext('Application deleted!'), 'success')
     return redirect(url_for('account.profile'))
+
 
 @blueprint.route('/<short_name>/update', methods=['GET', 'POST'])
 @login_required
@@ -307,8 +306,8 @@ def update(short_name):
             hidden=hidden,
             info=info,
             owner_id=app.owner_id,
-            allow_anonymous_contributors=form.allow_anonymous_contributors.data
-            )
+            allow_anonymous_contributors=form.allow_anonymous_contributors.data)
+
         app = App.query.filter_by(short_name=short_name).first_or_404()
         db.session.merge(new_application)
         db.session.commit()
@@ -373,7 +372,7 @@ def settings(short_name):
 
     if not application:
         abort(404)
-        
+
     title = "Application: %s &middot; Settings" % application.name
     try:
         require.app.read(application)
@@ -440,6 +439,7 @@ googledocs_urls = {
            "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE"
            "&usp=sharing"}
 
+
 def get_data_url(**kwargs):
     csvform = kwargs["csvform"]
     gdform = kwargs["gdform"]
@@ -455,19 +455,21 @@ def get_data_url(**kwargs):
     else:
         return None
 
+
 def get_csv_data_from_request(app, r):
     if r.status_code == 403:
         msg = "Oops! It looks like you don't have permission to access" \
             " that file"
         raise BulkImportException(lazy_gettext(msg), 'error')
     if ((not 'text/plain' in r.headers['content-type']) and
-        (not 'text/csv' in r.headers['content-type'])):
+       (not 'text/csv' in r.headers['content-type'])):
         msg = lazy_gettext("Oops! That file doesn't look like the right file.")
         raise BulkImportException(msg, 'error')
-    
+
     csvcontent = StringIO(r.text)
     csvreader = unicode_csv_reader(csvcontent)
     return import_csv_tasks(app, csvreader)
+
 
 def get_epicollect_data_from_request(app, r):
     if r.status_code == 403:
@@ -478,6 +480,7 @@ def get_epicollect_data_from_request(app, r):
         msg = "Oops! That project and form do not look like the right one."
         raise BulkImportException(lazy_gettext(msg), 'error')
     return import_epicollect_tasks(app, json.loads(r.text))
+
 
 @blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
 def import_task(short_name):
@@ -491,8 +494,7 @@ def import_task(short_name):
         ('googledocs_url', get_csv_data_from_request,
          'gdform', BulkTaskGDImportForm),
         ('epicollect_project', get_epicollect_data_from_request,
-         'epiform', BulkTaskEpiCollectPlusImportForm)
-        ]        
+         'epiform', BulkTaskEpiCollectPlusImportForm)]
 
     data_handlers = [
         (name, handler) 
@@ -502,22 +504,31 @@ def import_task(short_name):
         for _, _, form_name, cls in importer_forms]
 
     template_args.update(dict(forms))
-    
+
     template = request.args.get('template')
+
     if not (app.tasks or template or request.method == 'POST'):
         return render_template('/applications/import_options.html',
                                **template_args)
 
-    if template in googledocs_urls:
+    # By default all the forms are enabled. If a specific template is requested
+    # enable it and disable the rest of them
+    if template == 'epicollect':
+        template_args['gdform'] = None
+        template_args['csvform'] = None
+    elif template in googledocs_urls:
         template_args["gdform"].googledocs_url.data = googledocs_urls[template]
-    
+        template_args["csvform"] = None
+        template_args["epiform"] = None
+
     return _import_task(app, template_args, data_handlers)
+
 
 def _import_task(app, template_args, data_handlers):
     dataurl = get_data_url(**template_args)
 
     def render_forms():
-        tmpl = '/applications/import.html'    
+        tmpl = '/applications/import.html'
         return render_template(tmpl, **template_args)
 
     if not dataurl:
@@ -534,9 +545,11 @@ def _import_task(app, template_args, data_handlers):
     except BulkImportException, err_msg:
         flash(err_msg, 'error')
     except Exception as inst:
+        print inst
         msg = 'Oops! Looks like there was an error with processing that file!'
         flash(lazy_gettext(msg), 'error')
     return render_forms()
+
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
@@ -549,16 +562,16 @@ def task_presenter(short_name, task_id):
                    "<strong>%s</strong>"
                    "application" % app.name)
             flash(lazy_gettext(msg), 'warning')
-            return redirect(url_for(
-                    'account.signin',
-                    next=url_for('.presenter', short_name=app.short_name)))
+            return redirect(url_for('account.signin',
+                                    next=url_for('.presenter',
+                                                 short_name=app.short_name)))
         else:
             msg_1 = lazy_gettext(
                 "Ooops! You are an anonymous user and will not "
                 "get any credit"
                 " for your contributions.")
             next_url = url_for(
-                'app.task_presenter', 
+                'app.task_presenter',
                 short_name=short_name,
                 task_id=task_id)
             url = url_for(
@@ -582,8 +595,8 @@ def task_presenter(short_name, task_id):
     # Check if the user has submitted a task before
 
     tr_search = db.session.query(model.TaskRun)\
-            .filter(model.TaskRun.task_id == task_id)\
-            .filter(model.TaskRun.app_id == app.id)
+                  .filter(model.TaskRun.task_id == task_id)\
+                  .filter(model.TaskRun.app_id == app.id)
 
     if current_user.is_anonymous():
         remote_addr = request.remote_addr or "127.0.0.1"
@@ -596,6 +609,7 @@ def task_presenter(short_name, task_id):
         return respond('/applications/presenter.html')
     else:
         return respond('/applications/task/done.html')
+
 
 @blueprint.route('/<short_name>/presenter')
 @blueprint.route('/<short_name>/newtask')
@@ -630,6 +644,7 @@ def presenter(short_name):
         return resp
     else:
         return respond('/applications/presenter.html')
+
 
 @blueprint.route('/<short_name>/tutorial')
 def tutorial(short_name):
@@ -739,8 +754,8 @@ def export_to(short_name):
             .filter_by(app_id=app.id).count()
         sep = ", "
         yield "["
-        for i, tr in enumerate(db.session.query(table)\
-                .filter_by(app_id=app.id).yield_per(1), 1):
+        for i, tr in enumerate(db.session.query(table)
+                                 .filter_by(app_id=app.id).yield_per(1), 1):
             item = json.dumps(tr.dictize())
             if (i == n):
                 sep = ""
@@ -785,8 +800,7 @@ def export_to(short_name):
                 (lambda x: type(x.info) == dict),
                 lazy_gettext(
                     "Oops, there are no Task Runs yet to export, invite \
-                           some users to participate"))
-            }
+                           some users to participate"))}
         try:
             table, handle_row, test, msg = types[ty]
         except KeyError:
@@ -802,7 +816,7 @@ def export_to(short_name):
                 writer.writerow(t.info.keys())
 
             return Response(get_csv(out, writer, table, handle_row),
-                                mimetype='text/csv')
+                            mimetype='text/csv')
         else:
             flash(msg, 'info')
             return render_template('/applications/export.html',
