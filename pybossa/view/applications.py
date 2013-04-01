@@ -494,6 +494,7 @@ def import_task(short_name):
         field_id, handler, form_name, get_data_url = v
         if field_id in request.form:
             form = template_args[form_name]
+            template = k
             break
 
     def render_forms():
