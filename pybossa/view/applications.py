@@ -413,25 +413,14 @@ googledocs_urls = {
 
 
 def get_data_url_for_csv(form):
-    if form.validate_on_submit():
-        return form.csv_url.data
-    else:
-        return None
-
+    return form.csv_url.data
 
 def get_data_url_for_gdocs(form):
-    if form.validate_on_submit():
-        return ''.join([form.googledocs_url.data, '&output=csv'])
-    else:
-        return None
-
+    return ''.join([form.googledocs_url.data, '&output=csv'])
 
 def get_data_url_for_epicollect(form):
-    if form.validate_on_submit():
-        return 'http://plus.epicollect.net/%s/%s.json' % \
-            (form.epicollect_project.data, form.epicollect_form.data)
-    else:
-        return None
+    return 'http://plus.epicollect.net/%s/%s.json' % \
+        (form.epicollect_project.data, form.epicollect_form.data)
 
 
 def get_csv_data_from_request(app, r):
@@ -507,19 +496,19 @@ def import_task(short_name):
             form = template_args[form_name]
             break
 
+    def render_forms():
+        tmpl = '/applications/importers/%s.html' % template
+        return render_template(tmpl, **template_args)
+
+    if not (form and form.validate()):
+        return render_forms()
+
     return _import_task(app, template, template_args, 
                         handler, form, get_data_url)
 
 
 def _import_task(app, template, template_args, handler, form, get_data_url):
     dataurl = get_data_url(form)
-
-    def render_forms():
-        tmpl = '/applications/importers/%s.html' % template
-        return render_template(tmpl, **template_args)
-
-    if not dataurl:
-        return render_forms()
 
     try:
         r = requests.get(dataurl)
