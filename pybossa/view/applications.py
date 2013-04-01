@@ -515,7 +515,8 @@ def import_task(short_name):
     # enable it and disable the rest of them
     if template =='gdocs':
         mode = request.args.get('mode')
-        template_args["gdform"].googledocs_url.data = googledocs_urls[mode]
+        if mode is not None:
+            template_args["gdform"].googledocs_url.data = googledocs_urls[mode]
 
     return _import_task(app, template, template_args, data_handlers)
 
