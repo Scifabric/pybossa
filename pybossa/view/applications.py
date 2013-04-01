@@ -521,10 +521,10 @@ def import_task(short_name):
         template_args["csvform"] = None
         template_args["epiform"] = None
 
-    return _import_task(app, template_args, data_handlers)
+    return _import_task(app, template, template_args, data_handlers)
 
 
-def _import_task(app, template_args, data_handlers):
+def _import_task(app, template, template_args, data_handlers):
     dataurl = get_data_url(**template_args)
 
     def render_forms():
