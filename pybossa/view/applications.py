@@ -505,10 +505,11 @@ def import_task(short_name):
         return render_forms()
 
     return _import_task(app, template, template_args, 
-                        handler, form, get_data_url)
+                        handler, form, get_data_url, render_forms)
 
 
-def _import_task(app, template, template_args, handler, form, get_data_url):
+def _import_task(app, template, template_args, handler, form, get_data_url,
+                 render_forms):
     dataurl = get_data_url(form)
 
     try:
