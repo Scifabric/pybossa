@@ -475,7 +475,7 @@ def import_task(short_name):
 
     template = request.args.get('template')
 
-    if not (app.tasks or template or request.method == 'POST'):
+    if not (template or request.method == 'POST'):
         return render_template('/applications/import_options.html',
                                **template_args)
 
@@ -487,17 +487,17 @@ def import_task(short_name):
             template_args["gdform"].googledocs_url.data = googledocs_urls[mode]
 
     form = None
+    handler = None
     for k, v in data_handlers.iteritems():
-        field_id, _, form_name = v
-        print field_id
+        field_id, handler, form_name = v
         if field_id in request.form:
             form = template_args[form_name]
             break
 
-    return _import_task(app, template, template_args, data_handlers, form)
+    return _import_task(app, template, template_args, handler, form)
 
 
-def _import_task(app, template, template_args, data_handlers, form):
+def _import_task(app, template, template_args, handler, form):
     dataurl = get_data_url(form)
 
     def render_forms():
@@ -509,10 +509,7 @@ def _import_task(app, template, template_args, data_handlers, form):
 
     try:
         r = requests.get(dataurl)
-        for form_id, handler, _ in data_handlers.itervalues():
-            if form_id in request.form:
-                handler(app, r)
-                break
+        handler(app, r)
         flash(lazy_gettext('Tasks imported successfully!'), 'success')
         return redirect(url_for('.settings', short_name=app.short_name))
     except importer.BulkImportException, err_msg:
