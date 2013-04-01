@@ -17,10 +17,10 @@
         <fieldset>
         {{ gdform.hidden_tag() }}
         <span class="help-inline"> {{ _('Please provide a URL to a Google Docs Spreadsheet with data for') }} {{ active_app }}. <br/> {{ _('For more information, please look at') }} <a href="http://docs.pybossa.com/en/latest/user/overview.html#importing-the-tasks-via-the-built-in-csv-task-creator" target="_blank">{{ _('the documentation') }}.</a></span>
-          {{ render_field(gdform.googledocs_url, class_="span9", placeholder="The URL of the Google Docs Spreadsheet") }}
+          {{ render_field(gdform.googledocs_url, class_="input-block-level", placeholder="The URL of the Google Docs Spreadsheet") }}
           <div class="form-actions">
-            <input type="submit" value="Import" class="btn btn-primary" />
-            <a href="{{ url_for('app.settings', short_name=app.short_name) }}" class="btn">Cancel</a>
+              <input type="submit" value="{{_('Import')}}" class="btn btn-primary" />
+              <a href="{{ url_for('app.settings', short_name=app.short_name) }}" class="btn">{{_('Cancel')}}</a>
           </div>
         </fieldset>
       </form>
@@ -31,9 +31,9 @@
         <fieldset>
         {{ csvform.hidden_tag() }}
         <span class="help-inline">{{_('Please provide a URL (i.e. DropBox, Box, Ubuntu One, etc. public link) to a CSV file with data for')}} {{ active_app }}.<br/> {{_('For more information, please look at')}} <a href="http://docs.pybossa.com/en/latest/user/overview.html#importing-the-tasks-via-the-built-in-csv-task-creator" target="_blank">{{_('the documentation')}}.</a></span>
-          {{ render_field(csvform.csv_url, class_="span9", placeholder="The URL of the CSV file") }}
+          {{ render_field(csvform.csv_url, class_="input-block-level", placeholder="The URL of the CSV file") }}
           <div class="form-actions">
-            <input type="submit" value="Import" text="{{_('Import')}}" class="btn btn-primary" />
+            <input type="submit" value="{{_('Import')}}" class="btn btn-primary" />
             <a href="{{ url_for('app.settings', short_name=app.short_name) }}" class="btn">{{_('Cancel')}}</a>
           </div>
         </fieldset>
@@ -45,10 +45,10 @@
         <fieldset>
         {{ epiform.hidden_tag() }}
         <span class="help-inline">{{_('Please provide an EpiCollect Plus project name to import its data for')}} {{ active_app }}.<br/> {{_('For more information, please look at')}} <a href="http://docs.pybossa.com/en/latest/user/overview.html#importing-the-tasks-via-the-built-in-csv-task-creator" target="_blank">{{_('the documentation')}}.</a></span>
-          {{ render_field(epiform.epicollect_project, class_="span9", placeholder="The name of the public EpiCollect Plus project") }}
-          {{ render_field(epiform.epicollect_form, class_="span9", placeholder="The name of the project's form") }}
+          {{ render_field(epiform.epicollect_project, class_="input-block-level", placeholder="The name of the public EpiCollect Plus project") }}
+          {{ render_field(epiform.epicollect_form, class_="input-block-level", placeholder="The name of the project's form") }}
           <div class="form-actions">
-            <input type="submit" value="Import" text="{{_('Import')}} class="btn btn-primary" />
+            <input type="submit" value="{{_('Import')}}" class="btn btn-primary" />
             <a href="{{ url_for('app.settings', short_name=app.short_name) }}" class="btn">{{_('Cancel')}}</a>
           </div>
         </fieldset>
