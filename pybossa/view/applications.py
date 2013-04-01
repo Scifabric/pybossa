@@ -14,6 +14,7 @@
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from StringIO import StringIO
+import requests
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, make_response
 from flaskext.wtf import Form, IntegerField, TextField, BooleanField, \
