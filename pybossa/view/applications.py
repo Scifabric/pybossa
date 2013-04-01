@@ -492,8 +492,6 @@ def import_task(short_name):
         return render_template('/applications/import_options.html',
                                **template_args)
 
-    # By default all the forms are enabled. If a specific template is requested
-    # enable it and disable the rest of them
     if template =='gdocs':
         mode = request.args.get('mode')
         if mode is not None:
