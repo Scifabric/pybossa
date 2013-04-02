@@ -116,16 +116,21 @@ built-in :ref:`task-creator`. You have to do the following:
 .. image:: http://i.imgur.com/AeBAy7q.png
     
 3. Scroll down a bit to the **Task Settings** and  click on the **Import Tasks** 
-   button. After clicking on it you will see 6 different options:
+   button. After clicking on it you will see 7 different options:
 
-.. image:: http://i.imgur.com/wyGxV4s.png
+.. image:: http://i.imgur.com/Qf2sMGV.png
 
-The **Basic** template, allows you to upload your own CSV file:
+The **CSV** template, allows you to upload your own CSV file:
 
-.. image:: http://i.imgur.com/aU0A9gL.png
+.. image:: http://i.imgur.com/qoqIztQ.png
 
-4. Where you will have to provide a URL to a Google Docs Spreadsheet or a CSV file.  If you're
-   trying to import from a Google Spreadsheet, ensure the file is
+4. Where you will have to provide a URL to a CSV file that you can have hosted
+   in DropBox or any similar web service. PyBossa also supports Google Drive
+   Spreadsheets, so use this option if you have your data in Google Drive. 
+   
+.. note::
+
+   If you're trying to import from a Google Spreadsheet, ensure the file is
    accessible to everyone with link or is public.
 
 .. note::
@@ -136,9 +141,13 @@ The **Basic** template, allows you to upload your own CSV file:
    **priority_0**, or **n_answers**, it will be saved in the respective
    columns. Your spreadsheet must be visible to public or everyone with URL.
 
-The other three options provide a Google Docs URL to a public spreadsheet, 
+The other options pre-load a Google Docs URL to a public spreadsheet, 
 that you can automatically import for your application (the URL will
-automatically copy and pasted into the input field for importing the tasks). 
+automatically copy and pasted into the input field for importing the tasks).
+
+Finally, you will see that there is an option for importing tasks from an
+EpiCollect project, which is fully described in the next section. 
+
 By using these templates, you'll be able to learn the structure of the tasks,
 and directly re-use the :ref:`task-presenter` templates that know the structure
 (name of the columns) for presenting the task. 
