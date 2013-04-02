@@ -34,6 +34,7 @@ from pybossa.cache import apps as cached_apps
 
 import json
 import importer
+import presenter
 import operator
 import math
 
@@ -210,10 +211,15 @@ def task_presenter_editor(short_name):
                 'computer' % url_for('app.import_task',
                                      short_name=app.short_name)
             flash(lazy_gettext(msg), 'info')
+
+            wrap = lambda i: "applications/presenters/%s.html" % i
+            pres_tmpls = map(wrap, presenter.presenters)
+
             return render_template(
                 'applications/task_presenter_options.html',
                 title=title,
-                app=app)
+                app=app,
+                presenters=pres_tmpls)
 
         tmpl_uri = "applications/snippets/%s.html" \
             % request.args.get('template')
