@@ -162,10 +162,10 @@ class BulkTaskGDImportForm(BulkTaskImportForm):
 
     @property
     def variants(self):
-        return [("-".join(self.template_id, mode))
+        return [("-".join([self.template_id, mode]))
                 for mode in googledocs_urls.keys()]
 
-@register_importer
+#@register_importer
 class BulkTaskEpiCollectPlusImportForm(BulkTaskImportForm):
     msg_required = lazy_gettext("You must provide an EpiCollect Plus "
                                 "project name")

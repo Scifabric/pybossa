@@ -34,6 +34,8 @@ from pybossa.cache import apps as cached_apps
 
 import json
 import importer
+import operator
+import math
 
 blueprint = Blueprint('app', __name__)
 
@@ -370,16 +372,21 @@ def import_task(short_name):
     forms = [
         (i.form_id, i(request.form))
         for i in importer.importers]
+    forms = dict(forms)
+    template_args.update(forms)
 
-    template_args.update(dict(forms))
+    variants = reduce(operator.__add__,
+                      [i.variants for i in forms.itervalues()],
+                      [])
+    if len(variants) % 2:
+        variants.append("empty")
+    prefix = "applications/tasks/"
+    importer_variants = map(lambda i: "%s%s.html" % (prefix, i), variants)
+    importer_variants_by_twos = [
+        (importer_variants[i*2], importer_variants[i*2+1]) 
+        for i in xrange(0, int(math.ceil(len(variants)/2.0)))]
 
-    template_args["importer_modes"] = [
-        ("applications/tasks/csv.html",
-         "applications/tasks/epicollect.html"),
-        ("applications/tasks/gdocs-image.html",
-         "applications/tasks/gdocs-sound.html"),
-        ("applications/tasks/gdocs-map.html",
-         "applications/tasks/gdocs-pdf.html")]        
+    template_args["importer_modes"] = importer_variants_by_twos
 
     template = request.args.get('template')
 
