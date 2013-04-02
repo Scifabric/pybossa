@@ -115,6 +115,9 @@ class BulkTaskImportForm(Form):
         csvreader = unicode_csv_reader(csvcontent)
         return self.import_csv_tasks(app, csvreader)
 
+    @property
+    def variants(self):
+        return [self.template_id]
 
 @register_importer
 class BulkTaskCSVImportForm(BulkTaskImportForm):
@@ -157,6 +160,10 @@ class BulkTaskGDImportForm(BulkTaskImportForm):
         r = requests.get(dataurl)
         return self.get_csv_data_from_request(app, r)
 
+    @property
+    def variants(self):
+        return [("-".join(self.template_id, mode))
+                for mode in googledocs_urls.keys()]
 
 @register_importer
 class BulkTaskEpiCollectPlusImportForm(BulkTaskImportForm):
