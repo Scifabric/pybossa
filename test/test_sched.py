@@ -1,86 +1,18 @@
 import json
 import random
 
-from base import web, model, Fixtures, db
-from pybossa import sched
+from helper import sched
+from base import model, Fixtures, db
+import pybossa
 
 
-class TestSCHED:
+class TestSched(sched.Helper):
     def setUp(self):
-        self.app = web.app.test_client()
-        model.rebuild_db()
+        super(TestSched, self).setUp()
         Fixtures.create()
         self.endpoints = ['app', 'task', 'taskrun']
 
-    def tearDown(self):
-        db.session.remove()
-
-    @classmethod
-    def teardown_class(cls):
-        model.rebuild_db()
-
-    def is_task(self, task_id, tasks):
-        """Returns True if the task_id is in tasks list"""
-        for t in tasks:
-            if t.id == task_id:
-                return True
-        return False
-
-    def is_unique(self, id, items):
-        """Returns True if the id is not Unique"""
-        copies = 0
-        for i in items:
-            if type(i) is dict:
-                if i['id'] == id:
-                    copies = copies + 1
-            else:
-                if i.id == id:
-                    copies = copies + 1
-        if copies >= 2:
-            return False
-        else:
-            return True
-
-    def del_task_runs(self, app_id=1):
-        """Deletes all TaskRuns for a given app_id"""
-        db.session.query(model.TaskRun).filter_by(app_id=1).delete()
-        db.session.commit()
-        db.session.remove()
-
-    def register(self, method="POST", fullname="John Doe", username="johndoe", password="p4ssw0rd", password2=None, email=None):
-        """Helper function to register and sign in a user"""
-        if password2 is None:
-            password2 = password
-        if email is None:
-            email = username + '@example.com'
-        if method == "POST":
-            return self.app.post('/account/register',
-                                 data={'fullname': fullname,
-                                       'username': username,
-                                       'email_addr': email,
-                                       'password': password,
-                                       'confirm': password2},
-                                 follow_redirects=True)
-        else:
-            return self.app.get('/account/register', follow_redirects=True)
-
-    def signin(self, method="POST", username="johndoe",
-               password="p4ssw0rd", next=None):
-        """Helper function to sign in current user"""
-        url = '/account/signin'
-        if next is not  None:
-            url = url + '?next=' + next
-        if method == "POST":
-            return self.app.post(url, data={'username': username,
-                                            'password': password},
-                                 follow_redirects=True)
-        else:
-            return self.app.get(url, follow_redirects=True)
-
-    def signout(self):
-        """Helper function to sign out current user"""
-        return self.app.get('/account/signout', follow_redirects=True)
-
+    # Tests
     def test_anonymous_01_newtask(self):
         """ Test SCHED newtask returns a Task for the Anonymous User"""
         # Del previous TaskRuns
@@ -429,26 +361,26 @@ class TestGetBreadthFirst:
             self._add_task_run(task2)
 
         # now check we get task without task runs
-        out = sched.get_breadth_first_task(appid)
+        out = pybossa.sched.get_breadth_first_task(appid)
         assert out.id == taskid, out
 
         # now check that offset works
-        out1 = sched.get_breadth_first_task(appid)
-        out2 = sched.get_breadth_first_task(appid, offset=1)
+        out1 = pybossa.sched.get_breadth_first_task(appid)
+        out2 = pybossa.sched.get_breadth_first_task(appid, offset=1)
         assert out1.id != out2.id, out
 
         # asking for a bigger offset (max 10)
-        out2 = sched.get_breadth_first_task(appid, offset=11)
+        out2 = pybossa.sched.get_breadth_first_task(appid, offset=11)
         assert out2 is None, out
 
         self._add_task_run(task)
-        out = sched.get_breadth_first_task(appid)
+        out = pybossa.sched.get_breadth_first_task(appid)
         assert out.id == taskid, out
 
         # now add 2 more taskruns. We now have 3 and 2 task runs per task
         self._add_task_run(task)
         self._add_task_run(task)
-        out = sched.get_breadth_first_task(appid)
+        out = pybossa.sched.get_breadth_first_task(appid)
         assert out.id == task2.id, out
 
     def _add_task_run(self, task, user=None):

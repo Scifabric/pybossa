@@ -44,7 +44,7 @@ class TestWeb(web.Helper):
 
         res = self.app.get('/leaderboard', follow_redirects=True)
         assert self.html_title("Community Leaderboard") in res.data, res
-        assert "John Doe" in res.data, res.data
+        assert self.user.fullname in res.data, res.data
 
     def test_03_register(self):
         """Test WEB register user works"""
@@ -135,13 +135,13 @@ class TestWeb(web.Helper):
 
         res = self.signin()
         assert self.html_title() in res.data, res
-        assert "Welcome back John Doe" in res.data, res
+        assert "Welcome back %s" % self.user.fullname in res.data, res
 
         # Check profile page with several information chunks
         res = self.profile()
         assert self.html_title("Profile") in res.data, res
-        assert "John Doe" in res.data, res
-        assert "johndoe@example.com" in res.data, res
+        assert self.user.fullname in res.data, res
+        assert self.user.email_addr in res.data, res
 
         # Log out
         res = self.signout()
@@ -157,7 +157,7 @@ class TestWeb(web.Helper):
 
         res = self.signin(next='%2Faccount%2Fprofile')
         assert self.html_title("Profile") in res.data, res
-        assert "Welcome back John Doe" in res.data, res
+        assert "Welcome back %s" % self.user.fullname in res.data, res
 
     def test_05_update_user_profile(self):
         """Test WEB update user profile"""
@@ -167,11 +167,11 @@ class TestWeb(web.Helper):
 
         # Update profile with new data
         res = self.update_profile(method="GET")
-        msg = "Update your profile: John Doe"
+        msg = "Update your profile: %s" % self.user.fullname
         assert self.html_title(msg) in res.data, res
         msg = 'input id="id" name="id" type="hidden" value="1"'
         assert msg in res.data, res
-        assert "John Doe" in res.data, res
+        assert self.user.fullname in res.data, res
         assert "Save the changes" in res.data, res
         msg = '<a href="/account/profile/settings" class="btn">Cancel</a>'
         assert  msg in res.data, res
@@ -660,7 +660,7 @@ class TestWeb(web.Helper):
         self.register()
 
         user = db.session.query(model.User)\
-                 .filter(model.User.name == 'johndoe')\
+                 .filter(model.User.name == self.user.username)\
                  .first()
         app = db.session.query(model.App).first()
         task = db.session.query(model.Task)\
@@ -817,9 +817,9 @@ class TestWeb(web.Helper):
     def test_32_oauth_password(self):
         """Test WEB user sign in without password works"""
         user = model.User(email_addr="johndoe@johndoe.com",
-                          name="johndoe",
+                          name=self.user.username,
                           passwd_hash=None,
-                          fullname="John Doe",
+                          fullname=self.user.fullname,
                           api_key="api-key")
         db.session.add(user)
         db.session.commit()
@@ -1085,7 +1085,7 @@ class TestWeb(web.Helper):
         assert response_user is None, response_user
 
     def test_41_password_change(self):
-        """Test password changing"""
+        """Test WEB password changing"""
         password = "mehpassword"
         self.register(password=password)
         res = self.app.post('/account/profile/password',
@@ -1106,7 +1106,7 @@ class TestWeb(web.Helper):
         assert msg in res.data
 
     def test_42_password_link(self):
-        """Test visibility of password change link"""
+        """Test WEB visibility of password change link"""
         self.register()
         res = self.app.get('/account/profile/settings')
         assert "Change your Password" in res.data
@@ -1166,7 +1166,7 @@ class TestWeb(web.Helper):
     def test_45_password_reset_link(self):
         """Test WEB password reset email form"""
         res = self.app.post('/account/forgot-password',
-                            data={'email_addr': 'johndoe@example.com'},
+                            data={'email_addr': self.user.email_addr},
                             follow_redirects=True)
         assert ("We don't have this email in our records. You may have"
                 " signed up with a different email or used Twitter, "
@@ -1183,7 +1183,7 @@ class TestWeb(web.Helper):
         mail.suppress = True
         with mail.record_messages() as outbox:
             self.app.post('/account/forgot-password',
-                          data={'email_addr': 'johndoe@example.com'},
+                          data={'email_addr': self.user.email_addr},
                           follow_redirects=True)
             self.app.post('/account/forgot-password',
                           data={'email_addr': 'janedoe@example.com'},
@@ -1454,6 +1454,7 @@ class TestWeb(web.Helper):
         assert len(exported_task_runs) == len(app.task_runs), err_msg
 
     def test_54_import_tasks(self):
+        """Test WEB Import Tasks works"""
         # there's a bug in the test framework:
         # self.app.get somehow calls render_template twice
         return

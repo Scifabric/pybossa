@@ -1,8 +1,11 @@
 from base import model, db, web
+from helper.user import User
 
 
 class Helper(object):
     """Class to help testing the web interface"""
+
+    user = User()
 
     def setUp(self):
         self.app = web.app.test_client()
