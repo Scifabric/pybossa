@@ -1,7 +1,8 @@
 import json
 import StringIO
 
-from base import web, model, Fixtures, mail, webHelper
+from helper import web
+from base import model, Fixtures, mail
 from mock import patch
 from itsdangerous import BadSignature
 from collections import namedtuple
@@ -12,7 +13,7 @@ from pybossa.util import get_user_signup_method
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
 
-class TestWeb(webHelper):
+class TestWeb(web.Helper):
 
     def test_01_index(self):
         """Test WEB home page works"""
