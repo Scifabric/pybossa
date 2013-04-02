@@ -364,7 +364,6 @@ def settings(short_name):
         return abort(403)
 
 
-
 @blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
 def import_task(short_name):
     app = App.query.filter_by(short_name=short_name).first_or_404()
@@ -372,8 +371,8 @@ def import_task(short_name):
     template_args = {"title": title, "app": app}
 
     data_handlers = dict([
-            (i.template_id, (i.form_detector, i(request.form), i.form_id))
-            for i in importer.importers])
+        (i.template_id, (i.form_detector, i(request.form), i.form_id))
+        for i in importer.importers])
     forms = [
         (i.form_id, i(request.form))
         for i in importer.importers]
@@ -388,8 +387,8 @@ def import_task(short_name):
     prefix = "applications/tasks/"
     importer_variants = map(lambda i: "%s%s.html" % (prefix, i), variants)
     importer_variants_by_twos = [
-        (importer_variants[i*2], importer_variants[i*2+1])
-        for i in xrange(0, int(math.ceil(len(variants)/2.0)))]
+        (importer_variants[i * 2], importer_variants[i * 2 + 1])
+        for i in xrange(0, int(math.ceil(len(variants) / 2.0)))]
 
     template_args["importer_modes"] = importer_variants_by_twos
 
@@ -399,7 +398,7 @@ def import_task(short_name):
         return render_template('/applications/import_options.html',
                                **template_args)
 
-    if template =='gdocs':
+    if template == 'gdocs':
         mode = request.args.get('mode')
         if mode is not None:
             template_args["gdform"].googledocs_url.data = importer.googledocs_urls[mode]
