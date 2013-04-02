@@ -382,7 +382,6 @@ def import_task(short_name):
     variants = reduce(operator.__add__,
                       [i.variants for i in forms.itervalues()],
                       [])
-    print variants
     if len(variants) % 2:
         variants.append("empty")
     prefix = "applications/tasks/"
