@@ -40,6 +40,21 @@ class BulkImportException(Exception):
     pass
 
 
+googledocs_urls = {
+    'image': "https://docs.google.com/spreadsheet/ccc"
+             "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE"
+             "&usp=sharing",
+    'sound': "https://docs.google.com/spreadsheet/ccc"
+             "?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc"
+             "&usp=sharing",
+    'map': "https://docs.google.com/spreadsheet/ccc"
+           "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc"
+           "&usp=sharing",
+    'pdf': "https://docs.google.com/spreadsheet/ccc"
+           "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE"
+           "&usp=sharing"}
+
+
 class BulkTaskImportForm(Form):
     template_id = None
     form_id = None
@@ -100,6 +115,9 @@ class BulkTaskImportForm(Form):
         csvreader = unicode_csv_reader(csvcontent)
         return self.import_csv_tasks(app, csvreader)
 
+    @property
+    def variants(self):
+        return [self.template_id]
 
 @register_importer
 class BulkTaskCSVImportForm(BulkTaskImportForm):
@@ -142,6 +160,11 @@ class BulkTaskGDImportForm(BulkTaskImportForm):
         r = requests.get(dataurl)
         return self.get_csv_data_from_request(app, r)
 
+    @property
+    def variants(self):
+        return [("-".join([self.template_id, mode]))
+                for mode in googledocs_urls.keys()]
+
 
 @register_importer
 class BulkTaskEpiCollectPlusImportForm(BulkTaskImportForm):
@@ -182,19 +205,4 @@ class BulkTaskEpiCollectPlusImportForm(BulkTaskImportForm):
         dataurl = self.get_data_url(form)
         r = requests.get(dataurl)
         return self.get_epicollect_data_from_request(app, r)
-
-
-googledocs_urls = {
-    'image': "https://docs.google.com/spreadsheet/ccc"
-             "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE"
-             "&usp=sharing",
-    'sound': "https://docs.google.com/spreadsheet/ccc"
-             "?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc"
-             "&usp=sharing",
-    'map': "https://docs.google.com/spreadsheet/ccc"
-           "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc"
-           "&usp=sharing",
-    'pdf': "https://docs.google.com/spreadsheet/ccc"
-           "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE"
-           "&usp=sharing"}
 
