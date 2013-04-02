@@ -29,7 +29,8 @@ class BulkImportException(Exception):
 
 class BulkTaskCSVImportForm(Form):
     msg_required = lazy_gettext("You must provide a URL")
-    msg_url = lazy_gettext("Oops! That's not a valid URL. You must provide a valid URL")
+    msg_url = lazy_gettext("Oops! That's not a valid URL. "
+                           "You must provide a valid URL")
     csv_url = TextField(lazy_gettext('URL'),
                         [validators.Required(message=msg_required),
                          validators.URL(message=msg_url)])
@@ -37,15 +38,18 @@ class BulkTaskCSVImportForm(Form):
 
 class BulkTaskGDImportForm(Form):
     msg_required = lazy_gettext("You must provide a URL")
-    msg_url = lazy_gettext("Oops! That's not a valid URL. You must provide a valid URL")
+    msg_url = lazy_gettext("Oops! That's not a valid URL. "
+                           "You must provide a valid URL")
     googledocs_url = TextField(lazy_gettext('URL'),
                                [validators.Required(message=msg_required),
                                    validators.URL(message=msg_url)])
 
 
 class BulkTaskEpiCollectPlusImportForm(Form):
-    msg_required = lazy_gettext("You must provide an EpiCollect Plus project name")
-    msg_form_required = lazy_gettext("You must provide a Form name for the project")
+    msg_required = lazy_gettext("You must provide an EpiCollect Plus "
+                                "project name")
+    msg_form_required = lazy_gettext("You must provide a Form name "
+                                     "for the project")
     epicollect_project = TextField(lazy_gettext('Project Name'),
                                    [validators.Required(message=msg_required)])
     epicollect_form = TextField(lazy_gettext('Form name'),
@@ -64,7 +68,8 @@ def import_csv_tasks(app, csvreader):
         if not headers:
             headers = row
             if len(headers) != len(set(headers)):
-                msg = lazy_gettext('The file you uploaded has two headers with the same name.')
+                msg = lazy_gettext('The file you uploaded has '
+                                   'two headers with the same name.')
                 raise BulkImportException(msg)
             field_headers = set(headers) & fields
             for field in field_headers:
@@ -82,7 +87,8 @@ def import_csv_tasks(app, csvreader):
             db.session.commit()
             empty = False
     if empty:
-        raise BulkImportException(lazy_gettext('Oops! It looks like the file is empty.'))
+        raise BulkImportException(lazy_gettext('Oops! It looks like the file '
+                                               'is empty.'))
 
 
 def import_epicollect_tasks(app, data):
