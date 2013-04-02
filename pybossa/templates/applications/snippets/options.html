@@ -4,10 +4,12 @@
         <p class="lead">Use one of the following available <strong>templates</strong> for your application
     </div>
 </div>
-{% for presenter_tmpl in presenters %}
+{% for column in presenters | slice(3)%}
 <div class="row-fluid">
-    <div class="span12">
+    {% for presenter_tmpl in column %}
+    <div class="span6">
 	  {% include presenter_tmpl %}
     </div>
+    {% endfor %}
 </div>
 {% endfor %}
