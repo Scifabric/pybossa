@@ -41,6 +41,7 @@ class BulkImportException(Exception):
 
 
 googledocs_urls = {
+    'spreadsheet': None,
     'image': "https://docs.google.com/spreadsheet/ccc"
              "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE"
              "&usp=sharing",
@@ -179,7 +180,7 @@ class BulkTaskEpiCollectPlusImportForm(BulkTaskImportForm):
     template_id = "epicollect"
     form_id = "epiform"
     form_detector = "epicollect_project"
-    
+
     def import_epicollect_tasks(self, app, data):
         for d in data:
             task = model.Task(app=app)
