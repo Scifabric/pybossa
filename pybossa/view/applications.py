@@ -503,7 +503,7 @@ def task_presenter(short_name, task_id):
 
 @blueprint.route('/<short_name>/presenter')
 @blueprint.route('/<short_name>/newtask')
-def task_presenter(short_name):
+def show_presenter(short_name):
     app = App.query.filter_by(short_name=short_name)\
         .first_or_404()
     title = "Application &middot; %s &middot; Contribute" % app.name
