@@ -18,7 +18,8 @@ class TestSched(sched.Helper):
         self.del_task_runs()
 
         # Register
-        self.register(fullname="John Doe", username="johndoe", password="p4ssw0rd")
+        self.register(fullname=self.user.fullname, username=self.user.username,
+                      password=self.user.password)
         self.register(fullname="Marie Doe", username="mariedoe", password="dr0wss4p")
         self.signin()
 

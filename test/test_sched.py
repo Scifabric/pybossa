@@ -160,11 +160,11 @@ class TestSched(sched.Helper):
         assigned_tasks = []
         # We need one extra loop to allow the scheduler to mark a task as completed
         for i in range(11):
-            self.register(fullname="johndoe" + str(i),
-                          username="johndoe" + str(i),
-                          password="johndoe" + str(i))
+            self.register(fullname=self.user.username + str(i),
+                          username=self.user.username + str(i),
+                          password=self.user.username + str(i))
             print "Number of users %s" % len(db.session.query(model.User).all())
-            print "Giving answers as User: %s" % "johndoe" + str(i)
+            print "Giving answers as User: %s" % self.user.username + str(i)
             self.signin()
             # Get Task until scheduler returns None
             res = self.app.get('api/app/1/newtask')
@@ -213,12 +213,12 @@ class TestSched(sched.Helper):
             signin = False
             if random.random >= 0.5:
                 signin = True
-                self.register(fullname="johndoe" + str(i),
-                              username="johndoe" + str(i),
-                              password="johndoe" + str(i))
+                self.register(fullname=self.user.username + str(i),
+                              username=self.user.username + str(i),
+                              password=self.user.username + str(i))
 
             if signin:
-                print "Giving answers as User: %s" % "johndoe" + str(i)
+                print "Giving answers as User: %s" % self.user.username + str(i)
             else:
                 print "Giving answers as User IP: 127.0.0.%s" % str(i)
 
