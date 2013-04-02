@@ -1,5 +1,4 @@
 import json
-#import urllib
 
 from base import web, model, Fixtures, db
 from nose.tools import assert_equal
@@ -428,7 +427,6 @@ class TestAPI:
         assert_equal(out.app_id, app.id)
         root_id_ = out.id
 
-
         ##########
         # UPDATE #
         ##########
@@ -460,7 +458,6 @@ class TestAPI:
         assert_equal(res.status, '200 OK', res.data)
         out2 = db.session.query(model.Task).get(root_id_)
         assert_equal(out2.state, root_data['state'])
-
 
         ##########
         # DELETE #
