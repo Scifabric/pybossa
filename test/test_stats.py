@@ -4,7 +4,7 @@ from base import web, model, db, Fixtures
 import pybossa.stats as stats
 
 
-class TestAdmin:
+class TestStats:
     def setUp(self):
         self.app = web.app
         model.rebuild_db()

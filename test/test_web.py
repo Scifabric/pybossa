@@ -1,7 +1,8 @@
 import json
 import StringIO
 
-from base import web, model, Fixtures, mail
+from helper import web
+from base import model, Fixtures, mail
 from mock import patch
 from itsdangerous import BadSignature
 from collections import namedtuple
@@ -12,177 +13,7 @@ from pybossa.util import get_user_signup_method
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
 
-class TestWeb:
-
-    def setUp(self):
-        self.app = web.app.test_client()
-        #self.app.cache = web.cache.config['CACHE_TYPE']='nothingThatWillWork'
-        model.rebuild_db()
-        #Fixtures.create()
-
-    def tearDown(self):
-        db.session.remove()
-
-    @classmethod
-    def teardown_class(cls):
-        model.rebuild_db()
-
-    # Helper functions
-    def html_title(self, title=None):
-        """Helper function to create an HTML title"""
-        if title is None:
-            return "<title>PyBossa</title>"
-        else:
-            return "<title>PyBossa &middot; %s</title>" % title
-
-    def register(self, method="POST", fullname="John Doe", username="johndoe",
-                 password="p4ssw0rd", password2=None, email=None):
-        """Helper function to register and sign in a user"""
-        if password2 is None:
-            password2 = password
-        if email is None:
-            email = username + '@example.com'
-        if method == "POST":
-            return self.app.post('/account/register',
-                                 data={
-                                     'fullname': fullname,
-                                     'username': username,
-                                     'email_addr': email,
-                                     'password': password,
-                                     'confirm': password2},
-                                 follow_redirects=True)
-        else:
-            return self.app.get('/account/register', follow_redirects=True)
-
-    def signin(self, method="POST", email="johndoe@example.com", password="p4ssw0rd",
-               next=None):
-        """Helper function to sign in current user"""
-        url = '/account/signin'
-        if next is not None:
-            url = url + '?next=' + next
-        if method == "POST":
-            return self.app.post(url, data={'email': email,
-                                            'password': password},
-                                 follow_redirects=True)
-        else:
-            return self.app.get(url, follow_redirects=True)
-
-    def profile(self):
-        """Helper function to check profile of signed in user"""
-        return self.app.get("/account/profile", follow_redirects=True)
-
-    def update_profile(self, method="POST", id=1, fullname="John Doe",
-                       name="johndoe", locale="es", email_addr="johndoe@example.com"):
-        """Helper function to update the profile of users"""
-        if (method == "POST"):
-            return self.app.post("/account/profile/update",
-                                 data={'id': id,
-                                       'fullname': fullname,
-                                       'name': name,
-                                       'locale': locale,
-                                       'email_addr': email_addr},
-                                 follow_redirects=True)
-        else:
-            return self.app.get("/account/profile/update",
-                                follow_redirects=True)
-
-    def signout(self):
-        """Helper function to sign out current user"""
-        return self.app.get('/account/signout', follow_redirects=True)
-
-    def new_application(self, method="POST", name="Sample App",
-                        short_name="sampleapp", description="Description",
-                        thumbnail='An Icon link',
-                        allow_anonymous_contributors='True',
-                        long_description=u'<div id="long_desc">Long desc</div>',
-                        sched='default',
-                        hidden=False):
-        """Helper function to create an application"""
-        if method == "POST":
-            if hidden:
-                return self.app.post("/app/new", data={
-                    'name': name,
-                    'short_name': short_name,
-                    'description': description,
-                    'thumbnail': thumbnail,
-                    'allow_anonymou_contributors': allow_anonymous_contributors,
-                    'long_description': long_description,
-                    'sched': sched,
-                    'hidden': hidden,
-                }, follow_redirects=True)
-            else:
-                return self.app.post("/app/new", data={
-                    'name': name,
-                    'short_name': short_name,
-                    'description': description,
-                    'thumbnail': thumbnail,
-                    'allow_anonymous_contributors': allow_anonymous_contributors,
-                    'long_description': long_description,
-                    'sched': sched,
-                }, follow_redirects=True)
-        else:
-            return self.app.get("/app/new", follow_redirects=True)
-
-    def new_task(self, appid):
-        """Helper function to create tasks for an app"""
-        tasks = []
-        for i in range(0, 10):
-            tasks.append(model.Task(app_id=appid, state='0', info={}))
-        db.session.add_all(tasks)
-        db.session.commit()
-
-    def delTaskRuns(self, app_id=1):
-        """Deletes all TaskRuns for a given app_id"""
-        db.session.query(model.TaskRun).filter_by(app_id=1).delete()
-        db.session.commit()
-
-    def delete_application(self, method="POST", short_name="sampleapp"):
-        """Helper function to create an application"""
-        if method == "POST":
-            return self.app.post("/app/%s/delete" % short_name,
-                                 follow_redirects=True)
-        else:
-            return self.app.get("/app/%s/delete" % short_name,
-                                follow_redirects=True)
-
-    def update_application(self, method="POST", short_name="sampleapp", id=1,
-                           new_name="Sample App", new_short_name="sampleapp",
-                           new_description="Description",
-                           new_thumbnail="New Icon link",
-                           new_allow_anonymous_contributors="False",
-                           new_long_description="Long desc",
-                           new_sched="random",
-                           new_hidden=False):
-        """Helper function to create an application"""
-        if method == "POST":
-            if new_hidden:
-                return self.app.post("/app/%s/update" % short_name,
-                                     data={
-                                         'id': id,
-                                         'name': new_name,
-                                         'short_name': new_short_name,
-                                         'description': new_description,
-                                         'thumbnail': new_thumbnail,
-                                         'allow_anonymous_contributors': new_allow_anonymous_contributors,
-                                         'long_description': new_long_description,
-                                         'sched': new_sched,
-                                         'hidden': new_hidden},
-                                     follow_redirects=True)
-            else:
-                return self.app.post("/app/%s/update" % short_name,
-                                     data={'id': id, 'name': new_name,
-                                           'short_name': new_short_name,
-                                           'thumbnail': new_thumbnail,
-                                           'allow_anonymous_contributors': new_allow_anonymous_contributors,
-                                           'long_description': new_long_description,
-                                           'sched': new_sched,
-                                           'description': new_description},
-                                     follow_redirects=True)
-        else:
-            return self.app.get("/app/%s/update" % short_name,
-                                follow_redirects=True)
-
-    # Tests
+class TestWeb(web.Helper):
 
     def test_01_index(self):
         """Test WEB home page works"""
@@ -213,7 +44,7 @@ class TestWeb:
 
         res = self.app.get('/leaderboard', follow_redirects=True)
         assert self.html_title("Community Leaderboard") in res.data, res
-        assert "John Doe" in res.data, res.data
+        assert self.user.fullname in res.data, res.data
 
     def test_03_register(self):
         """Test WEB register user works"""
@@ -304,13 +135,13 @@ class TestWeb:
 
         res = self.signin()
         assert self.html_title() in res.data, res
-        assert "Welcome back John Doe" in res.data, res
+        assert "Welcome back %s" % self.user.fullname in res.data, res
 
         # Check profile page with several information chunks
         res = self.profile()
         assert self.html_title("Profile") in res.data, res
-        assert "John Doe" in res.data, res
-        assert "johndoe@example.com" in res.data, res
+        assert self.user.fullname in res.data, res
+        assert self.user.email_addr in res.data, res
 
         # Log out
         res = self.signout()
@@ -326,7 +157,7 @@ class TestWeb:
 
         res = self.signin(next='%2Faccount%2Fprofile')
         assert self.html_title("Profile") in res.data, res
-        assert "Welcome back John Doe" in res.data, res
+        assert "Welcome back %s" % self.user.fullname in res.data, res
 
     def test_05_update_user_profile(self):
         """Test WEB update user profile"""
@@ -336,11 +167,11 @@ class TestWeb:
 
         # Update profile with new data
         res = self.update_profile(method="GET")
-        msg = "Update your profile: John Doe"
+        msg = "Update your profile: %s" % self.user.fullname
         assert self.html_title(msg) in res.data, res
         msg = 'input id="id" name="id" type="hidden" value="1"'
         assert msg in res.data, res
-        assert "John Doe" in res.data, res
+        assert self.user.fullname in res.data, res
         assert "Save the changes" in res.data, res
         msg = '<a href="/account/profile/settings" class="btn">Cancel</a>'
         assert  msg in res.data, res
@@ -829,7 +660,7 @@ class TestWeb:
         self.register()
 
         user = db.session.query(model.User)\
-                 .filter(model.User.name == 'johndoe')\
+                 .filter(model.User.name == self.user.username)\
                  .first()
         app = db.session.query(model.App).first()
         task = db.session.query(model.Task)\
@@ -986,9 +817,9 @@ class TestWeb:
     def test_32_oauth_password(self):
         """Test WEB user sign in without password works"""
         user = model.User(email_addr="johndoe@johndoe.com",
-                          name="johndoe",
+                          name=self.user.username,
                           passwd_hash=None,
-                          fullname="John Doe",
+                          fullname=self.user.fullname,
                           api_key="api-key")
         db.session.add(user)
         db.session.commit()
@@ -1254,7 +1085,7 @@ class TestWeb:
         assert response_user is None, response_user
 
     def test_41_password_change(self):
-        """Test password changing"""
+        """Test WEB password changing"""
         password = "mehpassword"
         self.register(password=password)
         res = self.app.post('/account/profile/password',
@@ -1275,7 +1106,7 @@ class TestWeb:
         assert msg in res.data
 
     def test_42_password_link(self):
-        """Test visibility of password change link"""
+        """Test WEB visibility of password change link"""
         self.register()
         res = self.app.get('/account/profile/settings')
         assert "Change your Password" in res.data
@@ -1335,7 +1166,7 @@ class TestWeb:
     def test_45_password_reset_link(self):
         """Test WEB password reset email form"""
         res = self.app.post('/account/forgot-password',
-                            data={'email_addr': 'johndoe@example.com'},
+                            data={'email_addr': self.user.email_addr},
                             follow_redirects=True)
         assert ("We don't have this email in our records. You may have"
                 " signed up with a different email or used Twitter, "
@@ -1352,7 +1183,7 @@ class TestWeb:
         mail.suppress = True
         with mail.record_messages() as outbox:
             self.app.post('/account/forgot-password',
-                          data={'email_addr': 'johndoe@example.com'},
+                          data={'email_addr': self.user.email_addr},
                           follow_redirects=True)
             self.app.post('/account/forgot-password',
                           data={'email_addr': 'janedoe@example.com'},
@@ -1623,6 +1454,7 @@ class TestWeb:
         assert len(exported_task_runs) == len(app.task_runs), err_msg
 
     def test_54_import_tasks(self):
+        """Test WEB Import Tasks works"""
         # there's a bug in the test framework:
         # self.app.get somehow calls render_template twice
         return

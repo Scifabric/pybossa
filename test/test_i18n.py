@@ -1,54 +1,11 @@
-from base import web, model, db, Fixtures
+from helper import web
+from base import model, db, Fixtures
 
 
-class TestAdmin:
+class TestI18n(web.Helper):
     def setUp(self):
-        self.app = web.app.test_client()
-        model.rebuild_db()
+        super(TestI18n, self).setUp()
         Fixtures.create()
-
-    def tearDown(self):
-        db.session.remove()
-
-    @classmethod
-    def teardown_class(cls):
-        model.rebuild_db()
-
-    def register(self, method="POST", fullname="John Doe", username="johndoe",
-                 password="p4ssw0rd", password2=None, email=None):
-        """Helper function to register and sign in a user"""
-        if password2 is None:
-            password2 = password
-        if email is None:
-            email = username + '@example.com'
-        if method == "POST":
-            return self.app.post('/account/register',
-                                 data={
-                                     'fullname': fullname,
-                                     'username': username,
-                                     'email_addr': email,
-                                     'password': password,
-                                     'confirm': password2},
-                                 follow_redirects=True)
-        else:
-            return self.app.get('/account/register', follow_redirects=True)
-
-    def signin(self, method="POST", email="johndoe@example.com", password="p4ssw0rd",
-               next=None):
-        """Helper function to sign in current user"""
-        url = '/account/signin'
-        if next is not None:
-            url = url + '?next=' + next
-        if method == "POST":
-            return self.app.post(url, data={'email': email,
-                                            'password': password},
-                                 follow_redirects=True)
-        else:
-            return self.app.get(url, follow_redirects=True)
-
-    def signout(self):
-        """Helper function to sign out current user"""
-        return self.app.get('/account/signout', follow_redirects=True)
 
     # Tests
 
