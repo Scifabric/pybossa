@@ -1,5 +1,4 @@
 import json
-import csv
 import StringIO
 
 from base import web, model, Fixtures, mail
@@ -170,16 +169,15 @@ class TestWeb:
                                          'hidden': new_hidden},
                                      follow_redirects=True)
             else:
-                return self.app.post("/app/%s/update" % short_name, data={
-                        'id': id,
-                        'name': new_name,
-                        'short_name': new_short_name,
-                        'thumbnail': new_thumbnail,
-                        'allow_anonymous_contributors': new_allow_anonymous_contributors,
-                        'long_description': new_long_description,
-                        'sched': new_sched,
-                        'description': new_description,
-                    }, follow_redirects=True)
+                return self.app.post("/app/%s/update" % short_name,
+                                     data={'id': id, 'name': new_name,
+                                           'short_name': new_short_name,
+                                           'thumbnail': new_thumbnail,
+                                           'allow_anonymous_contributors': new_allow_anonymous_contributors,
+                                           'long_description': new_long_description,
+                                           'sched': new_sched,
+                                           'description': new_description},
+                                     follow_redirects=True)
         else:
             return self.app.get("/app/%s/update" % short_name,
                                 follow_redirects=True)
@@ -237,19 +235,19 @@ class TestWeb:
 
         res = self.register(fullname='')
         assert self.html_title("Register") in res.data, res
-        assert "Full name must be between 3 and 35 characters long"\
-                in res.data, res
+        msg = "Full name must be between 3 and 35 characters long"
+        assert msg in res.data, res
 
         res = self.register(username='')
         assert self.html_title("Register") in res.data, res
-        assert "User name must be between 3 and 35 characters long"\
-                in res.data, res
+        msg = "User name must be between 3 and 35 characters long"
+        assert msg in res.data, res
 
         res = self.register(email='')
         assert self.html_title("Register") in res.data, res
         assert self.html_title("Register") in res.data, res
-        assert "Email must be between 3 and 35 characters long"\
-                in res.data, res
+        msg = "Email must be between 3 and 35 characters long"
+        assert msg in res.data, res
 
         res = self.register(email='invalidemailaddress')
         assert self.html_title("Register") in res.data, res
@@ -278,31 +276,31 @@ class TestWeb:
         assert "Sign in" in res.data, res.data
 
         res = self.signin(email='')
-        assert "Please correct the errors" in  res.data, res
+        assert "Please correct the errors" in res.data, res
         assert "The e-mail is required" in res.data, res
 
         res = self.signin(password='')
-        assert "Please correct the errors" in  res.data, res
+        assert "Please correct the errors" in res.data, res
         assert "You must provide a password" in res.data, res
 
         res = self.signin(email='', password='')
-        assert "Please correct the errors" in  res.data, res
+        assert "Please correct the errors" in res.data, res
         assert "The e-mail is required" in res.data, res
         assert "You must provide a password" in res.data, res
 
         # Non-existant user
         msg = "Ooops, we didn't find you in the system"
         res = self.signin(email='wrongemail')
-        assert msg in  res.data, res.data
+        assert msg in res.data, res.data
 
         res = self.signin(email='wrongemail', password='wrongpassword')
-        assert msg in  res.data, res
+        assert msg in res.data, res
 
         # Real user but wrong password or username
         msg = "Ooops, Incorrect email/password"
         res = self.signin(password='wrongpassword')
         print res.data
-        assert msg in  res.data, res
+        assert msg in res.data, res
 
         res = self.signin()
         assert self.html_title() in res.data, res
@@ -338,14 +336,14 @@ class TestWeb:
 
         # Update profile with new data
         res = self.update_profile(method="GET")
-        assert self.html_title("Update your profile: John Doe")\
-                in res.data, res
-        assert 'input id="id" name="id" type="hidden" value="1"'\
-                in res.data, res
+        msg = "Update your profile: John Doe"
+        assert self.html_title(msg) in res.data, res
+        msg = 'input id="id" name="id" type="hidden" value="1"'
+        assert msg in res.data, res
         assert "John Doe" in res.data, res
         assert "Save the changes" in res.data, res
-        assert '<a href="/account/profile/settings" class="btn">Cancel</a>' in \
-                res.data, res
+        msg = '<a href="/account/profile/settings" class="btn">Cancel</a>'
+        assert  msg in res.data, res
 
         res = self.update_profile(fullname="John Doe 2",
                                   email_addr="johndoe2@example.com",
@@ -469,7 +467,7 @@ class TestWeb:
         Fixtures.create()
 
         f = model.Featured()
-        f.app_id=1
+        f.app_id = 1
         db.session.add(f)
         db.session.commit()
 
@@ -486,8 +484,8 @@ class TestWeb:
         res = self.new_application()
 
         res = self.app.get('/app/sampleapp', follow_redirects=True)
-        assert self.html_title("Application: Sample App")\
-                in res.data, res
+        msg = "Application: Sample App"
+        assert self.html_title(msg) in res.data, res
         err_msg = "There should be a contribute button"
         assert "Start Contributing Now" in res.data, err_msg
 
@@ -552,10 +550,10 @@ class TestWeb:
 
         # Get the Update App web page
         res = self.update_application(method="GET")
-        assert self.html_title("Application: Sample App &middot; Update")\
-                in res.data, res
-        assert 'input id="id" name="id" type="hidden" value="1"'\
-                in res.data, res
+        msg = "Application: Sample App &middot; Update"
+        assert self.html_title(msg) in res.data, res
+        msg = 'input id="id" name="id" type="hidden" value="1"'
+        assert msg in res.data, res
         assert "Save the changes" in res.data, res
 
         # Update the application
@@ -568,18 +566,18 @@ class TestWeb:
                                       new_hidden=True)
         app = db.session.query(model.App).first()
         assert "Application updated!" in res.data, res
-        assert app.name == "New Sample App", \
-                "App name not updated %s" % app.name
-        assert app.short_name == "newshortname", \
-                "App short name not updated %s" % app.short_name
-        assert app.description == "New description", \
-                "App description not updated %s" % app.description
-        assert app.info['thumbnail'] == "New Icon Link", \
-                "App thumbnail not updated %s" % app.icon['thumbnail']
-        assert app.long_description == "New long desc", \
-                "App long description not updated %s" % app.long_description
-        assert app.hidden == True, \
-                "App hidden not updated %s" % app.hidden
+        err_msg = "App name not updated %s" % app.name
+        assert app.name == "New Sample App", err_msg
+        err_msg = "App short name not updated %s" % app.short_name
+        assert app.short_name == "newshortname", err_msg
+        err_msg = "App description not updated %s" % app.description
+        assert app.description == "New description", err_msg
+        err_msg = "App thumbnail not updated %s" % app.info['thumbnail']
+        assert app.info['thumbnail'] == "New Icon Link", err_msg
+        err_msg = "App long description not updated %s" % app.long_description
+        assert app.long_description == "New long desc", err_msg
+        err_msg = "App hidden not updated %s" % app.hidden
+        assert app.hidden == 1, err_msg
 
     def test_13_hidden_applications(self):
         """Test WEB hidden application works"""
@@ -613,8 +611,8 @@ class TestWeb:
         self.register()
         self.new_application()
         res = self.delete_application(method="GET")
-        assert self.html_title("Application: Sample App &middot; Delete")\
-                in res.data, res
+        msg = "Application: Sample App &middot; Delete"
+        assert self.html_title(msg) in res.data, res
         assert "No, do not delete it" in res.data, res
 
         res = self.delete_application()
@@ -667,8 +665,8 @@ class TestWeb:
         res = self.app.get('app/%s/tasks' % (app.short_name),
                            follow_redirects=True)
         assert "Sample App" in res.data, res.data
-        assert 'Task <span class="label label-success">#1</span>'\
-                in res.data, res.data
+        msg = 'Task <span class="label label-success">#1</span>'
+        assert msg in res.data, res.data
         assert '10 of 10' in res.data, res.data
         assert 'Download results' in res.data, res.data
 
@@ -692,7 +690,7 @@ class TestWeb:
 
         app = db.session.query(model.App).first()
         res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
-                            follow_redirects=True)
+                           follow_redirects=True)
         data = json.loads(res.data)
         assert len(data) == 10, data
         for tr in data:
@@ -714,8 +712,8 @@ class TestWeb:
         res = self.app.get('app/%s/tasks' % (app.short_name),
                            follow_redirects=True)
         assert "Sample App" in res.data, res.data
-        assert 'Task <span class="label label-info">#1</span>'\
-                in res.data, res.data
+        msg = 'Task <span class="label label-info">#1</span>'
+        assert msg in res.data, res.data
         assert '0 of 10' in res.data, res.data
 
     def test_19_app_index_categories(self):
@@ -769,13 +767,13 @@ class TestWeb:
         self.delTaskRuns()
         app = db.session.query(model.App).first()
         task = db.session.query(model.Task)\
-                .filter(model.App.id == app.id)\
-                .first()
+                 .filter(model.App.id == app.id)\
+                 .first()
         res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
-                follow_redirects=True)
+                           follow_redirects=True)
         assert 'TaskPresenter' in res.data, res.data
-        assert "?next=%2Fapp%2F" + app.short_name +"%2Ftask%2F" + str(task.id),\
-                res.data
+        msg = "?next=%2Fapp%2F" + app.short_name + "%2Ftask%2F" + str(task.id)
+        assert msg in res.data, res.data
 
     def test_22_get_specific_completed_task_anonymous(self):
         """Test WEB get specific completed task_id
@@ -785,14 +783,12 @@ class TestWeb:
         Fixtures.create()
         app = db.session.query(model.App).first()
         task = db.session.query(model.Task)\
-                .filter(model.App.id == app.id)\
-                .first()
+                 .filter(model.App.id == app.id)\
+                 .first()
 
         for i in range(10):
-            task_run = model.TaskRun(app_id=app.id,
-                    task_id=task.id,
-                    user_ip="127.0.0.1",
-                    info={'answer': 1})
+            task_run = model.TaskRun(app_id=app.id, task_id=task.id,
+                                     user_ip="127.0.0.1", info={'answer': 1})
             db.session.add(task_run)
             db.session.commit()
 
@@ -803,9 +799,9 @@ class TestWeb:
         db.session.commit()
 
         res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
-                follow_redirects=True)
-        assert 'You have already participated in this task'\
-                in res.data, res.data
+                           follow_redirects=True)
+        msg = 'You have already participated in this task'
+        assert msg in res.data, res.data
         assert 'Try with another one' in res.data, res.data
 
     def test_23_get_specific_ongoing_task_user(self):
@@ -817,10 +813,10 @@ class TestWeb:
         self.signin()
         app = db.session.query(model.App).first()
         task = db.session.query(model.Task)\
-                .filter(model.App.id == app.id)\
-                .first()
+                 .filter(model.App.id == app.id)\
+                 .first()
         res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
-                follow_redirects=True)
+                           follow_redirects=True)
         assert 'TaskPresenter' in res.data, res.data
         self.signout()
 
@@ -833,17 +829,15 @@ class TestWeb:
         self.register()
 
         user = db.session.query(model.User)\
-                .filter(model.User.name == 'johndoe')\
-                .first()
+                 .filter(model.User.name == 'johndoe')\
+                 .first()
         app = db.session.query(model.App).first()
         task = db.session.query(model.Task)\
-                .filter(model.App.id == app.id)\
-                .first()
+                 .filter(model.App.id == app.id)\
+                 .first()
         for i in range(10):
-            task_run = model.TaskRun(app_id=app.id,
-                    task_id=task.id,
-                    user_id=user.id,
-                    info={'answer': 1})
+            task_run = model.TaskRun(app_id=app.id, task_id=task.id, user_id=user.id,
+                                     info={'answer': 1})
             db.session.add(task_run)
             db.session.commit()
             #self.app.get('api/app/%s/newtask' % app.id)
@@ -855,9 +849,9 @@ class TestWeb:
         db.session.commit()
 
         res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
-                follow_redirects=True)
-        assert 'You have already participated in this task'\
-                in res.data, res.data
+                           follow_redirects=True)
+        msg = 'You have already participated in this task'
+        assert msg in res.data, res.data
         assert 'Try with another one' in res.data, res.data
         self.signout()
 
@@ -870,23 +864,23 @@ class TestWeb:
         app1_short_name = app1.short_name
 
         db.session.query(model.Task)\
-                .filter(model.Task.app_id == 1)\
-                .first()
+                  .filter(model.Task.app_id == 1)\
+                  .first()
 
         self.register()
         self.new_application()
         app2 = db.session.query(model.App).get(2)
         self.new_task(app2.id)
         task2 = db.session.query(model.Task)\
-                .filter(model.Task.app_id == 2)\
-                .first()
+                  .filter(model.Task.app_id == 2)\
+                  .first()
         task2_id = task2.id
         self.signout()
 
         res = self.app.get('/app/%s/task/%s' % (app1_short_name, task2_id))
         assert "Error" in res.data, res.data
-        assert "This task does not belong to %s" % app1_short_name\
-                in res.data, res.data
+        msg = "This task does not belong to %s" % app1_short_name
+        assert msg in res.data, res.data
 
     def test_26_tutorial_signed_user(self):
         """Test WEB tutorials work as signed in user"""
@@ -897,8 +891,8 @@ class TestWeb:
         self.register()
         # First time accessing the app should redirect me to the tutorial
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
-        assert "some help" in res.data,\
-                "There should be some tutorial for the application"
+        err_msg = "There should be some tutorial for the application"
+        assert "some help" in res.data, err_msg
         # Second time should give me a task, and not the tutorial
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
         assert "some help" not in res.data
@@ -913,8 +907,8 @@ class TestWeb:
         # First time accessing the app should redirect me to the tutorial
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
         print res.data
-        assert "some help" in res.data,\
-                "There should be some tutorial for the application"
+        err_msg = "There should be some tutorial for the application"
+        assert "some help" in res.data, err_msg
         # Second time should give me a task, and not the tutorial
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
         assert "some help" not in res.data
@@ -926,8 +920,8 @@ class TestWeb:
         self.register()
         # First time accessing the app should redirect me to the tutorial
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
-        assert "some help" not in res.data,\
-                "There should not be a tutorial for the application"
+        err_msg = "There should not be a tutorial for the application"
+        assert "some help" not in res.data, err_msg
         # Second time should give me a task, and not the tutorial
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
         assert "some help" not in res.data
@@ -939,8 +933,8 @@ class TestWeb:
         self.register()
         # First time accessing the app should redirect me to the tutorial
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
-        assert "some help" not in res.data,\
-                "There should not be a tutorial for the application"
+        err_msg = "There should not be a tutorial for the application"
+        assert "some help" not in res.data, err_msg
         # Second time should give me a task, and not the tutorial
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
         assert "some help" not in res.data
@@ -953,8 +947,9 @@ class TestWeb:
         res = self.app.get('/app/sampleapp/settings', follow_redirects=True)
         assert "Sample App" in res.data, ("Application should be shown to "
                                           "the owner")
-        assert '<strong><i class="icon-cog"></i> ID</strong>: 1' in res.data,\
-                "Application ID should be shown to the owner"
+        msg = '<strong><i class="icon-cog"></i> ID</strong>: 1'
+        err_msg = "Application ID should be shown to the owner"
+        assert msg in res.data, err_msg
 
     def test_30_app_id_anonymous_user(self):
         """Test WEB application page does not show the ID to anonymous users"""
@@ -990,18 +985,17 @@ class TestWeb:
 
     def test_32_oauth_password(self):
         """Test WEB user sign in without password works"""
-        user = model.User(
-                email_addr="johndoe@johndoe.com",
-                name="johndoe",
-                passwd_hash=None,
-                fullname="John Doe",
-                api_key="api-key")
+        user = model.User(email_addr="johndoe@johndoe.com",
+                          name="johndoe",
+                          passwd_hash=None,
+                          fullname="John Doe",
+                          api_key="api-key")
         db.session.add(user)
         db.session.commit()
         res = self.signin()
         assert "Ooops, we didn't find you in the system" in res.data, res.data
 
-    @patch('pybossa.view.applications.requests.get')
+    @patch('pybossa.view.importer.requests.get')
     def test_33_bulk_csv_import_unauthorized(self, Mock):
         """Test WEB bulk import unauthorized works"""
         unauthorized_request = FakeRequest('Unauthorized', 403,
@@ -1010,15 +1004,15 @@ class TestWeb:
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        res = self.app.post(('/app/%s/import?template=csv' % (app.short_name)), data={
-            'csv_url': 'http://myfakecsvurl.com',
-            'formtype': 'csv',
-            }, follow_redirects=True)
+        url = '/app/%s/import?template=csv' % (app.short_name)
+        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
+                                       'formtype': 'csv'},
+                            follow_redirects=True)
         print res.data
         msg = "Oops! It looks like you don't have permission to access that file"
         assert msg in res.data
 
-    @patch('pybossa.view.applications.requests.get')
+    @patch('pybossa.view.importer.requests.get')
     def test_34_bulk_csv_import_non_html(self, Mock):
         """Test WEB bulk import non html works"""
         html_request = FakeRequest('Not a CSV', 200,
@@ -1027,12 +1021,12 @@ class TestWeb:
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        res = self.app.post(('/app/%s/import?template=csv' % (app.short_name)), data={
-            'csv_url': 'http://myfakecsvurl.com',
-            }, follow_redirects=True)
+        url = '/app/%s/import?template=csv' % (app.short_name)
+        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com'},
+                            follow_redirects=True)
         assert "Oops! That file doesn't look like the right file." in res.data
 
-    @patch('pybossa.view.applications.requests.get')
+    @patch('pybossa.view.importer.requests.get')
     def test_35_bulk_csv_import_non_html(self, Mock):
         """Test WEB bulk import non html works"""
         empty_file = FakeRequest('CSV,with,no,content\n', 200,
@@ -1041,14 +1035,13 @@ class TestWeb:
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        res = self.app.post(('/app/%s/import?template=csv' % (app.short_name)), data={
-            'csv_url': 'http://myfakecsvurl.com',
-            'formtype': 'csv',
-            }, follow_redirects=True)
-        #print res.data
+        url = '/app/%s/import?template=csv' % (app.short_name)
+        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
+                                       'formtype': 'csv'},
+                            follow_redirects=True)
         assert "Oops! It looks like the file is empty." in res.data
 
-    @patch('pybossa.view.applications.requests.get')
+    @patch('pybossa.view.importer.requests.get')
     def test_36_bulk_csv_import_dup_header(self, Mock):
         """Test WEB bulk import duplicate header works"""
         empty_file = FakeRequest('Foo,Bar,Foo\n1,2,3', 200,
@@ -1057,14 +1050,14 @@ class TestWeb:
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        res = self.app.post(('/app/%s/import?template=csv' % (app.short_name)), data={
-            'csv_url': 'http://myfakecsvurl.com',
-            'formtype': 'csv',
-            }, follow_redirects=True)
-        assert "The file you uploaded has two headers with the same" \
-                " name" in res.data
+        url = '/app/%s/import?template=csv' % (app.short_name)
+        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
+                                       'formtype': 'csv'},
+                            follow_redirects=True)
+        msg = "The file you uploaded has two headers with the same name"
+        assert msg in res.data
 
-    @patch('pybossa.view.applications.requests.get')
+    @patch('pybossa.view.importer.requests.get')
     def test_37_bulk_csv_import_no_column_names(self, Mock):
         """Test WEB bulk import no column names works"""
         empty_file = FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
@@ -1073,15 +1066,15 @@ class TestWeb:
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        res = self.app.post(('/app/%s/import?template=csv' % (app.short_name)), data={
-            'csv_url': 'http://myfakecsvurl.com',
-            'formtype': 'csv',
-            }, follow_redirects=True)
+        url = '/app/%s/import?template=csv' % (app.short_name)
+        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
+                                       'formtype': 'csv'},
+                            follow_redirects=True)
         task = db.session.query(model.Task).first()
         assert {u'Bar': u'2', u'Foo': u'1', u'Baz': u'3'} == task.info
         assert "Tasks imported successfully!" in res.data
 
-    @patch('pybossa.view.applications.requests.get')
+    @patch('pybossa.view.importer.requests.get')
     def test_38_bulk_csv_import_with_column_name(self, Mock):
         """Test WEB bulk import with column name works"""
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
@@ -1090,10 +1083,10 @@ class TestWeb:
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        res = self.app.post(('/app/%s/import?template=csv' % (app.short_name)), data={
-            'csv_url': 'http://myfakecsvurl.com',
-            'formtype': 'csv',
-            }, follow_redirects=True)
+        url = '/app/%s/import?template=csv' % (app.short_name)
+        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
+                                       'formtype': 'csv'},
+                            follow_redirects=True)
         task = db.session.query(model.Task).first()
         assert {u'Bar': u'2', u'Foo': u'1'} == task.info
         assert task.priority_0 == 3
@@ -1102,120 +1095,120 @@ class TestWeb:
     def test_39_google_oauth_creation(self):
         """Test WEB Google OAuth creation of user works"""
         fake_response = {
-                u'access_token': u'access_token',
-                u'token_type': u'Bearer',
-                u'expires_in': 3600,
-                u'id_token': u'token'}
+            u'access_token': u'access_token',
+            u'token_type': u'Bearer',
+            u'expires_in': 3600,
+            u'id_token': u'token'}
 
         fake_user = {
-        u'family_name': u'Doe', u'name': u'John Doe',
-        u'picture': u'https://goo.gl/img.jpg',
-        u'locale': u'en',
-        u'gender': u'male',
-        u'email': u'john@gmail.com',
-        u'birthday': u'0000-01-15',
-        u'link': u'https://plus.google.com/id',
-        u'given_name': u'John',
-        u'id': u'111111111111111111111',
-        u'verified_email': True}
+            u'family_name': u'Doe', u'name': u'John Doe',
+            u'picture': u'https://goo.gl/img.jpg',
+            u'locale': u'en',
+            u'gender': u'male',
+            u'email': u'john@gmail.com',
+            u'birthday': u'0000-01-15',
+            u'link': u'https://plus.google.com/id',
+            u'given_name': u'John',
+            u'id': u'111111111111111111111',
+            u'verified_email': True}
 
         from pybossa.view import google
         response_user = google.manage_user(fake_response['access_token'],
-                fake_user, None)
+                                           fake_user, None)
 
-        user = db.session.query(model.User)\
-                .get(1)
+        user = db.session.query(model.User).get(1)
 
         assert user.email_addr == response_user.email_addr, response_user
 
     def test_40_google_oauth_creation(self):
         """Test WEB Google OAuth detects same user name/email works"""
         fake_response = {
-                u'access_token': u'access_token',
-                u'token_type': u'Bearer',
-                u'expires_in': 3600,
-                u'id_token': u'token'}
+            u'access_token': u'access_token',
+            u'token_type': u'Bearer',
+            u'expires_in': 3600,
+            u'id_token': u'token'}
 
         fake_user = {
-        u'family_name': u'Doe', u'name': u'John Doe',
-        u'picture': u'https://goo.gl/img.jpg',
-        u'locale': u'en',
-        u'gender': u'male',
-        u'email': u'john@gmail.com',
-        u'birthday': u'0000-01-15',
-        u'link': u'https://plus.google.com/id',
-        u'given_name': u'John',
-        u'id': u'111111111111111111111',
-        u'verified_email': True}
+            u'family_name': u'Doe', u'name': u'John Doe',
+            u'picture': u'https://goo.gl/img.jpg',
+            u'locale': u'en',
+            u'gender': u'male',
+            u'email': u'john@gmail.com',
+            u'birthday': u'0000-01-15',
+            u'link': u'https://plus.google.com/id',
+            u'given_name': u'John',
+            u'id': u'111111111111111111111',
+            u'verified_email': True}
 
         self.register()
         self.signout()
 
         from pybossa.view import google
         response_user = google.manage_user(fake_response['access_token'],
-                fake_user, None)
+                                           fake_user, None)
 
         assert response_user is None, response_user
 
     def test_39_facebook_oauth_creation(self):
         """Test WEB Facebook OAuth creation of user works"""
         fake_response = {
-                u'access_token': u'access_token',
-                u'token_type': u'Bearer',
-                u'expires_in': 3600,
-                u'id_token': u'token'}
+            u'access_token': u'access_token',
+            u'token_type': u'Bearer',
+            u'expires_in': 3600,
+            u'id_token': u'token'}
 
-        fake_user = {u'username': u'teleyinex',
-                     u'first_name': u'John',
-                     u'last_name': u'Doe',
-                     u'verified': True,
-                     u'name': u'John Doe',
-                     u'locale': u'en_US',
-                     u'gender': u'male',
-                     u'email': u'johndoe@example.com',
-                     u'quotes': u'"quote',
-                     u'link': u'http://www.facebook.com/johndoe',
-                     u'timezone': 1,
-                     u'updated_time': u'2011-11-11T12:33:52+0000',
-                     u'id': u'11111'}
+        fake_user = {
+            u'username': u'teleyinex',
+            u'first_name': u'John',
+            u'last_name': u'Doe',
+            u'verified': True,
+            u'name': u'John Doe',
+            u'locale': u'en_US',
+            u'gender': u'male',
+            u'email': u'johndoe@example.com',
+            u'quotes': u'"quote',
+            u'link': u'http://www.facebook.com/johndoe',
+            u'timezone': 1,
+            u'updated_time': u'2011-11-11T12:33:52+0000',
+            u'id': u'11111'}
 
         from pybossa.view import facebook
         response_user = facebook.manage_user(fake_response['access_token'],
-                fake_user, None)
+                                             fake_user, None)
 
-        user = db.session.query(model.User)\
-                .get(1)
+        user = db.session.query(model.User).get(1)
 
         assert user.email_addr == response_user.email_addr, response_user
 
     def test_40_facebook_oauth_creation(self):
         """Test WEB Facebook OAuth detects same user name/email works"""
         fake_response = {
-                u'access_token': u'access_token',
-                u'token_type': u'Bearer',
-                u'expires_in': 3600,
-                u'id_token': u'token'}
+            u'access_token': u'access_token',
+            u'token_type': u'Bearer',
+            u'expires_in': 3600,
+            u'id_token': u'token'}
 
-        fake_user = {u'username': u'teleyinex',
-                     u'first_name': u'John',
-                     u'last_name': u'Doe',
-                     u'verified': True,
-                     u'name': u'John Doe',
-                     u'locale': u'en_US',
-                     u'gender': u'male',
-                     u'email': u'johndoe@example.com',
-                     u'quotes': u'"quote',
-                     u'link': u'http://www.facebook.com/johndoe',
-                     u'timezone': 1,
-                     u'updated_time': u'2011-11-11T12:33:52+0000',
-                     u'id': u'11111'}
+        fake_user = {
+            u'username': u'teleyinex',
+            u'first_name': u'John',
+            u'last_name': u'Doe',
+            u'verified': True,
+            u'name': u'John Doe',
+            u'locale': u'en_US',
+            u'gender': u'male',
+            u'email': u'johndoe@example.com',
+            u'quotes': u'"quote',
+            u'link': u'http://www.facebook.com/johndoe',
+            u'timezone': 1,
+            u'updated_time': u'2011-11-11T12:33:52+0000',
+            u'id': u'11111'}
 
         self.register()
         self.signout()
 
         from pybossa.view import google
         response_user = google.manage_user(fake_response['access_token'],
-                fake_user, None)
+                                           fake_user, None)
 
         assert response_user is None, response_user
 
@@ -1233,10 +1226,9 @@ class TestWeb:
 
         from pybossa.view import twitter
         response_user = twitter.manage_user(fake_response['access_token'],
-                fake_user, None)
+                                            fake_user, None)
 
-        user = db.session.query(model.User)\
-                .get(1)
+        user = db.session.query(model.User).get(1)
 
         assert user.email_addr == response_user.email_addr, response_user
 
@@ -1257,7 +1249,7 @@ class TestWeb:
 
         from pybossa.view import twitter
         response_user = twitter.manage_user(fake_response['access_token'],
-                fake_user, None)
+                                            fake_user, None)
 
         assert response_user is None, response_user
 
@@ -1265,21 +1257,22 @@ class TestWeb:
         """Test password changing"""
         password = "mehpassword"
         self.register(password=password)
-        res = self.app.post('/account/profile/password', data={
-            'current_password': password,
-            'new_password': "p4ssw0rd",
-            'confirm': "p4ssw0rd",
-            }, follow_redirects=True)
+        res = self.app.post('/account/profile/password',
+                            data={'current_password': password,
+                                  'new_password': "p4ssw0rd",
+                                  'confirm': "p4ssw0rd"},
+                            follow_redirects=True)
         assert "Yay, you changed your password succesfully!" in res.data
 
         password = "mehpassword"
         self.register(password=password)
-        res = self.app.post('/account/profile/password', data={
-            'current_password': "wrongpassword",
-            'new_password': "p4ssw0rd",
-            'confirm': "p4ssw0rd",
-            }, follow_redirects=True)
-        assert "Your current password doesn't match the one in our records" in res.data
+        res = self.app.post('/account/profile/password',
+                            data={'current_password': "wrongpassword",
+                                  'new_password': "p4ssw0rd",
+                                  'confirm': "p4ssw0rd"},
+                            follow_redirects=True)
+        msg = "Your current password doesn't match the one in our records"
+        assert msg in res.data
 
     def test_42_password_link(self):
         """Test visibility of password change link"""
@@ -1313,6 +1306,7 @@ class TestWeb:
         key = signer.dumps(userdict, salt='password-reset')
         returns = [BadSignature('Fake Error'), BadSignature('Fake Error'), userdict,
                    fakeuserdict, userdict]
+
         def side_effects(*args, **kwargs):
             result = returns.pop(0)
             if isinstance(result, BadSignature):
@@ -1332,20 +1326,20 @@ class TestWeb:
         assert 200 == res.status_code
         res = self.app.get('/account/reset-password?key=%s' % (key), follow_redirects=True)
         assert 403 == res.status_code
-        res = self.app.post('/account/reset-password?key=%s' % (key), data={
-                'new_password': 'p4ssw0rD',
-                'confirm': 'p4ssw0rD'
-                }, follow_redirects=True)
+        res = self.app.post('/account/reset-password?key=%s' % (key),
+                            data={'new_password': 'p4ssw0rD',
+                                  'confirm': 'p4ssw0rD'},
+                            follow_redirects=True)
         assert "You reset your password successfully!" in res.data
 
     def test_45_password_reset_link(self):
         """Test WEB password reset email form"""
-        res = self.app.post('/account/forgot-password', data={
-                'email_addr': 'johndoe@example.com'
-                }, follow_redirects=True)
+        res = self.app.post('/account/forgot-password',
+                            data={'email_addr': 'johndoe@example.com'},
+                            follow_redirects=True)
         assert ("We don't have this email in our records. You may have"
-               " signed up with a different email or used Twitter, "
-               "Facebook, or Google to sign-in") in res.data
+                " signed up with a different email or used Twitter, "
+                "Facebook, or Google to sign-in") in res.data
 
         self.register()
         self.register(username='janedoe')
@@ -1357,12 +1351,12 @@ class TestWeb:
         # supress mail sending doesn't seem to work
         mail.suppress = True
         with mail.record_messages() as outbox:
-            self.app.post('/account/forgot-password', data={
-                'email_addr': 'johndoe@example.com'
-                }, follow_redirects=True)
-            self.app.post('/account/forgot-password', data={
-                'email_addr': 'janedoe@example.com'
-                }, follow_redirects=True)
+            self.app.post('/account/forgot-password',
+                          data={'email_addr': 'johndoe@example.com'},
+                          follow_redirects=True)
+            self.app.post('/account/forgot-password',
+                          data={'email_addr': 'janedoe@example.com'},
+                          follow_redirects=True)
             assert 'Click here to recover your account' in outbox[0].body
             assert 'your Twitter account to ' in outbox[1].body
 
@@ -1396,8 +1390,9 @@ class TestWeb:
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        assert not app.info.get('task_presenter'), \
-                "Task Presenter should be empty"
+        err_msg = "Task Presenter should be empty"
+        assert not app.info.get('task_presenter'), err_msg
+
         res = self.app.get('/app/sampleapp/taskpresentereditor?template=basic',
                            follow_redirects=True)
         assert "var editor" in res.data, "CodeMirror Editor not found"
@@ -1408,16 +1403,17 @@ class TestWeb:
                             follow_redirects=True)
         assert "Sample App" in res.data, "Does not return to app details"
         app = db.session.query(model.App).first()
-        assert app.info['task_presenter'] == 'Some HTML code!', \
-                "Task Presenter failed to update"
+        err_msg = "Task Presenter failed to update"
+        assert app.info['task_presenter'] == 'Some HTML code!', err_msg
 
     def test_48_update_app_info(self):
         """Test WEB app update/edit works keeping previous info values"""
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        assert not app.info.get('task_presenter'), \
-                "Task Presenter should be empty"
+        err_msg = "Task Presenter should be empty"
+        assert not app.info.get('task_presenter'), err_msg
+
         res = self.app.post('/app/sampleapp/taskpresentereditor',
                             data={'editor': 'Some HTML code!'},
                             follow_redirects=True)
@@ -1820,7 +1816,7 @@ class TestWeb:
         res = self.app.get(url, follow_redirects=True)
         assert Fixtures.fullname in res.data, err_msg
 
-    @patch('pybossa.view.applications.requests.get')
+    @patch('pybossa.view.importer.requests.get')
     def test_71_bulk_epicollect_import_unauthorized(self, Mock):
         """Test WEB bulk import unauthorized works"""
         unauthorized_request = FakeRequest('Unauthorized', 403,
@@ -1829,17 +1825,17 @@ class TestWeb:
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        res = self.app.post(('/app/%s/import?template=csv' % (app.short_name)), data={
-            'epicollect_project': 'fakeproject',
-            'epicollect_form': 'fakeform',
-            'formtype': 'json',
-            }, follow_redirects=True)
+        url = '/app/%s/import?template=csv' % (app.short_name)
+        res = self.app.post(url, data={'epicollect_project': 'fakeproject',
+                                       'epicollect_form': 'fakeform',
+                                       'formtype': 'json'},
+                            follow_redirects=True)
         print res.data
         msg = "Oops! It looks like you don't have permission to access the " \
               "EpiCollect Plus project"
         assert msg in res.data
 
-    @patch('pybossa.view.applications.requests.get')
+    @patch('pybossa.view.importer.requests.get')
     def test_72_bulk_epicollect_import_non_html(self, Mock):
         """Test WEB bulk import non html works"""
         html_request = FakeRequest('Not an application/json', 200,
@@ -1848,15 +1844,16 @@ class TestWeb:
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        res = self.app.post(('/app/%s/import?template=csv' % (app.short_name)), data={
-            'epicollect_project': 'fakeproject',
-            'epicollect_form': 'fakeform',
-            'formtype': 'json',
-            }, follow_redirects=True)
+        url = '/app/%s/import?template=csv' % (app.short_name)
+        res = self.app.post(url, data={'epicollect_project': 'fakeproject',
+                                       'epicollect_form': 'fakeform',
+                                       'formtype': 'json'},
+                            follow_redirects=True)
         print res.data
-        assert "Oops! That project and form do not look like the right one." in res.data
+        msg = "Oops! That project and form do not look like the right one."
+        assert msg in res.data
 
-    @patch('pybossa.view.applications.requests.get')
+    @patch('pybossa.view.importer.requests.get')
     def test_73_bulk_epicollect_import_json(self, Mock):
         """Test WEB bulk import json works"""
         data = [dict(DeviceID=23)]
