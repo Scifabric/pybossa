@@ -1,14 +1,8 @@
 import json
-import urllib
-import flask
 import random
-
-#from flaskext.login import login_user, logout_user, current_user
 
 from base import web, model, Fixtures, db
 from pybossa import sched
-
-from nose.tools import assert_equal
 
 
 class TestSCHED:
@@ -25,14 +19,14 @@ class TestSCHED:
     def teardown_class(cls):
         model.rebuild_db()
 
-    def isTask(self, task_id, tasks):
+    def is_task(self, task_id, tasks):
         """Returns True if the task_id is in tasks list"""
         for t in tasks:
-            if t.id==task_id:
+            if t.id == task_id:
                 return True
         return False
 
-    def isUnique(self,id,items):
+    def is_unique(self, id, items):
         """Returns True if the id is not Unique"""
         copies = 0
         for i in items:
@@ -42,12 +36,12 @@ class TestSCHED:
             else:
                 if i.id == id:
                     copies = copies + 1
-        if copies>=2:
+        if copies >= 2:
             return False
         else:
             return True
 
-    def delTaskRuns(self, app_id=1):
+    def del_task_runs(self, app_id=1):
         """Deletes all TaskRuns for a given app_id"""
         db.session.query(model.TaskRun).filter_by(app_id=1).delete()
         db.session.commit()
@@ -60,55 +54,52 @@ class TestSCHED:
         if email is None:
             email = username + '@example.com'
         if method == "POST":
-            return self.app.post('/account/register', data = {
-                'fullname': fullname,
-                'username': username,
-                'email_addr': email,
-                'password': password,
-                'confirm': password2,
-                }, follow_redirects = True)
+            return self.app.post('/account/register',
+                                 data={'fullname': fullname,
+                                       'username': username,
+                                       'email_addr': email,
+                                       'password': password,
+                                       'confirm': password2},
+                                 follow_redirects=True)
         else:
-            return self.app.get('/account/register', follow_redirects = True)
+            return self.app.get('/account/register', follow_redirects=True)
 
-    def signin(self, method="POST", username="johndoe", password="p4ssw0rd", next=None):
+    def signin(self, method="POST", username="johndoe",
+               password="p4ssw0rd", next=None):
         """Helper function to sign in current user"""
         url = '/account/signin'
-        if next != None:
+        if next is not  None:
             url = url + '?next=' + next
         if method == "POST":
-            return self.app.post(url, data =  {
-                    'username': username,
-                    'password': password,
-                    }, follow_redirects = True)
+            return self.app.post(url, data={'username': username,
+                                            'password': password},
+                                 follow_redirects=True)
         else:
-            return self.app.get(url, follow_redirects = True)
+            return self.app.get(url, follow_redirects=True)
 
     def signout(self):
         """Helper function to sign out current user"""
-        return self.app.get('/account/signout', follow_redirects = True)
-
+        return self.app.get('/account/signout', follow_redirects=True)
 
     def test_anonymous_01_newtask(self):
         """ Test SCHED newtask returns a Task for the Anonymous User"""
         # Del previous TaskRuns
-        self.delTaskRuns()
+        self.del_task_runs()
 
         res = self.app.get('api/app/1/newtask')
         data = json.loads(res.data)
         assert data['info'], data
 
-
     def test_anonymous_02_gets_different_tasks(self):
         """ Test SCHED newtask returns N different Tasks for the Anonymous User"""
         # Del previous TaskRuns
-        self.delTaskRuns()
-
+        self.del_task_runs()
 
         assigned_tasks = []
         # Get a Task until scheduler returns None
         res = self.app.get('api/app/1/newtask')
         data = json.loads(res.data)
-        while (data.get('info')!=None):
+        while data.get('info') is not None:
             # Check that we have received a Task
             assert data.get('info'),  data
 
@@ -116,7 +107,7 @@ class TestSCHED:
             assigned_tasks.append(data)
 
             # Submit an Answer for the assigned task
-            tr = model.TaskRun(app_id=data['app_id'], task_id=data['id'], 
+            tr = model.TaskRun(app_id=data['app_id'], task_id=data['id'],
                                user_ip="127.0.0.1",
                                info={'answer': 'Yes'})
             db.session.add(tr)
@@ -129,16 +120,18 @@ class TestSCHED:
         assert len(assigned_tasks) == len(tasks), len(assigned_tasks)
         # Check if all the assigned Task.id are equal to the available ones
         tasks = db.session.query(model.Task).filter_by(app_id=1).all()
+        err_msg = "Assigned Task not found in DB Tasks"
         for at in assigned_tasks:
-            assert self.isTask(at['id'],tasks), "Assigned Task not found in DB Tasks"
+            assert self.is_task(at['id'], tasks), err_msg
         # Check that there are no duplicated tasks
+        err_msg = "One Assigned Task is duplicated"
         for at in assigned_tasks:
-            assert self.isUnique(at['id'],assigned_tasks), "One Assigned Task is duplicated"
+            assert self.is_unique(at['id'], assigned_tasks), err_msg
 
     def test_anonymous_03_respects_limit_tasks(self):
         """ Test SCHED newtask respects the limit of 30 TaskRuns per Task"""
         # Del previous TaskRuns
-        self.delTaskRuns()
+        self.del_task_runs()
 
         assigned_tasks = []
         # Get Task until scheduler returns None
@@ -146,7 +139,7 @@ class TestSCHED:
             res = self.app.get('api/app/1/newtask')
             data = json.loads(res.data)
 
-            while (data.get('info')!=None):
+            while data.get('info') is not None:
                 # Check that we received a Task
                 assert data.get('info'),  data
 
@@ -154,7 +147,7 @@ class TestSCHED:
                 assigned_tasks.append(data)
 
                 # Submit an Answer for the assigned task
-                tr = model.TaskRun(app_id=data['app_id'], task_id=data['id'], 
+                tr = model.TaskRun(app_id=data['app_id'], task_id=data['id'],
                                    user_ip="127.0.0." + str(i),
                                    info={'answer': 'Yes'})
                 db.session.add(tr)
@@ -165,17 +158,17 @@ class TestSCHED:
         # Check if there are 30 TaskRuns per Task
         tasks = db.session.query(model.Task).filter_by(app_id=1).all()
         for t in tasks:
-            assert len(t.task_runs)==10, len(t.task_runs)
+            assert len(t.task_runs) == 10, len(t.task_runs)
         # Check that all the answers are from different IPs
+        err_msg = "There are two or more Answers from same IP"
         for t in tasks:
             for tr in t.task_runs:
-                assert self.isUnique(tr.user_ip,t.task_runs), "There are two or more Answers from same IP"
-
+                assert self.is_unique(tr.user_ip, t.task_runs), err_msg
 
     def test_user_01_newtask(self):
         """ Test SCHED newtask returns a Task for John Doe User"""
         # Del previous TaskRuns
-        self.delTaskRuns()
+        self.del_task_runs()
 
         # Register
         self.register()
@@ -185,11 +178,10 @@ class TestSCHED:
         assert data['info'], data
         self.signout()
 
-
     def test_user_02_gets_different_tasks(self):
         """ Test SCHED newtask returns N different Tasks for John Doe User"""
         # Del previous TaskRuns
-        self.delTaskRuns()
+        self.del_task_runs()
 
         # Register
         self.register()
@@ -199,7 +191,7 @@ class TestSCHED:
         # Get Task until scheduler returns None
         res = self.app.get('api/app/1/newtask')
         data = json.loads(res.data)
-        while (data.get('info')!=None):
+        while data.get('info') is not None:
             # Check that we received a Task
             assert data.get('info'),  data
 
@@ -207,11 +199,8 @@ class TestSCHED:
             assigned_tasks.append(data)
 
             # Submit an Answer for the assigned task
-            tr = dict(
-                    app_id = data['app_id'],
-                    task_id = data['id'],
-                    info = {'answer': 'No'}
-                    )
+            tr = dict(app_id=data['app_id'], task_id=data['id'],
+                      info={'answer': 'No'})
             tr = json.dumps(tr)
 
             self.app.post('/api/taskrun', data=tr)
@@ -223,29 +212,33 @@ class TestSCHED:
         assert len(assigned_tasks) == len(tasks), assigned_tasks
         # Check if all the assigned Task.id are equal to the available ones
         tasks = db.session.query(model.Task).filter_by(app_id=1).all()
+        err_msg = "Assigned Task not found in DB Tasks"
         for at in assigned_tasks:
-            assert self.isTask(at['id'],tasks), "Assigned Task not found in DB Tasks"
+            assert self.is_task(at['id'], tasks), err_msg
         # Check that there are no duplicated tasks
+        err_msg = "One Assigned Task is duplicated"
         for at in assigned_tasks:
-            assert self.isUnique(at['id'],assigned_tasks), "One Assigned Task is duplicated"
+            assert self.is_unique(at['id'], assigned_tasks), err_msg
 
     def test_user_03_respects_limit_tasks(self):
         """ Test SCHED newtask respects the limit of 30 TaskRuns per Task"""
         # Del previous TaskRuns
-        self.delTaskRuns()
+        self.del_task_runs()
 
         assigned_tasks = []
         # We need one extra loop to allow the scheduler to mark a task as completed
         for i in range(11):
-            self.register(fullname="johndoe"+str(i),username="johndoe"+str(i),password="johndoe"+str(i))
+            self.register(fullname="johndoe" + str(i),
+                          username="johndoe" + str(i),
+                          password="johndoe" + str(i))
             print "Number of users %s" % len(db.session.query(model.User).all())
-            print "Giving answers as User: %s" % "johndoe"+str(i)
+            print "Giving answers as User: %s" % "johndoe" + str(i)
             self.signin()
             # Get Task until scheduler returns None
             res = self.app.get('api/app/1/newtask')
             data = json.loads(res.data)
 
-            while (data.get('info')!=None):
+            while data.get('info') is not None:
                 # Check that we received a Task
                 assert data.get('info'),  data
 
@@ -253,11 +246,8 @@ class TestSCHED:
                 assigned_tasks.append(data)
 
                 # Submit an Answer for the assigned task
-                tr = dict(
-                        app_id = data['app_id'],
-                        task_id = data['id'],
-                        info = {'answer': 'No'}
-                        )
+                tr = dict(app_id=data['app_id'], task_id=data['id'],
+                          info={'answer': 'No'})
                 tr = json.dumps(tr)
                 self.app.post('/api/taskrun', data=tr)
 
@@ -269,31 +259,34 @@ class TestSCHED:
         tasks = db.session.query(model.Task).filter_by(app_id=1).all()
         for t in tasks:
             print len(t.task_runs)
-            assert len(t.task_runs)==10, t.task_runs
+            assert len(t.task_runs) == 10, t.task_runs
         # Check that all the answers are from different IPs
+        err_msg = "There are two or more Answers from same User"
         for t in tasks:
             for tr in t.task_runs:
-                assert self.isUnique(tr.user_id,t.task_runs), "There are two or more Answers from same User"
+                assert self.is_unique(tr.user_id, t.task_runs), err_msg
         # Check that task.state is updated to completed
         for t in tasks:
-            assert t.state=="completed", t.state
+            assert t.state == "completed", t.state
 
     def test_tasks_for_user_ip_id(self):
-        """ Test SCHED newtask to see if sends the same ammount of Task to 
+        """ Test SCHED newtask to see if sends the same ammount of Task to
             user_id and user_ip
         """
         # Del Fixture Task
-        self.delTaskRuns()
+        self.del_task_runs()
 
         assigned_tasks = []
         for i in range(10):
             signin = False
             if random.random >= 0.5:
                 signin = True
-                self.register(fullname="johndoe"+str(i),username="johndoe"+str(i),password="johndoe"+str(i))
+                self.register(fullname="johndoe" + str(i),
+                              username="johndoe" + str(i),
+                              password="johndoe" + str(i))
 
             if signin:
-                print "Giving answers as User: %s" % "johndoe"+str(i)
+                print "Giving answers as User: %s" % "johndoe" + str(i)
             else:
                 print "Giving answers as User IP: 127.0.0.%s" % str(i)
 
@@ -303,7 +296,7 @@ class TestSCHED:
             res = self.app.get('api/app/1/newtask')
             data = json.loads(res.data)
 
-            while (data.get('info')!=None):
+            while data.get('info') is not None:
                 # Check that we received a Task
                 assert data.get('info'),  data
 
@@ -312,15 +305,12 @@ class TestSCHED:
 
                 # Submit an Answer for the assigned task
                 if signin:
-                    tr = dict(
-                            app_id = data['app_id'],
-                            task_id = data['id'],
-                            info = {'answer': 'No'}
-                            )
+                    tr = dict(app_id=data['app_id'], task_id=data['id'],
+                              info={'answer': 'No'})
                     tr = json.dumps(tr)
                     self.app.post('/api/taskrun', data=tr)
                 else:
-                    tr = model.TaskRun(app_id=data['app_id'], task_id=data['id'], 
+                    tr = model.TaskRun(app_id=data['app_id'], task_id=data['id'],
                                        user_ip="127.0.0." + str(i),
                                        info={'answer': 'Yes'})
                     db.session.add(tr)
@@ -335,19 +325,21 @@ class TestSCHED:
         tasks = db.session.query(model.Task).filter_by(app_id=1).all()
         for t in tasks:
             print len(t.task_runs)
-            assert len(t.task_runs)==10, t.task_runs
+            assert len(t.task_runs) == 10, t.task_runs
         # Check that all the answers are from different IPs and IDs
+        err_msg1 = "There are two or more Answers from same User ID"
+        err_msg2 = "There are two or more Answers from same User IP"
         for t in tasks:
             for tr in t.task_runs:
                 if tr.user_id:
-                    assert self.isUnique(tr.user_id,t.task_runs), "There are two or more Answers from same User ID"
+                    assert self.is_unique(tr.user_id, t.task_runs), err_msg1
                 else:
-                    assert self.isUnique(tr.user_ip,t.task_runs), "There are two or more Answers from same User IP"
+                    assert self.is_unique(tr.user_ip, t.task_runs), err_msg2
 
     def test_task_preloading(self):
         """Test TASK Pre-loading works"""
         # Del previous TaskRuns
-        self.delTaskRuns()
+        self.del_task_runs()
 
         # Register
         self.register()
@@ -372,11 +364,7 @@ class TestSCHED:
 
         # Submit an Answer for the assigned and pre-loaded task
         for t in assigned_tasks:
-            tr = dict(
-                    app_id=t['app_id'],
-                    task_id=t['id'],
-                    info={'answer': 'No'}
-                    )
+            tr = dict(app_id=t['app_id'], task_id=t['id'], info={'answer': 'No'})
             tr = json.dumps(tr)
 
             self.app.post('/api/taskrun', data=tr)
@@ -397,7 +385,7 @@ class TestSCHED:
         # Check that a big offset returns None
         res = self.app.get('api/app/1/newtask?offset=11')
         print json.loads(res.data)
-        assert json.loads(res.data)=={}, res.data
+        assert json.loads(res.data) == {}, res.data
 
 
 class TestGetBreadthFirst:
@@ -408,7 +396,7 @@ class TestGetBreadthFirst:
     def tearDown(self):
         db.session.remove()
 
-    def delTaskRuns(self, app_id=1):
+    def del_task_runs(self, app_id=1):
         """Deletes all TaskRuns for a given app_id"""
         db.session.query(model.TaskRun).filter_by(app_id=1).delete()
         db.session.commit()
@@ -422,14 +410,14 @@ class TestGetBreadthFirst:
         self._test_get_breadth_first_task(user)
 
     def _test_get_breadth_first_task(self, user=None):
-        self.delTaskRuns()
+        self.del_task_runs()
         if user:
             short_name = 'xyzuser'
         else:
             short_name = 'xyznouser'
         app = model.App(short_name=short_name)
-        task = model.Task(app=app, state = '0', info={})
-        task2 = model.Task(app=app, state = '0', info={})
+        task = model.Task(app=app, state='0', info={})
+        task2 = model.Task(app=app, state='0', info={})
         db.session.add(app)
         db.session.add(task)
         db.session.add(task2)
@@ -446,11 +434,11 @@ class TestGetBreadthFirst:
 
         # now check that offset works
         out1 = sched.get_breadth_first_task(appid)
-        out2 = sched.get_breadth_first_task(appid,offset=1)
+        out2 = sched.get_breadth_first_task(appid, offset=1)
         assert out1.id != out2.id, out
 
         # asking for a bigger offset (max 10)
-        out2 = sched.get_breadth_first_task(appid,offset=11)
+        out2 = sched.get_breadth_first_task(appid, offset=11)
         assert out2 is None, out
 
         self._add_task_run(task)

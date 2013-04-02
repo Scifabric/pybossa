@@ -9,48 +9,46 @@ class TestAdmin(web.Helper):
     def test_00_first_user_is_admin(self):
         """Test ADMIN First Created user is admin works"""
         self.register()
-        user = db.session.query(model.User)\
-                .get(1)
+        user = db.session.query(model.User).get(1)
         assert user.admin == 1, "User ID:1 should be admin, but it is not"
 
     def test_01_admin_index(self):
         """Test ADMIN index page works"""
         self.register()
         res = self.app.get("/admin", follow_redirects=True)
-        assert "Settings" in res.data,\
-                "There should be an index page for admin users and apps"
-        assert "Manage featured applications" in res.data,\
-                "There should be a button for managing apps"
-        assert "Manage admin users" in res.data,\
-                "There should be a button for managing users"
+        err_msg = "There should be an index page for admin users and apps"
+        assert "Settings" in res.data, err_msg
+        err_msg = "There should be a button for managing apps"
+        assert "Manage featured applications" in res.data, err_msg
+        err_msg = "There should be a button for managing users"
+        assert "Manage admin users" in res.data, err_msg
 
     def test_01_admin_index_anonymous(self):
         """Test ADMIN index page works as anonymous user"""
         res = self.app.get("/admin", follow_redirects=True)
-        assert "Please sign in to access this page" in res.data,\
-                "The user should not be able to access this page"\
-                " but the returned status is %s" % res.data
+        err_msg = ("The user should not be able to access this page"
+                   " but the returned status is %s" % res.data)
+        assert "Please sign in to access this page" in res.data, err_msg
 
     def test_01_admin_index_authenticated(self):
         """Test ADMIN index page works as signed in user"""
         self.register()
         self.signout()
-        self.register(username="tester2",
-                email="tester2@tester.com", password="tester")
+        self.register(username="tester2", email="tester2@tester.com",
+                      password="tester")
         res = self.app.get("/admin", follow_redirects=True)
-        assert "403 FORBIDDEN" in res.status,\
-                "The user should not be able to access this page"\
-                " but the returned status is %s" % res.status
+        err_msg = ("The user should not be able to access this page"
+                   " but the returned status is %s" % res.status)
+        assert "403 FORBIDDEN" in res.status, err_msg
 
     def test_02_second_user_is_not_admin(self):
         """Test ADMIN Second Created user is NOT admin works"""
         self.register()
         self.signout()
-        self.register(username="tester2",
-                email="tester2@tester.com", password="tester")
+        self.register(username="tester2", email="tester2@tester.com",
+                      password="tester")
         self.signout()
-        user = db.session.query(model.User)\
-                .get(2)
+        user = db.session.query(model.User).get(2)
         assert user.admin == 0, "User ID: 2 should not be admin, but it is"
 
     def test_03_admin_featured_apps_as_admin(self):
@@ -70,8 +68,8 @@ class TestAdmin(web.Helper):
         self.register()
         self.signout()
         self.register()
-        self.register(username="tester2",
-                email="tester2@tester.com", password="tester")
+        self.register(username="tester2", email="tester2@tester.com",
+                      password="tester")
         res = self.app.get('/admin/featured', follow_redirects=True)
         assert res.status == "403 FORBIDDEN", res.status
 
@@ -117,27 +115,27 @@ class TestAdmin(web.Helper):
         self.register()
         self.signout()
         self.register(username="John2", email="john2@john.com",
-                password="passwd")
+                      password="passwd")
         self.new_application()
         # The application is in the system but not in the front page
         res = self.app.get('/', follow_redirects=True)
-        assert "Create an App" in res.data,\
-            "The application should not be listed in the front page"\
-            " as it is not featured"
+        err_msg = ("The application should not be listed in the front page"
+                   "as it is not featured")
+        assert "Create an App" in res.data, err_msg
         res = self.app.get('/admin/featured', follow_redirects=True)
-        assert "403 FORBIDDEN" in res.status,\
-                "The user should not be able to access this page"\
-                " but the returned status is %s" % res.status
+        err_msg = ("The user should not be able to access this page"
+                   " but the returned status is %s" % res.status)
+        assert "403 FORBIDDEN" in res.status, err_msg
         # Try to add the app to the featured list
         res = self.app.post('/admin/featured/1')
-        assert "403 FORBIDDEN" in res.status,\
-                "The user should not be able to POST to this page"\
-                " but the returned status is %s" % res.status
+        err_msg = ("The user should not be able to POST to this page"
+                   " but the returned status is %s" % res.status)
+        assert "403 FORBIDDEN" in res.status, err_msg
         # Try to remove it again from the Featured list
         res = self.app.delete('/admin/featured/1')
-        assert "403 FORBIDDEN" in res.status,\
-                "The user should not be able to DELETE to this page"\
-                " but the returned status is %s" % res.status
+        err_msg = ("The user should not be able to DELETE to this page"
+                   " but the returned status is %s" % res.status)
+        assert "403 FORBIDDEN" in res.status, err_msg
 
     def test_08_admin_featured_apps_add_remove_app_anonymous(self):
         """Test ADMIN featured apps add-remove works as an anonymous user"""
@@ -150,19 +148,21 @@ class TestAdmin(web.Helper):
             "The application should not be listed in the front page"\
             " as it is not featured"
         res = self.app.get('/admin/featured', follow_redirects=True)
-        assert "Please sign in to access this page" in res.data,\
-                "The user should not be able to access this page"\
-                " but the returned status is %s" % res.data
+        err_msg = ("The user should not be able to access this page"
+                   " but the returned status is %s" % res.data)
+        assert "Please sign in to access this page" in res.data, err_msg
+
         # Try to add the app to the featured list
         res = self.app.post('/admin/featured/1', follow_redirects=True)
-        assert "Please sign in to access this page" in res.data,\
-                "The user should not be able to POST to this page"\
-                " but the returned status is %s" % res.data
+        err_msg = ("The user should not be able to POST to this page"
+                   " but the returned status is %s" % res.data)
+        assert "Please sign in to access this page" in res.data, err_msg
+
         # Try to remove it again from the Featured list
         res = self.app.delete('/admin/featured/1', follow_redirects=True)
-        assert "Please sign in to access this page" in res.data,\
-                "The user should not be able to DELETE to this page"\
-                " but the returned status is %s" % res.data
+        err_msg = ("The user should not be able to DELETE to this page"
+                   " but the returned status is %s" % res.data)
+        assert "Please sign in to access this page" in res.data, err_msg
 
     def test_09_admin_users_as_admin(self):
         """Test ADMIN users works as an admin user"""
@@ -193,7 +193,7 @@ class TestAdmin(web.Helper):
         self.register()
         self.signout()
         self.register(fullname="Juan Jose", username="juan",
-                email="juan@juan.com", password="juan")
+                      email="juan@juan.com", password="juan")
         self.signout()
         # Signin with admin user
         self.signin()
@@ -204,8 +204,8 @@ class TestAdmin(web.Helper):
         # Check with uppercase
         data = {'user': 'JUAN'}
         res = self.app.post('/admin/users', data=data, follow_redirects=True)
-        assert "Juan Jose" in res.data,\
-                "username search should be case insensitive"
+        err_msg = "username search should be case insensitive"
+        assert "Juan Jose" in res.data, err_msg
         # Search fullname
         data = {'user': 'Jose'}
         res = self.app.post('/admin/users', data=data, follow_redirects=True)
@@ -213,61 +213,61 @@ class TestAdmin(web.Helper):
         # Check with uppercase
         data = {'user': 'JOsE'}
         res = self.app.post('/admin/users', data=data, follow_redirects=True)
-        assert "Juan Jose" in res.data,\
-                "fullname search should be case insensitive"
+        err_msg = "fullname search should be case insensitive"
+        assert "Juan Jose" in res.data, err_msg
         # Warning should be issued for non-found users
         data = {'user': 'nothingExists'}
         res = self.app.post('/admin/users', data=data, follow_redirects=True)
-        warning = "We didn't find a user matching your query: <strong>"\
-                + data['user'] + "</strong>"
-        assert warning in res.data,\
-                "A flash message should be returned for non-found users"
+        warning = ("We didn't find a user matching your query: <strong>%s</strong>" %
+                   data['user'])
+        err_msg = "A flash message should be returned for non-found users"
+        assert warning in res.data, err_msg
 
     def test_13_admin_user_add_del(self):
         """Test ADMIN add/del user to admin group works"""
         self.register()
         self.signout()
         self.register(fullname="Juan Jose", username="juan",
-                email="juan@juan.com", password="juan")
+                      email="juan@juan.com", password="juan")
         self.signout()
         # Signin with admin user
         self.signin()
         # Add user.id=2 to admin group
         res = self.app.get("/admin/users/add/2", follow_redirects=True)
         assert "Current Users with Admin privileges" in res.data
-        assert "Juan Jose" in res.data,\
-                "User.id=2 should be listed as an admin"
+        err_msg = "User.id=2 should be listed as an admin"
+        assert "Juan Jose" in res.data, err_msg
         # Remove user.id=2 from admin group
         res = self.app.get("/admin/users/del/2", follow_redirects=True)
         assert "Current Users with Admin privileges" not in res.data
-        assert "Juan Jose" not in res.data,\
-                "User.id=2 should be listed as an admin"
+        err_msg = "User.id=2 should be listed as an admin"
+        assert "Juan Jose" not in res.data, err_msg
 
     def test_14_admin_user_add_del_anonymous(self):
         """Test ADMIN add/del user to admin group works as anonymous"""
         self.register()
         self.signout()
         self.register(fullname="Juan Jose", username="juan",
-                email="juan@juan.com", password="juan")
+                      email="juan@juan.com", password="juan")
         self.signout()
         # Add user.id=2 to admin group
         res = self.app.get("/admin/users/add/2", follow_redirects=True)
-        assert "Please sign in to access this page" in res.data,\
-                "User should be redirected to signin"
+        err_msg = "User should be redirected to signin"
+        assert "Please sign in to access this page" in res.data, err_msg
         # Remove user.id=2 from admin group
         res = self.app.get("/admin/users/del/2", follow_redirects=True)
-        assert "Please sign in to access this page" in res.data,\
-                "User should be redirected to signin"
+        err_msg = "User should be redirected to signin"
+        assert "Please sign in to access this page" in res.data, err_msg
 
     def test_15_admin_user_add_del_authenticated(self):
         """Test ADMIN add/del user to admin group works as authenticated"""
         self.register()
         self.signout()
         self.register(fullname="Juan Jose", username="juan",
-                email="juan@juan.com", password="juan")
+                      email="juan@juan.com", password="juan")
         self.signout()
         self.register(fullname="Juan Jose2", username="juan2",
-                email="juan2@juan.com", password="juan2")
+                      email="juan2@juan.com", password="juan2")
         self.signout()
         self.signin(email="juan2@juan.com", password="juan2")
         # Add user.id=2 to admin group
@@ -284,7 +284,7 @@ class TestAdmin(web.Helper):
         self.register()
         self.signout()
         self.register(fullname="Juan Jose", username="juan",
-                email="juan@juan.com", password="juan")
+                      email="juan@juan.com", password="juan")
         self.new_application()
         self.signout()
         # Sign in with the root user
@@ -296,7 +296,7 @@ class TestAdmin(web.Helper):
         assert "Update the application" in res.data,\
             "The app should be updated by admin users"
         res = self.update_application(new_name="Root",
-                new_short_name="rootsampleapp")
+                                      new_short_name="rootsampleapp")
         res = self.app.get('/app/rootsampleapp', follow_redirects=True)
         assert "Root" in res.data, "The app should be updated by admin users"
 
@@ -311,7 +311,7 @@ class TestAdmin(web.Helper):
         self.register()
         self.signout()
         self.register(fullname="Juan Jose", username="juan",
-                email="juan@juan.com", password="juan")
+                      email="juan@juan.com", password="juan")
         self.new_application()
         self.signout()
         # Sign in with the root user
@@ -320,8 +320,8 @@ class TestAdmin(web.Helper):
         assert "Yes, delete it" in res.data,\
             "The app should be deleted by admin users"
         res = self.delete_application()
-        assert "Application deleted!" in res.data,\
-                "The app should be deleted by admin users"
+        err_msg = "The app should be deleted by admin users"
+        assert "Application deleted!" in res.data, err_msg
 
     def test_18_admin_delete_tasks(self):
         """Test ADMIN can delete an app's tasks that belongs to another user"""
