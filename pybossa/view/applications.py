@@ -34,7 +34,7 @@ from pybossa.cache import apps as cached_apps
 
 import json
 import importer
-import presenter
+import presenter as presenter_module
 import operator
 import math
 
@@ -213,7 +213,7 @@ def task_presenter_editor(short_name):
             flash(lazy_gettext(msg), 'info')
 
             wrap = lambda i: "applications/presenters/%s.html" % i
-            pres_tmpls = map(wrap, presenter.presenters)
+            pres_tmpls = map(wrap, presenter_module.presenters)
 
             return render_template(
                 'applications/task_presenter_options.html',
@@ -503,7 +503,7 @@ def task_presenter(short_name, task_id):
 
 @blueprint.route('/<short_name>/presenter')
 @blueprint.route('/<short_name>/newtask')
-def show_presenter(short_name):
+def presenter(short_name):
     app = App.query.filter_by(short_name=short_name)\
         .first_or_404()
     title = "Application &middot; %s &middot; Contribute" % app.name
