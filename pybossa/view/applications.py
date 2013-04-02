@@ -365,11 +365,11 @@ def import_task(short_name):
     template_args = {"title": title, "app": app}
 
     data_handlers = dict([
-            (t, (name, handler, form_name))
-            for name, handler, form_name, _, t in importer.importer_forms])
+            (i.template_id, (i.form_detector, i(request.form), i.form_id))
+            for i in importer.importers])
     forms = [
-        (form_name, cls(request.form)) 
-        for _, _, form_name, cls, _ in importer.importer_forms]
+        (i.form_id, i(request.form))
+        for i in importer.importers]
 
     template_args.update(dict(forms))
 
@@ -408,7 +408,7 @@ def import_task(short_name):
 
 def _import_task(app, handler, form, render_forms):
     try:
-        handler(app, form)
+        handler.handle_import(app, form)
         flash(lazy_gettext('Tasks imported successfully!'), 'success')
         return redirect(url_for('.settings', short_name=app.short_name))
     except importer.BulkImportException, err_msg:
