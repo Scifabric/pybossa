@@ -14,7 +14,6 @@
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from StringIO import StringIO
-import requests
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, make_response
 from flaskext.wtf import Form, IntegerField, TextField, BooleanField, \
@@ -28,7 +27,7 @@ import pybossa.stats as stats
 
 from pybossa.core import db
 from pybossa.model import App, Task
-from pybossa.util import Unique, Pagination, unicode_csv_reader, UnicodeWriter
+from pybossa.util import Unique, Pagination, UnicodeWriter
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
 
@@ -389,7 +388,7 @@ def import_task(short_name):
     prefix = "applications/tasks/"
     importer_variants = map(lambda i: "%s%s.html" % (prefix, i), variants)
     importer_variants_by_twos = [
-        (importer_variants[i*2], importer_variants[i*2+1]) 
+        (importer_variants[i*2], importer_variants[i*2+1])
         for i in xrange(0, int(math.ceil(len(variants)/2.0)))]
 
     template_args["importer_modes"] = importer_variants_by_twos
