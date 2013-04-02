@@ -373,6 +373,14 @@ def import_task(short_name):
 
     template_args.update(dict(forms))
 
+    template_args["importer_modes"] = [
+        ("applications/tasks/csv.html",
+         "applications/tasks/epicollect.html"),
+        ("applications/tasks/gdocs-image.html",
+         "applications/tasks/gdocs-sound.html"),
+        ("applications/tasks/gdocs-map.html",
+         "applications/tasks/gdocs-pdf.html")]        
+
     template = request.args.get('template')
 
     if not (template or request.method == 'POST'):
