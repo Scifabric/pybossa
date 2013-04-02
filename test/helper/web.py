@@ -1,7 +1,7 @@
 from base import model, db, web
 
 
-class Helper:
+class Helper(object):
     """Class to help testing the web interface"""
 
     def setUp(self):
