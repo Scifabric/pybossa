@@ -202,14 +202,16 @@ def task_presenter_editor(short_name):
         form.editor.data = app.info['task_presenter']
     else:
         if not request.args.get('template'):
-            msg = '<strong>Note</strong> You will need to upload ' \
-                'the tasks using the <a href="%s">' \
-                'CSV importer</a> or download the app ' \
-                'bundle and run the <strong>createTasks.py ' \
-                '</strong> script in your ' \
-                'computer' % url_for('app.import_task',
-                                     short_name=app.short_name)
-            flash(lazy_gettext(msg), 'info')
+            msg_1 = lazy_gettext('<strong>Note</strong> You will need to upload the'
+                                 ' tasks using the')
+            msg_2 = lazy_gettext('CSV importer')
+            msg_3 = lazy_gettext(' or download the app bundle and run the'
+                                 ' <strong>createTasks.py</strong> script in your'
+                                 ' computer')
+            url = '<a href="%s"> %s</a>' % (url_for('app.import_task',
+                                                   short_name=app.short_name), msg_2)
+            msg = msg_1 + url + msg_3
+            flash(msg, 'info')
 
             wrap = lambda i: "applications/presenters/%s.html" % i
             pres_tmpls = map(wrap, presenter_module.presenters)
