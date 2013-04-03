@@ -209,7 +209,7 @@ def task_presenter_editor(short_name):
                                  ' <strong>createTasks.py</strong> script in your'
                                  ' computer')
             url = '<a href="%s"> %s</a>' % (url_for('app.import_task',
-                                                   short_name=app.short_name), msg_2)
+                                                    short_name=app.short_name), msg_2)
             msg = msg_1 + url + msg_3
             flash(msg, 'info')
 
