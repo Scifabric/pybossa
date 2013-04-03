@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2013-03-27 11:29+0100\n"
+"POT-Creation-Date: 2013-04-03 11:16+0200\n"
 "PO-Revision-Date: 2013-03-26 18:24+0100\n"
 "Last-Translator: Daniel Lombraña González <teleyinex@gmail.com>\n"
 "Language-Team: es <LL@li.org>\n"
@@ -25,17 +25,13 @@ msgstr ""
 "Por favor, actualiza tu cuenta de correo electrónico en la página de tu "
 "perfil"
 
-#: templates/_gcs_form.html:6 templates/admin/users.html:20
-msgid "Search"
-msgstr "Búsqueda"
-
 #: templates/_navbar.html:12 templates/account/index.html:41
 msgid "Community"
 msgstr "Comunidad"
 
 #: templates/_navbar.html:13 templates/base.html:71
 #: templates/account/applications.html:13 view/account.py:278
-#: view/applications.py:113 view/applications.py:134 view/applications.py:153
+#: view/applications.py:97
 msgid "Applications"
 msgstr "Aplicaciones"
 
@@ -173,7 +169,7 @@ msgstr "Borrador"
 msgid "You have not created an application"
 msgstr "No has creado una aplicación"
 
-#: templates/account/applications.html:29 view/applications.py:199
+#: templates/account/applications.html:29 view/applications.py:131
 msgid "Create an Application"
 msgstr "Crea una aplicación"
 
@@ -215,9 +211,11 @@ msgstr "Guardar los Cambios"
 
 #: templates/account/password.html:23 templates/account/password_forgot.html:13
 #: templates/account/register.html:25 templates/account/signin.html:46
-#: templates/account/update.html:30 templates/applications/import.html:37
-#: templates/applications/import.html:52 templates/applications/new.html:27
+#: templates/account/update.html:30 templates/applications/new.html:27
 #: templates/applications/task_presenter_editor.html:36
+#: templates/applications/importers/csv.html:23
+#: templates/applications/importers/epicollect.html:24
+#: templates/applications/importers/gdocs.html:23
 msgid "Cancel"
 msgstr "Cancelar"
 
@@ -432,6 +430,10 @@ msgstr "Organizar los Administradores"
 msgid "Try with the full name or nick"
 msgstr "Inténtalo con el nombre completo o nombre de usuario"
 
+#: templates/admin/users.html:20
+msgid "Search"
+msgstr "Búsqueda"
+
 #: templates/admin/users.html:31
 msgid "Current Users with Admin privileges"
 msgstr "Usuarios con privilegios de administrador"
@@ -455,7 +457,7 @@ msgstr "Exportar Tareas y Respuestas"
 #: templates/applications/export.html:17 templates/applications/export.html:22
 #: templates/applications/stats.html:227 templates/applications/stats.html:279
 #: templates/applications/stats.html:369 templates/applications/tasks.html:13
-#: templates/home/index.html:85
+#: templates/applications/tasks.html:58 templates/home/index.html:85
 msgid "Tasks"
 msgstr "Tareas"
 
@@ -475,9 +477,14 @@ msgid "ID"
 msgstr "ID"
 
 #: templates/applications/_helpers.html:61
-#: templates/applications/_helpers.html:109 view/applications.py:55
+#: templates/applications/_helpers.html:109 view/applications.py:53
 msgid "Description"
 msgstr "Descripción"
+
+#: templates/applications/_helpers.html:62
+#: templates/applications/_helpers.html:110
+msgid "Creation Date"
+msgstr "Creada"
 
 #: templates/applications/_helpers.html:63
 #: templates/applications/_helpers.html:112
@@ -499,17 +506,13 @@ msgstr "completado"
 msgid "Hidden"
 msgstr "Oculta"
 
-#: templates/applications/_helpers.html:68 view/applications.py:60
+#: templates/applications/_helpers.html:68 view/applications.py:58
 msgid "Yes"
 msgstr "Sí"
 
-#: templates/applications/_helpers.html:70 view/applications.py:61
+#: templates/applications/_helpers.html:70 view/applications.py:59
 msgid "No"
 msgstr "No"
-
-#: templates/applications/_helpers.html:110
-msgid "Creation Date"
-msgstr "Creada"
 
 #: templates/applications/_helpers.html:116
 #: templates/applications/_helpers.html:118
@@ -534,8 +537,11 @@ msgstr "Edita los detalles de la aplicación"
 msgid "Edit the task presenter"
 msgstr "Edita el presentador de tareas"
 
-#: templates/applications/actions.html:11 templates/applications/import.html:13
+#: templates/applications/actions.html:11
 #: templates/applications/settings.html:24
+#: templates/applications/importers/csv.html:13
+#: templates/applications/importers/epicollect.html:13
+#: templates/applications/importers/gdocs.html:13
 msgid "Import tasks"
 msgstr "Importa tareas"
 
@@ -595,53 +601,6 @@ msgstr "Tareas y Repuestas (enviadas por los usuarios) en el formato CSV o JSON"
 #: templates/applications/export.html:18 templates/applications/export.html:23
 msgid "Task Runs"
 msgstr "Respuestas"
-
-#: templates/applications/import.html:15
-msgid "From a Google Docs Spreadsheet"
-msgstr "Desde una hoja de cálcula de Google Docs"
-
-#: templates/applications/import.html:19
-msgid "Please provide a URL to a Google Docs Spreadsheet with data for"
-msgstr ""
-"Por favor, proporciona una URL de una hoja de cálculo de Google con datos"
-" para"
-
-#: templates/applications/import.html:19 templates/applications/import.html:33
-#: templates/applications/import.html:47
-msgid "For more information, please look at"
-msgstr "Para más información, por favor consulta"
-
-#: templates/applications/import.html:19 templates/applications/import.html:33
-#: templates/applications/import.html:47
-msgid "the documentation"
-msgstr "la documentación"
-
-#: templates/applications/import.html:29
-msgid "From a CSV file"
-msgstr "Desde un fichero CSV"
-
-#: templates/applications/import.html:33
-msgid ""
-"Please provide a URL (i.e. DropBox, Box, Ubuntu One, etc. public link) to"
-" a CSV file with data for"
-msgstr ""
-"Por favor proporciona un enlace (por ejemplo un enlace público de "
-"DropBox,\"\n"
-"\" Box, Ubuntu One, etc.) de un fichero CSV con datos para"
-
-#: templates/applications/import.html:36 templates/applications/import.html:51
-msgid "Import"
-msgstr "Importar"
-
-#: templates/applications/import.html:43
-msgid "From an EpiCollect Plus project"
-msgstr "Desde un proyecto EpiCollect Plus"
-
-#: templates/applications/import.html:47
-msgid "Please provide an EpiCollect Plus project name to import its data for"
-msgstr ""
-"Por favor proporciona el nombre de un proyecto EpiCollect Plus para "
-"importar sus datos para"
 
 #: templates/applications/index.html:11
 msgid "Featured"
@@ -852,15 +811,19 @@ msgstr "Este número identifica la tarea de la aplicación y es único"
 msgid ""
 "The first number shows how many answers have been submitted for the task "
 "and the"
-msgstr "El primer número muestra cuantas respuestas se han conseguido para la tarea"
-" y el"
+msgstr ""
+"El primer número muestra cuantas respuestas se han conseguido para la "
+"tarea\"\n"
+"\" y el"
 
 #: templates/applications/tasks.html:18
 msgid ""
 "This redundancy method will help to detect errors, typos, data forging, "
 "etc. when the task has been completed"
-msgstr "Este método de redundancia ayuda a detectar errores, fallos, falsificación"
-"de datos, etc. cuando una tarea ha sido completada"
+msgstr ""
+"Este método de redundancia ayuda a detectar errores, fallos, "
+"falsificación\"\n"
+"\"de datos, etc. cuando una tarea ha sido completada"
 
 #: templates/applications/tasks.html:18
 msgid "second number"
@@ -876,7 +839,9 @@ msgstr "Barra de Progreso"
 
 #: templates/applications/tasks.html:19
 msgid "The progress bar will the percentage that has been completed for the task"
-msgstr "La barra de progreso mostrará el porcentaje que ha sido completado para la tarea"
+msgstr ""
+"La barra de progreso mostrará el porcentaje que ha sido completado para "
+"la tarea"
 
 #: templates/applications/tasks.html:51
 msgid "Download results"
@@ -889,6 +854,55 @@ msgstr "Perdón! Esta aplicación no existe"
 #: templates/applications/tutorial.html:14
 msgid "Start contributing"
 msgstr "Participa"
+
+#: templates/applications/importers/csv.html:15
+msgid "From a CSV file"
+msgstr "Desde un fichero CSV"
+
+#: templates/applications/importers/csv.html:19
+msgid ""
+"Please provide a URL (i.e. DropBox, Box, Ubuntu One, etc. public link) to"
+" a CSV file with data for"
+msgstr ""
+"Por favor proporciona un enlace (por ejemplo un enlace público de "
+"DropBox,\"\n"
+"\" Box, Ubuntu One, etc.) de un fichero CSV con datos para"
+
+#: templates/applications/importers/csv.html:19
+#: templates/applications/importers/epicollect.html:19
+#: templates/applications/importers/gdocs.html:19
+msgid "For more information, please look at"
+msgstr "Para más información, por favor consulta"
+
+#: templates/applications/importers/csv.html:19
+#: templates/applications/importers/epicollect.html:19
+#: templates/applications/importers/gdocs.html:19
+msgid "the documentation"
+msgstr "la documentación"
+
+#: templates/applications/importers/csv.html:22
+#: templates/applications/importers/epicollect.html:23
+#: templates/applications/importers/gdocs.html:22
+msgid "Import"
+msgstr "Importar"
+
+#: templates/applications/importers/epicollect.html:15
+msgid "From an EpiCollect Plus project"
+msgstr "Desde un proyecto EpiCollect Plus"
+
+#: templates/applications/importers/epicollect.html:19
+msgid "Please provide an EpiCollect Plus project name to import its data for"
+msgstr ""
+"Por favor proporciona el nombre de un proyecto EpiCollect Plus para "
+"importar sus datos para"
+
+#: templates/applications/importers/gdocs.html:15
+msgid "From a Google Docs Spreadsheet"
+msgstr "Desde una hoja de cálcula de Google Docs"
+
+#: templates/applications/importers/gdocs.html:19
+msgid "Please provide a URL to a Google Drive Spreadsheet with data for"
+msgstr "Por favor, proporciona un enlace de una hoja de cálculo de Google Drive para"
 
 #: templates/home/about.html:9
 msgid ""
@@ -1089,8 +1103,8 @@ msgid ""
 msgstr "Uy, no te hemos encontrado en el sistema, ¿has creado una cuenta?"
 
 #: view/account.py:95 view/account.py:202 view/account.py:320
-#: view/account.py:353 view/account.py:391 view/applications.py:196
-#: view/applications.py:222 view/applications.py:343
+#: view/account.py:353 view/account.py:391 view/applications.py:138
+#: view/applications.py:195 view/applications.py:316
 msgid "Please correct the errors"
 msgstr "Por favor, corrija los siguientes errores"
 
@@ -1213,148 +1227,99 @@ msgstr "Algo ha ido mal, por favor corrige los errores del formulario"
 msgid "New API-KEY generated"
 msgstr "Nueva clave API creada"
 
-#: view/applications.py:47
+#: view/applications.py:45
 msgid "Name"
 msgstr "Nombre"
 
-#: view/applications.py:51
+#: view/applications.py:49
 msgid "Short Name"
 msgstr "Nombre Corto"
 
-#: view/applications.py:54
+#: view/applications.py:52
 msgid "Short Name is already taken."
 msgstr "El Nombre Corto ya está registrado"
 
-#: view/applications.py:57
+#: view/applications.py:55
 msgid "You must provide a description."
 msgstr "Debes proporcionar una descripción."
 
-#: view/applications.py:58
+#: view/applications.py:56
 msgid "Icon Link"
 msgstr "Enlace del icono"
 
-#: view/applications.py:59
+#: view/applications.py:57
 msgid "Allow Anonymous Contributors"
 msgstr "Permitir Voluntarios Anónimos"
 
-#: view/applications.py:62
+#: view/applications.py:60
 msgid "Long Description"
 msgstr "Descripción Larga"
 
-#: view/applications.py:63
+#: view/applications.py:61
 msgid "Task Scheduler"
 msgstr "Gestor de Tareas"
 
-#: view/applications.py:64
+#: view/applications.py:62
 msgid "Default"
 msgstr "Estándar"
 
-#: view/applications.py:65
+#: view/applications.py:63
 msgid "Breadth First"
 msgstr "Búsqueda en Anchura"
 
-#: view/applications.py:66
+#: view/applications.py:64
 msgid "Depth First"
 msgstr "Búsqueda en Profundidad"
 
-#: view/applications.py:67
+#: view/applications.py:65
 msgid "Random"
 msgstr "Aleatorio"
 
-#: view/applications.py:68
+#: view/applications.py:66
 msgid "Hide?"
 msgstr "Ocultar?"
 
-#: view/applications.py:77 view/applications.py:85
-msgid "You must provide a URL"
-msgstr "Debes proporcionar un enlace"
-
-#: view/applications.py:78 view/applications.py:86
-msgid "Oops! That's not a valid URL. You must provide a valid URL"
-msgstr "Uy! Ese enlace no es válido. Debes proporcionar uno correcto"
-
-#: view/applications.py:79 view/applications.py:87
-msgid "URL"
-msgstr "URL"
-
-#: view/applications.py:93
-msgid "You must provide an EpiCollect Plus project name"
-msgstr "Debes proporcionar el nombre de un proyecto EpiCollect Plus"
-
-#: view/applications.py:94
-msgid "You must provide a Form name for the project"
-msgstr "Debes proporcionar el nombre del Formulario del Proyecto"
-
-#: view/applications.py:95
-msgid "Project Name"
-msgstr "Nombre del Proyecto"
-
-#: view/applications.py:97
-msgid "Form name"
-msgstr "Nombre del Formulario"
-
-#: view/applications.py:188
+#: view/applications.py:160
 msgid "Application created!"
 msgstr "Aplicación creada!"
 
-#: view/applications.py:190
+#: view/applications.py:163
 msgid "You can check the "
 msgstr "Puedes comprobar la"
 
-#: view/applications.py:191
-msgid "Guide and  Documentation"
+#: view/applications.py:165
+msgid "Guide and Documentation"
 msgstr "Guía y  Documentación"
 
-#: view/applications.py:192
-msgid "for adding tasks,  a thumbnail, using PyBossa.JS, etc."
+#: view/applications.py:167
+msgid "for adding tasks, a thumbnail, using PyBossa.JS, etc."
 msgstr "para añadir tareas, un icono, utilizando PyBossa.JS, etc."
 
-#: view/applications.py:218
+#: view/applications.py:190
 msgid "Task presenter added!"
 msgstr "Presentador de Tareas añadido!"
 
-#: view/applications.py:278
+#: view/applications.py:256
 msgid "Application deleted!"
 msgstr "Aplicación eliminada!"
 
-#: view/applications.py:339
+#: view/applications.py:293
 msgid "Application updated!"
 msgstr "Aplicación actualizada!"
 
-#: view/applications.py:413
-msgid "The file you uploaded has two headers with the same name."
-msgstr "El fichero que has subido tiene dos cabeceras con el mismo nombre."
-
 #: view/applications.py:431
-msgid "Oops! It looks like the file is empty."
-msgstr "Uy! Parece que el fichero está vacío."
-
-#: view/applications.py:492
-msgid "Oops! That file doesn't look like the right file."
-msgstr "Uy! Ese fichero no parece que sea el correcto."
-
-#: view/applications.py:509
 msgid "Tasks imported successfully!"
 msgstr "Tareas importadas satisfactoriamente!"
 
-#: view/applications.py:551
+#: view/applications.py:457
 msgid ""
-"Ooops! You are an anonymous user and will not get any credit  for your "
+"Ooops! You are an anonymous user and will not get any credit for your "
 "contributions."
 msgstr ""
 "Uy! Eres un usuario anónimo y no vas a obtener ningún reconocimiento por "
 "tus contribuciones."
 
-#: view/applications.py:609 view/applications.py:620 view/applications.py:630
-msgid ""
-"Ooops! You are an anonymous user and will not"
-"                                      get any credit for your "
-"contributions. Sign in                                      now!"
-msgstr ""
-"Uy! Eres un usuario anónimo y no vas a obtener ningún reconocimiento por "
-"tus contribuciones."
-
-#: view/applications.py:807
+#: view/applications.py:683
 msgid ""
 "Oops, the application does not have tasks to                            "
 "export, if you are the owner add some tasks"
@@ -1362,11 +1327,61 @@ msgstr ""
 "Uy, la aplicación no tiene tareas que exportar, si eres el dueño de la "
 "aplicación añade alguna"
 
-#: view/applications.py:812
+#: view/applications.py:689
 msgid ""
 "Oops, there are no Task Runs yet to export, invite"
 "                            some users to participate"
 msgstr ""
 "Uy, no hay ninguna respuesta que exportar, invita a algunos voluntarios a"
 " participar"
+
+#: view/importer.py:81
+msgid "The file you uploaded has two headers with the same name."
+msgstr "El fichero que has subido tiene dos cabeceras con el mismo nombre."
+
+#: view/importer.py:100
+msgid "Oops! It looks like the file is empty."
+msgstr "Uy! Parece que el fichero está vacío."
+
+#: view/importer.py:111
+msgid "Oops! That file doesn't look like the right file."
+msgstr "Uy! Ese fichero no parece que sea el correcto."
+
+#: view/importer.py:125 view/importer.py:146
+msgid "You must provide a URL"
+msgstr "Debes proporcionar un enlace"
+
+#: view/importer.py:126 view/importer.py:147
+msgid "Oops! That's not a valid URL. You must provide a valid URL"
+msgstr "Uy! Ese enlace no es válido. Debes proporcionar uno correcto"
+
+#: view/importer.py:128 view/importer.py:149
+msgid "URL"
+msgstr "URL"
+
+#: view/importer.py:172
+msgid "You must provide an EpiCollect Plus project name"
+msgstr "Debes proporcionar el nombre de un proyecto EpiCollect Plus"
+
+#: view/importer.py:174
+msgid "You must provide a Form name for the project"
+msgstr "Debes proporcionar el nombre del Formulario del Proyecto"
+
+#: view/importer.py:176
+msgid "Project Name"
+msgstr "Nombre del Proyecto"
+
+#: view/importer.py:178
+msgid "Form name"
+msgstr "Nombre del Formulario"
+
+#~ msgid ""
+#~ "Ooops! You are an anonymous user "
+#~ "and will not                                      "
+#~ "get any credit for your contributions."
+#~ " Sign in                                      now!"
+#~ msgstr ""
+#~ "Uy! Eres un usuario anónimo y no"
+#~ " vas a obtener ningún reconocimiento "
+#~ "por tus contribuciones."
 
