@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2013-04-03 11:16+0200\n"
+"POT-Creation-Date: 2013-04-03 11:35+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1056,7 +1056,7 @@ msgstr ""
 
 #: view/account.py:95 view/account.py:202 view/account.py:320
 #: view/account.py:353 view/account.py:391 view/applications.py:138
-#: view/applications.py:195 view/applications.py:316
+#: view/applications.py:195 view/applications.py:318
 msgid "Please correct the errors"
 msgstr ""
 
@@ -1246,31 +1246,45 @@ msgstr ""
 msgid "Task presenter added!"
 msgstr ""
 
-#: view/applications.py:256
+#: view/applications.py:205
+msgid "<strong>Note</strong> You will need to upload the tasks using the"
+msgstr ""
+
+#: view/applications.py:207
+msgid "CSV importer"
+msgstr ""
+
+#: view/applications.py:208
+msgid ""
+" or download the app bundle and run the <strong>createTasks.py</strong> "
+"script in your computer"
+msgstr ""
+
+#: view/applications.py:258
 msgid "Application deleted!"
 msgstr ""
 
-#: view/applications.py:293
+#: view/applications.py:295
 msgid "Application updated!"
 msgstr ""
 
-#: view/applications.py:431
+#: view/applications.py:433
 msgid "Tasks imported successfully!"
 msgstr ""
 
-#: view/applications.py:457
+#: view/applications.py:459
 msgid ""
 "Ooops! You are an anonymous user and will not get any credit for your "
 "contributions."
 msgstr ""
 
-#: view/applications.py:683
+#: view/applications.py:685
 msgid ""
 "Oops, the application does not have tasks to                            "
 "export, if you are the owner add some tasks"
 msgstr ""
 
-#: view/applications.py:689
+#: view/applications.py:691
 msgid ""
 "Oops, there are no Task Runs yet to export, invite"
 "                            some users to participate"

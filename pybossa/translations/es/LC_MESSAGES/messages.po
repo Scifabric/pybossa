@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2013-04-03 11:16+0200\n"
+"POT-Creation-Date: 2013-04-03 11:35+0200\n"
 "PO-Revision-Date: 2013-03-26 18:24+0100\n"
 "Last-Translator: Daniel Lombraña González <teleyinex@gmail.com>\n"
 "Language-Team: es <LL@li.org>\n"
@@ -902,7 +902,9 @@ msgstr "Desde una hoja de cálcula de Google Docs"
 
 #: templates/applications/importers/gdocs.html:19
 msgid "Please provide a URL to a Google Drive Spreadsheet with data for"
-msgstr "Por favor, proporciona un enlace de una hoja de cálculo de Google Drive para"
+msgstr ""
+"Por favor, proporciona un enlace de una hoja de cálculo de Google Drive "
+"para"
 
 #: templates/home/about.html:9
 msgid ""
@@ -1104,7 +1106,7 @@ msgstr "Uy, no te hemos encontrado en el sistema, ¿has creado una cuenta?"
 
 #: view/account.py:95 view/account.py:202 view/account.py:320
 #: view/account.py:353 view/account.py:391 view/applications.py:138
-#: view/applications.py:195 view/applications.py:316
+#: view/applications.py:195 view/applications.py:318
 msgid "Please correct the errors"
 msgstr "Por favor, corrija los siguientes errores"
 
@@ -1299,19 +1301,35 @@ msgstr "para añadir tareas, un icono, utilizando PyBossa.JS, etc."
 msgid "Task presenter added!"
 msgstr "Presentador de Tareas añadido!"
 
-#: view/applications.py:256
+#: view/applications.py:205
+msgid "<strong>Note</strong> You will need to upload the tasks using the"
+msgstr "<strong>Nota</strong> Va a necesitar subir las tareas utilizando el"
+
+#: view/applications.py:207
+msgid "CSV importer"
+msgstr "importador CSV"
+
+#: view/applications.py:208
+msgid ""
+" or download the app bundle and run the <strong>createTasks.py</strong> "
+"script in your computer"
+msgstr ""
+" o descargar la aplicación y ejecutar el script <strong>createTasks.py</strong> "
+" en su PC"
+
+#: view/applications.py:258
 msgid "Application deleted!"
 msgstr "Aplicación eliminada!"
 
-#: view/applications.py:293
+#: view/applications.py:295
 msgid "Application updated!"
 msgstr "Aplicación actualizada!"
 
-#: view/applications.py:431
+#: view/applications.py:433
 msgid "Tasks imported successfully!"
 msgstr "Tareas importadas satisfactoriamente!"
 
-#: view/applications.py:457
+#: view/applications.py:459
 msgid ""
 "Ooops! You are an anonymous user and will not get any credit for your "
 "contributions."
@@ -1319,7 +1337,7 @@ msgstr ""
 "Uy! Eres un usuario anónimo y no vas a obtener ningún reconocimiento por "
 "tus contribuciones."
 
-#: view/applications.py:683
+#: view/applications.py:685
 msgid ""
 "Oops, the application does not have tasks to                            "
 "export, if you are the owner add some tasks"
@@ -1327,7 +1345,7 @@ msgstr ""
 "Uy, la aplicación no tiene tareas que exportar, si eres el dueño de la "
 "aplicación añade alguna"
 
-#: view/applications.py:689
+#: view/applications.py:691
 msgid ""
 "Oops, there are no Task Runs yet to export, invite"
 "                            some users to participate"
@@ -1374,14 +1392,4 @@ msgstr "Nombre del Proyecto"
 #: view/importer.py:178
 msgid "Form name"
 msgstr "Nombre del Formulario"
-
-#~ msgid ""
-#~ "Ooops! You are an anonymous user "
-#~ "and will not                                      "
-#~ "get any credit for your contributions."
-#~ " Sign in                                      now!"
-#~ msgstr ""
-#~ "Uy! Eres un usuario anónimo y no"
-#~ " vas a obtener ningún reconocimiento "
-#~ "por tus contribuciones."
 
