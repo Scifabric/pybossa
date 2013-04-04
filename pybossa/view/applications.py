@@ -48,6 +48,7 @@ class AppForm(Form):
                              message="Name is already taken.")])
     short_name = TextField(lazy_gettext('Short Name'),
                            [validators.Required(),
+                            validators.Regexp('^((?!/).)*$', message=lazy_gettext("/ char is not allowed")),
                             Unique(db.session, model.App, model.App.short_name,
                                    message=lazy_gettext("Short Name is already taken."))])
     description = TextField(lazy_gettext('Description'),
