@@ -444,7 +444,7 @@ def _import_task(app, handler, form, render_forms):
             empty = False
         if empty:
             raise importer.BulkImportException(lazy_gettext(
-                    'Oops! It looks like the task list is empty.'))
+                    'Oops! It looks like the file is empty.'))
         flash(lazy_gettext('Tasks imported successfully!'), 'success')
         return redirect(url_for('.settings', short_name=app.short_name))
     except importer.BulkImportException, err_msg:
