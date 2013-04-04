@@ -29,7 +29,7 @@ from sqlalchemy.sql import func, text
 import pybossa.model as model
 from pybossa.model import User
 from pybossa.core import db, signer, mail, cache, get_locale
-from pybossa.util import Unique
+from pybossa.util import Unique, NotAllowedChars
 from pybossa.util import Pagination
 from pybossa.util import Twitter
 from pybossa.util import Facebook
@@ -127,6 +127,7 @@ class RegisterForm(Form):
     err_msg_2 = lazy_gettext("The user name is already taken")
     username = TextField(lazy_gettext('User name'),
                          [validators.Length(min=3, max=35, message=err_msg),
+                          NotAllowedChars(),
                           Unique(db.session, model.User,
                                  model.User.name, err_msg_2)])
 
@@ -158,6 +159,7 @@ class UpdateProfileForm(Form):
     err_msg_2 = lazy_gettext("The user name is already taken")
     name = TextField(lazy_gettext('User name'),
                      [validators.Length(min=3, max=35, message=err_msg),
+                      NotAllowedChars(),
                       Unique(db.session, model.User, model.User.name,
                              err_msg_2)])
 
