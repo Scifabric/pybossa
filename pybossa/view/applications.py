@@ -435,7 +435,7 @@ def import_task(short_name):
 def _import_task(app, handler, form, render_forms):
     try:
         empty = True
-        for task_data in handler.tasks(app, form):
+        for task_data in handler.tasks(form):
             task = model.Task(app=app)
             print task_data
             [setattr(task, k, v) for k, v in task_data.iteritems()]

@@ -124,7 +124,7 @@ class BulkTaskCSVImportForm(BulkTaskImportForm):
     def get_data_url(self, form):
         return form.csv_url.data
 
-    def tasks(self, app, form):
+    def tasks(self, form):
         dataurl = self.get_data_url(form)
         r = requests.get(dataurl)
         return self.get_csv_data_from_request(r)
@@ -145,7 +145,7 @@ class BulkTaskGDImportForm(BulkTaskImportForm):
     def get_data_url(self, form):
         return ''.join([form.googledocs_url.data, '&output=csv'])
 
-    def tasks(self, app, form):
+    def tasks(self, form):
         dataurl = self.get_data_url(form)
         r = requests.get(dataurl)
         return self.get_csv_data_from_request(r)
@@ -188,7 +188,7 @@ class BulkTaskEpiCollectPlusImportForm(BulkTaskImportForm):
             raise BulkImportException(lazy_gettext(msg), 'error')
         return self.import_epicollect_tasks(json.loads(r.text))
 
-    def tasks(self, app, form):
+    def tasks(self, form):
         dataurl = self.get_data_url(form)
         r = requests.get(dataurl)
         return self.get_epicollect_data_from_request(r)
