@@ -392,7 +392,7 @@ def import_task(short_name):
         (importer_variants[i * 2], importer_variants[i * 2 + 1])
         for i in xrange(0, int(math.ceil(len(variants) / 2.0)))]
 
-    template_args["importer_modes"] = importer_variants_by_twos
+    template_args["importer_variants"] = importer_variants_by_twos
 
     template = request.args.get('template')
 
