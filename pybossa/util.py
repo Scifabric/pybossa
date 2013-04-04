@@ -20,6 +20,7 @@ from flask import abort, request, make_response, current_app
 from functools import wraps
 from flaskext.wtf import Form, TextField, PasswordField, validators,\
     ValidationError
+from flaskext.babel import lazy_gettext
 from flask_oauth import OAuth
 from flaskext.login import current_user
 from math import ceil
@@ -61,7 +62,7 @@ class Unique(object):
         self.model = model
         self.field = field
         if not message:
-            message = u'This item already exists'
+            message = lazy_gettext(u'This item already exists')
         self.message = message
 
     def __call__(self, form, field):
@@ -73,6 +74,22 @@ class Unique(object):
         else:
             id = None
         if check and (id is None or id != check.id):
+            raise ValidationError(self.message)
+
+
+class NotAllowedChars(object):
+    """Validator that checks field not allowed chars"""
+    not_valid_chars = '$#&/| '
+
+    def __init__(self, message=None):
+        if not message:
+            self.message = lazy_gettext(u'%sand space symbols are forbidden'
+                                        % self.not_valid_chars)
+        else:
+            self.message = message
+
+    def __call__(self, form, field):
+        if any(c in field.data for c in self.not_valid_chars):
             raise ValidationError(self.message)
 
 
