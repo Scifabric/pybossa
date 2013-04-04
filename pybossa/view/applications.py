@@ -434,7 +434,17 @@ def import_task(short_name):
 
 def _import_task(app, handler, form, render_forms):
     try:
-        handler.handle_import(app, form)
+        empty = True
+        for task_data in handler.tasks(app, form):
+            task = model.Task(app=app)
+            print task_data
+            [setattr(task, k, v) for k, v in task_data.iteritems()]
+            db.session.add(task)
+            db.session.commit()
+            empty = False
+        if empty:
+            raise importer.BulkImportException(lazy_gettext(
+                    'Oops! It looks like the task list is empty.'))
         flash(lazy_gettext('Tasks imported successfully!'), 'success')
         return redirect(url_for('.settings', short_name=app.short_name))
     except importer.BulkImportException, err_msg:
