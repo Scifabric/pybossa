@@ -16,8 +16,6 @@
 from StringIO import StringIO
 from flaskext.wtf import Form, TextField, validators
 from flaskext.babel import lazy_gettext
-import pybossa.model as model
-from pybossa.core import db
 from pybossa.util import unicode_csv_reader
 import json
 import requests
@@ -60,18 +58,17 @@ class BulkTaskImportForm(Form):
     template_id = None
     form_id = None
     form_detector = None
-    handle_import = None
+    tasks = None
     get_data_url = None
 
     def __init__(self, *args, **kwargs):
         super(BulkTaskImportForm, self).__init__(*args, **kwargs)
 
-    def import_csv_tasks(self, app, csvreader):
+    def import_csv_tasks(self, csvreader):
         headers = []
         fields = set(['state', 'quorum', 'calibration', 'priority_0',
                       'n_answers'])
         field_header_index = []
-        empty = True
 
         for row in csvreader:
             print row
@@ -85,23 +82,15 @@ class BulkTaskImportForm(Form):
                 for field in field_headers:
                     field_header_index.append(headers.index(field))
             else:
-                info = {}
-                task = model.Task(app=app)
+                task_data = {"info": {}}
                 for idx, cell in enumerate(row):
                     if idx in field_header_index:
-                        setattr(task, headers[idx], cell)
+                        task_data[headers[idx]] = cell
                     else:
-                        info[headers[idx]] = cell
-                task.info = info
-                db.session.add(task)
-                db.session.commit()
-                empty = False
-        if empty:
-            raise BulkImportException(lazy_gettext(
-                    'Oops! It looks like the file '
-                    'is empty.'))
+                        task_data["info"][headers[idx]] = cell
+                yield task_data
 
-    def get_csv_data_from_request(self, app, r):
+    def get_csv_data_from_request(self, r):
         if r.status_code == 403:
             msg = "Oops! It looks like you don't have permission to access" \
                 " that file"
@@ -114,7 +103,7 @@ class BulkTaskImportForm(Form):
 
         csvcontent = StringIO(r.text)
         csvreader = unicode_csv_reader(csvcontent)
-        return self.import_csv_tasks(app, csvreader)
+        return self.import_csv_tasks(csvreader)
 
     @property
     def variants(self):
@@ -135,10 +124,10 @@ class BulkTaskCSVImportForm(BulkTaskImportForm):
     def get_data_url(self, form):
         return form.csv_url.data
 
-    def handle_import(self, app, form):
+    def tasks(self, form):
         dataurl = self.get_data_url(form)
         r = requests.get(dataurl)
-        return self.get_csv_data_from_request(app, r)
+        return self.get_csv_data_from_request(r)
 
 
 @register_importer
@@ -156,10 +145,10 @@ class BulkTaskGDImportForm(BulkTaskImportForm):
     def get_data_url(self, form):
         return ''.join([form.googledocs_url.data, '&output=csv'])
 
-    def handle_import(self, app, form):
+    def tasks(self, form):
         dataurl = self.get_data_url(form)
         r = requests.get(dataurl)
-        return self.get_csv_data_from_request(app, r)
+        return self.get_csv_data_from_request(r)
 
     @property
     def variants(self):
@@ -181,18 +170,15 @@ class BulkTaskEpiCollectPlusImportForm(BulkTaskImportForm):
     form_id = "epiform"
     form_detector = "epicollect_project"
 
-    def import_epicollect_tasks(self, app, data):
+    def import_epicollect_tasks(self, data):
         for d in data:
-            task = model.Task(app=app)
-            task.info = d
-            db.session.add(task)
-        db.session.commit()
+            yield {"info": d}
 
     def get_data_url(self, form):
         return 'http://plus.epicollect.net/%s/%s.json' % \
             (form.epicollect_project.data, form.epicollect_form.data)
 
-    def get_epicollect_data_from_request(self, app, r):
+    def get_epicollect_data_from_request(self, r):
         if r.status_code == 403:
             msg = "Oops! It looks like you don't have permission to access" \
                 " the EpiCollect Plus project"
@@ -200,10 +186,10 @@ class BulkTaskEpiCollectPlusImportForm(BulkTaskImportForm):
         if not 'application/json' in r.headers['content-type']:
             msg = "Oops! That project and form do not look like the right one."
             raise BulkImportException(lazy_gettext(msg), 'error')
-        return self.import_epicollect_tasks(app, json.loads(r.text))
+        return self.import_epicollect_tasks(json.loads(r.text))
 
-    def handle_import(self, app, form):
+    def tasks(self, form):
         dataurl = self.get_data_url(form)
         r = requests.get(dataurl)
-        return self.get_epicollect_data_from_request(app, r)
+        return self.get_epicollect_data_from_request(r)
 
