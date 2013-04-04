@@ -20,8 +20,6 @@ import codecs
 import cStringIO
 from flask import abort, request, make_response, current_app
 from functools import wraps
-from flaskext.wtf import ValidationError
-from flaskext.babel import lazy_gettext
 from flask_oauth import OAuth
 from flaskext.login import current_user
 from math import ceil
@@ -51,44 +49,6 @@ def admin_required(f):
         else:
             return abort(403)
     return decorated_function
-
-
-class Unique(object):
-    """Validator that checks field uniqueness"""
-    def __init__(self, session, model, field, message=None):
-        self.session = session
-        self.model = model
-        self.field = field
-        if not message:
-            message = lazy_gettext(u'This item already exists')
-        self.message = message
-
-    def __call__(self, form, field):
-        check = self.session.query(self.model)\
-                    .filter(self.field == field.data)\
-                    .first()
-        if 'id' in form:
-            id = form.id.data
-        else:
-            id = None
-        if check and (id is None or id != check.id):
-            raise ValidationError(self.message)
-
-
-class NotAllowedChars(object):
-    """Validator that checks field not allowed chars"""
-    not_valid_chars = '$#&\/| '
-
-    def __init__(self, message=None):
-        if not message:
-            self.message = lazy_gettext(u'%sand space symbols are forbidden'
-                                        % self.not_valid_chars)
-        else:
-            self.message = message
-
-    def __call__(self, form, field):
-        if any(c in field.data for c in self.not_valid_chars):
-            raise ValidationError(self.message)
 
 
 # from http://flask.pocoo.org/snippets/56/
