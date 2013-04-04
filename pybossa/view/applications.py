@@ -365,6 +365,22 @@ def settings(short_name):
     except HTTPException:
         return abort(403)
 
+def compute_importer_variant_pairs(forms):
+    """Return a list of pairs of importer variants. The pair-wise enumeration
+    is due to UI design.
+    """
+    variants = reduce(operator.__add__,
+                      [i.variants for i in forms.itervalues()],
+                      [])
+    if len(variants) % 2:
+        variants.append("empty")
+
+    prefix = "applications/tasks/"
+
+    importer_variants = map(lambda i: "%s%s.html" % (prefix, i), variants)
+    return [
+        (importer_variants[i * 2], importer_variants[i * 2 + 1])
+        for i in xrange(0, int(math.ceil(len(variants) / 2.0)))]
 
 @blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
 def import_task(short_name):
@@ -381,18 +397,7 @@ def import_task(short_name):
     forms = dict(forms)
     template_args.update(forms)
 
-    variants = reduce(operator.__add__,
-                      [i.variants for i in forms.itervalues()],
-                      [])
-    if len(variants) % 2:
-        variants.append("empty")
-    prefix = "applications/tasks/"
-    importer_variants = map(lambda i: "%s%s.html" % (prefix, i), variants)
-    importer_variants_by_twos = [
-        (importer_variants[i * 2], importer_variants[i * 2 + 1])
-        for i in xrange(0, int(math.ceil(len(variants) / 2.0)))]
-
-    template_args["importer_modes"] = importer_variants_by_twos
+    template_args["importer_variants"] = compute_importer_variant_pairs(forms)
 
     template = request.args.get('template')
 
@@ -429,7 +434,17 @@ def import_task(short_name):
 
 def _import_task(app, handler, form, render_forms):
     try:
-        handler.handle_import(app, form)
+        empty = True
+        for task_data in handler.tasks(form):
+            task = model.Task(app=app)
+            print task_data
+            [setattr(task, k, v) for k, v in task_data.iteritems()]
+            db.session.add(task)
+            db.session.commit()
+            empty = False
+        if empty:
+            raise importer.BulkImportException(lazy_gettext(
+                    'Oops! It looks like the file is empty.'))
         flash(lazy_gettext('Tasks imported successfully!'), 'success')
         return redirect(url_for('.settings', short_name=app.short_name))
     except importer.BulkImportException, err_msg:
