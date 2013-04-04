@@ -10,12 +10,20 @@ web.app.config['TESTING'] = True
 web.app.config['CSRF_ENABLED'] = False
 web.app.config['SQLALCHEMY_DATABASE_URI'] = web.app.config['SQLALCHEMY_DATABASE_TEST_URI']
 web.app.config['CSRF_ENABLED'] = False
+web.app.config['MAIL_SERVER'] = 'localhost'
+web.app.config['MAIL_USERNAME'] = None
+web.app.config['MAIL_PASSWORD'] = None
+web.app.config['MAIL_PORT'] = 25
+web.app.config['MAIL_FAIL_SILENTLY'] = False
+web.app.config['MAIL_DEFAULT_SENDER'] = 'PyBossa Support <info@pybossa.com>'
+
 web.cache.config['CACHE_TYPE'] = 'null'
 web.cache.config['TESTING'] = True
 web.app.config['ANNOUNCEMENT'] = {'admin': 'Root Message',
                                   'user': 'User Message',
                                   'owner': 'Owner Message'}
 cache.init_app(web.app)
+mail.init_app(web.app)
 #engine = model.create_engine(web.app.config['SQLALCHEMY_DATABASE_URI'])
 #model.set_engine(engine)
 
