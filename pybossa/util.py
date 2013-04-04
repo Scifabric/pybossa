@@ -79,7 +79,7 @@ class Unique(object):
 
 class NotAllowedChars(object):
     """Validator that checks field not allowed chars"""
-    not_valid_chars = '$#&/| '
+    not_valid_chars = '$#&\/| '
 
     def __init__(self, message=None):
         if not message:
