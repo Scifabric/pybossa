@@ -1178,9 +1178,6 @@ class TestWeb(web.Helper):
         jane.twitter_user_id = 10
         db.session.add(jane)
         db.session.commit()
-        # TODO: This is a hack to get tests working. Documented method to
-        # supress mail sending doesn't seem to work
-        mail.suppress = True
         with mail.record_messages() as outbox:
             self.app.post('/account/forgot-password',
                           data={'email_addr': self.user.email_addr},
