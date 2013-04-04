@@ -15,11 +15,12 @@
 
 from datetime import timedelta
 from functools import update_wrapper
-import csv, codecs, cStringIO
+import csv
+import codecs
+import cStringIO
 from flask import abort, request, make_response, current_app
 from functools import wraps
-from flaskext.wtf import Form, TextField, PasswordField, validators,\
-    ValidationError
+from flaskext.wtf import ValidationError
 from flaskext.babel import lazy_gettext
 from flask_oauth import OAuth
 from flaskext.login import current_user
@@ -29,14 +30,13 @@ import json
 
 def jsonpify(f):
     """Wraps JSONified output for JSONP"""
-
     @wraps(f)
     def decorated_function(*args, **kwargs):
         callback = request.args.get('callback', False)
         if callback:
             content = str(callback) + '(' + str(f(*args, **kwargs).data) + ')'
             return current_app.response_class(content,
-                    mimetype='application/javascript')
+                                              mimetype='application/javascript')
         else:
             return f(*args, **kwargs)
     return decorated_function
@@ -44,7 +44,6 @@ def jsonpify(f):
 
 def admin_required(f):
     """Checks if the user is and admin or not"""
-
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if current_user.admin:
@@ -56,7 +55,6 @@ def admin_required(f):
 
 class Unique(object):
     """Validator that checks field uniqueness"""
-
     def __init__(self, session, model, field, message=None):
         self.session = session
         self.model = model
@@ -67,8 +65,8 @@ class Unique(object):
 
     def __call__(self, form, field):
         check = self.session.query(self.model)\
-                .filter(self.field == field.data)\
-                .first()
+                    .filter(self.field == field.data)\
+                    .first()
         if 'id' in form:
             id = form.id.data
         else:
@@ -211,9 +209,10 @@ class Pagination(object):
                    right_edge=0):
         last = 0
         for num in xrange(1, self.pages + 1):
-            if (num <= left_edge or (num > self.page - left_current -1 and
-                    num < self.page + right_current) or num > self.pages -
-                    right_edge):
+            if (num <= left_edge or
+                    (num > self.page - left_current - 1 and
+                     num < self.page + right_current) or
+                    num > self.pages - right_edge):
                 if last + 1 != num:
                     yield None
                 yield num
@@ -226,7 +225,8 @@ class Twitter:
     def __init__(self, c_k, c_s):
         #oauth = OAuth()
         # Use Twitter as example remote application
-        self.oauth = self.oauth.remote_app('twitter',
+        self.oauth = self.oauth.remote_app(
+            'twitter',
             # unless absolute urls are used to make requests,
             # this will be added before all URLs. This is also true for
             # request_token_url and others.
@@ -250,7 +250,8 @@ class Facebook:
     oauth = OAuth()
 
     def __init__(self, c_k, c_s):
-        self.oauth = self.oauth.remote_app('facebook',
+        self.oauth = self.oauth.remote_app(
+            'facebook',
             base_url='https://graph.facebook.com/',
             request_token_url=None,
             access_token_url='/oauth/access_token',
@@ -280,17 +281,18 @@ class Google:
     oauth = OAuth()
 
     def __init__(self, c_k, c_s):
-        self.oauth = self.oauth.remote_app('google',
-                base_url='https://www.google.com/accounts/',
-                authorize_url='https://accounts.google.com/o/oauth2/auth',
-                request_token_url=None,
-                request_token_params={'scope': 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
-                                      'response_type': 'code'},
-                access_token_url='https://accounts.google.com/o/oauth2/token',
-                access_token_method='POST',
-                access_token_params={'grant_type': 'authorization_code'},
-                consumer_key=c_k,
-                consumer_secret=c_s)
+        self.oauth = self.oauth.remote_app(
+            'google',
+            base_url='https://www.google.com/accounts/',
+            authorize_url='https://accounts.google.com/o/oauth2/auth',
+            request_token_url=None,
+            request_token_params={'scope': 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
+                                  'response_type': 'code'},
+            access_token_url='https://accounts.google.com/o/oauth2/token',
+            access_token_method='POST',
+            access_token_params={'grant_type': 'authorization_code'},
+            consumer_key=c_k,
+            consumer_secret=c_s)
 
 
 class UnicodeWriter:
@@ -327,6 +329,7 @@ class UnicodeWriter:
     def writerows(self, rows):
         for row in rows:
             self.writerow(row)
+
 
 def get_user_signup_method(user):
     """Return which OAuth sign up method the user used"""
