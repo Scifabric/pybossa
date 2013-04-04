@@ -24,12 +24,12 @@ from flask.ext.mail import Message
 from flaskext.wtf import Form, TextField, PasswordField, validators, \
         ValidationError, IntegerField, HiddenInput, SelectField
 
+import pybossa.validator as pb_validator
+import pybossa.model as model
 from flaskext.babel import lazy_gettext
 from sqlalchemy.sql import func, text
-import pybossa.model as model
 from pybossa.model import User
 from pybossa.core import db, signer, mail, cache, get_locale
-from pybossa.util import Unique
 from pybossa.util import Pagination
 from pybossa.util import Twitter
 from pybossa.util import Facebook
@@ -127,16 +127,17 @@ class RegisterForm(Form):
     err_msg_2 = lazy_gettext("The user name is already taken")
     username = TextField(lazy_gettext('User name'),
                          [validators.Length(min=3, max=35, message=err_msg),
-                          Unique(db.session, model.User,
-                                 model.User.name, err_msg_2)])
+                          pb_validator.NotAllowedChars(),
+                          pb_validator.Unique(db.session, model.User,
+                                              model.User.name, err_msg_2)])
 
     err_msg = lazy_gettext("Email must be between 3 and 35 characters long")
     err_msg_2 = lazy_gettext("Email is already taken")
     email_addr = TextField(lazy_gettext('Email Address'),
                            [validators.Length(min=3, max=35, message=err_msg),
                             validators.Email(),
-                            Unique(db.session, model.User,
-                                   model.User.email_addr, err_msg_2)])
+                            pb_validator.Unique(db.session, model.User,
+                                                model.User.email_addr, err_msg_2)])
 
     err_msg = lazy_gettext("Password cannot be empty")
     err_msg_2 = lazy_gettext("Passwords must match")
@@ -158,16 +159,17 @@ class UpdateProfileForm(Form):
     err_msg_2 = lazy_gettext("The user name is already taken")
     name = TextField(lazy_gettext('User name'),
                      [validators.Length(min=3, max=35, message=err_msg),
-                      Unique(db.session, model.User, model.User.name,
-                             err_msg_2)])
+                      pb_validator.NotAllowedChars(),
+                      pb_validator.Unique(db.session, model.User, model.User.name,
+                                          err_msg_2)])
 
     err_msg = lazy_gettext("Email must be between 3 and 35 characters long")
     err_msg_2 = lazy_gettext("Email is already taken")
     email_addr = TextField(lazy_gettext('Email Address'),
                            [validators.Length(min=3, max=35, message=err_msg),
                             validators.Email(),
-                            Unique(db.session, model.User,
-                                   model.User.email_addr, err_msg_2)])
+                            pb_validator.Unique(db.session, model.User,
+                                                model.User.email_addr, err_msg_2)])
 
     locale = SelectField(lazy_gettext('Default Language'))
 

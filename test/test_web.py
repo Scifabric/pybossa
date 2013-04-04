@@ -62,39 +62,44 @@ class TestWeb(web.Helper):
 
         res = self.register()
         assert self.html_title("Register") in res.data, res
-        assert "The user name is already taken" in res.data, res
+        assert "The user name is already taken" in res.data, res.data
 
         res = self.register(fullname='')
         assert self.html_title("Register") in res.data, res
         msg = "Full name must be between 3 and 35 characters long"
-        assert msg in res.data, res
+        assert msg in res.data, res.data
 
         res = self.register(username='')
         assert self.html_title("Register") in res.data, res
         msg = "User name must be between 3 and 35 characters long"
-        assert msg in res.data, res
+        assert msg in res.data, res.data
+
+        res = self.register(username='%a/$|')
+        assert self.html_title("Register") in res.data, res
+        msg = '$#&amp;\/| and space symbols are forbidden'
+        assert msg in res.data, res.data
 
         res = self.register(email='')
-        assert self.html_title("Register") in res.data, res
-        assert self.html_title("Register") in res.data, res
+        assert self.html_title("Register") in res.data, res.data
+        assert self.html_title("Register") in res.data, res.data
         msg = "Email must be between 3 and 35 characters long"
-        assert msg in res.data, res
+        assert msg in res.data, res.data
 
         res = self.register(email='invalidemailaddress')
-        assert self.html_title("Register") in res.data, res
-        assert "Invalid email address" in res.data, res
+        assert self.html_title("Register") in res.data, res.data
+        assert "Invalid email address" in res.data, res.data
 
         res = self.register()
-        assert self.html_title("Register") in res.data, res
-        assert "Email is already taken" in res.data, res
+        assert self.html_title("Register") in res.data, res.data
+        assert "Email is already taken" in res.data, res.data
 
         res = self.register(password='')
-        assert self.html_title("Register") in res.data, res
-        assert "Password cannot be empty" in res.data, res
+        assert self.html_title("Register") in res.data, res.data
+        assert "Password cannot be empty" in res.data, res.data
 
         res = self.register(password2='different')
-        assert self.html_title("Register") in res.data, res
-        assert "Passwords must match" in res.data, res
+        assert self.html_title("Register") in res.data, res.data
+        assert "Passwords must match" in res.data, res.data
 
     def test_04_signin_signout(self):
         """Test WEB sign in and sign out works"""
@@ -373,6 +378,37 @@ class TestWeb(web.Helper):
             "Scheduler should be the same: %s" % app.info['thumbnail']
         assert app.long_description == '<div id="long_desc">Long desc</div>', \
             "Long desc should be the same: %s" % app.long_description
+
+    def test_11_a_create_application_errors(self):
+        """Test WEB create an application issues the errors"""
+        self.register()
+        # Required fields checks
+        # Issue the error for the app.name
+        res = self.new_application(name=None)
+        err_msg = "An application must have a name"
+        assert "This field is required" in res.data, err_msg
+
+        # Issue the error for the app.short_name
+        res = self.new_application(short_name=None)
+        err_msg = "An application must have a short_name"
+        assert "This field is required" in res.data, err_msg
+
+        # Issue the error for the app.description
+        res = self.new_application(description=None)
+        err_msg = "An application must have a description"
+        assert "You must provide a description" in res.data, err_msg
+
+        # Issue the error for the app.short_name
+        res = self.new_application(short_name='$#/|')
+        err_msg = "An application must have a short_name without |/$# chars"
+        assert '$#&amp;\/| and space symbols are forbidden' in res.data, err_msg
+
+        # Now Unique checks
+        self.new_application()
+        res = self.new_application()
+        err_msg = "There should be a Unique field"
+        assert "Name is already taken" in res.data, err_msg
+        assert "Short Name is already taken" in res.data, err_msg
 
     def test_12_update_application(self):
         """Test WEB update application works"""

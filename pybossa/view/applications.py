@@ -24,10 +24,11 @@ from werkzeug.exceptions import HTTPException
 
 import pybossa.model as model
 import pybossa.stats as stats
+import pybossa.validator as pb_validator
 
 from pybossa.core import db
 from pybossa.model import App, Task
-from pybossa.util import Unique, Pagination, UnicodeWriter
+from pybossa.util import Pagination, UnicodeWriter
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
 
@@ -44,19 +45,24 @@ class AppForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
     name = TextField(lazy_gettext('Name'),
                      [validators.Required(),
-                      Unique(db.session, model.App, model.App.name,
-                             message="Name is already taken.")])
+                      pb_validator.Unique(db.session, model.App, model.App.name,
+                                          message="Name is already taken.")])
     short_name = TextField(lazy_gettext('Short Name'),
                            [validators.Required(),
-                            Unique(db.session, model.App, model.App.short_name,
-                                   message=lazy_gettext("Short Name is already taken."))])
+                            pb_validator.NotAllowedChars(),
+                            pb_validator.Unique(
+                                db.session, model.App, model.App.short_name,
+                                message=lazy_gettext(
+                                    "Short Name is already taken."))])
     description = TextField(lazy_gettext('Description'),
                             [validators.Required(
-                                message=lazy_gettext("You must provide a description."))])
+                                message=lazy_gettext(
+                                    "You must provide a description."))])
     thumbnail = TextField(lazy_gettext('Icon Link'))
-    allow_anonymous_contributors = SelectField(lazy_gettext('Allow Anonymous Contributors'),
-                                               choices=[('True', lazy_gettext('Yes')),
-                                                        ('False', lazy_gettext('No'))])
+    allow_anonymous_contributors = SelectField(
+        lazy_gettext('Allow Anonymous Contributors'),
+        choices=[('True', lazy_gettext('Yes')),
+                 ('False', lazy_gettext('No'))])
     long_description = TextAreaField(lazy_gettext('Long Description'))
     sched = SelectField(lazy_gettext('Task Scheduler'),
                         choices=[('default', lazy_gettext('Default')),
