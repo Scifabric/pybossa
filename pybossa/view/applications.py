@@ -27,7 +27,7 @@ import pybossa.stats as stats
 
 from pybossa.core import db
 from pybossa.model import App, Task
-from pybossa.util import Unique, Pagination, UnicodeWriter
+from pybossa.util import Unique, NotAllowedChars, Pagination, UnicodeWriter
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
 
@@ -48,7 +48,7 @@ class AppForm(Form):
                              message="Name is already taken.")])
     short_name = TextField(lazy_gettext('Short Name'),
                            [validators.Required(),
-                            validators.Regexp('^((?!/).)*$', message=lazy_gettext("/ char is not allowed")),
+                            NotAllowedChars(),
                             Unique(db.session, model.App, model.App.short_name,
                                    message=lazy_gettext("Short Name is already taken."))])
     description = TextField(lazy_gettext('Description'),
