@@ -13,3 +13,8 @@ the following values:
 * form_detector
 * form_id
 * template_id
+
+tasks() should generate a list of tasks
+
+variants, a property, should list all the variants of this importer;
+this mechanism is used for Google Docs
