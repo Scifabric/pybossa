@@ -172,6 +172,7 @@ class UpdateProfileForm(Form):
                                                 model.User.email_addr, err_msg_2)])
 
     locale = SelectField(lazy_gettext('Default Language'))
+    ckan_api = TextField(lazy_gettext('Datahub.io API Key'))
 
     def set_locales(self, locales):
         """Fill the locale.choices"""
@@ -291,6 +292,7 @@ def settings():
                            title=title,
                            user=user)
 
+
 @blueprint.route('/profile/update', methods=['GET', 'POST'])
 @login_required
 def update_profile():
@@ -310,7 +312,8 @@ def update_profile():
                                      fullname=form.fullname.data,
                                      name=form.name.data,
                                      email_addr=form.email_addr.data,
-                                     locale=form.locale.data)
+                                     locale=form.locale.data,
+                                     ckan_api=form.ckan_api.data)
             db.session.query(model.User)\
               .filter(model.User.id == current_user.id)\
               .first()

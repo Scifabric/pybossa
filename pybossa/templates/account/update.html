@@ -19,6 +19,9 @@
             {{ render_field(form.name, placeholder= _('myusername') ) }}
             {{ render_field(form.email_addr, placeholder= _('hello@mywebsite.org') ) }}
             {{ render_field(form.locale) }}
+            <hr>
+            <h2>External Services</h2>
+            {{ render_field(form.ckan_api) }}
             <div>
                 <img src="{{ current_user.email_addr | gravatar(size=25)}}">
                 <a href="http://www.gravatar.com">{{ _('Change your avatar at Gravatar.com') }}</a>. {{ _('We are using') }} {{current_user.email_addr}}
