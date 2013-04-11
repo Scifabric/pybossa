@@ -77,6 +77,12 @@ class TaskPresenterForm(Form):
     editor = TextAreaField('')
 
 
+def app_title(app, page_name):
+    if not app:
+        return "Application not found"
+    return "Application: %s &middot; %s" % (app.name, page_name)
+
+
 @blueprint.route('/', defaults={'page': 1})
 @blueprint.route('/page/<int:page>')
 def index(page):
@@ -489,11 +495,8 @@ def task_presenter(short_name, task_id):
                 'account.signin',
                 next=next_url)
             flash(msg_1 + "<a href=\"" + url + "\">Sign in now!</a>", "warning")
-    if app:
-        title = "Application: %s &middot; Contribute" % app.name
-    else:
-        title = "Application not found"
 
+    title = app_title(app, "Contribute")
     template_args = {"app": app, "title": title}
 
     def respond(tmpl):
@@ -560,10 +563,7 @@ def presenter(short_name):
 @blueprint.route('/<short_name>/tutorial')
 def tutorial(short_name):
     app = App.query.filter_by(short_name=short_name).first_or_404()
-    if app:
-        title = "Application: %s &middot; Tutorial" % app.name
-    else:
-        title = "Application not found"
+    title = app_title(app, "Tutorial")
     return render_template('/applications/tutorial.html', title=title, app=app)
 
 
@@ -588,10 +588,7 @@ def export(short_name, task_id):
 @blueprint.route('/<short_name>/tasks/<int:page>')
 def tasks(short_name, page):
     app = App.query.filter_by(short_name=short_name).first_or_404()
-    if app:
-        title = "Application: %s &middot; Tasks" % app.name
-    else:
-        title = "Application not found"
+    title = app_title(app, "Tasks")
 
     def respond():
         per_page = 10
@@ -655,10 +652,7 @@ def delete_tasks(short_name):
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
     app = App.query.filter_by(short_name=short_name).first_or_404()
-    if app:
-        title = "Application: %s &middot; Export" % app.name
-    else:
-        title = "Application not found"
+    title = app_title(app, "Export")
 
     def gen_json(table):
         n = db.session.query(table)\
