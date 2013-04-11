@@ -337,11 +337,7 @@ def update(short_name):
 
 @blueprint.route('/<short_name>/')
 def details(short_name):
-    app = db.session.query(model.App)\
-                    .filter(model.App.short_name == short_name)\
-                    .first()
-    if not app:
-        abort(404)
+    app = app_by_shortname(short_name)
 
     try:
         require.app.read(app)
@@ -360,12 +356,7 @@ def details(short_name):
 @blueprint.route('/<short_name>/settings')
 @login_required
 def settings(short_name):
-    app = db.session.query(model.App)\
-        .filter(model.App.short_name == short_name)\
-        .first()
-
-    if not app:
-        abort(404)
+    app = app_by_shortname(short_name)
 
     title = app_title(app, "Settings")
     try:
@@ -571,12 +562,7 @@ def tutorial(short_name):
 @blueprint.route('/<short_name>/<int:task_id>/results.json')
 def export(short_name, task_id):
     """Return a file with all the TaskRuns for a give Task"""
-    app = db.session.query(model.App)\
-            .filter(model.App.short_name == short_name)\
-            .first()
-
-    if not app:
-        return abort(404)
+    app = app_by_shortname(short_name)
     task = db.session.query(model.Task)\
         .filter(model.Task.id == task_id)\
         .first()
@@ -745,7 +731,7 @@ def export_to(short_name):
 @blueprint.route('/<short_name>/stats')
 def show_stats(short_name):
     """Returns App Stats"""
-    app = db.session.query(model.App).filter_by(short_name=short_name).first()
+    app = app_by_shortname(short_name)
     title = app_title(app, "Statistics")
 
     if not (len(app.tasks) > 0 and len(app.task_runs) > 0):
