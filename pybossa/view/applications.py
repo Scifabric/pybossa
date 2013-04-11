@@ -191,10 +191,7 @@ def new():
 @login_required
 def task_presenter_editor(short_name):
     errors = False
-    app = App.query.filter_by(short_name=short_name).first()
-
-    if not app:
-        abort(404)
+    app = app_by_shortname(short_name)
 
     title = app_title(app, "Task Presenter Editor")
     if not require.app.update(app):
@@ -258,10 +255,7 @@ def task_presenter_editor(short_name):
 @blueprint.route('/<short_name>/delete', methods=['GET', 'POST'])
 @login_required
 def delete(short_name):
-    app = App.query.filter_by(short_name=short_name).first()
-    if not app:
-        abort(404)
-
+    app = app_by_shortname(short_name)
     title = app_title(app, "Delete")
     if not require.app.delete(app):
         abort(403)
