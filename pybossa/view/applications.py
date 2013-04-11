@@ -342,21 +342,20 @@ def details(short_name):
                     .first()
     if not app:
         abort(404)
-    title = app_title(app, "Details")
-    template_args = {"app": app, "title": title}
 
     try:
         require.app.read(app)
         require.app.update(app)
-
-        return render_template('/applications/actions.html', **template_args)
+        template = '/applications/actions.html'
     except HTTPException:
         if app.hidden:
             app = None
-            title = app_title(app, "Details")
-            template_args = {"app": app, "title": title}
-        return render_template('/applications/app.html', **template_args)
+        template = '/applications/app.html'
 
+    title = app_title(app, "Details")
+    template_args = {"app": app, "title": title}
+    return render_template(template, **template_args)
+    
 
 @blueprint.route('/<short_name>/settings')
 @login_required
