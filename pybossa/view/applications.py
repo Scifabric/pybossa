@@ -714,6 +714,10 @@ def export_to(short_name):
                                    title=title,
                                    app=app)
 
+    export_formats = ["json", "csv"]
+    if current_user.ckan_api:
+        export_formats.append('ckan')
+
     ty = request.args.get('type')
     fmt = request.args.get('format')
     if not (fmt and ty):
@@ -722,7 +726,7 @@ def export_to(short_name):
         return render_template('/applications/export.html',
                                title=title,
                                app=app)
-    if fmt not in ["json", "csv"]:
+    if fmt not in export_formats:
         abort(404)
     return {"json": respond_json, "csv": respond_csv}[fmt](ty)
 

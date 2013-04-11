@@ -172,7 +172,7 @@ class UpdateProfileForm(Form):
                                                 model.User.email_addr, err_msg_2)])
 
     locale = SelectField(lazy_gettext('Default Language'))
-    ckan_api = TextField(lazy_gettext('Datahub.io API Key'))
+    ckan_api = TextField(lazy_gettext('CKAN API Key'))
 
     def set_locales(self, locales):
         """Fill the locale.choices"""
