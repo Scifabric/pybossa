@@ -397,7 +397,7 @@ def compute_importer_variant_pairs(forms):
 @blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
 def import_task(short_name):
     app = App.query.filter_by(short_name=short_name).first_or_404()
-    title = "Applications: %s &middot; Import Tasks" % app.name
+    title = app_title(app, "Import Tasks")
     template_args = {"title": title, "app": app}
 
     data_handlers = dict([
@@ -530,7 +530,7 @@ def task_presenter(short_name, task_id):
 def presenter(short_name):
     app = App.query.filter_by(short_name=short_name)\
         .first_or_404()
-    title = "Application &middot; %s &middot; Contribute" % app.name
+    title = app_title(app, "Contribute")
     template_args = {"app": app, "title": title}
 
     if not app.allow_anonymous_contributors and current_user.is_anonymous():
@@ -633,7 +633,7 @@ def delete_tasks(short_name):
         require.app.read(app)
         require.app.update(app)
         if request.method == 'GET':
-            title = "Application Tasks: %s &middot; Delete" % app.name
+            title = app_title(app, "Delete")
             return render_template('applications/tasks/delete.html',
                                    app=app,
                                    title=title)
@@ -745,7 +745,7 @@ def export_to(short_name):
 def show_stats(short_name):
     """Returns App Stats"""
     app = db.session.query(model.App).filter_by(short_name=short_name).first()
-    title = "Application: %s &middot; Statistics" % app.name
+    title = app_title(app, "Statistics")
 
     if not (len(app.tasks) > 0 and len(app.task_runs) > 0):
         return render_template('/applications/non_stats.html',
