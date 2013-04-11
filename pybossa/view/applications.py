@@ -80,6 +80,8 @@ class TaskPresenterForm(Form):
 def app_title(app, page_name):
     if not app:
         return "Application not found"
+    if page_name is None:
+        return "Application: %s" % (app.name)
     return "Application: %s &middot; %s" % (app.name, page_name)
 
 
@@ -352,7 +354,7 @@ def details(short_name):
             app = None
         template = '/applications/app.html'
 
-    title = app_title(app, "Details")
+    title = app_title(app, None)
     template_args = {"app": app, "title": title}
     return render_template(template, **template_args)
     
