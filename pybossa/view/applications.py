@@ -190,7 +190,7 @@ def task_presenter_editor(short_name):
     if not app:
         abort(404)
 
-    title = "Application: %s &middot; Task Presenter Editor" % app.name
+    title = app_title(app, "Task Presenter Editor")
     if not require.app.update(app):
         abort(403)
 
@@ -256,7 +256,7 @@ def delete(short_name):
     if not app:
         abort(404)
 
-    title = "Application: %s &middot; Delete" % app.name
+    title = app_title(app, "Delete")
     if not require.app.delete(app):
         abort(403)
     if request.method == 'GET':
@@ -311,7 +311,7 @@ def update(short_name):
     if not require.app.update(app):
         abort(403)
 
-    title = "Application: %s &middot; Update" % app.name
+    title = app_title(app, "Update")
     if request.method == 'GET':
         form = AppForm(obj=app)
         form.populate_obj(app)
