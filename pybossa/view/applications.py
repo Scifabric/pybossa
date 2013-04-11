@@ -31,6 +31,7 @@ from pybossa.model import App, Task
 from pybossa.util import Pagination, UnicodeWriter
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
+from pybossa.ckan import Ckan
 
 import json
 import importer
@@ -677,6 +678,33 @@ def export_to(short_name):
             return abort(404)
         return Response(gen_json(table), mimetype='application/json')
 
+    def respond_ckan(ty):
+        # First check if there is a package (dataset) in CKAN
+        ckan = Ckan(url=current_app.config['CKAN_API'],
+                    api_key=current_user.ckan_api)
+
+        package = ckan.package_exists(name=app.short_name)
+        if package:
+            if len(package['resources']) == 0:
+                resources = ckan.resource_create(name=ty)
+                return "New %s" % resources
+            else:
+                return "Old %s" % package['resources']
+        else:
+            print "Creating package"
+            output = ckan.package_create(app, current_user,
+                                         url_for('.details',
+                                                 short_name=app.short_name,
+                                                 _external=True))
+            return "Not Found %s" % output
+
+        #tables = {"task": model.Task, "task_run": model.TaskRun}
+        #try:
+        #    table = tables[ty]
+        #except KeyError:
+        #    return abort(404)
+        #return Response(gen_json(table), mimetype='application/json')
+
     def respond_csv(ty):
         # Export Task(/Runs) to CSV
         types = {
@@ -728,7 +756,7 @@ def export_to(short_name):
                                app=app)
     if fmt not in export_formats:
         abort(404)
-    return {"json": respond_json, "csv": respond_csv}[fmt](ty)
+    return {"json": respond_json, "csv": respond_csv, 'ckan': respond_ckan}[fmt](ty)
 
 
 @blueprint.route('/<short_name>/stats')
