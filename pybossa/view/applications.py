@@ -85,6 +85,10 @@ def app_title(app, page_name):
     return "Application: %s &middot; %s" % (app.name, page_name)
 
 
+def app_by_shortname(short_name):
+    return App.query.filter_by(short_name=short_name).first_or_404()
+
+
 @blueprint.route('/', defaults={'page': 1})
 @blueprint.route('/page/<int:page>')
 def index(page):
@@ -276,14 +280,14 @@ def delete(short_name):
 @blueprint.route('/<short_name>/update', methods=['GET', 'POST'])
 @login_required
 def update(short_name):
-    app = App.query.filter_by(short_name=short_name).first_or_404()
+    app = app_by_shortname(short_name)
 
     def handle_valid_form(form):
         hidden = int(form.hidden.data)
 
         new_info = {}
         # Add the info items
-        app = App.query.filter_by(short_name=short_name).first_or_404()
+        app = app_by_shortname(short_name)
         if form.thumbnail.data:
             new_info['thumbnail'] = form.thumbnail.data
         if form.sched.data:
@@ -303,7 +307,7 @@ def update(short_name):
             owner_id=app.owner_id,
             allow_anonymous_contributors=form.allow_anonymous_contributors.data)
 
-        app = App.query.filter_by(short_name=short_name).first_or_404()
+        app = app_by_shortname(short_name)
         db.session.merge(new_application)
         db.session.commit()
         flash(lazy_gettext('Application updated!'), 'success')
@@ -399,7 +403,7 @@ def compute_importer_variant_pairs(forms):
 
 @blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
 def import_task(short_name):
-    app = App.query.filter_by(short_name=short_name).first_or_404()
+    app = app_by_shortname(short_name)
     title = app_title(app, "Import Tasks")
     template_args = {"title": title, "app": app}
 
@@ -473,7 +477,7 @@ def _import_task(app, handler, form, render_forms):
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
-    app = App.query.filter_by(short_name=short_name).first_or_404()
+    app = app_by_shortname(short_name)
     task = Task.query.filter_by(id=task_id).first_or_404()
 
     if current_user.is_anonymous():
@@ -565,7 +569,7 @@ def presenter(short_name):
 
 @blueprint.route('/<short_name>/tutorial')
 def tutorial(short_name):
-    app = App.query.filter_by(short_name=short_name).first_or_404()
+    app = app_by_shortname(short_name)
     title = app_title(app, "Tutorial")
     return render_template('/applications/tutorial.html', title=title, app=app)
 
@@ -590,7 +594,7 @@ def export(short_name, task_id):
 @blueprint.route('/<short_name>/tasks', defaults={'page': 1})
 @blueprint.route('/<short_name>/tasks/<int:page>')
 def tasks(short_name, page):
-    app = App.query.filter_by(short_name=short_name).first_or_404()
+    app = app_by_shortname(short_name)
     title = app_title(app, "Tasks")
 
     def respond():
@@ -631,7 +635,7 @@ def tasks(short_name, page):
 @login_required
 def delete_tasks(short_name):
     """Delete ALL the tasks for a given application"""
-    app = App.query.filter_by(short_name=short_name).first_or_404()
+    app = app_by_shortname(short_name)
     try:
         require.app.read(app)
         require.app.update(app)
@@ -654,7 +658,7 @@ def delete_tasks(short_name):
 @blueprint.route('/<short_name>/export')
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
-    app = App.query.filter_by(short_name=short_name).first_or_404()
+    app = app_by_shortname(short_name)
     title = app_title(app, "Export")
 
     def gen_json(table):
