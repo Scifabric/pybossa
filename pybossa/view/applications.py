@@ -342,9 +342,9 @@ def details(short_name):
                     .first()
     if not app:
         abort(404)
-    title = "Application: %s" % app.name
-
+    title = app_title(app, "Details")
     template_args = {"app": app, "title": title}
+
     try:
         require.app.read(app)
         require.app.update(app)
@@ -352,7 +352,9 @@ def details(short_name):
         return render_template('/applications/actions.html', **template_args)
     except HTTPException:
         if app.hidden:
-            template_args = {"app": None, "title": "Application not found"}
+            app = None
+            title = app_title(app, "Details")
+            template_args = {"app": app, "title": title}
         return render_template('/applications/app.html', **template_args)
 
 
@@ -366,7 +368,7 @@ def settings(short_name):
     if not app:
         abort(404)
 
-    title = "Application: %s &middot; Settings" % app.name
+    title = app_title(app, "Settings")
     try:
         require.app.read(app)
         require.app.update(app)
