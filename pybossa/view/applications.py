@@ -359,20 +359,20 @@ def details(short_name):
 @blueprint.route('/<short_name>/settings')
 @login_required
 def settings(short_name):
-    application = db.session.query(model.App)\
-                    .filter(model.App.short_name == short_name)\
-                    .first()
+    app = db.session.query(model.App)\
+        .filter(model.App.short_name == short_name)\
+        .first()
 
-    if not application:
+    if not app:
         abort(404)
 
-    title = "Application: %s &middot; Settings" % application.name
+    title = "Application: %s &middot; Settings" % app.name
     try:
-        require.app.read(application)
-        require.app.update(application)
+        require.app.read(app)
+        require.app.update(app)
 
         return render_template('/applications/settings.html',
-                               app=application,
+                               app=app,
                                title=title)
     except HTTPException:
         return abort(403)
