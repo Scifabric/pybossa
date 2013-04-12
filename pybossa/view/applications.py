@@ -678,40 +678,55 @@ def export_to(short_name):
             return abort(404)
         return Response(gen_json(table), mimetype='application/json')
 
+    def create_ckan_datastores(ckan):
+        tables = {"task": model.Task, "task_run": model.TaskRun}
+        resources = dict(task=None, task_run=None)
+        for k in tables.keys():
+            # Create the two table resources
+            resource = ckan.resource_create(name=k)
+            resources[k] = resource['result']
+            ckan.datastore_create(name=k, resource_id=resources[k]['id'])
+        return resources
+
     def respond_ckan(ty):
         # First check if there is a package (dataset) in CKAN
         tables = {"task": model.Task, "task_run": model.TaskRun}
+        msg_1 = lazy_gettext("Data exported to ")
+        msg = msg_1 + "%s ..." % current_app.config['CKAN_URL']
+        flash(msg, 'success')
         ckan = Ckan(url=current_app.config['CKAN_API'],
                     api_key=current_user.ckan_api)
 
         package = ckan.package_exists(name=app.short_name)
         if package:
             if len(package['resources']) == 0:
-                for k in tables.keys():
-                    # Create the two table resources
-                    ckan.resource_create(name=k)
-                    ckan.datastore_create(name=k)
-                # Update the package
-                ckan.package_exists(name=app.short_name)
-                dt = ckan.datastore_upsert(name=ty, records=gen_json(tables[ty]))
-                return "New %s" % dt
+                resources = create_ckan_datastores(ckan)
+                dt = ckan.datastore_upsert(name=ty,
+                                           records=gen_json(tables[ty]),
+                                           resource_id=resources[ty]['id'])
+                return render_template('/applications/export.html',
+                                       title=title,
+                                       app=app)
             else:
+                ckan.datastore_delete(name=ty)
                 ckan.datastore_create(name=ty)
                 dt = ckan.datastore_upsert(name=ty, records=gen_json(tables[ty]))
-                return "Old %s" % dt
+                return render_template('/applications/export.html',
+                                       title=title,
+                                       app=app)
         else:
-            output = ckan.package_create(app, current_user,
-                                         url_for('.details',
-                                                 short_name=app.short_name,
-                                                 _external=True))
-            return "Not Found %s" % output
-
-        #tables = {"task": model.Task, "task_run": model.TaskRun}
-        #try:
-        #    table = tables[ty]
-        #except KeyError:
-        #    return abort(404)
-        #return Response(gen_json(table), mimetype='application/json')
+            dt = ckan.package_create(app, app.owner,
+                                url_for('.details',
+                                        short_name=app.short_name,
+                                        _external=True))
+            print dt
+            resources = create_ckan_datastores(ckan)
+            dt = ckan.datastore_upsert(name=ty,
+                                       records=gen_json(tables[ty]),
+                                       resource_id=resources[ty]['id'])
+            return render_template('/applications/export.html',
+                                   title=title,
+                                   app=app)
 
     def respond_csv(ty):
         # Export Task(/Runs) to CSV
@@ -761,6 +776,7 @@ def export_to(short_name):
             abort(404)
         return render_template('/applications/export.html',
                                title=title,
+                               ckan_name=current_app.config.get('CKAN_NAME'),
                                app=app)
     if fmt not in export_formats:
         abort(404)

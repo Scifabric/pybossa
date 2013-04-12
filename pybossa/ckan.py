@@ -46,6 +46,7 @@ class Ckan(object):
         for r in self.package['resources']:
             if r['name'] == name:
                 return r['id']
+        return False
 
     def package_exists(self, name):
         pkg = {'id': name}
@@ -67,7 +68,8 @@ class Ckan(object):
         r = requests.post(self.url + "/action/package_create",
                           headers=self.headers,
                           data=json.dumps(pkg))
-        self.package = r.json()
+        output = r.json()
+        self.package = output['result']
         return self.package
 
     def resource_create(self, name):
@@ -98,13 +100,24 @@ class Ckan(object):
         _records = ''
         for text in records:
             _records += text
-        #tmp = json.loads(_records)
-        #tmp = [{u'info': {u'city': u'San Marino  San Marino', u'question': u'Find one urban park for this city'}, u'n_answers': 30, u'quorum': 0, u'created': u'2012-09-13T20:00:26.585284', u'calibration': 0, u'app_id': 149, u'state': u'completed', 'id': 8709, u'priority_0': 0.0}]
-        print self.get_resource_id(name)
-        payload = {'resource_id': resource_id,
-                   'records': json.loads(_records),
-                   'method': 'insert'}
-        r = requests.post(self.url + "/action/datastore_upsert",
+        _records = json.loads(_records)
+        for i in range(0, len(_records), 20):
+            chunk = _records[i:i + 20]
+            payload = {'resource_id': resource_id,
+                       'records': chunk,
+                       'method': 'insert'}
+            r = requests.post(self.url + "/action/datastore_upsert",
+                              headers=self.headers,
+                              data=json.dumps(payload))
+            if r.status_code != 200:
+                return r.text
+        return r.text
+
+    def datastore_delete(self, name, resource_id=None):
+        if resource_id is None:
+            resource_id = self.get_resource_id(name)
+        payload = {'resource_id': resource_id}
+        r = requests.post(self.url + "/action/datastore_delete",
                           headers=self.headers,
                           data=json.dumps(payload))
         return r.text
