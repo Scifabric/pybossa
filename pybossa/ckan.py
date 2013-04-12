@@ -1,8 +1,16 @@
 import requests
 import json
 
+from pybossa.model import Task, TaskRun
+
 
 class Ckan(object):
+    aliases = dict(task="task", task_run="task_run, answer")
+    fields = dict(task=[{'id': attr} for attr in Task.__dict__.keys()
+                        if "__" not in attr[0:2] and "_" not in attr[0:1]],
+                  task_run=[{'id': attr} for attr in TaskRun.__dict__.keys()
+                            if "__" not in attr and "_" not in attr[0:1]])
+    indexes = dict(task='id', task_run='id')
 
     def __init__(self, url, api_key):
         self.url = url
@@ -35,15 +43,23 @@ class Ckan(object):
         return self.package
 
     def resource_create(self, name):
-        print self.package
         rsrc = {'package_id': self.package['id'],
                 'url': self.package['url'],
                 'description': name}
-        print rsrc
         r = requests.post(self.url + "/action/resource_create",
                           headers=self.headers,
                           data=json.dumps(rsrc))
-        print r.text
-        print r.json()
         self.resource[name] = r.json()
         return self.resource[name]
+
+    def datastore_create(self, name):
+        if name == 'task':
+            aliases = 'task'
+        elif name == 'task_run':
+            aliases = 'task_run, answers'
+        else:
+            return False
+        datastore = {'resource_id': self.resource[name]['id'],
+                     'aliases': aliases,
+                     'fields': self.fields[name],
+                     'indexes': self.indexes[name]}
