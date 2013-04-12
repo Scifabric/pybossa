@@ -370,6 +370,7 @@ def settings(short_name):
     except HTTPException:
         return abort(403)
 
+
 def compute_importer_variant_pairs(forms):
     """Return a list of pairs of importer variants. The pair-wise enumeration
     is due to UI design.
@@ -386,6 +387,7 @@ def compute_importer_variant_pairs(forms):
     return [
         (importer_variants[i * 2], importer_variants[i * 2 + 1])
         for i in xrange(0, int(math.ceil(len(variants) / 2.0)))]
+
 
 @blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
 def import_task(short_name):
@@ -448,8 +450,8 @@ def _import_task(app, handler, form, render_forms):
             db.session.commit()
             empty = False
         if empty:
-            raise importer.BulkImportException(lazy_gettext(
-                    'Oops! It looks like the file is empty.'))
+            raise importer.BulkImportException(
+                lazy_gettext('Oops! It looks like the file is empty.'))
         flash(lazy_gettext('Tasks imported successfully!'), 'success')
         return redirect(url_for('.settings', short_name=app.short_name))
     except importer.BulkImportException, err_msg:
@@ -562,7 +564,7 @@ def tutorial(short_name):
 @blueprint.route('/<short_name>/<int:task_id>/results.json')
 def export(short_name, task_id):
     """Return a file with all the TaskRuns for a give Task"""
-    app = app_by_shortname(short_name)
+    app_by_shortname(short_name)
     task = db.session.query(model.Task)\
         .filter(model.Task.id == task_id)\
         .first()
@@ -716,10 +718,9 @@ def export_to(short_name):
                                        app=app)
         else:
             dt = ckan.package_create(app, app.owner,
-                                url_for('.details',
-                                        short_name=app.short_name,
-                                        _external=True))
-            print dt
+                                     url_for('.details',
+                                             short_name=app.short_name,
+                                             _external=True))
             resources = create_ckan_datastores(ckan)
             dt = ckan.datastore_upsert(name=ty,
                                        records=gen_json(tables[ty]),
