@@ -82,9 +82,9 @@ class Ckan(object):
                 rsrc = r
                 break
         datastore = {'resource_id': rsrc['id'],
-                     'aliases': self.aliases[name],
                      'fields': self.fields[name],
-                     'indexes': self.indexes[name]}
+                     'indexes': self.indexes[name],
+                     'primary_key': self.primary_key[name]}
         r = requests.post(self.url + "/action/datastore_create",
                           headers=self.headers,
                           data=json.dumps(datastore))
