@@ -33,7 +33,7 @@ class Ckan(object):
         return fields
 
     def __init__(self, url, api_key):
-        self.url = url
+        self.url = url + "/api/3/"
         self.headers = {'Authorization': api_key,
                         'Content-type': 'application/json'}
         self.package = None

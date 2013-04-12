@@ -696,7 +696,7 @@ def export_to(short_name):
         msg_1 = lazy_gettext("Data exported to ")
         msg = msg_1 + "%s ..." % current_app.config['CKAN_URL']
         flash(msg, 'success')
-        ckan = Ckan(url=current_app.config['CKAN_API'],
+        ckan = Ckan(url=current_app.config['CKAN_URL'],
                     api_key=current_user.ckan_api)
 
         package = ckan.package_exists(name=app.short_name)
@@ -767,8 +767,9 @@ def export_to(short_name):
                                    app=app)
 
     export_formats = ["json", "csv"]
-    if current_user.ckan_api:
-        export_formats.append('ckan')
+    if current_user.is_authenticated():
+        if current_user.ckan_api:
+            export_formats.append('ckan')
 
     ty = request.args.get('type')
     fmt = request.args.get('format')
