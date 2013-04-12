@@ -352,7 +352,7 @@ def details(short_name):
     title = app_title(app, None)
     template_args = {"app": app, "title": title}
     return render_template(template, **template_args)
-    
+
 
 @blueprint.route('/<short_name>/settings')
 @login_required
@@ -680,18 +680,26 @@ def export_to(short_name):
 
     def respond_ckan(ty):
         # First check if there is a package (dataset) in CKAN
+        tables = {"task": model.Task, "task_run": model.TaskRun}
         ckan = Ckan(url=current_app.config['CKAN_API'],
                     api_key=current_user.ckan_api)
 
         package = ckan.package_exists(name=app.short_name)
         if package:
             if len(package['resources']) == 0:
-                resources = ckan.resource_create(name=ty)
-                return "New %s" % resources
+                for k in tables.keys():
+                    # Create the two table resources
+                    ckan.resource_create(name=k)
+                    ckan.datastore_create(name=k)
+                # Update the package
+                ckan.package_exists(name=app.short_name)
+                dt = ckan.datastore_upsert(name=ty, records=gen_json(tables[ty]))
+                return "New %s" % dt
             else:
-                return "Old %s" % package['resources']
+                ckan.datastore_create(name=ty)
+                dt = ckan.datastore_upsert(name=ty, records=gen_json(tables[ty]))
+                return "Old %s" % dt
         else:
-            print "Creating package"
             output = ckan.package_create(app, current_user,
                                          url_for('.details',
                                                  short_name=app.short_name,

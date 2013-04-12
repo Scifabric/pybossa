@@ -29,7 +29,7 @@ class Ckan(object):
                 elif attr in float_fields:
                     fields.append({'id': attr, 'type': 'float'})
                 else:
-                    fields.append({'id': attr})
+                    fields.append({'id': "%s_%s" % (obj.__name__, attr), 'type': 'int'})
         return fields
 
     def __init__(self, url, api_key):
@@ -41,6 +41,11 @@ class Ckan(object):
         self.fields = dict(task=self._field_setup(Task), task_run=self._field_setup(TaskRun))
         self.primary_key = dict(task='id', task_run='id')
         self.indexes = dict(task='id', task_run='id')
+
+    def get_resource_id(self, name):
+        for r in self.package['resources']:
+            if r['name'] == name:
+                return r['id']
 
     def package_exists(self, name):
         pkg = {'id': name}
@@ -75,17 +80,31 @@ class Ckan(object):
                           data=json.dumps(rsrc))
         return r.json()
 
-    def datastore_create(self, name):
-        rsrc = None
-        for r in self.package['resources']:
-            if r['name'] == name:
-                rsrc = r
-                break
-        datastore = {'resource_id': rsrc['id'],
+    def datastore_create(self, name, resource_id=None):
+        if resource_id is None:
+            resource_id = self.get_resource_id(name)
+        datastore = {'resource_id': resource_id,
                      'fields': self.fields[name],
                      'indexes': self.indexes[name],
                      'primary_key': self.primary_key[name]}
         r = requests.post(self.url + "/action/datastore_create",
                           headers=self.headers,
                           data=json.dumps(datastore))
-        return r.json()
+        return r.text
+
+    def datastore_upsert(self, name, records, resource_id=None):
+        if resource_id is None:
+            resource_id = self.get_resource_id(name)
+        _records = ''
+        for text in records:
+            _records += text
+        #tmp = json.loads(_records)
+        #tmp = [{u'info': {u'city': u'San Marino  San Marino', u'question': u'Find one urban park for this city'}, u'n_answers': 30, u'quorum': 0, u'created': u'2012-09-13T20:00:26.585284', u'calibration': 0, u'app_id': 149, u'state': u'completed', 'id': 8709, u'priority_0': 0.0}]
+        print self.get_resource_id(name)
+        payload = {'resource_id': resource_id,
+                   'records': json.loads(_records),
+                   'method': 'insert'}
+        r = requests.post(self.url + "/action/datastore_upsert",
+                          headers=self.headers,
+                          data=json.dumps(payload))
+        return r.text
