@@ -695,36 +695,49 @@ def export_to(short_name):
         tables = {"task": model.Task, "task_run": model.TaskRun}
         msg_1 = lazy_gettext("Data exported to ")
         msg = msg_1 + "%s ..." % current_app.config['CKAN_URL']
-        flash(msg, 'success')
         ckan = Ckan(url=current_app.config['CKAN_URL'],
                     api_key=current_user.ckan_api)
 
-        package = ckan.package_exists(name=app.short_name)
-        if package:
-            if len(package['resources']) == 0:
-                resources = create_ckan_datastores(ckan)
-                dt = ckan.datastore_upsert(name=ty,
-                                           records=gen_json(tables[ty]),
-                                           resource_id=resources[ty]['id'])
-                return render_template('/applications/export.html',
-                                       title=title,
-                                       app=app)
+        try:
+            package = ckan.package_exists(name=app.short_name)
+            if package:
+                if len(package['resources']) == 0:
+                    resources = create_ckan_datastores(ckan)
+                    ckan.datastore_upsert(name=ty,
+                                          records=gen_json(tables[ty]),
+                                          resource_id=resources[ty]['id'])
+                    return render_template('/applications/export.html',
+                                           title=title,
+                                           app=app)
+                else:
+                    ckan.datastore_delete(name=ty)
+                    ckan.datastore_create(name=ty)
+                    ckan.datastore_upsert(name=ty, records=gen_json(tables[ty]))
+                    flash(msg, 'success')
+                    return render_template('/applications/export.html',
+                                           title=title,
+                                           app=app)
             else:
-                ckan.datastore_delete(name=ty)
-                ckan.datastore_create(name=ty)
-                dt = ckan.datastore_upsert(name=ty, records=gen_json(tables[ty]))
+                ckan.package_create(app, app.owner,
+                                    url_for('.details',
+                                            short_name=app.short_name,
+                                            _external=True))
+                resources = create_ckan_datastores(ckan)
+                ckan.datastore_upsert(name=ty,
+                                      records=gen_json(tables[ty]),
+                                      resource_id=resources[ty]['id'])
+
+                flash(msg, 'success')
                 return render_template('/applications/export.html',
                                        title=title,
                                        app=app)
-        else:
-            dt = ckan.package_create(app, app.owner,
-                                     url_for('.details',
-                                             short_name=app.short_name,
-                                             _external=True))
-            resources = create_ckan_datastores(ckan)
-            dt = ckan.datastore_upsert(name=ty,
-                                       records=gen_json(tables[ty]),
-                                       resource_id=resources[ty]['id'])
+        except Exception as inst:
+            if len(inst.args) == 3:
+                type, msg, status_code = inst.args
+                msg = ("Error: %s with status code: %s" % (type, status_code))
+            else:
+                msg = ("Error: %s" % inst.args[0])
+            flash(msg, 'danger')
             return render_template('/applications/export.html',
                                    title=title,
                                    app=app)
