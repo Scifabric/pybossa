@@ -31,6 +31,7 @@ from pybossa.model import App, Task
 from pybossa.util import Pagination, UnicodeWriter
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
+from pybossa.ckan import Ckan
 
 import json
 import importer
@@ -351,7 +352,7 @@ def details(short_name):
     title = app_title(app, None)
     template_args = {"app": app, "title": title}
     return render_template(template, **template_args)
-    
+
 
 @blueprint.route('/<short_name>/settings')
 @login_required
@@ -369,6 +370,7 @@ def settings(short_name):
     except HTTPException:
         return abort(403)
 
+
 def compute_importer_variant_pairs(forms):
     """Return a list of pairs of importer variants. The pair-wise enumeration
     is due to UI design.
@@ -385,6 +387,7 @@ def compute_importer_variant_pairs(forms):
     return [
         (importer_variants[i * 2], importer_variants[i * 2 + 1])
         for i in xrange(0, int(math.ceil(len(variants) / 2.0)))]
+
 
 @blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
 def import_task(short_name):
@@ -447,8 +450,8 @@ def _import_task(app, handler, form, render_forms):
             db.session.commit()
             empty = False
         if empty:
-            raise importer.BulkImportException(lazy_gettext(
-                    'Oops! It looks like the file is empty.'))
+            raise importer.BulkImportException(
+                lazy_gettext('Oops! It looks like the file is empty.'))
         flash(lazy_gettext('Tasks imported successfully!'), 'success')
         return redirect(url_for('.settings', short_name=app.short_name))
     except importer.BulkImportException, err_msg:
@@ -561,7 +564,7 @@ def tutorial(short_name):
 @blueprint.route('/<short_name>/<int:task_id>/results.json')
 def export(short_name, task_id):
     """Return a file with all the TaskRuns for a give Task"""
-    app = app_by_shortname(short_name)
+    app_by_shortname(short_name)
     task = db.session.query(model.Task)\
         .filter(model.Task.id == task_id)\
         .first()
@@ -677,6 +680,68 @@ def export_to(short_name):
             return abort(404)
         return Response(gen_json(table), mimetype='application/json')
 
+    def create_ckan_datastores(ckan):
+        tables = {"task": model.Task, "task_run": model.TaskRun}
+        resources = dict(task=None, task_run=None)
+        for k in tables.keys():
+            # Create the two table resources
+            resource = ckan.resource_create(name=k)
+            resources[k] = resource['result']
+            ckan.datastore_create(name=k, resource_id=resources[k]['id'])
+        return resources
+
+    def respond_ckan(ty):
+        # First check if there is a package (dataset) in CKAN
+        tables = {"task": model.Task, "task_run": model.TaskRun}
+        msg_1 = lazy_gettext("Data exported to ")
+        msg = msg_1 + "%s ..." % current_app.config['CKAN_URL']
+        ckan = Ckan(url=current_app.config['CKAN_URL'],
+                    api_key=current_user.ckan_api)
+
+        try:
+            package = ckan.package_exists(name=app.short_name)
+            if package:
+                if len(package['resources']) == 0:
+                    resources = create_ckan_datastores(ckan)
+                    ckan.datastore_upsert(name=ty,
+                                          records=gen_json(tables[ty]),
+                                          resource_id=resources[ty]['id'])
+                    return render_template('/applications/export.html',
+                                           title=title,
+                                           app=app)
+                else:
+                    ckan.datastore_delete(name=ty)
+                    ckan.datastore_create(name=ty)
+                    ckan.datastore_upsert(name=ty, records=gen_json(tables[ty]))
+                    flash(msg, 'success')
+                    return render_template('/applications/export.html',
+                                           title=title,
+                                           app=app)
+            else:
+                ckan.package_create(app, app.owner,
+                                    url_for('.details',
+                                            short_name=app.short_name,
+                                            _external=True))
+                resources = create_ckan_datastores(ckan)
+                ckan.datastore_upsert(name=ty,
+                                      records=gen_json(tables[ty]),
+                                      resource_id=resources[ty]['id'])
+
+                flash(msg, 'success')
+                return render_template('/applications/export.html',
+                                       title=title,
+                                       app=app)
+        except Exception as inst:
+            if len(inst.args) == 3:
+                type, msg, status_code = inst.args
+                msg = ("Error: %s with status code: %s" % (type, status_code))
+            else:
+                msg = ("Error: %s" % inst.args[0])
+            flash(msg, 'danger')
+            return render_template('/applications/export.html',
+                                   title=title,
+                                   app=app)
+
     def respond_csv(ty):
         # Export Task(/Runs) to CSV
         types = {
@@ -714,6 +779,11 @@ def export_to(short_name):
                                    title=title,
                                    app=app)
 
+    export_formats = ["json", "csv"]
+    if current_user.is_authenticated():
+        if current_user.ckan_api:
+            export_formats.append('ckan')
+
     ty = request.args.get('type')
     fmt = request.args.get('format')
     if not (fmt and ty):
@@ -721,10 +791,11 @@ def export_to(short_name):
             abort(404)
         return render_template('/applications/export.html',
                                title=title,
+                               ckan_name=current_app.config.get('CKAN_NAME'),
                                app=app)
-    if fmt not in ["json", "csv"]:
+    if fmt not in export_formats:
         abort(404)
-    return {"json": respond_json, "csv": respond_csv}[fmt](ty)
+    return {"json": respond_json, "csv": respond_csv, 'ckan': respond_ckan}[fmt](ty)
 
 
 @blueprint.route('/<short_name>/stats')
