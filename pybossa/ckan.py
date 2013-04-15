@@ -53,7 +53,7 @@ class Ckan(object):
         r = requests.get(self.url + "/action/package_show",
                          headers=self.headers,
                          params=pkg)
-        output = r.json()
+        output = json.loads(r.text)
         if output.get('success'):
             self.package = output['result']
             return output['result']
@@ -68,9 +68,12 @@ class Ckan(object):
         r = requests.post(self.url + "/action/package_create",
                           headers=self.headers,
                           data=json.dumps(pkg))
-        output = r.json()
-        self.package = output['result']
-        return self.package
+        try:
+            output = json.loads(r.text)
+            self.package = output['result']
+            return self.package
+        except:
+            return {'error': r.text}
 
     def resource_create(self, name):
         rsrc = {'package_id': self.package['id'],
@@ -80,7 +83,10 @@ class Ckan(object):
         r = requests.post(self.url + "/action/resource_create",
                           headers=self.headers,
                           data=json.dumps(rsrc))
-        return r.json()
+        try:
+            return json.loads(r.text)
+        except:
+            return {'error': r.text}
 
     def datastore_create(self, name, resource_id=None):
         if resource_id is None:
@@ -92,7 +98,14 @@ class Ckan(object):
         r = requests.post(self.url + "/action/datastore_create",
                           headers=self.headers,
                           data=json.dumps(datastore))
-        return r.text
+        try:
+            output = json.loads(r.text)
+            if output['success']:
+                return output['result']
+            else:
+                return output
+        except:
+            return {"error": r.text}
 
     def datastore_upsert(self, name, records, resource_id=None):
         if resource_id is None:
@@ -101,17 +114,23 @@ class Ckan(object):
         for text in records:
             _records += text
         _records = json.loads(_records)
-        for i in range(0, len(_records), 20):
-            chunk = _records[i:i + 20]
-            payload = {'resource_id': resource_id,
-                       'records': chunk,
-                       'method': 'insert'}
-            r = requests.post(self.url + "/action/datastore_upsert",
-                              headers=self.headers,
-                              data=json.dumps(payload))
-            if r.status_code != 200:
-                return r.text
-        return r.text
+        try:
+            for i in range(0, len(_records), 20):
+                chunk = _records[i:i + 20]
+                payload = {'resource_id': resource_id,
+                           'records': chunk,
+                           'method': 'insert'}
+                r = requests.post(self.url + "/action/datastore_upsert",
+                                  headers=self.headers,
+                                  data=json.dumps(payload))
+                if r.status_code != 200:
+                    raise Exception("CKAN: upsert failed",
+                                    r.text,
+                                    r.status_code)
+            return True
+        except Exception as inst:
+            msg, err, status_code = inst.args
+            return {"error_msg": msg, "error": err, "status_code": status_code}
 
     def datastore_delete(self, name, resource_id=None):
         if resource_id is None:
@@ -120,4 +139,13 @@ class Ckan(object):
         r = requests.post(self.url + "/action/datastore_delete",
                           headers=self.headers,
                           data=json.dumps(payload))
-        return r.text
+        try:
+            if (r.status_code != 200):
+                raise Exception("CKAN: delete failed",
+                                r.text,
+                                r.status_code)
+            else:
+                return True
+        except Exception as inst:
+            msg, err, status_code = inst.args
+            return {"error_msg": msg, "error": err, "status_code": status_code}
