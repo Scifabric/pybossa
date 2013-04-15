@@ -66,8 +66,7 @@ class Ckan(object):
                                 r.text,
                                 r.status_code)
         except Exception as inst:
-            type, err, status_code = inst.args
-            return {"error_type": type, "error": err, "status_code": status_code}
+            return inst
 
     def package_create(self, app, user, url):
         pkg = {'name': app.short_name,
@@ -87,8 +86,7 @@ class Ckan(object):
                                 r.text,
                                 r.status_code)
         except Exception as inst:
-            type, err, status_code = inst.args
-            return {"error_type": type, "error": err, "status_code": status_code}
+            return inst
 
     def resource_create(self, name):
         rsrc = {'package_id': self.package['id'],
@@ -106,8 +104,7 @@ class Ckan(object):
                                 r.text,
                                 r.status_code)
         except Exception as inst:
-            type, err, status_code = inst.args
-            return {"error_type": type, "error": err, "status_code": status_code}
+            return inst
 
     def datastore_create(self, name, resource_id=None):
         if resource_id is None:
@@ -131,8 +128,7 @@ class Ckan(object):
                                 r.text,
                                 r.status_code)
         except Exception as inst:
-            type, err, status_code = inst.args
-            return {"error_type": type, "error": err, "status_code": status_code}
+            return inst
 
     def datastore_upsert(self, name, records, resource_id=None):
         if resource_id is None:
@@ -151,13 +147,12 @@ class Ckan(object):
                                   headers=self.headers,
                                   data=json.dumps(payload))
                 if r.status_code != 200:
-                    raise Exception("CKAN: upsert failed",
+                    raise Exception("CKAN: datastore_upsert failed",
                                     r.text,
                                     r.status_code)
             return True
         except Exception as inst:
-            type, err, status_code = inst.args
-            return {"error_msg": type, "error": err, "status_code": status_code}
+            return inst
 
     def datastore_delete(self, name, resource_id=None):
         if resource_id is None:
@@ -168,11 +163,10 @@ class Ckan(object):
                           data=json.dumps(payload))
         try:
             if r.status_code != 200:
-                raise Exception("CKAN: delete failed",
+                raise Exception("CKAN: datastore_delete failed",
                                 r.text,
                                 r.status_code)
             else:
                 return True
         except Exception as inst:
-            type, err, status_code = inst.args
-            return {"error_type": type, "error": err, "status_code": status_code}
+            return inst
