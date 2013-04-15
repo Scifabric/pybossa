@@ -18,3 +18,4 @@ flask-cache
 flask-heroku
 pygeoip
 flask-babel
+beautifulsoup4
