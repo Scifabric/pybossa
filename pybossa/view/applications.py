@@ -351,6 +351,14 @@ def details(short_name):
 
     title = app_title(app, None)
     template_args = {"app": app, "title": title}
+    if current_app.config.get('CKAN_URL'):
+        template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
+        ckan = Ckan(url=current_app.config['CKAN_URL'])
+        pkg = ckan.package_exists(name=app.short_name)
+        if pkg:
+            template_args['ckan_pkg_url'] = (
+                "%s/dataset/%s" % (current_app.config['CKAN_URL'], app.short_name))
+            template_args['ckan_pkg'] = pkg
     return render_template(template, **template_args)
 
 
@@ -697,10 +705,13 @@ def export_to(short_name):
         msg = msg_1 + "%s ..." % current_app.config['CKAN_URL']
         ckan = Ckan(url=current_app.config['CKAN_URL'],
                     api_key=current_user.ckan_api)
+        app_url = url_for('.details', short_name=app.short_name, _external=True)
 
         try:
             package = ckan.package_exists(name=app.short_name)
             if package:
+                # Update the package
+                ckan.package_update(app=app, user=app.owner, url=app_url)
                 if len(package['resources']) == 0:
                     resources = create_ckan_datastores(ckan)
                     ckan.datastore_upsert(name=ty,
@@ -718,10 +729,8 @@ def export_to(short_name):
                                            title=title,
                                            app=app)
             else:
-                ckan.package_create(app, app.owner,
-                                    url_for('.details',
-                                            short_name=app.short_name,
-                                            _external=True))
+                ckan.package_create(app=app, user=app.owner, url=app_url,
+                                    tags=current_app.config['BRAND'])
                 resources = create_ckan_datastores(ckan)
                 ckan.datastore_upsert(name=ty,
                                       records=gen_json(tables[ty]),
@@ -732,6 +741,7 @@ def export_to(short_name):
                                        title=title,
                                        app=app)
         except Exception as inst:
+            print inst
             if len(inst.args) == 3:
                 type, msg, status_code = inst.args
                 msg = ("Error: %s with status code: %s" % (type, status_code))
