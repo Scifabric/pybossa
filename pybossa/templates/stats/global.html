@@ -1,6 +1,7 @@
 {% extends "/base.html" %}
 {% set active_page = "leaderboard" %}
 {% set active_app  = "all" %}
+{% import "privacy/locked.html" as privacy %}
 
 {% block content %}
 <link href="{{url_for('static', filename='css/stats/stats.css')}}" rel="stylesheet" type="text/css">
@@ -17,6 +18,9 @@ h3 > small {
 
 <div class="row-fluid">
     <div class="span12">
+        {% if enforce_privacy and (current_user.is_anonymous() or (current_user.is_authenticated and not current_user.admin)) %}
+        {{ privacy.render_lock_page() }}
+        {% else %}
         <h1><strong>{{brand}}</strong>: General Statistics</h1>
         <br/>
             <!-- Users Stats CARD -->
@@ -141,7 +145,7 @@ h3 > small {
                 </div>
             </div>
             <!-- END Users Stats CARD -->
-
+        {% endif %} 
     </div>
 </div>
 {% endblock %}

@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% set active_page = "community"  %}
+{% import "privacy/locked.html" as privacy %}
 
 {% macro render_pagination(pagination) %}
   <div class="pagination pagination-centered">
@@ -38,6 +39,9 @@
 
 <div class="row">
   <div class="span9 offset2">
+      {% if enforce_privacy and (current_user.is_anonymous() or (current_user.is_authenticated and not current_user.admin)) %}
+        {{ privacy.render_lock_page() }}
+      {% else %}
       <h1>{{ _('Community') }} <small>{{total}} {{ _('registered users') }}</small><a class="pull-right btn btn-primary" href="{{url_for('leaderboard.index')}}"><i class="icon-trophy" style="color:white"></i> {{ _('Leaderboard') }}</a></h1>
       {% if accounts %}
       <ul class="thumbnails">
@@ -64,13 +68,11 @@
       {% endfor %}
       </ul>
     {% endif %}
-  </div>
-</div>
-
-<div class="row">
     <div class="span9 offset2">
         {{ render_pagination(pagination) }}
     </div>
+    {% endif %}
+  </div>
 </div>
 
 <script>

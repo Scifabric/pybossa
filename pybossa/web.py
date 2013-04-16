@@ -188,9 +188,10 @@ def home():
          'top_users': None}
 
     if app.config['ENFORCE_PRIVACY'] and current_user.is_authenticated():
-        print "PRIVACY ENABLED"
         if current_user.admin:
-            d['top_users'] = cached_apps.get_top()
+            d['top_users'] = cached_users.get_top()
+    if not app.config['ENFORCE_PRIVACY']:
+        d['top_users'] = cached_users.get_top()
     return render_template('/home/index.html', **d)
 
 
