@@ -27,6 +27,14 @@
             {{ app.long_description|safe}}
         {% endif %}
         <hr>
+        {% if ckan_pkg_url %}
+        <h2>Data repository: {{ckan_name | default('CKAN server')}}</h2>
+        <p><i class="icon-bar-chart" style="font-size:16px;"></i> <a href="{{ckan_pkg_url}}">Preview the data</a>
+</p>
+        {% if ckan_pkg.license_title %}
+        <p><strong>Data License</strong>: {{ ckan_pkg.license_title }}</p>
+        {% endif %}
+        {% endif %}
     </div>
     {% else %}
     <div class="page-header">

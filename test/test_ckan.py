@@ -232,11 +232,13 @@ class TestCkanModule(object):
             assert out is False, "It should return False as pkg does not exist"
             # Handle error in CKAN server
             Mock.return_value = self.server_error
-            out = self.ckan.package_exists(name="something-goes-wrong")
-            type, msg, status_code = out.args
-            assert "Server Error" in msg, msg
-            assert status_code == 500, "status_code should be 500"
-            assert type == "CKAN: package_show failed"
+            try:
+                self.ckan.package_exists(name="something-goes-wrong")
+            except Exception as out:
+                type, msg, status_code = out.args
+                assert "Server Error" in msg, msg
+                assert status_code == 500, "status_code should be 500"
+                assert type == "CKAN: package_show failed"
 
     @patch('pybossa.ckan.requests.get')
     def test_01_package_exists_returns_pkg(self, Mock):
@@ -289,21 +291,15 @@ class TestCkanModule(object):
             err_msg = "The package ID should be the same"
             assert out['id'] == self.package_id, err_msg
 
-    @patch('pybossa.ckan.requests.post')
-    def test_04_package_create_fails(self, Mock):
-        """Test CKAN package_create fails and handles it correctly"""
-        html_request = FakeRequest("Server Error", 500,
-                                   {'content-type': 'text/html'})
-        Mock.return_value = html_request
-        with self.app.test_request_context('/'):
-            # Resource that exists
-            app = model.App(short_name='urbanpark', name='Urban Parks')
-            user = model.User(fullname='Daniel Lombrana Gonzalez')
-            out = self.ckan.package_create(app=app, user=user, url="http://something.com")
-            type, msg, status_code = out.args
-            assert "Server Error" in msg, msg
-            assert 500 == status_code, status_code
-            assert "CKAN: package_create failed" == type, type
+            # Check the exception
+            Mock.return_value = self.server_error
+            try:
+                self.ckan.package_create(app=app, user=user, url="http://something.com")
+            except Exception as out:
+                type, msg, status_code = out.args
+                assert "Server Error" in msg, msg
+                assert 500 == status_code, status_code
+                assert "CKAN: package_create failed" == type, type
 
     @patch('pybossa.ckan.requests.post')
     def test_05_resource_create(self, Mock):
@@ -326,11 +322,13 @@ class TestCkanModule(object):
             err_msg = "It should create the task resource"
             assert out["id"] == self.task_resource_id, err_msg
             Mock.return_value = self.server_error
-            out = self.ckan.resource_create(name='something-goes-wrong')
-            type, msg, status_code = out.args
-            assert "Server Error" in msg, msg
-            assert 500 == status_code, status_code
-            assert "CKAN: resource_create failed" == type, type
+            try:
+                self.ckan.resource_create(name='something-goes-wrong')
+            except Exception as out:
+                type, msg, status_code = out.args
+                assert "Server Error" in msg, msg
+                assert 500 == status_code, status_code
+                assert "CKAN: resource_create failed" == type, type
 
     @patch('pybossa.ckan.requests.post')
     def test_05_datastore_create(self, Mock):
@@ -346,12 +344,14 @@ class TestCkanModule(object):
             assert out['resource_id'] == self.task_resource_id, err_msg
             # Check the error
             Mock.return_value = self.server_error
-            out = self.ckan.datastore_create(name='task',
-                                             resource_id=self.task_resource_id)
-            type, msg, status_code = out.args
-            assert "Server Error" in msg, err_msg
-            assert 500 == status_code, status_code
-            assert "CKAN: datastore_create failed" == type, type
+            try:
+                self.ckan.datastore_create(name='task',
+                                           resource_id=self.task_resource_id)
+            except Exception as out:
+                type, msg, status_code = out.args
+                assert "Server Error" in msg, err_msg
+                assert 500 == status_code, status_code
+                assert "CKAN: datastore_create failed" == type, type
 
     @patch('pybossa.ckan.requests.post')
     def test_06_datastore_upsert(self, Mock):
@@ -369,13 +369,15 @@ class TestCkanModule(object):
             assert out is True, err_msg
             # Check the error
             Mock.return_value = self.server_error
-            out = self.ckan.datastore_upsert(name='task',
-                                             records=json.dumps([record]),
-                                             resource_id=self.task_resource_id)
-            type, msg, status_code = out.args
-            assert "Server Error" in msg, msg
-            assert 500 == status_code, status_code
-            assert "CKAN: datastore_upsert failed" == type, type
+            try:
+                self.ckan.datastore_upsert(name='task',
+                                           records=json.dumps([record]),
+                                           resource_id=self.task_resource_id)
+            except Exception as out:
+                type, msg, status_code = out.args
+                assert "Server Error" in msg, msg
+                assert 500 == status_code, status_code
+                assert "CKAN: datastore_upsert failed" == type, type
 
     @patch('pybossa.ckan.requests.post')
     def test_07_datastore_delete(self, Mock):
@@ -391,9 +393,35 @@ class TestCkanModule(object):
             assert out is True, err_msg
             # Check the error
             Mock.return_value = self.server_error
-            out = self.ckan.datastore_delete(name='task',
-                                             resource_id=self.task_resource_id)
-            type, msg, status_code = out.args
-            assert "Server Error" in msg, msg
-            assert 500 == status_code, status_code
-            assert "CKAN: datastore_delete failed" == type, type
+            try:
+                self.ckan.datastore_delete(name='task',
+                                           resource_id=self.task_resource_id)
+            except Exception as out:
+                type, msg, status_code = out.args
+                assert "Server Error" in msg, msg
+                assert 500 == status_code, status_code
+                assert "CKAN: datastore_delete failed" == type, type
+
+    @patch('pybossa.ckan.requests.post')
+    def test_08_package_update(self, Mock):
+        """Test CKAN package_update works"""
+        html_request = FakeRequest(json.dumps(self.pkg_json_found), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
+        with self.app.test_request_context('/'):
+            # Resource that exists
+            app = model.App(short_name='urbanpark', name='Urban Parks')
+            user = model.User(fullname='Daniel Lombrana Gonzalez')
+            out = self.ckan.package_update(app=app, user=user, url="http://something.com")
+            err_msg = "The package ID should be the same"
+            assert out['id'] == self.package_id, err_msg
+
+            # Check the exception
+            Mock.return_value = self.server_error
+            try:
+                self.ckan.package_update(app=app, user=user, url="http://something.com")
+            except Exception as out:
+                type, msg, status_code = out.args
+                assert "Server Error" in msg, msg
+                assert 500 == status_code, status_code
+                assert "CKAN: package_update failed" == type, type
