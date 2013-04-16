@@ -54,7 +54,7 @@ class Ckan(object):
                          headers=self.headers,
                          params=pkg)
         try:
-            if r.status_code == 200:
+            if r.status_code == 200 or r.status_code == 404:
                 output = json.loads(r.text)
                 if output.get('success'):
                     self.package = output['result']
