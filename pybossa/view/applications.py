@@ -717,6 +717,7 @@ def export_to(short_name):
                     ckan.datastore_upsert(name=ty,
                                           records=gen_json(tables[ty]),
                                           resource_id=resources[ty]['id'])
+                    flash(msg, 'success')
                     return render_template('/applications/export.html',
                                            title=title,
                                            app=app)
