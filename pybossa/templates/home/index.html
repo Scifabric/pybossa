@@ -70,7 +70,8 @@
         </div>
       </section>
       
-      <section class="grey">
+      {% if top_users %}
+      <section id="top_users" class="grey">
         <h2><i class="icon-group"></i>{{ _('Most Active Volunteers') }}</h2>
         <ul class="users">
             {% for user in top_users %}
@@ -87,6 +88,7 @@
           {% endfor %}
         </ul>
       </section>
+      {% endif %}
 <script>
 $("a[rel=popover]").popover({
         html: true,

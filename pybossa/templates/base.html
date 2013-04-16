@@ -53,7 +53,8 @@
     </div> <!-- /container -->
     <footer>
     {% include ['custom/_footer.html', '_footer.html'] ignore missing %}
-    <div class="container">
+    {% if not enforce_privacy %}
+    <div id="footer_links" class="container">
         <div class="row">
             <div class="span4">
                 <ul>
@@ -75,6 +76,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
     </footer>
     <!-- Le javascript
     ================================================== -->

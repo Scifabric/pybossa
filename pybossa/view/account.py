@@ -56,7 +56,6 @@ def index(page):
                            total=count,
                            title="Community", pagination=pagination)
 
-
 class LoginForm(Form):
     email = TextField(lazy_gettext('E-mail'),
                       [validators.Required(

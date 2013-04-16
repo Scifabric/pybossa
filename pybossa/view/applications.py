@@ -354,10 +354,10 @@ def details(short_name):
     if current_app.config.get('CKAN_URL'):
         template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
         ckan = Ckan(url=current_app.config['CKAN_URL'])
-        pkg = ckan.package_exists(name=app.short_name)
+        pkg = ckan.package_exists(name=short_name)
         if pkg:
             template_args['ckan_pkg_url'] = (
-                "%s/dataset/%s" % (current_app.config['CKAN_URL'], app.short_name))
+                "%s/dataset/%s" % (current_app.config['CKAN_URL'], short_name))
             template_args['ckan_pkg'] = pkg
     return render_template(template, **template_args)
 

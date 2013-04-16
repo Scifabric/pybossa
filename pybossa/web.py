@@ -154,9 +154,9 @@ def global_template_context():
         description=app.config['DESCRIPTION'],
         terms_of_use=app.config['TERMSOFUSE'],
         data_use=app.config['DATAUSE'],
+        enforce_privacy=app.config['ENFORCE_PRIVACY'],
         version=pybossa.__version__,
-        current_user=current_user,
-        )
+        current_user=current_user)
 
 
 @login_manager.user_loader
@@ -183,12 +183,15 @@ def api_authentication():
 @app.route('/')
 def home():
     """ Render home page with the cached apps and users"""
-    d = {
-        'featured': cached_apps.get_featured_front_page(),
-        'top_apps': cached_apps.get_top(),
-        'top_users': cached_users.get_top(),
-    }
+    d = {'featured': cached_apps.get_featured_front_page(),
+         'top_apps': cached_apps.get_top(),
+         'top_users': None}
 
+    if app.config['ENFORCE_PRIVACY'] and current_user.is_authenticated():
+        if current_user.admin:
+            d['top_users'] = cached_users.get_top()
+    if not app.config['ENFORCE_PRIVACY']:
+        d['top_users'] = cached_users.get_top()
     return render_template('/home/index.html', **d)
 
 
