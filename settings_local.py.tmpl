@@ -62,6 +62,12 @@ DEFAULT_MAIL_SENDER = 'PyBossa Support <info@pybossa.com>'
 ## Use any combination of the next type of messages: root, user, and app owners
 ## ANNOUNCEMENT = {'admin': 'Root Message', 'user': 'User Message', 'owner': 'Owner Message'}
 
+## Enforce Privacy Mode, by default is disabled
+## This config variable will disable all related user pages except for admins
+## Stats, top users, leaderboard, etc
+ENFORCE_PRIVACY = False
+
+
 ## Cache setup. By default it is disabled, you can use "simple" or "memcached"
 ## Check the documentation for further details on flask-cache
 CACHE_TYPE = 'null'
