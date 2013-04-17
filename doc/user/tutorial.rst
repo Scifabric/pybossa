@@ -875,7 +875,7 @@ Exporting the task and task runs to a CKAN server
 -------------------------------------------------
 
 If the server has been configured to allow you to export your aplication's data
-to a CKAN server, the owner of the application will see another box that will
+to a CKAN server (see :ref:`config-ckan`), the owner of the application will see another box that will
 give you the option to export the data to the CKAN server.
 
 .. image:: http://i.imgur.com/v85Ol9u.png
