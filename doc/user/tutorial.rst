@@ -788,14 +788,18 @@ Exporting the obtained results
 ================================
 
 You can export all the available tasks and task runs for your application in 
-two different formats:
+three different ways:
 
 * JSON_, an open standard designed for human-readable data interchange, or 
 * CSV_,  a file that stores tabular data (numbers and text) in plain-text form
-  and that can be opened with almost any spreadsheet software.
+  and that can be opened with almost any spreadsheet software, or
+* CKAN_ web server,  a powerful data management system that makes data accessible
+  –by providing tools to streamline publishing, sharing, finding and using
+  data.
 
 .. _JSON: http://en.wikipedia.org/wiki/JSON
 .. _CSV: http://en.wikipedia.org/wiki/Comma-separated_values
+.. _CKAN: http://ckan.org
 
 For exporting the data, all you have to do is to visit the following URL in
 your web-browser::
@@ -803,21 +807,11 @@ your web-browser::
     http://PYBOSSA-SERVER/app/slug/export
 
 You will find a simple interface that will allow you to export the Tasks and
-Task Runs in the two mentioned formats
+Task Runs to JSON_ and CSV_ formats:
 
-.. image:: http://i.imgur.com/zqPkMST.png
+.. image:: http://i.imgur.com/a1GgUos.png
 
-For the JSON_ format, you will get all the output in the web browser, so you
-will have to save the created page afterwords:
-
-.. image:: http://i.imgur.com/vBDWLeb.png
-
-While for the CSV_ format, you will get a CSV file that will be automatically
-saved in your computer:
-
-.. image:: http://i.imgur.com/zVZCYW8.png
-
-The previous methods will download all the tasks and task runs, **even if they
+The previous methods will export all the tasks and task runs, **even if they
 are not completed**. When a task has been completed, in other words, when a 
 task has collected the number of answers specified by the task 
 (**n_answers** = 30 by default), a **brown button** with the text 
@@ -860,3 +854,48 @@ requesting the collected answers for the given tasks::
     query: &limit=n_answers so you can get all the submitted answers by the
     volunteers for the given task.
 
+
+Exporting the task and task runs in JSON
+----------------------------------------
+
+For the JSON_ format, you will get all the output in the web browser, so you
+will have to save the created page afterwords:
+
+.. image:: http://i.imgur.com/vBDWLeb.png
+
+Exporting the task and task runs to a CSV file
+----------------------------------------------
+
+While for the CSV_ format, you will get a CSV file that will be automatically
+saved in your computer:
+
+.. image:: http://i.imgur.com/zVZCYW8.png
+
+Exporting the task and task runs to a CKAN server
+-------------------------------------------------
+
+If the server has been configured to allow you to export your aplication's data
+to a CKAN server, the owner of the application will see another box that will
+give you the option to export the data to the CKAN server.
+
+.. image:: http://i.imgur.com/v85Ol9u.png
+
+In order to use this method you will need to add the CKAN API-KEY associated
+with your account, otherwise you will not be able to export the data and
+a warning message will let you know it.
+
+Adding the CKAN API-KEY is really simple. You only need to create an account in
+the supported CKAN server (i.e. `the Data hub`_), check your profile and copy
+the API-KEY. Then, open your PyBossa account page, edit it and paste the key in
+the section **External Services**.
+
+.. image:: http://i.imgur.com/f3gGQji.png
+
+Then, you will be able to actually export the data to the CKAN server and host
+it there. Your application will show in the info page at the bottom a link to
+your published data in the CKAN server so other people, citizens or researchers
+can actually cite your work.
+
+.. image:: http://i.imgur.com/HeImpwn.png
+
+.. _`the Data hub`: http://datahub.io
