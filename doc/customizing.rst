@@ -353,3 +353,35 @@ PyBossa has a default Terms of Service page that you can customize to fit your
 institutional needs. In the case that you want to not use the default one,
 please, create a **_tos.html** file in the **custom** folder (you can find it
 in the templates folder.
+
+Enforce Privacy mode
+====================
+
+Some projects need sometimes a way to protect their contributors due to the
+nature of the project. In this cases, where privacy is really important,
+PyBossa allows you to **lock** all the public pages related to the users and
+statistics about the site and applications. Specifically, by enabling this mode
+only administrators will be able to see the following pages:
+
+ * http://server/stats
+ * http://server/account/
+ * http://server/account/user/
+ * http://server/app/stats
+
+Additionally, the footer and front page top users will be removed with links to
+all these pages. If your project needs this type of protection you can enable
+it by changing the following config variable in your **settings_local.py** file from:
+
+.. code-block:: python
+    
+    ENFORCE_PRIVACY = False
+
+To:
+
+.. code-block:: python
+    
+    ENFORCE_PRIVACY = True
+
+
+.. note::
+    This feature is disabled by default.
