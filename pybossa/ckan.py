@@ -53,7 +53,7 @@ class Ckan(object):
         r = requests.get(self.url + "/action/package_show",
                          headers=self.headers,
                          params=pkg)
-        if r.status_code == 200 or r.status_code == 404:
+        if r.status_code == 200 or r.status_code == 404 or r.status_code == 403:
             output = json.loads(r.text)
             if output.get('success'):
                 self.package = output['result']
