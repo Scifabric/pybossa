@@ -188,7 +188,7 @@ def new():
     return redirect(url_for('.settings', short_name=app.short_name))
 
 
-@blueprint.route('/<short_name>/taskpresentereditor', methods=['GET', 'POST'])
+@blueprint.route('/<short_name>/tasks/taskpresentereditor', methods=['GET', 'POST'])
 @login_required
 def task_presenter_editor(short_name):
     errors = False
@@ -397,7 +397,7 @@ def compute_importer_variant_pairs(forms):
         for i in xrange(0, int(math.ceil(len(variants) / 2.0)))]
 
 
-@blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
+@blueprint.route('/<short_name>/tasks/import', methods=['GET', 'POST'])
 def import_task(short_name):
     app = app_by_shortname(short_name)
     title = app_title(app, "Import Tasks")
@@ -666,7 +666,7 @@ def delete_tasks(short_name):
         return abort(403)
 
 
-@blueprint.route('/<short_name>/export')
+@blueprint.route('/<short_name>/tasks/export')
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
     app = app_by_shortname(short_name)
