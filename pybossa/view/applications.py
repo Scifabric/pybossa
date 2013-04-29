@@ -640,7 +640,7 @@ def delete_tasks(short_name):
             db.session.commit()
             msg = "All the tasks and associated task runs have been deleted"
             flash(lazy_gettext(msg), 'success')
-            return redirect(url_for('.settings', short_name=app.short_name))
+            return redirect(url_for('.tasks', short_name=app.short_name))
     except HTTPException:
         return abort(403)
 
