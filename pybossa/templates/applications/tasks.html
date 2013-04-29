@@ -11,6 +11,7 @@
             </div>
             <div class="span9">
                 <h1><strong>{{app.name}}</strong>: {{_('Tasks')}}</h1>
+                {{ helper.render_overall_progress(app, show_contribute_btn=False) }}
                 <div class="row-fluid">
                     <div class="span6 well">
                         <h2><i class="icon-upload"></i> Import Tasks</h2>
@@ -42,4 +43,5 @@
       <h1>{{_('Sorry! This app does not exists')}}.</h1>
   </div>
 {% endif %}
+{{ helper.knob() }}
 {% endblock %}

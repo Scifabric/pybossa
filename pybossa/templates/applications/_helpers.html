@@ -61,7 +61,7 @@
         <li><strong><i class="icon-info-sign"></i> {{ _('Description') }}</strong>: {{ app['description'] }}</li>
         <li><strong><i class="icon-ok"></i> {{ _('Creation Date') }}</strong>: {{ app.created[0:10] }}</li>
         <li><strong><i class="icon-time"></i> {{ _('Last Activity') }}</strong>: {{ app.last_activity()}}</li>
-        <li><strong><i class="icon-cogs"></i> {{ _('Overall progress') }}</strong>: {{ ( app.completion_status() * 100) | round(2, 'floor') }}% {{ _('completed') }}</li>
+        <li><strong><i class="icon-cogs"></i> {{ _('Overall progress') }}</strong>: {{ ( app.completion_status() * 100) | round | int }}% {{ _('completed') }}</li>
         <li><strong><i class="icon-tasks"></i> <a href="{{url_for('app.tasks',short_name=app.short_name)}}">{{ _('Tasks') }}</strong></a> ({{ app.tasks | count }})</li>
         {% if not current_user.is_anonymous() %}
         <li>{% if app.hidden == 1 %}
@@ -111,7 +111,7 @@
             {% if app.last_activity != None %}
             <p style="margin:0"><strong><i class="icon-time"></i> {{ _('Last Activity') }}</strong>: {{ app.last_activity}}</p>
             {% endif %}
-            <p style="margin:0"><strong><i class="icon-cogs"></i> {{ _('Overall progress') }}</strong>: {{ app.overall_progress | round(2, 'floor') }}% completed</p>
+            <p style="margin:0"><strong><i class="icon-cogs"></i> {{ _('Overall progress') }}</strong>: {{ app.overall_progress | round | int }}% completed</p>
             {% if app.owner_id == current_user.id %}
             <p style="margin:0"><strong><i class="icon-user"></i> {{ _('Created by') }}</strong>: {{ _('Me') }}</p>
             {% else %}
@@ -147,11 +147,26 @@ function imgError(image) {
             'inputColor': '#8bbf36',
             'readOnly': true,
             'thickness': .2,
-            'width': 50,
+            'width': 40,
+            'height': 40,
+            'displayInput': false,
         });
-        $(".dial").val({{val}}).trigger('change');
+        $(".dial").css('font-size', '26px');
+        $(".dial").css('font-weight', 'bold');
     });
 </script>
+{% endmacro %}
+
+{% macro render_overall_progress(app, show_contribute_btn=True) %}
+{% set pctValue = (app.completion_status()*100)|round|int %}
+<div class="row-fluid">
+    <div class="span1"><input type="text" value={{pctValue}} class="dial"></div>
+    <h2><strong> {{_('Overall progress')}}</strong>: {{ pctValue }}% {{_('completed')}}
+        {% if show_contribute_btn %}
+        <a href="{{ url_for('app.presenter', short_name=app.short_name)}}" class="btn btn-primary pull-right"><i class="icon-thumbs-up" style="color:white;"></i> {{ _('Start Contributing Now!') }}</a>
+        {% endif %}
+    </h2>
+</div>
 {% endmacro %}
 
 {% macro render_grid_apps(apps, title) %}
