@@ -35,7 +35,6 @@
 <ul data-spy="affix" data-offset-top="200px" class="nav nav-list bs-docs-sidenav affix-top">
     <li {% if active_link=="info"%}class="active"{% endif %}><a href="{{url_for('app.details', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> {{_('Info')}}</a></li>
     <li {% if active_link=="contribute"%}class="active"{% endif %}><a href="{{url_for('app.presenter', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> {{_('Contribute')}}</a></li>
-    <li {% if active_link=="export"%}class="active"{% endif %}><a href="{{url_for('app.export_to', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> {{_('Export Tasks and Task Runs')}}</a></li>
     <li {% if active_link=="tasks"%}class="active"{% endif %}><a href="{{url_for('app.tasks', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> {{_('Tasks')}}</a></li>
     <li {% if active_link=="stats"%}class="active"{% endif %}><a href="{{url_for('app.show_stats', short_name=app.short_name)}}"><i class="icon-chevron-right"></i> {{_('Statistics')}}</a></li>
     {% if ( current_user.is_authenticated() and current_user.id == app.owner.id ) or current_user.admin %}
@@ -155,6 +154,20 @@ function imgError(image) {
         $(".dial").css('font-weight', 'bold');
     });
 </script>
+{% endmacro %}
+
+{% macro render_app_title(app, subtitle=None) %}
+<h1>
+    {% if app.info.thumbnail %}
+    <img class="img-polaroid" src="{{app.info.thumbnail}}" style="max-width:60px;" onerror="imgError(this);">
+    {% else %}
+    <img class="img-polaroid" src="{{url_for('static', filename='img/placeholder.png')}}" style="max-width:60px;" onerror="imgError(this);">
+    {% endif %}
+    {% if subtitle %}
+    <strong>{{ app.name }}</strong>: {{subtitle}}</h1>
+    {% else %}
+    <strong>{{ app.name }}</strong></h1>
+    {% endif %}
 {% endmacro %}
 
 {% macro render_overall_progress(app, show_contribute_btn=True) %}

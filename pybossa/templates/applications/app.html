@@ -11,15 +11,9 @@
     </div>
     <!-- Application -->
     <div class="span9" style="min-height:400px">
-        <h1>
-        {% if app.info.thumbnail %}
-            <img class="img-polaroid" src="{{app.info.thumbnail}}" style="max-width:60px;" onerror="imgError(this);"> 
-        {% else %}
-            <img class="img-polaroid" src="{{url_for('static', filename='img/placeholder.png')}}" style="max-width:60px;" onerror="imgError(this);"> 
-        {% endif %}
-        <strong>{{ app.name }}</strong></h1>
+        {{ helper.render_app_title(app)}}
         <hr>
-        {{ helper.render_overall_progress(app, pctValue) }}
+        {{ helper.render_overall_progress(app) }}
         {% if app.long_description %}
         <hr>
             {{ app.long_description|safe}}
