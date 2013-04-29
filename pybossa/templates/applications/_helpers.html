@@ -135,6 +135,25 @@ function imgError(image) {
 </script>
 {% endmacro %}
 
+{% macro knob(val) %}
+<script src="{{url_for('static', filename='js/vendor/jquery.knob.js')}}"></script>
+<script>
+    $(function() {
+        $(".dial").knob({
+            'min': 0,
+            'max': 100,
+            'skin': 'tron',
+            'fgColor': '#8bbf36',
+            'inputColor': '#8bbf36',
+            'readOnly': true,
+            'thickness': .2,
+            'width': 50,
+        });
+        $(".dial").val({{val}}).trigger('change');
+    });
+</script>
+{% endmacro %}
+
 {% macro render_grid_apps(apps, title) %}
     <div class="banner">
         <div class="row-fluid">
