@@ -870,3 +870,16 @@ def show_stats(short_name):
                            appStats=json.dumps(tmp),
                            userStats=userStats,
                            app=app)
+
+
+@blueprint.route('/<short_name>/tasks/settings')
+def task_settings(short_name):
+    """Settings page for tasks of the application"""
+    app = app_by_shortname(short_name)
+    return render_template('applications/task_settings.html',
+                           app=app)
+
+
+@blueprint.route('/<short_name>/tasks/redundancy')
+def task_redundancy(short_name):
+    return abort(404)
