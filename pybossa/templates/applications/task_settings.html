@@ -1,0 +1,35 @@
+{% extends "/base.html" %}
+{% set active_page = "applications" %}
+{% set active_link  = "tasks" %}
+{% import "applications/_helpers.html" as helper %}
+
+{% block content %}
+{% if app %}
+        <div class="row">
+            <div class="span3">
+                {{ helper.render_app_local_nav(app, 'tasks', current_user) }}
+            </div>
+            <div class="span9">
+                {{ helper.render_app_title(app, subtitle=_('Task Settings'))}}
+                <hr>
+                <div class="row-fluid">
+                    <div class="span6 well">
+                        <h2><i class="icon-remove"></i> {{_('Delete Tasks')}}</h2>
+                        <p>{{_('Delete all the tasks and associated answers')}}</p>
+                        <a href="{{url_for('app.delete_tasks', short_name=app.short_name)}}" class="btn btn-primary">{{_('Delete')}} <i class="icon-chevron-right"></i></a>
+                    </div>
+                    <div class="span6 well">
+                        <h2><i class="icon-repeat"></i> {{_('Task Redundancy')}}</h2>
+                        <p>{{_('Change the redundancy level for the tasks')}}</p>
+                        <a href="{{url_for('app.task_n_answers', short_name=app.short_name)}}" class="btn btn-primary">{{_('Redundancy')}} <i class="icon-chevron-right"></i></a>
+                    </div>
+                </div>
+            </div><!-- span9 -->
+        </div>
+{% else %}
+  <div class="page-header">
+      <h1>{{_('Sorry! This app does not exists')}}.</h1>
+  </div>
+{% endif %}
+{{ helper.knob() }}
+{% endblock %}

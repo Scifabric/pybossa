@@ -21,6 +21,7 @@ from flaskext.wtf import Form, IntegerField, TextField, BooleanField, \
 from flaskext.login import login_required, current_user
 from flaskext.babel import lazy_gettext
 from werkzeug.exceptions import HTTPException
+from sqlalchemy.sql import text
 
 import pybossa.model as model
 import pybossa.stats as stats
@@ -76,6 +77,15 @@ class AppForm(Form):
 class TaskPresenterForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
     editor = TextAreaField('')
+
+
+class TaskRedundancyForm(Form):
+    n_answers = IntegerField(lazy_gettext('Redundancy'),
+                             [validators.Required(),
+                              validators.NumberRange(
+                                  min=1, max=1000,
+                                  message=lazy_gettext('Number of answers should be a \
+                                                       value between 1 and 1,000'))])
 
 
 def app_title(app, page_name):
@@ -880,6 +890,29 @@ def task_settings(short_name):
                            app=app)
 
 
-@blueprint.route('/<short_name>/tasks/redundancy')
-def task_redundancy(short_name):
-    return abort(404)
+@blueprint.route('/<short_name>/tasks/redundancy', methods=['GET', 'POST'])
+@login_required
+def task_n_answers(short_name):
+    app = app_by_shortname(short_name)
+    title = app_title(app, lazy_gettext('Redundancy'))
+    form = TaskRedundancyForm()
+    try:
+        require.app.read(app)
+        require.app.update(app)
+        if request.method == 'GET':
+            return render_template('/applications/task_n_answers.html',
+                                   title=title,
+                                   form=form,
+                                   app=app)
+        elif request.method == 'POST' and form.validate():
+            sql = text('''UPDATE task SET n_answers=:n_answers WHERE app_id=:app_id''')
+            db.engine.execute(sql, n_answers=form.n_answers.data, app_id=app.id)
+            return redirect(url_for('.tasks', short_name=app.short_name))
+        else:
+            flash(lazy_gettext('Please correct the errors'), 'error')
+            return render_template('/applications/task_n_answers.html',
+                                   title=title,
+                                   form=form,
+                                   app=app)
+    except:
+        return abort(403)
