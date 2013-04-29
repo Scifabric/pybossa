@@ -581,9 +581,30 @@ def export(short_name, task_id):
     return Response(json.dumps(results), mimetype='application/json')
 
 
-@blueprint.route('/<short_name>/tasks', defaults={'page': 1})
-@blueprint.route('/<short_name>/tasks/<int:page>')
-def tasks(short_name, page):
+@blueprint.route('/<short_name>/tasks/')
+def tasks(short_name):
+    app = app_by_shortname(short_name)
+    title = app_title(app, "Tasks")
+
+    try:
+        require.app.read(app)
+        require.app.update(app)
+        return render_template('/applications/tasks.html',
+                               title=title,
+                               app=app)
+    except HTTPException:
+        if not app.hidden:
+            return render_template('/applications/tasks.html',
+                                   title="Application not found",
+                                   app=None)
+        return render_template('/applications/tasks.html',
+                               title="Application not found",
+                               app=None)
+
+
+@blueprint.route('/<short_name>/tasks/browse', defaults={'page': 1})
+@blueprint.route('/<short_name>/tasks/browse/<int:page>')
+def tasks_browse(short_name, page):
     app = app_by_shortname(short_name)
     title = app_title(app, "Tasks")
 
