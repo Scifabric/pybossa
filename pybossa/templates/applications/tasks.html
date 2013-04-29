@@ -1,6 +1,6 @@
 {% extends "/base.html" %}
 {% set active_page = "applications" %}
-{% set active_app  = "tasks" %}
+{% set active_link  = "tasks" %}
 {% import "applications/_helpers.html" as helper %}
 
 {% block content %}
@@ -13,26 +13,26 @@
                 <h1><strong>{{app.name}}</strong>: {{_('Tasks')}}</h1>
                 <div class="row-fluid">
                     <div class="span6 well">
-                        <h2>Task Presenter</h2>
-                        <p>Edit the task presenter</p>
-                        <a href="{{url_for('app.task_presenter_editor', short_name=app.short_name)}}" class="btn"><i class="icon-edit"></i> Editor</a>
+                        <h2><i class="icon-upload"></i> Import Tasks</h2>
+                        <p>Import tasks from templates, GDrive, or CSV</p>
+                        <a href="{{url_for('app.import_task', short_name=app.short_name)}}" class="btn">Import</a>
                     </div>
                     <div class="span6 well">
-                        <h2>Settings</h2>
-                        <p>Configure the task scheduler, redundancy, etc.</p>
-                        <a href="#" class="btn"><i class="icon-cog"></i> Settings</a>
+                        <h2><i class="icon-download"></i> Export Tasks</h2>
+                        <p>Export tasks to JSON, CSV or a CKAN server</p>
+                        <a href="{{url_for('app.export_to', short_name=app.short_name)}}" class="btn">Export</a>
                     </div>
                 </div>
                 <div class="row-fluid">
                     <div class="span6 well">
-                        <h2>Import Tasks</h2>
-                        <p>Import tasks from templates, GDrive, or CSV</p>
-                        <a href="{{url_for('app.import_task', short_name=app.short_name)}}" class="btn"><i class="icon-upload"></i> Import</a>
+                        <h2><i class="icon-edit"></i> Task Presenter</h2>
+                        <p>Edit the task presenter</p>
+                        <a href="{{url_for('app.task_presenter_editor', short_name=app.short_name)}}" class="btn">Editor</a>
                     </div>
                     <div class="span6 well">
-                        <h2>Export Tasks</h2>
-                        <p>Export tasks to JSON, CSV or a CKAN server</p>
-                        <a href="{{url_for('app.export_to', short_name=app.short_name)}}" class="btn"><i class="icon-download"></i> Export</a>
+                        <h2><i class="icon-cog"></i> Settings</h2>
+                        <p>Configure the task scheduler, redundancy, etc.</p>
+                        <a href="#" class="btn">Settings</a>
                     </div>
                 </div>
             </div><!-- span9 -->
