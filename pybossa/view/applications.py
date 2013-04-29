@@ -205,7 +205,7 @@ def task_presenter_editor(short_name):
         db.session.commit()
         msg_1 = lazy_gettext('Task presenter added!')
         flash('<i class="icon-ok"></i> ' + msg_1, 'success')
-        return redirect(url_for('.settings', short_name=app.short_name))
+        return redirect(url_for('.tasks', short_name=app.short_name))
 
     if request.method == 'POST' and not form.validate():
         flash(lazy_gettext('Please correct the errors'), 'error')
