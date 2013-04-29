@@ -408,11 +408,13 @@ def compute_importer_variant_pairs(forms):
 
 
 @blueprint.route('/<short_name>/tasks/import', methods=['GET', 'POST'])
+@login_required
 def import_task(short_name):
     app = app_by_shortname(short_name)
     title = app_title(app, "Import Tasks")
     template_args = {"title": title, "app": app}
-
+    if not require.app.update(app):
+        return abort(403)
     data_handlers = dict([
         (i.template_id, (i.form_detector, i(request.form), i.form_id))
         for i in importer.importers])
@@ -595,10 +597,8 @@ def export(short_name, task_id):
 def tasks(short_name):
     app = app_by_shortname(short_name)
     title = app_title(app, "Tasks")
-
     try:
         require.app.read(app)
-        require.app.update(app)
         return render_template('/applications/tasks.html',
                                title=title,
                                app=app)
@@ -634,7 +634,7 @@ def tasks_browse(short_name, page):
             abort(404)
 
         pagination = Pagination(page, per_page, count)
-        return render_template('/applications/tasks.html',
+        return render_template('/applications/tasks_browse.html',
                                app=app,
                                tasks=app_tasks,
                                title=title,
