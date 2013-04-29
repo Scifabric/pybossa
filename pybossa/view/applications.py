@@ -412,7 +412,8 @@ def compute_importer_variant_pairs(forms):
 def import_task(short_name):
     app = app_by_shortname(short_name)
     title = app_title(app, "Import Tasks")
-    template_args = {"title": title, "app": app}
+    loading_text = lazy_gettext("Importing tasks, this may take a while, wait...")
+    template_args = {"title": title, "app": app, "loading_text": loading_text}
     if not require.app.update(app):
         return abort(403)
     data_handlers = dict([
