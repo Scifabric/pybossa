@@ -680,7 +680,8 @@ def delete_tasks(short_name):
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
     app = app_by_shortname(short_name)
-    title = app_title(app, "Export")
+    title = app_title(app, lazy_gettext("Export"))
+    loading_text = lazy_gettext("Exporting data..., this may take a while")
 
     def gen_json(table):
         n = db.session.query(table)\
@@ -751,6 +752,7 @@ def export_to(short_name):
                     flash(msg, 'success')
                     return render_template('/applications/export.html',
                                            title=title,
+                                           loading_text=loading_text,
                                            app=app)
                 else:
                     ckan.datastore_delete(name=ty)
@@ -759,6 +761,7 @@ def export_to(short_name):
                     flash(msg, 'success')
                     return render_template('/applications/export.html',
                                            title=title,
+                                           loading_text=loading_text,
                                            app=app)
             else:
                 ckan.package_create(app=app, user=app.owner, url=app_url,
@@ -771,6 +774,7 @@ def export_to(short_name):
                 flash(msg, 'success')
                 return render_template('/applications/export.html',
                                        title=title,
+                                       loading_text=loading_text,
                                        app=app)
         except Exception as inst:
             print inst
@@ -782,6 +786,7 @@ def export_to(short_name):
             flash(msg, 'danger')
             return render_template('/applications/export.html',
                                    title=title,
+                                   loading_text=loading_text,
                                    app=app)
 
     def respond_csv(ty):
@@ -819,6 +824,7 @@ def export_to(short_name):
             flash(msg, 'info')
             return render_template('/applications/export.html',
                                    title=title,
+                                   loading_text=loading_text,
                                    app=app)
 
     export_formats = ["json", "csv"]
@@ -833,6 +839,7 @@ def export_to(short_name):
             abort(404)
         return render_template('/applications/export.html',
                                title=title,
+                               loading_text=loading_text,
                                ckan_name=current_app.config.get('CKAN_NAME'),
                                app=app)
     if fmt not in export_formats:

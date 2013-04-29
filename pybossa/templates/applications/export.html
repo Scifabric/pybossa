@@ -4,13 +4,7 @@
 {% import "applications/_helpers.html" as helper %}
 
 {% block content %}
-<div class="row">
-    <div class="span12">
-        <div id="loading" class="alert alert-info" style="display:none;">
-            <img src="{{url_for('static', filename='img/loading.gif')}}"/> Exporting data...
-        </div>
-    </div>
-</div>
+{{ helper.render_loading(text=loading_text) }}
 <div class="row">
     <div class="span3" style="padding: 8px 0;">
         {{ helper.render_app_local_nav(app, "export", current_user) }}

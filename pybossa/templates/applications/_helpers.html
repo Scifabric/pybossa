@@ -214,3 +214,13 @@ function imgError(image) {
         </div>
     </div>
 {% endmacro %}
+
+{% macro render_loading(text) %}
+<div class="row">
+    <div class="span12">
+        <div id="loading" class="alert alert-info" style="display:none;">
+            <img src="{{url_for('static', filename='img/loading.gif')}}"/> {{text}}
+        </div>
+    </div>
+</div>
+{% endmacro %}
