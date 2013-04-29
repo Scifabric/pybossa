@@ -170,14 +170,18 @@ function imgError(image) {
     {% endif %}
 {% endmacro %}
 
-{% macro render_overall_progress(app, show_contribute_btn=True) %}
+{% macro render_overall_progress(app, show_contribute_btn=True, show_n_tasks=False) %}
 {% set pctValue = (app.completion_status()*100)|round|int %}
+{% set nTasks = app.tasks | count %}
 <div class="row-fluid">
     <div class="span1"><input type="text" value={{pctValue}} class="dial"></div>
     <h2><strong> {{_('Overall progress')}}</strong>: {{ pctValue }}% {{_('completed')}}
         {% if show_contribute_btn %}
         <a href="{{ url_for('app.presenter', short_name=app.short_name)}}" class="btn btn-primary pull-right"><i class="icon-thumbs-up" style="color:white;"></i> {{ _('Start Contributing Now!') }}</a>
+        {% elif show_n_tasks %}
+        <span class="pull-right"><strong>{{nTasks}}</strong> {{_('Tasks')}}</span>
         {% endif %}
+
     </h2>
 </div>
 {% endmacro %}
