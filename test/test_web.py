@@ -14,6 +14,12 @@ FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
 
 class TestWeb(web.Helper):
+    pkg_json_not_found = {
+        "help": "Return ...",
+        "success": False,
+        "error": {
+            "message": "Not found",
+            "__type": "Not Found Error"}}
 
     def test_01_index(self):
         """Test WEB home page works"""
@@ -313,9 +319,13 @@ class TestWeb(web.Helper):
         assert '/app/test-app' in res.data, res.data
         assert '<h2><a href="/app/test-app/">My New App</a></h2>' in res.data, res.data
 
-    def test_10_get_application(self):
+    @patch('pybossa.ckan.requests.get')
+    def test_10_get_application(self, Mock):
         """Test WEB application URL/<short_name> works"""
         # Sign in and create an application
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
         self.register()
         res = self.new_application()
 
@@ -410,8 +420,13 @@ class TestWeb(web.Helper):
         assert "Name is already taken" in res.data, err_msg
         assert "Short Name is already taken" in res.data, err_msg
 
-    def test_12_update_application(self):
+    @patch('pybossa.ckan.requests.get')
+    def test_12_update_application(self, Mock):
         """Test WEB update application works"""
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
+
         self.register()
         self.new_application()
 
@@ -446,8 +461,12 @@ class TestWeb(web.Helper):
         err_msg = "App hidden not updated %s" % app.hidden
         assert app.hidden == 1, err_msg
 
-    def test_13_hidden_applications(self):
+    @patch('pybossa.ckan.requests.get')
+    def test_13_hidden_applications(self, Mock):
         """Test WEB hidden application works"""
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
         self.register()
         self.new_application()
         self.update_application(new_hidden=True)
@@ -459,8 +478,13 @@ class TestWeb(web.Helper):
         res = self.app.get('/app/sampleapp', follow_redirects=True)
         assert "Sorry! This app does not exists." in res.data, res.data
 
-    def test_13a_hidden_applications_owner(self):
+    @patch('pybossa.ckan.requests.get')
+    def test_13a_hidden_applications_owner(self, Mock):
         """Test WEB hidden applications are shown to their owners"""
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
+
         self.register()
         self.new_application()
         self.update_application(new_hidden=True)
@@ -529,7 +553,7 @@ class TestWeb(web.Helper):
 
         app = db.session.query(model.App).first()
 
-        res = self.app.get('app/%s/tasks' % (app.short_name),
+        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
                            follow_redirects=True)
         assert "Sample App" in res.data, res.data
         msg = 'Task <span class="label label-success">#1</span>'
@@ -576,7 +600,7 @@ class TestWeb(web.Helper):
 
         app = db.session.query(model.App).first()
 
-        res = self.app.get('app/%s/tasks' % (app.short_name),
+        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
                            follow_redirects=True)
         assert "Sample App" in res.data, res.data
         msg = 'Task <span class="label label-info">#1</span>'
@@ -818,8 +842,13 @@ class TestWeb(web.Helper):
         err_msg = "Application ID should be shown to the owner"
         assert msg in res.data, err_msg
 
-    def test_30_app_id_anonymous_user(self):
+    @patch('pybossa.ckan.requests.get')
+    def test_30_app_id_anonymous_user(self, Mock):
         """Test WEB application page does not show the ID to anonymous users"""
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
+
         self.register()
         self.new_application()
         self.signout()
@@ -871,7 +900,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        url = '/app/%s/import?template=csv' % (app.short_name)
+        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv'},
                             follow_redirects=True)
@@ -888,7 +917,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        url = '/app/%s/import?template=csv' % (app.short_name)
+        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com'},
                             follow_redirects=True)
         assert "Oops! That file doesn't look like the right file." in res.data
@@ -902,7 +931,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        url = '/app/%s/import?template=csv' % (app.short_name)
+        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv'},
                             follow_redirects=True)
@@ -917,7 +946,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        url = '/app/%s/import?template=csv' % (app.short_name)
+        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv'},
                             follow_redirects=True)
@@ -933,7 +962,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        url = '/app/%s/import?template=csv' % (app.short_name)
+        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv'},
                             follow_redirects=True)
@@ -950,7 +979,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        url = '/app/%s/import?template=csv' % (app.short_name)
+        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv'},
                             follow_redirects=True)
@@ -1236,7 +1265,7 @@ class TestWeb(web.Helper):
         """Test WEB task presenter editor loads"""
         self.register()
         self.new_application()
-        res = self.app.get('/app/sampleapp/taskpresentereditor',
+        res = self.app.get('/app/sampleapp/tasks/taskpresentereditor',
                            follow_redirects=True)
         err_msg = "Task Presenter options not found"
         assert "Task Presenter Editor" in res.data, err_msg
@@ -1257,12 +1286,12 @@ class TestWeb(web.Helper):
         err_msg = "Task Presenter should be empty"
         assert not app.info.get('task_presenter'), err_msg
 
-        res = self.app.get('/app/sampleapp/taskpresentereditor?template=basic',
+        res = self.app.get('/app/sampleapp/tasks/taskpresentereditor?template=basic',
                            follow_redirects=True)
         assert "var editor" in res.data, "CodeMirror Editor not found"
         assert "Task Presenter" in res.data, "CodeMirror Editor not found"
         assert "Task Presenter Preview" in res.data, "CodeMirror View not found"
-        res = self.app.post('/app/sampleapp/taskpresentereditor',
+        res = self.app.post('/app/sampleapp/tasks/taskpresentereditor',
                             data={'editor': 'Some HTML code!'},
                             follow_redirects=True)
         assert "Sample App" in res.data, "Does not return to app details"
@@ -1270,15 +1299,20 @@ class TestWeb(web.Helper):
         err_msg = "Task Presenter failed to update"
         assert app.info['task_presenter'] == 'Some HTML code!', err_msg
 
-    def test_48_update_app_info(self):
+    @patch('pybossa.ckan.requests.get')
+    def test_48_update_app_info(self, Mock):
         """Test WEB app update/edit works keeping previous info values"""
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
+
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
         err_msg = "Task Presenter should be empty"
         assert not app.info.get('task_presenter'), err_msg
 
-        res = self.app.post('/app/sampleapp/taskpresentereditor',
+        res = self.app.post('/app/sampleapp/tasks/taskpresentereditor',
                             data={'editor': 'Some HTML code!'},
                             follow_redirects=True)
         assert "Sample App" in res.data, "Does not return to app details"
@@ -1353,35 +1387,35 @@ class TestWeb(web.Helper):
         """Test WEB export Tasks to JSON works"""
         Fixtures.create()
         # First test for a non-existant app
-        uri = '/app/somethingnotexists/export'
+        uri = '/app/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
         # Now get the tasks in JSON format
-        uri = "/app/somethingnotexists/export?type=task&format=json"
+        uri = "/app/somethingnotexists/tasks/export?type=task&format=json"
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real app
-        uri = '/app/%s/export' % Fixtures.app_short_name
+        uri = '/app/%s/tasks/export' % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now test that a 404 is raised when an arg is invalid
-        uri = "/app/%s/export?type=ask&format=json" % Fixtures.app_short_name
+        uri = "/app/%s/tasks/export?type=ask&format=json" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
-        uri = "/app/%s/export?type=task&format=gson" % Fixtures.app_short_name
+        uri = "/app/%s/tasks/export?type=task&format=gson" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
-        uri = "/app/%s/export?format=json" % Fixtures.app_short_name
+        uri = "/app/%s/tasks/export?format=json" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
-        uri = "/app/%s/export?type=task" % Fixtures.app_short_name
+        uri = "/app/%s/tasks/export?type=task" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
 
         # Now get the tasks in JSON format
-        uri = "/app/%s/export?type=task&format=json" % Fixtures.app_short_name
+        uri = "/app/%s/tasks/export?type=task&format=json" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         exported_tasks = json.loads(res.data)
         app = db.session.query(model.App)\
@@ -1394,21 +1428,21 @@ class TestWeb(web.Helper):
         """Test WEB export Task Runs to JSON works"""
         Fixtures.create()
         # First test for a non-existant app
-        uri = '/app/somethingnotexists/export'
+        uri = '/app/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
         # Now get the tasks in JSON format
-        uri = "/app/somethingnotexists/export?type=taskrun&format=json"
+        uri = "/app/somethingnotexists/tasks/export?type=taskrun&format=json"
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real app
-        uri = '/app/%s/export' % Fixtures.app_short_name
+        uri = '/app/%s/tasks/export' % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in JSON format
-        uri = "/app/%s/export?type=task_run&format=json" % Fixtures.app_short_name
+        uri = "/app/%s/tasks/export?type=task_run&format=json" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         exported_task_runs = json.loads(res.data)
         app = db.session.query(model.App)\
@@ -1421,21 +1455,21 @@ class TestWeb(web.Helper):
         """Test WEB export Tasks to CSV works"""
         Fixtures.create()
         # First test for a non-existant app
-        uri = '/app/somethingnotexists/export'
+        uri = '/app/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
         # Now get the tasks in JSON format
-        uri = "/app/somethingnotexists/export?type=task&format=csv"
+        uri = "/app/somethingnotexists/tasks/export?type=task&format=csv"
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real app
-        uri = '/app/%s/export' % Fixtures.app_short_name
+        uri = '/app/%s/tasks/export' % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in JSON format
-        uri = "/app/%s/export?type=task&format=csv" % Fixtures.app_short_name
+        uri = "/app/%s/tasks/export?type=task&format=csv" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         csv_content = StringIO.StringIO(res.data)
         csvreader = unicode_csv_reader(csv_content)
@@ -1455,21 +1489,21 @@ class TestWeb(web.Helper):
         """Test WEB export Task Runs to CSV works"""
         Fixtures.create()
         # First test for a non-existant app
-        uri = '/app/somethingnotexists/export'
+        uri = '/app/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
         # Now get the tasks in JSON format
-        uri = "/app/somethingnotexists/export?type=tas&format=csv"
+        uri = "/app/somethingnotexists/tasks/export?type=tas&format=csv"
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real app
-        uri = '/app/%s/export' % Fixtures.app_short_name
+        uri = '/app/%s/tasks/export' % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in JSON format
-        uri = "/app/%s/export?type=task_run&format=csv" % Fixtures.app_short_name
+        uri = "/app/%s/tasks/export?type=task_run&format=csv" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         csv_content = StringIO.StringIO(res.data)
         csvreader = unicode_csv_reader(csv_content)
@@ -1495,7 +1529,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         # Without tasks, there should be a template
-        res = self.app.get('/app/sampleapp/import', follow_redirects=True)
+        res = self.app.get('/app/sampleapp/tasks/import', follow_redirects=True)
         err_msg = "There should be a CSV template"
         assert "template=csv" in res.data, err_msg
         err_msg = "There should be an Image template"
@@ -1506,7 +1540,7 @@ class TestWeb(web.Helper):
         assert "mode=pdf" in res.data, err_msg
         # With tasks
         self.new_task(1)
-        res = self.app.get('/app/sampleapp/import', follow_redirects=True)
+        res = self.app.get('/app/sampleapp/tasks/import', follow_redirects=True)
         err_msg = "There should load directly the basic template"
         err_msg = "There should not be a CSV template"
         assert "template=basic" not in res.data, err_msg
@@ -1690,7 +1724,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        url = '/app/%s/import?template=csv' % (app.short_name)
+        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'epicollect_project': 'fakeproject',
                                        'epicollect_form': 'fakeform',
                                        'formtype': 'json'},
@@ -1709,7 +1743,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        url = '/app/%s/import?template=csv' % (app.short_name)
+        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'epicollect_project': 'fakeproject',
                                        'epicollect_form': 'fakeform',
                                        'formtype': 'json'},
@@ -1728,7 +1762,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        res = self.app.post(('/app/%s/import' % (app.short_name)),
+        res = self.app.post(('/app/%s/tasks/import' % (app.short_name)),
                             data={'epicollect_project': 'fakeproject',
                                   'epicollect_form': 'fakeform',
                                   'formtype': 'json'},
