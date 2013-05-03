@@ -66,11 +66,6 @@ class AppForm(Form):
         choices=[('True', lazy_gettext('Yes')),
                  ('False', lazy_gettext('No'))])
     long_description = TextAreaField(lazy_gettext('Long Description'))
-    sched = SelectField(lazy_gettext('Task Scheduler'),
-                        choices=[('default', lazy_gettext('Default')),
-                                 ('breadth_first', lazy_gettext('Breadth First')),
-                                 ('depth_first', lazy_gettext('Depth First')),
-                                 ('random', lazy_gettext('Random'))],)
     hidden = BooleanField(lazy_gettext('Hide?'))
 
 
@@ -86,6 +81,14 @@ class TaskRedundancyForm(Form):
                                   min=1, max=1000,
                                   message=lazy_gettext('Number of answers should be a \
                                                        value between 1 and 1,000'))])
+
+
+class TaskSchedulerForm(Form):
+    sched = SelectField(lazy_gettext('Task Scheduler'),
+                        choices=[('default', lazy_gettext('Default')),
+                                 ('breadth_first', lazy_gettext('Breadth First')),
+                                 ('depth_first', lazy_gettext('Depth First')),
+                                 ('random', lazy_gettext('Random'))],)
 
 
 def app_title(app, page_name):
@@ -171,8 +174,6 @@ def new():
     # Add the info items
     if form.thumbnail.data:
         info['thumbnail'] = form.thumbnail.data
-    if form.sched.data:
-        info['sched'] = form.sched.data
 
     app = model.App(name=form.name.data,
                     short_name=form.short_name.data,
@@ -295,8 +296,8 @@ def update(short_name):
         app = app_by_shortname(short_name)
         if form.thumbnail.data:
             new_info['thumbnail'] = form.thumbnail.data
-        if form.sched.data:
-            new_info['sched'] = form.sched.data
+        #if form.sched.data:
+        #    new_info['sched'] = form.sched.data
 
         # Merge info object
         info = dict(app.info.items() + new_info.items())
@@ -328,11 +329,11 @@ def update(short_name):
         form.populate_obj(app)
         if app.info.get('thumbnail'):
             form.thumbnail.data = app.info['thumbnail']
-        if app.info.get('sched'):
-            for s in form.sched.choices:
-                if app.info['sched'] == s[0]:
-                    form.sched.data = s[0]
-                    break
+        #if app.info.get('sched'):
+        #    for s in form.sched.choices:
+        #        if app.info['sched'] == s[0]:
+        #            form.sched.data = s[0]
+        #            break
 
     if request.method == 'POST':
         form = AppForm(request.form)
@@ -919,6 +920,44 @@ def task_n_answers(short_name):
         else:
             flash(lazy_gettext('Please correct the errors'), 'error')
             return render_template('/applications/task_n_answers.html',
+                                   title=title,
+                                   form=form,
+                                   app=app)
+    except:
+        return abort(403)
+
+
+@blueprint.route('/<short_name>/tasks/scheduler', methods=['GET', 'POST'])
+@login_required
+def task_scheduler(short_name):
+    app = app_by_shortname(short_name)
+    title = app_title(app, lazy_gettext('Scheduler'))
+    form = TaskSchedulerForm()
+    try:
+        require.app.read(app)
+        require.app.update(app)
+        if request.method == 'GET':
+            if app.info.get('sched'):
+                for s in form.sched.choices:
+                    if app.info['sched'] == s[0]:
+                        form.sched.data = s[0]
+                        break
+            return render_template('/applications/task_scheduler.html',
+                                   title=title,
+                                   form=form,
+                                   app=app)
+        elif request.method == 'POST' and form.validate():
+            if form.sched.data:
+                app.info['sched'] = form.sched.data
+            cached_apps.reset()
+            db.session.add(app)
+            db.session.commit()
+            msg = lazy_gettext("Application Task Scheduler updated!")
+            flash(msg, 'success')
+            return redirect(url_for('.tasks', short_name=app.short_name))
+        else:
+            flash(lazy_gettext('Please correct the errors'), 'error')
+            return render_template('/applications/task_scheduler.html',
                                    title=title,
                                    form=form,
                                    app=app)
