@@ -1860,3 +1860,64 @@ class TestWeb(web.Helper):
         dom = BeautifulSoup(res.data)
         err_msg = "User should be redirected to sign in"
         assert dom.find(id="signin") is not None, err_msg
+
+    def test_76_task_settings_redundancy(self):
+        """Test WEB TASK SETTINGS redundancy page works"""
+        # Creat root user
+        self.register()
+        self.signout()
+        # Create owner
+        self.register(fullname="owner", username="owner")
+        self.new_application()
+        url = "/app/%s/tasks/redundancy" % self.app_short_name
+        form_id = 'task_redundancy'
+        self.signout()
+
+        # As owner and root
+        for i in range(0, 1):
+            if i == 0:
+                # As owner
+                print "Testing as owner"
+                self.signin(email="owner@example.com")
+                n_answers = 20
+            else:
+                print "Testing as root"
+                n_answers = 10
+                self.signin()
+            res = self.app.get(url, follow_redirects=True)
+            dom = BeautifulSoup(res.data)
+            # Correct values
+            err_msg = "There should be a %s section" % form_id
+            assert dom.find(id=form_id) is not None, err_msg
+            res = self.task_settings_scheduler(short_name=self.app_short_name,
+                                               n_answers=n_answers)
+            dom = BeautifulSoup(res.data)
+            err_msg = "Task Redundancy should be updated"
+            assert dom.find(id='msg_success') is not None, err_msg
+            app = db.session.query(model.App).get(1)
+            assert app.n_answers == n_answers, err_msg
+            # Wrong values, triggering the validators
+            res = self.task_settings_scheduler(short_name=self.app_short_name,
+                                               n_answers=0)
+            dom = BeautifulSoup(res.data)
+            err_msg = "Task Redundancy should be a value between 0 and 1000"
+            assert dom.find(id='msg_danger') is not None, err_msg
+            res = self.task_settings_scheduler(short_name=self.app_short_name,
+                                               n_answers=10000000)
+            dom = BeautifulSoup(res.data)
+            err_msg = "Task Redundancy should be a value between 0 and 1000"
+            assert dom.find(id='msg_danger') is not None, err_msg
+            self.signout()
+
+        # As an authenticated user
+        self.register(fullname="juan", username="juan")
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "User should not be allowed to access this page"
+        assert res.status_code == 403, err_msg
+        self.signout()
+
+        # As an anonymous user
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "User should be redirected to sign in"
+        assert dom.find(id="signin") is not None, err_msg

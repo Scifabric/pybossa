@@ -135,6 +135,17 @@ class Helper(object):
         else:
             return self.app.get(url, follow_redirects=True)
 
+    def task_settings_redundancy(self, method="POST", short_name='sampleapp',
+                                 n_answers=30):
+        """Helper function to modify task redundancy"""
+        url = "/app/%s/tasks/redundancy" % short_name
+        if method == "POST":
+            return self.app.post(url, data={
+                'n_answers': n_answers,
+            }, follow_redirects=True)
+        else:
+            return self.app.get(url, follow_redirects=True)
+
     def delete_application(self, method="POST", short_name="sampleapp"):
         """Helper function to create an application"""
         if method == "POST":
