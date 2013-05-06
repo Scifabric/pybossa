@@ -6,6 +6,7 @@ class Helper(object):
     """Class to help testing the web interface"""
 
     user = User()
+    app_short_name = "sampleapp"
 
     def setUp(self):
         self.app = web.app.test_client()
@@ -85,7 +86,6 @@ class Helper(object):
                         thumbnail='An Icon link',
                         allow_anonymous_contributors='True',
                         long_description=u'<div id="long_desc">Long desc</div>',
-                        sched='default',
                         hidden=False):
         """Helper function to create an application"""
         if method == "POST":
@@ -97,7 +97,6 @@ class Helper(object):
                     'thumbnail': thumbnail,
                     'allow_anonymou_contributors': allow_anonymous_contributors,
                     'long_description': long_description,
-                    'sched': sched,
                     'hidden': hidden,
                 }, follow_redirects=True)
             else:
@@ -108,7 +107,6 @@ class Helper(object):
                     'thumbnail': thumbnail,
                     'allow_anonymous_contributors': allow_anonymous_contributors,
                     'long_description': long_description,
-                    'sched': sched,
                 }, follow_redirects=True)
         else:
             return self.app.get("/app/new", follow_redirects=True)
@@ -125,6 +123,17 @@ class Helper(object):
         """Deletes all TaskRuns for a given app_id"""
         db.session.query(model.TaskRun).filter_by(app_id=1).delete()
         db.session.commit()
+
+    def task_settings_scheduler(self, method="POST", short_name='sampleapp',
+                                scheduler="default"):
+        """Helper function to modify task scheduler"""
+        url = "/app/%s/task/scheduler" % short_name
+        if method == "POST":
+            return self.app.post(url, data={
+                'scheduler': scheduler,
+            }, follow_redirects=True)
+        else:
+            return self.app.get(url, follow_redirects=True)
 
     def delete_application(self, method="POST", short_name="sampleapp"):
         """Helper function to create an application"""

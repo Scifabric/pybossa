@@ -9,6 +9,7 @@ from collections import namedtuple
 from pybossa.core import db, signer
 from pybossa.util import unicode_csv_reader
 from pybossa.util import get_user_signup_method
+from bs4 import BeautifulSoup
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
@@ -384,8 +385,6 @@ class TestWeb(web.Helper):
             'Different names %s' % app.short_name
         assert app.info['thumbnail'] == 'An Icon link', \
             "Thumbnail should be the same: %s" % app.info['thumbnail']
-        assert app.info['sched'] == 'default', \
-            "Scheduler should be the same: %s" % app.info['thumbnail']
         assert app.long_description == '<div id="long_desc">Long desc</div>', \
             "Long desc should be the same: %s" % app.long_description
 
@@ -444,7 +443,6 @@ class TestWeb(web.Helper):
                                       new_description="New description",
                                       new_thumbnail="New Icon Link",
                                       new_long_description='New long desc',
-                                      new_sched="random",
                                       new_hidden=True)
         app = db.session.query(model.App).first()
         assert "Application updated!" in res.data, res
@@ -1338,7 +1336,6 @@ class TestWeb(web.Helper):
         assert app.info['thumbnail'] == "New Icon link", error_msg
         error_msg = "The app long description has not been updated"
         assert app.long_description == "Long desc", error_msg
-        assert app.info['sched'] == "random", "The app sched has not been updated"
 
     def test_49_announcement_messages(self):
         """Test WEB announcement messages works"""
@@ -1774,3 +1771,31 @@ class TestWeb(web.Helper):
         tasks = db.session.query(model.Task).filter_by(app_id=app.id).all()
         err_msg = "The imported task from EpiCollect is wrong"
         assert tasks[0].info['DeviceID'] == 23, err_msg
+
+    def test_74_task_settings_page(self):
+        """Test WEB TASK SETTINGS page works"""
+        # As owner
+        self.register()
+        self.new_application()
+        url = "/app/%s/tasks/settings" % self.app_short_name
+
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        divs = ['task_scheduler', 'task_delete', 'task_redundancy']
+        for div in divs:
+            err_msg = "There should be a %s section" % div
+            assert dom.find(id=div) is not None, err_msg
+
+        self.signout()
+        # As an authenticated user
+        self.register(fullname="juan", username="juan")
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "User should not be allowed to access this page"
+        assert res.status_code == "401", err_msg
+        self.signout()
+
+        # As an anonymous user
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "User should be redirected to sign in"
+        assert dom.find(id="signin") is not None, err_msg
