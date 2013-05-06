@@ -1255,7 +1255,7 @@ class TestWeb(web.Helper):
         """Test WEB task presenter editor is an option"""
         self.register()
         self.new_application()
-        res = self.app.get('/app/sampleapp/settings', follow_redirects=True)
+        res = self.app.get('/app/sampleapp/tasks/', follow_redirects=True)
         assert "Edit the task presenter" in res.data, \
             "Task Presenter Editor should be an option"
 
