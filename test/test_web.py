@@ -1889,21 +1889,21 @@ class TestWeb(web.Helper):
             # Correct values
             err_msg = "There should be a %s section" % form_id
             assert dom.find(id=form_id) is not None, err_msg
-            res = self.task_settings_scheduler(short_name=self.app_short_name,
-                                               n_answers=n_answers)
+            res = self.task_settings_redundancy(short_name=self.app_short_name,
+                                                n_answers=n_answers)
             dom = BeautifulSoup(res.data)
             err_msg = "Task Redundancy should be updated"
             assert dom.find(id='msg_success') is not None, err_msg
             app = db.session.query(model.App).get(1)
             assert app.n_answers == n_answers, err_msg
             # Wrong values, triggering the validators
-            res = self.task_settings_scheduler(short_name=self.app_short_name,
-                                               n_answers=0)
+            res = self.task_settings_redundancy(short_name=self.app_short_name,
+                                                n_answers=0)
             dom = BeautifulSoup(res.data)
             err_msg = "Task Redundancy should be a value between 0 and 1000"
             assert dom.find(id='msg_danger') is not None, err_msg
-            res = self.task_settings_scheduler(short_name=self.app_short_name,
-                                               n_answers=10000000)
+            res = self.task_settings_redundancy(short_name=self.app_short_name,
+                                                n_answers=10000000)
             dom = BeautifulSoup(res.data)
             err_msg = "Task Redundancy should be a value between 0 and 1000"
             assert dom.find(id='msg_danger') is not None, err_msg
