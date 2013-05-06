@@ -1830,20 +1830,22 @@ class TestWeb(web.Helper):
                 # As owner
                 print "Testing as owner"
                 self.signin(email="owner@example.com")
+                sched = 'random'
             else:
                 print "Testing as root"
+                sched = 'default'
                 self.signin()
             res = self.app.get(url, follow_redirects=True)
             dom = BeautifulSoup(res.data)
             err_msg = "There should be a %s section" % form_id
             assert dom.find(id=form_id) is not None, err_msg
             res = self.task_settings_scheduler(short_name=self.app_short_name,
-                                               sched="random")
+                                               sched=sched)
             dom = BeautifulSoup(res.data)
             err_msg = "Task Scheduler should be updated"
             assert dom.find(id='msg_success') is not None, err_msg
             app = db.session.query(model.App).get(1)
-            assert app.info['sched'] == 'random', err_msg
+            assert app.info['sched'] == sched, err_msg
             self.signout()
 
         # As an authenticated user
