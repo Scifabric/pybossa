@@ -10,6 +10,7 @@
         {{ helper.render_app_local_nav(app, 'tasks', current_user)}}
     </div>
     <div class="span9">
+        {{ helper.render_app_title(app, subtitle=_('Import Tasks'))}}
         {% include "applications/tasks/options.html" %}
     </div>
 </div>
