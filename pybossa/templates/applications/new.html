@@ -20,7 +20,6 @@
             {{ render_field(form.thumbnail, class_="span4", placeholder=_('Paste the direct link to your app icon'))}}
             {{ render_field(form.allow_anonymous_contributors, class_="span4")}}
             {{ render_field(form.long_description, class_="span4", placeholder=_('Explain the application (you can use HTML code!)'))}}
-            {{ render_field(form.sched, class_="span4", placeholder="Task scheduler for your app", tooltip=_('Select how to distribute the tasks'))}}
             {{ render_field(form.hidden, tooltip=_('Do you want to hide your app?'))}}
             <div class="form-actions">
                 <input type="submit" value={{_('Create the application')}} class="btn btn-primary" />
