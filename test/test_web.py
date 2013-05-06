@@ -1774,8 +1774,11 @@ class TestWeb(web.Helper):
 
     def test_74_task_settings_page(self):
         """Test WEB TASK SETTINGS page works"""
-        # As owner
+        # Creat root user
         self.register()
+        self.signout()
+        # As owner
+        self.register(fullname="owner", username="owner")
         self.new_application()
         url = "/app/%s/tasks/settings" % self.app_short_name
 
@@ -1799,3 +1802,12 @@ class TestWeb(web.Helper):
         dom = BeautifulSoup(res.data)
         err_msg = "User should be redirected to sign in"
         assert dom.find(id="signin") is not None, err_msg
+
+        # As root
+        self.signin()
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        divs = ['task_scheduler', 'task_delete', 'task_redundancy']
+        for div in divs:
+            err_msg = "There should be a %s section" % div
+            assert dom.find(id=div) is not None, err_msg
