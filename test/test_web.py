@@ -1869,6 +1869,7 @@ class TestWeb(web.Helper):
         # Create owner
         self.register(fullname="owner", username="owner")
         self.new_application()
+        self.new_task(1)
         url = "/app/%s/tasks/redundancy" % self.app_short_name
         form_id = 'task_redundancy'
         self.signout()
@@ -1895,18 +1896,19 @@ class TestWeb(web.Helper):
             err_msg = "Task Redundancy should be updated"
             assert dom.find(id='msg_success') is not None, err_msg
             app = db.session.query(model.App).get(1)
-            assert app.n_answers == n_answers, err_msg
+            for t in app.tasks:
+                assert t.n_answers == n_answers, err_msg
             # Wrong values, triggering the validators
             res = self.task_settings_redundancy(short_name=self.app_short_name,
                                                 n_answers=0)
             dom = BeautifulSoup(res.data)
             err_msg = "Task Redundancy should be a value between 0 and 1000"
-            assert dom.find(id='msg_danger') is not None, err_msg
+            assert dom.find(id='msg_error') is not None, err_msg
             res = self.task_settings_redundancy(short_name=self.app_short_name,
                                                 n_answers=10000000)
             dom = BeautifulSoup(res.data)
             err_msg = "Task Redundancy should be a value between 0 and 1000"
-            assert dom.find(id='msg_danger') is not None, err_msg
+            assert dom.find(id='msg_error') is not None, err_msg
             self.signout()
 
         # As an authenticated user
