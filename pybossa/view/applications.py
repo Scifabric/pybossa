@@ -922,6 +922,8 @@ def task_n_answers(short_name):
         elif request.method == 'POST' and form.validate():
             sql = text('''UPDATE task SET n_answers=:n_answers WHERE app_id=:app_id''')
             db.engine.execute(sql, n_answers=form.n_answers.data, app_id=app.id)
+            msg = lazy_gettext('Redundancy of Tasks updated!')
+            flash(msg, 'success')
             return redirect(url_for('.tasks', short_name=app.short_name))
         else:
             flash(lazy_gettext('Please correct the errors'), 'error')

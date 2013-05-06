@@ -12,7 +12,7 @@
             </div>
             <div class="span9">
                 {{ helper.render_app_title(app, subtitle=_('Task Redundancy'))}}
-                <form class="form-horizontal" method="post" action="{{ url_for('app.task_n_answers', short_name=app.short_name) }}">
+                <form id="task_redundancy" class="form-horizontal" method="post" action="{{ url_for('app.task_n_answers', short_name=app.short_name) }}">
                     {{ form.hidden_tag() }}
                     <fieldset>
                         {{ render_field(form.n_answers, class_="input-block-level", placeholder= _('The number of answers per tasks that you want for the application')) }}
