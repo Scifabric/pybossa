@@ -1811,3 +1811,50 @@ class TestWeb(web.Helper):
         for div in divs:
             err_msg = "There should be a %s section" % div
             assert dom.find(id=div) is not None, err_msg
+
+    def test_75_task_settings_scheduler(self):
+        """Test WEB TASK SETTINGS scheduler page works"""
+        # Creat root user
+        self.register()
+        self.signout()
+        # Create owner
+        self.register(fullname="owner", username="owner")
+        self.new_application()
+        url = "/app/%s/tasks/scheduler" % self.app_short_name
+        form_id = 'task_scheduler'
+        self.signout()
+
+        # As owner and root
+        for i in range(0, 1):
+            if i == 0:
+                # As owner
+                print "Testing as owner"
+                self.signin(email="owner@example.com")
+            else:
+                print "Testing as root"
+                self.signin()
+            res = self.app.get(url, follow_redirects=True)
+            dom = BeautifulSoup(res.data)
+            err_msg = "There should be a %s section" % form_id
+            assert dom.find(id=form_id) is not None, err_msg
+            res = self.task_settings_scheduler(short_name=self.app_short_name,
+                                               sched="random")
+            dom = BeautifulSoup(res.data)
+            err_msg = "Task Scheduler should be updated"
+            assert dom.find(id='msg_success') is not None, err_msg
+            app = db.session.query(model.App).get(1)
+            assert app.info['sched'] == 'random', err_msg
+            self.signout()
+
+        # As an authenticated user
+        self.register(fullname="juan", username="juan")
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "User should not be allowed to access this page"
+        assert res.status_code == 403, err_msg
+        self.signout()
+
+        # As an anonymous user
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "User should be redirected to sign in"
+        assert dom.find(id="signin") is not None, err_msg

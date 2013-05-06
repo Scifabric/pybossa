@@ -125,12 +125,12 @@ class Helper(object):
         db.session.commit()
 
     def task_settings_scheduler(self, method="POST", short_name='sampleapp',
-                                scheduler="default"):
+                                sched="default"):
         """Helper function to modify task scheduler"""
-        url = "/app/%s/task/scheduler" % short_name
+        url = "/app/%s/tasks/scheduler" % short_name
         if method == "POST":
             return self.app.post(url, data={
-                'scheduler': scheduler,
+                'sched': sched,
             }, follow_redirects=True)
         else:
             return self.app.get(url, follow_redirects=True)

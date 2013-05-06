@@ -19,7 +19,7 @@
                     <li><strong>Random</strong>: returns a task randomly (a user could get the same task twice or more times).</li>
                 </ul>
 
-                <form class="form-horizontal" method="post" action="{{ url_for('app.task_scheduler', short_name=app.short_name) }}">
+                <form id="task_scheduler" class="form-horizontal" method="post" action="{{ url_for('app.task_scheduler', short_name=app.short_name) }}">
                     {{ form.hidden_tag() }}
                     <fieldset>
                         {{ render_field(form.sched, class_="span4", placeholder="Task scheduler for your app")}}
