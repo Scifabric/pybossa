@@ -1,9 +1,20 @@
 import json
 from helper import web
 from base import model, Fixtures, db
+from mock import patch
+from collections import namedtuple
+
+
+FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
 
 class TestAdmin(web.Helper):
+    pkg_json_not_found = {
+        "help": "Return ...",
+        "success": False,
+        "error": {
+            "message": "Not found",
+            "__type": "Not Found Error"}}
     # Tests
 
     def test_00_first_user_is_admin(self):
@@ -279,8 +290,12 @@ class TestAdmin(web.Helper):
         assert res.status == "403 FORBIDDEN",\
             "This action should be forbidden, not enought privileges"
 
-    def test_16_admin_update_app(self):
+    @patch('pybossa.ckan.requests.get')
+    def test_16_admin_update_app(self, Mock):
         """Test ADMIN can update an app that belongs to another user"""
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
         self.register()
         self.signout()
         self.register(fullname="Juan Jose", username="juan",

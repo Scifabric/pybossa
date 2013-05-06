@@ -804,12 +804,13 @@ three different ways:
 For exporting the data, all you have to do is to visit the following URL in
 your web-browser::
 
-    http://PYBOSSA-SERVER/app/slug/export
+    http://PYBOSSA-SERVER/app/slug/tasks/export
 
 You will find a simple interface that will allow you to export the Tasks and
 Task Runs to JSON_ and CSV_ formats:
 
-.. image:: http://i.imgur.com/a1GgUos.png
+.. image:: http://i.imgur.com/IAvl9OL.png
+    :width: 100%
 
 The previous methods will export all the tasks and task runs, **even if they
 are not completed**. When a task has been completed, in other words, when a 
@@ -822,9 +823,11 @@ You can check which tasks are completed, going to the application URL::
 
     http://PYBOSSA-SERVER/app/slug
 
-And clicking in the **Tasks** link in the **Summary Section**
+And clicking in the **Tasks** link in the **left local navigation**, and then
+click in the **Browse** box:
 
-.. image:: http://i.imgur.com/Lu1q3K4.png
+.. image:: http://i.imgur.com/2Q3x2wP.png
+    :width: 100%
 
 Then you will see which tasks are completed, and which ones you can download in
 JSON_ format:
@@ -861,7 +864,7 @@ Exporting the task and task runs in JSON
 For the JSON_ format, you will get all the output in the web browser, so you
 will have to save the created page afterwords:
 
-.. image:: http://i.imgur.com/vBDWLeb.png
+.. image:: http://i.imgur.com/raRHtmq.png
 
 Exporting the task and task runs to a CSV file
 ----------------------------------------------
@@ -869,7 +872,7 @@ Exporting the task and task runs to a CSV file
 While for the CSV_ format, you will get a CSV file that will be automatically
 saved in your computer:
 
-.. image:: http://i.imgur.com/zVZCYW8.png
+.. image:: http://i.imgur.com/iGPMc9w.png
 
 Exporting the task and task runs to a CKAN server
 -------------------------------------------------
@@ -878,7 +881,8 @@ If the server has been configured to allow you to export your aplication's data
 to a CKAN server (see :ref:`config-ckan`), the owner of the application will see another box that will
 give you the option to export the data to the CKAN server.
 
-.. image:: http://i.imgur.com/v85Ol9u.png
+.. image:: http://i.imgur.com/cAEBjez.png
+    :width: 100%
 
 In order to use this method you will need to add the CKAN API-KEY associated
 with your account, otherwise you will not be able to export the data and
@@ -896,6 +900,6 @@ it there. Your application will show in the info page at the bottom a link to
 your published data in the CKAN server so other people, citizens or researchers
 can actually cite your work.
 
-.. image:: http://i.imgur.com/HeImpwn.png
+.. image:: http://i.imgur.com/98xjH8a.png
 
 .. _`the Data hub`: http://datahub.io
