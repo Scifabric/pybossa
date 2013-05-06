@@ -76,29 +76,24 @@ figure:
         authenticated users can participate in all the applications, however
         you can change it to only allow authenticated volunteers to
         participate. 
-     6. **Task Scheduler**: The task scheduler is in charge in distributing the
-        tasks within the volunteers crowd. By default, the system will send the
-        same task to all the users until a minimum of 30 answers are obtained
-        for each task, then it will start sending the next task of your
-        application. You can change it to **breadth first** if you want to send
-        to every user a different task every time.
-     4. **Long Description**: A *long* description where you can use HTML
+     6. **Long Description**: A *long* description where you can use HTML
         to format the description of your application. This field is
         usually used to provide information about the application, the
         developer, the researcher group or institutions involved in the
         application, etc.
-     5. **Hide**: Click in this field if you want to hide the application.
+     7. **Hide**: Click in this field if you want to hide the application.
 
-.. image:: http://i.imgur.com/MdNRUnK.png
+.. image:: http://i.imgur.com/kvPu1a6.png
     :alt: PyBossa Create link
 
 4. Once you have filled all the fields, click in the **Create the
    application** button, and you will have created your first application.
 
-Once you have created the application, you should will be redirected to the
+After creating the application, you should be redirected to the
 **settings** application page:
 
-.. image:: http://i.imgur.com/AeBAy7q.png
+.. image:: http://i.imgur.com/IiB0sMG.png
+    :alt: PyBossa Application Settings page
 
 Importing the tasks via the built-in CSV Task Creator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -111,11 +106,12 @@ built-in :ref:`task-creator`. You have to do the following:
 
 .. image:: http://i.imgur.com/98o4ixD.png
 
-2. Click in the **Settings** section -on the left side local navigation menu:
+2. Click in the **Tasks** section -on the left side local navigation menu:
 
-.. image:: http://i.imgur.com/AeBAy7q.png
-    
-3. Scroll down a bit to the **Task Settings** and  click on the **Import Tasks** 
+.. image:: http://i.imgur.com/u5vusQR.png
+   :width: 100%
+
+3. And click again on the **Import Tasks** 
    button. After clicking on it you will see 7 different options:
 
 .. image:: http://i.imgur.com/Qf2sMGV.png
@@ -216,16 +212,18 @@ project, you will have to follow the next steps:
 
 .. image:: http://i.imgur.com/98o4ixD.png
 
-2. Click in the **Settings** section -on the left side local navigation menu:
+2. Click in the **Tasks** section -on the left side local navigation menu:
 
-.. image:: http://i.imgur.com/AeBAy7q.png
+.. image:: http://i.imgur.com/u5vusQR.png
+   :width: 100%
+
     
-3. Scroll down a bit to the **Task Settings** and  click on the **Import Tasks** 
-   button. After clicking on it you will see 6 different options:
+3. And  click on the **Import Tasks** 
+   button. After clicking on it you will see 7 different options:
 
-.. image:: http://i.imgur.com/wyGxV4s.png
+.. image:: http://i.imgur.com/Qf2sMGV.png
 
-4. Click in the second one: **Use an EpiCollect Project**
+4. Click in the first one: **Use an EpiCollect Project**
 
 5. Then, type the **name of the EpiCollect project** and the name of the
    **form** that you want to import, and click in the import button
@@ -247,10 +245,11 @@ tasks and associated task runs** from your application.
     delete all the tasks.**
 
 If you are sure that you want to flush all the tasks and task runs for your
-application, go to the application page (http://server/app/slug/) and click in
+application, go to the application page (http://server/app/slug/tasks/) and click in
 the **Settings** option of the left local navigation menu:
 
-.. image:: http://i.imgur.com/AeBAy7q.png
+.. image:: http://i.imgur.com/XsAOjnb.png
+    :width: 100%
 
 Then, you will see that there is a sub section called: **Task Settings** and
 a button with the label: **Delete the tasks**. Click in that button and a new
@@ -297,10 +296,11 @@ From there you will be able to manage your applications:
     :width: 100%
 
 Once you have chosen your application, you can add :ref:`task-presenter` by
-clicking in the **Settings** local navigation link, and then under the sub
-section *Application Settings* click in the button named **Edit the task presenter**. 
+clicking in the **Tasks** local navigation link, and then click in the 
+button named **Editor** under the **Task Presenter** box. 
 
-.. image:: http://i.imgur.com/AeBAy7q.png
+.. image:: http://i.imgur.com/XsAOjnb.png
+    :width: 100%
 
 After clicking in this button, a new web page will be shown where you can
 choose a template to start coding your application, so you don't have to

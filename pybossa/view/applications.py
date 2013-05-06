@@ -21,6 +21,7 @@ from flaskext.wtf import Form, IntegerField, TextField, BooleanField, \
 from flaskext.login import login_required, current_user
 from flaskext.babel import lazy_gettext
 from werkzeug.exceptions import HTTPException
+from sqlalchemy.sql import text
 
 import pybossa.model as model
 import pybossa.stats as stats
@@ -65,17 +66,29 @@ class AppForm(Form):
         choices=[('True', lazy_gettext('Yes')),
                  ('False', lazy_gettext('No'))])
     long_description = TextAreaField(lazy_gettext('Long Description'))
-    sched = SelectField(lazy_gettext('Task Scheduler'),
-                        choices=[('default', lazy_gettext('Default')),
-                                 ('breadth_first', lazy_gettext('Breadth First')),
-                                 ('depth_first', lazy_gettext('Depth First')),
-                                 ('random', lazy_gettext('Random'))],)
     hidden = BooleanField(lazy_gettext('Hide?'))
 
 
 class TaskPresenterForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
     editor = TextAreaField('')
+
+
+class TaskRedundancyForm(Form):
+    n_answers = IntegerField(lazy_gettext('Redundancy'),
+                             [validators.Required(),
+                              validators.NumberRange(
+                                  min=1, max=1000,
+                                  message=lazy_gettext('Number of answers should be a \
+                                                       value between 1 and 1,000'))])
+
+
+class TaskSchedulerForm(Form):
+    sched = SelectField(lazy_gettext('Task Scheduler'),
+                        choices=[('default', lazy_gettext('Default')),
+                                 ('breadth_first', lazy_gettext('Breadth First')),
+                                 ('depth_first', lazy_gettext('Depth First')),
+                                 ('random', lazy_gettext('Random'))],)
 
 
 def app_title(app, page_name):
@@ -161,8 +174,6 @@ def new():
     # Add the info items
     if form.thumbnail.data:
         info['thumbnail'] = form.thumbnail.data
-    if form.sched.data:
-        info['sched'] = form.sched.data
 
     app = model.App(name=form.name.data,
                     short_name=form.short_name.data,
@@ -188,7 +199,7 @@ def new():
     return redirect(url_for('.settings', short_name=app.short_name))
 
 
-@blueprint.route('/<short_name>/taskpresentereditor', methods=['GET', 'POST'])
+@blueprint.route('/<short_name>/tasks/taskpresentereditor', methods=['GET', 'POST'])
 @login_required
 def task_presenter_editor(short_name):
     errors = False
@@ -205,7 +216,7 @@ def task_presenter_editor(short_name):
         db.session.commit()
         msg_1 = lazy_gettext('Task presenter added!')
         flash('<i class="icon-ok"></i> ' + msg_1, 'success')
-        return redirect(url_for('.settings', short_name=app.short_name))
+        return redirect(url_for('.tasks', short_name=app.short_name))
 
     if request.method == 'POST' and not form.validate():
         flash(lazy_gettext('Please correct the errors'), 'error')
@@ -285,8 +296,8 @@ def update(short_name):
         app = app_by_shortname(short_name)
         if form.thumbnail.data:
             new_info['thumbnail'] = form.thumbnail.data
-        if form.sched.data:
-            new_info['sched'] = form.sched.data
+        #if form.sched.data:
+        #    new_info['sched'] = form.sched.data
 
         # Merge info object
         info = dict(app.info.items() + new_info.items())
@@ -318,11 +329,11 @@ def update(short_name):
         form.populate_obj(app)
         if app.info.get('thumbnail'):
             form.thumbnail.data = app.info['thumbnail']
-        if app.info.get('sched'):
-            for s in form.sched.choices:
-                if app.info['sched'] == s[0]:
-                    form.sched.data = s[0]
-                    break
+        #if app.info.get('sched'):
+        #    for s in form.sched.choices:
+        #        if app.info['sched'] == s[0]:
+        #            form.sched.data = s[0]
+        #            break
 
     if request.method == 'POST':
         form = AppForm(request.form)
@@ -397,12 +408,15 @@ def compute_importer_variant_pairs(forms):
         for i in xrange(0, int(math.ceil(len(variants) / 2.0)))]
 
 
-@blueprint.route('/<short_name>/import', methods=['GET', 'POST'])
+@blueprint.route('/<short_name>/tasks/import', methods=['GET', 'POST'])
+@login_required
 def import_task(short_name):
     app = app_by_shortname(short_name)
     title = app_title(app, "Import Tasks")
-    template_args = {"title": title, "app": app}
-
+    loading_text = lazy_gettext("Importing tasks, this may take a while, wait...")
+    template_args = {"title": title, "app": app, "loading_text": loading_text}
+    if not require.app.update(app):
+        return abort(403)
     data_handlers = dict([
         (i.template_id, (i.form_detector, i(request.form), i.form_id))
         for i in importer.importers])
@@ -461,7 +475,7 @@ def _import_task(app, handler, form, render_forms):
             raise importer.BulkImportException(
                 lazy_gettext('Oops! It looks like the file is empty.'))
         flash(lazy_gettext('Tasks imported successfully!'), 'success')
-        return redirect(url_for('.settings', short_name=app.short_name))
+        return redirect(url_for('.tasks', short_name=app.short_name))
     except importer.BulkImportException, err_msg:
         flash(err_msg, 'error')
     except Exception as inst:
@@ -581,9 +595,28 @@ def export(short_name, task_id):
     return Response(json.dumps(results), mimetype='application/json')
 
 
-@blueprint.route('/<short_name>/tasks', defaults={'page': 1})
-@blueprint.route('/<short_name>/tasks/<int:page>')
-def tasks(short_name, page):
+@blueprint.route('/<short_name>/tasks/')
+def tasks(short_name):
+    app = app_by_shortname(short_name)
+    title = app_title(app, "Tasks")
+    try:
+        require.app.read(app)
+        return render_template('/applications/tasks.html',
+                               title=title,
+                               app=app)
+    except HTTPException:
+        if not app.hidden:
+            return render_template('/applications/tasks.html',
+                                   title="Application not found",
+                                   app=None)
+        return render_template('/applications/tasks.html',
+                               title="Application not found",
+                               app=None)
+
+
+@blueprint.route('/<short_name>/tasks/browse', defaults={'page': 1})
+@blueprint.route('/<short_name>/tasks/browse/<int:page>')
+def tasks_browse(short_name, page):
     app = app_by_shortname(short_name)
     title = app_title(app, "Tasks")
 
@@ -603,7 +636,7 @@ def tasks(short_name, page):
             abort(404)
 
         pagination = Pagination(page, per_page, count)
-        return render_template('/applications/tasks.html',
+        return render_template('/applications/tasks_browse.html',
                                app=app,
                                tasks=app_tasks,
                                title=title,
@@ -640,16 +673,17 @@ def delete_tasks(short_name):
             db.session.commit()
             msg = "All the tasks and associated task runs have been deleted"
             flash(lazy_gettext(msg), 'success')
-            return redirect(url_for('.settings', short_name=app.short_name))
+            return redirect(url_for('.tasks', short_name=app.short_name))
     except HTTPException:
         return abort(403)
 
 
-@blueprint.route('/<short_name>/export')
+@blueprint.route('/<short_name>/tasks/export')
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
     app = app_by_shortname(short_name)
-    title = app_title(app, "Export")
+    title = app_title(app, lazy_gettext("Export"))
+    loading_text = lazy_gettext("Exporting data..., this may take a while")
 
     def gen_json(table):
         n = db.session.query(table)\
@@ -720,6 +754,7 @@ def export_to(short_name):
                     flash(msg, 'success')
                     return render_template('/applications/export.html',
                                            title=title,
+                                           loading_text=loading_text,
                                            app=app)
                 else:
                     ckan.datastore_delete(name=ty)
@@ -728,6 +763,7 @@ def export_to(short_name):
                     flash(msg, 'success')
                     return render_template('/applications/export.html',
                                            title=title,
+                                           loading_text=loading_text,
                                            app=app)
             else:
                 ckan.package_create(app=app, user=app.owner, url=app_url,
@@ -740,6 +776,7 @@ def export_to(short_name):
                 flash(msg, 'success')
                 return render_template('/applications/export.html',
                                        title=title,
+                                       loading_text=loading_text,
                                        app=app)
         except Exception as inst:
             print inst
@@ -751,6 +788,7 @@ def export_to(short_name):
             flash(msg, 'danger')
             return render_template('/applications/export.html',
                                    title=title,
+                                   loading_text=loading_text,
                                    app=app)
 
     def respond_csv(ty):
@@ -788,6 +826,7 @@ def export_to(short_name):
             flash(msg, 'info')
             return render_template('/applications/export.html',
                                    title=title,
+                                   loading_text=loading_text,
                                    app=app)
 
     export_formats = ["json", "csv"]
@@ -802,6 +841,7 @@ def export_to(short_name):
             abort(404)
         return render_template('/applications/export.html',
                                title=title,
+                               loading_text=loading_text,
                                ckan_name=current_app.config.get('CKAN_NAME'),
                                app=app)
     if fmt not in export_formats:
@@ -849,3 +889,85 @@ def show_stats(short_name):
                            appStats=json.dumps(tmp),
                            userStats=userStats,
                            app=app)
+
+
+@blueprint.route('/<short_name>/tasks/settings')
+@login_required
+def task_settings(short_name):
+    """Settings page for tasks of the application"""
+    app = app_by_shortname(short_name)
+    try:
+        require.app.read(app)
+        require.app.update(app)
+        return render_template('applications/task_settings.html',
+                               app=app)
+    except:
+        return abort(403)
+
+
+@blueprint.route('/<short_name>/tasks/redundancy', methods=['GET', 'POST'])
+@login_required
+def task_n_answers(short_name):
+    app = app_by_shortname(short_name)
+    title = app_title(app, lazy_gettext('Redundancy'))
+    form = TaskRedundancyForm()
+    try:
+        require.app.read(app)
+        require.app.update(app)
+        if request.method == 'GET':
+            return render_template('/applications/task_n_answers.html',
+                                   title=title,
+                                   form=form,
+                                   app=app)
+        elif request.method == 'POST' and form.validate():
+            sql = text('''UPDATE task SET n_answers=:n_answers WHERE app_id=:app_id''')
+            db.engine.execute(sql, n_answers=form.n_answers.data, app_id=app.id)
+            msg = lazy_gettext('Redundancy of Tasks updated!')
+            flash(msg, 'success')
+            return redirect(url_for('.tasks', short_name=app.short_name))
+        else:
+            flash(lazy_gettext('Please correct the errors'), 'error')
+            return render_template('/applications/task_n_answers.html',
+                                   title=title,
+                                   form=form,
+                                   app=app)
+    except:
+        return abort(403)
+
+
+@blueprint.route('/<short_name>/tasks/scheduler', methods=['GET', 'POST'])
+@login_required
+def task_scheduler(short_name):
+    app = app_by_shortname(short_name)
+    title = app_title(app, lazy_gettext('Scheduler'))
+    form = TaskSchedulerForm()
+    try:
+        require.app.read(app)
+        require.app.update(app)
+        if request.method == 'GET':
+            if app.info.get('sched'):
+                for s in form.sched.choices:
+                    if app.info['sched'] == s[0]:
+                        form.sched.data = s[0]
+                        break
+            return render_template('/applications/task_scheduler.html',
+                                   title=title,
+                                   form=form,
+                                   app=app)
+        elif request.method == 'POST' and form.validate():
+            if form.sched.data:
+                app.info['sched'] = form.sched.data
+            cached_apps.reset()
+            db.session.add(app)
+            db.session.commit()
+            msg = lazy_gettext("Application Task Scheduler updated!")
+            flash(msg, 'success')
+            return redirect(url_for('.tasks', short_name=app.short_name))
+        else:
+            flash(lazy_gettext('Please correct the errors'), 'error')
+            return render_template('/applications/task_scheduler.html',
+                                   title=title,
+                                   form=form,
+                                   app=app)
+    except:
+        return abort(403)

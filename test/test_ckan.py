@@ -12,7 +12,7 @@ FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
 
 class TestCkanWeb(web_helper.Helper):
-    url = "/app/%s/export" % Fixtures.app_short_name
+    url = "/app/%s/tasks/export" % Fixtures.app_short_name
 
     def setUp(self):
         super(TestCkanWeb, self).setUp()

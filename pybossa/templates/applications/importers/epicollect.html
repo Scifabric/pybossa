@@ -5,9 +5,10 @@
 
 {% block content %}
 {% from "_formhelpers.html" import render_field %}
+{{ helper.render_loading(loading_text) }}
 <div class="row">
     <div class="span3">
-        {{ helper.render_app_local_nav(app, 'settings', current_user)}}
+        {{ helper.render_app_local_nav(app, 'tasks', current_user)}}
     </div>
     <div class="span9">
         <h1><strong>{{app.name}}</strong>: {{_('Import tasks')}}</h1>
@@ -28,4 +29,9 @@
       {% endif %}
     </div>
 </div>
+<script>
+    $("#submit").off('click').on('click', function(){
+        $("#loading").show();
+    });
+</script>
 {% endblock %}

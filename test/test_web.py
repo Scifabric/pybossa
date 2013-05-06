@@ -9,11 +9,18 @@ from collections import namedtuple
 from pybossa.core import db, signer
 from pybossa.util import unicode_csv_reader
 from pybossa.util import get_user_signup_method
+from bs4 import BeautifulSoup
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
 
 class TestWeb(web.Helper):
+    pkg_json_not_found = {
+        "help": "Return ...",
+        "success": False,
+        "error": {
+            "message": "Not found",
+            "__type": "Not Found Error"}}
 
     def test_01_index(self):
         """Test WEB home page works"""
@@ -313,9 +320,13 @@ class TestWeb(web.Helper):
         assert '/app/test-app' in res.data, res.data
         assert '<h2><a href="/app/test-app/">My New App</a></h2>' in res.data, res.data
 
-    def test_10_get_application(self):
+    @patch('pybossa.ckan.requests.get')
+    def test_10_get_application(self, Mock):
         """Test WEB application URL/<short_name> works"""
         # Sign in and create an application
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
         self.register()
         res = self.new_application()
 
@@ -374,8 +385,6 @@ class TestWeb(web.Helper):
             'Different names %s' % app.short_name
         assert app.info['thumbnail'] == 'An Icon link', \
             "Thumbnail should be the same: %s" % app.info['thumbnail']
-        assert app.info['sched'] == 'default', \
-            "Scheduler should be the same: %s" % app.info['thumbnail']
         assert app.long_description == '<div id="long_desc">Long desc</div>', \
             "Long desc should be the same: %s" % app.long_description
 
@@ -410,8 +419,13 @@ class TestWeb(web.Helper):
         assert "Name is already taken" in res.data, err_msg
         assert "Short Name is already taken" in res.data, err_msg
 
-    def test_12_update_application(self):
+    @patch('pybossa.ckan.requests.get')
+    def test_12_update_application(self, Mock):
         """Test WEB update application works"""
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
+
         self.register()
         self.new_application()
 
@@ -429,7 +443,6 @@ class TestWeb(web.Helper):
                                       new_description="New description",
                                       new_thumbnail="New Icon Link",
                                       new_long_description='New long desc',
-                                      new_sched="random",
                                       new_hidden=True)
         app = db.session.query(model.App).first()
         assert "Application updated!" in res.data, res
@@ -446,8 +459,12 @@ class TestWeb(web.Helper):
         err_msg = "App hidden not updated %s" % app.hidden
         assert app.hidden == 1, err_msg
 
-    def test_13_hidden_applications(self):
+    @patch('pybossa.ckan.requests.get')
+    def test_13_hidden_applications(self, Mock):
         """Test WEB hidden application works"""
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
         self.register()
         self.new_application()
         self.update_application(new_hidden=True)
@@ -459,8 +476,13 @@ class TestWeb(web.Helper):
         res = self.app.get('/app/sampleapp', follow_redirects=True)
         assert "Sorry! This app does not exists." in res.data, res.data
 
-    def test_13a_hidden_applications_owner(self):
+    @patch('pybossa.ckan.requests.get')
+    def test_13a_hidden_applications_owner(self, Mock):
         """Test WEB hidden applications are shown to their owners"""
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
+
         self.register()
         self.new_application()
         self.update_application(new_hidden=True)
@@ -529,7 +551,7 @@ class TestWeb(web.Helper):
 
         app = db.session.query(model.App).first()
 
-        res = self.app.get('app/%s/tasks' % (app.short_name),
+        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
                            follow_redirects=True)
         assert "Sample App" in res.data, res.data
         msg = 'Task <span class="label label-success">#1</span>'
@@ -576,7 +598,7 @@ class TestWeb(web.Helper):
 
         app = db.session.query(model.App).first()
 
-        res = self.app.get('app/%s/tasks' % (app.short_name),
+        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
                            follow_redirects=True)
         assert "Sample App" in res.data, res.data
         msg = 'Task <span class="label label-info">#1</span>'
@@ -818,8 +840,13 @@ class TestWeb(web.Helper):
         err_msg = "Application ID should be shown to the owner"
         assert msg in res.data, err_msg
 
-    def test_30_app_id_anonymous_user(self):
+    @patch('pybossa.ckan.requests.get')
+    def test_30_app_id_anonymous_user(self, Mock):
         """Test WEB application page does not show the ID to anonymous users"""
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
+
         self.register()
         self.new_application()
         self.signout()
@@ -871,7 +898,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        url = '/app/%s/import?template=csv' % (app.short_name)
+        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv'},
                             follow_redirects=True)
@@ -888,7 +915,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        url = '/app/%s/import?template=csv' % (app.short_name)
+        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com'},
                             follow_redirects=True)
         assert "Oops! That file doesn't look like the right file." in res.data
@@ -902,7 +929,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        url = '/app/%s/import?template=csv' % (app.short_name)
+        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv'},
                             follow_redirects=True)
@@ -917,7 +944,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        url = '/app/%s/import?template=csv' % (app.short_name)
+        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv'},
                             follow_redirects=True)
@@ -933,7 +960,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        url = '/app/%s/import?template=csv' % (app.short_name)
+        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv'},
                             follow_redirects=True)
@@ -950,7 +977,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        url = '/app/%s/import?template=csv' % (app.short_name)
+        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv'},
                             follow_redirects=True)
@@ -1228,7 +1255,7 @@ class TestWeb(web.Helper):
         """Test WEB task presenter editor is an option"""
         self.register()
         self.new_application()
-        res = self.app.get('/app/sampleapp/settings', follow_redirects=True)
+        res = self.app.get('/app/sampleapp/tasks/', follow_redirects=True)
         assert "Edit the task presenter" in res.data, \
             "Task Presenter Editor should be an option"
 
@@ -1236,7 +1263,7 @@ class TestWeb(web.Helper):
         """Test WEB task presenter editor loads"""
         self.register()
         self.new_application()
-        res = self.app.get('/app/sampleapp/taskpresentereditor',
+        res = self.app.get('/app/sampleapp/tasks/taskpresentereditor',
                            follow_redirects=True)
         err_msg = "Task Presenter options not found"
         assert "Task Presenter Editor" in res.data, err_msg
@@ -1257,12 +1284,12 @@ class TestWeb(web.Helper):
         err_msg = "Task Presenter should be empty"
         assert not app.info.get('task_presenter'), err_msg
 
-        res = self.app.get('/app/sampleapp/taskpresentereditor?template=basic',
+        res = self.app.get('/app/sampleapp/tasks/taskpresentereditor?template=basic',
                            follow_redirects=True)
         assert "var editor" in res.data, "CodeMirror Editor not found"
         assert "Task Presenter" in res.data, "CodeMirror Editor not found"
         assert "Task Presenter Preview" in res.data, "CodeMirror View not found"
-        res = self.app.post('/app/sampleapp/taskpresentereditor',
+        res = self.app.post('/app/sampleapp/tasks/taskpresentereditor',
                             data={'editor': 'Some HTML code!'},
                             follow_redirects=True)
         assert "Sample App" in res.data, "Does not return to app details"
@@ -1270,15 +1297,20 @@ class TestWeb(web.Helper):
         err_msg = "Task Presenter failed to update"
         assert app.info['task_presenter'] == 'Some HTML code!', err_msg
 
-    def test_48_update_app_info(self):
+    @patch('pybossa.ckan.requests.get')
+    def test_48_update_app_info(self, Mock):
         """Test WEB app update/edit works keeping previous info values"""
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
+
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
         err_msg = "Task Presenter should be empty"
         assert not app.info.get('task_presenter'), err_msg
 
-        res = self.app.post('/app/sampleapp/taskpresentereditor',
+        res = self.app.post('/app/sampleapp/tasks/taskpresentereditor',
                             data={'editor': 'Some HTML code!'},
                             follow_redirects=True)
         assert "Sample App" in res.data, "Does not return to app details"
@@ -1304,7 +1336,6 @@ class TestWeb(web.Helper):
         assert app.info['thumbnail'] == "New Icon link", error_msg
         error_msg = "The app long description has not been updated"
         assert app.long_description == "Long desc", error_msg
-        assert app.info['sched'] == "random", "The app sched has not been updated"
 
     def test_49_announcement_messages(self):
         """Test WEB announcement messages works"""
@@ -1353,35 +1384,35 @@ class TestWeb(web.Helper):
         """Test WEB export Tasks to JSON works"""
         Fixtures.create()
         # First test for a non-existant app
-        uri = '/app/somethingnotexists/export'
+        uri = '/app/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
         # Now get the tasks in JSON format
-        uri = "/app/somethingnotexists/export?type=task&format=json"
+        uri = "/app/somethingnotexists/tasks/export?type=task&format=json"
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real app
-        uri = '/app/%s/export' % Fixtures.app_short_name
+        uri = '/app/%s/tasks/export' % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now test that a 404 is raised when an arg is invalid
-        uri = "/app/%s/export?type=ask&format=json" % Fixtures.app_short_name
+        uri = "/app/%s/tasks/export?type=ask&format=json" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
-        uri = "/app/%s/export?type=task&format=gson" % Fixtures.app_short_name
+        uri = "/app/%s/tasks/export?type=task&format=gson" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
-        uri = "/app/%s/export?format=json" % Fixtures.app_short_name
+        uri = "/app/%s/tasks/export?format=json" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
-        uri = "/app/%s/export?type=task" % Fixtures.app_short_name
+        uri = "/app/%s/tasks/export?type=task" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
 
         # Now get the tasks in JSON format
-        uri = "/app/%s/export?type=task&format=json" % Fixtures.app_short_name
+        uri = "/app/%s/tasks/export?type=task&format=json" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         exported_tasks = json.loads(res.data)
         app = db.session.query(model.App)\
@@ -1394,21 +1425,21 @@ class TestWeb(web.Helper):
         """Test WEB export Task Runs to JSON works"""
         Fixtures.create()
         # First test for a non-existant app
-        uri = '/app/somethingnotexists/export'
+        uri = '/app/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
         # Now get the tasks in JSON format
-        uri = "/app/somethingnotexists/export?type=taskrun&format=json"
+        uri = "/app/somethingnotexists/tasks/export?type=taskrun&format=json"
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real app
-        uri = '/app/%s/export' % Fixtures.app_short_name
+        uri = '/app/%s/tasks/export' % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in JSON format
-        uri = "/app/%s/export?type=task_run&format=json" % Fixtures.app_short_name
+        uri = "/app/%s/tasks/export?type=task_run&format=json" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         exported_task_runs = json.loads(res.data)
         app = db.session.query(model.App)\
@@ -1421,21 +1452,21 @@ class TestWeb(web.Helper):
         """Test WEB export Tasks to CSV works"""
         Fixtures.create()
         # First test for a non-existant app
-        uri = '/app/somethingnotexists/export'
+        uri = '/app/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
         # Now get the tasks in JSON format
-        uri = "/app/somethingnotexists/export?type=task&format=csv"
+        uri = "/app/somethingnotexists/tasks/export?type=task&format=csv"
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real app
-        uri = '/app/%s/export' % Fixtures.app_short_name
+        uri = '/app/%s/tasks/export' % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in JSON format
-        uri = "/app/%s/export?type=task&format=csv" % Fixtures.app_short_name
+        uri = "/app/%s/tasks/export?type=task&format=csv" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         csv_content = StringIO.StringIO(res.data)
         csvreader = unicode_csv_reader(csv_content)
@@ -1455,21 +1486,21 @@ class TestWeb(web.Helper):
         """Test WEB export Task Runs to CSV works"""
         Fixtures.create()
         # First test for a non-existant app
-        uri = '/app/somethingnotexists/export'
+        uri = '/app/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
         # Now get the tasks in JSON format
-        uri = "/app/somethingnotexists/export?type=tas&format=csv"
+        uri = "/app/somethingnotexists/tasks/export?type=tas&format=csv"
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real app
-        uri = '/app/%s/export' % Fixtures.app_short_name
+        uri = '/app/%s/tasks/export' % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in JSON format
-        uri = "/app/%s/export?type=task_run&format=csv" % Fixtures.app_short_name
+        uri = "/app/%s/tasks/export?type=task_run&format=csv" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         csv_content = StringIO.StringIO(res.data)
         csvreader = unicode_csv_reader(csv_content)
@@ -1495,7 +1526,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         # Without tasks, there should be a template
-        res = self.app.get('/app/sampleapp/import', follow_redirects=True)
+        res = self.app.get('/app/sampleapp/tasks/import', follow_redirects=True)
         err_msg = "There should be a CSV template"
         assert "template=csv" in res.data, err_msg
         err_msg = "There should be an Image template"
@@ -1506,7 +1537,7 @@ class TestWeb(web.Helper):
         assert "mode=pdf" in res.data, err_msg
         # With tasks
         self.new_task(1)
-        res = self.app.get('/app/sampleapp/import', follow_redirects=True)
+        res = self.app.get('/app/sampleapp/tasks/import', follow_redirects=True)
         err_msg = "There should load directly the basic template"
         err_msg = "There should not be a CSV template"
         assert "template=basic" not in res.data, err_msg
@@ -1690,7 +1721,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        url = '/app/%s/import?template=csv' % (app.short_name)
+        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'epicollect_project': 'fakeproject',
                                        'epicollect_form': 'fakeform',
                                        'formtype': 'json'},
@@ -1709,7 +1740,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        url = '/app/%s/import?template=csv' % (app.short_name)
+        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'epicollect_project': 'fakeproject',
                                        'epicollect_form': 'fakeform',
                                        'formtype': 'json'},
@@ -1728,7 +1759,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(model.App).first()
-        res = self.app.post(('/app/%s/import' % (app.short_name)),
+        res = self.app.post(('/app/%s/tasks/import' % (app.short_name)),
                             data={'epicollect_project': 'fakeproject',
                                   'epicollect_form': 'fakeform',
                                   'formtype': 'json'},
@@ -1740,3 +1771,155 @@ class TestWeb(web.Helper):
         tasks = db.session.query(model.Task).filter_by(app_id=app.id).all()
         err_msg = "The imported task from EpiCollect is wrong"
         assert tasks[0].info['DeviceID'] == 23, err_msg
+
+    def test_74_task_settings_page(self):
+        """Test WEB TASK SETTINGS page works"""
+        # Creat root user
+        self.register()
+        self.signout()
+        # As owner
+        self.register(fullname="owner", username="owner")
+        self.new_application()
+        url = "/app/%s/tasks/settings" % self.app_short_name
+
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        divs = ['task_scheduler', 'task_delete', 'task_redundancy']
+        for div in divs:
+            err_msg = "There should be a %s section" % div
+            assert dom.find(id=div) is not None, err_msg
+
+        self.signout()
+        # As an authenticated user
+        self.register(fullname="juan", username="juan")
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "User should not be allowed to access this page"
+        assert res.status_code == 403, err_msg
+        self.signout()
+
+        # As an anonymous user
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "User should be redirected to sign in"
+        assert dom.find(id="signin") is not None, err_msg
+
+        # As root
+        self.signin()
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        divs = ['task_scheduler', 'task_delete', 'task_redundancy']
+        for div in divs:
+            err_msg = "There should be a %s section" % div
+            assert dom.find(id=div) is not None, err_msg
+
+    def test_75_task_settings_scheduler(self):
+        """Test WEB TASK SETTINGS scheduler page works"""
+        # Creat root user
+        self.register()
+        self.signout()
+        # Create owner
+        self.register(fullname="owner", username="owner")
+        self.new_application()
+        url = "/app/%s/tasks/scheduler" % self.app_short_name
+        form_id = 'task_scheduler'
+        self.signout()
+
+        # As owner and root
+        for i in range(0, 1):
+            if i == 0:
+                # As owner
+                print "Testing as owner"
+                self.signin(email="owner@example.com")
+                sched = 'random'
+            else:
+                print "Testing as root"
+                sched = 'default'
+                self.signin()
+            res = self.app.get(url, follow_redirects=True)
+            dom = BeautifulSoup(res.data)
+            err_msg = "There should be a %s section" % form_id
+            assert dom.find(id=form_id) is not None, err_msg
+            res = self.task_settings_scheduler(short_name=self.app_short_name,
+                                               sched=sched)
+            dom = BeautifulSoup(res.data)
+            err_msg = "Task Scheduler should be updated"
+            assert dom.find(id='msg_success') is not None, err_msg
+            app = db.session.query(model.App).get(1)
+            assert app.info['sched'] == sched, err_msg
+            self.signout()
+
+        # As an authenticated user
+        self.register(fullname="juan", username="juan")
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "User should not be allowed to access this page"
+        assert res.status_code == 403, err_msg
+        self.signout()
+
+        # As an anonymous user
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "User should be redirected to sign in"
+        assert dom.find(id="signin") is not None, err_msg
+
+    def test_76_task_settings_redundancy(self):
+        """Test WEB TASK SETTINGS redundancy page works"""
+        # Creat root user
+        self.register()
+        self.signout()
+        # Create owner
+        self.register(fullname="owner", username="owner")
+        self.new_application()
+        self.new_task(1)
+        url = "/app/%s/tasks/redundancy" % self.app_short_name
+        form_id = 'task_redundancy'
+        self.signout()
+
+        # As owner and root
+        for i in range(0, 1):
+            if i == 0:
+                # As owner
+                print "Testing as owner"
+                self.signin(email="owner@example.com")
+                n_answers = 20
+            else:
+                print "Testing as root"
+                n_answers = 10
+                self.signin()
+            res = self.app.get(url, follow_redirects=True)
+            dom = BeautifulSoup(res.data)
+            # Correct values
+            err_msg = "There should be a %s section" % form_id
+            assert dom.find(id=form_id) is not None, err_msg
+            res = self.task_settings_redundancy(short_name=self.app_short_name,
+                                                n_answers=n_answers)
+            dom = BeautifulSoup(res.data)
+            err_msg = "Task Redundancy should be updated"
+            assert dom.find(id='msg_success') is not None, err_msg
+            app = db.session.query(model.App).get(1)
+            for t in app.tasks:
+                assert t.n_answers == n_answers, err_msg
+            # Wrong values, triggering the validators
+            res = self.task_settings_redundancy(short_name=self.app_short_name,
+                                                n_answers=0)
+            dom = BeautifulSoup(res.data)
+            err_msg = "Task Redundancy should be a value between 0 and 1000"
+            assert dom.find(id='msg_error') is not None, err_msg
+            res = self.task_settings_redundancy(short_name=self.app_short_name,
+                                                n_answers=10000000)
+            dom = BeautifulSoup(res.data)
+            err_msg = "Task Redundancy should be a value between 0 and 1000"
+            assert dom.find(id='msg_error') is not None, err_msg
+            self.signout()
+
+        # As an authenticated user
+        self.register(fullname="juan", username="juan")
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "User should not be allowed to access this page"
+        assert res.status_code == 403, err_msg
+        self.signout()
+
+        # As an anonymous user
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "User should be redirected to sign in"
+        assert dom.find(id="signin") is not None, err_msg

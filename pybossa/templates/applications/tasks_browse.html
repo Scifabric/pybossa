@@ -1,0 +1,68 @@
+{% extends "/base.html" %}
+{% set active_page = "applications" %}
+{% set active_app  = "all" %}
+{% import "applications/_helpers.html" as helper %}
+
+{% block content %}
+{% if app %}
+        <div class="row">
+            <div class="span3">
+                {{ helper.render_app_local_nav(app, 'tasks', current_user) }}
+            </div>
+            <div class="span9">
+                {{ helper.render_app_title(app, subtitle='Browse Tasks') }}
+                <hr>
+                <p>{{_('This page shows all the available tasks for this application')}}.</p> 
+                <p>{{_('For each task, you can find the following information')}}:
+                  <ul>
+                      <li><strong>{{_('Task')}} </strong><span class="label label-info">#0000</span> {{_('This number identifies the task for the application and it is unique')}}</li>
+                      <li><strong>0 of 30</strong>: {{_('The first number shows how many answers have been submitted for the task and the')}} <a data-placement="top" rel="tooltip" href="#" data-original-title="{{_('This redundancy method will help to detect errors, typos, data forging, etc. when the task has been completed')}}">{{_('second number')}}</a> {{_('how many need to be obtained to mark the task as')}} <strong>{{_('completed')}}</strong>. </li>
+                      <li><strong>{{_('Progress Bar')}}</strong>: {{_('The progress bar will the percentage that has been completed for the task')}}.</li>
+                  </ul>
+                </p>
+                <hr>
+                {% for t in tasks %}
+                {% set task_pct = t.pct_status()*100 %}
+                <div class="row-fluid">
+                        <div class="span3">
+                            {% if task_pct >= 100 %}
+                            {{_('Task')}} <span class="label label-success">#{{ t.id }}</span>
+                            {% else %}
+                            {{_('Task')}} <span class="label label-info">#{{ t.id }}</span>
+                            {% endif %}
+                            {% if t.info['n_answers'] %}
+                            {{ t.task_runs | count }} {{_('of')}} {{ t.info['n_answers'] }}
+                            {% else %}
+                            {{ t.task_runs | count }} {{_('of')}} {{ t.n_answers }}
+                            {% endif %}
+                        </div>
+                        {% if task_pct >= 100 %}
+                        <div class="progress progress-success progress-striped span5"> 
+                                <div class="bar" style="width:{{ task_pct }}%;"></div>
+                        </div>
+                        {% else %}
+                        <div class="progress progress-info progress-striped span5"> 
+                                <div class="bar" style="width:{{ task_pct }}%;"></div>
+                        </div>
+                        {% endif %}
+                        <div class="span4">
+                        {% if task_pct >= 100 %}
+                            <a class="btn btn-warning" href="{{ url_for('app.export', 
+                                short_name=app.short_name,
+                                task_id=t.id) }}"><i class="icon-download"></i> {{_('Download results')}}</a>
+                         {% endif %}
+                        </div>
+                </div>
+                {% endfor %}
+            </div><!-- span9 -->
+        </div>
+                {{ helper.render_pagination(pagination, _('Tasks')) }}
+{% else %}
+  <div class="page-header">
+      <h1>{{_('Sorry! This app does not exists')}}.</h1>
+  </div>
+{% endif %}
+<script>
+    $("a[rel=tooltip]").tooltip();
+</script>
+{% endblock %}
