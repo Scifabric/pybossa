@@ -892,11 +892,17 @@ def show_stats(short_name):
 
 
 @blueprint.route('/<short_name>/tasks/settings')
+@login_required
 def task_settings(short_name):
     """Settings page for tasks of the application"""
     app = app_by_shortname(short_name)
-    return render_template('applications/task_settings.html',
-                           app=app)
+    try:
+        require.app.read(app)
+        require.app.update(app)
+        return render_template('applications/task_settings.html',
+                               app=app)
+    except:
+        return abort(403)
 
 
 @blueprint.route('/<short_name>/tasks/redundancy', methods=['GET', 'POST'])

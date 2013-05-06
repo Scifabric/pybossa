@@ -13,19 +13,19 @@
                 {{ helper.render_app_title(app, subtitle=_('Task Settings'))}}
                 <hr>
                 <div class="row-fluid">
-                    <div class="span6 well">
+                    <div id="task_scheduler" class="span6 well">
                         <h2><i class="icon-filter"></i> {{_('Task Scheduler')}}</h2>
                         <p>{{_('Change how the tasks are delivered to volunteers')}}</p>
                         <a href="{{url_for('app.task_scheduler', short_name=app.short_name)}}" class="btn btn-primary">{{_('Scheduler')}} <i class="icon-chevron-right"></i></a>
                     </div>
-                    <div class="span6 well">
+                    <div id="task_redundancy" class="span6 well">
                         <h2><i class="icon-repeat"></i> {{_('Task Redundancy')}}</h2>
                         <p>{{_('Change the redundancy level for the tasks')}}</p>
                         <a href="{{url_for('app.task_n_answers', short_name=app.short_name)}}" class="btn btn-primary">{{_('Redundancy')}} <i class="icon-chevron-right"></i></a>
                     </div>
                 </div>
                 <div class="row-fluid">
-                    <div class="span6 well">
+                    <div id="task_delete" class="span6 well">
                         <h2><i class="icon-remove"></i> {{_('Delete Tasks')}}</h2>
                         <p>{{_('Delete all the tasks and associated answers')}}</p>
                         <a href="{{url_for('app.delete_tasks', short_name=app.short_name)}}" class="btn btn-primary">{{_('Delete')}} <i class="icon-chevron-right"></i></a>
