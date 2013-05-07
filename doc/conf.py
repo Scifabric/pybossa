@@ -25,23 +25,23 @@ sys.path.insert(0, os.path.abspath('../'))
 #needs_sphinx = '1.0'
 
 # Read the docs theme
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-if on_rtd:
-    html_theme = 'default'
-else:
+#on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+#if on_rtd:
+#    html_theme = 'default'
+#else:
     #html_theme = 'nature'
-    sys.path.append(os.path.abspath('_themes'))
-    html_theme_path = ['_themes']
-    html_theme = 'sphinx-theme-okfn'
-    html_theme_options = {
-            'logo_icon': 'logo.png',
-            'show_okfn_logo': False,
-            'show_version': False,
-            #'google_analytics_id': ...
-        }
-    html_sidebars = {
-        '**': ['globaltoc.html', 'localtoc.html', 'relations.html']
+sys.path.append(os.path.abspath('_themes'))
+html_theme_path = ['_themes']
+html_theme = 'sphinx-theme-okfn'
+html_theme_options = {
+        'logo_icon': 'logo.png',
+        'show_okfn_logo': False,
+        'show_version': False,
+        #'google_analytics_id': ...
     }
+html_sidebars = {
+    '**': ['globaltoc.html', 'localtoc.html', 'relations.html']
+}
 
 # Year for copyright
 year = datetime.datetime.now().year
