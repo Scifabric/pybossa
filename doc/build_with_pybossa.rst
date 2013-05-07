@@ -14,5 +14,6 @@ understand how things fit together.
 
    user/overview
    user/tutorial
+   user/app_settings
    api
    model

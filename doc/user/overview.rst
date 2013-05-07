@@ -1,5 +1,5 @@
 =============================================
-Quick overview: Creating your own Application
+Quickstart: Creating an Application
 =============================================
 
 This is a short guide about how you can create an application in a PyBossa
