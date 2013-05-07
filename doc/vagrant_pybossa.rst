@@ -22,8 +22,8 @@ Setting up PyBossa with Vagrant
 In order to start using Vagrant and PyBossa all you have to do is installing
 the following open source software:
 
-#. VirtualBox_
-#. Vagrant_
+#. VirtualBox_(min version 4.2.10)
+#. Vagrant_ (min version 1.2.1)
 
 .. note::
     Vagrant_ and VirtualBox_ works in Windows, GNU/Linux and Mac OS X, so you can try and run
