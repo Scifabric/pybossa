@@ -23,13 +23,15 @@ The documentation is organized as follows:
 
 .. _BOSSA: http://bossa.berkeley.edu/
 
+============
 Useful Links
-------------
+============
 
 * Mailing list: http://lists.okfn.org/mailman/listinfo/okfn-labs
 * Source code: https://github.com/PyBossa/pybossa
 * Template apps: https://github.com/PyBossa
 
+==================
 Indices and tables
 ==================
 
