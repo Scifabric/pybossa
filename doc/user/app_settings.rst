@@ -1,0 +1,222 @@
+===========================
+Configuring the Application
+===========================
+
+If you are the owner of an application, you can configure it using the web
+interface. When you are the owner (also an administrator of the PyBossa server) a new 
+link in the left local navigation bar of the application will appear with the
+name **Settings**.
+
+.. image:: http://i.imgur.com/IiB0sMG.png
+    :width: 100%
+
+The **Settings** page will give you three basic options:
+
+#. :ref:`app-details`: here you will be able to change the name
+   of the application, the description, icon, etc.
+#. :ref:`task-settings`: this button will open the :ref:`task-settings` page where you
+   will be able to configure the :ref:`task-scheduler`, modify the
+   :ref:`task-redundancy` 
+   and :ref:`delete-tasks` and its associated task runs (also known as
+   answers).
+#. :ref:`app-delete`: if you click in this button you will be able to
+   completely remove the application from the system. A big warning message
+   will be shown before allowing you to delete the application.
+
+.. _app-details:
+
+Edit the application details
+============================
+
+In this section you can change the following parameters of your application:
+
+* **Name**: the name of the application.
+* **Short name**: (also known as *slug*) the string that will be used to access
+  your application, http://server/app/short_name.
+* **Description**: the short description text of the application.
+* **Icon link**: the URL of the icon of the application.
+* **Allow Anonymous Contributors**: force users to sign in, in order to
+  participate in your application. By default anonymous users are allowed to
+  participate in all the applications, so change the value to *No* if you want
+  to disable anonymous contributions.
+* **Long Description**: change the text (you can use HTML and also the
+  `Bootstrap`_ CSS classes) describing the goals of your application.
+* **Hide**: tick this field, if you want to hide the application from the
+  public listings. You will be the only one with access to it (except admin
+  users).
+
+.. image:: http://i.imgur.com/LemKrKJ.png
+    :width: 100%
+
+.. _`Bootstrap`: http://twitter.github.io/bootstrap/
+
+.. _task-settings:
+
+Task Settings
+=============
+
+The *Task Settings* is only accessible for the application owner and server
+administrators. The page can be reached via the **Settings** menu, but also
+from the **Tasks** link in the left local navigation bar. 
+
+.. image:: http://i.imgur.com/Ycx30qb.png
+    :width: 100%
+
+The page shows three different blocks:
+
+#. **Task Scheduler**: this block allows you to specify how the application
+   should send tasks to the volunteers.
+#. **Task Redundancy**: use this block to change the default number of answers
+   (30 by default) that you want to obtain before marking a task as completed.
+#. **Delete Tasks**: this final block allows you to flush all the tasks and its
+   associated task runs (answers).
+
+.. _task-scheduler:
+
+Task Scheduler
+--------------
+
+PyBossa provides different task scheduler that will send tasks to the users in
+very different ways. 
+
+.. image:: http://i.imgur.com/1KeSido.png
+    :width: 100%
+
+Default or Depth First
+~~~~~~~~~~~~~~~~~~~~~~
+
+The Default task scheduler (also known as Depth First) has the following
+features:
+
+#. It sends the tasks in the order that were created, first in first out.
+#. Users (anonymous and authenticated) will only be allowed to participate once
+   in the same task. Once a user has submitted a Task Run (or answer) for
+   a given task, the scheduler will never send that task to the same user.
+#. It will send the same task until the :ref:`task-redundancy` is achieved. In
+   other words, if a task has a redundancy value of 3, the task will be always
+   sent until those 3 answers have been submitted. Once the 3 answers have been
+   collected, the task will be marked as *completed* and it will not be sent
+   again.
+#. When a user has submitted a Task Run for a given task, the scheduler
+   will send to the same user the next task.
+
+In summary, from the point of view of a user (authenticated or anonymous) the
+system will be sending the application tasks in the order they were created. If
+the user tries to reload a task that he or she already participated, the system
+will detect it, and warn the user giving the option to try with another task
+(the scheduler will search for the proper task for the given user).
+
+From the point of view of the application, the scheduler will be trying to
+complete (get all the answers requested by the :ref:`task-redundancy` value) all
+the tasks as soon as possible.
+
+Breadth First
+~~~~~~~~~~~~~
+
+The Breadth First scheduler has the following features:
+
+#. It sends the tasks in the order that were created, first in first out.
+#. It ignores the :ref:`task-redundancy` value, so it will keep sending tasks
+   no matter even though that value has been achieved.
+#. It sends always the task with the least number of task runs in the system.
+#. It ignores if a user has participated in the same task, allowing to submit
+   one ore answers to the same task by the same user (anonymous or
+   authenticated).
+#. A task will be never marked as completed, as the :ref:`task-redundancy` is
+   not respected.
+
+In summary, from the point of view of a user (authenticated or anonymous) the
+system will be sending the application tasks that have less answers (in case of
+not having an answer, the creation time will be used to send them like in
+a FIFO --first in first out). The user could load the same task as many times
+as he wants, and submit a new answer as many times as he wants.
+
+From the point of view of the application, the scheduler will be trying to obtain 
+as soon as possible an answer for all the available tasks. 
+
+.. note::
+
+    If your application needs to do an statistical analysis, be sure to check if
+    the answer has been submitted by the same user, and how many answers you have
+    obtained per task.
+
+Random
+~~~~~~
+
+The Random scheduler has the following features:
+
+#. It sends a task randomly to the users.
+#. A user (authenticated or anonymous) can receive the same task two or more
+   times in a row.
+#. It ignores the :task:`task-redundancy` value, so tasks will be never marked
+   as *completed*.
+
+In summary, from the point of view of a user (authenticated or anonymous) the
+system will be sending tasks randomly as the user could receive in a row the
+same task several times. 
+
+From the point of view of the application, the scheduler will be sending tasks
+randomly.
+
+.. note::
+    By using this scheduler, you may end up with some tasks that receive only
+    a few answers. If you want to avoid this issue, change to the other two
+    schedulers.
+
+.. _task-redundancy:
+
+Task Redundancy
+---------------
+
+The Task Redundancy is a feature that will allow you to analyze statistically
+the results that your application are getting for each of its tasks.
+
+PyBossa by default assigns a value of 30 task runs --answers-- per task, as
+this value is commonly used for analyzing the population statistically.
+
+This page will allow you to change the default value, 30, to whatever you like
+between a minimum of 1 or a maximum of 10000 answers per task. We recommend to
+have at use at least 3 answers per task, otherwise you will not be able to run
+a proper analysis on a given task if two uses answer different. 
+
+.. image:: http://i.imgur.com/rDrG8Bp.png
+    :width: 100%
+
+For example, imagine that the goal of the task is to answer if you see a human 
+in a picture, and the available answers are Yes and No. If you set up the
+redundancy value to 2, and two different users answer respectively Yes and No,
+you will not know the correct answer for the task. By increasing the redundancy
+value to 5 (or even bigger) you will be able to run a statistical analysis more
+accurately.
+
+.. _delete-tasks:
+
+Delete Tasks
+------------
+
+This section will allow you to complete remove all the Tasks and associated
+Task Runs (answers) of your application.
+
+.. image:: http://i.imgur.com/VmUeaWq.png
+    :width: 100%
+
+.. note::
+    This step cannot be undone, once you delete all the tasks and associated
+    task runs they will be lost forever.
+
+This feature is useful when you are testing your application, and you are
+deciding the structure that you are going to build in your answers. 
+
+.. _app-delete:
+
+Delete the application
+======================
+
+In case that you want to completely remove the application and all its tasks
+and task runs, use this section to delete the application.
+
+.. image:: http://i.imgur.com/Et4EAyj.png
+    :width: 100%
+
+.. note::
+    This action cannot be undone, so be sure before proceeding.
