@@ -29,20 +29,17 @@ python_virtualenv "/vagrant/env" do
 end
 
 execute "install pybossa requirements" do
-    command ". env/bin/activate; pip install -e /vagrant"
+    command ". env/bin/activate; pip install -e ."
     cwd "/vagrant"
-    user "pybossa"
 end
 
 execute "setup pybossa DB" do
     command "cp alembic.ini.template alembic.ini"
-    user "pybossa"
     cwd "/vagrant"
 end
 
 execute "setup pybossa DB" do
     command "cp settings_local.py.tmpl settings_local.py"
-    user "pybossa"
     cwd "/vagrant"
 end
 
@@ -60,6 +57,5 @@ end
 
 execute "populate pybossa db" do
     command ". env/bin/activate; python cli.py db_create"
-    user "pybossa"
     cwd "/vagrant"
 end
