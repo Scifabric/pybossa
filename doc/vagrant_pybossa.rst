@@ -55,8 +55,7 @@ the PyBossa development server::
 
   $ vagrant ssh
   $ cd /vagrant
-  $ . vagrant_env/bin/activate
-  $ python pybossa/web.py
+  $ source vagrant_start.sh
 
 Now all you have to do is open the following URL in your web browser::
 
