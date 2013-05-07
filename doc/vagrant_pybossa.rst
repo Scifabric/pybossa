@@ -58,7 +58,11 @@ the PyBossa development server::
   $ . vagrant_env/bin/activate
   $ python pybossa/web.py
 
-And you are done! Enjoy
+Now all you have to do is open the following URL in your web browser::
+
+  http://localhost:5000
+
+And you are done! Happy Hacking!
 
 .. _`Vagrant`: http://www.vagrantup.com/
 .. _`VirtualBox`: https://www.virtualbox.org/
