@@ -2,34 +2,12 @@ package 'postgresql-9.1'
 package "postgresql-server-dev-9.1" 
 package "python-dev"
 
-#user "pybossa" do
-#  home "/home/pybossa"
-#  shell "/bin/bash"
-#end
-#
-#directory "/home/pybossa" do
-#  owner "pybossa"
-#  group "pybossa"
-#  mode 0755
-#  action :create
-#end
-#
-#git "Clone" do
-#    repository "git://github.com/PyBossa/pybossa.git"
-#    reference "master"
-#    action :checkout
-#    destination "/home/pybossa/pybossa/"
-#    user "pybossa"
-#    group "pybossa"
-#    enable_submodules true
-#end
-
-python_virtualenv "/vagrant/env" do
+python_virtualenv "/vagrant/vagrant_env" do
     action :create
 end
 
 execute "install pybossa requirements" do
-    command ". env/bin/activate; pip install -e ."
+    command ". vagrant_env/bin/activate; pip install -e ."
     cwd "/vagrant"
 end
 
@@ -56,6 +34,6 @@ execute "create pybossa DB" do
 end
 
 execute "populate pybossa db" do
-    command ". env/bin/activate; python cli.py db_create"
+    command ". vagrant_env/bin/activate; python cli.py db_create"
     cwd "/vagrant"
 end
