@@ -20,7 +20,7 @@ The documentation is organized as follows:
    build_with_pybossa
    installing_pybossa
    vagrant_pybossa
-
+   faq
 
 .. _BOSSA: http://bossa.berkeley.edu/
 

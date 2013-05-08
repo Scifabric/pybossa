@@ -95,6 +95,9 @@ After creating the application, you should be redirected to the
 .. image:: http://i.imgur.com/IiB0sMG.png
     :alt: PyBossa Application Settings page
 
+
+.. _csv-import:
+
 Importing the tasks via the built-in CSV Task Creator
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
