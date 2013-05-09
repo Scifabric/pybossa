@@ -39,6 +39,7 @@ import importer
 import presenter as presenter_module
 import operator
 import math
+import requests
 
 blueprint = Blueprint('app', __name__)
 
@@ -362,14 +363,18 @@ def details(short_name):
 
     title = app_title(app, None)
     template_args = {"app": app, "title": title}
-    if current_app.config.get('CKAN_URL'):
-        template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
-        ckan = Ckan(url=current_app.config['CKAN_URL'])
-        pkg = ckan.package_exists(name=short_name)
-        if pkg:
-            template_args['ckan_pkg_url'] = (
-                "%s/dataset/%s" % (current_app.config['CKAN_URL'], short_name))
-            template_args['ckan_pkg'] = pkg
+    try:
+        if current_app.config.get('CKAN_URL'):
+            template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
+            ckan = Ckan(url=current_app.config['CKAN_URL'])
+            pkg = ckan.package_exists(name=short_name)
+            if pkg:
+                template_args['ckan_pkg_url'] = (
+                    "%s/dataset/%s" % (current_app.config['CKAN_URL'], short_name))
+                template_args['ckan_pkg'] = pkg
+    except requests.exceptions.ConnectionError:
+        current_app.logger.error("CKAN server down or there is a typo in the URL")
+
     return render_template(template, **template_args)
 
 
