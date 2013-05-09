@@ -16,6 +16,49 @@ It expects and returns JSON.
 Some requests will need an **API-KEY** to authenticate & authorize the
 operation. You can get your API-KEY in your *profile* account.
 
+The returned objects will have a **links** and **link** fields, not included in
+the model in order to support `Hypermedia as the Engine of Application State`_
+(also known as HATEOAS), so you can know which are the relations between
+objects.
+
+All objects will return a field **link** which will be the absolute URL for
+that specific object within the API. If the object has some parents, you will
+find the relations in the **links** list. For example, for a Task Run you will
+get something like this:
+
+.. code-block:: javascript
+
+    {
+    "info": 65,
+    "user_id": null,
+    "links": [
+        "<link rel='parent' title='app' href='http://localhost:5000/api/app/90'/>",
+        "<link rel='parent' title='task' href='http://localhost:5000/api/task/5894'/>"
+    ],
+    "task_id": 5894,
+    "created": "2012-07-07T17:23:45.714184",
+    "finish_time": "2012-07-07T17:23:45.714210",
+    "calibration": null,
+    "app_id": 90,
+    "user_ip": "X.X.X.X",
+    "link": "<link rel='self' title='taskrun' href='http://localhost:5000/api/taskrun/8969'/>",
+    "timeout": null,
+    "id": 8969
+    }
+
+The object link will have a tag **rel** equal to **self**, while the parent
+objects will be tagged with **parent**. The **title** field is used to specify
+the type of the object: task, taskrun or app.
+
+Apps will not have a **links** field, because these objects do not have
+parents.
+
+Tasks will have only one parent: the associated application.
+
+Task Runs will have only two parents: the associated task and associated app.
+
+.. _`Hypermedia as the Engine of Application State`: http://en.wikipedia.org/wiki/HATEOAS 
+
 Operations
 ----------
 
