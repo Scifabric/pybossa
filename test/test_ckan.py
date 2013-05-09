@@ -242,7 +242,8 @@ class TestCkanModule(object):
                 assert status_code == 500, "status_code should be 500"
                 assert type == "CKAN: package_show failed"
             # Now with a broken JSON item
-            Mock.return_value = FakeRequest("simpletext", 200, {'text/html'})
+            Mock.return_value = FakeRequest("simpletext", 200,
+                                            {'content-type': 'text/html'})
             out, e = self.ckan.package_exists(name='not-found')
             assert out is False, "It should return False as pkg does not exist"
             # Handle error in CKAN server
