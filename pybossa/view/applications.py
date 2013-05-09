@@ -367,13 +367,17 @@ def details(short_name):
         if current_app.config.get('CKAN_URL'):
             template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
             ckan = Ckan(url=current_app.config['CKAN_URL'])
-            pkg = ckan.package_exists(name=short_name)
+            pkg, e = ckan.package_exists(name=short_name)
+            if e:
+                raise e
             if pkg:
                 template_args['ckan_pkg_url'] = (
                     "%s/dataset/%s" % (current_app.config['CKAN_URL'], short_name))
                 template_args['ckan_pkg'] = pkg
     except requests.exceptions.ConnectionError:
         current_app.logger.error("CKAN server down or there is a typo in the URL")
+    except Exception as e:
+        current_app.logger.error(e)
 
     return render_template(template, **template_args)
 
@@ -747,7 +751,9 @@ def export_to(short_name):
         app_url = url_for('.details', short_name=app.short_name, _external=True)
 
         try:
-            package = ckan.package_exists(name=app.short_name)
+            package, e = ckan.package_exists(name=app.short_name)
+            if e:
+                raise e
             if package:
                 # Update the package
                 ckan.package_update(app=app, user=app.owner, url=app_url)
@@ -783,14 +789,20 @@ def export_to(short_name):
                                        title=title,
                                        loading_text=loading_text,
                                        app=app)
+        except requests.exceptions.ConnectionError:
+                msg = "CKAN server seems to be down, try again layer or contact the CKAN admins"
+                current_app.logger.error(msg)
+                flash(msg, 'danger')
         except Exception as inst:
-            print inst
             if len(inst.args) == 3:
                 type, msg, status_code = inst.args
                 msg = ("Error: %s with status code: %s" % (type, status_code))
+                current_app.logger.error(msg)
             else:
                 msg = ("Error: %s" % inst.args[0])
+                current_app.logger.error(msg)
             flash(msg, 'danger')
+        finally:
             return render_template('/applications/export.html',
                                    title=title,
                                    loading_text=loading_text,

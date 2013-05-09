@@ -228,17 +228,32 @@ class TestCkanModule(object):
         Mock.return_value = html_request
         with self.app.test_request_context('/'):
             # Resource that exists
-            out = self.ckan.package_exists(name='not-found')
+            out, e = self.ckan.package_exists(name='not-found')
             assert out is False, "It should return False as pkg does not exist"
             # Handle error in CKAN server
             Mock.return_value = self.server_error
             try:
-                self.ckan.package_exists(name="something-goes-wrong")
+                pkg, e = self.ckan.package_exists(name="something-goes-wrong")
+                if e:
+                    raise e
             except Exception as out:
                 type, msg, status_code = out.args
                 assert "Server Error" in msg, msg
                 assert status_code == 500, "status_code should be 500"
                 assert type == "CKAN: package_show failed"
+            # Now with a broken JSON item
+            Mock.return_value = FakeRequest("simpletext", 200, {'text/html'})
+            out, e = self.ckan.package_exists(name='not-found')
+            assert out is False, "It should return False as pkg does not exist"
+            # Handle error in CKAN server
+            try:
+                pkg, e = self.ckan.package_exists(name="something-goes-wrong")
+                if e:
+                    raise e
+            except Exception as out:
+                type, msg, status_code = out.args
+                assert status_code == 200, "status_code should be 200"
+                assert type == "CKAN: JSON not valid"
 
     @patch('pybossa.ckan.requests.get')
     def test_01_package_exists_returns_pkg(self, Mock):
@@ -248,7 +263,7 @@ class TestCkanModule(object):
         Mock.return_value = html_request
         with self.app.test_request_context('/'):
             # Resource that exists
-            out = self.ckan.package_exists(name='urbanpark')
+            out, e = self.ckan.package_exists(name='urbanpark')
             assert out is not False, "It should return a pkg"
             err_msg = "The pkg id should be the same"
             assert out['id'] == self.pkg_json_found['result']['id'], err_msg
@@ -262,7 +277,7 @@ class TestCkanModule(object):
         with self.app.test_request_context('/'):
             # Resource that exists
             # Get the package
-            out = self.ckan.package_exists(name='urbanpark')
+            out, e = self.ckan.package_exists(name='urbanpark')
             # Get the resource id for Task
             out = self.ckan.get_resource_id(name='task')
             err_msg = "It should return the task resource ID"
