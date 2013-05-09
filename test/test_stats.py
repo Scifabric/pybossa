@@ -45,7 +45,7 @@ class TestStats:
 
     def test_02_stats_hours(self):
         """Test STATS hours method works"""
-        hour = unicode(datetime.datetime.today().strftime('%H'))
+        hour = unicode(datetime.datetime.utcnow().strftime('%H'))
         with self.app.test_request_context('/'):
             hours, hours_anon, hours_auth, max_hours,\
                 max_hours_anon, max_hours_auth = stats.stats_hours(1)
@@ -79,7 +79,7 @@ class TestStats:
     def test_03_stats(self):
         """Test STATS stats method works"""
         today = unicode(datetime.date.today())
-        hour = int(datetime.datetime.today().strftime('%H'))
+        hour = int(datetime.datetime.utcnow().strftime('%H'))
         date_ms = time.mktime(time.strptime(today, "%Y-%m-%d")) * 1000
         anon = 0
         auth = 0
