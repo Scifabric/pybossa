@@ -85,7 +85,17 @@ class APIBase(MethodView):
                 query = query.order_by(self.__class__.id)
                 query = query.limit(limit)
                 query = query.offset(offset)
-                items = [x.dictize() for x in query.all()]
+                #items = [x.dictize() for x in query.all()]
+                items = []
+                for item in query.all():
+                    obj = item.dictize()
+                    links, link = self.hateoas.create_links(item)
+                    if links:
+                        obj['links'] = links
+                    if link:
+                        obj['link'] = link
+                    items.append(obj)
+
                 return Response(json.dumps(items), mimetype='application/json')
             else:
                 item = db.session.query(self.__class__).get(id)
