@@ -24,6 +24,7 @@ from pybossa.util import jsonpify, crossdomain
 import pybossa.model as model
 from pybossa.core import db
 from pybossa.auth import require
+from pybossa.hateoas import Hateoas
 import pybossa.sched as sched
 
 blueprint = Blueprint('api', __name__)
@@ -42,6 +43,7 @@ class APIBase(MethodView):
     Class to create CRUD methods for all the items: project, applications,
     tasks, etc.
     """
+    hateoas = Hateoas()
 
     @crossdomain(origin='*', headers=cors_headers)
     def options(self):
@@ -91,11 +93,11 @@ class APIBase(MethodView):
                     abort(404)
                 else:
                     obj = item.dictize()
-                    cls = self.__class__.__name__.lower()
-                    method = ".api_%s" % cls
-                    url = url_for(method, id=id, _external=True)
-                    link = "<link rel='self' title='%s' href='%s'/>" % (cls, url)
-                    obj['link'] = link
+                    links, link = self.hateoas.create_links(item)
+                    if links:
+                        obj['links'] = links
+                    if link:
+                        obj['link'] = link
                     return Response(json.dumps(obj),
                             mimetype='application/json')
         #except ProgrammingError, e:
