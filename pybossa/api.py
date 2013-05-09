@@ -94,8 +94,6 @@ class APIBase(MethodView):
                     cls = self.__class__.__name__.lower()
                     method = ".api_%s" % cls
                     url = url_for(method, id=id, _external=True)
-                    print method
-                    print url
                     link = "<link rel='self' title='%s' href='%s'/>" % (cls, url)
                     obj['link'] = link
                     return Response(json.dumps(obj),
