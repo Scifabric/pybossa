@@ -15,7 +15,7 @@
 
 import json
 
-from flask import Blueprint, request, jsonify, abort, Response
+from flask import Blueprint, request, jsonify, abort, Response, url_for
 from flask.views import View, MethodView
 from flaskext.login import current_user
 from sqlalchemy.exc import DatabaseError
@@ -90,7 +90,16 @@ class APIBase(MethodView):
                 if item is None:
                     abort(404)
                 else:
-                    return Response(json.dumps(item.dictize()),
+                    obj = item.dictize()
+                    cls = self.__class__.__name__.lower()
+                    method = ".api_%s" % cls
+                    url = url_for(method, id=id, _external=True)
+                    print method
+                    print url
+                    link = "<link rel='self' title='%s' href='%s'/>" % (cls, url)
+                    obj['link'] = link
+                    print
+                    return Response(json.dumps(obj),
                             mimetype='application/json')
         #except ProgrammingError, e:
         except DatabaseError as e:
