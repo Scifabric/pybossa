@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% set active_page = "profile" %}
+{% set active_link = "teams" %}
+{% from "account/_helpers.html" import render_account_local_nav %}
+{% from "team/_helpers.html" import render_team_user %}
+
+{% block content %}
+
+<div class="row">
+    <div class="span3">
+        {{ render_account_local_nav(current_user, active_link) }}
+    </div>
+    <div class="span9">
+        <h1><strong>{{ team.name }}:</strong> {{ _('belong to this groups') }}</h1>
+        {% from "_formhelpers.html" import render_field %}
+        <h2>Found Teams</h2>
+        {% if usersteam %}
+        {% for userteam in usersteam %}
+          {{ render_team_user( userteam ) }}
+        {% endfor %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
