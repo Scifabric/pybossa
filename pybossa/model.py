@@ -38,7 +38,7 @@ log = logging.getLogger(__name__)
 #Session = db.session
 
 def make_timestamp():
-    now = datetime.datetime.now()
+    now = datetime.datetime.utcnow()
     return now.isoformat()
 
 def make_uuid():
