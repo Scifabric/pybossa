@@ -29,14 +29,18 @@ class Hateoas(object):
     def create_links(self, item):
         cls = item.__class__.__name__.lower()
         if cls == 'taskrun':
-            print item
             link = self.create_link(item)
-            links = [self.create_link(item.app, rel='parent'),
-                     self.create_link(item.task, rel='parent')]
+            links = []
+            if item.app_id is not None:
+                links.append(self.create_link(item.app, rel='parent'))
+            if item.task_id is not None:
+                links.append(self.create_link(item.task, rel='parent'))
             return links, link
         elif cls == 'task':
             link = self.create_link(item)
-            links = [self.create_link(item.app, rel='parent')]
+            links = []
+            if item.app_id is not None:
+                links = [self.create_link(item.app, rel='parent')]
             return links, link
         elif cls == 'app':
             return None, self.create_link(item)
