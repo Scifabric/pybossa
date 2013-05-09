@@ -98,7 +98,6 @@ class APIBase(MethodView):
                     print url
                     link = "<link rel='self' title='%s' href='%s'/>" % (cls, url)
                     obj['link'] = link
-                    print
                     return Response(json.dumps(obj),
                             mimetype='application/json')
         #except ProgrammingError, e:
