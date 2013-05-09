@@ -15,7 +15,7 @@
 
 import json
 
-from flask import Blueprint, request, jsonify, abort, Response
+from flask import Blueprint, request, jsonify, abort, Response, url_for
 from flask.views import View, MethodView
 from flaskext.login import current_user
 from sqlalchemy.exc import DatabaseError
@@ -24,6 +24,7 @@ from pybossa.util import jsonpify, crossdomain
 import pybossa.model as model
 from pybossa.core import db
 from pybossa.auth import require
+from pybossa.hateoas import Hateoas
 import pybossa.sched as sched
 
 blueprint = Blueprint('api', __name__)
@@ -42,6 +43,7 @@ class APIBase(MethodView):
     Class to create CRUD methods for all the items: project, applications,
     tasks, etc.
     """
+    hateoas = Hateoas()
 
     @crossdomain(origin='*', headers=cors_headers)
     def options(self):
@@ -83,14 +85,30 @@ class APIBase(MethodView):
                 query = query.order_by(self.__class__.id)
                 query = query.limit(limit)
                 query = query.offset(offset)
-                items = [x.dictize() for x in query.all()]
+                #items = [x.dictize() for x in query.all()]
+                items = []
+                for item in query.all():
+                    obj = item.dictize()
+                    links, link = self.hateoas.create_links(item)
+                    if links:
+                        obj['links'] = links
+                    if link:
+                        obj['link'] = link
+                    items.append(obj)
+
                 return Response(json.dumps(items), mimetype='application/json')
             else:
                 item = db.session.query(self.__class__).get(id)
                 if item is None:
                     abort(404)
                 else:
-                    return Response(json.dumps(item.dictize()),
+                    obj = item.dictize()
+                    links, link = self.hateoas.create_links(item)
+                    if links:
+                        obj['links'] = links
+                    if link:
+                        obj['link'] = link
+                    return Response(json.dumps(obj),
                             mimetype='application/json')
         #except ProgrammingError, e:
         except DatabaseError as e:
