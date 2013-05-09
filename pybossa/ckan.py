@@ -54,12 +54,16 @@ class Ckan(object):
                          headers=self.headers,
                          params=pkg)
         if r.status_code == 200 or r.status_code == 404 or r.status_code == 403:
-            output = json.loads(r.text)
-            if output.get('success'):
-                self.package = output['result']
-                return output['result']
-            else:
-                return False
+            try:
+                output = json.loads(r.text)
+                if output.get('success'):
+                    self.package = output['result']
+                    return output['result'], None
+                else:
+                    return False, None
+            except ValueError:
+                return False, Exception("CKAN: JSON not valid", r.text,
+                                        r.status_code)
         else:
             raise Exception("CKAN: package_show failed",
                             r.text,
