@@ -65,40 +65,43 @@ def get_user_summary(name):
                SELECT * from global_rank WHERE user_id=:user_id;
                ''')
 
-    results = db.engine.execute(sql, user_id=user['id'])
-    for row in results:
-        user['rank'] = row.rank
-        user['score'] = row.score
+    if user:
+        results = db.engine.execute(sql, user_id=user['id'])
+        for row in results:
+            user['rank'] = row.rank
+            user['score'] = row.score
 
-    # Get the APPs where the USER has participated
-    sql = text('''
-               SELECT app.id, app.name, app.short_name, app.info,
-               COUNT(task_run.app_id) AS n_answers FROM app, task_run
-               WHERE app.id=task_run.app_id AND
-               task_run.user_id=:user_id GROUP BY app.id
-               ORDER BY n_answers DESC;
-               ''')
-    results = db.engine.execute(sql, user_id=user['id'])
-    apps = []
-    for row in results:
-        app = dict(id=row.id, name=row.name, info=dict(json.loads(row.info)),
-                   short_name=row.short_name,
-                   n_answers=row.n_answers)
-        apps.append(app)
+        # Get the APPs where the USER has participated
+        sql = text('''
+                   SELECT app.id, app.name, app.short_name, app.info,
+                   COUNT(task_run.app_id) AS n_answers FROM app, task_run
+                   WHERE app.id=task_run.app_id AND
+                   task_run.user_id=:user_id GROUP BY app.id
+                   ORDER BY n_answers DESC;
+                   ''')
+        results = db.engine.execute(sql, user_id=user['id'])
+        apps = []
+        for row in results:
+            app = dict(id=row.id, name=row.name, info=dict(json.loads(row.info)),
+                       short_name=row.short_name,
+                       n_answers=row.n_answers)
+            apps.append(app)
 
-    # Get the CREATED APPS by the USER
-    sql = text('''
-               SELECT app.id, app.name, app.short_name, app.info, app.created
-               FROM app
-               WHERE app.owner_id=:user_id
-               ORDER BY app.created DESC;
-               ''')
-    results = db.engine.execute(sql, user_id=user['id'])
-    apps_created = []
-    for row in results:
-        app = dict(id=row.id, name=row.name,
-                   short_name=row.short_name,
-                   info=dict(json.loads(row.info)))
-        apps_created.append(app)
+        # Get the CREATED APPS by the USER
+        sql = text('''
+                   SELECT app.id, app.name, app.short_name, app.info, app.created
+                   FROM app
+                   WHERE app.owner_id=:user_id
+                   ORDER BY app.created DESC;
+                   ''')
+        results = db.engine.execute(sql, user_id=user['id'])
+        apps_created = []
+        for row in results:
+            app = dict(id=row.id, name=row.name,
+                       short_name=row.short_name,
+                       info=dict(json.loads(row.info)))
+            apps_created.append(app)
 
-    return user, apps, apps_created
+        return user, apps, apps_created
+    else:
+        return None, None, None
