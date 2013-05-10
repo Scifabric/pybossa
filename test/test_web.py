@@ -1712,6 +1712,12 @@ class TestWeb(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         assert Fixtures.fullname in res.data, err_msg
 
+        # Should return 404 when a user does not exist
+        url = '/account/a-fake-name-that-does-not-exist/'
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "It should return a 404"
+        assert res.status_code == 404, err_msg
+
     @patch('pybossa.view.importer.requests.get')
     def test_71_bulk_epicollect_import_unauthorized(self, Mock):
         """Test WEB bulk import unauthorized works"""
