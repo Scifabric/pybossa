@@ -295,6 +295,25 @@ class TestAPI:
         id_ = out.id
         db.session.remove()
 
+        # test re-create should fail
+        res = self.app.post('/api/app?api_key=' + Fixtures.api_key,
+                            data=data)
+        err = json.loads(res.data)
+        err_msg = "IntegrityError exception should be raised"
+        assert err['action'] == 'failed', err_msg
+        assert err['exception_cls'] == "IntegrityError", err_msg
+
+        # test create with non-allowed fields should fail
+        data = dict(name='fail', short_name='fail', link='hateoas', wrong=15)
+        data = json.dumps(data)
+        res = self.app.post('/api/app?api_key=' + Fixtures.api_key,
+                            data=data)
+        err = json.loads(res.data)
+        print res.data
+        err_msg = "TypeError exception should be raised"
+        assert err['action'] == 'failed', err_msg
+        assert err['exception_cls'] == "TypeError", err_msg
+
         # test update
         data = {'name': 'My New Title'}
         datajson = json.dumps(data)
