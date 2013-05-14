@@ -44,6 +44,24 @@ class APIBase(MethodView):
     tasks, etc.
     """
     hateoas = Hateoas()
+    error_status = {"Forbidden":403,
+                    "Unauthorized":401,
+                    "TypeError":415,
+                    "ValueError":415}
+
+    def format_exception(self, e):
+        """Formats the exception to a valid JSON object"""
+        exception_cls = e.__class__.__name__
+        if self.error_status.get(exception_cls):
+            status = self.error_status.get(exception_cls)
+        else:
+            status = 200
+        error = dict(action="failed",
+                     target=self.__class__.__name__.lower(),
+                     exception_cls=exception_cls,
+                     exception_msg=e.message)
+        return Response(json.dumps(error), status=status,
+                        mimetype='application/json')
 
     @crossdomain(origin='*', headers=cors_headers)
     def options(self):
@@ -124,18 +142,21 @@ class APIBase(MethodView):
         :arg self: The class of the object to be inserted
         :returns: The JSON item stored in the DB
         """
-        data = json.loads(request.data)
-        # Clean HATEOAS args
-        if data.get('link'):
-            data.pop('link')
-        if data.get('links'):
-            data.pop('links')
-        inst = self.__class__(**data)
-        getattr(require, self.__class__.__name__.lower()).create(inst)
-        self._update_object(inst)
-        db.session.add(inst)
-        db.session.commit()
-        return json.dumps(inst.dictize())
+        try:
+            data = json.loads(request.data)
+            # Clean HATEOAS args
+            if data.get('link'):
+                data.pop('link')
+            if data.get('links'):
+                data.pop('links')
+            inst = self.__class__(**data)
+            getattr(require, self.__class__.__name__.lower()).create(inst)
+            self._update_object(inst)
+            db.session.add(inst)
+            db.session.commit()
+            return json.dumps(inst.dictize())
+        except Exception as e:
+            return self.format_exception(e)
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
