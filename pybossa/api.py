@@ -44,10 +44,10 @@ class APIBase(MethodView):
     tasks, etc.
     """
     hateoas = Hateoas()
-    error_status = {"Forbidden":403,
-                    "Unauthorized":401,
-                    "TypeError":415,
-                    "ValueError":415}
+    error_status = {"Forbidden": 403,
+                    "Unauthorized": 401,
+                    "TypeError": 415,
+                    "ValueError": 415}
 
     def format_exception(self, e):
         """Formats the exception to a valid JSON object"""
