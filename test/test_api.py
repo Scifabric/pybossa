@@ -366,6 +366,10 @@ class TestAPI:
         res = self.app.delete('/api/app/%s' % id_, data=data)
         error_msg = 'Anonymous should not be allowed to delete'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
+        error = json.loads(res.data)
+        assert error['status'] == 'failed', error
+        assert error['action'] == 'DELETE', error
+        assert error['target'] == 'app', error
         ### real user but not allowed as not owner!
         url = '/api/app/%s?api_key=%s' % (id_, Fixtures.api_key_2)
         res = self.app.delete(url, data=datajson)
