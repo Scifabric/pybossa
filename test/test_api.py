@@ -283,6 +283,8 @@ class TestAPI:
         data = json.dumps(data)
         # no api-key
         res = self.app.post('/api/app', data=data)
+        print res.data
+        print res.status
         assert_equal(res.status, '403 FORBIDDEN',
                      'Should not be allowed to create')
         # now a real user
@@ -305,14 +307,22 @@ class TestAPI:
 
         # test create with non-allowed fields should fail
         data = dict(name='fail', short_name='fail', link='hateoas', wrong=15)
+        res = self.app.post('/api/app?api_key=' + Fixtures.api_key,
+                            data=data)
+        err = json.loads(res.data)
+        err_msg = "ValueError exception should be raised"
+        assert err['action'] == 'failed', err_msg
+        assert err['exception_cls'] == "ValueError", err_msg
+        assert res.status_code == 415, err_msg
+        # Now with a JSON object but not valid
         data = json.dumps(data)
         res = self.app.post('/api/app?api_key=' + Fixtures.api_key,
                             data=data)
         err = json.loads(res.data)
-        print res.data
         err_msg = "TypeError exception should be raised"
         assert err['action'] == 'failed', err_msg
         assert err['exception_cls'] == "TypeError", err_msg
+        assert res.status_code == 415, err_msg
 
         # test update
         data = {'name': 'My New Title'}
