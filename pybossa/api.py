@@ -126,12 +126,11 @@ class APIBase(MethodView):
                         obj['links'] = links
                     if link:
                         obj['link'] = link
-                    return Response(json.dumps(obj),
-                            mimetype='application/json')
+                    return Response(json.dumps(obj), mimetype='application/json')
         #except ProgrammingError, e:
         except DatabaseError as e:
             return Response(json.dumps({'error': "%s" % e.orig}),
-                    mimetype='application/json')
+                            mimetype='application/json')
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
