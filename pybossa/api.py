@@ -18,7 +18,7 @@ import json
 from flask import Blueprint, request, abort, Response
 from flask.views import MethodView
 from flaskext.login import current_user
-from sqlalchemy.exc import DatabaseError
+from werkzeug.exceptions import NotFound
 
 from pybossa.util import jsonpify, crossdomain
 import pybossa.model as model
@@ -40,23 +40,28 @@ def index():
 
 class APIBase(MethodView):
     """
-    Class to create CRUD methods for all the items: project, applications,
-    tasks, etc.
+    Class to create CRUD methods for all the items: applications,
+    tasks and task runs.
     """
     hateoas = Hateoas()
     error_status = {"Forbidden": 403,
                     "Unauthorized": 401,
                     "TypeError": 415,
-                    "ValueError": 415}
+                    "ValueError": 415,
+                    "DataError": 415,
+                    "AttributeError": 415,
+                    "IntegrityError": 415}
 
-    def format_exception(self, e):
+    def format_exception(self, e, action):
         """Formats the exception to a valid JSON object"""
         exception_cls = e.__class__.__name__
         if self.error_status.get(exception_cls):
             status = self.error_status.get(exception_cls)
         else:
             status = 200
-        error = dict(action="failed",
+        error = dict(action=action,
+                     status="failed",
+                     status_code=status,
                      target=self.__class__.__name__.lower(),
                      exception_cls=exception_cls,
                      exception_msg=e.message)
@@ -84,12 +89,9 @@ class APIBase(MethodView):
                 query = db.session.query(self.__class__)
                 for k in request.args.keys():
                     if k not in ['limit', 'offset', 'api_key']:
-                        if not hasattr(self.__class__, k):
-                            return Response(
-                                json.dumps({'error': 'no such column: %s' % k}),
-                                mimetype='application/json')
+                        # Raise an error if the k arg is not a column
+                        getattr(self.__class__, k)
                         query = query.filter(getattr(self.__class__, k) == request.args[k])
-
                 try:
                     limit = min(10000, int(request.args.get('limit')))
                 except (ValueError, TypeError):
@@ -103,7 +105,6 @@ class APIBase(MethodView):
                 query = query.order_by(self.__class__.id)
                 query = query.limit(limit)
                 query = query.offset(offset)
-                #items = [x.dictize() for x in query.all()]
                 items = []
                 for item in query.all():
                     obj = item.dictize()
@@ -113,7 +114,6 @@ class APIBase(MethodView):
                     if link:
                         obj['link'] = link
                     items.append(obj)
-
                 return Response(json.dumps(items), mimetype='application/json')
             else:
                 item = db.session.query(self.__class__).get(id)
@@ -127,10 +127,8 @@ class APIBase(MethodView):
                     if link:
                         obj['link'] = link
                     return Response(json.dumps(obj), mimetype='application/json')
-        #except ProgrammingError, e:
-        except DatabaseError as e:
-            return Response(json.dumps({'error': "%s" % e.orig}),
-                            mimetype='application/json')
+        except Exception as e:
+            return self.format_exception(e, action='GET')
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
@@ -155,7 +153,7 @@ class APIBase(MethodView):
             db.session.commit()
             return json.dumps(inst.dictize())
         except Exception as e:
-            return self.format_exception(e)
+            return self.format_exception(e, action='POST')
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
@@ -170,14 +168,21 @@ class APIBase(MethodView):
         More info about HTTP status codes for this action `here
         <http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.7>`_.
         """
-        item = db.session.query(self.__class__).get(id)
-        getattr(require, self.__class__.__name__.lower()).delete(item)
-        if (item is None):
-            abort(404)
-        else:
+        try:
+            item = db.session.query(self.__class__).get(id)
+            if item is None:
+                raise NotFound
+            getattr(require, self.__class__.__name__.lower()).delete(item)
             db.session.delete(item)
             db.session.commit()
-            return "", 204
+            success = dict(action='DELETE',
+                           status='success',
+                           target=self.__class__.__name__.lower(),
+                           id=item.id)
+            return Response(json.dumps(success), status=204,
+                            mimetype='application/json')
+        except Exception as e:
+            return self.format_exception(e, action='DELETE')
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
@@ -216,7 +221,7 @@ class APIBase(MethodView):
         pass
 
 
-class ProjectAPI(APIBase):
+class AppAPI(APIBase):
     __class__ = model.App
 
     def _update_object(self, obj):
@@ -250,7 +255,7 @@ def register_api(view, endpoint, url, pk='id', pk_type='int'):
                            view_func=view_func,
                            methods=['GET', 'PUT', 'DELETE', 'OPTIONS'])
 
-register_api(ProjectAPI, 'api_app', '/app', pk='id', pk_type='int')
+register_api(AppAPI, 'api_app', '/app', pk='id', pk_type='int')
 register_api(TaskAPI, 'api_task', '/task', pk='id', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
 

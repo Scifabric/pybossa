@@ -412,6 +412,8 @@ class TestAPI:
         ### real user  not owner!
         url = '/api/app/%s?api_key=%s' % (id_, Fixtures.root_api_key)
         res = self.app.delete(url, data=datajson)
+        print res.status
+        print res.data
 
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
