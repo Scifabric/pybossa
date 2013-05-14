@@ -375,11 +375,30 @@ class TestAPI:
         res = self.app.delete(url, data=datajson)
         error_msg = 'Should not be able to delete apps of others'
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
+        error = json.loads(res.data)
+        assert error['status'] == 'failed', error
+        assert error['action'] == 'DELETE', error
+        assert error['target'] == 'app', error
 
         url = '/api/app/%s?api_key=%s' % (id_, Fixtures.api_key)
         res = self.app.delete(url, data=datajson)
 
         assert_equal(res.status, '204 NO CONTENT', res.data)
+
+        # delete an app that does not exist
+        url = '/api/app/5000?api_key=%s' % Fixtures.api_key
+        res = self.app.delete(url, data=datajson)
+        error = json.loads(res.data)
+        assert res.status_code == 404, error
+        assert error['status'] == 'failed', error
+        assert error['action'] == 'DELETE', error
+        assert error['target'] == 'app', error
+        assert error['exception_cls'] == 'NotFound', error
+
+        # delete an app that does not exist
+        url = '/api/app/?api_key=%s' % Fixtures.api_key
+        res = self.app.delete(url, data=datajson)
+        assert res.status_code == 404, error
 
     def test_04_admin_app_post(self):
         """Test API App update/delete for ADMIN users"""
