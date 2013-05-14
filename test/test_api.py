@@ -138,20 +138,34 @@ class TestAPI:
         endpoints = ['app', 'task', 'taskrun']
         for endpoint in endpoints:
             res = self.app.get("/api/%s?wrongfield=value" % endpoint)
-            data = json.loads(res.data)
-            assert "no such column: wrongfield" in data['error'], data
+            err = json.loads(res.data)
+            assert res.status_code == 415, err
+            assert err['status'] == 'failed', err
+            assert err['action'] == 'GET', err
+            assert err['exception_cls'] == 'AttributeError', err
 
     def test_query_sql_injection(self):
         """Test API SQL Injection is not allowed works"""
 
         q = '1%3D1;SELECT%20*%20FROM%20task%20WHERE%201=1'
         res = self.app.get('/api/task?' + q)
-        data = json.loads(res.data)
-        assert "no such column: " in data['error'], data
+        error = json.loads(res.data)
+        assert res.status_code == 415, error
+        assert error['action'] == 'GET', error
+        assert error['status'] == 'failed', error
+        assert error['target'] == 'task', error
+
         q = 'app_id=1%3D1;SELECT%20*%20FROM%20task%20WHERE%201'
-        res = self.app.get('/api/task?' + q)
-        data = json.loads(res.data)
-        assert "invalid input syntax" in data['error'], data
+        res = self.app.get('/api/apappp?' + q)
+        assert res.status_code == 404, res.data
+
+        q = 'app_id=1%3D1;SELECT%20*%20FROM%20task%20WHERE%201'
+        res = self.app.get('/api/' + q)
+        assert res.status_code == 404, res.data
+
+        q = 'app_id=1%3D1;SELECT%20*%20FROM%20task%20WHERE%201'
+        res = self.app.get('/api' + q)
+        assert res.status_code == 404, res.data
 
     def test_query_app(self):
         """Test API query for app endpoint works"""
@@ -283,8 +297,6 @@ class TestAPI:
         data = json.dumps(data)
         # no api-key
         res = self.app.post('/api/app', data=data)
-        print res.data
-        print res.status
         assert_equal(res.status, '403 FORBIDDEN',
                      'Should not be allowed to create')
         # now a real user
@@ -301,9 +313,10 @@ class TestAPI:
         res = self.app.post('/api/app?api_key=' + Fixtures.api_key,
                             data=data)
         err = json.loads(res.data)
-        err_msg = "IntegrityError exception should be raised"
-        assert err['action'] == 'failed', err_msg
-        assert err['exception_cls'] == "IntegrityError", err_msg
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == "IntegrityError", err
 
         # test create with non-allowed fields should fail
         data = dict(name='fail', short_name='fail', link='hateoas', wrong=15)
@@ -311,16 +324,18 @@ class TestAPI:
                             data=data)
         err = json.loads(res.data)
         err_msg = "ValueError exception should be raised"
-        assert err['action'] == 'failed', err_msg
+        assert res.status_code == 415, err
+        assert err['action'] == 'POST', err
+        assert err['status'] == 'failed', err
         assert err['exception_cls'] == "ValueError", err_msg
-        assert res.status_code == 415, err_msg
         # Now with a JSON object but not valid
         data = json.dumps(data)
         res = self.app.post('/api/app?api_key=' + Fixtures.api_key,
                             data=data)
         err = json.loads(res.data)
         err_msg = "TypeError exception should be raised"
-        assert err['action'] == 'failed', err_msg
+        assert err['action'] == 'POST', err_msg
+        assert err['status'] == 'failed', err_msg
         assert err['exception_cls'] == "TypeError", err_msg
         assert res.status_code == 415, err_msg
 
