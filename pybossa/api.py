@@ -240,18 +240,15 @@ class TaskRunAPI(APIBase):
 def register_api(view, endpoint, url, pk='id', pk_type='int'):
     view_func = view.as_view(endpoint)
     blueprint.add_url_rule(url,
-        view_func=view_func,
-        defaults={pk: None},
-        methods=['GET', 'OPTIONS']
-        )
+                           view_func=view_func,
+                           defaults={pk: None},
+                           methods=['GET', 'OPTIONS'])
     blueprint.add_url_rule(url,
-        view_func=view_func,
-        methods=['POST', 'OPTIONS']
-        )
+                           view_func=view_func,
+                           methods=['POST', 'OPTIONS'])
     blueprint.add_url_rule('%s/<%s:%s>' % (url, pk_type, pk),
-        view_func=view_func,
-        methods=['GET', 'PUT', 'DELETE', 'OPTIONS']
-        )
+                           view_func=view_func,
+                           methods=['GET', 'PUT', 'DELETE', 'OPTIONS'])
 
 register_api(ProjectAPI, 'api_app', '/app', pk='id', pk_type='int')
 register_api(TaskAPI, 'api_task', '/task', pk='id', pk_type='int')
@@ -273,8 +270,7 @@ def new_task(app_id):
     task = sched.new_task(app_id, user_id, user_ip, offset)
     # If there is a task for the user, return it
     if task:
-        return Response(json.dumps(task.dictize()),
-                mimetype="application/json")
+        return Response(json.dumps(task.dictize()), mimetype="application/json")
     else:
         return Response(json.dumps({}), mimetype="application/json")
 
@@ -303,19 +299,16 @@ def user_progress(app_id=None, short_name=None):
         if app:
             if current_user.is_anonymous():
                 tr = db.session.query(model.TaskRun)\
-                        .filter(model.TaskRun.app_id == app.id)\
-                        .filter(model.TaskRun.user_ip == request.remote_addr)\
-                        .all()
+                       .filter(model.TaskRun.app_id == app.id)\
+                       .filter(model.TaskRun.user_ip == request.remote_addr)\
+                       .all()
             else:
                 tr = db.session.query(model.TaskRun)\
-                        .filter(model.TaskRun.app_id == app.id)\
-                        .filter(model.TaskRun.user_id == current_user.id)\
-                        .all()
+                       .filter(model.TaskRun.app_id == app.id)\
+                       .filter(model.TaskRun.user_id == current_user.id)\
+                       .all()
             # Return
-            tmp = dict(
-                    done=len(tr),
-                    total=len(app.tasks)
-                    )
+            tmp = dict(done=len(tr), total=len(app.tasks))
             return Response(json.dumps(tmp), mimetype="application/json")
         else:
             return abort(404)
