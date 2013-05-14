@@ -15,7 +15,7 @@
 
 import json
 
-from flask import Blueprint, request, jsonify, abort, Response
+from flask import Blueprint, request, abort, Response
 from flask.views import View, MethodView
 from flaskext.login import current_user
 from sqlalchemy.exc import DatabaseError
