@@ -45,6 +45,7 @@ class APIBase(MethodView):
     """
     hateoas = Hateoas()
     error_status = {"Forbidden": 403,
+                    "NotFound": 404,
                     "Unauthorized": 401,
                     "TypeError": 415,
                     "ValueError": 415,
@@ -175,12 +176,7 @@ class APIBase(MethodView):
             getattr(require, self.__class__.__name__.lower()).delete(item)
             db.session.delete(item)
             db.session.commit()
-            success = dict(action='DELETE',
-                           status='success',
-                           target=self.__class__.__name__.lower(),
-                           id=item.id)
-            return Response(json.dumps(success), status=204,
-                            mimetype='application/json')
+            return '', 204
         except Exception as e:
             return self.format_exception(e, action='DELETE')
 
