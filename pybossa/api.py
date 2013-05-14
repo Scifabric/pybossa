@@ -85,9 +85,9 @@ class APIBase(MethodView):
                 for k in request.args.keys():
                     if k not in ['limit', 'offset', 'api_key']:
                         if not hasattr(self.__class__, k):
-                            return Response(json.dumps({
-                                'error': 'no such column: %s' % k}
-                                ), mimetype='application/json')
+                            return Response(
+                                json.dumps({'error': 'no such column: %s' % k}),
+                                mimetype='application/json')
                         query = query.filter(getattr(self.__class__, k) == request.args[k])
 
                 try:
