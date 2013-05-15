@@ -143,10 +143,7 @@ class APIBase(MethodView):
         try:
             data = json.loads(request.data)
             # Clean HATEOAS args
-            if data.get('link'):
-                data.pop('link')
-            if data.get('links'):
-                data.pop('links')
+            data = self.hateoas.remove_links(data)
             inst = self.__class__(**data)
             getattr(require, self.__class__.__name__.lower()).create(inst)
             self._update_object(inst)
@@ -210,10 +207,7 @@ class APIBase(MethodView):
             # may be missing the id as we allow partial updates
             data['id'] = id
             # Clean HATEOAS args
-            if data.get('link'):
-                data.pop('link')
-            if data.get('links'):
-                data.pop('links')
+            data = self.hateoas.remove_links(data)
             inst = self.__class__(**data)
             db.session.merge(inst)
             db.session.commit()
