@@ -170,6 +170,10 @@ class APIBase(MethodView):
         <http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.7>`_.
         """
         try:
+            for k in request.args.keys():
+                if k not in ['api_key']:
+                    raise
+
             item = db.session.query(self.__class__).get(id)
             if item is None:
                 raise NotFound
@@ -193,23 +197,30 @@ class APIBase(MethodView):
         More info about HTTP status codes for this action `here
         <http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6>`_.
         """
-        existing = db.session.query(self.__class__).get(id)
-        getattr(require, self.__class__.__name__.lower()).update(existing)
-        data = json.loads(request.data)
-        # may be missing the id as we allow partial updates
-        data['id'] = id
-        # Clean HATEOAS args
-        if data.get('link'):
-            data.pop('link')
-        if data.get('links'):
-            data.pop('links')
-        inst = self.__class__(**data)
-        if (existing is None):
-            abort(404)
-        else:
+        try:
+            for k in request.args.keys():
+                if k not in ['api_key']:
+                    # Raise an error if the k arg is not a column
+                    getattr(self.__class__, k)
+            existing = db.session.query(self.__class__).get(id)
+            if existing is None:
+                raise NotFound
+            getattr(require, self.__class__.__name__.lower()).update(existing)
+            data = json.loads(request.data)
+            # may be missing the id as we allow partial updates
+            data['id'] = id
+            # Clean HATEOAS args
+            if data.get('link'):
+                data.pop('link')
+            if data.get('links'):
+                data.pop('links')
+            inst = self.__class__(**data)
             db.session.merge(inst)
             db.session.commit()
-            return "", 200
+            return Response(json.dumps(inst.dictize()), 200,
+                            mimetype='application/json')
+        except Exception as e:
+            return self.format_exception(e, 'PUT')
 
     def _update_object(self, data_dict):
         '''Method to be overriden in inheriting classes which wish to update
