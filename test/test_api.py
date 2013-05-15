@@ -347,12 +347,20 @@ class TestAPI:
                            data=data)
         error_msg = 'Anonymous should not be allowed to update'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
+        error = json.loads(res.data)
+        assert error['status'] == 'failed', error
+        assert error['action'] == 'PUT', error
+        assert error['exception_cls'] == 'Forbidden', error
 
         ### real user but not allowed as not owner!
         url = '/api/app/%s?api_key=%s' % (id_, Fixtures.api_key_2)
         res = self.app.put(url, data=datajson)
         error_msg = 'Should not be able to update apps of others'
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
+        error = json.loads(res.data)
+        assert error['status'] == 'failed', error
+        assert error['action'] == 'PUT', error
+        assert error['exception_cls'] == 'Unauthorized', error
 
         res = self.app.put('/api/app/%s?api_key=%s' % (id_, Fixtures.api_key),
                            data=datajson)
@@ -360,6 +368,46 @@ class TestAPI:
         assert_equal(res.status, '200 OK', res.data)
         out2 = db.session.query(model.App).get(id_)
         assert_equal(out2.name, data['name'])
+        out = json.loads(res.data)
+        assert out.get('status') is None, error
+        assert out.get('id') == id_, error
+
+        # With fake data
+        data['algo'] = 13
+        datajson = json.dumps(data)
+        res = self.app.put('/api/app/%s?api_key=%s' % (id_, Fixtures.api_key),
+                           data=datajson)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'TypeError', err
+
+        # With not JSON data
+        datajson = data
+        res = self.app.put('/api/app/%s?api_key=%s' % (id_, Fixtures.api_key),
+                           data=datajson)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'ValueError', err
+
+        # With wrong args in the URL
+        data = dict(
+            name=name,
+            short_name='xxxx-project',
+            long_description=u'<div id="longdescription">\
+                               Long Description</div>')
+
+        datajson = json.dumps(data)
+        res = self.app.put('/api/app/%s?api_key=%s&search=select1' % (id_, Fixtures.api_key),
+                           data=datajson)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'AttributeError', err
 
         # test delete
         ## anonymous
