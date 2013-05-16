@@ -53,6 +53,11 @@ class APIBase(MethodView):
                     "AttributeError": 415,
                     "IntegrityError": 415}
 
+    def valid_args(self):
+        for k in request.args.keys():
+            if k not in ['api_key']:
+                getattr(self.__class__, k)
+
     def format_exception(self, e, action):
         """Formats the exception to a valid JSON object"""
         exception_cls = e.__class__.__name__
@@ -141,6 +146,7 @@ class APIBase(MethodView):
         :returns: The JSON item stored in the DB
         """
         try:
+            self.valid_args()
             data = json.loads(request.data)
             # Clean HATEOAS args
             data = self.hateoas.remove_links(data)
@@ -167,10 +173,7 @@ class APIBase(MethodView):
         <http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.7>`_.
         """
         try:
-            for k in request.args.keys():
-                if k not in ['api_key']:
-                    raise
-
+            self.valid_args()
             item = db.session.query(self.__class__).get(id)
             if item is None:
                 raise NotFound
@@ -195,10 +198,7 @@ class APIBase(MethodView):
         <http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6>`_.
         """
         try:
-            for k in request.args.keys():
-                if k not in ['api_key']:
-                    # Raise an error if the k arg is not a column
-                    getattr(self.__class__, k)
+            self.valid_args()
             existing = db.session.query(self.__class__).get(id)
             if existing is None:
                 raise NotFound
