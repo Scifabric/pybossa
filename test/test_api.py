@@ -559,7 +559,6 @@ class TestAPI:
                 .filter_by(owner_id=user.id)\
                 .one()
         data = dict(app_id=app.id, state='0', info='my task data')
-        data = json.dumps(data)
         root_data = dict(app_id=app.id, state='0', info='my root task data')
         root_data = json.dumps(root_data)
 
@@ -569,20 +568,20 @@ class TestAPI:
 
         # anonymous user
         # no api-key
-        res = self.app.post('/api/task', data=data)
+        res = self.app.post('/api/task', data=json.dumps(data))
         error_msg = 'Should not be allowed to create'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
         ### real user but not allowed as not owner!
         res = self.app.post('/api/task?api_key=' + Fixtures.api_key_2,
-                            data=data)
+                            data=json.dumps(data))
 
         error_msg = 'Should not be able to post tasks for apps of others'
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         # now a real user
         res = self.app.post('/api/task?api_key=' + Fixtures.api_key,
-                            data=data)
+                            data=json.dumps(data))
         assert res.data, res
         datajson = json.loads(res.data)
         out = db.session.query(model.Task)\
@@ -605,6 +604,33 @@ class TestAPI:
         assert_equal(out.info, 'my root task data'), out
         assert_equal(out.app_id, app.id)
         root_id_ = out.id
+
+        # POST with not JSON data
+        url = '/api/task?api_key=%s' % Fixtures.api_key
+        res = self.app.post(url, data=data)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == 'ValueError', err
+
+        # POST with not allowed args
+        res = self.app.post(url + '&foo=bar', data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == 'AttributeError', err
+
+        # POST with fake data
+        data['wrongfield'] = 13
+        res = self.app.post(url, data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == 'TypeError', err
+        data.pop('wrongfield')
 
         ##########
         # UPDATE #
