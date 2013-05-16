@@ -718,9 +718,20 @@ class TestAPI:
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         #### real user
+        # DELETE with not allowed args
+        res = self.app.delete(url + "&foo=bar", data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'task', err
+        assert err['action'] == 'DELETE', err
+        assert err['exception_cls'] == 'AttributeError', err
+
+        # DELETE returns 204
         url = '/api/task/%s?api_key=%s' % (id_, Fixtures.api_key)
         res = self.app.delete(url)
         assert_equal(res.status, '204 NO CONTENT', res.data)
+        assert res.data == '', res.data
 
         #### root user
         url = '/api/task/%s?api_key=%s' % (root_id_, Fixtures.root_api_key)
