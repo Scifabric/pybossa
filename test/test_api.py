@@ -78,6 +78,7 @@ class TestAPI:
 
         res = self.app.get('/api/app?limit=10')
         data = json.loads(res.data)
+        print data
         assert len(data) == 10, len(data)
 
         res = self.app.get('/api/app?limit=10&offset=10')
@@ -138,20 +139,34 @@ class TestAPI:
         endpoints = ['app', 'task', 'taskrun']
         for endpoint in endpoints:
             res = self.app.get("/api/%s?wrongfield=value" % endpoint)
-            data = json.loads(res.data)
-            assert "no such column: wrongfield" in data['error'], data
+            err = json.loads(res.data)
+            assert res.status_code == 415, err
+            assert err['status'] == 'failed', err
+            assert err['action'] == 'GET', err
+            assert err['exception_cls'] == 'AttributeError', err
 
     def test_query_sql_injection(self):
         """Test API SQL Injection is not allowed works"""
 
         q = '1%3D1;SELECT%20*%20FROM%20task%20WHERE%201=1'
         res = self.app.get('/api/task?' + q)
-        data = json.loads(res.data)
-        assert "no such column: " in data['error'], data
+        error = json.loads(res.data)
+        assert res.status_code == 415, error
+        assert error['action'] == 'GET', error
+        assert error['status'] == 'failed', error
+        assert error['target'] == 'task', error
+
         q = 'app_id=1%3D1;SELECT%20*%20FROM%20task%20WHERE%201'
-        res = self.app.get('/api/task?' + q)
-        data = json.loads(res.data)
-        assert "invalid input syntax" in data['error'], data
+        res = self.app.get('/api/apappp?' + q)
+        assert res.status_code == 404, res.data
+
+        q = 'app_id=1%3D1;SELECT%20*%20FROM%20task%20WHERE%201'
+        res = self.app.get('/api/' + q)
+        assert res.status_code == 404, res.data
+
+        q = 'app_id=1%3D1;SELECT%20*%20FROM%20task%20WHERE%201'
+        res = self.app.get('/api' + q)
+        assert res.status_code == 404, res.data
 
     def test_query_app(self):
         """Test API query for app endpoint works"""
@@ -295,6 +310,36 @@ class TestAPI:
         id_ = out.id
         db.session.remove()
 
+        # test re-create should fail
+        res = self.app.post('/api/app?api_key=' + Fixtures.api_key,
+                            data=data)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == "IntegrityError", err
+
+        # test create with non-allowed fields should fail
+        data = dict(name='fail', short_name='fail', link='hateoas', wrong=15)
+        res = self.app.post('/api/app?api_key=' + Fixtures.api_key,
+                            data=data)
+        err = json.loads(res.data)
+        err_msg = "ValueError exception should be raised"
+        assert res.status_code == 415, err
+        assert err['action'] == 'POST', err
+        assert err['status'] == 'failed', err
+        assert err['exception_cls'] == "ValueError", err_msg
+        # Now with a JSON object but not valid
+        data = json.dumps(data)
+        res = self.app.post('/api/app?api_key=' + Fixtures.api_key,
+                            data=data)
+        err = json.loads(res.data)
+        err_msg = "TypeError exception should be raised"
+        assert err['action'] == 'POST', err_msg
+        assert err['status'] == 'failed', err_msg
+        assert err['exception_cls'] == "TypeError", err_msg
+        assert res.status_code == 415, err_msg
+
         # test update
         data = {'name': 'My New Title'}
         datajson = json.dumps(data)
@@ -303,12 +348,20 @@ class TestAPI:
                            data=data)
         error_msg = 'Anonymous should not be allowed to update'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
+        error = json.loads(res.data)
+        assert error['status'] == 'failed', error
+        assert error['action'] == 'PUT', error
+        assert error['exception_cls'] == 'Forbidden', error
 
         ### real user but not allowed as not owner!
         url = '/api/app/%s?api_key=%s' % (id_, Fixtures.api_key_2)
         res = self.app.put(url, data=datajson)
         error_msg = 'Should not be able to update apps of others'
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
+        error = json.loads(res.data)
+        assert error['status'] == 'failed', error
+        assert error['action'] == 'PUT', error
+        assert error['exception_cls'] == 'Unauthorized', error
 
         res = self.app.put('/api/app/%s?api_key=%s' % (id_, Fixtures.api_key),
                            data=datajson)
@@ -316,22 +369,86 @@ class TestAPI:
         assert_equal(res.status, '200 OK', res.data)
         out2 = db.session.query(model.App).get(id_)
         assert_equal(out2.name, data['name'])
+        out = json.loads(res.data)
+        assert out.get('status') is None, error
+        assert out.get('id') == id_, error
+
+        # With fake data
+        data['algo'] = 13
+        datajson = json.dumps(data)
+        res = self.app.put('/api/app/%s?api_key=%s' % (id_, Fixtures.api_key),
+                           data=datajson)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'TypeError', err
+
+        # With not JSON data
+        datajson = data
+        res = self.app.put('/api/app/%s?api_key=%s' % (id_, Fixtures.api_key),
+                           data=datajson)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'ValueError', err
+
+        # With wrong args in the URL
+        data = dict(
+            name=name,
+            short_name='xxxx-project',
+            long_description=u'<div id="longdescription">\
+                               Long Description</div>')
+
+        datajson = json.dumps(data)
+        res = self.app.put('/api/app/%s?api_key=%s&search=select1' % (id_, Fixtures.api_key),
+                           data=datajson)
+        err = json.loads(res.data)
+        print err
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'AttributeError', err
 
         # test delete
         ## anonymous
         res = self.app.delete('/api/app/%s' % id_, data=data)
         error_msg = 'Anonymous should not be allowed to delete'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
+        error = json.loads(res.data)
+        assert error['status'] == 'failed', error
+        assert error['action'] == 'DELETE', error
+        assert error['target'] == 'app', error
         ### real user but not allowed as not owner!
         url = '/api/app/%s?api_key=%s' % (id_, Fixtures.api_key_2)
         res = self.app.delete(url, data=datajson)
         error_msg = 'Should not be able to delete apps of others'
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
+        error = json.loads(res.data)
+        assert error['status'] == 'failed', error
+        assert error['action'] == 'DELETE', error
+        assert error['target'] == 'app', error
 
         url = '/api/app/%s?api_key=%s' % (id_, Fixtures.api_key)
         res = self.app.delete(url, data=datajson)
 
         assert_equal(res.status, '204 NO CONTENT', res.data)
+
+        # delete an app that does not exist
+        url = '/api/app/5000?api_key=%s' % Fixtures.api_key
+        res = self.app.delete(url, data=datajson)
+        error = json.loads(res.data)
+        assert res.status_code == 404, error
+        assert error['status'] == 'failed', error
+        assert error['action'] == 'DELETE', error
+        assert error['target'] == 'app', error
+        assert error['exception_cls'] == 'NotFound', error
+
+        # delete an app that does not exist
+        url = '/api/app/?api_key=%s' % Fixtures.api_key
+        res = self.app.delete(url, data=datajson)
+        assert res.status_code == 404, error
 
     def test_04_admin_app_post(self):
         """Test API App update/delete for ADMIN users"""
@@ -341,10 +458,10 @@ class TestAPI:
             short_name='xxxx-project',
             long_description=u'<div id="longdescription">\
                                Long Description</div>')
-        data = json.dumps(data)
+        datajson = json.dumps(data)
         # now a real user (we use the second api_key as first user is an admin)
         res = self.app.post('/api/app?api_key=' + Fixtures.api_key_2,
-                            data=data)
+                            data=datajson)
 
         out = db.session.query(model.App).filter_by(name=name).one()
         assert out, out
@@ -352,6 +469,38 @@ class TestAPI:
         assert_equal(out.owner.name, 'tester-2')
         id_ = out.id
         db.session.remove()
+
+        # POST with not JSON data
+        res = self.app.post('/api/app?api_key=' + Fixtures.api_key_2,
+                            data=data)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'app', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == 'ValueError', err
+
+        # POST with not allowed args
+        res = self.app.post('/api/app?api_key=%s&foo=bar' % Fixtures.api_key_2,
+                            data=data)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'app', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == 'AttributeError', err
+
+        # POST with fake data
+        data['wrongfield'] = 13
+        res = self.app.post('/api/app?api_key=' + Fixtures.api_key_2,
+                            data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'app', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == 'TypeError', err
+        data.pop('wrongfield')
 
         # test update
         data = {'name': 'My New Title'}
@@ -364,11 +513,48 @@ class TestAPI:
         out2 = db.session.query(model.App).get(id_)
         assert_equal(out2.name, data['name'])
 
-        # test delete
-        ### real user  not owner!
-        url = '/api/app/%s?api_key=%s' % (id_, Fixtures.root_api_key)
-        res = self.app.delete(url, data=datajson)
+        # PUT with not JSON data
+        res = self.app.put(url, data=data)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'app', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'ValueError', err
 
+        # PUT with not allowed args
+        res = self.app.put(url + "&foo=bar", data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'app', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'AttributeError', err
+
+        # PUT with fake data
+        data['wrongfield'] = 13
+        res = self.app.put(url, data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'app', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'TypeError', err
+        data.pop('wrongfield')
+
+        # test delete
+        url = '/api/app/%s?api_key=%s' % (id_, Fixtures.root_api_key)
+        # DELETE with not allowed args
+        res = self.app.delete(url + "&foo=bar", data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'app', err
+        assert err['action'] == 'DELETE', err
+        assert err['exception_cls'] == 'AttributeError', err
+
+        ### DELETE success real user  not owner!
+        res = self.app.delete(url, data=json.dumps(data))
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
     def test_05_task_post(self):
@@ -380,7 +566,6 @@ class TestAPI:
                 .filter_by(owner_id=user.id)\
                 .one()
         data = dict(app_id=app.id, state='0', info='my task data')
-        data = json.dumps(data)
         root_data = dict(app_id=app.id, state='0', info='my root task data')
         root_data = json.dumps(root_data)
 
@@ -390,20 +575,20 @@ class TestAPI:
 
         # anonymous user
         # no api-key
-        res = self.app.post('/api/task', data=data)
+        res = self.app.post('/api/task', data=json.dumps(data))
         error_msg = 'Should not be allowed to create'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
         ### real user but not allowed as not owner!
         res = self.app.post('/api/task?api_key=' + Fixtures.api_key_2,
-                            data=data)
+                            data=json.dumps(data))
 
         error_msg = 'Should not be able to post tasks for apps of others'
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         # now a real user
         res = self.app.post('/api/task?api_key=' + Fixtures.api_key,
-                            data=data)
+                            data=json.dumps(data))
         assert res.data, res
         datajson = json.loads(res.data)
         out = db.session.query(model.Task)\
@@ -427,6 +612,36 @@ class TestAPI:
         assert_equal(out.app_id, app.id)
         root_id_ = out.id
 
+        # POST with not JSON data
+        url = '/api/task?api_key=%s' % Fixtures.api_key
+        res = self.app.post(url, data=data)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'task', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == 'ValueError', err
+
+        # POST with not allowed args
+        res = self.app.post(url + '&foo=bar', data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'task', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == 'AttributeError', err
+
+        # POST with fake data
+        data['wrongfield'] = 13
+        res = self.app.post(url, data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'task', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == 'TypeError', err
+        data.pop('wrongfield')
+
         ##########
         # UPDATE #
         ##########
@@ -446,11 +661,13 @@ class TestAPI:
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         ### real user
-        res = self.app.put('/api/task/%s?api_key=%s' % (id_, Fixtures.api_key),
-                           data=datajson)
+        url = '/api/task/%s?api_key=%s' % (id_, Fixtures.api_key)
+        res = self.app.put(url, data=datajson)
+        out = json.loads(res.data)
         assert_equal(res.status, '200 OK', res.data)
         out2 = db.session.query(model.Task).get(id_)
         assert_equal(out2.state, data['state'])
+        assert out2.id == out['id'], out
 
         ### root
         res = self.app.put('/api/task/%s?api_key=%s' % (root_id_, Fixtures.root_api_key),
@@ -458,6 +675,35 @@ class TestAPI:
         assert_equal(res.status, '200 OK', res.data)
         out2 = db.session.query(model.Task).get(root_id_)
         assert_equal(out2.state, root_data['state'])
+
+        # PUT with not JSON data
+        res = self.app.put(url, data=data)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'task', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'ValueError', err
+
+        # PUT with not allowed args
+        res = self.app.put(url + "&foo=bar", data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'task', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'AttributeError', err
+
+        # PUT with fake data
+        data['wrongfield'] = 13
+        res = self.app.put(url, data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'task', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'TypeError', err
+        data.pop('wrongfield')
 
         ##########
         # DELETE #
@@ -474,9 +720,20 @@ class TestAPI:
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         #### real user
+        # DELETE with not allowed args
+        res = self.app.delete(url + "&foo=bar", data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'task', err
+        assert err['action'] == 'DELETE', err
+        assert err['exception_cls'] == 'AttributeError', err
+
+        # DELETE returns 204
         url = '/api/task/%s?api_key=%s' % (id_, Fixtures.api_key)
         res = self.app.delete(url)
         assert_equal(res.status, '204 NO CONTENT', res.data)
+        assert res.data == '', res.data
 
         #### root user
         url = '/api/task/%s?api_key=%s' % (root_id_, Fixtures.root_api_key)
@@ -519,14 +776,43 @@ class TestAPI:
         assert_equal(taskrun.app_id, app_id), taskrun
 
         # create task run as authenticated user
-        res = self.app.post('/api/taskrun?api_key=%s' % Fixtures.api_key,
-                            data=datajson)
+        url = '/api/taskrun?api_key=%s' % Fixtures.api_key
+        res = self.app.post(url, data=datajson)
         taskrun = db.session.query(model.TaskRun)\
                     .filter_by(app_id=app_id)\
                     .all()[-1]
         _id = taskrun.id
         assert taskrun.app_id == app_id, taskrun
         assert taskrun.user.name == Fixtures.name, taskrun
+
+        # POST with not JSON data
+        res = self.app.post(url, data=data)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'taskrun', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == 'ValueError', err
+
+        # POST with not allowed args
+        res = self.app.post(url + '&foo=bar', data=data)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'taskrun', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == 'AttributeError', err
+
+        # POST with fake data
+        data['wrongfield'] = 13
+        res = self.app.post(url, data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'taskrun', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == 'TypeError', err
+        data.pop('wrongfield')
 
         ##########
         # UPDATE #
@@ -556,10 +842,41 @@ class TestAPI:
         # real user
         url = '/api/taskrun/%s?api_key=%s' % (_id, Fixtures.api_key)
         res = self.app.put(url, data=datajson)
+        out = json.loads(res.data)
         assert_equal(res.status, '200 OK', res.data)
         out2 = db.session.query(model.TaskRun).get(_id)
         assert_equal(out2.info, data['info'])
         assert_equal(out2.user.name, Fixtures.name)
+        assert out2.id == out['id'], out
+
+        # PUT with not JSON data
+        res = self.app.put(url, data=data)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'taskrun', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'ValueError', err
+
+        # PUT with not allowed args
+        res = self.app.put(url + "&foo=bar", data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'taskrun', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'AttributeError', err
+
+        # PUT with fake data
+        data['wrongfield'] = 13
+        res = self.app.put(url, data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'taskrun', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'TypeError', err
+        data.pop('wrongfield')
 
         # root user
         url = '/api/taskrun/%s?api_key=%s' % (_id, Fixtures.root_api_key)
@@ -592,7 +909,16 @@ class TestAPI:
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         #### real user
+        # DELETE with not allowed args
         url = '/api/taskrun/%s?api_key=%s' % (_id, Fixtures.api_key)
+        res = self.app.delete(url + "&foo=bar", data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'taskrun', err
+        assert err['action'] == 'DELETE', err
+        assert err['exception_cls'] == 'AttributeError', err
+
         res = self.app.delete(url)
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
