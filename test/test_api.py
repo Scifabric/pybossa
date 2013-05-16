@@ -458,10 +458,10 @@ class TestAPI:
             short_name='xxxx-project',
             long_description=u'<div id="longdescription">\
                                Long Description</div>')
-        data = json.dumps(data)
+        datajson = json.dumps(data)
         # now a real user (we use the second api_key as first user is an admin)
         res = self.app.post('/api/app?api_key=' + Fixtures.api_key_2,
-                            data=data)
+                            data=datajson)
 
         out = db.session.query(model.App).filter_by(name=name).one()
         assert out, out
@@ -469,6 +469,34 @@ class TestAPI:
         assert_equal(out.owner.name, 'tester-2')
         id_ = out.id
         db.session.remove()
+
+        # POST with not JSON data
+        res = self.app.post('/api/app?api_key=' + Fixtures.api_key_2,
+                            data=data)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == 'ValueError', err
+
+        # POST with not allowed args
+        res = self.app.post('/api/app?api_key=%s&foo=bar' % Fixtures.api_key_2,
+                            data=data)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == 'AttributeError', err
+
+        # POST with fake data
+        data['wrongfield'] = 13
+        res = self.app.post('/api/app?api_key=' + Fixtures.api_key_2,
+                            data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == 'TypeError', err
 
         # test update
         data = {'name': 'My New Title'}
