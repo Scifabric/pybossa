@@ -497,6 +497,7 @@ class TestAPI:
         assert err['status'] == 'failed', err
         assert err['action'] == 'POST', err
         assert err['exception_cls'] == 'TypeError', err
+        data.pop('wrongfield')
 
         # test update
         data = {'name': 'My New Title'}
@@ -533,11 +534,20 @@ class TestAPI:
         assert err['status'] == 'failed', err
         assert err['action'] == 'PUT', err
         assert err['exception_cls'] == 'TypeError', err
+        data.pop('wrongfield')
 
         # test delete
-        ### real user  not owner!
         url = '/api/app/%s?api_key=%s' % (id_, Fixtures.root_api_key)
-        res = self.app.delete(url, data=datajson)
+        # DELETE with not allowed args
+        res = self.app.delete(url + "&foo=bar", data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['action'] == 'DELETE', err
+        assert err['exception_cls'] == 'AttributeError', err
+
+        ### DELETE success real user  not owner!
+        res = self.app.delete(url, data=json.dumps(data))
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
     def test_05_task_post(self):
