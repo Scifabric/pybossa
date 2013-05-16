@@ -909,7 +909,16 @@ class TestAPI:
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         #### real user
+        # DELETE with not allowed args
         url = '/api/taskrun/%s?api_key=%s' % (_id, Fixtures.api_key)
+        res = self.app.delete(url + "&foo=bar", data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'taskrun', err
+        assert err['action'] == 'DELETE', err
+        assert err['exception_cls'] == 'AttributeError', err
+
         res = self.app.delete(url)
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
