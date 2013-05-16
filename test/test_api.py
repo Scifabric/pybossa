@@ -476,6 +476,7 @@ class TestAPI:
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
+        assert err['target'] == 'app', err
         assert err['action'] == 'POST', err
         assert err['exception_cls'] == 'ValueError', err
 
@@ -485,6 +486,7 @@ class TestAPI:
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
+        assert err['target'] == 'app', err
         assert err['action'] == 'POST', err
         assert err['exception_cls'] == 'AttributeError', err
 
@@ -495,6 +497,7 @@ class TestAPI:
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
+        assert err['target'] == 'app', err
         assert err['action'] == 'POST', err
         assert err['exception_cls'] == 'TypeError', err
         data.pop('wrongfield')
@@ -515,6 +518,7 @@ class TestAPI:
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
+        assert err['target'] == 'app', err
         assert err['action'] == 'PUT', err
         assert err['exception_cls'] == 'ValueError', err
 
@@ -523,6 +527,7 @@ class TestAPI:
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
+        assert err['target'] == 'app', err
         assert err['action'] == 'PUT', err
         assert err['exception_cls'] == 'AttributeError', err
 
@@ -532,6 +537,7 @@ class TestAPI:
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
+        assert err['target'] == 'app', err
         assert err['action'] == 'PUT', err
         assert err['exception_cls'] == 'TypeError', err
         data.pop('wrongfield')
@@ -543,6 +549,7 @@ class TestAPI:
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
+        assert err['target'] == 'app', err
         assert err['action'] == 'DELETE', err
         assert err['exception_cls'] == 'AttributeError', err
 
@@ -611,6 +618,7 @@ class TestAPI:
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
+        assert err['target'] == 'task', err
         assert err['action'] == 'POST', err
         assert err['exception_cls'] == 'ValueError', err
 
@@ -619,6 +627,7 @@ class TestAPI:
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
+        assert err['target'] == 'task', err
         assert err['action'] == 'POST', err
         assert err['exception_cls'] == 'AttributeError', err
 
@@ -628,6 +637,7 @@ class TestAPI:
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
+        assert err['target'] == 'task', err
         assert err['action'] == 'POST', err
         assert err['exception_cls'] == 'TypeError', err
         data.pop('wrongfield')
@@ -669,6 +679,7 @@ class TestAPI:
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
+        assert err['target'] == 'task', err
         assert err['action'] == 'PUT', err
         assert err['exception_cls'] == 'ValueError', err
 
@@ -677,6 +688,7 @@ class TestAPI:
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
+        assert err['target'] == 'task', err
         assert err['action'] == 'PUT', err
         assert err['exception_cls'] == 'AttributeError', err
 
@@ -686,6 +698,7 @@ class TestAPI:
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
+        assert err['target'] == 'task', err
         assert err['action'] == 'PUT', err
         assert err['exception_cls'] == 'TypeError', err
         data.pop('wrongfield')
