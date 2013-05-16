@@ -519,7 +519,7 @@ class TestAPI:
         assert err['exception_cls'] == 'ValueError', err
 
         # PUT with not allowed args
-        res = self.app.put(url + "&foo=bar", data=data)
+        res = self.app.put(url + "&foo=bar", data=json.dumps(data))
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
@@ -651,8 +651,8 @@ class TestAPI:
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         ### real user
-        res = self.app.put('/api/task/%s?api_key=%s' % (id_, Fixtures.api_key),
-                           data=datajson)
+        url = '/api/task/%s?api_key=%s' % (id_, Fixtures.api_key)
+        res = self.app.put(url, data=datajson)
         assert_equal(res.status, '200 OK', res.data)
         out2 = db.session.query(model.Task).get(id_)
         assert_equal(out2.state, data['state'])
@@ -663,6 +663,32 @@ class TestAPI:
         assert_equal(res.status, '200 OK', res.data)
         out2 = db.session.query(model.Task).get(root_id_)
         assert_equal(out2.state, root_data['state'])
+
+        # PUT with not JSON data
+        res = self.app.put(url, data=data)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'ValueError', err
+
+        # PUT with not allowed args
+        res = self.app.put(url + "&foo=bar", data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'AttributeError', err
+
+        # PUT with fake data
+        data['wrongfield'] = 13
+        res = self.app.put(url, data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'TypeError', err
+        data.pop('wrongfield')
 
         ##########
         # DELETE #
