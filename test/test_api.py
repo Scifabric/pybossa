@@ -663,9 +663,11 @@ class TestAPI:
         ### real user
         url = '/api/task/%s?api_key=%s' % (id_, Fixtures.api_key)
         res = self.app.put(url, data=datajson)
+        out = json.loads(res.data)
         assert_equal(res.status, '200 OK', res.data)
         out2 = db.session.query(model.Task).get(id_)
         assert_equal(out2.state, data['state'])
+        assert out2.id == out['id'], out
 
         ### root
         res = self.app.put('/api/task/%s?api_key=%s' % (root_id_, Fixtures.root_api_key),
