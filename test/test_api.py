@@ -78,6 +78,7 @@ class TestAPI:
 
         res = self.app.get('/api/app?limit=10')
         data = json.loads(res.data)
+        print data
         assert len(data) == 10, len(data)
 
         res = self.app.get('/api/app?limit=10&offset=10')
@@ -404,6 +405,7 @@ class TestAPI:
         res = self.app.put('/api/app/%s?api_key=%s&search=select1' % (id_, Fixtures.api_key),
                            data=datajson)
         err = json.loads(res.data)
+        print err
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
         assert err['action'] == 'PUT', err
