@@ -15,10 +15,10 @@
 
 import json
 
-from flask import Blueprint, request, jsonify, abort, Response, url_for
-from flask.views import View, MethodView
+from flask import Blueprint, request, abort, Response
+from flask.views import MethodView
 from flaskext.login import current_user
-from sqlalchemy.exc import DatabaseError
+from werkzeug.exceptions import NotFound
 
 from pybossa.util import jsonpify, crossdomain
 import pybossa.model as model
@@ -40,10 +40,39 @@ def index():
 
 class APIBase(MethodView):
     """
-    Class to create CRUD methods for all the items: project, applications,
-    tasks, etc.
+    Class to create CRUD methods for all the items: applications,
+    tasks and task runs.
     """
     hateoas = Hateoas()
+    error_status = {"Forbidden": 403,
+                    "NotFound": 404,
+                    "Unauthorized": 401,
+                    "TypeError": 415,
+                    "ValueError": 415,
+                    "DataError": 415,
+                    "AttributeError": 415,
+                    "IntegrityError": 415}
+
+    def valid_args(self):
+        for k in request.args.keys():
+            if k not in ['api_key']:
+                getattr(self.__class__, k)
+
+    def format_exception(self, e, action):
+        """Formats the exception to a valid JSON object"""
+        exception_cls = e.__class__.__name__
+        if self.error_status.get(exception_cls):
+            status = self.error_status.get(exception_cls)
+        else:
+            status = 200
+        error = dict(action=action,
+                     status="failed",
+                     status_code=status,
+                     target=self.__class__.__name__.lower(),
+                     exception_cls=exception_cls,
+                     exception_msg=e.message)
+        return Response(json.dumps(error), status=status,
+                        mimetype='application/json')
 
     @crossdomain(origin='*', headers=cors_headers)
     def options(self):
@@ -66,12 +95,9 @@ class APIBase(MethodView):
                 query = db.session.query(self.__class__)
                 for k in request.args.keys():
                     if k not in ['limit', 'offset', 'api_key']:
-                        if not hasattr(self.__class__, k):
-                            return Response(json.dumps({
-                                'error': 'no such column: %s' % k}
-                                ), mimetype='application/json')
+                        # Raise an error if the k arg is not a column
+                        getattr(self.__class__, k)
                         query = query.filter(getattr(self.__class__, k) == request.args[k])
-
                 try:
                     limit = min(10000, int(request.args.get('limit')))
                 except (ValueError, TypeError):
@@ -85,7 +111,6 @@ class APIBase(MethodView):
                 query = query.order_by(self.__class__.id)
                 query = query.limit(limit)
                 query = query.offset(offset)
-                #items = [x.dictize() for x in query.all()]
                 items = []
                 for item in query.all():
                     obj = item.dictize()
@@ -95,7 +120,6 @@ class APIBase(MethodView):
                     if link:
                         obj['link'] = link
                     items.append(obj)
-
                 return Response(json.dumps(items), mimetype='application/json')
             else:
                 item = db.session.query(self.__class__).get(id)
@@ -108,12 +132,9 @@ class APIBase(MethodView):
                         obj['links'] = links
                     if link:
                         obj['link'] = link
-                    return Response(json.dumps(obj),
-                            mimetype='application/json')
-        #except ProgrammingError, e:
-        except DatabaseError as e:
-            return Response(json.dumps({'error': "%s" % e.orig}),
-                    mimetype='application/json')
+                    return Response(json.dumps(obj), mimetype='application/json')
+        except Exception as e:
+            return self.format_exception(e, action='GET')
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
@@ -124,18 +145,19 @@ class APIBase(MethodView):
         :arg self: The class of the object to be inserted
         :returns: The JSON item stored in the DB
         """
-        data = json.loads(request.data)
-        # Clean HATEOAS args
-        if data.get('link'):
-            data.pop('link')
-        if data.get('links'):
-            data.pop('links')
-        inst = self.__class__(**data)
-        getattr(require, self.__class__.__name__.lower()).create(inst)
-        self._update_object(inst)
-        db.session.add(inst)
-        db.session.commit()
-        return json.dumps(inst.dictize())
+        try:
+            self.valid_args()
+            data = json.loads(request.data)
+            # Clean HATEOAS args
+            data = self.hateoas.remove_links(data)
+            inst = self.__class__(**data)
+            getattr(require, self.__class__.__name__.lower()).create(inst)
+            self._update_object(inst)
+            db.session.add(inst)
+            db.session.commit()
+            return json.dumps(inst.dictize())
+        except Exception as e:
+            return self.format_exception(e, action='POST')
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
@@ -150,14 +172,17 @@ class APIBase(MethodView):
         More info about HTTP status codes for this action `here
         <http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.7>`_.
         """
-        item = db.session.query(self.__class__).get(id)
-        getattr(require, self.__class__.__name__.lower()).delete(item)
-        if (item is None):
-            abort(404)
-        else:
+        try:
+            self.valid_args()
+            item = db.session.query(self.__class__).get(id)
+            if item is None:
+                raise NotFound
+            getattr(require, self.__class__.__name__.lower()).delete(item)
             db.session.delete(item)
             db.session.commit()
-            return "", 204
+            return '', 204
+        except Exception as e:
+            return self.format_exception(e, action='DELETE')
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
@@ -172,23 +197,24 @@ class APIBase(MethodView):
         More info about HTTP status codes for this action `here
         <http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.6>`_.
         """
-        existing = db.session.query(self.__class__).get(id)
-        getattr(require, self.__class__.__name__.lower()).update(existing)
-        data = json.loads(request.data)
-        # may be missing the id as we allow partial updates
-        data['id'] = id
-        # Clean HATEOAS args
-        if data.get('link'):
-            data.pop('link')
-        if data.get('links'):
-            data.pop('links')
-        inst = self.__class__(**data)
-        if (existing is None):
-            abort(404)
-        else:
+        try:
+            self.valid_args()
+            existing = db.session.query(self.__class__).get(id)
+            if existing is None:
+                raise NotFound
+            getattr(require, self.__class__.__name__.lower()).update(existing)
+            data = json.loads(request.data)
+            # may be missing the id as we allow partial updates
+            data['id'] = id
+            # Clean HATEOAS args
+            data = self.hateoas.remove_links(data)
+            inst = self.__class__(**data)
             db.session.merge(inst)
             db.session.commit()
-            return "", 200
+            return Response(json.dumps(inst.dictize()), 200,
+                            mimetype='application/json')
+        except Exception as e:
+            return self.format_exception(e, 'PUT')
 
     def _update_object(self, data_dict):
         '''Method to be overriden in inheriting classes which wish to update
@@ -196,7 +222,7 @@ class APIBase(MethodView):
         pass
 
 
-class ProjectAPI(APIBase):
+class AppAPI(APIBase):
     __class__ = model.App
 
     def _update_object(self, obj):
@@ -220,20 +246,17 @@ class TaskRunAPI(APIBase):
 def register_api(view, endpoint, url, pk='id', pk_type='int'):
     view_func = view.as_view(endpoint)
     blueprint.add_url_rule(url,
-        view_func=view_func,
-        defaults={pk: None},
-        methods=['GET', 'OPTIONS']
-        )
+                           view_func=view_func,
+                           defaults={pk: None},
+                           methods=['GET', 'OPTIONS'])
     blueprint.add_url_rule(url,
-        view_func=view_func,
-        methods=['POST', 'OPTIONS']
-        )
+                           view_func=view_func,
+                           methods=['POST', 'OPTIONS'])
     blueprint.add_url_rule('%s/<%s:%s>' % (url, pk_type, pk),
-        view_func=view_func,
-        methods=['GET', 'PUT', 'DELETE', 'OPTIONS']
-        )
+                           view_func=view_func,
+                           methods=['GET', 'PUT', 'DELETE', 'OPTIONS'])
 
-register_api(ProjectAPI, 'api_app', '/app', pk='id', pk_type='int')
+register_api(AppAPI, 'api_app', '/app', pk='id', pk_type='int')
 register_api(TaskAPI, 'api_task', '/task', pk='id', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
 
@@ -253,8 +276,7 @@ def new_task(app_id):
     task = sched.new_task(app_id, user_id, user_ip, offset)
     # If there is a task for the user, return it
     if task:
-        return Response(json.dumps(task.dictize()),
-                mimetype="application/json")
+        return Response(json.dumps(task.dictize()), mimetype="application/json")
     else:
         return Response(json.dumps({}), mimetype="application/json")
 
@@ -283,19 +305,16 @@ def user_progress(app_id=None, short_name=None):
         if app:
             if current_user.is_anonymous():
                 tr = db.session.query(model.TaskRun)\
-                        .filter(model.TaskRun.app_id == app.id)\
-                        .filter(model.TaskRun.user_ip == request.remote_addr)\
-                        .all()
+                       .filter(model.TaskRun.app_id == app.id)\
+                       .filter(model.TaskRun.user_ip == request.remote_addr)\
+                       .all()
             else:
                 tr = db.session.query(model.TaskRun)\
-                        .filter(model.TaskRun.app_id == app.id)\
-                        .filter(model.TaskRun.user_id == current_user.id)\
-                        .all()
+                       .filter(model.TaskRun.app_id == app.id)\
+                       .filter(model.TaskRun.user_id == current_user.id)\
+                       .all()
             # Return
-            tmp = dict(
-                    done=len(tr),
-                    total=len(app.tasks)
-                    )
+            tmp = dict(done=len(tr), total=len(app.tasks))
             return Response(json.dumps(tmp), mimetype="application/json")
         else:
             return abort(404)

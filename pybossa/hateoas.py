@@ -46,3 +46,11 @@ class Hateoas(object):
             return None, self.create_link(item)
         else:
             return False
+
+    def remove_links(self, item):
+        """Remove HATEOAS link and links from item"""
+        if item.get('link'):
+            item.pop('link')
+        if item.get('links'):
+            item.pop('links')
+        return item

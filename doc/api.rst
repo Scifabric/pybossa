@@ -107,6 +107,22 @@ Returns domain object.::
     Some GET actions may require to authenticate & authorize the request. Use the
     ?api_key arguement to pass the **API-KEY**.
 
+If the object is not found you will get a JSON object like this:
+
+.. code-block:: JavaScript
+
+    {
+        "status": "failed",
+        "action": "GET",
+        "target": "app",
+        "exception_msg": "404 Not Found",
+        "status_code": 404,
+        "exception_cls": "NotFound"
+    }
+
+Any other error will return the same object but with the proper status code and
+error message.
+
 Search
 ~~~~~~
 
@@ -127,6 +143,10 @@ It is possible to limit the number of returned objects::
     By default all GET queries return a maximum of 20 objects unless the
     **limit** keyword is used to get more: limit=50
 
+.. note::
+    If the search does not find anything, the server will return an empty JSON
+    list []
+
 Create
 ~~~~~~
 
@@ -137,6 +157,21 @@ Create a domain object. Returns created domain object.::
 .. note::
     Some POST actions may require to authenticate & authorize the request. Use the
     ?api_key arguement to pass the **API-KEY**.
+
+If an error occurs, the action will return a JSON object like this:
+
+.. code-block:: JavaScript
+
+    {
+        "status": "failed",
+        "action": "POST",
+        "target": "app",
+        "exception_msg": "type object 'App' has no attribute 'short_ame'",
+        "status_code": 415,
+        "exception_cls": "AttributeError"
+    }
+
+Where **target** will refer to an App, Task or TaskRun object.
 
 Update
 ~~~~~~
@@ -149,6 +184,21 @@ Update a domain object::
     Some PUT actions may require to authenticate & authorize the request. Use the
     ?api_key arguement to pass the **API-KEY**.
 
+If an error occurs, the action will return a JSON object like this:
+
+.. code-block:: JavaScript
+
+    {
+        "status": "failed",
+        "action": "PUT",
+        "target": "app",
+        "exception_msg": "type object 'App' has no attribute 'short_ame'",
+        "status_code": 415,
+        "exception_cls": "AttributeError"
+    }
+
+Where **target** will refer to an App, Task or TaskRun object.
+
 Delete
 ~~~~~~
 
@@ -159,6 +209,22 @@ Delete a domain object::
 .. note::
     Some DELETE actions may require to authenticate & authorize the request. Use the
     ?api_key arguement to pass the **API-KEY**.
+
+If an error occurs, the action will return a JSON object like this:
+
+.. code-block:: JavaScript
+
+    {
+        "status": "failed",
+        "action": "DELETE",
+        "target": "app",
+        "exception_msg": "type object 'App' has no attribute 'short_ame'",
+        "status_code": 415,
+        "exception_cls": "AttributeError"
+    }
+
+Where **target** will refer to an App, Task or TaskRun object.
+
 
 Requesting a new task for current user
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
