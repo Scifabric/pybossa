@@ -847,6 +847,35 @@ class TestAPI:
         assert_equal(out2.info, data['info'])
         assert_equal(out2.user.name, Fixtures.name)
 
+        # PUT with not JSON data
+        res = self.app.put(url, data=data)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'taskrun', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'ValueError', err
+
+        # PUT with not allowed args
+        res = self.app.put(url + "&foo=bar", data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'taskrun', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'AttributeError', err
+
+        # PUT with fake data
+        data['wrongfield'] = 13
+        res = self.app.put(url, data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'taskrun', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'TypeError', err
+        data.pop('wrongfield')
+
         # root user
         url = '/api/taskrun/%s?api_key=%s' % (_id, Fixtures.root_api_key)
         res = self.app.put(url, data=datajson)
