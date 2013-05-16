@@ -776,14 +776,43 @@ class TestAPI:
         assert_equal(taskrun.app_id, app_id), taskrun
 
         # create task run as authenticated user
-        res = self.app.post('/api/taskrun?api_key=%s' % Fixtures.api_key,
-                            data=datajson)
+        url = '/api/taskrun?api_key=%s' % Fixtures.api_key
+        res = self.app.post(url, data=datajson)
         taskrun = db.session.query(model.TaskRun)\
                     .filter_by(app_id=app_id)\
                     .all()[-1]
         _id = taskrun.id
         assert taskrun.app_id == app_id, taskrun
         assert taskrun.user.name == Fixtures.name, taskrun
+
+        # POST with not JSON data
+        res = self.app.post(url, data=data)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'taskrun', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == 'ValueError', err
+
+        # POST with not allowed args
+        res = self.app.post(url + '&foo=bar', data=data)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'taskrun', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == 'AttributeError', err
+
+        # POST with fake data
+        data['wrongfield'] = 13
+        res = self.app.post(url, data=json.dumps(data))
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'taskrun', err
+        assert err['action'] == 'POST', err
+        assert err['exception_cls'] == 'TypeError', err
+        data.pop('wrongfield')
 
         ##########
         # UPDATE #
