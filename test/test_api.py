@@ -842,10 +842,12 @@ class TestAPI:
         # real user
         url = '/api/taskrun/%s?api_key=%s' % (_id, Fixtures.api_key)
         res = self.app.put(url, data=datajson)
+        out = json.loads(res.data)
         assert_equal(res.status, '200 OK', res.data)
         out2 = db.session.query(model.TaskRun).get(_id)
         assert_equal(out2.info, data['info'])
         assert_equal(out2.user.name, Fixtures.name)
+        assert out2.id == out['id'], out
 
         # PUT with not JSON data
         res = self.app.put(url, data=data)
