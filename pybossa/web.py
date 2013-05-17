@@ -35,6 +35,7 @@ from pybossa.view.applications import blueprint as applications
 from pybossa.view.admin import blueprint as admin
 from pybossa.view.leaderboard import blueprint as leaderboard
 from pybossa.view.stats import blueprint as stats
+from pybossa.view.team import blueprint as team
 from pybossa.view.help import blueprint as help
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import users as cached_users
@@ -50,6 +51,7 @@ app.register_blueprint(admin, url_prefix='/admin')
 app.register_blueprint(leaderboard, url_prefix='/leaderboard')
 app.register_blueprint(stats, url_prefix='/stats')
 app.register_blueprint(help, url_prefix='/help')
+app.register_blueprint(team, url_prefix='/team')
 
 # Enable Twitter if available
 try:
