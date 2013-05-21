@@ -34,7 +34,7 @@
             <div class="span6">
                 <div class="btn-group">
                     <a href="#" class="btn">{{_('Edit')}}</a>
-                    <a href="#" class="btn">{{_('Delete')}}</a>
+                    <a href="{{url_for('admin.del_category', id=c.id)}}" class="btn">{{_('Delete')}}</a>
                 </div>
             </div>
         </div>

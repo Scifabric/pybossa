@@ -151,6 +151,7 @@ def del_admin(user_id=None):
 
 
 class CategoryForm(Form):
+    id = IntegerField(label=None, widget=HiddenInput())
     name = TextField(lazy_gettext('Name'),
                      [validators.Required(),
                       pb_validator.Unique(db.session, model.Category, model.Category.name,
@@ -184,3 +185,28 @@ def categories():
                                form=form)
     except:
         return abort(403)
+
+
+@blueprint.route('/categories/del/<int:id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def del_category(id):
+    """Deletes a category"""
+    try:
+        category = db.session.query(model.Category).get(id)
+        if category:
+            require.category.delete(category)
+            if request.method == 'GET':
+                return render_template('admin/del_category.html',
+                                       title=lazy_gettext('Delete Category'),
+                                       category=category)
+            if request.method == 'POST':
+                db.session.delete(category)
+                db.session.commit()
+                msg = lazy_gettext("Category deleted")
+                flash(msg, 'success')
+                return redirect(url_for(".categories"))
+        else:
+            return abort(404)
+    except:
+        raise
