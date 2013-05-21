@@ -169,16 +169,14 @@ def categories():
         if request.method == 'POST':
             require.category.create()
             form = CategoryForm(request.form)
-            print form.validate()
             if form.validate():
                 category = model.Category(name=form.name.data)
                 db.session.add(category)
                 db.session.commit()
-                msg = lazy_gettext("Category %s added", form.name.data)
+                msg = lazy_gettext("Category added")
                 flash(msg, 'success')
             else:
                 flash(lazy_gettext('Please correct the errors'), 'error')
-
         categories = db.session.query(model.Category).all()
         return render_template('admin/categories.html',
                                title=lazy_gettext('Categories'),

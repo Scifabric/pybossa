@@ -12,30 +12,34 @@
     <div class="span9">
         <h1><strong>{{ _('Admin Site') }}:</strong> {{ _('Manage Categories') }}</h1>
         <div class="row-fluid">
-            <div id="add" class="span6">
+            <div id="add" class="span12">
                 {% from "_formhelpers.html" import render_field %}
-                <form method="POST" action="{{url_for('admin.categories')}}">
+                <form class="form-horizontal" method="POST" action="{{url_for('admin.categories')}}">
                     {{form.hidden_tag()}}
                     <fieldset>
-                    {{ form.name(class_="input-block-level", placeholder="Category name") }}
+                    {{ render_field(form.name, placeholder= _('Category name')) }}
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">{{_('Add Category')}}</button>
                     </div>
                     </fieldset>
                 </form>
             </div>
-            <div id="list" class="span6">
-                {% if categories %}
-                {% for c in categories %}
-                <div class="well">
-                    <h2>{{c.name}}</h2>
+        </div>
+        {% if categories %}
+        {% for c in categories %}
+        <div class="row-fluid">
+            <div class="span3">
+                <h2>{{c.name}}</h2>
+            </div>
+            <div class="span6">
+                <div class="btn-group">
                     <a href="#" class="btn">{{_('Edit')}}</a>
                     <a href="#" class="btn">{{_('Delete')}}</a>
                 </div>
-                {% endfor %}
-                {% endif %}
             </div>
         </div>
+        {% endfor %}
+        {% endif %}
     </div>
 </div>
 {% endblock %}
