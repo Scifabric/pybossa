@@ -317,7 +317,8 @@ def update(short_name):
             hidden=hidden,
             info=info,
             owner_id=app.owner_id,
-            allow_anonymous_contributors=form.allow_anonymous_contributors.data)
+            allow_anonymous_contributors=form.allow_anonymous_contributors.data,
+            category_id=form.category_id.data)
 
         app = app_by_shortname(short_name)
         db.session.merge(new_application)
@@ -332,6 +333,10 @@ def update(short_name):
     title = app_title(app, "Update")
     if request.method == 'GET':
         form = AppForm(obj=app)
+        categories = db.session.query(model.Category).all()
+        form.category_id.choices = [(c.id, c.name) for c in categories]
+        if app.category_id is None:
+            app.category_id = categories[0].id
         form.populate_obj(app)
         if app.info.get('thumbnail'):
             form.thumbnail.data = app.info['thumbnail']
@@ -343,6 +348,8 @@ def update(short_name):
 
     if request.method == 'POST':
         form = AppForm(request.form)
+        categories = db.session.query(model.Category).all()
+        form.category_id.choices = [(c.id, c.name) for c in categories]
         if form.validate():
             return handle_valid_form(form)
         flash(lazy_gettext('Please correct the errors'), 'error')
