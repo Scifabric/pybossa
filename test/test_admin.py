@@ -447,3 +447,45 @@ class TestAdmin(web.Helper):
         assert category['name'] in res.data, err_msg
         updated_category = db.session.query(model.Category).get(obj.id)
         assert updated_category.name == obj.name, err_msg
+
+    def test_22_admin_delete_category(self):
+        """Test ADMIN delete category works"""
+        Fixtures.create()
+        obj = db.session.query(model.Category).get(1)
+        category = obj.dictize()
+
+        # Anonymous user GET
+        url = '/admin/categories/del/%s' % obj.id
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous users should be redirected to sign in"
+        assert dom.find(id='signin') is not None, err_msg
+        # Anonymous user POST
+        res = self.app.post(url, data=category, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous users should be redirected to sign in"
+        assert dom.find(id='signin') is not None, err_msg
+
+        # Authenticated user but not admin GET
+        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
+        res = self.app.post(url, follow_redirects=True)
+        err_msg = "Non-Admin users should get 403"
+        assert res.status_code == 403, err_msg
+        # Authenticated user but not admin POST
+        res = self.app.post(url, data=category, follow_redirects=True)
+        err_msg = "Non-Admin users should get 403"
+        assert res.status_code == 403, err_msg
+        self.signout()
+
+        # Admin GET
+        self.signin(email=Fixtures.root_addr, password=Fixtures.root_password)
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "Category should be listed for admin user"
+        assert category['name'] in res.data, err_msg
+        # Admin POST
+        res = self.app.post(url, data=category, follow_redirects=True)
+        err_msg = "Category should be deleted"
+        assert "Category deleted" in res.data, err_msg
+        assert category['name'] not in res.data, err_msg
+        output = db.session.query(model.Category).get(obj.id)
+        assert output is None, err_msg
