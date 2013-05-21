@@ -209,4 +209,4 @@ def del_category(id):
         else:
             return abort(404)
     except:
-        raise
+        abort(403)
