@@ -49,6 +49,10 @@ def index():
        belongs = None
        teams = model.Team.query.filter(Team.public=='t').all()
 
+       if teams:
+           for team in teams:
+               get_team_score(team)
+
        return render_template('/team/teams.html',
                               title=lazy_gettext("Teams Public"),
                               teams=teams,
@@ -69,6 +73,9 @@ def index():
        # List of teams belong to
        belongs = model.User2Team.query.filter(User2Team.user_id == current_user.id)  \
                                        .all() 
+       
+       for team in teams:
+           get_team_score(team)
    
        return render_template('/team/teams.html',
                               title=lazy_gettext("Manage Teams"),
@@ -96,6 +103,7 @@ def details(name=None):
          return redirect(url_for('team.index'))
 
        else:
+           get_team_score(team)
            return render_template('/team/index.html',
                             found=[],
                             team = team)         
@@ -136,7 +144,6 @@ def searchusers(name):
                               func.lower(model.User.fullname).like(query)))\
                   .all()
 
-           belongs = dict()
            if not founds:
                flash("<strong>Ooops!</strong> We didn't find a user "
                   "matching your query: <strong>%s</strong>" % form.user.data)
@@ -146,11 +153,10 @@ def searchusers(name):
                    user2team = model.User2Team.query.filter(User2Team.team_id==team.id)\
                                                 .filter(User2Team.user_id==found.id)\
                                                 .first()
-                   belongs[found.id]= (1, 0)[user2team is None]
+                   found.belong = (1, 0)[user2team is None]
 
            return render_template('/team/searchusers.html',
                             found =founds,
-                            belongs=belongs,
                             team = team,
                             title=lazy_gettext('Search User'))
 
@@ -449,3 +455,20 @@ class UpdateTeamForm(Form):
 
    public = BooleanField(lazy_gettext('Public'))
 
+def get_team_score(team):
+   '''' Get total score by team '''
+   sql = text('''
+       WITH  global_rank as(
+         WITH scores AS( 
+         SELECT team_id, count(*) AS score FROM user2team 
+         INNER JOIN task_run ON user2team.user_id = task_run.user_id 
+         GROUP BY user2team.team_id ) 
+         SELECT team_id,score,rank() OVER (ORDER BY score DESC)  
+         FROM  scores) 
+       SELECT  * from global_rank where team_id=:team_id;''')
+
+   results = db.engine.execute(sql, team_id=team.id)
+   
+   for result in results:
+      team.rank = result.rank
+      team.score = result.score
