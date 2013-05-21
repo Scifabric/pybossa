@@ -11,14 +11,14 @@
     <div class="span9" style="min-height:400px;">
         <h1><strong>Admin Site</strong></h1>
         <div class="row-fluid">
-            <div class="span6 well">
+            <div id="featured-apps" class="span6 well">
                 <h2><i class="icon-star"></i> {{_('Featured Applications')}}</h2>
                 <p>{{_('Show applications in the front page')}}</p>
                 <a href="{{url_for('admin.featured')}}" class="btn btn-primary">
                     {{ _('Manage') }} <i class="icon-chevron-right"></i>
                 </a>
             </div>
-            <div class="span6 well">
+            <div id="categories" class="span6 well">
                 <h2><i class="icon-check"></i> {{_('Categories')}}</h2>
                 <p>{{_('Manage application categories')}}</p>
                 <a href="{{url_for('admin.categories')}}" class="btn btn-primary">
@@ -27,7 +27,7 @@
             </div>
         </div>
         <div class="row-fluid">
-            <div class="span6 well">
+            <div id="users" class="span6 well">
                 <h2><i class="icon-user"></i> {{_('Administrators')}}</h2>
                 <p>{{_('Manage administrators')}}</p>
                 <a href="{{url_for('admin.users')}}" class="btn btn-primary">
