@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% set active_page = "profile" %}
+{% set active_link = "teams" %}
+{% import "account/_helpers.html" as helper %}
+{% import "team/_helpers.html" as team_helper %}
+
+{% from "account/_helpers.html" import render_account_local_nav %}
+
+
+{% block content %}
+<div class="row">
+    <div class="span3">
+        {{ render_account_local_nav(current_user, active_link) }}
+    </div>
+    <div class="span9" style="min-height:400px">
+        <h1><strong>{{ current_user.fullname }}'s</strong>: {{ _('Team') }}</h1>
+        {% if current_team.name %}
+          {{ team_helper.render_team(current_team) }}
+
+          <a href="{{url_for('team.update', name=current_team.name )}}" class="btn btn-primary"><i class="icon-edit  icon-large"></i>{{ _('Edit') }}</a>
+          <a href="{{url_for('team.delete', name=current_team.name )}}" class="btn btn-danger"> <i class="icon-trash icon-large"></i> {{ _('Delete') }}</a>
+          <a href="{{url_for('team.users', team_name=current_team.name )}}" class="btn btn-primary"><i class="icon-group icon-large"></i> {{ _('Manage Users') }}</a>
+        {% else %}
+       
+         <div class="row-fluid well well-small">
+          {{ _('You do not have your own group yet') }}
+         </div>
+          <a href="{{url_for('team.register')}}" class="btn btn-primary">{{ _('Create your own Team') }}</a>
+       
+        <a href="{{url_for('team.join')}}" class="btn btn-primary"><i class="icon-certificate icon-large"></i> {{ _('Join to an existing team') }}</a>
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}

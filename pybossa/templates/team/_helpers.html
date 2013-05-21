@@ -1,0 +1,59 @@
+{% macro render_team_user(user2team) %}
+<div class="row-fluid well well-small">
+    <div class="span2">
+        <img class="img-polaroid" src="{{user2team.user.email_addr | gravatar(size=100)}}">
+    </div>
+    <div class="span10">
+        <h2>{{user2team.user.fullname}} <small>(nick: {{user2team.user.name}})</small></h2>
+        <h2>{{ _('Join') }}:            <small>{{user2team['created'][0:10]}}</samll></h2>
+    
+        {% if user2team.team.owner == user2team.user.id %}
+          <h2>{{ _('Owner') }}</h2>
+          <a href="{{url_for('team.userdelete', user_id=user2team.user.id, team_name=user2team.team.name)}}" class="btn btn-danger">
+            {{ _('Remove from team') }}</a>
+        {% else %}
+         {% if user2team.status == 0 %}
+            <a href="{{url_for('team.userupdate', user_id=user2team.user.id,team_name=user2team.team.name)}}" class="btn btn-success">
+             {{ _('Accept user') }}</a>
+          {% endif %}
+
+          <a href="{{url_for('team.userdelete', user_id=user2team.user.id, team_name=user2team.team.name)}}" class="btn btn-danger">
+            <i class="icon-remove"></i>
+            {{ _('Remove from team') }}</a>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}
+
+
+{% macro render_team(team) %}
+<div class="row-fluid well well-small">
+    <div class="span10">
+        <h2>{{ _('Name') }}:        <small>{{team.name}}</small></h2>
+        <h2>{{ _('Description') }}: <small>{{team.description}}</small></h2>
+
+    </div>
+</div>
+{% endmacro %}
+
+{% macro render_user_team( user2team ) %}
+<div class="row-fluid well well-small">
+    <div class="span10">
+        <h2>{{ _('Name') }}:        <small> {{user2team.team.name}}</small></h2>
+        <h2>{{ _('Description') }}: <small> {{user2team.team.description}}</small></h2>
+        <h2>{{ _('Created') }}:     <small> {{user2team.team['created'][0:10]}}</small></h2>
+        {% if user2team.status == 1 %}
+          <h2>{{ _('Join since') }}:  <small> {{user2team['created'][0:10]}}</small></h2>
+
+          <a href="{{url_for('team.joindelete', team_id=user2team.team_id)}}" class="btn btn-danger">
+            <i class="icon-remove"></i>
+            {{ _('Remove team') }}</a>
+        {% else %}
+          <a href="{{url_for('team.joindelete', team_id=user2team.team_id)}}" class="btn btn-danger">
+            <i class="icon-remove"></i>
+            {{ _('Cancel process') }}</a>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}
+
