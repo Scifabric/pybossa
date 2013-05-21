@@ -29,11 +29,11 @@
               </div>
             </div>
         {% endif %}
-
+ 
         {% if teams %}
           {% for team in teams %}
             <div class="row-fluid well well-small">
-            {{ team_helper.render_team(team, current_user) }}
+            {{ team_helper.render_team(team, current_user ) }}
 
             {% if current_user.admin == 1 or current_user.id == team.owner %}
               <div class="span10">

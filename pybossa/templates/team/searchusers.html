@@ -22,10 +22,9 @@
               </form>
 
               {% if found %}
-                {{ belongs }}
                 <h2>Found Users</h2>
                 {% for user in found %}
-                  {{ team_helper.render_team_adduser(user, team, belongs[user.id])}}
+                  {{ team_helper.render_team_adduser(user, team )}}
                 {% endfor %}
               {% endif %}
 
