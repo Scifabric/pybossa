@@ -2,7 +2,6 @@
 {% set active_page = "profile" %}
 {% set active_link = "admin" %}
 {% from "account/_helpers.html" import render_account_local_nav %}
-{% from "admin/_helpers.html" import render_admin_user %}
 
 {% block content %}
 
@@ -12,18 +11,31 @@
     </div>
     <div class="span9">
         <h1><strong>{{ _('Admin Site') }}:</strong> {{ _('Manage Categories') }}</h1>
-        {% if categories %}
-        <h1>{{ _('Categories') }}</h1>
-        {% for c in categories %}
         <div class="row-fluid">
-            <div class="span12 well">
-                <h2>{{c.name}}</h2>
-                <a href="#" class="btn">{{_('Edit')}}</a>
-                <a href="#" class="btn">{{_('Delete')}}</a>
+            <div id="add" class="span6">
+                {% from "_formhelpers.html" import render_field %}
+                <form method="POST" action="{{url_for('admin.categories')}}">
+                    {{form.hidden_tag()}}
+                    <fieldset>
+                    {{ form.name(class_="input-block-level", placeholder="Category name") }}
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">{{_('Add Category')}}</button>
+                    </div>
+                    </fieldset>
+                </form>
+            </div>
+            <div id="list" class="span6">
+                {% if categories %}
+                {% for c in categories %}
+                <div class="well">
+                    <h2>{{c.name}}</h2>
+                    <a href="#" class="btn">{{_('Edit')}}</a>
+                    <a href="#" class="btn">{{_('Delete')}}</a>
+                </div>
+                {% endfor %}
+                {% endif %}
             </div>
         </div>
-        {% endfor %}
-        {% endif %}
     </div>
 </div>
 {% endblock %}

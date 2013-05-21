@@ -2,8 +2,11 @@ from flaskext.login import current_user
 
 
 def create(app=None):
-    if current_user.is_authenticated() and current_user.admin is True:
-        return True
+    if current_user.is_authenticated():
+        if current_user.admin is True:
+            return True
+        else:
+            return True
     else:
         return False
 

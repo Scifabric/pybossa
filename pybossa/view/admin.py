@@ -151,41 +151,38 @@ def del_admin(user_id=None):
 
 
 class CategoryForm(Form):
-    id = IntegerField(label=None, widget=HiddenInput())
     name = TextField(lazy_gettext('Name'),
                      [validators.Required(),
                       pb_validator.Unique(db.session, model.Category, model.Category.name,
                                           message="Name is already taken.")])
 
 
-@blueprint.route('/categories')
+@blueprint.route('/categories', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def categories():
     """List Categories"""
     try:
-        require.category.read()
+        if request.method == 'GET':
+            require.category.read()
+            form = CategoryForm()
+        if request.method == 'POST':
+            require.category.create()
+            form = CategoryForm(request.form)
+            print form.validate()
+            if form.validate():
+                category = model.Category(name=form.name.data)
+                db.session.add(category)
+                db.session.commit()
+                msg = lazy_gettext("Category %s added", form.name.data)
+                flash(msg, 'success')
+            else:
+                flash(lazy_gettext('Please correct the errors'), 'error')
+
         categories = db.session.query(model.Category).all()
         return render_template('admin/categories.html',
                                title=lazy_gettext('Categories'),
-                               categories=categories)
-    except:
-        return abort(403)
-
-
-@blueprint.route('/category/add', methods=['GET', 'POST'])
-@login_required
-@admin_required
-def add_category():
-    """Add a Category"""
-    try:
-        require.category.create()
-        form = CategoryForm()
-        if request.method == 'GET':
-            return render_template('admin/category.html',
-                                   title=lazy_gettext('Add a Category'),
-                                   form=form)
-        if request.method == 'POST':
-            pass
+                               categories=categories,
+                               form=form)
     except:
         return abort(403)
