@@ -113,14 +113,14 @@ def index(page):
                      True, False)
 
 
-def app_index(page, lookup, app_type, fallback, use_count):
+def app_index(page, lookup, category, app_type, fallback, use_count):
     """Show apps of app_type"""
     if not require.app.read():
         abort(403)
 
     per_page = 5
 
-    apps, count = lookup(page, per_page)
+    apps, count = lookup(category, page, per_page)
 
     if fallback and not apps:
         return redirect(url_for('.published'))
@@ -137,20 +137,27 @@ def app_index(page, lookup, app_type, fallback, use_count):
     return render_template('/applications/index.html', **template_args)
 
 
-@blueprint.route('/published', defaults={'page': 1})
-@blueprint.route('/published/page/<int:page>')
+@blueprint.route('/category/published', defaults={'page': 1})
+@blueprint.route('/category/published/page/<int:page>')
 def published(page):
     """Show the Published apps"""
     return app_index(page, cached_apps.get_published, 'app-published',
                      False, True)
 
 
-@blueprint.route('/draft', defaults={'page': 1})
-@blueprint.route('/draft/page/<int:page>')
+@blueprint.route('/category/draft', defaults={'page': 1})
+@blueprint.route('/category/draft/page/<int:page>')
 def draft(page):
     """Show the Draft apps"""
     return app_index(page, cached_apps.get_draft, 'app-draft',
                      False, True)
+
+
+@blueprint.route('/category/<string:category>', defaults={'page': 1})
+@blueprint.route('/category/<string:category>/page/<int:page>')
+def app2_index(category, page):
+    """Show Apps that belong to a given category"""
+    return app_index(page, cached_apps.get, category, 'app-published', False, True)
 
 
 @blueprint.route('/new', methods=['GET', 'POST'])

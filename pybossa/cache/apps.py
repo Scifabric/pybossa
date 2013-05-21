@@ -232,6 +232,53 @@ def get_draft(page=1, per_page=5):
     return apps, count
 
 
+@cache.memoize(timeout=50)
+def get(category, page=1, per_page=5):
+    """Return a list of apps with a pagination for a given category"""
+
+    sql = text('''
+               SELECT COUNT(app.id) FROM app
+               LEFT OUTER JOIN category ON app.category_id=category.id
+               WHERE
+               category.short_name=:category
+               AND app.hidden=0
+               GROUP BY app.id''')
+
+    results = db.engine.execute(sql, category=category)
+    count = 0
+    for row in results:
+        count = row[0]
+
+    sql = text('''
+               SELECT app.id, app.name, app.short_name, app.description,
+               app.info, app.created, app.category_id, "user".fullname AS owner
+               FROM "user", app LEFT OUTER JOIN category ON app.category_id=category.id
+               WHERE
+               category.short_name=:category
+               AND app.hidden=0
+               AND "user".id=app.owner_id
+               GROUP BY app.id, "user".id ORDER BY app.name
+               OFFSET :offset
+               LIMIT :limit;''')
+
+    offset = (page - 1) * per_page
+    results = db.engine.execute(sql, category=category, limit=per_page, offset=offset)
+    apps = []
+    for row in results:
+        app = dict(id=row.id,
+                   name=row.name, short_name=row.short_name,
+                   created=row.created,
+                   description=row.description,
+                   owner=row.owner,
+                   last_activity=last_activity(row.id),
+                   overall_progress=overall_progress(row.id),
+                   info=dict(json.loads(row.info)))
+        apps.append(app)
+    print apps
+    print count
+    return apps, count
+
+
 def reset():
     """Clean the cache"""
     cache.delete('front_page_featured_apps')
