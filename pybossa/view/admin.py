@@ -210,3 +210,42 @@ def del_category(id):
             return abort(404)
     except:
         abort(403)
+
+
+@blueprint.route('/categories/update/<int:id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def update_category(id):
+    """Updates a category"""
+    try:
+        category = db.session.query(model.Category).get(id)
+        if category:
+            require.category.update(category)
+            form = CategoryForm(obj=category)
+            form.populate_obj(category)
+            if request.method == 'GET':
+                return render_template('admin/update_category.html',
+                                       title=lazy_gettext('Update Category'),
+                                       category=category,
+                                       form=form)
+            if request.method == 'POST':
+                form = CategoryForm(request.form)
+                if form.validate():
+                    new_category = model.Category(id=form.id.data,
+                                                  name=form.name.data)
+                    print new_category.id
+                    db.session.merge(new_category)
+                    db.session.commit()
+                    msg = lazy_gettext("Category updated")
+                    flash(msg, 'success')
+                    return redirect(url_for(".categories"))
+                else:
+                    return render_template('admin/update_category.html',
+                                           title=lazy_gettext('Update Category'),
+                                           category=category,
+                                           form=form)
+        else:
+            return abort(404)
+    except:
+        raise
+        abort(403)

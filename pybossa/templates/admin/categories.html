@@ -30,13 +30,13 @@
         <hr>
         {% for c in categories %}
         <div class="row-fluid">
-            <div class="span3">
+            <div class="span4">
                 <h2>{{c.name}}</h2>
             </div>
             <div class="span6">
                 <div class="btn-group">
-                    <a href="#" class="btn">{{_('Edit')}}</a>
-                    <a href="{{url_for('admin.del_category', id=c.id)}}" class="btn">{{_('Delete')}}</a>
+                    <a href="{{url_for('admin.update_category', id=c.id)}}" class="btn"><i class="icon-edit"></i> {{_('Edit Category Name')}}</a>
+                    <a href="{{url_for('admin.del_category', id=c.id)}}" class="btn"><i class="icon-trash"></i> {{_('Delete Category')}}</a>
                 </div>
             </div>
         </div>
