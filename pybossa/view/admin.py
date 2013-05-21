@@ -21,13 +21,15 @@ from flask import flash
 from flask import redirect
 from flask import url_for
 from flaskext.login import login_required, current_user
-from flaskext.wtf import Form, TextField
+from flaskext.wtf import Form, TextField, IntegerField, HiddenInput, validators
 from flaskext.babel import lazy_gettext
 
 import pybossa.model as model
 from pybossa.core import db
 from pybossa.util import admin_required
 from pybossa.cache import apps as cached_apps
+from pybossa.auth import require
+import pybossa.validator as pb_validator
 from sqlalchemy import or_, func
 import json
 
@@ -146,3 +148,44 @@ def del_admin(user_id=None):
             return abort(404)
     else:
         return abort(404)
+
+
+class CategoryForm(Form):
+    id = IntegerField(label=None, widget=HiddenInput())
+    name = TextField(lazy_gettext('Name'),
+                     [validators.Required(),
+                      pb_validator.Unique(db.session, model.Category, model.Category.name,
+                                          message="Name is already taken.")])
+
+
+@blueprint.route('/categories')
+@login_required
+@admin_required
+def categories():
+    """List Categories"""
+    try:
+        require.category.read()
+        categories = db.session.query(model.Category).all()
+        return render_template('admin/categories.html',
+                               title=lazy_gettext('Categories'),
+                               categories=categories)
+    except:
+        return abort(403)
+
+
+@blueprint.route('/category/add', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def add_category():
+    """Add a Category"""
+    try:
+        require.category.create()
+        form = CategoryForm()
+        if request.method == 'GET':
+            return render_template('admin/category.html',
+                                   title=lazy_gettext('Add a Category'),
+                                   form=form)
+        if request.method == 'POST':
+            pass
+    except:
+        return abort(403)
