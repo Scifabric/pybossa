@@ -171,7 +171,9 @@ def categories():
             require.category.create()
             form = CategoryForm(request.form)
             if form.validate():
-                category = model.Category(name=form.name.data)
+                slug = form.name.data.lower().replace(" ", "")
+                category = model.Category(name=form.name.data,
+                                          short_name=slug)
                 db.session.add(category)
                 db.session.commit()
                 msg = lazy_gettext("Category added")
@@ -184,6 +186,7 @@ def categories():
                                categories=categories,
                                form=form)
     except:
+        raise
         return abort(403)
 
 
@@ -231,8 +234,10 @@ def update_category(id):
             if request.method == 'POST':
                 form = CategoryForm(request.form)
                 if form.validate():
+                    slug = form.name.data.lower().replace(" ", "")
                     new_category = model.Category(id=form.id.data,
-                                                  name=form.name.data)
+                                                  name=form.name.data,
+                                                  short_name=slug)
                     print new_category.id
                     db.session.merge(new_category)
                     db.session.commit()

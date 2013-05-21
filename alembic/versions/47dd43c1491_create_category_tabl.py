@@ -12,7 +12,6 @@ down_revision = '27bf0aefa49d'
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy import ForeignKey
 import datetime
 
 
@@ -26,6 +25,7 @@ def upgrade():
         'category',
         sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('name', sa.Text, nullable=False, unique=True),
+        sa.Column('short_name', sa.Text, nullable=False, unique=True),
         sa.Column('created', sa.Text, default=make_timestamp),
     )
 
