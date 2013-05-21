@@ -26,6 +26,8 @@
             </div>
         </div>
         {% if categories %}
+        <h1>{{_('List of Available Categories')}}</h1>
+        <hr>
         {% for c in categories %}
         <div class="row-fluid">
             <div class="span3">
@@ -38,6 +40,9 @@
                 </div>
             </div>
         </div>
+        {% if not loop.last %}
+        <hr>
+        {% endif %}
         {% endfor %}
         {% endif %}
     </div>
