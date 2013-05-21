@@ -241,8 +241,6 @@ class Category(db.Model, DomainObject):
     name = Column(Text, nullable=False, unique=True)
     #: created timestamp (automatically set)
     created = Column(Text, default=make_timestamp)
-    #: app_id application ID for this category
-    app_id = Column(Integer, ForeignKey('app.id'))
 
 
 class Task(db.Model, DomainObject):

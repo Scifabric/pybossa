@@ -66,6 +66,7 @@ class AppForm(Form):
         lazy_gettext('Allow Anonymous Contributors'),
         choices=[('True', lazy_gettext('Yes')),
                  ('False', lazy_gettext('No'))])
+    category_id = SelectField(lazy_gettext('Category'), coerce=int)
     long_description = TextAreaField(lazy_gettext('Long Description'))
     hidden = BooleanField(lazy_gettext('Hide?'))
 
@@ -158,6 +159,8 @@ def new():
     if not require.app.create():
         abort(403)
     form = AppForm(request.form)
+    categories = db.session.query(model.Category).all()
+    form.category_id.choices = [(c.id, c.name) for c in categories]
 
     def respond(errors):
         return render_template('applications/new.html',
@@ -180,6 +183,8 @@ def new():
                     short_name=form.short_name.data,
                     description=form.description.data,
                     long_description=form.long_description.data,
+                    category_id=form.category_id.data,
+                    allow_anonymous_contributors=form.allow_anonymous_contributors.data,
                     hidden=int(form.hidden.data),
                     owner_id=current_user.id,
                     info=info,)

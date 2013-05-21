@@ -27,7 +27,6 @@ def upgrade():
         sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('name', sa.Text, nullable=False, unique=True),
         sa.Column('created', sa.Text, default=make_timestamp),
-        sa.Column('app_id', sa.Integer, ForeignKey('app.id'), unique=True)
     )
 
 
