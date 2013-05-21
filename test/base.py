@@ -70,6 +70,10 @@ class Fixtures:
         db.session.commit()
         db.session.add(app)
 
+        # Categories
+        db.session.add_all(Fixtures.create_categories())
+        db.session.commit()
+
         task_info = {
             'n_answers': 10,
             'question': 'My random question',
@@ -180,3 +184,9 @@ class Fixtures:
                     info = task_run_info)
         task_run.task = task
         return task, task_run
+
+    @classmethod
+    def create_categories(cls):
+        names = ['Volunteer Thinking', 'Volunteer Computing',
+                 'Volunteer Sensing']
+        return [model.Category(name=c_name) for c_name in names]

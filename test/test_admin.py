@@ -3,6 +3,7 @@ from helper import web
 from base import model, Fixtures, db
 from mock import patch
 from collections import namedtuple
+from bs4 import BeautifulSoup
 
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
@@ -27,12 +28,13 @@ class TestAdmin(web.Helper):
         """Test ADMIN index page works"""
         self.register()
         res = self.app.get("/admin", follow_redirects=True)
+        dom = BeautifulSoup(res.data)
         err_msg = "There should be an index page for admin users and apps"
         assert "Settings" in res.data, err_msg
-        err_msg = "There should be a button for managing apps"
-        assert "Manage featured applications" in res.data, err_msg
-        err_msg = "There should be a button for managing users"
-        assert "Manage admin users" in res.data, err_msg
+        divs = ['featured-apps', 'users', 'categories']
+        for div in divs:
+            err_msg = "There should be a button for managing %s" % div
+            assert dom.find(id=div) is not None, err_msg
 
     def test_01_admin_index_anonymous(self):
         """Test ADMIN index page works as anonymous user"""
@@ -353,3 +355,52 @@ class TestAdmin(web.Helper):
         assert res.status_code == 200, err_msg
         tasks = db.session.query(model.Task).filter_by(app_id=1).all()
         assert len(tasks) == 0, "len(app.tasks) != 0"
+
+    def test_19_admin_list_categories(self):
+        """Test ADMIN list categories works"""
+        Fixtures.create()
+        # Anonymous user
+        url = '/admin/categories'
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous users should be redirected to sign in"
+        assert dom.find(id='signin') is not None, err_msg
+
+        # Authenticated user but not admin
+        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "Non-Admin users should get 403"
+        assert res.status_code == 403, err_msg
+        self.signout()
+
+        # Admin user
+        self.signin(email=Fixtures.root_addr, password=Fixtures.root_password)
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Admin users should be get a list of Categories"
+        assert dom.find(id='categories') is not None, err_msg
+
+    def test_20_admin_add_category(self):
+        """Test ADMIN add category works"""
+        Fixtures.create()
+        category = {'name': 'cat'}
+        # Anonymous user
+        url = '/admin/categories'
+        res = self.app.post(url, data=category, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous users should be redirected to sign in"
+        assert dom.find(id='signin') is not None, err_msg
+
+        # Authenticated user but not admin
+        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
+        res = self.app.post(url, data=category, follow_redirects=True)
+        err_msg = "Non-Admin users should get 403"
+        assert res.status_code == 403, err_msg
+        self.signout()
+
+        # Admin
+        self.signin(email=Fixtures.root_addr, password=Fixtures.root_password)
+        res = self.app.post(url, data=category, follow_redirects=True)
+        err_msg = "Category should be added"
+        assert "Category added" in res.data, err_msg
+        assert category['name'] in res.data, err_msg
