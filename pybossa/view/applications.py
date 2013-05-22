@@ -32,6 +32,7 @@ from pybossa.model import App, Task
 from pybossa.util import Pagination, UnicodeWriter
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
+from pybossa.cache import categories as cached_cat
 from pybossa.ckan import Ckan
 
 import json
@@ -126,7 +127,7 @@ def app_index(page, lookup, category, app_type, fallback, use_count):
         return redirect(url_for('.published'))
 
     pagination = Pagination(page, per_page, count)
-    categories = db.session.query(model.Category).all()
+    categories = cached_cat.get()
     template_args = {
         "apps": apps,
         "title": lazy_gettext("Applications"),
