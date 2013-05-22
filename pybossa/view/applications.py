@@ -106,8 +106,8 @@ def app_by_shortname(short_name):
     return App.query.filter_by(short_name=short_name).first_or_404()
 
 
-@blueprint.route('/', defaults={'page': 1})
-@blueprint.route('/page/<int:page>')
+@blueprint.route('/category/featured', defaults={'page': 1})
+@blueprint.route('/category/featured/page/<int:page>')
 def index(page):
     """By default show the Featured apps"""
     return app_index(page, cached_apps.get_featured, 'app-featured',

@@ -23,10 +23,14 @@
                 <i class="icon-star"></i> {{pagination.total_count}} {{ _('Featured Applications') }}
             </h1>
             <h2>{{ _('A special selection of the most interesting applications') }}</h2>
-            {% else %}
+            {% elif category_slug=='volunteerthinking' %}
             <h1>
                 <i class="icon-th"></i> {{pagination.total_count}} {{ active_cat.name }} Applications</h1>
-            <h2>{{ _('All available applications') }}</h2>
+            <h2>{{ _('All available applications where you can help using your skills') }}</h2>
+            {% elif category_slug=='volunteersensing' %}
+            <h1>
+                <i class="icon-th"></i> {{pagination.total_count}} {{ active_cat.name }} Applications</h1>
+            <h2>{{ _('All available applications where you can help gathering data') }}</h2>
             {% endif %}
             {% for app in apps %}
             {{ helper.show_app(app, category, current_user) }}
