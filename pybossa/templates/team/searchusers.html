@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% set active_page = "profile" %}
+{% set active_link = "teams" %}
+{% from "account/_helpers.html" import render_account_local_nav %}
+{% import "team/_helpers.html" as team_helper %}
+
+
+{% block content %}
+
+<div class="row">
+    <div class="span3">
+        {{ render_account_local_nav(current_user, active_link) }}
+    </div>
+    <div class="span9">
+        <h1>{{ _('Search users in') }}:<strong> {{ team.name }}</strong></h1>
+            {% from "_formhelpers.html" import render_field %}
+              <form class="form-search" method="POST">
+              <div class="input-append">
+              <input id="user" name="user" type="text" class="input-large search-query" placeholder={{ _('Try with the full name or nick') }}>
+              <button type="submit" class="btn"><i class="icon-search"></i> {{ _('Search') }}</button>
+              </div>
+              </form>
+
+              {% if found %}
+                <h2>Found Users</h2>
+                {% for user in found %}
+                  {{ team_helper.render_team_adduser(user, team )}}
+                {% endfor %}
+              {% endif %}
+
+            </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% set active_page = "profile" %}
+{% set active_link = "teams" %}
+{% import "team/_helpers.html" as helper %}
+{% from "account/_helpers.html" import render_account_local_nav %}
+
+
+{% block content %}
+{% from "_formhelpers.html" import render_field %}
+<div class="row">
+    <div class="span3">
+      {{ render_account_local_nav(current_user, active_link) }}
+    </div>
+    <div class="span9">
+        <h1><strong>{{ current_user.fullname }}'s</strong>: {{ _('Update your team') }}</h1>
+
+        <form method="post" class="form-horizontal" action="{{ url_for('team.update', name=team.name) }}">
+            <fieldset>
+              {{ form.id }}
+              {{ form.hidden_tag() }}
+              {{ render_field(form.name,        placeholder= _('my team name') ) }}
+              {{ render_field(form.description, placeholder= _('my team description') ) }}
+              {{ render_field(form.public, tooltip=_('Do you want to be public this team?'))}}
+
+            <div class="form-actions">
+              <input type="submit" value="{{ _('Save the changes') }}" class="btn btn-primary btn" />
+              <a href="{{ url_for('team.index') }}"                    class="btn">{{ _('Cancel') }}</a>
+            </div>
+            </fieldset>
+        </form>
+    </div>
+</div>
+{% endblock %}

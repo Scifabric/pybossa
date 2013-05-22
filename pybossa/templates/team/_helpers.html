@@ -1,0 +1,39 @@
+{% macro render_team(team, user) %}
+
+    <div class="span10">
+        <h2>{{ _('Name') }}:        <small>{{team.name}}</small></h2>
+        <h2>{{ _('Description') }}: <small>{{team.description}}</small></h2>
+        <h2>{{ _('Created') }}:     <small>{{team['created'][0:10]}}</small></h2>
+        <h2>{{ _('Owner') }}:       <small>{{team.user.name}}</small></h2>
+        <h2>{{ _('Type') }}:        <small>{%if  team.public %}{{ _('Public')}}{% else %}{{ _('Private')}}{% endif %}</small></h2>
+        {% if team.rank  %}
+        <h2>{{ _('Rank') }}:        <small>{{ team.rank }} {{_ ('with a Score of') }} {{ team.score }} {{ _('contributed tasks') }}</small></h2>
+        {% endif %}
+
+    </div>
+{% endmacro %}
+
+{% macro render_team_adduser( user, team) %}
+<div class="row-fluid well well-small">
+    <div class="span2">
+        <img class="img-polaroid" src="{{user.email_addr | gravatar(size=100)}}">
+    </div>
+    <div class="span10">
+        <h2>{{user.fullname}} <small>(nick: {{user.name}})</small></h2>
+        <h3>{{ _('Member since') }}: {{user.created[0:10]}}</h3>
+        {% if user.id == team.owner %}
+          <h3><strong>{{ _('Owner') }}</strong></h3>
+        {% else %}
+          {% if user.belong == 0 %}
+          <a href="{{url_for('team.join_add', name=team.name, user=user.name)}}" class="btn btn-primary">
+            <i class="icon-plus"></i>
+            {{ _('Add to team') }}</a>
+          {% else %}
+           <a href="{{url_for('team.join_delete', name=team.name, user=user.name)}}" class="btn btn-danger">
+            <i class="icon-minus"></i>
+            {{ _('Remove to team') }}</a>
+          {% endif %}
+       {% endif %}
+    </div>
+</div>
+{% endmacro %}

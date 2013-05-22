@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% set active_page = "profile" %}
+{% set active_link = "teams" %}
+{% import "account/_helpers.html" as helper %}
+{% import "team/_helpers.html" as team_helper %}
+
+{% from "account/_helpers.html" import render_account_local_nav %}
+
+
+{% block content %}
+<div class="row-fluid">
+    <div class="span3">
+        {{ render_account_local_nav(current_user, active_link) }}
+    </div>
+    <div class="span9" style="min-height:400px">
+        {% if not current_user.is_anonymous() %}
+          <h1><strong>{{ current_user.fullname }}'s</strong>: {{ _('Team') }}</h1>
+        {% else %}
+          <h1><strong>{{ _('Public Teams') }}</strong></h1>
+        {% endif %}
+
+        {% if not current_user.is_anonymous() and not owner %}
+            <div class="row-fluid well well-small">
+              <div class="span10">
+                <h2>{{ _('You do not have you own group yet') }}</h2>
+               </div>
+              <div class="span10">
+               <a href="{{url_for('team.add')}}" class="btn btn-primary">{{ _('Create your own Team') }}</a>
+              </div>
+            </div>
+        {% endif %}
+ 
+        {% if teams %}
+          {% for team in teams %}
+            <div class="row-fluid well well-small">
+            {{ team_helper.render_team(team, current_user ) }}
+
+            {% if current_user.admin == 1 or current_user.id == team.owner %}
+              <div class="span10">
+                <a href="{{url_for('team.update', name=team.name )}}" class="btn btn-primary"><i class="icon-edit  icon-large"></i>{{ _('Edit') }}</a>
+                <a href="{{url_for('team.delete', name=team.name )}}" class="btn btn-danger"> <i class="icon-trash icon-large"></i> {{ _('Delete') }}</a>
+                <a href="{{url_for('team.details',name=team.name )}}" class="btn btn-primary"><i class="icon-group icon-large"></i> {{ _('Manage Users') }}</a>
+              </div>
+            {% elif not current_user.is_anonymous() %}
+
+             <div class="span10">
+                 {% for belong in belongs if belong.team_id == team.id%}
+                  <a href="{{url_for('team.user_delete', name=team.name )}}" class="btn btn-danger"> <i class="icon-trash icon-large"></i> {{ _('Left this team') }}</a>
+                 {% else %}
+                  <a href="{{url_for('team.user_add', name=team.name )}}" class="btn btn-primary"><i class="icon-edit  icon-large"></i>{{ _('Join this team') }}</a>
+                 {% endfor %}
+              </div>
+           {% endif %}            
+            </div>
+          {% endfor %}
+        {% else %}
+          <div class="row-fluid well well-small">
+            
+            {% if current_user.is_anonymous() %}
+             {{ _('There are not publics teams created') }}
+            {% else %}
+             {{ _('There are not teams created') }}
+            {% endif %}
+       
+          </div>
+        {% endif %} 
+    </div>
+</div>
+{% endblock %}
