@@ -157,14 +157,6 @@ def app_index(page, lookup, category, fallback, use_count):
     return render_template('/applications/index.html', **template_args)
 
 
-#@blueprint.route('/category/published', defaults={'page': 1})
-#@blueprint.route('/category/published/page/<int:page>')
-#def published(page):
-#    """Show the Published apps"""
-#    return app_index(page, cached_apps.get_published, 'app-published',
-#                     False, True)
-
-
 @blueprint.route('/category/draft', defaults={'page': 1})
 @blueprint.route('/category/draft/page/<int:page>')
 @login_required
