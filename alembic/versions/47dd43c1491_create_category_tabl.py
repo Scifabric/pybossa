@@ -26,8 +26,15 @@ def upgrade():
         sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('name', sa.Text, nullable=False, unique=True),
         sa.Column('short_name', sa.Text, nullable=False, unique=True),
+        sa.Column('description', sa.Text, nullable=False),
         sa.Column('created', sa.Text, default=make_timestamp),
     )
+
+    # Add two categories
+    query = 'INSERT INTO category (name, short_name, description) VALUES (\'Thinking\', \'thinking\', \'Applications where you can help using your skills\')'
+    op.execute(query)
+    query = 'INSERT INTO category  (name, short_name, description) VALUES (\'Sensing\', \'sensing\', \'Applications where you can help gathering data\')'
+    op.execute(query)
 
 
 def downgrade():
