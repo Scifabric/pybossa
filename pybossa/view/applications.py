@@ -114,7 +114,7 @@ def index(page):
                      True, False)
 
 
-def app_index(page, lookup, category, app_type, fallback, use_count):
+def app_index(page, lookup, category, fallback, use_count):
     """Show apps of app_type"""
     if not require.app.read():
         abort(403)
@@ -132,7 +132,7 @@ def app_index(page, lookup, category, app_type, fallback, use_count):
         "apps": apps,
         "title": lazy_gettext("Applications"),
         "pagination": pagination,
-        "app_type": app_type,
+        "category": category,
         "categories": categories}
 
     if use_count:
@@ -160,7 +160,7 @@ def draft(page):
 @blueprint.route('/category/<string:category>/page/<int:page>')
 def app2_index(category, page):
     """Show Apps that belong to a given category"""
-    return app_index(page, cached_apps.get, category, category, False, True)
+    return app_index(page, cached_apps.get, category, False, True)
 
 
 @blueprint.route('/new', methods=['GET', 'POST'])
