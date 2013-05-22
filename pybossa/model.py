@@ -240,6 +240,8 @@ class Category(db.Model, DomainObject):
     name = Column(Text, nullable=False, unique=True)
     #: slug / Category slug
     short_name = Column(Text, nullable=False, unique=True)
+    #: description / Description for the category
+    description = Column(Text, nullable=False)
     #: created timestamp (automatically set)
     created = Column(Text, default=make_timestamp)
 
