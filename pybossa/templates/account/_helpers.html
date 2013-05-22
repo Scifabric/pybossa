@@ -6,7 +6,8 @@
     <li {% if active_link=="admin"%}class="active"{% endif %}><a href="{{url_for('admin.index')}}"><i class="icon-chevron-right"></i> {{ _('Admin Site') }}</a></li>
     {% endif %}
     <li {% if active_link=="settings"%}class="active"{% endif %}><a href="{{url_for('account.settings')}}"><i class="icon-chevron-right"></i> {{ _('My Settings') }}</a></li>
-   <li {% if active_link=="teams"%}class="active"{% endif %}><a href="{{url_for('team.index')}}"><i class="icon-chevron-right"></i> {{ _('My Team') }}</a></li>
+   <li {% if active_link=="teams"%}class="active"{% endif %}><a href="{{url_for('team.index')}}"><i class="icon-chevron-right"></i>
+   {% if current_user.is_anonymous() %}{{ _('Public Teams') }}{% else %}{{ _('My Teams') }}{% endif %}</a></li>
 </ul>
 {% endmacro %}
 
