@@ -29,7 +29,7 @@ import pybossa.validator as pb_validator
 
 from pybossa.core import db
 from pybossa.model import App, Task
-from pybossa.util import Pagination, UnicodeWriter
+from pybossa.util import Pagination, UnicodeWriter, admin_required
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
@@ -152,6 +152,8 @@ def published(page):
 
 @blueprint.route('/category/draft', defaults={'page': 1})
 @blueprint.route('/category/draft/page/<int:page>')
+@login_required
+@admin_required
 def draft(page):
     """Show the Draft apps"""
     return app_index(page, cached_apps.get_draft, 'app-draft',
