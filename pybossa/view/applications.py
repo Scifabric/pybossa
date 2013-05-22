@@ -126,11 +126,13 @@ def app_index(page, lookup, category, app_type, fallback, use_count):
         return redirect(url_for('.published'))
 
     pagination = Pagination(page, per_page, count)
+    categories = db.session.query(model.Category).all()
     template_args = {
         "apps": apps,
         "title": lazy_gettext("Applications"),
         "pagination": pagination,
-        "app_type": app_type}
+        "app_type": app_type,
+        "categories": categories}
 
     if use_count:
         template_args.update({"count": count})
@@ -157,7 +159,7 @@ def draft(page):
 @blueprint.route('/category/<string:category>/page/<int:page>')
 def app2_index(category, page):
     """Show Apps that belong to a given category"""
-    return app_index(page, cached_apps.get, category, 'app-published', False, True)
+    return app_index(page, cached_apps.get, category, category, False, True)
 
 
 @blueprint.route('/new', methods=['GET', 'POST'])

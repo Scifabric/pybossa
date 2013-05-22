@@ -233,9 +233,8 @@ def get_draft(page=1, per_page=5):
 
 
 @cache.memoize(timeout=50)
-def get(category, page=1, per_page=5):
-    """Return a list of apps with a pagination for a given category"""
-
+def n_count(category):
+    """Count the number of apps in a given category"""
     sql = text('''
                SELECT COUNT(app.id) FROM app
                LEFT OUTER JOIN category ON app.category_id=category.id
@@ -248,6 +247,14 @@ def get(category, page=1, per_page=5):
     count = 0
     for row in results:
         count = row[0]
+    return count
+
+
+@cache.memoize(timeout=50)
+def get(category, page=1, per_page=5):
+    """Return a list of apps with a pagination for a given category"""
+
+    count = n_count(category)
 
     sql = text('''
                SELECT app.id, app.name, app.short_name, app.description,
@@ -274,8 +281,6 @@ def get(category, page=1, per_page=5):
                    overall_progress=overall_progress(row.id),
                    info=dict(json.loads(row.info)))
         apps.append(app)
-    print apps
-    print count
     return apps, count
 
 
