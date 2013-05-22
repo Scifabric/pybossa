@@ -153,7 +153,7 @@ def n_published():
     return count
 
 @cache.memoize(timeout=50)
-def get_published(page=1, per_page=5):
+def get_published(category, page=1, per_page=5):
     """Return a list of apps with a pagination"""
 
     count = n_published()
@@ -202,7 +202,7 @@ def n_draft():
     return count
 
 @cache.memoize(timeout=50)
-def get_draft(page=1, per_page=5):
+def get_draft(category, page=1, per_page=5):
     """Return list of draft applications"""
 
     count = n_draft()
@@ -241,7 +241,7 @@ def n_count(category):
                WHERE
                category.short_name=:category
                AND app.hidden=0
-               GROUP BY app.id''')
+               ''')
 
     results = db.engine.execute(sql, category=category)
     count = 0
@@ -294,6 +294,8 @@ def reset():
     cache.delete_memoized(get_published)
     cache.delete_memoized(get_featured)
     cache.delete_memoized(get_draft)
+    cache.delete_memoized(n_count)
+    cache.delete_memoized(get)
 
 
 def clean(app_id):

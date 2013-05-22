@@ -30,13 +30,17 @@
         <hr>
         {% for c in categories %}
         <div class="row-fluid">
-            <div class="span4">
-                <h2>{{c.name}}</h2>
+            <div class="span5">
+                <h2>{{c.name}} <small>({{ n_apps_per_category[c.short_name]}} apps)</small></h2>
             </div>
             <div class="span6">
                 <div class="btn-group">
                     <a href="{{url_for('admin.update_category', id=c.id)}}" class="btn"><i class="icon-edit"></i> {{_('Edit Category Name')}}</a>
+                    {% if n_apps_per_category[c.short_name] == 0 %}
                     <a href="{{url_for('admin.del_category', id=c.id)}}" class="btn"><i class="icon-trash"></i> {{_('Delete Category')}}</a>
+                    {% else %}
+                    <a href="#" class="btn disabled"><i class="icon-trash"></i> {{_('Delete Category')}}</a>
+                    {% endif %}
                 </div>
             </div>
         </div>

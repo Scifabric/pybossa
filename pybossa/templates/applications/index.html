@@ -8,32 +8,25 @@
 <div class="row">
     <div class="span3">
             <ul data-spy="affix" data-offset-top="200px" class="nav nav-list bs-docs-sidenav affix-top">
-                <li {% if category=="app-featured"%}class="active"{% endif %}><a href="{{url_for('app.index')}}"><i class="icon-chevron-right"></i> {{ _('Featured') }}</a></li>
-                <li {% if category=="app-published"%}class="active"{% endif %}><a href="{{url_for('app.published')}}"><i class="icon-chevron-right"></i> {{ _('Published') }}</a></li>
-                <li {% if category=="app-draft"%}class="active"{% endif %}><a href="{{url_for('app.draft')}}"><i class="icon-chevron-right"></i> {{ _('Draft') }}</a></li>
+                <li {% if category_slug=="app-featured"%}class="active"{% endif %}><a href="{{url_for('app.index')}}"><i class="icon-chevron-right"></i> {{ _('Featured') }}</a></li>
+                <li {% if category_slug=="app-published"%}class="active"{% endif %}><a href="{{url_for('app.published')}}"><i class="icon-chevron-right"></i> {{ _('Published') }}</a></li>
+                <li {% if category_slug=="app-draft"%}class="active"{% endif %}><a href="{{url_for('app.draft')}}"><i class="icon-chevron-right"></i> {{ _('Draft') }}</a></li>
                 {% for c in categories %}
-                <li {% if category==c.short_name%}class="active"{% endif %}><a href="{{url_for('app.app2_index', category=c.short_name)}}"><i class="icon-chevron-right"></i> {{ c.name }}</a></li>
+                <li {% if active_cat.short_name==c.short_name%}class="active"{% endif %}><a href="{{url_for('app.app2_index', category=c.short_name)}}"><i class="icon-chevron-right"></i> {{ c.name }}</a></li>
                 {% endfor %}
             </ul>
     </div>
     <div class="span9">
         {% if apps %}
-            {% if category=="app-featured"%} 
+            {% if category_slug=="app-featured"%} 
             <h1>
                 <i class="icon-star"></i> {{pagination.total_count}} {{ _('Featured Applications') }}
             </h1>
             <h2>{{ _('A special selection of the most interesting applications') }}</h2>
-            {% endif %}
-            {% if category=="app-published"%} 
+            {% else %}
             <h1>
-                <i class="icon-th"></i> {{pagination.total_count}} {{ _('Published Applications') }}</h1>
+                <i class="icon-th"></i> {{pagination.total_count}} {{ active_cat.name }} Applications</h1>
             <h2>{{ _('All available applications') }}</h2>
-            {% endif %}
-            {% if category=="app-draft"%} 
-            <h1>
-                <i class="icon-wrench"></i> {{pagination.total_count}} {{ _('Draft Applications') }}
-            </h1>
-            <h2>{{ _('Work in progress applications') }} <em>{{ _('you can not contribute yet') }}</em></h2>
             {% endif %}
             {% for app in apps %}
             {{ helper.show_app(app, category, current_user) }}

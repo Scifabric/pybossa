@@ -183,9 +183,14 @@ def categories():
             else:
                 flash(lazy_gettext('Please correct the errors'), 'error')
         categories = cached_cat.get()
+        n_apps_per_category = dict()
+        for c in categories:
+            n_apps_per_category[c.short_name] = cached_apps.n_count(c.short_name)
+
         return render_template('admin/categories.html',
                                title=lazy_gettext('Categories'),
                                categories=categories,
+                               n_apps_per_category=n_apps_per_category,
                                form=form)
     except:
         raise
@@ -215,6 +220,7 @@ def del_category(id):
         else:
             return abort(404)
     except:
+        raise
         abort(403)
 
 

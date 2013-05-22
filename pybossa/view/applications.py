@@ -128,11 +128,13 @@ def app_index(page, lookup, category, fallback, use_count):
 
     pagination = Pagination(page, per_page, count)
     categories = cached_cat.get()
+    active_cat = db.session.query(model.Category).filter_by(short_name=category).first()
     template_args = {
         "apps": apps,
         "title": lazy_gettext("Applications"),
         "pagination": pagination,
-        "category": category,
+        "category_slug": category,
+        "active_cat": active_cat,
         "categories": categories}
 
     if use_count:
@@ -333,6 +335,7 @@ def update(short_name):
         app = app_by_shortname(short_name)
         db.session.merge(new_application)
         db.session.commit()
+        cached_apps.reset()
         flash(lazy_gettext('Application updated!'), 'success')
         return redirect(url_for('.details',
                                 short_name=new_application.short_name))
@@ -358,7 +361,7 @@ def update(short_name):
 
     if request.method == 'POST':
         form = AppForm(request.form)
-        categories = db.session.query(model.Category).all()
+        categories = cached_cat.get()
         form.category_id.choices = [(c.id, c.name) for c in categories]
         if form.validate():
             return handle_valid_form(form)
