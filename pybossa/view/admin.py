@@ -182,7 +182,7 @@ def categories():
                 flash(msg, 'success')
             else:
                 flash(lazy_gettext('Please correct the errors'), 'error')
-        categories = cached_cat.get()
+        categories = cached_cat.get_all()
         n_apps_per_category = dict()
         for c in categories:
             n_apps_per_category[c.short_name] = cached_apps.n_count(c.short_name)
