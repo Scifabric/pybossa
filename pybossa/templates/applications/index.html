@@ -15,8 +15,6 @@
                 {% if current_user.is_authenticated() and current_user.admin %}
                 <li {% if category_slug=="app-draft"%}class="active"{% endif %}><a href="{{url_for('app.draft')}}"><i class="icon-chevron-right"></i> {{ _('Draft') }}</a></li>
                 {% endif %}
-                <li {% if category_slug=="app-published"%}class="active"{% endif %}><a href="{{url_for('app.published')}}"><i class="icon-chevron-right"></i> {{ _('Published') }}</a></li>
-
             </ul>
     </div>
     <div class="span9">

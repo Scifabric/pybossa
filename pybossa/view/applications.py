@@ -106,6 +106,21 @@ def app_by_shortname(short_name):
     return App.query.filter_by(short_name=short_name).first_or_404()
 
 
+@blueprint.route('/', defaults={'page': 1})
+@blueprint.route('/page/<int:page>', defaults={'page': 1})
+def redirect_old_featured(page):
+    """DEPRECATED only to redirect old links"""
+    return redirect(url_for('.index', page=page), 301)
+
+
+@blueprint.route('/published', defaults={'page': 1})
+@blueprint.route('/published/<int:page>', defaults={'page': 1})
+def redirect_old_published(page):
+    """DEPRECATED only to redirect old links"""
+    category = db.session.query(model.Category).first()
+    return redirect(url_for('.app2_index', category=category.short_name, page=page), 301)
+
+
 @blueprint.route('/category/featured', defaults={'page': 1})
 @blueprint.route('/category/featured/page/<int:page>')
 def index(page):
@@ -142,12 +157,12 @@ def app_index(page, lookup, category, fallback, use_count):
     return render_template('/applications/index.html', **template_args)
 
 
-@blueprint.route('/category/published', defaults={'page': 1})
-@blueprint.route('/category/published/page/<int:page>')
-def published(page):
-    """Show the Published apps"""
-    return app_index(page, cached_apps.get_published, 'app-published',
-                     False, True)
+#@blueprint.route('/category/published', defaults={'page': 1})
+#@blueprint.route('/category/published/page/<int:page>')
+#def published(page):
+#    """Show the Published apps"""
+#    return app_index(page, cached_apps.get_published, 'app-published',
+#                     False, True)
 
 
 @blueprint.route('/category/draft', defaults={'page': 1})
