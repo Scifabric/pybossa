@@ -16,7 +16,7 @@
         {% if not current_user.is_anonymous() %}
           <h1><strong>{{ current_user.fullname }}'s</strong>: {{ _('Team') }}</h1>
         {% else %}
-          <h1><strong>{{ _('Public\'s') }}</strong>: {{ _('Team') }}</h1>
+          <h1><strong>{{ _('Public Teams') }}</strong></h1>
         {% endif %}
 
         {% if not current_user.is_anonymous() and not owner %}
@@ -55,7 +55,13 @@
           {% endfor %}
         {% else %}
           <div class="row-fluid well well-small">
+            
+            {% if current_user.is_anonymous() %}
+             {{ _('There are not publics teams created') }}
+            {% else %}
              {{ _('There are not teams created') }}
+            {% endif %}
+       
           </div>
         {% endif %} 
     </div>
