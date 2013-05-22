@@ -19,6 +19,9 @@ field = 'category_id'
 
 def upgrade():
     op.add_column('app', sa.Column(field, sa.Integer, sa.ForeignKey('category.id')))
+    # Assign First Category to Published Apps but not draft
+    query = 'UPDATE app SET category_id=1 FROM task WHERE app.info LIKE(\'%task_presenter%\') AND task.app_id=app.id AND app.hidden=0'
+    op.execute(query)
 
 
 def downgrade():
