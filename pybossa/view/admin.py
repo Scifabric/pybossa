@@ -28,6 +28,7 @@ import pybossa.model as model
 from pybossa.core import db
 from pybossa.util import admin_required
 from pybossa.cache import apps as cached_apps
+from pybossa.cache import categories as cached_cat
 from pybossa.auth import require
 import pybossa.validator as pb_validator
 from sqlalchemy import or_, func
@@ -176,11 +177,12 @@ def categories():
                                           short_name=slug)
                 db.session.add(category)
                 db.session.commit()
+                cached_cat.reset()
                 msg = lazy_gettext("Category added")
                 flash(msg, 'success')
             else:
                 flash(lazy_gettext('Please correct the errors'), 'error')
-        categories = db.session.query(model.Category).all()
+        categories = cached_cat.get()
         return render_template('admin/categories.html',
                                title=lazy_gettext('Categories'),
                                categories=categories,
@@ -208,6 +210,7 @@ def del_category(id):
                 db.session.commit()
                 msg = lazy_gettext("Category deleted")
                 flash(msg, 'success')
+                cached_cat.reset()
                 return redirect(url_for(".categories"))
         else:
             return abort(404)
@@ -241,6 +244,7 @@ def update_category(id):
                     print new_category.id
                     db.session.merge(new_category)
                     db.session.commit()
+                    cached_cat.reset()
                     msg = lazy_gettext("Category updated")
                     flash(msg, 'success')
                     return redirect(url_for(".categories"))
