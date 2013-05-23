@@ -12,17 +12,32 @@
     <div class="span9">
         <h1><strong>{{ _('Admin Site') }} :</strong> {{ _('Manage featured applications') }}</h1>
     {% include "admin/js/featured_apps.js" %}
-    {% for app in apps %}
-    {{ render_app_short_summary(app, current_user) }}
-    {% if app.featured == app.id %}
-    <button id="appBtn{{app.id}}" class="btn btn-primary active" data-toggle="button" onclick="toggle({{app.id}})">
-            <i id="app{{app.id}}" class="icon-star"></i> {{ _('Featured!') }}</button>
-    {% else %}
-            <button id="appBtn{{app.id}}" class="btn btn-primary" data-toggle="button" onclick="toggle({{app.id}})">
-            <i id="app{{app.id}}" class="icon-star-empty"></i> {{_('Featured!')}}</button>
-    {% endif %}
-    <hr>
-    {% endfor %}
+    <div class="tabbable"> <!-- Only required for left/right tabs -->
+        <ul class="nav nav-tabs">
+            {% for c in categories %}
+            <li {% if loop.first %}class="active"{% endif %}>
+            <a href="#{{c.short_name}}" data-toggle="tab">{{c.name}}</a>
+            </li>
+            {% endfor %}
+        </ul>
+        <div class="tab-content">
+            {% for c in categories %}
+            <div {% if loop.first %}class="tab-pane active" {% else %} class="tab-pane" {% endif %} id="{{c.short_name}}">
+                {% for app in apps[c.short_name] %}
+                {{ render_app_short_summary(app, current_user) }}
+                {% if app.featured == app.id %}
+                <button id="appBtn{{app.id}}" class="btn btn-primary active" data-toggle="button" onclick="toggle({{app.id}})">
+                        <i id="app{{app.id}}" class="icon-star"></i> {{ _('Featured!') }}</button>
+                {% else %}
+                        <button id="appBtn{{app.id}}" class="btn btn-primary" data-toggle="button" onclick="toggle({{app.id}})">
+                        <i id="app{{app.id}}" class="icon-star-empty"></i> {{_('Featured!')}}</button>
+                {% endif %}
+                <hr>
+                {% endfor %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
     </div>
 </div>
 {% endblock %}

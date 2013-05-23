@@ -52,10 +52,24 @@ def index():
 @admin_required
 def featured(app_id=None):
     """List featured apps of PyBossa"""
-    n_published = cached_apps.n_published()
+    categories = cached_cat.get_all()
+
     if request.method == 'GET':
-        apps, n_published = cached_apps.get_published(page=1, per_page=n_published)
-        return render_template('/admin/applications.html', apps=apps)
+        apps = {}
+        for c in categories:
+            n_apps = cached_apps.n_count(category=c.short_name)
+            apps[c.short_name], n_apps = cached_apps.get(category=c.short_name,
+                                                         page=1,
+                                                         per_page=n_apps)
+        categories.insert(0, model.Category(name='Featured',
+                                            short_name='featured',
+                                            description='None'))
+        n_apps = cached_apps.n_featured()
+        apps['featured'], n_apps = cached_apps.get_featured(category=None,
+                                                            page=1,
+                                                            per_page=n_apps)
+        return render_template('/admin/applications.html', apps=apps,
+                               categories=categories)
     if request.method == 'POST':
         cached_apps.reset()
         f = model.Featured()

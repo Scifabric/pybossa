@@ -133,6 +133,7 @@ def get_featured(category, page=1, per_page=5):
                    overall_progress=overall_progress(row.id),
                    last_activity=last_activity(row.id),
                    owner=row.owner,
+                   featured=row.id,
                    info=dict(json.loads(row.info)))
         apps.append(app)
     return apps, count
@@ -260,7 +261,8 @@ def get(category, page=1, per_page=5):
     sql = text('''
                SELECT app.id, app.name, app.short_name, app.description,
                app.info, app.created, app.category_id, "user".fullname AS owner
-               FROM "user", task, app LEFT OUTER JOIN category ON app.category_id=category.id
+               FROM "user", task, app
+               LEFT OUTER JOIN category ON app.category_id=category.id
                WHERE
                category.short_name=:category
                AND app.hidden=0
