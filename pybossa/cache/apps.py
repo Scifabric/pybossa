@@ -252,18 +252,21 @@ def n_count(category):
 
 @cache.memoize(timeout=50)
 def get(category, page=1, per_page=5):
-    """Return a list of apps with a pagination for a given category"""
+    """Return a list of apps with at least one task and a task_presenter
+       with a pagination for a given category"""
 
     count = n_count(category)
 
     sql = text('''
                SELECT app.id, app.name, app.short_name, app.description,
                app.info, app.created, app.category_id, "user".fullname AS owner
-               FROM "user", app LEFT OUTER JOIN category ON app.category_id=category.id
+               FROM "user", task, app LEFT OUTER JOIN category ON app.category_id=category.id
                WHERE
                category.short_name=:category
                AND app.hidden=0
                AND "user".id=app.owner_id
+               AND app.info LIKE('%task_presenter%')
+               AND task.app_id=app.id
                GROUP BY app.id, "user".id ORDER BY app.name
                OFFSET :offset
                LIMIT :limit;''')
