@@ -92,6 +92,38 @@
 </div>
 {% endmacro %}
 
+{% macro render_app_admin_featured(app, current_user) -%}
+<div class="row-fluid well well-small">
+    <div class="span3">
+        {% if app.info.thumbnail %}
+        <img class="img-polaroid" src="{{app.info.thumbnail}}" onerror="imgError(this);" style="max-width:100px"/>
+        {% else %}
+        <img class="img-polaroid" src="{{url_for('static', filename='img/placeholder.png')}}" style="max-width:100px"/>
+        {% endif %}
+    </div>
+    <div class="span9">
+        <h2><a href="{{url_for('app.settings', short_name=app.short_name)}}">{{app.name}}</a></h2>
+        <p>{{ app['description'] }}</p>
+        <a class="btn btn-inverse" href="{{url_for('app.settings', short_name=app.short_name)}}"><i class="icon-wrench"></i> {{ _('Settings') }}</a>
+        {% if app.featured == app.id %}
+        <button id="appBtnDel{{app.id}}" class="btn btn-danger" onclick="del({{app.id}})">
+                <i id="app{{app.id}}" class="icon-remove"></i> {{ _('Remove from Featured!') }}
+        </button>
+        <button id="appBtnAdd{{app.id}}" class="btn btn-primary" onclick="add({{app.id}})" style="display:none;">
+                <i id="app{{app.id}}" class="icon-plus"></i> {{ _('Add to Featured!') }}
+        </button>
+        {% else %}
+        <button id="appBtnAdd{{app.id}}" class="btn btn-primary" onclick="add({{app.id}})">
+                <i id="app{{app.id}}" class="icon-plus"></i> {{ _('Add to Featured!') }}
+        </button>
+        <button id="appBtnDel{{app.id}}" class="btn btn-danger" onclick="del({{app.id}})" style="display:none;">
+                <i id="app{{app.id}}" class="icon-remove"></i> {{ _('Remove from Featured!') }}
+        </button>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}
+
 
 {% macro show_app(app, class="", current_user) -%}
 <div class="row-fluid {{class}} well">

@@ -2,7 +2,7 @@
 {% set active_page = "profile" %}
 {% set active_link = "admin" %}
 {% from "account/_helpers.html" import render_account_local_nav %}
-{% from "applications/_helpers.html" import render_app_short_summary %}
+{% from "applications/_helpers.html" import render_app_admin_featured, broken_image %}
 
 {% block content %}
 <div class="row">
@@ -23,27 +23,12 @@
             {% for c in categories %}
             <div {% if loop.first %}class="tab-pane active" {% else %} class="tab-pane" {% endif %} id="{{c.short_name}}">
                 {% for app in apps[c.short_name] %}
-                {{ render_app_short_summary(app, current_user) }}
-                {% if app.featured == app.id %}
-                <button id="appBtnDel{{app.id}}" class="btn btn-danger" onclick="del({{app.id}})">
-                        <i id="app{{app.id}}" class="icon-remove"></i> {{ _('Remove from Featured!') }}
-                </button>
-                <button id="appBtnAdd{{app.id}}" class="btn btn-primary" onclick="add({{app.id}})" style="display:none;">
-                        <i id="app{{app.id}}" class="icon-plus"></i> {{ _('Add to Featured!') }}
-                </button>
-                {% else %}
-                <button id="appBtnAdd{{app.id}}" class="btn btn-primary" onclick="add({{app.id}})">
-                        <i id="app{{app.id}}" class="icon-plus"></i> {{ _('Add to Featured!') }}
-                </button>
-                <button id="appBtnDel{{app.id}}" class="btn btn-danger" onclick="del({{app.id}})" style="display:none;">
-                        <i id="app{{app.id}}" class="icon-remove"></i> {{ _('Remove from Featured!') }}
-                </button>
-                {% endif %}
-                <hr>
+                {{ render_app_admin_featured(app, current_user) }}
                 {% endfor %}
             </div>
             {% endfor %}
         </div>
     </div>
 </div>
+{{ broken_image() }}
 {% endblock %}
