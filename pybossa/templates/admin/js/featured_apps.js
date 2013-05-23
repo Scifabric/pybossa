@@ -8,14 +8,8 @@
           dataType: 'json',
       });
       xhr.done(function(){
-          if ($("#app" + app_id).hasClass("icon-plus")) {
-              $("#app" + app_id).removeClass("icon-plus");
-              $("#app" + app_id).addClass("icon-remove");
-          }
-          if ($("#appBtn" + app_id).hasClass('btn btn-primary')){
-                $("#appBtn" + app_id).removeClass('btn btn-primary');
-                $("#appBtn" + app_id).addClass('btn btn-danger');
-          }
+          $("#appBtnDel" + app_id).show();
+          $("#appBtnAdd" + app_id).hide();
       });
   }
   function del(app_id) {
@@ -26,24 +20,10 @@
           dataType: 'json',
       });
       xhr.done(function(){
-          if ($("#app" + app_id).hasClass("icon-remove")) {
-              $("#app" + app_id).removeClass("icon-remove");
-              $("#app" + app_id).addClass("icon-plus");
-          }
-          if ($("#appBtn" + app_id).hasClass('btn btn-danger')){
-                $("#appBtn" + app_id).removeClass('btn btn-danger');
-                $("#appBtn" + app_id).addClass('btn btn-primary');
-          }
+          $("#appBtnDel" + app_id).hide();
+          $("#appBtnAdd" + app_id).show();
+
       });
   }
-
-  function toggle(app_id) {
-      if ($("#app" + app_id).hasClass("icon-remove")) {
-          del(app_id);
-      }
-      else {
-          add(app_id);
-      }
-   }
 </script>
 
