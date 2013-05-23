@@ -124,9 +124,17 @@ def redirect_old_published(page):
 @blueprint.route('/category/featured', defaults={'page': 1})
 @blueprint.route('/category/featured/page/<int:page>')
 def index(page):
-    """By default show the Featured apps"""
-    return app_index(page, cached_apps.get_featured, 'app-featured',
-                     True, False)
+    """List apps in the system"""
+    if cached_apps.n_featured() > 0:
+        return app_index(page, cached_apps.get_featured, 'app-featured',
+                         True, False)
+    else:
+        categories = cached_cat.get_used()
+        if len(categories) > 0:
+            category = categories[0]['short_name']
+        else:
+            category = db.session.query(model.Category).first().short_name
+        return redirect(url_for('.app2_index', category=category))
 
 
 def app_index(page, lookup, category, fallback, use_count):
