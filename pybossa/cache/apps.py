@@ -237,11 +237,14 @@ def get_draft(category, page=1, per_page=5):
 def n_count(category):
     """Count the number of apps in a given category"""
     sql = text('''
-               SELECT COUNT(app.id) FROM app
+               SELECT COUNT(app.id) FROM task, app
                LEFT OUTER JOIN category ON app.category_id=category.id
                WHERE
                category.short_name=:category
                AND app.hidden=0
+               AND app.info LIKE('%task_presenter%')
+               AND task.app_id=app.id
+               GROUP BY app.id
                ''')
 
     results = db.engine.execute(sql, category=category)

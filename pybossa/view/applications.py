@@ -126,15 +126,15 @@ def redirect_old_published(page):
 def index(page):
     """List apps in the system"""
     if cached_apps.n_featured() > 0:
-        return app_index(page, cached_apps.get_featured, 'app-featured',
+        return app_index(page, cached_apps.get_featured, 'featured',
                          True, False)
     else:
         categories = cached_cat.get_used()
         if len(categories) > 0:
-            category = categories[0]['short_name']
+            cat_short_name = categories[0]['short_name']
         else:
-            category = db.session.query(model.Category).first().short_name
-        return redirect(url_for('.app2_index', category=category))
+            cat_short_name = db.session.query(model.Category).first().short_name
+        return redirect(url_for('.app2_index', category=cat_short_name))
 
 
 def app_index(page, lookup, category, fallback, use_count):
@@ -151,12 +151,27 @@ def app_index(page, lookup, category, fallback, use_count):
 
     pagination = Pagination(page, per_page, count)
     categories = cached_cat.get_used()
-    active_cat = db.session.query(model.Category).filter_by(short_name=category).first()
+    # Check for pre-defined categories featured and draft
+    featured_cat = model.Category(name='Featured',
+                                  short_name='featured',
+                                  description='Featured applications')
+    if category is 'featured':
+        active_cat = featured_cat
+    elif category is 'draft':
+        active_cat = model.Category(name='Draft',
+                                    short_name='draft',
+                                    description='Draft applications')
+    else:
+        active_cat = db.session.query(model.Category)\
+                       .filter_by(short_name=category).first()
+
+    # Check if we have to add the section Featured to local nav
+    if cached_apps.n_featured() > 0:
+        categories.insert(0, featured_cat)
     template_args = {
         "apps": apps,
         "title": lazy_gettext("Applications"),
         "pagination": pagination,
-        "category_slug": category,
         "active_cat": active_cat,
         "categories": categories}
 
@@ -171,7 +186,7 @@ def app_index(page, lookup, category, fallback, use_count):
 @admin_required
 def draft(page):
     """Show the Draft apps"""
-    return app_index(page, cached_apps.get_draft, 'app-draft',
+    return app_index(page, cached_apps.get_draft, 'draft',
                      False, True)
 
 
