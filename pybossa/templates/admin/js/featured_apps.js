@@ -8,12 +8,13 @@
           dataType: 'json',
       });
       xhr.done(function(){
-          if ($("#app" + app_id).hasClass("icon-star-empty")) {
-              $("#app" + app_id).removeClass("icon-star-empty");
-              $("#app" + app_id).addClass("icon-star");
+          if ($("#app" + app_id).hasClass("icon-plus")) {
+              $("#app" + app_id).removeClass("icon-plus");
+              $("#app" + app_id).addClass("icon-remove");
           }
-          if (!$("#appBtn" + app_id).hasClass('active')){
-                $("#appBtn" + app_id).addClass('active');
+          if ($("#appBtn" + app_id).hasClass('btn btn-primary')){
+                $("#appBtn" + app_id).removeClass('btn btn-primary');
+                $("#appBtn" + app_id).addClass('btn btn-danger');
           }
       });
   }
@@ -25,18 +26,19 @@
           dataType: 'json',
       });
       xhr.done(function(){
-          if ($("#app" + app_id).hasClass("icon-star")) {
-              $("#app" + app_id).removeClass("icon-star");
-              $("#app" + app_id).addClass("icon-star-empty");
+          if ($("#app" + app_id).hasClass("icon-remove")) {
+              $("#app" + app_id).removeClass("icon-remove");
+              $("#app" + app_id).addClass("icon-plus");
           }
-          if ($("#appBtn" + app_id).hasClass('active')){
-                $("#appBtn" + app_id).removeClass('active');
+          if ($("#appBtn" + app_id).hasClass('btn btn-danger')){
+                $("#appBtn" + app_id).removeClass('btn btn-danger');
+                $("#appBtn" + app_id).addClass('btn btn-primary');
           }
       });
   }
 
   function toggle(app_id) {
-      if ($("#app" + app_id).hasClass("icon-star")) {
+      if ($("#app" + app_id).hasClass("icon-remove")) {
           del(app_id);
       }
       else {

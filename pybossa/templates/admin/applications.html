@@ -26,11 +26,11 @@
                 {% for app in apps[c.short_name] %}
                 {{ render_app_short_summary(app, current_user) }}
                 {% if app.featured == app.id %}
-                <button id="appBtn{{app.id}}" class="btn btn-primary active" data-toggle="button" onclick="toggle({{app.id}})">
-                        <i id="app{{app.id}}" class="icon-star"></i> {{ _('Featured!') }}</button>
+                <button id="appBtn{{app.id}}" class="btn btn-danger" onclick="toggle({{app.id}})">
+                        <i id="app{{app.id}}" class="icon-remove"></i> {{ _('Featured!') }}</button>
                 {% else %}
-                        <button id="appBtn{{app.id}}" class="btn btn-primary" data-toggle="button" onclick="toggle({{app.id}})">
-                        <i id="app{{app.id}}" class="icon-star-empty"></i> {{_('Featured!')}}</button>
+                        <button id="appBtn{{app.id}}" class="btn btn-primary" onclick="toggle({{app.id}})">
+                        <i id="app{{app.id}}" class="icon-plus"></i> {{_('Featured!')}}</button>
                 {% endif %}
                 <hr>
                 {% endfor %}
