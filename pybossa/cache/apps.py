@@ -260,16 +260,18 @@ def get(category, page=1, per_page=5):
 
     sql = text('''
                SELECT app.id, app.name, app.short_name, app.description,
-               app.info, app.created, app.category_id, "user".fullname AS owner
+               app.info, app.created, app.category_id, "user".fullname AS owner,
+               featured.app_id as featured
                FROM "user", task, app
                LEFT OUTER JOIN category ON app.category_id=category.id
+               LEFT OUTER JOIN featured ON app.id=featured.app_id
                WHERE
                category.short_name=:category
                AND app.hidden=0
                AND "user".id=app.owner_id
                AND app.info LIKE('%task_presenter%')
                AND task.app_id=app.id
-               GROUP BY app.id, "user".id ORDER BY app.name
+               GROUP BY app.id, "user".id, featured.app_id ORDER BY app.name
                OFFSET :offset
                LIMIT :limit;''')
 
@@ -282,6 +284,7 @@ def get(category, page=1, per_page=5):
                    created=row.created,
                    description=row.description,
                    owner=row.owner,
+                   featured=row.featured,
                    last_activity=last_activity(row.id),
                    overall_progress=overall_progress(row.id),
                    info=dict(json.loads(row.info)))
