@@ -379,7 +379,7 @@ class Team(db.Model, DomainObject):
     #: description
     description = Column(Unicode(length=200), unique=True)
     #: owner
-    owner = Column(Integer, ForeignKey('user.id'))
+    owner_id = Column(Integer, ForeignKey('user.id'))
     #: Public flag Boolean Integer (0,1)
     public = Column(Boolean, default=False)
 
