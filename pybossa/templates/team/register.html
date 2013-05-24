@@ -1,7 +1,7 @@
-{% extends "base.html" %}
-{% set active_page = "profile" %}
+{% extends "/base.html" %}
+{% set active_page = "create" %}
 {% set active_link = "teams" %}
-{% from "account/_helpers.html" import render_account_local_nav %}
+{% from "tea,/_helpers.html" import render_account_local_nav %}
 
 
 {% block content %}
@@ -13,7 +13,7 @@
     <div class="span9">
         <h1>{{ _('Create a Team') }}:</h1>
         {% from "_formhelpers.html" import render_field %}
-        <form method="post" class="form-horizontal" action="{{ url_for('team.add') }}">
+        <form method="post" class="form-horizontal" action="{{ url_for('team.new') }}">
         {{ form.hidden_tag() }}
         <fieldset>
           {{ render_field(form.name, placeholder= _('my team name')) }}

@@ -1,81 +1,29 @@
 {% extends "base.html" %}
-{% set active_page = "profile" %}
-{% set active_link = "teams" %}
-{% import "team/_helpers.html" as team_helper %}
-{% from "account/_helpers.html" import render_account_local_nav %}
+{% set active_page = "teams" %}
+{% import "team/_helpers.html" as helper %}
 
 {% block content %}
 <div class="row-fluid">
     <div class="span3">
-        {{ render_account_local_nav(current_user, active_link) }}
+      {{ helper.render_teams_nav(team, team_type, current_user, team_owner) }}
     </div>
     <div class="span9" style="min-height:400px">
-        {% if not current_user.is_anonymous() %}
-          <h1><strong>{{ current_user.fullname }}'s</strong>: {{ _('Team') }}</h1>
-        {% else %}
-          <h1><strong>{{ _('Public\'s') }}</strong>: {{ _('Team') }}</h1>
-        {% endif %}
+        <h1>
+           <i class="icon-th"></i> {% if teams %}{{pagination.total_count}}{% endif %}  {{ title }}
+           {% if teams %}
+                <a class="pull-right btn btn-primary" href="{{url_for('team.search_teams', type=team_type)}}"><i class="icon-group" style="color:white"></i> {{ _('Search') }}</a>
+           {% endif %}
+        <h1>
+        {% if teams %}
+            <h2>{{ _('All available teams') }}</h2>
 
-        {% if team %}
-            <div class="row-fluid well well-small">
-            {{ team_helper.render_team(team, current_user) }}
-
-            {% if current_user.admin == 1 or current_user.id == team.owner %}
-              <div class="span10">
-                <a href="{{url_for('team.update', name=team.name )}}" class="btn btn-primary"><i class="icon-edit  icon-large"></i>{{ _('Edit') }}</a>
-                <a href="{{url_for('team.delete', name=team.name )}}" class="btn btn-danger"> <i class="icon-trash icon-large"></i> {{ _('Delete') }}</a>
-                <a href="{{url_for('team.searchusers',  name=team.name )}}" class="btn btn-primary"><i class="icon-group icon-large"></i> {{ _('Add Users') }}</a>
-
-              </div>
-
-            {% elif not current_user.is_anonymous() %}
-
-             <div class="span10">
-                 {% for user2team in team.user2team  if user2team.user_id == current_user.id %}
-                  <a href="{{url_for('team.user_delete', name=team.name, user_id=0 )}}" class="btn btn-danger"> <i class="icon-trash icon-large"></i> {{ _('Left this team') }}</a>
-                 {% else %}
-                  <a href="{{url_for('team.user_add', name=team.name )}}" class="btn btn-primary"><i class="icon-edit  icon-large"></i>{{ _('Join this team') }}</a>
-                 {% endfor %}
-              </div>
-           {% endif %}            
-            </div>
-            <h1><strong>{{ _('Member\'s') }}</strong></h1>
-
-            <div class="row-fluid well well-small">
-                <table class="table table-striped table-bordered table-hover table-condensed">
-                <thead>
-                 <tr>
-                   <th>{{ _('Name') }}</th>
-                   <th>{{ _('Joined') }}</th>
-                   {% if current_user.id == team.owner or current_user.admin == 1 %}
-                   <th>{{ _('Manage') }}</th>
-                   {% endif %}
-                 </tr>
-                 {% for user2team in team.user2team %}
-                   
-                   <tr>
-                     <td><strong><a href="{{url_for('account.public_profile', name=user2team.user.name)}}">{{user2team.user.fullname}}</a></strong></td>
-                     <td>{{ user2team.created[0:10] }}</td>
-
-                     {% if current_user.id == team.owner or current_user.admin == 1 %}
-                     <td>
-
-                       {% if user2team.user_id == team.owner %}
-                          {{ _('Owner') }}
-                       {% else %}
-                         <a href="{{url_for('team.join_delete', name=team.name, user=user2team.user.name)}}" class="btn btn-danger"> <i class="icon-trash icon-large"></i> {{ _('Remove') }}</a>
-                                              
-                       {% endif %}
-                     </td> 
-                     {% endif %}
-                   </tr>
-                 {% endfor %}
-                </thead>
-             </table>
-           
-
-            </div>
-        {% endif %} 
+          {% for team in teams %}
+            {{ helper.show_team(team, team_type, current_user) }}
+          {% endfor %}
+          {{ helper.render_pagination(pagination) }}
+       {% else %}
+            <h2>{{ _('No available teams') }}</h2>
+       {% endif %} 
     </div>
 </div>
 {% endblock %}
