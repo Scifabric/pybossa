@@ -25,7 +25,7 @@ def upgrade():
         sa.Column('created', sa.Text, default=make_timestamp),
         sa.Column('name', sa.String(50), nullable=False),
         sa.Column('description', sa.Unicode(200)),
-        sa.Column('owner', sa.Integer, ForeignKey('user.id'), unique=True),
+        sa.Column('owner_id', sa.Integer, ForeignKey('user.id'), unique=True),
         sa.Column('public', sa.Boolean, default=False )
     )
 
