@@ -1,4 +1,4 @@
-from base import model, db, web
+from base import model, db, web, Fixtures
 from helper.user import User
 
 
@@ -81,14 +81,23 @@ class Helper(object):
         """Helper function to sign out current user"""
         return self.app.get('/account/signout', follow_redirects=True)
 
+    def create_categories(self):
+        categories = db.session.query(model.Category).all()
+        if len(categories) == 0:
+            print "Categories 0"
+            print "Creating default ones"
+            Fixtures.create_categories()
+
     def new_application(self, method="POST", name="Sample App",
                         short_name="sampleapp", description="Description",
                         thumbnail='An Icon link',
                         allow_anonymous_contributors='True',
+                        category_id="1",
                         long_description=u'<div id="long_desc">Long desc</div>',
                         hidden=False):
         """Helper function to create an application"""
         if method == "POST":
+            self.create_categories()
             if hidden:
                 return self.app.post("/app/new", data={
                     'name': name,
@@ -96,6 +105,7 @@ class Helper(object):
                     'description': description,
                     'thumbnail': thumbnail,
                     'allow_anonymou_contributors': allow_anonymous_contributors,
+                    'category_id': category_id,
                     'long_description': long_description,
                     'hidden': hidden,
                 }, follow_redirects=True)
@@ -106,6 +116,7 @@ class Helper(object):
                     'description': description,
                     'thumbnail': thumbnail,
                     'allow_anonymous_contributors': allow_anonymous_contributors,
+                    'category_id': category_id,
                     'long_description': long_description,
                 }, follow_redirects=True)
         else:
@@ -160,6 +171,7 @@ class Helper(object):
                            new_description="Description",
                            new_thumbnail="New Icon link",
                            new_allow_anonymous_contributors="False",
+                           new_category_id="2",
                            new_long_description="Long desc",
                            new_sched="random",
                            new_hidden=False):
@@ -174,6 +186,7 @@ class Helper(object):
                                          'description': new_description,
                                          'thumbnail': new_thumbnail,
                                          'allow_anonymous_contributors': new_allow_anonymous_contributors,
+                                         'category_id': new_category_id,
                                          'long_description': new_long_description,
                                          'sched': new_sched,
                                          'hidden': new_hidden},
@@ -184,6 +197,7 @@ class Helper(object):
                                            'short_name': new_short_name,
                                            'thumbnail': new_thumbnail,
                                            'allow_anonymous_contributors': new_allow_anonymous_contributors,
+                                           'category_id': new_category_id,
                                            'long_description': new_long_description,
                                            'sched': new_sched,
                                            'description': new_description},

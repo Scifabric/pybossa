@@ -179,6 +179,8 @@ class App(db.Model, DomainObject):
                              order_by='TaskRun.finish_time.desc()')
     #: `Featured` or not for this app
     featured = relationship('Featured', cascade='all, delete-orphan')
+    #: `category` or not for this app
+    category = relationship('Category', cascade='all')
 
     #: Percentage of completed tasks based on Task.state
     #: (0 not done, 1 completed)

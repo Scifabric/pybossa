@@ -212,7 +212,6 @@ class TestAdmin(web.Helper):
         self.signin()
         data = {'user': 'juan'}
         res = self.app.post('/admin/users', data=data, follow_redirects=True)
-        print res.data
         assert "Juan Jose" in res.data, "username should be searchable"
         # Check with uppercase
         data = {'user': 'JUAN'}
@@ -383,7 +382,8 @@ class TestAdmin(web.Helper):
     def test_20_admin_add_category(self):
         """Test ADMIN add category works"""
         Fixtures.create()
-        category = {'name': 'cat'}
+        category = {'name': 'cat', 'short_name': 'cat',
+                    'description': 'description'}
         # Anonymous user
         url = '/admin/categories'
         res = self.app.post(url, data=category, follow_redirects=True)
@@ -451,7 +451,7 @@ class TestAdmin(web.Helper):
     def test_22_admin_delete_category(self):
         """Test ADMIN delete category works"""
         Fixtures.create()
-        obj = db.session.query(model.Category).get(1)
+        obj = db.session.query(model.Category).first()
         category = obj.dictize()
 
         # Anonymous user GET
@@ -489,3 +489,15 @@ class TestAdmin(web.Helper):
         assert category['name'] not in res.data, err_msg
         output = db.session.query(model.Category).get(obj.id)
         assert output is None, err_msg
+
+        # Now try to delete the only available Category
+        obj = db.session.query(model.Category).first()
+        url = '/admin/categories/del/%s' % obj.id
+        category = obj.dictize()
+        res = self.app.post(url, data=category, follow_redirects=True)
+        print res.data
+        err_msg = "Category should not be deleted"
+        assert "Category deleted" not in res.data, err_msg
+        assert category['name'] in res.data, err_msg
+        output = db.session.query(model.Category).get(obj.id)
+        assert output.id == category['id'], err_msg
