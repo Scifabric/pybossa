@@ -20,7 +20,7 @@ def setup_alembic_config():
             with file(dynamic_filename, "w") as conf:
                 for line in f.readlines():
                     if line.startswith("sqlalchemy.url"):
-                        conf.write("sqlalchemy.url = %s\n" % 
+                        conf.write("sqlalchemy.url = %s\n" %
                                    os.environ['DATABASE_URL'])
                     else:
                         conf.write(line)
@@ -34,6 +34,14 @@ def db_create():
     # then, load the Alembic configuration and generate the
     # version table, "stamping" it with the most recent rev:
     setup_alembic_config()
+    # finally, add a minimum set of categories: Volunteer Thinking, Volunteer Sensing, Published and Draft
+    categories = []
+    categories.append(model.Category(name="Volunteer Thinking"))
+    categories.append(model.Category(name="Volunteer Sensing"))
+    categories.append(model.Category(name="Published"))
+    categories.append(model.Category(name="Draft"))
+    db.session.add_all(categories)
+    db.session.commit()
 
 def db_rebuild():
     '''Rebuild the db'''
