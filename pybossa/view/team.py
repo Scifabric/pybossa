@@ -35,87 +35,101 @@ from flaskext.babel import lazy_gettext
 from sqlalchemy.sql import func, text
 from pybossa.model import User, Team, User2Team
 from pybossa.util import Pagination
-from sqlalchemy import or_, func
-
+from pybossa.auth import require
+from sqlalchemy import or_, func, and_
+from pybossa.cache import teams as cached_teams
+from werkzeug.exceptions import HTTPException
 
 blueprint = Blueprint('team', __name__)
 
-@blueprint.route('/')
-def index():
-   ''' List of teams  '''
-   # Anonymous only see public teams
-   if current_user.is_anonymous():
-       owner = None
-       belongs = None
-       teams = model.Team.query.filter(Team.public=='t').all()
+def team_title(team, page_name):
+    if not team:
+        return "Team not found"
+    if page_name is None:
+        return "Team: %s" % (team.name)
+    return "Team: %s &middot; %s" % (team.name, page_name)
 
-       if teams:
-           for team in teams:
-               get_team_score(team)
+def team_by_name(name):
+    if current_user.is_anonymous():    
+       return Team.query.filter_by(name=name, public='t').first_or_404()
+    else:
+       return Team.query.filter_by(name=name).first_or_404()
 
-       return render_template('/team/teams.html',
-                              title=lazy_gettext("Teams Public"),
-                              teams=teams,
-                              owner=[],
-                              belongs=[])
+def team_current(name):
+   ''' Obtain the team of of de current_user '''
+   if current_user.admin == 1:
+       return Team.query.filter(Team.name==name)\
+                        .first_or_404()
    else:
-       # List all Teams
-       if current_user.admin == 1:
-          teams = model.Team.query.all()
+       return Team.query.filter(Team.owner==current_user.id)\
+                        .filter(Team.name==name)\
+                        .first_or_404()
 
-       # List owner Teams and public teams
-       else:
-           teams = model.Team.query.filter((Team.owner==current_user.id) | (Team.public=='t')).all()
+def get_signed_teams(page=1, per_page=5):
+   '''Return a list of public teams with a pagination'''
 
-       # To know if is a owner team
-       owner = model.Team.query.filter(Team.owner==current_user.id).first()
-       
-       # List of teams belong to
-       belongs = model.User2Team.query.filter(User2Team.user_id == current_user.id)  \
-                                       .all() 
-       
-       for team in teams:
-           get_team_score(team)
-   
-       return render_template('/team/teams.html',
-                              title=lazy_gettext("Manage Teams"),
-                              teams=teams,
-                              owner=owner,
-                              belongs=belongs)
+   sql = text('''
+              SELECT count(*)
+              FROM team 
+              INNER JOIN "user" ON team.owner="user".id
+              INNER JOIN user2team on team.id=user2team.team_id
+              WHERE user2team.user_id=:user_id
+              ''')
+   results = db.engine.execute(sql, user_id=current_user.id)
+   for row in results:
+       count = row[0]
+    
+   sql = text('''
+              SELECT team.id,team.name,team.description,team.created,
+              team.owner,"user".name as owner_name
+              FROM team 
+              INNER JOIN "user" ON team.owner="user".id
+              INNER JOIN user2team on team.id=user2team.team_id
+              WHERE user2team.user_id=:user_id
+              OFFSET(:offset) LIMIT(:limit);
+              ''')
 
-@blueprint.route('/<name>', methods=['GET', 'POST'])
-def details(name=None):
-   if not name:
-       abort(404)
-   else:
-       if current_user.is_anonymous():
-           team = model.Team.query.filter((Team.name==name) & \
-                                          (Team.public=='t')).first()
-       elif current_user.admin == 1:
-           team = model.Team.query.filter(Team.name==name).first()
+   offset = (page - 1) * per_page
+   results = db.engine.execute(sql, user_id=current_user.id, limit=per_page, offset=offset)
+   teams = []
+   for row in results:
+       team = dict(id=row.id, name=row.name,
+                   created=row.created, description=row.description,
+                   owner=row.owner,
+                   owner_name=row.owner_name
+                   )
+    
+       ''' Score and Rank '''
+       sql = text('''
+                  WITH  global_rank as(
+                  WITH scores AS( 
+                  SELECT team_id, count(*) AS score FROM user2team 
+                  INNER JOIN task_run ON user2team.user_id = task_run.user_id 
+                  GROUP BY user2team.team_id ) 
+                  SELECT team_id,score,rank() OVER (ORDER BY score DESC)  
+                  FROM  scores) 
+                  SELECT  * from global_rank where team_id=:team_id;
+                  ''')
 
-       else:
-           team = model.Team.query.filter((Team.name==name) & \
-                                          ((Team.public=='t') | (Team.owner==current_user.id)))\
-                                  .first()
-       if team is None:
-         flash("<strong>Ooops!</strong> We don't find this team", 'error')
-         return redirect(url_for('team.index'))
+       results = db.engine.execute(sql, team_id=row.id)
+       for result in results:
+           team['rank'] = result.rank
+           team['score'] = result.score
 
-       else:
-           get_team_score(team)
-           return render_template('/team/index.html',
-                            found=[],
-                            team = team)         
-class UpdateTeamForm(Form):
+       teams.append(team)
+
+   return teams, count
+
+# Ok
+class TeamForm(Form):
    ''' Modify Team '''
    id = IntegerField(label=None, widget=HiddenInput())
    err_msg = lazy_gettext("Team Name must be between 3 and 35 characters long")
    err_msg_2 = lazy_gettext("The team name is already taken")
    name = TextField(lazy_gettext('Team Name'),
                          [validators.Length(min=3, max=35, message=err_msg),
-                          pb_validator.Unique(db.session, model.Team,
-                                              model.Team.name, err_msg_2)])
+                          pb_validator.Unique(db.session, Team,
+                                              Team.name, err_msg_2)])
 
    err_msg = lazy_gettext("Team Description must be between 3 and 35 characters long")
    description = TextField(lazy_gettext('Description'),
@@ -123,337 +137,555 @@ class UpdateTeamForm(Form):
 
    public = BooleanField(lazy_gettext('Public'))
 
-@blueprint.route('/<name>/search', methods=['GET', 'POST'])
-@login_required
-def searchusers(name):
-   team  = model.Team.query.filter(Team.name==name)\
-                           .first()
-   if not team:
-       flash("<strong>Ooops!</strong> We didn't find this team", 'error')
-       return redirect(url_for('team.index'))
+# Ok
+@blueprint.route('/', defaults={'page': 1})
+@blueprint.route('/page/<int:page>')
+def index(page):
+    """By default show the Public Teams"""
 
-   else:
-       form = SearchForm(request.form)
-       users = db.session.query(model.User)\
+    return team_index(page, cached_teams.get_publics, 'public',
+                      True, False, lazy_gettext('Public Teams'))
+
+@blueprint.route('/signed/', defaults={'page': 1})
+@blueprint.route('/signed/page/<int:page>')
+@login_required
+def signed(page):
+    """By show the Signed Teams"""
+
+    #if current_user.is_anonymous():    
+    #   list_teams = cached_teams.get_publics
+    #else:
+
+    list_teams = get_signed_teams
+
+    return team_index(page, list_teams, 'signed',
+                      True, False, lazy_gettext('Signed Teams'))
+# Ok
+def team_index(page, lookup, team_type, fallback, use_count, title):
+    """Show apps of app_type"""
+    if not require.team.read():
+        abort(403)
+  
+    per_page = 5
+
+    teams, count = lookup(page, per_page)
+
+    team_owner = []
+    if not current_user.is_anonymous():
+       team_owner = Team.query.filter(Team.owner==current_user.id).first()
+   
+       for team in teams:
+           user2team = User2Team.query.filter(User2Team.team_id==team['id'])\
+                                        .filter(User2Team.user_id==current_user.id)\
+                                        .first()
+           team['belong'] = (1, 0)[user2team is None]
+    
+    #if fallback and not apps:
+    #    return redirect(url_for('.published'))
+
+    pagination = Pagination(page, per_page, count)
+    template_args = {
+        "teams": teams,
+        "team_owner": team_owner,
+        "title": title,
+        "pagination": pagination,
+        "team_type": team_type}
+
+    if use_count:
+        template_args.update({"count": count})
+
+    return render_template('/team/index.html', **template_args)
+
+# Ok
+@blueprint.route('/<name>/')
+def details(name=None):
+   team = team_by_name(name)
+
+   try:
+       require.team.read(team)
+       #require.team.update(team)
+       template = '/team/team.html'
+   except HTTPException:
+       #if team.hidden:
+       #    team = None
+       print "exception"
+       template = '/team/index.html'
+
+   title = team_title(team, None)
+   template_args = {"team": team, "title": title}
+
+   return render_template(template, **template_args)
+
+# Ok
+@blueprint.route('/<name>/settings')
+@login_required
+def settings(name):
+   team = team_by_name(name)
+
+   title = team_title(team, "Settings")
+   try:
+       require.team.read(team)
+       require.team.update(team)
+
+       return render_template('/team/settings.html',
+                               team=team,
+                               title=title)
+   except HTTPException:
+       return abort(403)
+
+@blueprint.route('/<type>/search', methods=['GET', 'POST'])
+def search_teams(type):
+
+   form = SearchForm(request.form)
+   teams = db.session.query(Team)\
                 .all()
 
-       if request.method == 'POST' and form.user.data:
-           query = '%' + form.user.data.lower() + '%'
-           founds = db.session.query(model.User)\
-                  .filter(or_(func.lower(model.User.name).like(query),
-                              func.lower(model.User.fullname).like(query)))\
+   if request.method == 'POST' and form.user.data:
+       query = '%' + form.user.data.lower() + '%'
+
+       print type
+       if type == 'public':
+           founds = db.session.query(Team)\
+                      .filter(func.lower(Team.name).like(query))\
+                      .filter(Team.public=='t')\
+                      .all()
+       else:
+           founds = db.session.query(Team)\
+                      .join(User2Team)\
+                      .filter(func.lower(Team.name).like(query))\
+                      .filter(User2Team.user_id == current_user.id)\
+                      .all()
+       if not founds:
+           flash("<strong>Ooops!</strong> We didn't find a team "
+                  "matching your query: <strong>%s</strong>" % form.user.data)
+
+           return render_template('/team/search_teams.html', 
+                          founds= [],
+                          team_type = type,
+                          title=lazy_gettext('Search Team'))
+       else:
+           return render_template('/team/search_teams.html', 
+                          founds= founds,
+                          team_type = type,
+                          title=lazy_gettext('Search Team'))
+
+   return render_template('/team/search_teams.html', 
+                          found=[],
+                          team_type = type,
+                          title=lazy_gettext('Search Team'))
+
+@blueprint.route('/<name>/users/search', methods=['GET', 'POST'])
+@login_required
+def search_users(name):
+
+   team = team_current(name)
+
+   form = SearchForm(request.form)
+   users = db.session.query(User)\
+                .all()
+
+   if request.method == 'POST' and form.user.data:
+       query = '%' + form.user.data.lower() + '%'
+       founds = db.session.query(User)\
+                  .filter(or_(func.lower(User.name).like(query),
+                              func.lower(User.fullname).like(query)))\
                   .all()
 
-           if not founds:
-               flash("<strong>Ooops!</strong> We didn't find a user "
+       if not founds:
+           flash("<strong>Ooops!</strong> We didn't find a user "
                   "matching your query: <strong>%s</strong>" % form.user.data)
-            
-           else:
-               for found in founds:
-                   user2team = model.User2Team.query.filter(User2Team.team_id==team.id)\
+
+           return render_template('/team/search_users.html', 
+                          founds=[],
+                          team=team,
+                          title=lazy_gettext('Search User'))
+       else:
+           for found in founds:
+               user2team = User2Team.query.filter(User2Team.team_id==team.id)\
                                                 .filter(User2Team.user_id==found.id)\
                                                 .first()
-                   found.belong = (1, 0)[user2team is None]
+               found.belong = (1, 0)[user2team is None]
 
-           return render_template('/team/searchusers.html',
-                            found =founds,
+           return render_template('/team/search_users.html',
+                            founds =founds,
                             team = team,
                             title=lazy_gettext('Search User'))
 
-       return render_template('/team/searchusers.html', 
-                          found=[],
+   return render_template('/team/search_users.html', 
+                          founds=[],
                           team=team,
                           title=lazy_gettext('Search User'))
-
 
 class SearchForm(Form):
    user = TextField(lazy_gettext('User'))
 
-@blueprint.route('/add', methods=['GET', 'POST'])
+@blueprint.route('/new/', methods=['GET', 'POST'])
 @login_required
-def add():
-   team = model.Team.query.filter(Team.owner==current_user.id).first()
-
+def new():
+   team = Team.query.filter(Team.owner==current_user.id).first()
    if team:
        flash("<strong>Ooops!</strong> You already ownn your group "
            "<strong>%s</strong>" % team.name)
        return redirect(url_for('team.index'))
 
-
-   ''' Create Team '''
-   # TODO:T re-enable csrf
    form = TeamForm(request.form)
-   if request.method == 'POST' and form.validate():
-        
-       team = model.Team( name=form.name.data,
-                          description=form.description.data,
-                          public=form.public.data,
-                          owner=current_user.id)
-       db.session.add(team)
-       db.session.commit()
 
-       user2team = model.User2Team( user_id = current_user.id,
-                          team_id = team.id)
+   def respond(errors):
+       return render_template('team/new.html',
+                               title=lazy_gettext("Create a Team"),
+                               form=form, errors=errors)
 
-       db.session.add(user2team)
-       db.session.commit()
-        
-       flash(lazy_gettext('Team successfully created'), 'success')
-       return redirect(url_for('team.index'))
+   if request.method != 'POST':
+       return respond(False)
 
-   if request.method == 'POST' and not form.validate():
+   if not form.validate():
        flash(lazy_gettext('Please correct the errors'), 'error')
-    
-   return render_template('/team/register.html', form=form)
+       return respond(True)
 
+        
+   team = Team( name=form.name.data,
+                       description=form.description.data,
+                       public=form.public.data,
+                       owner=current_user.id)
+
+   cached_teams.reset()
+   db.session.add(team)
+   db.session.commit()
+
+   # Insert into the current user in the new group 
+   user2team = User2Team( user_id = current_user.id,
+                                 team_id = team.id)
+
+   db.session.add(user2team)
+   db.session.commit()
+        
+   flash(lazy_gettext('Team created'), 'success')
+   return redirect(url_for('.details', name=team.name))
+
+@blueprint.route('/<name>/settings')
+@login_required
+def settings(name):
+   team = team_by_name(name)
+
+   title = team_title(team, "Settings")
+   try:
+       require.team.read(team)
+       require.team.update(team)
+
+       return render_template('/team/settings.html',
+                               team=team,
+                               title=title)
+   except HTTPException:
+       return abort(403)
+
+
+@blueprint.route('/<name>/users')
+def users(name):
+   team = team_by_name(name)
+
+   # Search users in the team
+   belongs = User2Team.query.filter(User2Team.team_id == team.id)\
+                                  .all()
+
+   template = '/team/users.html'
+   title = team_title(team, None)
+   template_args = {
+                    "team": team, 
+                    "belongs": belongs,
+                    "title": title}
+
+   return render_template(template, **template_args)
+
+# OK
 @blueprint.route('/<name>/delete', methods=['GET', 'POST'])
 @login_required
 def delete(name):
    ''' Delete the team owner of de current_user '''
-   if current_user.admin == 1:
-       current_team  = model.Team.query.filter(Team.name==name)\
-                                       .first()
-   else:
-       current_team  = model.Team.query.filter(Team.owner==current_user.id)\
-                                       .filter(Team.name==name)\
-                                       .first()
-   if current_team:
-       db.session.delete(current_team)
-       db.session.commit()
+   team = team_current(name)
+   title = team_title(team, "Delete")
 
-       flash(lazy_gettext('Your team has been deleted!'), 'success')
-       return redirect(url_for('team.index'))
-   else:
-       flash(lazy_gettext('Oopps, The group that you try to delete doesn\t exists or you don\t are the owner.'), 'error')
-       return redirect(url_for('team.index'))
+   if not require.team.delete(team):
+      abort(403)
 
+   if request.method == 'GET':
+       return render_template('/team/delete.html',
+                               title=title,
+                               team=team)
+   
+   cached_teams.clean(team.id)
+   db.session.delete(team)
+   db.session.commit()
+
+   flash(lazy_gettext('Team deleted!'), 'success')
+   return redirect(url_for('team.index'))
+
+# OK
 @blueprint.route('/<name>/update', methods=['GET', 'POST'])
 @login_required
 def update(name):
    ''' Update the team owner of the current user '''
-   if current_user.admin == 1:
-       user_team  = model.Team.query.filter(Team.name==name)\
-                                    .first()
-   else:
-       user_team  = model.Team.query.filter(Team.owner==current_user.id)\
-                                    .filter(Team.name==name)\
-                                    .first()
-   if user_team:
-       form = UpdateTeamForm(obj=user_team)
-       if request.method == 'GET':
-           title_msg = "Update team: %s" % user_team.name
-           return render_template('team/update.html',
-                               title=title_msg,
-                               form=form,
-                               team=user_team)
-       else:
-           form = UpdateTeamForm(request.form)
-           if form.validate():
-               new_profile = model.Team(id=form.id.data,
-                                     name=form.name.data,
-                                     description=form.description.data,
-                                     public=form.public.data)
+   team = team_current(name)
+  
+   def handle_valid_form(form):
+       new_team = Team(id=form.id.data,
+                                name=form.name.data,
+                                description=form.description.data,
+                                public=form.public.data)
 
-               db.session.merge(new_profile)
-               db.session.commit()
-            
-               flash(lazy_gettext('Your team has been updated!'), 'success')
-               return redirect(url_for('team.index'))
+       db.session.merge(new_team)
+       db.session.commit()
 
-           else:
-               flash(lazy_gettext('Please correct the errors'), 'error')
-               title_msg = 'Update team: %s' % user_team.name
-               return render_template('/team/update.html', form=form,
-                                   title=title_msg)
-   else:
-       flash(lazy_gettext('Oopps, The group that you try to update doesn\t exists or you don\t are the owner.'), 'error')
-       title_msg = 'Update team: '
-       return redirect(url_for('team.index'))
+       flash(lazy_gettext('Team updated!'), 'success')
+       return redirect(url_for('.details',
+                                name=new_team.name))
+
+   if not require.team.update(team):
+       abort(403)
+
+   title = team_title(team, "Update")
+   if request.method == 'GET':
+       form = TeamForm(obj=team)
+       form.populate_obj(team)
+
+   if request.method == 'POST':
+       form = TeamForm(request.form)
+       if form.validate():
+           return handle_valid_form(form)
+       flash(lazy_gettext('Please correct the errors'), 'error')        
+
+   return render_template('/team/update.html',
+                           form=form,
+                           title=title,
+                           team=team)
+
+'''
+@blueprint.route('/add', methods=['GET', 'POST'])
+@login_required
+   #    abort(403)
+
+   # If exists goes to details  
+   #team = model.Team.query.filter(Team.owner==current_user.id).first()
+   #if team:
+   #    template = '/team/index.html'
+   #    title = team_title(team, None)
+   #    template_args = {"team": team, "title": title}
+   #    return render_template(template, **template_args)
+
+   form = TeamForm(request.form)
+
+   def respond(errors):
+       return render_template('team/new.html',
+                               title=lazy_gettext("Create a Team"),
+                               form=form, errors=errors)
+
+   if request.method != 'POST':
+       return respond(False)
+
+   if not form.validate():
+       flash(lazy_gettext('Please correct the errors'), 'error')
+       return respond(True)
+
+        
+   team = model.Team( name=form.name.data,
+                       description=form.description.data,
+                       public=form.public.data,
+                       owner=current_user.id)
+
+   cached_teams.reset()
+   db.session.add(team)
+   # mirar si lo podemos quitar
+   db.session.commit()
+
+   # Insert into the current user in the new group 
+   user2team = model.User2Team( user_id = current_user.id,
+                                 team_id = team.id)
+
+   db.session.add(user2team)
+   db.session.commit()
+        
+   flash(lazy_gettext('Team created'), 'success')
+   return redirect(url_for('.details', name=team.name))
+
+   #if request.method == 'POST' and not form.validate():
+'''
+
+@blueprint.route('/<name>/settings')
+@login_required
+def settings(name):
+   team = team_by_name(name)
+
+   title = team_title(team, "Settings")
+   try:
+       require.team.read(team)
+       require.team.update(team)
+
+       return render_template('/team/settings.html',
+                               team=team,
+                               title=title)
+   except HTTPException:
+       return abort(403)
+
+# Ok
+@blueprint.route('/<name>/delete', methods=['GET', 'POST'])
+@login_required
+def delete(name):
+   ''' Delete the team owner of de current_user '''
+   team = team_current(name)
+   title = team_title(team, "Delete")
+
+   if not require.team.delete(team):
+      abort(403)
+
+   if request.method == 'GET':
+       return render_template('/team/delete.html',
+                               title=title,
+                               team=team)
+   
+   cached_teams.clean(team.id)
+   db.session.delete(team)
+   db.session.commit()
+
+   flash(lazy_gettext('Team deleted!'), 'success')
+   return redirect(url_for('team.index'))
+
+# OK
+@blueprint.route('/<name>/update', methods=['GET', 'POST'])
+@login_required
+def update(name):
+   ''' Update the team owner of the current user '''
+   team = team_current(name)
+  
+   def handle_valid_form(form):
+       new_team = Team(id=form.id.data,
+                                name=form.name.data,
+                                description=form.description.data,
+                                public=form.public.data)
+
+       db.session.merge(new_team)
+       db.session.commit()
+
+       flash(lazy_gettext('Team updated!'), 'success')
+       return redirect(url_for('.details',
+                                name=new_team.name))
+
+   if not require.team.update(team):
+       abort(403)
+
+   title = team_title(team, "Update")
+   if request.method == 'GET':
+       form = TeamForm(obj=team)
+       form.populate_obj(team)
+
+   if request.method == 'POST':
+       form = TeamForm(request.form)
+       if form.validate():
+           return handle_valid_form(form)
+       flash(lazy_gettext('Please correct the errors'), 'error')        
+
+   return render_template('/team/update.html',
+                           form=form,
+                           title=title,
+                           team=team)
 
 @blueprint.route('/<name>/join', methods=['GET', 'POST'])
 @login_required
 def user_add(name):
-   ''' Add user from a team '''
-   if current_user.admin == 1:
-       team  = model.Team.query.filter_by(name=name).first()
-   else:
-       team = model.Team.query.filter((Team.name==name) & \
-                                      (Team.public=='t')).first()
-   if team:
-       # Search relationship
-       user2team = db.session.query(User2Team)\
+   ''' Add Current User to a team '''
+   team = team_by_name(name)
+  
+   # Search relationship
+   user2team = db.session.query(User2Team)\
                    .filter(User2Team.user_id == current_user.id )\
                    .filter(User2Team.team_id == team.id )\
                    .first()
 
-       if user2team:
-           flash( lazy_gettext('This user already is in this team'), 'error')
-           return redirect(url_for('team.searchusers',  name=team.name ))
+   if user2team:
+       flash( lazy_gettext('This user already is in this team'), 'error')
+       return redirect(url_for('team.search_users',  name=team.name ))
 
-       else:
-           user2team = model.User2Team(
+   else:
+       user2team = User2Team(
                       user_id = current_user.id,
                       team_id = team.id)
 
-           db.session.add(user2team)
-           db.session.commit()
-           flash( lazy_gettext('Association to the team created'), 'success')
-           return redirect(url_for('team.details',  name=team.name ))
-
-   else:
-       abort(404)  
+       db.session.add(user2team)
+       db.session.commit()
+       flash( lazy_gettext('Association to the team created'), 'success')
+       return redirect(url_for('team.signed' ))
 
 @blueprint.route('/<name>/separate', methods=['GET', 'POST'])
 @login_required
 def user_delete(name):
-    if current_user.admin == 1:
-       team  = model.Team.query.filter_by(name=name).first()
-    else:
-       team = model.Team.query.filter((Team.name==name) & \
-                                      (Team.public=='t')).first()
+   team = team_by_name(name)
 
-    if team:
-       ''' Check if exits association'''
-       user2team = db.session.query(User2Team)\
+   ''' Check if exits association'''
+   user2team = db.session.query(User2Team)\
                    .filter(User2Team.user_id == current_user.id )\
                    .filter(User2Team.team_id == team.id )\
                    .first()
 
-       if user2team:
-          db.session.delete(user2team)
-          db.session.commit()
+   if user2team:
+       db.session.delete(user2team)
+       db.session.commit()
+       flash(lazy_gettext('Association to the team deleted'), 'success')
 
-          flash(lazy_gettext('Association to the team deleted'), 'success')
-
-    return redirect(url_for('team.details',  name=name ))
+   return redirect(url_for('team.signed', name=name))
 
 @blueprint.route('/<name>/join/<user>', methods=['GET', 'POST'])
 @login_required
 def join_add(name,user):
    ''' Add user from a team '''
-   if current_user.admin == 1:
-       team  = model.Team.query.filter_by(name=name).first()
+   team = team_current(name)
+  
+   user = User.query.filter_by(name=user).first()
+   if not user:
+       flash( lazy_gettext('This user don\t exists!!!'), 'error')
+       return redirect(url_for('team.index',  name=team.name ))
+
+   # Search relationship
+   user2team = db.session.query(User2Team)\
+                 .filter(User2Team.user_id == user.id )\
+                 .filter(User2Team.team_id == team.id )\
+                 .first()
+
+   if user2team:
+       flash( lazy_gettext('This user already is in this team'), 'error')
+       return redirect(url_for('team.searchusers',  name=team.name ))
+
    else:
-       team = model.Team.query.filter((Team.name==name) & \
-                                      (Team.owner==current_user.id)).first()
-   if team:
-       user = model.User.query.filter_by(name=user).first()
-       if not user:
-           flash( lazy_gettext('This user don\t exists!!!'), 'error')
-           return redirect(url_for('team.index',  name=team.name ))
-
-       # Search relationship
-       user2team = db.session.query(User2Team)\
-                   .filter(User2Team.user_id == user.id )\
-                   .filter(User2Team.team_id == team.id )\
-                   .first()
-
-       if user2team:
-           flash( lazy_gettext('This user already is in this team'), 'error')
-           return redirect(url_for('team.searchusers',  name=team.name ))
-
-       else:
-           user2team = model.User2Team(
+       user2team = User2Team(
                       user_id = user.id,
                       team_id = team.id)
 
-           db.session.add(user2team)
-           db.session.commit()
-           flash( lazy_gettext('Association to the team created'), 'success')
-           return redirect(url_for('team.details',  name=team.name ))
-
-   else:
-       abort(404)  
+       db.session.add(user2team)
+       db.session.commit()
+       flash( lazy_gettext('Association to the team created'), 'success')
+       return redirect(url_for('team.users',  name=team.name ))
 
 @blueprint.route('/<name>/separate/<user>', methods=['GET', 'POST'])
 @login_required
 def join_delete(name, user):
-    ''' Delete user from a team '''
-    if current_user.admin == 1:
-       team  = model.Team.query.filter_by(name=name).first()
-    else:
-       team = model.Team.query.filter((Team.name==name) & \
-                                      (Team.owner==current_user.id)).first()
+   ''' Delete user from a team '''
+   team = team_current(name)
 
-    if team:
-       user = model.User.query.filter_by(name=user).first()
-       if not user:
-           flash( lazy_gettext('This user don\t exists!!!'), 'error')
-           return redirect(url_for('team.details',  name=team.name ))
+   user = User.query.filter_by(name=user).first()
+   if not user:
+       flash( lazy_gettext('This user doesn\'t exists!!!'), 'error')
+       return redirect(url_for('team.index'))
 
-       ''' Check if exits association'''
-       user2team = db.session.query(User2Team)\
-                   .filter(User2Team.user_id == user.id )\
-                   .filter(User2Team.team_id == team.id )\
-                   .first()
+   ''' Check if exits association'''
+   user2team = db.session.query(User2Team)\
+                  .filter(User2Team.user_id == user.id )\
+                  .filter(User2Team.team_id == team.id )\
+                  .first()
 
-       if user2team:
-          db.session.delete(user2team)
-          db.session.commit()
+   if user2team:
+       db.session.delete(user2team)
+       db.session.commit()
 
-          flash(lazy_gettext('The user has been deleted to the team correctly!'), 'success')
+       flash(lazy_gettext('The user has been deleted to the team correctly!'), 'success')
 
-    return redirect(url_for('team.details',  name=name ))
-
-class TeamForm(Form):
-   err_msg = lazy_gettext("Team Name must be between 3 and 35 characters long")
-   err_msg_2 = lazy_gettext("The team name is already taken")
-   name = TextField(lazy_gettext('Team Name'),
-                         [validators.Length(min=3, max=35, message=err_msg),
-                          pb_validator.Unique(db.session, model.Team,
-                                              model.Team.name, err_msg_2)])
-
-   err_msg = lazy_gettext("Team Description must be between 3 and 35 characters long")
-   description = TextField(lazy_gettext('Description'),
-                         [validators.Length(min=3, max=35, message=err_msg)])
-
-   public = BooleanField(lazy_gettext('Public'), default=False)
-
-class TeamUserForm(Form):
-   team = SelectField(lazy_gettext('Team name'), coerce=int)
- 
-   def set_teams(self, teams):
-       ''' Fill the teams.choices '''
-       choices = []
-       for team in teams:
-           choices.append((team.id,team.name))
-       self.team.choices = choices
-
-''' Modify Team '''
-class UpdateTeamForm(Form):
-   id = IntegerField(label=None, widget=HiddenInput())
-   err_msg = lazy_gettext("Team Name must be between 3 and 35 characters long")
-   err_msg_2 = lazy_gettext("The team name is already taken")
-   name = TextField(lazy_gettext('Team Name'),
-                         [validators.Length(min=3, max=35, message=err_msg),
-                          pb_validator.Unique(db.session, model.Team,
-                                              model.Team.name, err_msg_2)])
-
-   err_msg = lazy_gettext("Team Description must be between 3 and 35 characters long")
-   description = TextField(lazy_gettext('Description'),
-                         [validators.Length(min=3, max=35, message=err_msg)])
-
-    
-   description = TextField(lazy_gettext('Description'),
-                         [validators.Length(min=3, max=35, message=err_msg)])
-
-   public = BooleanField(lazy_gettext('Public'))
-
-''' Modify Team '''
-class UpdateTeamForm(Form):
-   id = IntegerField(label=None, widget=HiddenInput())
-   err_msg = lazy_gettext("Team Name must be between 3 and 35 characters long")
-   err_msg_2 = lazy_gettext("The team name is already taken")
-   name = TextField(lazy_gettext('Team Name'),
-                         [validators.Length(min=3, max=35, message=err_msg),
-                          pb_validator.Unique(db.session, model.Team,
-                                              model.Team.name, err_msg_2)])
-
-   err_msg = lazy_gettext("Team Description must be between 3 and 35 characters long")
-   description = TextField(lazy_gettext('Description'),
-                         [validators.Length(min=3, max=35, message=err_msg)])
-
-   public = BooleanField(lazy_gettext('Public'))
+   return redirect(url_for('team.signed'))
 
 def get_team_score(team):
    '''' Get total score by team '''
