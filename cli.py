@@ -36,10 +36,12 @@ def db_create():
     setup_alembic_config()
     # finally, add a minimum set of categories: Volunteer Thinking, Volunteer Sensing, Published and Draft
     categories = []
-    categories.append(model.Category(name="Volunteer Thinking"))
-    categories.append(model.Category(name="Volunteer Sensing"))
-    categories.append(model.Category(name="Published"))
-    categories.append(model.Category(name="Draft"))
+    categories.append(model.Category(name="Thinking",
+                                     short_name='thinking',
+                                     description='Volunteer Thinking apps'))
+    categories.append(model.Category(name="Volunteer Sensing",
+                                     short_name='sensing',
+                                     description='Volunteer Sensing apps'))
     db.session.add_all(categories)
     db.session.commit()
 

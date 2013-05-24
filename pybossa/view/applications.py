@@ -133,7 +133,11 @@ def index(page):
         if len(categories) > 0:
             cat_short_name = categories[0]['short_name']
         else:
-            cat_short_name = db.session.query(model.Category).first().short_name
+            cat = db.session.query(model.Category).first()
+            if cat:
+                cat_short_name = cat.short_name
+            else:
+                cat_short_name = "algo"
         return redirect(url_for('.app2_index', category=cat_short_name))
 
 
@@ -142,49 +146,42 @@ def app_index(page, lookup, category, fallback, use_count):
     if not require.app.read():
         abort(403)
 
-    if category:
-        per_page = 5
+    per_page = 5
 
-        apps, count = lookup(category, page, per_page)
+    apps, count = lookup(category, page, per_page)
 
-        if fallback and not apps:
-            return redirect(url_for('.published'))
+    if fallback and not apps:
+        return redirect(url_for('.published'))
 
-        pagination = Pagination(page, per_page, count)
-        categories = cached_cat.get_used()
-        # Check for pre-defined categories featured and draft
-        featured_cat = model.Category(name='Featured',
-                                      short_name='featured',
-                                      description='Featured applications')
-        if category is 'featured':
-            active_cat = featured_cat
-        elif category is 'draft':
-            active_cat = model.Category(name='Draft',
-                                        short_name='draft',
-                                        description='Draft applications')
-        else:
-            active_cat = db.session.query(model.Category)\
-                           .filter_by(short_name=category).first()
-
-        # Check if we have to add the section Featured to local nav
-        if cached_apps.n_featured() > 0:
-            categories.insert(0, featured_cat)
-        template_args = {
-            "apps": apps,
-            "title": lazy_gettext("Applications"),
-            "pagination": pagination,
-            "active_cat": active_cat,
-            "categories": categories}
-
-        if use_count:
-            template_args.update({"count": count})
-        return render_template('/applications/index.html', **template_args)
+    pagination = Pagination(page, per_page, count)
+    categories = cached_cat.get_all()
+    # Check for pre-defined categories featured and draft
+    featured_cat = model.Category(name='Featured',
+                                  short_name='featured',
+                                  description='Featured applications')
+    if category is 'featured':
+        active_cat = featured_cat
+    elif category is 'draft':
+        active_cat = model.Category(name='Draft',
+                                    short_name='draft',
+                                    description='Draft applications')
     else:
-        template_args = {
-            'apps': None,
-            'title': lazy_gettext('Applications'),
-        }
-        return render_template('/applications/index.html', **template_args)
+        active_cat = db.session.query(model.Category)\
+                       .filter_by(short_name=category).first()
+
+    # Check if we have to add the section Featured to local nav
+    if cached_apps.n_featured() > 0:
+        categories.insert(0, featured_cat)
+    template_args = {
+        "apps": apps,
+        "title": lazy_gettext("Applications"),
+        "pagination": pagination,
+        "active_cat": active_cat,
+        "categories": categories}
+
+    if use_count:
+        template_args.update({"count": count})
+    return render_template('/applications/index.html', **template_args)
 
 
 @blueprint.route('/category/draft', defaults={'page': 1})

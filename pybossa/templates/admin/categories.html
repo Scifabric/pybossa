@@ -18,6 +18,7 @@
                     {{form.hidden_tag()}}
                     <fieldset>
                     {{ render_field(form.name, placeholder= _('Category name')) }}
+                    {{ render_field(form.description, placeholder= _('Category description')) }}
                     <div class="form-actions">
                         <button type="submit" class="btn btn-primary">{{_('Add Category')}}</button>
                     </div>

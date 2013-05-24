@@ -17,8 +17,9 @@
             <fieldset>
             {{form.id}}
             {{ render_field(form.name, placeholder= _('Category name')) }}
+            {{ render_field(form.description, placeholder= _('Category description')) }}
             <div class="form-actions">
-                <button type="submit" class="btn btn-primary">{{_('Update Category Name')}}</button>
+                <button type="submit" class="btn btn-primary">{{_('Update Category')}}</button>
                 <a href="{{url_for('admin.categories')}}" class="btn" >{{_('Cancel')}}</a>
             </div>
             </fieldset>

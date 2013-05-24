@@ -164,6 +164,8 @@ class CategoryForm(Form):
                      [validators.Required(),
                       pb_validator.Unique(db.session, model.Category, model.Category.name,
                                           message="Name is already taken.")])
+    description = TextField(lazy_gettext('Description'),
+                            [validators.Required()])
 
 
 @blueprint.route('/categories', methods=['GET', 'POST'])
@@ -181,7 +183,8 @@ def categories():
             if form.validate():
                 slug = form.name.data.lower().replace(" ", "")
                 category = model.Category(name=form.name.data,
-                                          short_name=slug)
+                                          short_name=slug,
+                                          description=form.description.data)
                 db.session.add(category)
                 db.session.commit()
                 cached_cat.reset()
@@ -212,22 +215,28 @@ def del_category(id):
     try:
         category = db.session.query(model.Category).get(id)
         if category:
-            require.category.delete(category)
-            if request.method == 'GET':
-                return render_template('admin/del_category.html',
-                                       title=lazy_gettext('Delete Category'),
-                                       category=category)
-            if request.method == 'POST':
-                db.session.delete(category)
-                db.session.commit()
-                msg = lazy_gettext("Category deleted")
-                flash(msg, 'success')
-                cached_cat.reset()
-                return redirect(url_for(".categories"))
+            if len(cached_cat.get_all()) > 1:
+                require.category.delete(category)
+                if request.method == 'GET':
+                    return render_template('admin/del_category.html',
+                                           title=lazy_gettext('Delete Category'),
+                                           category=category)
+                if request.method == 'POST':
+                    db.session.delete(category)
+                    db.session.commit()
+                    msg = lazy_gettext("Category deleted")
+                    flash(msg, 'success')
+                    cached_cat.reset()
+                    return redirect(url_for(".categories"))
+            else:
+                msg = lazy_gettext('Sorry, it is not possible to delete the only \
+                                   available category. You can modify it, click the \
+                                   edit button')
+                flash(msg, 'warning')
+                return redirect(url_for('.categories'))
         else:
             return abort(404)
     except:
-        raise
         abort(403)
 
 
