@@ -289,21 +289,22 @@ class TestWeb(web.Helper):
         res = self.app.get('/app/noapp/24/results.json', follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
 
-    def test_06_applications(self):
-        """Test WEB applications index interface works"""
+    def test_06_applications_without_apps(self):
+        """Test WEB applications index without apps works"""
         # Check first without apps
+        Fixtures.create_categories()
         res = self.app.get('/app', follow_redirects=True)
         assert "Applications" in res.data, res.data
-        assert "Featured" in res.data, res.data
-        assert "Published" in res.data, res.data
-        assert "Draft" in res.data, res.data
+        assert Fixtures.cat_1 in res.data, res.data
 
+    def test_06_applications_2(self):
+        """Test WEB applications index with apps"""
         Fixtures.create()
 
         res = self.app.get('/app', follow_redirects=True)
         assert self.html_title("Applications") in res.data, res.data
         assert "Applications" in res.data, res.data
-        assert '/app/test-app' in res.data, res.data
+        assert Fixtures.app_short_name in res.data, res.data
 
     def test_06_featured_apps(self):
         """Test WEB application index shows featured apps in all the pages works"""
@@ -613,9 +614,7 @@ class TestWeb(web.Helper):
 
         res = self.app.get('app', follow_redirects=True)
         assert "Applications" in res.data, res.data
-        assert "Featured" in res.data, res.data
-        assert "Published" in res.data, res.data
-        assert "Draft" in res.data, res.data
+        assert Fixtures.cat_1 in res.data, res.data
 
     def test_20_app_index_published(self):
         """Test WEB Application Index published works"""
@@ -638,14 +637,32 @@ class TestWeb(web.Helper):
 
     def test_20_app_index_draft(self):
         """Test WEB Application Index draft works"""
+        # Create root
         self.register()
         self.new_application()
         self.signout()
+        # Create a user
+        self.register(fullname="jane", username="jane", email="jane@jane.com")
+        self.signout()
 
+        # As Anonymous
+        res = self.app.get('/app/draft', follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous should not see draft apps"
+        assert dom.find(id='signin') is not None, err_msg
+
+        # As authenticated but not admin
+        self.signin(email="jane@jane.com", password="p4ssw0rd")
+        res = self.app.get('/app/draft', follow_redirects=True)
+        assert res.status_code == 403, "Non-admin should not see draft apps"
+        self.signout()
+
+        # As Admin
+        self.signin()
         res = self.app.get('/app/draft', follow_redirects=True)
         assert "Applications" in res.data, res.data
         assert "app-published" not in res.data, res.data
-        assert "app-draft" in res.data, res.data
+        assert "draft" in res.data, res.data
         assert "Sample App" in res.data, res.data
 
     def test_21_get_specific_ongoing_task_anonymous(self):

@@ -47,11 +47,12 @@ class Fixtures:
     app_short_name = u'test-app'
     password = u'tester'
     root_password = password + 'root'
+    cat_1 = 'thinking'
+    cat_2 = 'sensing'
 
     @classmethod
     def create(cls,sched='default'):
         root, user,user2 = Fixtures.create_users()
-
         info = {
             'total': 150,
             'long_description': 'hello world',
@@ -70,8 +71,6 @@ class Fixtures:
         db.session.commit()
         db.session.add(app)
 
-        # Categories
-        Fixtures.create_categories()
 
         task_info = {
             'n_answers': 10,
@@ -154,12 +153,17 @@ class Fixtures:
 
     @classmethod
     def create_app(cls,info):
+        category = db.session.query(model.Category).first()
+        if category is None:
+            cls.create_categories()
+            category = db.session.query(model.Category).first()
         app = model.App(
-                name = cls.app_name,
-                short_name = cls.app_short_name,
-                description = u'description',
-                hidden = 0,
-                info = info
+                name=cls.app_name,
+                short_name=cls.app_short_name,
+                description=u'description',
+                hidden=0,
+                category_id=category.id,
+                info=info
             )
         return app
 
@@ -186,7 +190,7 @@ class Fixtures:
 
     @classmethod
     def create_categories(cls):
-        names = ['Volunteer Thinking', 'Volunteer Sensing']
+        names = [cls.cat_1, cls.cat_2]
         db.session.add_all([model.Category(name=c_name,
                                            short_name=c_name.lower().replace(" ",""),
                                            description=c_name)

@@ -107,31 +107,38 @@ def app_by_shortname(short_name):
 
 
 @blueprint.route('/', defaults={'page': 1})
-@blueprint.route('/page/<int:page>', defaults={'page': 1})
+@blueprint.route('/page/<int:page>/', defaults={'page': 1})
 def redirect_old_featured(page):
     """DEPRECATED only to redirect old links"""
     return redirect(url_for('.index', page=page), 301)
 
 
-@blueprint.route('/published', defaults={'page': 1})
-@blueprint.route('/published/<int:page>', defaults={'page': 1})
+@blueprint.route('/published/', defaults={'page': 1})
+@blueprint.route('/published/<int:page>/', defaults={'page': 1})
 def redirect_old_published(page):
     """DEPRECATED only to redirect old links"""
     category = db.session.query(model.Category).first()
     return redirect(url_for('.app2_index', category=category.short_name, page=page), 301)
 
 
-@blueprint.route('/category/featured', defaults={'page': 1})
-@blueprint.route('/category/featured/page/<int:page>')
+@blueprint.route('/draft/', defaults={'page': 1})
+@blueprint.route('/draft/<int:page>/', defaults={'page': 1})
+def redirect_old_draft(page):
+    """DEPRECATED only to redirect old links"""
+    return redirect(url_for('.draft', page=page), 301)
+
+
+@blueprint.route('/category/featured/', defaults={'page': 1})
+@blueprint.route('/category/featured/page/<int:page>/')
 def index(page):
     """List apps in the system"""
     if cached_apps.n_featured() > 0:
         return app_index(page, cached_apps.get_featured, 'featured',
                          True, False)
     else:
-        categories = cached_cat.get_used()
+        categories = cached_cat.get_all()
         if len(categories) > 0:
-            cat_short_name = categories[0]['short_name']
+            cat_short_name = categories[0].short_name
         else:
             cat = db.session.query(model.Category).first()
             if cat:
@@ -184,8 +191,8 @@ def app_index(page, lookup, category, fallback, use_count):
     return render_template('/applications/index.html', **template_args)
 
 
-@blueprint.route('/category/draft', defaults={'page': 1})
-@blueprint.route('/category/draft/page/<int:page>')
+@blueprint.route('/category/draft/', defaults={'page': 1})
+@blueprint.route('/category/draft/page/<int:page>/')
 @login_required
 @admin_required
 def draft(page):
@@ -194,8 +201,8 @@ def draft(page):
                      False, True)
 
 
-@blueprint.route('/category/<string:category>', defaults={'page': 1})
-@blueprint.route('/category/<string:category>/page/<int:page>')
+@blueprint.route('/category/<string:category>/', defaults={'page': 1})
+@blueprint.route('/category/<string:category>/page/<int:page>/')
 def app2_index(category, page):
     """Show Apps that belong to a given category"""
     return app_index(page, cached_apps.get, category, False, True)

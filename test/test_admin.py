@@ -451,7 +451,7 @@ class TestAdmin(web.Helper):
     def test_22_admin_delete_category(self):
         """Test ADMIN delete category works"""
         Fixtures.create()
-        obj = db.session.query(model.Category).first()
+        obj = db.session.query(model.Category).get(2)
         category = obj.dictize()
 
         # Anonymous user GET
