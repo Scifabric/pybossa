@@ -1,0 +1,29 @@
+{% extends "/base.html" %}
+{% set active_page = "teams" %}
+{% set active_team  = "settings" %}
+{% import "team/_helpers.html" as helper %}
+
+{% block content %}
+<div class="row">
+    {% if team %}
+    <div class="span3">
+        {{ helper.render_team_local_nav(team, 'settings', current_user) }}
+    </div>
+    <!-- Team -->
+    <div class="span9">
+        <h1><strong>{{ team.name }}</strong>: {{ _('Settings') }}</h1>
+        {{ helper.render_team_summary(team, current_user) }}
+        <h2>{{ _('Team Settings') }}</h2>
+        <div class="btn-group">
+            <a class="btn" href="{{ url_for('team.update', name = team.name) }}"><i class="icon-edit icon-white"></i> {{ _('Edit the team details') }}</a>
+            <a class="btn" href="{{ url_for('team.delete', name = team.name) }}"><i class="icon-trash icon-white"></i> {{ _('Delete the team') }}</a>
+        </div>
+    </div>
+    {% else %}
+    <div class="page-header">
+        <h1>{{ _('Sorry! This app does not exists.') }}</h1>
+    </div>
+{% endif %}
+</div>
+{{ helper.broken_image() }}
+{% endblock %}
