@@ -631,8 +631,8 @@ class TestWeb(web.Helper):
 
         res = self.app.get('app', follow_redirects=True)
         assert "Applications" in res.data, res.data
-        assert "app-published" in res.data, res.data
-        assert "app-draft" not in res.data, res.data
+        assert Fixtures.cat_1 in res.data, res.data
+        assert "draft" not in res.data, res.data
         assert "Sample App" in res.data, res.data
 
     def test_20_app_index_draft(self):
