@@ -37,7 +37,7 @@
             <div class="span6">
                 <div class="btn-group">
                     <a href="{{url_for('admin.update_category', id=c.id)}}" class="btn"><i class="icon-edit"></i> {{_('Edit Category Name')}}</a>
-                    {% if n_apps_per_category[c.short_name] == 0 %}
+                    {% if n_apps_per_category[c.short_name] == 0 and (categories | count > 1) %}
                     <a href="{{url_for('admin.del_category', id=c.id)}}" class="btn"><i class="icon-trash"></i> {{_('Delete Category')}}</a>
                     {% else %}
                     <a href="#" class="btn disabled"><i class="icon-trash"></i> {{_('Delete Category')}}</a>
