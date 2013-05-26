@@ -17,6 +17,7 @@ from pybossa.core import cache
 from pybossa.core import db
 from pybossa.model import Featured, Team
 from pybossa.util import pretty_date
+from pybossa.team import get_number_members, get_rank
 
 import json
 import string
@@ -35,20 +36,17 @@ def n_public():
     for row in results:
         count = row[0]
     return count
-
+	
 
 def get_publics(page=1, per_page=5):
    '''Return a list of public teams with a pagination'''
-   print "get_public"
-
-
    count = n_public()
 
    sql = text('''
                SELECT team.id,team.name,team.description,team.created,
-               team.owner,"user".name as owner_name
+               team.owner_id,"user".name as owner, team.public
                FROM team 
-               INNER JOIN "user" ON team.owner="user".id
+               INNER JOIN "user" ON team.owner_id="user".id
                WHERE public='t' 
                OFFSET(:offset) LIMIT(:limit);
                ''')
@@ -59,27 +57,13 @@ def get_publics(page=1, per_page=5):
    for row in results:
        team = dict(id=row.id, name=row.name,
                    created=row.created, description=row.description,
+                   owner_id=row.owner_id,
                    owner=row.owner,
-                   owner_name=row.owner_name
-                   )
-       ''' Score and Rank '''
-       sql = text('''
-                  WITH  global_rank as(
-                  WITH scores AS( 
-                  SELECT team_id, count(*) AS score FROM user2team 
-                  INNER JOIN task_run ON user2team.user_id = task_run.user_id 
-                  GROUP BY user2team.team_id ) 
-                  SELECT team_id,score,rank() OVER (ORDER BY score DESC)  
-                  FROM  scores) 
-                  SELECT  * from global_rank where team_id=:team_id;
-                  ''')
-
-       results = db.engine.execute(sql, team_id=row.id)
-
-       for result in results:
-           team['rank'] = result.rank
-           team['score'] = result.score
-
+				   public=row.public
+                   )       
+		  
+       team['rank'], team['score'] = get_rank(row.id)		  
+       team['members'] = get_number_members(row.id)
        teams.append(team)
 
    return teams, count
