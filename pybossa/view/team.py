@@ -39,6 +39,7 @@ from pybossa.auth import require
 from sqlalchemy import or_, func, and_
 from pybossa.cache import teams as cached_teams
 from werkzeug.exceptions import HTTPException
+from pybossa.team import get_number_members
 
 blueprint = Blueprint('team', __name__)
 
@@ -61,17 +62,49 @@ def team_current(name):
        return Team.query.filter(Team.name==name)\
                         .first_or_404()
    else:
-       return Team.query.filter(Team.owner==current_user.id)\
+       return Team.query.filter(Team.owner_id==current_user.id)\
                         .filter(Team.name==name)\
                         .first_or_404()
 
+def user_belong_team(team_id):
+   ''' Is a user belong to a team'''
+   if  current_user.is_anonymous():    
+       return 0
+   else:
+      belong = User2Team.query.filter(User2Team.team_id==team_id)\
+                               .filter(User2Team.user_id==current_user.id)\
+                               .first()
+      return (1,0)[belong is None]
+
+def get_rank(team_id):
+    ''' Score and Rank '''
+    sql = text('''
+               WITH  global_rank as(
+               WITH scores AS( 
+               SELECT team_id, count(*) AS score FROM user2team 
+               INNER JOIN task_run ON user2team.user_id = task_run.user_id 
+               GROUP BY user2team.team_id ) 
+               SELECT team_id,score,rank() OVER (ORDER BY score DESC)  
+               FROM  scores) 
+               SELECT  * from global_rank where team_id=:team_id;
+               ''')
+
+    results = db.engine.execute(sql, team_id=team_id)
+    rank = 0
+    score = 0
+    for result in results:
+        rank  = result.rank
+        score = result.score
+		
+    return rank, score
+	
 def get_signed_teams(page=1, per_page=5):
    '''Return a list of public teams with a pagination'''
 
    sql = text('''
               SELECT count(*)
               FROM team 
-              INNER JOIN "user" ON team.owner="user".id
+              INNER JOIN "user" ON team.owner_id="user".id
               INNER JOIN user2team on team.id=user2team.team_id
               WHERE user2team.user_id=:user_id
               ''')
@@ -81,9 +114,9 @@ def get_signed_teams(page=1, per_page=5):
     
    sql = text('''
               SELECT team.id,team.name,team.description,team.created,
-              team.owner,"user".name as owner_name
+              team.owner_id,"user".name as owner, team.public
               FROM team 
-              INNER JOIN "user" ON team.owner="user".id
+              INNER JOIN "user" ON team.owner_id="user".id
               INNER JOIN user2team on team.id=user2team.team_id
               WHERE user2team.user_id=:user_id
               OFFSET(:offset) LIMIT(:limit);
@@ -95,27 +128,13 @@ def get_signed_teams(page=1, per_page=5):
    for row in results:
        team = dict(id=row.id, name=row.name,
                    created=row.created, description=row.description,
-                   owner=row.owner,
-                   owner_name=row.owner_name
+                   owner_id=row.owner_id,
+                   owner_name=row.owner,
+				   public=row.public
                    )
     
-       ''' Score and Rank '''
-       sql = text('''
-                  WITH  global_rank as(
-                  WITH scores AS( 
-                  SELECT team_id, count(*) AS score FROM user2team 
-                  INNER JOIN task_run ON user2team.user_id = task_run.user_id 
-                  GROUP BY user2team.team_id ) 
-                  SELECT team_id,score,rank() OVER (ORDER BY score DESC)  
-                  FROM  scores) 
-                  SELECT  * from global_rank where team_id=:team_id;
-                  ''')
-
-       results = db.engine.execute(sql, team_id=row.id)
-       for result in results:
-           team['rank'] = result.rank
-           team['score'] = result.score
-
+       team['rank'], team['score'] = get_rank(row.id)	
+       team['members'] =get_number_members(row.id)
        teams.append(team)
 
    return teams, count
@@ -160,6 +179,7 @@ def signed(page):
 
     return team_index(page, list_teams, 'signed',
                       True, False, lazy_gettext('Signed Teams'))
+					  
 # Ok
 def team_index(page, lookup, team_type, fallback, use_count, title):
     """Show apps of app_type"""
@@ -172,17 +192,11 @@ def team_index(page, lookup, team_type, fallback, use_count, title):
 
     team_owner = []
     if not current_user.is_anonymous():
-       team_owner = Team.query.filter(Team.owner==current_user.id).first()
+       team_owner = Team.query.filter(Team.owner_id==current_user.id).first()
    
        for team in teams:
-           user2team = User2Team.query.filter(User2Team.team_id==team['id'])\
-                                        .filter(User2Team.user_id==current_user.id)\
-                                        .first()
-           team['belong'] = (1, 0)[user2team is None]
+           team['belong'] = user_belong_team(1)
     
-    #if fallback and not apps:
-    #    return redirect(url_for('.published'))
-
     pagination = Pagination(page, per_page, count)
     template_args = {
         "teams": teams,
@@ -197,10 +211,15 @@ def team_index(page, lookup, team_type, fallback, use_count, title):
     return render_template('/team/index.html', **template_args)
 
 # Ok
+
 @blueprint.route('/<name>/')
 def details(name=None):
    team = team_by_name(name)
-
+   
+   data = dict( belong = user_belong_team(team.id),
+                members = get_number_members(team.id))
+   data['rank'], data['score'] = get_rank(team.id)
+   
    try:
        require.team.read(team)
        #require.team.update(team)
@@ -212,7 +231,11 @@ def details(name=None):
        template = '/team/index.html'
 
    title = team_title(team, None)
-   template_args = {"team": team, "title": title}
+   template_args = {
+                    "team": team, 
+		            "title": title,
+		            "data": data,
+                   }
 
    return render_template(template, **template_args)
 
@@ -304,7 +327,7 @@ def search_users(name):
                user2team = User2Team.query.filter(User2Team.team_id==team.id)\
                                                 .filter(User2Team.user_id==found.id)\
                                                 .first()
-               found.belong = (1, 0)[user2team is None]
+               found.belongbelong = (1, 0)[user2team is None]
 
            return render_template('/team/search_users.html',
                             founds =founds,
@@ -322,7 +345,7 @@ class SearchForm(Form):
 @blueprint.route('/new/', methods=['GET', 'POST'])
 @login_required
 def new():
-   team = Team.query.filter(Team.owner==current_user.id).first()
+   team = Team.query.filter(Team.owner_id==current_user.id).first()
    if team:
        flash("<strong>Ooops!</strong> You already ownn your group "
            "<strong>%s</strong>" % team.name)
@@ -346,7 +369,7 @@ def new():
    team = Team( name=form.name.data,
                        description=form.description.data,
                        public=form.public.data,
-                       owner=current_user.id)
+                       owner_id=current_user.id)
 
    cached_teams.reset()
    db.session.add(team)
@@ -457,58 +480,6 @@ def update(name):
                            form=form,
                            title=title,
                            team=team)
-
-'''
-@blueprint.route('/add', methods=['GET', 'POST'])
-@login_required
-   #    abort(403)
-
-   # If exists goes to details  
-   #team = model.Team.query.filter(Team.owner==current_user.id).first()
-   #if team:
-   #    template = '/team/index.html'
-   #    title = team_title(team, None)
-   #    template_args = {"team": team, "title": title}
-   #    return render_template(template, **template_args)
-
-   form = TeamForm(request.form)
-
-   def respond(errors):
-       return render_template('team/new.html',
-                               title=lazy_gettext("Create a Team"),
-                               form=form, errors=errors)
-
-   if request.method != 'POST':
-       return respond(False)
-
-   if not form.validate():
-       flash(lazy_gettext('Please correct the errors'), 'error')
-       return respond(True)
-
-        
-   team = model.Team( name=form.name.data,
-                       description=form.description.data,
-                       public=form.public.data,
-                       owner=current_user.id)
-
-   cached_teams.reset()
-   db.session.add(team)
-   # mirar si lo podemos quitar
-   db.session.commit()
-
-   # Insert into the current user in the new group 
-   user2team = model.User2Team( user_id = current_user.id,
-                                 team_id = team.id)
-
-   db.session.add(user2team)
-   db.session.commit()
-        
-   flash(lazy_gettext('Team created'), 'success')
-   return redirect(url_for('.details', name=team.name))
-
-   #if request.method == 'POST' and not form.validate():
-'''
-
 @blueprint.route('/<name>/settings')
 @login_required
 def settings(name):
