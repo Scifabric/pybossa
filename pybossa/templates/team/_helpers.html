@@ -132,15 +132,12 @@
 			{% if team.rank %}
             <p style="margin:0"><strong><i class="icon-user"></i> {{ _('Rank') }}</strong>:{{ team.rank }} {{ _('with a score of') }} {{ team.score }}</p>
             {% endif %}
-			
-            {% if not current_user.is_anonymous() %}			    
-				{% if team.belong %}
-				<a href="{{url_for('team.user_delete', name=team.name )}}" class="btn btn-danger"> <i class="icon-trash icon-large"></i> {{ _('Left this team') }}</a>
-				{% else %}              
-					{% if team.owner != current_user.id %}
-					<a href="{{url_for('team.user_add', name=team.name )}}" class="btn btn-primary"><i class="icon-edit  icon-large"></i>{{ _('Join this team') }}</a>              
-					{% endif %}
-				{% endif %}
+            {% if not current_user.is_anonymous() and team.owner_id != current_user.id %}
+	      {% if team.belong %}
+	        <a href="{{url_for('team.user_delete', name=team.name )}}" class="btn btn-danger"> <i class="icon-trash icon-large"></i> {{ _('Left this team') }}</a>
+              {% else %}              
+                <a href="{{url_for('team.user_add', name=team.name )}}" class="btn btn-primary"><i class="icon-edit  icon-large"></i>{{ _('Join this team') }}</a>              
+	      {% endif %}
            {% endif %}
         </div>
     </div> <!--end of clas -->
@@ -155,14 +152,4 @@ function imgError(image) {
     return true;
 }
 </script>
-{% endmacro %}
-
-{% macro render_team_title(team, subtitle=None) %}
-<h1>
-    <img class="img-polaroid" src="{{url_for('static', filename='img/placeholder.png')}}" style="max-width:60px;" onerror="imgError(this);">
-   {% if subtitle %}
-   <strong>{{ team.name }}</strong>: {{subtitle}}</h1>
-   {% else %}
-   <strong>{{ team.name }}</strong></h1>
-   {% endif %}
 {% endmacro %}
