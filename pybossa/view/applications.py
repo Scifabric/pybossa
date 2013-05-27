@@ -29,9 +29,10 @@ import pybossa.validator as pb_validator
 
 from pybossa.core import db
 from pybossa.model import App, Task
-from pybossa.util import Pagination, UnicodeWriter
+from pybossa.util import Pagination, UnicodeWriter, admin_required
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
+from pybossa.cache import categories as cached_cat
 from pybossa.ckan import Ckan
 
 import json
@@ -66,6 +67,7 @@ class AppForm(Form):
         lazy_gettext('Allow Anonymous Contributors'),
         choices=[('True', lazy_gettext('Yes')),
                  ('False', lazy_gettext('No'))])
+    category_id = SelectField(lazy_gettext('Category'), coerce=int)
     long_description = TextAreaField(lazy_gettext('Long Description'))
     hidden = BooleanField(lazy_gettext('Hide?'))
 
@@ -105,51 +107,105 @@ def app_by_shortname(short_name):
 
 
 @blueprint.route('/', defaults={'page': 1})
-@blueprint.route('/page/<int:page>')
+@blueprint.route('/page/<int:page>/', defaults={'page': 1})
+def redirect_old_featured(page):
+    """DEPRECATED only to redirect old links"""
+    return redirect(url_for('.index', page=page), 301)
+
+
+@blueprint.route('/published/', defaults={'page': 1})
+@blueprint.route('/published/<int:page>/', defaults={'page': 1})
+def redirect_old_published(page):
+    """DEPRECATED only to redirect old links"""
+    category = db.session.query(model.Category).first()
+    return redirect(url_for('.app2_index', category=category.short_name, page=page), 301)
+
+
+@blueprint.route('/draft/', defaults={'page': 1})
+@blueprint.route('/draft/<int:page>/', defaults={'page': 1})
+def redirect_old_draft(page):
+    """DEPRECATED only to redirect old links"""
+    return redirect(url_for('.draft', page=page), 301)
+
+
+@blueprint.route('/category/featured/', defaults={'page': 1})
+@blueprint.route('/category/featured/page/<int:page>/')
 def index(page):
-    """By default show the Featured apps"""
-    return app_index(page, cached_apps.get_featured, 'app-featured',
-                     True, False)
+    """List apps in the system"""
+    if cached_apps.n_featured() > 0:
+        return app_index(page, cached_apps.get_featured, 'featured',
+                         True, False)
+    else:
+        categories = cached_cat.get_all()
+        if len(categories) > 0:
+            cat_short_name = categories[0].short_name
+        else:
+            cat = db.session.query(model.Category).first()
+            if cat:
+                cat_short_name = cat.short_name
+            else:
+                cat_short_name = "algo"
+        return redirect(url_for('.app2_index', category=cat_short_name))
 
 
-def app_index(page, lookup, app_type, fallback, use_count):
+def app_index(page, lookup, category, fallback, use_count):
     """Show apps of app_type"""
     if not require.app.read():
         abort(403)
 
     per_page = 5
 
-    apps, count = lookup(page, per_page)
+    apps, count = lookup(category, page, per_page)
 
     if fallback and not apps:
         return redirect(url_for('.published'))
 
     pagination = Pagination(page, per_page, count)
+    categories = cached_cat.get_all()
+    # Check for pre-defined categories featured and draft
+    featured_cat = model.Category(name='Featured',
+                                  short_name='featured',
+                                  description='Featured applications')
+    if category is 'featured':
+        active_cat = featured_cat
+    elif category is 'draft':
+        active_cat = model.Category(name='Draft',
+                                    short_name='draft',
+                                    description='Draft applications')
+    else:
+        active_cat = db.session.query(model.Category)\
+                       .filter_by(short_name=category).first()
+
+    # Check if we have to add the section Featured to local nav
+    if cached_apps.n_featured() > 0:
+        categories.insert(0, featured_cat)
     template_args = {
         "apps": apps,
         "title": lazy_gettext("Applications"),
         "pagination": pagination,
-        "app_type": app_type}
+        "active_cat": active_cat,
+        "categories": categories}
 
     if use_count:
         template_args.update({"count": count})
     return render_template('/applications/index.html', **template_args)
 
 
-@blueprint.route('/published', defaults={'page': 1})
-@blueprint.route('/published/page/<int:page>')
-def published(page):
-    """Show the Published apps"""
-    return app_index(page, cached_apps.get_published, 'app-published',
-                     False, True)
-
-
-@blueprint.route('/draft', defaults={'page': 1})
-@blueprint.route('/draft/page/<int:page>')
+@blueprint.route('/category/draft/', defaults={'page': 1})
+@blueprint.route('/category/draft/page/<int:page>/')
+@login_required
+@admin_required
 def draft(page):
     """Show the Draft apps"""
-    return app_index(page, cached_apps.get_draft, 'app-draft',
+    return app_index(page, cached_apps.get_draft, 'draft',
                      False, True)
+
+
+@blueprint.route('/category/<string:category>/', defaults={'page': 1})
+@blueprint.route('/category/<string:category>/page/<int:page>/')
+def app2_index(category, page):
+    """Show Apps that belong to a given category"""
+    return app_index(page, cached_apps.get, category, False, True)
 
 
 @blueprint.route('/new', methods=['GET', 'POST'])
@@ -158,6 +214,8 @@ def new():
     if not require.app.create():
         abort(403)
     form = AppForm(request.form)
+    categories = db.session.query(model.Category).all()
+    form.category_id.choices = [(c.id, c.name) for c in categories]
 
     def respond(errors):
         return render_template('applications/new.html',
@@ -180,6 +238,8 @@ def new():
                     short_name=form.short_name.data,
                     description=form.description.data,
                     long_description=form.long_description.data,
+                    category_id=form.category_id.data,
+                    allow_anonymous_contributors=form.allow_anonymous_contributors.data,
                     hidden=int(form.hidden.data),
                     owner_id=current_user.id,
                     info=info,)
@@ -312,11 +372,14 @@ def update(short_name):
             hidden=hidden,
             info=info,
             owner_id=app.owner_id,
-            allow_anonymous_contributors=form.allow_anonymous_contributors.data)
+            allow_anonymous_contributors=form.allow_anonymous_contributors.data,
+            category_id=form.category_id.data)
 
         app = app_by_shortname(short_name)
         db.session.merge(new_application)
         db.session.commit()
+        cached_apps.reset()
+        cached_cat.reset()
         flash(lazy_gettext('Application updated!'), 'success')
         return redirect(url_for('.details',
                                 short_name=new_application.short_name))
@@ -327,6 +390,10 @@ def update(short_name):
     title = app_title(app, "Update")
     if request.method == 'GET':
         form = AppForm(obj=app)
+        categories = db.session.query(model.Category).all()
+        form.category_id.choices = [(c.id, c.name) for c in categories]
+        if app.category_id is None:
+            app.category_id = categories[0].id
         form.populate_obj(app)
         if app.info.get('thumbnail'):
             form.thumbnail.data = app.info['thumbnail']
@@ -338,6 +405,8 @@ def update(short_name):
 
     if request.method == 'POST':
         form = AppForm(request.form)
+        categories = cached_cat.get_all()
+        form.category_id.choices = [(c.id, c.name) for c in categories]
         if form.validate():
             return handle_valid_form(form)
         flash(lazy_gettext('Please correct the errors'), 'error')
