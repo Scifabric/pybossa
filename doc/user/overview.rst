@@ -76,15 +76,25 @@ figure:
         authenticated users can participate in all the applications, however
         you can change it to only allow authenticated volunteers to
         participate. 
-     6. **Long Description**: A *long* description where you can use HTML
+     6. **Category**: Select a category that fits your application.
+        :ref:`categories` 
+        are added and managed by the server :ref:`administrators`.
+     7. **Long Description**: A *long* description where you can use HTML
         to format the description of your application. This field is
         usually used to provide information about the application, the
         developer, the researcher group or institutions involved in the
         application, etc.
-     7. **Hide**: Click in this field if you want to hide the application.
+     8. **Hide**: Click in this field if you want to hide the application.
 
-.. image:: http://i.imgur.com/kvPu1a6.png
+.. image:: http://i.imgur.com/C8PpqYh.png
     :alt: PyBossa Create link
+
+.. note::
+    PyBossa usually provides two Categories by default: *thinking* and
+    *sensing*. The *thinking* category represents the standard PyBossa
+    application where users contribute helping with their skills. *Sensing*
+    category refers to applications that are using a volunter sensing tool like
+    EpiCollect for gathering data.
 
 4. Once you have filled all the fields, click in the **Create the
    application** button, and you will have created your first application.
