@@ -1,14 +1,14 @@
-"""Add Table User2Group
+"""Add User2Team Table
 
-Revision ID: 544c054f1440
-Revises: f74b07be6fd
-Create Date: 2013-04-30 17:32:53.151219
+Revision ID: 1a18759fdad4
+Revises: 483d70a10096
+Create Date: 2013-05-27 13:41:55.153373
 
 """
 
 # revision identifiers, used by Alembic.
-revision = '544c054f1440'
-down_revision = 'f74b07be6fd'
+revision = '1a18759fdad4'
+down_revision = '483d70a10096'
 
 from alembic import op
 import sqlalchemy as sa
@@ -30,5 +30,4 @@ def upgrade():
 
 def downgrade():
     op.drop_table('user2team')
-
 
