@@ -36,15 +36,13 @@
 					<p style="margin:0"><strong><i class="icon-user"></i> {{ _('Rank') }}</strong>:{{ data['rank'] }} {{ _('with a score of') }} {{ data['score'] }}</p>
 					{% endif %}
 					
-					{% if not current_user.is_anonymous() %}					    
-						{% if team.owner_id != current_user.id %}
-							{% if data['belong'] == 1%}
-							<a href="{{url_for('team.user_delete', name=team.name )}}" class="btn btn-danger"> <i class="icon-trash icon-large"></i> {{ _('Left this team') }}</a>
-							{% else %}													   
-							<a href="{{url_for('team.user_add', name=team.name )}}" class="btn btn-primary"><i class="icon-edit  icon-large"></i>{{ _('Join this team') }}</a>							
-						   {% endif %}
-						{% endif %}					
-				    {% endif %}
+					{% if not current_user.is_anonymous() and team.owner_id != current_user.id %}
+					   {% if data['belong'] == 1%}
+					     <a href="{{url_for('team.user_delete', name=team.name )}}" class="btn btn-danger"> <i class="icon-trash icon-large"></i> {{ _('Left this team') }}</a>
+					   {% else %}													   
+					     <a href="{{url_for('team.user_add', name=team.name )}}" class="btn btn-primary"><i class="icon-edit  icon-large"></i>{{ _('Join this team') }}</a>							
+				           {% endif %}
+				        {% endif %}					
 				</div>
 			</div> 
 		</div>
