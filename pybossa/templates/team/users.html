@@ -13,7 +13,7 @@
     <div class="span9" style="min-height:400px"> 
 
 	    <h1><i class="icon-group"></i> <strong>{{ team.name }}</strong><small>{{total}} {{ _('members') }}</small>
-              {% if ( current_user.is_authenticated() and current_user.id == team.owner ) or current_user.admin %}
+              {% if ( current_user.is_authenticated() and current_user.id == team.owner_id ) or current_user.admin %}
                <a class="pull-right btn btn-primary" href="{{url_for('team.search_users', name=team.name)}}"><i class="icon-user" style="color:white"></i> {{ _('Add Users') }}</a>
               {% endif %}
            </h1>
@@ -23,7 +23,7 @@
                  <tr>
                    <th>{{ _('Name') }}</th>
                    <th>{{ _('Joined') }}</th>
-                   {% if current_user.id == team.owner or current_user.admin == 1 %}
+                   {% if current_user.id == team.owner_id or current_user.admin == 1 %}
                    <th>{{ _('Manage') }}</th>
                    {% endif %}
                  </tr>
@@ -33,10 +33,10 @@
                      <td><strong><a href="{{url_for('account.public_profile', name=user2team.user.name)}}">{{user2team.user.fullname}}</a></strong></td>
                      <td>{{ user2team.created[0:10] }}</td>
 
-                     {% if current_user.id == team.owner or current_user.admin == 1 %}
+                     {% if current_user.id == team.owner_id or current_user.admin == 1 %}
                      <td>
 
-                       {% if user2team.user_id == team.owner %}
+                       {% if user2team.user_id == team.owner_id %}
                           {{ _('Owner') }}
                        {% else %}
                          <a href="{{url_for('team.join_delete', name=team.name, user=user2team.user.name)}}" class="btn btn-danger"> <i class="icon-trash icon-large"></i> {{ _('Remove') }}</a>

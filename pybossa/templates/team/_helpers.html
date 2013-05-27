@@ -133,7 +133,7 @@
             <p style="margin:0"><strong><i class="icon-user"></i> {{ _('Rank') }}</strong>:{{ team.rank }} {{ _('with a score of') }} {{ team.score }}</p>
             {% endif %}
 			
-            {% if not current_user.is_anonymous() %}
+            {% if not current_user.is_anonymous() %}			    
 				{% if team.belong %}
 				<a href="{{url_for('team.user_delete', name=team.name )}}" class="btn btn-danger"> <i class="icon-trash icon-large"></i> {{ _('Left this team') }}</a>
 				{% else %}              

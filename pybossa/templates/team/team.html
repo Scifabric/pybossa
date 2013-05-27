@@ -29,7 +29,7 @@
 					{% endif %}
 					
 					<p style="margin:0"><strong><i class="icon-user"></i> {{ _('Created by') }}</strong>: 
-					{% if team.owner_id == current_user.id %}{{ _('Me') }}{% else %} {{ team.owner}} {% endif %}
+					{% if team.owner_id == current_user.id %}{{ _('Me') }}{% else %} {{ team.user.name }} {% endif %}
 					</p>	
 					
 					{% if data['rank'] >0 %}
@@ -38,7 +38,7 @@
 					
 					{% if not current_user.is_anonymous() %}					    
 						{% if team.owner_id != current_user.id %}
-							{% if belong == 1%}
+							{% if data['belong'] == 1%}
 							<a href="{{url_for('team.user_delete', name=team.name )}}" class="btn btn-danger"> <i class="icon-trash icon-large"></i> {{ _('Left this team') }}</a>
 							{% else %}													   
 							<a href="{{url_for('team.user_add', name=team.name )}}" class="btn btn-primary"><i class="icon-edit  icon-large"></i>{{ _('Join this team') }}</a>							
