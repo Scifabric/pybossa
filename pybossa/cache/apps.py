@@ -112,7 +112,7 @@ def n_featured():
     return count
 
 @cache.memoize(timeout=50)
-def get_featured(page=1, per_page=5):
+def get_featured(category, page=1, per_page=5):
     """Return a list of featured apps with a pagination"""
 
     count = n_featured()
@@ -133,6 +133,7 @@ def get_featured(page=1, per_page=5):
                    overall_progress=overall_progress(row.id),
                    last_activity=last_activity(row.id),
                    owner=row.owner,
+                   featured=row.id,
                    info=dict(json.loads(row.info)))
         apps.append(app)
     return apps, count
@@ -153,7 +154,7 @@ def n_published():
     return count
 
 @cache.memoize(timeout=50)
-def get_published(page=1, per_page=5):
+def get_published(category, page=1, per_page=5):
     """Return a list of apps with a pagination"""
 
     count = n_published()
@@ -202,7 +203,7 @@ def n_draft():
     return count
 
 @cache.memoize(timeout=50)
-def get_draft(page=1, per_page=5):
+def get_draft(category, page=1, per_page=5):
     """Return list of draft applications"""
 
     count = n_draft()
@@ -232,6 +233,68 @@ def get_draft(page=1, per_page=5):
     return apps, count
 
 
+@cache.memoize(timeout=50)
+def n_count(category):
+    """Count the number of apps in a given category"""
+    sql = text('''
+               SELECT COUNT(app.id) FROM task, app
+               LEFT OUTER JOIN category ON app.category_id=category.id
+               WHERE
+               category.short_name=:category
+               AND app.hidden=0
+               AND app.info LIKE('%task_presenter%')
+               AND task.app_id=app.id
+               GROUP BY app.id
+               ''')
+
+    results = db.engine.execute(sql, category=category)
+    count = 0
+    for row in results:
+        count = row[0]
+    return count
+
+
+@cache.memoize(timeout=50)
+def get(category, page=1, per_page=5):
+    """Return a list of apps with at least one task and a task_presenter
+       with a pagination for a given category"""
+
+    count = n_count(category)
+
+    sql = text('''
+               SELECT app.id, app.name, app.short_name, app.description,
+               app.info, app.created, app.category_id, "user".fullname AS owner,
+               featured.app_id as featured
+               FROM "user", task, app
+               LEFT OUTER JOIN category ON app.category_id=category.id
+               LEFT OUTER JOIN featured ON app.id=featured.app_id
+               WHERE
+               category.short_name=:category
+               AND app.hidden=0
+               AND "user".id=app.owner_id
+               AND app.info LIKE('%task_presenter%')
+               AND task.app_id=app.id
+               GROUP BY app.id, "user".id, featured.app_id ORDER BY app.name
+               OFFSET :offset
+               LIMIT :limit;''')
+
+    offset = (page - 1) * per_page
+    results = db.engine.execute(sql, category=category, limit=per_page, offset=offset)
+    apps = []
+    for row in results:
+        app = dict(id=row.id,
+                   name=row.name, short_name=row.short_name,
+                   created=row.created,
+                   description=row.description,
+                   owner=row.owner,
+                   featured=row.featured,
+                   last_activity=last_activity(row.id),
+                   overall_progress=overall_progress(row.id),
+                   info=dict(json.loads(row.info)))
+        apps.append(app)
+    return apps, count
+
+
 def reset():
     """Clean the cache"""
     cache.delete('front_page_featured_apps')
@@ -242,6 +305,8 @@ def reset():
     cache.delete_memoized(get_published)
     cache.delete_memoized(get_featured)
     cache.delete_memoized(get_draft)
+    cache.delete_memoized(n_count)
+    cache.delete_memoized(get)
 
 
 def clean(app_id):

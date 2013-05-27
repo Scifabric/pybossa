@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% set active_page = "profile" %}
+{% set active_link = "admin" %}
+{% from "account/_helpers.html" import render_account_local_nav %}
+
+{% block content %}
+
+<div class="row">
+    <div class="span3">
+        {{ render_account_local_nav(current_user, active_link) }}
+    </div>
+    <div class="span9">
+        <h1><strong>{{ _('Admin Site') }}:</strong> {{title}}</h1>
+        {% from "_formhelpers.html" import render_field %}
+        <form class="form-horizontal" method="POST" action="{{url_for('admin.update_category', id=category.id)}}">
+            {{form.hidden_tag()}}
+            <fieldset>
+            {{form.id}}
+            {{ render_field(form.name, placeholder= _('Category name')) }}
+            {{ render_field(form.description, placeholder= _('Category description')) }}
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">{{_('Update Category')}}</button>
+                <a href="{{url_for('admin.categories')}}" class="btn" >{{_('Cancel')}}</a>
+            </div>
+            </fieldset>
+        </form>
+    </div>
+</div>
+{% endblock %}
