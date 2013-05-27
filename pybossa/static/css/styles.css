@@ -378,6 +378,10 @@ body > footer .container {
   box-shadow: inset 0px 0px 2px 0px rgba(0, 0, 0, 0.5);
   width: 100px;
 }
+.banner .featured li img {
+    min-width: 100px;
+    min-height: 100px;
+}
 .get-started .span4 p:first-of-type {
   margin-top: -10px;
 }

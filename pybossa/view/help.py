@@ -15,6 +15,7 @@
 from flask import Blueprint
 from flask import render_template
 from pybossa.cache import apps as cached_apps
+from pybossa.cache import categories as cached_cat
 from random import choice
 
 blueprint = Blueprint('help', __name__)
@@ -23,7 +24,8 @@ blueprint = Blueprint('help', __name__)
 @blueprint.route('/api')
 def api():
     """Render help/api page"""
-    apps, count = cached_apps.get_published()
+    categories = cached_cat.get_used()
+    apps, count = cached_apps.get(categories[0]['short_name'])
     if len(apps) > 0:
         app_id = choice(apps)['id']
     else:

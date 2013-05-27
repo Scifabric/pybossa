@@ -8,34 +8,38 @@
 <div class="row">
     <div class="span3">
             <ul data-spy="affix" data-offset-top="200px" class="nav nav-list bs-docs-sidenav affix-top">
-                <li {% if app_type=="app-featured"%}class="active"{% endif %}><a href="{{url_for('app.index')}}"><i class="icon-chevron-right"></i> {{ _('Featured') }}</a></li>
-                <li {% if app_type=="app-published"%}class="active"{% endif %}><a href="{{url_for('app.published')}}"><i class="icon-chevron-right"></i> {{ _('Published') }}</a></li>
-                <li {% if app_type=="app-draft"%}class="active"{% endif %}><a href="{{url_for('app.draft')}}"><i class="icon-chevron-right"></i> {{ _('Draft') }}</a></li>
+                {% for c in categories %}
+                <li {% if active_cat.short_name==c.short_name%}class="active"{% endif %}><a href="{{url_for('app.app2_index', category=c.short_name)}}"><i class="icon-chevron-right"></i> {{ c.name }}</a></li>
+                {% endfor %}
+                {% if current_user.is_authenticated() and current_user.admin %}
+                <li {% if active_cat.short_name=="draft"%}class="active"{% endif %}><a href="{{url_for('app.draft')}}"><i class="icon-chevron-right"></i> {{ _('Draft') }}</a></li>
+                {% endif %}
             </ul>
     </div>
     <div class="span9">
         {% if apps %}
-            {% if app_type=="app-featured"%} 
+            {% if active_cat.short_name=="featured"%} 
             <h1>
                 <i class="icon-star"></i> {{pagination.total_count}} {{ _('Featured Applications') }}
             </h1>
             <h2>{{ _('A special selection of the most interesting applications') }}</h2>
-            {% endif %}
-            {% if app_type=="app-published"%} 
+            {% elif active_cat.short_name=='draft' %}
             <h1>
-                <i class="icon-th"></i> {{pagination.total_count}} {{ _('Published Applications') }}</h1>
-            <h2>{{ _('All available applications') }}</h2>
-            {% endif %}
-            {% if app_type=="app-draft"%} 
+                <i class="icon-wrench"></i> {{pagination.total_count}} {{ _('Draft Applications')}}</h1>
+            <h2>{{ _('Work in progress applications') }}</h2>
+            {% else %}
             <h1>
-                <i class="icon-wrench"></i> {{pagination.total_count}} {{ _('Draft Applications') }}
-            </h1>
-            <h2>{{ _('Work in progress applications') }} <em>{{ _('you can not contribute yet') }}</em></h2>
+                <i class="icon-th"></i> {{pagination.total_count}} {{ active_cat.name }} Applications</h1>
+            <h2>{{ active_cat.description }}</h2>
             {% endif %}
             {% for app in apps %}
-            {{ helper.show_app(app, app_type, current_user) }}
+            {{ helper.show_app(app, category, current_user) }}
             {% endfor %}
             {{ helper.render_pagination(pagination) }}
+        {% else %}
+            <h1>
+                <i class="icon-th"></i> {{pagination.total_count}} {{ active_cat.name }} Applications</h1>
+            <h2>{{_('Sorry, there are no published applications for this category yet')}}</h2>
         {% endif %}
     </div>
 </div>

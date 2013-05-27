@@ -18,6 +18,7 @@ The documentation is organized as follows:
    :maxdepth: 1
 
    build_with_pybossa
+   admin
    installing_pybossa
    vagrant_pybossa
    faq
