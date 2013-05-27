@@ -44,6 +44,12 @@
       <li {% if active_link=="signed"%}class="active"{% endif %}><a href="{{url_for('team.signed')}}"><i class="icon-chevron-right"></i> {{ _('Signed') }}</a></li>
     {% endif %}
     <li {% if active_link=="public"%}class="active"{% endif %}><a href="{{url_for('team.index')}}"><i class="icon-chevron-right"></i> {{ _('Public') }}</a></li>
+    {% if current_user.admin %}
+    <li {% if active_link=="private"%}class="active"{% endif %}><a href="{{url_for('team.private')}}"><i class="icon-chevron-right"></i> {{ _('Private') }}</a></li>
+    {% endif %}
+
+
+
   </ul>
 {% endmacro %}
 
