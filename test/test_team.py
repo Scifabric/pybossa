@@ -1,5 +1,6 @@
 from helper import web
 from base import model, db, Fixtures
+from nose.tools import assert_equal
 
 class TestTeams(web.Helper):
    # Helper functions
@@ -12,20 +13,22 @@ class TestTeams(web.Helper):
        ''' Test TEAM create team work'''
        if method == "POST":
            if public == True:
-             return self.app.post("/team/add", data={
-               'name':        name,
-               'description': description,
-               'public':      public,
-               'owner':       owner
-                }, follow_redirects=True)
+             return self.app.post('/team/new/', 
+                                 data={'name':        name,
+                                       'description': description,
+                                       'public':      public,
+                                       'owner':       owner
+                                      }, 
+                                  follow_redirects=True)
            else:
-             return self.app.post("/team/add", data={
-               'name':        name,
-               'description': description,
-               'owner':       owner
-                }, follow_redirects=True)
+             return self.app.post('/team/new/', 
+                                 data={'name':        name,
+                                       'description': description,
+                                       'owner':       owner
+                                      }, 
+                                 follow_redirects=True)
        else:
-           return self.app.get("/team/add", follow_redirects=True)
+           return self.app.get("/team/new/", follow_redirects=True)
 
    def delete_team(self, method="POST", name="TeamTest",
             description="Team TestDescription", public=True):
@@ -60,7 +63,7 @@ class TestTeams(web.Helper):
        res = self.app.get("/team", follow_redirects=True)
  
        err_msg = "There would be a team public page"
-       assert  "Teams Public" in res.data, err_msg
+       assert  "Public Teams" in res.data, err_msg
 
    def test_01_team_add(self):
        ''' Test 01 TEAM create a team'''
@@ -68,10 +71,11 @@ class TestTeams(web.Helper):
 
        res = self.app.get("/team", follow_redirects=True)
        err_msg = "There should be a button for Create Team"
-       assert "Create your own Team" in res.data, err_msg
+       assert "Create your Team" in res.data, err_msg
       
        res = self.new_team(name="TestTeam")
-       assert "Team successfully created" in res.data, res
+       print res.data
+       assert "Team created" in res.data, res
        self.signout
 
        team = db.session.query(model.Team).get(1)
@@ -88,11 +92,9 @@ class TestTeams(web.Helper):
        assert "Team Description must be between 3 and 35 characters long" in res.data, re
 
        res = self.new_team()
-       assert "Team successfully created" in res.data, res
+       assert "Team created" in res.data, res
 
        res = self.new_team()
-       print res.data
-       #assert "The team name is already taken" in res.data, res
        assert "You already ownn your group" in res.data, res
 
        self.signout()
@@ -200,7 +202,7 @@ class TestTeams(web.Helper):
        self.register()
        self.new_team()
        res =  self.delete_team()
-       assert "Your team has been deleted!" in res.data, res
+       assert "Team deleted!" in res.data, res
        self.signout()
 
    def test_08_team_update(self):
@@ -209,14 +211,16 @@ class TestTeams(web.Helper):
        self.new_team()
 
        res =  self.update_team()
-       assert "Your team has been updated!" in res.data, res
+       assert "Team updated!" in res.data, res
        self.signout()
 
    def test_09_team_delete_dont_exists(self):
        ''' Test 09 TEAM delete doesn't exists'''
        self.register()
        res =  self.delete_team(name='Team not exists')
-       assert "Oopps, The group that you try to delete doesn\t exists or you don\t are the owner." in res.data, res
+       print res.status
+       error_msg = "You don\'t delete a not exists team"
+       assert_equal(res.status, '404 NOT FOUND', error_msg)
        self.signout()
 
    def test_10_join_team_public(self):
@@ -230,22 +234,18 @@ class TestTeams(web.Helper):
        self.register(username="tester2", email="tester2@tester.com",
                       password="tester")
 
-       res = self.app.get("/team/%s" % _name, follow_redirects=True)
+       res = self.app.get("/team/%s/join" % _name, follow_redirects=True)
        err_msg = "You can not join to the Team"
        assert "Join this team " not in res.data, err_msg
        
        res = self.app.get("/team/%s/join" % _name, follow_redirects=True)
        err_msg = "You can not associate to the team"
-       assert "Association to the team created"  in res.data, err_msg
+       assert "This user already is in this team"  in res.data, err_msg
 
-       res = self.app.get("/team/%s" % _name, follow_redirects=True)
+       res = self.app.get("/team/%s/separate" % _name, follow_redirects=True)
        err_msg = "You can not left to the Team"
        assert "Left this team " not in res.data, err_msg
        
-       res = self.app.get("/team/%s/separate" % _name, follow_redirects=True)
-       err_msg = "You can not left to the Team"
-       assert "Association to the team deleted"  in res.data, err_msg
-
        self.signout()
 
    def test_11_join_team_private(self):
@@ -260,62 +260,9 @@ class TestTeams(web.Helper):
                       password="tester")
 
        res = self.app.get("/team/%s" % _name, follow_redirects=True)
-       err_msg = "You can view private team"
-       assert "We don\'t find this team"  in res.data, err_msg
-      
-       self.signout() 
 
-   def test_09_team_delete_dont_exists(self):
-       ''' Test 09 TEAM delete doesn't exists'''
-       self.register()
-       res =  self.delete_team(name='Team not exists')
-       assert "Oopps, The group that you try to delete doesn\t exists or you don\t are the owner." in res.data, res
-       self.signout()
-
-   def test_10_join_team_public(self):
-       ''' Test 10 TEAM join to a public team '''
-       _name = "User1Team"
-
-       self.register()
-       self.new_team(name=_name, public=True)
-       self.signout()
-
-       self.register(username="tester2", email="tester2@tester.com",
-                      password="tester")
-
-       res = self.app.get("/team/%s" % _name, follow_redirects=True)
-       err_msg = "You can not join to the Team"
-       assert "Join this team " not in res.data, err_msg
-       
-       res = self.app.get("/team/%s/join" % _name, follow_redirects=True)
-       err_msg = "You can not associate to the team"
-       assert "Association to the team created"  in res.data, err_msg
-
-       res = self.app.get("/team/%s" % _name, follow_redirects=True)
-       err_msg = "You can not left to the Team"
-       assert "Left this team " not in res.data, err_msg
-       
-       res = self.app.get("/team/%s/separate" % _name, follow_redirects=True)
-       err_msg = "You can not left to the Team"
-       assert "Association to the team deleted"  in res.data, err_msg
-
-       self.signout()
-
-   def test_11_join_team_private(self):
-       ''' Test 11 TEAM join to a private team '''
-       _name = "User1Team"
-
-       self.register()
-       self.new_team(name=_name)
-       self.signout()
-
-       self.register(username="tester2", email="tester2@tester.com",
-                      password="tester")
-
-       res = self.app.get("/team/%s" % _name, follow_redirects=True)
-       err_msg = "You can view private team"
-       assert "We don\'t find this team"  in res.data, err_msg
-      
+       error_msg = "You don\'t see a private team"
+       assert_equal(res.status, '404 NOT FOUND', error_msg)
        self.signout() 
 
    def test_12_manage_team(self):
@@ -336,7 +283,8 @@ class TestTeams(web.Helper):
        self.signout()
 
        self.signin()
-       res = self.app.get("/team/%s" % _name, follow_redirects=True)
+       res = self.app.get("/team/%s/users" % _name, follow_redirects=True)
+       print res.data
        err_msg = "You can not add user to the Team"
        assert "Add Users" in res.data, err_msg
 
