@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% set active_page = "profile" %}
+{% set active_link = "admin" %}
+{% from "account/_helpers.html" import render_account_local_nav %}
+
+{% block content %}
+
+<div class="row">
+    <div class="span3">
+        {{ render_account_local_nav(current_user, active_link) }}
+    </div>
+    <div class="span9">
+        <h1><strong>{{ _('Admin Site') }}:</strong> {{title}}</h1>
+        <div class="alert alert-danger">
+            <strong>{{ _('Danger Zone!') }}</strong> {{ _('Deleting the category will remove it from all the applications! This operation cannot be undone!') }}
+        </div>
+        <h2>{{_('Delete Category')}}: {{category.name}}?</h2>
+        <form method="post" action="{{url_for('admin.del_category', id=category.id)}}">
+            <input class="btn btn-small" type="submit"  value="Yes"</input>
+            <a class="btn btn-large" href="{{url_for('admin.categories')}}">No, do not delete it</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

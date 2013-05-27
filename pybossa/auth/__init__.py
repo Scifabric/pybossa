@@ -6,6 +6,7 @@ import app
 import task
 import taskrun
 import team
+import category
 
 class Requirement(object):
     """ Checks a function call and raises an exception if the
@@ -33,4 +34,3 @@ class Requirement(object):
         return cls(module)
 
 require = Requirement.here()
-
