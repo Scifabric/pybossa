@@ -39,7 +39,7 @@ from pybossa.auth import require
 from sqlalchemy import or_, func, and_
 from pybossa.cache import teams as cached_teams
 from werkzeug.exceptions import HTTPException
-from pybossa.team import get_number_members
+from pybossa.team import get_number_members, get_rank
 
 blueprint = Blueprint('team', __name__)
 
@@ -50,21 +50,18 @@ def team_title(team, page_name):
         return "Team: %s" % (team.name)
     return "Team: %s &middot; %s" % (team.name, page_name)
 
-def team_by_name(name):
-    if current_user.is_anonymous():    
-       return Team.query.filter_by(name=name, public='t').first_or_404()
-    else:
+def get_team(name):
+    if current_user.admin == 1:
        return Team.query.filter_by(name=name).first_or_404()
-
-def team_current(name):
-   ''' Obtain the team of of de current_user '''
-   if current_user.admin == 1:
-       return Team.query.filter(Team.name==name)\
-                        .first_or_404()
-   else:
-       return Team.query.filter(Team.owner_id==current_user.id)\
-                        .filter(Team.name==name)\
-                        .first_or_404()
+    elif current_user.is_anonymous():
+       return Team.query.filter_by(name=name, public='t').first_or_404()    
+    else:
+	   '''  tiene que encontrar los publicos ''
+	   ''' y a los que pertenezca '''
+       return Team.query.outerjoin(User2Team)\
+		         .filter(Team.name==name)\
+			 .filter(or_ (Team.public=='t', User2Team.user_id==current_user.id))\
+			 .first_or_404()
 
 def user_belong_team(team_id):
    ''' Is a user belong to a team'''
@@ -76,28 +73,6 @@ def user_belong_team(team_id):
                                .first()
       return (1,0)[belong is None]
 
-def get_rank(team_id):
-    ''' Score and Rank '''
-    sql = text('''
-               WITH  global_rank as(
-               WITH scores AS( 
-               SELECT team_id, count(*) AS score FROM user2team 
-               INNER JOIN task_run ON user2team.user_id = task_run.user_id 
-               GROUP BY user2team.team_id ) 
-               SELECT team_id,score,rank() OVER (ORDER BY score DESC)  
-               FROM  scores) 
-               SELECT  * from global_rank where team_id=:team_id;
-               ''')
-
-    results = db.engine.execute(sql, team_id=team_id)
-    rank = 0
-    score = 0
-    for result in results:
-        rank  = result.rank
-        score = result.score
-		
-    return rank, score
-	
 def get_signed_teams(page=1, per_page=5):
    '''Return a list of public teams with a pagination'''
 
@@ -129,10 +104,10 @@ def get_signed_teams(page=1, per_page=5):
        team = dict(id=row.id, name=row.name,
                    created=row.created, description=row.description,
                    owner_id=row.owner_id,
-                   owner_name=row.owner,
+                   owner=row.owner,
 				   public=row.public
-                   )
-    
+                   )       
+       print "Name %s" % row.name
        team['rank'], team['score'] = get_rank(row.id)	
        team['members'] =get_number_members(row.id)
        teams.append(team)
@@ -195,7 +170,7 @@ def team_index(page, lookup, team_type, fallback, use_count, title):
        team_owner = Team.query.filter(Team.owner_id==current_user.id).first()
    
        for team in teams:
-           team['belong'] = user_belong_team(1)
+           team['belong'] = user_belong_team(Team.id)
     
     pagination = Pagination(page, per_page, count)
     template_args = {
@@ -211,10 +186,10 @@ def team_index(page, lookup, team_type, fallback, use_count, title):
     return render_template('/team/index.html', **template_args)
 
 # Ok
-
 @blueprint.route('/<name>/')
 def details(name=None):
-   team = team_by_name(name)
+   ''' Team details '''
+   team = get_team(name)
    
    data = dict( belong = user_belong_team(team.id),
                 members = get_number_members(team.id))
@@ -243,7 +218,7 @@ def details(name=None):
 @blueprint.route('/<name>/settings')
 @login_required
 def settings(name):
-   team = team_by_name(name)
+   team = get_team(name)
 
    title = team_title(team, "Settings")
    try:
@@ -258,7 +233,7 @@ def settings(name):
 
 @blueprint.route('/<type>/search', methods=['GET', 'POST'])
 def search_teams(type):
-
+   ''' Search Team '''
    form = SearchForm(request.form)
    teams = db.session.query(Team)\
                 .all()
@@ -300,8 +275,7 @@ def search_teams(type):
 @blueprint.route('/<name>/users/search', methods=['GET', 'POST'])
 @login_required
 def search_users(name):
-
-   team = team_current(name)
+   team = get_team(name)
 
    form = SearchForm(request.form)
    users = db.session.query(User)\
@@ -327,7 +301,7 @@ def search_users(name):
                user2team = User2Team.query.filter(User2Team.team_id==team.id)\
                                                 .filter(User2Team.user_id==found.id)\
                                                 .first()
-               found.belongbelong = (1, 0)[user2team is None]
+               found.belong = (1, 0)[user2team is None]
 
            return render_template('/team/search_users.html',
                             founds =founds,
@@ -385,26 +359,9 @@ def new():
    flash(lazy_gettext('Team created'), 'success')
    return redirect(url_for('.details', name=team.name))
 
-@blueprint.route('/<name>/settings')
-@login_required
-def settings(name):
-   team = team_by_name(name)
-
-   title = team_title(team, "Settings")
-   try:
-       require.team.read(team)
-       require.team.update(team)
-
-       return render_template('/team/settings.html',
-                               team=team,
-                               title=title)
-   except HTTPException:
-       return abort(403)
-
-
 @blueprint.route('/<name>/users')
 def users(name):
-   team = team_by_name(name)
+   team = get_team(name)
 
    # Search users in the team
    belongs = User2Team.query.filter(User2Team.team_id == team.id)\
@@ -424,7 +381,7 @@ def users(name):
 @login_required
 def delete(name):
    ''' Delete the team owner of de current_user '''
-   team = team_current(name)
+   team = get_team(name)
    title = team_title(team, "Delete")
 
    if not require.team.delete(team):
@@ -447,84 +404,7 @@ def delete(name):
 @login_required
 def update(name):
    ''' Update the team owner of the current user '''
-   team = team_current(name)
-  
-   def handle_valid_form(form):
-       new_team = Team(id=form.id.data,
-                                name=form.name.data,
-                                description=form.description.data,
-                                public=form.public.data)
-
-       db.session.merge(new_team)
-       db.session.commit()
-
-       flash(lazy_gettext('Team updated!'), 'success')
-       return redirect(url_for('.details',
-                                name=new_team.name))
-
-   if not require.team.update(team):
-       abort(403)
-
-   title = team_title(team, "Update")
-   if request.method == 'GET':
-       form = TeamForm(obj=team)
-       form.populate_obj(team)
-
-   if request.method == 'POST':
-       form = TeamForm(request.form)
-       if form.validate():
-           return handle_valid_form(form)
-       flash(lazy_gettext('Please correct the errors'), 'error')        
-
-   return render_template('/team/update.html',
-                           form=form,
-                           title=title,
-                           team=team)
-@blueprint.route('/<name>/settings')
-@login_required
-def settings(name):
-   team = team_by_name(name)
-
-   title = team_title(team, "Settings")
-   try:
-       require.team.read(team)
-       require.team.update(team)
-
-       return render_template('/team/settings.html',
-                               team=team,
-                               title=title)
-   except HTTPException:
-       return abort(403)
-
-# Ok
-@blueprint.route('/<name>/delete', methods=['GET', 'POST'])
-@login_required
-def delete(name):
-   ''' Delete the team owner of de current_user '''
-   team = team_current(name)
-   title = team_title(team, "Delete")
-
-   if not require.team.delete(team):
-      abort(403)
-
-   if request.method == 'GET':
-       return render_template('/team/delete.html',
-                               title=title,
-                               team=team)
-   
-   cached_teams.clean(team.id)
-   db.session.delete(team)
-   db.session.commit()
-
-   flash(lazy_gettext('Team deleted!'), 'success')
-   return redirect(url_for('team.index'))
-
-# OK
-@blueprint.route('/<name>/update', methods=['GET', 'POST'])
-@login_required
-def update(name):
-   ''' Update the team owner of the current user '''
-   team = team_current(name)
+   team = get_team(name)
   
    def handle_valid_form(form):
        new_team = Team(id=form.id.data,
@@ -562,7 +442,7 @@ def update(name):
 @login_required
 def user_add(name):
    ''' Add Current User to a team '''
-   team = team_by_name(name)
+   team = get_team(name)
   
    # Search relationship
    user2team = db.session.query(User2Team)\
@@ -587,7 +467,7 @@ def user_add(name):
 @blueprint.route('/<name>/separate', methods=['GET', 'POST'])
 @login_required
 def user_delete(name):
-   team = team_by_name(name)
+   team = get_team(name)
 
    ''' Check if exits association'''
    user2team = db.session.query(User2Team)\
@@ -606,7 +486,7 @@ def user_delete(name):
 @login_required
 def join_add(name,user):
    ''' Add user from a team '''
-   team = team_current(name)
+   team = get_team(name)
   
    user = User.query.filter_by(name=user).first()
    if not user:
@@ -637,7 +517,7 @@ def join_add(name,user):
 @login_required
 def join_delete(name, user):
    ''' Delete user from a team '''
-   team = team_current(name)
+   team = get_team(name)
 
    user = User.query.filter_by(name=user).first()
    if not user:
@@ -657,21 +537,3 @@ def join_delete(name, user):
        flash(lazy_gettext('The user has been deleted to the team correctly!'), 'success')
 
    return redirect(url_for('team.signed'))
-
-def get_team_score(team):
-   '''' Get total score by team '''
-   sql = text('''
-       WITH  global_rank as(
-         WITH scores AS( 
-         SELECT team_id, count(*) AS score FROM user2team 
-         INNER JOIN task_run ON user2team.user_id = task_run.user_id 
-         GROUP BY user2team.team_id ) 
-         SELECT team_id,score,rank() OVER (ORDER BY score DESC)  
-         FROM  scores) 
-       SELECT  * from global_rank where team_id=:team_id;''')
-
-   results = db.engine.execute(sql, team_id=team.id)
-   
-   for result in results:
-      team.rank = result.rank
-      team.score = result.score
