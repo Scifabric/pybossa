@@ -71,6 +71,45 @@ def user_belong_team(team_id):
                                .first()
       return (1,0)[belong is None]
 
+
+def get_private_teams(page=1, per_page=5):
+   '''Return a list of public teams with a pagination'''
+
+   sql = text('''
+              SELECT count(*)
+              FROM team 
+              WHERE public='f';
+              ''')
+   results = db.engine.execute(sql)
+   for row in results:
+       count = row[0]
+    
+   sql = text('''
+              SELECT team.id,team.name,team.description,team.created,
+              team.owner_id,"user".name as owner, team.public
+              FROM team 
+              INNER JOIN "user" ON team.owner_id="user".id
+              WHERE team.public='f'
+              OFFSET(:offset) LIMIT(:limit);
+              ''')
+
+   offset = (page - 1) * per_page
+   results = db.engine.execute(sql, limit=per_page, offset=offset)
+   teams = []
+   for row in results:
+       team = dict(id=row.id, name=row.name,
+                   created=row.created, description=row.description,
+                   owner_id=row.owner_id,
+                   owner=row.owner,
+		   public=row.public
+                   )       
+
+       team['rank'], team['score'] = get_rank(row.id)	
+       team['members'] =get_number_members(row.id)
+       teams.append(team)
+
+   return teams, count
+
 def get_signed_teams(page=1, per_page=5):
    '''Return a list of public teams with a pagination'''
 
@@ -142,6 +181,15 @@ def signed(page):
     '''By show the Signed Teams'''
     return team_index(page, get_signed_teams, 'signed',
                       True, False, lazy_gettext('Signed Teams'))
+
+
+@blueprint.route('/private/', defaults={'page': 1})
+@blueprint.route('/private/page/<int:page>')
+@login_required
+def private(page):
+    '''By show the private Teams'''
+    return team_index(page, get_private_teams, 'private',
+                      True, False, lazy_gettext('Private Teams'))
 					  
 def team_index(page, lookup, team_type, fallback, use_count, title):
    '''Show apps of app_type'''
