@@ -175,13 +175,13 @@ def team_index(page, lookup, team_type, fallback, use_count, title):
 @blueprint.route('/<name>/')
 def details(name=None):
    ''' Team details '''
-   team = get_team(name)
-
-   print "Detail: %s " % require.team.read()
    if not require.team.read():
         abort(403)
-  
-   # Get Extra data 
+
+   team = get_team(name)
+   title = team_title(team, team.name)
+   
+   # Get extra data 
    data = dict( belong = user_belong_team(team.id),
                 members = get_number_members(team.id))
    data['rank'], data['score'] = get_rank(team.id)
@@ -192,7 +192,6 @@ def details(name=None):
    except HTTPException:
        template = '/team/index.html'
 
-   title = team_title(team, None)
    template_args = {
                     "team": team, 
 		    "title": title,
@@ -205,8 +204,8 @@ def details(name=None):
 @login_required
 def settings(name):
    team = get_team(name)
+   title = lazy_gettext('Settings')
 
-   title = team_title(team, "Settings")
    try:
        require.team.read(team)
        require.team.update(team)
@@ -219,11 +218,11 @@ def settings(name):
 
 @blueprint.route('/<type>/search', methods=['GET', 'POST'])
 def search_teams(type):
-   ''' Search Team '''
-
+   ''' Search Teams '''
    if not require.team.read():
         abort(403)
 
+   title = lazy_gettext('Search Teams')
    form = SearchForm(request.form)
    teams = db.session.query(Team)\
                      .all()
@@ -264,9 +263,11 @@ def search_teams(type):
 @blueprint.route('/<name>/users/search', methods=['GET', 'POST'])
 @login_required
 def search_users(name):
-   team = get_team(name)
+   ''' Search users in a team'''
+   if not require.team.read():
+        abort(403)
 
-   # ???
+   team = get_team(name)
 
    form = SearchForm(request.form)
    users = db.session.query(User).all()
@@ -309,10 +310,10 @@ class SearchForm(Form):
 @blueprint.route('/new/', methods=['GET', 'POST'])
 @login_required
 def new():
-   team = Team.query.filter(Team.owner_id==current_user.id).first()
-
-   if not require.team.create(team):
+   if not require.team.create():
        abort(403)
+
+   team = Team.query.filter(Team.owner_id==current_user.id).first()
 
    if team:
        flash("<strong>Ooops!</strong> You already ownn your group "
@@ -333,7 +334,6 @@ def new():
        flash(lazy_gettext('Please correct the errors'), 'error')
        return respond(True)
 
-        
    team = Team( name=form.name.data,
                        description=form.description.data,
                        public=form.public.data,
@@ -351,11 +351,12 @@ def new():
    db.session.commit()
         
    flash(lazy_gettext('Team created'), 'success')
-   return redirect(url_for('.details', name=team.name))
+   return redirect(url_for('.settings', name=team.name))
 
 @blueprint.route('/<name>/users')
 def users(name):
    team = get_team(name)
+   title = lazy_gettext('Search Users')
 
    if not require.team.read():
        abort(403)
@@ -365,7 +366,6 @@ def users(name):
                                   .all()
 
    template = '/team/users.html'
-   title = team_title(team, None)
    template_args = {
                     "team": team, 
                     "belongs": belongs,
@@ -378,11 +378,11 @@ def users(name):
 def delete(name):
    ''' Delete the team owner of de current_user '''
    team = get_team(name)
+   title = lazy_gettext('Delete Team')
 
    if not require.team.delete(team):
       abort(403)
 
-   title = team_title(team, "Delete")
 
    if request.method == 'GET':
        return render_template('/team/delete.html',
@@ -401,6 +401,7 @@ def delete(name):
 def update(name):
    ''' Update the team owner of the current user '''
    team = get_team(name)
+   title = lazy_gettext('Update Team')
 
    if not require.team.update(team):
        abort(403)
@@ -418,10 +419,6 @@ def update(name):
        return redirect(url_for('.details',
                                 name=new_team.name))
 
-   if not require.team.update(team):
-       abort(403)
-
-   title = team_title(team, "Update")
    if request.method == 'GET':
        form = TeamForm(obj=team)
        form.populate_obj(team)
@@ -442,6 +439,7 @@ def update(name):
 def user_add(name):
    ''' Add Current User to a team '''
    team = get_team(name)
+   title = lazy_gettext('Add User to a Team')
 
    if not require.team.read():
        abort(403)
@@ -470,6 +468,7 @@ def user_add(name):
 @login_required
 def user_delete(name):
    team = get_team(name)
+   title = lazy_gettext('Delete User from a Team')
 
    if not require.team.read():
        abort(403)
@@ -492,6 +491,7 @@ def user_delete(name):
 def join_add(name,user):
    ''' Add user from a team '''
    team = get_team(name)
+   title = lazy_gettext('Create association')
 
    if not require.team.update(team):
        abort(403)
@@ -526,6 +526,7 @@ def join_add(name,user):
 def join_delete(name, user):
    ''' Delete user from a team '''
    team = get_team(name)
+   title = lazy_gettext('Delete association')
 
    if not require.team.update(team):
       abort(403)
