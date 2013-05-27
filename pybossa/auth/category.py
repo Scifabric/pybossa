@@ -6,7 +6,7 @@ def create(app=None):
         if current_user.admin is True:
             return True
         else:
-            return True
+            return False
     else:
         return False
 
