@@ -139,6 +139,7 @@ def users(user_id=None):
                                   func.lower(model.User.fullname).like(query)))\
                       .filter(model.User.id != current_user.id)\
                       .all()
+            require.user.update(found)
             if not found:
                 flash("<strong>Ooops!</strong> We didn't find a user "
                       "matching your query: <strong>%s</strong>" % form.user.data)
@@ -164,12 +165,14 @@ def add_admin(user_id=None):
         if user_id:
             user = db.session.query(model.User)\
                      .get(user_id)
+            require.user.update(user)
             if user:
                 user.admin = True
                 db.session.commit()
                 return redirect(url_for(".users"))
             else:
-                return abort(404)
+                msg = "User not found"
+                return format_error(msg, 404)
     except HTTPException:
         return abort(403)
     except Exception as e:
@@ -186,14 +189,17 @@ def del_admin(user_id=None):
         if user_id:
             user = db.session.query(model.User)\
                      .get(user_id)
+            require.user.update(user)
             if user:
                 user.admin = False
                 db.session.commit()
                 return redirect(url_for('.users'))
             else:
-                return abort(404)
+                msg = "User.id not found"
+                return format_error(msg, 404)
         else:
-            return abort(404)
+            msg = "User.id is missing for method del_admin"
+            return format_error(msg, 415)
     except HTTPException:
         return abort(403)
     except Exception as e:
