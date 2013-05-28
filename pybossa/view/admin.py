@@ -21,6 +21,7 @@ from flask import flash
 from flask import redirect
 from flask import url_for
 from flask import current_app
+from flask import Response
 from flaskext.login import login_required, current_user
 from flaskext.wtf import Form, TextField, IntegerField, HiddenInput, validators
 from flaskext.babel import lazy_gettext
@@ -38,6 +39,13 @@ import json
 
 
 blueprint = Blueprint('admin', __name__)
+
+
+def format_error(msg, status_code):
+    error = dict(error=msg,
+                 status_code=status_code)
+    return Response(json.dumps(error), status=status_code,
+                    mimetype='application/json')
 
 
 @blueprint.route('/')
@@ -66,10 +74,12 @@ def featured(app_id=None):
                                                              per_page=n_apps)
             return render_template('/admin/applications.html', apps=apps,
                                    categories=categories)
-        if request.method == 'POST':
+        if request.method == 'POST' and app_id:
             cached_apps.reset()
             f = model.Featured()
             f.app_id = app_id
+            app = db.session.query(model.App).get(app_id)
+            require.app.update(app)
             # Check if the app is already in this table
             tmp = db.session.query(model.Featured)\
                     .filter(model.Featured.app_id == app_id)\
@@ -79,9 +89,12 @@ def featured(app_id=None):
                 db.session.commit()
                 return json.dumps(f.dictize())
             else:
-                return json.dumps({'error': 'App.id %s already in Featured table'
-                                   % app_id})
-        if request.method == 'DELETE':
+                msg = "App.id %s alreay in Featured table" % app_id
+                return format_error(msg, 415)
+        else:
+            msg = "Missing app_id for POST action in featured method"
+            return format_error(msg, 415)
+        if request.method == 'DELETE' and app_id:
             cached_apps.reset()
             f = db.session.query(model.Featured)\
                   .filter(model.Featured.app_id == app_id)\
@@ -91,8 +104,11 @@ def featured(app_id=None):
                 db.session.commit()
                 return "", 204
             else:
-                return json.dumps({'error': 'App.id %s is not in Featured table'
-                                   % app_id})
+                msg = 'App.id %s is not in Featured table' % app_id
+                return format_error(msg, 404)
+        else:
+            msg = 'App.id is missing for DELETE action in featured method'
+            return format_error(msg, 415)
     except HTTPException:
         return abort(403)
     except Exception as e:
