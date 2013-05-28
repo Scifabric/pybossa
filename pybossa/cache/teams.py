@@ -15,39 +15,32 @@
 from sqlalchemy.sql import func, text
 from pybossa.core import cache
 from pybossa.core import db
-from pybossa.model import Featured, Team
-from pybossa.util import pretty_date
+from pybossa.model import Team
 from pybossa.team import get_number_members, get_rank
-
-import json
-import string
-import operator
-import datetime
-import time
-from datetime import timedelta
 
 STATS_TIMEOUT=50
 
-@cache.cached(key_prefix="number_public_teams")
-def n_public():
+@cache.cached(key_prefix="get_public_count")
+def get_public_count():
     """Return number of Public Teams"""
-    sql = text('''select count(*) from team where public='t';''')
+    sql = text('''select count(*) from team where public;''')
     results = db.engine.execute(sql)
     for row in results:
         count = row[0]
     return count
 	
 
-def get_publics(page=1, per_page=5):
+@cache.cached(key_prefix="get_public_data")
+def get_public_data(page=1, per_page=5):
    '''Return a list of public teams with a pagination'''
-   count = n_public()
+   count = get_public_count()
 
    sql = text('''
                SELECT team.id,team.name,team.description,team.created,
                team.owner_id,"user".name as owner, team.public
                FROM team 
                INNER JOIN "user" ON team.owner_id="user".id
-               WHERE public='t' 
+               WHERE public
                OFFSET(:offset) LIMIT(:limit);
                ''')
 
@@ -70,13 +63,8 @@ def get_publics(page=1, per_page=5):
 
 def reset():
    """Clean thie cache"""
-   cache.delete('number_public_teams')
-   cache.delete_memoized(get_publics)
-
-def reset():
-   """Clean thie cache"""
-   cache.delete('number_public_teams')
-   cache.delete_memoized(get_publics)
+   cache.delete('get_public_count')
+   cache.delete('get_public_data')
 
 def clean(team_id):
    """Clean all items in cache"""
