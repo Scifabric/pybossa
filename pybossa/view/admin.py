@@ -240,9 +240,11 @@ def del_category(id):
                 return redirect(url_for('.categories'))
         else:
             return abort(404)
-    except:
-        raise
-        abort(403)
+    except HTTPException:
+        return abort(403)
+    except Exception as e:
+        current_app.logger.error(e)
+        return abort(500)
 
 
 @blueprint.route('/categories/update/<int:id>', methods=['GET', 'POST'])
@@ -282,6 +284,8 @@ def update_category(id):
                                            form=form)
         else:
             return abort(404)
-    except:
-        raise
-        abort(403)
+    except HTTPException:
+        return abort(403)
+    except Exception as e:
+        current_app.logger.error(e)
+        return abort(500)
