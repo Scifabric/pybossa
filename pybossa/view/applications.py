@@ -166,9 +166,9 @@ def app_index(page, lookup, category, fallback, use_count):
     featured_cat = model.Category(name='Featured',
                                   short_name='featured',
                                   description='Featured applications')
-    if category is 'featured':
+    if category == 'featured':
         active_cat = featured_cat
-    elif category is 'draft':
+    elif category == 'draft':
         active_cat = model.Category(name='Draft',
                                     short_name='draft',
                                     description='Draft applications')
