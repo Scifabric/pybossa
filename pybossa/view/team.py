@@ -71,7 +71,6 @@ def user_belong_team(team_id):
                                .first()
       return (1,0)[belong is None]
 
-
 def get_private_teams(page=1, per_page=5):
    '''Return a list of public teams with a pagination'''
 
@@ -170,16 +169,16 @@ class TeamForm(Form):
 @blueprint.route('/', defaults={'page': 1})
 @blueprint.route('/page/<int:page>')
 def index(page):
-    '''By default show the Public Teams'''
-    return team_index(page, cached_teams.get_publics, 'public',
+   '''By default show the Public Teams'''
+   return team_index(page, cached_teams.get_publics, 'public',
                       True, False, lazy_gettext('Public Teams'))
 
 @blueprint.route('/signed/', defaults={'page': 1})
 @blueprint.route('/signed/page/<int:page>')
 @login_required
 def signed(page):
-    '''By show the Signed Teams'''
-    return team_index(page, get_signed_teams, 'signed',
+   '''By show the Signed Teams'''
+   return team_index(page, get_signed_teams, 'signed',
                       True, False, lazy_gettext('Signed Teams'))
 
 
@@ -187,8 +186,11 @@ def signed(page):
 @blueprint.route('/private/page/<int:page>')
 @login_required
 def private(page):
-    '''By show the private Teams'''
-    return team_index(page, get_private_teams, 'private',
+   if current_user.admin != 1:
+       abort(404) 
+
+   '''By show the private Teams'''
+   return team_index(page, get_private_teams, 'private',
                       True, False, lazy_gettext('Private Teams'))
 					  
 def team_index(page, lookup, team_type, fallback, use_count, title):
