@@ -15,6 +15,9 @@
 from sqlalchemy.sql import func, text
 from pybossa.core import cache
 from pybossa.core import db
+from flaskext.login import current_user
+from pybossa.model import User, Team, User2Team
+from sqlalchemy import or_, func, and_
 
 def get_number_members(team_id):
     """Return number of Public Teams"""
@@ -46,3 +49,101 @@ def get_rank(team_id):
         score = result.score
 		
     return rank, score
+
+def get_team(name):
+    ''' Get Team by name and owner '''
+    if current_user.is_anonymous():
+       return Team.query.filter_by(name=name, public=True).first_or_404()    
+    elif current_user.admin == 1:
+       return Team.query.filter_by(name=name).first_or_404()
+    else:
+       return Team.query.filter(Team.name==name)\
+                      .outerjoin(User2Team)\
+                      .filter(or_ (Team.public ==True, User2Team.user_id == current_user.id))\
+                      .first_or_404()
+
+def user_belong_team(team_id):
+   ''' Is a user belong to a team'''
+   if  current_user.is_anonymous():    
+       return 0
+   else:
+      belong = User2Team.query.filter(User2Team.team_id==team_id)\
+                               .filter(User2Team.user_id==current_user.id)\
+                               .first()
+      return (1,0)[belong is None]
+
+def get_signed_teams(page=1, per_page=5):
+   '''Return a list of public teams with a pagination'''
+   sql = text('''
+              SELECT count(*)
+              FROM User2Team
+              WHERE User2Team.user_id=:user_id;
+              ''')
+
+   results = db.engine.execute(sql, user_id=current_user.id)
+   for row in results:
+       count = row[0]
+   sql = text('''
+              SELECT team.id,team.name,team.description,team.created,
+              team.owner_id,"user".name as owner, team.public
+              FROM team 
+              JOIN user2team ON team.id=user2team.team_id
+              JOIN "user" ON team.owner_id="user".id
+              WHERE user2team.user_id=:user_id
+              OFFSET(:offset) LIMIT(:limit);
+              ''')
+
+   offset = (page - 1) * per_page
+   results = db.engine.execute(sql, limit=per_page, offset=offset, user_id=current_user.id)
+   teams = []
+   for row in results:
+       team = dict(id=row.id, name=row.name,
+                   created=row.created, description=row.description,
+                   owner_id=row.owner_id,
+                   owner=row.owner,
+                   public=row.public
+                   )
+
+       team['rank'], team['score'] = get_rank(row.id)
+       team['members'] =get_number_members(row.id)
+       teams.append(team)
+
+   return teams, count
+
+def get_private_teams(page=1, per_page=5):
+   '''Return a list of public teams with a pagination'''
+
+   sql = text('''
+              SELECT count(*)
+              FROM team 
+              WHERE not public;
+              ''')
+   results = db.engine.execute(sql)
+   for row in results:
+       count = row[0]
+    
+   sql = text('''
+              SELECT team.id,team.name,team.description,team.created,
+              team.owner_id,"user".name as owner, team.public
+              FROM team 
+              INNER JOIN "user" ON team.owner_id="user".id
+              WHERE not team.public
+              OFFSET(:offset) LIMIT(:limit);
+              ''')
+
+   offset = (page - 1) * per_page
+   results = db.engine.execute(sql, limit=per_page, offset=offset)
+   teams = []
+   for row in results:
+       team = dict(id=row.id, name=row.name,
+                   created=row.created, description=row.description,
+                   owner_id=row.owner_id,
+                   owner=row.owner,
+                   public=row.public
+                   )
+
+       team['rank'], team['score'] = get_rank(row.id)
+       team['members'] =get_number_members(row.id)
+       teams.append(team)
+
+   return teams, count
