@@ -20,9 +20,11 @@ from flask import abort
 from flask import flash
 from flask import redirect
 from flask import url_for
+from flask import current_app
 from flaskext.login import login_required, current_user
 from flaskext.wtf import Form, TextField, IntegerField, HiddenInput, validators
 from flaskext.babel import lazy_gettext
+from werkzeug.exceptions import HTTPException
 
 import pybossa.model as model
 from pybossa.core import db
@@ -202,9 +204,11 @@ def categories():
                                categories=categories,
                                n_apps_per_category=n_apps_per_category,
                                form=form)
-    except:
-        raise
+    except HTTPException:
         return abort(403)
+    except Exception as e:
+        current_app.logger.error(e)
+        return abort(500)
 
 
 @blueprint.route('/categories/del/<int:id>', methods=['GET', 'POST'])
