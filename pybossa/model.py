@@ -396,7 +396,7 @@ class Team(db.Model, DomainObject):
     #: team name
     name = Column(Unicode(length=50), unique=True)
     #: description
-    description = Column(Unicode(length=200), unique=True)
+    description = Column(Unicode(length=200))
     #: owner
     owner_id = Column(Integer, ForeignKey('user.id'))
     #: Public flag Boolean Integer (0,1)
@@ -422,7 +422,8 @@ class User2Team(db.Model, DomainObject):
     __tablename__ = 'user2team'
     #: id
     user_id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'), primary_key=True)
-    team_id = Column(Integer, ForeignKey('team.id', ondelete='CASCADE'), primary_key=True)
+    team_id = Column(Integer, ForeignKey('team.id', ondelete='CASCADE'), primary_key=True)     
+
     #: created timestamp (automatically set)
     created = Column(Text, default=make_timestamp)
 
