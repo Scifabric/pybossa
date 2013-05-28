@@ -54,44 +54,50 @@ def index():
 @admin_required
 def featured(app_id=None):
     """List featured apps of PyBossa"""
-    categories = cached_cat.get_all()
+    try:
+        categories = cached_cat.get_all()
 
-    if request.method == 'GET':
-        apps = {}
-        for c in categories:
-            n_apps = cached_apps.n_count(category=c.short_name)
-            apps[c.short_name], n_apps = cached_apps.get(category=c.short_name,
-                                                         page=1,
-                                                         per_page=n_apps)
-        return render_template('/admin/applications.html', apps=apps,
-                               categories=categories)
-    if request.method == 'POST':
-        cached_apps.reset()
-        f = model.Featured()
-        f.app_id = app_id
-        # Check if the app is already in this table
-        tmp = db.session.query(model.Featured)\
-                .filter(model.Featured.app_id == app_id)\
-                .first()
-        if (tmp is None):
-            db.session.add(f)
-            db.session.commit()
-            return json.dumps(f.dictize())
-        else:
-            return json.dumps({'error': 'App.id %s already in Featured table'
-                               % app_id})
-    if request.method == 'DELETE':
-        cached_apps.reset()
-        f = db.session.query(model.Featured)\
-              .filter(model.Featured.app_id == app_id)\
-              .first()
-        if (f):
-            db.session.delete(f)
-            db.session.commit()
-            return "", 204
-        else:
-            return json.dumps({'error': 'App.id %s is not in Featured table'
-                               % app_id})
+        if request.method == 'GET':
+            apps = {}
+            for c in categories:
+                n_apps = cached_apps.n_count(category=c.short_name)
+                apps[c.short_name], n_apps = cached_apps.get(category=c.short_name,
+                                                             page=1,
+                                                             per_page=n_apps)
+            return render_template('/admin/applications.html', apps=apps,
+                                   categories=categories)
+        if request.method == 'POST':
+            cached_apps.reset()
+            f = model.Featured()
+            f.app_id = app_id
+            # Check if the app is already in this table
+            tmp = db.session.query(model.Featured)\
+                    .filter(model.Featured.app_id == app_id)\
+                    .first()
+            if (tmp is None):
+                db.session.add(f)
+                db.session.commit()
+                return json.dumps(f.dictize())
+            else:
+                return json.dumps({'error': 'App.id %s already in Featured table'
+                                   % app_id})
+        if request.method == 'DELETE':
+            cached_apps.reset()
+            f = db.session.query(model.Featured)\
+                  .filter(model.Featured.app_id == app_id)\
+                  .first()
+            if (f):
+                db.session.delete(f)
+                db.session.commit()
+                return "", 204
+            else:
+                return json.dumps({'error': 'App.id %s is not in Featured table'
+                                   % app_id})
+    except HTTPException:
+        return abort(403)
+    except Exception as e:
+        current_app.logger.error(e)
+        return abort(500)
 
 
 class SearchForm(Form):
@@ -103,27 +109,34 @@ class SearchForm(Form):
 @admin_required
 def users(user_id=None):
     """Manage users of PyBossa"""
-    form = SearchForm(request.form)
-    users = db.session.query(model.User)\
-              .filter(model.User.admin == True)\
-              .filter(model.User.id != current_user.id)\
-              .all()
-
-    if request.method == 'POST' and form.user.data:
-        query = '%' + form.user.data.lower() + '%'
-        found = db.session.query(model.User)\
-                  .filter(or_(func.lower(model.User.name).like(query),
-                              func.lower(model.User.fullname).like(query)))\
+    try:
+        form = SearchForm(request.form)
+        users = db.session.query(model.User)\
+                  .filter(model.User.admin == True)\
                   .filter(model.User.id != current_user.id)\
                   .all()
-        if not found:
-            flash("<strong>Ooops!</strong> We didn't find a user "
-                  "matching your query: <strong>%s</strong>" % form.user.data)
-        return render_template('/admin/users.html', found=found, users=users,
-                               title=lazy_gettext("Manage Admin Users"), form=form)
 
-    return render_template('/admin/users.html', found=[], users=users,
-                           title=lazy_gettext("Manage Admin Users"), form=form)
+        if request.method == 'POST' and form.user.data:
+            query = '%' + form.user.data.lower() + '%'
+            found = db.session.query(model.User)\
+                      .filter(or_(func.lower(model.User.name).like(query),
+                                  func.lower(model.User.fullname).like(query)))\
+                      .filter(model.User.id != current_user.id)\
+                      .all()
+            if not found:
+                flash("<strong>Ooops!</strong> We didn't find a user "
+                      "matching your query: <strong>%s</strong>" % form.user.data)
+            return render_template('/admin/users.html', found=found, users=users,
+                                   title=lazy_gettext("Manage Admin Users"),
+                                   form=form)
+
+        return render_template('/admin/users.html', found=[], users=users,
+                               title=lazy_gettext("Manage Admin Users"), form=form)
+    except HTTPException:
+        return abort(403)
+    except Exception as e:
+        current_app.logger.error(e)
+        return abort(500)
 
 
 @blueprint.route('/users/add/<int:user_id>')
@@ -131,15 +144,21 @@ def users(user_id=None):
 @admin_required
 def add_admin(user_id=None):
     """Add admin flag for user_id"""
-    if user_id:
-        user = db.session.query(model.User)\
-                 .get(user_id)
-        if user:
-            user.admin = True
-            db.session.commit()
-            return redirect(url_for(".users"))
-        else:
-            return abort(404)
+    try:
+        if user_id:
+            user = db.session.query(model.User)\
+                     .get(user_id)
+            if user:
+                user.admin = True
+                db.session.commit()
+                return redirect(url_for(".users"))
+            else:
+                return abort(404)
+    except HTTPException:
+        return abort(403)
+    except Exception as e:
+        current_app.logger.error(e)
+        return abort(500)
 
 
 @blueprint.route('/users/del/<int:user_id>')
@@ -147,17 +166,23 @@ def add_admin(user_id=None):
 @admin_required
 def del_admin(user_id=None):
     """Del admin flag for user_id"""
-    if user_id:
-        user = db.session.query(model.User)\
-                 .get(user_id)
-        if user:
-            user.admin = False
-            db.session.commit()
-            return redirect(url_for('.users'))
+    try:
+        if user_id:
+            user = db.session.query(model.User)\
+                     .get(user_id)
+            if user:
+                user.admin = False
+                db.session.commit()
+                return redirect(url_for('.users'))
+            else:
+                return abort(404)
         else:
             return abort(404)
-    else:
-        return abort(404)
+    except HTTPException:
+        return abort(403)
+    except Exception as e:
+        current_app.logger.error(e)
+        return abort(500)
 
 
 class CategoryForm(Form):
