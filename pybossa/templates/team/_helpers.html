@@ -34,12 +34,11 @@
 
 {% macro render_teams_nav(team, active_link, current_user, team_owner) %}
   <ul data-spy="affix" data-offset-top="200px" class="nav nav-list bs-docs-sidenav affix-top">
-    <li {% if active_link=="index"%}class="active"{% endif %}><a href="{{url_for('team.index')}}"><i class="icon-chevron-right"></i> {{ _('Teams') }}</a></li>
     {% if current_user.is_authenticated()  or current_user.admin %}
       {% if not team_owner %}
-        <li {% if active_link=="owner"%}class="active"{% endif %}><a href="{{ url_for('team.new')}}"><i class="icon-chevron-right"></i> {{ _('Create your Team') }}</a></li>
+        <li {% if active_link=="new"%}class="active"{% endif %}><a href="{{ url_for('team.new')}}"><i class="icon-chevron-right"></i> {{ _('Create your Team') }}</a></li>
       {% else %}
-        <li {% if active_link=="owner"%}class="active"{% endif %}><a href="{{url_for('team.details', name=team_owner.name)}}"><i class="icon-chevron-right"></i> {{ _('Edit your Team') }}</a></li>
+        <li {% if active_link=="edit"%}class="active"{% endif %}><a href="{{url_for('team.details', name=team_owner.name)}}"><i class="icon-chevron-right"></i> {{ _('Edit your Team') }}</a></li>
       {% endif %}
       <li {% if active_link=="signed"%}class="active"{% endif %}><a href="{{url_for('team.signed')}}"><i class="icon-chevron-right"></i> {{ _('Signed') }}</a></li>
     {% endif %}
@@ -55,7 +54,6 @@
 
 {% macro render_team_local_nav(team, active_link, current_user) %}
   <ul data-spy="affix" data-offset-top="200px" class="nav nav-list bs-docs-sidenav affix-top">
-    <li {% if active_link=="index"%}class="active"{% endif %}><a href="{{url_for('team.details', name=team.name)}}"><i class="icon-chevron-right"></i> {{_('Team')}}</a></li>
     <li {% if active_link=="info"%}class="active"{% endif %}><a href="{{url_for('team.details', name=team.name)}}"><i class="icon-chevron-right"></i> {{_('Info')}}</a></li>
     <li {% if active_link=="members"%}class="active"{% endif %}><a href="{{url_for('team.users', name=team.name)}}"><i class="icon-chevron-right"></i> {{_('Members')}}</a></li>
     {% if ( current_user.is_authenticated() and current_user.id == team.owner_id ) or current_user.admin %}
