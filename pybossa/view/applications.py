@@ -118,7 +118,7 @@ def redirect_old_featured(page):
 def redirect_old_published(page):
     """DEPRECATED only to redirect old links"""
     category = db.session.query(model.Category).first()
-    return redirect(url_for('.app2_index', category=category.short_name, page=page), 301)
+    return redirect(url_for('.app_cat_index', category=category.short_name, page=page), 301)
 
 
 @blueprint.route('/draft/', defaults={'page': 1})
@@ -145,7 +145,7 @@ def index(page):
                 cat_short_name = cat.short_name
             else:
                 cat_short_name = "algo"
-        return redirect(url_for('.app2_index', category=cat_short_name))
+        return redirect(url_for('.app_cat_index', category=cat_short_name))
 
 
 def app_index(page, lookup, category, fallback, use_count):
@@ -166,9 +166,9 @@ def app_index(page, lookup, category, fallback, use_count):
     featured_cat = model.Category(name='Featured',
                                   short_name='featured',
                                   description='Featured applications')
-    if category is 'featured':
+    if category == 'featured':
         active_cat = featured_cat
-    elif category is 'draft':
+    elif category == 'draft':
         active_cat = model.Category(name='Draft',
                                     short_name='draft',
                                     description='Draft applications')
@@ -203,7 +203,7 @@ def draft(page):
 
 @blueprint.route('/category/<string:category>/', defaults={'page': 1})
 @blueprint.route('/category/<string:category>/page/<int:page>/')
-def app2_index(category, page):
+def app_cat_index(category, page):
     """Show Apps that belong to a given category"""
     return app_index(page, cached_apps.get, category, False, True)
 
