@@ -7,14 +7,14 @@
 {% block content %}
 <div class="row-fluid">
     <div class="span3">
-        {{ helper.render_team_local_nav(team, 'members', current_user) }}
+        {{ helper.render_teams_nav(team, 'myteams', current_user) }}
     </div>
 
     <div class="span9" style="min-height:400px"> 
 
 	    <h1><i class="icon-group"></i> <strong>{{ team.name }}</strong><small>{{total}} {{ _('members') }}</small>
               {% if ( current_user.is_authenticated() and current_user.id == team.owner_id ) or current_user.admin %}
-               <a class="pull-right btn btn-primary" href="{{url_for('team.search_users', name=team.name)}}"><i class="icon-user" style="color:white"></i> {{ _('Add Users') }}</a>
+               <a class="pull-right btn btn-primary" href="{{url_for('team.search_users', name=team.name)}}"><i class="icon-plus" style="color:white"></i> {{ _('Add Users') }}</a>
               {% endif %}
            </h1>
 
@@ -39,7 +39,7 @@
                        {% if user2team.user_id == team.owner_id %}
                           {{ _('Owner') }}
                        {% else %}
-                         <a href="{{url_for('team.join_delete', name=team.name, user=user2team.user.name)}}" class="btn btn-danger"> <i class="icon-trash icon-large"></i> {{ _('Remove') }}</a>
+                         <a href="{{url_for('team.join_delete', name=team.name, user=user2team.user.name)}}" class="btn btn-danger btn-small"><i class="icon-trash icon-small"></i> {{ _('Remove') }}</a>
                                               
                        {% endif %}
                      </td> 

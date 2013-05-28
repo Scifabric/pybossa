@@ -8,7 +8,7 @@
 
 <div class="row">
     <div class="span3">
-       {{ helper.render_teams_nav(team, team_type, current_user, team_owner) }}
+       {{ helper.render_teams_nav(team, 'myteams', current_user) }}
     </div>
     <div class="span9" style="min-height:400px">
 
@@ -24,10 +24,8 @@
                 <h2>Found Teams</h2>
                 {% for item in founds %}
                   {{ helper.show_team(item, team_type, current_user) }}
-
                 {% endfor %}
               {% endif %}
-
             </div>
     </div>
 </div>

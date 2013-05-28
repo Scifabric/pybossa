@@ -5,9 +5,14 @@
 {% block content %}
 <div class="row-fluid">
     <div class="span3">
-      {{ helper.render_teams_nav(team, team_type, current_user, team_owner) }}
+      {{ helper.render_teams_nav(team, team_type, current_user) }}
     </div>
     <div class="span9" style="min-height:400px">
+        {% if current_user.is_authenticated() and team_type=='myteams' %}
+          <h1><strong>{{ _('Team') }}</strong>: {{ _('Create a new Team') }}</h1>
+          <a href="{{ url_for('team.new')}}" class="btn">{{ _('Create new Team') }}</a>
+        {% endif %}
+
         <h1>
            <i class="icon-th"></i> {% if teams %}{{pagination.total_count}}{% endif %}  {{ title }}
            {% if teams %}
