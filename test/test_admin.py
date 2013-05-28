@@ -116,7 +116,6 @@ class TestAdmin(web.Helper):
             " as it is featured"
         # Remove it again from the Featured list
         res = self.app.delete('/admin/featured/1')
-        print res.data
         assert res.status == "204 NO CONTENT", res.status
         # Check that it is not listed in the front page
         res = self.app.get('/', follow_redirects=True)
