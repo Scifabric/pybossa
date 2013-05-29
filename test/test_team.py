@@ -69,13 +69,14 @@ class TestTeams(web.Helper):
        ''' Test 01 TEAM create a team'''
        self.register()
 
-       res = self.app.get("/team", follow_redirects=True)
+       res = self.app.get("/team/myteams", follow_redirects=True)
        err_msg = "There should be a button for Create Team"
-       assert "Create your Team" in res.data, err_msg
+       print res.data
+       assert "Create new Team" in res.data, err_msg
       
        res = self.new_team(name="TestTeam")
-       print res.data
        assert "Team created" in res.data, res
+      
        self.signout
 
        team = db.session.query(model.Team).get(1)
@@ -95,7 +96,10 @@ class TestTeams(web.Helper):
        assert "Team created" in res.data, res
 
        res = self.new_team()
-       assert "You already ownn your group" in res.data, res
+       assert "The team name is already taken" in res.data, res
+
+       res = self.new_team(name='Team2')
+       assert "Team created" in res.data, res
 
        self.signout()
 
