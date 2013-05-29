@@ -859,10 +859,9 @@ def export_to(short_name):
             if len(inst.args) == 3:
                 type, msg, status_code = inst.args
                 msg = ("Error: %s with status code: %s" % (type, status_code))
-                current_app.logger.error(msg)
             else:
                 msg = ("Error: %s" % inst.args[0])
-                current_app.logger.error(msg)
+            current_app.logger.error(msg)
             flash(msg, 'danger')
         finally:
             return respond()
