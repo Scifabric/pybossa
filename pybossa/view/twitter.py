@@ -58,24 +58,24 @@ def manage_user(access_token, user_data, next_url):
 
     if user is not None:
         return user
-    else:
-        twitter_token = dict(oauth_token=access_token['oauth_token'],
-                             oauth_token_secret=access_token['oauth_token_secret'])
-        info = dict(twitter_token=twitter_token)
-        user = db.session.query(model.User)\
-                 .filter_by(name=user_data['screen_name'])\
-                 .first()
 
-        if user is None:
-            user = model.User(fullname=user_data['screen_name'],
-                              name=user_data['screen_name'],
-                              email_addr=user_data['screen_name'],
-                              twitter_user_id=user_data['user_id'],
-                              info=info)
-            db.session.add(user)
-            db.session.commit()
-            return user
-        return None
+    twitter_token = dict(oauth_token=access_token['oauth_token'],
+                         oauth_token_secret=access_token['oauth_token_secret'])
+    info = dict(twitter_token=twitter_token)
+    user = db.session.query(model.User)\
+        .filter_by(name=user_data['screen_name'])\
+        .first()
+
+    if user is None:
+        user = model.User(fullname=user_data['screen_name'],
+                          name=user_data['screen_name'],
+                          email_addr=user_data['screen_name'],
+                          twitter_user_id=user_data['user_id'],
+                          info=info)
+        db.session.add(user)
+        db.session.commit()
+        return user
+    return None
 
 
 @blueprint.route('/oauth-authorized')
