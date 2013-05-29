@@ -120,12 +120,9 @@ def oauth_authorized(resp):
             return redirect(url_for('account.signin'))
 
     first_login = False
-    request_email = False
     login_user(user, remember=True)
     flash("Welcome back %s" % user.fullname, 'success')
-    if user.email_addr == user.name:
-        request_email = True
-    if not request_email:
+    if user.email_addr != user.name:
         return redirect(next_url)
     if first_login:
         flash("This is your first login, please add a valid e-mail")
