@@ -1014,33 +1014,35 @@ def task_scheduler(short_name):
     app = app_by_shortname(short_name)
     title = app_title(app, lazy_gettext('Scheduler'))
     form = TaskSchedulerForm()
+
     try:
         require.app.read(app)
         require.app.update(app)
-        if request.method == 'GET':
-            if app.info.get('sched'):
-                for s in form.sched.choices:
-                    if app.info['sched'] == s[0]:
-                        form.sched.data = s[0]
-                        break
-            return render_template('/applications/task_scheduler.html',
-                                   title=title,
-                                   form=form,
-                                   app=app)
-        elif request.method == 'POST' and form.validate():
-            if form.sched.data:
-                app.info['sched'] = form.sched.data
-            cached_apps.reset()
-            db.session.add(app)
-            db.session.commit()
-            msg = lazy_gettext("Application Task Scheduler updated!")
-            flash(msg, 'success')
-            return redirect(url_for('.tasks', short_name=app.short_name))
-        else:
-            flash(lazy_gettext('Please correct the errors'), 'error')
-            return render_template('/applications/task_scheduler.html',
-                                   title=title,
-                                   form=form,
-                                   app=app)
     except:
         return abort(403)
+
+    if request.method == 'GET':
+        if app.info.get('sched'):
+            for s in form.sched.choices:
+                if app.info['sched'] == s[0]:
+                    form.sched.data = s[0]
+                    break
+        return render_template('/applications/task_scheduler.html',
+                               title=title,
+                               form=form,
+                               app=app)
+    elif request.method == 'POST' and form.validate():
+        if form.sched.data:
+            app.info['sched'] = form.sched.data
+        cached_apps.reset()
+        db.session.add(app)
+        db.session.commit()
+        msg = lazy_gettext("Application Task Scheduler updated!")
+        flash(msg, 'success')
+        return redirect(url_for('.tasks', short_name=app.short_name))
+    else:
+        flash(lazy_gettext('Please correct the errors'), 'error')
+        return render_template('/applications/task_scheduler.html',
+                               title=title,
+                               form=form,
+                               app=app)
