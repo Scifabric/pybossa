@@ -1041,9 +1041,9 @@ def task_scheduler(short_name):
         msg = lazy_gettext("Application Task Scheduler updated!")
         flash(msg, 'success')
         return redirect(url_for('.tasks', short_name=app.short_name))
-    else:
-        flash(lazy_gettext('Please correct the errors'), 'error')
-        return render_template('/applications/task_scheduler.html',
-                               title=title,
-                               form=form,
-                               app=app)
+
+    flash(lazy_gettext('Please correct the errors'), 'error')
+    return render_template('/applications/task_scheduler.html',
+                           title=title,
+                           form=form,
+                           app=app)
