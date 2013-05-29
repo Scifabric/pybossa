@@ -763,6 +763,12 @@ def export_to(short_name):
     title = app_title(app, lazy_gettext("Export"))
     loading_text = lazy_gettext("Exporting data..., this may take a while")
 
+    def respond():
+        return render_template('/applications/export.html',
+                               title=title,
+                               loading_text=loading_text,
+                               app=app)
+
     def gen_json(table):
         n = db.session.query(table)\
             .filter_by(app_id=app.id).count()
@@ -844,10 +850,7 @@ def export_to(short_name):
                                       resource_id=resources[ty]['id'])
 
             flash(msg, 'success')
-            return render_template('/applications/export.html',
-                                   title=title,
-                                   loading_text=loading_text,
-                                   app=app)
+            return respond()
         except requests.exceptions.ConnectionError:
                 msg = "CKAN server seems to be down, try again layer or contact the CKAN admins"
                 current_app.logger.error(msg)
@@ -862,10 +865,7 @@ def export_to(short_name):
                 current_app.logger.error(msg)
             flash(msg, 'danger')
         finally:
-            return render_template('/applications/export.html',
-                                   title=title,
-                                   loading_text=loading_text,
-                                   app=app)
+            return respond()
 
     def respond_csv(ty):
         # Export Task(/Runs) to CSV
@@ -900,10 +900,7 @@ def export_to(short_name):
                             mimetype='text/csv')
         else:
             flash(msg, 'info')
-            return render_template('/applications/export.html',
-                                   title=title,
-                                   loading_text=loading_text,
-                                   app=app)
+            return respond()
 
     export_formats = ["json", "csv"]
     if current_user.is_authenticated():
