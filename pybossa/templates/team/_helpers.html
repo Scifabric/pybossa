@@ -88,22 +88,21 @@
               <p style="margin:0"><strong><i class="icon-user"></i> {{ _('Rank') }}</strong>:{{ team.rank }} {{ _('with a score of') }} {{ team.score }}</p>
             {% endif %}
             {% if detail %}
-            {% if not current_user.is_anonymous()  %}
-              {% if current_user.admin==1 or team.owner_id == current_user.id %}
-              <a href="{{ url_for('team.update', name = team.name) }}" class="btn btn-primary"><i class="icon-edit icon-white"></i> {{ _('Edit the team details') }}</a>
-              <a href="{{ url_for('team.delete', name = team.name) }}" class="btn btn-danger"><i class="icon-trash icon-white"></i> {{ _('Delete the team') }}</a>
-              {% endif %}
+              {% if not current_user.is_anonymous()  %}
+                {% if current_user.admin==1 or team.owner_id == current_user.id %}
+                  <a href="{{ url_for('team.update', name = team.name) }}" class="btn btn-primary"><i class="icon-edit icon-white"></i> {{ _('Edit the team details') }}</a>
+                  <a href="{{ url_for('team.delete', name = team.name) }}" class="btn btn-danger"><i class="icon-trash icon-white"></i> {{ _('Delete the team') }}</a>
+                {% endif %}
               
-              {% if current_user.id != team.owner_id %}
- 	        {% if team.belong%}
-	          <a href="{{url_for('team.user_delete', name=team.name )}}" class="btn btn-danger"><i class="icon-signout icon-large"></i> {{ _('Left this team') }}</a>
-                {% else %}              
-                  <a href="{{url_for('team.user_add', name=team.name )}}" class="btn btn-primary"><i class="icon-signin  icon-large"></i> {{ _('Join this team') }}</a>              
-  	        {% endif %}
+                {% if current_user.id != team.owner_id %}
+ 	          {% if team.belong%}
+	            <a href="{{url_for('team.user_delete', name=team.name )}}" class="btn btn-danger"><i class="icon-signout icon-large"></i> {{ _('Left this team') }}</a>
+                  {% else %}              
+                    <a href="{{url_for('team.user_add', name=team.name )}}" class="btn btn-primary"><i class="icon-signin  icon-large"></i> {{ _('Join this team') }}</a>              
+  	          {% endif %}
+                {% endif %}
              {% endif %}
-           {% else %}
              <a href="{{ url_for('team.users', name = team.name) }}" class="btn btn-primary"><i class="icon-group icon-white"></i> {{ _('Members') }}</a>
-           {% endif %}
            {% endif %}
         </div>
     </div> <!--end of clas -->
