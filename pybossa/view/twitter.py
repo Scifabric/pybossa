@@ -42,9 +42,9 @@ def login():
 def get_twitter_token():
     if current_user.is_anonymous():
         return None
-    else:
-        return((current_user.info['twitter_token']['oauth_token'],
-               current_user.info['twitter_token']['oauth_token_secret']))
+
+    return((current_user.info['twitter_token']['oauth_token'],
+            current_user.info['twitter_token']['oauth_token_secret']))
 
 
 def manage_user(access_token, user_data, next_url):
