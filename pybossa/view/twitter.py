@@ -123,7 +123,7 @@ def oauth_authorized(resp):
     request_email = False
     login_user(user, remember=True)
     flash("Welcome back %s" % user.fullname, 'success')
-    if (user.email_addr == user.name):
+    if user.email_addr == user.name:
         request_email = True
     if not request_email:
         return redirect(next_url)
