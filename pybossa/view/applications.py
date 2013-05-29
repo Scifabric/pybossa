@@ -1015,6 +1015,11 @@ def task_scheduler(short_name):
     title = app_title(app, lazy_gettext('Scheduler'))
     form = TaskSchedulerForm()
 
+    def respond():
+        return render_template('/applications/task_scheduler.html',
+                               title=title,
+                               form=form,
+                               app=app)
     try:
         require.app.read(app)
         require.app.update(app)
@@ -1027,10 +1032,7 @@ def task_scheduler(short_name):
                 if app.info['sched'] == s[0]:
                     form.sched.data = s[0]
                     break
-        return render_template('/applications/task_scheduler.html',
-                               title=title,
-                               form=form,
-                               app=app)
+        return respond()
 
     if request.method == 'POST' and form.validate():
         if form.sched.data:
@@ -1043,7 +1045,4 @@ def task_scheduler(short_name):
         return redirect(url_for('.tasks', short_name=app.short_name))
 
     flash(lazy_gettext('Please correct the errors'), 'error')
-    return render_template('/applications/task_scheduler.html',
-                           title=title,
-                           form=form,
-                           app=app)
+    return respond()
