@@ -68,6 +68,7 @@ def manage_user(access_token, user_data, next_url):
 
     if user is not None:
         return None
+
     user = model.User(fullname=user_data['screen_name'],
                       name=user_data['screen_name'],
                       email_addr=user_data['screen_name'],
