@@ -125,10 +125,11 @@ def oauth_authorized(resp):
     flash("Welcome back %s" % user.fullname, 'success')
     if (user.email_addr == user.name):
         request_email = True
-    if request_email:
-        if first_login:
-            flash("This is your first login, please add a valid e-mail")
-        else:
-            flash("Please update your e-mail address in your profile page")
-        return redirect(url_for('account.update_profile'))
-    return redirect(next_url)
+    if not request_email:
+        return redirect(next_url)
+    if first_login:
+        flash("This is your first login, please add a valid e-mail")
+    else:
+        flash("Please update your e-mail address in your profile page")
+    return redirect(url_for('account.update_profile'))
+
