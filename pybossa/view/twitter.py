@@ -75,8 +75,7 @@ def manage_user(access_token, user_data, next_url):
             db.session.add(user)
             db.session.commit()
             return user
-        else:
-            return None
+        return None
 
 
 @blueprint.route('/oauth-authorized')
