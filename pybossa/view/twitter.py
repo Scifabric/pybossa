@@ -66,16 +66,16 @@ def manage_user(access_token, user_data, next_url):
         .filter_by(name=user_data['screen_name'])\
         .first()
 
-    if user is None:
-        user = model.User(fullname=user_data['screen_name'],
-                          name=user_data['screen_name'],
-                          email_addr=user_data['screen_name'],
-                          twitter_user_id=user_data['user_id'],
-                          info=info)
-        db.session.add(user)
-        db.session.commit()
-        return user
-    return None
+    if user is not None:
+        return None
+    user = model.User(fullname=user_data['screen_name'],
+                      name=user_data['screen_name'],
+                      email_addr=user_data['screen_name'],
+                      twitter_user_id=user_data['user_id'],
+                      info=info)
+    db.session.add(user)
+    db.session.commit()
+    return user
 
 
 @blueprint.route('/oauth-authorized')
