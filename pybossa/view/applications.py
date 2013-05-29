@@ -831,20 +831,10 @@ def export_to(short_name):
                     ckan.datastore_upsert(name=ty,
                                           records=gen_json(tables[ty]),
                                           resource_id=resources[ty]['id'])
-                    flash(msg, 'success')
-                    return render_template('/applications/export.html',
-                                           title=title,
-                                           loading_text=loading_text,
-                                           app=app)
                 else:
                     ckan.datastore_delete(name=ty)
                     ckan.datastore_create(name=ty)
                     ckan.datastore_upsert(name=ty, records=gen_json(tables[ty]))
-                    flash(msg, 'success')
-                    return render_template('/applications/export.html',
-                                           title=title,
-                                           loading_text=loading_text,
-                                           app=app)
             else:
                 ckan.package_create(app=app, user=app.owner, url=app_url,
                                     tags=current_app.config['BRAND'])
@@ -853,11 +843,11 @@ def export_to(short_name):
                                       records=gen_json(tables[ty]),
                                       resource_id=resources[ty]['id'])
 
-                flash(msg, 'success')
-                return render_template('/applications/export.html',
-                                       title=title,
-                                       loading_text=loading_text,
-                                       app=app)
+            flash(msg, 'success')
+            return render_template('/applications/export.html',
+                                   title=title,
+                                   loading_text=loading_text,
+                                   app=app)
         except requests.exceptions.ConnectionError:
                 msg = "CKAN server seems to be down, try again layer or contact the CKAN admins"
                 current_app.logger.error(msg)
