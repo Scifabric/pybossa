@@ -56,7 +56,9 @@ def manage_user(access_token, user_data, next_url):
              .filter_by(twitter_user_id=user_data['user_id'])\
              .first()
 
-    if user is None:
+    if user is not None:
+        return user
+    else:
         twitter_token = dict(oauth_token=access_token['oauth_token'],
                              oauth_token_secret=access_token['oauth_token_secret'])
         info = dict(twitter_token=twitter_token)
@@ -75,8 +77,6 @@ def manage_user(access_token, user_data, next_url):
             return user
         else:
             return None
-    else:
-        return user
 
 
 @blueprint.route('/oauth-authorized')
