@@ -118,17 +118,17 @@ def oauth_authorized(resp):
             return redirect(url_for('account.forgot_password'))
         else:
             return redirect(url_for('account.signin'))
-    else:
-        first_login = False
-        request_email = False
-        login_user(user, remember=True)
-        flash("Welcome back %s" % user.fullname, 'success')
-        if (user.email_addr == user.name):
-            request_email = True
-        if request_email:
-            if first_login:
-                flash("This is your first login, please add a valid e-mail")
-            else:
-                flash("Please update your e-mail address in your profile page")
-            return redirect(url_for('account.update_profile'))
-        return redirect(next_url)
+
+    first_login = False
+    request_email = False
+    login_user(user, remember=True)
+    flash("Welcome back %s" % user.fullname, 'success')
+    if (user.email_addr == user.name):
+        request_email = True
+    if request_email:
+        if first_login:
+            flash("This is your first login, please add a valid e-mail")
+        else:
+            flash("Please update your e-mail address in your profile page")
+        return redirect(url_for('account.update_profile'))
+    return redirect(next_url)
