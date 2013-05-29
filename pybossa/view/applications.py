@@ -1031,7 +1031,8 @@ def task_scheduler(short_name):
                                title=title,
                                form=form,
                                app=app)
-    elif request.method == 'POST' and form.validate():
+
+    if request.method == 'POST' and form.validate():
         if form.sched.data:
             app.info['sched'] = form.sched.data
         cached_apps.reset()
