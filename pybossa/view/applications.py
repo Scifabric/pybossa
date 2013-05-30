@@ -763,6 +763,12 @@ def export_to(short_name):
     title = app_title(app, lazy_gettext("Export"))
     loading_text = lazy_gettext("Exporting data..., this may take a while")
 
+    def respond():
+        return render_template('/applications/export.html',
+                               title=title,
+                               loading_text=loading_text,
+                               app=app)
+
     def gen_json(table):
         n = db.session.query(table)\
             .filter_by(app_id=app.id).count()
@@ -831,20 +837,10 @@ def export_to(short_name):
                     ckan.datastore_upsert(name=ty,
                                           records=gen_json(tables[ty]),
                                           resource_id=resources[ty]['id'])
-                    flash(msg, 'success')
-                    return render_template('/applications/export.html',
-                                           title=title,
-                                           loading_text=loading_text,
-                                           app=app)
                 else:
                     ckan.datastore_delete(name=ty)
                     ckan.datastore_create(name=ty)
                     ckan.datastore_upsert(name=ty, records=gen_json(tables[ty]))
-                    flash(msg, 'success')
-                    return render_template('/applications/export.html',
-                                           title=title,
-                                           loading_text=loading_text,
-                                           app=app)
             else:
                 ckan.package_create(app=app, user=app.owner, url=app_url,
                                     tags=current_app.config['BRAND'])
@@ -853,11 +849,8 @@ def export_to(short_name):
                                       records=gen_json(tables[ty]),
                                       resource_id=resources[ty]['id'])
 
-                flash(msg, 'success')
-                return render_template('/applications/export.html',
-                                       title=title,
-                                       loading_text=loading_text,
-                                       app=app)
+            flash(msg, 'success')
+            return respond()
         except requests.exceptions.ConnectionError:
                 msg = "CKAN server seems to be down, try again layer or contact the CKAN admins"
                 current_app.logger.error(msg)
@@ -866,16 +859,12 @@ def export_to(short_name):
             if len(inst.args) == 3:
                 type, msg, status_code = inst.args
                 msg = ("Error: %s with status code: %s" % (type, status_code))
-                current_app.logger.error(msg)
             else:
                 msg = ("Error: %s" % inst.args[0])
-                current_app.logger.error(msg)
+            current_app.logger.error(msg)
             flash(msg, 'danger')
         finally:
-            return render_template('/applications/export.html',
-                                   title=title,
-                                   loading_text=loading_text,
-                                   app=app)
+            return respond()
 
     def respond_csv(ty):
         # Export Task(/Runs) to CSV
@@ -910,10 +899,7 @@ def export_to(short_name):
                             mimetype='text/csv')
         else:
             flash(msg, 'info')
-            return render_template('/applications/export.html',
-                                   title=title,
-                                   loading_text=loading_text,
-                                   app=app)
+            return respond()
 
     export_formats = ["json", "csv"]
     if current_user.is_authenticated():
@@ -1027,33 +1013,35 @@ def task_scheduler(short_name):
     app = app_by_shortname(short_name)
     title = app_title(app, lazy_gettext('Scheduler'))
     form = TaskSchedulerForm()
+
+    def respond():
+        return render_template('/applications/task_scheduler.html',
+                               title=title,
+                               form=form,
+                               app=app)
     try:
         require.app.read(app)
         require.app.update(app)
-        if request.method == 'GET':
-            if app.info.get('sched'):
-                for s in form.sched.choices:
-                    if app.info['sched'] == s[0]:
-                        form.sched.data = s[0]
-                        break
-            return render_template('/applications/task_scheduler.html',
-                                   title=title,
-                                   form=form,
-                                   app=app)
-        elif request.method == 'POST' and form.validate():
-            if form.sched.data:
-                app.info['sched'] = form.sched.data
-            cached_apps.reset()
-            db.session.add(app)
-            db.session.commit()
-            msg = lazy_gettext("Application Task Scheduler updated!")
-            flash(msg, 'success')
-            return redirect(url_for('.tasks', short_name=app.short_name))
-        else:
-            flash(lazy_gettext('Please correct the errors'), 'error')
-            return render_template('/applications/task_scheduler.html',
-                                   title=title,
-                                   form=form,
-                                   app=app)
     except:
         return abort(403)
+
+    if request.method == 'GET':
+        if app.info.get('sched'):
+            for s in form.sched.choices:
+                if app.info['sched'] == s[0]:
+                    form.sched.data = s[0]
+                    break
+        return respond()
+
+    if request.method == 'POST' and form.validate():
+        if form.sched.data:
+            app.info['sched'] = form.sched.data
+        cached_apps.reset()
+        db.session.add(app)
+        db.session.commit()
+        msg = lazy_gettext("Application Task Scheduler updated!")
+        flash(msg, 'success')
+        return redirect(url_for('.tasks', short_name=app.short_name))
+
+    flash(lazy_gettext('Please correct the errors'), 'error')
+    return respond()
