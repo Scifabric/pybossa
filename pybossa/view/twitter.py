@@ -42,9 +42,9 @@ def login():
 def get_twitter_token():
     if current_user.is_anonymous():
         return None
-    else:
-        return((current_user.info['twitter_token']['oauth_token'],
-               current_user.info['twitter_token']['oauth_token_secret']))
+
+    return((current_user.info['twitter_token']['oauth_token'],
+            current_user.info['twitter_token']['oauth_token_secret']))
 
 
 def manage_user(access_token, user_data, next_url):
@@ -56,27 +56,27 @@ def manage_user(access_token, user_data, next_url):
              .filter_by(twitter_user_id=user_data['user_id'])\
              .first()
 
-    if user is None:
-        twitter_token = dict(oauth_token=access_token['oauth_token'],
-                             oauth_token_secret=access_token['oauth_token_secret'])
-        info = dict(twitter_token=twitter_token)
-        user = db.session.query(model.User)\
-                 .filter_by(name=user_data['screen_name'])\
-                 .first()
-
-        if user is None:
-            user = model.User(fullname=user_data['screen_name'],
-                              name=user_data['screen_name'],
-                              email_addr=user_data['screen_name'],
-                              twitter_user_id=user_data['user_id'],
-                              info=info)
-            db.session.add(user)
-            db.session.commit()
-            return user
-        else:
-            return None
-    else:
+    if user is not None:
         return user
+
+    twitter_token = dict(oauth_token=access_token['oauth_token'],
+                         oauth_token_secret=access_token['oauth_token_secret'])
+    info = dict(twitter_token=twitter_token)
+    user = db.session.query(model.User)\
+        .filter_by(name=user_data['screen_name'])\
+        .first()
+
+    if user is not None:
+        return None
+
+    user = model.User(fullname=user_data['screen_name'],
+                      name=user_data['screen_name'],
+                      email_addr=user_data['screen_name'],
+                      twitter_user_id=user_data['user_id'],
+                      info=info)
+    db.session.add(user)
+    db.session.commit()
+    return user
 
 
 @blueprint.route('/oauth-authorized')
@@ -118,17 +118,15 @@ def oauth_authorized(resp):
             return redirect(url_for('account.forgot_password'))
         else:
             return redirect(url_for('account.signin'))
-    else:
-        first_login = False
-        request_email = False
-        login_user(user, remember=True)
-        flash("Welcome back %s" % user.fullname, 'success')
-        if (user.email_addr == user.name):
-            request_email = True
-        if request_email:
-            if first_login:
-                flash("This is your first login, please add a valid e-mail")
-            else:
-                flash("Please update your e-mail address in your profile page")
-            return redirect(url_for('account.update_profile'))
+
+    first_login = False
+    login_user(user, remember=True)
+    flash("Welcome back %s" % user.fullname, 'success')
+    if user.email_addr != user.name:
         return redirect(next_url)
+    if first_login:
+        flash("This is your first login, please add a valid e-mail")
+    else:
+        flash("Please update your e-mail address in your profile page")
+    return redirect(url_for('account.update_profile'))
+
