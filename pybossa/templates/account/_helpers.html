@@ -11,6 +11,13 @@
 </ul>
 {% endmacro %}
 
+{% macro render_community_local_nav(current_user, active_link) %}
+<ul data-spy="affix" data-offset-top="200px" class="nav nav-list bs-docs-sidenav affix-top">
+    <li {% if active_link=="community"%}class="active"{% endif %}><a href="{{url_for('account.index')}}"><i class="icon-chevron-right"></i> {{ _('Community') }}</a></li>
+    <li {% if active_link=="teams"%}class="active"{% endif %}><a href="{{url_for('team.teams')}}"><i class="icon-chevron-right"></i> {{ _('Teams') }}</a></li>
+</ul>
+{% endmacro %}
+
 {% macro render_twitter_btn(app) %}
 <a href="https://twitter.com/share" class="twitter-share-button"
     data-text="{{ _('I\'ve done') }} {{app.c}} {{ _('tasks for the @PyBossa project:') }} {{app.name}}. {{ _('Do you want to help?') }} {{url_for('app.details',short_name=app.short_name,_external=True)}}"
