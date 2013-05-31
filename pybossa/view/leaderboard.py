@@ -45,7 +45,7 @@ def index():
                LIMIT :limit;
                ''')
 
-    results = db.engine.execute(sql, limit=20)
+    results = db.engine.execute(sql, limit=limit)
 
     top_users = []
     user_in_top = False
@@ -74,3 +74,33 @@ def index():
 
     return render_template('/stats/index.html', title="Community Leaderboard",
                            top_users=top_users)
+
+
+@blueprint.route('/teams')
+def teams():
+    """Get the last activity from teams and apps"""
+    # Top 20 teams
+    limit = 20
+
+    sql = text(
+            '''
+            WITH  global_rank as(
+                WITH scores AS(
+                    SELECT team_id, count(*) AS score FROM user2team
+                    INNER JOIN task_run ON user2team.user_id = task_run.user_id
+                    GROUP BY user2team.team_id )
+                SELECT team_id,score,rank() OVER (ORDER BY score DESC)
+                FROM  scores)
+            SELECT rank, score, team.name
+            FROM global_rank
+            JOIN team ON team_id=team.id
+            ORDER BY rank
+            LIMIT :limit;
+            ''')
+
+    results = db.engine.execute(sql, limit=limit)
+
+    top_teams = results
+
+    return render_template('/stats/teams.html', title="Teams Leaderboard",
+                           top_teams=top_teams)
