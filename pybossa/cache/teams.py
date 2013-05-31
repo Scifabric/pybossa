@@ -28,7 +28,15 @@ def get_public_count():
     for row in results:
         count = row[0]
     return count
-	
+
+@cache.cached(key_prefix="get__count")
+def get_count():
+    """Return number of Teams"""
+    sql = text('''select count(*) from team;''')
+    results = db.engine.execute(sql)
+    for row in results:
+        count = row[0]
+    return count
 
 @cache.cached(key_prefix="get_public_data")
 def get_public_data(page=1, per_page=5):
@@ -38,7 +46,7 @@ def get_public_data(page=1, per_page=5):
    sql = text('''
                SELECT team.id,team.name,team.description,team.created,
                team.owner_id,"user".name as owner, team.public
-               FROM team 
+               FROM team
                INNER JOIN "user" ON team.owner_id="user".id
                WHERE public
                OFFSET(:offset) LIMIT(:limit);
@@ -53,18 +61,45 @@ def get_public_data(page=1, per_page=5):
                    owner_id=row.owner_id,
                    owner=row.owner,
 				   public=row.public
-                   )       
-		  
-       team['rank'], team['score'] = get_rank(row.id)		  
+                   )
+
+       team['rank'], team['score'] = get_rank(row.id)
        team['members'] = get_number_members(row.id)
+       team['total'] = get_count()
        teams.append(team)
 
    return teams, count
 
+
+@cache.memoize(timeout=50)
+def get_team_summary(name):
+    # Get TEAM
+    sql = text('''
+            SELECT team.id,team.name,team.description,team.created,
+            team.owner_id,"user".name as owner, team.public
+            FROM team
+            INNER JOIN "user" ON team.owner_id="user".id
+            WHERE team.name=:name
+            ''')
+
+    results = db.engine.execute(sql, name=name)
+    team = dict()
+    for row in results:
+        team = dict(id=row.id, name=row.name, description=row.description,
+                    owner=row.owner,public=row.public,created=row.created)
+
+        team['rank'], team['score'] = get_rank(row.id)
+        team['members'] = get_number_members(row.id)
+        team['total'] = get_count()
+
+        return team
+    else:
+        return None
+
 def reset():
    """Clean thie cache"""
+   cache.delete('get_count')
    cache.delete('get_public_count')
-   cache.delete('get_public_data')
 
 def clean(team_id):
    """Clean all items in cache"""
