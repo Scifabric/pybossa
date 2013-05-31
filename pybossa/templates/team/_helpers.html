@@ -8,7 +8,7 @@
           </li>
         {% endif %}
 
-        {%- for page in pagination.iter_pages() %}
+        {% for page in pagination.iter_pages() %}
           {% if page %}
             {% if page != pagination.page %}
             <li>
@@ -107,7 +107,38 @@
         </div>
     </div> <!--end of clas -->
 </div><!-- end of class=row -->
-{%- endmacro %}
+{% endmacro %}
+
+{% macro render_team_profile(team, private=True) %}
+<div class="row-fluid">
+    <div class="span3">
+        <img class="img-polaroid" src="{{ team.name | gravatar(size=164)}}">
+    </div>
+    <div class="span9">
+        <h2><i class="icon-info-sign"></i> {{_('Description')}}: <small>{{ team.description }}</small></h2>
+        <h2><i class="icon-group"></i> {{_('Members')}}: <small>{{ team.members }}</small></h2>
+        {% if private %}
+            <h2><i class="icon-user"></i> {{_('Owner')}}: <small>{{ team.owner }}</small></h2>
+            <h2><i class="icon-time"></i> {{ _('Created') }}: <small>{{ team.created[0:10]}}</small></h2>
+        {% endif %}
+
+        {% if team.public %}
+            <h2><i class="icon-eye-open"></i> {{ _('Type') }}: <small>{{ _('Public') }}</small></h2>	
+        {% else %}
+        <h2><i class="icon-eye-close"></i> {{ _('Type') }}: <small> {{ _('Private') }}</small></h2>
+        {% endif %}
+
+        {% if team.rank %}
+            <h2><i class="icon-trophy"></i> {{ _('Rank')}}: <small>
+                {{ team.rank }} {{_('of')}} {{ team.total }} {{ _('with a Score of')}} {{team.score}} {{ _('contributed tasks')}}
+            </small></h2>
+        {% else %}
+            <h2><i class="icon-trophy"></i> {{ _('Rank') }}: <small>{{ _('The team  has not contributed a task yet') }}</small></h2>
+        {% endif %}
+    </div>
+</div>
+{% endmacro %}
+
 
 {% macro broken_image() %}
 <script>
@@ -118,3 +149,4 @@ function imgError(image) {
 }
 </script>
 {% endmacro %}
+
