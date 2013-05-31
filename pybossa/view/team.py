@@ -73,12 +73,44 @@ def index(page):
    return team_index(page, cached_teams.get_public_data, 'public',
                       True, False, lazy_gettext('Public Teams'))
 
+@blueprint.route('/teams', defaults={'page': 1})
+@blueprint.route('/teams/page/<int:page>')
+def teams(page):
+
+    per_page = 24
+    count = db.session.query(model.Team).count()
+    teams = db.session.query(model.Team)\
+                      .limit(per_page)\
+                      .offset((page - 1) * per_page).all()
+
+    if not teams and page != 1:
+        abort(404)
+
+    pagination = Pagination(page, per_page, count)
+
+    return render_template('team/teams.html', teams=teams,
+                                              total=count,
+                                              title="Teams",
+                                              pagination=pagination)
+@blueprint.route('/<name>/')
+def public_profile(name):
+    ''' Render the public team profile'''
+    ''' team = db.session.query(model.Team).first()'''
+    team = cached_teams.get_team_summary(name)
+
+
+    if team:
+        '''title = "%s &middot; Team Profile" % team['name']'''
+        return render_template('/team/public_profile.html',
+                                title='holita',
+                                team=team)
+
 @blueprint.route('/private/', defaults={'page': 1})
 @blueprint.route('/private/page/<int:page>')
 @login_required
 def private(page):
    if current_user.admin != 1:
-       abort(404) 
+       abort(404)
 
    '''By show the private Teams'''
    return team_index(page, team_func.get_private_teams, 'private',
@@ -90,7 +122,7 @@ def private(page):
 @login_required
 def myteams(page):
    if not require.team.create():
-       abort(403)
+        abort(403)
 
    # First Get own team
    #teams = Team.query.filter(Team.owner_id==current_user.id).all()
@@ -111,12 +143,12 @@ def myteams(page):
                           title=lazy_gettext("My Teams"),
                           teams = teams)
 '''
-					  
+
 def team_index(page, lookup, team_type, fallback, use_count, title):
    '''Show apps of app_type'''
    if not require.team.read():
        abort(403)
-  
+
    per_page = 5
 
    teams, count = lookup(page, per_page)
@@ -124,10 +156,10 @@ def team_index(page, lookup, team_type, fallback, use_count, title):
    team_owner = []
    if not current_user.is_anonymous():
        team_owner = Team.query.filter(Team.owner_id==current_user.id).first()
-   
+
        for team in teams:
            team['belong'] = team_func.user_belong_team(team['id'])
-    
+
    pagination = Pagination(page, per_page, count)
    template_args = {
         "teams": teams,
@@ -149,12 +181,12 @@ def detail(name=None):
 
    team = team_func.get_team(name)
    title = team_title(team, team.name)
-   
-   # Get extra data 
+
+   # Get extra data
    data = dict( belong = team_func.user_belong_team(team.id),
                 members = team_func.get_number_members(team.id))
    data['rank'], data['score'] = team_func.get_rank(team.id)
-   
+
    try:
        require.team.read(team)
        template = '/team/team.html'
@@ -162,7 +194,7 @@ def detail(name=None):
        template = '/team/index.html'
 
    template_args = {
-                    "team": team, 
+                    "team": team,
 		    "title": title,
 		    "data": data,
                    }
@@ -215,17 +247,17 @@ def search_teams(type):
            flash("<strong>Ooops!</strong> We didn't find a team "
                   "matching your query: <strong>%s</strong>" % form.user.data)
 
-           return render_template('/team/search_teams.html', 
+           return render_template('/team/search_teams.html',
                           founds= [],
                           team_type = type,
                           title=lazy_gettext('Search Team'))
        else:
-           return render_template('/team/search_teams.html', 
+           return render_template('/team/search_teams.html',
                           founds= founds,
                           team_type = type,
                           title=lazy_gettext('Search Team'))
 
-   return render_template('/team/search_teams.html', 
+   return render_template('/team/search_teams.html',
                           found=[],
                           team_type = type,
                           title=lazy_gettext('Search Team'))
@@ -253,7 +285,7 @@ def search_users(name):
            flash("<strong>Ooops!</strong> We didn't find a user "
                   "matching your query: <strong>%s</strong>" % form.user.data)
 
-           return render_template('/team/search_users.html', 
+           return render_template('/team/search_users.html',
                           founds=[],
                           team=team,
                           title=lazy_gettext('Search name of User'))
@@ -269,7 +301,7 @@ def search_users(name):
                             team = team,
                             title=lazy_gettext('Search User'))
 
-   return render_template('/team/search_users.html', 
+   return render_template('/team/search_users.html',
                           founds=[],
                           team=team,
                           title=lazy_gettext('Search User'))
@@ -306,13 +338,13 @@ def new():
        db.session.add(team)
        db.session.commit()
 
-       # Insert into the current user in the new group 
+       # Insert into the current user in the new group
        user2team = User2Team( user_id = current_user.id,
                           team_id = team.id)
 
        db.session.add(user2team)
        db.session.commit()
-        
+
        flash(lazy_gettext('Team created'), 'success')
        return redirect(url_for('.detail', name=team.name))
    except Exception as e:
@@ -333,7 +365,7 @@ def users(name):
 
    template = '/team/users.html'
    template_args = {
-                    "team": team, 
+                    "team": team,
                     "belongs": belongs,
                     "title": title}
 
@@ -354,7 +386,7 @@ def delete(name):
        return render_template('/team/delete.html',
                                title=title,
                                team=team)
-   
+
    cached_teams.clean(team.id)
    db.session.delete(team)
    db.session.commit()
@@ -371,7 +403,7 @@ def update(name):
 
    if not require.team.update(team):
        abort(403)
-  
+
    def handle_valid_form(form):
        new_team = Team(id=form.id.data,
                                 name=form.name.data,
@@ -393,7 +425,7 @@ def update(name):
        form = TeamForm(request.form)
        if form.validate():
            return handle_valid_form(form)
-       flash(lazy_gettext('Please correct the errors'), 'error')        
+       flash(lazy_gettext('Please correct the errors'), 'error')
 
    return render_template('/team/update.html',
                            form=form,
@@ -409,7 +441,7 @@ def user_add(name):
 
    if not require.team.read():
        abort(403)
-  
+
    # Search relationship
    user2team = db.session.query(User2Team)\
                    .filter(User2Team.user_id == current_user.id )\
@@ -461,7 +493,7 @@ def join_add(name,user):
 
    if not require.team.update(team):
        abort(403)
-  
+
    user = User.query.filter_by(name=user).first()
    if not user:
        flash( lazy_gettext('This user don\t exists!!!'), 'error')
