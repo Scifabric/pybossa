@@ -53,14 +53,11 @@ def get_rank(team_id):
 def get_team(name):
     ''' Get Team by name and owner '''
     if current_user.is_anonymous():
-       '''
-       return Team.query.filter_by(name=name, public=True).first_or_404()
-       '''
-
        return Team.query.filter_by(name=name).first_or_404()
 
     elif current_user.admin == 1:
        return Team.query.filter_by(name=name).first_or_404()
+
     else:
        return Team.query.filter(Team.name==name)\
                       .outerjoin(User2Team)\
