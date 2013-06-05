@@ -98,12 +98,13 @@ def public_profile(name):
     ''' team = db.session.query(model.Team).first()'''
     team = cached_teams.get_team_summary(name)
 
-
     if team:
         '''title = "%s &middot; Team Profile" % team['name']'''
         return render_template('/team/public_profile.html',
-                                title='holita',
+                                title='Public Profile',
                                 team=team)
+    else:
+        abort(404)
 
 @blueprint.route('/private/', defaults={'page': 1})
 @blueprint.route('/private/page/<int:page>')
@@ -134,15 +135,6 @@ def myteams(page):
    return team_index(page, team_func.get_signed_teams, 'myteams',
                       True, False, lazy_gettext('My Teams'))
 
-'''
-   teams = Team.query.outerjoin(User2Team)\
-                     .filter(or_ (Team.owner_id ==current_user.id, User2Team.user_id == current_user.id))\
-                     .all()
-
-   return render_template('team/myteams.html',
-                          title=lazy_gettext("My Teams"),
-                          teams = teams)
-'''
 
 def team_index(page, lookup, team_type, fallback, use_count, title):
    '''Show apps of app_type'''
@@ -173,9 +165,10 @@ def team_index(page, lookup, team_type, fallback, use_count, title):
 
    return render_template('/team/index.html', **template_args)
 
-@blueprint.route('/<name>/')
+@blueprint.route('/<name>/profile')
 def detail(name=None):
    ''' Team details '''
+
    if not require.team.read():
         abort(403)
 
@@ -400,7 +393,7 @@ def update(name):
    ''' Update the team owner of the current user '''
    team = team_func.get_team(name)
    title = lazy_gettext('Update Team')
-
+  
    if not require.team.update(team):
        abort(403)
 
