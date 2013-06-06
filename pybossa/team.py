@@ -25,19 +25,19 @@ def get_number_members(team_id):
     results = db.engine.execute(sql, team_id=team_id)
     for row in results:
         count = row[0]
-
+ 
     return count
-
+	
 def get_rank(team_id):
     ''' Score and Rank '''
     sql = text('''
                WITH  global_rank as(
-               WITH scores AS(
-               SELECT team_id, count(*) AS score FROM user2team
-               INNER JOIN task_run ON user2team.user_id = task_run.user_id
-               GROUP BY user2team.team_id )
-               SELECT team_id,score,rank() OVER (ORDER BY score DESC)
-               FROM  scores)
+               WITH scores AS( 
+               SELECT team_id, count(*) AS score FROM user2team 
+               INNER JOIN task_run ON user2team.user_id = task_run.user_id 
+               GROUP BY user2team.team_id ) 
+               SELECT team_id,score,rank() OVER (ORDER BY score DESC)  
+               FROM  scores) 
                SELECT  * from global_rank where team_id=:team_id;
                ''')
 
@@ -47,18 +47,13 @@ def get_rank(team_id):
     for result in results:
         rank  = result.rank
         score = result.score
-
+		
     return rank, score
 
 def get_team(name):
     ''' Get Team by name and owner '''
     if current_user.is_anonymous():
-       '''
-       return Team.query.filter_by(name=name, public=True).first_or_404()
-       '''
-
-       return Team.query.filter_by(name=name).first_or_404()
-
+       return Team.query.filter_by(name=name, public=True).first_or_404()    
     elif current_user.admin == 1:
        return Team.query.filter_by(name=name).first_or_404()
     else:
@@ -69,7 +64,7 @@ def get_team(name):
 
 def user_belong_team(team_id):
    ''' Is a user belong to a team'''
-   if  current_user.is_anonymous():
+   if  current_user.is_anonymous():    
        return 0
    else:
       belong = User2Team.query.filter(User2Team.team_id==team_id)\
@@ -91,7 +86,7 @@ def get_signed_teams(page=1, per_page=5):
    sql = text('''
               SELECT team.id,team.name,team.description,team.created,
               team.owner_id,"user".name as owner, team.public
-              FROM team
+              FROM team 
               JOIN user2team ON team.id=user2team.team_id
               JOIN "user" ON team.owner_id="user".id
               WHERE user2team.user_id=:user_id
@@ -120,17 +115,17 @@ def get_private_teams(page=1, per_page=5):
 
    sql = text('''
               SELECT count(*)
-              FROM team
+              FROM team 
               WHERE not public;
               ''')
    results = db.engine.execute(sql)
    for row in results:
        count = row[0]
-
+    
    sql = text('''
               SELECT team.id,team.name,team.description,team.created,
               team.owner_id,"user".name as owner, team.public
-              FROM team
+              FROM team 
               INNER JOIN "user" ON team.owner_id="user".id
               WHERE not team.public
               OFFSET(:offset) LIMIT(:limit);
