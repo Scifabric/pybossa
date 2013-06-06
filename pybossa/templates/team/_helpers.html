@@ -109,7 +109,7 @@
 </div><!-- end of class=row -->
 {% endmacro %}
 
-{% macro render_team_profile(team, private=True, manage=False) %}
+{% macro render_team_profile(team, private=True) %}
 <div class="row-fluid">
     <div class="span3">
         <img class="img-polaroid" src="{{ team.name | gravatar(size=164)}}">
@@ -134,10 +134,6 @@
             </small></h2>
         {% else %}
             <h2><i class="icon-trophy"></i> {{ _('Rank') }}: <small>{{ _('The team  has not contributed a task yet') }}</small></h2>
-        {% endif %}
-        
-        {% if manage %}
-	   <a href="{{url_for('team.detail', name=team.name )}}" class="btn btn-primary"><i class="icon-group icon-large"></i> {{ _('Manage this team') }}</a>
         {% endif %}
     </div>
 </div>
