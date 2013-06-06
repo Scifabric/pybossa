@@ -11,7 +11,7 @@
         {% else %}
         <section id="team-data">
             <h1><strong>{{ team['name'] }}</strong></h1>
-            {{ helper.render_team_profile(team, True) }}
+            {{ helper.render_team_profile(team, True, manage )}}
         </section>
         {% endif %}
     </div>
