@@ -94,22 +94,22 @@
                   <a href="{{ url_for('team.delete', name = team.name) }}" class="btn btn-danger"><i class="icon-trash icon-white"></i> {{ _('Delete the team') }}</a>
                 {% endif %}
               
-                {% if current_user.id != team.owner_id %}
- 	          {% if team.belong%}
+                {% if current_user.id != team.owner_id  %}
+                  {% if team.belong%}
 	            <a href="{{url_for('team.user_delete', name=team.name )}}" class="btn btn-danger"><i class="icon-signout icon-large"></i> {{ _('Left this team') }}</a>
                   {% else %}              
                     <a href="{{url_for('team.user_add', name=team.name )}}" class="btn btn-primary"><i class="icon-signin  icon-large"></i> {{ _('Join this team') }}</a>              
   	          {% endif %}
                 {% endif %}
-             {% endif %}
-             <a href="{{ url_for('team.users', name = team.name) }}" class="btn btn-primary"><i class="icon-group icon-white"></i> {{ _('Members') }}</a>
+              {% endif %}
+              <a href="{{ url_for('team.users', name = team.name) }}" class="btn btn-primary"><i class="icon-group icon-white"></i> {{ _('Members') }}</a>
            {% endif %}
         </div>
     </div> <!--end of clas -->
 </div><!-- end of class=row -->
 {% endmacro %}
 
-{% macro render_team_profile(team, private=True) %}
+{% macro render_team_profile(team, private=True, manage=False) %}
 <div class="row-fluid">
     <div class="span3">
         <img class="img-polaroid" src="{{ team.name | gravatar(size=164)}}">
@@ -134,6 +134,10 @@
             </small></h2>
         {% else %}
             <h2><i class="icon-trophy"></i> {{ _('Rank') }}: <small>{{ _('The team  has not contributed a task yet') }}</small></h2>
+        {% endif %}
+        
+        {% if manage %}
+	   <a href="{{url_for('team.detail', name=team.name )}}" class="btn btn-primary"><i class="icon-group icon-large"></i> {{ _('Manage this team') }}</a>
         {% endif %}
     </div>
 </div>
