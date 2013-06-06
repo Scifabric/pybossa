@@ -77,33 +77,52 @@ def index(page):
 @blueprint.route('/teams/page/<int:page>')
 def teams(page):
 
-    per_page = 24
-    count = db.session.query(model.Team).count()
-    teams = db.session.query(model.Team)\
+   per_page = 24
+   count = db.session.query(model.Team).count()
+   teams = db.session.query(model.Team)\
                       .limit(per_page)\
                       .offset((page - 1) * per_page).all()
 
-    if not teams and page != 1:
-        abort(404)
+   if not teams and page != 1:
+       abort(404)
 
-    pagination = Pagination(page, per_page, count)
+   pagination = Pagination(page, per_page, count)
 
-    return render_template('team/teams.html', teams=teams,
+   return render_template('team/teams.html', teams=teams,
                                               total=count,
                                               title="Teams",
                                               pagination=pagination)
 @blueprint.route('/<name>/')
 def public_profile(name):
-    ''' Render the public team profile'''
-    ''' team = db.session.query(model.Team).first()'''
-    team = cached_teams.get_team_summary(name)
+   ''' Render the public team profile'''
+   team = cached_teams.get_team_summary(name)
 
+   if team:
+       try:
+           team_func.get_team(name)
+           manage = True
+       except HTTPException:
+           manage = False
 
-    if team:
-        '''title = "%s &middot; Team Profile" % team['name']'''
-        return render_template('/team/public_profile.html',
-                                title='holita',
-                                team=team)
+       '''
+       if current_user.is_anonymous():
+           manage = False
+       elif current_user.admin == 1:
+           manage = True
+       else:          
+           belong = Team.query.filter(Team.name==name)\
+                      .outerjoin(User2Team)\
+                      .filter(or_ (Team.public ==True, User2Team.user_id == current_user.id))\
+                      .first()
+           manage = belong
+       '''
+       '''title = "%s &middot; Team Profile" % team['name']'''
+       return render_template('/team/public_profile.html',
+                                title='Public Profile',
+                                team=team,
+                                manage=manage)
+   else:
+       abort(404)
 
 @blueprint.route('/private/', defaults={'page': 1})
 @blueprint.route('/private/page/<int:page>')
@@ -134,15 +153,6 @@ def myteams(page):
    return team_index(page, team_func.get_signed_teams, 'myteams',
                       True, False, lazy_gettext('My Teams'))
 
-'''
-   teams = Team.query.outerjoin(User2Team)\
-                     .filter(or_ (Team.owner_id ==current_user.id, User2Team.user_id == current_user.id))\
-                     .all()
-
-   return render_template('team/myteams.html',
-                          title=lazy_gettext("My Teams"),
-                          teams = teams)
-'''
 
 def team_index(page, lookup, team_type, fallback, use_count, title):
    '''Show apps of app_type'''
@@ -173,9 +183,10 @@ def team_index(page, lookup, team_type, fallback, use_count, title):
 
    return render_template('/team/index.html', **template_args)
 
-@blueprint.route('/<name>/')
+@blueprint.route('/<name>/profile')
 def detail(name=None):
    ''' Team details '''
+
    if not require.team.read():
         abort(403)
 
@@ -400,7 +411,7 @@ def update(name):
    ''' Update the team owner of the current user '''
    team = team_func.get_team(name)
    title = lazy_gettext('Update Team')
-
+  
    if not require.team.update(team):
        abort(403)
 
