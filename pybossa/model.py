@@ -180,7 +180,7 @@ class App(db.Model, DomainObject):
     #: `Featured` or not for this app
     featured = relationship('Featured', cascade='all, delete-orphan')
     #: `category` or not for this app
-    category = relationship('Category', cascade='all')
+    category = relationship('Category')
 
     #: Percentage of completed tasks based on Task.state
     #: (0 not done, 1 completed)
