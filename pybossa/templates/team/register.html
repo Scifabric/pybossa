@@ -18,7 +18,7 @@
         <fieldset>
           {{ render_field(form.name, placeholder= _('my team name')) }}
           {{ render_field(form.description, placeholder= _('my team description')) }}
-          {{ render_field(form.public, tooltip=_('Do you want to be public this team?'))}}
+          {{ render_field(form.public, tooltip=_('Do you want to be public this team or public invitation only?'))}}
           <div class="form-actions">
             <input type="submit" value="{{ _('Create a team') }}" class="btn btn-primary btn-large" />
             <a href="{{ url_for('team.index') }}" class="btn">{{ _('Cancel') }}</a>
