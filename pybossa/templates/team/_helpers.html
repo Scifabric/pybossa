@@ -38,7 +38,7 @@
     {% endif %}
     <li {% if active_link=="public"%}class="active"{% endif %}><a href="{{url_for('team.index')}}"><i class="icon-chevron-right"></i> {{ _('Public') }}</a></li>
     {% if current_user.admin == 1%}
-      <li {% if active_link=="private"%}class="active"{% endif %}><a href="{{url_for('team.private')}}"><i class="icon-chevron-right"></i> {{ _('Private') }}</a></li>
+      <li {% if active_link=="private"%}class="active"{% endif %}><a href="{{url_for('team.private')}}"><i class="icon-chevron-right"></i> {{ _('Public Invitation Only') }}</a></li>
     {% endif %}
   </ul>
 {% endmacro %}
@@ -55,11 +55,11 @@
           <h3><strong>{{ _('Owner') }}</strong></h3>
         {% else %}
           {% if user.belong == 0 %}
-          <a href="{{url_for('team.join_add', name=team.name, user=user.name)}}" class="btn btn-primary">
+          <a href="{{url_for('team.user_add', name=team.name, user=user.name)}}" class="btn btn-primary">
             <i class="icon-plus"></i>
             {{ _('Add to team') }}</a>
           {% else %}
-           <a href="{{url_for('team.join_delete', name=team.name, user=user.name)}}" class="btn btn-danger">
+           <a href="{{url_for('team.user_delete', name=team.name, user=user.name)}}" class="btn btn-danger">
             <i class="icon-minus"></i>
             {{ _('Remove to team') }}</a>
           {% endif %}
@@ -79,37 +79,63 @@
             {% if team.public %}
                <i class="icon icon-eye-open"></i> <strong>{{ _('Type') }}</strong>:{{ _('Public') }}			
             {% else %}
-               <i class="icon icon-eye-close"></i> <strong>{{ _('Type') }}</strong>: {{ _('Private') }}
+               <i class="icon icon-eye-close"></i> <strong>{{ _('Type') }}</strong>: {{ _('Public Invitation Only') }}
             {% endif %}
 	    <p style="margin:0"><strong><i class="icon-user"></i> {{ _('Created by') }}</strong>: 
-            {% if team.owner_id == current_user.id %}{{ _('Me') }}{% else %} {{ team.owner}} {% endif %}
-            </p>
+            {% if team.owner_id == current_user.id %}
+                {{ _('Me') }}
+            {% else %} 
+                {{ team.owner}} 
+            {% endif %}
+        </p>
             {% if team.rank %}
               <p style="margin:0"><strong><i class="icon-user"></i> {{ _('Rank') }}</strong>:{{ team.rank }} {{ _('with a score of') }} {{ team.score }}</p>
             {% endif %}
             {% if detail %}
-              {% if not current_user.is_anonymous()  %}
-                {% if current_user.admin==1 or team.owner_id == current_user.id %}
-                  <a href="{{ url_for('team.update', name = team.name) }}" class="btn btn-primary"><i class="icon-edit icon-white"></i> {{ _('Edit the team details') }}</a>
-                  <a href="{{ url_for('team.delete', name = team.name) }}" class="btn btn-danger"><i class="icon-trash icon-white"></i> {{ _('Delete the team') }}</a>
-                {% endif %}
-              
-                {% if current_user.id != team.owner_id  %}
-                  {% if team.belong%}
-	            <a href="{{url_for('team.user_delete', name=team.name )}}" class="btn btn-danger"><i class="icon-signout icon-large"></i> {{ _('Left this team') }}</a>
-                  {% else %}              
-                    <a href="{{url_for('team.user_add', name=team.name )}}" class="btn btn-primary"><i class="icon-signin  icon-large"></i> {{ _('Join this team') }}</a>              
-  	          {% endif %}
-                {% endif %}
-              {% endif %}
-              <a href="{{ url_for('team.users', name = team.name) }}" class="btn btn-primary"><i class="icon-group icon-white"></i> {{ _('Members') }}</a>
-           {% endif %}
+            <a href="{{ url_for('team.detail', name = team.name) }}" class="btn btn-inverse"><i class="icon-edit icon-white"></i> {{ _('Configuration') }}</a>
+            {% endif %}
         </div>
     </div> <!--end of clas -->
 </div><!-- end of class=row -->
 {% endmacro %}
 
-{% macro render_team_profile(team, private=True, manage=False) %}
+{% macro render_team_summary(team, data, current_user ) -%}
+<div class="row-fluid">
+    <div class="span2">
+    </div>
+    <div class="span8">
+        <ul style="list-style-type: none; font-size: 16px;">
+        {% if current_user.id == team.owner_id %}
+            <li><strong><i class="icon-cog"></i> {{ _('ID') }}</strong>: {{ team.id }}</li>
+        {% endif %}
+        <li><strong><i class="icon-info-sign"></i> {{ _('Description') }}</strong>: {{ team['description'] }}</li>
+        <li><strong><i class="icon-ok"></i> {{ _('Creation Date') }}</strong>: {{ team.created[0:10] }}</li>
+
+        {% if team.public %}
+            <i class="icon icon-eye-open"></i> <strong>{{ _('Type') }}</strong>:{{ _('Public') }}			
+        {% else %}
+            <i class="icon icon-eye-close"></i> <strong>{{ _('Type') }}</strong>: {{ _('Public Invitation Only') }}
+        {% endif %}
+
+	    <p style="margin:0"><strong><i class="icon-user"></i> {{ _('Created by') }}</strong>: 
+        {% if team.owner_id == current_user.id %}
+            {{ _('Me') }}
+        {% else %} 
+        {{ team.owner }} 
+        {% endif %}
+        </p>
+        <p style="margin:0"><strong><i class="icon-group"></i>        {{ _('Members') }}</strong>: {{ data.members }}</p>						
+        
+        {% if team.rank %}
+            <p style="margin:0"><strong><i class="icon-user"></i> {{ _('Rank') }}</strong>:{{ team.rank }} {{ _('with a score of') }} {{ team.score }}</p>
+        {% endif %}
+    </ul>
+    </div> 
+</div>
+{% endmacro %}
+
+
+{% macro render_team_profile(team, private=True) %}
 <div class="row-fluid">
     <div class="span3">
         <img class="img-polaroid" src="{{ team.name | gravatar(size=164)}}">
@@ -125,7 +151,7 @@
         {% if team.public %}
             <h2><i class="icon-eye-open"></i> {{ _('Type') }}: <small>{{ _('Public') }}</small></h2>	
         {% else %}
-        <h2><i class="icon-eye-close"></i> {{ _('Type') }}: <small> {{ _('Private') }}</small></h2>
+        <h2><i class="icon-eye-close"></i> {{ _('Type') }}: <small> {{ _('Public Invitation Only') }}</small></h2>
         {% endif %}
 
         {% if team.rank %}
@@ -134,10 +160,6 @@
             </small></h2>
         {% else %}
             <h2><i class="icon-trophy"></i> {{ _('Rank') }}: <small>{{ _('The team  has not contributed a task yet') }}</small></h2>
-        {% endif %}
-        
-        {% if manage %}
-	   <a href="{{url_for('team.detail', name=team.name )}}" class="btn btn-primary"><i class="icon-group icon-large"></i> {{ _('Manage this team') }}</a>
         {% endif %}
     </div>
 </div>
