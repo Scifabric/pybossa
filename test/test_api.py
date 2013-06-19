@@ -200,6 +200,49 @@ class TestAPI:
             assert item['app_id'] == 1, item
         assert len(data) == 5, data
 
+    def test_query_category(self):
+        """Test API query for category endpoint works"""
+        # Test for real field
+        url = "/api/category"
+        res = self.app.get(url + "?short_name=thinking")
+        data = json.loads(res.data)
+        # Should return one result
+        assert len(data) == 1, data
+        # Correct result
+        assert data[0]['short_name'] == 'thinking', data
+
+        # Valid field but wrong value
+        res = self.app.get(url + "?short_name=wrongvalue")
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        # Multiple fields
+        res = self.app.get(url + '?short_name=thinking&name=thinking')
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 1, data
+        # Correct result
+        assert data[0]['short_name'] == 'thinking', data
+        assert data[0]['name'] == 'thinking', data
+
+        # Limits
+        res = self.app.get(url + "?limit=1")
+        data = json.loads(res.data)
+        for item in data:
+            assert item['short_name'] == 'thinking' , item
+        assert len(data) == 1, data
+
+        # Errors
+        res = self.app.get(url + "?something")
+        err = json.loads(res.data)
+        err_msg = "AttributeError exception should be raised"
+        res.status_code == 415, err_msg
+        err['action'] = 'GET', err_msg
+        err['status'] = 'failed', err_msg
+        err['exception_cls'] = 'AttributeError', err_msg
+
+
+
     def test_query_task(self):
         """Test API query for task endpoint works"""
         # Test for real field
