@@ -1,7 +1,7 @@
 from flaskext.login import current_user
 
 
-def create(app=None):
+def create(category=None):
     if current_user.is_authenticated():
         if current_user.admin is True:
             return True
@@ -11,13 +11,13 @@ def create(app=None):
         return False
 
 
-def read(app=None):
+def read(category=None):
     return True
 
 
-def update(app):
-    return create(app)
+def update(category):
+    return create(category)
 
 
-def delete(app):
-    return create(app)
+def delete(category):
+    return create(category)
