@@ -35,7 +35,7 @@
             {% for app in apps %}
             {{ helper.show_app(app, category, current_user) }}
             {% endfor %}
-            {% if pagination.total_count > 1 %}
+            {% if pagination.pages > 1 %}
                 {{ helper.render_pagination(pagination) }}
             {% endif %}
         {% else %}
