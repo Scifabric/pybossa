@@ -59,9 +59,7 @@
                     <li><strong><i class='icon-calendar'></i> {{ _('Created') }}</strong> {{team['created'][0:10]}}</li>
                     <li><strong><i class='icon-tasks'></i> {{ _('Description') }}</strong> {{ team['description'] }}</li>
                     <li><strong><i class='icon-tasks'></i> {{ _('Owner') }}</strong> {{ team.user.name }}</li>
-                    <li><strong><i class='icon-tasks'></i> {{ _('Type') }}</strong> {% if team['public'] %}{{ _('Public') }}{% else %}{{ _('Private') }} {% endif %}</li>
-
-
+                    <li><strong><i class='icon-tasks'></i> {{ _('Type') }}</strong> {% if team['public'] %}{{ _('Public') }}{% else %}{{ _('Public invitation only') }} {% endif %}</li>
             </ul>
             ">
              <img src="{{team['name'] | gravatar(size=90)}}">
