@@ -26,7 +26,7 @@ from flaskext.wtf import Form, TextField, PasswordField, validators, \
 
 import pybossa.validator as pb_validator
 import pybossa.model as model
-from flaskext.babel import lazy_gettext
+from flaskext.babel import lazy_gettext, gettext
 from sqlalchemy.sql import func, text
 from pybossa.model import User
 from pybossa.core import db, signer, mail, cache, get_locale
@@ -113,7 +113,7 @@ def signin():
 @blueprint.route('/signout')
 def signout():
     logout_user()
-    flash(lazy_gettext('You are now signed out'), 'success')
+    flash(gettext('You are now signed out'), 'success')
     return redirect(url_for('home'))
 
 
