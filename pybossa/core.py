@@ -17,7 +17,7 @@ import os
 import logging
 from itsdangerous import URLSafeTimedSerializer
 from flask import Flask, url_for, session, request
-from flaskext.login import LoginManager, current_user
+from flask.ext.login import LoginManager, current_user
 from flaskext.gravatar import Gravatar
 from flask.ext.mail import Mail
 from flask.ext.sqlalchemy import SQLAlchemy

@@ -1,4 +1,4 @@
-from flaskext.login import current_user
+from flask.ext.login import current_user
 import pybossa.model as model
 from pybossa.core import db
 
