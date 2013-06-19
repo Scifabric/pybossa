@@ -21,7 +21,6 @@
             {% endif %}
               
             {% if current_user.id != team.owner_id  %}
-                *** {{ team.belong }}***
                 {% if data.belong  %}
 	                <a id="user_delete" class="btn" href="{{url_for('team.user_delete', name=team.name )}}"><i class="icon-signout icon-large"></i> {{ _('Left this team') }}</a>
                 {% else %}              
