@@ -16,18 +16,27 @@
         <h1>
            <i class="icon-th"></i> {% if teams %}{{pagination.total_count}}{% endif %}  {{ title }}
            {% if teams %}
-                <a class="pull-right btn btn-primary" href="{{url_for('team.search_teams', type=team_type)}}"><i class="icon-group" style="color:white"></i> {{ _('Search') }}</a>
+                <a class="pull-right btn btn-primary" href="{{url_for('team.search_teams', type=team_type)}}"><i class="icon-group" style="color:white"></i> {{ _('Search Team') }}</a>
            {% endif %}
         <h1>
-        {% if teams %}
-            <h2>{{ _('All available teams') }}</h2>
+            {% if teams %}
+              {% if team_type=='myteams' %}
+                <h2>{{ _('Teams I belong') }}</h2>
+              {% else %}
+                <h2>{{ _('All available teams') }}</h2>
+              {% endif %}
 
           {% for team in teams %}
             {{ helper.show_team(team, team_type, current_user) }}
           {% endfor %}
           {{ helper.render_pagination(pagination) }}
-       {% else %}
-            <h2>{{ _('No available teams') }}</h2>
+          {% else %}
+
+              {% if team_type=='myteams' %}
+                <h2>{{ _('Not belong to any team') }}</h2>
+              {% else %}
+                <h2>{{ _('No available teams') }}</h2>
+              {% endif %}
        {% endif %} 
     </div>
 </div>
