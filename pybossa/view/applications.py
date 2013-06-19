@@ -181,7 +181,7 @@ def app_index(page, lookup, category, fallback, use_count):
         categories.insert(0, featured_cat)
     template_args = {
         "apps": apps,
-        "title": lazy_gettext("Applications"),
+        "title": gettext("Applications"),
         "pagination": pagination,
         "active_cat": active_cat,
         "categories": categories}
@@ -219,7 +219,7 @@ def new():
 
     def respond(errors):
         return render_template('applications/new.html',
-                               title=lazy_gettext("Create an Application"),
+                               title=gettext("Create an Application"),
                                form=form, errors=errors)
 
     if request.method != 'POST':
@@ -491,7 +491,7 @@ def compute_importer_variant_pairs(forms):
 def import_task(short_name):
     app = app_by_shortname(short_name)
     title = app_title(app, "Import Tasks")
-    loading_text = lazy_gettext("Importing tasks, this may take a while, wait...")
+    loading_text = gettext("Importing tasks, this may take a while, wait...")
     template_args = {"title": title, "app": app, "loading_text": loading_text}
     if not require.app.update(app):
         return abort(403)
@@ -749,8 +749,8 @@ def delete_tasks(short_name):
             for task in app.tasks:
                 db.session.delete(task)
             db.session.commit()
-            msg = "All the tasks and associated task runs have been deleted"
-            flash(gettext(msg), 'success')
+            msg = gettext("All the tasks and associated task runs have been deleted")
+            flash(msg, 'success')
             return redirect(url_for('.tasks', short_name=app.short_name))
     except HTTPException:
         return abort(403)
@@ -760,8 +760,8 @@ def delete_tasks(short_name):
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
     app = app_by_shortname(short_name)
-    title = app_title(app, lazy_gettext("Export"))
-    loading_text = lazy_gettext("Exporting data..., this may take a while")
+    title = app_title(app, gettext("Export"))
+    loading_text = gettext("Exporting data..., this may take a while")
 
     def respond():
         return render_template('/applications/export.html',
@@ -872,15 +872,15 @@ def export_to(short_name):
             "task": (
                 model.Task, handle_task,
                 (lambda x: True),
-                lazy_gettext(
+                gettext(
                     "Oops, the application does not have tasks to \
-                           export, if you are the owner add some tasks")),
+                    export, if you are the owner add some tasks")),
             "task_run": (
                 model.TaskRun, handle_task_run,
                 (lambda x: type(x.info) == dict),
-                lazy_gettext(
+                gettext(
                     "Oops, there are no Task Runs yet to export, invite \
-                           some users to participate"))}
+                     some users to participate"))}
         try:
             table, handle_row, test, msg = types[ty]
         except KeyError:
@@ -981,7 +981,7 @@ def task_settings(short_name):
 @login_required
 def task_n_answers(short_name):
     app = app_by_shortname(short_name)
-    title = app_title(app, lazy_gettext('Redundancy'))
+    title = app_title(app, gettext('Redundancy'))
     form = TaskRedundancyForm()
     try:
         require.app.read(app)
@@ -1011,7 +1011,7 @@ def task_n_answers(short_name):
 @login_required
 def task_scheduler(short_name):
     app = app_by_shortname(short_name)
-    title = app_title(app, lazy_gettext('Scheduler'))
+    title = app_title(app, gettext('Task Scheduler'))
     form = TaskSchedulerForm()
 
     def respond():

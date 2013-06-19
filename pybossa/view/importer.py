@@ -15,7 +15,7 @@
 
 from StringIO import StringIO
 from flaskext.wtf import Form, TextField, validators
-from flaskext.babel import lazy_gettext
+from flaskext.babel import lazy_gettext, gettext
 from pybossa.util import unicode_csv_reader
 import json
 import requests
@@ -75,8 +75,8 @@ class BulkTaskImportForm(Form):
             if not headers:
                 headers = row
                 if len(headers) != len(set(headers)):
-                    msg = lazy_gettext('The file you uploaded has '
-                                       'two headers with the same name.')
+                    msg = gettext('The file you uploaded has '
+                                  'two headers with the same name.')
                     raise BulkImportException(msg)
                 field_headers = set(headers) & fields
                 for field in field_headers:
@@ -94,11 +94,10 @@ class BulkTaskImportForm(Form):
         if r.status_code == 403:
             msg = "Oops! It looks like you don't have permission to access" \
                 " that file"
-            raise BulkImportException(lazy_gettext(msg), 'error')
+            raise BulkImportException(gettext(msg), 'error')
         if ((not 'text/plain' in r.headers['content-type']) and
             (not 'text/csv' in r.headers['content-type'])):
-            msg = lazy_gettext(
-                "Oops! That file doesn't look like the right file.")
+            msg = gettext("Oops! That file doesn't look like the right file.")
             raise BulkImportException(msg, 'error')
 
         csvcontent = StringIO(r.text)
@@ -182,10 +181,10 @@ class BulkTaskEpiCollectPlusImportForm(BulkTaskImportForm):
         if r.status_code == 403:
             msg = "Oops! It looks like you don't have permission to access" \
                 " the EpiCollect Plus project"
-            raise BulkImportException(lazy_gettext(msg), 'error')
+            raise BulkImportException(gettext(msg), 'error')
         if not 'application/json' in r.headers['content-type']:
             msg = "Oops! That project and form do not look like the right one."
-            raise BulkImportException(lazy_gettext(msg), 'error')
+            raise BulkImportException(gettext(msg), 'error')
         return self.import_epicollect_tasks(json.loads(r.text))
 
     def tasks(self, form):
