@@ -43,7 +43,9 @@
       </ul>
     {% endif %}
     <div class="span9">
-        {{ helper.render_pagination(pagination) }}
+        {% if pagination.total_count > 1 %}
+            {{ helper.render_pagination(pagination) }}
+        {% endif %}
     </div>
     {% endif %}
   </div>
