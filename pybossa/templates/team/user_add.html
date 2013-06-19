@@ -9,7 +9,10 @@
           {{ helper.render_teams_nav(team, 'myteams', current_user) }}
       </div>
     <div class="span9">
-        <h1>{{ _('Team') }} <strong>{{team.name}}</strong>: {{ _('Join') }} <strong>{{ user }}</strong></h1>
+        <h1>{{ _('Team') }} <strong>{{team.name}}</strong>: {{ _('Join') }} 
+            {%if user %}
+                <strong>{{ user }}</strong></h1>
+            {% endif %}
         {{ helper.show_team(team,'delete', current_user, false) }}
         <form class="form-horizontal" method="post" action="{{ url_for('team.user_add', name = team.name, user=user) }}">
         <fieldset>
