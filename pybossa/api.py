@@ -229,6 +229,10 @@ class AppAPI(APIBase):
         obj.owner = current_user
 
 
+class CategoryAPI(APIBase):
+    __class__ = model.Category
+
+
 class TaskAPI(APIBase):
     __class__ = model.Task
 
@@ -257,6 +261,7 @@ def register_api(view, endpoint, url, pk='id', pk_type='int'):
                            methods=['GET', 'PUT', 'DELETE', 'OPTIONS'])
 
 register_api(AppAPI, 'api_app', '/app', pk='id', pk_type='int')
+register_api(CategoryAPI, 'api_category', '/category', pk='id', pk_type='int')
 register_api(TaskAPI, 'api_task', '/task', pk='id', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
 
