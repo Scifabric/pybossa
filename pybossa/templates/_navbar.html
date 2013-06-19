@@ -22,7 +22,7 @@
                     <li><a href="{{ url_for('account.profile') }}"><i class="icon icon-user"></i> {{ _('My Profile') }}</a></li>
                     <li><a href="{{ url_for('account.applications') }}"><i class="icon icon-th-large"></i> {{ _('My Applications') }}</a></li>
                     <li><a href="{{ url_for('account.settings') }}"><i class="icon icon-cog"></i> {{ _('My Settings') }}</a></li>
-                    <li><a href="{{ url_for('team.index') }}"><i class="icon icon-group"></i> {{ _('My Teams') }}</a></li>
+                    <li><a href="{{ url_for('team.myteams') }}"><i class="icon icon-group"></i> {{ _('My Teams') }}</a></li>
                     {% if current_user.admin == 1 %}
                     <li class="divider"></li>
                     <li><a href="{{ url_for('admin.index') }}"><i class="icon icon-cog"></i> {{ _('Admin Site') }}</a></li>
