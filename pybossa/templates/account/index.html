@@ -43,7 +43,7 @@
       </ul>
     {% endif %}
     <div class="span9">
-        {% if pagination.total_count > 1 %}
+        {% if pagination.pages > 1 %}
             {{ helper.render_pagination(pagination) }}
         {% endif %}
     </div>
