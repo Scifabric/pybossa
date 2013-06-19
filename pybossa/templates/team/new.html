@@ -8,7 +8,7 @@
 {% from "_formhelpers.html" import render_field %}
 <div id="app-form" class="row"> 
     <div class="span3">
-      {{ helper.render_teams_nav(team, 'new', current_user) }}
+      {{ helper.render_teams_nav(team, 'myteams', current_user) }}
     </div>
     <div class="span9">
         <h1><strong>{{ _('Team') }}</strong>: {{ _('Create a new Team') }}</h1>
@@ -17,7 +17,7 @@
         <fieldset>
           {{ render_field(form.name, placeholder= _('my team name')) }}
           {{ render_field(form.description, placeholder= _('my team description')) }}
-          {{ render_field(form.public, tooltip=_('Do you want to be public this team?'))}}
+          {{ render_field(form.public, tooltip=_('Do you want to be public this team or public-invitation-only? '))}}
           <div class="form-actions">
             <input type="submit" value="{{ _('Create a team') }}" class="btn btn-primary btn-large" />
             <a href="{{ url_for('team.index') }}" class="btn">{{ _('Cancel') }}</a>
