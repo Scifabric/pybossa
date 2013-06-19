@@ -19,7 +19,7 @@ import json
 
 from flask import Blueprint, request, url_for, flash, redirect, session, abort
 from flask import render_template, current_app
-from flaskext.login import login_required, login_user, logout_user, current_user
+from flask.ext.login import login_required, login_user, logout_user, current_user
 from flask.ext.mail import Message
 from flaskext.wtf import Form, TextField, PasswordField, validators, \
         ValidationError, IntegerField, HiddenInput, SelectField

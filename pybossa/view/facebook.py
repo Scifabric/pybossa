@@ -14,7 +14,7 @@
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask import Blueprint, request, url_for, flash, redirect, session
-from flaskext.login import login_user, current_user
+from flask.ext.login import login_user, current_user
 
 import pybossa.model as model
 from pybossa.core import db

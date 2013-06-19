@@ -22,7 +22,7 @@ from flask import redirect
 from flask import url_for
 from flask import current_app
 from flask import Response
-from flaskext.login import login_required, current_user
+from flask.ext.login import login_required, current_user
 from flaskext.wtf import Form, TextField, IntegerField, HiddenInput, validators
 from flaskext.babel import lazy_gettext
 from werkzeug.exceptions import HTTPException

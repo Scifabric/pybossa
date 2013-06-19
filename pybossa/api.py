@@ -17,7 +17,7 @@ import json
 
 from flask import Blueprint, request, abort, Response
 from flask.views import MethodView
-from flaskext.login import current_user
+from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound
 
 from pybossa.util import jsonpify, crossdomain
