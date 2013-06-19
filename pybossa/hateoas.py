@@ -45,7 +45,11 @@ class Hateoas(object):
         elif cls == 'category':
             return None, self.create_link(item)
         elif cls == 'app':
-            return None, self.create_link(item)
+            link = self.create_link(item)
+            links = []
+            if item.category_id is not None:
+                links.append(self.create_link(item.category, rel='category'))
+            return links, link
         else:
             return False
 
