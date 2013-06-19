@@ -347,8 +347,10 @@ class TestAPI:
         assert err['action'] == 'POST', err_msg
         assert err['exception_cls'] == 'Forbidden', err_msg
 
+
         # now a real user but not admin
-        res = self.app.post(url + '?api_key=' + Fixtures.api_key, data=data)
+        res = self.app.post(url + '?api_key=' + Fixtures.api_key,
+                            data=data)
         err = json.loads(res.data)
         err_msg = 'Should not be allowed to create'
         assert res.status_code == 401, err_msg
@@ -362,7 +364,7 @@ class TestAPI:
         err_msg = 'Admin should be able to create a Category'
         assert res.status_code == 200, err_msg
         cat = db.session.query(model.Category)\
-                .filter_by(short_name=category['short_name']).first()
+                .filter_by(short_name = category['short_name']).first()
         id_ = err['id']
         assert err['id'] == cat.id, err_msg
         assert err['name'] == category['name'], err_msg
@@ -471,7 +473,7 @@ class TestAPI:
 
         # test delete
         ## anonymous
-        res = self.app.delete(url + '/%s' % id_, data=data)
+        res = self.app.delete(url +'/%s' % id_, data=data)
         error_msg = 'Anonymous should not be allowed to delete'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
         error = json.loads(res.data)
@@ -508,6 +510,7 @@ class TestAPI:
         url = '/api/category/?api_key=%s' % Fixtures.root_api_key
         res = self.app.delete(url, data=datajson)
         assert res.status_code == 404, error
+
 
     def test_04_app_post(self):
         """Test API App creation and auth"""
