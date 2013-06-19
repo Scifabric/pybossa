@@ -75,23 +75,23 @@ def signin():
         user = model.User.query.filter_by(email_addr=email).first()
         if user and user.check_password(password):
             login_user(user, remember=True)
-            msg_1 = lazy_gettext("Welcome back") + " " + user.fullname
+            msg_1 = gettext("Welcome back") + " " + user.fullname
             flash(msg_1, 'success')
             return redirect(request.args.get("next") or url_for("home"))
         elif user:
             msg, method = get_user_signup_method(user)
             if method == 'local':
-                msg = lazy_gettext("Ooops, Incorrect email/password")
+                msg = gettext("Ooops, Incorrect email/password")
                 flash(msg, 'error')
             else:
                 flash(msg, 'info')
         else:
-            msg = lazy_gettext("Ooops, we didn't find you in the system, \
-                               did you sign in?")
+            msg = gettext("Ooops, we didn't find you in the system, \
+                          did you sign in?")
             flash(msg, 'info')
 
     if request.method == 'POST' and not form.validate():
-        flash(lazy_gettext('Please correct the errors'), 'error')
+        flash(gettext('Please correct the errors'), 'error')
     auth = {'twitter': False, 'facebook': False, 'google': False}
     if current_user.is_anonymous():
         # If Twitter is enabled in config, show the Twitter Sign in button
@@ -198,12 +198,12 @@ def register():
         db.session.add(account)
         db.session.commit()
         login_user(account, remember=True)
-        flash(lazy_gettext('Thanks for signing-up'), 'success')
+        flash(gettext('Thanks for signing-up'), 'success')
         return redirect(url_for('home'))
     if request.method == 'POST' and not form.validate():
-        flash(lazy_gettext('Please correct the errors'), 'error')
+        flash(gettext('Please correct the errors'), 'error')
     return render_template('account/register.html',
-                           title=lazy_gettext("Register"), form=form)
+                           title=gettext("Register"), form=form)
 
 
 @blueprint.route('/profile', methods=['GET'])
@@ -245,7 +245,7 @@ def profile():
         user.score = row.score
 
     user.total = db.session.query(model.User).count()
-    return render_template('account/profile.html', title=lazy_gettext("Profile"),
+    return render_template('account/profile.html', title=gettext("Profile"),
                            apps_contrib=apps_contrib,
                            user=user)
 
@@ -277,7 +277,7 @@ def applications():
             apps_draft.append(app)
 
     return render_template('account/applications.html',
-                           title=lazy_gettext("Applications"),
+                           title=gettext("Applications"),
                            apps_published=apps_published,
                            apps_draft=apps_draft)
 
@@ -318,10 +318,10 @@ def update_profile():
               .first()
             db.session.merge(new_profile)
             db.session.commit()
-            flash(lazy_gettext('Your profile has been updated!'), 'success')
+            flash(gettext('Your profile has been updated!'), 'success')
             return redirect(url_for('.profile'))
         else:
-            flash(lazy_gettext('Please correct the errors'), 'error')
+            flash(gettext('Please correct the errors'), 'error')
             title_msg = 'Update your profile: %s' % current_user.fullname
             return render_template('/account/update.html', form=form,
                                    title=title_msg)
@@ -348,13 +348,13 @@ def change_password():
             user.set_password(form.new_password.data)
             db.session.add(user)
             db.session.commit()
-            flash(lazy_gettext('Yay, you changed your password succesfully!'), 'success')
+            flash(gettext('Yay, you changed your password succesfully!'), 'success')
             return redirect(url_for('.profile'))
         else:
-            msg = lazy_gettext("Your current password doesn't match the one in our records")
+            msg = gettext("Your current password doesn't match the one in our records")
             flash(msg, 'error')
     if request.method == 'POST' and not form.validate():
-        flash(lazy_gettext('Please correct the errors'), 'error')
+        flash(gettext('Please correct the errors'), 'error')
     return render_template('/account/password.html', form=form)
 
 
@@ -389,10 +389,10 @@ def reset_password():
         db.session.add(user)
         db.session.commit()
         login_user(user)
-        flash(lazy_gettext('You reset your password successfully!'), 'success')
+        flash(gettext('You reset your password successfully!'), 'success')
         return redirect(url_for('.profile'))
     if request.method == 'POST' and not form.validate():
-        flash(lazy_gettext('Please correct the errors'), 'error')
+        flash(gettext('Please correct the errors'), 'error')
     return render_template('/account/password_reset.html', form=form)
 
 
@@ -435,14 +435,14 @@ def forgot_password():
                     user=user, recovery_url=recovery_url)
             msg.html = markdown(msg.body)
             mail.send(msg)
-            flash(lazy_gettext("We've send you email with account recovery instructions!"),
+            flash(gettext("We've send you email with account recovery instructions!"),
                   'success')
         else:
-            flash(lazy_gettext("We don't have this email in our records. You may have"
+            flash(gettext("We don't have this email in our records. You may have"
                   " signed up with a different email or used Twitter, "
                   "Facebook, or Google to sign-in"), 'error')
     if request.method == 'POST' and not form.validate():
-        flash(lazy_gettext('Something went wrong, please correct the errors on the '
+        flash(gettext('Something went wrong, please correct the errors on the '
               'form'), 'error')
     return render_template('/account/password_forgot.html', form=form)
 
@@ -460,7 +460,7 @@ def reset_api_key():
             user = db.session.query(model.User).get(current_user.id)
             user.api_key = model.make_uuid()
             db.session.commit()
-            msg = lazy_gettext('New API-KEY generated')
+            msg = gettext('New API-KEY generated')
             flash(msg, 'success')
             return redirect(url_for('account.settings'))
     else:
