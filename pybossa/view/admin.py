@@ -24,7 +24,7 @@ from flask import current_app
 from flask import Response
 from flask.ext.login import login_required, current_user
 from flaskext.wtf import Form, TextField, IntegerField, HiddenInput, validators
-from flaskext.babel import lazy_gettext
+from flaskext.babel import lazy_gettext, gettext
 from werkzeug.exceptions import HTTPException
 
 import pybossa.model as model
@@ -143,11 +143,11 @@ def users(user_id=None):
                 flash("<strong>Ooops!</strong> We didn't find a user "
                       "matching your query: <strong>%s</strong>" % form.user.data)
             return render_template('/admin/users.html', found=found, users=users,
-                                   title=lazy_gettext("Manage Admin Users"),
+                                   title=gettext("Manage Admin Users"),
                                    form=form)
 
         return render_template('/admin/users.html', found=[], users=users,
-                               title=lazy_gettext("Manage Admin Users"), form=form)
+                               title=gettext("Manage Admin Users"), form=form)
     except HTTPException:
         return abort(403)
     except Exception as e:
@@ -236,17 +236,17 @@ def categories():
                 db.session.add(category)
                 db.session.commit()
                 cached_cat.reset()
-                msg = lazy_gettext("Category added")
+                msg = gettext("Category added")
                 flash(msg, 'success')
             else:
-                flash(lazy_gettext('Please correct the errors'), 'error')
+                flash(gettext('Please correct the errors'), 'error')
         categories = cached_cat.get_all()
         n_apps_per_category = dict()
         for c in categories:
             n_apps_per_category[c.short_name] = cached_apps.n_count(c.short_name)
 
         return render_template('admin/categories.html',
-                               title=lazy_gettext('Categories'),
+                               title=gettext('Categories'),
                                categories=categories,
                                n_apps_per_category=n_apps_per_category,
                                form=form)
@@ -269,17 +269,17 @@ def del_category(id):
                 require.category.delete(category)
                 if request.method == 'GET':
                     return render_template('admin/del_category.html',
-                                           title=lazy_gettext('Delete Category'),
+                                           title=gettext('Delete Category'),
                                            category=category)
                 if request.method == 'POST':
                     db.session.delete(category)
                     db.session.commit()
-                    msg = lazy_gettext("Category deleted")
+                    msg = gettext("Category deleted")
                     flash(msg, 'success')
                     cached_cat.reset()
                     return redirect(url_for(".categories"))
             else:
-                msg = lazy_gettext('Sorry, it is not possible to delete the only \
+                msg = gettext('Sorry, it is not possible to delete the only \
                                    available category. You can modify it, click the \
                                    edit button')
                 flash(msg, 'warning')
@@ -306,7 +306,7 @@ def update_category(id):
             form.populate_obj(category)
             if request.method == 'GET':
                 return render_template('admin/update_category.html',
-                                       title=lazy_gettext('Update Category'),
+                                       title=gettext('Update Category'),
                                        category=category,
                                        form=form)
             if request.method == 'POST':
@@ -320,12 +320,12 @@ def update_category(id):
                     db.session.merge(new_category)
                     db.session.commit()
                     cached_cat.reset()
-                    msg = lazy_gettext("Category updated")
+                    msg = gettext("Category updated")
                     flash(msg, 'success')
                     return redirect(url_for(".categories"))
                 else:
                     return render_template('admin/update_category.html',
-                                           title=lazy_gettext('Update Category'),
+                                           title=gettext('Update Category'),
                                            category=category,
                                            form=form)
         else:
