@@ -229,7 +229,7 @@ class TestAPI:
         res = self.app.get(url + "?limit=1")
         data = json.loads(res.data)
         for item in data:
-            assert item['short_name'] == 'thinking', item
+            assert item['short_name'] == 'thinking' , item
         assert len(data) == 1, data
 
         # Errors
@@ -240,6 +240,8 @@ class TestAPI:
         err['action'] = 'GET', err_msg
         err['status'] = 'failed', err_msg
         err['exception_cls'] = 'AttributeError', err_msg
+
+
 
     def test_query_task(self):
         """Test API query for task endpoint works"""
