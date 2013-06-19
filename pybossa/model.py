@@ -22,7 +22,7 @@ import json
 import uuid
 
 from werkzeug import generate_password_hash, check_password_hash
-import flaskext.login
+import flask.ext.login
 from sqlalchemy import BigInteger, Integer, Boolean, Unicode,\
         Float, UnicodeText, Text, String
 from sqlalchemy.schema import Table, MetaData, Column, ForeignKey
@@ -368,7 +368,7 @@ class TaskRun(db.Model, DomainObject):
     '''
 
 
-class User(db.Model, DomainObject, flaskext.login.UserMixin):
+class User(db.Model, DomainObject, flask.ext.login.UserMixin):
     __tablename__ = 'user'
     id = Column(Integer, primary_key=True)
     #: created timestamp (automatically set)

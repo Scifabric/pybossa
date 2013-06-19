@@ -1,6 +1,6 @@
-Flask==0.9
+Flask==0.10.1
 SQLAlchemy==0.7.8
-Flask-Login==0.1
+Flask-Login==0.2.3
 Flask-WTF==0.6
 Flask-Gravatar
 Flask-OAuth==0.12
@@ -19,3 +19,4 @@ flask-heroku
 pygeoip
 flask-babel
 beautifulsoup4
+python-memcached

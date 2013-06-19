@@ -18,7 +18,7 @@ from flask import Blueprint, request, url_for, flash, redirect, abort, Response,
 from flask import render_template, make_response
 from flaskext.wtf import Form, IntegerField, TextField, BooleanField, \
     SelectField, validators, HiddenInput, TextAreaField
-from flaskext.login import login_required, current_user
+from flask.ext.login import login_required, current_user
 from flaskext.babel import lazy_gettext
 from werkzeug.exceptions import HTTPException
 from sqlalchemy.sql import text
