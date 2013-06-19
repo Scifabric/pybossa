@@ -39,7 +39,7 @@
                        {% if user2team.user_id == team.owner_id %}
                           {{ _('Owner') }}
                        {% else %}
-                         <a href="{{url_for('team.join_delete', name=team.name, user=user2team.user.name)}}" class="btn btn-danger btn-small"><i class="icon-trash icon-small"></i> {{ _('Remove') }}</a>
+                         <a href="{{url_for('team.user_delete', name=team.name, user=user2team.user.name)}}" class="btn btn-danger btn-small"><i class="icon-trash icon-small"></i> {{ _('Remove') }}</a>
                                               
                        {% endif %}
                      </td> 
