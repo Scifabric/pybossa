@@ -1,39 +1,7 @@
 {% extends "base.html" %}
 {% set active_page = "community"  %}
 {% import "privacy/locked.html" as privacy %}
-
-{% macro render_pagination(pagination) %}
-  <div class="pagination pagination-centered">
-      <ul>
-        {% if pagination.has_prev %}
-          <li>
-          <a href="{{ url_for_other_page(pagination.page - 1)
-            }}">&laquo; {{_('Prev')}}</a>
-          </li>
-        {% endif %}
-
-        {%- for page in pagination.iter_pages() %}
-          {% if page %}
-            {% if page != pagination.page %}
-            <li>
-              <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
-             </li>
-            {% else %}
-            <li class="active">
-                <a href="#">{{ page }}</a>
-            </li>  
-            {% endif %}
-          {% endif %}
-        {%- endfor %}
-        {% if pagination.has_next %}
-          <li>
-          <a href="{{ url_for_other_page(pagination.page + 1)
-            }}">{{_('Next')}} &raquo;</a>
-          </li>
-        {% endif %}
-    </ul>
-  </div>
-{% endmacro %}
+{% import "account/_helpers.html" as helper %}
 
 {% block content %}
 
@@ -68,8 +36,8 @@
       {% endfor %}
       </ul>
     {% endif %}
-    <div class="span9 offset2">
-        {{ render_pagination(pagination) }}
+    <div class="span9">
+        {{ helper.render_pagination(pagination) }}
     </div>
     {% endif %}
   </div>
