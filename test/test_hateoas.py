@@ -23,13 +23,18 @@ class TestHateoas(web_helper.Helper):
         output = json.loads(res.data)
         err_msg = "There should be a Link with the object URI"
         assert output['link'] is not None, err_msg
+
+        err_msg = "There should be a Links list with the category URI"
+        assert output['links'] is not None, err_msg
+        assert len(output['links']) == 1, err_msg
+        app_link = self.hateoas.link(rel='category', title='category',
+                                     href='http://localhost/api/category/1')
+        assert app_link == output['links'][0], err_msg
+
         app_link = self.hateoas.link(rel='self', title='app',
                                      href='http://localhost/api/app/1')
-
         err_msg = "The object link is wrong: %s" % output['link']
         assert app_link == output['link'], err_msg
-        err_msg = "There should not be links, this is the parent object"
-        assert output.get('links') is None, err_msg
 
         # For task
         res = self.app.get("/api/task/1", follow_redirects=True)
@@ -82,8 +87,13 @@ class TestHateoas(web_helper.Helper):
 
         err_msg = "The object link is wrong: %s" % output['link']
         assert app_link == output['link'], err_msg
-        err_msg = "There should not be links, this is the parent object"
-        assert output.get('links') is None, err_msg
+
+        err_msg = "There should be a Links list with the category URI"
+        assert output['links'] is not None, err_msg
+        assert len(output['links']) == 1, err_msg
+        app_link = self.hateoas.link(rel='category', title='category',
+                                     href='http://localhost/api/category/1')
+        assert app_link == output['links'][0], err_msg
 
         # For task
         res = self.app.get("/api/task", follow_redirects=True)
