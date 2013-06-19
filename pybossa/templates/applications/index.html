@@ -35,7 +35,9 @@
             {% for app in apps %}
             {{ helper.show_app(app, category, current_user) }}
             {% endfor %}
-            {{ helper.render_pagination(pagination) }}
+            {% if pagination.total_count > 1 %}
+                {{ helper.render_pagination(pagination) }}
+            {% endif %}
         {% else %}
             <h1>
                 <i class="icon-th"></i> {{pagination.total_count}} {{ active_cat.name }} Applications</h1>
