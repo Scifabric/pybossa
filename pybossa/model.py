@@ -29,13 +29,21 @@ from sqlalchemy.schema import Table, MetaData, Column, ForeignKey
 from sqlalchemy.orm import relationship, backref, class_mapper
 from sqlalchemy.types import MutableType, TypeDecorator
 from sqlalchemy import event, text
+from sqlalchemy.engine import reflection
+from sqlalchemy import create_engine
+from sqlalchemy.schema import (
+    MetaData,
+    Table,
+    DropTable,
+    ForeignKeyConstraint,
+    DropConstraint,
+    )
 
 from pybossa.core import db
 from pybossa.util import pretty_date
 
 log = logging.getLogger(__name__)
 
-#Session = db.session
 
 def make_timestamp():
     now = datetime.datetime.utcnow()
@@ -46,7 +54,36 @@ def make_uuid():
 
 
 def rebuild_db():
-    db.drop_all()
+    # See this SQLAlchemy recipe: http://www.sqlalchemy.org/trac/wiki/UsageRecipes/DropEverything
+    inspector = reflection.Inspector.from_engine(db.engine)
+    # gather all data first before dropping anything.
+    # some DBs lock after things have been dropped in
+    # a transaction.
+
+    metadata = MetaData()
+
+    tbs = []
+    all_fks = []
+
+    for table_name in inspector.get_table_names():
+        fks = []
+        for fk in inspector.get_foreign_keys(table_name):
+            if not fk['name']:
+                continue
+            fks.append(
+                ForeignKeyConstraint((),(),name=fk['name'])
+                )
+        t = Table(table_name,metadata,*fks)
+        tbs.append(t)
+        all_fks.extend(fks)
+
+    for fkc in all_fks:
+        db.engine.execute(DropConstraint(fkc))
+
+    for table in tbs:
+        db.engine.execute(DropTable(table))
+
+    db.session.commit()
     db.create_all()
 
 # =========================================
