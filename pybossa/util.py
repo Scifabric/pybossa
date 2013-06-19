@@ -21,7 +21,7 @@ import cStringIO
 from flask import abort, request, make_response, current_app
 from functools import wraps
 from flask_oauth import OAuth
-from flaskext.login import current_user
+from flask.ext.login import current_user
 from math import ceil
 import json
 

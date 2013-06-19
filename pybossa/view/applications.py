@@ -18,8 +18,8 @@ from flask import Blueprint, request, url_for, flash, redirect, abort, Response,
 from flask import render_template, make_response
 from flaskext.wtf import Form, IntegerField, TextField, BooleanField, \
     SelectField, validators, HiddenInput, TextAreaField
-from flaskext.login import login_required, current_user
-from flaskext.babel import lazy_gettext
+from flask.ext.login import login_required, current_user
+from flaskext.babel import lazy_gettext, gettext
 from werkzeug.exceptions import HTTPException
 from sqlalchemy.sql import text
 
@@ -181,7 +181,7 @@ def app_index(page, lookup, category, fallback, use_count):
         categories.insert(0, featured_cat)
     template_args = {
         "apps": apps,
-        "title": lazy_gettext("Applications"),
+        "title": gettext("Applications"),
         "pagination": pagination,
         "active_cat": active_cat,
         "categories": categories}
@@ -219,14 +219,14 @@ def new():
 
     def respond(errors):
         return render_template('applications/new.html',
-                               title=lazy_gettext("Create an Application"),
+                               title=gettext("Create an Application"),
                                form=form, errors=errors)
 
     if request.method != 'POST':
         return respond(False)
 
     if not form.validate():
-        flash(lazy_gettext('Please correct the errors'), 'error')
+        flash(gettext('Please correct the errors'), 'error')
         return respond(True)
 
     info = {}
@@ -248,14 +248,14 @@ def new():
     db.session.add(app)
     db.session.commit()
     # Clean cache
-    msg_1 = lazy_gettext('Application created!')
+    msg_1 = gettext('Application created!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')
     flash('<i class="icon-bullhorn"></i> ' +
-          lazy_gettext('You can check the ') +
+          gettext('You can check the ') +
           '<strong><a href="https://docs.pybossa.com">' +
-          lazy_gettext('Guide and Documentation') +
+          gettext('Guide and Documentation') +
           '</a></strong> ' +
-          lazy_gettext('for adding tasks, a thumbnail, using PyBossa.JS, etc.'),
+          gettext('for adding tasks, a thumbnail, using PyBossa.JS, etc.'),
           'info')
     return redirect(url_for('.settings', short_name=app.short_name))
 
@@ -275,12 +275,12 @@ def task_presenter_editor(short_name):
         app.info['task_presenter'] = form.editor.data
         db.session.add(app)
         db.session.commit()
-        msg_1 = lazy_gettext('Task presenter added!')
+        msg_1 = gettext('Task presenter added!')
         flash('<i class="icon-ok"></i> ' + msg_1, 'success')
         return redirect(url_for('.tasks', short_name=app.short_name))
 
     if request.method == 'POST' and not form.validate():
-        flash(lazy_gettext('Please correct the errors'), 'error')
+        flash(gettext('Please correct the errors'), 'error')
         errors = True
 
     if request.method != 'GET':
@@ -290,12 +290,12 @@ def task_presenter_editor(short_name):
         form.editor.data = app.info['task_presenter']
     else:
         if not request.args.get('template'):
-            msg_1 = lazy_gettext('<strong>Note</strong> You will need to upload the'
-                                 ' tasks using the')
-            msg_2 = lazy_gettext('CSV importer')
-            msg_3 = lazy_gettext(' or download the app bundle and run the'
-                                 ' <strong>createTasks.py</strong> script in your'
-                                 ' computer')
+            msg_1 = gettext('<strong>Note</strong> You will need to upload the'
+                            ' tasks using the')
+            msg_2 = gettext('CSV importer')
+            msg_3 = gettext(' or download the app bundle and run the'
+                            ' <strong>createTasks.py</strong> script in your'
+                            ' computer')
             url = '<a href="%s"> %s</a>' % (url_for('app.import_task',
                                                     short_name=app.short_name), msg_2)
             msg = msg_1 + url + msg_3
@@ -317,7 +317,7 @@ def task_presenter_editor(short_name):
         msg = 'Your code will be <em>automagically</em> rendered in \
                       the <strong>preview section</strong>. Click in the \
                       preview button!'
-        flash(lazy_gettext(msg), 'info')
+        flash(gettext(msg), 'info')
     return render_template('applications/task_presenter_editor.html',
                            title=title,
                            form=form,
@@ -340,7 +340,7 @@ def delete(short_name):
     cached_apps.clean(app.id)
     db.session.delete(app)
     db.session.commit()
-    flash(lazy_gettext('Application deleted!'), 'success')
+    flash(gettext('Application deleted!'), 'success')
     return redirect(url_for('account.profile'))
 
 
@@ -380,7 +380,7 @@ def update(short_name):
         db.session.commit()
         cached_apps.reset()
         cached_cat.reset()
-        flash(lazy_gettext('Application updated!'), 'success')
+        flash(gettext('Application updated!'), 'success')
         return redirect(url_for('.details',
                                 short_name=new_application.short_name))
 
@@ -409,7 +409,7 @@ def update(short_name):
         form.category_id.choices = [(c.id, c.name) for c in categories]
         if form.validate():
             return handle_valid_form(form)
-        flash(lazy_gettext('Please correct the errors'), 'error')
+        flash(gettext('Please correct the errors'), 'error')
 
     return render_template('/applications/update.html',
                            form=form,
@@ -491,7 +491,7 @@ def compute_importer_variant_pairs(forms):
 def import_task(short_name):
     app = app_by_shortname(short_name)
     title = app_title(app, "Import Tasks")
-    loading_text = lazy_gettext("Importing tasks, this may take a while, wait...")
+    loading_text = gettext("Importing tasks, this may take a while, wait...")
     template_args = {"title": title, "app": app, "loading_text": loading_text}
     if not require.app.update(app):
         return abort(403)
@@ -551,15 +551,15 @@ def _import_task(app, handler, form, render_forms):
             empty = False
         if empty:
             raise importer.BulkImportException(
-                lazy_gettext('Oops! It looks like the file is empty.'))
-        flash(lazy_gettext('Tasks imported successfully!'), 'success')
+                gettext('Oops! It looks like the file is empty.'))
+        flash(gettext('Tasks imported successfully!'), 'success')
         return redirect(url_for('.tasks', short_name=app.short_name))
     except importer.BulkImportException, err_msg:
         flash(err_msg, 'error')
     except Exception as inst:
         print inst
         msg = 'Oops! Looks like there was an error with processing that file!'
-        flash(lazy_gettext(msg), 'error')
+        flash(gettext(msg), 'error')
     return render_forms()
 
 
@@ -573,12 +573,12 @@ def task_presenter(short_name, task_id):
             msg = ("Oops! You have to sign in to participate in "
                    "<strong>%s</strong>"
                    "application" % app.name)
-            flash(lazy_gettext(msg), 'warning')
+            flash(gettext(msg), 'warning')
             return redirect(url_for('account.signin',
                                     next=url_for('.presenter',
                                                  short_name=app.short_name)))
         else:
-            msg_1 = lazy_gettext(
+            msg_1 = gettext(
                 "Ooops! You are an anonymous user and will not "
                 "get any credit"
                 " for your contributions.")
@@ -630,7 +630,7 @@ def presenter(short_name):
     if not app.allow_anonymous_contributors and current_user.is_anonymous():
         msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
                application" % app.name
-        flash(lazy_gettext(msg), 'warning')
+        flash(gettext(msg), 'warning')
         return redirect(url_for('account.signin',
                         next=url_for('.presenter', short_name=app.short_name)))
 
@@ -640,7 +640,7 @@ def presenter(short_name):
 
     def respond(tmpl):
         if (current_user.is_anonymous()):
-            msg_1 = lazy_gettext(msg)
+            msg_1 = gettext(msg)
             flash(msg_1, "warning")
         resp = make_response(render_template(tmpl, **template_args))
         return resp
@@ -749,8 +749,8 @@ def delete_tasks(short_name):
             for task in app.tasks:
                 db.session.delete(task)
             db.session.commit()
-            msg = "All the tasks and associated task runs have been deleted"
-            flash(lazy_gettext(msg), 'success')
+            msg = gettext("All the tasks and associated task runs have been deleted")
+            flash(msg, 'success')
             return redirect(url_for('.tasks', short_name=app.short_name))
     except HTTPException:
         return abort(403)
@@ -760,8 +760,8 @@ def delete_tasks(short_name):
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
     app = app_by_shortname(short_name)
-    title = app_title(app, lazy_gettext("Export"))
-    loading_text = lazy_gettext("Exporting data..., this may take a while")
+    title = app_title(app, gettext("Export"))
+    loading_text = gettext("Exporting data..., this may take a while")
 
     def respond():
         return render_template('/applications/export.html',
@@ -819,7 +819,7 @@ def export_to(short_name):
     def respond_ckan(ty):
         # First check if there is a package (dataset) in CKAN
         tables = {"task": model.Task, "task_run": model.TaskRun}
-        msg_1 = lazy_gettext("Data exported to ")
+        msg_1 = gettext("Data exported to ")
         msg = msg_1 + "%s ..." % current_app.config['CKAN_URL']
         ckan = Ckan(url=current_app.config['CKAN_URL'],
                     api_key=current_user.ckan_api)
@@ -872,15 +872,15 @@ def export_to(short_name):
             "task": (
                 model.Task, handle_task,
                 (lambda x: True),
-                lazy_gettext(
+                gettext(
                     "Oops, the application does not have tasks to \
-                           export, if you are the owner add some tasks")),
+                    export, if you are the owner add some tasks")),
             "task_run": (
                 model.TaskRun, handle_task_run,
                 (lambda x: type(x.info) == dict),
-                lazy_gettext(
+                gettext(
                     "Oops, there are no Task Runs yet to export, invite \
-                           some users to participate"))}
+                     some users to participate"))}
         try:
             table, handle_row, test, msg = types[ty]
         except KeyError:
@@ -981,7 +981,7 @@ def task_settings(short_name):
 @login_required
 def task_n_answers(short_name):
     app = app_by_shortname(short_name)
-    title = app_title(app, lazy_gettext('Redundancy'))
+    title = app_title(app, gettext('Redundancy'))
     form = TaskRedundancyForm()
     try:
         require.app.read(app)
@@ -994,11 +994,11 @@ def task_n_answers(short_name):
         elif request.method == 'POST' and form.validate():
             sql = text('''UPDATE task SET n_answers=:n_answers WHERE app_id=:app_id''')
             db.engine.execute(sql, n_answers=form.n_answers.data, app_id=app.id)
-            msg = lazy_gettext('Redundancy of Tasks updated!')
+            msg = gettext('Redundancy of Tasks updated!')
             flash(msg, 'success')
             return redirect(url_for('.tasks', short_name=app.short_name))
         else:
-            flash(lazy_gettext('Please correct the errors'), 'error')
+            flash(gettext('Please correct the errors'), 'error')
             return render_template('/applications/task_n_answers.html',
                                    title=title,
                                    form=form,
@@ -1011,7 +1011,7 @@ def task_n_answers(short_name):
 @login_required
 def task_scheduler(short_name):
     app = app_by_shortname(short_name)
-    title = app_title(app, lazy_gettext('Scheduler'))
+    title = app_title(app, gettext('Task Scheduler'))
     form = TaskSchedulerForm()
 
     def respond():
@@ -1039,9 +1039,9 @@ def task_scheduler(short_name):
         cached_apps.reset()
         db.session.add(app)
         db.session.commit()
-        msg = lazy_gettext("Application Task Scheduler updated!")
+        msg = gettext("Application Task Scheduler updated!")
         flash(msg, 'success')
         return redirect(url_for('.tasks', short_name=app.short_name))
 
-    flash(lazy_gettext('Please correct the errors'), 'error')
+    flash(gettext('Please correct the errors'), 'error')
     return respond()
