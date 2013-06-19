@@ -19,7 +19,7 @@
         {{ render_field(form.public, tooltip=_('Do you want to be public this team?'))}}
         <div class="form-actions">
           <input type="submit" value="Save the changes" class="btn btn-primary" />
-          <a href="{{url_for('team.settings', name=team.name)}}" class="btn">Cancel</a>
+          <a href="{{url_for('team.detail', name=team.name)}}" class="btn">Cancel</a>
         </div>
       </fieldset>
     </form>
