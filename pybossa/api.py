@@ -334,9 +334,11 @@ def user_progress(app_id=None, short_name=None):
 
 
 @jsonpify
-@blueprint.route('/vmcp', methods=['POST'])
+@blueprint.route('/vmcp', methods=['GET'])
 def vmcp():
     """VMCP support to sign CernVM requests"""
+    #app = db.session.query(model.App).get(app_id)
+    #if not app.info.get('vmcp'):
     error = dict(action=request.method,
                  status="failed",
                  status_code=None,
@@ -354,12 +356,13 @@ def vmcp():
             salt = request.args.get('cvm_salt')
         else:
             raise AttributeError
-        if request.form:
-            data = request.form.copy()
-        else:
-            raise ValueError
+        #if request.form:
+        #    data = request.form.copy()
+        #else:
+        #    raise ValueError
+        data = request.args.copy()
         signed_data = sign(data, salt, pkey)
-        print signed_data
+        print json.dumps(signed_data)
         return Response(json.dumps(signed_data), 200, mimetype='application/json')
 
     except KeyError:
