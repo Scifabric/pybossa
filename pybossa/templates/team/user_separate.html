@@ -17,7 +17,7 @@
         {{ helper.show_team(team,'delete', current_user, false) }}
         <form class="form-horizontal" method="post" action="{{ url_for('team.user_delete', name = team.name, user=user) }}">
         <fieldset>
-            <h3>{{ _('Are you sure you want to separate to') }}<strong> {{ user }} </strong>{{ _('this team?') }}</h3>
+            <h3>{{ _('Are you sure you want to separate to') }}{% if user %} <strong>{{ user }}</strong> {% endif %} {{ _('this team?') }}</h3>
             <div class="form-actions">
               <input type="submit" class="btn btn-small" value="Yes, separate it"/>
               <a href="{{ url_for('team.detail', name = team.name) }}" class="btn btn-large btn-primary">{{ _('No!') }}</a>
