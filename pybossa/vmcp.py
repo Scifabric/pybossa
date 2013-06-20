@@ -30,7 +30,9 @@ that includes the signature.
 
 def sign(data, salt, pkey):
     # Calculate buffer to sign (sorting the keys)
+    print data
     strBuffer = ""
+    print data.keys()
     for k in sorted(data.iterkeys()):
 
         # Handle the BOOL special case
