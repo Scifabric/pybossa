@@ -20,3 +20,4 @@ pygeoip
 flask-babel
 beautifulsoup4
 python-memcached
+m2crypto
