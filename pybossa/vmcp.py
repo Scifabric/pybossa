@@ -15,7 +15,6 @@
 
 import M2Crypto
 import hashlib
-import urllib
 import base64
 
 """
@@ -26,6 +25,17 @@ that includes the signature.
 @param $salt Is the salt parameter passed via the cvm_salt GET parameter
 @param $pkey Is the path to the private key file that will be used to calculate the signature
 """
+
+
+def myquote(line):
+    valid = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~"
+    escaped = ""
+    for c in line:
+        if c not in valid:
+            escaped += "%%%.2X" % ord(c)
+        else:
+            escaped += c
+    return escaped
 
 
 def sign(data, salt, pkey):
@@ -45,7 +55,7 @@ def sign(data, salt, pkey):
             data[k] = v
 
         # Update buffer
-        strBuffer += "%s=%s\n" % (str(k).lower(), urllib.quote(str(v)))
+        strBuffer += "%s=%s\n" % (str(k).lower(), myquote(str(v)))
 
     # Append salt
     strBuffer += salt
