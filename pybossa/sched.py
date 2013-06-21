@@ -145,28 +145,29 @@ def get_incremental_task(app_id, user_id=None, user_ip=None, n_answers=30, offse
 
 def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
     """Gets all available tasks for a given application and user"""
-
-    # print "Using offset = %s" % offset
+    rows = None
     if user_id and not user_ip:
-        participated_tasks = db.session.query(model.TaskRun.task_id)\
-                                       .filter_by(user_id=user_id)\
-                                       .filter_by(app_id=app_id)\
-                                       .order_by(model.TaskRun.task_id)
+        query = text('''
+                     SELECT id FROM task WHERE NOT EXISTS
+                     (SELECT task_id FROM task_run WHERE
+                     app_id=:app_id AND user_id=:user_id AND task_id=task.id)
+                     AND app_id=:app_id AND state !='completed'
+                     ORDER BY priority_0 DESC, id ASC LIMIT 10''')
+        rows = db.engine.execute(query, app_id=app_id, user_id=user_id)
     else:
         if not user_ip:
-            user_ip = "127.0.0.1"
-        participated_tasks = db.session.query(model.TaskRun.task_id)\
-                                       .filter_by(user_ip=user_ip)\
-                                       .filter_by(app_id=app_id)\
-                                       .order_by(model.TaskRun.task_id)
+            user_ip = '127.0.0.1'
+        query = text('''
+                     SELECT id FROM task WHERE NOT EXISTS
+                     (SELECT task_id FROM task_run WHERE
+                     app_id=:app_id AND user_ip=:user_ip AND task_id=task.id)
+                     AND app_id=:app_id AND state !='completed'
+                     ORDER BY priority_0 DESC, id ASC LIMIT 10''')
+        rows = db.engine.execute(query, app_id=app_id, user_ip=user_ip)
 
-    tasks = db.session.query(model.Task)\
-                      .filter(not_(model.Task.id.in_(participated_tasks.all())))\
-                      .filter_by(app_id=app_id)\
-                      .filter(model.Task.state != "completed")\
-                      .order_by(model.Task.id)\
-                      .limit(10)\
-                      .all()
+    tasks = []
+    for t in rows:
+        tasks.append(db.session.query(model.Task).get(t.id))
 
     candidate_tasks = []
 
