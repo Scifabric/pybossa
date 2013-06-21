@@ -271,19 +271,23 @@ register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
 @crossdomain(origin='*', headers=cors_headers)
 def new_task(app_id):
     # Check if the request has an arg:
-    if request.args.get('offset'):
-        offset = int(request.args.get('offset'))
+    app = AppAPI()
+    res = app.get(id=app_id)
+    if res.status_code == 200:
+        if request.args.get('offset'):
+            offset = int(request.args.get('offset'))
+        else:
+            offset = 0
+        user_id = None if current_user.is_anonymous() else current_user.id
+        user_ip = request.remote_addr if current_user.is_anonymous() else None
+        task = sched.new_task(app_id, user_id, user_ip, offset)
+        # If there is a task for the user, return it
+        if task:
+            return Response(json.dumps(task.dictize()), mimetype="application/json")
+        else:
+            return Response(json.dumps({}), mimetype="application/json")
     else:
-        offset = 0
-
-    user_id = None if current_user.is_anonymous() else current_user.id
-    user_ip = request.remote_addr if current_user.is_anonymous() else None
-    task = sched.new_task(app_id, user_id, user_ip, offset)
-    # If there is a task for the user, return it
-    if task:
-        return Response(json.dumps(task.dictize()), mimetype="application/json")
-    else:
-        return Response(json.dumps({}), mimetype="application/json")
+        return res
 
 
 @jsonpify
