@@ -15,7 +15,8 @@ The **Settings** page will give you three basic options:
 #. :ref:`app-details`: here you will be able to change the name
    of the application, the description, icon, etc.
 #. :ref:`task-settings`: this button will open the :ref:`task-settings` page where you
-   will be able to configure the :ref:`task-scheduler`, modify the
+   will be able to configure the :ref:`task-scheduler`, change the
+   :ref:`task-priority`, modify the
    :ref:`task-redundancy` 
    and :ref:`delete-tasks` and its associated task runs (also known as
    answers).
@@ -59,13 +60,14 @@ The *Task Settings* is only accessible for the application owner and server
 administrators. The page can be reached via the **Settings** menu, but also
 from the **Tasks** link in the left local navigation bar. 
 
-.. image:: http://i.imgur.com/Ycx30qb.png
+.. image:: http://i.imgur.com/znVy3ON.png
     :width: 100%
 
-The page shows three different blocks:
+The page shows four different blocks:
 
 #. **Task Scheduler**: this block allows you to specify how the application
    should send tasks to the volunteers.
+#. **Task Priority**: this block allows you to change the priority of the tasks.
 #. **Task Redundancy**: use this block to change the default number of answers
    (30 by default) that you want to obtain before marking a task as completed.
 #. **Delete Tasks**: this final block allows you to flush all the tasks and its
@@ -162,6 +164,31 @@ randomly.
     By using this scheduler, you may end up with some tasks that receive only
     a few answers. If you want to avoid this issue, change to the other two
     schedulers.
+
+.. _task-priority:
+
+Task Priority
+--------------
+
+PyBossa allows you to prioritize the tasks, or in other words, which tasks
+should be delivered first to the volunteers.
+
+.. image:: http://i.imgur.com/gay8VAw.png
+    :width: 100%
+
+.. note::
+    **Important**: Task Priority is only respected by the default scheduler.
+
+The page shows you two input boxes:
+
+#. **Task IDs**: comma separated Task IDs of your application tasks. Note: not
+   spaces between the values or commas.
+#. **Priority**: the priority that you want to set for the Task IDs. This must
+   be a value between 0.0 and 1.0.
+
+A task with a priority 1.0 will be the first Task to be delivered to a given
+user. In case that two or more tasks have the same priority value, the first task
+that will be delivered will be the one with the lower Task.ID value.
 
 .. _task-redundancy:
 
