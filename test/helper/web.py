@@ -157,6 +157,18 @@ class Helper(object):
         else:
             return self.app.get(url, follow_redirects=True)
 
+    def task_settings_priority(self, method="POST", short_name='sampleapp',
+                                 task_ids="1", priority_0=0.0):
+        """Helper function to modify task redundancy"""
+        url = "/app/%s/tasks/priority" % short_name
+        if method == "POST":
+            return self.app.post(url, data={
+                'task_ids': task_ids,
+                'priority_0': priority_0
+            }, follow_redirects=True)
+        else:
+            return self.app.get(url, follow_redirects=True)
+
     def delete_application(self, method="POST", short_name="sampleapp"):
         """Helper function to create an application"""
         if method == "POST":
