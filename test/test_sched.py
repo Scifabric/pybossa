@@ -319,6 +319,39 @@ class TestSched(sched.Helper):
         print json.loads(res.data)
         assert json.loads(res.data) == {}, res.data
 
+    def test_task_priority(self):
+        """Test SCHED respects priority_0 field"""
+        # Del previous TaskRuns
+        self.del_task_runs()
+
+        # Register
+        self.register()
+        self.signin()
+
+        # By default, tasks without priority should be ordered by task.id (FIFO)
+        tasks = db.session.query(model.Task).filter_by(app_id=1).order_by('id').all()
+        res = self.app.get('api/app/1/newtask')
+        task1 = json.loads(res.data)
+        # Check that we received a Task
+        err_msg = "Task.id should be the same"
+        assert task1.get('id') == tasks[0].id, err_msg
+
+        # Now let's change the priority to a random task
+        import random
+        t = random.choice(tasks)
+        # Increase priority to maximum
+        t.priority_0 = 1
+        db.session.add(t)
+        db.session.commit()
+        # Request again a new task
+        res = self.app.get('api/app/1/newtask')
+        task1 = json.loads(res.data)
+        # Check that we received a Task
+        err_msg = "Task.id should be the same"
+        assert task1.get('id') == t.id, err_msg
+        err_msg = "Task.priority_0 should be the 1"
+        assert task1.get('priority_0') == 1, err_msg
+
 
 class TestGetBreadthFirst:
     @classmethod
