@@ -201,13 +201,15 @@ Number of answers or task runs per task
 PyBossa by default will send a task to different users (authenticated and
 anonymous users) until 30 different task runs are obtained for each task. 
 
-The scheduler does not allow the same user to submit more than one answer for 
+:ref:`task-scheduler` does not allow the same user to submit more than one answer for 
 any task (even 'anonymous' users who are not logged in, are recognised via 
 their IP address).
 
-This value, 30 answers, can be changed for each task without problems. If you want
+This value, 30 answers, can be changed for each task without problems in the 
+:ref:`task-redundancy` section or using the API. If you want
 to improve the quality of the results for one task and get more confidence on
-the data when you will analyze it, you can specify it in the task JSON object::
+the data when you will analyze it, you can specify it in the task JSON object
+if you use the API::
 
     { 
         'app_id': your application id,
@@ -215,11 +217,35 @@ the data when you will analyze it, you can specify it in the task JSON object::
         'n_answers': 100
     }
 
-In this case the **n_answers** field will make the scheduler try and obtain 100 different answers from different users for each task.
+In this case the **n_answers** field will make :ref:`task-scheduler` to try and 
+obtain 100 different answers from different users for each task.
 
 The `createTasks.py script <https://github.com/PyBossa/app-flickrperson/blob/master/createTasks.py>`_ has a command line argument that allows you to
 change the number of task runs that you want per task. Check the source code
 for more information.
+
+Changing the Priority of the tasks
+==================================
+
+Every task can have its own **priority**. The :ref:`task-priority` can be configured using
+the web interface, or the API.
+
+A task with a higher priority will be delivered first to the volunteers. Hence if you 
+have a project where you need to analyze a task first due
+to an external event (a new data sample has been obtained), then you can modify 
+the priority of the new created task and deliver it first. 
+
+Using the API for changing the priority will be as simple as specifying in the task 
+JSON object the following::
+
+    { 
+        'app_id': your application id,
+        'info': the previous JSON object,
+        'priority_0': 0.9
+    }
+
+The priority is a number between 0.0 and 1.0. The highest priority is 1.0 and
+the lowest is 0.0. 
 
 Providing more details about the application
 ============================================

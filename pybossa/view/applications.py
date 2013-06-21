@@ -16,7 +16,7 @@
 from StringIO import StringIO
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, make_response
-from flaskext.wtf import Form, IntegerField, TextField, BooleanField, \
+from flaskext.wtf import Form, IntegerField, DecimalField, TextField, BooleanField, \
     SelectField, validators, HiddenInput, TextAreaField
 from flask.ext.login import login_required, current_user
 from flaskext.babel import lazy_gettext, gettext
@@ -84,6 +84,18 @@ class TaskRedundancyForm(Form):
                                   min=1, max=1000,
                                   message=lazy_gettext('Number of answers should be a \
                                                        value between 1 and 1,000'))])
+
+
+class TaskPriorityForm(Form):
+    task_ids = TextField(lazy_gettext('Task IDs'),
+                         [validators.Required(),
+                          pb_validator.CommaSeparatedIntegers()])
+
+    priority_0 = DecimalField(lazy_gettext('Priority'),
+                              [validators.NumberRange(
+                                  min=0, max=1,
+                                  message=lazy_gettext('Priority should be a \
+                                                       value between 0.0 and 1.0'))])
 
 
 class TaskSchedulerForm(Form):
@@ -1045,3 +1057,43 @@ def task_scheduler(short_name):
 
     flash(gettext('Please correct the errors'), 'error')
     return respond()
+
+
+@blueprint.route('/<short_name>/tasks/priority', methods=['GET', 'POST'])
+@login_required
+def task_priority(short_name):
+    app = app_by_shortname(short_name)
+    title = app_title(app, gettext('Task Priority'))
+    form = TaskPriorityForm()
+
+    def respond():
+        return render_template('/applications/task_priority.html',
+                               title=title,
+                               form=form,
+                               app=app)
+    try:
+        require.app.read(app)
+        require.app.update(app)
+    except:
+        return abort(403)
+
+    if request.method == 'GET':
+        return respond()
+    if request.method == 'POST' and form.validate():
+        tasks = []
+        for task_id in form.task_ids.data.split(","):
+            if task_id != '':
+                t = db.session.query(model.Task).filter_by(app_id=app.id)\
+                              .filter_by(id=int(task_id)).first()
+                if t:
+                    t.priority_0 = form.priority_0.data
+                    tasks.append(t)
+                else:
+                    flash(gettext(("Ooops, Task.id=%s does not belong to the app" % task_id)), 'danger')
+        db.session.add_all(tasks)
+        db.session.commit()
+        flash(gettext("Task priority has been changed"), 'success')
+        return respond()
+    else:
+        flash(gettext('Please correct the errors'), 'error')
+        return respond()

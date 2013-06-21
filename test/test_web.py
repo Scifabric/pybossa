@@ -1946,3 +1946,79 @@ class TestWeb(web.Helper):
         dom = BeautifulSoup(res.data)
         err_msg = "User should be redirected to sign in"
         assert dom.find(id="signin") is not None, err_msg
+
+    def test_77_task_settings_priority(self):
+        """Test WEB TASK SETTINGS priority page works"""
+        # Creat root user
+        self.register()
+        self.signout()
+        # Create owner
+        self.register(fullname="owner", username="owner")
+        self.new_application()
+        self.new_task(1)
+        url = "/app/%s/tasks/priority" % self.app_short_name
+        form_id = 'task_priority'
+        self.signout()
+
+        # As owner and root
+        app = db.session.query(model.App).get(1)
+        _id = app.tasks[0].id
+        for i in range(0, 1):
+            if i == 0:
+                # As owner
+                print "Testing as owner"
+                self.signin(email="owner@example.com")
+                task_ids = str(_id)
+                priority_0 = 1.0
+            else:
+                print "Testing as root"
+                task_ids = "1"
+                priority_0 = 0.5
+                self.signin()
+            res = self.app.get(url, follow_redirects=True)
+            dom = BeautifulSoup(res.data)
+            # Correct values
+            err_msg = "There should be a %s section" % form_id
+            assert dom.find(id=form_id) is not None, err_msg
+            res = self.task_settings_priority(short_name=self.app_short_name,
+                                              task_ids=task_ids,
+                                              priority_0=priority_0)
+            dom = BeautifulSoup(res.data)
+            err_msg = "Task Priority should be updated"
+            print dom.prettify()
+            assert dom.find(id='msg_success') is not None, err_msg
+            task = db.session.query(model.Task).get(_id)
+            assert task.id == int(task_ids), err_msg
+            assert task.priority_0 == priority_0, err_msg
+            # Wrong values, triggering the validators
+            res = self.task_settings_priority(short_name=self.app_short_name,
+                                              priority_0=3,
+                                              task_ids="1")
+            dom = BeautifulSoup(res.data)
+            err_msg = "Task Priority should be a value between 0.0 and 1.0"
+            assert dom.find(id='msg_error') is not None, err_msg
+            res = self.task_settings_priority(short_name=self.app_short_name,
+                                              task_ids="1, 2")
+            dom = BeautifulSoup(res.data)
+            err_msg = "Task Priority task_ids should be a comma separated, no spaces, integers"
+            assert dom.find(id='msg_error') is not None, err_msg
+            res = self.task_settings_priority(short_name=self.app_short_name,
+                                              task_ids="1,a")
+            dom = BeautifulSoup(res.data)
+            err_msg = "Task Priority task_ids should be a comma separated, no spaces, integers"
+            assert dom.find(id='msg_error') is not None, err_msg
+
+            self.signout()
+
+        # As an authenticated user
+        self.register(fullname="juan", username="juan")
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "User should not be allowed to access this page"
+        assert res.status_code == 403, err_msg
+        self.signout()
+
+        # As an anonymous user
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "User should be redirected to sign in"
+        assert dom.find(id="signin") is not None, err_msg
