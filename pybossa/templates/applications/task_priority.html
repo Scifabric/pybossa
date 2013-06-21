@@ -13,6 +13,7 @@
             <div class="span9">
                 {{ helper.render_app_title(app, subtitle=_('Task Priority'))}}
                 <p>You can change the <strong>priority</strong> of one or more tasks, providing a list of task IDs separeted by commas. The lowest priority is <span class="badge badge-warning">0.0</span> and the highest priority is <span class="badge badge-info">1.0</span>.</p>
+                <p><span class="label label-info"><i class="icon-bullhorn"></i> Important</span> The priory value is only respected by the <strong>default scheduler</strong>.</p>
                 <form id="task_priority" class="form-horizontal" method="post" action="{{ url_for('app.task_priority', short_name=app.short_name) }}">
                     {{ form.hidden_tag() }}
                     <fieldset>
