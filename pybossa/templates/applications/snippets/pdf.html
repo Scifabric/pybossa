@@ -70,11 +70,9 @@
 
 </div>
 <script src="http://code.jquery.com/ui/1.9.1/jquery-ui.js"></script>
-<script src="http://hitconsultants.com/dragscroll_scrollsync/scrollsync.js"></script>
-<script src="http://hitconsultants.com/dragscroll_scrollsync/dragscrollable.js"></script>
-<script src="/static/js/pybossa/pybossa.js" type="text/javascript"></script>
-<!-- Use latest PDF.js build from Github -->
-<script type="text/javascript" src="https://raw.github.com/mozilla/pdf.js/gh-pages/build/pdf.js"></script>
+<script src="{{url_for('static', filename='js/pdf/scrollsync.js')}}"></script>
+<script src="{{url_for('static', filename='js/pdf/dragscrollable.js')}}"></script>
+<script src="{{url_for('static', filename='js/pdf/pdf.js')}}" type="text/javascript" ></script>
 
 <script>
 //
