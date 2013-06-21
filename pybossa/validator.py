@@ -15,6 +15,7 @@
 
 from flaskext.babel import lazy_gettext
 from flaskext.wtf import ValidationError
+import re
 
 
 class Unique(object):
@@ -52,4 +53,22 @@ class NotAllowedChars(object):
 
     def __call__(self, form, field):
         if any(c in field.data for c in self.not_valid_chars):
+            raise ValidationError(self.message)
+
+
+class CommaSeparatedIntegers(object):
+    """Validator that validates input fields that have comma separated values"""
+    not_valid_chars = '$#&\/| '
+
+    def __init__(self, message=None):
+        if not message:
+            self.message = lazy_gettext(u'Only comma separated values are allowed, no spaces')
+
+        else:
+            self.message = message
+
+    def __call__(self, form, field):
+        pattern = re.compile('^[\d,]+$')
+        print field.data
+        if pattern.match(field.data) is None:
             raise ValidationError(self.message)
