@@ -37,6 +37,7 @@ machine!)::
 Once the source code has been downloaded, all you have to do to start your
 PyBossa development environment is typing the following::
 
+    $ cd pybossa
     $ vagrant up
 
 The system will download a Virtual Machine, install all the required libraries
