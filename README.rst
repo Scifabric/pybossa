@@ -32,6 +32,11 @@ documentation**
 
 See `installation instructions <http://docs.pybossa.com/en/latest/install.html>`_.
 
+**NOTE**: The latest version uses M2CRYPTO and the pypi version has a bug that
+does not allow you to sign properly RSA keys, however it will install it
+perfectly well. For this reason, you will need to
+patch it yourself if you want to use it, please, see [this link for further information](http://stackoverflow.com/a/11072709)
+
 Running Tests
 =============
 
