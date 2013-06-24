@@ -32,3 +32,5 @@ pybossa/static/js/raphael-min.js
 pybossa/static/openlayers/
 .vagrant/
 vagrant_env/
+keys/*
+*.pem

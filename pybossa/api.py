@@ -15,7 +15,7 @@
 
 import json
 
-from flask import Blueprint, request, abort, Response
+from flask import Blueprint, request, abort, Response, current_app
 from flask.views import MethodView
 from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound
@@ -25,7 +25,9 @@ import pybossa.model as model
 from pybossa.core import db
 from pybossa.auth import require
 from pybossa.hateoas import Hateoas
+from pybossa.vmcp import sign
 import pybossa.sched as sched
+import os
 
 blueprint = Blueprint('api', __name__)
 
@@ -329,3 +331,51 @@ def user_progress(app_id=None, short_name=None):
             return abort(404)
     else:
         return abort(404)
+
+
+@jsonpify
+@blueprint.route('/vmcp', methods=['GET'])
+def vmcp():
+    """VMCP support to sign CernVM requests"""
+    error = dict(action=request.method,
+                 status="failed",
+                 status_code=None,
+                 target='vmcp',
+                 exception_cls='vmcp',
+                 exception_msg=None)
+    try:
+        if current_app.config.get('VMCP_KEY'):
+            pkey = current_app.root_path + '/../keys/' + current_app.config.get('VMCP_KEY')
+            if not os.path.exists(pkey):
+                raise IOError
+        else:
+            raise KeyError
+        if request.args.get('cvm_salt'):
+            salt = request.args.get('cvm_salt')
+        else:
+            raise AttributeError
+        data = request.args.copy()
+        signed_data = sign(data, salt, pkey)
+        return Response(json.dumps(signed_data), 200, mimetype='application/json')
+
+    except KeyError:
+        error['status_code'] = 501
+        error['exception_msg'] = "The server is not configured properly, contact the admins"
+        return Response(json.dumps(error), status=error['status_code'],
+                        mimetype='application/json')
+    except IOError:
+        error['status_code'] = 501
+        error['exception_msg'] = "The server is not configured properly (private key is missing), contact the admins"
+        return Response(json.dumps(error), status=error['status_code'],
+                        mimetype='application/json')
+
+    except AttributeError:
+        error['status_code'] = 415
+        error['exception_msg'] = "cvm_salt parameter is missing"
+        return Response(json.dumps(error), status=error['status_code'],
+                        mimetype='application/json')
+    except ValueError:
+        error['status_code'] = 415
+        error['exception_msg'] = "Virtual Machine parameters are missing {'cpus': 1, 'ram': 128, ...}"
+        return Response(json.dumps(error), status=error['status_code'],
+                        mimetype='application/json')
