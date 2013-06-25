@@ -569,7 +569,7 @@ def _import_task(app, handler, form, render_forms):
     except importer.BulkImportException, err_msg:
         flash(err_msg, 'error')
     except Exception as inst:
-        print inst
+        current_app.logger.error(inst)
         msg = 'Oops! Looks like there was an error with processing that file!'
         flash(gettext(msg), 'error')
     return render_forms()
