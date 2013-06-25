@@ -554,17 +554,28 @@ def import_task(short_name):
 def _import_task(app, handler, form, render_forms):
     try:
         empty = True
+        n = 0
+        n_data = 0
         for task_data in handler.tasks(form):
-            task = model.Task(app=app)
-            print task_data
+            n_data += 1
+            task = model.Task(app_id=app.id)
             [setattr(task, k, v) for k, v in task_data.iteritems()]
-            db.session.add(task)
-            db.session.commit()
-            empty = False
-        if empty:
+            data = db.session.query(model.Task).filter_by(app_id=app.id).filter_by(info=task.info).first()
+            if data is None:
+                db.session.add(task)
+                db.session.commit()
+                n += 1
+                empty = False
+        if empty and n_data == 0:
             raise importer.BulkImportException(
                 gettext('Oops! It looks like the file is empty.'))
-        flash(gettext('Tasks imported successfully!'), 'success')
+        if empty and n_data > 0:
+            flash(gettext('Oops! It looks like there are no new records to import.'), 'warning')
+
+        msg = str(n) + " " + gettext('Tasks imported successfully!')
+        if n == 1:
+            msg = str(n) + " " + gettext('Task imported successfully!')
+        flash(msg, 'success')
         return redirect(url_for('.tasks', short_name=app.short_name))
     except importer.BulkImportException, err_msg:
         flash(err_msg, 'error')
