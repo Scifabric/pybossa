@@ -1806,10 +1806,27 @@ class TestWeb(web.Helper):
 
         err_msg = "Tasks should be imported"
         #print res.data
-        assert "Tasks imported successfully!" in res.data, err_msg
+        assert "1 Task imported successfully!" in res.data, err_msg
         tasks = db.session.query(model.Task).filter_by(app_id=app.id).all()
         err_msg = "The imported task from EpiCollect is wrong"
         assert tasks[0].info['DeviceID'] == 23, err_msg
+
+        data = [dict(DeviceID=23), dict(DeviceID=24)]
+        html_request = FakeRequest(json.dumps(data), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
+        res = self.app.post(('/app/%s/tasks/import' % (app.short_name)),
+                            data={'epicollect_project': 'fakeproject',
+                                  'epicollect_form': 'fakeform',
+                                  'formtype': 'json'},
+                            follow_redirects=True)
+        app = db.session.query(model.App).first()
+        assert len(app.tasks) == 2, "There should be only 2 tasks"
+        n = 0
+        epi_tasks = [{u'DeviceID': 23}, {u'DeviceID': 24}]
+        for t in app.tasks:
+            assert t.info == epi_tasks[n], "The task info should be the same"
+            n += 1
 
     def test_74_task_settings_page(self):
         """Test WEB TASK SETTINGS page works"""
