@@ -23,9 +23,11 @@ import requests
 
 importers = []
 
+
 def register_importer(cls):
     importers.append(cls)
     return cls
+
 
 def enabled_importers(enabled_importer_names=None):
     if enabled_importer_names is None:
@@ -96,7 +98,7 @@ class BulkTaskImportForm(Form):
                 " that file"
             raise BulkImportException(gettext(msg), 'error')
         if ((not 'text/plain' in r.headers['content-type']) and
-            (not 'text/csv' in r.headers['content-type'])):
+                (not 'text/csv' in r.headers['content-type'])):
             msg = gettext("Oops! That file doesn't look like the right file.")
             raise BulkImportException(msg, 'error')
 
@@ -107,6 +109,7 @@ class BulkTaskImportForm(Form):
     @property
     def variants(self):
         return [self.template_id]
+
 
 @register_importer
 class BulkTaskCSVImportForm(BulkTaskImportForm):
@@ -191,4 +194,3 @@ class BulkTaskEpiCollectPlusImportForm(BulkTaskImportForm):
         dataurl = self.get_data_url(form)
         r = requests.get(dataurl)
         return self.get_epicollect_data_from_request(r)
-
