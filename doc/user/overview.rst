@@ -180,6 +180,10 @@ available templates are the following:
     service. Once you have the public link, all you need in order to import the 
     tasks is to paste it in the input box of the section **From a CSV file**.
 
+.. note::
+    If you import again the same URL, only new records will be added to the
+    application.
+
 
 .. _`Image Pattern Recognition`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE&usp=sharing#gid=0
 .. _`Sound Pattern Recognition`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc#gid=0
@@ -246,6 +250,12 @@ project, you will have to follow the next steps:
 All the data points should be imported now in your application.
 
 .. _`EpiCollect`: http://plus.epicollect.net
+
+.. note::
+    EpiCollect projects will be gathering data mostly all the time, for this
+    reason, if you import again the same EpiCollect project, only **new data
+    points** will be imported. This feature will allow you to easily add new data
+    points to the PyBossa application without having to do anything special.
 
 Flushing all the tasks
 ~~~~~~~~~~~~~~~~~~~~~~

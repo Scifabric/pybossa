@@ -983,7 +983,7 @@ class TestWeb(web.Helper):
                             follow_redirects=True)
         task = db.session.query(model.Task).first()
         assert {u'Bar': u'2', u'Foo': u'1', u'Baz': u'3'} == task.info
-        assert "Tasks imported successfully!" in res.data
+        assert "1 Task imported successfully!" in res.data
 
     @patch('pybossa.view.importer.requests.get')
     def test_38_bulk_csv_import_with_column_name(self, Mock):
@@ -1001,7 +1001,23 @@ class TestWeb(web.Helper):
         task = db.session.query(model.Task).first()
         assert {u'Bar': u'2', u'Foo': u'1'} == task.info
         assert task.priority_0 == 3
-        assert "Tasks imported successfully!" in res.data
+        assert "1 Task imported successfully!" in res.data
+
+        # Check that only new items are imported
+        empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
+                                 {'content-type': 'text/plain'})
+        Mock.return_value = empty_file
+        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
+        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
+                                       'formtype': 'csv'},
+                            follow_redirects=True)
+        app = db.session.query(model.App).first()
+        assert len(app.tasks) == 2, "There should be only 2 tasks"
+        n = 0
+        csv_tasks = [{u'Foo': u'1', u'Bar': u'2'}, {u'Foo': u'4', u'Bar': u'5'}]
+        for t in app.tasks:
+            assert t.info == csv_tasks[n], "The task info should be the same"
+            n += 1
 
     def test_39_google_oauth_creation(self):
         """Test WEB Google OAuth creation of user works"""
@@ -1790,10 +1806,27 @@ class TestWeb(web.Helper):
 
         err_msg = "Tasks should be imported"
         #print res.data
-        assert "Tasks imported successfully!" in res.data, err_msg
+        assert "1 Task imported successfully!" in res.data, err_msg
         tasks = db.session.query(model.Task).filter_by(app_id=app.id).all()
         err_msg = "The imported task from EpiCollect is wrong"
         assert tasks[0].info['DeviceID'] == 23, err_msg
+
+        data = [dict(DeviceID=23), dict(DeviceID=24)]
+        html_request = FakeRequest(json.dumps(data), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
+        res = self.app.post(('/app/%s/tasks/import' % (app.short_name)),
+                            data={'epicollect_project': 'fakeproject',
+                                  'epicollect_form': 'fakeform',
+                                  'formtype': 'json'},
+                            follow_redirects=True)
+        app = db.session.query(model.App).first()
+        assert len(app.tasks) == 2, "There should be only 2 tasks"
+        n = 0
+        epi_tasks = [{u'DeviceID': 23}, {u'DeviceID': 24}]
+        for t in app.tasks:
+            assert t.info == epi_tasks[n], "The task info should be the same"
+            n += 1
 
     def test_74_task_settings_page(self):
         """Test WEB TASK SETTINGS page works"""

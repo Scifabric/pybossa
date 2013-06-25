@@ -3,6 +3,8 @@ python:
   - "2.6"
   - "2.7"
 env: PYBOSSA_SETTINGS='../settings_test.py'
+before_install:
+  - sudo apt-get update && sudo apt-get install swig
 install:
   - python setup.py install
 before_script:
