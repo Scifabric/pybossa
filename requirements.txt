@@ -20,4 +20,4 @@ pygeoip
 flask-babel
 beautifulsoup4
 python-memcached
-M2Crypto==dev
+M2Crypto==0.22.dev
