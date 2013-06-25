@@ -6,6 +6,7 @@ env: PYBOSSA_SETTINGS='../settings_test.py'
 install:
   - python setup.py install
 before_script:
+  - sudo apt-get update && sudo apt-get install swig
   - psql -c 'create database pybossa;' -U postgres
 script: nosetests
 notifications:
