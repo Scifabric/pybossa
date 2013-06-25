@@ -20,4 +20,4 @@ pygeoip
 flask-babel
 beautifulsoup4
 python-memcached
--e git+https://github.com/Hypernode/M2Crypto@53d5ac266cd40aeb45f53e485700409b8ff2191a#egg=M2Crypto-dev
+M2Crypto==dev
