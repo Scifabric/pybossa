@@ -16,7 +16,7 @@
 #import json
 #from flask import Blueprint, request, url_for, flash, redirect, abort
 #from flask import abort, request, make_response, current_app
-from sqlalchemy.sql import not_, text
+from sqlalchemy.sql import text
 import pybossa.model as model
 from pybossa.core import db
 import random
@@ -118,7 +118,10 @@ def get_random_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
     """Returns a random task for the user"""
     app = db.session.query(model.App).get(app_id)
     from random import choice
-    return choice(app.tasks)
+    if len(app.tasks) > 0:
+        return choice(app.tasks)
+    else:
+        return None
 
 
 def get_incremental_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
