@@ -687,13 +687,17 @@ def tutorial(short_name):
 @blueprint.route('/<short_name>/<int:task_id>/results.json')
 def export(short_name, task_id):
     """Return a file with all the TaskRuns for a give Task"""
-    app_by_shortname(short_name)
-    task = db.session.query(model.Task)\
-        .filter(model.Task.id == task_id)\
-        .first()
-
-    results = [tr.dictize() for tr in task.task_runs]
-    return Response(json.dumps(results), mimetype='application/json')
+    # Check if the app exists
+    app = app_by_shortname(short_name)
+    # Check if the task belongs to the app and exists
+    task = db.session.query(model.Task).filter_by(app_id=app.id).first()
+    if task:
+        taskruns = db.session.query(model.TaskRun).filter_by(task_id=task_id)\
+                             .filter_by(app_id=app.id).all()
+        results = [tr.dictize() for tr in taskruns]
+        return Response(json.dumps(results), mimetype='application/json')
+    else:
+        return abort(404)
 
 
 @blueprint.route('/<short_name>/tasks/')
