@@ -53,7 +53,7 @@ def oauth_authorized(resp):
     if resp is None:
         flash(u'You denied the request to sign in.', 'error')
         flash(u'Reason: ' + request.args['error_reason'] +
-              ' ' + request.arts['error_description'], 'error')
+              ' ' + request.args['error_description'], 'error')
         return redirect(next_url)
 
     # We have to store the oauth_token in the session to get the USER fields
