@@ -178,9 +178,9 @@ class UpdateProfileForm(Form):
         choices = []
         for locale in locales:
             if locale == 'en':
-                lang = lazy_gettext("English")
+                lang = gettext("English")
             if locale == 'es':
-                lang = lazy_gettext("Spanish")
+                lang = gettext("Spanish")
             choices.append((locale, lang))
         self.locale.choices = choices
 
