@@ -240,7 +240,7 @@ class TestCkanModule(object):
                 type, msg, status_code = out.args
                 assert "Server Error" in msg, msg
                 assert status_code == 500, "status_code should be 500"
-                assert type == "CKAN: package_show failed"
+                assert type == "CKAN: the remote site failed! package_show failed"
             # Now with a broken JSON item
             Mock.return_value = FakeRequest("simpletext", 200,
                                             {'content-type': 'text/html'})
@@ -315,7 +315,7 @@ class TestCkanModule(object):
                 type, msg, status_code = out.args
                 assert "Server Error" in msg, msg
                 assert 500 == status_code, status_code
-                assert "CKAN: package_create failed" == type, type
+                assert "CKAN: the remote site failed! package_create failed" == type, type
 
     @patch('pybossa.ckan.requests.post')
     def test_05_resource_create(self, Mock):
@@ -344,7 +344,7 @@ class TestCkanModule(object):
                 type, msg, status_code = out.args
                 assert "Server Error" in msg, msg
                 assert 500 == status_code, status_code
-                assert "CKAN: resource_create failed" == type, type
+                assert "CKAN: the remote site failed! resource_create failed" == type, type
 
     @patch('pybossa.ckan.requests.post')
     def test_05_datastore_create(self, Mock):
@@ -367,7 +367,7 @@ class TestCkanModule(object):
                 type, msg, status_code = out.args
                 assert "Server Error" in msg, err_msg
                 assert 500 == status_code, status_code
-                assert "CKAN: datastore_create failed" == type, type
+                assert "CKAN: the remote site failed! datastore_create failed" == type, type
 
     @patch('pybossa.ckan.requests.post')
     def test_06_datastore_upsert(self, Mock):
@@ -393,7 +393,7 @@ class TestCkanModule(object):
                 type, msg, status_code = out.args
                 assert "Server Error" in msg, msg
                 assert 500 == status_code, status_code
-                assert "CKAN: datastore_upsert failed" == type, type
+                assert "CKAN: the remote site failed! datastore_upsert failed" == type, type
 
     @patch('pybossa.ckan.requests.post')
     def test_07_datastore_delete(self, Mock):
@@ -416,7 +416,7 @@ class TestCkanModule(object):
                 type, msg, status_code = out.args
                 assert "Server Error" in msg, msg
                 assert 500 == status_code, status_code
-                assert "CKAN: datastore_delete failed" == type, type
+                assert "CKAN: the remote site failed! datastore_delete failed" == type, type
 
     @patch('pybossa.ckan.requests.post')
     def test_08_package_update(self, Mock):
@@ -428,16 +428,20 @@ class TestCkanModule(object):
             # Resource that exists
             app = model.App(short_name='urbanpark', name='Urban Parks')
             user = model.User(fullname='Daniel Lombrana Gonzalez')
-            out = self.ckan.package_update(app=app, user=user, url="http://something.com")
+            out = self.ckan.package_update(app=app, user=user,
+                                           url="http://something.com",
+                                           resources=self.pkg_json_found['result']['resources'])
             err_msg = "The package ID should be the same"
             assert out['id'] == self.package_id, err_msg
 
             # Check the exception
             Mock.return_value = self.server_error
             try:
-                self.ckan.package_update(app=app, user=user, url="http://something.com")
+                self.ckan.package_update(app=app, user=user,
+                                         url="http://something.com",
+                                         resources=self.pkg_json_found['result']['resources'])
             except Exception as out:
                 type, msg, status_code = out.args
                 assert "Server Error" in msg, msg
                 assert 500 == status_code, status_code
-                assert "CKAN: package_update failed" == type, type
+                assert "CKAN: the remote site failed! package_update failed" == type, type
