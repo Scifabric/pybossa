@@ -833,15 +833,15 @@ def export_to(short_name):
             return abort(404)
         return Response(gen_json(table), mimetype='application/json')
 
-    def create_ckan_datastores(ckan):
+    def create_ckan_datastore(ckan, table, package_id):
         tables = {"task": model.Task, "task_run": model.TaskRun}
-        resources = dict(task=None, task_run=None)
-        for k in tables.keys():
-            # Create the two table resources
-            resource = ckan.resource_create(name=k)
-            resources[k] = resource['result']
-            ckan.datastore_create(name=k, resource_id=resources[k]['id'])
-        return resources
+        new_resource = ckan.resource_create(name=table,
+                                            package_id=package_id)
+        ckan.datastore_create(name=table,
+                              resource_id=new_resource['result']['id'])
+        ckan.datastore_upsert(name=table,
+                              records=gen_json(tables[table]),
+                              resource_id=new_resource['result']['id'])
 
     def respond_ckan(ty):
         # First check if there is a package (dataset) in CKAN
@@ -858,24 +858,32 @@ def export_to(short_name):
                 raise e
             if package:
                 # Update the package
-                ckan.package_update(app=app, user=app.owner, url=app_url)
-                if len(package['resources']) == 0:
-                    resources = create_ckan_datastores(ckan)
-                    ckan.datastore_upsert(name=ty,
-                                          records=gen_json(tables[ty]),
-                                          resource_id=resources[ty]['id'])
-                else:
-                    ckan.datastore_delete(name=ty)
-                    ckan.datastore_create(name=ty)
-                    ckan.datastore_upsert(name=ty, records=gen_json(tables[ty]))
+                package = ckan.package_update(app=app, user=app.owner, url=app_url,
+                                              resources=package['resources'])
+                ckan.package = package
+                resource_found = False
+                print len(package['resources'])
+                for r in package['resources']:
+                    if r['name'] == ty:
+                        ckan.datastore_delete(name=ty, resource_id=r['id'])
+                        ckan.datastore_create(name=ty, resource_id=r['id'])
+                        ckan.datastore_upsert(name=ty,
+                                              records=gen_json(tables[ty]),
+                                              resource_id=r['id'])
+                        resource_found = True
+                        break
+                if not resource_found:
+                    create_ckan_datastore(ckan, ty, package['id'])
             else:
-                ckan.package_create(app=app, user=app.owner, url=app_url,
-                                    tags=current_app.config['BRAND'])
-                resources = create_ckan_datastores(ckan)
-                ckan.datastore_upsert(name=ty,
-                                      records=gen_json(tables[ty]),
-                                      resource_id=resources[ty]['id'])
-
+                package = ckan.package_create(app=app, user=app.owner, url=app_url)
+                create_ckan_datastore(ckan, ty, package['id'])
+                #new_resource = ckan.resource_create(name=ty,
+                #                                    package_id=package['id'])
+                #ckan.datastore_create(name=ty,
+                #                      resource_id=new_resource['result']['id'])
+                #ckan.datastore_upsert(name=ty,
+                #                     records=gen_json(tables[ty]),
+                #                     resource_id=new_resource['result']['id'])
             flash(msg, 'success')
             return respond()
         except requests.exceptions.ConnectionError:
@@ -884,8 +892,8 @@ def export_to(short_name):
                 flash(msg, 'danger')
         except Exception as inst:
             if len(inst.args) == 3:
-                type, msg, status_code = inst.args
-                msg = ("Error: %s with status code: %s" % (type, status_code))
+                t, msg, status_code = inst.args
+                msg = ("Error: %s with status code: %s" % (t, status_code))
             else:
                 msg = ("Error: %s" % inst.args[0])
             current_app.logger.error(msg)
