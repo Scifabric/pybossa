@@ -64,7 +64,7 @@ def index():
                AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
                AND DATE(task_run.finish_time) <= NOW()
                GROUP BY app.id
-               ORDER BY n_answers DESC;''')
+               ORDER BY n_answers DESC LIMIT 5;''')
 
     results = db.engine.execute(sql, limit=5)
     top5_apps_24_hours = []
@@ -80,7 +80,7 @@ def index():
                AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
                AND DATE(task_run.finish_time) <= NOW()
                GROUP BY "user".id
-               ORDER BY n_answers DESC;''')
+               ORDER BY n_answers DESC LIMIT 5;''')
 
     results = db.engine.execute(sql, limit=5)
     top5_users_24_hours = []
