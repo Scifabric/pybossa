@@ -690,7 +690,8 @@ def export(short_name, task_id):
     # Check if the app exists
     app = app_by_shortname(short_name)
     # Check if the task belongs to the app and exists
-    task = db.session.query(model.Task).filter_by(app_id=app.id).first()
+    task = db.session.query(model.Task).filter_by(app_id=app.id)\
+                                       .filter_by(id=task_id).first()
     if task:
         taskruns = db.session.query(model.TaskRun).filter_by(task_id=task_id)\
                              .filter_by(app_id=app.id).all()
