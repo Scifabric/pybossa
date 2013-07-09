@@ -27,7 +27,7 @@ from datetime import timedelta
 
 
 # Cache Stats for 24 hours
-STATS_TIMEOUT = 24*60*60
+STATS_TIMEOUT = 24 * 60 * 60
 
 
 @cache.memoize(timeout=STATS_TIMEOUT)
