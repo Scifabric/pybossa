@@ -87,14 +87,13 @@ def stats_users(app_id):
     for row in results:
         users['n_auth'] = row[0]
 
-    # Get Anonymous Users
+    # Get all Anonymous Users
     sql = text('''SELECT task_run.user_ip AS user_ip,
                COUNT(task_run.id) as n_tasks FROM task_run
                WHERE task_run.user_ip IS NOT NULL AND
                task_run.user_id IS NULL AND
                task_run.app_id=:app_id
-               GROUP BY task_run.user_ip ORDER BY n_tasks DESC
-               LIMIT 5;''')
+               GROUP BY task_run.user_ip ORDER BY n_tasks DESC;''')
     results = db.engine.execute(sql, app_id=app_id)
 
     for row in results:
@@ -346,7 +345,7 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
             name = row.name
         top5_auth.append(dict(name=name, fullname=fullname, tasks=u[1]))
 
-    userAnonStats['top5'] = top5_anon
+    userAnonStats['top5'] = top5_anon[0:5]
     userAnonStats['locs'] = loc_anon
     userAuthStats['top5'] = top5_auth
 
@@ -388,4 +387,5 @@ def get_stats(app_id, geo=False):
                                      max_hours, max_hours_anon, max_hours_auth)
 
     users_stats = stats_format_users(app_id, users, anon_users, auth_users, geo)
+
     return dates_stats, hours_stats, users_stats
