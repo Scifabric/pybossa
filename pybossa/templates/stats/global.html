@@ -38,7 +38,7 @@ h3 > small {
                             <h4><i class="icon-group"></i> {{ _('Top 5 Users in the last 24 hours') }}</h4>
                                 <ol>
                                 {% for user in top5_users_24_hours %}
-                                <li>{{user.fullname}} {{ _('with') }} {{user.n_answers}} {{ _('contributed answers') }}</li>
+                                <li><a href="{{url_for('account.public_profile', name=user.name)}}" >{{user.fullname}}</a> {{ _('with') }} {{user.n_answers}} {{ _('contributed answers') }}</li>
                                 {% endfor %}
                                 </ol>
                             {% else %}
