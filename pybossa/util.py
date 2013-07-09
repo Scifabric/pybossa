@@ -294,8 +294,6 @@ class UnicodeWriter:
 def get_user_signup_method(user):
     """Return which OAuth sign up method the user used"""
     msg = u'Sorry, there is already an account with the same e-mail.'
-    print type(user.info)
-    print user.info
     # Google
     if user.info.get('google_token'):
         msg += " <strong>It seems like you signed up with your Google account.</strong>"

@@ -70,9 +70,10 @@ def manage_user(access_token, user_data, next_url):
                   .filter_by(email_addr=user_data['email'])\
                   .first()
 
-        if user is None and email is None:
+        if ((user is None) and (email is None)):
             user = model.User(fullname=user_data['name'],
-                              name=user_data['name'],
+                              name=user_data['name'].encode('ascii', 'ignore')
+                                                    .lower().replace(" ", ""),
                               email_addr=user_data['email'],
                               google_user_id=user_data['id'],
                               info=info)
@@ -80,6 +81,8 @@ def manage_user(access_token, user_data, next_url):
             db.session.commit()
             return user
         else:
+            if user:
+                return user
             return None
     else:
         return user
