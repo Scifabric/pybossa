@@ -47,16 +47,16 @@
                         {% endif %}
                         <div class="span4">
                         {% if task_pct >= 100 %}
-                            <a class="btn btn-success" href="{{ url_for('app.export', 
+                            <a id="fulldownload" class="btn btn-success" href="{{ url_for('app.export', 
                                 short_name=app.short_name,
                                 task_id=t.id) }}"><i class="icon-cloud-download"></i> {{_('Download Task Results')}}</a>
                         {% elif task_pct > 0 and task_pct < 100 %}
-                            <a class="btn btn-info" href="{{ url_for('app.export', 
+                            <a id="partialdownload" class="btn btn-info" href="{{ url_for('app.export', 
                                 short_name=app.short_name,
                                 task_id=t.id) }}"><i class="icon-cloud-download"></i> {{_('Download Partial results')}}</a>
 
                          {% else %}
-                            <a class="btn btn-info disabled" href="#"><i class="icon-cloud-download"></i> {{_('Nothing to download yet')}}</a>
+                            <a id="nothingtodownload" class="btn btn-info disabled" href="#"><i class="icon-cloud-download"></i> {{_('Nothing to download yet')}}</a>
                          {% endif %}
                         </div>
                 </div>

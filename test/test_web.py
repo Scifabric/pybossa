@@ -541,7 +541,30 @@ class TestWeb(web.Helper):
         db.session.add(task)
         db.session.commit()
 
-        for i in range(10):
+        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
+                           follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        assert "Sample App" in res.data, res.data
+        assert '0 of 10' in res.data, res.data
+        err_msg = "Download button should be disabled"
+        assert dom.find(id='nothingtodownload') is not None, err_msg
+
+        for i in range(5):
+            task_run = model.TaskRun(app_id=app.id, task_id=1,
+                                     info={'answer': 1})
+            db.session.add(task_run)
+            db.session.commit()
+            self.app.get('api/app/%s/newtask' % app.id)
+
+        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
+                           follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        assert "Sample App" in res.data, res.data
+        assert '5 of 10' in res.data, res.data
+        err_msg = "Download Partial results button should be shown"
+        assert dom.find(id='partialdownload') is not None, err_msg
+
+        for i in range(5):
             task_run = model.TaskRun(app_id=app.id, task_id=1,
                                      info={'answer': 1})
             db.session.add(task_run)
@@ -558,7 +581,9 @@ class TestWeb(web.Helper):
         msg = 'Task <span class="label label-success">#1</span>'
         assert msg in res.data, res.data
         assert '10 of 10' in res.data, res.data
-        assert 'Download results' in res.data, res.data
+        dom = BeautifulSoup(res.data)
+        err_msg = "Download Full results button should be shown"
+        assert dom.find(id='fulldownload') is not None, err_msg
 
     def test_17_export_task_runs(self):
         """Test WEB TaskRun export works"""
