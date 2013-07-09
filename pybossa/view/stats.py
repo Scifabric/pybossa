@@ -64,7 +64,7 @@ def index():
                AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
                AND DATE(task_run.finish_time) <= NOW()
                GROUP BY app.id
-               ORDER BY n_answers DESC;''')
+               ORDER BY n_answers DESC LIMIT 5;''')
 
     results = db.engine.execute(sql, limit=5)
     top5_apps_24_hours = []
@@ -74,18 +74,19 @@ def index():
         top5_apps_24_hours.append(tmp)
 
     # Top 5 Most active users in last 24 hours
-    sql = text('''SELECT "user".id, "user".fullname,
+    sql = text('''SELECT "user".id, "user".fullname, "user".name,
                COUNT(task_run.app_id) AS n_answers FROM "user", task_run
                WHERE "user".id=task_run.user_id
                AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
                AND DATE(task_run.finish_time) <= NOW()
                GROUP BY "user".id
-               ORDER BY n_answers DESC;''')
+               ORDER BY n_answers DESC LIMIT 5;''')
 
     results = db.engine.execute(sql, limit=5)
     top5_users_24_hours = []
     for row in results:
         user = dict(id=row.id, fullname=row.fullname,
+                    name=row.name,
                     n_answers=row.n_answers)
         top5_users_24_hours.append(user)
 
