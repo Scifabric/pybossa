@@ -15,6 +15,9 @@
     <div id="taskcompleted" class="alert alert-info" style="display:none;">
         <strong>The task has been completed!</strong> Thanks a lot!</strong>
 </div>
+    <div id="loading" class="alert alert-info">
+        <strong>Loading the PDF file...</strong>
+</div>
 
 <div id="finish" class="alert alert-success" style="display:none;">
     <strong>Congratulations!</strong> You have participated in all available tasks!</strong>
@@ -211,6 +214,7 @@ pybossa.presentTask(function(task, deferred){
             renderPage(task);
             $("#question h1").text(task.info.question);
             $("#task-id").text(task.id);
+            $("#loading").hide();
             $(".btn-zoom").off('click').on('click', function(evt){
                 console.log($(evt.target).attr("value"));
                 zoom(task, parseInt($(evt.target).attr("value")));
