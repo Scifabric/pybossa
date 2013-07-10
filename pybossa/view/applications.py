@@ -162,8 +162,6 @@ def index(page):
 
 def app_index(page, lookup, category, fallback, use_count):
     """Show apps of app_type"""
-    if not require.app.read():
-        abort(403)
 
     per_page = 5
 
@@ -275,85 +273,97 @@ def new():
 @blueprint.route('/<short_name>/tasks/taskpresentereditor', methods=['GET', 'POST'])
 @login_required
 def task_presenter_editor(short_name):
-    errors = False
-    app = app_by_shortname(short_name)
+    try:
+        errors = False
+        app = app_by_shortname(short_name)
 
-    title = app_title(app, "Task Presenter Editor")
-    if not require.app.update(app):
-        abort(403)
+        title = app_title(app, "Task Presenter Editor")
+        require.app.read(app)
+        require.app.update(app)
 
-    form = TaskPresenterForm(request.form)
-    if request.method == 'POST' and form.validate():
-        app.info['task_presenter'] = form.editor.data
-        db.session.add(app)
-        db.session.commit()
-        msg_1 = gettext('Task presenter added!')
-        flash('<i class="icon-ok"></i> ' + msg_1, 'success')
-        return redirect(url_for('.tasks', short_name=app.short_name))
+        form = TaskPresenterForm(request.form)
+        if request.method == 'POST' and form.validate():
+            app.info['task_presenter'] = form.editor.data
+            db.session.add(app)
+            db.session.commit()
+            msg_1 = gettext('Task presenter added!')
+            flash('<i class="icon-ok"></i> ' + msg_1, 'success')
+            return redirect(url_for('.tasks', short_name=app.short_name))
 
-    if request.method == 'POST' and not form.validate():
-        flash(gettext('Please correct the errors'), 'error')
-        errors = True
+        if request.method == 'POST' and not form.validate():
+            flash(gettext('Please correct the errors'), 'error')
+            errors = True
 
-    if request.method != 'GET':
-        return
+        if request.method != 'GET':
+            return
 
-    if app.info.get('task_presenter'):
-        form.editor.data = app.info['task_presenter']
-    else:
-        if not request.args.get('template'):
-            msg_1 = gettext('<strong>Note</strong> You will need to upload the'
-                            ' tasks using the')
-            msg_2 = gettext('CSV importer')
-            msg_3 = gettext(' or download the app bundle and run the'
-                            ' <strong>createTasks.py</strong> script in your'
-                            ' computer')
-            url = '<a href="%s"> %s</a>' % (url_for('app.import_task',
-                                                    short_name=app.short_name), msg_2)
-            msg = msg_1 + url + msg_3
-            flash(msg, 'info')
+        if app.info.get('task_presenter'):
+            form.editor.data = app.info['task_presenter']
+        else:
+            if not request.args.get('template'):
+                msg_1 = gettext('<strong>Note</strong> You will need to upload the'
+                                ' tasks using the')
+                msg_2 = gettext('CSV importer')
+                msg_3 = gettext(' or download the app bundle and run the'
+                                ' <strong>createTasks.py</strong> script in your'
+                                ' computer')
+                url = '<a href="%s"> %s</a>' % (url_for('app.import_task',
+                                                        short_name=app.short_name), msg_2)
+                msg = msg_1 + url + msg_3
+                flash(msg, 'info')
 
-            wrap = lambda i: "applications/presenters/%s.html" % i
-            pres_tmpls = map(wrap, presenter_module.presenters)
+                wrap = lambda i: "applications/presenters/%s.html" % i
+                pres_tmpls = map(wrap, presenter_module.presenters)
 
-            return render_template(
-                'applications/task_presenter_options.html',
-                title=title,
-                app=app,
-                presenters=pres_tmpls)
+                return render_template(
+                    'applications/task_presenter_options.html',
+                    title=title,
+                    app=app,
+                    presenters=pres_tmpls)
 
-        tmpl_uri = "applications/snippets/%s.html" \
-            % request.args.get('template')
-        tmpl = render_template(tmpl_uri, app=app)
-        form.editor.data = tmpl
-        msg = 'Your code will be <em>automagically</em> rendered in \
-                      the <strong>preview section</strong>. Click in the \
-                      preview button!'
-        flash(gettext(msg), 'info')
-    return render_template('applications/task_presenter_editor.html',
-                           title=title,
-                           form=form,
-                           app=app,
-                           errors=errors)
+            tmpl_uri = "applications/snippets/%s.html" \
+                % request.args.get('template')
+            tmpl = render_template(tmpl_uri, app=app)
+            form.editor.data = tmpl
+            msg = 'Your code will be <em>automagically</em> rendered in \
+                          the <strong>preview section</strong>. Click in the \
+                          preview button!'
+            flash(gettext(msg), 'info')
+        return render_template('applications/task_presenter_editor.html',
+                               title=title,
+                               form=form,
+                               app=app,
+                               errors=errors)
+    except HTTPException as e:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise e
 
 
 @blueprint.route('/<short_name>/delete', methods=['GET', 'POST'])
 @login_required
 def delete(short_name):
     app = app_by_shortname(short_name)
-    title = app_title(app, "Delete")
-    if not require.app.delete(app):
-        abort(403)
-    if request.method == 'GET':
-        return render_template('/applications/delete.html',
-                               title=title,
-                               app=app)
-    # Clean cache
-    cached_apps.clean(app.id)
-    db.session.delete(app)
-    db.session.commit()
-    flash(gettext('Application deleted!'), 'success')
-    return redirect(url_for('account.profile'))
+    try:
+        title = app_title(app, "Delete")
+        require.app.read(app)
+        require.app.delete(app)
+        if request.method == 'GET':
+            return render_template('/applications/delete.html',
+                                   title=title,
+                                   app=app)
+        # Clean cache
+        cached_apps.clean(app.id)
+        db.session.delete(app)
+        db.session.commit()
+        flash(gettext('Application deleted!'), 'success')
+        return redirect(url_for('account.profile'))
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
 
 @blueprint.route('/<short_name>/update', methods=['GET', 'POST'])
@@ -396,37 +406,43 @@ def update(short_name):
         return redirect(url_for('.details',
                                 short_name=new_application.short_name))
 
-    if not require.app.update(app):
-        abort(403)
+    try:
+        require.app.read(app)
+        require.app.update(app)
 
-    title = app_title(app, "Update")
-    if request.method == 'GET':
-        form = AppForm(obj=app)
-        categories = db.session.query(model.Category).all()
-        form.category_id.choices = [(c.id, c.name) for c in categories]
-        if app.category_id is None:
-            app.category_id = categories[0].id
-        form.populate_obj(app)
-        if app.info.get('thumbnail'):
-            form.thumbnail.data = app.info['thumbnail']
-        #if app.info.get('sched'):
-        #    for s in form.sched.choices:
-        #        if app.info['sched'] == s[0]:
-        #            form.sched.data = s[0]
-        #            break
+        title = app_title(app, "Update")
+        if request.method == 'GET':
+            form = AppForm(obj=app)
+            categories = db.session.query(model.Category).all()
+            form.category_id.choices = [(c.id, c.name) for c in categories]
+            if app.category_id is None:
+                app.category_id = categories[0].id
+            form.populate_obj(app)
+            if app.info.get('thumbnail'):
+                form.thumbnail.data = app.info['thumbnail']
+            #if app.info.get('sched'):
+            #    for s in form.sched.choices:
+            #        if app.info['sched'] == s[0]:
+            #            form.sched.data = s[0]
+            #            break
 
-    if request.method == 'POST':
-        form = AppForm(request.form)
-        categories = cached_cat.get_all()
-        form.category_id.choices = [(c.id, c.name) for c in categories]
-        if form.validate():
-            return handle_valid_form(form)
-        flash(gettext('Please correct the errors'), 'error')
+        if request.method == 'POST':
+            form = AppForm(request.form)
+            categories = cached_cat.get_all()
+            form.category_id.choices = [(c.id, c.name) for c in categories]
+            if form.validate():
+                return handle_valid_form(form)
+            flash(gettext('Please correct the errors'), 'error')
 
-    return render_template('/applications/update.html',
-                           form=form,
-                           title=title,
-                           app=app)
+        return render_template('/applications/update.html',
+                               form=form,
+                               title=title,
+                               app=app)
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
 
 @blueprint.route('/<short_name>/')
@@ -435,14 +451,15 @@ def details(short_name):
 
     try:
         require.app.read(app)
-        require.app.update(app)
-        template = '/applications/actions.html'
+        template = '/applications/app.html'
     except HTTPException:
         if app.hidden:
-            app = None
-        template = '/applications/app.html'
+            raise abort(403)
+        else:
+            raise
 
     title = app_title(app, None)
+
     template_args = {"app": app, "title": title}
     try:
         if current_app.config.get('CKAN_URL'):
@@ -477,7 +494,10 @@ def settings(short_name):
                                app=app,
                                title=title)
     except HTTPException:
-        return abort(403)
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
 
 def compute_importer_variant_pairs(forms):
@@ -505,8 +525,15 @@ def import_task(short_name):
     title = app_title(app, "Import Tasks")
     loading_text = gettext("Importing tasks, this may take a while, wait...")
     template_args = {"title": title, "app": app, "loading_text": loading_text}
-    if not require.app.update(app):
-        return abort(403)
+    try:
+        require.app.read(app)
+        require.app.update(app)
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
+
     data_handlers = dict([
         (i.template_id, (i.form_detector, i(request.form), i.form_id))
         for i in importer.importers])
@@ -590,6 +617,13 @@ def _import_task(app, handler, form, render_forms):
 def task_presenter(short_name, task_id):
     app = app_by_shortname(short_name)
     task = Task.query.filter_by(id=task_id).first_or_404()
+    try:
+        require.app.read(app)
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
     if current_user.is_anonymous():
         if not app.allow_anonymous_contributors:
@@ -649,6 +683,13 @@ def presenter(short_name):
     app = app_by_shortname(short_name)
     title = app_title(app, "Contribute")
     template_args = {"app": app, "title": title}
+    try:
+        require.app.read(app)
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
     if not app.allow_anonymous_contributors and current_user.is_anonymous():
         msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
@@ -681,6 +722,13 @@ def presenter(short_name):
 def tutorial(short_name):
     app = app_by_shortname(short_name)
     title = app_title(app, "Tutorial")
+    try:
+        require.app.read(app)
+    except HTTPException:
+        if app.hidden:
+            return abort(403)
+        else:
+            raise
     return render_template('/applications/tutorial.html', title=title, app=app)
 
 
@@ -689,6 +737,14 @@ def export(short_name, task_id):
     """Return a file with all the TaskRuns for a give Task"""
     # Check if the app exists
     app = app_by_shortname(short_name)
+    try:
+        require.app.read(app)
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
+
     # Check if the task belongs to the app and exists
     task = db.session.query(model.Task).filter_by(app_id=app.id)\
                                        .filter_by(id=task_id).first()
@@ -711,13 +767,10 @@ def tasks(short_name):
                                title=title,
                                app=app)
     except HTTPException:
-        if not app.hidden:
-            return render_template('/applications/tasks.html',
-                                   title="Application not found",
-                                   app=None)
-        return render_template('/applications/tasks.html',
-                               title="Application not found",
-                               app=None)
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
 
 @blueprint.route('/<short_name>/tasks/browse', defaults={'page': 1})
@@ -750,14 +803,12 @@ def tasks_browse(short_name, page):
 
     try:
         require.app.read(app)
-        require.app.update(app)
         return respond()
     except HTTPException:
-        if not app.hidden:
-            return respond()
-        return render_template('/applications/tasks.html',
-                               title="Application not found",
-                               app=None)
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
 
 @blueprint.route('/<short_name>/tasks/delete', methods=['GET', 'POST'])
@@ -790,6 +841,14 @@ def export_to(short_name):
     app = app_by_shortname(short_name)
     title = app_title(app, gettext("Export"))
     loading_text = gettext("Exporting data..., this may take a while")
+
+    try:
+        require.app.read(app)
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
     def respond():
         return render_template('/applications/export.html',
@@ -963,6 +1022,14 @@ def show_stats(short_name):
     app = app_by_shortname(short_name)
     title = app_title(app, "Statistics")
 
+    try:
+        require.app.read(app)
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
+
     if not (len(app.tasks) > 0 and len(app.task_runs) > 0):
         return render_template('/applications/non_stats.html',
                                title=title,
@@ -1039,8 +1106,11 @@ def task_n_answers(short_name):
                                    title=title,
                                    form=form,
                                    app=app)
-    except:
-        return abort(403)
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
 
 @blueprint.route('/<short_name>/tasks/scheduler', methods=['GET', 'POST'])
@@ -1058,8 +1128,11 @@ def task_scheduler(short_name):
     try:
         require.app.read(app)
         require.app.update(app)
-    except:
-        return abort(403)
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
     if request.method == 'GET':
         if app.info.get('sched'):
@@ -1098,8 +1171,11 @@ def task_priority(short_name):
     try:
         require.app.read(app)
         require.app.update(app)
-    except:
-        return abort(403)
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
     if request.method == 'GET':
         return respond()
