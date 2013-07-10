@@ -9,12 +9,15 @@ def read(app=None):
     if app.hidden:
         if current_user.is_anonymous():
             return False
-        if current_user.is_authenticated() and app.owner.id != current_user.id:
-            return False
-        if current_user.is_authenticated() and not current_user.admin:
-            return False
-        if current_user.is_authenticated() and app.owner.id == current_user.id:
-            return True
+        if current_user.is_authenticated():
+            if current_user.admin:
+                return True
+            else:
+                return False
+            if current_user.id == app.owner.id:
+                return True
+            else:
+                return False
     return True
 
 
