@@ -58,11 +58,6 @@ def manage_user(access_token, user_data, next_url):
              .filter_by(google_user_id=user_data['id'])\
              .first()
 
-    # Update the name to fit with new paradigm to avoid UTF8 problems
-    if type(user.name) == unicode or ' ' in user.name:
-        user.name = user.name.encode('ascii', 'ignore').lower().replace(" ", "")
-        db.session.add(user)
-        db.session.commit()
 
     # user never signed on
     if user is None:
@@ -90,6 +85,11 @@ def manage_user(access_token, user_data, next_url):
         else:
             return None
     else:
+        # Update the name to fit with new paradigm to avoid UTF8 problems
+        if type(user.name) == unicode or ' ' in user.name:
+            user.name = user.name.encode('ascii', 'ignore').lower().replace(" ", "")
+            db.session.add(user)
+            db.session.commit()
         return user
 
 
