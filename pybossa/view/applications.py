@@ -347,19 +347,25 @@ def task_presenter_editor(short_name):
 @login_required
 def delete(short_name):
     app = app_by_shortname(short_name)
-    title = app_title(app, "Delete")
-    if not require.app.delete(app):
-        abort(403)
-    if request.method == 'GET':
-        return render_template('/applications/delete.html',
-                               title=title,
-                               app=app)
-    # Clean cache
-    cached_apps.clean(app.id)
-    db.session.delete(app)
-    db.session.commit()
-    flash(gettext('Application deleted!'), 'success')
-    return redirect(url_for('account.profile'))
+    try:
+        title = app_title(app, "Delete")
+        require.app.read(app)
+        require.app.delete(app)
+        if request.method == 'GET':
+            return render_template('/applications/delete.html',
+                                   title=title,
+                                   app=app)
+        # Clean cache
+        cached_apps.clean(app.id)
+        db.session.delete(app)
+        db.session.commit()
+        flash(gettext('Application deleted!'), 'success')
+        return redirect(url_for('account.profile'))
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
 
 @blueprint.route('/<short_name>/update', methods=['GET', 'POST'])
@@ -401,6 +407,7 @@ def update(short_name):
         flash(gettext('Application updated!'), 'success')
         return redirect(url_for('.details',
                                 short_name=new_application.short_name))
+
 
     if not require.app.update(app):
         abort(403)
