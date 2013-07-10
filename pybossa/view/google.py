@@ -58,14 +58,13 @@ def manage_user(access_token, user_data, next_url):
              .filter_by(google_user_id=user_data['id'])\
              .first()
 
-
     # user never signed on
     if user is None:
         google_token = dict(oauth_token=access_token)
         info = dict(google_token=google_token)
         user = db.session.query(model.User)\
-                 .filter_by(fullname=user_data['name'].encode('ascii', 'ignore')
-                                                      .lower().replace(" ", ""))\
+                 .filter_by(name=user_data['name'].encode('ascii', 'ignore')
+                                                  .lower().replace(" ", ""))\
                  .first()
 
         email = db.session.query(model.User)\
@@ -128,7 +127,8 @@ def oauth_authorized(resp):
                  .first()
         if user is None:
             user = db.session.query(model.User)\
-                     .filter_by(email_addr=user_data['email'])\
+                     .filter_by(name=user_data['name'].encode('ascii', 'ignore')
+                                                      .lower().replace(' ', ''))\
                      .first()
 
         msg, method = get_user_signup_method(user)
