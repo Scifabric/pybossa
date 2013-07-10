@@ -804,14 +804,12 @@ def tasks_browse(short_name, page):
 
     try:
         require.app.read(app)
-        require.app.update(app)
         return respond()
     except HTTPException:
-        if not app.hidden:
-            return respond()
-        return render_template('/applications/tasks.html',
-                               title="Application not found",
-                               app=None)
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
 
 @blueprint.route('/<short_name>/tasks/delete', methods=['GET', 'POST'])
