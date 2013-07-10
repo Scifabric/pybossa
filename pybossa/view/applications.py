@@ -723,6 +723,13 @@ def presenter(short_name):
 def tutorial(short_name):
     app = app_by_shortname(short_name)
     title = app_title(app, "Tutorial")
+    try:
+        require.app.read(app)
+    except HTTPException:
+        if app.hidden:
+            return abort(403)
+        else:
+            raise
     return render_template('/applications/tutorial.html', title=title, app=app)
 
 
