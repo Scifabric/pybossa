@@ -20,6 +20,8 @@ def read(app=None):
                 return False
         else:
             return False
+    else:
+        return True
 
 
 def update(app):
