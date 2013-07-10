@@ -105,7 +105,7 @@ Returns domain object.::
 
 .. note::
     Some GET actions may require to authenticate & authorize the request. Use the
-    ?api_key arguement to pass the **API-KEY**.
+    ?api_key argument to pass the **API-KEY**.
 
 If the object is not found you will get a JSON object like this:
 
@@ -156,7 +156,7 @@ Create a domain object. Returns created domain object.::
 
 .. note::
     Some POST actions may require to authenticate & authorize the request. Use the
-    ?api_key arguement to pass the **API-KEY**.
+    ?api_key argument to pass the **API-KEY**.
 
 If an error occurs, the action will return a JSON object like this:
 
@@ -182,7 +182,7 @@ Update a domain object::
 
 .. note::
     Some PUT actions may require to authenticate & authorize the request. Use the
-    ?api_key arguement to pass the **API-KEY**.
+    ?api_key argument to pass the **API-KEY**.
 
 If an error occurs, the action will return a JSON object like this:
 
@@ -208,7 +208,7 @@ Delete a domain object::
 
 .. note::
     Some DELETE actions may require to authenticate & authorize the request. Use the
-    ?api_key arguement to pass the **API-KEY**.
+    ?api_key argument to pass the **API-KEY**.
 
 If an error occurs, the action will return a JSON object like this:
 
