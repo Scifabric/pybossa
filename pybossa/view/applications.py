@@ -684,6 +684,13 @@ def presenter(short_name):
     app = app_by_shortname(short_name)
     title = app_title(app, "Contribute")
     template_args = {"app": app, "title": title}
+    try:
+        require.app.read(app)
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
     if not app.allow_anonymous_contributors and current_user.is_anonymous():
         msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
