@@ -1129,8 +1129,11 @@ def task_scheduler(short_name):
     try:
         require.app.read(app)
         require.app.update(app)
-    except:
-        return abort(403)
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
     if request.method == 'GET':
         if app.info.get('sched'):
@@ -1169,8 +1172,11 @@ def task_priority(short_name):
     try:
         require.app.read(app)
         require.app.update(app)
-    except:
-        return abort(403)
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
     if request.method == 'GET':
         return respond()
