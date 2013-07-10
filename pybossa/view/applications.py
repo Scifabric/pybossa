@@ -1023,6 +1023,14 @@ def show_stats(short_name):
     app = app_by_shortname(short_name)
     title = app_title(app, "Statistics")
 
+    try:
+        require.app.read(app)
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
+
     if not (len(app.tasks) > 0 and len(app.task_runs) > 0):
         return render_template('/applications/non_stats.html',
                                title=title,
