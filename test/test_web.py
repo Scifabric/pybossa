@@ -1158,9 +1158,9 @@ class TestWeb(web.Helper):
         self.register()
         self.signout()
 
-        from pybossa.view import google
-        response_user = google.manage_user(fake_response['access_token'],
-                                           fake_user, None)
+        from pybossa.view import facebook
+        response_user = facebook.manage_user(fake_response['access_token'],
+                                             fake_user, None)
 
         assert response_user is None, response_user
 
