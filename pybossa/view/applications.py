@@ -497,7 +497,10 @@ def settings(short_name):
                                app=app,
                                title=title)
     except HTTPException:
-        return abort(403)
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
 
 def compute_importer_variant_pairs(forms):
