@@ -408,38 +408,43 @@ def update(short_name):
         return redirect(url_for('.details',
                                 short_name=new_application.short_name))
 
+    try:
+        require.app.read(app)
+        require.app.update(app)
 
-    if not require.app.update(app):
-        abort(403)
+        title = app_title(app, "Update")
+        if request.method == 'GET':
+            form = AppForm(obj=app)
+            categories = db.session.query(model.Category).all()
+            form.category_id.choices = [(c.id, c.name) for c in categories]
+            if app.category_id is None:
+                app.category_id = categories[0].id
+            form.populate_obj(app)
+            if app.info.get('thumbnail'):
+                form.thumbnail.data = app.info['thumbnail']
+            #if app.info.get('sched'):
+            #    for s in form.sched.choices:
+            #        if app.info['sched'] == s[0]:
+            #            form.sched.data = s[0]
+            #            break
 
-    title = app_title(app, "Update")
-    if request.method == 'GET':
-        form = AppForm(obj=app)
-        categories = db.session.query(model.Category).all()
-        form.category_id.choices = [(c.id, c.name) for c in categories]
-        if app.category_id is None:
-            app.category_id = categories[0].id
-        form.populate_obj(app)
-        if app.info.get('thumbnail'):
-            form.thumbnail.data = app.info['thumbnail']
-        #if app.info.get('sched'):
-        #    for s in form.sched.choices:
-        #        if app.info['sched'] == s[0]:
-        #            form.sched.data = s[0]
-        #            break
+        if request.method == 'POST':
+            form = AppForm(request.form)
+            categories = cached_cat.get_all()
+            form.category_id.choices = [(c.id, c.name) for c in categories]
+            if form.validate():
+                return handle_valid_form(form)
+            flash(gettext('Please correct the errors'), 'error')
 
-    if request.method == 'POST':
-        form = AppForm(request.form)
-        categories = cached_cat.get_all()
-        form.category_id.choices = [(c.id, c.name) for c in categories]
-        if form.validate():
-            return handle_valid_form(form)
-        flash(gettext('Please correct the errors'), 'error')
-
-    return render_template('/applications/update.html',
-                           form=form,
-                           title=title,
-                           app=app)
+        return render_template('/applications/update.html',
+                               form=form,
+                               title=title,
+                               app=app)
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
 
 @blueprint.route('/<short_name>/')
