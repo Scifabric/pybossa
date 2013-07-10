@@ -6,7 +6,9 @@ def create(app=None):
 
 
 def read(app=None):
-    if app.hidden:
+    if app is None:
+        return True
+    elif app.hidden:
         if current_user.is_authenticated():
             if current_user.admin:
                 return True
@@ -18,7 +20,6 @@ def read(app=None):
                 return False
         else:
             return False
-    return True
 
 
 def update(app):
