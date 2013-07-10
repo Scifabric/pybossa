@@ -142,7 +142,6 @@ class TestWeb(web.Helper):
         # Real user but wrong password or username
         msg = "Ooops, Incorrect email/password"
         res = self.signin(password='wrongpassword')
-        print res.data
         assert msg in res.data, res
 
         res = self.signin()
@@ -838,7 +837,6 @@ class TestWeb(web.Helper):
         #self.register()
         # First time accessing the app should redirect me to the tutorial
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
-        print res.data
         err_msg = "There should be some tutorial for the application"
         assert "some help" in res.data, err_msg
         # Second time should give me a task, and not the tutorial
@@ -945,7 +943,6 @@ class TestWeb(web.Helper):
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv'},
                             follow_redirects=True)
-        print res.data
         msg = "Oops! It looks like you don't have permission to access that file"
         assert msg in res.data
 
@@ -1383,8 +1380,6 @@ class TestWeb(web.Helper):
 
         self.update_application()
         app = db.session.query(model.App).first()
-        print app.info
-        print _info
         for key in _info:
             assert key in app.info.keys(), \
                 "The key %s is lost and it should be here" % key
@@ -1791,7 +1786,6 @@ class TestWeb(web.Helper):
                                        'epicollect_form': 'fakeform',
                                        'formtype': 'json'},
                             follow_redirects=True)
-        print res.data
         msg = "Oops! It looks like you don't have permission to access the " \
               "EpiCollect Plus project"
         assert msg in res.data
@@ -1810,7 +1804,6 @@ class TestWeb(web.Helper):
                                        'epicollect_form': 'fakeform',
                                        'formtype': 'json'},
                             follow_redirects=True)
-        print res.data
         msg = "Oops! That project and form do not look like the right one."
         assert msg in res.data
 
@@ -1831,7 +1824,6 @@ class TestWeb(web.Helper):
                             follow_redirects=True)
 
         err_msg = "Tasks should be imported"
-        #print res.data
         assert "1 Task imported successfully!" in res.data, err_msg
         tasks = db.session.query(model.Task).filter_by(app_id=app.id).all()
         err_msg = "The imported task from EpiCollect is wrong"
@@ -1910,11 +1902,9 @@ class TestWeb(web.Helper):
         for i in range(0, 1):
             if i == 0:
                 # As owner
-                print "Testing as owner"
                 self.signin(email="owner@example.com")
                 sched = 'random'
             else:
-                print "Testing as root"
                 sched = 'default'
                 self.signin()
             res = self.app.get(url, follow_redirects=True)
@@ -1960,11 +1950,9 @@ class TestWeb(web.Helper):
         for i in range(0, 1):
             if i == 0:
                 # As owner
-                print "Testing as owner"
                 self.signin(email="owner@example.com")
                 n_answers = 20
             else:
-                print "Testing as root"
                 n_answers = 10
                 self.signin()
             res = self.app.get(url, follow_redirects=True)
@@ -2025,12 +2013,10 @@ class TestWeb(web.Helper):
         for i in range(0, 1):
             if i == 0:
                 # As owner
-                print "Testing as owner"
                 self.signin(email="owner@example.com")
                 task_ids = str(_id)
                 priority_0 = 1.0
             else:
-                print "Testing as root"
                 task_ids = "1"
                 priority_0 = 0.5
                 self.signin()
@@ -2044,7 +2030,6 @@ class TestWeb(web.Helper):
                                               priority_0=priority_0)
             dom = BeautifulSoup(res.data)
             err_msg = "Task Priority should be updated"
-            print dom.prettify()
             assert dom.find(id='msg_success') is not None, err_msg
             task = db.session.query(model.Task).get(_id)
             assert task.id == int(task_ids), err_msg
@@ -2073,7 +2058,7 @@ class TestWeb(web.Helper):
         self.register(fullname="juan", username="juan")
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should not be allowed to access this page"
-        assert res.status_code == 403, err_msg
+        assert res.status_code == 401, err_msg
         self.signout()
 
         # As an anonymous user
