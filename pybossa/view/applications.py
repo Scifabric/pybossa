@@ -528,8 +528,15 @@ def import_task(short_name):
     title = app_title(app, "Import Tasks")
     loading_text = gettext("Importing tasks, this may take a while, wait...")
     template_args = {"title": title, "app": app, "loading_text": loading_text}
-    if not require.app.update(app):
-        return abort(403)
+    try:
+        require.app.read(app)
+        require.app.update(app)
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
+
     data_handlers = dict([
         (i.template_id, (i.form_detector, i(request.form), i.form_id))
         for i in importer.importers])
