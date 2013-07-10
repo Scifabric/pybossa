@@ -162,8 +162,6 @@ def index(page):
 
 def app_index(page, lookup, category, fallback, use_count):
     """Show apps of app_type"""
-    if not require.app.read():
-        abort(403)
 
     per_page = 5
 
@@ -620,6 +618,13 @@ def _import_task(app, handler, form, render_forms):
 def task_presenter(short_name, task_id):
     app = app_by_shortname(short_name)
     task = Task.query.filter_by(id=task_id).first_or_404()
+    try:
+        require.app.read(app)
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
     if current_user.is_anonymous():
         if not app.allow_anonymous_contributors:
