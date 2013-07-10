@@ -843,6 +843,14 @@ def export_to(short_name):
     title = app_title(app, gettext("Export"))
     loading_text = gettext("Exporting data..., this may take a while")
 
+    try:
+        require.app.read(app)
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
+
     def respond():
         return render_template('/applications/export.html',
                                title=title,
