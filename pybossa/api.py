@@ -126,8 +126,9 @@ class APIBase(MethodView):
             else:
                 item = db.session.query(self.__class__).get(id)
                 if item is None:
-                    abort(404)
+                    raise abort(404)
                 else:
+                    getattr(require, self.__class__.__name__.lower()).read(item)
                     obj = item.dictize()
                     links, link = self.hateoas.create_links(item)
                     if links:
