@@ -61,6 +61,7 @@ def index():
     sql = text('''SELECT app.id, app.name, app.short_name, app.info,
                COUNT(task_run.app_id) AS n_answers FROM app, task_run
                WHERE app.id=task_run.app_id
+               AND app.hidden=0
                AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
                AND DATE(task_run.finish_time) <= NOW()
                GROUP BY app.id
