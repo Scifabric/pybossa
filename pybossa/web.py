@@ -102,8 +102,6 @@ def url_for_other_page(page):
 app.jinja_env.globals['url_for_other_page'] = url_for_other_page
 
 
-
-
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('404.html'), 404
@@ -112,6 +110,17 @@ def page_not_found(e):
 @app.errorhandler(500)
 def server_error(e):
     return render_template('500.html'), 500
+
+
+@app.errorhandler(403)
+def forbidden(e):
+    return render_template('403.html'), 403
+
+
+@app.errorhandler(401)
+def unauthorized(e):
+    return render_template('401.html'), 401
+
 #@app.errorhandler(401)
 #@app.errorhandler(403)
 #@app.errorhandler(404)
