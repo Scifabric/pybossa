@@ -452,12 +452,14 @@ def details(short_name):
     app = app_by_shortname(short_name)
 
     try:
-        print "HOLA"
         require.app.read(app)
         require.app.update(app)
         template = '/applications/actions.html'
-    except HTTPException as e:
-        raise e
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
     title = app_title(app, None)
 
