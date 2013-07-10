@@ -356,7 +356,7 @@ class TestWeb(web.Helper):
         assert self.html_title("Application: Sample App") in res.data, res
         assert "Start Contributing Now" in res.data, err_msg
         res = self.app.get('/app/sampleapp/settings')
-        assert res.status == '403 FORBIDDEN', res.status
+        assert res.status == '401 UNAUTHORIZED', res.status
 
     def test_11_create_application(self):
         """Test WEB create an application works"""

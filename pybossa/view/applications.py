@@ -451,8 +451,7 @@ def details(short_name):
 
     try:
         require.app.read(app)
-        require.app.update(app)
-        template = '/applications/actions.html'
+        template = '/applications/app.html'
     except HTTPException:
         if app.hidden:
             raise abort(403)
