@@ -6,6 +6,15 @@ def create(app=None):
 
 
 def read(app=None):
+    if app.hidden:
+        if current_user.is_anonymous():
+            return False
+        if current_user.is_authenticated() and app.owner.id != current_user.id:
+            return False
+        if current_user.is_authenticated() and not current_user.admin:
+            return False
+        if current_user.is_authenticated() and app.owner.id == current_user.id:
+            return True
     return True
 
 
