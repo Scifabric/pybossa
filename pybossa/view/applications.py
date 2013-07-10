@@ -738,6 +738,14 @@ def export(short_name, task_id):
     """Return a file with all the TaskRuns for a give Task"""
     # Check if the app exists
     app = app_by_shortname(short_name)
+    try:
+        require.app.read(app)
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
+
     # Check if the task belongs to the app and exists
     task = db.session.query(model.Task).filter_by(app_id=app.id)\
                                        .filter_by(id=task_id).first()
@@ -760,13 +768,10 @@ def tasks(short_name):
                                title=title,
                                app=app)
     except HTTPException:
-        if not app.hidden:
-            return render_template('/applications/tasks.html',
-                                   title="Application not found",
-                                   app=None)
-        return render_template('/applications/tasks.html',
-                               title="Application not found",
-                               app=None)
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
 
 @blueprint.route('/<short_name>/tasks/browse', defaults={'page': 1})
