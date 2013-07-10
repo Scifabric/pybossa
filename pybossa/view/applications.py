@@ -1107,8 +1107,11 @@ def task_n_answers(short_name):
                                    title=title,
                                    form=form,
                                    app=app)
-    except:
-        return abort(403)
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
 
 @blueprint.route('/<short_name>/tasks/scheduler', methods=['GET', 'POST'])
