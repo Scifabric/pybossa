@@ -384,7 +384,7 @@ class User(db.Model, DomainObject, flask.ext.login.UserMixin):
     #: api key
     api_key = Column(String(length=36), default=make_uuid, unique=True)
     passwd_hash = Column(Unicode(length=254), unique=True)
-    #: Adming flag Boolean Integer (0,1)
+    #: Admin flag Boolean Integer (0,1)
     admin = Column(Boolean, default=False)
     #: TODO: find out ... bossa specific
     category = Column(Integer)
