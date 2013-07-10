@@ -1997,7 +1997,7 @@ class TestWeb(web.Helper):
         self.register(fullname="juan", username="juan")
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should not be allowed to access this page"
-        assert res.status_code == 403, err_msg
+        assert res.status_code == 401, err_msg
         self.signout()
 
         # As an anonymous user
