@@ -275,66 +275,72 @@ def new():
 @blueprint.route('/<short_name>/tasks/taskpresentereditor', methods=['GET', 'POST'])
 @login_required
 def task_presenter_editor(short_name):
-    errors = False
-    app = app_by_shortname(short_name)
+    try:
+        errors = False
+        app = app_by_shortname(short_name)
 
-    title = app_title(app, "Task Presenter Editor")
-    if not require.app.update(app):
-        abort(403)
+        title = app_title(app, "Task Presenter Editor")
+        require.app.read(app)
+        require.app.update(app)
 
-    form = TaskPresenterForm(request.form)
-    if request.method == 'POST' and form.validate():
-        app.info['task_presenter'] = form.editor.data
-        db.session.add(app)
-        db.session.commit()
-        msg_1 = gettext('Task presenter added!')
-        flash('<i class="icon-ok"></i> ' + msg_1, 'success')
-        return redirect(url_for('.tasks', short_name=app.short_name))
+        form = TaskPresenterForm(request.form)
+        if request.method == 'POST' and form.validate():
+            app.info['task_presenter'] = form.editor.data
+            db.session.add(app)
+            db.session.commit()
+            msg_1 = gettext('Task presenter added!')
+            flash('<i class="icon-ok"></i> ' + msg_1, 'success')
+            return redirect(url_for('.tasks', short_name=app.short_name))
 
-    if request.method == 'POST' and not form.validate():
-        flash(gettext('Please correct the errors'), 'error')
-        errors = True
+        if request.method == 'POST' and not form.validate():
+            flash(gettext('Please correct the errors'), 'error')
+            errors = True
 
-    if request.method != 'GET':
-        return
+        if request.method != 'GET':
+            return
 
-    if app.info.get('task_presenter'):
-        form.editor.data = app.info['task_presenter']
-    else:
-        if not request.args.get('template'):
-            msg_1 = gettext('<strong>Note</strong> You will need to upload the'
-                            ' tasks using the')
-            msg_2 = gettext('CSV importer')
-            msg_3 = gettext(' or download the app bundle and run the'
-                            ' <strong>createTasks.py</strong> script in your'
-                            ' computer')
-            url = '<a href="%s"> %s</a>' % (url_for('app.import_task',
-                                                    short_name=app.short_name), msg_2)
-            msg = msg_1 + url + msg_3
-            flash(msg, 'info')
+        if app.info.get('task_presenter'):
+            form.editor.data = app.info['task_presenter']
+        else:
+            if not request.args.get('template'):
+                msg_1 = gettext('<strong>Note</strong> You will need to upload the'
+                                ' tasks using the')
+                msg_2 = gettext('CSV importer')
+                msg_3 = gettext(' or download the app bundle and run the'
+                                ' <strong>createTasks.py</strong> script in your'
+                                ' computer')
+                url = '<a href="%s"> %s</a>' % (url_for('app.import_task',
+                                                        short_name=app.short_name), msg_2)
+                msg = msg_1 + url + msg_3
+                flash(msg, 'info')
 
-            wrap = lambda i: "applications/presenters/%s.html" % i
-            pres_tmpls = map(wrap, presenter_module.presenters)
+                wrap = lambda i: "applications/presenters/%s.html" % i
+                pres_tmpls = map(wrap, presenter_module.presenters)
 
-            return render_template(
-                'applications/task_presenter_options.html',
-                title=title,
-                app=app,
-                presenters=pres_tmpls)
+                return render_template(
+                    'applications/task_presenter_options.html',
+                    title=title,
+                    app=app,
+                    presenters=pres_tmpls)
 
-        tmpl_uri = "applications/snippets/%s.html" \
-            % request.args.get('template')
-        tmpl = render_template(tmpl_uri, app=app)
-        form.editor.data = tmpl
-        msg = 'Your code will be <em>automagically</em> rendered in \
-                      the <strong>preview section</strong>. Click in the \
-                      preview button!'
-        flash(gettext(msg), 'info')
-    return render_template('applications/task_presenter_editor.html',
-                           title=title,
-                           form=form,
-                           app=app,
-                           errors=errors)
+            tmpl_uri = "applications/snippets/%s.html" \
+                % request.args.get('template')
+            tmpl = render_template(tmpl_uri, app=app)
+            form.editor.data = tmpl
+            msg = 'Your code will be <em>automagically</em> rendered in \
+                          the <strong>preview section</strong>. Click in the \
+                          preview button!'
+            flash(gettext(msg), 'info')
+        return render_template('applications/task_presenter_editor.html',
+                               title=title,
+                               form=form,
+                               app=app,
+                               errors=errors)
+    except HTTPException as e:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise e
 
 
 @blueprint.route('/<short_name>/delete', methods=['GET', 'POST'])
@@ -434,15 +440,15 @@ def details(short_name):
     app = app_by_shortname(short_name)
 
     try:
+        print "HOLA"
         require.app.read(app)
         require.app.update(app)
         template = '/applications/actions.html'
-    except HTTPException:
-        if app.hidden:
-            app = None
-        template = '/applications/app.html'
+    except HTTPException as e:
+        raise e
 
     title = app_title(app, None)
+
     template_args = {"app": app, "title": title}
     try:
         if current_app.config.get('CKAN_URL'):
