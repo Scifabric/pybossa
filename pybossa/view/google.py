@@ -58,12 +58,19 @@ def manage_user(access_token, user_data, next_url):
              .filter_by(google_user_id=user_data['id'])\
              .first()
 
+    # Update the name to fit with new paradigm to avoid UTF8 problems
+    if type(user.name) == unicode or ' ' in user.name:
+        user.name = user.name.encode('ascii', 'ignore').lower().replace(" ", "")
+        db.session.add(user)
+        db.session.commit()
+
     # user never signed on
     if user is None:
         google_token = dict(oauth_token=access_token)
         info = dict(google_token=google_token)
         user = db.session.query(model.User)\
-                 .filter_by(fullname=user_data['name'])\
+                 .filter_by(fullname=user_data['name'].encode('ascii', 'ignore')
+                                                      .lower().replace(" ", ""))\
                  .first()
 
         email = db.session.query(model.User)\
@@ -81,8 +88,6 @@ def manage_user(access_token, user_data, next_url):
             db.session.commit()
             return user
         else:
-            if user:
-                return user
             return None
     else:
         return user
@@ -121,6 +126,11 @@ def oauth_authorized(resp):
         user = db.session.query(model.User)\
                  .filter_by(email_addr=user_data['email'])\
                  .first()
+        if user is None:
+            user = db.session.query(model.User)\
+                     .filter_by(email_addr=user_data['email'])\
+                     .first()
+
         msg, method = get_user_signup_method(user)
         flash(msg, 'info')
         if method == 'local':
