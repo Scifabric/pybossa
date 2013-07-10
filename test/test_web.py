@@ -475,7 +475,8 @@ class TestWeb(web.Helper):
         assert "Sample App" not in res.data, res
 
         res = self.app.get('/app/sampleapp', follow_redirects=True)
-        assert "Sorry! This app does not exists." in res.data, res.data
+        err_msg = "Hidden apps should return a 403"
+        res.status_code == 403, err_msg
 
     @patch('pybossa.ckan.requests.get')
     def test_13a_hidden_applications_owner(self, Mock):
@@ -1933,7 +1934,7 @@ class TestWeb(web.Helper):
         self.register(fullname="juan", username="juan")
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should not be allowed to access this page"
-        assert res.status_code == 403, err_msg
+        assert res.status_code == 401, err_msg
         self.signout()
 
         # As an anonymous user
