@@ -626,3 +626,23 @@ body > footer li > a {
 body > footer li > a:hover {
     color: rgb(205, 205, 205);
 }
+
+/* Cookies banner */
+
+#cookiesbanner {
+    position: fixed;
+    color: rgb(221, 221, 221);
+    min-height: 30px;
+    position: fixed;
+    left: 0px;
+    bottom: 0px;
+    width: 100%;
+    z-index: 99999;
+    padding: 6px 20px 4px;
+    background-color: rgba(70, 70, 70, 0.9);
+    text-align: left;
+}
+
+#cookiesbanner > p {
+    margin-top: 8px;
+}
