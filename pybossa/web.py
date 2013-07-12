@@ -131,8 +131,9 @@ def global_template_context():
                   " right now it is empty!"), 'error')
 
     # Cookies warning
-    cookie_name = app.config['BRAND'] + "_cookiewarning"
+    cookie_name = app.config['BRAND'] + "_accept_cookies"
     show_cookies_warning = False
+    print request.cookies.get(cookie_name)
     if not request.cookies.get(cookie_name):
         show_cookies_warning = True
 

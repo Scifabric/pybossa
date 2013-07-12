@@ -629,7 +629,7 @@ body > footer li > a:hover {
 
 /* Cookies banner */
 
-#cookiesbanner {
+#cookies_warning {
     position: fixed;
     color: rgb(221, 221, 221);
     min-height: 30px;
@@ -643,6 +643,6 @@ body > footer li > a:hover {
     text-align: left;
 }
 
-#cookiesbanner > p {
+#cookies_warning > p {
     margin-top: 8px;
 }
