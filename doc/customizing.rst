@@ -99,6 +99,17 @@ name of the file.
 
 .. _LOGO: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L17
 
+Adding your Contact Information
+===============================
+
+By default, PyBossa provides an e-mail and a Twitter handle to contact the
+PyBossa infrastructure. If you want, you can change it to your own e-mail and
+Twitter account. You can do it, modifying the following variables in the
+**settings_local.py** file:
+
+* **CONTACT_EMAIL** = 'your@email.com'
+* **CONTACT_TWITTER** = 'yourtwitterhandle'
+
 Terms of Use
 ============
 
