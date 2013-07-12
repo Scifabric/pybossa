@@ -46,8 +46,7 @@ def tos():
     return render_template('help/tos.html', title='Help: Terms of Use')
 
 
-@blueprint.route('/cookie-policy')
-def cookie_policy():
-    """Set a cookie to accept the use of cookies"""
-    pass
-
+@blueprint.route('/cookies-policy')
+def cookies_policy():
+    """Render help/cookies-policy page"""
+    return render_template('help/cookies_policy.html', title='Help: Cookies Policy')
