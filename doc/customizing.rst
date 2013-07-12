@@ -349,10 +349,20 @@ restart the server.
 Using your own Terms of Use
 ===========================
 
-PyBossa has a default Terms of Service page that you can customize to fit your
-institutional needs. In the case that you want to not use the default one,
-please, create a **_tos.html** file in the **custom** folder (you can find it
-in the templates folder.
+PyBossa has a default Terms of Service page that you can customize it to fit your
+institutional needs. In the case that you do not want to use the default one,
+please, create a **_tos.html** file in the **custom** folder. You
+can re-use the template **help/_tos.html** and adapt it (it is
+located in the **template/help** folder.
+
+Using your own Cookies Policy
+=============================
+
+PyBossa has a default cookies policy page, but you can customize it to fit your
+institutional needs. In the case that you do not want to use the default one,
+please, create a **_cookies_policy.html** file in the **custom** folder. You
+can re-use the template **help/_cookies_policy.html** and adapt it (it is
+located in the **template/help** folder.
 
 .. _config-ckan:
 
