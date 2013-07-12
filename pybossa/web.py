@@ -151,6 +151,16 @@ def global_template_context():
                 if key == 'user':
                     flash(announcement[key], 'info')
 
+    if app.config.get('CONTACT_EMAIL'):
+        contact_email = app.config.get('CONTACT_EMAIL')
+    else:
+        contact_email = 'info@pybossa.com'
+
+    if app.config.get('CONTACT_TWITTER'):
+        contact_twitter = app.config.get('CONTACT_TWITTER')
+    else:
+        contact_twitter = 'PyBossa'
+
     return dict(
         brand=app.config['BRAND'],
         title=app.config['TITLE'],
@@ -162,7 +172,9 @@ def global_template_context():
         enforce_privacy=app.config['ENFORCE_PRIVACY'],
         version=pybossa.__version__,
         current_user=current_user,
-        show_cookies_warning=show_cookies_warning)
+        show_cookies_warning=show_cookies_warning,
+        contact_email=contact_email,
+        contact_twitter=contact_twitter)
 
 
 @login_manager.user_loader
