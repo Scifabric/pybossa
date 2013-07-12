@@ -121,24 +121,6 @@ def forbidden(e):
 def unauthorized(e):
     return render_template('401.html'), 401
 
-#@app.errorhandler(401)
-#@app.errorhandler(403)
-#@app.errorhandler(404)
-#@app.errorhandler(410)
-#@app.errorhandler(500)
-#def handle_exceptions(exc):
-#    """
-#    Re-format exceptions to JSON
-#
-#    :arg error: The exception object
-#    :returns: The exception object in JSON format
-#    """
-#    output = {'status': exc.code,
-#              'name': exc.name,
-#              'description': exc.description
-#             }
-#    return json.dumps(output)
-
 
 @app.context_processor
 def global_template_context():
@@ -147,6 +129,12 @@ def global_template_context():
                 current_user.email_addr == "None"):
             flash(lazy_gettext("Please update your e-mail address in your profile page,"
                   " right now it is empty!"), 'error')
+
+    # Cookies warning
+    cookie_name = app.config['BRAND'] + "_cookiewarning"
+    show_cookies_warning = False
+    if not request.cookies.get(cookie_name):
+        show_cookies_warning = True
 
     # Announcement sections
     if app.config.get('ANNOUNCEMENT'):
@@ -170,7 +158,8 @@ def global_template_context():
         data_use=app.config['DATAUSE'],
         enforce_privacy=app.config['ENFORCE_PRIVACY'],
         version=pybossa.__version__,
-        current_user=current_user)
+        current_user=current_user,
+        show_cookies_warning=show_cookies_warning)
 
 
 @login_manager.user_loader
