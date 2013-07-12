@@ -51,9 +51,11 @@
     {% block content %}{% endblock %}
 
     </div> <!-- /container -->
+    {% if show_cookies_warning %}
     <div id="cookiesbanner">
         <p>Cookies help us deliver our services. By using our services, you agree to our use of cookies. <a class="btn btn-mini btn-success" href="#">OK</a> <a class="btn btn-mini" href="#">More info</a></p>
     </div>
+    {% endif %}
     <footer>
     {% include ['custom/_footer.html', '_footer.html'] ignore missing %}
     {% if not enforce_privacy %}
