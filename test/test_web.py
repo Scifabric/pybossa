@@ -2066,3 +2066,52 @@ class TestWeb(web.Helper):
         dom = BeautifulSoup(res.data)
         err_msg = "User should be redirected to sign in"
         assert dom.find(id="signin") is not None, err_msg
+
+    def test_78_cookies_warning(self):
+        """Test WEB cookies warning is displayed"""
+        # As Anonymous
+        res = self.app.get('/', follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "If cookies are not accepted, cookies banner should be shown"
+        assert dom.find(id='cookies_warning') is not None, err_msg
+
+        # As user
+        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
+        res = self.app.get('/', follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "If cookies are not accepted, cookies banner should be shown"
+        assert dom.find(id='cookies_warning') is not None, err_msg
+        self.signout()
+
+        # As admin
+        self.signin(email=Fixtures.root_addr, password=Fixtures.root_password)
+        res = self.app.get('/', follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "If cookies are not accepted, cookies banner should be shown"
+        assert dom.find(id='cookies_warning') is not None, err_msg
+        self.signout()
+
+    def test_49_cookies_warning2(self):
+        """Test WEB cookies warning is hidden"""
+        # As Anonymous
+        self.app.set_cookie("localhost", "PyBossa_accept_cookies", "Yes")
+        res = self.app.get('/', follow_redirects=True, headers={})
+        dom = BeautifulSoup(res.data)
+        err_msg = "If cookies are not accepted, cookies banner should be hidden"
+        assert dom.find(id='cookies_warning') is None, err_msg
+
+        # As user
+        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
+        res = self.app.get('/', follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "If cookies are not accepted, cookies banner should be hidden"
+        assert dom.find(id='cookies_warning') is None, err_msg
+        self.signout()
+
+        # As admin
+        self.signin(email=Fixtures.root_addr, password=Fixtures.root_password)
+        res = self.app.get('/', follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "If cookies are not accepted, cookies banner should be hidden"
+        assert dom.find(id='cookies_warning') is None, err_msg
+        self.signout()
