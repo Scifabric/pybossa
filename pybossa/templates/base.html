@@ -51,6 +51,11 @@
     {% block content %}{% endblock %}
 
     </div> <!-- /container -->
+    {% if show_cookies_warning %}
+    <div id="cookies_warning">
+        <p>Cookies help us deliver our services. By using our services, you agree to our use of cookies. <button class="btn btn-mini btn-success" onclick="accept_cookies()"><i class="icon-thumbs-up"></i> OK</button> <a class="btn btn-mini" href="{{url_for('help.cookies_policy')}}"><i class="icon-info-sign"></i> More info</a></p>
+    </div>
+    {% endif %}
     <footer>
     {% include ['custom/_footer.html', '_footer.html'] ignore missing %}
     {% if not enforce_privacy %}
@@ -81,5 +86,8 @@
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
+    <script>
+    {% include 'cookies.js' %}
+    </script>
   </body>
 </html>
