@@ -44,3 +44,10 @@ def license():
 def tos():
     """Render help/terms-of-use page"""
     return render_template('help/tos.html', title='Help: Terms of Use')
+
+
+@blueprint.route('/cookie-policy')
+def cookie_policy():
+    """Set a cookie to accept the use of cookies"""
+    pass
+

@@ -52,8 +52,8 @@
 
     </div> <!-- /container -->
     {% if show_cookies_warning %}
-    <div id="cookiesbanner">
-        <p>Cookies help us deliver our services. By using our services, you agree to our use of cookies. <a class="btn btn-mini btn-success" href="#">OK</a> <a class="btn btn-mini" href="#">More info</a></p>
+    <div id="cookies_warning">
+        <p>Cookies help us deliver our services. By using our services, you agree to our use of cookies. <button class="btn btn-mini btn-success" onclick="accept_cookies()">OK</button> <a class="btn btn-mini" href="#">More info</a></p>
     </div>
     {% endif %}
     <footer>
@@ -86,5 +86,16 @@
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
+    <script>
+            function accept_cookies(){
+                var cookie_name = "{{brand}}_accept_cookies";
+                var exdays = 30;
+                var exdate = new Date();
+                exdate.setDate(exdate.getDate() + exdays);
+                var cookie_value = escape("Yes") + ((exdays==null) ? "" : "; expires="+exdate.toUTCString());
+                document.cookie = cookie_name + "=" + cookie_value;
+                $("#cookies_warning").hide();
+            };
+    </script>
   </body>
 </html>
