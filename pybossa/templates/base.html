@@ -57,20 +57,20 @@
     </div>
     {% endif %}
     <footer>
-    {% include ['custom/_footer.html', '_footer.html'] ignore missing %}
     {% if not enforce_privacy %}
     <div id="footer_links" class="container">
         <div class="row">
-            <div class="span4">
+            <div class="span3">
                 <ul>
                     <li><strong>{{ _('Resources') }}</strong></li>
                     <li><i class="icon-link"></i> <a href="http://docs.pybossa.com">{{ _('Docs') }}</a></li>
                     <li><i class="icon-link"></i> <a href="{{url_for('help.api')}}">API</a></li>
                     <li><i class="icon-link"></i> <a href="{{url_for('help.tos')}}">{{ _('Terms of Use') }}</a></li>
+                    <li><i class="icon-link"></i> <a href="{{url_for('help.cookies_policy')}}">{{ _('Cookies Policy') }}</a></li>
                     <li><i class="icon-link"></i> <a href="{{url_for('stats.index')}}">{{ _('Stats') }}</a></li>
                 </ul>
             </div>
-            <div class="span4">
+            <div class="span3">
                 <ul>
                     <li><strong>{{ _('Licenses') }}</strong></li>
                     <li><i class="icon-link"></i> <a href="{{url_for('help.license')}}">{{ _('Overview') }}</a></li>
@@ -79,9 +79,24 @@
                     <li><i class="icon-link"></i> <a href="{{url_for('help.license', _anchor='content')}}">{{ _('Content') }}</a></li>
                 </ul>
             </div>
+            <div class="span3">
+                <ul>
+                    <li><strong>{{ _('Technologies') }}</strong></li>
+                    <li><i class="icon-link"></i> <a href="http://ckan.org">{{ _('CKAN') }}</a></li>
+                    <li><i class="icon-link"></i> <a href="http://www.epicollect.net">{{ _('EpiCollect') }}</a></li>
+                </ul>
+            </div>
+            <div class="span3">
+                <ul>
+                    <li><strong>{{ _('Contact') }}</strong></li>
+                    <li><i class="icon-envelope"></i> <a href="mailto:{{contact_email}}">{{ _('Email') }}</a></li>
+                    <li><i class="icon-twitter"></i> <a href="http://twiter.com/{{contact_twitter}}">{{ _('Twitter') }}</a></li>
+                </ul>
+            </div>
         </div>
     </div>
     {% endif %}
+    {% include ['custom/_footer.html', '_footer.html'] ignore missing %}
     </footer>
     <!-- Le javascript
     ================================================== -->
