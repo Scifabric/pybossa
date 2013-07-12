@@ -87,15 +87,7 @@
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <script>
-            function accept_cookies(){
-                var cookie_name = "{{brand}}_accept_cookies";
-                var exdays = 30;
-                var exdate = new Date();
-                exdate.setDate(exdate.getDate() + exdays);
-                var cookie_value = escape("Yes") + ((exdays==null) ? "" : "; expires="+exdate.toUTCString());
-                document.cookie = cookie_name + "=" + cookie_value;
-                $("#cookies_warning").hide();
-            };
+    {% include 'cookies.js' %}
     </script>
   </body>
 </html>
