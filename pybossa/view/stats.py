@@ -13,7 +13,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 import json
-from flask import Blueprint
+import pygeoip
+from flask import Blueprint, current_app
 from flask import render_template
 from sqlalchemy.sql import text
 
@@ -91,6 +92,25 @@ def index():
                     n_answers=row.n_answers)
         top5_users_24_hours.append(user)
 
+    # All IP addresses from anonymous users to create a map
+    locs = []
+    if current_app.config['GEO']:
+        sql = '''SELECT DISTINCT(user_ip) from task_run WHERE user_ip IS NOT NULL;'''
+        results = db.engine.execute(sql)
+
+        geolite = current_app.root_path + '/../dat/GeoLiteCity.dat'
+        gic = pygeoip.GeoIP(geolite)
+        for row in results:
+            loc = gic.record_by_addr(row.user_ip)
+            if (len(loc.keys()) == 0):
+                loc['latitude'] = 0
+                loc['longitude'] = 0
+            locs.append(dict(loc=loc))
+
+    show_locs = False
+    if len(locs) > 0:
+        show_locs = True
+
     stats = dict(n_total_users=n_total_users, n_auth=n_auth, n_anon=n_anon,
                  n_published_apps=n_published_apps,
                  n_draft_apps=n_draft_apps,
@@ -117,6 +137,8 @@ def index():
                            users=json.dumps(users),
                            apps=json.dumps(apps),
                            tasks=json.dumps(tasks),
+                           locs=json.dumps(locs),
+                           show_locs=show_locs,
                            top5_users_24_hours=top5_users_24_hours,
                            top5_apps_24_hours=top5_apps_24_hours,
                            stats=stats)
