@@ -161,7 +161,7 @@ h3 > small {
             </div>
             <!-- END Users Stats CARD -->
             <!-- START Anonymous Users Map CARD -->
-            {% if locs | count > 0 %}
+            {% if show_locs %}
             <div id="card" class="row-fluid">
                 <div class="span12 well">
                     <h2>{{ _('Anonymous Volunteers') }}</h2>
