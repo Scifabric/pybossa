@@ -115,6 +115,14 @@ pybossa.taskLoaded(function(task, deferred) {
 pybossa.presentTask(function(task, deferred) {
     if ( !$.isEmptyObject(task) ) {
         loadUserProgress();
+        if ((task.info.oembed == undefined) && (task.info.video_url)) {
+            var oembed = $("<iframe/>");
+            oembed.attr("src", task.info.video_url);
+            oembed.attr("width", 512);
+            oembed.attr("height", 512);
+            oembed.attr("frameborder", 0);
+            task.info.oembed = oembed;
+        }
         $('#video-clip').html('').append(task.info.oembed);
         $('#task-id').html(task.id);
 
