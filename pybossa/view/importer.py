@@ -48,6 +48,9 @@ googledocs_urls = {
     'sound': "https://docs.google.com/spreadsheet/ccc"
              "?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc"
              "&usp=sharing",
+    'video': "https://docs.google.com/spreadsheet/ccc"
+             "?key=0AsNlt0WgPAHwdGZ2UGhxSTJjQl9YNVhfUVhGRUdoRWc"
+             "&usp=sharing",
     'map': "https://docs.google.com/spreadsheet/ccc"
            "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc"
            "&usp=sharing",
@@ -73,7 +76,6 @@ class BulkTaskImportForm(Form):
         field_header_index = []
 
         for row in csvreader:
-            print row
             if not headers:
                 headers = row
                 if len(headers) != len(set(headers)):
