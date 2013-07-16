@@ -168,6 +168,7 @@ available templates are the following:
 
 * `Image Pattern Recognition`_
 * `Sound Pattern Recognition`_
+* `Video Pattern Recognition`_
 * `Geo-coding`_ and
 * `PDF transcription`_. 
 
@@ -187,6 +188,7 @@ available templates are the following:
 
 .. _`Image Pattern Recognition`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE&usp=sharing#gid=0
 .. _`Sound Pattern Recognition`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc#gid=0
+.. _`Video Pattern Recognition`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdGZ2UGhxSTJjQl9YNVhfUVhGRUdoRWc#gid=0
 .. _`Geo-coding`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc&usp=sharing
 .. _`PDF transcription`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE&usp=sharing
 .. _`DropBox`: http://www.dropbox.com
