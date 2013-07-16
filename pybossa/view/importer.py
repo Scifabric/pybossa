@@ -76,7 +76,6 @@ class BulkTaskImportForm(Form):
         field_header_index = []
 
         for row in csvreader:
-            print row
             if not headers:
                 headers = row
                 if len(headers) != len(set(headers)):
