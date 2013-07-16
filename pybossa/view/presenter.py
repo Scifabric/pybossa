@@ -13,4 +13,4 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-presenters = ["basic", "image", "sound", "map", "pdf"]
+presenters = ["basic", "image", "sound", "video", "map", "pdf"]
