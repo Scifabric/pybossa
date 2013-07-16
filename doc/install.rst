@@ -102,7 +102,7 @@ Installing the required libraries for PyBossa is a step that will need to use
 some compilers and dev libraries in order to work. Thus, you will need to
 install the following packages::
 
-    sudo aptitude install postgresql-server-dev-9.1 python-dev
+    sudo aptitude install postgresql-server-dev-9.1 python-dev swig
 
 Then, you are ready to download the code and install the requirements 
 (you may wish to create a virtualenv first)::
