@@ -147,6 +147,11 @@ You will need to modify the **name** and **short_name** fiels in order to
 create an application in crowdcrafting.org, as there is already an application
 registered with those values.
 
+.. note::
+
+    The **name** and **short_name** of the application **must be unique**!
+    Otherwise you will get an error (IntegrityError) when creating the application.
+
 You can re-use the other fields if you want. **Description** will be the text
 shown in the application listing page, and the **question** field is the
 question that will be shown to the users when they collaborate with your
@@ -193,7 +198,27 @@ and associated tasks. In order to create the application and its tasks,
 run the following script::
 
   python createTasks.py -s http://PYBOSSA-SERVER -k API-KEY -c
-  
+
+
+.. note::
+    You can check all the available options for the command line with the
+    **-h** argument.
+
+If something goes wrong, you should an error message similar to the following
+one::
+
+    ERROR:root:pbclient.create_app
+    {
+        "action": "POST",
+        "exception_cls": "IntegrityError",
+        "exception_msg": "(IntegrityError) duplicate key value violates unique constraint \"app_name_key\"\nDETAIL:  Key (name)=(Flickr Person Finder) already exists.\n",
+        "status": "failed",
+        "status_code": 415,
+        "target": "app"
+    }
+
+The error message will have the information regarding the problems it has found
+when using the API.
 
 Number of answers or task runs per task
 =======================================
