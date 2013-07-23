@@ -6,6 +6,10 @@ python_virtualenv "/vagrant/vagrant_env" do
     action :create
 end
 
+execute "install SWIG library" do
+    command "apt-get install -y swig"
+end
+
 execute "install pybossa requirements" do
     command ". vagrant_env/bin/activate; pip install -e ."
     cwd "/vagrant"
