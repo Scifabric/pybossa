@@ -11,7 +11,7 @@ execute "install SWIG library" do
 end
 
 execute "install pybossa requirements" do
-    command ". vagrant_env/bin/activate; pip install -e ."
+    command ". vagrant_env/bin/activate; pip install --pre -e ."
     cwd "/vagrant"
 end
 
