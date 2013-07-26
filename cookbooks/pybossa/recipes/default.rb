@@ -2,7 +2,7 @@ package 'postgresql-9.1'
 package "postgresql-server-dev-9.1" 
 package "python-dev"
 
-python_virtualenv "/vagrant/vagrant_env" do
+python_virtualenv "/opt/vagrant_env" do
     action :create
 end
 
@@ -11,7 +11,7 @@ execute "install SWIG library" do
 end
 
 execute "install pybossa requirements" do
-    command ". vagrant_env/bin/activate; pip install --pre -e ."
+    command ". /opt/vagrant_env/bin/activate; pip install --pre -e ."
     cwd "/vagrant"
 end
 
@@ -38,6 +38,6 @@ execute "create pybossa DB" do
 end
 
 execute "populate pybossa db" do
-    command ". vagrant_env/bin/activate; python cli.py db_create"
+    command ". /opt/vagrant_env/bin/activate; python cli.py db_create"
     cwd "/vagrant"
 end
