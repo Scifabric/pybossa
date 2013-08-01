@@ -102,10 +102,11 @@ def index():
         gic = pygeoip.GeoIP(geolite)
         for row in results:
             loc = gic.record_by_addr(row.user_ip)
-            if (len(loc.keys()) == 0):
-                loc['latitude'] = 0
-                loc['longitude'] = 0
-            locs.append(dict(loc=loc))
+            if loc is not None:
+                if (len(loc.keys()) == 0):
+                    loc['latitude'] = 0
+                    loc['longitude'] = 0
+                locs.append(dict(loc=loc))
 
     show_locs = False
     if len(locs) > 0:
