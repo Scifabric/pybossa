@@ -13,7 +13,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
 
-from flaskext.babel import lazy_gettext
+from flask.ext.babel import lazy_gettext
 from flaskext.wtf import ValidationError
 import re
 

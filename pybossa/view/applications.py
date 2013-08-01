@@ -19,7 +19,7 @@ from flask import render_template, make_response
 from flaskext.wtf import Form, IntegerField, DecimalField, TextField, BooleanField, \
     SelectField, validators, HiddenInput, TextAreaField
 from flask.ext.login import login_required, current_user
-from flaskext.babel import lazy_gettext, gettext
+from flask.ext.babel import lazy_gettext, gettext
 from werkzeug.exceptions import HTTPException
 from sqlalchemy.sql import text
 

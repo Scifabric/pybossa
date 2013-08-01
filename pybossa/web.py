@@ -21,7 +21,7 @@ import os
 from flask import Response, request, g, render_template,\
         abort, flash, redirect, session, url_for
 from flask.ext.login import login_user, logout_user, current_user
-from flaskext.babel import lazy_gettext
+from flask.ext.babel import lazy_gettext
 from sqlalchemy.exc import UnboundExecutionError
 from sqlalchemy import func, desc
 from werkzeug.exceptions import *

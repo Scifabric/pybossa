@@ -15,7 +15,7 @@
 
 from StringIO import StringIO
 from flaskext.wtf import Form, TextField, validators
-from flaskext.babel import lazy_gettext, gettext
+from flask.ext.babel import lazy_gettext, gettext
 from pybossa.util import unicode_csv_reader
 import json
 import requests

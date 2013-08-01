@@ -24,7 +24,7 @@ from flask import current_app
 from flask import Response
 from flask.ext.login import login_required, current_user
 from flaskext.wtf import Form, TextField, IntegerField, HiddenInput, validators
-from flaskext.babel import lazy_gettext, gettext
+from flask.ext.babel import lazy_gettext, gettext
 from werkzeug.exceptions import HTTPException
 
 import pybossa.model as model
