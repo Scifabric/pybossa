@@ -322,6 +322,8 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
             loc = gic.record_by_addr(u[0])
         else:
             loc = {}
+        if loc is None:
+            loc = {}
         if (len(loc.keys()) == 0):
             loc['latitude'] = 0
             loc['longitude'] = 0
@@ -331,6 +333,8 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
         if geo:
             loc = gic.record_by_addr(u[0])
         else:
+            loc = {}
+        if loc is None:
             loc = {}
         if (len(loc.keys()) == 0):
             loc['latitude'] = 0
