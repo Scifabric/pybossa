@@ -104,16 +104,38 @@ install the following packages::
 
     sudo aptitude install postgresql-server-dev-9.1 python-dev swig
 
-Then, you are ready to download the code and install the requirements 
-(you may wish to create a virtualenv first)::
+Then, you are ready to download the code and install the required libraries for
+running PyBossa.
+
+.. note:: 
+    We recommend you to install the required libraries using a **virtual
+    environment** with the command virtualenv (you can install the package
+    python-virtualenv). This will allow to have all the libraries for PyBossa
+    in one folder of your choice, so cleaning the installation would be as
+    simple as deleting that folder without affecting your system.
+
+
+If you decide to use a **virtualenv** then, follow these steps (lines starting
+with **#** are comments)::
+
+  # get the source code
+  git clone --recursive https://github.com/PyBossa/pybossa
+  # Access the source code folder
+  cd pybossa
+  virtualenv env
+  # Activate the virtual environment
+  source env/bin/activate
+  # Install the required libraries
+  pip install -e .
+
+Otherwise you should be able to install the libraries in your system like
+this::
 
   # get the source
   git clone --recursive https://github.com/PyBossa/pybossa
+  # Access the source code folder
   cd pybossa
-  # [optional] create virtualenv first
-  # cd pybossa/
-  # virtualenv env
-  # . env/bin/activate
+  # Install the required libraries
   pip install -e .
 
 .. note::
