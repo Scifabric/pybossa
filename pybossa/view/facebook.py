@@ -99,10 +99,16 @@ def manage_user(access_token, user_data, next_url):
         info = dict(facebook_token=facebook_token)
         user = db.session.query(model.User)\
                  .filter_by(name=user_data['username']).first()
-        email = db.session.query(model.User)\
-                  .filter_by(email_addr=user_data['email']).first()
+        # NOTE: Sometimes users at Facebook validate their accounts without
+        # registering an e-mail (see this http://stackoverflow.com/a/17809808)
+        email = None
+        if user_data.get('email'):
+            email = db.session.query(model.User)\
+                      .filter_by(email_addr=user_data['email']).first()
 
         if user is None and email is None:
+            if not user_data.get('email'):
+                user_data['email'] = "None"
             user = model.User(fullname=user_data['name'],
                               name=user_data['username'],
                               email_addr=user_data['email'],
