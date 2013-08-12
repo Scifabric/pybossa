@@ -17,7 +17,7 @@
             {% include '_gcs_form.html' ignore missing %}
           {% if current_user.is_authenticated() %}
             <ul class="nav secondary-nav pull-right">
-              <li {% if active_page == 'profile' %} class="active" {% endif %}><a href="#" data-toggle="dropdown" class="dropdown-toggle"><i class="icon icon-user"></i> {{ current_user.name | truncate(8,true) }} <span class="caret"></span></a>
+              <li {% if active_page == 'profile' %} class="active" {% endif %}><a href="#" data-toggle="dropdown" class="dropdown-toggle"><i class="icon icon-user"></i> {{ current_user.name | truncate(6,true) }} <span class="caret"></span></a>
                 <ul class="dropdown-menu">
                     <li><a href="{{ url_for('account.profile') }}"><i class="icon icon-user"></i> {{ _('My Profile') }}</a></li>
                     <li><a href="{{ url_for('account.applications') }}"><i class="icon icon-th-large"></i> {{ _('My Applications') }}</a></li>
