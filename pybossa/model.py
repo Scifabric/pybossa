@@ -223,20 +223,25 @@ class App(db.Model, DomainObject):
     #: (0 not done, 1 completed)
     def completion_status(self):
         """Returns the percentage of submitted Tasks Runs done"""
-        sql = text('''SELECT COUNT(task_id) FROM task_run WHERE app_id=:app_id''')
+        sql = text('''SELECT task.id, n_answers,
+                   count(task_run.task_id) AS n_task_runs
+                   FROM task LEFT OUTER JOIN task_run ON task.id=task_run.task_id
+                   WHERE task.app_id=:app_id GROUP BY task.id''')
         results = db.engine.execute(sql, app_id=self.id)
+        # row[0] task.id
+        # row[1] n_answers
+        # row[2] n_task_runs
+        n_expected_task_runs = 0
+        n_task_runs = 0
         for row in results:
-            n_task_runs = float(row[0])
-        sql = text('''SELECT SUM(n_answers) FROM task WHERE app_id=:app_id''')
-        results = db.engine.execute(sql, app_id=self.id)
-        for row in results:
-            if row[0] is None:
-                n_expected_task_runs = float(30 * n_task_runs)
-            else:
-                n_expected_task_runs = float(row[0])
+            tmp = row[2]
+            if row[2] > row[1]:
+                tmp = row[1]
+            n_expected_task_runs += row[1]
+            n_task_runs += tmp
         pct = float(0)
         if n_expected_task_runs != 0:
-            pct = n_task_runs / n_expected_task_runs
+            pct = float(n_task_runs) / float(n_expected_task_runs)
         return pct
 
     def n_completed_tasks(self):
