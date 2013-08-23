@@ -15,7 +15,7 @@
 from sqlalchemy.sql import func, text
 from pybossa.core import cache
 from pybossa.core import db
-from flaskext.login import current_user
+from flask.ext.login import current_user
 from pybossa.model import User, Team, User2Team
 from sqlalchemy import or_, func, and_
 
