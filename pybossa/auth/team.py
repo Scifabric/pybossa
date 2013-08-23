@@ -1,4 +1,4 @@
-from flaskext.login import current_user
+from flask.ext.login import current_user
 
 def create(team=None):
     return not current_user.is_anonymous()
