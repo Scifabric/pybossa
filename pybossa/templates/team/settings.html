@@ -1,0 +1,43 @@
+{% extends "/base.html" %}
+{% set active_page = "teams" %}
+{% set active_team  = "all" %}
+{% import "team/_helpers.html" as helper %}
+
+{% block content %}
+<div class="row">
+    {% if team %}
+    <div class="span3">
+        {{ helper.render_teams_nav(team, 'myteams', current_user) }}
+    </div>
+    <!-- Team -->
+    <div class="span9" style="min-height:400px">        
+        <h1><strong>{{ team.name }}</strong>: {{ _('Settings') }}</h1>
+        {{ helper.render_team_summary(team, data, current_user) }}
+        <h2>{{ _('Team Settings') }}</h2>
+        <div class="btn-group">
+            {% if current_user.admin==1 or team.owner_id == current_user.id %}
+                <a id="edit_team" class="btn" href="{{ url_for('team.update', name = team.name) }}"><i class="icon-edit icon-white"></i> {{ _('Edit the team details') }}</a>
+                <a id="delete_team" class="btn" href="{{ url_for('team.delete', name = team.name) }}"><i class="icon-trash icon-white"></i> {{ _('Delete the team') }}</a>
+            {% endif %}
+              
+            {% if current_user.id != team.owner_id  %}
+                {% if data.belong  %}
+	                <a id="user_delete" class="btn" href="{{url_for('team.user_delete', name=team.name )}}"><i class="icon-signout icon-large"></i> {{ _('Left this team') }}</a>
+                {% else %}              
+                    <a id="user_add" class="btn" href="{{url_for('team.user_add', name=team.name )}}"><i class="icon-signin  icon-large"></i> {{ _('Join this team') }}</a>
+  	            {% endif %}
+            {% endif %}
+            <a id="members" class="btn" href="{{ url_for('team.users', name = team.name) }}"><i class="icon-group icon-white"></i> {{ _('Members') }}</a>
+        </div>
+    </div> <!--end of clas -->
+    {% else %}
+    <div class="page-header">
+        <h1>{{ _('Sorry! This team does not exists.') }}</h1>
+    </div>	
+	{% endif %}
+</div>
+{{ helper.broken_image() }}
+{% endblock %}
+
+
+

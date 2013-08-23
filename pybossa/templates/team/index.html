@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% set active_page = "teams" %}
+{% import "team/_helpers.html" as helper %}
+
+{% block content %}
+<div class="row-fluid">
+    <div class="span3">
+      {{ helper.render_teams_nav(team, team_type, current_user) }}
+    </div>
+    <div class="span9" style="min-height:400px">
+        {% if current_user.is_authenticated() and team_type=='myteams' %}
+          <h1><strong>{{ _('Team') }}</strong>: {{ _('Create a new Team') }}</h1>
+          <a href="{{ url_for('team.new')}}" class="btn">{{ _('Create new Team') }}</a>
+        {% endif %}
+
+        <h1>
+           <i class="icon-th"></i> {% if teams %}{{pagination.total_count}}{% endif %}  {{ title }}
+           {% if teams %}
+                <a class="pull-right btn btn-primary" href="{{url_for('team.search_teams', type=team_type)}}"><i class="icon-group" style="color:white"></i> {{ _('Search Team') }}</a>
+           {% endif %}
+        <h1>
+            {% if teams %}
+              {% if team_type=='myteams' %}
+                <h2>{{ _('Teams I belong') }}</h2>
+              {% else %}
+                <h2>{{ _('All available teams') }}</h2>
+              {% endif %}
+
+          {% for team in teams %}
+            {{ helper.show_team(team, team_type, current_user) }}
+          {% endfor %}
+          {{ helper.render_pagination(pagination) }}
+          {% else %}
+
+              {% if team_type=='myteams' %}
+                <h2>{{ _('Not belong to any team') }}</h2>
+              {% else %}
+                <h2>{{ _('No available teams') }}</h2>
+              {% endif %}
+       {% endif %} 
+    </div>
+</div>
+{% endblock %}

@@ -1,5 +1,5 @@
 {% extends "/base.html" %}
-{% set active_page = "community" %}
+{% set active_page = "teams" %}
 {% set active_app  = "all" %}
 {% import "privacy/locked.html" as privacy %}
 {% import "account/_helpers.html" as helper %}
@@ -13,30 +13,22 @@
         {% if enforce_privacy and (current_user.is_anonymous() or (current_user.is_authenticated and not current_user.admin)) %}
         {{ privacy.render_lock_page() }}
         {% else %}
-        <h1><i class="icon-trophy"></i> <strong>Community Leaderboard</strong></h1>
+        <h1><i class="icon-trophy"></i> <strong>Teams Leaderboard</strong></h1>
         <table class="table table-striped table-bordered table-hover table-condensed">
             <thead>
                 <tr>
                     <th>{{ _('Rank') }}</th>
-                    <th>{{ _('Name') }}</th>
+                    <th>{{ _('Team') }}</th>
                     <th>{{ _('Score') }}</th>
                 </tr>
             </thead>
             <tbody>
-            {% for user in top_users %}
-            {% if user.fullname == current_user.fullname %}
-                <tr class="success">
-                    <td><strong>{{user.rank}}</strong></td>
-                    <td><strong><a href="{{url_for('account.public_profile', name=user.name)}}">{{user.fullname}}</a></strong></td>
-                    <td><strong>{{user.score}}</strong></td>
-                </tr> 
-            {% else %}
+            {% for team in top_teams %}
                 <tr>
-                    <td>{{user.rank}}</td>
-                    <td><strong><a href="{{url_for('account.public_profile', name=user.name)}}">{{user.fullname}}</a></strong></td>
-                    <td>{{user.score}}</td>
+                    <td>{{team.rank}}</td>
+                    <td><strong><a href="{{url_for('team.public_profile', name=team.name)}}">{{team.name}}</a></strong></td>
+                    <td>{{team.score}}</td>
                 </tr> 
-            {%endif%}
             {% endfor %}
             </tbody>
         </table>

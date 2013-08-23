@@ -6,6 +6,15 @@
     <li {% if active_link=="admin"%}class="active"{% endif %}><a href="{{url_for('admin.index')}}"><i class="icon-chevron-right"></i> {{ _('Admin Site') }}</a></li>
     {% endif %}
     <li {% if active_link=="settings"%}class="active"{% endif %}><a href="{{url_for('account.settings')}}"><i class="icon-chevron-right"></i> {{ _('My Settings') }}</a></li>
+   <li {% if active_link=="teams"%}class="active"{% endif %}><a href="{{url_for('team.index')}}"><i class="icon-chevron-right"></i>
+   {% if current_user.is_anonymous() %}{{ _('Public Teams') }}{% else %}{{ _('My Teams') }}{% endif %}</a></li>
+</ul>
+{% endmacro %}
+
+{% macro render_community_local_nav(current_user, active_link) %}
+<ul data-spy="affix" data-offset-top="200px" class="nav nav-list bs-docs-sidenav affix-top">
+    <li {% if active_link=="community"%}class="active"{% endif %}><a href="{{url_for('account.index')}}"><i class="icon-chevron-right"></i> {{ _('Community') }}</a></li>
+    <li {% if active_link=="teams"%}class="active"{% endif %}><a href="{{url_for('team.teams')}}"><i class="icon-chevron-right"></i> {{ _('Teams') }}</a></li>
 </ul>
 {% endmacro %}
 

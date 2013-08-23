@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% set active_page = "members" %}
+{% set active_team  = "members" %}
+{% import "team/_helpers.html" as helper %}
+
+
+{% block content %}
+<div class="row-fluid">
+    <div class="span3">
+        {{ helper.render_teams_nav(team, 'myteams', current_user) }}
+    </div>
+
+    <div class="span9" style="min-height:400px"> 
+
+	    <h1><i class="icon-group"></i> <strong>{{ team.name }}</strong><small>{{total}} {{ _('members') }}</small>
+              {% if ( current_user.is_authenticated() and current_user.id == team.owner_id ) or current_user.admin %}
+               <a class="pull-right btn btn-primary" href="{{url_for('team.search_users', name=team.name)}}"><i class="icon-plus" style="color:white"></i> {{ _('Add Users') }}</a>
+              {% endif %}
+           </h1>
+
+        <table class="table table-striped table-bordered table-hover table-condensed">
+                <thead>
+                 <tr>
+                   <th>{{ _('Name') }}</th>
+                   <th>{{ _('Joined') }}</th>
+                   {% if current_user.id == team.owner_id or current_user.admin == 1 %}
+                   <th>{{ _('Manage') }}</th>
+                   {% endif %}
+                 </tr>
+                 {% for user2team in team.user2team %}
+                   
+                   <tr>
+                     <td><strong><a href="{{url_for('account.public_profile', name=user2team.user.name)}}">{{user2team.user.fullname}}</a></strong></td>
+                     <td>{{ user2team.created[0:10] }}</td>
+
+                     {% if current_user.id == team.owner_id or current_user.admin == 1 %}
+                     <td>
+
+                       {% if user2team.user_id == team.owner_id %}
+                          {{ _('Owner') }}
+                       {% else %}
+                         <a href="{{url_for('team.user_delete', name=team.name, user=user2team.user.name)}}" class="btn btn-danger btn-small"><i class="icon-trash icon-small"></i> {{ _('Remove') }}</a>
+                                              
+                       {% endif %}
+                     </td> 
+                     {% endif %}
+                   </tr>
+                 {% endfor %}
+                </thead>
+             </table>
+    </div>
+</div>
+{% endblock %}

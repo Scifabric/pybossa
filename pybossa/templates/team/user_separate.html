@@ -1,0 +1,33 @@
+{% extends "/base.html" %}
+{% set active_page = "teams" %}
+{% import "team/_helpers.html" as helper %}
+
+{% block content %}
+{% if team %}
+  <div class="row">
+      <div class="span3">
+          {{ helper.render_teams_nav(team, 'myteams', current_user) }}
+      </div>
+    <div class="span9">
+        <h1>{{ _('Team') }} <strong>{{team.name}}</strong>: {{ _('Separate') }} <strong>
+        {% if user %}    
+            {{ user }}
+        {% endif %}
+            </h1>
+        {{ helper.show_team(team,'delete', current_user, false) }}
+        <form class="form-horizontal" method="post" action="{{ url_for('team.user_delete', name = team.name, user=user) }}">
+        <fieldset>
+            <h3>{{ _('Are you sure you want to separate to') }}{% if user %} <strong>{{ user }}</strong> {% endif %} {{ _('this team?') }}</h3>
+            <div class="form-actions">
+              <input type="submit" class="btn btn-small" value="Yes, separate it"/>
+              <a href="{{ url_for('team.detail', name = team.name) }}" class="btn btn-large btn-primary">{{ _('No!') }}</a>
+            </div>
+    </div>
+  </div>
+{% else %}
+  <div class="page-header">
+    <h1>{{ _('Sorry! This team does not exists.') }}</h1>
+  </div>
+{% endif %}
+{{ helper.broken_image() }}
+{% endblock %}

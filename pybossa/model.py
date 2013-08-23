@@ -425,6 +425,51 @@ class User(db.Model, DomainObject, flask.ext.login.UserMixin):
     task_runs = relationship('TaskRun', backref='user')
     apps = relationship('App', backref='owner')
 
+class Team(db.Model, DomainObject):
+    __tablename__ = 'team'
+    id = Column(Integer, primary_key=True)
+    #: created timestamp (automatically set)
+    created = Column(Text, default=make_timestamp)
+    #: team name
+    name = Column(Unicode(length=50), unique=True)
+    #: description
+    description = Column(Unicode(length=200))
+    #: owner
+    owner_id = Column(Integer, ForeignKey('user.id'))
+    #: Public flag Boolean Integer (0,1)
+    public = Column(Boolean, default=False)
+
+    #: TODO: find out ...
+    #flags = Column(Integer)
+    #: arbitrary additional information about the user in a JSON dict.
+    #info = Column(JSONType, default=dict)
+    def get_id(self):
+        '''id for login system. equates to name'''
+        return self.name
+
+    @classmethod
+    def by_name(cls, name):
+        '''Lookup user by (user)name.'''
+        return db.session.query(Team).filter_by(name=name).first()
+
+    user2team = relationship('User2Team', cascade='all, delete-orphan')
+    user = relationship('User')
+
+class User2Team(db.Model, DomainObject):
+    __tablename__ = 'user2team'
+    #: id
+    user_id = Column(Integer, ForeignKey('user.id', ondelete='CASCADE'), primary_key=True)
+    team_id = Column(Integer, ForeignKey('team.id', ondelete='CASCADE'), primary_key=True)     
+
+    #: created timestamp (automatically set)
+    created = Column(Text, default=make_timestamp)
+
+    def get_id(self):
+        '''id for login system. equates to name'''
+        return self.name
+
+    team = relationship('Team')
+    user = relationship('User')
 
 @event.listens_for(User, 'before_insert')
 def make_admin(mapper, conn, target):

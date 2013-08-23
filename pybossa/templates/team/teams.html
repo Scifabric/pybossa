@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% set active_page = "teams"  %}
+{% import "privacy/locked.html" as privacy %}
+{% import "account/_helpers.html" as helper %}
+
+{% macro render_pagination(pagination) %}
+  <div class="pagination pagination-centered">
+      <ul>
+        {% if pagination.has_prev %}
+          <li>
+          <a href="{{ url_for_other_page(pagination.page - 1)
+            }}">&laquo; {{_('Prev')}}</a>
+          </li>
+        {% endif %}
+
+        {%- for page in pagination.iter_pages() %}
+          {% if page %}
+            {% if page != pagination.page %}
+            <li>
+              <a href="{{ url_for_other_page(page) }}">{{ page }}</a>
+             </li>
+            {% else %}
+            <li class="active">
+                <a href="#">{{ page }}</a>
+            </li>  
+            {% endif %}
+          {% endif %}
+        {%- endfor %}
+        {% if pagination.has_next %}
+          <li>
+          <a href="{{ url_for_other_page(pagination.page + 1)
+            }}">{{_('Next')}} &raquo;</a>
+          </li>
+        {% endif %}
+    </ul>
+  </div>
+{% endmacro %}
+
+{% block content %}
+
+<div class="row">
+    <div class="span3">
+         {{ helper.render_community_local_nav(current_user, active_page) }}
+        
+    </div>
+
+    <div class="span9" style="min-height:400px">
+
+      {% if enforce_privacy and (current_user.is_anonymous() or (current_user.is_authenticated and not current_user.admin)) %}
+        {{ privacy.render_lock_page() }}
+      {% else %}
+      <h1>{{ _('Teams') }} <small>{{total}} {{ _('registered teams') }}</small><a class="pull-right btn btn-primary" href="{{url_for('leaderboard.teams')}}"><i class="icon-trophy" style="color:white"></i> {{ _('Teamboard') }}</a></h1>
+      {% if teams %}
+      <ul class="thumbnails">
+          {% for team in teams %}
+          <li>
+          <a href="{{url_for('team.public_profile', name=team.name)}}" class="thumbnail" rel='popover' title="<strong>{{team['name']}}</strong>" data-content="
+                <ul style='list-style-type:none; margin-left:0px;'>
+                    <li><strong><i class='icon-calendar'></i> {{ _('Created') }}</strong> {{team['created'][0:10]}}</li>
+                    <li><strong><i class='icon-tasks'></i> {{ _('Description') }}</strong> {{ team['description'] }}</li>
+                    <li><strong><i class='icon-tasks'></i> {{ _('Owner') }}</strong> {{ team.user.name }}</li>
+                    <li><strong><i class='icon-tasks'></i> {{ _('Type') }}</strong> {% if team['public'] %}{{ _('Public') }}{% else %}{{ _('Public invitation only') }} {% endif %}</li>
+            </ul>
+            ">
+             <img src="{{team['name'] | gravatar(size=90)}}">
+        </a>
+         </li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+    <div class="span9">
+        {{ render_pagination(pagination) }}
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+$("a[rel=popover]").popover({
+        html: true,
+        animate: true,
+        trigger: 'hover',
+        placement: 'bottom'
+                });
+
+</script>
+{% endblock %}

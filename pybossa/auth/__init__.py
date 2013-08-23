@@ -5,6 +5,7 @@ from flask.ext.login import current_user
 import app
 import task
 import taskrun
+import team
 import category
 import user
 

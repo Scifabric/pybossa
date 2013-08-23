@@ -6,7 +6,13 @@
 {% block content %}
 
 <div class="row">
-  <div class="span9 offset2">
+    <div class="span3">
+         {{ helper.render_community_local_nav(current_user, active_page) }}
+        
+    </div>
+
+    <div class="span9" style="min-height:400px">
+
       {% if enforce_privacy and (current_user.is_anonymous() or (current_user.is_authenticated and not current_user.admin)) %}
         {{ privacy.render_lock_page() }}
       {% else %}

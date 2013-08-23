@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% set active_page = "team" %}
+{% import "team/_helpers.html" as helper %}
+{% import "privacy/locked.html" as privacy %}
+
+{% block content %}
+<div class="row">
+    <div class="span12">
+        {% if enforce_privacy and (current_user.is_anonymous() or (current_user.is_authenticated and not current_user.admin)) %}
+        {{ privacy.render_lock_page() }}
+        {% else %}
+        <section id="team-data">
+            <h1><strong>{{ team['name'] }}</strong></h1>
+            {{ helper.render_team_profile(team, True)}}
+    </div>
+
+        </section>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
