@@ -23,7 +23,7 @@ from flask import abort
 from flask import flash
 from flask import redirect
 from flask import url_for
-from flaskext.login import login_required, current_user
+from flask.ext.login import login_required, current_user
 from flask.ext.mail import Message
 from flaskext.wtf import Form, TextField, PasswordField, validators, \
         ValidationError, IntegerField, HiddenInput, SelectField, BooleanField
@@ -31,7 +31,7 @@ from flaskext.wtf import Form, TextField, PasswordField, validators, \
 from pybossa.core import db, mail
 import pybossa.validator as pb_validator
 import pybossa.model as model
-from flaskext.babel import lazy_gettext
+from flask.ext.babel import lazy_gettext, gettext
 from sqlalchemy.sql import func, text
 from pybossa.model import User, Team, User2Team
 from pybossa.util import Pagination
@@ -76,7 +76,7 @@ class TeamForm(Form):
 def index(page):
     '''By default show the Public Teams'''
     return team_index(page, cached_teams.get_public_data, 'public',
-                      True, False, lazy_gettext('Public Teams')
+                      True, False, gettext('Public Teams')
                      )
 
 @blueprint.route('/teams', defaults={'page': 1})
@@ -126,7 +126,7 @@ def private(page):
 
     '''By show the private Teams'''
     return team_index(page, cached_teams.get_private_teams, 'private',
-                      True, False, lazy_gettext('Private Teams'))
+                      True, False, gettext('Private Teams'))
 
 @blueprint.route('/myteams', defaults={'page': 1})
 @blueprint.route('/myteams/page/<int:page>')
@@ -138,7 +138,7 @@ def myteams(page):
 
     '''By show the private Teams'''
     return team_index(page, cached_teams.get_signed_teams, 'myteams',
-                      True, False, lazy_gettext('My Teams'))
+                      True, False, gettext('My Teams'))
 
 
 def team_index(page, lookup, team_type, fallback, use_count, title):
@@ -207,7 +207,7 @@ def search_teams(type):
     if not require.team.read():
         abort(403)
 
-    title = lazy_gettext('Search name of teams')
+    title = gettext('Search name of teams')
     form = SearchForm(request.form)
     teams = db.session.query(Team).all()
 
@@ -234,19 +234,19 @@ def search_teams(type):
                 '/team/search_teams.html',
                 founds= [],
                 team_type = type,
-                title=lazy_gettext('Search Team'))
+                title=gettext('Search Team'))
         else:
             return render_template(
                 '/team/search_teams.html',
-                founds= founds,
+                founds = founds,
                 team_type = type,
-                title=lazy_gettext('Search Team'))
+                title = gettext('Search Team'))
 
     return render_template(
             '/team/search_teams.html',
-            found=[],
+            found = [],
             team_type = type,
-            title=lazy_gettext('Search Team'))
+            title = gettext('Search Team'))
 
 @blueprint.route('/<name>/users/search', methods=['GET', 'POST'])
 @login_required
@@ -273,9 +273,9 @@ def search_users(name):
 
             return render_template(
                 '/team/search_users.html',
-                founds=[],
-                team=team,
-                title=lazy_gettext('Search name of User'))
+                founds = [],
+                team = team,
+                title = gettext('Search name of User'))
         else:
             for found in founds:
                 user2team = User2Team.query\
@@ -286,15 +286,15 @@ def search_users(name):
 
             return render_template(
                 '/team/search_users.html',
-                founds =founds,
+                founds = founds,
                 team = team,
-                title=lazy_gettext('Search User'))
+                title = gettext('Search User'))
 
     return render_template(
         '/team/search_users.html',
-        founds=[],
-        team=team,
-        title=lazy_gettext('Search User'))
+        founds = [],
+        team = team,
+        title = gettext('Search User'))
 
 class SearchForm(Form):
     ''' Search User Form Generic '''
@@ -312,14 +312,14 @@ def new():
     def respond(errors):
         return render_template(
             'team/new.html',
-            title=lazy_gettext('Create a Team'),
+            title = gettext('Create a Team'),
             form=form, errors=errors)
 
     if request.method != 'POST':
         return respond(False)
 
     if not form.validate():
-        flash(lazy_gettext('Please correct the errors'), 'error')
+        flash(gettext('Please correct the errors'), 'error')
         return respond(True)
 
     team = Team(
@@ -342,7 +342,7 @@ def new():
         db.session.add(user2team)
         db.session.commit()
 
-        flash(lazy_gettext('Team created'), 'success')
+        flash(gettext('Team created'), 'success')
         return redirect(url_for('.detail', name=team.name))
 
     except Exception as e:
@@ -354,7 +354,7 @@ def new():
 def users(name):
     ''' Add new user to a team '''
     team = cached_teams.get_team(name)
-    title = lazy_gettext('Search Users')
+    title = gettext('Search Users')
 
     if not require.team.read():
         abort(403)
@@ -377,7 +377,7 @@ def users(name):
 def delete(name):
     ''' Delete the team owner of de current_user '''
     team = cached_teams.get_team(name)
-    title = lazy_gettext('Delete Team')
+    title = gettext('Delete Team')
 
     if not require.team.delete(team):
         abort(403)
@@ -392,7 +392,7 @@ def delete(name):
     db.session.delete(team)
     db.session.commit()
 
-    flash(lazy_gettext('Team deleted!'), 'success')
+    flash(gettext('Team deleted!'), 'success')
     return redirect(url_for('team.myteams'))
 
 @blueprint.route('/<name>/update', methods=['GET', 'POST'])
@@ -411,13 +411,13 @@ def update(name):
         db.session.merge(new_team)
         db.session.commit()
 
-        flash(lazy_gettext('Team updated!'), 'success')
+        flash(gettext('Team updated!'), 'success')
         return redirect(url_for('.detail',name=new_team.name))
 
     if not require.team.update(team):
         abort(403)
 
-    title = lazy_gettext('Update Team')
+    title = gettext('Update Team')
     if request.method == 'GET':
         form = TeamForm(obj=team)
         form.populate_obj(team)
@@ -426,7 +426,7 @@ def update(name):
         form = TeamForm(request.form)
         if form.validate():
             return handle_valid_form(form)
-        flash(lazy_gettext('Please correct the errors'), 'error')
+        flash(gettext('Please correct the errors'), 'error')
 
     return render_template(
         '/team/update.html',
@@ -440,7 +440,7 @@ def update(name):
 def user_add(name,user=None):
     ''' Add Current User to a team '''
     team = cached_teams.get_team(name)
-    title = lazy_gettext('Add User to a Team')
+    title = gettext('Add User to a Team')
 
     if not require.team.read():
         abort(403)
@@ -456,14 +456,14 @@ def user_add(name,user=None):
     if user:
         user_search = User.query.filter_by(name=user).first()
         if not user_search:
-            flash( lazy_gettext('This user don\t exists!!!'), 'error')
+            flash(gettext('This user don\t exists!!!'), 'error')
             return redirect(url_for('team.myteams',  name=team.name ))
         else:
             ''' Check to see if the current_user is the owner or admin '''
             if current_user.admin is True or team.owner_id == current_user.id:
                 user_id = user_search.id
             else:
-                flash( lazy_gettext('You do not have right to add to this team!!!'), 'error')
+                flash(gettext('You do not have right to add to this team!!!'), 'error')
                 return redirect(url_for('team.myteams',  name=team.name ))
     else:
         user_id = current_user.id
@@ -475,7 +475,7 @@ def user_add(name,user=None):
                 .first()
 
     if user2team:
-        flash( lazy_gettext('This user already is in this team'), 'error')
+        flash(gettext('This user already is in this team'), 'error')
         return redirect(url_for('team.search_users',  name=team.name ))
 
     else:
@@ -486,7 +486,7 @@ def user_add(name,user=None):
 
         db.session.add(user2team)
         db.session.commit()
-        flash( lazy_gettext('Association to the team created'), 'success')
+        flash(gettext('Association to the team created'), 'success')
         return redirect(url_for('team.myteams' ))
 
 @blueprint.route('/<name>/separate', methods=['GET', 'POST'])
@@ -494,7 +494,7 @@ def user_add(name,user=None):
 @login_required
 def user_delete(name,user=None):
     team = cached_teams.get_team(name)
-    title = lazy_gettext('Delete User from a Team')
+    title = gettext('Delete User from a Team')
 
     if not require.team.read():
         abort(403)
@@ -510,14 +510,14 @@ def user_delete(name,user=None):
     if user:
         user_search = User.query.filter_by(name=user).first()
         if not user_search:
-            flash( lazy_gettext('This user don\t exists!!!'), 'error')
+            flash(gettext('This user don\t exists!!!'), 'error')
             return redirect(url_for('team.myteams',  name=team.name ))
         else:
             ''' Check to see if the current_user is the owner or admin '''
             if current_user.admin is True or team.owner_id == current_user.id:
                 user_id = user_search.id
             else:
-                flash( lazy_gettext('You do not have right to separate to this team!!!'), 'error')
+                flash(gettext('You do not have right to separate to this team!!!'), 'error')
                 return redirect(url_for('team.myteams',  name=team.name ))
     else:
         user_id = current_user.id
@@ -531,6 +531,6 @@ def user_delete(name,user=None):
     if user2team:
         db.session.delete(user2team)
         db.session.commit()
-        flash(lazy_gettext('Association to the team deleted'), 'success')
+        flash(gettext('Association to the team deleted'), 'success')
 
     return redirect(url_for('team.myteams'))
