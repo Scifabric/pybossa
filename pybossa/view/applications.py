@@ -115,7 +115,18 @@ def app_title(app, page_name):
 
 
 def app_by_shortname(short_name):
-    return App.query.filter_by(short_name=short_name).first_or_404()
+    app = cached_apps.get_app(short_name)
+    if app.id:
+        # Populate CACHE with the data of the app
+        return (app,
+                cached_apps.n_tasks(app.id),
+                cached_apps.n_task_runs(app.id),
+                cached_apps.overall_progress(app.id),
+                cached_apps.last_activity(app.id))
+
+    else:
+        return abort(404)
+    #return App.query.filter_by(short_name=short_name).first_or_404()
 
 
 @blueprint.route('/', defaults={'page': 1})
@@ -167,6 +178,13 @@ def app_index(page, lookup, category, fallback, use_count):
 
     apps, count = lookup(category, page, per_page)
 
+    data = []
+    for app in apps:
+        data.append(dict(app=app, n_tasks=cached_apps.n_tasks(app['id']),
+                         overall_progress=cached_apps.overall_progress(app['id']),
+                         last_activity=cached_apps.last_activity(app['id'])))
+
+
     if fallback and not apps:
         return redirect(url_for('.published'))
 
@@ -190,7 +208,7 @@ def app_index(page, lookup, category, fallback, use_count):
     if cached_apps.n_featured() > 0:
         categories.insert(0, featured_cat)
     template_args = {
-        "apps": apps,
+        "apps": data,
         "title": gettext("Applications"),
         "pagination": pagination,
         "active_cat": active_cat,
@@ -275,7 +293,7 @@ def new():
 def task_presenter_editor(short_name):
     try:
         errors = False
-        app = app_by_shortname(short_name)
+        app, n_tasks, n_task_runs, overall_progress, last_activty = app_by_shortname(short_name)
 
         title = app_title(app, "Task Presenter Editor")
         require.app.read(app)
@@ -283,9 +301,11 @@ def task_presenter_editor(short_name):
 
         form = TaskPresenterForm(request.form)
         if request.method == 'POST' and form.validate():
-            app.info['task_presenter'] = form.editor.data
-            db.session.add(app)
+            db_app = db.session.query(model.App).filter_by(id=app.id).first()
+            db_app.info['task_presenter'] = form.editor.data
+            db.session.add(db_app)
             db.session.commit()
+            cached_apps.delete_app(app.short_name)
             msg_1 = gettext('Task presenter added!')
             flash('<i class="icon-ok"></i> ' + msg_1, 'success')
             return redirect(url_for('.tasks', short_name=app.short_name))
@@ -344,7 +364,7 @@ def task_presenter_editor(short_name):
 @blueprint.route('/<short_name>/delete', methods=['GET', 'POST'])
 @login_required
 def delete(short_name):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     try:
         title = app_title(app, "Delete")
         require.app.read(app)
@@ -352,10 +372,14 @@ def delete(short_name):
         if request.method == 'GET':
             return render_template('/applications/delete.html',
                                    title=title,
-                                   app=app)
+                                   app=app,
+                                   n_tasks=n_tasks,
+                                   overall_progress=overall_progress,
+                                   last_activity=last_activity)
         # Clean cache
+        cached_apps.delete_app(app.short_name)
         cached_apps.clean(app.id)
-        db.session.delete(app)
+        App.query.filter_by(short_name=app.short_name).delete()
         db.session.commit()
         flash(gettext('Application deleted!'), 'success')
         return redirect(url_for('account.profile'))
@@ -369,14 +393,14 @@ def delete(short_name):
 @blueprint.route('/<short_name>/update', methods=['GET', 'POST'])
 @login_required
 def update(short_name):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
 
     def handle_valid_form(form):
         hidden = int(form.hidden.data)
 
         new_info = {}
         # Add the info items
-        app = app_by_shortname(short_name)
+        app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
         if form.thumbnail.data:
             new_info['thumbnail'] = form.thumbnail.data
         #if form.sched.data:
@@ -397,7 +421,7 @@ def update(short_name):
             allow_anonymous_contributors=form.allow_anonymous_contributors.data,
             category_id=form.category_id.data)
 
-        app = app_by_shortname(short_name)
+        app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
         db.session.merge(new_application)
         db.session.commit()
         cached_apps.reset()
@@ -447,7 +471,7 @@ def update(short_name):
 
 @blueprint.route('/<short_name>/')
 def details(short_name):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
 
     try:
         require.app.read(app)
@@ -460,7 +484,10 @@ def details(short_name):
 
     title = app_title(app, None)
 
-    template_args = {"app": app, "title": title}
+    template_args = {"app": app, "title": title,
+                     "n_tasks": n_tasks,
+                     "overall_progress": overall_progress,
+                     "last_activity": last_activity}
     try:
         if current_app.config.get('CKAN_URL'):
             template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
@@ -483,7 +510,7 @@ def details(short_name):
 @blueprint.route('/<short_name>/settings')
 @login_required
 def settings(short_name):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
 
     title = app_title(app, "Settings")
     try:
@@ -492,6 +519,9 @@ def settings(short_name):
 
         return render_template('/applications/settings.html',
                                app=app,
+                               n_tasks=n_tasks,
+                               overall_progress=overall_progress,
+                               last_activity=last_activity,
                                title=title)
     except HTTPException:
         if app.hidden:
@@ -521,7 +551,7 @@ def compute_importer_variant_pairs(forms):
 @blueprint.route('/<short_name>/tasks/import', methods=['GET', 'POST'])
 @login_required
 def import_task(short_name):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, "Import Tasks")
     loading_text = gettext("Importing tasks, this may take a while, wait...")
     template_args = {"title": title, "app": app, "loading_text": loading_text}
@@ -603,6 +633,10 @@ def _import_task(app, handler, form, render_forms):
         if n == 1:
             msg = str(n) + " " + gettext('Task imported successfully!')
         flash(msg, 'success')
+        cached_apps.delete_n_tasks(app.id)
+        cached_apps.delete_n_task_runs(app.id)
+        cached_apps.delete_overall_progress(app.id)
+        cached_apps.delete_last_activity(app.id)
         return redirect(url_for('.tasks', short_name=app.short_name))
     except importer.BulkImportException, err_msg:
         flash(err_msg, 'error')
@@ -615,7 +649,7 @@ def _import_task(app, handler, form, render_forms):
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     task = Task.query.filter_by(id=task_id).first_or_404()
     try:
         require.app.read(app)
@@ -680,7 +714,7 @@ def task_presenter(short_name, task_id):
 @blueprint.route('/<short_name>/presenter')
 @blueprint.route('/<short_name>/newtask')
 def presenter(short_name):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, "Contribute")
     template_args = {"app": app, "title": title}
     try:
@@ -720,7 +754,7 @@ def presenter(short_name):
 
 @blueprint.route('/<short_name>/tutorial')
 def tutorial(short_name):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, "Tutorial")
     try:
         require.app.read(app)
@@ -736,7 +770,7 @@ def tutorial(short_name):
 def export(short_name, task_id):
     """Return a file with all the TaskRuns for a give Task"""
     # Check if the app exists
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     try:
         require.app.read(app)
     except HTTPException:
@@ -759,13 +793,16 @@ def export(short_name, task_id):
 
 @blueprint.route('/<short_name>/tasks/')
 def tasks(short_name):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, "Tasks")
     try:
         require.app.read(app)
         return render_template('/applications/tasks.html',
                                title=title,
-                               app=app)
+                               app=app,
+                               n_tasks=n_tasks,
+                               overall_progress=overall_progress,
+                               last_activity=last_activity)
     except HTTPException:
         if app.hidden:
             raise abort(403)
@@ -776,7 +813,7 @@ def tasks(short_name):
 @blueprint.route('/<short_name>/tasks/browse', defaults={'page': 1})
 @blueprint.route('/<short_name>/tasks/browse/<int:page>')
 def tasks_browse(short_name, page):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, "Tasks")
 
     def respond():
@@ -815,7 +852,7 @@ def tasks_browse(short_name, page):
 @login_required
 def delete_tasks(short_name):
     """Delete ALL the tasks for a given application"""
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     try:
         require.app.read(app)
         require.app.update(app)
@@ -823,13 +860,19 @@ def delete_tasks(short_name):
             title = app_title(app, "Delete")
             return render_template('applications/tasks/delete.html',
                                    app=app,
+                                   n_tasks=n_tasks,
+                                   overall_progress=overall_progress,
+                                   last_activity=last_activity,
                                    title=title)
         else:
-            for task in app.tasks:
-                db.session.delete(task)
+            db.session.query(model.Task).filter_by(app_id=app.id).delete()
             db.session.commit()
             msg = gettext("All the tasks and associated task runs have been deleted")
             flash(msg, 'success')
+            cached_apps.delete_last_activity(app.id)
+            cached_apps.delete_n_tasks(app.id)
+            cached_apps.delete_n_task_runs(app.id)
+            cached_apps.delete_overall_progress(app.id)
             return redirect(url_for('.tasks', short_name=app.short_name))
     except HTTPException:
         return abort(403)
@@ -838,7 +881,7 @@ def delete_tasks(short_name):
 @blueprint.route('/<short_name>/tasks/export')
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, gettext("Export"))
     loading_text = gettext("Exporting data..., this may take a while")
 
@@ -1019,7 +1062,7 @@ def export_to(short_name):
 @blueprint.route('/<short_name>/stats')
 def show_stats(short_name):
     """Returns App Stats"""
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, "Statistics")
 
     try:
@@ -1030,7 +1073,7 @@ def show_stats(short_name):
         else:
             raise
 
-    if not (len(app.tasks) > 0 and len(app.task_runs) > 0):
+    if not ((n_tasks > 0) and (n_task_runs > 0)):
         return render_template('/applications/non_stats.html',
                                title=title,
                                app=app)
@@ -1070,7 +1113,7 @@ def show_stats(short_name):
 @login_required
 def task_settings(short_name):
     """Settings page for tasks of the application"""
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     try:
         require.app.read(app)
         require.app.update(app)
@@ -1083,7 +1126,7 @@ def task_settings(short_name):
 @blueprint.route('/<short_name>/tasks/redundancy', methods=['GET', 'POST'])
 @login_required
 def task_n_answers(short_name):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, gettext('Redundancy'))
     form = TaskRedundancyForm()
     try:
@@ -1116,7 +1159,7 @@ def task_n_answers(short_name):
 @blueprint.route('/<short_name>/tasks/scheduler', methods=['GET', 'POST'])
 @login_required
 def task_scheduler(short_name):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, gettext('Task Scheduler'))
     form = TaskSchedulerForm()
 
@@ -1143,11 +1186,12 @@ def task_scheduler(short_name):
         return respond()
 
     if request.method == 'POST' and form.validate():
+        app = App.query.filter_by(short_name=app.short_name).first()
         if form.sched.data:
             app.info['sched'] = form.sched.data
-        cached_apps.reset()
         db.session.add(app)
         db.session.commit()
+        cached_apps.delete_app(app.short_name)
         msg = gettext("Application Task Scheduler updated!")
         flash(msg, 'success')
         return redirect(url_for('.tasks', short_name=app.short_name))
@@ -1159,7 +1203,7 @@ def task_scheduler(short_name):
 @blueprint.route('/<short_name>/tasks/priority', methods=['GET', 'POST'])
 @login_required
 def task_priority(short_name):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, gettext('Task Priority'))
     form = TaskPriorityForm()
 
@@ -1192,6 +1236,7 @@ def task_priority(short_name):
                     flash(gettext(("Ooops, Task.id=%s does not belong to the app" % task_id)), 'danger')
         db.session.add_all(tasks)
         db.session.commit()
+        cached_apps.delete_app(app.short_name)
         flash(gettext("Task priority has been changed"), 'success')
         return respond()
     else:

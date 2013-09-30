@@ -13,7 +13,7 @@
     <div class="span9" style="min-height:400px">
         {{ helper.render_app_title(app)}}
         <hr>
-        {{ helper.render_overall_progress(app) }}
+        {{ helper.render_overall_progress(app, n_tasks, overall_progress) }}
         {% if app.long_description %}
         <hr>
             {{ app.long_description|safe}}
