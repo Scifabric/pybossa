@@ -26,6 +26,7 @@ from pybossa.core import db
 from pybossa.auth import require
 from pybossa.hateoas import Hateoas
 from pybossa.vmcp import sign
+from pybossa.cache import apps as cached_apps
 import pybossa.sched as sched
 import os
 
@@ -177,12 +178,13 @@ class APIBase(MethodView):
         """
         try:
             self.valid_args()
-            item = db.session.query(self.__class__).get(id)
-            if item is None:
+            inst = db.session.query(self.__class__).get(id)
+            if inst is None:
                 raise NotFound
-            getattr(require, self.__class__.__name__.lower()).delete(item)
-            db.session.delete(item)
+            getattr(require, self.__class__.__name__.lower()).delete(inst)
+            db.session.delete(inst)
             db.session.commit()
+            self._refresh_cache(inst)
             return '', 204
         except Exception as e:
             return self.format_exception(e, action='DELETE')
@@ -214,6 +216,7 @@ class APIBase(MethodView):
             inst = self.__class__(**data)
             db.session.merge(inst)
             db.session.commit()
+            self._refresh_cache(inst)
             return Response(json.dumps(inst.dictize()), 200,
                             mimetype='application/json')
         except Exception as e:
@@ -224,9 +227,17 @@ class APIBase(MethodView):
         data dict.'''
         pass
 
+    def _refresh_cache(self, data_dict):
+        '''Method to be overriden in inheriting classes which wish to refresh
+        cache for given object.'''
+        pass
+
 
 class AppAPI(APIBase):
     __class__ = model.App
+
+    def _refresh_cache(self, obj):
+        cached_apps.delete_app(obj.short_name)
 
     def _update_object(self, obj):
         try:

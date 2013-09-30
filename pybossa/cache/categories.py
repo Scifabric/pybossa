@@ -18,9 +18,6 @@ from pybossa.core import db
 import pybossa.model as model
 
 
-STATS_TIMEOUT = 50
-
-
 @cache.cached(key_prefix="categories_all")
 def get_all():
     """Return all categories"""

@@ -25,7 +25,24 @@ import datetime
 import time
 from datetime import timedelta
 
-STATS_TIMEOUT=50
+
+@cache.memoize()
+def get_app(short_name):
+    sql = text('''SELECT * FROM
+                  app WHERE app.short_name=:short_name''')
+    results = db.engine.execute(sql, short_name=short_name)
+    app = App()
+    for row in results:
+        app = App(id=row.id, name=row.name, short_name=row.short_name,
+                  created=row.created,
+                  description=row.description,
+                  long_description=row.long_description,
+                  owner_id=row.owner_id,
+                  hidden=row.hidden,
+                  info=json.loads(row.info),
+                  allow_anonymous_contributors=row.allow_anonymous_contributors)
+    return app
+
 
 @cache.cached(key_prefix="front_page_featured_apps")
 def get_featured_front_page():
@@ -60,7 +77,29 @@ def get_top(n=4):
     return top_apps
 
 
-@cache.memoize(timeout=60*5)
+@cache.memoize()
+def n_tasks(app_id):
+    sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task
+                  WHERE task.app_id=:app_id''')
+    results = db.engine.execute(sql, app_id=app_id)
+    n_tasks = 0
+    for row in results:
+        n_tasks = row.n_tasks
+    return n_tasks
+
+
+@cache.memoize()
+def n_task_runs(app_id):
+    sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
+                  WHERE task_run.app_id=:app_id''')
+    results = db.engine.execute(sql, app_id=app_id)
+    n_task_runs = 0
+    for row in results:
+        n_task_runs = row.n_task_runs
+    return n_task_runs
+
+
+@cache.memoize()
 def last_activity(app_id):
     sql = text('''SELECT finish_time FROM task_run WHERE app_id=:app_id
                ORDER BY finish_time DESC LIMIT 1''')
@@ -111,7 +150,8 @@ def n_featured():
         count = row[0]
     return count
 
-@cache.memoize(timeout=50)
+
+@cache.memoize()
 def get_featured(category, page=1, per_page=5):
     """Return a list of featured apps with a pagination"""
 
@@ -153,7 +193,7 @@ def n_published():
         count = row[0]
     return count
 
-@cache.memoize(timeout=50)
+@cache.memoize()
 def get_published(category, page=1, per_page=5):
     """Return a list of apps with a pagination"""
 
@@ -202,7 +242,7 @@ def n_draft():
         count = row[0]
     return count
 
-@cache.memoize(timeout=50)
+@cache.memoize()
 def get_draft(category, page=1, per_page=5):
     """Return list of draft applications"""
 
@@ -233,7 +273,7 @@ def get_draft(category, page=1, per_page=5):
     return apps, count
 
 
-@cache.memoize(timeout=50)
+@cache.memoize()
 def n_count(category):
     """Count the number of apps in a given category"""
     sql = text('''
@@ -256,7 +296,7 @@ def n_count(category):
     return count
 
 
-@cache.memoize(timeout=50)
+@cache.memoize()
 def get(category, page=1, per_page=5):
     """Return a list of apps with at least one task and a task_presenter
        with a pagination for a given category"""
@@ -311,8 +351,35 @@ def reset():
     cache.delete_memoized(get)
 
 
+def delete_app(app_id):
+    """Reset app values in cache"""
+    cache.delete_memoized(get_app, app_id)
+
+
+def delete_n_tasks(app_id):
+    """Reset n_tasks value in cache"""
+    cache.delete_memoized(n_tasks, app_id)
+
+
+def delete_n_task_runs(app_id):
+    """Reset n_tasks value in cache"""
+    cache.delete_memoized(n_task_runs, app_id)
+
+
+def delete_overall_progress(app_id):
+    """Reset overall_progress value in cache"""
+    cache.delete_memoized(overall_progress, app_id)
+
+
+def delete_last_activity(app_id):
+    """Reset last_activity value in cache"""
+    cache.delete_memoized(last_activity, app_id)
+
+
 def clean(app_id):
     """Clean all items in cache"""
     reset()
+    cache.delete_memoized(n_tasks, app_id)
+    cache.delete_memoized(n_task_runs, app_id)
     cache.delete_memoized(last_activity, app_id)
     cache.delete_memoized(overall_progress, app_id)

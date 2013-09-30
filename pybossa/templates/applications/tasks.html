@@ -12,9 +12,9 @@
             <div class="span9">
                 {{ helper.render_app_title(app, subtitle=_('Tasks'))}}
                 <hr>
-                {{ helper.render_overall_progress(app, show_contribute_btn=False, show_n_tasks=True) }}
+                {{ helper.render_overall_progress(app, n_tasks, overall_progress, show_contribute_btn=False, show_n_tasks=True) }}
                 <hr>
-                {% if app.owner == current_user or (current_user.is_authenticated() and current_user.admin)%}
+                {% if app.owner_id == current_user.id or (current_user.is_authenticated() and current_user.admin)%}
                 <div class="row-fluid">
                     <div id="import_tasks" class="span6 well">
                         <h2><i class="icon-upload"></i> {{_('Import Tasks')}}</h2>
