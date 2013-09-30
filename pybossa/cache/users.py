@@ -31,7 +31,7 @@ def get_top(n=10):
     return top_users
 
 
-@cache.memoize(timeout=50)
+@cache.memoize()
 def get_user_summary(name):
     # Get USER
     sql = text('''

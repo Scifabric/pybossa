@@ -13,7 +13,7 @@
         <div class="alert alert-danger">
             <strong>Danger Zone!</strong> If you delete all the tasks and task runs they will be gone forever!<br/><strong>You cannot undo this action!</strong>
         </div>
-        {{ helper.render_app_summary(app, current_user) }}
+        {{ helper.render_app_summary(app, n_tasks, overall_progress, last_activity, current_user) }}
         <form class="form-horizontal" method="post" action="{{ url_for('app.delete_tasks', short_name = app.short_name) }}">
         <h3><strong>Are you sure you want to delete ALL the application tasks and associated task runs?</strong></h3>
         <div class="form-actions">

@@ -12,7 +12,7 @@
     <!-- Application -->
     <div class="span9">
         <h1><strong>{{ app.name }}</strong>: {{ _('Settings') }}</h1>
-        {{ helper.render_app_summary(app, current_user) }}
+        {{ helper.render_app_summary(app, n_tasks, overall_progress, last_activity, current_user) }}
         <h2>{{ _('Application Settings') }}</h2>
         <div class="btn-group">
             <a class="btn" href="{{ url_for('app.update', short_name = app.short_name) }}"><i class="icon-edit icon-white"></i> {{ _('Edit the application details') }}</a>

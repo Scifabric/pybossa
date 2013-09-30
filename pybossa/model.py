@@ -296,7 +296,7 @@ class Task(db.Model, DomainObject):
     created = Column(Text, default=make_timestamp)
     #: ForeignKey to App.id (NB: use task relationship rather than this field
     #: in normal use
-    app_id = Column(Integer, ForeignKey('app.id'))
+    app_id = Column(Integer, ForeignKey('app.id', ondelete='CASCADE'))
     #: a StateEnum instance
     # TODO: state should be an integer?
     state = Column(UnicodeText, default=u'ongoing')
@@ -346,7 +346,7 @@ class TaskRun(db.Model, DomainObject):
     #: application id of this task run
     app_id = Column(Integer, ForeignKey('app.id'))
     #: task id of this task run
-    task_id = Column(Integer, ForeignKey('task.id'))
+    task_id = Column(Integer, ForeignKey('task.id', ondelete='CASCADE'))
     #: user id of performer of this task
     user_id = Column(Integer, ForeignKey('user.id'))
     # ip address of this user (only if anonymous)

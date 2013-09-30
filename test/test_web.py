@@ -1030,6 +1030,7 @@ class TestWeb(web.Helper):
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
                                  {'content-type': 'text/plain'})
         Mock.return_value = empty_file
+        app = db.session.query(model.App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv'},
@@ -1741,6 +1742,7 @@ class TestWeb(web.Helper):
         # As Anonymous user
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should be redirected to sign in"
+        app = db.session.query(model.App).first()
         msg = "Oops! You have to sign in to participate in <strong>%s</strong>" % app.name
         assert msg in res.data, err_msg
 
@@ -1823,6 +1825,7 @@ class TestWeb(web.Helper):
                                   'formtype': 'json'},
                             follow_redirects=True)
 
+        app = db.session.query(model.App).first()
         err_msg = "Tasks should be imported"
         assert "1 Task imported successfully!" in res.data, err_msg
         tasks = db.session.query(model.Task).filter_by(app_id=app.id).all()
