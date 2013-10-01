@@ -12,7 +12,7 @@ def read(app=None):
         if current_user.is_authenticated():
             if current_user.admin:
                 return True
-            elif current_user.id == app.owner.id:
+            elif current_user.id == app.owner_id:
                 return True
             else:
                 return False
