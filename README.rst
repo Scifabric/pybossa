@@ -74,9 +74,12 @@ Copyright / License
 
 Copyright 2013 SF Isle of Man Limited. 
 
-License: The GNU Affero General Public License, either version 3 of the License
+Source Code License: The GNU Affero General Public License, either version 3 of the License
 or (at your option) any later version. (see COPYING file)
 
 The GNU Affero General Public License is a free, copyleft license for
 software and other kinds of works, specifically designed to ensure
 cooperation with the community in the case of network server software.
+
+Documentation and media is under a Creative Commons Attribution License version
+3.
