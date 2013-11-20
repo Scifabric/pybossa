@@ -379,7 +379,8 @@ def delete(short_name):
         # Clean cache
         cached_apps.delete_app(app.short_name)
         cached_apps.clean(app.id)
-        App.query.filter_by(short_name=app.short_name).delete()
+        app = App.query.get(app.id)
+        db.session.delete(app)
         db.session.commit()
         flash(gettext('Application deleted!'), 'success')
         return redirect(url_for('account.profile'))
@@ -865,7 +866,9 @@ def delete_tasks(short_name):
                                    last_activity=last_activity,
                                    title=title)
         else:
-            db.session.query(model.Task).filter_by(app_id=app.id).delete()
+            tasks = db.session.query(model.Task).filter_by(app_id=app.id).all()
+            for t in tasks:
+                db.session.delete(t)
             db.session.commit()
             msg = gettext("All the tasks and associated task runs have been deleted")
             flash(msg, 'success')

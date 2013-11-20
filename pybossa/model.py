@@ -209,13 +209,13 @@ class App(db.Model, DomainObject):
 
     ## Relationships
     #: `Task`s for this app.`
-    tasks = relationship('Task', cascade='all, delete-orphan', backref='app')
+    tasks = relationship('Task', cascade='all, delete, delete-orphan', backref='app')
     #: `TaskRun`s for this app.`
     task_runs = relationship('TaskRun', backref='app',
                              cascade='all, delete-orphan',
                              order_by='TaskRun.finish_time.desc()')
     #: `Featured` or not for this app
-    featured = relationship('Featured', cascade='all, delete-orphan')
+    featured = relationship('Featured', cascade='all, delete, delete-orphan')
     #: `category` or not for this app
     category = relationship('Category')
 
@@ -325,7 +325,7 @@ class Task(db.Model, DomainObject):
 
     ## Relationships
     #: `TaskRun`s for this task`
-    task_runs = relationship('TaskRun', cascade='all, delete-orphan', backref='task')
+    task_runs = relationship('TaskRun', cascade='all, delete, delete-orphan', backref='task')
 
     def pct_status(self):
         """Returns the percentage of Tasks that are completed"""
