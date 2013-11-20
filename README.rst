@@ -68,3 +68,15 @@ Authors
 * Twitter Bootstrap Icons by Glyphicons http://http://glyphicons.com/
 * FontAwesome fonts by http://fortawesome.github.com/Font-Awesome/
 * GeoLite data by MaxMind http://www.maxmind.com
+
+Copyright / License
+===================
+
+Copyright 2013 SF Isle of Man Limited. 
+
+License: The GNU Affero General Public License, either version 3 of the License
+or (at your option) any later version. (see COPYING file)
+
+The GNU Affero General Public License is a free, copyleft license for
+software and other kinds of works, specifically designed to ensure
+cooperation with the community in the case of network server software.
