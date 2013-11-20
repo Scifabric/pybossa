@@ -11,7 +11,7 @@ setup(
     install_requires = requirements,
     dependency_links = ['git+https://github.com/Hypernode/M2Crypto#egg=M2Crypto-0.22.dev'],
     # metadata for upload to PyPI
-    author = 'Citizen Cyberscience Centre and Open Knowledge Foundation',
+    author = 'Sf Isle of Man Limited',
     # TODO: change
     author_email = 'info@pybossa.com',
     description = 'Open Source CrowdSourcing framework',
