@@ -46,6 +46,14 @@ def n_anon_users():
         n_anon = row.n_anon
     return n_anon
 
+@cache.cached(timeout=STATS_TIMEOUT, key_prefix="site_n_tasks")
+def n_tasks_site():
+    sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task''')
+    results = db.engine.execute(sql)
+    for row in results:
+        n_tasks = row.n_tasks
+    return n_tasks
+
 
 @cache.cached(timeout=STATS_TIMEOUT)
 @blueprint.route('/')
@@ -64,10 +72,7 @@ def index():
     n_draft_apps = cached_apps.n_draft()
     n_total_apps = n_published_apps + n_draft_apps
 
-    sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task''')
-    results = db.engine.execute(sql)
-    for row in results:
-        n_tasks = row.n_tasks
+    n_tasks = n_tasks_site()
 
     sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run''')
     results = db.engine.execute(sql)
