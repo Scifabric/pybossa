@@ -33,8 +33,18 @@ def n_auth_users():
     sql = text('''SELECT COUNT("user".id) AS n_auth FROM "user";''')
     results = db.engine.execute(sql)
     for row in results:
-        n_auth = int(row.n_auth)
+        n_auth = row.n_auth
     return n_auth
+
+@cache.cached(timeout=STATS_TIMEOUT, key_prefix="site_n_anon_users")
+def n_anon_users():
+    sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip))
+               AS n_anon FROM task_run;''')
+
+    results = db.engine.execute(sql)
+    for row in results:
+        n_anon = row.n_anon
+    return n_anon
 
 
 @cache.cached(timeout=STATS_TIMEOUT)
@@ -46,12 +56,7 @@ def index():
 
     n_auth = n_auth_users()
 
-    sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip))
-               AS n_anon FROM task_run;''')
-
-    results = db.engine.execute(sql)
-    for row in results:
-        n_anon = row.n_anon
+    n_anon = n_anon_users()
 
     n_total_users = n_anon + n_auth
 
