@@ -54,6 +54,34 @@ def n_tasks_site():
         n_tasks = row.n_tasks
     return n_tasks
 
+cache.cached(timeout=STATS_TIMEOUT, key_prefix="site_n_task_runs")
+def n_task_runs_site():
+    sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run''')
+    results = db.engine.execute(sql)
+    for row in results:
+        n_task_runs = row.n_task_runs
+    return n_task_runs
+
+@cache.cached(timeout=STATS_TIMEOUT, key_prefix="site_top5_apps_24_hours")
+def get_top5_apps_24_hours():
+    # Top 5 Most active apps in last 24 hours
+    sql = text('''SELECT app.id, app.name, app.short_name, app.info,
+               COUNT(task_run.app_id) AS n_answers FROM app, task_run
+               WHERE app.id=task_run.app_id
+               AND app.hidden=0
+               AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
+               AND DATE(task_run.finish_time) <= NOW()
+               GROUP BY app.id
+               ORDER BY n_answers DESC LIMIT 5;''')
+
+    results = db.engine.execute(sql, limit=5)
+    top5_apps_24_hours = []
+    for row in results:
+        tmp = dict(id=row.id, name=row.name, short_name=row.short_name,
+                   info=dict(json.loads(row.info)), n_answers=row.n_answers)
+        top5_apps_24_hours.append(tmp)
+    return top5_apps_24_hours
+
 
 @cache.cached(timeout=STATS_TIMEOUT)
 @blueprint.route('/')
@@ -74,27 +102,11 @@ def index():
 
     n_tasks = n_tasks_site()
 
-    sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run''')
-    results = db.engine.execute(sql)
-    for row in results:
-        n_task_runs = row.n_task_runs
+    n_task_runs = n_task_runs_site()
 
-    # Top 5 Most active apps in last 24 hours
-    sql = text('''SELECT app.id, app.name, app.short_name, app.info,
-               COUNT(task_run.app_id) AS n_answers FROM app, task_run
-               WHERE app.id=task_run.app_id
-               AND app.hidden=0
-               AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
-               AND DATE(task_run.finish_time) <= NOW()
-               GROUP BY app.id
-               ORDER BY n_answers DESC LIMIT 5;''')
 
-    results = db.engine.execute(sql, limit=5)
-    top5_apps_24_hours = []
-    for row in results:
-        tmp = dict(id=row.id, name=row.name, short_name=row.short_name,
-                   info=dict(json.loads(row.info)), n_answers=row.n_answers)
-        top5_apps_24_hours.append(tmp)
+
+    top5_apps_24_hours = get_top5_apps_24_hours()
 
     # Top 5 Most active users in last 24 hours
     sql = text('''SELECT "user".id, "user".fullname, "user".name,
