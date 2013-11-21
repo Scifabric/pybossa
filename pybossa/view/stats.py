@@ -46,6 +46,7 @@ def n_anon_users():
         n_anon = row.n_anon
     return n_anon
 
+
 @cache.cached(timeout=STATS_TIMEOUT, key_prefix="site_n_tasks")
 def n_tasks_site():
     sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task''')
@@ -54,13 +55,15 @@ def n_tasks_site():
         n_tasks = row.n_tasks
     return n_tasks
 
-cache.cached(timeout=STATS_TIMEOUT, key_prefix="site_n_task_runs")
+
+@cache.cached(timeout=STATS_TIMEOUT, key_prefix="site_n_task_runs")
 def n_task_runs_site():
     sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run''')
     results = db.engine.execute(sql)
     for row in results:
         n_task_runs = row.n_task_runs
     return n_task_runs
+
 
 @cache.cached(timeout=STATS_TIMEOUT, key_prefix="site_top5_apps_24_hours")
 def get_top5_apps_24_hours():
@@ -83,7 +86,49 @@ def get_top5_apps_24_hours():
     return top5_apps_24_hours
 
 
-@cache.cached(timeout=STATS_TIMEOUT)
+@cache.cached(timeout=STATS_TIMEOUT, key_prefix="site_top5_users_24_hours")
+def get_top5_users_24_hours():
+    # Top 5 Most active users in last 24 hours
+    sql = text('''SELECT "user".id, "user".fullname, "user".name,
+               COUNT(task_run.app_id) AS n_answers FROM "user", task_run
+               WHERE "user".id=task_run.user_id
+               AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
+               AND DATE(task_run.finish_time) <= NOW()
+               GROUP BY "user".id
+               ORDER BY n_answers DESC LIMIT 5;''')
+
+    results = db.engine.execute(sql, limit=5)
+    top5_users_24_hours = []
+    for row in results:
+        user = dict(id=row.id, fullname=row.fullname,
+                    name=row.name,
+                    n_answers=row.n_answers)
+        top5_users_24_hours.append(user)
+    return top5_users_24_hours
+
+
+@cache.cached(timeout=STATS_TIMEOUT, key_prefix="site_locs")
+def get_locs():
+    # All IP addresses from anonymous users to create a map
+    locs = []
+    if current_app.config['GEO']:
+        sql = '''SELECT DISTINCT(user_ip) from task_run WHERE user_ip IS NOT NULL;'''
+        results = db.engine.execute(sql)
+
+        geolite = current_app.root_path + '/../dat/GeoLiteCity.dat'
+        gic = pygeoip.GeoIP(geolite)
+        for row in results:
+            loc = gic.record_by_addr(row.user_ip)
+            if loc is None:
+                loc = {}
+            if (len(loc.keys()) == 0):
+                loc['latitude'] = 0
+                loc['longitude'] = 0
+            locs.append(dict(loc=loc))
+    return locs
+
+
+@cache.cached(timeout=STATS_TIMEOUT, key_prefix="global_site_stats")
 @blueprint.route('/')
 def index():
     """Return Global Statistics for the site"""
@@ -104,43 +149,11 @@ def index():
 
     n_task_runs = n_task_runs_site()
 
-
-
     top5_apps_24_hours = get_top5_apps_24_hours()
 
-    # Top 5 Most active users in last 24 hours
-    sql = text('''SELECT "user".id, "user".fullname, "user".name,
-               COUNT(task_run.app_id) AS n_answers FROM "user", task_run
-               WHERE "user".id=task_run.user_id
-               AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
-               AND DATE(task_run.finish_time) <= NOW()
-               GROUP BY "user".id
-               ORDER BY n_answers DESC LIMIT 5;''')
+    top5_users_24_hours = get_top5_users_24_hours()
 
-    results = db.engine.execute(sql, limit=5)
-    top5_users_24_hours = []
-    for row in results:
-        user = dict(id=row.id, fullname=row.fullname,
-                    name=row.name,
-                    n_answers=row.n_answers)
-        top5_users_24_hours.append(user)
-
-    # All IP addresses from anonymous users to create a map
-    locs = []
-    if current_app.config['GEO']:
-        sql = '''SELECT DISTINCT(user_ip) from task_run WHERE user_ip IS NOT NULL;'''
-        results = db.engine.execute(sql)
-
-        geolite = current_app.root_path + '/../dat/GeoLiteCity.dat'
-        gic = pygeoip.GeoIP(geolite)
-        for row in results:
-            loc = gic.record_by_addr(row.user_ip)
-            if loc is None:
-                loc = {}
-            if (len(loc.keys()) == 0):
-                loc['latitude'] = 0
-                loc['longitude'] = 0
-            locs.append(dict(loc=loc))
+    locs = get_locs()
 
     show_locs = False
     if len(locs) > 0:
