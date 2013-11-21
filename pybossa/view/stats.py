@@ -26,17 +26,25 @@ from pybossa.cache import apps as cached_apps
 
 blueprint = Blueprint('stats', __name__)
 
+STATS_TIMEOUT = 24 * 60 * 60
 
-@cache.cached(timeout=300)
+@cache.cached(timeout=STATS_TIMEOUT, key_prefix="site_n_auth_users")
+def n_auth_users():
+    sql = text('''SELECT COUNT("user".id) AS n_auth FROM "user";''')
+    results = db.engine.execute(sql)
+    for row in results:
+        n_auth = int(row.n_auth)
+    return n_auth
+
+
+@cache.cached(timeout=STATS_TIMEOUT)
 @blueprint.route('/')
 def index():
     """Return Global Statistics for the site"""
 
     title = "Global Statistics"
-    sql = text('''SELECT COUNT("user".id) AS n_auth FROM "user";''')
-    results = db.engine.execute(sql)
-    for row in results:
-        n_auth = row.n_auth
+
+    n_auth = n_auth_users()
 
     sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip))
                AS n_anon FROM task_run;''')
