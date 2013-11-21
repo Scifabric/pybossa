@@ -918,12 +918,25 @@ def export_to(short_name):
             yield item + sep
         yield "]"
 
+    def format_csv_properly(row):
+        keys = sorted(row.keys())
+        values = []
+        for k in keys:
+            values.append(row[k])
+        return values
+
+
     def handle_task(writer, t):
-        writer.writerow(t.info.values())
+        if (type(t.info) == dict):
+            values = format_csv_properly(t.info)
+            writer.writerow(values)
+        else:
+            writer.writerow([t.info()])
 
     def handle_task_run(writer, t):
         if (type(t.info) == dict):
-            writer.writerow(t.info.values())
+            values = format_csv_properly(t.info)
+            writer.writerow(values)
         else:
             writer.writerow([t.info])
 
@@ -1037,7 +1050,7 @@ def export_to(short_name):
             .first()
         if t is not None:
             if test(t):
-                writer.writerow(t.info.keys())
+                writer.writerow(sorted(t.info.keys()))
 
             return Response(get_csv(out, writer, table, handle_row),
                             mimetype='text/csv')
