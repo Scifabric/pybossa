@@ -29,6 +29,7 @@ import datetime
 import time
 from datetime import timedelta
 
+STATS_FRONTPAGE_TIMEOUT = 12 * 60 * 60
 
 @cache.memoize()
 def get_app(short_name):
@@ -48,7 +49,7 @@ def get_app(short_name):
     return app
 
 
-@cache.cached(key_prefix="front_page_featured_apps")
+@cache.cached(timeout=STATS_FRONTPAGE_TIMEOUT, key_prefix="front_page_featured_apps")
 def get_featured_front_page():
     """Return featured apps"""
     sql = text('''SELECT app.id, app.name, app.short_name, app.info FROM
@@ -62,7 +63,7 @@ def get_featured_front_page():
     return featured
 
 
-@cache.cached(key_prefix="front_page_top_apps")
+@cache.cached(timeout=STATS_FRONTPAGE_TIMEOUT, key_prefix="front_page_top_apps")
 def get_top(n=4):
     """Return top n=4 apps"""
     sql = text('''
@@ -151,7 +152,8 @@ def last_activity(app_id):
             return None
 
 
-@cache.cached(key_prefix="number_featured_apps")
+# This function does not change too much, so cache it for a longer time
+@cache.cached(timeout=STATS_FRONTPAGE_TIMEOUT, key_prefix="number_featured_apps")
 def n_featured():
     """Return number of featured apps"""
     sql = text('''select count(*) from featured;''')
@@ -161,7 +163,8 @@ def n_featured():
     return count
 
 
-@cache.memoize()
+# This function does not change too much, so cache it for a longer time
+@cache.memoize(timeout=STATS_FRONTPAGE_TIMEOUT)
 def get_featured(category, page=1, per_page=5):
     """Return a list of featured apps with a pagination"""
 
@@ -238,7 +241,8 @@ def get_published(category, page=1, per_page=5):
         apps.append(app)
     return apps, count
 
-@cache.cached(key_prefix="number_draft_apps")
+# Cache it for longer times, as this is only shown to admin users
+@cache.cached(timeout=STATS_FRONTPAGE_TIMEOUT, key_prefix="number_draft_apps")
 def n_draft():
     """Return number of draft applications"""
     sql = text('''
@@ -252,7 +256,7 @@ def n_draft():
         count = row[0]
     return count
 
-@cache.memoize()
+@cache.memoize(timeout=STATS_FRONTPAGE_TIMEOUT)
 def get_draft(category, page=1, per_page=5):
     """Return list of draft applications"""
 
@@ -349,6 +353,7 @@ def get(category, page=1, per_page=5):
 
 def reset():
     """Clean the cache"""
+    cache.delete("index_front_page")
     cache.delete('front_page_featured_apps')
     cache.delete('front_page_top_apps')
     cache.delete('number_featured_apps')

@@ -33,8 +33,6 @@ from datetime import timedelta
 # Cache Stats for 24 hours
 STATS_TIMEOUT = 24 * 60 * 60
 
-print STATS_TIMEOUT
-
 
 @cache.memoize(timeout=STATS_TIMEOUT)
 def get_task_runs(app_id):
