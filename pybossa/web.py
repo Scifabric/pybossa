@@ -201,7 +201,6 @@ def api_authentication():
 
 
 @app.route('/')
-@cache.cached(timeout=ONE_HOUR, key_prefix="index_front_page")
 def home():
     """ Render home page with the cached apps and users"""
     d = {'featured': cached_apps.get_featured_front_page(),
