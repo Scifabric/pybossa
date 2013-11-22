@@ -15,3 +15,8 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+# Cache global variables for timeouts
+ONE_DAY = 24 * 60 * 60
+ONE_HOUR = 60 * 60
+HALF_HOUR = 30 * 60
+FIVE_MINUTES = 5 * 60
