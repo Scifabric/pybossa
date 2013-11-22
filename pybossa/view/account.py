@@ -31,7 +31,6 @@ import pybossa.validator as pb_validator
 import pybossa.model as model
 from flask.ext.babel import lazy_gettext, gettext
 from sqlalchemy.sql import func, text
-from pybossa.cache import ONE_DAY
 from pybossa.model import User
 from pybossa.core import db, signer, mail, get_locale
 from pybossa.util import Pagination
