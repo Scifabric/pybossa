@@ -32,6 +32,7 @@ from werkzeug.exceptions import *
 import pybossa
 from pybossa.core import app, login_manager, db, cache, babel
 import pybossa.model as model
+from pybossa.cache import ONE_HOUR
 from pybossa.api import blueprint as api
 from pybossa.view.account import blueprint as account
 from pybossa.view.applications import blueprint as applications
@@ -200,6 +201,7 @@ def api_authentication():
 
 
 @app.route('/')
+@cache.cached(timeout=ONE_HOUR, key_prefix="index_front_page")
 def home():
     """ Render home page with the cached apps and users"""
     d = {'featured': cached_apps.get_featured_front_page(),
