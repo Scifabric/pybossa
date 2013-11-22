@@ -128,8 +128,8 @@ def get_locs():
     return locs
 
 
-@cache.cached(timeout=STATS_TIMEOUT, key_prefix="global_site_stats")
 @blueprint.route('/')
+@cache.cached(timeout=STATS_TIMEOUT, key_prefix="global_site_stats")
 def index():
     """Return Global Statistics for the site"""
 
