@@ -30,7 +30,8 @@ import pybossa.model as model
 import pybossa.stats as stats
 import pybossa.validator as pb_validator
 
-from pybossa.core import db
+from pybossa.core import db, cache
+from pybossa.cache import ONE_DAY, ONE_HOUR
 from pybossa.model import App, Task
 from pybossa.util import Pagination, UnicodeWriter, admin_required
 from pybossa.auth import require
@@ -474,6 +475,7 @@ def update(short_name):
 
 
 @blueprint.route('/<short_name>/')
+@cache.cached(timeout=ONE_HOUR)
 def details(short_name):
     app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
 
@@ -1079,6 +1081,7 @@ def export_to(short_name):
 
 
 @blueprint.route('/<short_name>/stats')
+@cache.cached(timeout=ONE_DAY)
 def show_stats(short_name):
     """Returns App Stats"""
     app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
