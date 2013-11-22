@@ -391,6 +391,12 @@ def delete_last_activity(app_id):
     cache.delete_memoized(last_activity, app_id)
 
 
+def delete_app_pages(short_name):
+    """Reset app static pages"""
+    cache.delete('view//app/%s/' % short_name)
+    cache.delete('view//app/%s/stats' % short_name)
+
+
 def clean(app_id):
     """Clean all items in cache"""
     reset()
