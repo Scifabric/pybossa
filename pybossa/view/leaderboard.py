@@ -25,15 +25,13 @@ from sqlalchemy.sql import func, text
 from sqlalchemy import func
 
 import pybossa.model as model
-from pybossa.core import db, cache
-from pybossa.cache import ONE_HOUR
+from pybossa.core import db
 from pybossa.auth import require
 
 blueprint = Blueprint('leaderboard', __name__)
 
 
 @blueprint.route('/')
-@cache.cached(timeout=ONE_HOUR, key_prefix="site_leaderboard")
 def index():
     """Get the last activity from users and apps"""
     # Top 20 users

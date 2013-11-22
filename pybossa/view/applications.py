@@ -475,7 +475,6 @@ def update(short_name):
 
 
 @blueprint.route('/<short_name>/')
-@cache.cached(timeout=ONE_HOUR)
 def details(short_name):
     app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
 
@@ -1082,7 +1081,6 @@ def export_to(short_name):
 
 
 @blueprint.route('/<short_name>/stats')
-@cache.cached(timeout=ONE_DAY)
 def show_stats(short_name):
     """Returns App Stats"""
     app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)

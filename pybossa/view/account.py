@@ -31,9 +31,8 @@ import pybossa.validator as pb_validator
 import pybossa.model as model
 from flask.ext.babel import lazy_gettext, gettext
 from sqlalchemy.sql import func, text
-from pybossa.cache import ONE_DAY
 from pybossa.model import User
-from pybossa.core import db, signer, mail, cache, get_locale
+from pybossa.core import db, signer, mail, get_locale
 from pybossa.util import Pagination
 from pybossa.util import Twitter
 from pybossa.util import Facebook
@@ -46,7 +45,6 @@ blueprint = Blueprint('account', __name__)
 
 @blueprint.route('/', defaults={'page': 1})
 @blueprint.route('/page/<int:page>')
-@cache.cached(timeout=ONE_DAY)
 def index(page):
     per_page = 24
     count = db.session.query(model.User).count()
