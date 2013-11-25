@@ -20,7 +20,7 @@ from sqlalchemy.sql import func, text
 from pybossa.core import db
 from pybossa.model import Featured, App, TaskRun, Task
 from pybossa.util import pretty_date
-from pybossa.cache import memoize, cache
+from pybossa.cache import memoize, cache, delete_memoized, delete_cached
 
 import json
 import string
@@ -356,54 +356,48 @@ def get(category, page=1, per_page=5):
 
 def reset():
     """Clean the cache"""
-    cache.delete("index_front_page")
-    cache.delete('front_page_featured_apps')
-    cache.delete('front_page_top_apps')
-    cache.delete('number_featured_apps')
-    cache.delete('number_published_apps')
-    cache.delete('number_draft_apps')
-    cache.delete_memoized(get_published)
-    cache.delete_memoized(get_featured)
-    cache.delete_memoized(get_draft)
-    cache.delete_memoized(n_count)
-    cache.delete_memoized(get)
+    delete_cached("index_front_page")
+    delete_cached('front_page_featured_apps')
+    delete_cached('front_page_top_apps')
+    delete_cached('number_featured_apps')
+    delete_cached('number_published_apps')
+    delete_cached('number_draft_apps')
+    delete_memoized(get_published)
+    delete_memoized(get_featured)
+    delete_memoized(get_draft)
+    delete_memoized(n_count)
+    delete_memoized(get)
 
 
 def delete_app(app_id):
     """Reset app values in cache"""
-    cache.delete_memoized(get_app, app_id)
+    delete_memoized(get_app, app_id)
 
 
 def delete_n_tasks(app_id):
     """Reset n_tasks value in cache"""
-    cache.delete_memoized(n_tasks, app_id)
+    delete_memoized(n_tasks, app_id)
 
 
 def delete_n_task_runs(app_id):
     """Reset n_tasks value in cache"""
-    cache.delete_memoized(n_task_runs, app_id)
+    delete_memoized(n_task_runs, app_id)
 
 
 def delete_overall_progress(app_id):
     """Reset overall_progress value in cache"""
-    cache.delete_memoized(overall_progress, app_id)
+    delete_memoized(overall_progress, app_id)
 
 
 def delete_last_activity(app_id):
     """Reset last_activity value in cache"""
-    cache.delete_memoized(last_activity, app_id)
-
-
-def delete_app_pages(short_name):
-    """Reset app static pages"""
-    cache.delete('view//app/%s/' % short_name)
-    cache.delete('view//app/%s/stats' % short_name)
+    delete_memoized(last_activity, app_id)
 
 
 def clean(app_id):
     """Clean all items in cache"""
     reset()
-    cache.delete_memoized(n_tasks, app_id)
-    cache.delete_memoized(n_task_runs, app_id)
-    cache.delete_memoized(last_activity, app_id)
-    cache.delete_memoized(overall_progress, app_id)
+    delete_memoized(n_tasks, app_id)
+    delete_memoized(n_task_runs, app_id)
+    delete_memoized(last_activity, app_id)
+    delete_memoized(overall_progress, app_id)
