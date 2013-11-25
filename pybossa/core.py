@@ -28,7 +28,6 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.cache import Cache
 from flask.ext.heroku import Heroku
 from flask.ext.babel import Babel
-from redis.sentinel import Sentinel
 
 from pybossa import default_settings as settings
 
