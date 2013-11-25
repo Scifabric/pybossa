@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 # Cache global variables for timeouts
+import hashlib
 from random import choice
 import settings_local as settings
 from redis.sentinel import Sentinel
@@ -38,7 +39,7 @@ def cache(key_prefix, timeout=300, debug=False):
         @wraps(f)
         def wrapper(*args, **kwargs):
             if not debug:
-                key = "%s:%s" % (REDIS_KEYPREFIX, key_prefix)
+                key = "%s::%s" % (REDIS_KEYPREFIX, key_prefix)
                 sentinel = Sentinel(settings.REDIS_SENTINEL, socket_timeout=0.1)
                 master = sentinel.master_for('mymaster')
                 slave = sentinel.slave_for('mymaster')
@@ -60,10 +61,12 @@ def memoize(timeout=300, debug=False):
         @wraps(f)
         def wrapper(*args, **kwargs):
             if not debug:
-                key = "%s:%s" % (REDIS_KEYPREFIX, f.__name__)
-                key += "_args"
+                key = "%s:%s_args:" % (REDIS_KEYPREFIX, f.__name__)
+                key_to_hash = ""
                 for i in args:
-                    key += ":%s" % i
+                    key_to_hash += ":%s" % i
+                print key_to_hash
+                key = key + ":" + hashlib.md5(key_to_hash).hexdigest()
                 #key += "_kwargs"
                 #for i in frozenset(kwargs.items()):
                 #    key += ":%s" % i
@@ -88,10 +91,12 @@ def delete_memoized(function, arg=None):
     master = sentinel.master_for(settings.REDIS_MASTER)
     keys = []
     if arg:
-        key = "%s:%s_args:%s" % (settings.REDIS_KEYPREFIX, function.__name__, arg)
+        key_to_hash = ":%s" % arg
+        key = "%s:%s_args::%s" % (settings.REDIS_KEYPREFIX, function.__name__,
+                                 hashlib.md5(key_to_hash).hexdigest())
         keys.append(key)
     else:
-        key = "%s:%s_args:*" % (settings.REDIS_KEYPREFIX, function.__name__)
+        key = "%s:%s_args::*" % (settings.REDIS_KEYPREFIX, function.__name__)
         keys = master.keys(key)
     for k in keys:
         master.delete(k)
@@ -101,5 +106,5 @@ def delete_memoized(function, arg=None):
 def delete_cached(key):
     sentinel = Sentinel(settings.REDIS_SENTINEL, socket_timeout=0.1)
     master = sentinel.master_for(settings.REDIS_MASTER)
-    key = "%s:%s" % (settings.REDIS_KEYPREFIX, key)
+    key = "%s::%s" % (settings.REDIS_KEYPREFIX, key)
     return master.delete(key)
