@@ -30,7 +30,7 @@ except ImportError: # pragma: no cover
 try:
     import settings_local as settings
 except ImportError: # pragma: no cover
-    os.environ.set('PYBOSSA_REDIS_CACHE_DISABLED', '1')
+    os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
 
 ONE_DAY = 24 * 60 * 60
 ONE_HOUR = 60 * 60
@@ -69,7 +69,6 @@ def memoize(timeout=300, debug=False):
                 key_to_hash = ""
                 for i in args:
                     key_to_hash += ":%s" % i
-                print key_to_hash
                 key = key + ":" + hashlib.md5(key_to_hash).hexdigest()
                 #key += "_kwargs"
                 #for i in frozenset(kwargs.items()):
