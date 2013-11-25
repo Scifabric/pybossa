@@ -17,6 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 # Cache global variables for timeouts
 import hashlib
+import os
 from random import choice
 import settings_local as settings
 from redis.sentinel import Sentinel
@@ -31,15 +32,14 @@ ONE_DAY = 24 * 60 * 60
 ONE_HOUR = 60 * 60
 HALF_HOUR = 30 * 60
 FIVE_MINUTES = 5 * 60
-REDIS_KEYPREFIX = settings.REDIS_KEYPREFIX
 
 
 def cache(key_prefix, timeout=300):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            if settings.REDIS_CACHE_ENABLED:
-                key = "%s::%s" % (REDIS_KEYPREFIX, key_prefix)
+            if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:
+                key = "%s::%s" % (settings.REDIS_KEYPREFIX, key_prefix)
                 sentinel = Sentinel(settings.REDIS_SENTINEL, socket_timeout=0.1)
                 master = sentinel.master_for('mymaster')
                 slave = sentinel.slave_for('mymaster')
@@ -60,8 +60,8 @@ def memoize(timeout=300, debug=False):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            if settings.REDIS_CACHE_ENABLED:
-                key = "%s:%s_args:" % (REDIS_KEYPREFIX, f.__name__)
+            if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:
+                key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, f.__name__)
                 key_to_hash = ""
                 for i in args:
                     key_to_hash += ":%s" % i
@@ -87,7 +87,7 @@ def memoize(timeout=300, debug=False):
 
 
 def delete_memoized(function, arg=None):
-    if settings.REDIS_CACHE_ENABLED:
+    if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:
         sentinel = Sentinel(settings.REDIS_SENTINEL, socket_timeout=0.1)
         master = sentinel.master_for(settings.REDIS_MASTER)
         keys = []
@@ -105,7 +105,7 @@ def delete_memoized(function, arg=None):
 
 
 def delete_cached(key):
-    if settings.REDIS_CACHE_ENABLED:
+    if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:
         sentinel = Sentinel(settings.REDIS_SENTINEL, socket_timeout=0.1)
         master = sentinel.master_for(settings.REDIS_MASTER)
         key = "%s::%s" % (settings.REDIS_KEYPREFIX, key)
