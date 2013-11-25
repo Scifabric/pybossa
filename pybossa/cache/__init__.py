@@ -30,29 +30,54 @@ ONE_DAY = 24 * 60 * 60
 ONE_HOUR = 60 * 60
 HALF_HOUR = 30 * 60
 FIVE_MINUTES = 5 * 60
+REDIS_KEYPREFIX = settings.REDIS_KEYPREFIX
 
 
-def memoize(timeout=300):
+def cache(key_prefix, timeout=300, debug=False):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            key = "pybossa_cache:%s" % f.__name__
-            key += "_args"
-            for i in args:
-                key += ":%s" % i
-            #key += "_kwargs"
-            #for i in frozenset(kwargs.items()):
-            #    key += ":%s" % i
-            print key
-            sentinel = Sentinel(settings.REDIS_SENTINEL, socket_timeout=0.1)
-            master = sentinel.master_for('mymaster')
-            slave = sentinel.slave_for('mymaster')
-            output = slave.get(key)
-            if output:
-                return pickle.loads(output)
+            if not debug:
+                key = "%s:%s" % (REDIS_KEYPREFIX, key_prefix)
+                sentinel = Sentinel(settings.REDIS_SENTINEL, socket_timeout=0.1)
+                master = sentinel.master_for('mymaster')
+                slave = sentinel.slave_for('mymaster')
+                output = slave.get(key)
+                if output:
+                    return pickle.loads(output)
+                else:
+                    output = f(*args, **kwargs)
+                    master.setex(key, timeout, pickle.dumps(output))
+                    return output
             else:
-                output = f(*args, **kwargs)
-                master.setex(key, timeout, pickle.dumps(output))
-                return output
+                return f(*args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def memoize(timeout=300, debug=False):
+    def decorator(f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            if not debug:
+                key = "%s:%s" % (REDIS_KEYPREFIX, f.__name__)
+                key += "_args"
+                for i in args:
+                    key += ":%s" % i
+                #key += "_kwargs"
+                #for i in frozenset(kwargs.items()):
+                #    key += ":%s" % i
+                sentinel = Sentinel(settings.REDIS_SENTINEL, socket_timeout=0.1)
+                master = sentinel.master_for(settings.REDIS_MASTER)
+                slave = sentinel.slave_for(settings.REDIS_MASTER)
+                output = slave.get(key)
+                if output:
+                    return pickle.loads(output)
+                else:
+                    output = f(*args, **kwargs)
+                    master.setex(key, timeout, pickle.dumps(output))
+                    return output
+            else:
+                return f(*args, **kwargs)
         return wrapper
     return decorator
