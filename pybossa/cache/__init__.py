@@ -34,11 +34,11 @@ FIVE_MINUTES = 5 * 60
 REDIS_KEYPREFIX = settings.REDIS_KEYPREFIX
 
 
-def cache(key_prefix, timeout=300, debug=False):
+def cache(key_prefix, timeout=300):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            if not debug:
+            if settings.REDIS_CACHE_ENABLED:
                 key = "%s::%s" % (REDIS_KEYPREFIX, key_prefix)
                 sentinel = Sentinel(settings.REDIS_SENTINEL, socket_timeout=0.1)
                 master = sentinel.master_for('mymaster')
@@ -60,7 +60,7 @@ def memoize(timeout=300, debug=False):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            if not debug:
+            if settings.REDIS_CACHE_ENABLED:
                 key = "%s:%s_args:" % (REDIS_KEYPREFIX, f.__name__)
                 key_to_hash = ""
                 for i in args:
