@@ -19,7 +19,6 @@
 import hashlib
 import os
 from random import choice
-import settings_local as settings
 from redis.sentinel import Sentinel
 from werkzeug.contrib.cache import RedisCache
 from functools import wraps
@@ -27,6 +26,11 @@ try:
     import cPickle as pickle
 except ImportError: # pragma: no cover
     import pickle
+
+try:
+    import settings_local as settings
+except ImportError: # pragma: no cover
+    os.environ.set('PYBOSSA_REDIS_CACHE_DISABLED', '1')
 
 ONE_DAY = 24 * 60 * 60
 ONE_HOUR = 60 * 60
