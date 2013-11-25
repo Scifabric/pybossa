@@ -18,9 +18,11 @@
 
 from flask import current_app
 from sqlalchemy.sql import text
-from pybossa.core import cache
+#from pybossa.core import cache
 from pybossa.core import db
+from pybossa.cache import cache, memoize, ONE_DAY
 from pybossa.model import TaskRun, Task
+from pybossa.cache import FIVE_MINUTES, memoize
 
 import string
 import pygeoip
@@ -30,25 +32,21 @@ import time
 from datetime import timedelta
 
 
-# Cache Stats for 24 hours
-STATS_TIMEOUT = 24 * 60 * 60
-
-
-@cache.memoize(timeout=STATS_TIMEOUT)
+@memoize(timeout=ONE_DAY)
 def get_task_runs(app_id):
     """Return all the Task Runs for a given app_id"""
     task_runs = db.session.query(TaskRun).filter_by(app_id=app_id).all()
     return task_runs
 
 
-@cache.memoize(timeout=STATS_TIMEOUT)
+@memoize(timeout=ONE_DAY)
 def get_tasks(app_id):
     """Return all the tasks for a given app_id"""
     tasks = db.session.query(Task).filter_by(app_id=app_id).all()
     return tasks
 
 
-@cache.memoize(timeout=STATS_TIMEOUT)
+@memoize(timeout=ONE_DAY)
 def get_avg_n_tasks(app_id):
     """Return the average number of answers expected per task,
     and the number of tasks"""
@@ -63,7 +61,7 @@ def get_avg_n_tasks(app_id):
     return avg, total_n_tasks
 
 
-@cache.memoize(timeout=STATS_TIMEOUT)
+@memoize(timeout=ONE_DAY)
 def stats_users(app_id):
     """Return users's stats for a given app_id"""
     users = {}
@@ -115,7 +113,7 @@ def stats_users(app_id):
     return users, anon_users, auth_users
 
 
-@cache.memoize(timeout=STATS_TIMEOUT)
+@memoize(timeout=ONE_DAY)
 def stats_dates(app_id):
     dates = {}
     dates_anon = {}
@@ -156,7 +154,7 @@ def stats_dates(app_id):
     return dates, dates_n_tasks, dates_anon, dates_auth
 
 
-@cache.memoize(timeout=STATS_TIMEOUT)
+@memoize(timeout=ONE_DAY)
 def stats_hours(app_id):
     hours = {}
     hours_anon = {}
@@ -198,7 +196,7 @@ def stats_hours(app_id):
     return hours, hours_anon, hours_auth, max_hours, max_hours_anon, max_hours_auth
 
 
-@cache.memoize(timeout=STATS_TIMEOUT)
+@memoize(timeout=ONE_DAY)
 def stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
                        dates_anon, dates_auth):
     """Format dates stats into a JSON format"""
@@ -256,7 +254,7 @@ def stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
         dayTotalStats, dayAvgAnswers, dayEstimates
 
 
-@cache.memoize(timeout=STATS_TIMEOUT)
+@memoize(timeout=ONE_DAY)
 def stats_format_hours(app_id, hours, hours_anon, hours_auth,
                        max_hours, max_hours_anon, max_hours_auth):
     """Format hours stats into a JSON format"""
@@ -297,7 +295,7 @@ def stats_format_hours(app_id, hours, hours_anon, hours_auth,
     return hourNewStats, hourNewAnonStats, hourNewAuthStats
 
 
-@cache.memoize(timeout=STATS_TIMEOUT)
+@memoize(timeout=ONE_DAY)
 def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
     """Format User Stats into JSON"""
     userStats = dict(label="User Statistics", values=[])
@@ -361,7 +359,7 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
                 n_anon=users['n_anon'], n_auth=users['n_auth'])
 
 
-@cache.memoize(timeout=STATS_TIMEOUT)
+@memoize(timeout=ONE_DAY)
 def get_stats(app_id, geo=False):
     """Return the stats a given app"""
     hours, hours_anon, hours_auth, max_hours, \
