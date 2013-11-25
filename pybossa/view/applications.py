@@ -880,7 +880,6 @@ def delete_tasks(short_name):
             cached_apps.delete_n_tasks(app.id)
             cached_apps.delete_n_task_runs(app.id)
             cached_apps.delete_overall_progress(app.id)
-            cached_apps.delete_app_pages(short_name)
             return redirect(url_for('.tasks', short_name=app.short_name))
     except HTTPException:
         return abort(403)

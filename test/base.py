@@ -44,7 +44,7 @@ web.app.config['ANNOUNCEMENT'] = {'admin': 'Root Message',
 web.app.config['CKAN_URL'] = 'http://datahub.io'
 web.app.config['CKAN_NAME'] = 'CKAN server'
 web.app.config['ENFORCE_PRIVACY'] = False
-cache.init_app(web.app)
+#cache.init_app(web.app)
 mail.init_app(web.app)
 #engine = model.create_engine(web.app.config['SQLALCHEMY_DATABASE_URI'])
 #model.set_engine(engine)

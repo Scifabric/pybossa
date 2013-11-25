@@ -87,24 +87,26 @@ def memoize(timeout=300, debug=False):
 
 
 def delete_memoized(function, arg=None):
-    sentinel = Sentinel(settings.REDIS_SENTINEL, socket_timeout=0.1)
-    master = sentinel.master_for(settings.REDIS_MASTER)
-    keys = []
-    if arg:
-        key_to_hash = ":%s" % arg
-        key = "%s:%s_args::%s" % (settings.REDIS_KEYPREFIX, function.__name__,
-                                 hashlib.md5(key_to_hash).hexdigest())
-        keys.append(key)
-    else:
-        key = "%s:%s_args::*" % (settings.REDIS_KEYPREFIX, function.__name__)
-        keys = master.keys(key)
-    for k in keys:
-        master.delete(k)
-    return True
+    if settings.REDIS_CACHE_ENABLED:
+        sentinel = Sentinel(settings.REDIS_SENTINEL, socket_timeout=0.1)
+        master = sentinel.master_for(settings.REDIS_MASTER)
+        keys = []
+        if arg:
+            key_to_hash = ":%s" % arg
+            key = "%s:%s_args::%s" % (settings.REDIS_KEYPREFIX, function.__name__,
+                                     hashlib.md5(key_to_hash).hexdigest())
+            keys.append(key)
+        else:
+            key = "%s:%s_args::*" % (settings.REDIS_KEYPREFIX, function.__name__)
+            keys = master.keys(key)
+        for k in keys:
+            master.delete(k)
+        return True
 
 
 def delete_cached(key):
-    sentinel = Sentinel(settings.REDIS_SENTINEL, socket_timeout=0.1)
-    master = sentinel.master_for(settings.REDIS_MASTER)
-    key = "%s::%s" % (settings.REDIS_KEYPREFIX, key)
-    return master.delete(key)
+    if settings.REDIS_CACHE_ENABLED:
+        sentinel = Sentinel(settings.REDIS_SENTINEL, socket_timeout=0.1)
+        master = sentinel.master_for(settings.REDIS_MASTER)
+        key = "%s::%s" % (settings.REDIS_KEYPREFIX, key)
+        return master.delete(key)
