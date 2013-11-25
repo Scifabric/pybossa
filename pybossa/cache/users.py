@@ -16,11 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from sqlalchemy.sql import text
-from pybossa.core import cache, db
+from pybossa.core import db
+from pybossa.cache import cache, memoize, ONE_DAY
 import json
 
 
-@cache.cached(key_prefix="front_page_top_users")
+@cache(key_prefix="front_page_top_users", timeout=ONE_DAY)
 def get_top(n=10):
     """Return the n=10 top users"""
     sql = text('''SELECT "user".id, "user".name, "user".fullname, "user".email_addr,
@@ -34,7 +35,7 @@ def get_top(n=10):
     return top_users
 
 
-@cache.memoize()
+@memoize()
 def get_user_summary(name):
     # Get USER
     sql = text('''
