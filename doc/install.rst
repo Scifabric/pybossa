@@ -8,6 +8,7 @@ Pre-requisites:
 
   * Python >= 2.7, <3.0
   * PostgreSQL version 9.1 and the Python bindings for PostgreSQL database. 
+  * Redis >= 2.6
   * pip for installing python packages (e.g. on ubuntu python-pip)
 
 .. note::
@@ -137,6 +138,8 @@ this::
   cd pybossa
   # Install the required libraries
   pip install -e .
+  # Install the CACHE required libraries
+  pip install -r cache_requirements.txt
 
 .. note::
     Vim_ editor is a very popular text editor in GNU/Linux systems, however it
@@ -233,24 +236,49 @@ second one will perform the migration.
 
 .. _Alembic: http://pypi.python.org/pypi/alembic
 
-Enabling a Cache
-================
+Speeding up the site
+====================
 
-PyBossa comes with a Cache system (based on `flask-cache <http://packages.python.org/Flask-Cache/>`_) 
-that it is disabled by default. If you want to start caching some pages of the PyBossa server, you
-only have to modify your settings and change the following value from::
+PyBossa comes with a Cache system that it is enabled by default. PyBossa uses
+a Redis_ server to cache some objects like applications, statistics, etc. The
+system uses the Sentinel_ feature of Redis_, so you can have several
+master/slave nodes configured with Sentinel_, and your PyBossa server will use
+them "automagically".
 
-    CACHE_TYPE = 'null'
+In order to run PyBossa, you will need first to configure a Sentinel node.
+Create a config file named **sentinel.conf** with something like this::
 
-to::
+    sentinel monitor mymaster 127.0.0.1 6379 2
+    sentinel down-after-milliseconds mymaster 60000
+    sentinel failover-timeout mymaster 180000
+    sentinel parallel-syncs mymaster 1
 
-    CACHE_TYPE = 'simple'
+Then, you can start the service with this command::
 
-The cache also supports other configurations, so please, check the official
-documentation of `flask-cache <http://packages.python.org/Flask-Cache/>`_.
+    sentinel-server sentinel.conf --sentinel
+
+Finally, you can start your master Redis-server to accept connections, and
+Sentinel will manage it. If you add a slave, Sentinel will find it and start
+using it for load-balancing queries in PyBossa Cache system.
+
+For more details about Redis_ and Sentinel_, please, read the official documentation_.
+
+If you want to disable it, you can do it with an environment variable::
+
+    export PYBOSSA_REDIS_CACHE_DISABLED='1'
+
+Then start the server, and nothing will be cached.
+
+.. _Redis: http://redis.io/
+.. _Sentinel: http://redis.io/topics/sentinel
+.. _documentation: http://redis.io/topics/sentinel
 
 .. note::
-   **Important**: We highly recommend you to enable the cache, as it will boost
+   **Important**: We highly recommend you to not disable the cache, as it will boost
    the performance of the server caching SQL queries as well as page views. If
    you have lots of applications with hundreds of tasks, you should enable it.
 
+.. note::
+   **Important**: Sometimes Redis is a bit outdated in your Linux distribution.
+   If this is the case, you will need to install it by hand, but it is really
+   easy and well documented in the official Redis_ site.
