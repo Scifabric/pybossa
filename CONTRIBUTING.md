@@ -31,8 +31,8 @@ If this is your case, you will need to contact all the other authors, and get th
 
 ## Download Instructions
 
-If you are an Individual download this [form](https://dl.dropboxusercontent.com/u/27667029/PyBossaIndividualContributorAssignmentAgreement.pdf).
+If you are an **Individual** download this [form](https://dl.dropboxusercontent.com/u/27667029/PyBossaIndividualContributorAssignmentAgreement.pdf).
 
-If you are an Entity download this [form](https://dl.dropboxusercontent.com/u/27667029/PyBossaEntityContributorAssignmentAgreement.pdf).
+If you are an **Entity** download this [form](https://dl.dropboxusercontent.com/u/27667029/PyBossaEntityContributorAssignmentAgreement.pdf).
 
 Please print, sign and scan it and send it as an attachment in an email to  to *info AT pybossa.com* Once we have received your copy, we will send you back a signed copy from us, and from that moment you will be able to start contributing to the project normally. Welcome to the community!
