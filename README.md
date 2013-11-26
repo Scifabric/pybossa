@@ -1,36 +1,27 @@
-.. image:: https://travis-ci.org/PyBossa/pybossa.png
-   :target: https://travis-ci.org/#!/PyBossa/pybossa
+[![Travis CI](https://travis-ci.org/PyBossa/pybossa.png)](https://travis-ci.org/#!/PyBossa/pybossa)
 
 PyBossa is an open source platform for crowd-sourcing online (volunteer)
 assistance to perform tasks that require human cognition, knowledge or
 intelligence (e.g. image classification, transcription, information location
 etc). 
 
-PyBossa was inspired by the BOSSA_ crowdsourcing engine but is written in
+PyBossa was inspired by the [BOSSA](http://bossa.berkeley.edu/) crowdsourcing engine but is written in
 python (hence the name!). It can be used for any distributed tasks application
 but was initially developed to help scientists and other researchers
 crowd-source human problem-solving skills!
 
-.. _BOSSA: http://bossa.berkeley.edu/
+# See it in Action
 
+PyBossa powers [CrowdCrafting.org](http://crowdcrafting.org/) and [ForestWatchers.net](http://forestwatchers.net)
 
-See it in Action
-================
-
-PyBossa powers `CrowdCrafting.org <http://crowdcrafting.org/>`_ 
-and `ForestWatchers.net <http://forestwatchers.net>`_
-
-Installing and Upgrading
-========================
+# Installing and Upgrading
 
 **Important: if you are updating a server, please, be sure to check the
 Database Migration scripts, as new changes could introduce new tables,
-columns, etc, in the DB model. See the `Migration Section`_ from the
+columns, etc, in the DB model. See the [Migration Section](http://docs.pybossa.com/en/latest/install.html#migrating-the-database-table-structure) from the
 documentation**
 
-.. _`Migration Section`: http://docs.pybossa.com/en/latest/install.html#migrating-the-database-table-structure
-
-See `installation instructions <http://docs.pybossa.com/en/latest/install.html>`_.
+See [installation instructions](http://docs.pybossa.com/en/latest/install.html).
 
 **NOTE**: The latest version uses M2CRYPTO and the pypi version has a bug that
 does not allow you to sign properly RSA keys, however it will install it
@@ -38,39 +29,43 @@ perfectly well. For this reason, you will need to install it using this other
 version: pip install -e git+https://github.com/Hypernode/M2Crypto#egg=M2Crypto
 
 
-Running Tests
-=============
+# Running Tests
 
-Set SQLALCHEMY_DATABASE_TEST_URI e.g.::
+Set SQLALCHEMY_DATABASE_TEST_URI e.g.:
 
+```
   SQLALCHEMY_DATABASE_URI = 'postgres://pybossa:pass@localhost/pybossa'
+```
 
-Then run the tests (requires nose)::
+Then run the tests (requires nose):
 
+```
   nosetests -v test/
+```
 
+# Useful Links
 
-Useful Links
-============
+* [Documentation](http://docs.pybossa.com/)
+* [Mailing List](http://lists.okfn.org/mailman/listinfo/open-science-dev)
 
-* `Documentation <http://docs.pybossa.com/>`_
-* `Mailing List <http://lists.okfn.org/mailman/listinfo/open-science-dev>`_
+# Contributing
 
+If you want to contribute to the project, please, check the
+[CONTRIBUTING file](CONTRIBUTING.md).
 
-Authors
-=======
+It has the instructions to become a contributor.
 
-* Daniel Lombraña González - Citizen Cyberscience Centre
+## Authors
+
+* Daniel Lombraña González - Citizen Cyberscience Centre, Shuttleworth Fellow
 * Rufus Pollock - Open Knowledge Foundation
-* Chris Powell - EPICollect
 * David Anderson - BOINC / Berkeley (via BOSSA)
 
 * Twitter Bootstrap Icons by Glyphicons http://http://glyphicons.com/
 * FontAwesome fonts by http://fortawesome.github.com/Font-Awesome/
 * GeoLite data by MaxMind http://www.maxmind.com
 
-Copyright / License
-===================
+## Copyright / License
 
 Copyright 2013 SF Isle of Man Limited. 
 
