@@ -47,10 +47,8 @@ blueprint = Blueprint('account', __name__)
 @blueprint.route('/page/<int:page>')
 def index(page):
     per_page = 24
-    count = db.session.query(model.User).count()
-    accounts = db.session.query(model.User)\
-                 .limit(per_page)\
-                 .offset((page - 1) * per_page).all()
+    count = cached_users.get_total_users()
+    accounts = cached_users.get_users_page(page, per_page)
     if not accounts and page != 1:
         abort(404)
     pagination = Pagination(page, per_page, count)
