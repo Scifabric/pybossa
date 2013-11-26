@@ -57,13 +57,13 @@ It has the instructions to become a contributor.
 
 ## Authors
 
-* Daniel Lombraña González - Citizen Cyberscience Centre, Shuttleworth Fellow
-* Rufus Pollock - Open Knowledge Foundation
+* [Daniel Lombraña González](http://daniellombrana.es) - [Citizen Cyberscience Centre](http://citizencyberscience.net/), [Shuttleworth Fellow](http://www.shuttleworthfoundation.org/fellows/daniel-lombrana/)
+* Rufus Pollock - [Open Knowledge Foundation](http://okfn.org/)
 * David Anderson - BOINC / Berkeley (via BOSSA)
 
-* Twitter Bootstrap Icons by Glyphicons http://http://glyphicons.com/
-* FontAwesome fonts by http://fortawesome.github.com/Font-Awesome/
-* GeoLite data by MaxMind http://www.maxmind.com
+* [Twitter Bootstrap Icons by Glyphicons](http://http://glyphicons.com/)
+* [FontAwesome fonts](http://fortawesome.github.com/Font-Awesome/)
+* [GeoLite data by MaxMind](http://www.maxmind.com)
 
 ## Copyright / License
 
