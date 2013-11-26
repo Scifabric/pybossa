@@ -21,14 +21,14 @@ from flask import Blueprint, current_app
 from flask import render_template
 from sqlalchemy.sql import text
 
-from pybossa.core import db, cache
+from pybossa.core import db
+from pybossa.cache import cache, ONE_DAY
 from pybossa.cache import apps as cached_apps
 
 blueprint = Blueprint('stats', __name__)
 
-STATS_TIMEOUT = 24 * 60 * 60
 
-@cache.cached(timeout=STATS_TIMEOUT, key_prefix="site_n_auth_users")
+@cache(timeout=ONE_DAY, key_prefix="site_n_auth_users")
 def n_auth_users():
     sql = text('''SELECT COUNT("user".id) AS n_auth FROM "user";''')
     results = db.engine.execute(sql)
@@ -36,7 +36,7 @@ def n_auth_users():
         n_auth = row.n_auth
     return n_auth
 
-@cache.cached(timeout=STATS_TIMEOUT, key_prefix="site_n_anon_users")
+@cache(timeout=ONE_DAY, key_prefix="site_n_anon_users")
 def n_anon_users():
     sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip))
                AS n_anon FROM task_run;''')
@@ -47,7 +47,7 @@ def n_anon_users():
     return n_anon
 
 
-@cache.cached(timeout=STATS_TIMEOUT, key_prefix="site_n_tasks")
+@cache(timeout=ONE_DAY, key_prefix="site_n_tasks")
 def n_tasks_site():
     sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task''')
     results = db.engine.execute(sql)
@@ -56,7 +56,7 @@ def n_tasks_site():
     return n_tasks
 
 
-@cache.cached(timeout=STATS_TIMEOUT, key_prefix="site_n_task_runs")
+@cache(timeout=ONE_DAY, key_prefix="site_n_task_runs")
 def n_task_runs_site():
     sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run''')
     results = db.engine.execute(sql)
@@ -65,7 +65,7 @@ def n_task_runs_site():
     return n_task_runs
 
 
-@cache.cached(timeout=STATS_TIMEOUT, key_prefix="site_top5_apps_24_hours")
+@cache(timeout=ONE_DAY, key_prefix="site_top5_apps_24_hours")
 def get_top5_apps_24_hours():
     # Top 5 Most active apps in last 24 hours
     sql = text('''SELECT app.id, app.name, app.short_name, app.info,
@@ -86,7 +86,7 @@ def get_top5_apps_24_hours():
     return top5_apps_24_hours
 
 
-@cache.cached(timeout=STATS_TIMEOUT, key_prefix="site_top5_users_24_hours")
+@cache(timeout=ONE_DAY, key_prefix="site_top5_users_24_hours")
 def get_top5_users_24_hours():
     # Top 5 Most active users in last 24 hours
     sql = text('''SELECT "user".id, "user".fullname, "user".name,
@@ -107,7 +107,7 @@ def get_top5_users_24_hours():
     return top5_users_24_hours
 
 
-@cache.cached(timeout=STATS_TIMEOUT, key_prefix="site_locs")
+@cache(timeout=ONE_DAY, key_prefix="site_locs")
 def get_locs():
     # All IP addresses from anonymous users to create a map
     locs = []
@@ -129,7 +129,7 @@ def get_locs():
 
 
 @blueprint.route('/')
-@cache.cached(timeout=STATS_TIMEOUT, key_prefix="global_site_stats")
+@cache(timeout=ONE_DAY, key_prefix="global_site_stats")
 def index():
     """Return Global Statistics for the site"""
 
