@@ -30,7 +30,7 @@ import pybossa.model as model
 import pybossa.stats as stats
 import pybossa.validator as pb_validator
 
-from pybossa.core import db, cache
+from pybossa.core import db
 from pybossa.cache import ONE_DAY, ONE_HOUR
 from pybossa.model import App, Task
 from pybossa.util import Pagination, UnicodeWriter, admin_required
