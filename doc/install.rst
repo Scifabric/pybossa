@@ -236,6 +236,9 @@ second one will perform the migration.
 
 .. _Alembic: http://pypi.python.org/pypi/alembic
 
+
+.. _pybossa-cache:
+
 Speeding up the site
 ====================
 
