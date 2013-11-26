@@ -38,6 +38,7 @@ from pybossa.cache import categories as cached_cat
 from pybossa.auth import require
 import pybossa.validator as pb_validator
 from sqlalchemy import or_, func
+import sqlalchemy.orm.attributes
 import json
 
 
@@ -122,6 +123,15 @@ class SearchForm(Form):
     user = TextField(lazy_gettext('User'))
 
 
+@blueprint.route('/users/download', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def download_users(user_id=None):
+    """Download users"""
+    users = db.session.execute(model.User.__table__.select())
+    userslist = [dict(user) for user in users]
+    return Response(json.dumps(userslist), 200, content_type="text/json", headers={'Content-Disposition': 'attachment; filename="users.json"'})
+
 @blueprint.route('/users', methods=['GET', 'POST'])
 @login_required
 @admin_required
@@ -134,7 +144,7 @@ def users(user_id=None):
                   .filter(model.User.id != current_user.id)\
                   .all()
 
-        if request.method == 'POST' and form.user.data:
+        if request.method == 'POST':
             query = '%' + form.user.data.lower() + '%'
             found = db.session.query(model.User)\
                       .filter(or_(func.lower(model.User.name).like(query),
