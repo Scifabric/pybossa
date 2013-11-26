@@ -87,9 +87,6 @@ login_manager.login_view = 'account.signin'
 login_manager.login_message = u"Please sign in to access this page."
 app = create_app()
 
-cache = Cache(config=app.config)
-
-cache.init_app(app)
 
 #toolbar = DebugToolbarExtension(app)
 db = SQLAlchemy(app)
