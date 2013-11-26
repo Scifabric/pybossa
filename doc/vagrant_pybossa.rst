@@ -15,6 +15,11 @@ system in a very simple way, and more importantly, without polluting your
 system with lots of libraries that you may or may not needed (everything is
 configured in the Virtual Machine, which is a very safe sand-box!).
 
+.. note::
+    Vagrant disables the CACHE system, in order to simplify the deployment
+    and requirements within the virtual machine set up. If you want to test
+    the CACHE system, check :ref:`pybossa-cache`.
+
 
 Setting up PyBossa with Vagrant
 ===============================
