@@ -21,7 +21,7 @@ import random
 
 import pybossa.web as web
 import pybossa.model as model
-from pybossa.core import db, mail, cache, app
+from pybossa.core import db, mail, app
 
 _here = os.path.dirname(__file__)
 web.app.config['TESTING'] = True
@@ -35,8 +35,6 @@ web.app.config['MAIL_PORT'] = 25
 web.app.config['MAIL_FAIL_SILENTLY'] = False
 web.app.config['MAIL_DEFAULT_SENDER'] = 'PyBossa Support <info@pybossa.com>'
 
-web.cache.config['CACHE_TYPE'] = 'null'
-web.cache.config['TESTING'] = True
 web.app.config['ANNOUNCEMENT'] = {'admin': 'Root Message',
                                   'user': 'User Message',
                                   'owner': 'Owner Message'}
