@@ -6,7 +6,7 @@ except:
 
 setup(
     name = 'pybossa',
-    version = '0.1.1',
+    version = '0.2.0',
     packages = find_packages(),
     install_requires = requirements,
     dependency_links = ['git+https://github.com/Hypernode/M2Crypto#egg=M2Crypto-0.22.dev'],

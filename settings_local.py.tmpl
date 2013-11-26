@@ -88,12 +88,10 @@ MAIL_DEFAULT_SENDER = 'PyBossa Support <info@pybossa.com>'
 ENFORCE_PRIVACY = False
 
 
-## Cache setup. By default it is disabled, you can use "simple" or "memcached"
-## Check the documentation for further details on flask-cache
-CACHE_TYPE = 'null'
-## In seconds: 20 minutes * 60 seconds
-CACHE_DEFAULT_TIMEOUT = 20*60
-### Cache setup. By default it will use SimpleCache 
-## If you want to use memcached install python-memcached (pip install python-memcached)
-#CACHE_TYPE = 'memcached'
-#CACHE_MEMCACHED_SERVERS = ['127.0.0.1:11211']
+## Cache setup. By default it is enabled
+## Redis Sentinel
+# List of Sentinel servers (IP, port)
+REDIS_CACHE_ENABLED = True
+REDIS_SENTINEL = [('localhost', 26379)]
+REDIS_MASTER = 'mymaster'
+REDIS_KEYPREFIX = 'pybossa_cache'

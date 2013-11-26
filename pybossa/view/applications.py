@@ -30,7 +30,7 @@ import pybossa.model as model
 import pybossa.stats as stats
 import pybossa.validator as pb_validator
 
-from pybossa.core import db, cache
+from pybossa.core import db
 from pybossa.cache import ONE_DAY, ONE_HOUR
 from pybossa.model import App, Task
 from pybossa.util import Pagination, UnicodeWriter, admin_required
@@ -880,7 +880,6 @@ def delete_tasks(short_name):
             cached_apps.delete_n_tasks(app.id)
             cached_apps.delete_n_task_runs(app.id)
             cached_apps.delete_overall_progress(app.id)
-            cached_apps.delete_app_pages(short_name)
             return redirect(url_for('.tasks', short_name=app.short_name))
     except HTTPException:
         return abort(403)

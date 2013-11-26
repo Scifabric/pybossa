@@ -15,6 +15,12 @@ execute "install pybossa requirements" do
     cwd "/vagrant"
 end
 
+execute "install pybossa cache requirements" do
+    command ". /opt/vagrant_env/bin/activate; pip install -r cache_requirements.txt"
+    cwd "/vagrant"
+end
+
+
 execute "setup pybossa DB" do
     command "cp alembic.ini.template alembic.ini"
     cwd "/vagrant"

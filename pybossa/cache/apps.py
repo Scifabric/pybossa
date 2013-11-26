@@ -17,10 +17,10 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from sqlalchemy.sql import func, text
-from pybossa.core import cache
 from pybossa.core import db
 from pybossa.model import Featured, App, TaskRun, Task
 from pybossa.util import pretty_date
+from pybossa.cache import memoize, cache, delete_memoized, delete_cached
 
 import json
 import string
@@ -31,7 +31,7 @@ from datetime import timedelta
 
 STATS_FRONTPAGE_TIMEOUT = 12 * 60 * 60
 
-@cache.memoize()
+@memoize()
 def get_app(short_name):
     sql = text('''SELECT * FROM
                   app WHERE app.short_name=:short_name''')
@@ -49,7 +49,7 @@ def get_app(short_name):
     return app
 
 
-@cache.cached(timeout=STATS_FRONTPAGE_TIMEOUT, key_prefix="front_page_featured_apps")
+@cache(timeout=STATS_FRONTPAGE_TIMEOUT, key_prefix="front_page_featured_apps")
 def get_featured_front_page():
     """Return featured apps"""
     sql = text('''SELECT app.id, app.name, app.short_name, app.info FROM
@@ -63,7 +63,7 @@ def get_featured_front_page():
     return featured
 
 
-@cache.cached(timeout=STATS_FRONTPAGE_TIMEOUT, key_prefix="front_page_top_apps")
+@cache(timeout=STATS_FRONTPAGE_TIMEOUT, key_prefix="front_page_top_apps")
 def get_top(n=4):
     """Return top n=4 apps"""
     sql = text('''
@@ -82,7 +82,7 @@ def get_top(n=4):
     return top_apps
 
 
-@cache.memoize()
+@memoize()
 def n_tasks(app_id):
     sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task
                   WHERE task.app_id=:app_id''')
@@ -93,7 +93,7 @@ def n_tasks(app_id):
     return n_tasks
 
 
-@cache.memoize()
+@memoize()
 def n_task_runs(app_id):
     sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
                   WHERE task_run.app_id=:app_id''')
@@ -104,7 +104,7 @@ def n_task_runs(app_id):
     return n_task_runs
 
 
-@cache.memoize()
+@memoize()
 def last_activity(app_id):
     sql = text('''SELECT finish_time FROM task_run WHERE app_id=:app_id
                ORDER BY finish_time DESC LIMIT 1''')
@@ -117,7 +117,7 @@ def last_activity(app_id):
             return None
 
 
-@cache.memoize()
+@memoize()
 def overall_progress(app_id):
     """Returns the percentage of submitted Tasks Runs done when a task is
     completed"""
@@ -140,7 +140,7 @@ def overall_progress(app_id):
     return (pct * 100)
 
 
-@cache.memoize()
+@memoize()
 def last_activity(app_id):
     sql = text('''SELECT finish_time FROM task_run WHERE app_id=:app_id
                ORDER BY finish_time DESC LIMIT 1''')
@@ -153,7 +153,7 @@ def last_activity(app_id):
 
 
 # This function does not change too much, so cache it for a longer time
-@cache.cached(timeout=STATS_FRONTPAGE_TIMEOUT, key_prefix="number_featured_apps")
+@cache(timeout=STATS_FRONTPAGE_TIMEOUT, key_prefix="number_featured_apps")
 def n_featured():
     """Return number of featured apps"""
     sql = text('''select count(*) from featured;''')
@@ -164,7 +164,7 @@ def n_featured():
 
 
 # This function does not change too much, so cache it for a longer time
-@cache.memoize(timeout=STATS_FRONTPAGE_TIMEOUT)
+@memoize(timeout=STATS_FRONTPAGE_TIMEOUT)
 def get_featured(category, page=1, per_page=5):
     """Return a list of featured apps with a pagination"""
 
@@ -191,7 +191,8 @@ def get_featured(category, page=1, per_page=5):
         apps.append(app)
     return apps, count
 
-@cache.cached(key_prefix="number_published_apps")
+
+@cache(key_prefix="number_published_apps")
 def n_published():
     """Return number of published apps"""
     sql = text('''
@@ -206,7 +207,7 @@ def n_published():
         count = row[0]
     return count
 
-@cache.memoize()
+@memoize()
 def get_published(category, page=1, per_page=5):
     """Return a list of apps with a pagination"""
 
@@ -241,8 +242,9 @@ def get_published(category, page=1, per_page=5):
         apps.append(app)
     return apps, count
 
+
 # Cache it for longer times, as this is only shown to admin users
-@cache.cached(timeout=STATS_FRONTPAGE_TIMEOUT, key_prefix="number_draft_apps")
+@cache(timeout=STATS_FRONTPAGE_TIMEOUT, key_prefix="number_draft_apps")
 def n_draft():
     """Return number of draft applications"""
     sql = text('''
@@ -256,7 +258,8 @@ def n_draft():
         count = row[0]
     return count
 
-@cache.memoize(timeout=STATS_FRONTPAGE_TIMEOUT)
+
+@memoize(timeout=STATS_FRONTPAGE_TIMEOUT)
 def get_draft(category, page=1, per_page=5):
     """Return list of draft applications"""
 
@@ -287,7 +290,7 @@ def get_draft(category, page=1, per_page=5):
     return apps, count
 
 
-@cache.memoize()
+@memoize()
 def n_count(category):
     """Count the number of apps in a given category"""
     sql = text('''
@@ -310,7 +313,7 @@ def n_count(category):
     return count
 
 
-@cache.memoize()
+@memoize()
 def get(category, page=1, per_page=5):
     """Return a list of apps with at least one task and a task_presenter
        with a pagination for a given category"""
@@ -353,54 +356,48 @@ def get(category, page=1, per_page=5):
 
 def reset():
     """Clean the cache"""
-    cache.delete("index_front_page")
-    cache.delete('front_page_featured_apps')
-    cache.delete('front_page_top_apps')
-    cache.delete('number_featured_apps')
-    cache.delete('number_published_apps')
-    cache.delete('number_draft_apps')
-    cache.delete_memoized(get_published)
-    cache.delete_memoized(get_featured)
-    cache.delete_memoized(get_draft)
-    cache.delete_memoized(n_count)
-    cache.delete_memoized(get)
+    delete_cached("index_front_page")
+    delete_cached('front_page_featured_apps')
+    delete_cached('front_page_top_apps')
+    delete_cached('number_featured_apps')
+    delete_cached('number_published_apps')
+    delete_cached('number_draft_apps')
+    delete_memoized(get_published)
+    delete_memoized(get_featured)
+    delete_memoized(get_draft)
+    delete_memoized(n_count)
+    delete_memoized(get)
 
 
 def delete_app(app_id):
     """Reset app values in cache"""
-    cache.delete_memoized(get_app, app_id)
+    delete_memoized(get_app, app_id)
 
 
 def delete_n_tasks(app_id):
     """Reset n_tasks value in cache"""
-    cache.delete_memoized(n_tasks, app_id)
+    delete_memoized(n_tasks, app_id)
 
 
 def delete_n_task_runs(app_id):
     """Reset n_tasks value in cache"""
-    cache.delete_memoized(n_task_runs, app_id)
+    delete_memoized(n_task_runs, app_id)
 
 
 def delete_overall_progress(app_id):
     """Reset overall_progress value in cache"""
-    cache.delete_memoized(overall_progress, app_id)
+    delete_memoized(overall_progress, app_id)
 
 
 def delete_last_activity(app_id):
     """Reset last_activity value in cache"""
-    cache.delete_memoized(last_activity, app_id)
-
-
-def delete_app_pages(short_name):
-    """Reset app static pages"""
-    cache.delete('view//app/%s/' % short_name)
-    cache.delete('view//app/%s/stats' % short_name)
+    delete_memoized(last_activity, app_id)
 
 
 def clean(app_id):
     """Clean all items in cache"""
     reset()
-    cache.delete_memoized(n_tasks, app_id)
-    cache.delete_memoized(n_task_runs, app_id)
-    cache.delete_memoized(last_activity, app_id)
-    cache.delete_memoized(overall_progress, app_id)
+    delete_memoized(n_tasks, app_id)
+    delete_memoized(n_task_runs, app_id)
+    delete_memoized(last_activity, app_id)
+    delete_memoized(overall_progress, app_id)
