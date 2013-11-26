@@ -30,7 +30,7 @@ from sqlalchemy import func, desc
 from werkzeug.exceptions import *
 
 import pybossa
-from pybossa.core import app, login_manager, db, cache, babel
+from pybossa.core import app, login_manager, db, babel
 import pybossa.model as model
 from pybossa.api import blueprint as api
 from pybossa.view.account import blueprint as account
