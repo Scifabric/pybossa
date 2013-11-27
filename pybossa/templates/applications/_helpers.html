@@ -69,6 +69,12 @@
             <i class="icon icon-eye-open"></i> <strong>{{ _('Hidden') }}</strong>: {{ _('No') }}
         {% endif %}
         </li>
+        <li>{% if app.maintenance == 1 %}
+            <i class="icon icon-eye-close"></i> <strong>{{ _('Maintenance') }}</strong>: {{ _('Yes') }}
+        {% else %} 
+            <i class="icon icon-eye-open"></i> <strong>{{ _('Maintenance') }}</strong>: {{ _('No') }}
+        {% endif %}
+        </li>
         {% endif %}
       </ul>
     </div>
