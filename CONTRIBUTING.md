@@ -3,7 +3,7 @@
 ## Before You Start
 
 Anyone wishing to contribute to the **[PyBossa/pybossa](https://github.com/PyBossa/pybossa)** project 
-**MUST read & sign a Contributor Asignment Agreement (CAA)**. 
+**MUST read & sign a Contributor Assignment Agreement (CAA)**. 
 
 The PyBossa team is legally prevented from accepting any pull requests from users who have not signed the CAA first.
 
