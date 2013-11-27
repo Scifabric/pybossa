@@ -22,6 +22,7 @@
         {{ render_field(form.category_id)}}
         {{ render_field(form.long_description, class_="input-xlarge", placeholder="Explain the application (you can use HTML code!)")}}
         {{ render_field(form.hidden, tooltip="Do you want to hide your app?")}}
+        {{ render_field(form.maintenance, tooltip="Do you want to maintain your app?")}}
         <div class="form-actions">
           <input type="submit" value="Save the changes" class="btn btn-primary" />
           <a href="{{url_for('app.settings', short_name=app.short_name)}}" class="btn">Cancel</a>
