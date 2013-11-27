@@ -186,6 +186,10 @@ class App(db.Model, DomainObject):
     #: Boolean integer (0,1) indicating that \
     #: this App should be hidden from everyone but Administrators
     hidden = Column(Integer, default=0)
+    #: Boolean integer (0,1) indicating that \
+    #: this App should be in maintenance from everyone but 
+    #: except the owner and Administrators
+    maintenance = Column(Integer, default=0)
     #: owner (id)
     owner_id = Column(Integer, ForeignKey('user.id'))
     ## Following may not be relevant ...
