@@ -44,6 +44,7 @@ def get_app(short_name):
                   long_description=row.long_description,
                   owner_id=row.owner_id,
                   hidden=row.hidden,
+                  maintenance=row.maintenance,
                   info=json.loads(row.info),
                   allow_anonymous_contributors=row.allow_anonymous_contributors)
     return app

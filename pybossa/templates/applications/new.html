@@ -22,6 +22,7 @@
             {{ render_field(form.category_id, class_="span4")}}
             {{ render_field(form.long_description, class_="span4", placeholder=_('Explain the application (you can use HTML code!)'))}}
             {{ render_field(form.hidden, tooltip=_('Do you want to hide your app?'))}}
+            {{ render_field(form.maintenance, tooltip=_('Do you want to set maintain your app?'))}}
             <div class="form-actions">
                 <input type="submit" value={{_('Create the application')}} class="btn btn-primary" />
                 <a href="{{url_for('account.profile')}}" class="btn">{{_('Cancel')}}</a>
