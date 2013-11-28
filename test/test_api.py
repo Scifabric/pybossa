@@ -1398,3 +1398,21 @@ class TestAPI:
         err_msg = "There should be a question"
         assert task['info'].get('question') == 'My random question', err_msg
         self.signout()
+
+    def test_12_users_settings(self):
+        """ Test API users settings"""
+        # As Anonymous user
+        self.signout()
+        res = self.app.get('/api/settings', follow_redirects=True)
+        data = json.loads(res.data)
+        err_msg = "Should return None in language field"
+        assert data['language'] == None, err_msg
+
+        # as register user
+        self.register()
+        res = self.signin()
+        res = self.app.get('/api/settings', follow_redirects=True)
+        data = json.loads(res.data)
+        err_msg = "Should return 'en' in language field to an authenticated use by default"
+        assert data['language'] == 'en', err_msg
+        self.signout()
