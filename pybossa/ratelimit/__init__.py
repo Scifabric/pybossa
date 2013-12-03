@@ -21,7 +21,7 @@ import time
 from functools import update_wrapper, wraps
 from flask import request, g
 from werkzeug.exceptions import TooManyRequests
-from pybossa.core import sentinel
+from pybossa.core import sentinel, redis_master
 from pybossa.error import ErrorStatus
 
 
@@ -37,11 +37,10 @@ class RateLimit(object):
         self.per = per
         self.send_x_headers = send_x_headers
 
-        master = sentinel.master_for('mymaster')
-
-        p = master.pipeline()
+        p = redis_master.pipeline()
         p.incr(self.key)
         p.expireat(self.key, self.reset + self.expiration_window)
+
         self.current = min(p.execute()[0], limit)
 
     remaining = property(lambda x: x.limit - x.current)
