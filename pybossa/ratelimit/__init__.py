@@ -25,7 +25,10 @@ from werkzeug.exceptions import TooManyRequests
 from pybossa.error import ErrorStatus
 
 try:
-    import settings_local as settings
+    if os.environ['PYBOSSA_SETTINGS']:
+        import os.environ['PYBOSSA_SETTINGS'] as settings
+    else:
+        import settings_local as settings
 except ImportError: # pragma: no cover
     os.environ['PYBOSSA_RATELIMIT_DISABLED'] = '1'
 
