@@ -19,22 +19,13 @@
 import os
 import time
 from functools import update_wrapper, wraps
-from redis.sentinel import Sentinel
 from flask import request, g
 from werkzeug.exceptions import TooManyRequests
+from pybossa.core import sentinel
 from pybossa.error import ErrorStatus
 
-try:
-    if os.environ['PYBOSSA_SETTINGS']:
-        import os.environ['PYBOSSA_SETTINGS'] as settings
-    else:
-        import settings_local as settings
-except ImportError: # pragma: no cover
-    os.environ['PYBOSSA_RATELIMIT_DISABLED'] = '1'
 
-sentinel = Sentinel(settings.REDIS_SENTINEL, socket_timeout=0.1)
 error = ErrorStatus()
-
 
 class RateLimit(object):
     expiration_window = 10
@@ -46,7 +37,7 @@ class RateLimit(object):
         self.per = per
         self.send_x_headers = send_x_headers
 
-        master = sentinel.master_for(settings.REDIS_MASTER)
+        master = sentinel.master_for('mymaster')
 
         p = master.pipeline()
         p.incr(self.key)
@@ -57,17 +48,11 @@ class RateLimit(object):
     over_limit = property(lambda x: x.current >= x.limit)
 
 
-#def on_over_limit(limit):
-#    return error.format_exception(TooManyRequests, action=limit.key)
-#    #return 'You hit the rate limit', 429
-
-
 def get_view_rate_limit():
     return getattr(g, '_view_rate_limit', None)
 
 
 def ratelimit(limit, per=300, send_x_headers=True,
-              #over_limit=on_over_limit,
               scope_func=lambda: request.remote_addr,
               key_func=lambda: request.endpoint,
               path=lambda: request.path):
