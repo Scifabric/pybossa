@@ -1398,3 +1398,17 @@ class TestAPI:
         err_msg = "There should be a question"
         assert task['info'].get('question') == 'My random question', err_msg
         self.signout()
+
+    def test_12_rate_limiting_app(self):
+        """Test API.app rate limit"""
+        # GET
+        url = '/api/app'
+        limit = 300
+        for i in range(limit):
+            res = self.app.get(url)
+            err_msg = "API.app GET X-RateLimit-Remaining not working"
+            print res.headers
+            assert res.headers['X-RateLimit-Remaining'] == (limit - i), err_msg
+        # POST
+        # PUT
+        # DELETE

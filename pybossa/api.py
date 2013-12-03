@@ -156,7 +156,8 @@ class APIBase(MethodView):
                         obj['link'] = link
                     return Response(json.dumps(obj), mimetype='application/json')
         except Exception as e:
-            return error.format_exception(e, action='GET')
+            return error.format_exception(e, target=self.__class__.__name__.lower(),
+                                          action='GET')
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
@@ -179,7 +180,8 @@ class APIBase(MethodView):
             db.session.commit()
             return json.dumps(inst.dictize())
         except Exception as e:
-            return error.format_exception(e, action='POST')
+            return error.format_exception(e, target=self.__class__.__name__.lower(),
+                                          action='POST')
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
@@ -205,7 +207,8 @@ class APIBase(MethodView):
             self._refresh_cache(inst)
             return '', 204
         except Exception as e:
-            return error.format_exception(e, action='DELETE')
+            return error.format_exception(e, target=self.__class__.__name__.lower(),
+                                          action='DELETE')
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
@@ -238,7 +241,8 @@ class APIBase(MethodView):
             return Response(json.dumps(inst.dictize()), 200,
                             mimetype='application/json')
         except Exception as e:
-            return error.format_exception(e, 'PUT')
+            return error.format_exception(e, target=self.__class__.__name__.lower(),
+                                          action='PUT')
 
     def _update_object(self, data_dict):
         '''Method to be overriden in inheriting classes which wish to update
