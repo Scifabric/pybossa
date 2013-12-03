@@ -39,12 +39,16 @@ from pybossa.auth import require
 from pybossa.hateoas import Hateoas
 from pybossa.vmcp import sign
 from pybossa.cache import apps as cached_apps
+from pybossa.ratelimit import ratelimit
 import pybossa.sched as sched
+from pybossa.error import ErrorStatus
 import os
 
 blueprint = Blueprint('api', __name__)
 
 cors_headers = ['Content-Type', 'Authorization']
+
+error = ErrorStatus()
 
 
 @blueprint.route('/')
@@ -59,35 +63,36 @@ class APIBase(MethodView):
     tasks and task runs.
     """
     hateoas = Hateoas()
-    error_status = {"Forbidden": 403,
-                    "NotFound": 404,
-                    "Unauthorized": 401,
-                    "TypeError": 415,
-                    "ValueError": 415,
-                    "DataError": 415,
-                    "AttributeError": 415,
-                    "IntegrityError": 415}
+    #error_status = {"Forbidden": 403,
+    #                "NotFound": 404,
+    #                "Unauthorized": 401,
+    #                "TypeError": 415,
+    #                "ValueError": 415,
+    #                "DataError": 415,
+    #                "AttributeError": 415,
+    #                "IntegrityError": 415,
+    #                "TooManyRequests": 429}
 
     def valid_args(self):
         for k in request.args.keys():
             if k not in ['api_key']:
                 getattr(self.__class__, k)
 
-    def format_exception(self, e, action):
-        """Formats the exception to a valid JSON object"""
-        exception_cls = e.__class__.__name__
-        if self.error_status.get(exception_cls):
-            status = self.error_status.get(exception_cls)
-        else:
-            status = 200
-        error = dict(action=action,
-                     status="failed",
-                     status_code=status,
-                     target=self.__class__.__name__.lower(),
-                     exception_cls=exception_cls,
-                     exception_msg=e.message)
-        return Response(json.dumps(error), status=status,
-                        mimetype='application/json')
+    #def format_exception(self, e, action):
+    #    """Formats the exception to a valid JSON object"""
+    #    exception_cls = e.__class__.__name__
+    #    if self.error_status.get(exception_cls):
+    #        status = self.error_status.get(exception_cls)
+    #    else:
+    #        status = 200
+    #    error = dict(action=action,
+    #                 status="failed",
+    #                 status_code=status,
+    #                 target=self.__class__.__name__.lower(),
+    #                 exception_cls=exception_cls,
+    #                 exception_msg=e.message)
+    #    return Response(json.dumps(error), status=status,
+    #                    mimetype='application/json')
 
     @crossdomain(origin='*', headers=cors_headers)
     def options(self):
@@ -95,6 +100,7 @@ class APIBase(MethodView):
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
+    @ratelimit(limit=300, per=15*60)
     def get(self, id):
         """
         Returns an item from the DB with the request.data JSON object or all
@@ -150,7 +156,7 @@ class APIBase(MethodView):
                         obj['link'] = link
                     return Response(json.dumps(obj), mimetype='application/json')
         except Exception as e:
-            return self.format_exception(e, action='GET')
+            return error.format_exception(e, action='GET')
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
@@ -173,7 +179,7 @@ class APIBase(MethodView):
             db.session.commit()
             return json.dumps(inst.dictize())
         except Exception as e:
-            return self.format_exception(e, action='POST')
+            return error.format_exception(e, action='POST')
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
@@ -199,7 +205,7 @@ class APIBase(MethodView):
             self._refresh_cache(inst)
             return '', 204
         except Exception as e:
-            return self.format_exception(e, action='DELETE')
+            return error.format_exception(e, action='DELETE')
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
@@ -232,7 +238,7 @@ class APIBase(MethodView):
             return Response(json.dumps(inst.dictize()), 200,
                             mimetype='application/json')
         except Exception as e:
-            return self.format_exception(e, 'PUT')
+            return error.format_exception(e, 'PUT')
 
     def _update_object(self, data_dict):
         '''Method to be overriden in inheriting classes which wish to update
