@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from helper import sched
-from base import Fixtures
+from base import Fixtures, redis_flushall
 import json
 
 
@@ -29,7 +29,7 @@ class TestSched(sched.Helper):
     # Tests
     def test_incremental_tasks(self):
         """ Test incremental SCHED strategy - second TaskRun receives first gaven answer"""
-
+        redis_flushall()
         Fixtures.create_2(sched='incremental')
 
         # Del previous TaskRuns
