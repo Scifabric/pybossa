@@ -59,7 +59,7 @@ class ErrorStatus(object):
         if self.error_status.get(exception_cls):
             status = self.error_status.get(exception_cls)
         else:
-            status = 200
+            status = 500
         error = dict(action=action.upper(),
                      status="failed",
                      status_code=status,
