@@ -18,7 +18,7 @@
 
 import json
 
-from base import web, model, Fixtures, db
+from base import web, model, Fixtures, db, redis_flushall
 from nose.tools import assert_equal
 
 
@@ -31,6 +31,7 @@ class TestAPI:
 
     def tearDown(self):
         db.session.remove()
+        redis_flushall()
 
 
     @classmethod
