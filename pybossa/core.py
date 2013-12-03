@@ -27,6 +27,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 #from flask.ext.debugtoolbar import DebugToolbarExtension
 from flask.ext.heroku import Heroku
 from flask.ext.babel import Babel
+from redis.sentinel import Sentinel
 
 from pybossa import default_settings as settings
 
@@ -48,7 +49,7 @@ def create_app():
 
 def configure_app(app):
     app.config.from_object(settings)
-    app.config.from_envvar('PYBOSSA_SETTINGS', silent=True)
+    app.config.from_envvar('PYBOSSA_SETTINGS', silent=False)
     # parent directory
     here = os.path.dirname(os.path.abspath( __file__ ))
     config_path = os.path.join(os.path.dirname(here), 'settings_local.py')
@@ -87,6 +88,7 @@ login_manager.login_view = 'account.signin'
 login_manager.login_message = u"Please sign in to access this page."
 app = create_app()
 
+sentinel = Sentinel(app.config['REDIS_SENTINEL'], socket_timeout=0.1)
 
 #toolbar = DebugToolbarExtension(app)
 db = SQLAlchemy(app)
