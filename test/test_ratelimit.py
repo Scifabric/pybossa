@@ -93,7 +93,15 @@ class TestAPI:
                 data = json.dumps(data)
                 res = self.app.post(url, data=data)
             elif action == 'put':
-                res = self.app.put(url, data)
+                _url = '/api/%s/%s' % (obj, i)
+
+                if obj == 'app':
+                    data = dict(name=i,
+                                short_name=i,
+                                long_description=u'something')
+                data = json.dumps(data)
+
+                res = self.app.put(_url + url, data)
             elif action == 'delete':
                 _url = '/api/%s/%s' % (obj, i)
                 res = self.app.delete(_url + url)
@@ -120,12 +128,10 @@ class TestAPI:
         action = 'get'
         self.check_limit(url, action, 'app')
 
-
     def test_01_app_post(self):
         """Test API.app POST rate limit"""
         url = '/api/app?api_key=' + Fixtures.api_key
         self.check_limit(url, 'post', 'app')
-        
 
     def test_02_app_delete(self):
         """Test API.app DELETE rate limit"""
@@ -136,3 +142,13 @@ class TestAPI:
 
         url = '?api_key=%s' % (Fixtures.api_key)
         self.check_limit(url, 'delete', 'app')
+
+    def test_02_app_put(self):
+        """Test API.app PUT rate limit"""
+        for i in range(300):
+            app = model.App(name=str(i), short_name=str(i), description=str(i))
+            db.session.add(app)
+        db.session.commit()
+
+        url = '?api_key=%s' % (Fixtures.api_key)
+        self.check_limit(url, 'put', 'app')
