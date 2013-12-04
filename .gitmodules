@@ -16,3 +16,9 @@
 [submodule "cookbooks/postgresql"]
 	path = cookbooks/postgresql
 	url = git://github.com/opscode-cookbooks/postgresql.git
+[submodule "cookbooks/redis"]
+	path = cookbooks/redis
+	url = git@github.com:teleyinex/chef-cookbook-redis.git
+[submodule "cookbooks/build-essential"]
+	path = cookbooks/build-essential
+	url = git@github.com:opscode-cookbooks/build-essential.git
