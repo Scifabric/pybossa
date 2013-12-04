@@ -15,11 +15,16 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+"""
+This module tests the RateLimit class and decorator for the API.
 
+It tests all the actions: GET, POST, DEL and PUT, as well as the specific
+API endpoints like userprogress or vmcp.
+
+"""
 import json
 
 from base import web, model, Fixtures, db, redis_flushall
-from nose.tools import assert_equal
 
 
 class TestAPI:
@@ -33,48 +38,9 @@ class TestAPI:
         db.session.remove()
         redis_flushall()
 
-
     @classmethod
     def teardown_class(cls):
         model.rebuild_db()
-
-    # Helper functions
-    def register(self, method="POST", fullname="John Doe", username="johndoe",
-                 password="p4ssw0rd", password2=None, email=None):
-        """Helper function to register and sign in a user"""
-        if password2 is None:
-            password2 = password
-        if email is None:
-            email = username + '@example.com'
-        if method == "POST":
-            return self.app.post('/account/register',
-                                 data={'fullname': fullname,
-                                       'username': username,
-                                       'email_addr': email,
-                                       'password': password,
-                                       'confirm': password2,
-                                       },
-                                 follow_redirects=True)
-        else:
-            return self.app.get('/account/register', follow_redirects=True)
-
-    def signin(self, method="POST", email="johndoe@example.com", password="p4ssw0rd",
-               next=None):
-        """Helper function to sign in current user"""
-        url = '/account/signin'
-        if next is not None:
-            url = url + '?next=' + next
-        if method == "POST":
-            return self.app.post(url,
-                                 data={'email': email,
-                                       'password': password},
-                                 follow_redirects=True)
-        else:
-            return self.app.get(url, follow_redirects=True)
-
-    def signout(self):
-        """Helper function to sign out current user"""
-        return self.app.get('/account/signout', follow_redirects=True)
 
     def check_limit(self, url, action, obj, data=None):
         # Reset keys in Redis
@@ -121,26 +87,26 @@ class TestAPI:
                 assert error['exception_cls'] == 'TooManyRequests', err_msg
 
     def test_00_api_get(self):
-        """Test API GET rate limit"""
+        """Test API GET rate limit."""
         # GET as Anonymous
         url = '/api/'
         action = 'get'
         self.check_limit(url, action, 'app')
 
     def test_00_app_get(self):
-        """Test API.app GET rate limit"""
+        """Test API.app GET rate limit."""
         # GET as Anonymous
         url = '/api/app'
         action = 'get'
         self.check_limit(url, action, 'app')
 
     def test_01_app_post(self):
-        """Test API.app POST rate limit"""
+        """Test API.app POST rate limit."""
         url = '/api/app?api_key=' + Fixtures.api_key
         self.check_limit(url, 'post', 'app')
 
     def test_02_app_delete(self):
-        """Test API.app DELETE rate limit"""
+        """Test API.app DELETE rate limit."""
         for i in range(300):
             app = model.App(name=str(i), short_name=str(i), description=str(i))
             db.session.add(app)
@@ -150,7 +116,7 @@ class TestAPI:
         self.check_limit(url, 'delete', 'app')
 
     def test_03_app_put(self):
-        """Test API.app PUT rate limit"""
+        """Test API.app PUT rate limit."""
         for i in range(300):
             app = model.App(name=str(i), short_name=str(i), description=str(i))
             db.session.add(app)
@@ -160,16 +126,16 @@ class TestAPI:
         self.check_limit(url, 'put', 'app')
 
     def test_04_new_task(self):
-        """Test API.new_task(app_id) GET rate limit"""
+        """Test API.new_task(app_id) GET rate limit."""
         url = '/api/app/1/newtask'
         self.check_limit(url, 'get', 'app')
 
     def test_05_vmcp(self):
-        """Test API.vmcp GET rate limit"""
+        """Test API.vmcp GET rate limit."""
         url = '/api/vmcp'
         self.check_limit(url, 'get', 'app')
 
     def test_05_user_progress(self):
-        """Test API.user_progress GET rate limit"""
+        """Test API.user_progress GET rate limit."""
         url = '/api/app/1/userprogress'
         self.check_limit(url, 'get', 'app')
