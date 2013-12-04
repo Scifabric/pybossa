@@ -16,18 +16,34 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 # Cache global variables for timeouts
-import os
+"""
+Rate limit module for limiting the requests in the API.
+
+This module exports:
+    * RateLimit class: for limiting the requests
+    * ratelimit decorator: for decorating the views
+
+"""
 import time
 from functools import update_wrapper, wraps
 from flask import request, g
 from werkzeug.exceptions import TooManyRequests
-from pybossa.core import sentinel, redis_master
+from pybossa.core import redis_master
 from pybossa.error import ErrorStatus
-
 
 error = ErrorStatus()
 
+
 class RateLimit(object):
+
+    """
+    Limit the number of requests.
+
+    It uses a Redis pipe from the master node (configured via Sentinel) to
+    limit the number of requests.
+
+    """
+
     expiration_window = 10
 
     def __init__(self, key_prefix, limit, per, send_x_headers):
@@ -48,6 +64,7 @@ class RateLimit(object):
 
 
 def get_view_rate_limit():
+    """Return the rate limit values."""
     return getattr(g, '_view_rate_limit', None)
 
 
@@ -55,6 +72,12 @@ def ratelimit(limit, per=300, send_x_headers=True,
               scope_func=lambda: request.remote_addr,
               key_func=lambda: request.endpoint,
               path=lambda: request.path):
+    """
+    Decorator for limiting the access to a route.
+
+    Returns the function if within the limit, otherwise TooManyRequests error
+
+    """
     def decorator(f):
         @wraps(f)
         def rate_limited(*args, **kwargs):
