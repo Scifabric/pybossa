@@ -9,7 +9,7 @@ services:
 before_install:
   - sudo apt-get update && sudo apt-get install swig
   - redis-server --version
-  - redis-server contrib/sentinel.conf --sentinel
+  - redis-server contrib/redis/sentinel.conf --sentinel
 install:
   - python setup.py install
   - pip install -r cache_requirements.txt
