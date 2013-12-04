@@ -34,3 +34,8 @@ pybossa/static/openlayers/
 vagrant_env/
 keys/*
 *.pem
+*.swm
+*.swn
+*.swl
+*.log
+log
