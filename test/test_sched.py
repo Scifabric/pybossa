@@ -20,7 +20,7 @@ import json
 import random
 
 from helper import sched
-from base import model, Fixtures, db
+from base import model, Fixtures, db, redis_flushall
 import pybossa
 
 
@@ -33,6 +33,7 @@ class TestSched(sched.Helper):
     # Tests
     def test_anonymous_01_newtask(self):
         """ Test SCHED newtask returns a Task for the Anonymous User"""
+        redis_flushall()
         # Del previous TaskRuns
         self.del_task_runs()
 
@@ -42,6 +43,7 @@ class TestSched(sched.Helper):
 
     def test_anonymous_02_gets_different_tasks(self):
         """ Test SCHED newtask returns N different Tasks for the Anonymous User"""
+        redis_flushall()
         # Del previous TaskRuns
         self.del_task_runs()
 
@@ -80,6 +82,7 @@ class TestSched(sched.Helper):
 
     def test_anonymous_03_respects_limit_tasks(self):
         """ Test SCHED newtask respects the limit of 30 TaskRuns per Task"""
+        redis_flushall()
         # Del previous TaskRuns
         self.del_task_runs()
 
@@ -117,6 +120,7 @@ class TestSched(sched.Helper):
 
     def test_user_01_newtask(self):
         """ Test SCHED newtask returns a Task for John Doe User"""
+        redis_flushall()
         # Del previous TaskRuns
         self.del_task_runs()
 
@@ -130,6 +134,7 @@ class TestSched(sched.Helper):
 
     def test_user_02_gets_different_tasks(self):
         """ Test SCHED newtask returns N different Tasks for John Doe User"""
+        redis_flushall()
         # Del previous TaskRuns
         self.del_task_runs()
 
@@ -172,6 +177,7 @@ class TestSched(sched.Helper):
 
     def test_user_03_respects_limit_tasks(self):
         """ Test SCHED newtask respects the limit of 30 TaskRuns per Task"""
+        redis_flushall()
         # Del previous TaskRuns
         self.del_task_runs()
 
@@ -223,6 +229,7 @@ class TestSched(sched.Helper):
         """ Test SCHED newtask to see if sends the same ammount of Task to
             user_id and user_ip
         """
+        redis_flushall()
         # Del Fixture Task
         self.del_task_runs()
 
@@ -288,6 +295,7 @@ class TestSched(sched.Helper):
 
     def test_task_preloading(self):
         """Test TASK Pre-loading works"""
+        redis_flushall()
         # Del previous TaskRuns
         self.del_task_runs()
 
@@ -339,6 +347,7 @@ class TestSched(sched.Helper):
 
     def test_task_priority(self):
         """Test SCHED respects priority_0 field"""
+        redis_flushall()
         # Del previous TaskRuns
         self.del_task_runs()
 
@@ -378,6 +387,7 @@ class TestGetBreadthFirst:
 
     def tearDown(self):
         db.session.remove()
+        redis_flushall()
 
     def del_task_runs(self, app_id=1):
         """Deletes all TaskRuns for a given app_id"""

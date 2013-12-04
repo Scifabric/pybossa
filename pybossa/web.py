@@ -41,6 +41,7 @@ from pybossa.view.stats import blueprint as stats
 from pybossa.view.help import blueprint as help
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import users as cached_users
+from pybossa.ratelimit import get_view_rate_limit
 
 
 logger = logging.getLogger('pybossa')
@@ -124,6 +125,16 @@ def forbidden(e):
 def unauthorized(e):
     return render_template('401.html'), 401
 
+
+@app.after_request
+def inject_x_rate_headers(response):
+    limit = get_view_rate_limit()
+    if limit and limit.send_x_headers:
+        h = response.headers
+        h.add('X-RateLimit-Remaining', str(limit.remaining))
+        h.add('X-RateLimit-Limit', str(limit.limit))
+        h.add('X-RateLimit-Reset', str(limit.reset))
+    return response
 
 @app.context_processor
 def global_template_context():

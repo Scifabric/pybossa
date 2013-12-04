@@ -59,6 +59,37 @@ Task Runs will have only two parents: the associated task and associated app.
 
 .. _`Hypermedia as the Engine of Application State`: http://en.wikipedia.org/wiki/HATEOAS 
 
+
+.. _rate-limiting:
+
+Rate Limiting
+-------------
+
+Rate Limiting in PyBossa v2.0.1 has been enabled for all the API endpoints.
+The rate limiting gives any user, using the IP, **a window of 15 minutes to do at
+most 300 requests per endpoint**.
+
+This new feature includes in the headers the following values to throttle your
+requests without problems:
+
+* **X-Rate-Limit-Limit**: the rate limit ceiling for that given request
+* **X-Rate-Limit-Remaining**: the number of requests left for the 15 minute window
+* **X-Rate-Limit-Reset**: the remaining window before the rate limit resets in UTC epoch seconds
+
+We recommend to use the Python package **requests** for interacting with
+PyBossa, as it is really simple to check those values:
+
+.. code-block:: python
+
+    import requests
+    import time
+
+    res = requests.get('http://SERVER/api/app')
+    if int(res.headers['X-Rate-Limit-Remaining']) < 10:
+        time.sleep(300) # Sleep for 5 minutes
+    else:
+        pass # Do your stuff
+
 Operations
 ----------
 

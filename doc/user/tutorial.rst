@@ -220,6 +220,11 @@ one::
 The error message will have the information regarding the problems it has found
 when using the API.
 
+.. note::
+    Since version 2.0.1 PyBossa enforces API Rate Limiting, so you might exceed
+    the number of allowed requests, getting a 429 error. Please see
+    :ref:`rate-limiting` section.
+
 Number of answers or task runs per task
 =======================================
 

@@ -39,16 +39,20 @@ from pybossa.auth import require
 from pybossa.hateoas import Hateoas
 from pybossa.vmcp import sign
 from pybossa.cache import apps as cached_apps
+from pybossa.ratelimit import ratelimit
 import pybossa.sched as sched
+from pybossa.error import ErrorStatus
 import os
 
 blueprint = Blueprint('api', __name__)
 
 cors_headers = ['Content-Type', 'Authorization']
 
+error = ErrorStatus()
 
 @blueprint.route('/')
 @crossdomain(origin='*', headers=cors_headers)
+@ratelimit(limit=300, per=15*60)
 def index():
     return 'The PyBossa API'
 
@@ -59,35 +63,12 @@ class APIBase(MethodView):
     tasks and task runs.
     """
     hateoas = Hateoas()
-    error_status = {"Forbidden": 403,
-                    "NotFound": 404,
-                    "Unauthorized": 401,
-                    "TypeError": 415,
-                    "ValueError": 415,
-                    "DataError": 415,
-                    "AttributeError": 415,
-                    "IntegrityError": 415}
 
     def valid_args(self):
         for k in request.args.keys():
             if k not in ['api_key']:
                 getattr(self.__class__, k)
 
-    def format_exception(self, e, action):
-        """Formats the exception to a valid JSON object"""
-        exception_cls = e.__class__.__name__
-        if self.error_status.get(exception_cls):
-            status = self.error_status.get(exception_cls)
-        else:
-            status = 200
-        error = dict(action=action,
-                     status="failed",
-                     status_code=status,
-                     target=self.__class__.__name__.lower(),
-                     exception_cls=exception_cls,
-                     exception_msg=e.message)
-        return Response(json.dumps(error), status=status,
-                        mimetype='application/json')
 
     @crossdomain(origin='*', headers=cors_headers)
     def options(self):
@@ -95,6 +76,7 @@ class APIBase(MethodView):
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
+    @ratelimit(limit=300, per=15*60)
     def get(self, id):
         """
         Returns an item from the DB with the request.data JSON object or all
@@ -150,10 +132,12 @@ class APIBase(MethodView):
                         obj['link'] = link
                     return Response(json.dumps(obj), mimetype='application/json')
         except Exception as e:
-            return self.format_exception(e, action='GET')
+            return error.format_exception(e, target=self.__class__.__name__.lower(),
+                                          action='GET')
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
+    @ratelimit(limit=300, per=15*60)
     def post(self):
         """
         Adds an item to the DB with the request.data JSON object
@@ -173,10 +157,12 @@ class APIBase(MethodView):
             db.session.commit()
             return json.dumps(inst.dictize())
         except Exception as e:
-            return self.format_exception(e, action='POST')
+            return error.format_exception(e, target=self.__class__.__name__.lower(),
+                                          action='POST')
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
+    @ratelimit(limit=300, per=15*60)
     def delete(self, id):
         """
         Deletes a single item from the DB
@@ -199,10 +185,12 @@ class APIBase(MethodView):
             self._refresh_cache(inst)
             return '', 204
         except Exception as e:
-            return self.format_exception(e, action='DELETE')
+            return error.format_exception(e, target=self.__class__.__name__.lower(),
+                                          action='DELETE')
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
+    @ratelimit(limit=300, per=15*60)
     def put(self, id):
         """
         Updates a single item in the DB
@@ -232,7 +220,8 @@ class APIBase(MethodView):
             return Response(json.dumps(inst.dictize()), 200,
                             mimetype='application/json')
         except Exception as e:
-            return self.format_exception(e, 'PUT')
+            return error.format_exception(e, target=self.__class__.__name__.lower(),
+                                          action='PUT')
 
     def _update_object(self, data_dict):
         '''Method to be overriden in inheriting classes which wish to update
@@ -303,11 +292,13 @@ register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
 @jsonpify
 @blueprint.route('/app/<app_id>/newtask')
 @crossdomain(origin='*', headers=cors_headers)
+@ratelimit(limit=300, per=15*60)
 def new_task(app_id):
     # Check if the request has an arg:
-    app = AppAPI()
-    res = app.get(id=app_id)
-    if res.status_code == 200:
+    try:
+        app = db.session.query(model.App).get(app_id)
+        if app is None:
+            raise NotFound
         if request.args.get('offset'):
             offset = int(request.args.get('offset'))
         else:
@@ -320,14 +311,15 @@ def new_task(app_id):
             return Response(json.dumps(task.dictize()), mimetype="application/json")
         else:
             return Response(json.dumps({}), mimetype="application/json")
-    else:
-        return res
+    except Exception as e:
+        return error.format_exception(e, target='app', action='GET')
 
 
 @jsonpify
 @blueprint.route('/app/<short_name>/userprogress')
 @blueprint.route('/app/<int:app_id>/userprogress')
 @crossdomain(origin='*', headers=cors_headers)
+@ratelimit(limit=300, per=15*60)
 def user_progress(app_id=None, short_name=None):
     """Return a JSON object with two fields regarding the tasks for the user:
         { 'done': 10,
@@ -367,6 +359,7 @@ def user_progress(app_id=None, short_name=None):
 
 @jsonpify
 @blueprint.route('/vmcp', methods=['GET'])
+@ratelimit(limit=300, per=15*60)
 def vmcp():
     """VMCP support to sign CernVM requests"""
     error = dict(action=request.method,

@@ -21,7 +21,7 @@ import random
 
 import pybossa.web as web
 import pybossa.model as model
-from pybossa.core import db, mail, app
+from pybossa.core import db, mail, app, redis_master
 
 _here = os.path.dirname(__file__)
 web.app.config['TESTING'] = True
@@ -46,6 +46,9 @@ web.app.config['ENFORCE_PRIVACY'] = False
 mail.init_app(web.app)
 #engine = model.create_engine(web.app.config['SQLALCHEMY_DATABASE_URI'])
 #model.set_engine(engine)
+
+def redis_flushall():
+    redis_master.flushall()
 
 class Fixtures:
     fullname = u'T Tester'

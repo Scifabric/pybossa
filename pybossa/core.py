@@ -27,6 +27,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 #from flask.ext.debugtoolbar import DebugToolbarExtension
 from flask.ext.heroku import Heroku
 from flask.ext.babel import Babel
+from redis.sentinel import Sentinel
 
 from pybossa import default_settings as settings
 
@@ -87,6 +88,9 @@ login_manager.login_view = 'account.signin'
 login_manager.login_message = u"Please sign in to access this page."
 app = create_app()
 
+sentinel = Sentinel(app.config['REDIS_SENTINEL'], socket_timeout=0.1)
+redis_master = sentinel.master_for('mymaster')
+redis_slave = sentinel.slave_for('mymaster')
 
 #toolbar = DebugToolbarExtension(app)
 db = SQLAlchemy(app)
