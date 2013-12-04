@@ -128,6 +128,9 @@ with **#** are comments)::
   source env/bin/activate
   # Install the required libraries
   pip install -e .
+  # Install the CACHE required libraries
+  pip install -r cache_requirements.txt
+
 
 Otherwise you should be able to install the libraries in your system like
 this::
@@ -170,6 +173,108 @@ database::
 
   cp alembic.ini.template alembic.ini
   # now set the sqlalchemy.url ...
+
+.. _pybossa-cache:
+
+Installing Redis
+================
+
+Since version v0.2.1, PyBossa uses Redis not only for caching objects and speed
+up the site, but also for limiting the usage of the API requests.
+
+Redis can be installed via your GNU/Linux distribution package system (check
+that it is at least version 2.6) or downloading the package directly from its
+official Redis_ site.
+
+Once you have downloaded it, and installed it, you will need to run two
+instances:
+
+* **Redis-server**: as a master node, accepting read and write operations.
+* **Redis-sentinel**: as a sentinel node, to configure the master and slave Redis
+  nodes.
+
+Server
+------
+If you have installed the server via your distribution package system, then,
+the server will be running already. If this is not the case, check the official
+documentation of Redis_ to configure it and run it. The default values should
+be fine.
+
+.. note::
+    Please, make sure that you are running version >= 2.6
+
+.. note::
+    If you have installed the software using the source code, then, check the
+    contrib folder, as there is a specific folder for Redis with init.d start
+    scripts. You only have to copy that file to /etc/init.d/ and adapt it to
+    your needs.
+
+Sentinel
+--------
+Redis can be run in sentinel mode with the **--sentinel** arg, or by its own
+command named: redis-sentinel. This will vary from your distribution and
+version of Redis, so check its help page to know how you can run it.
+
+In any case, you will need to run a sentinel node, as PyBossa uses it to
+load-balance the queries, and also to autoconfigure the master and slaves
+automagically.
+
+In order to run PyBossa, you will need first to configure a Sentinel node.
+Create a config file named **sentinel.conf** with something like this::
+
+    sentinel monitor mymaster 127.0.0.1 6379 2
+    sentinel down-after-milliseconds mymaster 60000
+    sentinel failover-timeout mymaster 180000
+    sentinel parallel-syncs mymaster 1
+
+In the contrib folder you will find a file named **sentinel.conf** that should
+be enough to run the sentinel node. Thus, for running it::
+
+    redis-server contrib/sentinel.conf --sentinel
+
+.. note::
+    Please, make sure that you are running version >= 2.6
+
+.. note::
+    If you have installed the software using the source code, then, check the
+    contrib folder, as there is a specific folder for Redis with init.d start
+    scripts. You only have to copy that file to /etc/init.d/ and adapt it to
+    your needs.
+
+Speeding up the site
+====================
+
+PyBossa comes with a Cache system that it is enabled by default. PyBossa uses
+a Redis_ server to cache some objects like applications, statistics, etc. The
+system uses the Sentinel_ feature of Redis_, so you can have several
+master/slave nodes configured with Sentinel_, and your PyBossa server will use
+them "automagically".
+
+Once you have started your master Redis-server to accept connections, 
+Sentinel will manage it and its slaves. If you add a slave, Sentinel will 
+find it and start using it for load-balancing queries in PyBossa Cache system.
+
+For more details about Redis_ and Sentinel_, please, read the official documentation_.
+
+If you want to disable it, you can do it with an environment variable::
+
+    export PYBOSSA_REDIS_CACHE_DISABLED='1'
+
+Then start the server, and nothing will be cached.
+
+.. _Redis: http://redis.io/
+.. _Sentinel: http://redis.io/topics/sentinel
+.. _documentation: http://redis.io/topics/sentinel
+
+.. note::
+   **Important**: We highly recommend you to not disable the cache, as it will boost
+   the performance of the server caching SQL queries as well as page views. If
+   you have lots of applications with hundreds of tasks, you should enable it.
+
+.. note::
+   **Important**: Sometimes Redis is a bit outdated in your Linux distribution.
+   If this is the case, you will need to install it by hand, but it is really
+   easy and well documented in the official Redis_ site.
 
 Configuring the DataBase
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -237,94 +342,4 @@ second one will perform the migration.
 .. _Alembic: http://pypi.python.org/pypi/alembic
 
 
-.. _pybossa-cache:
 
-Installing Redis
-================
-
-Since version v0.2.1, PyBossa uses Redis not only for caching objects and speed
-up the site, but also for limiting the usage of the API requests.
-
-Redis can be installed via your GNU/Linux distribution package system (check
-that it is at least version 2.6) or downloading the package directly from its
-official Redis_ site.
-
-Once you have downloaded it, and installed it, you will need to run two
-instances:
-
-* **Redis-server**: as a master node, accepting read and write operations.
-* **Sentinel**: as a sentinel node, to configure the master and slave Redis
-  nodes.
-
-Server
-------
-If you have installed the server via your distribution package system, then,
-the server will be running already. If this is not the case, check the official
-documentation of Redis_ to configure it and run it. The default values should
-be fine.
-
-Sentinel
---------
-Redis can be run in sentinel mode with the **--sentinel** arg, or by its own
-command named: redis-sentinel. This will vary from your distribution and
-version of Redis, so check its help page to know how you can run it.
-
-In any case, you will need to run a sentinel node, as PyBossa uses it to
-load-balance the queries, and also to autoconfigure the master and slaves
-automagically.
-
-In order to run PyBossa, you will need first to configure a Sentinel node.
-Create a config file named **sentinel.conf** with something like this::
-
-    sentinel monitor mymaster 127.0.0.1 6379 2
-    sentinel down-after-milliseconds mymaster 60000
-    sentinel failover-timeout mymaster 180000
-    sentinel parallel-syncs mymaster 1
-
-In the contrib folder you will find a file named **sentinel.conf** that should
-be enough to run the sentinel node. Thus, for running it::
-
-    redis-server contrib/sentinel.conf --sentinel
-
-
-.. note::
-    If you want to run it when you reboot the machine, copy and paste the file
-    /etc/init.d/redis into /etc/init.d/redis-sentinel. Then modify it
-    accordingly, and you will be done. You can also use Supervisord if you
-    prefer it.
-
-
-Speeding up the site
-====================
-
-PyBossa comes with a Cache system that it is enabled by default. PyBossa uses
-a Redis_ server to cache some objects like applications, statistics, etc. The
-system uses the Sentinel_ feature of Redis_, so you can have several
-master/slave nodes configured with Sentinel_, and your PyBossa server will use
-them "automagically".
-
-Once you have started your master Redis-server to accept connections, 
-Sentinel will manage it and its slaves. If you add a slave, Sentinel will 
-find it and start using it for load-balancing queries in PyBossa Cache system.
-
-For more details about Redis_ and Sentinel_, please, read the official documentation_.
-
-If you want to disable it, you can do it with an environment variable::
-
-    export PYBOSSA_REDIS_CACHE_DISABLED='1'
-
-Then start the server, and nothing will be cached.
-
-.. _Redis: http://redis.io/
-.. _Sentinel: http://redis.io/topics/sentinel
-.. _documentation: http://redis.io/topics/sentinel
-
-.. note::
-   **Important**: We highly recommend you to not disable the cache, as it will boost
-   the performance of the server caching SQL queries as well as page views. If
-   you have lots of applications with hundreds of tasks, you should enable it.
-
-.. note::
-   **Important**: Sometimes Redis is a bit outdated in your Linux distribution.
-   If this is the case, you will need to install it by hand, but it is really
-   easy and well documented in the official Redis_ site.
