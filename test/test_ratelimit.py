@@ -157,3 +157,8 @@ class TestAPI:
         """Test API.new_task(app_id) GET rate limit"""
         url = '/api/app/1/newtask'
         self.check_limit(url, 'get', 'app')
+
+    def test_05_vmcp(self):
+        """Test API.new_task(app_id) GET rate limit"""
+        url = '/api/vmcp'
+        self.check_limit(url, 'get', 'app')
