@@ -120,6 +120,12 @@ class TestAPI:
                 err_msg = "The exception_cls should be TooManyRequests"
                 assert error['exception_cls'] == 'TooManyRequests', err_msg
 
+    def test_00_api_get(self):
+        """Test API GET rate limit"""
+        # GET as Anonymous
+        url = '/api/'
+        action = 'get'
+        self.check_limit(url, action, 'app')
 
     def test_00_app_get(self):
         """Test API.app GET rate limit"""
