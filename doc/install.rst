@@ -239,14 +239,39 @@ second one will perform the migration.
 
 .. _pybossa-cache:
 
-Speeding up the site
-====================
+Installing Redis
+================
 
-PyBossa comes with a Cache system that it is enabled by default. PyBossa uses
-a Redis_ server to cache some objects like applications, statistics, etc. The
-system uses the Sentinel_ feature of Redis_, so you can have several
-master/slave nodes configured with Sentinel_, and your PyBossa server will use
-them "automagically".
+Since version v0.2.1, PyBossa uses Redis not only for caching objects and speed
+up the site, but also for limiting the usage of the API requests.
+
+Redis can be installed via your GNU/Linux distribution package system (check
+that it is at least version 2.6) or downloading the package directly from its
+official Redis_ site.
+
+Once you have downloaded it, and installed it, you will need to run two
+instances:
+
+* **Redis-server**: as a master node, accepting read and write operations.
+* **Sentinel**: as a sentinel node, to configure the master and slave Redis
+  nodes.
+
+Server
+------
+If you have installed the server via your distribution package system, then,
+the server will be running already. If this is not the case, check the official
+documentation of Redis_ to configure it and run it. The default values should
+be fine.
+
+Sentinel
+--------
+Redis can be run in sentinel mode with the **--sentinel** arg, or by its own
+command named: redis-sentinel. This will vary from your distribution and
+version of Redis, so check its help page to know how you can run it.
+
+In any case, you will need to run a sentinel node, as PyBossa uses it to
+load-balance the queries, and also to autoconfigure the master and slaves
+automagically.
 
 In order to run PyBossa, you will need first to configure a Sentinel node.
 Create a config file named **sentinel.conf** with something like this::
@@ -256,13 +281,31 @@ Create a config file named **sentinel.conf** with something like this::
     sentinel failover-timeout mymaster 180000
     sentinel parallel-syncs mymaster 1
 
-Then, you can start the service with this command::
+In the contrib folder you will find a file named **sentinel.conf** that should
+be enough to run the sentinel node. Thus, for running it::
 
-    sentinel-server sentinel.conf --sentinel
+    redis-server contrib/sentinel.conf --sentinel
 
-Finally, you can start your master Redis-server to accept connections, and
-Sentinel will manage it. If you add a slave, Sentinel will find it and start
-using it for load-balancing queries in PyBossa Cache system.
+
+.. note::
+    If you want to run it when you reboot the machine, copy and paste the file
+    /etc/init.d/redis into /etc/init.d/redis-sentinel. Then modify it
+    accordingly, and you will be done. You can also use Supervisord if you
+    prefer it.
+
+
+Speeding up the site
+====================
+
+PyBossa comes with a Cache system that it is enabled by default. PyBossa uses
+a Redis_ server to cache some objects like applications, statistics, etc. The
+system uses the Sentinel_ feature of Redis_, so you can have several
+master/slave nodes configured with Sentinel_, and your PyBossa server will use
+them "automagically".
+
+Once you have started your master Redis-server to accept connections, 
+Sentinel will manage it and its slaves. If you add a slave, Sentinel will 
+find it and start using it for load-balancing queries in PyBossa Cache system.
 
 For more details about Redis_ and Sentinel_, please, read the official documentation_.
 

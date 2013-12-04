@@ -42,10 +42,11 @@ instances of it:
   
 For more information, check :ref:`pybossa-cache`.
 
-Changes v0.2.0
-~~~~~~~~~~~~~~
+Changelog
+~~~~~~~~~
 
-* New CACHE system using Redis Master-Slave infrastructure
+* [v0.2.1] New Rate Limiting for all the API endpoints
+* [v0.2.0] New CACHE system using Redis Master-Slave infrastructure
 
 ============
 Useful Links
