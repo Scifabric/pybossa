@@ -86,6 +86,7 @@ def memoize(timeout=300, debug=False):
                 key_to_hash = ""
                 for i in args:
                     key_to_hash += ":%s" % i
+                key_to_hash = key_to_hash.encode('utf-8')
                 key = key + ":" + hashlib.md5(key_to_hash).hexdigest()
                 #key += "_kwargs"
                 #for i in frozenset(kwargs.items()):
@@ -114,6 +115,7 @@ def delete_memoized(function, arg=None):
         keys = []
         if arg:
             key_to_hash = ":%s" % arg
+            key_to_hash = key_to_hash.encode('utf-8')
             key = "%s:%s_args::%s" % (settings.REDIS_KEYPREFIX,
                                       function.__name__,
                                       hashlib.md5(key_to_hash).hexdigest())
