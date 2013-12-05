@@ -369,9 +369,9 @@ def reset():
     delete_memoized(get)
 
 
-def delete_app(app_id):
+def delete_app(short_name):
     """Reset app values in cache"""
-    delete_memoized(get_app, app_id)
+    delete_memoized(get_app, short_name)
 
 
 def delete_n_tasks(app_id):
