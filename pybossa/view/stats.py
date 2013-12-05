@@ -129,7 +129,6 @@ def get_locs():
 
 
 @blueprint.route('/')
-@cache(timeout=ONE_DAY, key_prefix="global_site_stats")
 def index():
     """Return Global Statistics for the site"""
 
