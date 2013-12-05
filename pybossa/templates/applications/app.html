@@ -19,14 +19,12 @@
             {{ app.long_description|safe}}
         {% endif %}
         <hr>
-        {% if ckan_pkg_url %}
+        <div id="ckan" style="display:none">
         <h2>Data repository: {{ckan_name | default('CKAN server')}}</h2>
-        <p><i class="icon-bar-chart" style="font-size:16px;"></i> <a href="{{ckan_pkg_url}}">Preview the data</a>
-</p>
-        {% if ckan_pkg.license_title %}
-        <p><strong>Data License</strong>: {{ ckan_pkg.license_title }}</p>
-        {% endif %}
-        {% endif %}
+        <p><i class="icon-bar-chart" style="font-size:16px;"></i> <a href="{{ckan_url}}/dataset/{{app.short_name}}">Preview the data</a>
+        </p>
+        <p id="ckan_license" style="display:none"><strong>Data License</strong>: <span id="ckan_license_value"></span></p>
+        </div>
     </div>
     {% else %}
     <div class="page-header">
@@ -34,6 +32,17 @@
     </div>
 {% endif %}
 </div>
+<script>
+    var url = "{{ckan_url}}/api/3/action/package_show";
+    $.get(url, {id: '{{ckan_pkg_name}}'}, function(data){
+            if (data['success'] == true) {
+                $("#ckan").show();
+                if (data['result']['license_title'] != null) {
+                    $("#ckan_license").show();
+                }
+            }
+            });
+</script>
 {{ helper.broken_image() }}
 {{ helper.knob() }}
 {% endblock %}
