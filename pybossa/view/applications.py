@@ -1158,7 +1158,9 @@ def task_n_answers(short_name):
                                    form=form,
                                    app=app)
         elif request.method == 'POST' and form.validate():
-            sql = text('''UPDATE task SET n_answers=:n_answers WHERE app_id=:app_id''')
+            sql = text('''
+                       UPDATE task SET n_answers=:n_answers,
+                       state='ongoing' WHERE app_id=:app_id''')
             db.engine.execute(sql, n_answers=form.n_answers.data, app_id=app.id)
             msg = gettext('Redundancy of Tasks updated!')
             flash(msg, 'success')
