@@ -90,7 +90,6 @@ def memoize(timeout=300, debug=False):
                 #key += "_kwargs"
                 #for i in frozenset(kwargs.items()):
                 #    key += ":%s" % i
-                print redis_slave.info()
                 output = redis_slave.get(key)
                 if output:
                     return pickle.loads(output)
