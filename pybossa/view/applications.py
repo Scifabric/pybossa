@@ -493,22 +493,10 @@ def details(short_name):
                      "n_tasks": n_tasks,
                      "overall_progress": overall_progress,
                      "last_activity": last_activity}
-    try:
-        if current_app.config.get('CKAN_URL'):
-            template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
-            ckan = Ckan(url=current_app.config['CKAN_URL'])
-            pkg, e = ckan.package_exists(name=short_name)
-            if e:
-                raise e
-            if pkg:
-                template_args['ckan_pkg_url'] = (
-                    "%s/dataset/%s" % (current_app.config['CKAN_URL'], short_name))
-                template_args['ckan_pkg'] = pkg
-    except requests.exceptions.ConnectionError:
-        current_app.logger.error("CKAN server down or there is a typo in the URL")
-    except Exception as e:
-        current_app.logger.error(e)
-
+    if current_app.config.get('CKAN_URL'):
+        template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
+        template_args['ckan_url'] = current_app.config.get('CKAN_URL')
+        template_args['ckan_pkg_name'] = short_name
     return render_template(template, **template_args)
 
 
