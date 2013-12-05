@@ -32,7 +32,7 @@ import pybossa.validator as pb_validator
 
 from pybossa.core import db
 from pybossa.cache import ONE_DAY, ONE_HOUR
-from pybossa.model import App, Task
+from pybossa.model import App, Task, User
 from pybossa.util import Pagination, UnicodeWriter, admin_required
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
@@ -969,7 +969,8 @@ def export_to(short_name):
                 raise e
             if package:
                 # Update the package
-                package = ckan.package_update(app=app, user=app.owner, url=app_url,
+                owner = User.query.get(app.owner_id)
+                package = ckan.package_update(app=app, user=owner, url=app_url,
                                               resources=package['resources'])
                 ckan.package = package
                 resource_found = False
@@ -986,7 +987,8 @@ def export_to(short_name):
                 if not resource_found:
                     create_ckan_datastore(ckan, ty, package['id'])
             else:
-                package = ckan.package_create(app=app, user=app.owner, url=app_url)
+                owner = User.query.get(app.owner_id)
+                package = ckan.package_create(app=app, user=owner, url=app_url)
                 create_ckan_datastore(ckan, ty, package['id'])
                 #new_resource = ckan.resource_create(name=ty,
                 #                                    package_id=package['id'])
