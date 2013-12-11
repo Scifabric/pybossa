@@ -314,6 +314,15 @@ def new_task(app_id):
     except Exception as e:
         return error.format_exception(e, target='app', action='GET')
 
+@jsonpify
+@blueprint.route('/settings')
+@crossdomain(origin='*', headers=cors_headers)
+def settings(app_id=None, short_name=None):
+    if current_user.is_anonymous():
+        tmp = dict( language = None )
+    else:
+        tmp = dict( language = current_user.locale )
+    return Response( json.dumps(tmp), mimetype="application/json" )
 
 @jsonpify
 @blueprint.route('/app/<short_name>/userprogress')
