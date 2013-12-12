@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from sqlalchemy.sql import text
 from pybossa.core import db
-from pybossa.cache import cache, memoize, ONE_DAY, ONE_HOUR
+from pybossa.cache import cache, memoize, delete_memoized, ONE_DAY, ONE_HOUR
 from pybossa.model import User
 import json
 
@@ -133,3 +133,8 @@ def get_users_page(page, per_page=24):
                     task_runs=row.task_runs)
         accounts.append(user)
     return accounts
+
+
+def delete_user_summary(name):
+    """Delete from cache the user summary."""
+    delete_memoized(get_user_summary, name)
