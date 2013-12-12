@@ -320,6 +320,7 @@ def update_profile():
               .first()
             db.session.merge(new_profile)
             db.session.commit()
+            cached_users.delete_user_summary(current_user.name)
             flash(gettext('Your profile has been updated!'), 'success')
             return redirect(url_for('.profile'))
         else:
