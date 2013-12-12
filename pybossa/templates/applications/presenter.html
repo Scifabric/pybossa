@@ -3,7 +3,12 @@
 {% set active_app = app.short_name %}
 
 {% block content %}
-
+<script>
+    Modernizr.load({
+            test: window.JSON,
+            nope: '{{url_for('static', filename='js/vendor/json2.min.js')}}'
+            });
+</script>
 <script src="{{url_for('static', filename="js/pybossa/pybossa.js")}}" type="text/javascript"></script>
 <div class="row">
     <div class="span12">
