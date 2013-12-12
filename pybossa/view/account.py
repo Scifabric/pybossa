@@ -462,6 +462,7 @@ def reset_api_key():
             user = db.session.query(model.User).get(current_user.id)
             user.api_key = model.make_uuid()
             db.session.commit()
+            cached_users.delete_user_summary(user.name)
             msg = gettext('New API-KEY generated')
             flash(msg, 'success')
             return redirect(url_for('account.settings'))
