@@ -17,12 +17,13 @@
                 <h2>Export in CSV format</h2>
                 <a href={{url_for('app.export_to', short_name=app.short_name, type='task', format='csv')}} class="btn btn-large">{{ _('Tasks') }}</a>
                 <a href={{url_for('app.export_to', short_name=app.short_name, type='task_run', format='csv')}} class="btn btn-large">{{ _('Task Runs') }}</a>
+                <a href={{url_for('app.export_to', short_name=app.short_name, type='combined', format='csv')}} class="btn btn-large">{{ _('Both') }}</a>
             </div>
             <div id="json" class="span6 well">
                 <h2>Export in JSON format</h2>
                 <a href={{url_for('app.export_to', short_name=app.short_name, type='task', format='json')}} class="btn btn-large">{{ _('Tasks') }}</a>
                 <a href={{url_for('app.export_to', short_name=app.short_name, type='task_run', format='json')}} class="btn btn-large">{{ _('Task Runs') }}</a>
-
+                <a href={{url_for('app.export_to', short_name=app.short_name, type='combined', format='json')}} class="btn btn-large">{{ _('Both') }}</a>
             </div>
         </div>
         <div class="row-fluid">
