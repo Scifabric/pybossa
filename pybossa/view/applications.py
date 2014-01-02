@@ -897,7 +897,7 @@ def export_to(short_name):
             handle_row(writer, tr)
 
     def respond_json(ty, results):
-        return Response(gen_json(results), mimetype='application/json')
+        return Response(gen_json(results), mimetype='application/json', headers={'Content-Disposition': 'attachment; filename="%s.json"' % ty})
 
     def create_ckan_datastore(ckan, table, results, package_id):
         tables = {"task": model.Task, "task_run": model.TaskRun}
@@ -1003,7 +1003,7 @@ def export_to(short_name):
                     keys += t['task']['info'].keys()
                 writer.writerow(keys)
             get_csv(out, writer, results, handle_row)
-            return Response(out.getvalue(), mimetype='text/csv')
+            return Response(out.getvalue(), mimetype='text/csv', headers={'Content-Disposition': 'attachment; filename="%s.csv"' % ty})
         else:
             flash(msg, 'info')
             return respond()
