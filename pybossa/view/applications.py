@@ -1251,3 +1251,9 @@ def task_priority(short_name):
     else:
         flash(gettext('Please correct the errors'), 'error')
         return respond()
+
+
+@blueprint.route('/<short_name>/static/<filename>')
+def get_file(short_name, filename):
+    app = app_by_shortname(short_name)
+    return redirect(appfiles.url("%s/%s" % (short_name, filename)))
