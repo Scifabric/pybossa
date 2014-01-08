@@ -27,7 +27,7 @@ import pybossa.model as model
 import pybossa.stats as stats
 import pybossa.validator as pb_validator
 
-from pybossa.core import db
+from pybossa.core import db, appfiles
 from pybossa.model import App, Task
 from pybossa.util import Pagination, UnicodeWriter, admin_required
 from pybossa.auth import require
@@ -1197,3 +1197,9 @@ def task_priority(short_name):
     else:
         flash(gettext('Please correct the errors'), 'error')
         return respond()
+
+
+@blueprint.route('/<short_name>/static/<filename>')
+def get_file(short_name, filename):
+    app = app_by_shortname(short_name)
+    return redirect(appfiles.url("%s/%s" % (short_name, filename)))

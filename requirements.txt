@@ -6,6 +6,7 @@ Flask-Gravatar
 Flask-OAuth==0.12
 Flask-SQLAlchemy
 Flask-Mail
+Flask-Uploads
 python-dateutil
 alembic
 psycopg2

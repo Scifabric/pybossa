@@ -15,24 +15,26 @@
 
 import json
 
-from flask import Blueprint, request, abort, Response, current_app
+from flask import Blueprint, request, abort, Response, current_app, redirect
 from flask.views import MethodView
 from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound
 
 from pybossa.util import jsonpify, crossdomain
 import pybossa.model as model
+from pybossa.core import app, appfiles
 from pybossa.core import db
 from pybossa.auth import require
 from pybossa.hateoas import Hateoas
 from pybossa.vmcp import sign
 import pybossa.sched as sched
 import os
+import flaskext.uploads
+
 
 blueprint = Blueprint('api', __name__)
 
 cors_headers = ['Content-Type', 'Authorization']
-
 
 @blueprint.route('/')
 @crossdomain(origin='*', headers=cors_headers)
@@ -276,6 +278,28 @@ register_api(CategoryAPI, 'api_category', '/category', pk='id', pk_type='int')
 register_api(TaskAPI, 'api_task', '/task', pk='id', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
 
+@jsonpify
+@blueprint.route('/app/<app_id>/addfile', methods=['POST'])
+@crossdomain(origin='*', headers=cors_headers)
+def add_file(app_id):
+    try:
+        if request.method != 'POST' or 'file' not in request.files:
+            raise ValueError("Please POST the variable 'file' set to the file to upload")
+
+        app = db.session.query(model.App).get(app_id)
+        if app is None:
+            raise NotFound
+        require.app.update(app)
+
+        filename = appfiles.save(request.files['file'], app.short_name)
+        res = {'status': 'ok', 'filename': filename}
+    except Exception, e:
+        print e
+        import traceback
+        traceback.print_exc()
+        res = {'status': 'error', 'error': str(e)}
+    return Response(json.dumps(res), 200,
+                    mimetype='application/json')
 
 @jsonpify
 @blueprint.route('/app/<app_id>/newtask')
