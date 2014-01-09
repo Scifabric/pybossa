@@ -1,0 +1,28 @@
+================
+Changelog v0.2.3
+================
+
+The most interesting changes are the following:
+ * New security version for POSTing task_runs preventing abusing the system
+ * CKAN backend performance improvements: polling now with JavaScript
+
+For a full list of changes, see associated `Github milestone`_.
+
+.. _Github milestone: https://github.com/PyBossa/pybossa/issues?milestone=7&page=1&state=closed
+
+Upgrading
+=========
+
+The new security changes force you to upgrade your current server to make it
+more robust against possible attacks.
+
+.. note::
+    Please, backup the database before continuing.
+
+In order to upgrade you will have to pull the new code, and then run the
+following command to upgrade the database::
+
+  source env/bin/activate
+  alembic upgrade head
+
+Then restart your server, and you will be done.
