@@ -243,15 +243,7 @@ class AppAPI(APIBase):
         cached_apps.delete_app(obj.short_name)
 
     def _update_object(self, obj):
-        try:
-            obj.owner = current_user
-            if ((obj.name is None) or (obj.name == '') or (obj.short_name is None)
-                    or (obj.short_name == '')):
-                raise ValueError
-        except ValueError as e:
-            e.message = e.message + \
-                ' App.name and App.short_name cannot be NULL or Empty'
-            raise
+        obj.owner = current_user
 
 
 class CategoryAPI(APIBase):

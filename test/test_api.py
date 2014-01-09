@@ -19,7 +19,7 @@
 import json
 
 from base import web, model, Fixtures, db, redis_flushall
-from nose.tools import assert_equal
+from nose.tools import assert_equal, assert_raises
 
 
 class TestAPI:
@@ -637,6 +637,40 @@ class TestAPI:
         assert err['status'] == 'failed', err
         assert err['action'] == 'PUT', err
         assert err['exception_cls'] == 'TypeError', err
+
+        # With empty fields
+        data.pop('algo')
+        data['name'] = None
+        datajson = json.dumps(data)
+        res = self.app.put('/api/app/%s?api_key=%s' % (id_, Fixtures.api_key),
+                           data=datajson)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'IntegrityError', err
+
+        data['name'] = ''
+        datajson = json.dumps(data)
+        res = self.app.put('/api/app/%s?api_key=%s' % (id_, Fixtures.api_key),
+                           data=datajson)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'IntegrityError', err
+
+        data['name'] = 'something'
+        data['short_name'] = ''
+        datajson = json.dumps(data)
+        res = self.app.put('/api/app/%s?api_key=%s' % (id_, Fixtures.api_key),
+                           data=datajson)
+        err = json.loads(res.data)
+        assert res.status_code == 415, err
+        assert err['status'] == 'failed', err
+        assert err['action'] == 'PUT', err
+        assert err['exception_cls'] == 'IntegrityError', err
+
 
         # With not JSON data
         datajson = data

@@ -440,3 +440,14 @@ def make_admin(mapper, conn, target):
     if users == 0:
         target.admin = True
         #print "User %s is the first one, so we make it an admin" % target.name
+
+
+@event.listens_for(App, 'before_update')
+@event.listens_for(App, 'before_insert')
+def empty_string_to_none(mapper, conn, target):
+    if target.name == '':
+        target.name = None
+    if target.short_name == '':
+        target.short_name = None
+    if target.description == '':
+        target.description = None
