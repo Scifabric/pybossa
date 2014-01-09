@@ -27,10 +27,10 @@ This package adds GET, POST, PUT and DELETE methods for:
 
 import json
 
-from flask import Blueprint, request, abort, Response, current_app
+from flask import Blueprint, request, abort, Response, current_app, make_response
 from flask.views import MethodView
 from flask.ext.login import current_user
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import NotFound, Unauthorized, Forbidden
 
 from pybossa.util import jsonpify, crossdomain
 import pybossa.model as model
@@ -43,6 +43,8 @@ from pybossa.ratelimit import ratelimit
 import pybossa.sched as sched
 from pybossa.error import ErrorStatus
 import os
+from itsdangerous import URLSafeSerializer
+from sqlalchemy.exc import IntegrityError
 
 blueprint = Blueprint('api', __name__)
 
@@ -241,15 +243,7 @@ class AppAPI(APIBase):
         cached_apps.delete_app(obj.short_name)
 
     def _update_object(self, obj):
-        try:
-            obj.owner = current_user
-            if ((obj.name is None) or (obj.name == '') or (obj.short_name is None)
-                    or (obj.short_name == '')):
-                raise ValueError
-        except ValueError as e:
-            e.message = e.message + \
-                ' App.name and App.short_name cannot be NULL or Empty'
-            raise
+        obj.owner = current_user
 
 
 class CategoryAPI(APIBase):
@@ -264,10 +258,34 @@ class TaskRunAPI(APIBase):
     __class__ = model.TaskRun
 
     def _update_object(self, obj):
+        """Validate the task_run object and update it with user id or ip."""
+        s = URLSafeSerializer(current_app.config.get('SECRET_KEY'))
+        # Get the cookie with the task signed for the current task_run
+        cookie_id = 'task_run_for_task_id_%s' % obj.task_id
+        task_cookie = request.cookies.get(cookie_id)
+        if task_cookie is None:
+            raise Unauthorized("Missing task cookie for posting"
+                               " a valid task_run")
+        # Load the real task from the DB
+        task_cookie = s.loads(task_cookie)
+        task = db.session.query(model.Task).get(task_cookie['id'])
+        if ((task is None) or (task.id != obj.task_id)):
+            raise Forbidden('Invalid task_id')
+        if (task.app_id != obj.app_id):
+            raise Forbidden('Invalid app_id')
         if not current_user.is_anonymous():
             obj.user = current_user
         else:
             obj.user_ip = request.remote_addr
+        # Check if this task_run has already been posted
+        task_run = db.session.query(model.TaskRun)\
+                     .filter_by(app_id=obj.app_id)\
+                     .filter_by(task_id=obj.task_id)\
+                     .filter_by(user=obj.user)\
+                     .filter_by(user_ip=obj.user_ip)\
+                     .first()
+        if task_run is not None:
+            raise Forbidden('You have already posted this task_run')
 
 
 def register_api(view, endpoint, url, pk='id', pk_type='int'):
@@ -307,8 +325,15 @@ def new_task(app_id):
         user_ip = request.remote_addr if current_user.is_anonymous() else None
         task = sched.new_task(app_id, user_id, user_ip, offset)
         # If there is a task for the user, return it
+
         if task:
-            return Response(json.dumps(task.dictize()), mimetype="application/json")
+            s = URLSafeSerializer(current_app.config.get('SECRET_KEY'))
+            r = make_response(json.dumps(task.dictize()))
+            r.mimetype = "application/json"
+            cookie_id = 'task_run_for_task_id_%s' % task.id
+            r.set_cookie(cookie_id, s.dumps(task.dictize()))
+            return r
+
         else:
             return Response(json.dumps({}), mimetype="application/json")
     except Exception as e:

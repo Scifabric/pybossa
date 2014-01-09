@@ -60,6 +60,8 @@ class ErrorStatus(object):
             status = self.error_status.get(exception_cls)
         else:
             status = 500
+        if exception_cls == 'Forbidden' or exception_cls == 'Unauthorized':
+            e.message = e.description
         error = dict(action=action.upper(),
                      status="failed",
                      status_code=status,

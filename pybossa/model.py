@@ -172,11 +172,11 @@ class App(db.Model, DomainObject):
     #: created timestamp (automatically set)
     created = Column(Text, default=make_timestamp)
     #: Name / Title for this Application
-    name = Column(Unicode(length=255), unique=True)
+    name = Column(Unicode(length=255), unique=True, nullable=False)
     #: slug used in urls etc
-    short_name = Column(Unicode(length=255), unique=True)
+    short_name = Column(Unicode(length=255), unique=True, nullable=False)
     #: description
-    description = Column(Unicode(length=255))
+    description = Column(Unicode(length=255), nullable=False)
     #: long description
     long_description = Column(UnicodeText)
     #: Allow anonymous contributors to participate in the application tasks
@@ -187,7 +187,7 @@ class App(db.Model, DomainObject):
     #: this App should be hidden from everyone but Administrators
     hidden = Column(Integer, default=0)
     #: owner (id)
-    owner_id = Column(Integer, ForeignKey('user.id'))
+    owner_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     ## Following may not be relevant ...
     ## TODO: ask about these
     #: estimate of time it should take for user
@@ -303,7 +303,7 @@ class Task(db.Model, DomainObject):
     created = Column(Text, default=make_timestamp)
     #: ForeignKey to App.id (NB: use task relationship rather than this field
     #: in normal use
-    app_id = Column(Integer, ForeignKey('app.id', ondelete='CASCADE'))
+    app_id = Column(Integer, ForeignKey('app.id', ondelete='CASCADE'), nullable=False)
     #: a StateEnum instance
     # TODO: state should be an integer?
     state = Column(UnicodeText, default=u'ongoing')
@@ -351,9 +351,10 @@ class TaskRun(db.Model, DomainObject):
     #: created timestamp (automatically set)
     created = Column(Text, default=make_timestamp)
     #: application id of this task run
-    app_id = Column(Integer, ForeignKey('app.id'))
+    app_id = Column(Integer, ForeignKey('app.id'), nullable=False)
     #: task id of this task run
-    task_id = Column(Integer, ForeignKey('task.id', ondelete='CASCADE'))
+    task_id = Column(Integer, ForeignKey('task.id', ondelete='CASCADE'),
+                     nullable=False)
     #: user id of performer of this task
     user_id = Column(Integer, ForeignKey('user.id'))
     # ip address of this user (only if anonymous)
@@ -381,11 +382,11 @@ class User(db.Model, DomainObject, flask.ext.login.UserMixin):
     #: created timestamp (automatically set)
     created = Column(Text, default=make_timestamp)
     #: email address ...
-    email_addr = Column(Unicode(length=254), unique=True)
+    email_addr = Column(Unicode(length=254), unique=True, nullable=False)
     #: user name
-    name = Column(Unicode(length=254), unique=True)
+    name = Column(Unicode(length=254), unique=True, nullable=False)
     #: full name
-    fullname = Column(Unicode(length=500))
+    fullname = Column(Unicode(length=500), nullable=False)
     #: locale
     locale = Column(Unicode(length=254))
     #: api key
@@ -439,3 +440,14 @@ def make_admin(mapper, conn, target):
     if users == 0:
         target.admin = True
         #print "User %s is the first one, so we make it an admin" % target.name
+
+
+@event.listens_for(App, 'before_update')
+@event.listens_for(App, 'before_insert')
+def empty_string_to_none(mapper, conn, target):
+    if target.name == '':
+        target.name = None
+    if target.short_name == '':
+        target.short_name = None
+    if target.description == '':
+        target.description = None
