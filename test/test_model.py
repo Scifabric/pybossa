@@ -17,26 +17,195 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from base import model, db
+from nose.tools import raises, assert_raises
+from sqlalchemy.exc import IntegrityError
 
 
 class TestModel:
     @classmethod
-    def setup_class(self):
+    def setUp(self):
         model.rebuild_db()
 
     def tearDown(self):
         db.session.remove()
 
+    def test_user(self):
+        """Test USER model."""
+        # First user
+        user = model.User(
+            email_addr="john.doe@example.com",
+            name="johndoe",
+            fullname="John Doe",
+            locale="en")
+
+        user2 = model.User(
+            email_addr="john.doe2@example.com",
+            name="johndoe2",
+            fullname="John Doe2",
+            locale="en",)
+
+        db.session.add(user)
+        db.session.commit()
+        tmp = db.session.query(model.User).get(1)
+        assert tmp.email_addr == user.email_addr, tmp
+        assert tmp.name == user.name, tmp
+        assert tmp.fullname == user.fullname, tmp
+        assert tmp.locale == user.locale, tmp
+        assert tmp.api_key is not None, tmp
+        assert tmp.created is not None, tmp
+        err_msg = "First user should be admin"
+        assert tmp.admin is True, err_msg
+
+        db.session.add(user2)
+        db.session.commit()
+        tmp = db.session.query(model.User).get(2)
+        assert tmp.email_addr == user2.email_addr, tmp
+        assert tmp.name == user2.name, tmp
+        assert tmp.fullname == user2.fullname, tmp
+        assert tmp.locale == user2.locale, tmp
+        assert tmp.api_key is not None, tmp
+        assert tmp.created is not None, tmp
+        err_msg = "Second user should be not an admin"
+        assert tmp.admin is False, err_msg
+
+    def test_user_errors(self):
+        """Test USER model errors."""
+        user = model.User(
+            email_addr="john.doe@example.com",
+            name="johndoe",
+            fullname="John Doe",
+            locale="en")
+
+        # User.name should not be nullable
+        user.name = None
+        db.session.add(user)
+        assert_raises(IntegrityError, db.session.commit)
+        db.session.rollback()
+
+        # User.fullname should not be nullable
+        user.name = "johndoe"
+        user.fullname = None
+        db.session.add(user)
+        assert_raises(IntegrityError, db.session.commit)
+        db.session.rollback()
+
+        # User.email_addr should not be nullable
+        user.name = "johndoe"
+        user.fullname = "John Doe"
+        user.email_addr = None
+        db.session.add(user)
+        assert_raises(IntegrityError, db.session.commit)
+        db.session.rollback()
+
+    def test_app_errors(self):
+        """Test APP model errors."""
+        app = model.App(
+            name='Application',
+            short_name='app',
+            description='desc',
+            owner_id=None)
+
+        # App.owner_id shoult not be nullable
+        db.session.add(app)
+        assert_raises(IntegrityError, db.session.commit)
+        db.session.rollback()
+
+        # App.name shoult not be nullable
+        user = model.User(
+            email_addr="john.doe@example.com",
+            name="johndoe",
+            fullname="John Doe",
+            locale="en")
+        db.session.add(user)
+        db.session.commit()
+        user = db.session.query(model.User).first()
+        app.owner_id = user.id
+        app.name = None
+        db.session.add(app)
+        assert_raises(IntegrityError, db.session.commit)
+        db.session.rollback()
+
+        # App.short_name shoult not be nullable
+        app.name = "Application"
+        app.short_name = None
+        db.session.add(app)
+        assert_raises(IntegrityError, db.session.commit)
+        db.session.rollback()
+
+        # App.description shoult not be nullable
+        db.session.add(app)
+        app.short_name = "app"
+        app.description = None
+        assert_raises(IntegrityError, db.session.commit)
+        db.session.rollback()
+
+    def test_task_errors(self):
+        """Test TASK model errors."""
+        user = model.User(
+            email_addr="john.doe@example.com",
+            name="johndoe",
+            fullname="John Doe",
+            locale="en")
+        db.session.add(user)
+        db.session.commit()
+        user = db.session.query(model.User).first()
+        app = model.App(
+            name='Application',
+            short_name='app',
+            description='desc',
+            owner_id=user.id)
+        db.session.add(app)
+        db.session.commit()
+
+        task = model.Task(app_id=None)
+        db.session.add(task)
+        assert_raises(IntegrityError, db.session.commit)
+        db.session.rollback()
+
+    def test_task_run_errors(self):
+        """Test TASK_RUN model errors."""
+        user = model.User(
+            email_addr="john.doe@example.com",
+            name="johndoe",
+            fullname="John Doe",
+            locale="en")
+        db.session.add(user)
+        db.session.commit()
+
+        user = db.session.query(model.User).first()
+        app = model.App(
+            name='Application',
+            short_name='app',
+            description='desc',
+            owner_id=user.id)
+        db.session.add(app)
+        db.session.commit()
+
+        task = model.Task(app_id=app.id)
+        db.session.add(task)
+        db.session.commit()
+
+        task_run = model.TaskRun(app_id=None, task_id=task.id)
+        db.session.add(task_run)
+        assert_raises(IntegrityError, db.session.commit)
+        db.session.rollback()
+
+        task_run = model.TaskRun(app_id=app.id, task_id=None)
+        db.session.add(task_run)
+        assert_raises(IntegrityError, db.session.commit)
+        db.session.rollback()
+
     def test_all(self):
         """Test MODEL works"""
         username = u'test-user-1'
-        user = model.User(name=username)
+        user = model.User(name=username, fullname=username, email_addr=username)
         info = {
             'total': 150,
             'long_description': 'hello world'}
         app = model.App(
             name=u'My New App',
             short_name=u'my-new-app',
+            description=u'description',
             info=info)
         app.owner = user
         task_info = {
@@ -47,6 +216,7 @@ class TestModel:
         task_run = model.TaskRun(info=task_run_info)
         task.app = app
         task_run.task = task
+        task_run.app = app
         task_run.user = user
         db.session.add_all([user, app, task, task_run])
         db.session.commit()
@@ -80,16 +250,16 @@ class TestModel:
         user = model.User.by_name(username)
         assert user.apps[0].id == app_id, user
 
-    def test_user(self):
-        """Test MODEL User works"""
-        user = model.User(name=u'test-user', email_addr=u'test@xyz.org')
-        db.session.add(user)
-        db.session.commit()
-
-        db.session.remove()
-        user = model.User.by_name(u'test-user')
-        assert user, user
-        assert len(user.api_key) == 36, user
-
-        out = user.dictize()
-        assert out['name'] == u'test-user', out
+#    def test_user(self):
+#        """Test MODEL User works"""
+#        user = model.User(name=u'test-user', email_addr=u'test@xyz.org')
+#        db.session.add(user)
+#        db.session.commit()
+#
+#        db.session.remove()
+#        user = model.User.by_name(u'test-user')
+#        assert user, user
+#        assert len(user.api_key) == 36, user
+#
+#        out = user.dictize()
+#        assert out['name'] == u'test-user', out

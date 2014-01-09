@@ -108,7 +108,8 @@ class TestAPI:
     def test_02_app_delete(self):
         """Test API.app DELETE rate limit."""
         for i in range(300):
-            app = model.App(name=str(i), short_name=str(i), description=str(i))
+            app = model.App(name=str(i), short_name=str(i),
+                            description=str(i), owner_id=1)
             db.session.add(app)
         db.session.commit()
 
@@ -118,7 +119,8 @@ class TestAPI:
     def test_03_app_put(self):
         """Test API.app PUT rate limit."""
         for i in range(300):
-            app = model.App(name=str(i), short_name=str(i), description=str(i))
+            app = model.App(name=str(i), short_name=str(i),
+                            description=str(i), owner_id=1)
             db.session.add(app)
         db.session.commit()
 

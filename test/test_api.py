@@ -545,6 +545,8 @@ class TestAPI:
         data = dict(
             name=name,
             short_name='xxxx-project',
+            description='description',
+            owner_id=1,
             long_description=u'<div id="longdescription">\
                                Long Description</div>')
         data = json.dumps(data)
@@ -704,16 +706,22 @@ class TestAPI:
 
     def test_04_admin_app_post(self):
         """Test API App update/delete for ADMIN users"""
+        self.register()
+        user = db.session.query(model.User).first()
         name = u'XXXX Project'
         data = dict(
             name=name,
             short_name='xxxx-project',
+            owner_id=user.id,
+            description='description',
             long_description=u'<div id="longdescription">\
                                Long Description</div>')
         datajson = json.dumps(data)
         # now a real user (we use the second api_key as first user is an admin)
         res = self.app.post('/api/app?api_key=' + Fixtures.api_key_2,
                             data=datajson)
+
+        print res.data
 
         out = db.session.query(model.App).filter_by(name=name).one()
         assert out, out

@@ -27,8 +27,14 @@ import pybossa
 class TestSched(sched.Helper):
     def setUp(self):
         super(TestSched, self).setUp()
+        model.rebuild_db()
         Fixtures.create()
         self.endpoints = ['app', 'task', 'taskrun']
+
+    def tearDown(self):
+        db.session.remove()
+        redis_flushall()
+
 
     # Tests
     def test_anonymous_01_newtask(self):
@@ -381,6 +387,10 @@ class TestSched(sched.Helper):
 
 
 class TestGetBreadthFirst:
+    def setUp(self):
+        model.rebuild_db()
+        Fixtures.create()
+
     @classmethod
     def teardown_class(cls):
         model.rebuild_db()
@@ -408,9 +418,16 @@ class TestGetBreadthFirst:
             short_name = 'xyzuser'
         else:
             short_name = 'xyznouser'
-        app = model.App(short_name=short_name)
+
+        app = model.App(short_name=short_name, name=short_name,
+                        description=short_name)
+        owner = db.session.query(model.User).get(1)
+
+        app.owner = owner
         task = model.Task(app=app, state='0', info={})
         task2 = model.Task(app=app, state='0', info={})
+        task.app = app
+        task2.app = app
         db.session.add(app)
         db.session.add(task)
         db.session.add(task2)
@@ -419,7 +436,7 @@ class TestGetBreadthFirst:
         appid = app.id
         # give task2 a bunch of runs
         for idx in range(2):
-            self._add_task_run(task2)
+            self._add_task_run(app, task2)
 
         # now check we get task without task runs
         out = pybossa.sched.get_breadth_first_task(appid)
@@ -434,17 +451,17 @@ class TestGetBreadthFirst:
         out2 = pybossa.sched.get_breadth_first_task(appid, offset=11)
         assert out2 is None, out
 
-        self._add_task_run(task)
+        self._add_task_run(app, task)
         out = pybossa.sched.get_breadth_first_task(appid)
         assert out.id == taskid, out
 
         # now add 2 more taskruns. We now have 3 and 2 task runs per task
-        self._add_task_run(task)
-        self._add_task_run(task)
+        self._add_task_run(app, task)
+        self._add_task_run(app, task)
         out = pybossa.sched.get_breadth_first_task(appid)
         assert out.id == task2.id, out
 
-    def _add_task_run(self, task, user=None):
-        tr = model.TaskRun(task=task, user=user)
+    def _add_task_run(self, app, task, user=None):
+        tr = model.TaskRun(app=app, task=task, user=user)
         db.session.add(tr)
         db.session.commit()
