@@ -77,3 +77,7 @@ CACHE_TYPE = 'null'
 ## If you want to use memcached install python-memcached (pip install python-memcached)
 #CACHE_TYPE = 'memcached'
 #CACHE_MEMCACHED_SERVERS = ['127.0.0.1:11211']CACHE_MEMCACHED_SERVERS = ['127.0.0.1:11211']
+
+# Where to store uploaded files, for example application static files
+import os.path
+UPLOADS_DEFAULT_DEST=os.path.abspath('uploads')
