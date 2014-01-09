@@ -35,3 +35,4 @@ vagrant_env/
 keys/*
 *.pem
 uploads
+*~

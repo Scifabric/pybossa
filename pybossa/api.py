@@ -291,7 +291,17 @@ def add_file(app_id):
             raise NotFound
         require.app.update(app)
 
-        filename = appfiles.save(request.files['file'], app.short_name)
+        appfile = {"storage": request.files['file'], "folder": app.short_name}
+
+        if 'filename' in request.args:
+            # Note: normpath is important for security!
+            dirname, filename = os.path.split(os.path.normpath(request.args['filename']))
+            if dirname.startswith('/'):
+                dirname = dirname[1:]
+            appfile['folder'] = os.path.join(appfile['folder'], dirname)
+            appfile['name'] = filename
+
+        filename = appfiles.save(**appfile)
         res = {'status': 'ok', 'filename': filename}
     except Exception, e:
         print e

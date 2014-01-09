@@ -1199,7 +1199,6 @@ def task_priority(short_name):
         return respond()
 
 
-@blueprint.route('/<short_name>/static/<filename>')
+@blueprint.route('/<short_name>/static/<path:filename>')
 def get_file(short_name, filename):
-    app = app_by_shortname(short_name)
     return redirect(appfiles.url("%s/%s" % (short_name, filename)))
