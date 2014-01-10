@@ -429,8 +429,10 @@ def update(short_name):
         app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
         db.session.merge(new_application)
         db.session.commit()
+        cached_apps.delete_app(short_name)
         cached_apps.reset()
         cached_cat.reset()
+        cached_apps.get_app(new_application.short_name)
         flash(gettext('Application updated!'), 'success')
         return redirect(url_for('.details',
                                 short_name=new_application.short_name))
