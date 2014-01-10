@@ -18,7 +18,7 @@ Vagrant.configure("2") do |config|
       chef.add_recipe "postgresql"
       #chef.add_recipe "apache2"
       chef.add_recipe "git"
-      chef.add_recipe "python"
+      #chef.add_recipe "python"
       #chef.add_recipe "application"
       chef.add_recipe "redis"
       chef.add_recipe "pybossa"
