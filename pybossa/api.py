@@ -137,6 +137,7 @@ class APIBase(MethodView):
                         obj['link'] = link
                     return Response(json.dumps(obj), mimetype='application/json')
         except Exception as e:
+            raise
             return self.format_exception(e, action='GET')
 
     @jsonpify
@@ -257,6 +258,16 @@ class TaskRunAPI(APIBase):
         else:
             obj.user_ip = request.remote_addr
 
+class RunDataAPI(APIBase):
+    __class__ = model.RunData
+
+    def _update_object(self, obj):
+        if obj.user_id is not None:
+            obj.user_id = None
+            if not current_user.is_anonymous():
+                obj.user = current_user
+            else:
+                obj.user_ip = request.remote_addr
 
 def register_api(view, endpoint, url, pk='id', pk_type='int'):
     view_func = view.as_view(endpoint)
@@ -275,6 +286,7 @@ register_api(AppAPI, 'api_app', '/app', pk='id', pk_type='int')
 register_api(CategoryAPI, 'api_category', '/category', pk='id', pk_type='int')
 register_api(TaskAPI, 'api_task', '/task', pk='id', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
+register_api(RunDataAPI, 'api_rundata', '/rundata', pk='id', pk_type='int')
 
 
 @jsonpify

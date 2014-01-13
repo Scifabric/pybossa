@@ -367,6 +367,32 @@ class TaskRun(db.Model, DomainObject):
         }
     '''
 
+class RunData(db.Model, DomainObject):
+    '''General data about user activity in general - attached to any of
+       (app, task, user, key), for (app, task, key), (app, key), (app, user, key) or (user, key) 
+       where key is any arbitrary string.
+    '''
+    __tablename__ = 'run_data'
+    #: id
+    id = Column(Integer, primary_key=True)
+    #: created timestamp (automatically set)
+    created = Column(Text, default=make_timestamp)
+    #: application id of this task run
+    app_id = Column(Integer, ForeignKey('app.id'))
+    #: task id of this task run
+    task_id = Column(Integer, ForeignKey('task.id'))
+    #: user id of performer of this task
+    user_id = Column(Integer, ForeignKey('user.id'))
+    # ip address of this user (only if anonymous)
+    user_ip = Column(Text)
+    key = Column(Text)
+
+    amount = Column(Float)
+    info = Column(JSONType, default=dict)
+
+    app = relationship('App', backref='run_data')
+    task = relationship('Task', backref='run_data')
+    user = relationship('User', backref='run_data')
 
 class User(db.Model, DomainObject, flask.ext.login.UserMixin):
     __tablename__ = 'user'
