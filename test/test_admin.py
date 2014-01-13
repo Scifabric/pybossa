@@ -339,7 +339,7 @@ class TestAdmin(web.Helper):
         juan = db.session.query(model.User).filter_by(name="juan").first()
         assert app.owner_id == juan.id, "Owner_id should be: %s" % juan.id
         assert app.owner_id != 1, "The owner should be not updated"
-        res = self.update_application(new_name="Root",
+        res = self.update_application(short_name="rootsampleapp",
                                       new_short_name="sampleapp",
                                       new_long_description="New Long Desc")
         res = self.app.get('/app/sampleapp', follow_redirects=True)
