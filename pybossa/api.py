@@ -80,6 +80,11 @@ class APIBase(MethodView):
     def options(self):
         return ''
 
+    def _query_filter_args(self, request):
+        return dict((k, v)
+                    for (k, v) in request.args.iteritems()
+                    if k not in ['limit', 'offset', 'api_key'])
+
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
     def get(self, id):
@@ -95,11 +100,10 @@ class APIBase(MethodView):
             getattr(require, self.__class__.__name__.lower()).read()
             if id is None:
                 query = db.session.query(self.__class__)
-                for k in request.args.keys():
-                    if k not in ['limit', 'offset', 'api_key']:
-                        # Raise an error if the k arg is not a column
-                        getattr(self.__class__, k)
-                        query = query.filter(getattr(self.__class__, k) == request.args[k])
+                for k, v in self._query_filter_args(request).iteritems():
+                    # Raise an error if the k arg is not a column
+                    getattr(self.__class__, k)
+                    query = query.filter(getattr(self.__class__, k) == v)
                 try:
                     limit = min(10000, int(request.args.get('limit')))
                 except (ValueError, TypeError):
@@ -260,6 +264,19 @@ class TaskRunAPI(APIBase):
 
 class RunDataAPI(APIBase):
     __class__ = model.RunData
+
+    def _query_filter_args(self, request):
+        res = APIBase._query_filter_args(self, request)
+        for key in res.keys():
+            if res[key] == 'null':
+                res[key] = None
+        if res.get('user_id', None) == '-1':
+            del res['user_id']
+            if not current_user.is_anonymous():
+                res['user_id'] = current_user.id
+            else:
+                res['user_ip'] = request.remote_addr
+        return res
 
     def _update_object(self, obj):
         if obj.user_id is not None:
