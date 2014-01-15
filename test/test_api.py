@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
-
+from mock import patch
 from base import web, model, Fixtures, db, redis_flushall
 from nose.tools import assert_equal, assert_raises
 
@@ -1634,3 +1634,26 @@ class TestAPI:
         err_msg = "There should be a question"
         assert task['info'].get('question') == 'My random question', err_msg
         self.signout()
+
+    @patch.dict(web.app.config, {'VMCP_KEY': 'invalid.key'})
+    def test_vcmp(self):
+        """Test VCMP without key fail works."""
+        res = self.app.get('api/vmcp', follow_redirects=True)
+        err = json.loads(res.data)
+        assert res.status_code == 501, err
+        assert err['status_code'] == 501, err
+        assert err['status'] == "failed", err
+        assert err['target'] == "vmcp", err
+        assert err['action'] == "GET", err
+
+    @patch.dict(web.app.config, {'VMCP_KEY': 'invalid.key'})
+    def test_vmcp_01(self):
+        """Test VMCP errors works"""
+        with patch('os.path.exists', return_value=True):
+            res = self.app.get('api/vmcp', follow_redirects=True)
+            err = json.loads(res.data)
+            assert res.status_code == 415, err
+            assert err['status_code'] == 415, err
+            assert err['status'] == "failed", err
+            assert err['target'] == "vmcp", err
+            assert err['action'] == "GET", err
