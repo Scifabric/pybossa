@@ -43,9 +43,9 @@ def myquote(line):
 
 def sign(data, salt, pkey):
     # Calculate buffer to sign (sorting the keys)
-    print data
+    # print data
     strBuffer = ""
-    print data.keys()
+    # print data.keys()
     for k in sorted(data.iterkeys()):
 
         # Handle the BOOL special case
@@ -63,7 +63,7 @@ def sign(data, salt, pkey):
     # Append salt
     strBuffer += salt
 
-    print "Signing '%s'" % strBuffer
+    #print "Signing '%s'" % strBuffer
 
     # Sign data
     rsa = M2Crypto.RSA.load_key(pkey)

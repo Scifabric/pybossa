@@ -37,7 +37,8 @@ import pybossa.model as model
 from pybossa.core import db
 from pybossa.auth import require
 from pybossa.hateoas import Hateoas
-from pybossa.vmcp import sign
+#from pybossa.vmcp import sign
+import pybossa.vmcp
 from pybossa.cache import apps as cached_apps
 from pybossa.ratelimit import ratelimit
 import pybossa.sched as sched
@@ -405,7 +406,7 @@ def vmcp():
         else:
             raise AttributeError
         data = request.args.copy()
-        signed_data = sign(data, salt, pkey)
+        signed_data = pybossa.vmcp.sign(data, salt, pkey)
         return Response(json.dumps(signed_data), 200, mimetype='application/json')
 
     except KeyError:
@@ -419,7 +420,7 @@ def vmcp():
         return Response(json.dumps(error), status=error['status_code'],
                         mimetype='application/json')
 
-    except AttributeError:
+    except AttributeError as e:
         error['status_code'] = 415
         error['exception_msg'] = "cvm_salt parameter is missing"
         return Response(json.dumps(error), status=error['status_code'],
