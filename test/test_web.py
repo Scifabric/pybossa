@@ -476,6 +476,13 @@ class TestWeb(web.Helper):
         err_msg = "App hidden not updated %s" % app.hidden
         assert app.hidden == 1, err_msg
 
+        # Test root can access it
+        self.signout()
+        self.register(fullname='New', username='new')
+        url = '/app/%s/' % app.short_name
+        res = self.app.get(url, follow_redirects=True)
+        assert "Forbidden" in res.data, res.data
+
     @patch('pybossa.ckan.requests.get')
     def test_13_hidden_applications(self, Mock):
         """Test WEB hidden application works"""
