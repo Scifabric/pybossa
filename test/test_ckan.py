@@ -365,6 +365,29 @@ class TestCkanModule(object):
                 assert "CKAN: the remote site failed! resource_create failed" == type, type
 
     @patch('pybossa.ckan.requests.post')
+    def test_05_datastore_create_without_resource_id(self, Mock):
+        """Test CKAN datastore_create without resource_id works"""
+        html_request = FakeRequest(json.dumps(self.task_datastore), 200,
+                                   {'content-type': 'application/json'})
+
+        Mock.return_value = html_request
+        with self.app.test_request_context('/'):
+            out = self.ckan.datastore_create(name='task',
+                                             resource_id=None)
+            err_msg = "It should ref the task resource ID"
+            assert out['resource_id'] == self.task_resource_id, err_msg
+            # Check the error
+            Mock.return_value = self.server_error
+            try:
+                self.ckan.datastore_create(name='task',
+                                           resource_id=self.task_resource_id)
+            except Exception as out:
+                type, msg, status_code = out.args
+                assert "Server Error" in msg, err_msg
+                assert 500 == status_code, status_code
+                assert "CKAN: the remote site failed! datastore_create failed" == type, type
+
+    @patch('pybossa.ckan.requests.post')
     def test_05_datastore_create(self, Mock):
         """Test CKAN datastore_create works"""
         html_request = FakeRequest(json.dumps(self.task_datastore), 200,
