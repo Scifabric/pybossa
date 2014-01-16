@@ -137,6 +137,15 @@ class TestAPI:
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
 
+        # Test a non-existant ID
+        res = self.app.get('/api/app/3434209')
+        err = json.loads(res.data)
+        assert res.status_code == 404, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'app', err
+        assert err['exception_cls'] == 'NotFound', err
+        assert err['action'] == 'GET', err
+
     def test_get_query_with_api_key(self):
         """ Test API GET query with an API-KEY"""
         for endpoint in self.endpoints:
@@ -1635,9 +1644,10 @@ class TestAPI:
         assert task['info'].get('question') == 'My random question', err_msg
         self.signout()
 
-    @patch.dict(web.app.config, {'VMCP_KEY': 'invalid.key'})
     def test_vcmp(self):
         """Test VCMP without key fail works."""
+        if web.app.config.get('VMCP_KEY'):
+            web.app.config.pop('VMCP_KEY')
         res = self.app.get('api/vmcp', follow_redirects=True)
         err = json.loads(res.data)
         assert res.status_code == 501, err
