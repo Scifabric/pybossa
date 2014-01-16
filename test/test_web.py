@@ -1402,6 +1402,14 @@ class TestWeb(web.Helper):
             assert 'your Google account to ' in outbox[2].body
             assert 'your Facebook account to ' in outbox[3].body
 
+        # Test with not valid form
+        res = self.app.post('/account/forgot-password',
+                            data={'email_addr': ''},
+                            follow_redirects=True)
+        msg = "Something went wrong, please correct the errors"
+        assert msg in res.data, res.data
+
+
     def test_46_task_presenter_editor_exists(self):
         """Test WEB task presenter editor is an option"""
         self.register()
