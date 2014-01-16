@@ -63,6 +63,8 @@ class TestModel:
         assert tmp.created is not None, tmp
         err_msg = "First user should be admin"
         assert tmp.admin is True, err_msg
+        err_msg = "check_password method should return False"
+        assert tmp.check_password(password="nothing") is False, err_msg
 
         db.session.add(user2)
         db.session.commit()
