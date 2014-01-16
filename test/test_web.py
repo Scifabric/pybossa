@@ -187,6 +187,16 @@ class TestWeb(web.Helper):
         assert self.html_title("Profile") in res.data, res
         assert "Welcome back %s" % self.user.fullname in res.data, res
 
+    def test_profile_applications(self):
+        """Test WEB user profile applications page works."""
+        Fixtures.create()
+        self.signin(email=Fixtures.email_addr, password=Fixtures.password)
+        url = '/account/profile/applications'
+        res = self.app.get(url)
+        assert "Applications" in res.data, res.data
+        assert "Published" in res.data, res.data
+        assert Fixtures.app_name in res.data, res.data
+
     def test_05_update_user_profile(self):
         """Test WEB update user profile"""
 
