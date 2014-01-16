@@ -224,26 +224,26 @@ class App(db.Model, DomainObject):
 
     #: Percentage of completed tasks based on Task.state
     #: (0 not done, 1 completed)
-    def completion_status(self):
-        """Returns the percentage of submitted Tasks Runs done when a task is
-        completed"""
-        sql = text('''SELECT task.id, n_answers,
-                   count(task_run.task_id) AS n_task_runs
-                   FROM task LEFT OUTER JOIN task_run ON task.id=task_run.task_id
-                   WHERE task.app_id=:app_id GROUP BY task.id''')
-        results = db.engine.execute(sql, app_id=self.id)
-        n_expected_task_runs = 0
-        n_task_runs = 0
-        for row in results:
-            tmp = row[2]
-            if row[2] > row[1]:
-                tmp = row[1]
-            n_expected_task_runs += row[1]
-            n_task_runs += tmp
-        pct = float(0)
-        if n_expected_task_runs != 0:
-           pct = float(n_task_runs) / float(n_expected_task_runs)
-        return pct
+    # def completion_status(self):
+    #     """Returns the percentage of submitted Tasks Runs done when a task is
+    #     completed"""
+    #     sql = text('''SELECT task.id, n_answers,
+    #                count(task_run.task_id) AS n_task_runs
+    #                FROM task LEFT OUTER JOIN task_run ON task.id=task_run.task_id
+    #                WHERE task.app_id=:app_id GROUP BY task.id''')
+    #     results = db.engine.execute(sql, app_id=self.id)
+    #     n_expected_task_runs = 0
+    #     n_task_runs = 0
+    #     for row in results:
+    #         tmp = row[2]
+    #         if row[2] > row[1]:
+    #             tmp = row[1]
+    #         n_expected_task_runs += row[1]
+    #         n_task_runs += tmp
+    #     pct = float(0)
+    #     if n_expected_task_runs != 0:
+    #        pct = float(n_task_runs) / float(n_expected_task_runs)
+    #     return pct
 
 
     def n_completed_tasks(self):
