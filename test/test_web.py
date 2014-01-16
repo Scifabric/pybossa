@@ -64,11 +64,11 @@ class TestWeb(web.Helper):
             db.session.commit()
             self.app.get('api/app/%s/newtask' % app.id)
 
-        self.signout()
 
         res = self.app.get('/leaderboard', follow_redirects=True)
         assert self.html_title("Community Leaderboard") in res.data, res
         assert self.user.fullname in res.data, res.data
+        self.signout()
 
     def test_03_register(self):
         """Test WEB register user works"""
