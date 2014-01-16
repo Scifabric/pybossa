@@ -254,15 +254,15 @@ class App(db.Model, DomainObject):
     #             completed += 1
     #     return completed
 
-    def last_activity(self):
-        sql = text('''SELECT finish_time FROM task_run WHERE app_id=:app_id
-                   ORDER BY finish_time DESC LIMIT 1''')
-        results = db.engine.execute(sql, app_id=self.id)
-        for row in results:
-            if row is not None:
-                return pretty_date(row[0])
-            else:
-                return None
+    # def last_activity(self):
+    #     sql = text('''SELECT finish_time FROM task_run WHERE app_id=:app_id
+    #                ORDER BY finish_time DESC LIMIT 1''')
+    #     results = db.engine.execute(sql, app_id=self.id)
+    #     for row in results:
+    #         if row is not None:
+    #             return pretty_date(row[0])
+    #         else:
+    #             return None
 
 
 class Featured(db.Model, DomainObject):
