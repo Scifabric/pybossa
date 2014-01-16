@@ -38,11 +38,11 @@ def get_task_runs(app_id):
     return task_runs
 
 
-@memoize(timeout=ONE_DAY)
-def get_tasks(app_id):
-    """Return all the tasks for a given app_id"""
-    tasks = db.session.query(Task).filter_by(app_id=app_id).all()
-    return tasks
+#@memoize(timeout=ONE_DAY)
+#def get_tasks(app_id):
+#    """Return all the tasks for a given app_id"""
+#    tasks = db.session.query(Task).filter_by(app_id=app_id).all()
+#    return tasks
 
 
 @memoize(timeout=ONE_DAY)
@@ -227,7 +227,7 @@ def stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
             dayNewAnonStats['values'].append(
                 [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000),
                  dates_anon[d]])
-        else:
+        else: # pragma: no cover
             dayNewAnonStats['values'].append(
                 [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), 0])
 
@@ -236,7 +236,7 @@ def stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
             dayNewAuthStats['values'].append(
                 [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000),
                  dates_auth[d]])
-        else:
+        else: # pragma: no cover
             dayNewAuthStats['values'].append(
                 [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), 0])
 
