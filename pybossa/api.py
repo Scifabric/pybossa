@@ -425,8 +425,8 @@ def vmcp():
         error['exception_msg'] = "cvm_salt parameter is missing"
         return Response(json.dumps(error), status=error['status_code'],
                         mimetype='application/json')
-    except ValueError:
-        error['status_code'] = 415
-        error['exception_msg'] = "Virtual Machine parameters are missing {'cpus': 1, 'ram': 128, ...}"
-        return Response(json.dumps(error), status=error['status_code'],
-                        mimetype='application/json')
+    #except ValueError:
+    #    error['status_code'] = 415
+    #    error['exception_msg'] = "Virtual Machine parameters are missing {'cpus': 1, 'ram': 128, ...}"
+    #    return Response(json.dumps(error), status=error['status_code'],
+    #                    mimetype='application/json')
