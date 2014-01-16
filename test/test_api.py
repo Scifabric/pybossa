@@ -1323,6 +1323,13 @@ class TestAPI:
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         # real user
+        url = '/api/taskrun/%s' % _id
+        out = self.app.get(url, follow_redirects=True)
+        task = json.loads(out.data)
+        datajson = json.loads(datajson)
+        datajson['link'] = task['link']
+        datajson['links'] = task['links']
+        datajson = json.dumps(datajson)
         url = '/api/taskrun/%s?api_key=%s' % (_id, Fixtures.api_key)
         res = self.app.put(url, data=datajson)
         out = json.loads(res.data)
