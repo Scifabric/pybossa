@@ -92,7 +92,6 @@ class Fixtures:
 
 
         task_info = {
-            'n_answers': 10,
             'question': 'My random question',
             'url': 'my url'
             }
@@ -124,7 +123,6 @@ class Fixtures:
         db.session.add_all([root, user, user2, app])
 
         task_info = {
-            'n_answers': 10,
             'question': 'My random question',
             'url': 'my url'
             }
