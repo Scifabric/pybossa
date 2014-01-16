@@ -337,6 +337,20 @@ class TestWeb(web.Helper):
         assert '/app/test-app' in res.data, res.data
         assert '<h2><a href="/app/test-app/">My New App</a></h2>' in res.data, res.data
 
+        # Update one task to have more answers than expected
+        task = db.session.query(model.Task).get(1)
+        task.n_answers=1
+        db.session.add(task)
+        db.session.commit()
+        task = db.session.query(model.Task).get(1)
+        cat = db.session.query(model.Category).get(1)
+        url = '/app/category/featured/'
+        res = self.app.get(url, follow_redirects=True)
+        tmp = '1 Featured Applications'
+        assert tmp in res.data, res
+
+
+
     @patch('pybossa.ckan.requests.get')
     def test_10_get_application(self, Mock):
         """Test WEB application URL/<short_name> works"""
@@ -675,6 +689,8 @@ class TestWeb(web.Helper):
         cat = db.session.query(model.Category).get(1)
         url = '/app/category/%s/' % Fixtures.cat_1
         res = self.app.get(url, follow_redirects=True)
+        tmp = '1 %s Applications' % Fixtures.cat_1
+        assert tmp in res.data, res
 
     def test_20_app_index_published(self):
         """Test WEB Application Index published works"""
