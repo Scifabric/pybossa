@@ -58,7 +58,7 @@ class ErrorStatus(object):
         exception_cls = e.__class__.__name__
         if self.error_status.get(exception_cls):
             status = self.error_status.get(exception_cls)
-        else:
+        else: # pragma: no cover
             status = 500
         if exception_cls == 'Forbidden' or exception_cls == 'Unauthorized':
             e.message = e.description
