@@ -1649,6 +1649,8 @@ class TestAPI:
     @patch.dict(web.app.config, {'VMCP_KEY': 'invalid.key'})
     def test_vmcp_01(self):
         """Test VMCP errors works"""
+        # Even though the key does not exists, let's patch it to test
+        # all the errors
         with patch('os.path.exists', return_value=True):
             res = self.app.get('api/vmcp', follow_redirects=True)
             err = json.loads(res.data)
@@ -1657,3 +1659,16 @@ class TestAPI:
             assert err['status'] == "failed", err
             assert err['target'] == "vmcp", err
             assert err['action'] == "GET", err
+            assert err['exception_msg'] == 'cvm_salt parameter is missing'
+
+    @patch.dict(web.app.config, {'VMCP_KEY': 'invalid.key'})
+    def test_vmcp_02(self):
+        """Test VMCP signing works."""
+        signature = dict(signature='XX')
+        with patch('os.path.exists', return_value=True):
+            with patch('pybossa.vmcp.sign', return_value=signature):
+                res = self.app.get('api/vmcp?cvm_salt=testsalt',
+                                   follow_redirects=True)
+                out = json.loads(res.data)
+                assert res.status_code == 200, out
+                assert out['signature'] == signature['signature'], out
