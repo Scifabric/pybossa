@@ -1373,9 +1373,15 @@ class TestWeb(web.Helper):
 
         self.register()
         self.register(username='janedoe')
+        self.register(username='google')
+        self.register(username='facebook')
         jane = model.User.query.get(2)
         jane.twitter_user_id = 10
-        db.session.add(jane)
+        google = model.User.query.get(3)
+        google.google_user_id = 103
+        facebook = model.User.query.get(4)
+        facebook.facebook_user_id = 104
+        db.session.add_all([jane, google, facebook])
         db.session.commit()
         with mail.record_messages() as outbox:
             self.app.post('/account/forgot-password',
@@ -1384,8 +1390,17 @@ class TestWeb(web.Helper):
             self.app.post('/account/forgot-password',
                           data={'email_addr': 'janedoe@example.com'},
                           follow_redirects=True)
+            self.app.post('/account/forgot-password',
+                          data={'email_addr': 'google@example.com'},
+                          follow_redirects=True)
+            self.app.post('/account/forgot-password',
+                          data={'email_addr': 'facebook@example.com'},
+                          follow_redirects=True)
+
             assert 'Click here to recover your account' in outbox[0].body
             assert 'your Twitter account to ' in outbox[1].body
+            assert 'your Google account to ' in outbox[2].body
+            assert 'your Facebook account to ' in outbox[3].body
 
     def test_46_task_presenter_editor_exists(self):
         """Test WEB task presenter editor is an option"""
