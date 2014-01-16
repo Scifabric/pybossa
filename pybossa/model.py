@@ -246,13 +246,13 @@ class App(db.Model, DomainObject):
     #     return pct
 
 
-    def n_completed_tasks(self):
-        """Returns the number of Tasks that are completed"""
-        completed = 0
-        for t in self.tasks:
-            if t.state == "completed":
-                completed += 1
-        return completed
+    # def n_completed_tasks(self):
+    #     """Returns the number of Tasks that are completed"""
+    #     completed = 0
+    #     for t in self.tasks:
+    #         if t.state == "completed":
+    #             completed += 1
+    #     return completed
 
     def last_activity(self):
         sql = text('''SELECT finish_time FROM task_run WHERE app_id=:app_id
