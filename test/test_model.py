@@ -146,9 +146,19 @@ class TestModel:
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
 
+        app.name = ''
+        db.session.add(app)
+        assert_raises(IntegrityError, db.session.commit)
+        db.session.rollback()
+
         # App.short_name shoult not be nullable
         app.name = "Application"
         app.short_name = None
+        db.session.add(app)
+        assert_raises(IntegrityError, db.session.commit)
+        db.session.rollback()
+
+        app.short_name = ''
         db.session.add(app)
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
@@ -159,6 +169,12 @@ class TestModel:
         app.description = None
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
+
+        app.description = ''
+        db.session.add(app)
+        assert_raises(IntegrityError, db.session.commit)
+        db.session.rollback()
+
 
     def test_task_errors(self):
         """Test TASK model errors."""
