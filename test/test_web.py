@@ -215,6 +215,12 @@ class TestWeb(web.Helper):
         assert  msg in res.data, res
 
         res = self.update_profile(fullname="John Doe 2",
+                                  email_addr="johndoe2@example",
+                                  locale="en")
+        assert "Please correct the errors" in res.data, res.data
+
+
+        res = self.update_profile(fullname="John Doe 2",
                                   email_addr="johndoe2@example.com",
                                   locale="en")
         assert self.html_title("Profile") in res.data, res.data
@@ -1319,9 +1325,10 @@ class TestWeb(web.Helper):
         user = model.User.query.get(1)
         userdict = {'user': user.name, 'password': user.passwd_hash}
         fakeuserdict = {'user': user.name, 'password': 'wronghash'}
+        fakeuserdict_err = {'user': user.name, 'passwd': 'some'}
         key = signer.dumps(userdict, salt='password-reset')
         returns = [BadSignature('Fake Error'), BadSignature('Fake Error'), userdict,
-                   fakeuserdict, userdict]
+                   fakeuserdict, userdict, fakeuserdict_err]
 
         def side_effects(*args, **kwargs):
             result = returns.pop(0)
@@ -1342,11 +1349,18 @@ class TestWeb(web.Helper):
         assert 200 == res.status_code
         res = self.app.get('/account/reset-password?key=%s' % (key), follow_redirects=True)
         assert 403 == res.status_code
+
         res = self.app.post('/account/reset-password?key=%s' % (key),
                             data={'new_password': 'p4ssw0rD',
                                   'confirm': 'p4ssw0rD'},
                             follow_redirects=True)
+
         assert "You reset your password successfully!" in res.data
+
+        # Request without password
+        res = self.app.get('/account/reset-password?key=%s' % (key), follow_redirects=True)
+        assert 403 == res.status_code
+
 
     def test_45_password_reset_link(self):
         """Test WEB password reset email form"""
