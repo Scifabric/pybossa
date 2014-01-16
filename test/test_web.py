@@ -658,17 +658,20 @@ class TestWeb(web.Helper):
     def test_19_app_index_categories(self):
         """Test WEB Application Index categories works"""
         self.register()
-        res = self.new_application()
-        app = db.session.query(model.App).filter_by(short_name='sampleapp').first()
-        cat = db.session.query(model.Category).get(1)
+        #res = self.new_application()
+        Fixtures.create()
         self.signout()
 
         res = self.app.get('app', follow_redirects=True)
         assert "Applications" in res.data, res.data
         assert Fixtures.cat_1 in res.data, res.data
 
-        Fixtures.create()
-        apps = db.session.query(model.App).filter_by(category_id=1).all()
+        task = db.session.query(model.Task).get(1)
+        # Update one task to have more answers than expected
+        task.n_answers=1
+        db.session.add(task)
+        db.session.commit()
+        task = db.session.query(model.Task).get(1)
         cat = db.session.query(model.Category).get(1)
         url = '/app/category/%s/' % Fixtures.cat_1
         res = self.app.get(url, follow_redirects=True)
