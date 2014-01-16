@@ -1234,6 +1234,10 @@ class TestWeb(web.Helper):
 
         assert user.email_addr == response_user.email_addr, response_user
 
+        res = self.signin(email=user.email_addr, password='wrong')
+        msg = "It seems like you signed up with your Twitter account"
+        assert msg in res.data, msg
+
     def test_40_twitter_oauth_creation(self):
         """Test WEB Twitter OAuth detects same user name/email works"""
         fake_response = {
