@@ -71,7 +71,7 @@ def rebuild_db():
     for table_name in inspector.get_table_names():
         fks = []
         for fk in inspector.get_foreign_keys(table_name):
-            if not fk['name']:
+            if not fk['name']: # pragma: no cover
                 continue
             fks.append(
                 ForeignKeyConstraint((),(),name=fk['name'])
