@@ -53,7 +53,7 @@ class Hateoas(object):
             if item.category_id is not None:
                 links.append(self.create_link(item.category, rel='category'))
             return links, link
-        else:
+        else: # pragma: no cover
             return False
 
     def remove_links(self, item):
