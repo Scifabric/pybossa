@@ -105,19 +105,6 @@ def n_task_runs(app_id):
 
 
 @memoize()
-def last_activity(app_id):
-    sql = text('''SELECT finish_time FROM task_run WHERE app_id=:app_id
-               ORDER BY finish_time DESC LIMIT 1''')
-    results = db.engine.execute(sql, app_id=app_id)
-    for row in results:
-        if row is not None:
-            print pretty_date(row[0])
-            return pretty_date(row[0])
-        else:
-            return None
-
-
-@memoize()
 def overall_progress(app_id):
     """Returns the percentage of submitted Tasks Runs done when a task is
     completed"""
