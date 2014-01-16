@@ -105,6 +105,17 @@ class TestModel:
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
 
+    def test_app_repr(self):
+        """Test APP model repr works."""
+        app = model.App(
+            id=1,
+            name='Application',
+            short_name='app',
+            description='desc',
+            owner_id=None)
+
+        assert app.__repr__() == 'App(1)'
+
     def test_app_errors(self):
         """Test APP model errors."""
         app = model.App(
