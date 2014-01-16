@@ -77,7 +77,7 @@ ORDER BY taskcount ASC limit 10 ;
     # done as many as we need
     # tasks = [ x[0] for x in tasks if x[1] < n_answers ]
     tasks = [x[0] for x in tasks]
-    print len(tasks)
+    # print len(tasks)
     if tasks:
         if (offset == 0):
             return db.session.query(model.Task).get(tasks[0])
@@ -86,7 +86,7 @@ ORDER BY taskcount ASC limit 10 ;
                 return db.session.query(model.Task).get(tasks[offset])
             else:
                 return None
-    else:
+    else: # pragma: no cover
         return None
     # candidate_tasks = get_candidate_tasks(app_id, user_id, user_ip, n_answers)
     # total_remaining = len(candidate_tasks)
