@@ -29,6 +29,14 @@ class TestModel:
     def tearDown(self):
         db.session.remove()
 
+    @raises(NotImplementedError)
+    def test_domain_object_error(self):
+        """Test DomainObject errors work."""
+        user = model.User()
+        user.name = "John"
+        d = user.dictize()
+        user.undictize(d)
+
     def test_user(self):
         """Test USER model."""
         # First user
