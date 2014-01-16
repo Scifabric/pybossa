@@ -144,7 +144,7 @@ class DomainObject(object):
     def __str__(self):
         return self.__unicode__().encode('utf8')
 
-    def __unicode__(self):
+    def __unicode__(self): # pragma: no cover
         repr = u'<%s' % self.__class__.__name__
         table = class_mapper(self.__class__).mapped_table
         for col in table.c:
