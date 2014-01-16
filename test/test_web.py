@@ -658,12 +658,20 @@ class TestWeb(web.Helper):
     def test_19_app_index_categories(self):
         """Test WEB Application Index categories works"""
         self.register()
-        self.new_application()
+        res = self.new_application()
+        app = db.session.query(model.App).filter_by(short_name='sampleapp').first()
+        cat = db.session.query(model.Category).get(1)
         self.signout()
 
         res = self.app.get('app', follow_redirects=True)
         assert "Applications" in res.data, res.data
         assert Fixtures.cat_1 in res.data, res.data
+
+        Fixtures.create()
+        apps = db.session.query(model.App).filter_by(category_id=1).all()
+        cat = db.session.query(model.Category).get(1)
+        url = '/app/category/%s/' % Fixtures.cat_1
+        res = self.app.get(url, follow_redirects=True)
 
     def test_20_app_index_published(self):
         """Test WEB Application Index published works"""
