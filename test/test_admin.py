@@ -132,6 +132,13 @@ class TestAdmin(web.Helper):
         assert "Sample App" in res.data,\
             "The application should be listed in the front page"\
             " as it is featured"
+        # A rety should fail
+        res = self.app.post('/admin/featured/1')
+        err = json.loads(res.data)
+        err_msg = "App.id 1 alreay in Featured table"
+        assert err['error'] == err_msg, err_msg
+        assert err['status_code'] == 415, "Status code should be 415"
+
         # Remove it again from the Featured list
         res = self.app.delete('/admin/featured/1')
         assert res.status == "204 NO CONTENT", res.status
