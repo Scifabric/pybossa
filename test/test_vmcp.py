@@ -16,11 +16,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-import json
-from mock import patch
-from base import web, model, Fixtures, db, redis_flushall
 import pybossa.vmcp as vmcp
-from nose.tools import assert_equal, assert_raises
+from mock import patch
+import hashlib
+import M2Crypto
+import base64
 
 
 class TestAPI:
@@ -33,3 +33,74 @@ class TestAPI:
         # Non-valid
         err_msg = "Non-Valid chars should be quoted"
         assert vmcp.myquote('%') == '%25', err_msg
+
+    def test_calculate_buffer(self):
+        """Test calculate_buffer works"""
+        data = {"flags": 8,
+                "name": "MyAwesomeVM",
+                "ram": 512,
+                "secret": "mg041na39123",
+                "userData": "[amiconfig]\nplugins=cernvm\n[cernvm]\nusers=user:users;password",
+                "vcpus": 1,
+                "true": True,
+                "false": False,
+                "version": "1.5"}
+
+        out = vmcp.calculate_buffer(data, 'salt')
+        err_msg = "Salt should be appended to the string"
+        assert 'salt' in out, err_msg
+        err_msg = "Boolean True has to be converted to 1"
+        assert "true=1" in out, err_msg
+        err_msg = "Boolean False has to be converted to 0"
+        assert "false=0" in out, err_msg
+
+    def _sign(self, data, salt):
+        """Help function to prepare the data for signing."""
+        strBuffer = ""
+        # print data.keys()
+        for k in sorted(data.iterkeys()):
+
+            # Handle the BOOL special case
+            v = data[k]
+            if type(v) == bool:
+                if v:
+                    v = 1
+                else:
+                    v = 0
+                data[k] = v
+
+            # Update buffer
+            strBuffer += "%s=%s\n" % (str(k).lower(), vmcp.myquote(str(v)))
+
+        # Append salt
+        strBuffer += salt
+        return strBuffer
+
+    def test_sign(self):
+        """Test sign works."""
+        rsa = M2Crypto.RSA.gen_key(2048, 65537)
+        salt = 'salt'
+        data = {"flags": 8,
+                "name": "MyAwesomeVM",
+                "ram": 512,
+                "secret": "mg041na39123",
+                "userData": "[amiconfig]\nplugins=cernvm\n[cernvm]\nusers=user:users;password",
+                "vcpus": 1,
+                "version": "1.5"}
+        strBuffer = self._sign(data, salt)
+        digest = hashlib.new('sha512', strBuffer).digest()
+
+        with patch('M2Crypto.RSA.load_key', return_value=rsa):
+            out = vmcp.sign(data, salt, 'key')
+            err_msg = "There should be a key named signature"
+            assert out.get('signature'), err_msg
+
+            err_msg = "The signature should not be empty"
+            assert out['signature'] is not None, err_msg
+            assert out['signature'] != '', err_msg
+
+            err_msg = "The signature should be the same"
+            assert strBuffer == out['strBuffer']
+            assert digest == out['digest']
+            signature = base64.b64decode(out['signature'])
+            assert rsa.verify(digest, signature, 'sha512') == 1, err_msg
