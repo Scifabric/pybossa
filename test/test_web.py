@@ -772,6 +772,15 @@ class TestWeb(web.Helper):
         msg = "?next=%2Fapp%2F" + app.short_name + "%2Ftask%2F" + str(task.id)
         assert msg in res.data, res.data
 
+        # Try with a hidden app
+        app.hidden = 1
+        db.session.add(app)
+        db.session.commit()
+        res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
+                           follow_redirects=True)
+        assert 'Forbidden' in res.data, res.data
+        assert res.status_code == 403, "It should be forbidden"
+
     def test_22_get_specific_completed_task_anonymous(self):
         """Test WEB get specific completed task_id
         for an app works as anonymous"""
