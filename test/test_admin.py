@@ -147,6 +147,12 @@ class TestAdmin(web.Helper):
         assert "Sample App" not in res.data,\
             "The application should not be listed in the front page"\
             " as it is not featured"
+        # If we try to delete again, it shoul return an error
+        res = self.app.delete('/admin/featured/1')
+        err = json.loads(res.data)
+        assert err['status_code'] == 404, "App should not be found"
+        err_msg = 'App.id 1 is not in Featured table'
+        assert err['error'] == err_msg, err_msg
 
     def test_07_admin_featured_apps_add_remove_app_non_admin(self):
         """Test ADMIN featured apps add-remove works as an non-admin user"""
