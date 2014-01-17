@@ -525,7 +525,7 @@ def compute_importer_variant_pairs(forms):
     variants = reduce(operator.__add__,
                       [i.variants for i in forms.itervalues()],
                       [])
-    if len(variants) % 2:
+    if len(variants) % 2: # pragma: no cover
         variants.append("empty")
 
     prefix = "applications/tasks/"
