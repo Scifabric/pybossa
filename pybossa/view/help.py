@@ -32,7 +32,7 @@ def api():
     apps, count = cached_apps.get(categories[0]['short_name'])
     if len(apps) > 0:
         app_id = choice(apps)['id']
-    else:
+    else:  # pragma: no cover
         app_id = None
     return render_template('help/api.html', title="Help: API",
                            app_id=app_id)
