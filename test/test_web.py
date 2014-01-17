@@ -1455,6 +1455,11 @@ class TestWeb(web.Helper):
         err_msg = "Task Presenter failed to update"
         assert app.info['task_presenter'] == 'Some HTML code!', err_msg
 
+        # Check it loads the previous posted code:
+        res = self.app.get('/app/sampleapp/tasks/taskpresentereditor',
+                           follow_redirects=True)
+        assert "Some HTML code" in res.data, res.data
+
     @patch('pybossa.ckan.requests.get')
     def test_48_update_app_info(self, Mock):
         """Test WEB app update/edit works keeping previous info values"""
