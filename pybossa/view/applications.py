@@ -164,14 +164,7 @@ def index(page):
                          True, False)
     else:
         categories = cached_cat.get_all()
-        if len(categories) > 0:
-            cat_short_name = categories[0].short_name
-        else:
-            cat = db.session.query(model.Category).first()
-            if cat:
-                cat_short_name = cat.short_name
-            else:
-                cat_short_name = "algo"
+        cat_short_name = categories[0].short_name
         return redirect(url_for('.app_cat_index', category=cat_short_name))
 
 
@@ -190,7 +183,7 @@ def app_index(page, lookup, category, fallback, use_count):
 
 
     if fallback and not apps:
-        return redirect(url_for('.published'))
+        return redirect(url_for('.index'))
 
     pagination = Pagination(page, per_page, count)
     categories = cached_cat.get_all()
