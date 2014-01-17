@@ -111,7 +111,7 @@ class TaskSchedulerForm(Form):
 
 
 def app_title(app, page_name):
-    if not app:
+    if not app:  # pragma: no cover
         return "Application not found"
     if page_name is None:
         return "Application: %s" % (app.name)
