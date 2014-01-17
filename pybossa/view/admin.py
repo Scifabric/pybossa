@@ -77,43 +77,41 @@ def featured(app_id=None):
                                                              per_page=n_apps)
             return render_template('/admin/applications.html', apps=apps,
                                    categories=categories)
-        elif app_id:
-            if request.method == 'POST':
-                cached_apps.reset()
-                f = model.Featured()
-                f.app_id = app_id
-                app = db.session.query(model.App).get(app_id)
-                require.app.update(app)
-                # Check if the app is already in this table
-                tmp = db.session.query(model.Featured)\
-                        .filter(model.Featured.app_id == app_id)\
-                        .first()
-                if (tmp is None):
-                    db.session.add(f)
-                    db.session.commit()
-                    return json.dumps(f.dictize())
-                else:
-                    msg = "App.id %s alreay in Featured table" % app_id
-                    return format_error(msg, 415)
-            if request.method == 'DELETE':
-                cached_apps.reset()
-                f = db.session.query(model.Featured)\
-                      .filter(model.Featured.app_id == app_id)\
-                      .first()
-                if (f):
-                    db.session.delete(f)
-                    db.session.commit()
-                    return "", 204
-                else:
-                    msg = 'App.id %s is not in Featured table' % app_id
-                    return format_error(msg, 404)
         else:
-            msg = ('App.id is missing for %s action in featured method' %
-                   request.method)
-            return format_error(msg, 415)
-    except HTTPException:
-        return abort(403)
-    except Exception as e:
+            app = db.session.query(model.App).get(app_id)
+            if app:
+                if request.method == 'POST':
+                    cached_apps.reset()
+                    f = model.Featured()
+                    f.app_id = app_id
+                    require.app.update(app)
+                    # Check if the app is already in this table
+                    tmp = db.session.query(model.Featured)\
+                            .filter(model.Featured.app_id == app_id)\
+                            .first()
+                    if (tmp is None):
+                        db.session.add(f)
+                        db.session.commit()
+                        return json.dumps(f.dictize())
+                    else:
+                        msg = "App.id %s alreay in Featured table" % app_id
+                        return format_error(msg, 415)
+                if request.method == 'DELETE':
+                    cached_apps.reset()
+                    f = db.session.query(model.Featured)\
+                          .filter(model.Featured.app_id == app_id)\
+                          .first()
+                    if (f):
+                        db.session.delete(f)
+                        db.session.commit()
+                        return "", 204
+                    else:
+                        msg = 'App.id %s is not in Featured table' % app_id
+                        return format_error(msg, 404)
+            else:
+                msg = 'App.id %s not found' % app_id
+                return format_error(msg, 404)
+    except Exception as e: # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
 
@@ -151,9 +149,7 @@ def users(user_id=None):
 
         return render_template('/admin/users.html', found=[], users=users,
                                title=gettext("Manage Admin Users"), form=form)
-    except HTTPException:
-        return abort(403)
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
 
@@ -175,9 +171,7 @@ def add_admin(user_id=None):
             else:
                 msg = "User not found"
                 return format_error(msg, 404)
-    except HTTPException:
-        return abort(403)
-    except Exception as e:
+    except Exception as e: # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
 
@@ -202,9 +196,7 @@ def del_admin(user_id=None):
         else:
             msg = "User.id is missing for method del_admin"
             return format_error(msg, 415)
-    except HTTPException:
-        return abort(403)
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
 
@@ -253,9 +245,7 @@ def categories():
                                categories=categories,
                                n_apps_per_category=n_apps_per_category,
                                form=form)
-    except HTTPException:
-        return abort(403)
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
 
@@ -289,9 +279,7 @@ def del_category(id):
                 return redirect(url_for('.categories'))
         else:
             return abort(404)
-    except HTTPException:
-        return abort(403)
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
 
@@ -333,8 +321,6 @@ def update_category(id):
                                            form=form)
         else:
             return abort(404)
-    except HTTPException:
-        return abort(403)
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
