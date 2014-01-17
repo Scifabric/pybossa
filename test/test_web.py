@@ -21,6 +21,7 @@ import StringIO
 from helper import web
 from base import model, Fixtures, mail
 from mock import patch
+from flask import Response
 from itsdangerous import BadSignature
 from collections import namedtuple
 from pybossa.core import db, signer
@@ -363,9 +364,7 @@ class TestWeb(web.Helper):
         url = '/app/category/featured/'
         res = self.app.get(url, follow_redirects=True)
         tmp = '1 Featured Applications'
-        assert tmp in res.data, res
-
-
+        assert tmp in res.data, res.data
 
     @patch('pybossa.ckan.requests.get')
     def test_10_get_application(self, Mock):
@@ -1813,8 +1812,29 @@ class TestWeb(web.Helper):
         Fixtures.create()
         url = "/help/api"
         res = self.app.get(url, follow_redirects=True)
-        err_msg = "There should be a help api.html page"
+        err_msg = "There should be a help api page"
         assert "API Help" in res.data, err_msg
+
+    def test_59_help_license(self):
+        """Test WEB help license page exists."""
+        url = "/help/license"
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "There should be a help license page"
+        assert "Licenses" in res.data, err_msg
+
+    def test_59_help_tos(self):
+        """Test WEB help TOS page exists."""
+        url = "/help/terms-of-use"
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "There should be a TOS page"
+        assert "Terms for use" in res.data, err_msg
+
+    def test_59_help_policy(self):
+        """Test WEB help policy page exists."""
+        url = "/help/cookies-policy"
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "There should be a TOS page"
+        assert "uses cookies" in res.data, err_msg
 
     def test_69_allow_anonymous_contributors(self):
         """Test WEB allow anonymous contributors works"""
