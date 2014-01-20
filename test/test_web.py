@@ -1868,10 +1868,6 @@ class TestWeb(web.Helper):
             assert msg in res.data, err_msg
 
     def test_54_import_tasks(self):
-        """Test WEB Import Tasks works"""
-        # there's a bug in the test framework:
-        # self.app.get somehow calls render_template twice
-        return
         """Test WEB import Task templates should work"""
         self.register()
         self.new_application()
