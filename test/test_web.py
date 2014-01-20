@@ -1714,25 +1714,13 @@ class TestWeb(web.Helper):
 
     @patch('pybossa.view.applications.Ckan', autospec=True)
     def test_export_tasks_ckan(self, mock1):
-        mocks = [Mock(), Mock()]
+        mocks = [Mock()]
         from test_ckan import TestCkanModule
         fake_ckn = TestCkanModule()
         package = fake_ckn.pkg_json_found
         package['id'] = 3
         mocks[0].package_exists.return_value = (False, None)
         mocks[0].package_create.return_value = fake_ckn.pkg_json_found
-        mocks[0].resource_create.return_value = dict(result=dict(id=3))
-        mocks[0].datastore_create.return_value = 'datastore'
-        mocks[0].datastore_upsert.return_value = 'datastore'
-
-        # Second time exporting the package
-        resource = dict(id=1, name='task')
-        package = dict(id=1, resources=[resource])
-        mocks[0].package_exists.return_value = (package, None)
-        mocks[0].package_update.return_value = package
-        mocks[0].datastore_delete.return_value = None
-        mocks[0].datastore_create.return_value = None
-        mocks[0].datastore_upsert.return_value = None
         mocks[0].resource_create.return_value = dict(result=dict(id=3))
         mocks[0].datastore_create.return_value = 'datastore'
         mocks[0].datastore_upsert.return_value = 'datastore'
@@ -1774,8 +1762,105 @@ class TestWeb(web.Helper):
             err_msg = "Tasks should be exported to CKAN"
             assert msg in res.data, err_msg
 
-            # Second time exporting the package
+    @patch('pybossa.view.applications.Ckan', autospec=True)
+    def test_task_export_tasks_ckan_second_time(self, mock1):
+        """Test WEB Export CKAN Tasks works with an existing package."""
+        # Second time exporting the package
+        mocks = [Mock()]
+        resource = dict(name='task', id=1)
+        package = dict(id=3, resources=[resource])
+        mocks[0].package_exists.return_value = (package, None)
+        mocks[0].package_update.return_value = package
+        mocks[0].datastore_delete.return_value = None
+        mocks[0].datastore_create.return_value = None
+        mocks[0].datastore_upsert.return_value = None
+        mocks[0].resource_create.return_value = dict(result=dict(id=3))
+        mocks[0].datastore_create.return_value = 'datastore'
+        mocks[0].datastore_upsert.return_value = 'datastore'
 
+        mock1.side_effect = mocks
+
+        Fixtures.create()
+        user = db.session.query(model.User).filter_by(name=Fixtures.name).first()
+        app = db.session.query(model.App).first()
+        user.ckan_api = 'ckan-api-key'
+        app.owner_id = user.id
+        db.session.add(user)
+        db.session.add(app)
+        db.session.commit()
+
+        self.signin(email=user.email_addr, password=Fixtures.password)
+        # First test for a non-existant app
+        uri = '/app/somethingnotexists/tasks/export'
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        # Now get the tasks in JSON format
+        uri = "/app/somethingnotexists/tasks/export?type=task&format=ckan"
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+
+        # Now with a real app
+        uri = '/app/%s/tasks/export' % Fixtures.app_short_name
+        res = self.app.get(uri, follow_redirects=True)
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
+        assert heading in res.data, "Export page should be available\n %s" % res.data
+        # Now get the tasks in JSON format
+        uri = "/app/%s/tasks/export?type=task&format=ckan" % Fixtures.app_short_name
+        #res = self.app.get(uri, follow_redirects=True)
+        with patch.dict(webapp.app.config, {'CKAN_URL': 'http://ckan.com'}):
+            # First time exporting the package
+            res = self.app.get(uri, follow_redirects=True)
+            msg = 'Data exported to http://ckan.com'
+            err_msg = "Tasks should be exported to CKAN"
+            assert msg in res.data, err_msg
+
+    @patch('pybossa.view.applications.Ckan', autospec=True)
+    def test_task_export_tasks_ckan_without_resources(self, mock1):
+        """Test WEB Export CKAN Tasks works without resources ."""
+        mocks = [Mock()]
+        package = dict(id=3, resources=[])
+        mocks[0].package_exists.return_value = (package, None)
+        mocks[0].package_update.return_value = package
+        mocks[0].resource_create.return_value = dict(result=dict(id=3))
+        mocks[0].datastore_create.return_value = 'datastore'
+        mocks[0].datastore_upsert.return_value = 'datastore'
+
+
+        mock1.side_effect = mocks
+
+        Fixtures.create()
+        user = db.session.query(model.User).filter_by(name=Fixtures.name).first()
+        app = db.session.query(model.App).first()
+        user.ckan_api = 'ckan-api-key'
+        app.owner_id = user.id
+        db.session.add(user)
+        db.session.add(app)
+        db.session.commit()
+
+        self.signin(email=user.email_addr, password=Fixtures.password)
+        # First test for a non-existant app
+        uri = '/app/somethingnotexists/tasks/export'
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+        # Now get the tasks in JSON format
+        uri = "/app/somethingnotexists/tasks/export?type=task&format=ckan"
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+
+        # Now with a real app
+        uri = '/app/%s/tasks/export' % Fixtures.app_short_name
+        res = self.app.get(uri, follow_redirects=True)
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
+        assert heading in res.data, "Export page should be available\n %s" % res.data
+        # Now get the tasks in JSON format
+        uri = "/app/%s/tasks/export?type=task&format=ckan" % Fixtures.app_short_name
+        #res = self.app.get(uri, follow_redirects=True)
+        with patch.dict(webapp.app.config, {'CKAN_URL': 'http://ckan.com'}):
+            # First time exporting the package
+            res = self.app.get(uri, follow_redirects=True)
+            msg = 'Data exported to http://ckan.com'
+            err_msg = "Tasks should be exported to CKAN"
+            assert msg in res.data, err_msg
 
     def test_54_import_tasks(self):
         """Test WEB Import Tasks works"""
