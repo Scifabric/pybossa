@@ -54,8 +54,13 @@ class TestWeb(web.Helper):
         self.new_application()
 
         app = db.session.query(model.App).first()
+        # Without stats
+        url = '/app/%s/stats' % app.short_name
+        res = self.app.get(url)
+        assert "Sorry" in res.data, res.data
+
         # We use a string here to check that it works too
-        task = model.Task(app_id=app.id, info={'n_answers': '10'})
+        task = model.Task(app_id=app.id, n_answers=10)
         db.session.add(task)
         db.session.commit()
 
