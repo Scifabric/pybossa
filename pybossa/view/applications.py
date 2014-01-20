@@ -967,9 +967,10 @@ def export_to(short_name):
                 owner = User.query.get(app.owner_id)
                 package = ckan.package_update(app=app, user=owner, url=app_url,
                                               resources=package['resources'])
+
                 ckan.package = package
                 resource_found = False
-                print len(package['resources'])
+                # print len(package['resources'])
                 for r in package['resources']:
                     if r['name'] == ty:
                         ckan.datastore_delete(name=ty, resource_id=r['id'])
