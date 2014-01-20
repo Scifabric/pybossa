@@ -654,7 +654,6 @@ class TestWeb(web.Helper):
             db.session.add(task_run)
             db.session.commit()
 
-        self.signout()
 
         app = db.session.query(model.App).first()
         res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
@@ -663,6 +662,25 @@ class TestWeb(web.Helper):
         assert len(data) == 10, data
         for tr in data:
             assert tr['info']['answer'] == 1, tr
+
+        # Check with hidden app: owner should have access to it
+        app.hidden = 1
+        db.session.add(app)
+        db.session.commit()
+        res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
+                           follow_redirects=True)
+        print res.data
+        data = json.loads(res.data)
+        assert len(data) == 10, data
+        for tr in data:
+            assert tr['info']['answer'] == 1, tr
+        self.signout()
+
+        # Check with hidden app: anonymous should not have access to it
+        res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
+                           follow_redirects=True)
+        assert res.status_code == 403, res.data
+        assert "Forbidden" in res.data, res.data
 
     def test_18_task_status_wip(self):
         """Test WEB Task Status on going works"""
