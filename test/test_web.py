@@ -1724,6 +1724,19 @@ class TestWeb(web.Helper):
         mocks[0].resource_create.return_value = dict(result=dict(id=3))
         mocks[0].datastore_create.return_value = 'datastore'
         mocks[0].datastore_upsert.return_value = 'datastore'
+
+        # Second time exporting the package
+        resource = dict(id=1, name='task')
+        package = dict(id=1, resources=[resource])
+        mocks[0].package_exists.return_value = (package, None)
+        mocks[0].package_update.return_value = package
+        mocks[0].datastore_delete.return_value = None
+        mocks[0].datastore_create.return_value = None
+        mocks[0].datastore_upsert.return_value = None
+        mocks[0].resource_create.return_value = dict(result=dict(id=3))
+        mocks[0].datastore_create.return_value = 'datastore'
+        mocks[0].datastore_upsert.return_value = 'datastore'
+
         mock1.side_effect = mocks
 
         """Test WEB Export CKAN Tasks works."""
@@ -1755,10 +1768,13 @@ class TestWeb(web.Helper):
         uri = "/app/%s/tasks/export?type=task&format=ckan" % Fixtures.app_short_name
         #res = self.app.get(uri, follow_redirects=True)
         with patch.dict(webapp.app.config, {'CKAN_URL': 'http://ckan.com'}):
+            # First time exporting the package
             res = self.app.get(uri, follow_redirects=True)
             msg = 'Data exported to http://ckan.com'
             err_msg = "Tasks should be exported to CKAN"
             assert msg in res.data, err_msg
+
+            # Second time exporting the package
 
 
     def test_54_import_tasks(self):
