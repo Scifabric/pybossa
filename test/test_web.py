@@ -1148,6 +1148,41 @@ class TestWeb(web.Helper):
             assert t.info == csv_tasks[n], "The task info should be the same"
             n += 1
 
+    @patch('pybossa.view.importer.requests.get')
+    def test_38_bulk_gdocs_import(self, Mock):
+        """Test WEB bulk GDocs import works."""
+        empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
+                                 {'content-type': 'text/plain'})
+        Mock.return_value = empty_file
+        self.register()
+        self.new_application()
+        app = db.session.query(model.App).first()
+        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
+        res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
+                                       'formtype': 'gdocs'},
+                            follow_redirects=True)
+        task = db.session.query(model.Task).first()
+        assert {u'Bar': u'2', u'Foo': u'1'} == task.info
+        assert task.priority_0 == 3
+        assert "1 Task imported successfully!" in res.data
+
+        # Check that only new items are imported
+        empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
+                                 {'content-type': 'text/plain'})
+        Mock.return_value = empty_file
+        app = db.session.query(model.App).first()
+        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
+        res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
+                                       'formtype': 'gdocs'},
+                            follow_redirects=True)
+        app = db.session.query(model.App).first()
+        assert len(app.tasks) == 2, "There should be only 2 tasks"
+        n = 0
+        csv_tasks = [{u'Foo': u'1', u'Bar': u'2'}, {u'Foo': u'4', u'Bar': u'5'}]
+        for t in app.tasks:
+            assert t.info == csv_tasks[n], "The task info should be the same"
+            n += 1
+
     def test_39_google_oauth_creation(self):
         """Test WEB Google OAuth creation of user works"""
         fake_response = {
