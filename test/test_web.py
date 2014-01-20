@@ -903,6 +903,11 @@ class TestWeb(web.Helper):
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
         assert "some help" not in res.data
 
+        # Check if the tutorial can be accessed directly
+        res = self.app.get('/app/test-app/tutorial', follow_redirects=True)
+        err_msg = "There should be some tutorial for the application"
+        assert "some help" in res.data, err_msg
+
     def test_27_tutorial_anonymous_user(self):
         """Test WEB tutorials work as an anonymous user"""
         Fixtures.create()
