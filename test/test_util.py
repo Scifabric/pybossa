@@ -18,6 +18,8 @@
 import pybossa.util
 from base import web, model, Fixtures
 from mock import patch
+from datetime import datetime, timedelta
+import dateutil.parser
 
 
 class TestWebModule:
@@ -46,3 +48,54 @@ class TestWebModule:
         assert res.headers['Access-Control-Max-Age'] == '21600', err_msg
         headers = 'CONTENT-TYPE, AUTHORIZATION'
         assert res.headers['Access-Control-Allow-Headers'] == headers, err_msg
+
+    def test_pretty_date(self):
+        """Test pretty_date works."""
+        now = datetime.now()
+        pd = pybossa.util.pretty_date(now.isoformat())
+        assert pd == "just now", pd
+
+        d = now - timedelta(seconds=10)
+        pd = pybossa.util.pretty_date(d.isoformat())
+        assert pd == '10 seconds ago', pd
+
+        d = now - timedelta(minutes=1)
+        pd = pybossa.util.pretty_date(d.isoformat())
+        assert pd == 'a minute ago', pd
+
+        d = now - timedelta(minutes=2)
+        pd = pybossa.util.pretty_date(d.isoformat())
+        assert pd == '2 minutes ago', pd
+
+        d = now - timedelta(hours=1)
+        pd = pybossa.util.pretty_date(d.isoformat())
+        assert pd == 'an hour ago', pd
+
+        d = now - timedelta(hours=5)
+        pd = pybossa.util.pretty_date(d.isoformat())
+        assert pd == '5 hours ago', pd
+
+        d = now - timedelta(days=1)
+        pd = pybossa.util.pretty_date(d.isoformat())
+        assert pd == 'Yesterday', pd
+
+        d = now - timedelta(days=5)
+        pd = pybossa.util.pretty_date(d.isoformat())
+        assert pd == '5 days ago', pd
+
+        d = now - timedelta(weeks=1)
+        pd = pybossa.util.pretty_date(d.isoformat())
+        assert pd == '1 weeks ago', pd
+
+        d = now - timedelta(days=32)
+        pd = pybossa.util.pretty_date(d.isoformat())
+        assert pd == '1 month ago', pd
+
+        d = now - timedelta(days=366)
+        pd = pybossa.util.pretty_date(d.isoformat())
+        assert pd == '1 year ago', pd
+
+        d = now - timedelta(days=766)
+        pd = pybossa.util.pretty_date(d.isoformat())
+        assert pd == '2 years ago', pd
+
