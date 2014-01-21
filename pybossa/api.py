@@ -56,7 +56,7 @@ error = ErrorStatus()
 @blueprint.route('/')
 @crossdomain(origin='*', headers=cors_headers)
 @ratelimit(limit=300, per=15*60)
-def index():
+def index():  # pragma: no cover
     return 'The PyBossa API'
 
 
@@ -74,7 +74,7 @@ class APIBase(MethodView):
 
 
     @crossdomain(origin='*', headers=cors_headers)
-    def options(self):
+    def options(self):  # pragma: no cover
         return ''
 
     @jsonpify
@@ -270,7 +270,7 @@ class TaskRunAPI(APIBase):
         # Load the real task from the DB
         task_cookie = s.loads(task_cookie)
         task = db.session.query(model.Task).get(task_cookie['id'])
-        if ((task is None) or (task.id != obj.task_id)):
+        if ((task is None) or (task.id != obj.task_id)):  # pragma: no cover
             raise Forbidden('Invalid task_id')
         if (task.app_id != obj.app_id):
             raise Forbidden('Invalid app_id')
@@ -379,7 +379,7 @@ def user_progress(app_id=None, short_name=None):
             return Response(json.dumps(tmp), mimetype="application/json")
         else:
             return abort(404)
-    else:
+    else:  # pragma: no cover
         return abort(404)
 
 
