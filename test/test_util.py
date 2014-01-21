@@ -34,3 +34,15 @@ class TestWebModule:
         assert "mycallback" in res.data, err_msg
         err_msg = "Status code should be 200"
         assert res.status_code == 200, err_msg
+
+    def test_cors(self):
+        """Test CORS decorator works."""
+        res = self.app.get('/api/app/1')
+        err_msg = "CORS should be enabled"
+        print res.headers
+        assert res.headers['Access-Control-Allow-Origin'] == '*', err_msg
+        methods = 'PUT, HEAD, DELETE, OPTIONS, GET'
+        assert res.headers['Access-Control-Allow-Methods'] == methods, err_msg
+        assert res.headers['Access-Control-Max-Age'] == '21600', err_msg
+        headers = 'CONTENT-TYPE, AUTHORIZATION'
+        assert res.headers['Access-Control-Allow-Headers'] == headers, err_msg
