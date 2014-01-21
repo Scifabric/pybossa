@@ -20,6 +20,8 @@ from base import web, model, Fixtures
 from mock import patch
 from datetime import datetime, timedelta
 import dateutil.parser
+import calendar
+import time
 
 
 class TestWebModule:
@@ -51,8 +53,12 @@ class TestWebModule:
 
     def test_pretty_date(self):
         """Test pretty_date works."""
+
         now = datetime.now()
         pd = pybossa.util.pretty_date(now.isoformat())
+        assert pd == "just now", pd
+
+        pd = pybossa.util.pretty_date(calendar.timegm(time.gmtime()))
         assert pd == "just now", pd
 
         d = now - timedelta(seconds=10)
