@@ -48,6 +48,12 @@ class TestWeb(web.Helper):
         assert self.html_title() in res.data, res
         assert "Create an App" in res.data, res
 
+    def test_01_search(self):
+        """Test WEB search page works."""
+        res = self.app.get('/search')
+        err_msg = "Search page should be accessible"
+        assert "Search" in res.data, err_msg
+
     def test_02_stats(self):
         """Test WEB leaderboard or stats page works"""
         self.register()
