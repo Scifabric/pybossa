@@ -135,7 +135,7 @@ def last_activity(app_id):
     for row in results:
         if row is not None:
             return pretty_date(row[0])
-        else:
+        else:  # pragma: no cover
             return None
 
 
