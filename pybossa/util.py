@@ -98,7 +98,7 @@ def crossdomain(origin=None, methods=None, headers=None,
     return decorator
 
 
-# From http://stackoverflow.com/q/1551382
+# Fromhttp://stackoverflow.com/q/1551382
 def pretty_date(time=False):
     """
     Get a datetime object or a int() Epoch timestamp and return a
@@ -108,7 +108,8 @@ def pretty_date(time=False):
     from datetime import datetime
     import dateutil.parser
     now = datetime.now()
-    time = dateutil.parser.parse(time)
+    if type(time) is str:
+        time = dateutil.parser.parse(time)
     if type(time) is int:
         diff = now - datetime.fromtimestamp(time)
     elif isinstance(time, datetime):
