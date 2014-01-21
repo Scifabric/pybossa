@@ -22,6 +22,7 @@ from datetime import datetime, timedelta
 import dateutil.parser
 import calendar
 import time
+import csv
 
 
 class TestWebModule:
@@ -134,3 +135,11 @@ class TestWebModule:
             err_msg = "It should return the page: %s" % page
             assert i == page, err_msg
             page += 1
+
+    def test_unicode_csv_reader(self):
+        """Test unicode_csv_reader works."""
+        fake_csv = ['one, two, three']
+        err_msg = "Each cell should be encoded as Unicode"
+        for row in pybossa.util.unicode_csv_reader(fake_csv):
+            for item in row:
+                assert type(item) == unicode, err_msg
