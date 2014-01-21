@@ -149,8 +149,10 @@ class TestWebModule:
         """Test UnicodeWriter class works."""
         tmp = tempfile.NamedTemporaryFile()
         uw = pybossa.util.UnicodeWriter(tmp)
-        fake_csv = ['one, two, three']
+        fake_csv = ['one, two, three, {"i": 1}']
         for row in csv.reader(fake_csv):
+            # change it for a dict
+            row[3] = dict(i=1)
             uw.writerow(row)
         tmp.seek(0)
         err_msg = "It should be the same CSV content"
