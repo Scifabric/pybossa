@@ -23,6 +23,7 @@ import dateutil.parser
 import calendar
 import time
 import csv
+import tempfile
 
 
 class TestWebModule:
@@ -143,3 +144,18 @@ class TestWebModule:
         for row in pybossa.util.unicode_csv_reader(fake_csv):
             for item in row:
                 assert type(item) == unicode, err_msg
+
+    def test_UnicodeWriter(self):
+        """Test UnicodeWriter class works."""
+        tmp = tempfile.NamedTemporaryFile()
+        uw = pybossa.util.UnicodeWriter(tmp)
+        fake_csv = ['one, two, three']
+        for row in csv.reader(fake_csv):
+            uw.writerow(row)
+        tmp.seek(0)
+        err_msg = "It should be the same CSV content"
+        with open(tmp.name, 'rb') as f:
+            reader = csv.reader(f)
+            for row in reader:
+                for item in row:
+                    assert item in fake_csv[0], err_msg
