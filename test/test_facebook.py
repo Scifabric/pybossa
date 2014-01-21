@@ -26,7 +26,7 @@ class TestFacebook:
         Fixtures.create()
 
     def test_manage_user(self):
-        """Test FACEBOOK get_token works."""
+        """Test FACEBOOK manage_user works."""
         with self.app.test_request_context('/'):
             # First with a new user
             user_data = dict(id=1, username='facebook',
