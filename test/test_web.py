@@ -2071,6 +2071,13 @@ class TestWeb(web.Helper):
         err_msg = "There should be a help license page"
         assert "Licenses" in res.data, err_msg
 
+    def test_59_about(self):
+        """Test WEB help about page exists."""
+        url = "/about"
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "There should be an about page"
+        assert "About" in res.data, err_msg
+
     def test_59_help_tos(self):
         """Test WEB help TOS page exists."""
         url = "/help/terms-of-use"

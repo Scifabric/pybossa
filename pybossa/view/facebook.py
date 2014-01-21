@@ -35,14 +35,14 @@ facebook = Facebook(app.config['FACEBOOK_APP_ID'],
 
 
 @blueprint.route('/', methods=['GET', 'POST'])
-def login():
+def login():  # pragma: no cover
     return facebook.oauth.authorize(callback=url_for('.oauth_authorized',
                                                      next=request.args.get("next"),
                                                      _external=True))
 
 
 @facebook.oauth.tokengetter
-def get_facebook_token():
+def get_facebook_token():  # pragma: no cover
     if current_user.is_anonymous():
         return session.get('oauth_token')
     else:

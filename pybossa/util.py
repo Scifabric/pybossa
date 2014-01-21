@@ -43,7 +43,7 @@ def jsonpify(f):
     return decorated_function
 
 
-def admin_required(f):
+def admin_required(f):  # pragma: no cover
     """Checks if the user is and admin or not"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -58,16 +58,16 @@ def admin_required(f):
 def crossdomain(origin=None, methods=None, headers=None,
                 max_age=21600, attach_to_all=True,
                 automatic_options=True):
-    if methods is not None:
+    if methods is not None:  # pragma: no cover
         methods = ', '.join(sorted(x.upper() for x in methods))
     if headers is not None and not isinstance(headers, basestring):
         headers = ', '.join(x.upper() for x in headers)
     if not isinstance(origin, basestring):  # pragma: no cover
         origin = ', '.join(origin)
-    if isinstance(max_age, timedelta):
+    if isinstance(max_age, timedelta):  # pragma: no cover
         max_age = max_age.total_seconds()
 
-    def get_methods():
+    def get_methods():  # pragma: no cover
         if methods is not None:
             return methods
 
@@ -77,7 +77,7 @@ def crossdomain(origin=None, methods=None, headers=None,
     def decorator(f):
 
         def wrapped_function(*args, **kwargs):
-            if automatic_options and request.method == 'OPTIONS':
+            if automatic_options and request.method == 'OPTIONS':  # pragma: no cover
                 resp = current_app.make_default_options_response()
             else:
                 resp = make_response(f(*args, **kwargs))
@@ -177,7 +177,7 @@ class Pagination(object):
                     (num > self.page - left_current - 1 and
                      num < self.page + right_current) or
                     num > self.pages - right_edge):
-                if last + 1 != num:
+                if last + 1 != num:  # pragma: no cover
                     yield None
                 yield num
                 last = num

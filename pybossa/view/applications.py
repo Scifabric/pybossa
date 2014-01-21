@@ -142,7 +142,7 @@ def redirect_old_featured(page):
 
 @blueprint.route('/published/', defaults={'page': 1})
 @blueprint.route('/published/<int:page>/', defaults={'page': 1})
-def redirect_old_published(page):
+def redirect_old_published(page):  # pragma: no cover
     """DEPRECATED only to redirect old links"""
     category = db.session.query(model.Category).first()
     return redirect(url_for('.app_cat_index', category=category.short_name, page=page), 301)

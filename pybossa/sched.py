@@ -185,7 +185,7 @@ def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30, offset
         if (t.info.get('n_answers')):
             t.n_answers = int(t.info['n_answers'])
         # NEW WAY!
-        if t.n_answers is None:
+        if t.n_answers is None:  # pragma: no cover
             t.n_answers = 30
 
         if (len(t.task_runs) >= t.n_answers):

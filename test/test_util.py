@@ -55,13 +55,19 @@ class TestWebModule:
 
     def test_pretty_date(self):
         """Test pretty_date works."""
-
         now = datetime.now()
+        pd = pybossa.util.pretty_date()
+        assert pd == "just now", pd
+
         pd = pybossa.util.pretty_date(now.isoformat())
         assert pd == "just now", pd
 
         pd = pybossa.util.pretty_date(calendar.timegm(time.gmtime()))
         assert pd == "just now", pd
+
+        d = now + timedelta(days=10)
+        pd = pybossa.util.pretty_date(d.isoformat())
+        assert pd == '', pd
 
         d = now - timedelta(seconds=10)
         pd = pybossa.util.pretty_date(d.isoformat())
@@ -98,6 +104,10 @@ class TestWebModule:
         d = now - timedelta(days=32)
         pd = pybossa.util.pretty_date(d.isoformat())
         assert pd == '1 month ago', pd
+
+        d = now - timedelta(days=62)
+        pd = pybossa.util.pretty_date(d.isoformat())
+        assert pd == '2 months ago', pd
 
         d = now - timedelta(days=366)
         pd = pybossa.util.pretty_date(d.isoformat())

@@ -163,12 +163,12 @@ def global_template_context():
                 if key == 'user':
                     flash(announcement[key], 'info')
 
-    if app.config.get('CONTACT_EMAIL'):
+    if app.config.get('CONTACT_EMAIL'):  # pragma: no cover
         contact_email = app.config.get('CONTACT_EMAIL')
     else:
         contact_email = 'info@pybossa.com'
 
-    if app.config.get('CONTACT_TWITTER'):
+    if app.config.get('CONTACT_TWITTER'):  # pragma: no cover
         contact_twitter = app.config.get('CONTACT_TWITTER')
     else:
         contact_twitter = 'PyBossa'

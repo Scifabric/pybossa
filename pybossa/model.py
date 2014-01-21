@@ -141,7 +141,7 @@ class DomainObject(object):
     def undictize(cls, dict_):
         raise NotImplementedError()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return self.__unicode__().encode('utf8')
 
     def __unicode__(self): # pragma: no cover
@@ -338,7 +338,7 @@ class Task(db.Model, DomainObject):
             self.n_answers = int(self.info['n_answers'])
         if self.n_answers != 0 and self.n_answers != None:
             return float(len(self.task_runs)) / self.n_answers
-        else:
+        else:  # pragma: no cover
             return float(0)
 
 
