@@ -35,13 +35,13 @@ twitter = Twitter(app.config['TWITTER_CONSUMER_KEY'],
 
 
 @blueprint.route('/', methods=['GET', 'POST'])
-def login():
+def login():  # pragma: no cover
     return twitter.oauth.authorize(callback=url_for('.oauth_authorized',
                                                     next=request.args.get("next")))
 
 
 @twitter.oauth.tokengetter
-def get_twitter_token():
+def get_twitter_token():  # pragma: no cover
     if current_user.is_anonymous():
         return None
 
@@ -83,7 +83,7 @@ def manage_user(access_token, user_data, next_url):
 
 @blueprint.route('/oauth-authorized')
 @twitter.oauth.authorized_handler
-def oauth_authorized(resp):
+def oauth_authorized(resp):  # pragma: no cover
     """Called after authorization. After this function finished handling,
     the OAuth information is removed from the session again. When this
     happened, the tokengetter from above is used to retrieve the oauth
