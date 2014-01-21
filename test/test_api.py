@@ -1558,6 +1558,13 @@ class TestAPI:
         error_msg = "The reported total number of tasks is wrong"
         assert len(tasks) == data['total'], error_msg
 
+        url = '/api/app/5000/userprogress'
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 404, res.status_code
+
+        url = '/api/app/userprogress'
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 404, res.status_code
 
         error_msg = "The reported number of done tasks is wrong"
         assert len(taskruns) == data['done'], error_msg
@@ -1685,6 +1692,17 @@ class TestAPI:
         """Test VCMP without key fail works."""
         if web.app.config.get('VMCP_KEY'):
             web.app.config.pop('VMCP_KEY')
+        res = self.app.get('api/vmcp', follow_redirects=True)
+        err = json.loads(res.data)
+        assert res.status_code == 501, err
+        assert err['status_code'] == 501, err
+        assert err['status'] == "failed", err
+        assert err['target'] == "vmcp", err
+        assert err['action'] == "GET", err
+
+    @patch.dict(web.app.config, {'VMCP_KEY': 'invalid.key'})
+    def test_vmcp_file_not_found(self):
+        """Test VMCP with invalid file key works."""
         res = self.app.get('api/vmcp', follow_redirects=True)
         err = json.loads(res.data)
         assert res.status_code == 501, err
