@@ -16,7 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from base import web, model, Fixtures
-from pybossa.web import url_for_other_page
+from pybossa.web import url_for_other_page, get_port
+from mock import patch
 
 
 class TestWebModule:
@@ -33,3 +34,13 @@ class TestWebModule:
                 tmp = '/?page=%s' % i
                 err_msg = "The page url is not built correctly"
                 assert tmp == url, err_msg
+
+    def test_get_port(self):
+        """Test get_port works."""
+        # Without os.environ
+        err_msg = "It should return the default Flask port"
+        with patch.dict(web.app.config, {'PORT': 5000}):
+            assert get_port() == 5000, err_msg
+        with patch('os.environ.get', return_value='99'):
+            err_msg = "The returning port should be 99"
+            assert get_port() == 99, err_msg
