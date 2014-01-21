@@ -56,7 +56,7 @@ def cache(key_prefix, timeout=300):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:
+            if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:  # pragma: no cover
                 key = "%s::%s" % (settings.REDIS_KEYPREFIX, key_prefix)
                 output = redis_slave.get(key)
                 if output:
@@ -81,7 +81,7 @@ def memoize(timeout=300, debug=False):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:
+            if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:  # pragma: no cover
                 key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, f.__name__)
                 key_to_hash = ""
                 for i in args:
@@ -111,7 +111,7 @@ def delete_memoized(function, arg=None):
     Returns True if success
 
     """
-    if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:
+    if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:  # pragma: no cover
         keys = []
         if arg:
             key_to_hash = ":%s" % arg
@@ -136,6 +136,6 @@ def delete_cached(key):
     Returns True if success
 
     """
-    if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:
+    if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:  # pragma: no cover
         key = "%s::%s" % (settings.REDIS_KEYPREFIX, key)
         return redis_master.delete(key)
