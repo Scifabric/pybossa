@@ -36,7 +36,7 @@ from raven.contrib.flask import Sentry
 
 def create_app():
     app = Flask(__name__)
-    if 'DATABASE_URL' in os.environ:
+    if 'DATABASE_URL' in os.environ:  # pragma: no cover
         heroku = Heroku(app)
     configure_app(app)
     setup_error_email(app)
