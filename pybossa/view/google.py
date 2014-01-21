@@ -35,7 +35,7 @@ google = Google(app.config['GOOGLE_CLIENT_ID'],
 
 
 @blueprint.route('/', methods=['GET', 'POST'])
-def login():
+def login():  # pragma: no cover
     if request.args.get("next"):
         request_token_params = {
             'scope': 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
@@ -46,7 +46,7 @@ def login():
 
 
 @google.oauth.tokengetter
-def get_google_token():
+def get_google_token():  # pragma: no cover
     if current_user.is_anonymous():
         return session.get('oauth_token')
     else:
@@ -97,7 +97,7 @@ def manage_user(access_token, user_data, next_url):
 
 @blueprint.route('/oauth_authorized')
 @google.oauth.authorized_handler
-def oauth_authorized(resp):
+def oauth_authorized(resp):  # pragma: no cover
     #print "OAUTH authorized method called"
     next_url = url_for('home')
 
