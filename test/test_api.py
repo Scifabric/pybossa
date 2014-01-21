@@ -1515,7 +1515,6 @@ class TestAPI:
 
         res = self.app.get('/api/app/1/newtask')
         data = json.loads(res.data)
-        print data
         # Add a new TaskRun and check again
         tr = model.TaskRun(app_id=1, task_id=data['id'], user_id=1,
                            info={'answer': u'annakarenina'})
@@ -1552,6 +1551,13 @@ class TestAPI:
         data = json.loads(res.data)
         error_msg = "The reported total number of tasks is wrong"
         assert len(tasks) == data['total'], error_msg
+
+        url = '/api/app/%s/userprogress' % app.short_name
+        res = self.app.get(url, follow_redirects=True)
+        data = json.loads(res.data)
+        error_msg = "The reported total number of tasks is wrong"
+        assert len(tasks) == data['total'], error_msg
+
 
         error_msg = "The reported number of done tasks is wrong"
         assert len(taskruns) == data['done'], error_msg
