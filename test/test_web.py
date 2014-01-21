@@ -1334,6 +1334,15 @@ class TestWeb(web.Helper):
         msg = "It seems like you signed up with your Twitter account"
         assert msg in res.data, msg
 
+        # Now the other way around
+        user.twitter_user_id = None
+        db.session.add(user)
+        db.session.commit()
+        res = self.signin(email=user.email_addr, password='wrong')
+        msg = "It seems like you created an account locally"
+        assert msg in res.data, msg
+
+
     def test_40_twitter_oauth_creation(self):
         """Test WEB Twitter OAuth detects same user name/email works"""
         fake_response = {
