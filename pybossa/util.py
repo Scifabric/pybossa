@@ -62,7 +62,7 @@ def crossdomain(origin=None, methods=None, headers=None,
         methods = ', '.join(sorted(x.upper() for x in methods))
     if headers is not None and not isinstance(headers, basestring):
         headers = ', '.join(x.upper() for x in headers)
-    if not isinstance(origin, basestring):
+    if not isinstance(origin, basestring):  # pragma: no cover
         origin = ', '.join(origin)
     if isinstance(max_age, timedelta):
         max_age = max_age.total_seconds()
@@ -81,7 +81,7 @@ def crossdomain(origin=None, methods=None, headers=None,
                 resp = current_app.make_default_options_response()
             else:
                 resp = make_response(f(*args, **kwargs))
-            if not attach_to_all and request.method != 'OPTIONS':
+            if not attach_to_all and request.method != 'OPTIONS':  # pragma: no cover
                 return resp
 
             h = resp.headers
