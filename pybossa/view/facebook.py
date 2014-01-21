@@ -51,7 +51,7 @@ def get_facebook_token():
 
 @blueprint.route('/oauth-authorized')
 @facebook.oauth.authorized_handler
-def oauth_authorized(resp):
+def oauth_authorized(resp):  # pragma: no cover
     next_url = request.args.get('next') or url_for('home')
     if resp is None:
         flash(u'You denied the request to sign in.', 'error')
