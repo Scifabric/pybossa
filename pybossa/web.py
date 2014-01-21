@@ -242,7 +242,7 @@ def get_port():
     else:
         return app.config['PORT']
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     logging.basicConfig(level=logging.NOTSET)
     app.run(host=app.config['HOST'], port=get_port(),
             debug=app.config.get('DEBUG', True))
