@@ -108,7 +108,7 @@ def pretty_date(time=False):
     from datetime import datetime
     import dateutil.parser
     now = datetime.now()
-    if type(time) is str:
+    if type(time) is str or type(time) is unicode:
         time = dateutil.parser.parse(time)
     if type(time) is int:
         diff = now - datetime.fromtimestamp(time)
