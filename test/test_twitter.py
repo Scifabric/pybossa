@@ -16,38 +16,36 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from base import web, model, Fixtures
-import pybossa.view.facebook as facebook
+import pybossa.view.twitter as twitter
 
 
-class TestFacebook:
+class TestTwitter:
     def setUp(self):
         self.app = web.app
         model.rebuild_db()
         Fixtures.create()
 
     def test_manage_user(self):
-        """Test FACEBOOK get_token works."""
+        """Test TWITTER manage_user works."""
         with self.app.test_request_context('/'):
             # First with a new user
-            user_data = dict(id=1, username='facebook',
-                             email='f@f.com', name='name')
-            token = 't'
-            user = facebook.manage_user(token, user_data, None)
-            assert user.email_addr == user_data['email'], user
-            assert user.name == user_data['username'], user
-            assert user.fullname == user_data['name'], user
-            assert user.facebook_user_id == user_data['id'], user
+            user_data = dict(user_id=1, screen_name='twitter')
+            token = dict(oauth_token='token', oauth_token_secret='secret')
+            user = twitter.manage_user(token, user_data, None)
+            assert user.email_addr == user_data['screen_name'], user
+            assert user.name == user_data['screen_name'], user
+            assert user.fullname == user_data['screen_name'], user
+            assert user.twitter_user_id == user_data['user_id'], user
 
             # Second with the same user
-            user = facebook.manage_user(token, user_data, None)
-            assert user.email_addr == user_data['email'], user
-            assert user.name == user_data['username'], user
-            assert user.fullname == user_data['name'], user
-            assert user.facebook_user_id == user_data['id'], user
+            user = twitter.manage_user(token, user_data, None)
+            assert user.email_addr == user_data['screen_name'], user
+            assert user.name == user_data['screen_name'], user
+            assert user.fullname == user_data['screen_name'], user
+            assert user.twitter_user_id == user_data['user_id'], user
 
             # Finally with a user that already is in the system
-            user_data = dict(id=10, username=Fixtures.name,
-                             email=Fixtures.email_addr, name=Fixtures.fullname)
-            token = 'tA'
-            user = facebook.manage_user(token, user_data, None)
+            user_data = dict(user_id=10, screen_name=Fixtures.name)
+            token = dict(oauth_token='token2', oauth_token_secret='secret2')
+            user = twitter.manage_user(token, user_data, None)
             assert user is None

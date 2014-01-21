@@ -518,12 +518,29 @@ class TestWeb(web.Helper):
         err_msg = "App hidden not updated %s" % app.hidden
         assert app.hidden == 1, err_msg
 
-        # Test root can access it
+        # Check that the owner can access it even though is hidden
+
+        user = db.session.query(model.User).filter_by(name='johndoe').first()
+        user.admin = False
+        db.session.add(user)
+        db.session.commit()
+        res = self.app.get('/app/newshortname/')
+        err_msg = "Owner should be able to see his hidden app"
+        assert app.name in res.data, err_msg
         self.signout()
+
         self.register(fullname='New', username='new')
         url = '/app/%s/' % app.short_name
         res = self.app.get(url, follow_redirects=True)
         assert "Forbidden" in res.data, res.data
+
+        user = db.session.query(model.User).filter_by(name='new').first()
+        user.admin = True
+        db.session.add(user)
+        db.session.commit()
+        res = self.app.get('/app/newshortname/')
+        err_msg = "Root user should be able to see his hidden app"
+        assert app.name in res.data, err_msg
 
     @patch('pybossa.ckan.requests.get')
     def test_13_hidden_applications(self, Mock):
