@@ -105,3 +105,32 @@ class TestWebModule:
         pd = pybossa.util.pretty_date(d.isoformat())
         assert pd == '2 years ago', pd
 
+    def test_pagination(self):
+        """Test Class Pagination works."""
+        page = 1
+        per_page = 5
+        total_count = 10
+        p = pybossa.util.Pagination(page, per_page, total_count)
+        assert p.page == page, p.page
+        assert p.per_page == per_page, p.per_page
+        assert p.total_count == total_count, p.total_count
+
+        err_msg = "It should return two pages"
+        assert p.pages == 2, err_msg
+        p.total_count = 7
+        assert p.pages == 2, err_msg
+        p.total_count = 10
+
+        err_msg = "It should return False"
+        assert p.has_prev is False, err_msg
+        err_msg = "It should return True"
+        assert p.has_next is True, err_msg
+        p.page = 2
+        assert p.has_prev is True, err_msg
+        err_msg = "It should return False"
+        assert p.has_next is False, err_msg
+
+        for i in p.iter_pages():
+            err_msg = "It should return the page: %s" % page
+            assert i == page, err_msg
+            page += 1
