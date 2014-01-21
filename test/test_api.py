@@ -1081,6 +1081,21 @@ class TestAPI:
         err_msg = "POST should be unauthorized without proper task cookie"
         assert res.status_code == 401, err_msg
 
+        # Get NotFound for an non-existing app
+        url = '/api/app/5000/newtask'
+        res = self.app.get(url)
+        err = json.loads(res.data)
+        err_msg = "The app does not exist"
+        assert err['status'] == 'failed', err_msg
+        assert err['status_code'] == 404, err_msg
+        assert err['exception_cls'] == 'NotFound', err_msg
+        assert err['target'] == 'app', err_msg
+
+        # Get an empty task
+        url = '/api/app/%s/newtask?offset=1000' % app_id
+        res = self.app.get(url)
+        assert res.data == '{}', res.data
+
         # Get first the cookie and post should be valid
         url = '/api/app/%s/newtask' % app_id
         res = self.app.get(url)
