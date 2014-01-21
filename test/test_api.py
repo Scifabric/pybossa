@@ -636,6 +636,15 @@ class TestAPI:
         assert out.get('status') is None, error
         assert out.get('id') == id_, error
 
+        # With wrong id
+        res = self.app.put('/api/app/5000?api_key=%s' % Fixtures.api_key,
+                           data=datajson)
+        assert_equal(res.status, '404 NOT FOUND', res.data)
+        error = json.loads(res.data)
+        assert error['status'] == 'failed', error
+        assert error['action'] == 'PUT', error
+        assert error['exception_cls'] == 'NotFound', error
+
         # With fake data
         data['algo'] = 13
         datajson = json.dumps(data)
