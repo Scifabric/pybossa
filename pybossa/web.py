@@ -56,34 +56,34 @@ app.register_blueprint(stats, url_prefix='/stats')
 app.register_blueprint(help, url_prefix='/help')
 
 # Enable Twitter if available
-try:
+try:  # pragma: no cover
     if (app.config['TWITTER_CONSUMER_KEY'] and
             app.config['TWITTER_CONSUMER_SECRET']):
         from pybossa.view.twitter import blueprint as twitter
         app.register_blueprint(twitter, url_prefix='/twitter')
-except Exception as inst:
+except Exception as inst:  # pragma: no cover
     print type(inst)
     print inst.args
     print inst
     print "Twitter singin disabled"
 
 # Enable Facebook if available
-try:
+try:  # pragma: no cover
     if (app.config['FACEBOOK_APP_ID'] and app.config['FACEBOOK_APP_SECRET']):
         from pybossa.view.facebook import blueprint as facebook
         app.register_blueprint(facebook, url_prefix='/facebook')
-except Exception as inst:
+except Exception as inst: # pragma: no cover
     print type(inst)
     print inst.args
     print inst
     print "Facebook singin disabled"
 
 # Enable Google if available
-try:
+try:  # pragma: no cover
     if (app.config['GOOGLE_CLIENT_ID'] and app.config['GOOGLE_CLIENT_SECRET']):
         from pybossa.view.google import blueprint as google
         app.register_blueprint(google, url_prefix='/google')
-except Exception as inst:
+except Exception as inst:  # pragma: no cover
     print type(inst)
     print inst.args
     print inst
@@ -91,11 +91,11 @@ except Exception as inst:
 
 # Check if app stats page can generate the map
 geolite = app.root_path + '/../dat/GeoLiteCity.dat'
-if not os.path.exists(geolite):
+if not os.path.exists(geolite):  # pragma: no cover
     app.config['GEO'] = False
     print("GeoLiteCity.dat file not found")
     print("App page stats web map disabled")
-else:
+else:  # pragma: no cover
     app.config['GEO'] = True
 
 
@@ -112,7 +112,7 @@ def page_not_found(e):
 
 
 @app.errorhandler(500)
-def server_error(e):
+def server_error(e):  # pragma: no cover
     return render_template('500.html'), 500
 
 
