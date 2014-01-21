@@ -1183,6 +1183,7 @@ class TestWeb(web.Helper):
             assert t.info == csv_tasks[n], "The task info should be the same"
             n += 1
 
+
     def test_39_google_oauth_creation(self):
         """Test WEB Google OAuth creation of user works"""
         fake_response = {
