@@ -57,6 +57,7 @@ try:
         from pybossa.view.twitter import blueprint as twitter
         app.register_blueprint(twitter, url_prefix='/twitter')
         from pybossa.view.twitter import get_twitter_token
+        app.jinja_env.globals['twitter_id'] = app.config['TWITTER_CONSUMER_KEY']
 except Exception as inst:
     print type(inst)
     print inst.args
@@ -69,6 +70,7 @@ try:
         from pybossa.view.facebook import blueprint as facebook
         app.register_blueprint(facebook, url_prefix='/facebook')
         from pybossa.view.facebook import get_facebook_token
+        app.jinja_env.globals['facebook_id'] = app.config['FACEBOOK_APP_ID']
 except Exception as inst:
     print type(inst)
     print inst.args
@@ -81,6 +83,7 @@ try:
         from pybossa.view.google import blueprint as google
         app.register_blueprint(google, url_prefix='/google')
         from pybossa.view.google import get_facebook_token
+        app.jinja_env.globals['google_id'] = app.config['GOOGLE_CLIENT_ID']
 except Exception as inst:
     print type(inst)
     print inst.args
