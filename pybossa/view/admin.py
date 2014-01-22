@@ -191,10 +191,9 @@ def del_admin(user_id=None):
                 db.session.commit()
                 return redirect(url_for('.users'))
             else:
-                print "HOLA"
                 msg = "User.id not found"
                 return format_error(msg, 404)
-        else:
+        else:  # pragma: no cover
             msg = "User.id is missing for method del_admin"
             return format_error(msg, 415)
     except Exception as e:  # pragma: no cover
@@ -326,6 +325,6 @@ def update_category(id):
                                            form=form)
         else:
             return abort(404)
-    except Exception as e:  # pragma: no cover
+    except Exception as e: # pragma: no cover
         current_app.logger.error(e)
         return abort(500)

@@ -510,6 +510,15 @@ class TestWeb(web.Helper):
         assert msg in res.data, res
         assert "Save the changes" in res.data, res
 
+        # Check form validation
+        res = self.update_application(new_name="",
+                                      new_short_name="",
+                                      new_description="New description",
+                                      new_thumbnail="New Icon Link",
+                                      new_long_description='New long desc',
+                                      new_hidden=True)
+        assert "Please correct the errors" in res.data, res.data
+
         # Update the application
         res = self.update_application(new_name="New Sample App",
                                       new_short_name="newshortname",
@@ -532,6 +541,7 @@ class TestWeb(web.Helper):
         err_msg = "App hidden not updated %s" % app.hidden
         assert app.hidden == 1, err_msg
 
+
         # Check that the owner can access it even though is hidden
 
         user = db.session.query(model.User).filter_by(name='johndoe').first()
@@ -543,12 +553,27 @@ class TestWeb(web.Helper):
         assert app.name in res.data, err_msg
         self.signout()
 
-        self.register(fullname='New', username='new')
-        url = '/app/%s/' % app.short_name
+        res = self.register(fullname='Paco', username='paco')
+        url = '/app/newshortname/'
         res = self.app.get(url, follow_redirects=True)
         assert "Forbidden" in res.data, res.data
+        assert res.status_code == 403
 
-        user = db.session.query(model.User).filter_by(name='new').first()
+        tmp = db.session.query(model.App).first()
+        tmp.hidden = 0
+        db.session.add(tmp)
+        db.session.commit()
+
+        url = '/app/newshortname/update'
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 401, res.status_code
+
+        tmp.hidden = 1
+        db.session.add(tmp)
+        db.session.commit()
+
+
+        user = db.session.query(model.User).filter_by(name='paco').first()
         user.admin = True
         db.session.add(user)
         db.session.commit()
@@ -595,6 +620,7 @@ class TestWeb(web.Helper):
 
     def test_14_delete_application(self):
         """Test WEB delete application works"""
+        Fixtures.create()
         self.register()
         self.new_application()
         res = self.delete_application(method="GET")
@@ -602,8 +628,22 @@ class TestWeb(web.Helper):
         assert self.html_title(msg) in res.data, res
         assert "No, do not delete it" in res.data, res
 
+        app = db.session.query(model.App).filter_by(short_name='sampleapp').first()
+        app.hidden = 1
+        db.session.add(app)
+        db.session.commit()
+        res = self.delete_application(method="GET")
+        msg = "Application: Sample App &middot; Delete"
+        assert self.html_title(msg) in res.data, res
+        assert "No, do not delete it" in res.data, res
+
         res = self.delete_application()
         assert "Application deleted!" in res.data, res
+
+        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
+        res = self.delete_application(short_name=Fixtures.app_short_name)
+        assert res.status_code == 401, res.status_code
+
 
     def test_15_twitter_email_warning(self):
         """Test WEB Twitter email warning works"""
@@ -1022,6 +1062,12 @@ class TestWeb(web.Helper):
         msg = '<strong><i class="icon-cog"></i> ID</strong>: 1'
         err_msg = "Application ID should be shown to the owner"
         assert msg in res.data, err_msg
+
+        self.signout()
+        Fixtures.create()
+        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
+        res = self.app.get('/app/sampleapp/settings', follow_redirects=True)
+        assert res.status_code == 401, res.status_code
 
     @patch('pybossa.ckan.requests.get')
     def test_30_app_id_anonymous_user(self, Mock):
@@ -1589,6 +1635,37 @@ class TestWeb(web.Helper):
                            follow_redirects=True)
         assert "Some HTML code" in res.data, res.data
 
+        # Now with hidden apps
+        app.hidden = 1
+        db.session.add(app)
+        db.session.commit()
+        res = self.app.get('/app/sampleapp/tasks/taskpresentereditor?template=basic',
+                           follow_redirects=True)
+        assert "var editor" in res.data, "CodeMirror Editor not found"
+        assert "Task Presenter" in res.data, "CodeMirror Editor not found"
+        assert "Task Presenter Preview" in res.data, "CodeMirror View not found"
+
+        res = self.app.post('/app/sampleapp/tasks/taskpresentereditor',
+                            data={'editor': 'Some HTML code!'},
+                            follow_redirects=True)
+        assert "Sample App" in res.data, "Does not return to app details"
+        app = db.session.query(model.App).first()
+        err_msg = "Task Presenter failed to update"
+        assert app.info['task_presenter'] == 'Some HTML code!', err_msg
+
+        # Check it loads the previous posted code:
+        res = self.app.get('/app/sampleapp/tasks/taskpresentereditor',
+                           follow_redirects=True)
+        assert "Some HTML code" in res.data, res.data
+
+        self.signout()
+        Fixtures.create()
+        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
+        res = self.app.get('/app/sampleapp/tasks/taskpresentereditor?template=basic',
+                           follow_redirects=True)
+        assert res.status_code == 403
+
+
     @patch('pybossa.ckan.requests.get')
     def test_48_update_app_info(self, Mock):
         """Test WEB app update/edit works keeping previous info values"""
@@ -1959,6 +2036,7 @@ class TestWeb(web.Helper):
 
     def test_54_import_tasks(self):
         """Test WEB import Task templates should work"""
+        Fixtures.create()
         self.register()
         self.new_application()
         # Without tasks, there should be a template
@@ -1983,6 +2061,11 @@ class TestWeb(web.Helper):
         assert "template=map" not in res.data, err_msg
         err_msg = "There should not be a PDF template"
         assert "template=pdf" not in res.data, err_msg
+        self.signout()
+
+        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
+        res = self.app.get('/app/sampleapp/tasks/import', follow_redirects=True)
+        assert res.status_code == 401, res.status_code
 
     def test_55_facebook_account_warning(self):
         """Test WEB Facebook OAuth user gets a hint to sign in"""
