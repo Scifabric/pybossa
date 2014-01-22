@@ -567,7 +567,7 @@ def import_task(short_name):
         return render_template('/applications/import_options.html',
                                **template_args)
 
-    if template == 'gdocs':
+    if template == 'gdocs':  # pragma: no cover
         mode = request.args.get('mode')
         if mode is not None:
             template_args["gdform"].googledocs_url.data = importer.googledocs_urls[mode]
@@ -588,7 +588,7 @@ def import_task(short_name):
         tmpl = '/applications/importers/%s.html' % template
         return render_template(tmpl, **template_args)
 
-    if not (form and form.validate_on_submit()):
+    if not (form and form.validate_on_submit()):  # pragma: no cover
         return render_forms()
 
     return _import_task(app, handler, form, render_forms)
@@ -626,7 +626,7 @@ def _import_task(app, handler, form, render_forms):
         return redirect(url_for('.tasks', short_name=app.short_name))
     except importer.BulkImportException, err_msg:
         flash(err_msg, 'error')
-    except Exception as inst:
+    except Exception as inst:  # pragma: no cover
         current_app.logger.error(inst)
         msg = 'Oops! Looks like there was an error with processing that file!'
         flash(gettext(msg), 'error')
@@ -642,7 +642,7 @@ def task_presenter(short_name, task_id):
     except HTTPException:
         if app.hidden:
             raise abort(403)
-        else:
+        else:  # pragma: no cover
             raise
 
     if current_user.is_anonymous():
@@ -708,7 +708,7 @@ def presenter(short_name):
     except HTTPException:
         if app.hidden:
             raise abort(403)
-        else:
+        else:  # pragma: no cover
             raise
 
     if not app.allow_anonymous_contributors and current_user.is_anonymous():
@@ -747,7 +747,7 @@ def tutorial(short_name):
     except HTTPException:
         if app.hidden:
             return abort(403)
-        else:
+        else: # pragma: no cover
             raise
     return render_template('/applications/tutorial.html', title=title, app=app)
 
@@ -762,7 +762,7 @@ def export(short_name, task_id):
     except HTTPException:
         if app.hidden:
             raise abort(403)
-        else:
+        else: # pragma: no cover
             raise
 
     # Check if the task belongs to the app and exists
@@ -792,7 +792,7 @@ def tasks(short_name):
     except HTTPException:
         if app.hidden:
             raise abort(403)
-        else:
+        else: # pragma: no cover
             raise
 
 
@@ -830,7 +830,7 @@ def tasks_browse(short_name, page):
     except HTTPException:
         if app.hidden:
             raise abort(403)
-        else:
+        else: # pragma: no cover
             raise
 
 
@@ -878,7 +878,7 @@ def export_to(short_name):
     except HTTPException:
         if app.hidden:
             raise abort(403)
-        else:
+        else: # pragma: no cover
             raise
 
     def respond():
@@ -912,14 +912,14 @@ def export_to(short_name):
         if (type(t.info) == dict):
             values = format_csv_properly(t.info)
             writer.writerow(values)
-        else:
-            writer.writerow([t.info()])
+        else: # pragma: no cover
+            writer.writerow([t.info])
 
     def handle_task_run(writer, t):
         if (type(t.info) == dict):
             values = format_csv_properly(t.info)
             writer.writerow(values)
-        else:
+        else: # pragma: no cover
             writer.writerow([t.info])
 
     def get_csv(out, writer, table, handle_row):
@@ -958,6 +958,8 @@ def export_to(short_name):
 
         try:
             package, e = ckan.package_exists(name=app.short_name)
+            print package
+            print e
             if e:
                 raise e
             if package:
@@ -1001,7 +1003,7 @@ def export_to(short_name):
             if len(inst.args) == 3:
                 t, msg, status_code = inst.args
                 msg = ("Error: %s with status code: %s" % (t, status_code))
-            else:
+            else: # pragma: no cover
                 msg = ("Error: %s" % inst.args[0])
             current_app.logger.error(msg)
             flash(msg, 'danger')

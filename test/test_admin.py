@@ -507,6 +507,10 @@ class TestAdmin(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         err_msg = "Category should be listed for admin user"
         assert _name in res.data, err_msg
+        # Check 404
+        url_404 = '/admin/categories/update/5000'
+        res = self.app.get(url_404, follow_redirects=True)
+        assert res.status_code == 404, res.status_code
         # Admin POST
         res = self.app.post(url, data=category, follow_redirects=True)
         err_msg = "Category should be updated"

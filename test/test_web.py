@@ -30,6 +30,8 @@ from pybossa.util import unicode_csv_reader
 from pybossa.util import get_user_signup_method
 from pybossa.ckan import Ckan
 from bs4 import BeautifulSoup
+from requests.exceptions import ConnectionError
+from werkzeug.exceptions import NotFound
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
@@ -722,6 +724,20 @@ class TestWeb(web.Helper):
         err_msg = "Download Full results button should be shown"
         assert dom.find(id='fulldownload') is not None, err_msg
 
+        app.hidden = 1
+        db.session.add(app)
+        db.session.commit()
+        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
+                           follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+
+        Fixtures.create()
+        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
+        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
+                           follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+
+
     def test_17_export_task_runs(self):
         """Test WEB TaskRun export works"""
         self.register()
@@ -746,6 +762,11 @@ class TestWeb(web.Helper):
         assert len(data) == 10, data
         for tr in data:
             assert tr['info']['answer'] == 1, tr
+
+        # Check with correct app but wrong task id
+        res = self.app.get('app/%s/%s/results.json' % (app.short_name, 5000),
+                           follow_redirects=True)
+        assert res.status_code == 404, res.status_code
 
         # Check with hidden app: owner should have access to it
         app.hidden = 1
@@ -785,6 +806,12 @@ class TestWeb(web.Helper):
         msg = 'Task <span class="label label-info">#1</span>'
         assert msg in res.data, res.data
         assert '0 of 10' in res.data, res.data
+
+        # For a non existing page
+        res = self.app.get('app/%s/tasks/browse/5000' % (app.short_name),
+                           follow_redirects=True)
+        assert res.status_code == 404, res.status_code
+
 
     def test_19_app_index_categories(self):
         """Test WEB Application Index categories works"""
@@ -882,6 +909,14 @@ class TestWeb(web.Helper):
                            follow_redirects=True)
         assert 'Forbidden' in res.data, res.data
         assert res.status_code == 403, "It should be forbidden"
+        # Try with only registered users
+        app.allow_anonymous_contributors = False
+        app.hidden = 0
+        db.session.add(app)
+        db.session.commit()
+        res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
+                           follow_redirects=True)
+        assert "sign in to participate" in res.data
 
     def test_22_get_specific_completed_task_anonymous(self):
         """Test WEB get specific completed task_id
@@ -1010,6 +1045,15 @@ class TestWeb(web.Helper):
         err_msg = "There should be some tutorial for the application"
         assert "some help" in res.data, err_msg
 
+        # Hidden app
+        app1.hidden = 1
+        db.session.add(app1)
+        db.session.commit()
+        url = '/app/%s/tutorial' % app1.short_name
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+
+
     def test_27_tutorial_anonymous_user(self):
         """Test WEB tutorials work as an anonymous user"""
         Fixtures.create()
@@ -1024,6 +1068,18 @@ class TestWeb(web.Helper):
         # Second time should give me a task, and not the tutorial
         res = self.app.get('/app/test-app/newtask', follow_redirects=True)
         assert "some help" not in res.data
+
+        # Check if the tutorial can be accessed directly
+        res = self.app.get('/app/test-app/tutorial', follow_redirects=True)
+        err_msg = "There should be some tutorial for the application"
+        assert "some help" in res.data, err_msg
+
+        # Hidden app
+        app1.hidden = 1
+        db.session.add(app1)
+        db.session.commit()
+        res = self.app.get('/app/test-app/tutorial', follow_redirects=True)
+        assert res.status_code == 403, res.status_code
 
     def test_28_non_tutorial_signed_user(self):
         """Test WEB app without tutorial work as signed in user"""
@@ -1266,6 +1322,23 @@ class TestWeb(web.Helper):
             assert t.info == csv_tasks[n], "The task info should be the same"
             n += 1
 
+        # Check that only new items are imported
+        empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
+                                 {'content-type': 'text/plain'})
+        Mock.return_value = empty_file
+        app = db.session.query(model.App).first()
+        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
+        res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
+                                       'formtype': 'gdocs'},
+                            follow_redirects=True)
+        app = db.session.query(model.App).first()
+        assert len(app.tasks) == 2, "There should be only 2 tasks"
+        n = 0
+        csv_tasks = [{u'Foo': u'1', u'Bar': u'2'}, {u'Foo': u'4', u'Bar': u'5'}]
+        for t in app.tasks:
+            assert t.info == csv_tasks[n], "The task info should be the same"
+            n += 1
+        assert "no new records" in res.data, res.data
 
     def test_39_google_oauth_creation(self):
         """Test WEB Google OAuth creation of user works"""
@@ -1584,13 +1657,35 @@ class TestWeb(web.Helper):
         assert msg in res.data, res.data
 
 
-    def test_46_task_presenter_editor_exists(self):
-        """Test WEB task presenter editor is an option"""
+    def test_46_tasks_exists(self):
+        """Test WEB tasks page works."""
         self.register()
         self.new_application()
         res = self.app.get('/app/sampleapp/tasks/', follow_redirects=True)
         assert "Edit the task presenter" in res.data, \
             "Task Presenter Editor should be an option"
+
+        app = db.session.query(model.App).first()
+        app.hidden = 1
+        db.session.add(app)
+        db.session.commit()
+        # As owner
+        res = self.app.get('/app/sampleapp/tasks/', follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        assert "Edit the task presenter" in res.data, \
+            "Task Presenter Editor should be an option"
+        self.signout()
+        # As anonymous
+        res = self.app.get('/app/sampleapp/tasks/', follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+
+        Fixtures.create()
+
+        # As another user, but not owner
+        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
+        res = self.app.get('/app/sampleapp/tasks/', follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+        self.signout()
 
     def test_47_task_presenter_editor_loads(self):
         """Test WEB task presenter editor loads"""
@@ -1788,6 +1883,23 @@ class TestWeb(web.Helper):
         err_msg = "The number of exported tasks is different from App Tasks"
         assert len(exported_tasks) == len(app.tasks), err_msg
 
+        app.hidden = 1
+        db.session.add(app)
+        db.session.commit()
+        res = self.app.get('app/%s/tasks/export' % (app.short_name),
+                           follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+
+        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
+        res = self.app.get('app/%s/tasks/export' % (app.short_name),
+                           follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+        # Owner
+        self.signin(email=Fixtures.email_addr, password=Fixtures.password)
+        res = self.app.get('app/%s/tasks/export' % (app.short_name),
+                           follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+
     def test_51_export_taskruns_json(self):
         """Test WEB export Task Runs to JSON works"""
         Fixtures.create()
@@ -1885,21 +1997,105 @@ class TestWeb(web.Helper):
         assert len(exported_task_runs) == len(app.task_runs), err_msg
 
     @patch('pybossa.view.applications.Ckan', autospec=True)
-    def test_export_tasks_ckan(self, mock1):
+    def test_export_tasks_ckan_exception(self, mock1):
         mocks = [Mock()]
         from test_ckan import TestCkanModule
         fake_ckn = TestCkanModule()
         package = fake_ckn.pkg_json_found
         package['id'] = 3
-        mocks[0].package_exists.return_value = (False, None)
-        mocks[0].package_create.return_value = fake_ckn.pkg_json_found
+        mocks[0].package_exists.return_value = (False,
+                                                Exception("CKAN: error",
+                                                          "error", 500))
+        # mocks[0].package_create.return_value = fake_ckn.pkg_json_found
+        # mocks[0].resource_create.return_value = dict(result=dict(id=3))
+        # mocks[0].datastore_create.return_value = 'datastore'
+        # mocks[0].datastore_upsert.return_value = 'datastore'
+
+        mock1.side_effect = mocks
+
+        """Test WEB Export CKAN Tasks works."""
+        Fixtures.create()
+        user = db.session.query(model.User).filter_by(name=Fixtures.name).first()
+        app = db.session.query(model.App).first()
+        user.ckan_api = 'ckan-api-key'
+        app.owner_id = user.id
+        db.session.add(user)
+        db.session.add(app)
+        db.session.commit()
+
+        self.signin(email=user.email_addr, password=Fixtures.password)
+        # Now with a real app
+        uri = '/app/%s/tasks/export' % Fixtures.app_short_name
+        res = self.app.get(uri, follow_redirects=True)
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
+        assert heading in res.data, "Export page should be available\n %s" % res.data
+        # Now get the tasks in JSON format
+        uri = "/app/%s/tasks/export?type=task&format=ckan" % Fixtures.app_short_name
+        with patch.dict(webapp.app.config, {'CKAN_URL': 'http://ckan.com'}):
+            # First time exporting the package
+            res = self.app.get(uri, follow_redirects=True)
+            msg = 'Error'
+            err_msg = "An exception should be raised"
+            assert msg in res.data, err_msg
+
+    @patch('pybossa.view.applications.Ckan', autospec=True)
+    def test_export_tasks_ckan_connection_error(self, mock1):
+        mocks = [Mock()]
+        from test_ckan import TestCkanModule
+        fake_ckn = TestCkanModule()
+        package = fake_ckn.pkg_json_found
+        package['id'] = 3
+        mocks[0].package_exists.return_value = (False, ConnectionError)
+        # mocks[0].package_create.return_value = fake_ckn.pkg_json_found
+        # mocks[0].resource_create.return_value = dict(result=dict(id=3))
+        # mocks[0].datastore_create.return_value = 'datastore'
+        # mocks[0].datastore_upsert.return_value = 'datastore'
+
+        mock1.side_effect = mocks
+
+        """Test WEB Export CKAN Tasks works."""
+        Fixtures.create()
+        user = db.session.query(model.User).filter_by(name=Fixtures.name).first()
+        app = db.session.query(model.App).first()
+        user.ckan_api = 'ckan-api-key'
+        app.owner_id = user.id
+        db.session.add(user)
+        db.session.add(app)
+        db.session.commit()
+
+        self.signin(email=user.email_addr, password=Fixtures.password)
+        # Now with a real app
+        uri = '/app/%s/tasks/export' % Fixtures.app_short_name
+        res = self.app.get(uri, follow_redirects=True)
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
+        assert heading in res.data, "Export page should be available\n %s" % res.data
+        # Now get the tasks in JSON format
+        uri = "/app/%s/tasks/export?type=task&format=ckan" % Fixtures.app_short_name
+        with patch.dict(webapp.app.config, {'CKAN_URL': 'http://ckan.com'}):
+            # First time exporting the package
+            res = self.app.get(uri, follow_redirects=True)
+            msg = 'CKAN server seems to be down'
+            err_msg = "A connection exception should be raised"
+            assert msg in res.data, err_msg
+
+    @patch('pybossa.view.applications.Ckan', autospec=True)
+    def test_task_export_tasks_ckan_first_time(self, mock1):
+        """Test WEB Export CKAN Tasks works without an existing package."""
+        # Second time exporting the package
+        mocks = [Mock()]
+        resource = dict(name='task', id=1)
+        package = dict(id=3, resources=[resource])
+        mocks[0].package_exists.return_value = (None, None)
+        mocks[0].package_create.return_value = package
+        #mocks[0].datastore_delete.return_value = None
+        mocks[0].datastore_create.return_value = None
+        mocks[0].datastore_upsert.return_value = None
         mocks[0].resource_create.return_value = dict(result=dict(id=3))
         mocks[0].datastore_create.return_value = 'datastore'
         mocks[0].datastore_upsert.return_value = 'datastore'
 
         mock1.side_effect = mocks
 
-        """Test WEB Export CKAN Tasks works."""
         Fixtures.create()
         user = db.session.query(model.User).filter_by(name=Fixtures.name).first()
         app = db.session.query(model.App).first()
@@ -1918,6 +2114,11 @@ class TestWeb(web.Helper):
         uri = "/app/somethingnotexists/tasks/export?type=task&format=ckan"
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
+        # Now get the tasks in JSON format
+        uri = "/app/somethingnotexists/tasks/export?type=other&format=ckan"
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
+
 
         # Now with a real app
         uri = '/app/%s/tasks/export' % Fixtures.app_short_name
@@ -1933,6 +2134,8 @@ class TestWeb(web.Helper):
             msg = 'Data exported to http://ckan.com'
             err_msg = "Tasks should be exported to CKAN"
             assert msg in res.data, err_msg
+
+
 
     @patch('pybossa.view.applications.Ckan', autospec=True)
     def test_task_export_tasks_ckan_second_time(self, mock1):
@@ -2244,6 +2447,44 @@ class TestWeb(web.Helper):
         err_msg = "The authenticated user should be able to participate"
         assert app.name in res.data, err_msg
         self.signout()
+
+        # However if the app is hidden, it should be forbidden
+        app.hidden = 1
+        db.session.add(app)
+        db.session.commit()
+
+        # As Anonymous user
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+
+        # As registered user
+        self.register()
+        self.signin()
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+        self.signout()
+
+        # As admin
+        self.signin(email=Fixtures.root_addr, password=Fixtures.root_password)
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        self.signout()
+
+        # As owner
+        self.signin(email=Fixtures.email_addr, password=Fixtures.password)
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        self.signout()
+
+        # Now only allow authenticated users
+        app.allow_anonymous_contributors = False
+        app.hidden = 0
+        db.session.add(app)
+        db.session.commit()
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "Only authenticated users can participate"
+        assert "You have to sign in" in res.data, err_msg
+
 
     def test_70_public_user_profile(self):
         """Test WEB public user profile works"""

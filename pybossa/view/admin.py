@@ -324,7 +324,9 @@ def update_category(id):
                                            category=category,
                                            form=form)
         else:
-            return abort(404)
+            abort(404)
+    except HTTPException:
+        raise
     except Exception as e: # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
