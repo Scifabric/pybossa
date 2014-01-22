@@ -84,6 +84,18 @@ class TestWeb(web.Helper):
         assert self.user.fullname in res.data, res.data
         self.signout()
 
+    def test_03_account_index(self):
+        """Test WEB account index works."""
+        # Without users
+        res = self.app.get('/account/page/15', follow_redirects=True)
+        assert res.status_code == 404, res.status_code
+
+        Fixtures.create()
+        res = self.app.get('/account', follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        err_msg = "There should be a Community page"
+        assert "Community" in res.data, err_msg
+
     def test_03_register(self):
         """Test WEB register user works"""
         res = self.app.get('/account/signin')
@@ -205,10 +217,12 @@ class TestWeb(web.Helper):
         """Test WEB user profile applications page works."""
         Fixtures.create()
         self.signin(email=Fixtures.email_addr, password=Fixtures.password)
+        self.new_application()
         url = '/account/profile/applications'
         res = self.app.get(url)
         assert "Applications" in res.data, res.data
         assert "Published" in res.data, res.data
+        assert "Draft" in res.data, res.data
         assert Fixtures.app_name in res.data, res.data
 
     def test_05_update_user_profile(self):
@@ -1393,6 +1407,15 @@ class TestWeb(web.Helper):
         msg = "Your current password doesn't match the one in our records"
         assert msg in res.data
 
+        self.register(password=password)
+        res = self.app.post('/account/profile/password',
+                            data={'current_password': '',
+                                  'new_password':'',
+                                  'confirm': ''},
+                            follow_redirects=True)
+        msg = "Please correct the errors"
+        assert msg in res.data
+
     def test_42_password_link(self):
         """Test WEB visibility of password change link"""
         self.register()
@@ -1423,9 +1446,10 @@ class TestWeb(web.Helper):
         userdict = {'user': user.name, 'password': user.passwd_hash}
         fakeuserdict = {'user': user.name, 'password': 'wronghash'}
         fakeuserdict_err = {'user': user.name, 'passwd': 'some'}
+        fakeuserdict_form = {'user': user.name, 'passwd': 'p4ssw0rD'}
         key = signer.dumps(userdict, salt='password-reset')
         returns = [BadSignature('Fake Error'), BadSignature('Fake Error'), userdict,
-                   fakeuserdict, userdict, fakeuserdict_err]
+                   fakeuserdict, userdict, userdict, fakeuserdict_err]
 
         def side_effects(*args, **kwargs):
             result = returns.pop(0)
@@ -1447,6 +1471,14 @@ class TestWeb(web.Helper):
         res = self.app.get('/account/reset-password?key=%s' % (key), follow_redirects=True)
         assert 403 == res.status_code
 
+        # Check validation
+        res = self.app.post('/account/reset-password?key=%s' % (key),
+                            data={'new_password': '',
+                                  'confirm': '#4a4'},
+                            follow_redirects=True)
+
+        assert "Please correct the errors" in res.data, res.data
+
         res = self.app.post('/account/reset-password?key=%s' % (key),
                             data={'new_password': 'p4ssw0rD',
                                   'confirm': 'p4ssw0rD'},
@@ -1457,7 +1489,6 @@ class TestWeb(web.Helper):
         # Request without password
         res = self.app.get('/account/reset-password?key=%s' % (key), follow_redirects=True)
         assert 403 == res.status_code
-
 
     def test_45_password_reset_link(self):
         """Test WEB password reset email form"""
