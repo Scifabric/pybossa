@@ -573,6 +573,25 @@ class TestAPI:
         id_ = out.id
         db.session.remove()
 
+        # now a real user with headers auth
+        headers = [('Authorization', Fixtures.api_key)]
+        new_app = dict(
+            name=name + '2',
+            short_name='xxxx-project2',
+            description='description2',
+            owner_id=1,
+            long_description=u'<div id="longdescription">\
+                               Long Description</div>')
+        new_app = json.dumps(new_app)
+        res = self.app.post('/api/app', headers=headers,
+                            data=new_app)
+        out = db.session.query(model.App).filter_by(name=name + '2').one()
+        assert out, out
+        assert_equal(out.short_name, 'xxxx-project2'), out
+        assert_equal(out.owner.name, 'tester')
+        id_ = out.id
+        db.session.remove()
+
         # test re-create should fail
         res = self.app.post('/api/app?api_key=' + Fixtures.api_key,
                             data=data)
