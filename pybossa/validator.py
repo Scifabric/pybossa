@@ -69,11 +69,10 @@ class CommaSeparatedIntegers(object):
         if not message:
             self.message = lazy_gettext(u'Only comma separated values are allowed, no spaces')
 
-        else:
+        else:  # pragma: no cover
             self.message = message
 
     def __call__(self, form, field):
         pattern = re.compile('^[\d,]+$')
-        print field.data
         if pattern.match(field.data) is None:
             raise ValidationError(self.message)

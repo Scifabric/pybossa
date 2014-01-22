@@ -49,3 +49,12 @@ class TestValidator:
             f.email.data = Fixtures.email_addr + "$"
             u = pybossa.validator.NotAllowedChars()
             u.__call__(f, f.email)
+
+    @raises(ValidationError)
+    def test_comma_separated_integers(self):
+        """Test VALIDATOR CommaSeparatedIntegers works."""
+        with self.app.test_request_context('/'):
+            f = LoginForm()
+            f.email.data = '1 2 3'
+            u = pybossa.validator.CommaSeparatedIntegers()
+            u.__call__(f, f.email)
