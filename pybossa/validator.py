@@ -22,12 +22,14 @@ import re
 
 
 class Unique(object):
-    """Validator that checks field uniqueness"""
+
+    """Validator that checks field uniqueness."""
+
     def __init__(self, session, model, field, message=None):
         self.session = session
         self.model = model
         self.field = field
-        if not message:
+        if not message:  # pragma: no cover
             message = lazy_gettext(u'This item already exists')
         self.message = message
 
@@ -51,7 +53,7 @@ class NotAllowedChars(object):
         if not message:
             self.message = lazy_gettext(u'%sand space symbols are forbidden'
                                         % self.not_valid_chars)
-        else:
+        else:  # pragma: no cover
             self.message = message
 
     def __call__(self, form, field):
