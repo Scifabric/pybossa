@@ -282,6 +282,14 @@ class TestAdmin(web.Helper):
         self.signout()
         # Signin with admin user
         self.signin()
+        # Add user.id=1000 (it does not exist)
+        res = self.app.get("/admin/users/add/1000", follow_redirects=True)
+        err = json.loads(res.data)
+        assert res.status_code == 404, res.status_code
+        assert err['error'] == "User not found", err
+        assert err['status_code'] == 404, err
+
+
         # Add user.id=2 to admin group
         res = self.app.get("/admin/users/add/2", follow_redirects=True)
         assert "Current Users with Admin privileges" in res.data
@@ -292,6 +300,12 @@ class TestAdmin(web.Helper):
         assert "Current Users with Admin privileges" not in res.data
         err_msg = "User.id=2 should be listed as an admin"
         assert "Juan Jose" not in res.data, err_msg
+        # Delete a non existant user should return an error
+        res = self.app.get("/admin/users/del/5000", follow_redirects=True)
+        err = json.loads(res.data)
+        assert res.status_code == 404, res.status_code
+        assert err['error'] == "User.id not found", err
+        assert err['status_code'] == 404, err
 
     def test_14_admin_user_add_del_anonymous(self):
         """Test ADMIN add/del user to admin group works as anonymous"""
@@ -449,6 +463,15 @@ class TestAdmin(web.Helper):
         assert "Category added" in res.data, err_msg
         assert category['name'] in res.data, err_msg
 
+        category = {'name': 'cat', 'short_name': 'cat',
+                    'description': 'description'}
+
+        self.signin(email=Fixtures.root_addr, password=Fixtures.root_password)
+        res = self.app.post(url, data=category, follow_redirects=True)
+        err_msg = "Category form validation should work"
+        assert "Please correct the errors" in res.data, err_msg
+
+
     def test_21_admin_update_category(self):
         """Test ADMIN update category works"""
         Fixtures.create()
@@ -491,6 +514,10 @@ class TestAdmin(web.Helper):
         assert category['name'] in res.data, err_msg
         updated_category = db.session.query(model.Category).get(obj.id)
         assert updated_category.name == obj.name, err_msg
+        # With not valid form
+        category['name'] = None
+        res = self.app.post(url, data=category, follow_redirects=True)
+        assert "Please correct the errors" in res.data, err_msg
 
     def test_22_admin_delete_category(self):
         """Test ADMIN delete category works"""
@@ -533,6 +560,11 @@ class TestAdmin(web.Helper):
         assert category['name'] not in res.data, err_msg
         output = db.session.query(model.Category).get(obj.id)
         assert output is None, err_msg
+        # Non existant category
+        category['id'] = 5000
+        url = '/admin/categories/del/5000'
+        res = self.app.post(url, data=category, follow_redirects=True)
+        assert res.status_code == 404, res.status_code
 
         # Now try to delete the only available Category
         obj = db.session.query(model.Category).first()

@@ -191,6 +191,7 @@ def del_admin(user_id=None):
                 db.session.commit()
                 return redirect(url_for('.users'))
             else:
+                print "HOLA"
                 msg = "User.id not found"
                 return format_error(msg, 404)
         else:
@@ -278,7 +279,9 @@ def del_category(id):
                 flash(msg, 'warning')
                 return redirect(url_for('.categories'))
         else:
-            return abort(404)
+            abort(404)
+    except HTTPException:
+        raise
     except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
@@ -307,7 +310,7 @@ def update_category(id):
                     new_category = model.Category(id=form.id.data,
                                                   name=form.name.data,
                                                   short_name=slug)
-                    print new_category.id
+                    # print new_category.id
                     db.session.merge(new_category)
                     db.session.commit()
                     cached_cat.reset()
@@ -315,6 +318,8 @@ def update_category(id):
                     flash(msg, 'success')
                     return redirect(url_for(".categories"))
                 else:
+                    msg = gettext("Please correct the errors")
+                    flash(msg, 'success')
                     return render_template('admin/update_category.html',
                                            title=gettext('Update Category'),
                                            category=category,
