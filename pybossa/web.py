@@ -65,7 +65,7 @@ except Exception as inst:
     print type(inst)
     print inst.args
     print inst
-    print "Twitter singin disabled"
+    print "Twitter signin disabled"
 
 # Enable Facebook if available
 try:
@@ -76,7 +76,7 @@ except Exception as inst:
     print type(inst)
     print inst.args
     print inst
-    print "Facebook singin disabled"
+    print "Facebook signin disabled"
 
 # Enable Google if available
 try:
@@ -87,7 +87,7 @@ except Exception as inst:
     print type(inst)
     print inst.args
     print inst
-    print "Google singin disabled"
+    print "Google signin disabled"
 
 # Check if app stats page can generate the map
 geolite = app.root_path + '/../dat/GeoLiteCity.dat'
