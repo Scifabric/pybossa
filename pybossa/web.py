@@ -39,7 +39,6 @@ from pybossa.view.help import blueprint as help
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import users as cached_users
 
-
 logger = logging.getLogger('pybossa')
 
 # other views ...
@@ -57,6 +56,7 @@ try:
             app.config['TWITTER_CONSUMER_SECRET']):
         from pybossa.view.twitter import blueprint as twitter
         app.register_blueprint(twitter, url_prefix='/twitter')
+        from pybossa.view.twitter import get_twitter_token
 except Exception as inst:
     print type(inst)
     print inst.args
@@ -68,6 +68,7 @@ try:
     if (app.config['FACEBOOK_APP_ID'] and app.config['FACEBOOK_APP_SECRET']):
         from pybossa.view.facebook import blueprint as facebook
         app.register_blueprint(facebook, url_prefix='/facebook')
+        from pybossa.view.facebook import get_facebook_token
 except Exception as inst:
     print type(inst)
     print inst.args
@@ -79,11 +80,32 @@ try:
     if (app.config['GOOGLE_CLIENT_ID'] and app.config['GOOGLE_CLIENT_SECRET']):
         from pybossa.view.google import blueprint as google
         app.register_blueprint(google, url_prefix='/google')
+        from pybossa.view.google import get_facebook_token
 except Exception as inst:
     print type(inst)
     print inst.args
     print inst
     print "Google singin disabled"
+
+def template_get_twitter_token():
+    try:
+        return get_twitter_token()[0]
+    except:
+        return None
+def template_get_facebook_token():
+    try:
+        return get_facebook_token()[0]
+    except:
+        return None
+def template_get_google_token():
+    try:
+        return get_google_token()[0]
+    except:
+        return None
+
+app.jinja_env.globals['get_twitter_token'] = template_get_twitter_token
+app.jinja_env.globals['get_facebook_token'] = template_get_facebook_token
+app.jinja_env.globals['get_google_token'] = template_get_google_token
 
 # Check if app stats page can generate the map
 geolite = app.root_path + '/../dat/GeoLiteCity.dat'
@@ -100,7 +122,6 @@ def url_for_other_page(page):
     args['page'] = page
     return url_for(request.endpoint, **args)
 app.jinja_env.globals['url_for_other_page'] = url_for_other_page
-
 
 @app.errorhandler(404)
 def page_not_found(e):
