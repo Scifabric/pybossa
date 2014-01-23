@@ -80,11 +80,37 @@ class TestWeb(web.Helper):
             db.session.commit()
             self.app.get('api/app/%s/newtask' % app.id)
 
+        # With stats
+        url = '/app/%s/stats' % app.short_name
+        res = self.app.get(url)
+        assert res.status_code == 200, res.status_code
+        assert "Distribution" in res.data, res.data
 
         res = self.app.get('/leaderboard', follow_redirects=True)
         assert self.html_title("Community Leaderboard") in res.data, res
         assert self.user.fullname in res.data, res.data
+
+        # With hidden app
+        app.hidden = 1
+        db.session.add(app)
+        db.session.commit()
+        url = '/app/%s/stats' % app.short_name
+        res = self.app.get(url)
+        assert res.status_code == 200, res.status_code
+        assert "Distribution" in res.data, res.data
         self.signout()
+
+        Fixtures.create()
+        # As anonymous
+        url = '/app/%s/stats' % app.short_name
+        res = self.app.get(url)
+        assert res.status_code == 403, res.status_code
+        # As another user, but not owner
+        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
+        url = '/app/%s/stats' % app.short_name
+        res = self.app.get(url)
+        assert res.status_code == 403, res.status_code
+
 
     def test_03_account_index(self):
         """Test WEB account index works."""
