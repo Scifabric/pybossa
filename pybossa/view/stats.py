@@ -108,7 +108,7 @@ def get_top5_users_24_hours():
 
 
 @cache(timeout=ONE_DAY, key_prefix="site_locs")
-def get_locs():
+def get_locs(): # pragma: no cover
     # All IP addresses from anonymous users to create a map
     locs = []
     if current_app.config['GEO']:

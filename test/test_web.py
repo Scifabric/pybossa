@@ -2414,14 +2414,10 @@ class TestWeb(web.Helper):
         err_msg = "New generated API key should be different from old one"
         assert api_key != user.api_key, err_msg
 
-    @patch('pybossa.stats.pygeoip', autospec=True)
+    @patch('pybossa.view.stats.get_locs', return_value=[{'latitude':0, 'longitude':0}])
     def test_58_global_stats(self, mock1):
         """Test WEB global stats of the site works"""
         Fixtures.create()
-        returns = [Mock()]
-        returns[0].GeoIP.return_value = 'gic'
-        returns[0].GeoIP.record_by_addr.return_value = {}
-        mock1.side_effects = returns
 
         url = "/stats"
         res = self.app.get(url, follow_redirects=True)
