@@ -1074,7 +1074,7 @@ def show_stats(short_name):
     except HTTPException:
         if app.hidden:
             raise abort(403)
-        else:
+        else: # pragma: no cover
             raise
 
     if not ((n_tasks > 0) and (n_task_runs > 0)):
@@ -1158,7 +1158,7 @@ def task_n_answers(short_name):
     except HTTPException:
         if app.hidden:
             raise abort(403)
-        else:
+        else: # pragma: no cover
             raise
 
 
@@ -1180,7 +1180,7 @@ def task_scheduler(short_name):
     except HTTPException:
         if app.hidden:
             raise abort(403)
-        else:
+        else: # pragma: no cover
             raise
 
     if request.method == 'GET':

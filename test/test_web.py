@@ -2708,6 +2708,22 @@ class TestWeb(web.Helper):
         err_msg = "User should be redirected to sign in"
         assert dom.find(id="signin") is not None, err_msg
 
+        # With hidden app
+        app.hidden = 1
+        db.session.add(app)
+        db.session.commit()
+        self.register(fullname="daniel", username="daniel")
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+        self.signout()
+        self.signin()
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        # Correct values
+        err_msg = "There should be a %s section" % form_id
+        assert dom.find(id=form_id) is not None, err_msg
+
+
     def test_76_task_settings_redundancy(self):
         """Test WEB TASK SETTINGS redundancy page works"""
         # Creat root user
@@ -2754,6 +2770,8 @@ class TestWeb(web.Helper):
             dom = BeautifulSoup(res.data)
             err_msg = "Task Redundancy should be a value between 0 and 1000"
             assert dom.find(id='msg_error') is not None, err_msg
+
+
             self.signout()
 
         # As an authenticated user
@@ -2768,6 +2786,21 @@ class TestWeb(web.Helper):
         dom = BeautifulSoup(res.data)
         err_msg = "User should be redirected to sign in"
         assert dom.find(id="signin") is not None, err_msg
+
+        # With hidden app
+        app.hidden = 1
+        db.session.add(app)
+        db.session.commit()
+        self.register(fullname="daniel", username="daniel")
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+        self.signout()
+        self.signin()
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        # Correct values
+        err_msg = "There should be a %s section" % form_id
+        assert dom.find(id=form_id) is not None, err_msg
 
     def test_77_task_settings_priority(self):
         """Test WEB TASK SETTINGS priority page works"""
