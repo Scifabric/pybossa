@@ -29,6 +29,14 @@ class TestModel:
     def tearDown(self):
         db.session.remove()
 
+    @raises(NotImplementedError)
+    def test_domain_object_error(self):
+        """Test DomainObject errors work."""
+        user = model.User()
+        user.name = "John"
+        d = user.dictize()
+        user.undictize(d)
+
     def test_user(self):
         """Test USER model."""
         # First user
@@ -55,6 +63,8 @@ class TestModel:
         assert tmp.created is not None, tmp
         err_msg = "First user should be admin"
         assert tmp.admin is True, err_msg
+        err_msg = "check_password method should return False"
+        assert tmp.check_password(password="nothing") is False, err_msg
 
         db.session.add(user2)
         db.session.commit()
@@ -97,6 +107,17 @@ class TestModel:
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
 
+    def test_app_repr(self):
+        """Test APP model repr works."""
+        app = model.App(
+            id=1,
+            name='Application',
+            short_name='app',
+            description='desc',
+            owner_id=None)
+
+        assert app.__repr__() == 'App(1)'
+
     def test_app_errors(self):
         """Test APP model errors."""
         app = model.App(
@@ -125,9 +146,19 @@ class TestModel:
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
 
+        app.name = ''
+        db.session.add(app)
+        assert_raises(IntegrityError, db.session.commit)
+        db.session.rollback()
+
         # App.short_name shoult not be nullable
         app.name = "Application"
         app.short_name = None
+        db.session.add(app)
+        assert_raises(IntegrityError, db.session.commit)
+        db.session.rollback()
+
+        app.short_name = ''
         db.session.add(app)
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
@@ -138,6 +169,12 @@ class TestModel:
         app.description = None
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
+
+        app.description = ''
+        db.session.add(app)
+        assert_raises(IntegrityError, db.session.commit)
+        db.session.rollback()
+
 
     def test_task_errors(self):
         """Test TASK model errors."""

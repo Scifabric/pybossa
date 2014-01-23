@@ -160,7 +160,7 @@ class Ckan(object):
             output = json.loads(r.text)
             if output['success']:
                 return output['result']
-            else:
+            else:  # pragma: no cover
                 return output
         else:
             raise Exception("CKAN: the remote site failed! datastore_create failed",

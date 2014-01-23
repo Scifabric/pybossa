@@ -41,16 +41,13 @@ def myquote(line):
     return escaped
 
 
-def sign(data, salt, pkey):
-    # Calculate buffer to sign (sorting the keys)
-    print data
+def calculate_buffer(data, salt):
     strBuffer = ""
-    print data.keys()
     for k in sorted(data.iterkeys()):
 
         # Handle the BOOL special case
         v = data[k]
-        if type(v) == bool:
+        if type(v) == bool:  # pragma: no cover
             if v:
                 v = 1
             else:
@@ -62,15 +59,19 @@ def sign(data, salt, pkey):
 
     # Append salt
     strBuffer += salt
+    return strBuffer
 
-    print "Signing '%s'" % strBuffer
 
+def sign(data, salt, pkey):
+    strBuffer = calculate_buffer(data, salt)
     # Sign data
     rsa = M2Crypto.RSA.load_key(pkey)
     digest = hashlib.new('sha512', strBuffer).digest()
 
     # Append signature
     data['signature'] = base64.b64encode(rsa.sign(digest, "sha512"))
+    data['digest'] = digest
+    data['strBuffer'] = strBuffer
 
     # Return new data dictionary
     return data

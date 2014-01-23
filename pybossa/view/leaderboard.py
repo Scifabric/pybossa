@@ -70,7 +70,7 @@ def index():
                        WHERE user_id=:user_id ORDER BY rank;
                        ''')
             user_rank = db.engine.execute(sql, user_id=current_user.id)
-            for row in user_rank:
+            for row in user_rank: # pragma: no cover
                 top_users.append(row)
     else:
         top_users = results

@@ -36,7 +36,7 @@ from raven.contrib.flask import Sentry
 
 def create_app():
     app = Flask(__name__)
-    if 'DATABASE_URL' in os.environ:
+    if 'DATABASE_URL' in os.environ:  # pragma: no cover
         heroku = Heroku(app)
     configure_app(app)
     setup_error_email(app)
@@ -59,7 +59,7 @@ def configure_app(app):
 from logging.handlers import SMTPHandler
 def setup_error_email(app):
     ADMINS = app.config.get('ADMINS', '')
-    if not app.debug and ADMINS:
+    if not app.debug and ADMINS: # pragma: no cover
         mail_handler = SMTPHandler('127.0.0.1',
                                    'server-error@no-reply.com',
                                    ADMINS, 'error')
@@ -96,7 +96,7 @@ redis_slave = sentinel.slave_for('mymaster')
 db = SQLAlchemy(app)
 mail = Mail(app)
 signer = URLSafeTimedSerializer(app.config['ITSDANGEORUSKEY'])
-if app.config.get('SENTRY_DSN'):
+if app.config.get('SENTRY_DSN'): # pragma: no cover
     sentr = Sentry(app)
 
 babel = Babel(app)

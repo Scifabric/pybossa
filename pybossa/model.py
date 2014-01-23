@@ -71,7 +71,7 @@ def rebuild_db():
     for table_name in inspector.get_table_names():
         fks = []
         for fk in inspector.get_foreign_keys(table_name):
-            if not fk['name']:
+            if not fk['name']: # pragma: no cover
                 continue
             fks.append(
                 ForeignKeyConstraint((),(),name=fk['name'])
@@ -141,10 +141,10 @@ class DomainObject(object):
     def undictize(cls, dict_):
         raise NotImplementedError()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return self.__unicode__().encode('utf8')
 
-    def __unicode__(self):
+    def __unicode__(self): # pragma: no cover
         repr = u'<%s' % self.__class__.__name__
         table = class_mapper(self.__class__).mapped_table
         for col in table.c:
@@ -224,45 +224,45 @@ class App(db.Model, DomainObject):
 
     #: Percentage of completed tasks based on Task.state
     #: (0 not done, 1 completed)
-    def completion_status(self):
-        """Returns the percentage of submitted Tasks Runs done when a task is
-        completed"""
-        sql = text('''SELECT task.id, n_answers,
-                   count(task_run.task_id) AS n_task_runs
-                   FROM task LEFT OUTER JOIN task_run ON task.id=task_run.task_id
-                   WHERE task.app_id=:app_id GROUP BY task.id''')
-        results = db.engine.execute(sql, app_id=self.id)
-        n_expected_task_runs = 0
-        n_task_runs = 0
-        for row in results:
-            tmp = row[2]
-            if row[2] > row[1]:
-                tmp = row[1]
-            n_expected_task_runs += row[1]
-            n_task_runs += tmp
-        pct = float(0)
-        if n_expected_task_runs != 0:
-           pct = float(n_task_runs) / float(n_expected_task_runs)
-        return pct
+    # def completion_status(self):
+    #     """Returns the percentage of submitted Tasks Runs done when a task is
+    #     completed"""
+    #     sql = text('''SELECT task.id, n_answers,
+    #                count(task_run.task_id) AS n_task_runs
+    #                FROM task LEFT OUTER JOIN task_run ON task.id=task_run.task_id
+    #                WHERE task.app_id=:app_id GROUP BY task.id''')
+    #     results = db.engine.execute(sql, app_id=self.id)
+    #     n_expected_task_runs = 0
+    #     n_task_runs = 0
+    #     for row in results:
+    #         tmp = row[2]
+    #         if row[2] > row[1]:
+    #             tmp = row[1]
+    #         n_expected_task_runs += row[1]
+    #         n_task_runs += tmp
+    #     pct = float(0)
+    #     if n_expected_task_runs != 0:
+    #        pct = float(n_task_runs) / float(n_expected_task_runs)
+    #     return pct
 
 
-    def n_completed_tasks(self):
-        """Returns the number of Tasks that are completed"""
-        completed = 0
-        for t in self.tasks:
-            if t.state == "completed":
-                completed += 1
-        return completed
+    # def n_completed_tasks(self):
+    #     """Returns the number of Tasks that are completed"""
+    #     completed = 0
+    #     for t in self.tasks:
+    #         if t.state == "completed":
+    #             completed += 1
+    #     return completed
 
-    def last_activity(self):
-        sql = text('''SELECT finish_time FROM task_run WHERE app_id=:app_id
-                   ORDER BY finish_time DESC LIMIT 1''')
-        results = db.engine.execute(sql, app_id=self.id)
-        for row in results:
-            if row is not None:
-                return pretty_date(row[0])
-            else:
-                return None
+    # def last_activity(self):
+    #     sql = text('''SELECT finish_time FROM task_run WHERE app_id=:app_id
+    #                ORDER BY finish_time DESC LIMIT 1''')
+    #     results = db.engine.execute(sql, app_id=self.id)
+    #     for row in results:
+    #         if row is not None:
+    #             return pretty_date(row[0])
+    #         else:
+    #             return None
 
 
 class Featured(db.Model, DomainObject):
@@ -338,7 +338,7 @@ class Task(db.Model, DomainObject):
             self.n_answers = int(self.info['n_answers'])
         if self.n_answers != 0 and self.n_answers != None:
             return float(len(self.task_runs)) / self.n_answers
-        else:
+        else:  # pragma: no cover
             return float(0)
 
 

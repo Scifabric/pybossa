@@ -132,6 +132,13 @@ class TestAdmin(web.Helper):
         assert "Sample App" in res.data,\
             "The application should be listed in the front page"\
             " as it is featured"
+        # A rety should fail
+        res = self.app.post('/admin/featured/1')
+        err = json.loads(res.data)
+        err_msg = "App.id 1 alreay in Featured table"
+        assert err['error'] == err_msg, err_msg
+        assert err['status_code'] == 415, "Status code should be 415"
+
         # Remove it again from the Featured list
         res = self.app.delete('/admin/featured/1')
         assert res.status == "204 NO CONTENT", res.status
@@ -140,6 +147,19 @@ class TestAdmin(web.Helper):
         assert "Sample App" not in res.data,\
             "The application should not be listed in the front page"\
             " as it is not featured"
+        # If we try to delete again, it shoul return an error
+        res = self.app.delete('/admin/featured/1')
+        err = json.loads(res.data)
+        assert err['status_code'] == 404, "App should not be found"
+        err_msg = 'App.id 1 is not in Featured table'
+        assert err['error'] == err_msg, err_msg
+
+        # Try with an id that does not exist
+        res = self.app.delete('/admin/featured/999')
+        err = json.loads(res.data)
+        assert err['status_code'] == 404, "App should not be found"
+        err_msg = 'App.id 999 not found'
+        assert err['error'] == err_msg, err_msg
 
     def test_07_admin_featured_apps_add_remove_app_non_admin(self):
         """Test ADMIN featured apps add-remove works as an non-admin user"""
@@ -262,6 +282,14 @@ class TestAdmin(web.Helper):
         self.signout()
         # Signin with admin user
         self.signin()
+        # Add user.id=1000 (it does not exist)
+        res = self.app.get("/admin/users/add/1000", follow_redirects=True)
+        err = json.loads(res.data)
+        assert res.status_code == 404, res.status_code
+        assert err['error'] == "User not found", err
+        assert err['status_code'] == 404, err
+
+
         # Add user.id=2 to admin group
         res = self.app.get("/admin/users/add/2", follow_redirects=True)
         assert "Current Users with Admin privileges" in res.data
@@ -272,6 +300,12 @@ class TestAdmin(web.Helper):
         assert "Current Users with Admin privileges" not in res.data
         err_msg = "User.id=2 should be listed as an admin"
         assert "Juan Jose" not in res.data, err_msg
+        # Delete a non existant user should return an error
+        res = self.app.get("/admin/users/del/5000", follow_redirects=True)
+        err = json.loads(res.data)
+        assert res.status_code == 404, res.status_code
+        assert err['error'] == "User.id not found", err
+        assert err['status_code'] == 404, err
 
     def test_14_admin_user_add_del_anonymous(self):
         """Test ADMIN add/del user to admin group works as anonymous"""
@@ -429,6 +463,15 @@ class TestAdmin(web.Helper):
         assert "Category added" in res.data, err_msg
         assert category['name'] in res.data, err_msg
 
+        category = {'name': 'cat', 'short_name': 'cat',
+                    'description': 'description'}
+
+        self.signin(email=Fixtures.root_addr, password=Fixtures.root_password)
+        res = self.app.post(url, data=category, follow_redirects=True)
+        err_msg = "Category form validation should work"
+        assert "Please correct the errors" in res.data, err_msg
+
+
     def test_21_admin_update_category(self):
         """Test ADMIN update category works"""
         Fixtures.create()
@@ -464,6 +507,10 @@ class TestAdmin(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         err_msg = "Category should be listed for admin user"
         assert _name in res.data, err_msg
+        # Check 404
+        url_404 = '/admin/categories/update/5000'
+        res = self.app.get(url_404, follow_redirects=True)
+        assert res.status_code == 404, res.status_code
         # Admin POST
         res = self.app.post(url, data=category, follow_redirects=True)
         err_msg = "Category should be updated"
@@ -471,6 +518,10 @@ class TestAdmin(web.Helper):
         assert category['name'] in res.data, err_msg
         updated_category = db.session.query(model.Category).get(obj.id)
         assert updated_category.name == obj.name, err_msg
+        # With not valid form
+        category['name'] = None
+        res = self.app.post(url, data=category, follow_redirects=True)
+        assert "Please correct the errors" in res.data, err_msg
 
     def test_22_admin_delete_category(self):
         """Test ADMIN delete category works"""
@@ -513,6 +564,11 @@ class TestAdmin(web.Helper):
         assert category['name'] not in res.data, err_msg
         output = db.session.query(model.Category).get(obj.id)
         assert output is None, err_msg
+        # Non existant category
+        category['id'] = 5000
+        url = '/admin/categories/del/5000'
+        res = self.app.post(url, data=category, follow_redirects=True)
+        assert res.status_code == 404, res.status_code
 
         # Now try to delete the only available Category
         obj = db.session.query(model.Category).first()

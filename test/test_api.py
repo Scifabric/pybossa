@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
-
+from mock import patch
 from base import web, model, Fixtures, db, redis_flushall
 from nose.tools import assert_equal, assert_raises
 
@@ -136,6 +136,15 @@ class TestAPI:
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
+
+        # Test a non-existant ID
+        res = self.app.get('/api/app/3434209')
+        err = json.loads(res.data)
+        assert res.status_code == 404, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'app', err
+        assert err['exception_cls'] == 'NotFound', err
+        assert err['action'] == 'GET', err
 
     def test_get_query_with_api_key(self):
         """ Test API GET query with an API-KEY"""
@@ -564,6 +573,25 @@ class TestAPI:
         id_ = out.id
         db.session.remove()
 
+        # now a real user with headers auth
+        headers = [('Authorization', Fixtures.api_key)]
+        new_app = dict(
+            name=name + '2',
+            short_name='xxxx-project2',
+            description='description2',
+            owner_id=1,
+            long_description=u'<div id="longdescription">\
+                               Long Description</div>')
+        new_app = json.dumps(new_app)
+        res = self.app.post('/api/app', headers=headers,
+                            data=new_app)
+        out = db.session.query(model.App).filter_by(name=name + '2').one()
+        assert out, out
+        assert_equal(out.short_name, 'xxxx-project2'), out
+        assert_equal(out.owner.name, 'tester')
+        id_ = out.id
+        db.session.remove()
+
         # test re-create should fail
         res = self.app.post('/api/app?api_key=' + Fixtures.api_key,
                             data=data)
@@ -626,6 +654,15 @@ class TestAPI:
         out = json.loads(res.data)
         assert out.get('status') is None, error
         assert out.get('id') == id_, error
+
+        # With wrong id
+        res = self.app.put('/api/app/5000?api_key=%s' % Fixtures.api_key,
+                           data=datajson)
+        assert_equal(res.status, '404 NOT FOUND', res.data)
+        error = json.loads(res.data)
+        assert error['status'] == 'failed', error
+        assert error['action'] == 'PUT', error
+        assert error['exception_cls'] == 'NotFound', error
 
         # With fake data
         data['algo'] = 13
@@ -1063,6 +1100,21 @@ class TestAPI:
         err_msg = "POST should be unauthorized without proper task cookie"
         assert res.status_code == 401, err_msg
 
+        # Get NotFound for an non-existing app
+        url = '/api/app/5000/newtask'
+        res = self.app.get(url)
+        err = json.loads(res.data)
+        err_msg = "The app does not exist"
+        assert err['status'] == 'failed', err_msg
+        assert err['status_code'] == 404, err_msg
+        assert err['exception_cls'] == 'NotFound', err_msg
+        assert err['target'] == 'app', err_msg
+
+        # Get an empty task
+        url = '/api/app/%s/newtask?offset=1000' % app_id
+        res = self.app.get(url)
+        assert res.data == '{}', res.data
+
         # Get first the cookie and post should be valid
         url = '/api/app/%s/newtask' % app_id
         res = self.app.get(url)
@@ -1314,6 +1366,13 @@ class TestAPI:
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         # real user
+        url = '/api/taskrun/%s' % _id
+        out = self.app.get(url, follow_redirects=True)
+        task = json.loads(out.data)
+        datajson = json.loads(datajson)
+        datajson['link'] = task['link']
+        datajson['links'] = task['links']
+        datajson = json.dumps(datajson)
         url = '/api/taskrun/%s?api_key=%s' % (_id, Fixtures.api_key)
         res = self.app.put(url, data=datajson)
         out = json.loads(res.data)
@@ -1475,7 +1534,6 @@ class TestAPI:
 
         res = self.app.get('/api/app/1/newtask')
         data = json.loads(res.data)
-        print data
         # Add a new TaskRun and check again
         tr = model.TaskRun(app_id=1, task_id=data['id'], user_id=1,
                            info={'answer': u'annakarenina'})
@@ -1512,6 +1570,20 @@ class TestAPI:
         data = json.loads(res.data)
         error_msg = "The reported total number of tasks is wrong"
         assert len(tasks) == data['total'], error_msg
+
+        url = '/api/app/%s/userprogress' % app.short_name
+        res = self.app.get(url, follow_redirects=True)
+        data = json.loads(res.data)
+        error_msg = "The reported total number of tasks is wrong"
+        assert len(tasks) == data['total'], error_msg
+
+        url = '/api/app/5000/userprogress'
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 404, res.status_code
+
+        url = '/api/app/userprogress'
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 404, res.status_code
 
         error_msg = "The reported number of done tasks is wrong"
         assert len(taskruns) == data['done'], error_msg
@@ -1634,3 +1706,53 @@ class TestAPI:
         err_msg = "There should be a question"
         assert task['info'].get('question') == 'My random question', err_msg
         self.signout()
+
+    def test_vcmp(self):
+        """Test VCMP without key fail works."""
+        if web.app.config.get('VMCP_KEY'):
+            web.app.config.pop('VMCP_KEY')
+        res = self.app.get('api/vmcp', follow_redirects=True)
+        err = json.loads(res.data)
+        assert res.status_code == 501, err
+        assert err['status_code'] == 501, err
+        assert err['status'] == "failed", err
+        assert err['target'] == "vmcp", err
+        assert err['action'] == "GET", err
+
+    @patch.dict(web.app.config, {'VMCP_KEY': 'invalid.key'})
+    def test_vmcp_file_not_found(self):
+        """Test VMCP with invalid file key works."""
+        res = self.app.get('api/vmcp', follow_redirects=True)
+        err = json.loads(res.data)
+        assert res.status_code == 501, err
+        assert err['status_code'] == 501, err
+        assert err['status'] == "failed", err
+        assert err['target'] == "vmcp", err
+        assert err['action'] == "GET", err
+
+    @patch.dict(web.app.config, {'VMCP_KEY': 'invalid.key'})
+    def test_vmcp_01(self):
+        """Test VMCP errors works"""
+        # Even though the key does not exists, let's patch it to test
+        # all the errors
+        with patch('os.path.exists', return_value=True):
+            res = self.app.get('api/vmcp', follow_redirects=True)
+            err = json.loads(res.data)
+            assert res.status_code == 415, err
+            assert err['status_code'] == 415, err
+            assert err['status'] == "failed", err
+            assert err['target'] == "vmcp", err
+            assert err['action'] == "GET", err
+            assert err['exception_msg'] == 'cvm_salt parameter is missing'
+
+    @patch.dict(web.app.config, {'VMCP_KEY': 'invalid.key'})
+    def test_vmcp_02(self):
+        """Test VMCP signing works."""
+        signature = dict(signature='XX')
+        with patch('os.path.exists', return_value=True):
+            with patch('pybossa.vmcp.sign', return_value=signature):
+                res = self.app.get('api/vmcp?cvm_salt=testsalt',
+                                   follow_redirects=True)
+                out = json.loads(res.data)
+                assert res.status_code == 200, out
+                assert out['signature'] == signature['signature'], out

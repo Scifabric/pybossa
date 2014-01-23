@@ -105,19 +105,6 @@ def n_task_runs(app_id):
 
 
 @memoize()
-def last_activity(app_id):
-    sql = text('''SELECT finish_time FROM task_run WHERE app_id=:app_id
-               ORDER BY finish_time DESC LIMIT 1''')
-    results = db.engine.execute(sql, app_id=app_id)
-    for row in results:
-        if row is not None:
-            print pretty_date(row[0])
-            return pretty_date(row[0])
-        else:
-            return None
-
-
-@memoize()
 def overall_progress(app_id):
     """Returns the percentage of submitted Tasks Runs done when a task is
     completed"""
@@ -148,7 +135,7 @@ def last_activity(app_id):
     for row in results:
         if row is not None:
             return pretty_date(row[0])
-        else:
+        else:  # pragma: no cover
             return None
 
 
@@ -207,40 +194,40 @@ def n_published():
         count = row[0]
     return count
 
-@memoize()
-def get_published(category, page=1, per_page=5):
-    """Return a list of apps with a pagination"""
-
-    count = n_published()
-
-    sql = text('''
-               SELECT app.id, app.name, app.short_name, app.description,
-               app.info, app.created, "user".fullname AS owner,
-               featured.app_id as featured
-               FROM task, "user", app LEFT OUTER JOIN featured ON app.id=featured.app_id
-               WHERE
-               app.id=task.app_id AND app.info LIKE('%task_presenter%')
-               AND app.hidden=0
-               AND "user".id=app.owner_id
-               GROUP BY app.id, "user".id, featured.id ORDER BY app.name
-               OFFSET :offset
-               LIMIT :limit;''')
-
-    offset = (page - 1) * per_page
-    results = db.engine.execute(sql, limit=per_page, offset=offset)
-    apps = []
-    for row in results:
-        app = dict(id=row.id,
-                   name=row.name, short_name=row.short_name,
-                   created=row.created,
-                   description=row.description,
-                   owner=row.owner,
-                   featured=row.featured,
-                   last_activity=last_activity(row.id),
-                   overall_progress=overall_progress(row.id),
-                   info=dict(json.loads(row.info)))
-        apps.append(app)
-    return apps, count
+#@memoize()
+#def get_published(category, page=1, per_page=5):
+#    """Return a list of apps with a pagination"""
+#
+#    count = n_published()
+#
+#    sql = text('''
+#               SELECT app.id, app.name, app.short_name, app.description,
+#               app.info, app.created, "user".fullname AS owner,
+#               featured.app_id as featured
+#               FROM task, "user", app LEFT OUTER JOIN featured ON app.id=featured.app_id
+#               WHERE
+#               app.id=task.app_id AND app.info LIKE('%task_presenter%')
+#               AND app.hidden=0
+#               AND "user".id=app.owner_id
+#               GROUP BY app.id, "user".id, featured.id ORDER BY app.name
+#               OFFSET :offset
+#               LIMIT :limit;''')
+#
+#    offset = (page - 1) * per_page
+#    results = db.engine.execute(sql, limit=per_page, offset=offset)
+#    apps = []
+#    for row in results:
+#        app = dict(id=row.id,
+#                   name=row.name, short_name=row.short_name,
+#                   created=row.created,
+#                   description=row.description,
+#                   owner=row.owner,
+#                   featured=row.featured,
+#                   last_activity=last_activity(row.id),
+#                   overall_progress=overall_progress(row.id),
+#                   info=dict(json.loads(row.info)))
+#        apps.append(app)
+#    return apps, count
 
 
 # Cache it for longer times, as this is only shown to admin users
@@ -362,7 +349,7 @@ def reset():
     delete_cached('number_featured_apps')
     delete_cached('number_published_apps')
     delete_cached('number_draft_apps')
-    delete_memoized(get_published)
+    #delete_memoized(get_published)
     delete_memoized(get_featured)
     delete_memoized(get_draft)
     delete_memoized(n_count)

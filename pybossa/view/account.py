@@ -585,7 +585,7 @@ def reset_api_key():
             msg = gettext('New API-KEY generated')
             flash(msg, 'success')
             return redirect(url_for('account.settings'))
-    else:
+    else: # pragma: no cover
         return abort(403)
 
 

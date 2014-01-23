@@ -37,7 +37,8 @@ import pybossa.model as model
 from pybossa.core import db
 from pybossa.auth import require
 from pybossa.hateoas import Hateoas
-from pybossa.vmcp import sign
+#from pybossa.vmcp import sign
+import pybossa.vmcp
 from pybossa.cache import apps as cached_apps
 from pybossa.ratelimit import ratelimit
 import pybossa.sched as sched
@@ -55,7 +56,7 @@ error = ErrorStatus()
 @blueprint.route('/')
 @crossdomain(origin='*', headers=cors_headers)
 @ratelimit(limit=300, per=15*60)
-def index():
+def index():  # pragma: no cover
     return 'The PyBossa API'
 
 
@@ -73,7 +74,7 @@ class APIBase(MethodView):
 
 
     @crossdomain(origin='*', headers=cors_headers)
-    def options(self):
+    def options(self):  # pragma: no cover
         return ''
 
     @jsonpify
@@ -269,7 +270,7 @@ class TaskRunAPI(APIBase):
         # Load the real task from the DB
         task_cookie = s.loads(task_cookie)
         task = db.session.query(model.Task).get(task_cookie['id'])
-        if ((task is None) or (task.id != obj.task_id)):
+        if ((task is None) or (task.id != obj.task_id)):  # pragma: no cover
             raise Forbidden('Invalid task_id')
         if (task.app_id != obj.app_id):
             raise Forbidden('Invalid app_id')
@@ -378,7 +379,7 @@ def user_progress(app_id=None, short_name=None):
             return Response(json.dumps(tmp), mimetype="application/json")
         else:
             return abort(404)
-    else:
+    else:  # pragma: no cover
         return abort(404)
 
 
@@ -405,7 +406,7 @@ def vmcp():
         else:
             raise AttributeError
         data = request.args.copy()
-        signed_data = sign(data, salt, pkey)
+        signed_data = pybossa.vmcp.sign(data, salt, pkey)
         return Response(json.dumps(signed_data), 200, mimetype='application/json')
 
     except KeyError:
@@ -419,13 +420,13 @@ def vmcp():
         return Response(json.dumps(error), status=error['status_code'],
                         mimetype='application/json')
 
-    except AttributeError:
+    except AttributeError as e:
         error['status_code'] = 415
         error['exception_msg'] = "cvm_salt parameter is missing"
         return Response(json.dumps(error), status=error['status_code'],
                         mimetype='application/json')
-    except ValueError:
-        error['status_code'] = 415
-        error['exception_msg'] = "Virtual Machine parameters are missing {'cpus': 1, 'ram': 128, ...}"
-        return Response(json.dumps(error), status=error['status_code'],
-                        mimetype='application/json')
+    #except ValueError:
+    #    error['status_code'] = 415
+    #    error['exception_msg'] = "Virtual Machine parameters are missing {'cpus': 1, 'ram': 128, ...}"
+    #    return Response(json.dumps(error), status=error['status_code'],
+    #                    mimetype='application/json')

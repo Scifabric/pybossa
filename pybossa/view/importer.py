@@ -32,11 +32,11 @@ def register_importer(cls):
     return cls
 
 
-def enabled_importers(enabled_importer_names=None):
-    if enabled_importer_names is None:
-        return importers
-    check = lambda i: i.template_id in enabled_importer_names
-    return filter(check, importers)
+# def enabled_importers(enabled_importer_names=None):
+#     if enabled_importer_names is None:
+#         return importers
+#     check = lambda i: i.template_id in enabled_importer_names
+#     return filter(check, importers)
 
 
 class BulkImportException(Exception):
