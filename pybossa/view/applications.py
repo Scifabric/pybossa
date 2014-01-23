@@ -958,8 +958,6 @@ def export_to(short_name):
 
         try:
             package, e = ckan.package_exists(name=app.short_name)
-            print package
-            print e
             if e:
                 raise e
             if package:

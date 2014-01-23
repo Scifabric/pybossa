@@ -1938,6 +1938,10 @@ class TestWeb(web.Helper):
         uri = "/app/somethingnotexists/tasks/export?type=task&format=csv"
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
+        # Now get the wrong table name in JSON format
+        uri = "/app/%s/tasks/export?type=wrong&format=csv" % Fixtures.app_short_name
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real app
         uri = '/app/%s/tasks/export' % Fixtures.app_short_name
@@ -1960,6 +1964,15 @@ class TestWeb(web.Helper):
             n = n + 1
         err_msg = "The number of exported tasks is different from App Tasks"
         assert len(exported_tasks) == len(app.tasks), err_msg
+
+        # With an empty app
+        self.register()
+        self.new_application()
+        # Now get the tasks in JSON format
+        uri = "/app/sampleapp/tasks/export?type=task&format=csv"
+        res = self.app.get(uri, follow_redirects=True)
+        msg = "application does not have tasks"
+        assert msg in res.data, msg
 
     def test_53_export_task_runs_csv(self):
         """Test WEB export Task Runs to CSV works"""
