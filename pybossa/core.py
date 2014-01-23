@@ -53,7 +53,7 @@ def configure_app(app):
     # parent directory
     here = os.path.dirname(os.path.abspath( __file__ ))
     config_path = os.path.join(os.path.dirname(here), 'settings_local.py')
-    if os.path.exists(config_path):
+    if os.path.exists(config_path): # pragma: no cover
         app.config.from_pyfile(config_path)
 
 from logging.handlers import SMTPHandler
@@ -71,7 +71,7 @@ from logging import Formatter
 def setup_logging(app):
     log_file_path = app.config.get('LOG_FILE')
     log_level = app.config.get('LOG_LEVEL', logging.WARN)
-    if log_file_path:
+    if log_file_path: # pragma: no cover
         file_handler = RotatingFileHandler(log_file_path)
         file_handler.setFormatter(Formatter(
             '%(name)s:%(levelname)s:[%(asctime)s] %(message)s '

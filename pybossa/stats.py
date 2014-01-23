@@ -335,7 +335,7 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
             loc = gic.record_by_addr(u[0])
         else:
             loc = {}
-        if loc is None:
+        if loc is None: # pragma: no cover
             loc = {}
         if (len(loc.keys()) == 0):
             loc['latitude'] = 0

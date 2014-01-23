@@ -126,11 +126,11 @@ def signin():
     auth = {'twitter': False, 'facebook': False, 'google': False}
     if current_user.is_anonymous():
         # If Twitter is enabled in config, show the Twitter Sign in button
-        if ('twitter' in current_app.blueprints):
+        if ('twitter' in current_app.blueprints): # pragma: no cover
             auth['twitter'] = True
-        if ('facebook' in current_app.blueprints):
+        if ('facebook' in current_app.blueprints): # pragma: no cover
             auth['facebook'] = True
-        if ('google' in current_app.blueprints):
+        if ('google' in current_app.blueprints): # pragma: no cover
             auth['google'] = True
         return render_template('account/signin.html',
                                title="Sign in",

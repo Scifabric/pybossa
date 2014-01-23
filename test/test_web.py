@@ -56,10 +56,15 @@ class TestWeb(web.Helper):
         err_msg = "Search page should be accessible"
         assert "Search" in res.data, err_msg
 
-    def test_02_stats(self):
+    @patch('pybossa.stats.pygeoip', autospec=True)
+    def test_02_stats(self, mock1):
         """Test WEB leaderboard or stats page works"""
         self.register()
         self.new_application()
+        returns = [Mock()]
+        returns[0].GeoIP.return_value = 'gic'
+        returns[0].GeoIP.record_by_addr.return_value = {}
+        mock1.side_effects = returns
 
         app = db.session.query(model.App).first()
         # Without stats
@@ -86,6 +91,11 @@ class TestWeb(web.Helper):
         assert res.status_code == 200, res.status_code
         assert "Distribution" in res.data, res.data
 
+        with patch.dict(webapp.app.config, {'GEO': True}):
+            url = '/app/%s/stats' % app.short_name
+            res = self.app.get(url)
+            assert "GeoLite" in res.data, res.data
+
         res = self.app.get('/leaderboard', follow_redirects=True)
         assert self.html_title("Community Leaderboard") in res.data, res
         assert self.user.fullname in res.data, res.data
@@ -110,7 +120,6 @@ class TestWeb(web.Helper):
         url = '/app/%s/stats' % app.short_name
         res = self.app.get(url)
         assert res.status_code == 403, res.status_code
-
 
     def test_03_account_index(self):
         """Test WEB account index works."""
@@ -2405,12 +2414,23 @@ class TestWeb(web.Helper):
         err_msg = "New generated API key should be different from old one"
         assert api_key != user.api_key, err_msg
 
-    def test_58_global_stats(self):
+    @patch('pybossa.stats.pygeoip', autospec=True)
+    def test_58_global_stats(self, mock1):
         """Test WEB global stats of the site works"""
+        Fixtures.create()
+        returns = [Mock()]
+        returns[0].GeoIP.return_value = 'gic'
+        returns[0].GeoIP.record_by_addr.return_value = {}
+        mock1.side_effects = returns
+
         url = "/stats"
         res = self.app.get(url, follow_redirects=True)
         err_msg = "There should be a Global Statistics page of the project"
         assert "General Statistics" in res.data, err_msg
+
+        with patch.dict(webapp.app.config, {'GEO': True}):
+            res = self.app.get(url, follow_redirects=True)
+            assert "GeoLite" in res.data, res.data
 
     def test_59_help_api(self):
         """Test WEB help api page exists"""
