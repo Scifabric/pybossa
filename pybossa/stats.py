@@ -316,14 +316,14 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
     loc_anon = []
     # Check if the GeoLiteCity.dat exists
     geolite = current_app.root_path + '/../dat/GeoLiteCity.dat'
-    if geo:
+    if geo: # pragma: no cover
         gic = pygeoip.GeoIP(geolite)
     for u in anon_users:
-        if geo:
+        if geo: # pragma: no cover
             loc = gic.record_by_addr(u[0])
         else:
             loc = {}
-        if loc is None:
+        if loc is None: # pragma: no cover
             loc = {}
         if (len(loc.keys()) == 0):
             loc['latitude'] = 0
@@ -331,7 +331,7 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
         top5_anon.append(dict(ip=u[0], loc=loc, tasks=u[1]))
 
     for u in anon_users:
-        if geo:
+        if geo: # pragma: no cover
             loc = gic.record_by_addr(u[0])
         else:
             loc = {}
