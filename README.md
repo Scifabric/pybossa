@@ -1,4 +1,4 @@
-[![Travis CI](https://travis-ci.org/PyBossa/pybossa.png)](https://travis-ci.org/#!/PyBossa/pybossa)
+[![Travis CI](https://travis-ci.org/PyBossa/pybossa.png)](https://travis-ci.org/#!/PyBossa/pybossa) [![Coverage Status](https://coveralls.io/repos/PyBossa/pybossa/badge.png)](https://coveralls.io/r/PyBossa/pybossa)
 
 PyBossa is an open source platform for crowd-sourcing online (volunteer)
 assistance to perform tasks that require human cognition, knowledge or

@@ -10,6 +10,7 @@ before_install:
   - sudo apt-get update && sudo apt-get install swig
   - redis-server --version
   - redis-server contrib/redis/sentinel.conf --sentinel
+  - pip install coveralls --use-mirrors
 install:
   - python setup.py install
   - pip install -r cache_requirements.txt
