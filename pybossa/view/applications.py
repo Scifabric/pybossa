@@ -1201,9 +1201,9 @@ def task_scheduler(short_name):
         msg = gettext("Application Task Scheduler updated!")
         flash(msg, 'success')
         return redirect(url_for('.tasks', short_name=app.short_name))
-
-    flash(gettext('Please correct the errors'), 'error')
-    return respond()
+    else: # pragma: no cover
+        flash(gettext('Please correct the errors'), 'error')
+        return respond()
 
 
 @blueprint.route('/<short_name>/tasks/priority', methods=['GET', 'POST'])

@@ -2875,6 +2875,22 @@ class TestWeb(web.Helper):
         err_msg = "User should be redirected to sign in"
         assert dom.find(id="signin") is not None, err_msg
 
+        # With hidden app
+        app.hidden = 1
+        db.session.add(app)
+        db.session.commit()
+        self.register(fullname="daniel", username="daniel")
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+        self.signout()
+        self.signin()
+        res = self.app.get(url, follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        # Correct values
+        err_msg = "There should be a %s section" % form_id
+        assert dom.find(id=form_id) is not None, err_msg
+
+
     def test_78_cookies_warning(self):
         """Test WEB cookies warning is displayed"""
         # As Anonymous
