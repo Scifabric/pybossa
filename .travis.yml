@@ -20,3 +20,5 @@ script: nosetests --with-coverage --cover-erase --cover-package=pybossa
 notifications:
   email: false
   irc: "irc.freenode.net#okfn-dev"
+after_success:
+  - coveralls
