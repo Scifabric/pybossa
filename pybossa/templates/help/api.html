@@ -20,7 +20,7 @@
         <hr>
         <h2>Applications API end point</h2>
         <p>
-        For example, if you want to <strong>get a list of available applications</strong> in the server, 
+        For example, if you want to <strong>get a list of available applications</strong> on this server, 
         you can obtain them by opening the following URL:
         </p>
         <ul>
@@ -59,7 +59,7 @@
             <li><a href="{{url_for('api.api_task', app_id=app_id)}}">{{url_for('api.api_task', app_id=app_id, _external=True)}}</a></li>
         </ul>
         <p>
-        Or for example <strong>get a list of completed tasks for a given application</strong> (i.e it could return an empty list because there are no task completed yet):
+        Or for example <strong>get a list of completed tasks for a given application</strong> (i.e. it could return an empty list because there are no tasks completed yet):
         </p>
         <ul>
             <li><a href="{{url_for('api.api_task', app_id=app_id, state='completed')}}">{{url_for('api.api_task', app_id=app_id,  state='completed', _external=True)}}</a></li>
