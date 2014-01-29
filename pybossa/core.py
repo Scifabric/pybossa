@@ -90,7 +90,7 @@ login_manager = LoginManager()
 login_manager.login_view = 'account.signin'
 login_manager.login_message = u"Please sign in to access this page."
 # Configure theme
-try:
+try: # pragma: no cover
     # First with local settings
     import settings_local
     theme = settings_local.THEME
