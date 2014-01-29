@@ -19,3 +19,6 @@
 [submodule "cookbooks/build-essential"]
 	path = cookbooks/build-essential
 	url = git://github.com/opscode-cookbooks/build-essential.git
+[submodule "pybossa/themes/default"]
+	path = pybossa/themes/default
+	url = git://github.com/PyBossa/pybossa-default-theme

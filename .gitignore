@@ -13,7 +13,6 @@ doc/_build
 *.coverage
 alembic.ini
 alembic-heroku.ini
-pybossa/themes/*
 pybossa/templates/custom_footer.html
 pybossa/templates/home/_other_projects.html
 pybossa/templates/home/custom_text.html
