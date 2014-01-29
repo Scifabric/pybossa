@@ -36,3 +36,6 @@ TERMSOFUSE = 'http://okfn.org/terms-of-use/'
 DATAUSE = 'http://opendatacommons.org/licenses/by/'
 LOGO = ''
 LOCALES = ['en', 'es']
+
+## Default THEME
+THEME = 'default'
