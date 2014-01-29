@@ -30,12 +30,16 @@ from flask.ext.babel import Babel
 from redis.sentinel import Sentinel
 
 from pybossa import default_settings as settings
+import settings_local
 
 from raven.contrib.flask import Sentry
 
 
-def create_app():
-    app = Flask(__name__)
+def create_app(theme='default'):
+    template_folder = os.path.join('themes', theme, 'templates')
+    static_folder = os.path.join('themes', theme, 'static')
+    app = Flask(__name__, template_folder=template_folder,
+                static_folder=static_folder)
     if 'DATABASE_URL' in os.environ:  # pragma: no cover
         heroku = Heroku(app)
     configure_app(app)
@@ -86,7 +90,8 @@ def setup_logging(app):
 login_manager = LoginManager()
 login_manager.login_view = 'account.signin'
 login_manager.login_message = u"Please sign in to access this page."
-app = create_app()
+# Configure theme
+app = create_app(theme=settings_local.THEME)
 
 sentinel = Sentinel(app.config['REDIS_SENTINEL'], socket_timeout=0.1)
 redis_master = sentinel.master_for('mymaster')
