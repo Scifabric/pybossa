@@ -30,7 +30,6 @@ from flask.ext.babel import Babel
 from redis.sentinel import Sentinel
 
 from pybossa import default_settings as settings
-import settings_local
 
 from raven.contrib.flask import Sentry
 
@@ -93,6 +92,7 @@ login_manager.login_message = u"Please sign in to access this page."
 # Configure theme
 try:
     # First with local settings
+    import settings_local
     theme = settings_local.THEME
 except:
     # Otherwise try with default theme
