@@ -91,7 +91,14 @@ login_manager = LoginManager()
 login_manager.login_view = 'account.signin'
 login_manager.login_message = u"Please sign in to access this page."
 # Configure theme
-app = create_app(theme=settings_local.THEME)
+try:
+    # First with local settings
+    theme = settings_local.THEME
+except:
+    # Otherwise try with default theme
+    theme = settings.THEME
+# Create app
+app = create_app(theme=theme)
 
 sentinel = Sentinel(app.config['REDIS_SENTINEL'], socket_timeout=0.1)
 redis_master = sentinel.master_for('mymaster')
