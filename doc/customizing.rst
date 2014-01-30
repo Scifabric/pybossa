@@ -99,6 +99,37 @@ name of the file.
 
 .. _LOGO: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L17
 
+Creating your own theme
+=======================
+
+PyBossa supports themes. By default, it provides its own theme that you can use
+or if you prefer, copy it and create your own. The default theme for PyBossa is
+available in the `repository pybossa-default-theme`_.
+
+In order to create your theme, all you have to do is to fork the default theme
+to your own account, and then start modifying it. A theme has a very simple
+structure:
+
+* info.json: this file includes some information about the author, license and
+  name.
+* static: this folder has all the CSS, JavaScript, images, etc. In other words,
+  the static content.
+* templates: this folder has the templates for PyBossa.
+
+Therefore, if you want to change the look and feel (i.e. colors of the top bar)
+all you have to do is to modify the styles.css file of the static folder. Or
+if you prefer, create your own.
+
+However, if you want to modify the structure, let's say you want to change the
+order of the elements of the navigation bar: the first element should be the
+About link, then you will have to modify the files included in the templates
+folder.
+
+As you can see, you will be able to give a full personality to your own PyBossa
+server without problems.
+
+.. _`repository pybossa-default-theme`: https://github.com/PyBossa/pybossa-default-theme
+
 Adding your Contact Information
 ===============================
 

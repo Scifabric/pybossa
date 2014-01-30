@@ -5,6 +5,7 @@ Changelog v0.2.3
 The most interesting changes are the following:
  * New security version for POSTing task_runs preventing abusing the system
  * CKAN backend performance improvements: polling now with JavaScript
+ * Themes support: now you can easily customize PyBossa look and feel
 
 For a full list of changes, see associated `Github milestone`_.
 
