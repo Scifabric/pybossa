@@ -367,15 +367,15 @@ def user_progress(app_id=None, short_name=None):
             if current_user.is_anonymous():
                 tr = db.session.query(model.TaskRun)\
                        .filter(model.TaskRun.app_id == app.id)\
-                       .filter(model.TaskRun.user_ip == request.remote_addr)\
-                       .all()
+                       .filter(model.TaskRun.user_ip == request.remote_addr)
             else:
                 tr = db.session.query(model.TaskRun)\
                        .filter(model.TaskRun.app_id == app.id)\
-                       .filter(model.TaskRun.user_id == current_user.id)\
-                       .all()
+                       .filter(model.TaskRun.user_id == current_user.id)
+            tasks = db.session.query(model.Task)\
+                .filter(model.Task.app_id == app.id)
             # Return
-            tmp = dict(done=len(tr), total=len(app.tasks))
+            tmp = dict(done=tr.count(), total=tasks.count())
             return Response(json.dumps(tmp), mimetype="application/json")
         else:
             return abort(404)
