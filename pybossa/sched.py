@@ -68,7 +68,7 @@ def get_breadth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, off
                    ''')
         tasks = db.engine.execute(sql, app_id=app_id, user_id=user_id)
     else:
-        if not user_ip:
+        if not user_ip: # pragma: no cover
             user_ip = '127.0.0.1'
         sql = text('''
                    SELECT task.id, COUNT(task_run.task_id) AS taskcount FROM task
