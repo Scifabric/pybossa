@@ -47,31 +47,15 @@ def get_breadth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, off
     """Gets a new task which have the least number of task runs (excluding the
     current user).
 
-    DEPRECATED!!!! SEE NEW VERSION
     Note that it **ignores** the number of answers limit for efficiency reasons
     (this is not a big issue as all it means is that you may end up with some
     tasks run more than is strictly needed!)
-
-    NB: current algorithm has the draw-back that it will allocate tasks to a
-    user which the user has already done if that task has the least number of
-    performances (excluding that done by the user). To fix this is possible but
-    would be costly as we'd need to find all tasks the user has done and
-    exclude those task ids explicitly.
     """
     # Uncomment the next three lines to profile the sched function
     #import timeit
     #T = timeit.Timer(lambda: get_candidate_tasks(app_id, user_id,
     #                  user_ip, n_answers))
     #print "First algorithm: %s" % T.timeit(number=1)
-
-    # Old scheduler with several issues
-    #sql = text('''
-    #           SELECT task.id, count(task_run.task_id) AS taskcount from task
-    #           LEFT JOIN task_run ON (task.id = task_run.task_id)
-    #           WHERE task.app_id = :app_id AND
-    #           (task_run.user_id IS NULL OR task_run.user_id != :user_id OR task_run.id IS NULL)
-    #           GROUP BY task.id
-    #           ORDER BY taskcount, id ASC limit 10 ;''')
 
     if user_id and not user_ip:
         sql = text('''
