@@ -452,9 +452,14 @@ class TestGetBreadthFirst:
         for idx in range(2):
             self._add_task_run(app, task2)
 
-        # now check we get task without task runs
+        # now check we get task without task runs as anonymous user
         out = pybossa.sched.get_breadth_first_task(appid)
         assert out.id == taskid, out
+
+        # now check we get task without task runs as a user
+        out = pybossa.sched.get_breadth_first_task(appid, owner.id)
+        assert out.id == taskid, out
+
 
         # now check that offset works
         out1 = pybossa.sched.get_breadth_first_task(appid)
