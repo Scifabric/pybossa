@@ -121,17 +121,13 @@ The Breadth First scheduler has the following features:
 #. It ignores the :ref:`task-redundancy` value, so it will keep sending tasks
    no matter even though that value has been achieved.
 #. It sends always the task with the least number of task runs in the system.
-#. It ignores if a user has participated in the same task, allowing to submit
-   one ore answers to the same task by the same user (anonymous or
-   authenticated).
 #. A task will be never marked as completed, as the :ref:`task-redundancy` is
    not respected.
 
 In summary, from the point of view of a user (authenticated or anonymous) the
-system will be sending the application tasks that have less answers (in case of
+system will be sending the application's tasks that have less answers (in case of
 not having an answer, the creation time will be used to send them like in
-a FIFO --first in first out). The user could load the same task as many times
-as he wants, and submit a new answer as many times as he wants.
+a FIFO --first in first out). 
 
 From the point of view of the application, the scheduler will be trying to obtain 
 as soon as possible an answer for all the available tasks. 
