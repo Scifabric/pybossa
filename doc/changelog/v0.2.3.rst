@@ -6,6 +6,8 @@ The most interesting changes are the following:
  * New security version for POSTing task_runs preventing abusing the system
  * CKAN backend performance improvements: polling now with JavaScript
  * Themes support: now you can easily customize PyBossa look and feel
+ * Breadth First Scheduler improved: now users can only participate once in
+   every task.
 
 For a full list of changes, see associated `Github milestone`_.
 
