@@ -276,6 +276,10 @@ class TaskRunAPI(APIBase):
             raise Forbidden('Invalid app_id')
         if not current_user.is_anonymous():
             obj.user = current_user
+            if db.session.query(model.TaskRun).filter(model.TaskRun.app_id==obj.app_id,
+                                                      model.TaskRun.task_id==obj.task_id,
+                                                      model.TaskRun.user==obj.user).count() > 0:
+                raise Exception("You have already submitted an answer for this task...")
         else:
             obj.user_ip = request.remote_addr
         # Check if this task_run has already been posted
