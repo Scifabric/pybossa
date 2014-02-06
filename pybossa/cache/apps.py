@@ -134,7 +134,7 @@ def last_activity(app_id):
     results = db.engine.execute(sql, app_id=app_id)
     for row in results:
         if row is not None:
-            return pretty_date(row[0])
+            return row[0]
         else:  # pragma: no cover
             return None
 
@@ -171,7 +171,8 @@ def get_featured(category, page=1, per_page=5):
         app = dict(id=row.id, name=row.name, short_name=row.short_name,
                    created=row.created, description=row.description,
                    overall_progress=overall_progress(row.id),
-                   last_activity=last_activity(row.id),
+                   last_activity=pretty_date(last_activity(row.id)),
+                   last_activity_raw=last_activity(row.id),
                    owner=row.owner,
                    featured=row.id,
                    info=dict(json.loads(row.info)))
@@ -270,7 +271,8 @@ def get_draft(category, page=1, per_page=5):
                    created=row.created,
                    description=row.description,
                    owner=row.owner,
-                   last_activity=last_activity(row.id),
+                   last_activity=pretty_date(last_activity(row.id)),
+                   last_activity_raw=last_activity(row.id),
                    overall_progress=overall_progress(row.id),
                    info=dict(json.loads(row.info)))
         apps.append(app)
@@ -334,7 +336,8 @@ def get(category, page=1, per_page=5):
                    description=row.description,
                    owner=row.owner,
                    featured=row.featured,
-                   last_activity=last_activity(row.id),
+                   last_activity=pretty_date(last_activity(row.id)),
+                   last_activity_raw=last_activity(row.id),
                    overall_progress=overall_progress(row.id),
                    info=dict(json.loads(row.info)))
         apps.append(app)

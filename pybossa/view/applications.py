@@ -179,7 +179,8 @@ def app_index(page, lookup, category, fallback, use_count):
     for app in apps:
         data.append(dict(app=app, n_tasks=cached_apps.n_tasks(app['id']),
                          overall_progress=cached_apps.overall_progress(app['id']),
-                         last_activity=cached_apps.last_activity(app['id'])))
+                         last_activity=app['last_activity'],
+                         last_activity_raw=app['last_activity_raw']))
 
 
     if fallback and not apps:  # pragma: no cover
