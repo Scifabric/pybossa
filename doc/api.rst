@@ -10,7 +10,25 @@ The RESTful API is located at::
 
 It expects and returns JSON.
 
-.. autoclass:: pybossa.api.APIBase
+.. autoclass:: pybossa.api.api_base.APIBase
+   :members:
+
+.. autoclass:: pybossa.api.AppAPI
+   :members:
+
+.. autoclass:: pybossa.api.TaskAPI
+   :members:
+
+.. autoclass:: pybossa.api.TaskRunAPI
+   :members:
+
+.. autoclass:: pybossa.api.CategoryAPI
+   :members:
+
+.. autoclass:: pybossa.api.GlobalStatsAPI
+   :members:
+
+.. autoclass:: pybossa.api.VmcpAPI
    :members:
 
 Some requests will need an **API-KEY** to authenticate & authorize the

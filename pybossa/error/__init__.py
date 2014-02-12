@@ -41,6 +41,7 @@ class ErrorStatus(object):
     error_status = {"Forbidden": 403,
                     "NotFound": 404,
                     "Unauthorized": 401,
+                    "MethodNotAllowed": 405,
                     "TypeError": 415,
                     "ValueError": 415,
                     "DataError": 415,

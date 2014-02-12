@@ -1756,3 +1756,23 @@ class TestAPI:
                 out = json.loads(res.data)
                 assert res.status_code == 200, out
                 assert out['signature'] == signature['signature'], out
+
+                # Now with a post
+                res = self.app.post('api/vmcp?cvm_salt=testsalt',
+                                   follow_redirects=True)
+                assert res.status_code == 405, res.status_code
+
+    def test_global_stats(self):
+        """Test Global Stats works."""
+        res = self.app.get('api/globalstats')
+        stats = json.loads(res.data)
+        assert res.status_code == 200, res.status_code
+        keys = ['n_projects', 'n_pending_tasks', 'n_users', 'n_task_runs']
+        for k in keys:
+            err_msg = "%s should be in stats JSON object" % k
+            assert k in stats.keys(), err_msg
+
+    def test_post_global_stats(self):
+        """Test Global Stats Post works."""
+        res = self.app.post('api/globalstats')
+        assert res.status_code == 405, res.status_code

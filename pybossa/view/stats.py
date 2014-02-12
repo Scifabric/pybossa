@@ -56,6 +56,15 @@ def n_tasks_site():
     return n_tasks
 
 
+@cache(timeout=ONE_DAY, key_prefix="site_n_total_tasks")
+def n_total_tasks_site():
+    sql = text('''SELECT SUM(n_answers) AS n_tasks FROM task''')
+    results = db.engine.execute(sql)
+    for row in results:
+        total = row.n_tasks
+    return total
+
+
 @cache(timeout=ONE_DAY, key_prefix="site_n_task_runs")
 def n_task_runs_site():
     sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run''')
