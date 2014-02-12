@@ -22,13 +22,29 @@ This package adds GET method for Global Stats.
 
 """
 import json
-from api_base import APIBase
+from api_base import APIBase, cors_headers
 from flask import Response
 import pybossa.view.stats as stats
 import pybossa.cache.apps as cached_apps
+from pybossa.util import jsonpify, crossdomain
+from pybossa.ratelimit import ratelimit
+from werkzeug.exceptions import MethodNotAllowed
+
 
 class GlobalStatsAPI(APIBase):
+
+    """
+    Class for Global Stats of PyBossa server.
+
+    Returns global stats as a JSON object.
+
+    """
+
+    @jsonpify
+    @crossdomain(origin='*', headers=cors_headers)
+    @ratelimit(limit=300, per=15 * 60)
     def get(self, id):
+        """Return global stats."""
         n_pending_tasks = stats.n_total_tasks_site() - stats.n_task_runs_site()
         n_users = stats.n_auth_users() + stats.n_anon_users()
         n_projects = cached_apps.n_published() + cached_apps.n_draft()

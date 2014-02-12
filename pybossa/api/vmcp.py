@@ -23,10 +23,12 @@ This package signs via API a request from CernVM plugin.
 """
 import os
 import json
-from flask import Response, request, current_app
-from api_base import APIBase
-from werkzeug.exceptions import MethodNotAllowed
 import pybossa.vmcp
+from flask import Response, request, current_app
+from api_base import APIBase, cors_headers
+from werkzeug.exceptions import MethodNotAllowed
+from pybossa.util import jsonpify, crossdomain
+from pybossa.ratelimit import ratelimit
 
 
 class VmcpAPI(APIBase):
@@ -37,6 +39,9 @@ class VmcpAPI(APIBase):
 
     """
 
+    @jsonpify
+    @crossdomain(origin='*', headers=cors_headers)
+    @ratelimit(limit=300, per=15 * 60)
     def get(self, id):
         """Return signed VMCP for CernVM requests."""
         error = dict(action=request.method,
