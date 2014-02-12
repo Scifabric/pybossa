@@ -31,7 +31,7 @@ from flask import Blueprint, request, abort, Response, current_app, make_respons
 from flask.views import MethodView
 from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound, Unauthorized, Forbidden
-
+import pybossa.view.stats as stats
 from pybossa.util import jsonpify, crossdomain
 import pybossa.model as model
 from pybossa.core import db
@@ -430,3 +430,18 @@ def vmcp():
     #    error['exception_msg'] = "Virtual Machine parameters are missing {'cpus': 1, 'ram': 128, ...}"
     #    return Response(json.dumps(error), status=error['status_code'],
     #                    mimetype='application/json')
+
+
+@jsonpify
+@blueprint.route('/stats', methods=['GET'])
+@ratelimit(limit=300, per=15 * 60)
+def global_stats():
+    """Return Global STATS for the site as JSON."""
+    n_pending_tasks = stats.n_total_tasks_site() - stats.n_task_runs_site()
+    n_users = stats.n_auth_users() + stats.n_anon_users()
+    n_projects = cached_apps.n_published() + cached_apps.n_draft()
+    data = dict(n_projects=n_projects,
+                n_users=n_users,
+                n_task_runs=stats.n_task_runs_site(),
+                n_pending_tasks=n_pending_tasks)
+    return Response(json.dumps(data), 200, mimetype='application/json')
