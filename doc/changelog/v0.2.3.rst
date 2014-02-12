@@ -8,6 +8,7 @@ The most interesting changes are the following:
  * Themes support: now you can easily customize PyBossa look and feel
  * Breadth First Scheduler improved: now users can only participate once in
    every task.
+ * Refactor API and add a new endpoint: globalstats.
 
 For a full list of changes, see associated `Github milestone`_.
 
