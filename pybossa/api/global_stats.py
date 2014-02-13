@@ -60,6 +60,14 @@ class GlobalStatsAPI(APIBase):
             datum = dict()
             datum[c['short_name']] = cached_apps.n_count(c['short_name'])
             data['categories'].append(datum)
+        # Add Featured
+        datum = dict()
+        datum['featured'] = cached_apps.n_featured()
+        data['categories'].append(datum)
+        # Add Draft
+        datum = dict()
+        datum['draft'] = cached_apps.n_draft()
+        data['categories'].append(datum)
         return Response(json.dumps(data), 200, mimetype='application/json')
 
     def _post(self):
