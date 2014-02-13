@@ -26,6 +26,7 @@ from api_base import APIBase, cors_headers
 from flask import Response
 import pybossa.view.stats as stats
 import pybossa.cache.apps as cached_apps
+import pybossa.cache.categories as cached_categories
 from pybossa.util import jsonpify, crossdomain
 from pybossa.ratelimit import ratelimit
 from werkzeug.exceptions import MethodNotAllowed
@@ -51,7 +52,14 @@ class GlobalStatsAPI(APIBase):
         data = dict(n_projects=n_projects,
                     n_users=n_users,
                     n_task_runs=stats.n_task_runs_site(),
-                    n_pending_tasks=n_pending_tasks)
+                    n_pending_tasks=n_pending_tasks,
+                    categories=[])
+        # Add Categories
+        categories = cached_categories.get_used()
+        for c in categories:
+            datum = dict()
+            datum[c['short_name']] = cached_apps.n_count(c['short_name'])
+            data['categories'].append(datum)
         return Response(json.dumps(data), 200, mimetype='application/json')
 
     def _post(self):
