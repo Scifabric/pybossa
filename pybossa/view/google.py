@@ -1,17 +1,20 @@
-# This file is part of PyBOSSA.
+# -*- coding: utf8 -*-
+# This file is part of PyBossa.
 #
-# PyBOSSA is free software: you can redistribute it and/or modify
+# Copyright (C) 2013 SF Isle of Man Limited
+#
+# PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBOSSA is distributed in the hope that it will be useful,
+# PyBossa is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask import Blueprint, request, url_for, flash, redirect, session
 from flask.ext.login import login_user, current_user
@@ -32,7 +35,7 @@ google = Google(app.config['GOOGLE_CLIENT_ID'],
 
 
 @blueprint.route('/', methods=['GET', 'POST'])
-def login():
+def login():  # pragma: no cover
     if request.args.get("next"):
         request_token_params = {
             'scope': 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
@@ -43,7 +46,7 @@ def login():
 
 
 @google.oauth.tokengetter
-def get_google_token():
+def get_google_token():  # pragma: no cover
     if current_user.is_anonymous():
         return session.get('oauth_token')
     else:
@@ -94,7 +97,7 @@ def manage_user(access_token, user_data, next_url):
 
 @blueprint.route('/oauth_authorized')
 @google.oauth.authorized_handler
-def oauth_authorized(resp):
+def oauth_authorized(resp):  # pragma: no cover
     #print "OAUTH authorized method called"
     next_url = url_for('home')
 

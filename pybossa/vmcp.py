@@ -1,17 +1,20 @@
-# This file is part of PyBOSSA.
+# -*- coding: utf8 -*-
+# This file is part of PyBossa.
 #
-# PyBOSSA is free software: you can redistribute it and/or modify
+# Copyright (C) 2013 SF Isle of Man Limited
+#
+# PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBOSSA is distributed in the hope that it will be useful,
+# PyBossa is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 import M2Crypto
 import hashlib
@@ -38,16 +41,13 @@ def myquote(line):
     return escaped
 
 
-def sign(data, salt, pkey):
-    # Calculate buffer to sign (sorting the keys)
-    print data
+def calculate_buffer(data, salt):
     strBuffer = ""
-    print data.keys()
     for k in sorted(data.iterkeys()):
 
         # Handle the BOOL special case
         v = data[k]
-        if type(v) == bool:
+        if type(v) == bool:  # pragma: no cover
             if v:
                 v = 1
             else:
@@ -59,15 +59,19 @@ def sign(data, salt, pkey):
 
     # Append salt
     strBuffer += salt
+    return strBuffer
 
-    print "Signing '%s'" % strBuffer
 
+def sign(data, salt, pkey):
+    strBuffer = calculate_buffer(data, salt)
     # Sign data
     rsa = M2Crypto.RSA.load_key(pkey)
     digest = hashlib.new('sha512', strBuffer).digest()
 
     # Append signature
     data['signature'] = base64.b64encode(rsa.sign(digest, "sha512"))
+    data['digest'] = digest
+    data['strBuffer'] = strBuffer
 
     # Return new data dictionary
     return data

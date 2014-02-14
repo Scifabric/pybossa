@@ -10,7 +10,25 @@ The RESTful API is located at::
 
 It expects and returns JSON.
 
-.. autoclass:: pybossa.api.APIBase
+.. autoclass:: pybossa.api.api_base.APIBase
+   :members:
+
+.. autoclass:: pybossa.api.AppAPI
+   :members:
+
+.. autoclass:: pybossa.api.TaskAPI
+   :members:
+
+.. autoclass:: pybossa.api.TaskRunAPI
+   :members:
+
+.. autoclass:: pybossa.api.CategoryAPI
+   :members:
+
+.. autoclass:: pybossa.api.GlobalStatsAPI
+   :members:
+
+.. autoclass:: pybossa.api.VmcpAPI
    :members:
 
 Some requests will need an **API-KEY** to authenticate & authorize the
@@ -58,6 +76,60 @@ Tasks will have only one parent: the associated application.
 Task Runs will have only two parents: the associated task and associated app.
 
 .. _`Hypermedia as the Engine of Application State`: http://en.wikipedia.org/wiki/HATEOAS 
+
+
+.. _rate-limiting:
+
+Rate Limiting
+-------------
+
+Rate Limiting in PyBossa v2.0.1 has been enabled for all the API endpoints.
+The rate limiting gives any user, using the IP, **a window of 15 minutes to do at
+most 300 requests per endpoint**.
+
+This new feature includes in the headers the following values to throttle your
+requests without problems:
+
+* **X-Rate-Limit-Limit**: the rate limit ceiling for that given request
+* **X-Rate-Limit-Remaining**: the number of requests left for the 15 minute window
+* **X-Rate-Limit-Reset**: the remaining window before the rate limit resets in UTC epoch seconds
+
+We recommend to use the Python package **requests** for interacting with
+PyBossa, as it is really simple to check those values:
+
+.. code-block:: python
+
+    import requests
+    import time
+
+    res = requests.get('http://SERVER/api/app')
+    if int(res.headers['X-Rate-Limit-Remaining']) < 10:
+        time.sleep(300) # Sleep for 5 minutes
+    else:
+        pass # Do your stuff
+
+
+.. _api-security:
+
+Security
+--------
+
+While applications and tasks can only be created by owners using an API-KEY,
+the task_runs can be created by any user without problems. For this reason,
+a secured cookie based system has been enabled to avoid attacks on the server.
+
+In order to POST a task_run you will need to request first the task associated
+for that task_run using the **newtask** API endpoint. This request will create
+a secured cookie (using your server SECRET key) that will be sent to the user.
+
+Then in order to post the task_run, the previous cookie should be sent. The
+cookie will be validated for the current task, and if it is not valid it will
+be forbidden to post a task_run.
+
+Every PyBossa application using the PyBossa.JS and web interface do not need to
+change anything, as the browser always attaches the cookies created for the
+tasks the user is participating.
+
 
 Operations
 ----------

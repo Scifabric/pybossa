@@ -1,9 +1,27 @@
+# -*- coding: utf8 -*-
+# This file is part of PyBossa.
+#
+# Copyright (C) 2013 SF Isle of Man Limited
+#
+# PyBossa is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# PyBossa is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+
 import os
 import random
 
 import pybossa.web as web
 import pybossa.model as model
-from pybossa.core import db, mail, cache, app
+from pybossa.core import db, mail, app, redis_master
 
 _here = os.path.dirname(__file__)
 web.app.config['TESTING'] = True
@@ -17,8 +35,6 @@ web.app.config['MAIL_PORT'] = 25
 web.app.config['MAIL_FAIL_SILENTLY'] = False
 web.app.config['MAIL_DEFAULT_SENDER'] = 'PyBossa Support <info@pybossa.com>'
 
-web.cache.config['CACHE_TYPE'] = 'null'
-web.cache.config['TESTING'] = True
 web.app.config['ANNOUNCEMENT'] = {'admin': 'Root Message',
                                   'user': 'User Message',
                                   'owner': 'Owner Message'}
@@ -26,10 +42,13 @@ web.app.config['ANNOUNCEMENT'] = {'admin': 'Root Message',
 web.app.config['CKAN_URL'] = 'http://datahub.io'
 web.app.config['CKAN_NAME'] = 'CKAN server'
 web.app.config['ENFORCE_PRIVACY'] = False
-cache.init_app(web.app)
+#cache.init_app(web.app)
 mail.init_app(web.app)
 #engine = model.create_engine(web.app.config['SQLALCHEMY_DATABASE_URI'])
 #model.set_engine(engine)
+
+def redis_flushall():
+    redis_master.flushall()
 
 class Fixtures:
     fullname = u'T Tester'
@@ -73,7 +92,6 @@ class Fixtures:
 
 
         task_info = {
-            'n_answers': 10,
             'question': 'My random question',
             'url': 'my url'
             }
@@ -105,7 +123,6 @@ class Fixtures:
         db.session.add_all([root, user, user2, app])
 
         task_info = {
-            'n_answers': 10,
             'question': 'My random question',
             'url': 'my url'
             }

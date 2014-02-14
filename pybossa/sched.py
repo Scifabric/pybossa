@@ -1,17 +1,20 @@
-# This file is part of PyBOSSA.
+# -*- coding: utf8 -*-
+# This file is part of PyBossa.
 #
-# PyBOSSA is free software: you can redistribute it and/or modify
+# Copyright (C) 2013 SF Isle of Man Limited
+#
+# PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBOSSA is distributed in the hope that it will be useful,
+# PyBossa is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 #import json
 #from flask import Blueprint, request, url_for, flash, redirect, abort
@@ -47,12 +50,6 @@ def get_breadth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, off
     Note that it **ignores** the number of answers limit for efficiency reasons
     (this is not a big issue as all it means is that you may end up with some
     tasks run more than is strictly needed!)
-
-    NB: current algorithm has the draw-back that it will allocate tasks to a
-    user which the user has already done if that task has the least number of
-    performances (excluding that done by the user). To fix this is possible but
-    would be costly as we'd need to find all tasks the user has done and
-    exclude those task ids explicitly.
     """
     # Uncomment the next three lines to profile the sched function
     #import timeit
@@ -60,21 +57,33 @@ def get_breadth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, off
     #                  user_ip, n_answers))
     #print "First algorithm: %s" % T.timeit(number=1)
 
-    sql = text('''
-SELECT task.id, count(task_run.task_id) AS taskcount from task
-LEFT JOIN task_run ON (task.id = task_run.task_id)
-WHERE task.app_id = :app_id AND
-(task_run.user_id IS NULL OR task_run.user_id != :user_id OR task_run.id IS NULL)
-GROUP BY task.id
-ORDER BY taskcount ASC limit 10 ;
-''')
-    # results will be list of (taskid, count)
-    tasks = db.engine.execute(sql, app_id=app_id, user_id=user_id)
+    if user_id and not user_ip:
+        sql = text('''
+                   SELECT task.id, COUNT(task_run.task_id) AS taskcount FROM task
+                   LEFT JOIN task_run ON (task.id = task_run.task_id) WHERE NOT EXISTS
+                   (SELECT 1 FROM task_run WHERE app_id=:app_id AND
+                   user_id=:user_id AND task_id=task.id)
+                   AND task.app_id=:app_id AND task.state !='completed'
+                   group by task.id ORDER BY taskcount, id ASC LIMIT 10;
+                   ''')
+        tasks = db.engine.execute(sql, app_id=app_id, user_id=user_id)
+    else:
+        if not user_ip: # pragma: no cover
+            user_ip = '127.0.0.1'
+        sql = text('''
+                   SELECT task.id, COUNT(task_run.task_id) AS taskcount FROM task
+                   LEFT JOIN task_run ON (task.id = task_run.task_id) WHERE NOT EXISTS
+                   (SELECT 1 FROM task_run WHERE app_id=:app_id AND
+                   user_ip=:user_ip AND task_id=task.id)
+                   AND task.app_id=:app_id AND task.state !='completed'
+                   group by task.id ORDER BY taskcount, id ASC LIMIT 10;
+                   ''')
+
+        # results will be list of (taskid, count)
+        tasks = db.engine.execute(sql, app_id=app_id, user_ip=user_ip)
     # ignore n_answers for the present - we will just keep going once we've
     # done as many as we need
-    # tasks = [ x[0] for x in tasks if x[1] < n_answers ]
     tasks = [x[0] for x in tasks]
-    print len(tasks)
     if tasks:
         if (offset == 0):
             return db.session.query(model.Task).get(tasks[0])
@@ -83,14 +92,8 @@ ORDER BY taskcount ASC limit 10 ;
                 return db.session.query(model.Task).get(tasks[offset])
             else:
                 return None
-    else:
+    else: # pragma: no cover
         return None
-    # candidate_tasks = get_candidate_tasks(app_id, user_id, user_ip, n_answers)
-    # total_remaining = len(candidate_tasks)
-    #print "Available tasks %s " % total_remaining
-    # if total_remaining == 0:
-    #    return None
-    # return candidate_tasks[0]
 
 
 def get_depth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
@@ -182,7 +185,7 @@ def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30, offset
         if (t.info.get('n_answers')):
             t.n_answers = int(t.info['n_answers'])
         # NEW WAY!
-        if t.n_answers is None:
+        if t.n_answers is None:  # pragma: no cover
             t.n_answers = 30
 
         if (len(t.task_runs) >= t.n_answers):
