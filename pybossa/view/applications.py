@@ -129,8 +129,8 @@ def app_by_shortname(short_name):
                 cached_apps.last_activity(app.id))
 
     else:
+        cached_apps.delete_app(short_name)
         return abort(404)
-    #return App.query.filter_by(short_name=short_name).first_or_404()
 
 
 @blueprint.route('/', defaults={'page': 1})
