@@ -46,6 +46,25 @@ HALF_HOUR = 30 * 60
 FIVE_MINUTES = 5 * 60
 
 
+def get_key_to_hash(*args, **kwargs):
+    """Return key to hash for *args and **kwargs."""
+    key_to_hash = ""
+    # First args
+    for i in args:
+        key_to_hash += ":%s" % i
+    # Attach any kwargs
+    for key in sorted(kwargs.iterkeys()):
+        key_to_hash += ":%s" % kwargs[key]
+    return key_to_hash
+
+
+def get_hash_key(prefix, key_to_hash):
+    """Return hash for a prefix and a key to hash."""
+    key_to_hash = key_to_hash.encode('utf-8')
+    key = prefix + ":" + hashlib.md5(key_to_hash).hexdigest()
+    return key
+
+
 def cache(key_prefix, timeout=300):
     """
     Decorator for caching functions.
@@ -83,14 +102,9 @@ def memoize(timeout=300, debug=False):
         def wrapper(*args, **kwargs):
             if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:  # pragma: no cover
                 key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, f.__name__)
-                key_to_hash = ""
-                for i in args:
-                    key_to_hash += ":%s" % i
-                key_to_hash = key_to_hash.encode('utf-8')
-                key = key + ":" + hashlib.md5(key_to_hash).hexdigest()
-                #key += "_kwargs"
-                #for i in frozenset(kwargs.items()):
-                #    key += ":%s" % i
+                key_to_hash = get_key_to_hash(*args, **kwargs)
+                key = get_hash_key(key, key_to_hash)
+                print "Memoize %s" % key
                 output = redis_slave.get(key)
                 if output:
                     return pickle.loads(output)
@@ -104,7 +118,7 @@ def memoize(timeout=300, debug=False):
     return decorator
 
 
-def delete_memoized(function, arg=None):
+def delete_memoized(function, *args, **kwargs):
     """
     Delete a memoized value from the cache.
 
@@ -113,19 +127,24 @@ def delete_memoized(function, arg=None):
     """
     if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:  # pragma: no cover
         keys = []
-        if arg:
-            key_to_hash = ":%s" % arg
-            key_to_hash = key_to_hash.encode('utf-8')
-            key = "%s:%s_args::%s" % (settings.REDIS_KEYPREFIX,
-                                      function.__name__,
-                                      hashlib.md5(key_to_hash).hexdigest())
-            keys.append(key)
-        else:
-            key = "%s:%s_args::*" % (settings.REDIS_KEYPREFIX,
-                                     function.__name__)
-            keys = redis_master.keys(key)
-        for k in keys:
-            redis_master.delete(k)
+        #if arg:
+        #    key_to_hash = ":%s" % arg
+        #    key_to_hash = key_to_hash.encode('utf-8')
+        #    key = "%s:%s_args::%s" % (settings.REDIS_KEYPREFIX,
+        #                              function.__name__,
+        #                              hashlib.md5(key_to_hash).hexdigest())
+        #    keys.append(key)
+        #else:
+        #    key = "%s:%s_args::*" % (settings.REDIS_KEYPREFIX,
+        #                             function.__name__)
+        #    keys = redis_master.keys(key)
+        key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, function.__name__)
+        key_to_hash = get_key_to_hash(*args, **kwargs)
+        key = get_hash_key(key, key_to_hash)
+        print "Deleting memoized key: %s" % key
+        #for k in keys:
+        #    redis_master.delete(k)
+        redis_master.delete(key)
         return True
 
 
