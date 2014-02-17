@@ -11,12 +11,16 @@ Vagrant.configure("2") do |config|
   config.vm.box_url = "http://files.vagrantup.com/precise32.box"
   #config.vm.provision :shell, :path => "bootstrap.sh"
   config.vm.provision :chef_solo do |chef|
+      chef.provisioning_path = "/tmp/vagrant-chef-solo"
+      chef.file_cache_path = chef.provisioning_path
       chef.add_recipe "apt"
+      chef.add_recipe "build-essential"
       chef.add_recipe "postgresql"
       #chef.add_recipe "apache2"
       chef.add_recipe "git"
-      chef.add_recipe "python"
+      #chef.add_recipe "python"
       #chef.add_recipe "application"
+      chef.add_recipe "redis"
       chef.add_recipe "pybossa"
   end
   #config.vm.provision :puppet do |puppet|

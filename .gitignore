@@ -36,3 +36,8 @@ keys/*
 *.pem
 uploads
 *~
+*.swm
+*.swn
+*.swl
+*.log
+log
