@@ -1,17 +1,20 @@
-# This file is part of PyBOSSA.
+# -*- coding: utf8 -*-
+# This file is part of PyBossa.
 #
-# PyBOSSA is free software: you can redistribute it and/or modify
+# Copyright (C) 2013 SF Isle of Man Limited
+#
+# PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBOSSA is distributed in the hope that it will be useful,
+# PyBossa is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask.ext.babel import lazy_gettext
 from flaskext.wtf import ValidationError
@@ -19,12 +22,14 @@ import re
 
 
 class Unique(object):
-    """Validator that checks field uniqueness"""
+
+    """Validator that checks field uniqueness."""
+
     def __init__(self, session, model, field, message=None):
         self.session = session
         self.model = model
         self.field = field
-        if not message:
+        if not message:  # pragma: no cover
             message = lazy_gettext(u'This item already exists')
         self.message = message
 
@@ -48,7 +53,7 @@ class NotAllowedChars(object):
         if not message:
             self.message = lazy_gettext(u'%sand space symbols are forbidden'
                                         % self.not_valid_chars)
-        else:
+        else:  # pragma: no cover
             self.message = message
 
     def __call__(self, form, field):
@@ -64,11 +69,10 @@ class CommaSeparatedIntegers(object):
         if not message:
             self.message = lazy_gettext(u'Only comma separated values are allowed, no spaces')
 
-        else:
+        else:  # pragma: no cover
             self.message = message
 
     def __call__(self, form, field):
         pattern = re.compile('^[\d,]+$')
-        print field.data
         if pattern.match(field.data) is None:
             raise ValidationError(self.message)

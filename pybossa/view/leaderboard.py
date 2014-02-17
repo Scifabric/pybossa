@@ -1,17 +1,20 @@
-# This file is part of PyBOSSA.
+# -*- coding: utf8 -*-
+# This file is part of PyBossa.
 #
-# PyBOSSA is free software: you can redistribute it and/or modify
+# Copyright (C) 2013 SF Isle of Man Limited
+#
+# PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBOSSA is distributed in the hope that it will be useful,
+# PyBossa is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask import Blueprint, request, url_for, flash, redirect, abort
 from flask import render_template
@@ -67,7 +70,7 @@ def index():
                        WHERE user_id=:user_id ORDER BY rank;
                        ''')
             user_rank = db.engine.execute(sql, user_id=current_user.id)
-            for row in user_rank:
+            for row in user_rank: # pragma: no cover
                 top_users.append(row)
     else:
         top_users = results

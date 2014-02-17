@@ -1,15 +1,15 @@
 # Spanish translations for PROJECT.
-# Copyright (C) 2013 ORGANIZATION
-# This file is distributed under the same license as the PROJECT project.
-# FIRST AUTHOR <EMAIL@ADDRESS>, 2013.
+# Copyright (C) 2013 SF Isle of Man Limited
+# This file is distributed under the same license as the PyBossa project.
+# Daniel Lombraña González <daniel@shuttleworthfoundation.org>, 2013.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
-"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"Report-Msgid-Bugs-To: daniel@shuttleworthfoundation.org\n"
 "POT-Creation-Date: 2013-04-03 11:35+0200\n"
 "PO-Revision-Date: 2013-03-26 18:24+0100\n"
-"Last-Translator: Daniel Lombraña González <teleyinex@gmail.com>\n"
+"Last-Translator: Daniel Lombraña González <daniel@shuttleworthfoundation.org>\n"
 "Language-Team: es <LL@li.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "MIME-Version: 1.0\n"
