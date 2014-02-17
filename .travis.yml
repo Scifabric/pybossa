@@ -2,14 +2,23 @@ language: python
 python:
   - "2.6"
   - "2.7"
-env: PYBOSSA_SETTINGS='../settings_test.py'
+env: 
+  - PYBOSSA_SETTINGS='../settings_test.py' PYBOSSA_REDIS_CACHE_DISABLED='1'
+services:
+  - redis-server
 before_install:
   - sudo apt-get update && sudo apt-get install swig
+  - redis-server --version
+  - redis-server contrib/redis/sentinel.conf --sentinel
+  - pip install coveralls --use-mirrors
 install:
   - python setup.py install
+  - pip install -r cache_requirements.txt
 before_script:
   - psql -c 'create database pybossa;' -U postgres
-script: nosetests
+script: nosetests -v --with-coverage --cover-erase --cover-package=pybossa
 notifications:
   email: false
   irc: "irc.freenode.net#okfn-dev"
+after_success:
+  - coveralls

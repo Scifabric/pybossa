@@ -1,17 +1,20 @@
-# This file is part of PyBOSSA.
+# -*- coding: utf8 -*-
+# This file is part of PyBossa.
 #
-# PyBOSSA is free software: you can redistribute it and/or modify
+# Copyright (C) 2013 SF Isle of Man Limited
+#
+# PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBOSSA is distributed in the hope that it will be useful,
+# PyBossa is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask import Blueprint
 from flask import render_template
@@ -75,43 +78,41 @@ def featured(app_id=None):
                                                              per_page=n_apps)
             return render_template('/admin/applications.html', apps=apps,
                                    categories=categories)
-        elif app_id:
-            if request.method == 'POST':
-                cached_apps.reset()
-                f = model.Featured()
-                f.app_id = app_id
-                app = db.session.query(model.App).get(app_id)
-                require.app.update(app)
-                # Check if the app is already in this table
-                tmp = db.session.query(model.Featured)\
-                        .filter(model.Featured.app_id == app_id)\
-                        .first()
-                if (tmp is None):
-                    db.session.add(f)
-                    db.session.commit()
-                    return json.dumps(f.dictize())
-                else:
-                    msg = "App.id %s alreay in Featured table" % app_id
-                    return format_error(msg, 415)
-            if request.method == 'DELETE':
-                cached_apps.reset()
-                f = db.session.query(model.Featured)\
-                      .filter(model.Featured.app_id == app_id)\
-                      .first()
-                if (f):
-                    db.session.delete(f)
-                    db.session.commit()
-                    return "", 204
-                else:
-                    msg = 'App.id %s is not in Featured table' % app_id
-                    return format_error(msg, 404)
         else:
-            msg = ('App.id is missing for %s action in featured method' %
-                   request.method)
-            return format_error(msg, 415)
-    except HTTPException:
-        return abort(403)
-    except Exception as e:
+            app = db.session.query(model.App).get(app_id)
+            if app:
+                if request.method == 'POST':
+                    cached_apps.reset()
+                    f = model.Featured()
+                    f.app_id = app_id
+                    require.app.update(app)
+                    # Check if the app is already in this table
+                    tmp = db.session.query(model.Featured)\
+                            .filter(model.Featured.app_id == app_id)\
+                            .first()
+                    if (tmp is None):
+                        db.session.add(f)
+                        db.session.commit()
+                        return json.dumps(f.dictize())
+                    else:
+                        msg = "App.id %s alreay in Featured table" % app_id
+                        return format_error(msg, 415)
+                if request.method == 'DELETE':
+                    cached_apps.reset()
+                    f = db.session.query(model.Featured)\
+                          .filter(model.Featured.app_id == app_id)\
+                          .first()
+                    if (f):
+                        db.session.delete(f)
+                        db.session.commit()
+                        return "", 204
+                    else:
+                        msg = 'App.id %s is not in Featured table' % app_id
+                        return format_error(msg, 404)
+            else:
+                msg = 'App.id %s not found' % app_id
+                return format_error(msg, 404)
+    except Exception as e: # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
 
@@ -158,9 +159,7 @@ def users(user_id=None):
 
         return render_template('/admin/users.html', found=[], users=users,
                                title=gettext("Manage Admin Users"), form=form)
-    except HTTPException:
-        return abort(403)
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
 
@@ -182,9 +181,7 @@ def add_admin(user_id=None):
             else:
                 msg = "User not found"
                 return format_error(msg, 404)
-    except HTTPException:
-        return abort(403)
-    except Exception as e:
+    except Exception as e: # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
 
@@ -206,12 +203,10 @@ def del_admin(user_id=None):
             else:
                 msg = "User.id not found"
                 return format_error(msg, 404)
-        else:
+        else:  # pragma: no cover
             msg = "User.id is missing for method del_admin"
             return format_error(msg, 415)
-    except HTTPException:
-        return abort(403)
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
 
@@ -260,9 +255,7 @@ def categories():
                                categories=categories,
                                n_apps_per_category=n_apps_per_category,
                                form=form)
-    except HTTPException:
-        return abort(403)
-    except Exception as e:
+    except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
 
@@ -295,10 +288,10 @@ def del_category(id):
                 flash(msg, 'warning')
                 return redirect(url_for('.categories'))
         else:
-            return abort(404)
+            abort(404)
     except HTTPException:
-        return abort(403)
-    except Exception as e:
+        raise
+    except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
 
@@ -326,7 +319,7 @@ def update_category(id):
                     new_category = model.Category(id=form.id.data,
                                                   name=form.name.data,
                                                   short_name=slug)
-                    print new_category.id
+                    # print new_category.id
                     db.session.merge(new_category)
                     db.session.commit()
                     cached_cat.reset()
@@ -334,14 +327,16 @@ def update_category(id):
                     flash(msg, 'success')
                     return redirect(url_for(".categories"))
                 else:
+                    msg = gettext("Please correct the errors")
+                    flash(msg, 'success')
                     return render_template('admin/update_category.html',
                                            title=gettext('Update Category'),
                                            category=category,
                                            form=form)
         else:
-            return abort(404)
+            abort(404)
     except HTTPException:
-        return abort(403)
-    except Exception as e:
+        raise
+    except Exception as e: # pragma: no cover
         current_app.logger.error(e)
         return abort(500)

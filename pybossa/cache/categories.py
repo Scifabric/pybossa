@@ -1,33 +1,34 @@
-# This file is part of PyBOSSA.
+# -*- coding: utf8 -*-
+# This file is part of PyBossa.
 #
-# PyBOSSA is free software: you can redistribute it and/or modify
+# Copyright (C) 2013 SF Isle of Man Limited
+#
+# PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBOSSA is distributed in the hope that it will be useful,
+# PyBossa is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+
 from sqlalchemy.sql import text
-from pybossa.core import cache
+from pybossa.cache import cache, delete_cached, ONE_DAY
 from pybossa.core import db
 import pybossa.model as model
 
 
-STATS_TIMEOUT = 50
-
-
-@cache.cached(key_prefix="categories_all")
+@cache(key_prefix="categories_all", timeout=ONE_DAY)
 def get_all():
     """Return all categories"""
     return db.session.query(model.Category).all()
 
 
-@cache.cached(key_prefix="categories_used")
+@cache(key_prefix="categories_used", timeout=ONE_DAY)
 def get_used():
     """Return categories only used by apps"""
     sql = text('''
@@ -45,5 +46,5 @@ def get_used():
 
 def reset():
     """Clean the cache"""
-    cache.delete('categories_all')
-    cache.delete('categories_used')
+    delete_cached('categories_all')
+    delete_cached('categories_used')

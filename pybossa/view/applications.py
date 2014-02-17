@@ -1,17 +1,20 @@
-# This file is part of PyBOSSA.
+# -*- coding: utf8 -*-
+# This file is part of PyBossa.
 #
-# PyBOSSA is free software: you can redistribute it and/or modify
+# Copyright (C) 2013 SF Isle of Man Limited
+#
+# PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBOSSA is distributed in the hope that it will be useful,
+# PyBossa is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from StringIO import StringIO
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
@@ -28,7 +31,8 @@ import pybossa.stats as stats
 import pybossa.validator as pb_validator
 
 from pybossa.core import db
-from pybossa.model import App, Task
+from pybossa.cache import ONE_DAY, ONE_HOUR
+from pybossa.model import App, Task, User
 from pybossa.util import Pagination, UnicodeWriter, admin_required
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
@@ -107,7 +111,7 @@ class TaskSchedulerForm(Form):
 
 
 def app_title(app, page_name):
-    if not app:
+    if not app:  # pragma: no cover
         return "Application not found"
     if page_name is None:
         return "Application: %s" % (app.name)
@@ -115,7 +119,18 @@ def app_title(app, page_name):
 
 
 def app_by_shortname(short_name):
-    return App.query.filter_by(short_name=short_name).first_or_404()
+    app = cached_apps.get_app(short_name)
+    if app.id:
+        # Populate CACHE with the data of the app
+        return (app,
+                cached_apps.n_tasks(app.id),
+                cached_apps.n_task_runs(app.id),
+                cached_apps.overall_progress(app.id),
+                cached_apps.last_activity(app.id))
+
+    else:
+        return abort(404)
+    #return App.query.filter_by(short_name=short_name).first_or_404()
 
 
 @blueprint.route('/', defaults={'page': 1})
@@ -127,7 +142,7 @@ def redirect_old_featured(page):
 
 @blueprint.route('/published/', defaults={'page': 1})
 @blueprint.route('/published/<int:page>/', defaults={'page': 1})
-def redirect_old_published(page):
+def redirect_old_published(page):  # pragma: no cover
     """DEPRECATED only to redirect old links"""
     category = db.session.query(model.Category).first()
     return redirect(url_for('.app_cat_index', category=category.short_name, page=page), 301)
@@ -149,14 +164,7 @@ def index(page):
                          True, False)
     else:
         categories = cached_cat.get_all()
-        if len(categories) > 0:
-            cat_short_name = categories[0].short_name
-        else:
-            cat = db.session.query(model.Category).first()
-            if cat:
-                cat_short_name = cat.short_name
-            else:
-                cat_short_name = "algo"
+        cat_short_name = categories[0].short_name
         return redirect(url_for('.app_cat_index', category=cat_short_name))
 
 
@@ -167,8 +175,16 @@ def app_index(page, lookup, category, fallback, use_count):
 
     apps, count = lookup(category, page, per_page)
 
-    if fallback and not apps:
-        return redirect(url_for('.published'))
+    data = []
+    for app in apps:
+        data.append(dict(app=app, n_tasks=cached_apps.n_tasks(app['id']),
+                         overall_progress=cached_apps.overall_progress(app['id']),
+                         last_activity=app['last_activity'],
+                         last_activity_raw=app['last_activity_raw']))
+
+
+    if fallback and not apps:  # pragma: no cover
+        return redirect(url_for('.index'))
 
     pagination = Pagination(page, per_page, count)
     categories = cached_cat.get_all()
@@ -190,7 +206,7 @@ def app_index(page, lookup, category, fallback, use_count):
     if cached_apps.n_featured() > 0:
         categories.insert(0, featured_cat)
     template_args = {
-        "apps": apps,
+        "apps": data,
         "title": gettext("Applications"),
         "pagination": pagination,
         "active_cat": active_cat,
@@ -221,7 +237,7 @@ def app_cat_index(category, page):
 @blueprint.route('/new', methods=['GET', 'POST'])
 @login_required
 def new():
-    if not require.app.create():
+    if not require.app.create():  # pragma: no cover
         abort(403)
     form = AppForm(request.form)
     categories = db.session.query(model.Category).all()
@@ -254,7 +270,7 @@ def new():
                     owner_id=current_user.id,
                     info=info,)
 
-    cached_apps.reset()
+    #cached_apps.reset()
     db.session.add(app)
     db.session.commit()
     # Clean cache
@@ -275,7 +291,7 @@ def new():
 def task_presenter_editor(short_name):
     try:
         errors = False
-        app = app_by_shortname(short_name)
+        app, n_tasks, n_task_runs, overall_progress, last_activty = app_by_shortname(short_name)
 
         title = app_title(app, "Task Presenter Editor")
         require.app.read(app)
@@ -283,19 +299,19 @@ def task_presenter_editor(short_name):
 
         form = TaskPresenterForm(request.form)
         if request.method == 'POST' and form.validate():
-            app.info['task_presenter'] = form.editor.data
-            db.session.add(app)
+            db_app = db.session.query(model.App).filter_by(id=app.id).first()
+            db_app.info['task_presenter'] = form.editor.data
+            db.session.add(db_app)
             db.session.commit()
+            cached_apps.delete_app(app.short_name)
             msg_1 = gettext('Task presenter added!')
             flash('<i class="icon-ok"></i> ' + msg_1, 'success')
             return redirect(url_for('.tasks', short_name=app.short_name))
 
-        if request.method == 'POST' and not form.validate():
+        # It does not have a validation
+        if request.method == 'POST' and not form.validate():  # pragma: no cover
             flash(gettext('Please correct the errors'), 'error')
             errors = True
-
-        if request.method != 'GET':
-            return
 
         if app.info.get('task_presenter'):
             form.editor.data = app.info['task_presenter']
@@ -337,14 +353,14 @@ def task_presenter_editor(short_name):
     except HTTPException as e:
         if app.hidden:
             raise abort(403)
-        else:
+        else:  # pragma: no cover
             raise e
 
 
 @blueprint.route('/<short_name>/delete', methods=['GET', 'POST'])
 @login_required
 def delete(short_name):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     try:
         title = app_title(app, "Delete")
         require.app.read(app)
@@ -352,14 +368,19 @@ def delete(short_name):
         if request.method == 'GET':
             return render_template('/applications/delete.html',
                                    title=title,
-                                   app=app)
+                                   app=app,
+                                   n_tasks=n_tasks,
+                                   overall_progress=overall_progress,
+                                   last_activity=last_activity)
         # Clean cache
+        cached_apps.delete_app(app.short_name)
         cached_apps.clean(app.id)
+        app = App.query.get(app.id)
         db.session.delete(app)
         db.session.commit()
         flash(gettext('Application deleted!'), 'success')
         return redirect(url_for('account.profile'))
-    except HTTPException:
+    except HTTPException:  # pragma: no cover
         if app.hidden:
             raise abort(403)
         else:
@@ -369,14 +390,14 @@ def delete(short_name):
 @blueprint.route('/<short_name>/update', methods=['GET', 'POST'])
 @login_required
 def update(short_name):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
 
     def handle_valid_form(form):
         hidden = int(form.hidden.data)
 
         new_info = {}
         # Add the info items
-        app = app_by_shortname(short_name)
+        app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
         if form.thumbnail.data:
             new_info['thumbnail'] = form.thumbnail.data
         #if form.sched.data:
@@ -397,11 +418,13 @@ def update(short_name):
             allow_anonymous_contributors=form.allow_anonymous_contributors.data,
             category_id=form.category_id.data)
 
-        app = app_by_shortname(short_name)
+        app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
         db.session.merge(new_application)
         db.session.commit()
+        cached_apps.delete_app(short_name)
         cached_apps.reset()
         cached_cat.reset()
+        cached_apps.get_app(new_application.short_name)
         flash(gettext('Application updated!'), 'success')
         return redirect(url_for('.details',
                                 short_name=new_application.short_name))
@@ -439,20 +462,20 @@ def update(short_name):
                                title=title,
                                app=app)
     except HTTPException:
-        if app.hidden:
+        if app.hidden:  # pragma: no cover
             raise abort(403)
-        else:
+        else:  # pragma: no cover
             raise
 
 
 @blueprint.route('/<short_name>/')
 def details(short_name):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
 
     try:
         require.app.read(app)
         template = '/applications/app.html'
-    except HTTPException:
+    except HTTPException:  # pragma: no cover
         if app.hidden:
             raise abort(403)
         else:
@@ -460,30 +483,21 @@ def details(short_name):
 
     title = app_title(app, None)
 
-    template_args = {"app": app, "title": title}
-    try:
-        if current_app.config.get('CKAN_URL'):
-            template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
-            ckan = Ckan(url=current_app.config['CKAN_URL'])
-            pkg, e = ckan.package_exists(name=short_name)
-            if e:
-                raise e
-            if pkg:
-                template_args['ckan_pkg_url'] = (
-                    "%s/dataset/%s" % (current_app.config['CKAN_URL'], short_name))
-                template_args['ckan_pkg'] = pkg
-    except requests.exceptions.ConnectionError:
-        current_app.logger.error("CKAN server down or there is a typo in the URL")
-    except Exception as e:
-        current_app.logger.error(e)
-
+    template_args = {"app": app, "title": title,
+                     "n_tasks": n_tasks,
+                     "overall_progress": overall_progress,
+                     "last_activity": last_activity}
+    if current_app.config.get('CKAN_URL'):
+        template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
+        template_args['ckan_url'] = current_app.config.get('CKAN_URL')
+        template_args['ckan_pkg_name'] = short_name
     return render_template(template, **template_args)
 
 
 @blueprint.route('/<short_name>/settings')
 @login_required
 def settings(short_name):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
 
     title = app_title(app, "Settings")
     try:
@@ -492,9 +506,12 @@ def settings(short_name):
 
         return render_template('/applications/settings.html',
                                app=app,
+                               n_tasks=n_tasks,
+                               overall_progress=overall_progress,
+                               last_activity=last_activity,
                                title=title)
     except HTTPException:
-        if app.hidden:
+        if app.hidden:  # pragma: no cover
             raise abort(403)
         else:
             raise
@@ -507,7 +524,7 @@ def compute_importer_variant_pairs(forms):
     variants = reduce(operator.__add__,
                       [i.variants for i in forms.itervalues()],
                       [])
-    if len(variants) % 2:
+    if len(variants) % 2: # pragma: no cover
         variants.append("empty")
 
     prefix = "applications/tasks/"
@@ -521,7 +538,7 @@ def compute_importer_variant_pairs(forms):
 @blueprint.route('/<short_name>/tasks/import', methods=['GET', 'POST'])
 @login_required
 def import_task(short_name):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, "Import Tasks")
     loading_text = gettext("Importing tasks, this may take a while, wait...")
     template_args = {"title": title, "app": app, "loading_text": loading_text}
@@ -529,7 +546,7 @@ def import_task(short_name):
         require.app.read(app)
         require.app.update(app)
     except HTTPException:
-        if app.hidden:
+        if app.hidden:  # pragma: no cover
             raise abort(403)
         else:
             raise
@@ -551,7 +568,7 @@ def import_task(short_name):
         return render_template('/applications/import_options.html',
                                **template_args)
 
-    if template == 'gdocs':
+    if template == 'gdocs':  # pragma: no cover
         mode = request.args.get('mode')
         if mode is not None:
             template_args["gdform"].googledocs_url.data = importer.googledocs_urls[mode]
@@ -572,7 +589,7 @@ def import_task(short_name):
         tmpl = '/applications/importers/%s.html' % template
         return render_template(tmpl, **template_args)
 
-    if not (form and form.validate_on_submit()):
+    if not (form and form.validate_on_submit()):  # pragma: no cover
         return render_forms()
 
     return _import_task(app, handler, form, render_forms)
@@ -603,10 +620,14 @@ def _import_task(app, handler, form, render_forms):
         if n == 1:
             msg = str(n) + " " + gettext('Task imported successfully!')
         flash(msg, 'success')
+        cached_apps.delete_n_tasks(app.id)
+        cached_apps.delete_n_task_runs(app.id)
+        cached_apps.delete_overall_progress(app.id)
+        cached_apps.delete_last_activity(app.id)
         return redirect(url_for('.tasks', short_name=app.short_name))
     except importer.BulkImportException, err_msg:
         flash(err_msg, 'error')
-    except Exception as inst:
+    except Exception as inst:  # pragma: no cover
         current_app.logger.error(inst)
         msg = 'Oops! Looks like there was an error with processing that file!'
         flash(gettext(msg), 'error')
@@ -615,14 +636,14 @@ def _import_task(app, handler, form, render_forms):
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     task = Task.query.filter_by(id=task_id).first_or_404()
     try:
         require.app.read(app)
     except HTTPException:
         if app.hidden:
             raise abort(403)
-        else:
+        else:  # pragma: no cover
             raise
 
     if current_user.is_anonymous():
@@ -680,7 +701,7 @@ def task_presenter(short_name, task_id):
 @blueprint.route('/<short_name>/presenter')
 @blueprint.route('/<short_name>/newtask')
 def presenter(short_name):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, "Contribute")
     template_args = {"app": app, "title": title}
     try:
@@ -688,7 +709,7 @@ def presenter(short_name):
     except HTTPException:
         if app.hidden:
             raise abort(403)
-        else:
+        else:  # pragma: no cover
             raise
 
     if not app.allow_anonymous_contributors and current_user.is_anonymous():
@@ -720,14 +741,14 @@ def presenter(short_name):
 
 @blueprint.route('/<short_name>/tutorial')
 def tutorial(short_name):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, "Tutorial")
     try:
         require.app.read(app)
     except HTTPException:
         if app.hidden:
             return abort(403)
-        else:
+        else: # pragma: no cover
             raise
     return render_template('/applications/tutorial.html', title=title, app=app)
 
@@ -736,13 +757,13 @@ def tutorial(short_name):
 def export(short_name, task_id):
     """Return a file with all the TaskRuns for a give Task"""
     # Check if the app exists
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     try:
         require.app.read(app)
     except HTTPException:
         if app.hidden:
             raise abort(403)
-        else:
+        else: # pragma: no cover
             raise
 
     # Check if the task belongs to the app and exists
@@ -759,24 +780,27 @@ def export(short_name, task_id):
 
 @blueprint.route('/<short_name>/tasks/')
 def tasks(short_name):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, "Tasks")
     try:
         require.app.read(app)
         return render_template('/applications/tasks.html',
                                title=title,
-                               app=app)
+                               app=app,
+                               n_tasks=n_tasks,
+                               overall_progress=overall_progress,
+                               last_activity=last_activity)
     except HTTPException:
         if app.hidden:
             raise abort(403)
-        else:
+        else: # pragma: no cover
             raise
 
 
 @blueprint.route('/<short_name>/tasks/browse', defaults={'page': 1})
 @blueprint.route('/<short_name>/tasks/browse/<int:page>')
 def tasks_browse(short_name, page):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, "Tasks")
 
     def respond():
@@ -807,7 +831,7 @@ def tasks_browse(short_name, page):
     except HTTPException:
         if app.hidden:
             raise abort(403)
-        else:
+        else: # pragma: no cover
             raise
 
 
@@ -815,7 +839,7 @@ def tasks_browse(short_name, page):
 @login_required
 def delete_tasks(short_name):
     """Delete ALL the tasks for a given application"""
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     try:
         require.app.read(app)
         require.app.update(app)
@@ -823,13 +847,21 @@ def delete_tasks(short_name):
             title = app_title(app, "Delete")
             return render_template('applications/tasks/delete.html',
                                    app=app,
+                                   n_tasks=n_tasks,
+                                   overall_progress=overall_progress,
+                                   last_activity=last_activity,
                                    title=title)
         else:
-            for task in app.tasks:
-                db.session.delete(task)
+            tasks = db.session.query(model.Task).filter_by(app_id=app.id).all()
+            for t in tasks:
+                db.session.delete(t)
             db.session.commit()
             msg = gettext("All the tasks and associated task runs have been deleted")
             flash(msg, 'success')
+            cached_apps.delete_last_activity(app.id)
+            cached_apps.delete_n_tasks(app.id)
+            cached_apps.delete_n_task_runs(app.id)
+            cached_apps.delete_overall_progress(app.id)
             return redirect(url_for('.tasks', short_name=app.short_name))
     except HTTPException:
         return abort(403)
@@ -838,7 +870,7 @@ def delete_tasks(short_name):
 @blueprint.route('/<short_name>/tasks/export')
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, gettext("Export"))
     loading_text = gettext("Exporting data..., this may take a while")
 
@@ -847,7 +879,7 @@ def export_to(short_name):
     except HTTPException:
         if app.hidden:
             raise abort(403)
-        else:
+        else: # pragma: no cover
             raise
 
     def respond():
@@ -869,13 +901,26 @@ def export_to(short_name):
             yield item + sep
         yield "]"
 
+    def format_csv_properly(row):
+        keys = sorted(row.keys())
+        values = []
+        for k in keys:
+            values.append(row[k])
+        return values
+
+
     def handle_task(writer, t):
-        writer.writerow(t.info.values())
+        if (type(t.info) == dict):
+            values = format_csv_properly(t.info)
+            writer.writerow(values)
+        else: # pragma: no cover
+            writer.writerow([t.info])
 
     def handle_task_run(writer, t):
         if (type(t.info) == dict):
-            writer.writerow(t.info.values())
-        else:
+            values = format_csv_properly(t.info)
+            writer.writerow(values)
+        else: # pragma: no cover
             writer.writerow([t.info])
 
     def get_csv(out, writer, table, handle_row):
@@ -918,11 +963,13 @@ def export_to(short_name):
                 raise e
             if package:
                 # Update the package
-                package = ckan.package_update(app=app, user=app.owner, url=app_url,
+                owner = User.query.get(app.owner_id)
+                package = ckan.package_update(app=app, user=owner, url=app_url,
                                               resources=package['resources'])
+
                 ckan.package = package
                 resource_found = False
-                print len(package['resources'])
+                # print len(package['resources'])
                 for r in package['resources']:
                     if r['name'] == ty:
                         ckan.datastore_delete(name=ty, resource_id=r['id'])
@@ -935,7 +982,8 @@ def export_to(short_name):
                 if not resource_found:
                     create_ckan_datastore(ckan, ty, package['id'])
             else:
-                package = ckan.package_create(app=app, user=app.owner, url=app_url)
+                owner = User.query.get(app.owner_id)
+                package = ckan.package_create(app=app, user=owner, url=app_url)
                 create_ckan_datastore(ckan, ty, package['id'])
                 #new_resource = ckan.resource_create(name=ty,
                 #                                    package_id=package['id'])
@@ -954,7 +1002,7 @@ def export_to(short_name):
             if len(inst.args) == 3:
                 t, msg, status_code = inst.args
                 msg = ("Error: %s with status code: %s" % (t, status_code))
-            else:
+            else: # pragma: no cover
                 msg = ("Error: %s" % inst.args[0])
             current_app.logger.error(msg)
             flash(msg, 'danger')
@@ -988,7 +1036,7 @@ def export_to(short_name):
             .first()
         if t is not None:
             if test(t):
-                writer.writerow(t.info.keys())
+                writer.writerow(sorted(t.info.keys()))
 
             return Response(get_csv(out, writer, table, handle_row),
                             mimetype='text/csv')
@@ -1019,7 +1067,7 @@ def export_to(short_name):
 @blueprint.route('/<short_name>/stats')
 def show_stats(short_name):
     """Returns App Stats"""
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, "Statistics")
 
     try:
@@ -1027,10 +1075,10 @@ def show_stats(short_name):
     except HTTPException:
         if app.hidden:
             raise abort(403)
-        else:
+        else: # pragma: no cover
             raise
 
-    if not (len(app.tasks) > 0 and len(app.task_runs) > 0):
+    if not ((n_tasks > 0) and (n_task_runs > 0)):
         return render_template('/applications/non_stats.html',
                                title=title,
                                app=app)
@@ -1070,20 +1118,20 @@ def show_stats(short_name):
 @login_required
 def task_settings(short_name):
     """Settings page for tasks of the application"""
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     try:
         require.app.read(app)
         require.app.update(app)
         return render_template('applications/task_settings.html',
                                app=app)
-    except:
+    except:  # pragma: no cover
         return abort(403)
 
 
 @blueprint.route('/<short_name>/tasks/redundancy', methods=['GET', 'POST'])
 @login_required
 def task_n_answers(short_name):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, gettext('Redundancy'))
     form = TaskRedundancyForm()
     try:
@@ -1095,7 +1143,9 @@ def task_n_answers(short_name):
                                    form=form,
                                    app=app)
         elif request.method == 'POST' and form.validate():
-            sql = text('''UPDATE task SET n_answers=:n_answers WHERE app_id=:app_id''')
+            sql = text('''
+                       UPDATE task SET n_answers=:n_answers,
+                       state='ongoing' WHERE app_id=:app_id''')
             db.engine.execute(sql, n_answers=form.n_answers.data, app_id=app.id)
             msg = gettext('Redundancy of Tasks updated!')
             flash(msg, 'success')
@@ -1109,14 +1159,14 @@ def task_n_answers(short_name):
     except HTTPException:
         if app.hidden:
             raise abort(403)
-        else:
+        else: # pragma: no cover
             raise
 
 
 @blueprint.route('/<short_name>/tasks/scheduler', methods=['GET', 'POST'])
 @login_required
 def task_scheduler(short_name):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, gettext('Task Scheduler'))
     form = TaskSchedulerForm()
 
@@ -1131,7 +1181,7 @@ def task_scheduler(short_name):
     except HTTPException:
         if app.hidden:
             raise abort(403)
-        else:
+        else: # pragma: no cover
             raise
 
     if request.method == 'GET':
@@ -1143,23 +1193,24 @@ def task_scheduler(short_name):
         return respond()
 
     if request.method == 'POST' and form.validate():
+        app = App.query.filter_by(short_name=app.short_name).first()
         if form.sched.data:
             app.info['sched'] = form.sched.data
-        cached_apps.reset()
         db.session.add(app)
         db.session.commit()
+        cached_apps.delete_app(app.short_name)
         msg = gettext("Application Task Scheduler updated!")
         flash(msg, 'success')
         return redirect(url_for('.tasks', short_name=app.short_name))
-
-    flash(gettext('Please correct the errors'), 'error')
-    return respond()
+    else: # pragma: no cover
+        flash(gettext('Please correct the errors'), 'error')
+        return respond()
 
 
 @blueprint.route('/<short_name>/tasks/priority', methods=['GET', 'POST'])
 @login_required
 def task_priority(short_name):
-    app = app_by_shortname(short_name)
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, gettext('Task Priority'))
     form = TaskPriorityForm()
 
@@ -1188,10 +1239,11 @@ def task_priority(short_name):
                 if t:
                     t.priority_0 = form.priority_0.data
                     tasks.append(t)
-                else:
+                else:  # pragma: no cover
                     flash(gettext(("Ooops, Task.id=%s does not belong to the app" % task_id)), 'danger')
         db.session.add_all(tasks)
         db.session.commit()
+        cached_apps.delete_app(app.short_name)
         flash(gettext("Task priority has been changed"), 'success')
         return respond()
     else:
