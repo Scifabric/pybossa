@@ -1,17 +1,20 @@
-# This file is part of PyBOSSA.
+# -*- coding: utf8 -*-
+# This file is part of PyBossa.
 #
-# PyBOSSA is free software: you can redistribute it and/or modify
+# Copyright (C) 2013 SF Isle of Man Limited
+#
+# PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBOSSA is distributed in the hope that it will be useful,
+# PyBossa is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 #import os
 #from glob import iglob
@@ -68,7 +71,7 @@ def rebuild_db():
     for table_name in inspector.get_table_names():
         fks = []
         for fk in inspector.get_foreign_keys(table_name):
-            if not fk['name']:
+            if not fk['name']: # pragma: no cover
                 continue
             fks.append(
                 ForeignKeyConstraint((),(),name=fk['name'])
@@ -138,10 +141,10 @@ class DomainObject(object):
     def undictize(cls, dict_):
         raise NotImplementedError()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return self.__unicode__().encode('utf8')
 
-    def __unicode__(self):
+    def __unicode__(self): # pragma: no cover
         repr = u'<%s' % self.__class__.__name__
         table = class_mapper(self.__class__).mapped_table
         for col in table.c:
@@ -169,11 +172,11 @@ class App(db.Model, DomainObject):
     #: created timestamp (automatically set)
     created = Column(Text, default=make_timestamp)
     #: Name / Title for this Application
-    name = Column(Unicode(length=255), unique=True)
+    name = Column(Unicode(length=255), unique=True, nullable=False)
     #: slug used in urls etc
-    short_name = Column(Unicode(length=255), unique=True)
+    short_name = Column(Unicode(length=255), unique=True, nullable=False)
     #: description
-    description = Column(Unicode(length=255))
+    description = Column(Unicode(length=255), nullable=False)
     #: long description
     long_description = Column(UnicodeText)
     #: Allow anonymous contributors to participate in the application tasks
@@ -184,7 +187,7 @@ class App(db.Model, DomainObject):
     #: this App should be hidden from everyone but Administrators
     hidden = Column(Integer, default=0)
     #: owner (id)
-    owner_id = Column(Integer, ForeignKey('user.id'))
+    owner_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     ## Following may not be relevant ...
     ## TODO: ask about these
     #: estimate of time it should take for user
@@ -209,53 +212,57 @@ class App(db.Model, DomainObject):
 
     ## Relationships
     #: `Task`s for this app.`
-    tasks = relationship('Task', cascade='all, delete-orphan', backref='app')
+    tasks = relationship('Task', cascade='all, delete, delete-orphan', backref='app')
     #: `TaskRun`s for this app.`
     task_runs = relationship('TaskRun', backref='app',
                              cascade='all, delete-orphan',
                              order_by='TaskRun.finish_time.desc()')
     #: `Featured` or not for this app
-    featured = relationship('Featured', cascade='all, delete-orphan')
+    featured = relationship('Featured', cascade='all, delete, delete-orphan')
     #: `category` or not for this app
     category = relationship('Category')
 
     #: Percentage of completed tasks based on Task.state
     #: (0 not done, 1 completed)
-    def completion_status(self):
-        """Returns the percentage of submitted Tasks Runs done"""
-        sql = text('''SELECT COUNT(task_id) FROM task_run WHERE app_id=:app_id''')
-        results = db.engine.execute(sql, app_id=self.id)
-        for row in results:
-            n_task_runs = float(row[0])
-        sql = text('''SELECT SUM(n_answers) FROM task WHERE app_id=:app_id''')
-        results = db.engine.execute(sql, app_id=self.id)
-        for row in results:
-            if row[0] is None:
-                n_expected_task_runs = float(30 * n_task_runs)
-            else:
-                n_expected_task_runs = float(row[0])
-        pct = float(0)
-        if n_expected_task_runs != 0:
-            pct = n_task_runs / n_expected_task_runs
-        return pct
+    # def completion_status(self):
+    #     """Returns the percentage of submitted Tasks Runs done when a task is
+    #     completed"""
+    #     sql = text('''SELECT task.id, n_answers,
+    #                count(task_run.task_id) AS n_task_runs
+    #                FROM task LEFT OUTER JOIN task_run ON task.id=task_run.task_id
+    #                WHERE task.app_id=:app_id GROUP BY task.id''')
+    #     results = db.engine.execute(sql, app_id=self.id)
+    #     n_expected_task_runs = 0
+    #     n_task_runs = 0
+    #     for row in results:
+    #         tmp = row[2]
+    #         if row[2] > row[1]:
+    #             tmp = row[1]
+    #         n_expected_task_runs += row[1]
+    #         n_task_runs += tmp
+    #     pct = float(0)
+    #     if n_expected_task_runs != 0:
+    #        pct = float(n_task_runs) / float(n_expected_task_runs)
+    #     return pct
 
-    def n_completed_tasks(self):
-        """Returns the number of Tasks that are completed"""
-        completed = 0
-        for t in self.tasks:
-            if t.state == "completed":
-                completed += 1
-        return completed
 
-    def last_activity(self):
-        sql = text('''SELECT finish_time FROM task_run WHERE app_id=:app_id
-                   ORDER BY finish_time DESC LIMIT 1''')
-        results = db.engine.execute(sql, app_id=self.id)
-        for row in results:
-            if row is not None:
-                return pretty_date(row[0])
-            else:
-                return None
+    # def n_completed_tasks(self):
+    #     """Returns the number of Tasks that are completed"""
+    #     completed = 0
+    #     for t in self.tasks:
+    #         if t.state == "completed":
+    #             completed += 1
+    #     return completed
+
+    # def last_activity(self):
+    #     sql = text('''SELECT finish_time FROM task_run WHERE app_id=:app_id
+    #                ORDER BY finish_time DESC LIMIT 1''')
+    #     results = db.engine.execute(sql, app_id=self.id)
+    #     for row in results:
+    #         if row is not None:
+    #             return pretty_date(row[0])
+    #         else:
+    #             return None
 
 
 class Featured(db.Model, DomainObject):
@@ -296,7 +303,7 @@ class Task(db.Model, DomainObject):
     created = Column(Text, default=make_timestamp)
     #: ForeignKey to App.id (NB: use task relationship rather than this field
     #: in normal use
-    app_id = Column(Integer, ForeignKey('app.id'))
+    app_id = Column(Integer, ForeignKey('app.id', ondelete='CASCADE'), nullable=False)
     #: a StateEnum instance
     # TODO: state should be an integer?
     state = Column(UnicodeText, default=u'ongoing')
@@ -321,7 +328,7 @@ class Task(db.Model, DomainObject):
 
     ## Relationships
     #: `TaskRun`s for this task`
-    task_runs = relationship('TaskRun', cascade='all, delete-orphan', backref='task')
+    task_runs = relationship('TaskRun', cascade='all, delete, delete-orphan', backref='task')
 
     def pct_status(self):
         """Returns the percentage of Tasks that are completed"""
@@ -331,7 +338,7 @@ class Task(db.Model, DomainObject):
             self.n_answers = int(self.info['n_answers'])
         if self.n_answers != 0 and self.n_answers != None:
             return float(len(self.task_runs)) / self.n_answers
-        else:
+        else:  # pragma: no cover
             return float(0)
 
 
@@ -344,9 +351,10 @@ class TaskRun(db.Model, DomainObject):
     #: created timestamp (automatically set)
     created = Column(Text, default=make_timestamp)
     #: application id of this task run
-    app_id = Column(Integer, ForeignKey('app.id'))
+    app_id = Column(Integer, ForeignKey('app.id'), nullable=False)
     #: task id of this task run
-    task_id = Column(Integer, ForeignKey('task.id'))
+    task_id = Column(Integer, ForeignKey('task.id', ondelete='CASCADE'),
+                     nullable=False)
     #: user id of performer of this task
     user_id = Column(Integer, ForeignKey('user.id'))
     # ip address of this user (only if anonymous)
@@ -374,11 +382,11 @@ class User(db.Model, DomainObject, flask.ext.login.UserMixin):
     #: created timestamp (automatically set)
     created = Column(Text, default=make_timestamp)
     #: email address ...
-    email_addr = Column(Unicode(length=254), unique=True)
+    email_addr = Column(Unicode(length=254), unique=True, nullable=False)
     #: user name
-    name = Column(Unicode(length=254), unique=True)
+    name = Column(Unicode(length=254), unique=True, nullable=False)
     #: full name
-    fullname = Column(Unicode(length=500))
+    fullname = Column(Unicode(length=500), nullable=False)
     #: locale
     locale = Column(Unicode(length=254))
     #: api key
@@ -432,3 +440,14 @@ def make_admin(mapper, conn, target):
     if users == 0:
         target.admin = True
         #print "User %s is the first one, so we make it an admin" % target.name
+
+
+@event.listens_for(App, 'before_update')
+@event.listens_for(App, 'before_insert')
+def empty_string_to_none(mapper, conn, target):
+    if target.name == '':
+        target.name = None
+    if target.short_name == '':
+        target.short_name = None
+    if target.description == '':
+        target.description = None

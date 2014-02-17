@@ -1,3 +1,21 @@
+# -*- coding: utf8 -*-
+# This file is part of PyBossa.
+#
+# Copyright (C) 2013 SF Isle of Man Limited
+#
+# PyBossa is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# PyBossa is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+
 import json
 from mock import patch
 from collections import namedtuple
@@ -347,6 +365,29 @@ class TestCkanModule(object):
                 assert "CKAN: the remote site failed! resource_create failed" == type, type
 
     @patch('pybossa.ckan.requests.post')
+    def test_05_datastore_create_without_resource_id(self, Mock):
+        """Test CKAN datastore_create without resource_id works"""
+        html_request = FakeRequest(json.dumps(self.task_datastore), 200,
+                                   {'content-type': 'application/json'})
+
+        Mock.return_value = html_request
+        with self.app.test_request_context('/'):
+            out = self.ckan.datastore_create(name='task',
+                                             resource_id=None)
+            err_msg = "It should ref the task resource ID"
+            assert out['resource_id'] == self.task_resource_id, err_msg
+            # Check the error
+            Mock.return_value = self.server_error
+            try:
+                self.ckan.datastore_create(name='task',
+                                           resource_id=self.task_resource_id)
+            except Exception as out:
+                type, msg, status_code = out.args
+                assert "Server Error" in msg, err_msg
+                assert 500 == status_code, status_code
+                assert "CKAN: the remote site failed! datastore_create failed" == type, type
+
+    @patch('pybossa.ckan.requests.post')
     def test_05_datastore_create(self, Mock):
         """Test CKAN datastore_create works"""
         html_request = FakeRequest(json.dumps(self.task_datastore), 200,
@@ -368,6 +409,33 @@ class TestCkanModule(object):
                 assert "Server Error" in msg, err_msg
                 assert 500 == status_code, status_code
                 assert "CKAN: the remote site failed! datastore_create failed" == type, type
+
+    @patch('pybossa.ckan.requests.post')
+    def test_06_datastore_upsert_without_resource_id(self, Mock):
+        """Test CKAN datastore_upsert without resourece_id works"""
+        html_request = FakeRequest(json.dumps(self.task_upsert), 200,
+                                   {'content-type': 'application/json'})
+
+        record = dict(info=dict(foo="bar"))
+        Mock.return_value = html_request
+        with self.app.test_request_context('/'):
+            out = self.ckan.datastore_upsert(name='task',
+                                             records=json.dumps([record]),
+                                             resource_id=None)
+            err_msg = "It should return True"
+            assert out is True, err_msg
+            # Check the error
+            Mock.return_value = self.server_error
+            try:
+                self.ckan.datastore_upsert(name='task',
+                                           records=json.dumps([record]),
+                                           resource_id=self.task_resource_id)
+            except Exception as out:
+                type, msg, status_code = out.args
+                assert "Server Error" in msg, msg
+                assert 500 == status_code, status_code
+                assert "CKAN: the remote site failed! datastore_upsert failed" == type, type
+
 
     @patch('pybossa.ckan.requests.post')
     def test_06_datastore_upsert(self, Mock):

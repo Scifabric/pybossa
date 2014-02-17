@@ -1,19 +1,35 @@
 package 'postgresql-9.1'
 package "postgresql-server-dev-9.1" 
-package "python-dev"
 
-python_virtualenv "/opt/vagrant_env" do
-    action :create
+apt_package "python-dev" do
+    action :install
 end
 
-execute "install SWIG library" do
-    command "apt-get install -y swig"
+apt_package "python-virtualenv" do
+    action :install
 end
+
+apt_package "swig" do
+    action :install
+end
+
+
+execute "Create virtualenv" do
+    command "virtualenv vagrant_env"
+    cwd "/opt/"
+end
+
 
 execute "install pybossa requirements" do
-    command ". /opt/vagrant_env/bin/activate; pip install --pre -e ."
+    command ". /opt/vagrant_env/bin/activate; pip install -e ."
     cwd "/vagrant"
 end
+
+execute "install pybossa cache requirements" do
+    command ". /opt/vagrant_env/bin/activate; pip install -r cache_requirements.txt"
+    cwd "/vagrant"
+end
+
 
 execute "setup pybossa DB" do
     command "cp alembic.ini.template alembic.ini"
