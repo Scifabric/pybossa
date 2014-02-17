@@ -1,20 +1,45 @@
+# -*- coding: utf8 -*-
+# This file is part of PyBossa.
+#
+# Copyright (C) 2013 SF Isle of Man Limited
+#
+# PyBossa is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# PyBossa is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+
 import json
 import random
 
 from helper import sched
-from base import model, Fixtures, db
+from base import model, Fixtures, db, redis_flushall
 import pybossa
 
 
 class TestSched(sched.Helper):
     def setUp(self):
         super(TestSched, self).setUp()
+        model.rebuild_db()
         Fixtures.create()
         self.endpoints = ['app', 'task', 'taskrun']
+
+    def tearDown(self):
+        db.session.remove()
+        redis_flushall()
+
 
     # Tests
     def test_anonymous_01_newtask(self):
         """ Test SCHED newtask returns a Task for the Anonymous User"""
+        redis_flushall()
         # Del previous TaskRuns
         self.del_task_runs()
 
@@ -24,6 +49,7 @@ class TestSched(sched.Helper):
 
     def test_anonymous_02_gets_different_tasks(self):
         """ Test SCHED newtask returns N different Tasks for the Anonymous User"""
+        redis_flushall()
         # Del previous TaskRuns
         self.del_task_runs()
 
@@ -62,6 +88,7 @@ class TestSched(sched.Helper):
 
     def test_anonymous_03_respects_limit_tasks(self):
         """ Test SCHED newtask respects the limit of 30 TaskRuns per Task"""
+        redis_flushall()
         # Del previous TaskRuns
         self.del_task_runs()
 
@@ -99,6 +126,7 @@ class TestSched(sched.Helper):
 
     def test_user_01_newtask(self):
         """ Test SCHED newtask returns a Task for John Doe User"""
+        redis_flushall()
         # Del previous TaskRuns
         self.del_task_runs()
 
@@ -112,6 +140,7 @@ class TestSched(sched.Helper):
 
     def test_user_02_gets_different_tasks(self):
         """ Test SCHED newtask returns N different Tasks for John Doe User"""
+        redis_flushall()
         # Del previous TaskRuns
         self.del_task_runs()
 
@@ -154,6 +183,7 @@ class TestSched(sched.Helper):
 
     def test_user_03_respects_limit_tasks(self):
         """ Test SCHED newtask respects the limit of 30 TaskRuns per Task"""
+        redis_flushall()
         # Del previous TaskRuns
         self.del_task_runs()
 
@@ -205,6 +235,7 @@ class TestSched(sched.Helper):
         """ Test SCHED newtask to see if sends the same ammount of Task to
             user_id and user_ip
         """
+        redis_flushall()
         # Del Fixture Task
         self.del_task_runs()
 
@@ -270,6 +301,7 @@ class TestSched(sched.Helper):
 
     def test_task_preloading(self):
         """Test TASK Pre-loading works"""
+        redis_flushall()
         # Del previous TaskRuns
         self.del_task_runs()
 
@@ -321,6 +353,7 @@ class TestSched(sched.Helper):
 
     def test_task_priority(self):
         """Test SCHED respects priority_0 field"""
+        redis_flushall()
         # Del previous TaskRuns
         self.del_task_runs()
 
@@ -354,12 +387,17 @@ class TestSched(sched.Helper):
 
 
 class TestGetBreadthFirst:
+    def setUp(self):
+        model.rebuild_db()
+        Fixtures.create()
+
     @classmethod
     def teardown_class(cls):
         model.rebuild_db()
 
     def tearDown(self):
         db.session.remove()
+        redis_flushall()
 
     def del_task_runs(self, app_id=1):
         """Deletes all TaskRuns for a given app_id"""
@@ -374,15 +412,36 @@ class TestGetBreadthFirst:
         user = Fixtures.create_users()[0]
         self._test_get_breadth_first_task(user)
 
+    def test_get_random_task(self):
+        self._test_get_random_task()
+
+    def _test_get_random_task(self, user=None):
+        task = pybossa.sched.get_random_task(app_id=1)
+        assert task is not None, task
+
+        tasks = db.session.query(model.Task).all()
+        for t in tasks:
+            db.session.delete(t)
+        db.session.commit()
+        task = pybossa.sched.get_random_task(app_id=1)
+        assert task is None, task
+
     def _test_get_breadth_first_task(self, user=None):
         self.del_task_runs()
         if user:
             short_name = 'xyzuser'
         else:
             short_name = 'xyznouser'
-        app = model.App(short_name=short_name)
+
+        app = model.App(short_name=short_name, name=short_name,
+                        description=short_name)
+        owner = db.session.query(model.User).get(1)
+
+        app.owner = owner
         task = model.Task(app=app, state='0', info={})
         task2 = model.Task(app=app, state='0', info={})
+        task.app = app
+        task2.app = app
         db.session.add(app)
         db.session.add(task)
         db.session.add(task2)
@@ -391,11 +450,16 @@ class TestGetBreadthFirst:
         appid = app.id
         # give task2 a bunch of runs
         for idx in range(2):
-            self._add_task_run(task2)
+            self._add_task_run(app, task2)
 
-        # now check we get task without task runs
+        # now check we get task without task runs as anonymous user
         out = pybossa.sched.get_breadth_first_task(appid)
         assert out.id == taskid, out
+
+        # now check we get task without task runs as a user
+        out = pybossa.sched.get_breadth_first_task(appid, owner.id)
+        assert out.id == taskid, out
+
 
         # now check that offset works
         out1 = pybossa.sched.get_breadth_first_task(appid)
@@ -406,17 +470,17 @@ class TestGetBreadthFirst:
         out2 = pybossa.sched.get_breadth_first_task(appid, offset=11)
         assert out2 is None, out
 
-        self._add_task_run(task)
+        self._add_task_run(app, task)
         out = pybossa.sched.get_breadth_first_task(appid)
         assert out.id == taskid, out
 
         # now add 2 more taskruns. We now have 3 and 2 task runs per task
-        self._add_task_run(task)
-        self._add_task_run(task)
+        self._add_task_run(app, task)
+        self._add_task_run(app, task)
         out = pybossa.sched.get_breadth_first_task(appid)
         assert out.id == task2.id, out
 
-    def _add_task_run(self, task, user=None):
-        tr = model.TaskRun(task=task, user=user)
+    def _add_task_run(self, app, task, user=None):
+        tr = model.TaskRun(app=app, task=task, user=user)
         db.session.add(tr)
         db.session.commit()

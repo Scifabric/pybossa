@@ -1,22 +1,27 @@
-# This file is part of PyBOSSA.
+# -*- coding: utf8 -*-
+# This file is part of PyBossa.
 #
-# PyBOSSA is free software: you can redistribute it and/or modify
+# Copyright (C) 2013 SF Isle of Man Limited
+#
+# PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBOSSA is distributed in the hope that it will be useful,
+# PyBossa is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+
 from flask import current_app
 from sqlalchemy.sql import text
-from pybossa.core import cache
 from pybossa.core import db
+from pybossa.cache import cache, memoize, ONE_DAY
 from pybossa.model import TaskRun, Task
+from pybossa.cache import FIVE_MINUTES, memoize
 
 import string
 import pygeoip
@@ -26,25 +31,21 @@ import time
 from datetime import timedelta
 
 
-# Cache Stats for 24 hours
-STATS_TIMEOUT = 24 * 60 * 60
-
-
-@cache.memoize(timeout=STATS_TIMEOUT)
+@memoize(timeout=ONE_DAY)
 def get_task_runs(app_id):
     """Return all the Task Runs for a given app_id"""
     task_runs = db.session.query(TaskRun).filter_by(app_id=app_id).all()
     return task_runs
 
 
-@cache.memoize(timeout=STATS_TIMEOUT)
-def get_tasks(app_id):
-    """Return all the tasks for a given app_id"""
-    tasks = db.session.query(Task).filter_by(app_id=app_id).all()
-    return tasks
+#@memoize(timeout=ONE_DAY)
+#def get_tasks(app_id):
+#    """Return all the tasks for a given app_id"""
+#    tasks = db.session.query(Task).filter_by(app_id=app_id).all()
+#    return tasks
 
 
-@cache.memoize(timeout=STATS_TIMEOUT)
+@memoize(timeout=ONE_DAY)
 def get_avg_n_tasks(app_id):
     """Return the average number of answers expected per task,
     and the number of tasks"""
@@ -59,7 +60,7 @@ def get_avg_n_tasks(app_id):
     return avg, total_n_tasks
 
 
-@cache.memoize(timeout=STATS_TIMEOUT)
+@memoize(timeout=ONE_DAY)
 def stats_users(app_id):
     """Return users's stats for a given app_id"""
     users = {}
@@ -111,7 +112,7 @@ def stats_users(app_id):
     return users, anon_users, auth_users
 
 
-@cache.memoize(timeout=STATS_TIMEOUT)
+@memoize(timeout=ONE_DAY)
 def stats_dates(app_id):
     dates = {}
     dates_anon = {}
@@ -152,7 +153,7 @@ def stats_dates(app_id):
     return dates, dates_n_tasks, dates_anon, dates_auth
 
 
-@cache.memoize(timeout=STATS_TIMEOUT)
+@memoize(timeout=ONE_DAY)
 def stats_hours(app_id):
     hours = {}
     hours_anon = {}
@@ -194,7 +195,7 @@ def stats_hours(app_id):
     return hours, hours_anon, hours_auth, max_hours, max_hours_anon, max_hours_auth
 
 
-@cache.memoize(timeout=STATS_TIMEOUT)
+@memoize(timeout=ONE_DAY)
 def stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
                        dates_anon, dates_auth):
     """Format dates stats into a JSON format"""
@@ -226,7 +227,7 @@ def stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
             dayNewAnonStats['values'].append(
                 [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000),
                  dates_anon[d]])
-        else:
+        else: # pragma: no cover
             dayNewAnonStats['values'].append(
                 [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), 0])
 
@@ -235,7 +236,7 @@ def stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
             dayNewAuthStats['values'].append(
                 [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000),
                  dates_auth[d]])
-        else:
+        else: # pragma: no cover
             dayNewAuthStats['values'].append(
                 [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), 0])
 
@@ -252,7 +253,7 @@ def stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
         dayTotalStats, dayAvgAnswers, dayEstimates
 
 
-@cache.memoize(timeout=STATS_TIMEOUT)
+@memoize(timeout=ONE_DAY)
 def stats_format_hours(app_id, hours, hours_anon, hours_auth,
                        max_hours, max_hours_anon, max_hours_auth):
     """Format hours stats into a JSON format"""
@@ -293,7 +294,7 @@ def stats_format_hours(app_id, hours, hours_anon, hours_auth,
     return hourNewStats, hourNewAnonStats, hourNewAuthStats
 
 
-@cache.memoize(timeout=STATS_TIMEOUT)
+@memoize(timeout=ONE_DAY)
 def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
     """Format User Stats into JSON"""
     userStats = dict(label="User Statistics", values=[])
@@ -315,14 +316,14 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
     loc_anon = []
     # Check if the GeoLiteCity.dat exists
     geolite = current_app.root_path + '/../dat/GeoLiteCity.dat'
-    if geo:
+    if geo: # pragma: no cover
         gic = pygeoip.GeoIP(geolite)
     for u in anon_users:
-        if geo:
+        if geo: # pragma: no cover
             loc = gic.record_by_addr(u[0])
         else:
             loc = {}
-        if loc is None:
+        if loc is None: # pragma: no cover
             loc = {}
         if (len(loc.keys()) == 0):
             loc['latitude'] = 0
@@ -330,11 +331,11 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
         top5_anon.append(dict(ip=u[0], loc=loc, tasks=u[1]))
 
     for u in anon_users:
-        if geo:
+        if geo: # pragma: no cover
             loc = gic.record_by_addr(u[0])
         else:
             loc = {}
-        if loc is None:
+        if loc is None: # pragma: no cover
             loc = {}
         if (len(loc.keys()) == 0):
             loc['latitude'] = 0
@@ -357,7 +358,7 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
                 n_anon=users['n_anon'], n_auth=users['n_auth'])
 
 
-@cache.memoize(timeout=STATS_TIMEOUT)
+@memoize(timeout=ONE_DAY)
 def get_stats(app_id, geo=False):
     """Return the stats a given app"""
     hours, hours_anon, hours_auth, max_hours, \

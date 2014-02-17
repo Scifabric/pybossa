@@ -1,17 +1,20 @@
-# This file is part of PyBOSSA.
+# -*- coding: utf8 -*-
+# This file is part of PyBossa.
 #
-# PyBOSSA is free software: you can redistribute it and/or modify
+# Copyright (C) 2013 SF Isle of Man Limited
+#
+# PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBOSSA is distributed in the hope that it will be useful,
+# PyBossa is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import logging
@@ -22,18 +25,21 @@ from flaskext.gravatar import Gravatar
 from flask.ext.mail import Mail
 from flask.ext.sqlalchemy import SQLAlchemy
 #from flask.ext.debugtoolbar import DebugToolbarExtension
-from flask.ext.cache import Cache
 from flask.ext.heroku import Heroku
 from flask.ext.babel import Babel
+from redis.sentinel import Sentinel
 
 from pybossa import default_settings as settings
 
 from raven.contrib.flask import Sentry
 
 
-def create_app():
-    app = Flask(__name__)
-    if 'DATABASE_URL' in os.environ:
+def create_app(theme='default'):
+    template_folder = os.path.join('themes', theme, 'templates')
+    static_folder = os.path.join('themes', theme, 'static')
+    app = Flask(__name__, template_folder=template_folder,
+                static_folder=static_folder)
+    if 'DATABASE_URL' in os.environ:  # pragma: no cover
         heroku = Heroku(app)
     configure_app(app)
     setup_error_email(app)
@@ -50,13 +56,13 @@ def configure_app(app):
     # parent directory
     here = os.path.dirname(os.path.abspath( __file__ ))
     config_path = os.path.join(os.path.dirname(here), 'settings_local.py')
-    if os.path.exists(config_path):
+    if os.path.exists(config_path): # pragma: no cover
         app.config.from_pyfile(config_path)
 
 from logging.handlers import SMTPHandler
 def setup_error_email(app):
     ADMINS = app.config.get('ADMINS', '')
-    if not app.debug and ADMINS:
+    if not app.debug and ADMINS: # pragma: no cover
         mail_handler = SMTPHandler('127.0.0.1',
                                    'server-error@no-reply.com',
                                    ADMINS, 'error')
@@ -68,7 +74,7 @@ from logging import Formatter
 def setup_logging(app):
     log_file_path = app.config.get('LOG_FILE')
     log_level = app.config.get('LOG_LEVEL', logging.WARN)
-    if log_file_path:
+    if log_file_path: # pragma: no cover
         file_handler = RotatingFileHandler(log_file_path)
         file_handler.setFormatter(Formatter(
             '%(name)s:%(levelname)s:[%(asctime)s] %(message)s '
@@ -83,17 +89,26 @@ def setup_logging(app):
 login_manager = LoginManager()
 login_manager.login_view = 'account.signin'
 login_manager.login_message = u"Please sign in to access this page."
-app = create_app()
+# Configure theme
+try: # pragma: no cover
+    # First with local settings
+    import settings_local
+    theme = settings_local.THEME
+except:
+    # Otherwise try with default theme
+    theme = settings.THEME
+# Create app
+app = create_app(theme=theme)
 
-cache = Cache(config=app.config)
-
-cache.init_app(app)
+sentinel = Sentinel(app.config['REDIS_SENTINEL'], socket_timeout=0.1)
+redis_master = sentinel.master_for('mymaster')
+redis_slave = sentinel.slave_for('mymaster')
 
 #toolbar = DebugToolbarExtension(app)
 db = SQLAlchemy(app)
 mail = Mail(app)
 signer = URLSafeTimedSerializer(app.config['ITSDANGEORUSKEY'])
-if app.config.get('SENTRY_DSN'):
+if app.config.get('SENTRY_DSN'): # pragma: no cover
     sentr = Sentry(app)
 
 babel = Babel(app)

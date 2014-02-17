@@ -1,17 +1,20 @@
-# This file is part of PyBOSSA.
+# -*- coding: utf8 -*-
+# This file is part of PyBossa.
 #
-# PyBOSSA is free software: you can redistribute it and/or modify
+# Copyright (C) 2013 SF Isle of Man Limited
+#
+# PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBOSSA is distributed in the hope that it will be useful,
+# PyBossa is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import timedelta
 from functools import update_wrapper
@@ -40,7 +43,7 @@ def jsonpify(f):
     return decorated_function
 
 
-def admin_required(f):
+def admin_required(f):  # pragma: no cover
     """Checks if the user is and admin or not"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -55,16 +58,16 @@ def admin_required(f):
 def crossdomain(origin=None, methods=None, headers=None,
                 max_age=21600, attach_to_all=True,
                 automatic_options=True):
-    if methods is not None:
+    if methods is not None:  # pragma: no cover
         methods = ', '.join(sorted(x.upper() for x in methods))
     if headers is not None and not isinstance(headers, basestring):
         headers = ', '.join(x.upper() for x in headers)
-    if not isinstance(origin, basestring):
+    if not isinstance(origin, basestring):  # pragma: no cover
         origin = ', '.join(origin)
-    if isinstance(max_age, timedelta):
+    if isinstance(max_age, timedelta):  # pragma: no cover
         max_age = max_age.total_seconds()
 
-    def get_methods():
+    def get_methods():  # pragma: no cover
         if methods is not None:
             return methods
 
@@ -74,11 +77,11 @@ def crossdomain(origin=None, methods=None, headers=None,
     def decorator(f):
 
         def wrapped_function(*args, **kwargs):
-            if automatic_options and request.method == 'OPTIONS':
+            if automatic_options and request.method == 'OPTIONS':  # pragma: no cover
                 resp = current_app.make_default_options_response()
             else:
                 resp = make_response(f(*args, **kwargs))
-            if not attach_to_all and request.method != 'OPTIONS':
+            if not attach_to_all and request.method != 'OPTIONS':  # pragma: no cover
                 return resp
 
             h = resp.headers
@@ -95,7 +98,7 @@ def crossdomain(origin=None, methods=None, headers=None,
     return decorator
 
 
-# From http://stackoverflow.com/q/1551382
+# Fromhttp://stackoverflow.com/q/1551382
 def pretty_date(time=False):
     """
     Get a datetime object or a int() Epoch timestamp and return a
@@ -105,7 +108,8 @@ def pretty_date(time=False):
     from datetime import datetime
     import dateutil.parser
     now = datetime.now()
-    time = dateutil.parser.parse(time)
+    if type(time) is str or type(time) is unicode:
+        time = dateutil.parser.parse(time)
     if type(time) is int:
         diff = now - datetime.fromtimestamp(time)
     elif isinstance(time, datetime):
@@ -173,7 +177,7 @@ class Pagination(object):
                     (num > self.page - left_current - 1 and
                      num < self.page + right_current) or
                     num > self.pages - right_edge):
-                if last + 1 != num:
+                if last + 1 != num:  # pragma: no cover
                     yield None
                 yield num
                 last = num
@@ -286,7 +290,7 @@ class UnicodeWriter:
         # empty queue
         self.queue.truncate(0)
 
-    def writerows(self, rows):
+    def writerows(self, rows):  # pragma: no cover
         for row in rows:
             self.writerow(row)
 

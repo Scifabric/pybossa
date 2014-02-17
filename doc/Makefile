@@ -1,5 +1,6 @@
 # Makefile for Sphinx documentation
-#
+# Copyright (c) 2013 SF Isle of Man Limited
+# License Creative Commons Attribution 3.0
 
 # You can set these variables from the command line.
 SPHINXOPTS    =

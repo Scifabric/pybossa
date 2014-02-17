@@ -1,23 +1,28 @@
-# This file is part of PyBOSSA.
+# -*- coding: utf8 -*-
+# This file is part of PyBossa.
 #
-# PyBOSSA is free software: you can redistribute it and/or modify
+# Copyright (C) 2013 SF Isle of Man Limited
+#
+# PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
 #
-# PyBOSSA is distributed in the hope that it will be useful,
+# PyBossa is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU Affero General Public License for more details.
 #
 # You should have received a copy of the GNU Affero General Public License
-# along with PyBOSSA.  If not, see <http://www.gnu.org/licenses/>.
+# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from sqlalchemy.sql import text
-from pybossa.core import cache, db
+from pybossa.core import db
+from pybossa.cache import cache, memoize, delete_memoized, ONE_DAY, ONE_HOUR
+from pybossa.model import User
 import json
 
 
-@cache.cached(key_prefix="front_page_top_users")
+@cache(key_prefix="front_page_top_users", timeout=ONE_DAY)
 def get_top(n=10):
     """Return the n=10 top users"""
     sql = text('''SELECT "user".id, "user".name, "user".fullname, "user".email_addr,
@@ -31,7 +36,7 @@ def get_top(n=10):
     return top_users
 
 
-@cache.memoize(timeout=50)
+@memoize()
 def get_user_summary(name):
     # Get USER
     sql = text('''
@@ -105,3 +110,31 @@ def get_user_summary(name):
         return user, apps, apps_created
     else:
         return None, None, None
+
+
+@cache(timeout=ONE_HOUR, key_prefix="site_total_users")
+def get_total_users():
+    count = User.query.count()
+    return count
+
+
+@memoize(timeout=ONE_HOUR)
+def get_users_page(page, per_page=24):
+    offset = (page - 1) * per_page
+    sql = text('''SELECT "user".id, "user".name, "user".fullname, "user".email_addr,
+               "user".created, COUNT(task_run.id) AS task_runs from task_run, "user"
+               WHERE "user".id=task_run.user_id group by "user".id
+               ORDER BY "user".created DESC LIMIT :limit OFFSET :offset''')
+    results = db.engine.execute(sql, limit=per_page, offset=offset)
+    accounts = []
+    for row in results:
+        user = dict(id=row.id, name=row.name, fullname=row.fullname,
+                    email_addr=row.email_addr, created=row.created,
+                    task_runs=row.task_runs)
+        accounts.append(user)
+    return accounts
+
+
+def delete_user_summary(name):
+    """Delete from cache the user summary."""
+    delete_memoized(get_user_summary, name)
