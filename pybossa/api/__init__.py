@@ -48,6 +48,7 @@ from app import AppAPI
 from category import CategoryAPI
 from vmcp import VmcpAPI
 import flaskext.uploads
+import os.path
 
 blueprint = Blueprint('api', __name__)
 
@@ -101,7 +102,6 @@ def add_file(app_id):
         app = db.session.query(model.App).get(app_id)
         if app is None:
             raise NotFound
-        require.app.update(app)
 
         appfile = {"storage": request.files['file'], "folder": app.short_name}
 
