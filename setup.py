@@ -1,6 +1,7 @@
 from setuptools import setup, find_packages
 try:
     requirements = open('requirements.txt').read().split('\n')
+    requirements[-1] = "M2Crypto==0.22.dev"
 except:
     requirements = []
 
