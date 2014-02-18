@@ -35,6 +35,7 @@ from pybossa.auth import require
 from pybossa.hateoas import Hateoas
 from pybossa.ratelimit import ratelimit
 from pybossa.error import ErrorStatus
+import sqlalchemy
 
 
 cors_headers = ['Content-Type', 'Authorization']
@@ -59,6 +60,11 @@ class APIBase(MethodView):
         """Return '' for Options method."""
         return ''
 
+    def _query_filter_args(self, request):
+        return dict((k, v)
+                    for (k, v) in request.args.iteritems()
+                    if k not in ['limit', 'offset', 'api_key', 'cols', 'group_by'])
+
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
     @ratelimit(limit=300, per=15 * 60)
@@ -76,14 +82,54 @@ class APIBase(MethodView):
         try:
             self._get()
             getattr(require, self.__class__.__name__.lower()).read()
-            if id is None:
+            if id is not None:
+                item = db.session.query(self.__class__).get(id)
+                if item is None:
+                    raise abort(404)
+                else:
+                    getattr(require, self.__class__.__name__.lower()).read(item)
+                    obj = item.dictize()
+                    links, link = self.hateoas.create_links(item)
+                    if links:
+                        obj['links'] = links
+                    if link:
+                        obj['link'] = link
+                    return Response(json.dumps(obj), mimetype='application/json')
+            elif 'group_by' in request.args:
+                cols = request.args.get('cols', 'amount').split(",")
+                group_by = request.args['group_by'].split(',')
+                group_by_cols = [getattr(self.__class__, key) for key in group_by]
+                sum_cols = [sqlalchemy.func.sum(getattr(self.__class__, col)).label(col + "_sum") for col in cols]
+                avg_cols = [sqlalchemy.func.avg(getattr(self.__class__, col)).label(col + "_avg") for col in cols]
+                res_cols = sum_cols + avg_cols
+                query = db.session.query(*group_by_cols + res_cols)
+                for k, v in self._query_filter_args(request).iteritems():
+                    # Raise an error if the k arg is not a column
+                    getattr(self.__class__, k)
+                    query = query.filter(getattr(self.__class__, k) == v)
+                try:
+                    limit = min(10000, int(request.args.get('limit')))
+                except (ValueError, TypeError):
+                    limit = 20
+
+                try:
+                    offset = int(request.args.get('offset'))
+                except (ValueError, TypeError):
+                    offset = 0
+
+                query = query.group_by(*group_by_cols)
+                query = query.order_by(*group_by_cols)
+                query = query.limit(limit)
+                query = query.offset(offset)
+                def dictize(x):
+                    return dict((key, getattr(x, key)) for key in x.keys())
+                return Response(json.dumps([dictize(x) for x in query]), mimetype='application/json')
+            else:
                 query = db.session.query(self.__class__)
-                for k in request.args.keys():
-                    if k not in ['limit', 'offset', 'api_key']:
-                        # Raise an error if the k arg is not a column
-                        getattr(self.__class__, k)
-                        query = query.filter(
-                            getattr(self.__class__, k) == request.args[k])
+                for k, v in self._query_filter_args(request).iteritems():
+                    # Raise an error if the k arg is not a column
+                    getattr(self.__class__, k)
+                    query = query.filter(getattr(self.__class__, k) == v)
                 try:
                     limit = min(10000, int(request.args.get('limit')))
                 except (ValueError, TypeError):
@@ -107,21 +153,6 @@ class APIBase(MethodView):
                         obj['link'] = link
                     items.append(obj)
                 return Response(json.dumps(items), mimetype='application/json')
-            else:
-                item = db.session.query(self.__class__).get(id)
-                if item is None:
-                    raise abort(404)
-                else:
-                    getattr(require,
-                            self.__class__.__name__.lower()).read(item)
-                    obj = item.dictize()
-                    links, link = self.hateoas.create_links(item)
-                    if links:
-                        obj['links'] = links
-                    if link:
-                        obj['link'] = link
-                    return Response(json.dumps(obj),
-                                    mimetype='application/json')
         except Exception as e:
             return error.format_exception(
                 e,

@@ -46,6 +46,7 @@ from task_run import TaskRunAPI
 from app import AppAPI
 from category import CategoryAPI
 from vmcp import VmcpAPI
+from rundata import RunDataAPI
 
 blueprint = Blueprint('api', __name__)
 
@@ -86,6 +87,7 @@ register_api(TaskAPI, 'api_task', '/task', pk='id', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
 register_api(GlobalStatsAPI, 'api_globalstats', '/globalstats')
 register_api(VmcpAPI, 'api_vmcp', '/vmcp')
+register_api(RunDataAPI, 'api_rundata', '/rundata', pk='id', pk_type='int')
 
 
 @jsonpify
