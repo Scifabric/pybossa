@@ -28,6 +28,7 @@ from api_base import APIBase
 from pybossa.model import Task, TaskRun
 from itsdangerous import URLSafeSerializer
 from werkzeug.exceptions import Unauthorized, Forbidden
+from pybossa.core import db
 
 
 class TaskRunAPI(APIBase):
