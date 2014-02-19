@@ -30,6 +30,8 @@ from flask import request, g
 from werkzeug.exceptions import TooManyRequests
 from pybossa.core import redis_master
 from pybossa.error import ErrorStatus
+from pybossa.core import app
+
 
 error = ErrorStatus()
 
@@ -68,7 +70,7 @@ def get_view_rate_limit():
     return getattr(g, '_view_rate_limit', None)
 
 
-def ratelimit(limit, per=300, send_x_headers=True,
+def ratelimit(limit=None, per=None, send_x_headers=True,
               scope_func=lambda: request.remote_addr,
               key_func=lambda: request.endpoint,
               path=lambda: request.path):
@@ -78,12 +80,22 @@ def ratelimit(limit, per=300, send_x_headers=True,
     Returns the function if within the limit, otherwise TooManyRequests error
 
     """
+
     def decorator(f):
+        actual_limit = limit
+        actual_per = per
+        if limit is None or per is None:
+            rate_limit = app.config.get('RATE_LIMIT', None)
+            if 'RATE_LIMIT_' + f.func_name.upper() in app.config:
+                rate_limit = app.config.get('RATE_LIMIT_' + f.func_name.upper(), None)
+            if rate_limit is None:
+                return f
+            actual_limit, actual_per = rate_limit
         @wraps(f)
         def rate_limited(*args, **kwargs):
             try:
                 key = 'rate-limit/%s/%s/' % (key_func(), scope_func())
-                rlimit = RateLimit(key, limit, per, send_x_headers)
+                rlimit = RateLimit(key, actual_limit, actual_per, send_x_headers)
                 g._view_rate_limit = rlimit
                 #if over_limit is not None and rlimit.over_limit:
                 if rlimit.over_limit:

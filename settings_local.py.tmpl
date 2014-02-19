@@ -95,3 +95,9 @@ REDIS_CACHE_ENABLED = True
 REDIS_SENTINEL = [('localhost', 26379)]
 REDIS_MASTER = 'mymaster'
 REDIS_KEYPREFIX = 'pybossa_cache'
+
+# 300 requests per 15 minutes
+RATE_LIMIT = (300, 15*60)
+
+# No rate limit
+# RATE_LIMIT = None

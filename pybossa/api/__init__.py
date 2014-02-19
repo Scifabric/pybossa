@@ -56,7 +56,7 @@ error = ErrorStatus()
 
 @blueprint.route('/')
 @crossdomain(origin='*', headers=cors_headers)
-@ratelimit(limit=300, per=15 * 60)
+@ratelimit()
 def index():  # pragma: no cover
     """Return dummy text for welcome page."""
     return 'The PyBossa API'
@@ -91,7 +91,7 @@ register_api(VmcpAPI, 'api_vmcp', '/vmcp')
 @jsonpify
 @blueprint.route('/app/<app_id>/newtask')
 @crossdomain(origin='*', headers=cors_headers)
-@ratelimit(limit=300, per=15 * 60)
+@ratelimit()
 def new_task(app_id):
     """Return a new task for an application."""
     # Check if the request has an arg:
@@ -126,7 +126,7 @@ def new_task(app_id):
 @blueprint.route('/app/<short_name>/userprogress')
 @blueprint.route('/app/<int:app_id>/userprogress')
 @crossdomain(origin='*', headers=cors_headers)
-@ratelimit(limit=300, per=15 * 60)
+@ratelimit()
 def user_progress(app_id=None, short_name=None):
     """API endpoint for user progress.
 
