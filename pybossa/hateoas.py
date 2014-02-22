@@ -53,6 +53,11 @@ class Hateoas(object):
             if item.category_id is not None:
                 links.append(self.create_link(item.category, rel='category'))
             return links, link
+        elif cls == 'user':
+            link = self.create_link(item)
+            links = []
+            # TODO: add the apps created by the user as the links with rel=? (maybe 'app'??)
+            return None, link
         else: # pragma: no cover
             return False
 
