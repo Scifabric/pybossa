@@ -118,7 +118,7 @@ class TestHateoas(web_helper.Helper):
         assert user_link == output['link'], err_msg
         # when the links specification of a user will be set, modify the following
         err_msg = "The list of links should be empty for now"
-        assert output.get('links') == [], err_msg
+        assert output.get('links') == None, err_msg
 
 
 
@@ -198,13 +198,13 @@ class TestHateoas(web_helper.Helper):
 
         # For user
         res = self.app.get("/api/user", follow_redirects=True)
-        output = json.loads(res.data)
+        output = json.loads(res.data)[0]
         err_msg = "There should be a Link with the object URI"
         assert output['link'] is not None, err_msg
         user_link = self.hateoas.link(rel='self', title='user',
                                       href='http://localhost/api/user/1')
         err_msg = "The object link ir wrong: %s" % output['link']
         assert user_link == output['link'], err_msg
-        # TODO: when the links specification of a user will be set, modify the following
+        # when the links specification of a user will be set, modify the following
         err_msg = "The list of links should be empty for now"
-        assert output.get('links') == [], err_msg
+        assert output.get('links') == None, err_msg
