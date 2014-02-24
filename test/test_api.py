@@ -110,7 +110,6 @@ class TestAPI:
 
         res = self.app.get('/api/app?limit=10')
         data = json.loads(res.data)
-        print data
         assert len(data) == 10, len(data)
 
         res = self.app.get('/api/app?limit=10&offset=10')
@@ -125,6 +124,24 @@ class TestAPI:
         res = self.app.get('/api/taskrun')
         data = json.loads(res.data)
         assert len(data) == 20, len(data)
+
+        # Register 30 new users to test limit on users too
+        for i in range(30):
+            self.register(fullname="User%s" %i, username="user%s" %i)
+
+        res = self.app.get('/api/user')
+        data = json.loads(res.data)
+        assert len(data) == 20, len(data)
+
+        res = self.app.get('/api/user?limit=10')
+        data = json.loads(res.data)
+        print data
+        assert len(data) == 10, len(data)
+
+        res = self.app.get('/api/user?limit=10&offset=10')
+        data = json.loads(res.data)
+        assert len(data) == 10, len(data)
+        assert data[0].get('id') == 11
 
     def test_01_app_query(self):
         """ Test API App query"""

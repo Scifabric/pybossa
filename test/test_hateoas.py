@@ -205,6 +205,6 @@ class TestHateoas(web_helper.Helper):
                                       href='http://localhost/api/user/1')
         err_msg = "The object link ir wrong: %s" % output['link']
         assert user_link == output['link'], err_msg
-        # when the links specification of a user will be set, modify the following
+        # TODO: when the links specification of a user will be set, modify the following
         err_msg = "The list of links should be empty for now"
         assert output.get('links') == [], err_msg
