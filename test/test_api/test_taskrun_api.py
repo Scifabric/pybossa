@@ -1,11 +1,11 @@
 import json
-from test_api import TestAPI
 from base import model, Fixtures, db
 from nose.tools import assert_equal
+from test_api import HelperAPI
 
 
 
-class TestTaskrunAPI(TestAPI):
+class TestTaskrunAPI(HelperAPI):
 
     def test_query_taskrun(self):
         """Test API query for taskrun endpoint works"""
