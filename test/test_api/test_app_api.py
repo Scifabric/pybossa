@@ -2,9 +2,11 @@ import json
 from mock import patch
 from base import web, model, Fixtures, db, redis_flushall
 from nose.tools import assert_equal, assert_raises
-from test_api import TestAPI
+from test_api import HelperAPI
 
-class TestAppAPI(TestAPI):
+
+
+class TestAppAPI(HelperAPI):
 
     def test_01_app_query(self):
         """ Test API App query"""

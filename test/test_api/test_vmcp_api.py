@@ -1,11 +1,11 @@
 import json
-from test_api import TestAPI
 from base import web
 from mock import patch
+from test_api import HelperAPI
 
 
 
-class TestVmcpAPI(TestAPI):
+class TestVmcpAPI(HelperAPI):
 
     def test_vcmp(self):
         """Test VCMP without key fail works."""

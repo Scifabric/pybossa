@@ -1,11 +1,11 @@
 import json
-from test_api import TestAPI
 from base import model, Fixtures, db
 from nose.tools import assert_equal
+from test_api import HelperAPI
 
 
 
-class TestTaskAPI(TestAPI):
+class TestTaskAPI(HelperAPI):
 
     def test_02_task_query(self):
         """ Test API Task query"""

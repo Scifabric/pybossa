@@ -1,8 +1,9 @@
 import json
-from test_api import TestAPI
+from test_api import HelperAPI
 
 
-class TestGlobalStatsAPI(TestAPI):
+
+class TestGlobalStatsAPI(HelperAPI):
     def test_global_stats(self):
         """Test Global Stats works."""
         res = self.app.get('api/globalstats')
