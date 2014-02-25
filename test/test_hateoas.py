@@ -35,7 +35,7 @@ class TestHateoas(web_helper.Helper):
     # Tests
 
     def test_00_link_object(self):
-        """Test HATEOAS object link is created when"""
+        """Test HATEOAS object link is created"""
         # For app
         res = self.app.get("/api/app/1", follow_redirects=True)
         output = json.loads(res.data)
