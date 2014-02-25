@@ -61,9 +61,10 @@ class TestCategoryAPI(HelperAPI):
         err = json.loads(res.data)
         err_msg = "AttributeError exception should be raised"
         res.status_code == 415, err_msg
-        err['action'] = 'GET', err_msg
-        err['status'] = 'failed', err_msg
-        err['exception_cls'] = 'AttributeError', err_msg
+        assert res.status_code == 415, err_msg
+        assert err['action'] == 'GET', err_msg
+        assert err['status'] == 'failed', err_msg
+        assert err['exception_cls'] == 'AttributeError', err_msg
 
     def test_04_category_post(self):
         """Test API Category creation and auth"""
