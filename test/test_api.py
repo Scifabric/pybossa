@@ -132,8 +132,8 @@ class TestAPI:
             # The output should have a mime-type: application/json
             assert res.mimetype == 'application/json', res
 
-    def test_user_query(self):
-        """USER -- Test API User query"""
+    def test_user_get(self):
+        """USER -- Test API User GET all"""
         res = self.app.get('/api/user')
         data = json.loads(res.data)
         user = data[0]
@@ -185,79 +185,14 @@ class TestAPI:
         assert data[0]['name'] == 'root', data
         assert data[0]['locale'] == 'en', data
 
-
-
-
-        # Test for real field
-        res = self.app.get("/api/app?short_name=test-app")
-        data = json.loads(res.data)
-        # Should return one result
-        assert len(data) == 1, data
-        # Correct result
-        assert data[0]['short_name'] == 'test-app', data
-
-        # Valid field but wrong value
-        res = self.app.get("/api/app?short_name=wrongvalue")
-        data = json.loads(res.data)
-        assert len(data) == 0, data
-
-        # Multiple fields
-        res = self.app.get('/api/app?short_name=test-app&name=My New App')
-        data = json.loads(res.data)
-        # One result
-        assert len(data) == 1, data
-        # Correct result
-        assert data[0]['short_name'] == 'test-app', data
-        assert data[0]['name'] == 'My New App', data
-
-        # Limits
-        res = self.app.get("/api/taskrun?app_id=1&limit=5")
-        print res.data
-        data = json.loads(res.data)
-        for item in data:
-            assert item['app_id'] == 1, item
-        assert len(data) == 5, data
-
-
-         #"""Test API query for category endpoint works"""
-        # Test for real field
-        url = "/api/category"
-        res = self.app.get(url + "?short_name=thinking")
-        data = json.loads(res.data)
-        # Should return one result
-        assert len(data) == 1, data
-        # Correct result
-        assert data[0]['short_name'] == 'thinking', data
-
-        # Valid field but wrong value
-        res = self.app.get(url + "?short_name=wrongvalue")
-        data = json.loads(res.data)
-        assert len(data) == 0, data
-
-        # Multiple fields
-        res = self.app.get(url + '?short_name=thinking&name=thinking')
-        data = json.loads(res.data)
-        # One result
-        assert len(data) == 1, data
-        # Correct result
-        assert data[0]['short_name'] == 'thinking', data
-        assert data[0]['name'] == 'thinking', data
-
-        # Limits
-        res = self.app.get(url + "?limit=1")
-        data = json.loads(res.data)
-        for item in data:
-            assert item['short_name'] == 'thinking', item
-        assert len(data) == 1, data
-
-        # Errors
-        res = self.app.get(url + "?something")
+        # When querying with non-valid fields -- Errors
+        res = self.app.get("/api/user?something_invalid=whatever")
         err = json.loads(res.data)
         err_msg = "AttributeError exception should be raised"
-        res.status_code == 415, err_msg
-        err['action'] = 'GET', err_msg
-        err['status'] = 'failed', err_msg
-        err['exception_cls'] = 'AttributeError', err_msg
+        assert res.status_code == 415, err_msg
+        assert err['action'] == 'GET', err_msg
+        assert err['status'] == 'failed', err_msg
+        assert err['exception_cls'] == 'AttributeError', err_msg
 
 
     # END OF USER API TESTS
