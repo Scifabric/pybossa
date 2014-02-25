@@ -24,6 +24,38 @@ from test_api import HelperAPI
 
 class TestTaskAPI(HelperAPI):
 
+    def test_query_task(self):
+        """Test API query for task endpoint works"""
+        # Test for real field
+        res = self.app.get("/api/task?app_id=1")
+        data = json.loads(res.data)
+        # Should return one result
+        assert len(data) == 10, data
+        # Correct result
+        assert data[0]['app_id'] == 1, data
+
+        # Valid field but wrong value
+        res = self.app.get("/api/task?app_id=99999999")
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        # Multiple fields
+        res = self.app.get('/api/task?app_id=1&state=0')
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 10, data
+        # Correct result
+        assert data[0]['app_id'] == 1, data
+        assert data[0]['state'] == '0', data
+
+        # Limits
+        res = self.app.get("/api/task?app_id=1&limit=5")
+        print res.data
+        data = json.loads(res.data)
+        for item in data:
+            assert item['app_id'] == 1, item
+        assert len(data) == 5, data
+
     def test_02_task_query(self):
         """ Test API Task query"""
         res = self.app.get('/api/task')
