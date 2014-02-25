@@ -52,7 +52,7 @@ class TestAPI:
                                        'username': username,
                                        'email_addr': email,
                                        'password': password,
-                                       'confirm': password2,
+                                       'confirm': password2
                                        },
                                  follow_redirects=True)
         else:
@@ -87,6 +87,181 @@ class TestAPI:
                         task_id=task['id'],
                         info='my task result')
         return cookie, task_run
+
+
+    # USER API TESTS
+
+    def test_get_limit(self):
+        # This is to be moved to test_api_common test_00_limits_query once
+        # the pull request refactoring these tests has been approved
+        """USER -- Test API GET limits works"""
+
+        # Register 30 new users to test limit on users too
+        for i in range(30):
+            self.register(fullname="User%s" %i, username="user%s" %i)
+
+        res = self.app.get('/api/user')
+        data = json.loads(res.data)
+        assert len(data) == 20, len(data)
+
+        res = self.app.get('/api/user?limit=10')
+        data = json.loads(res.data)
+        print data
+        assert len(data) == 10, len(data)
+
+        res = self.app.get('/api/user?limit=10&offset=10')
+        data = json.loads(res.data)
+        assert len(data) == 10, len(data)
+        assert data[0].get('id') == 11
+
+    def test_get_query_with_API_KEY_user(self):
+        # This is to be moved to test_api_common test_get_query_with_api_key once
+        # the pull request refactoring these tests has been approved
+        """USER -- Test API GET query with an API-KEY works"""
+
+        endpoint = 'user'
+        url = '/api/' + endpoint + '?api_key=' + Fixtures.api_key
+        res = self.app.get(url)
+        data = json.loads(res.data)
+
+        if endpoint == 'user':
+            # With Fixtures.create() 3 users are created in de DB
+            assert len(data) == 3, data
+            user = data[0]
+            assert user['email_addr'] == 'root@root.com', data
+            # The output should have a mime-type: application/json
+            assert res.mimetype == 'application/json', res
+
+    def test_user_query(self):
+        """USER -- Test API User query"""
+        res = self.app.get('/api/user')
+        data = json.loads(res.data)
+        user = data[0]
+        assert len(data) == 3, data
+        assert user['email_addr'] == 'root@root.com', data
+
+        # The output should have a mime-type: application/json
+        assert res.mimetype == 'application/json', res
+
+        # Test a non-existant ID
+        res = self.app.get('/api/user/3434209')
+        err = json.loads(res.data)
+        assert res.status_code == 404, err
+        assert err['status'] == 'failed', err
+        assert err['target'] == 'user', err
+        assert err['exception_cls'] == 'NotFound', err
+        assert err['action'] == 'GET', err
+
+    def test_query_user(self):
+        """USER -- Test API query for user endpoint works"""
+
+        # When querying with a valid existing field which is unique
+        # It should return one correct result if exists
+        res = self.app.get("/api/user?name=root")
+        data = json.loads(res.data)
+        assert len(data) == 1, data
+        assert data[0]['name'] == 'root', data
+        # And it should return no results if there are no matches
+        res = self.app.get("/api/user?name=Godzilla")
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        # When querying with a valid existing non-unique field
+        self.register(fullname="John-Doe", username="fakeUser1")
+        self.register(fullname="John-Doe", username="fakeUser2")
+        res = self.app.get("/api/user?fullname=John-Doe")
+        data = json.loads(res.data)
+        # It should return 2 results
+        assert len(data) == 2, data
+        # And they should be the correct ones
+        assert (data[0]['fullname'] == data[1]['fullname'] == 'John-Doe'
+               and data[0] != data[1]), data
+
+        # When querying with multiple valid fields
+        res = self.app.get("/api/user?name=root&locale=en")
+        data = json.loads(res.data)
+        # It should find and return one correct result
+        assert len(data) == 1, data
+        assert data[0]['name'] == 'root', data
+        assert data[0]['locale'] == 'en', data
+
+
+
+
+        # Test for real field
+        res = self.app.get("/api/app?short_name=test-app")
+        data = json.loads(res.data)
+        # Should return one result
+        assert len(data) == 1, data
+        # Correct result
+        assert data[0]['short_name'] == 'test-app', data
+
+        # Valid field but wrong value
+        res = self.app.get("/api/app?short_name=wrongvalue")
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        # Multiple fields
+        res = self.app.get('/api/app?short_name=test-app&name=My New App')
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 1, data
+        # Correct result
+        assert data[0]['short_name'] == 'test-app', data
+        assert data[0]['name'] == 'My New App', data
+
+        # Limits
+        res = self.app.get("/api/taskrun?app_id=1&limit=5")
+        print res.data
+        data = json.loads(res.data)
+        for item in data:
+            assert item['app_id'] == 1, item
+        assert len(data) == 5, data
+
+
+         #"""Test API query for category endpoint works"""
+        # Test for real field
+        url = "/api/category"
+        res = self.app.get(url + "?short_name=thinking")
+        data = json.loads(res.data)
+        # Should return one result
+        assert len(data) == 1, data
+        # Correct result
+        assert data[0]['short_name'] == 'thinking', data
+
+        # Valid field but wrong value
+        res = self.app.get(url + "?short_name=wrongvalue")
+        data = json.loads(res.data)
+        assert len(data) == 0, data
+
+        # Multiple fields
+        res = self.app.get(url + '?short_name=thinking&name=thinking')
+        data = json.loads(res.data)
+        # One result
+        assert len(data) == 1, data
+        # Correct result
+        assert data[0]['short_name'] == 'thinking', data
+        assert data[0]['name'] == 'thinking', data
+
+        # Limits
+        res = self.app.get(url + "?limit=1")
+        data = json.loads(res.data)
+        for item in data:
+            assert item['short_name'] == 'thinking', item
+        assert len(data) == 1, data
+
+        # Errors
+        res = self.app.get(url + "?something")
+        err = json.loads(res.data)
+        err_msg = "AttributeError exception should be raised"
+        res.status_code == 415, err_msg
+        err['action'] = 'GET', err_msg
+        err['status'] = 'failed', err_msg
+        err['exception_cls'] = 'AttributeError', err_msg
+
+
+    # END OF USER API TESTS
+
 
     def test_00_limits_query(self):
         """Test API GET limits works"""
@@ -125,23 +300,6 @@ class TestAPI:
         data = json.loads(res.data)
         assert len(data) == 20, len(data)
 
-        # Register 30 new users to test limit on users too
-        for i in range(30):
-            self.register(fullname="User%s" %i, username="user%s" %i)
-
-        res = self.app.get('/api/user')
-        data = json.loads(res.data)
-        assert len(data) == 20, len(data)
-
-        res = self.app.get('/api/user?limit=10')
-        data = json.loads(res.data)
-        print data
-        assert len(data) == 10, len(data)
-
-        res = self.app.get('/api/user?limit=10&offset=10')
-        data = json.loads(res.data)
-        assert len(data) == 10, len(data)
-        assert data[0].get('id') == 11
 
     def test_01_app_query(self):
         """ Test API App query"""

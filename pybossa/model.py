@@ -388,7 +388,7 @@ class User(db.Model, DomainObject, flask.ext.login.UserMixin):
     #: full name
     fullname = Column(Unicode(length=500), nullable=False)
     #: locale
-    locale = Column(Unicode(length=254))
+    locale = Column(Unicode(length=254), default='en')
     #: api key
     api_key = Column(String(length=36), default=make_uuid, unique=True)
     passwd_hash = Column(Unicode(length=254), unique=True)
