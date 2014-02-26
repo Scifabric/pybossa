@@ -394,6 +394,8 @@ class User(db.Model, DomainObject, flask.ext.login.UserMixin):
     passwd_hash = Column(Unicode(length=254), unique=True)
     #: Admin flag Boolean Integer (0,1)
     admin = Column(Boolean, default=False)
+    # Privacy mode flag
+    privacy_mode = Column(Boolean, default=True)
     #: TODO: find out ... bossa specific
     category = Column(Integer)
     #: TODO: find out ...
