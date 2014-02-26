@@ -194,6 +194,14 @@ class TestAPI:
         assert err['status'] == 'failed', err_msg
         assert err['exception_cls'] == 'AttributeError', err_msg
 
+        # POST, DELETE and PUT requests are forbidden
+        post_response = self.app.post("/api/user")
+        assert post_response.status_code == 405, post_response.status_code
+        delete_response = self.app.delete("/api/user")
+        assert delete_response.status_code == 405, delete_response.status_code
+        put_response = self.app.put("/api/user")
+        assert put_response.status_code == 405, put_response.status_code
+
 
     # END OF USER API TESTS
 

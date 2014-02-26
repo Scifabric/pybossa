@@ -53,6 +53,15 @@ class UserAPI(APIBase):
     __class__ = User
 
 
+    def _post(self):
+        raise MethodNotAllowed(valid_methods=['GET'])
+
+    def _delete(self):
+        raise MethodNotAllowed(valid_methods=['GET'])
+
+    def _put(self):
+        raise MethodNotAllowed(valid_methods=['GET'])
+
     # @jsonpify
     # @crossdomain(origin='*', headers=cors_headers)
     # @ratelimit(limit=300, per=15 * 60)
