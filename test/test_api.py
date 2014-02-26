@@ -133,7 +133,8 @@ class TestAPI:
             assert res.mimetype == 'application/json', res
 
     def test_user_get(self):
-        """USER -- Test API User GET all"""
+        """USER -- Test API User GET"""
+        # Test a GET all users
         res = self.app.get('/api/user')
         data = json.loads(res.data)
         user = data[0]
@@ -142,6 +143,12 @@ class TestAPI:
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
+
+        # Test GETting a specific user by ID
+        res = self.app.get('/api/user/1')
+        data = json.loads(res.data)
+        user = data
+        assert user['email_addr'] == 'root@root.com', data
 
         # Test a non-existant ID
         res = self.app.get('/api/user/3434209')
@@ -157,18 +164,18 @@ class TestAPI:
 
         # When querying with a valid existing field which is unique
         # It should return one correct result if exists
-        res = self.app.get("/api/user?name=root")
+        res = self.app.get('/api/user?name=root')
         data = json.loads(res.data)
         assert len(data) == 1, data
         assert data[0]['name'] == 'root', data
         # And it should return no results if there are no matches
-        res = self.app.get("/api/user?name=Godzilla")
+        res = self.app.get('/api/user?name=Godzilla')
         data = json.loads(res.data)
         assert len(data) == 0, data
 
         # When querying with a valid existing non-unique field
-        self.register(fullname="John-Doe", username="fakeUser1")
-        self.register(fullname="John-Doe", username="fakeUser2")
+        self.register(fullname='John-Doe', username='fakeUser1')
+        self.register(fullname='John-Doe', username='fakeUser2')
         res = self.app.get("/api/user?fullname=John-Doe")
         data = json.loads(res.data)
         # It should return 2 results
@@ -178,7 +185,7 @@ class TestAPI:
                and data[0] != data[1]), data
 
         # When querying with multiple valid fields
-        res = self.app.get("/api/user?name=root&locale=en")
+        res = self.app.get('/api/user?name=root&locale=en')
         data = json.loads(res.data)
         # It should find and return one correct result
         assert len(data) == 1, data
@@ -186,7 +193,7 @@ class TestAPI:
         assert data[0]['locale'] == 'en', data
 
         # When querying with non-valid fields -- Errors
-        res = self.app.get("/api/user?something_invalid=whatever")
+        res = self.app.get('/api/user?something_invalid=whatever')
         err = json.loads(res.data)
         err_msg = "AttributeError exception should be raised"
         assert res.status_code == 415, err_msg
@@ -194,14 +201,109 @@ class TestAPI:
         assert err['status'] == 'failed', err_msg
         assert err['exception_cls'] == 'AttributeError', err_msg
 
-        # POST, DELETE and PUT requests are forbidden
-        post_response = self.app.post("/api/user")
+    def test_user_not_allowed_actions(self):
+        """USER -- Test POST, PUT and DELETE actions are not allowed for user
+        in the API"""
+
+        post_response = self.app.post('/api/user')
         assert post_response.status_code == 405, post_response.status_code
-        delete_response = self.app.delete("/api/user")
+        delete_response = self.app.delete('/api/user')
         assert delete_response.status_code == 405, delete_response.status_code
-        put_response = self.app.put("/api/user")
+        put_response = self.app.put('/api/user')
         assert put_response.status_code == 405, put_response.status_code
 
+    def test_privacy_mode_queries(self):
+        """USER -- Test API user queries for privacy mode"""
+
+        # Add user with name publicUser, privacy mode disabled
+        user_with_privacy_disabled = model.User(email_addr='public@user.com',
+                                    name='publicUser', fullname='Public user')
+        db.session.add(user_with_privacy_disabled)
+        # Add user with name privateUser, privacy mode enabled
+        user_with_privacy_disabled = model.User(email_addr='private@user.com',
+                                    name='privateUser', fullname='Private user')
+        db.session.add(user_with_privacy_disabled)
+        db.session.commit()
+
+        # With no API-KEY
+        # User with privacy disabled
+        res = self.app.get('/api/user/4')
+        data = json.loads(res.data)
+        user_with_privacy_disabled = data
+        # When checking a public field it should be returned
+        assert user_with_privacy_disabled['locale'] == 'en', data
+        # When checking a private field it should be returned too
+        assert user_with_privacy_disabled['name'] == 'publicUser', data
+        # User with privacy enabled
+        res = self.app.get('/api/user/5')
+        data = json.loads(res.data)
+        user_with_privacy_enabled = data
+        # When checking a public field it should be returned
+        assert user_with_privacy_enabled['locale'] == 'en', data
+        # When checking a private field it should not be returned
+        assert 'name' not in user_with_privacy_enabled, data
+        # Users with privacy enabled and disabled, mixed together
+        res = self.app.get('/api/user')
+        data = json.loads(res.data)
+        user_with_privacy_disabled = data[3]
+        user_with_privacy_enabled = data[4]
+        assert user_with_privacy_disabled['locale'] == 'en', data
+        assert user_with_privacy_disabled['name'] == 'publicUser', data
+        assert user_with_privacy_enabled['locale'] == 'en', data
+        assert 'name' not in user_with_privacy_enabled, data
+
+        # With a non-admin API-KEY
+        # User with privacy disabled
+        res = self.app.get('/api/user/4?api_key=' + Fixtures.api_key)
+        data = json.loads(res.data)
+        user_with_privacy_disabled = data
+        # When checking a public field it should be returned
+        assert user_with_privacy_disabled['locale'] == 'en', data
+        # When checking a private field it should be returned too
+        assert user_with_privacy_disabled['name'] == 'publicUser', data
+        # User with privacy enabled
+        res = self.app.get('/api/user/5?api_key=' + Fixtures.api_key)
+        data = json.loads(res.data)
+        user_with_privacy_enabled = data
+        # When checking a public field it should be returned
+        assert user_with_privacy_enabled['locale'] == 'en', data
+        # When checking a private field it should not be returned
+        assert 'name' not in user_with_privacy_enabled, data
+        # Users with privacy enabled and disabled, mixed together
+        res = self.app.get('/api/user?api_key=' + Fixtures.api_key)
+        data = json.loads(res.data)
+        user_with_privacy_disabled = data[3]
+        user_with_privacy_enabled = data[4]
+        assert user_with_privacy_disabled['locale'] == 'en', data
+        assert user_with_privacy_disabled['name'] == 'publicUser', data
+        assert user_with_privacy_enabled['locale'] == 'en', data
+        assert 'name' not in user_with_privacy_enabled, data
+
+        # Admin API-KEY should be able to retrieve every field in user
+        res = self.app.get('/api/user/4?api_key=' + Fixtures.root_api_key)
+        data = json.loads(res.data)
+        user_with_privacy_disabled = data
+        # When checking a public field it should be returned
+        assert user_with_privacy_disabled['locale'] == 'en', data
+        # When checking a private field it should be returned too
+        assert user_with_privacy_disabled['name'] == 'publicUser', data
+        # User with privacy enabled
+        res = self.app.get('/api/user/5?api_key=' + Fixtures.root_api_key)
+        data = json.loads(res.data)
+        user_with_privacy_enabled = data
+        # When checking a public field it should be returned
+        assert user_with_privacy_enabled['locale'] == 'en', data
+        # When checking a private field it should be returned too
+        assert user_with_privacy_enabled['name'] == 'privateUser', data
+        # Users with privacy enabled and disabled, mixed together
+        res = self.app.get('/api/user?api_key=' + Fixtures.root_api_key)
+        data = json.loads(res.data)
+        user_with_privacy_disabled = data[3]
+        user_with_privacy_enabled = data[4]
+        assert user_with_privacy_disabled['locale'] == 'en', data
+        assert user_with_privacy_disabled['name'] == 'publicUser', data
+        assert user_with_privacy_enabled['locale'] == 'en', data
+        assert user_with_privacy_enabled['name'] == 'privateUser', data
 
     # END OF USER API TESTS
 
