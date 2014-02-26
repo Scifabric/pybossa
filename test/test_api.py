@@ -217,7 +217,8 @@ class TestAPI:
 
         # Add user with name publicUser, privacy mode disabled
         user_with_privacy_disabled = model.User(email_addr='public@user.com',
-                                    name='publicUser', fullname='Public user')
+                                    name='publicUser', fullname='Public user', 
+                                    privacy_mode=False)
         db.session.add(user_with_privacy_disabled)
         # Add user with name privateUser, privacy mode enabled
         user_with_privacy_disabled = model.User(email_addr='private@user.com',
