@@ -52,18 +52,19 @@ class UserAPI(APIBase):
 
     __class__ = User
 
-    # Define private and public fields (maybe should be defined in the model?)
+    # Define private and public fields available through the API
+    # (maybe should be defined in the model?)
     public_attributes = ('locale', 'name')
 
     def get(self, id):
-        """Get an object.
+        """Get a user.
 
-        Returns an item from the DB with the request.data JSON object or all
-        the items if id == None
+        Returns a user from the DB with the request.data JSON object or all
+        the users if id == None
 
-        :arg self: The class of the object to be retrieved
-        :arg integer id: the ID of the object in the DB
-        :returns: The JSON item/s stored in the DB
+        :arg self: The class of the object to be retrieved, in this case User
+        :arg integer id: the ID of the user in the DB
+        :returns: The JSON user/s stored in the DB
 
         """
         try:
