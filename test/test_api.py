@@ -112,7 +112,7 @@ class TestAPI:
         res = self.app.get('/api/user?limit=10&offset=10')
         data = json.loads(res.data)
         assert len(data) == 10, len(data)
-        assert data[0].get('id') == 11
+        assert data[0].get('name') == 'user7', data
 
     def test_get_query_with_API_KEY_user(self):
         # This is to be moved to test_api_common test_get_query_with_api_key once
@@ -128,7 +128,7 @@ class TestAPI:
             # With Fixtures.create() 3 users are created in de DB
             assert len(data) == 3, data
             user = data[0]
-            assert user['email_addr'] == 'root@root.com', data
+            assert user['name'] == 'root', data
             # The output should have a mime-type: application/json
             assert res.mimetype == 'application/json', res
 
@@ -139,7 +139,7 @@ class TestAPI:
         data = json.loads(res.data)
         user = data[0]
         assert len(data) == 3, data
-        assert user['email_addr'] == 'root@root.com', data
+        assert user['name'] == 'root', data
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
@@ -148,7 +148,7 @@ class TestAPI:
         res = self.app.get('/api/user/1')
         data = json.loads(res.data)
         user = data
-        assert user['email_addr'] == 'root@root.com', data
+        assert user['name'] == 'root', data
 
         # Test a non-existant ID
         res = self.app.get('/api/user/3434209')
@@ -174,14 +174,12 @@ class TestAPI:
         assert len(data) == 0, data
 
         # When querying with a valid existing non-unique field
-        self.register(fullname='John-Doe', username='fakeUser1')
-        self.register(fullname='John-Doe', username='fakeUser2')
-        res = self.app.get("/api/user?fullname=John-Doe")
+        res = self.app.get("/api/user?locale=en")
         data = json.loads(res.data)
-        # It should return 2 results
-        assert len(data) == 2, data
+        # It should return 3 results, as every registered user has locale=en by default
+        assert len(data) == 3, data
         # And they should be the correct ones
-        assert (data[0]['fullname'] == data[1]['fullname'] == 'John-Doe'
+        assert (data[0]['locale'] == data[1]['locale'] == 'en'
                and data[0] != data[1]), data
 
         # When querying with multiple valid fields
@@ -215,12 +213,12 @@ class TestAPI:
     def test_privacy_mode_queries(self):
         """USER -- Test API user queries for privacy mode"""
 
-        # Add user with name publicUser, privacy mode disabled
+        # Add user with fullname 'Public user', privacy mode disabled
         user_with_privacy_disabled = model.User(email_addr='public@user.com',
                                     name='publicUser', fullname='Public user',
                                     privacy_mode=False)
         db.session.add(user_with_privacy_disabled)
-        # Add user with name privateUser, privacy mode enabled
+        # Add user with fullname 'Private user', privacy mode enabled
         user_with_privacy_enabled = model.User(email_addr='private@user.com',
                                     name='privateUser', fullname='Private user',
                                     privacy_mode=True)
@@ -235,7 +233,7 @@ class TestAPI:
         # When checking a public field it should be returned
         assert user_with_privacy_disabled['locale'] == 'en', data
         # When checking a private field it should be returned too
-        assert user_with_privacy_disabled['name'] == 'publicUser', data
+        assert user_with_privacy_disabled['fullname'] == 'Public user', data
         # User with privacy enabled
         res = self.app.get('/api/user/5')
         data = json.loads(res.data)
@@ -243,16 +241,16 @@ class TestAPI:
         # When checking a public field it should be returned
         assert user_with_privacy_enabled['locale'] == 'en', data
         # When checking a private field it should not be returned
-        assert 'name' not in user_with_privacy_enabled, data
+        assert 'fullname' not in user_with_privacy_enabled, data
         # Users with privacy enabled and disabled, mixed together
         res = self.app.get('/api/user')
         data = json.loads(res.data)
         user_with_privacy_disabled = data[3]
         user_with_privacy_enabled = data[4]
         assert user_with_privacy_disabled['locale'] == 'en', data
-        assert user_with_privacy_disabled['name'] == 'publicUser', data
+        assert user_with_privacy_disabled['fullname'] == 'Public user', data
         assert user_with_privacy_enabled['locale'] == 'en', data
-        assert 'name' not in user_with_privacy_enabled, data
+        assert 'fullname' not in user_with_privacy_enabled, data
 
         # With a non-admin API-KEY
         # User with privacy disabled
@@ -262,7 +260,7 @@ class TestAPI:
         # When checking a public field it should be returned
         assert user_with_privacy_disabled['locale'] == 'en', data
         # When checking a private field it should be returned too
-        assert user_with_privacy_disabled['name'] == 'publicUser', data
+        assert user_with_privacy_disabled['fullname'] == 'Public user', data
         # User with privacy enabled
         res = self.app.get('/api/user/5?api_key=' + Fixtures.api_key)
         data = json.loads(res.data)
@@ -270,16 +268,16 @@ class TestAPI:
         # When checking a public field it should be returned
         assert user_with_privacy_enabled['locale'] == 'en', data
         # When checking a private field it should not be returned
-        assert 'name' not in user_with_privacy_enabled, data
+        assert 'fullname' not in user_with_privacy_enabled, data
         # Users with privacy enabled and disabled, mixed together
         res = self.app.get('/api/user?api_key=' + Fixtures.api_key)
         data = json.loads(res.data)
         user_with_privacy_disabled = data[3]
         user_with_privacy_enabled = data[4]
         assert user_with_privacy_disabled['locale'] == 'en', data
-        assert user_with_privacy_disabled['name'] == 'publicUser', data
+        assert user_with_privacy_disabled['fullname'] == 'Public user', data
         assert user_with_privacy_enabled['locale'] == 'en', data
-        assert 'name' not in user_with_privacy_enabled, data
+        assert 'fullname' not in user_with_privacy_enabled, data
 
         # Admin API-KEY should be able to retrieve every field in user
         res = self.app.get('/api/user/4?api_key=' + Fixtures.root_api_key)
@@ -288,7 +286,7 @@ class TestAPI:
         # When checking a public field it should be returned
         assert user_with_privacy_disabled['locale'] == 'en', data
         # When checking a private field it should be returned too
-        assert user_with_privacy_disabled['name'] == 'publicUser', data
+        assert user_with_privacy_disabled['fullname'] == 'Public user', data
         # User with privacy enabled
         res = self.app.get('/api/user/5?api_key=' + Fixtures.root_api_key)
         data = json.loads(res.data)
@@ -296,16 +294,16 @@ class TestAPI:
         # When checking a public field it should be returned
         assert user_with_privacy_enabled['locale'] == 'en', data
         # When checking a private field it should be returned too
-        assert user_with_privacy_enabled['name'] == 'privateUser', data
+        assert user_with_privacy_enabled['fullname'] == 'Private user', data
         # Users with privacy enabled and disabled, mixed together
         res = self.app.get('/api/user?api_key=' + Fixtures.root_api_key)
         data = json.loads(res.data)
         user_with_privacy_disabled = data[3]
         user_with_privacy_enabled = data[4]
         assert user_with_privacy_disabled['locale'] == 'en', data
-        assert user_with_privacy_disabled['name'] == 'publicUser', data
+        assert user_with_privacy_disabled['fullname'] == 'Public user', data
         assert user_with_privacy_enabled['locale'] == 'en', data
-        assert user_with_privacy_enabled['name'] == 'privateUser', data
+        assert user_with_privacy_enabled['fullname'] == 'Private user', data
 
     # END OF USER API TESTS
 
@@ -1907,7 +1905,6 @@ class TestAPI:
         res = self.app.get(url, follow_redirects=True)
         task = json.loads(res.data)
         err_msg = "The task.app_id should be null"
-        print task
         assert task['app_id'] is None, err_msg
         err_msg = "There should be an error message"
         err = "This application does not allow anonymous contributors"
