@@ -56,83 +56,14 @@ class UserAPI(APIBase):
     # (maybe should be defined in the model?) There are fields like password has
     # that shouldn't be visible even for admins
     public_attributes = ('locale', 'name')
-    private_attributes = ('name', 'locale', 'fullname', 'email_addr', 'created', 'info')
+    private_attributes = ('name', 'locale', 'fullname', 'email_addr', 'created', 'info', 'link', 'links')
 
-    def get(self, id):
-        """Get a user.
 
-        Returns a user from the DB with the request.data JSON object or all
-        the users if id == None
-
-        :arg self: The class of the object to be retrieved, in this case User
-        :arg integer id: the ID of the user in the DB
-        :returns: The JSON user/s stored in the DB
-
-        """
-        try:
-            self._get()
-            getattr(require, self.__class__.__name__.lower()).read()
-            if id is None:
-                query = db.session.query(self.__class__)
-                for k in request.args.keys():
-                    if k not in ['limit', 'offset', 'api_key']:
-                        # Raise an error if the k arg is not a column
-                        getattr(self.__class__, k)
-                        query = query.filter(
-                            getattr(self.__class__, k) == request.args[k])
-                try:
-                    limit = min(10000, int(request.args.get('limit')))
-                except (ValueError, TypeError):
-                    limit = 20
-
-                try:
-                    offset = int(request.args.get('offset'))
-                except (ValueError, TypeError):
-                    offset = 0
-
-                query = query.order_by(self.__class__.id)
-                query = query.limit(limit)
-                query = query.offset(offset)
-                items = []
-                for item in query.all():
-                    obj = item.dictize()
-                    links, link = self.hateoas.create_links(item)
-                    if links:
-                        obj['links'] = links
-                    if link:
-                        obj['link'] = link
-                    privacy = self._is_user_private(item)
-                    self._filter_attributes_to_return(obj, privacy)
-                    items.append(obj)
-                return Response(json.dumps(items), mimetype='application/json')
-            else:
-                item = db.session.query(self.__class__).get(id)
-                if item is None:
-                    raise abort(404)
-                else:
-                    getattr(require,
-                            self.__class__.__name__.lower()).read(item)
-                    obj = item.dictize()
-                    links, link = self.hateoas.create_links(item)
-                    if links:
-                        obj['links'] = links
-                    if link:
-                        obj['link'] = link
-                    privacy = self._is_user_private(item)
-                    self._filter_attributes_to_return(obj, privacy)
-                    return Response(json.dumps(obj),
-                                    mimetype='application/json')
-        except Exception as e:
-            return error.format_exception(
-                e,
-                target=self.__class__.__name__.lower(),
-                action='GET')
-
-    def _filter_attributes_to_return(self, user_data, privacy):
-        for attribute in dict(user_data):
-            self._remove_attribute_if_private(attribute,
-                                                           user_data,
-                                                           privacy)
+    def _filter_attributes_to_return(self, user_data):
+        privacy = self._is_user_private(user_data)
+        for attribute in user_data.keys():
+            self._remove_attribute_if_private(attribute, user_data, privacy)
+        return user_data
 
     def _remove_attribute_if_private(self, attribute, user_data, privacy):
         if self._is_attribute_private(attribute, privacy):
@@ -143,7 +74,7 @@ class UserAPI(APIBase):
                 privacy and attribute not in self.public_attributes)
 
     def _is_user_private(self, user):
-        return not self._is_requester_admin() and user.privacy_mode
+        return not self._is_requester_admin() and user['privacy_mode']
 
     def _is_requester_admin(self):
         return current_user.is_authenticated() and current_user.admin
