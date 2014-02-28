@@ -108,7 +108,10 @@ class TestHateoas(web_helper.Helper):
         err_msg = "The object links should are wrong"
 
         # For user
-        res = self.app.get("/api/user/1", follow_redirects=True)
+        # Pending define what user fields will be visible through the API
+        # Issue #626. For now let's suppose link and links are both visible,
+        # at least for admins->using admin API-KEY
+        res = self.app.get("/api/user/1?api_key=" + Fixtures.root_api_key, follow_redirects=True)
         output = json.loads(res.data)
         err_msg = "There should be a Link with the object URI"
         assert output['link'] is not None, err_msg
@@ -197,7 +200,10 @@ class TestHateoas(web_helper.Helper):
         err_msg = "The object links should are wrong"
 
         # For user
-        res = self.app.get("/api/user", follow_redirects=True)
+        # Pending define what user fields will be visible through the API
+        # Issue #626. For now let's suppose link and links are both visible,
+        # at least for admins->using admin API-KEY
+        res = self.app.get("/api/user?api_key=" + Fixtures.root_api_key, follow_redirects=True)
         output = json.loads(res.data)[0]
         err_msg = "There should be a Link with the object URI"
         assert output['link'] is not None, err_msg
