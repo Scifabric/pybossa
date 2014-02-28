@@ -125,7 +125,7 @@ class TestAPI:
         data = json.loads(res.data)
 
         if endpoint == 'user':
-            # With Fixtures.create() 3 users are created in de DB
+            # With Fixtures.create() 3 users are created in the DB
             assert len(data) == 3, data
             user = data[0]
             assert user['name'] == 'root', data
