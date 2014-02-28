@@ -53,8 +53,10 @@ class UserAPI(APIBase):
     __class__ = User
 
     # Define private and public fields available through the API
-    # (maybe should be defined in the model?)
+    # (maybe should be defined in the model?) There are fields like password has
+    # that shouldn't be visible even for admins
     public_attributes = ('locale', 'name')
+    private_attributes = ('name', 'locale', 'fullname', 'email_addr', 'created', 'info')
 
     def get(self, id):
         """Get a user.
@@ -99,11 +101,8 @@ class UserAPI(APIBase):
                         obj['links'] = links
                     if link:
                         obj['link'] = link
-                    if not(current_user.is_authenticated() and current_user.admin) and item.privacy_mode:
-                        obj_copy = dict(obj)
-                        for attribute in obj_copy:
-                            if attribute not in self.public_attributes:
-                                del obj[attribute]
+                    privacy = self._is_user_private(item)
+                    self._filter_attributes_to_return(obj, privacy)
                     items.append(obj)
                 return Response(json.dumps(items), mimetype='application/json')
             else:
@@ -119,11 +118,8 @@ class UserAPI(APIBase):
                         obj['links'] = links
                     if link:
                         obj['link'] = link
-                    if not (current_user.is_authenticated() and current_user.admin) and item.privacy_mode:
-                        obj_copy = dict(obj)
-                        for attribute in obj_copy:
-                            if attribute not in self.public_attributes:
-                                del obj[attribute]
+                    privacy = self._is_user_private(item)
+                    self._filter_attributes_to_return(obj, privacy)
                     return Response(json.dumps(obj),
                                     mimetype='application/json')
         except Exception as e:
@@ -132,6 +128,25 @@ class UserAPI(APIBase):
                 target=self.__class__.__name__.lower(),
                 action='GET')
 
+    def _filter_attributes_to_return(self, user_data, privacy):
+        for attribute in dict(user_data):
+            self._remove_attribute_if_private(attribute,
+                                                           user_data,
+                                                           privacy)
+
+    def _remove_attribute_if_private(self, attribute, user_data, privacy):
+        if self._is_attribute_private(attribute, privacy):
+            del user_data[attribute]
+
+    def _is_attribute_private(self, attribute, privacy):
+        return (attribute not in self.private_attributes or
+                privacy and attribute not in self.public_attributes)
+
+    def _is_user_private(self, user):
+        return not self._is_requester_admin() and user.privacy_mode
+
+    def _is_requester_admin(self):
+        return current_user.is_authenticated() and current_user.admin
 
     def _post(self):
         raise MethodNotAllowed(valid_methods=['GET'])
