@@ -88,15 +88,14 @@ class APIBase(MethodView):
     def _create_json_response(self, query_result, id):
         if len (query_result) == 1 and query_result[0] is None:
             raise abort(404)
-        items = []
-        for item in query_result:
-            obj = self._add_hateoas_links(item)
-            obj = self._filter_attributes_to_return(obj)
-            items.append(obj)
+        items = list(self._create_dict_from_model(item) for item in query_result)
         if id:
             getattr(require, self.__class__.__name__.lower()).read(query_result[0])
             items = items[0]
         return json.dumps(items)
+
+    def _create_dict_from_model(self, model):
+        return self._select_attributes(self._add_hateoas_links(model))
 
     def _add_hateoas_links(self, item):
         obj = item.dictize()
@@ -274,7 +273,7 @@ class APIBase(MethodView):
         """
         pass
 
-    def _filter_attributes_to_return(self, item_data):
+    def _select_attributes(self, item_data):
         """Method to be overriden in inheriting classes in case it is not
         desired that every object attribute is returned by the API
         """

@@ -59,7 +59,7 @@ class UserAPI(APIBase):
     private_attributes = ('name', 'locale', 'fullname', 'email_addr', 'created', 'info', 'link', 'links')
 
 
-    def _filter_attributes_to_return(self, user_data):
+    def _select_attributes(self, user_data):
         privacy = self._is_user_private(user_data)
         for attribute in user_data.keys():
             self._remove_attribute_if_private(attribute, user_data, privacy)
