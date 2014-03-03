@@ -22,25 +22,12 @@ This package adds GET method for:
     * users
 
 """
-import json
-from api_base import APIBase, cors_headers, error
+from api_base import APIBase
 from pybossa.model import User
-import pybossa.view.stats as stats
-import pybossa.cache.apps as cached_apps
-import pybossa.cache.categories as cached_categories
-from pybossa.util import jsonpify, crossdomain
-from pybossa.ratelimit import ratelimit
+import pybossa.cache.users as cached_users
 from werkzeug.exceptions import MethodNotAllowed
-from flask import request, abort, Response
-from flask.views import MethodView
+from flask import request
 from flask.ext.login import current_user
-from werkzeug.exceptions import NotFound
-from pybossa.util import jsonpify, crossdomain
-from pybossa.core import db
-from pybossa.auth import require
-from pybossa.hateoas import Hateoas
-from pybossa.ratelimit import ratelimit
-from pybossa.error import ErrorStatus
 
 
 class UserAPI(APIBase):
@@ -53,7 +40,7 @@ class UserAPI(APIBase):
     __class__ = User
 
     # Define private and public fields available through the API
-    # (maybe should be defined in the model?) There are fields like password has
+    # (maybe should be defined in the model?) There are fields like password hash
     # that shouldn't be visible even for admins
     public_attributes = ('locale', 'name')
     private_attributes = ('name', 'locale', 'fullname', 'email_addr', 'created', 'info', 'link', 'links')

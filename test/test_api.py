@@ -89,12 +89,10 @@ class TestAPI:
         return cookie, task_run
 
 
-    # USER API TESTS
-
     def test_get_limit(self):
         # This is to be moved to test_api_common test_00_limits_query once
         # the pull request refactoring these tests has been approved
-        """USER -- Test API GET limits works"""
+        """Test API GET limits works"""
 
         # Register 30 new users to test limit on users too
         for i in range(30):
@@ -117,7 +115,7 @@ class TestAPI:
     def test_get_query_with_API_KEY_user(self):
         # This is to be moved to test_api_common test_get_query_with_api_key once
         # the pull request refactoring these tests has been approved
-        """USER -- Test API GET query with an API-KEY works"""
+        """Test API GET query with an API-KEY works"""
 
         endpoint = 'user'
         url = '/api/' + endpoint + '?api_key=' + Fixtures.api_key
@@ -133,7 +131,7 @@ class TestAPI:
             assert res.mimetype == 'application/json', res
 
     def test_user_get(self):
-        """USER -- Test API User GET"""
+        """Test API User GET"""
         # Test a GET all users
         res = self.app.get('/api/user')
         data = json.loads(res.data)
@@ -160,7 +158,7 @@ class TestAPI:
         assert err['action'] == 'GET', err
 
     def test_query_user(self):
-        """USER -- Test API query for user endpoint works"""
+        """Test API query for user endpoint works"""
 
         # When querying with a valid existing field which is unique
         # It should return one correct result if exists
@@ -200,7 +198,7 @@ class TestAPI:
         assert err['exception_cls'] == 'AttributeError', err_msg
 
     def test_user_not_allowed_actions(self):
-        """USER -- Test POST, PUT and DELETE actions are not allowed for user
+        """Test POST, PUT and DELETE actions are not allowed for user
         in the API"""
 
         post_response = self.app.post('/api/user')
@@ -211,7 +209,7 @@ class TestAPI:
         assert put_response.status_code == 405, put_response.status_code
 
     def test_privacy_mode_queries(self):
-        """USER -- Test API user queries for privacy mode"""
+        """Test API user queries for privacy mode"""
 
         # Add user with fullname 'Public user', privacy mode disabled
         user_with_privacy_disabled = model.User(email_addr='public@user.com',
@@ -304,8 +302,6 @@ class TestAPI:
         assert user_with_privacy_disabled['fullname'] == 'Public user', data
         assert user_with_privacy_enabled['locale'] == 'en', data
         assert user_with_privacy_enabled['fullname'] == 'Private user', data
-
-    # END OF USER API TESTS
 
 
     def test_00_limits_query(self):
