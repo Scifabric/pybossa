@@ -89,7 +89,7 @@ class TestAPI:
         return cookie, task_run
 
 
-    def test_get_limit(self):
+    def test_user_get_limit(self):
         # This is to be moved to test_api_common test_00_limits_query once
         # the pull request refactoring these tests has been approved
         """Test API GET limits works"""
@@ -208,7 +208,7 @@ class TestAPI:
         put_response = self.app.put('/api/user')
         assert put_response.status_code == 405, put_response.status_code
 
-    def test_privacy_mode_queries(self):
+    def test_privacy_mode_user_get(self):
         """Test API user queries for privacy mode"""
 
         # Add user with fullname 'Public user', privacy mode disabled
@@ -302,6 +302,39 @@ class TestAPI:
         assert user_with_privacy_disabled['fullname'] == 'Public user', data
         assert user_with_privacy_enabled['locale'] == 'en', data
         assert user_with_privacy_enabled['fullname'] == 'Private user', data
+
+    def test_privacy_mode_user_queries(self):
+        """Test API user queries for privacy mode with private fields in query
+        """
+
+        # Add user with fullname 'Public user', privacy mode disabled
+        user_with_privacy_disabled = model.User(email_addr='public@user.com',
+                                    name='publicUser', fullname='User',
+                                    privacy_mode=False)
+        db.session.add(user_with_privacy_disabled)
+        # Add user with fullname 'Private user', privacy mode enabled
+        user_with_privacy_enabled = model.User(email_addr='private@user.com',
+                                    name='privateUser', fullname='User',
+                                    privacy_mode=True)
+        db.session.add(user_with_privacy_enabled)
+        db.session.commit()
+
+        # When querying with private fields
+        query = 'api/user?fullname=User'
+        # with no API-KEY, no user with privacy enabled should be returned,
+        # even if it matches the query
+        res = self.app.get(query)
+        data = json.loads(res.data)
+        assert len(data) == 1, data
+        public_user = data[0]
+        assert public_user['name'] == 'publicUser', public_user
+
+        # with a non-admin API-KEY, the result should be the same
+        res = self.app.get(query + '&api_key=' + Fixtures.api_key)
+        data = json.loads(res.data)
+        assert len(data) == 1, data
+        public_user = data[0]
+        assert public_user['name'] == 'publicUser', public_user
 
 
     def test_00_limits_query(self):

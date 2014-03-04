@@ -66,6 +66,22 @@ class UserAPI(APIBase):
     def _is_requester_admin(self):
         return current_user.is_authenticated() and current_user.admin
 
+    def _filter_query(self, users, limit, offset):
+        users = APIBase._filter_query(self, users, limit, offset)
+        if not self._private_arguments_in_request():
+            return users
+        else:
+            for user in users:
+                if not self._is_requester_admin() and user.privacy_mode:
+                    del users[users.index(user)]
+        return users
+
+    def _private_arguments_in_request(self):
+        for attribute in request.args.keys():
+            if attribute in self.private_attributes and attribute not in self.public_attributes:
+                return True
+        return False
+
     def _post(self):
         raise MethodNotAllowed(valid_methods=['GET'])
 
