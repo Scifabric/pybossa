@@ -336,6 +336,15 @@ class TestAPI:
         public_user = data[0]
         assert public_user['name'] == 'publicUser', public_user
 
+        # with an admin API-KEY, all the matching results should be returned
+        res = self.app.get(query + '&api_key=' + Fixtures.root_api_key)
+        data = json.loads(res.data)
+        assert len(data) == 2, data
+        public_user = data[0]
+        assert public_user['name'] == 'publicUser', public_user
+        private_user = data[1]
+        assert private_user['name'] == 'privateUser', private_user
+
 
     def test_00_limits_query(self):
         """Test API GET limits works"""

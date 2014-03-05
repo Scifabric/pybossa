@@ -70,10 +70,9 @@ class UserAPI(APIBase):
         users = APIBase._filter_query(self, users, limit, offset)
         if not self._private_arguments_in_request():
             return users
-        else:
-            for user in users:
-                if not self._is_requester_admin() and user.privacy_mode:
-                    del users[users.index(user)]
+        for user in users:
+            if not self._is_requester_admin() and user.privacy_mode:
+                del users[users.index(user)]
         return users
 
     def _private_arguments_in_request(self):
