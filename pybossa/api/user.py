@@ -42,8 +42,14 @@ class UserAPI(APIBase):
     # Define private and public fields available through the API
     # (maybe should be defined in the model?) There are fields like password hash
     # that shouldn't be visible even for admins
+
+    # Attributes that are always visible from everyone
     public_attributes = ('locale', 'name')
-    private_attributes = ('name', 'locale', 'fullname', 'email_addr', 'created', 'info', 'link', 'links')
+
+    # Attributes that are visible only for admins or everyone if the user
+    # has privacy_mode disabled
+    allowed_attributes = ('name', 'locale', 'fullname', 'email_addr', 'created',
+                          'info', 'link', 'links')
 
 
     def _select_attributes(self, user_data):
@@ -57,7 +63,7 @@ class UserAPI(APIBase):
             del user_data[attribute]
 
     def _is_attribute_private(self, attribute, privacy):
-        return (attribute not in self.private_attributes or
+        return (attribute not in self.allowed_attributes or
                 privacy and attribute not in self.public_attributes)
 
     def _is_user_private(self, user):
@@ -66,18 +72,15 @@ class UserAPI(APIBase):
     def _is_requester_admin(self):
         return current_user.is_authenticated() and current_user.admin
 
-    def _filter_query(self, users, limit, offset):
-        users = APIBase._filter_query(self, users, limit, offset)
-        if not self._private_arguments_in_request():
-            return users
-        for user in users:
-            if not self._is_requester_admin() and user.privacy_mode:
-                del users[users.index(user)]
-        return users
+    def _custom_filter(self, query):
+        if self._private_attributes_in_request() and not self._is_requester_admin():
+            query = query.filter(getattr(User, 'privacy_mode') == False)
+        return query
 
-    def _private_arguments_in_request(self):
+    def _private_attributes_in_request(self):
         for attribute in request.args.keys():
-            if attribute in self.private_attributes and attribute not in self.public_attributes:
+            if (attribute in self.allowed_attributes and
+                attribute not in self.public_attributes):
                 return True
         return False
 

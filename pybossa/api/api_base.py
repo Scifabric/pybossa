@@ -123,6 +123,7 @@ class APIBase(MethodView):
                 getattr(self.__class__, k)
                 query = query.filter(
                     getattr(self.__class__, k) == request.args[k])
+        query = self._custom_filter(query)
         return self._format_query_result(query, limit, offset)
 
     def _format_query_result(self, query, limit, offset):
@@ -278,3 +279,8 @@ class APIBase(MethodView):
         desired that every object attribute is returned by the API
         """
         return item_data
+    def _custom_filter(self, query):
+        """Method to be overriden in inheriting classes which wish to consider
+        specific filtering criteria
+        """
+        return query
