@@ -84,13 +84,13 @@ class UserAPI(APIBase):
                 return True
         return False
 
-    def _post(self):
+    def post(self):
         raise MethodNotAllowed(valid_methods=['GET'])
 
-    def _delete(self):
+    def delete(self):
         raise MethodNotAllowed(valid_methods=['GET'])
 
-    def _put(self):
+    def put(self):
         raise MethodNotAllowed(valid_methods=['GET'])
 
 

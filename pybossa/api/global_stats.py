@@ -70,5 +70,5 @@ class GlobalStatsAPI(APIBase):
         data['categories'].append(datum)
         return Response(json.dumps(data), 200, mimetype='application/json')
 
-    def _post(self):
+    def post(self):
         raise MethodNotAllowed

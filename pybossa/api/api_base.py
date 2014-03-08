@@ -74,7 +74,6 @@ class APIBase(MethodView):
 
         """
         try:
-            self._get()
             getattr(require, self.__class__.__name__.lower()).read()
             query = self._db_query(self.__class__, id)
             json_response = self._create_json_response(query, id)
@@ -154,7 +153,6 @@ class APIBase(MethodView):
 
         """
         try:
-            self._post()
             self.valid_args()
             data = json.loads(request.data)
             # Clean HATEOAS args
@@ -186,7 +184,6 @@ class APIBase(MethodView):
 
         """
         try:
-            self._delete()
             self.valid_args()
             inst = db.session.query(self.__class__).get(id)
             if inst is None:
@@ -217,7 +214,6 @@ class APIBase(MethodView):
 
         """
         try:
-            self._put()
             self.valid_args()
             existing = db.session.query(self.__class__).get(id)
             if existing is None:
@@ -240,21 +236,6 @@ class APIBase(MethodView):
                 target=self.__class__.__name__.lower(),
                 action='PUT')
 
-    def _get(self):
-        """GET method to override."""
-        pass
-
-    def _post(self):
-        """POST method to override."""
-        pass
-
-    def _put(self):
-        """PUT method to override."""
-        pass
-
-    def _delete(self):
-        """DELETE method to override."""
-        pass
 
     def _update_object(self, data_dict):
         """Update object.

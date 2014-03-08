@@ -88,5 +88,5 @@ class VmcpAPI(APIBase):
             return Response(json.dumps(error), status=error['status_code'],
                             mimetype='application/json')
 
-    def _post(self):
+    def post(self):
         raise MethodNotAllowed
