@@ -19,7 +19,9 @@
 import json
 from mock import patch
 from base import web, model, Fixtures, db, redis_flushall
-from nose.tools import assert_equal, assert_raises
+from nose.tools import assert_equal, assert_raises, raises
+from werkzeug.exceptions import MethodNotAllowed
+from pybossa.api.user import UserAPI
 
 
 class TestAPI:
@@ -112,6 +114,7 @@ class TestAPI:
         assert len(data) == 10, len(data)
         assert data[0].get('name') == 'user7', data
 
+
     def test_get_query_with_API_KEY_user(self):
         # This is to be moved to test_api_common test_get_query_with_api_key once
         # the pull request refactoring these tests has been approved
@@ -129,6 +132,7 @@ class TestAPI:
             assert user['name'] == 'root', data
             # The output should have a mime-type: application/json
             assert res.mimetype == 'application/json', res
+
 
     def test_user_get(self):
         """Test API User GET"""
@@ -156,6 +160,7 @@ class TestAPI:
         assert err['target'] == 'user', err
         assert err['exception_cls'] == 'NotFound', err
         assert err['action'] == 'GET', err
+
 
     def test_query_user(self):
         """Test API query for user endpoint works"""
@@ -197,16 +202,22 @@ class TestAPI:
         assert err['status'] == 'failed', err_msg
         assert err['exception_cls'] == 'AttributeError', err_msg
 
+
     def test_user_not_allowed_actions(self):
         """Test POST, PUT and DELETE actions are not allowed for user
         in the API"""
 
+        user_api_instance = UserAPI()
         post_response = self.app.post('/api/user')
         assert post_response.status_code == 405, post_response.status_code
+        assert_raises(MethodNotAllowed, user_api_instance.post)
         delete_response = self.app.delete('/api/user')
         assert delete_response.status_code == 405, delete_response.status_code
+        assert_raises(MethodNotAllowed, user_api_instance.delete)
         put_response = self.app.put('/api/user')
         assert put_response.status_code == 405, put_response.status_code
+        assert_raises(MethodNotAllowed, user_api_instance.put)
+
 
     def test_privacy_mode_user_get(self):
         """Test API user queries for privacy mode"""
@@ -302,6 +313,7 @@ class TestAPI:
         assert user_with_privacy_disabled['fullname'] == 'Public user', data
         assert user_with_privacy_enabled['locale'] == 'en', data
         assert user_with_privacy_enabled['fullname'] == 'Private user', data
+
 
     def test_privacy_mode_user_queries(self):
         """Test API user queries for privacy mode with private fields in query
