@@ -110,7 +110,6 @@ class TestAPI:
 
         res = self.app.get('/api/app?limit=10')
         data = json.loads(res.data)
-        print data
         assert len(data) == 10, len(data)
 
         res = self.app.get('/api/app?limit=10&offset=10')
@@ -235,7 +234,6 @@ class TestAPI:
 
         # Limits
         res = self.app.get("/api/taskrun?app_id=1&limit=5")
-        print res.data
         data = json.loads(res.data)
         for item in data:
             assert item['app_id'] == 1, item
@@ -308,7 +306,6 @@ class TestAPI:
 
         # Limits
         res = self.app.get("/api/task?app_id=1&limit=5")
-        print res.data
         data = json.loads(res.data)
         for item in data:
             assert item['app_id'] == 1, item
@@ -340,7 +337,6 @@ class TestAPI:
 
         # Limits
         res = self.app.get("/api/taskrun?app_id=1&limit=5")
-        print res.data
         data = json.loads(res.data)
         for item in data:
             assert item['app_id'] == 1, item
@@ -363,7 +359,6 @@ class TestAPI:
         taskruns = json.loads(res.data)
         assert len(taskruns) == 10, taskruns
         taskrun = taskruns[0]
-        #print taskrun
         assert taskrun['info']['answer'] == 'annakarenina', taskrun
 
         # The output should have a mime-type: application/json
@@ -502,7 +497,6 @@ class TestAPI:
         res = self.app.put('/api/category/%s?api_key=%s&search=select1' % (id_, Fixtures.root_api_key),
                            data=datajson)
         err = json.loads(res.data)
-        print err
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
         assert err['action'] == 'PUT', err
@@ -730,7 +724,6 @@ class TestAPI:
         res = self.app.put('/api/app/%s?api_key=%s&search=select1' % (id_, Fixtures.api_key),
                            data=datajson)
         err = json.loads(res.data)
-        print err
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
         assert err['action'] == 'PUT', err
@@ -792,7 +785,6 @@ class TestAPI:
         res = self.app.post('/api/app?api_key=' + Fixtures.api_key_2,
                             data=datajson)
 
-        print res.data
 
         out = db.session.query(model.App).filter_by(name=name).one()
         assert out, out
@@ -1077,28 +1069,27 @@ class TestAPI:
         assert tasks, tasks
 
     def test_06_taskrun_post(self):
-        """Test API TaskRun creation and auth"""
+        """Test API TaskRun creation and auth for anonymous users"""
         app = db.session.query(model.App)\
                 .filter_by(short_name=Fixtures.app_short_name)\
                 .one()
-        tasks = db.session.query(model.Task)\
-                  .filter_by(app_id=app.id)
-
+        task = db.session.query(model.Task)\
+                  .filter_by(app_id=app.id).first()
+        task_runs = db.session.query(model.TaskRun).all()
+        for tr in task_runs:
+            db.session.delete(tr)
+        db.session.commit()
         app_id = app.id
 
         # Create taskrun
         data = dict(
             app_id=app_id,
-            task_id=tasks[0].id,
+            task_id=task.id,
             info='my task result')
 
         datajson = json.dumps(data)
 
         # anonymous user
-        # any user cannot create a TaskRun without the proper cookie
-        res = self.app.post('/api/taskrun', data=datajson)
-        err_msg = "POST should be unauthorized without proper task cookie"
-        assert res.status_code == 401, err_msg
 
         # Get NotFound for an non-existing app
         url = '/api/app/5000/newtask'
@@ -1115,25 +1106,13 @@ class TestAPI:
         res = self.app.get(url)
         assert res.data == '{}', res.data
 
-        # Get first the cookie and post should be valid
-        url = '/api/app/%s/newtask' % app_id
-        res = self.app.get(url)
-        cookie = res.headers['set-cookie']
-        task = json.loads(res.data)
-        # Post for current task with cookies
-        # Create taskrun
-        data = dict(
-            app_id=task['app_id'],
-            task_id=task['id'],
-            info='my task result')
         # With wrong app_id
         data['app_id'] = 100000000000000000
         datajson = json.dumps(data)
-        tmp = self.app.post('/api/taskrun', data=datajson,
-                            headers=[('Cookie', cookie)])
+        tmp = self.app.post('/api/taskrun', data=datajson)
         err_msg = "This post should fail as the app_id is wrong"
         err = json.loads(tmp.data)
-        assert tmp.status_code == 403, err_msg
+        assert tmp.status_code == 403, tmp.data
         assert err['status'] == 'failed', err_msg
         assert err['status_code'] == 403, err_msg
         assert err['exception_msg'] == 'Invalid app_id', err_msg
@@ -1141,90 +1120,60 @@ class TestAPI:
         assert err['target'] == 'taskrun', err_msg
 
         # With wrong task_id
-        data['app_id'] = task['app_id']
+        data['app_id'] = task.app_id
         data['task_id'] = 100000000000000000000
         datajson = json.dumps(data)
-        tmp = self.app.post('/api/taskrun', data=datajson,
-                            headers=[('Cookie', cookie)])
-        err_msg = "This post should fail as the task_id is wrong"
+        tmp = self.app.post('/api/taskrun', data=datajson)
         err = json.loads(tmp.data)
-        assert tmp.status_code == 401, err_msg
+        assert tmp.status_code == 403, err_msg
         assert err['status'] == 'failed', err_msg
-        assert err['status_code'] == 401, err_msg
-        msg = 'Missing task cookie for posting a valid task_run'
-        assert err['exception_msg'] == msg, err_msg
-        assert err['exception_cls'] == 'Unauthorized', err_msg
+        assert err['status_code'] == 403, err_msg
+        assert err['exception_msg'] == 'Invalid task_id', err_msg
+        assert err['exception_cls'] == 'Forbidden', err_msg
         assert err['target'] == 'taskrun', err_msg
 
         # Now with everything fine
         data = dict(
-            app_id=task['app_id'],
-            task_id=task['id'],
+            app_id=task.app_id,
+            task_id=task.id,
             info='my task result')
         datajson = json.dumps(data)
-        tmp = self.app.post('/api/taskrun', data=datajson,
-                            headers=[('Cookie', cookie)])
+        tmp = self.app.post('/api/taskrun', data=datajson)
         r_taskrun = json.loads(tmp.data)
-        taskrun = db.session.query(model.TaskRun)\
-                    .get(r_taskrun['id'])
         assert tmp.status_code == 200, r_taskrun
-        err_msg = "Task run created has a different ID"
-        assert taskrun.id == r_taskrun['id'], err_msg
 
         # If the anonymous tries again it should be forbidden
-        tmp = self.app.post('/api/taskrun', data=datajson,
-                            headers=[('Cookie', cookie)])
+        tmp = self.app.post('/api/taskrun', data=datajson)
         err_msg = ("Anonymous users should be only allowed to post \
                     one task_run per task")
         assert tmp.status_code == 403, err_msg
 
     def test_06_taskrun_authenticated_post(self):
+        """Test API TaskRun creation and auth for authenticated users"""
         app = db.session.query(model.App)\
                 .filter_by(short_name=Fixtures.app_short_name)\
                 .one()
-        tasks = db.session.query(model.Task)\
-                  .filter_by(app_id=app.id)
-
+        task = db.session.query(model.Task)\
+                  .filter_by(app_id=app.id).first()
         task_runs = db.session.query(model.TaskRun).all()
         for tr in task_runs:
             db.session.delete(tr)
         db.session.commit()
-
         app_id = app.id
 
         # Create taskrun
         data = dict(
-            app_id=0,
-            task_id=0,
+            app_id=app_id,
+            task_id=task.id,
             info='my task result')
-
-        datajson = json.dumps(data)
-        url = '/api/taskrun?api_key=%s' % Fixtures.api_key
-        res = self.app.post(url, data=datajson)
-        err_msg = "POST should be unauthorized without proper task cookie"
-        assert res.status_code == 401, err_msg
-
-        # Get first the cookie and post should be valid
-        url = '/api/app/%s/newtask' % app_id
-        res = self.app.get(url)
-        cookie = res.headers['set-cookie']
-        task = json.loads(res.data)
-        data = dict(
-            app_id=task['app_id'],
-            task_id=task['id'],
-            info='my task result')
-
-        # Post for current task with cookies
 
         # With wrong app_id
         data['app_id'] = 100000000000000000
         datajson = json.dumps(data)
         url = '/api/taskrun?api_key=%s' % Fixtures.api_key
-        tmp = self.app.post(url, data=datajson,
-                            headers=[('Cookie', cookie)])
+        tmp = self.app.post(url, data=datajson)
         err_msg = "This post should fail as the app_id is wrong"
         err = json.loads(tmp.data)
-        print tmp.data
         assert tmp.status_code == 403, err_msg
         assert err['status'] == 'failed', err_msg
         assert err['status_code'] == 403, err_msg
@@ -1233,42 +1182,36 @@ class TestAPI:
         assert err['target'] == 'taskrun', err_msg
 
         # With wrong task_id
-        data['app_id'] = task['app_id']
+        data['app_id'] = task.app_id
         data['task_id'] = 100000000000000000000
         datajson = json.dumps(data)
-        tmp = self.app.post(url, data=datajson,
-                            headers=[('Cookie', cookie)])
+        tmp = self.app.post(url, data=datajson)
         err_msg = "This post should fail as the task_id is wrong"
         err = json.loads(tmp.data)
-        assert tmp.status_code == 401, err_msg
+        assert tmp.status_code == 403, err_msg
         assert err['status'] == 'failed', err_msg
-        assert err['status_code'] == 401, err_msg
-        msg = 'Missing task cookie for posting a valid task_run'
-        assert err['exception_msg'] == msg, err_msg
-        assert err['exception_cls'] == 'Unauthorized', err_msg
+        assert err['status_code'] == 403, err_msg
+        assert err['exception_msg'] == 'Invalid task_id', err_msg
+        assert err['exception_cls'] == 'Forbidden', err_msg
         assert err['target'] == 'taskrun', err_msg
 
         # Now with everything fine
         data = dict(
-            app_id=task['app_id'],
-            task_id=task['id'],
+            app_id=task.app_id,
+            task_id=task.id,
             info='my task result')
         datajson = json.dumps(data)
-        tmp = self.app.post(url, data=datajson,
-                            headers=[('Cookie', cookie)])
+        tmp = self.app.post(url, data=datajson)
         r_taskrun = json.loads(tmp.data)
-        taskrun = db.session.query(model.TaskRun)\
-                    .get(r_taskrun['id'])
         assert tmp.status_code == 200, r_taskrun
-        err_msg = "Task run created has a different ID"
-        assert taskrun.id == r_taskrun['id'], err_msg
 
         # If the user tries again it should be forbidden
-        tmp = self.app.post(url, data=datajson,
-                            headers=[('Cookie', cookie)])
-        err_msg = ("Anonymous users should be only allowed to post \
+        tmp = self.app.post(url, data=datajson)
+        err_msg = ("Authorized users should be only allowed to post \
                     one task_run per task")
-        assert tmp.status_code == 403, err_msg
+        task_runs = self.app.get('/api/taskrun')
+        assert tmp.status_code == 403, task_runs.data
+
 
     def test_06_taskrun_post_with_bad_data(self):
         """Test API TaskRun error messages."""
@@ -1331,15 +1274,13 @@ class TestAPI:
         # Post a task_run
 
         url = '/api/taskrun'
-        tmp = self.app.post(url, data=json.dumps(task_run),
-                            headers=[('Cookie', cookie)])
+        tmp = self.app.post(url, data=json.dumps(task_run))
 
         # Save task_run ID for anonymous user
         _id_anonymous = json.loads(tmp.data)['id']
 
         url = '/api/taskrun?api_key=%s' % Fixtures.api_key
-        tmp = self.app.post(url, data=json.dumps(task_run),
-                            headers=[('Cookie', cookie)])
+        tmp = self.app.post(url, data=json.dumps(task_run))
 
         # Save task_run ID for real user
         _id = json.loads(tmp.data)['id']
@@ -1463,7 +1404,6 @@ class TestAPI:
         ### root
         url = '/api/taskrun/%s?api_key=%s' % (_id_anonymous, Fixtures.root_api_key)
         res = self.app.delete(url)
-        print res.data
         error_msg = 'Admin should be able to delete TaskRuns of others'
         assert_equal(res.status, '204 NO CONTENT', error_msg)
 
@@ -1529,7 +1469,6 @@ class TestAPI:
         assert len(tasks) == data['total'], error_msg
 
         error_msg = "The reported number of done tasks is wrong"
-        print len(taskruns)
         assert len(taskruns) == data['done'], data
 
         res = self.app.get('/api/app/1/newtask')
@@ -1685,7 +1624,6 @@ class TestAPI:
         res = self.app.get(url, follow_redirects=True)
         task = json.loads(res.data)
         err_msg = "The task.app_id should be null"
-        print task
         assert task['app_id'] is None, err_msg
         err_msg = "There should be an error message"
         err = "This application does not allow anonymous contributors"
@@ -1695,7 +1633,6 @@ class TestAPI:
 
         # As registered user
         res = self.signin()
-        print res.data
         url = '/api/app/%s/newtask' % app.id
         res = self.app.get(url, follow_redirects=True)
         task = json.loads(res.data)
