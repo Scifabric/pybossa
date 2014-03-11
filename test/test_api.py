@@ -76,17 +76,6 @@ class TestAPI:
         """Helper function to sign out current user"""
         return self.app.get('/account/signout', follow_redirects=True)
 
-    def get_task_run_cookie(self, app_id):
-        """Return cookie and init task_run to post it."""
-        # Get first the cookie and post should be valid
-        url = '/api/app/%s/newtask' % app_id
-        res = self.app.get(url)
-        cookie = res.headers['set-cookie']
-        task = json.loads(res.data)
-        task_run = dict(app_id=task['app_id'],
-                        task_id=task['id'],
-                        info='my task result')
-        return cookie, task_run
 
     def test_00_limits_query(self):
         """Test API GET limits works"""
@@ -1218,14 +1207,13 @@ class TestAPI:
         app = db.session.query(model.App)\
                 .filter_by(short_name=Fixtures.app_short_name)\
                 .one()
-        tasks = db.session.query(model.Task)\
-                  .filter_by(app_id=app.id)
-
+        task = db.session.query(model.Task)\
+                  .filter_by(app_id=app.id).first()
         app_id = app.id
-
+        task_run = dict(app_id=app_id, task_id=task.id, info='my task result')
         url = '/api/taskrun?api_key=%s' % Fixtures.api_key
+
         # POST with not JSON data
-        cookie, task_run = self.get_task_run_cookie(app_id)
         res = self.app.post(url, data=task_run)
         err = json.loads(res.data)
         assert res.status_code == 415, err
@@ -1260,19 +1248,16 @@ class TestAPI:
         app = db.session.query(model.App)\
                 .filter_by(short_name=Fixtures.app_short_name)\
                 .one()
-        tasks = db.session.query(model.Task)\
-                  .filter_by(app_id=app.id)
-
+        task = db.session.query(model.Task)\
+                  .filter_by(app_id=app.id).first()
         task_runs = db.session.query(model.TaskRun).all()
         for tr in task_runs:
             db.session.delete(tr)
         db.session.commit()
-
         app_id = app.id
+        task_run = dict(app_id=app_id, task_id=task.id, info='my task result')
 
-        cookie, task_run = self.get_task_run_cookie(app_id)
         # Post a task_run
-
         url = '/api/taskrun'
         tmp = self.app.post(url, data=json.dumps(task_run))
 
