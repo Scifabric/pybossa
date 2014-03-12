@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 # This file is part of PyBossa.
 #
 # Copyright (C) 2013 SF Isle of Man Limited
@@ -154,46 +154,34 @@ def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30, offset
     rows = None
     if user_id and not user_ip:
         query = text('''
-                     SELECT id FROM task WHERE NOT EXISTS
-                     (SELECT task_id FROM task_run WHERE
-                     app_id=:app_id AND user_id=:user_id AND task_id=task.id)
-                     AND app_id=:app_id AND state !='completed'
-                     ORDER BY priority_0 DESC, id ASC LIMIT 10''')
+                     SELECT id
+                     FROM task
+                     WHERE
+                       NOT EXISTS (SELECT task_id FROM task_run WHERE
+                                   app_id=:app_id AND task_id=task.id AND user_id=:user_id)
+                       AND task_runs_nr < n_answers
+                       AND app_id=:app_id
+                       AND state !='completed'
+                     ORDER BY priority_0 DESC, id ASC
+                     LIMIT 10''')
         rows = db.engine.execute(query, app_id=app_id, user_id=user_id)
     else:
         if not user_ip:
             user_ip = '127.0.0.1'
         query = text('''
-                     SELECT id FROM task WHERE NOT EXISTS
-                     (SELECT task_id FROM task_run WHERE
-                     app_id=:app_id AND user_ip=:user_ip AND task_id=task.id)
-                     AND app_id=:app_id AND state !='completed'
-                     ORDER BY priority_0 DESC, id ASC LIMIT 10''')
+                     SELECT id
+                     FROM task
+                     WHERE
+                       NOT EXISTS (SELECT task_id FROM task_run WHERE
+                                   app_id=:app_id AND task_id=task.id AND user_ip=:user_ip)
+                       AND task_runs_nr < n_answers
+                       AND app_id=:app_id AND state !='completed'
+                     ORDER BY priority_0 DESC, id ASC
+                     LIMIT 10''')
         rows = db.engine.execute(query, app_id=app_id, user_ip=user_ip)
 
     tasks = []
     for t in rows:
         tasks.append(db.session.query(model.Task).get(t.id))
 
-    candidate_tasks = []
-
-    for t in tasks:
-        # DEPRECATED: t.info.n_answers will be removed
-        # DEPRECATED: so if your task has a different value for n_answers
-        # DEPRECATED: use t.n_answers instead
-        #print t.id
-        if (t.info.get('n_answers')):
-            t.n_answers = int(t.info['n_answers'])
-        # NEW WAY!
-        if t.n_answers is None:  # pragma: no cover
-            t.n_answers = 30
-
-        if (len(t.task_runs) >= t.n_answers):
-                t.state = "completed"
-                db.session.merge(t)
-                db.session.commit()
-        else:
-            candidate_tasks.append(t)
-            if (offset == 0):
-                break
-    return candidate_tasks
+    return tasks

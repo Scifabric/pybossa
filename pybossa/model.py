@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 # This file is part of PyBossa.
 #
 # Copyright (C) 2013 SF Isle of Man Limited
@@ -329,6 +329,7 @@ class Task(db.Model, DomainObject):
     ## Relationships
     #: `TaskRun`s for this task`
     task_runs = relationship('TaskRun', cascade='all, delete, delete-orphan', backref='task')
+    task_runs_nr = Column(Integer, default=0)
 
     def pct_status(self):
         """Returns the percentage of Tasks that are completed"""
