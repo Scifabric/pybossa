@@ -320,7 +320,7 @@ class TestTaskrunCreateAuthorization:
 
     def test_authenticated_user_update_other_users_taskrun(self):
         """Test authenticated user cannot update a taskrun if it was created
-        by another authenticated user, but can update its own taskruns"""
+        by another authenticated user, but can update his own taskruns"""
 
         app = Fixtures.create_app('')
         app.owner = self.root
@@ -336,13 +336,13 @@ class TestTaskrunCreateAuthorization:
                                 task_id=task.id,
                                 user=self.user1,
                                 info="some taskrun info")
-        other_users_taskrun = model.TaskRun(app_id=app.id,
+        own_users_taskrun = model.TaskRun(app_id=app.id,
                                 task_id=task.id,
                                 user=self.root,
                                 info="a different taskrun info")
 
         assert not taskrun_authorization.current_user.is_anonymous()
-        assert taskrun_authorization.update(user_taskrun)
+        assert taskrun_authorization.update(own_taskrun)
         assert not taskrun_authorization.update(other_users_taskrun)
 
 
@@ -369,6 +369,141 @@ class TestTaskrunCreateAuthorization:
         assert taskrun_authorization.update(user_taskrun)
 
 
+    def test_anonymous_user_delete_anonymous_taskrun(self):
+        """Test anonymous users cannot delete an anonymously posted taskrun"""
+
+        app = Fixtures.create_app('')
+        app.owner = self.root
+        db.session.add(app)
+        db.session.commit()
+        task = model.Task(app_id=app.id, state='0', n_answers=10)
+        task.app = app
+        db.session.add(task)
+        db.session.commit()
+        taskrun_authorization.current_user = FakeCurrentUser()
+
+        anonymous_taskrun = model.TaskRun(app_id=app.id,
+                                task_id=task.id,
+                                user_ip='127.0.0.0',
+                                info="some taskrun info")
+
+        assert taskrun_authorization.current_user.is_anonymous()
+        assert not taskrun_authorization.delete(anonymous_taskrun)
 
 
+    def test_authenticated_user_delete_anonymous_taskrun(self):
+        """Test authenticated users cannot delete an anonymously posted taskrun"""
 
+        app = Fixtures.create_app('')
+        app.owner = self.root
+        db.session.add(app)
+        db.session.commit()
+        task = model.Task(app_id=app.id, state='0', n_answers=10)
+        task.app = app
+        db.session.add(task)
+        db.session.commit()
+        taskrun_authorization.current_user = FakeCurrentUser(self.user1)
+
+        anonymous_taskrun = model.TaskRun(app_id=app.id,
+                                task_id=task.id,
+                                user_ip='127.0.0.0',
+                                info="some taskrun info")
+
+        assert not taskrun_authorization.current_user.is_anonymous()
+        assert not taskrun_authorization.delete(anonymous_taskrun)
+
+
+    def test_admin_delete_anonymous_taskrun(self):
+        """Test admins can delete anonymously posted taskruns"""
+
+        app = Fixtures.create_app('')
+        app.owner = self.user1
+        db.session.add(app)
+        db.session.commit()
+        task = model.Task(app_id=app.id, state='0', n_answers=10)
+        task.app = app
+        db.session.add(task)
+        db.session.commit()
+        self.root.admin = True
+        taskrun_authorization.current_user = FakeCurrentUser(self.root)
+
+        anonymous_taskrun = model.TaskRun(app_id=app.id,
+                                task_id=task.id,
+                                user_ip='127.0.0.0',
+                                info="some taskrun info")
+
+        assert taskrun_authorization.current_user.admin
+        assert taskrun_authorization.delete(anonymous_taskrun)
+
+
+    def test_anonymous_user_delete_user_taskrun(self):
+        """Test anonymous user cannot delete taskruns posted by authenticated users"""
+
+        app = Fixtures.create_app('')
+        app.owner = self.root
+        db.session.add(app)
+        db.session.commit()
+        task = model.Task(app_id=app.id, state='0', n_answers=10)
+        task.app = app
+        db.session.add(task)
+        db.session.commit()
+        taskrun_authorization.current_user = FakeCurrentUser()
+
+        user_taskrun = model.TaskRun(app_id=app.id,
+                                task_id=task.id,
+                                user_id=self.root.id,
+                                info="some taskrun info")
+
+        assert taskrun_authorization.current_user.is_anonymous()
+        assert not taskrun_authorization.delete(user_taskrun)
+
+
+    def test_authenticated_user_update_other_users_taskrun(self):
+        """Test authenticated user cannot delete a taskrun if it was created
+        by another authenticated user, but can delete his own taskruns"""
+
+        app = Fixtures.create_app('')
+        app.owner = self.root
+        db.session.add(app)
+        db.session.commit()
+        task = model.Task(app_id=app.id, state='0', n_answers=10)
+        task.app = app
+        db.session.add(task)
+        db.session.commit()
+        taskrun_authorization.current_user = FakeCurrentUser(self.user1)
+
+        own_taskrun = model.TaskRun(app_id=app.id,
+                                task_id=task.id,
+                                user=self.user1,
+                                info="some taskrun info")
+        other_users_taskrun = model.TaskRun(app_id=app.id,
+                                task_id=task.id,
+                                user=self.root,
+                                info="a different taskrun info")
+
+        assert not taskrun_authorization.current_user.is_anonymous()
+        assert taskrun_authorization.delete(own_taskrun)
+        assert not taskrun_authorization.delete(other_users_taskrun)
+
+
+    def test_admin_update_user_taskrun(self):
+        """Test admins can delete taskruns posted by authenticated users"""
+
+        app = Fixtures.create_app('')
+        app.owner = self.root
+        db.session.add(app)
+        db.session.commit()
+        task = model.Task(app_id=app.id, state='0', n_answers=10)
+        task.app = app
+        db.session.add(task)
+        db.session.commit()
+        self.root.admin = True
+        taskrun_authorization.current_user = FakeCurrentUser(self.root)
+
+        user_taskrun = model.TaskRun(app_id=app.id,
+                                task_id=task.id,
+                                user=self.user1,
+                                info="some taskrun info")
+
+        assert taskrun_authorization.current_user.admin
+        assert taskrun_authorization.delete(user_taskrun)
