@@ -42,7 +42,6 @@ def update(taskrun):
     if current_user.is_anonymous():
         return False
     else:
-        # User authenticated
         return current_user.admin or taskrun.user.id == current_user.id
 
 
