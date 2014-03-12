@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -*- coding: utf-8 -*-
 # This file is part of PyBossa.
 #
 # Copyright (C) 2014 SF Isle of Man Limited
@@ -57,6 +57,12 @@ class TaskRunAPI(APIBase):
             obj.user = current_user
         else:
             obj.user_ip = request.remote_addr
+
+        task.task_runs_nr += 1
+        # FIXME: Get rid of this way of using status...
+        if task.task_runs_nr >= task.n_answers:
+            task.state = "completed"
+
         # Check if this task_run has already been posted
         # task_run = db.session.query(model.TaskRun)\
         task_run = TaskRun.query\

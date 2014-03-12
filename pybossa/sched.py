@@ -159,8 +159,7 @@ def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30, offset
                      WHERE
                        NOT EXISTS (SELECT task_id FROM task_run WHERE
                                    app_id=:app_id AND task_id=task.id AND user_id=:user_id)
-                       AND (SELECT count(*) FROM task_run WHERE
-                            app_id=:app_id AND task_id=task.id) < n_answers
+                       AND task_runs_nr < n_answers
                        AND app_id=:app_id
                        AND state !='completed'
                      ORDER BY priority_0 DESC, id ASC
@@ -175,8 +174,7 @@ def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30, offset
                      WHERE
                        NOT EXISTS (SELECT task_id FROM task_run WHERE
                                    app_id=:app_id AND task_id=task.id AND user_ip=:user_ip)
-                       AND (SELECT count(*) FROM task_run WHERE
-                            app_id=:app_id AND task_id=task.id) < n_answers
+                       AND task_runs_nr < n_answers
                        AND app_id=:app_id AND state !='completed'
                      ORDER BY priority_0 DESC, id ASC
                      LIMIT 10''')
