@@ -229,18 +229,144 @@ class TestTaskrunCreateAuthorization:
         assert taskrun_authorization.read(own_taskrun)
 
 
+    def test_anonymous_user_update_anoymous_taskrun(self):
+        """Test anonymous users cannot update an anonymously posted taskrun"""
+
+        app = Fixtures.create_app('')
+        app.owner = self.root
+        db.session.add(app)
+        db.session.commit()
+        task = model.Task(app_id=app.id, state='0', n_answers=10)
+        task.app = app
+        db.session.add(task)
+        db.session.commit()
+        taskrun_authorization.current_user = FakeCurrentUser()
+
+        anonymous_taskrun = model.TaskRun(app_id=app.id,
+                                task_id=task.id,
+                                user_ip='127.0.0.0',
+                                info="some taskrun info")
+
+        assert taskrun_authorization.current_user.is_anonymous()
+        assert_raises(Forbidden, taskrun_authorization.update, anonymous_taskrun)
 
 
+    def test_authenticated_user_update_anonymous_taskrun(self):
+        """Test authenticated users cannot update an anonymously posted taskrun"""
+
+        app = Fixtures.create_app('')
+        app.owner = self.root
+        db.session.add(app)
+        db.session.commit()
+        task = model.Task(app_id=app.id, state='0', n_answers=10)
+        task.app = app
+        db.session.add(task)
+        db.session.commit()
+        taskrun_authorization.current_user = FakeCurrentUser(self.user1)
+
+        anonymous_taskrun = model.TaskRun(app_id=app.id,
+                                task_id=task.id,
+                                user_ip='127.0.0.0',
+                                info="some taskrun info")
+
+        assert not taskrun_authorization.current_user.is_anonymous()
+        assert_raises(Forbidden, taskrun_authorization.update, anonymous_taskrun)
 
 
+    def test_admin_update_anonymous_taskrun(self):
+        """Test admins cannot update anonymously posted taskruns"""
+
+        app = Fixtures.create_app('')
+        app.owner = self.user1
+        db.session.add(app)
+        db.session.commit()
+        task = model.Task(app_id=app.id, state='0', n_answers=10)
+        task.app = app
+        db.session.add(task)
+        db.session.commit()
+        self.root.admin = True
+        taskrun_authorization.current_user = FakeCurrentUser(self.root)
+
+        anonymous_taskrun = model.TaskRun(app_id=app.id,
+                                task_id=task.id,
+                                user_ip='127.0.0.0',
+                                info="some taskrun info")
+
+        assert taskrun_authorization.current_user.admin
+        assert_raises(Forbidden, taskrun_authorization.update, anonymous_taskrun)
 
 
+    def test_anonymous_user_update_user_taskrun(self):
+        """Test anonymous user cannot update taskruns posted by authenticated users"""
+
+        app = Fixtures.create_app('')
+        app.owner = self.root
+        db.session.add(app)
+        db.session.commit()
+        task = model.Task(app_id=app.id, state='0', n_answers=10)
+        task.app = app
+        db.session.add(task)
+        db.session.commit()
+        taskrun_authorization.current_user = FakeCurrentUser()
+
+        user_taskrun = model.TaskRun(app_id=app.id,
+                                task_id=task.id,
+                                user_id=self.root.id,
+                                info="some taskrun info")
+
+        assert taskrun_authorization.current_user.is_anonymous()
+        assert_raises(Forbidden, taskrun_authorization.update, user_taskrun)
 
 
+    def test_authenticated_user_update_other_users_taskrun(self):
+        """Test authenticated user cannot update a taskrun if it was created
+        by another authenticated user, but can update its own taskruns"""
+
+        app = Fixtures.create_app('')
+        app.owner = self.root
+        db.session.add(app)
+        db.session.commit()
+        task = model.Task(app_id=app.id, state='0', n_answers=10)
+        task.app = app
+        db.session.add(task)
+        db.session.commit()
+        taskrun_authorization.current_user = FakeCurrentUser(self.user1)
+
+        user_taskrun = model.TaskRun(app_id=app.id,
+                                task_id=task.id,
+                                user=self.user1,
+                                info="some taskrun info")
+        other_users_taskrun = model.TaskRun(app_id=app.id,
+                                task_id=task.id,
+                                user=self.root,
+                                info="a different taskrun info")
+
+        assert not taskrun_authorization.current_user.is_anonymous()
+        assert taskrun_authorization.update(user_taskrun)
+        assert not taskrun_authorization.update(other_users_taskrun)
 
 
+    def test_admin_update_user_taskrun(self):
+        """Test admins can update taskruns posted by authenticated users"""
 
+        app = Fixtures.create_app('')
+        app.owner = self.root
+        db.session.add(app)
+        db.session.commit()
+        task = model.Task(app_id=app.id, state='0', n_answers=10)
+        task.app = app
+        db.session.add(task)
+        db.session.commit()
+        self.root.admin = True
+        taskrun_authorization.current_user = FakeCurrentUser(self.root)
 
+        user_taskrun = model.TaskRun(app_id=app.id,
+                                task_id=task.id,
+                                user=self.user1,
+                                info="some taskrun info")
+
+        assert taskrun_authorization.current_user.admin
+        assert taskrun_authorization.update(user_taskrun)
 
 
 
