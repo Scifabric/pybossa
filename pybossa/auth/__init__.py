@@ -41,9 +41,9 @@ class Requirement(object):
         fc = self.wrapped(*args, **kwargs)
         if fc is not True:
             if current_user.is_anonymous():
-                raise abort(403)
-            else:
                 raise abort(401)
+            else:
+                raise abort(403)
         return fc
 
     @classmethod

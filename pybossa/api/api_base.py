@@ -145,8 +145,8 @@ class APIBase(MethodView):
             # Clean HATEOAS args
             data = self.hateoas.remove_links(data)
             inst = self.__class__(**data)
-            getattr(require, self.__class__.__name__.lower()).create(inst)
             self._update_object(inst)
+            getattr(require, self.__class__.__name__.lower()).create(inst)
             db.session.add(inst)
             db.session.commit()
             return json.dumps(inst.dictize())

@@ -22,12 +22,12 @@ This package adds GET, POST, PUT and DELETE methods for:
     * task_runs
 
 """
-from flask import request, current_app
+from flask import request
 from flask.ext.login import current_user
 from api_base import APIBase
 from pybossa.model import Task, TaskRun
 from itsdangerous import URLSafeSerializer
-from werkzeug.exceptions import Unauthorized, Forbidden
+from werkzeug.exceptions import Forbidden
 
 
 class TaskRunAPI(APIBase):
@@ -46,18 +46,8 @@ class TaskRunAPI(APIBase):
             raise Forbidden('Invalid app_id')
 
         # Add the user info so it cannot post again the same taskrun
-        if not current_user.is_anonymous():
-            taskrun.user = current_user
-        else:
+        if current_user.is_anonymous():
             taskrun.user_ip = request.remote_addr
+        else:
+            taskrun.user = current_user
 
-        # Check if this task_run has already been posted
-        # task_run = db.session.query(model.TaskRun)\
-        task_run = TaskRun.query\
-            .filter_by(app_id=taskrun.app_id)\
-            .filter_by(task_id=taskrun.task_id)\
-            .filter_by(user=taskrun.user)\
-            .filter_by(user_ip=taskrun.user_ip)\
-            .first()
-        if task_run is not None:
-            raise Forbidden('You have already posted this task_run')

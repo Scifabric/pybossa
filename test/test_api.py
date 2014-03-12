@@ -366,17 +366,17 @@ class TestAPI:
         res = self.app.post(url, data=data)
         err = json.loads(res.data)
         err_msg = 'Should not be allowed to create'
-        assert res.status_code == 403, err_msg
+        assert res.status_code == 401, err_msg
         assert err['action'] == 'POST', err_msg
-        assert err['exception_cls'] == 'Forbidden', err_msg
+        assert err['exception_cls'] == 'Unauthorized', err_msg
 
         # now a real user but not admin
         res = self.app.post(url + '?api_key=' + Fixtures.api_key, data=data)
         err = json.loads(res.data)
         err_msg = 'Should not be allowed to create'
-        assert res.status_code == 401, err_msg
+        assert res.status_code == 403, err_msg
         assert err['action'] == 'POST', err_msg
-        assert err['exception_cls'] == 'Unauthorized', err_msg
+        assert err['exception_cls'] == 'Forbidden', err_msg
 
         # now as an admin
         res = self.app.post(url + '?api_key=' + Fixtures.root_api_key,
@@ -429,21 +429,21 @@ class TestAPI:
         res = self.app.put(url + '/%s' % id_,
                            data=data)
         error_msg = 'Anonymous should not be allowed to update'
-        assert_equal(res.status, '403 FORBIDDEN', error_msg)
-        error = json.loads(res.data)
-        assert error['status'] == 'failed', error
-        assert error['action'] == 'PUT', error
-        assert error['exception_cls'] == 'Forbidden', error
-
-        ### real user but not allowed as not admin!
-        url = '/api/category/%s?api_key=%s' % (id_, Fixtures.api_key)
-        res = self.app.put(url, data=datajson)
-        error_msg = 'Should not be able to update apps of others'
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
         error = json.loads(res.data)
         assert error['status'] == 'failed', error
         assert error['action'] == 'PUT', error
         assert error['exception_cls'] == 'Unauthorized', error
+
+        ### real user but not allowed as not admin!
+        url = '/api/category/%s?api_key=%s' % (id_, Fixtures.api_key)
+        res = self.app.put(url, data=datajson)
+        error_msg = 'Should not be able to update apps of others'
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+        error = json.loads(res.data)
+        assert error['status'] == 'failed', error
+        assert error['action'] == 'PUT', error
+        assert error['exception_cls'] == 'Forbidden', error
 
         # Now as an admin
         res = self.app.put('/api/category/%s?api_key=%s' % (id_, Fixtures.root_api_key),
@@ -495,7 +495,7 @@ class TestAPI:
         ## anonymous
         res = self.app.delete(url + '/%s' % id_, data=data)
         error_msg = 'Anonymous should not be allowed to delete'
-        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
         error = json.loads(res.data)
         assert error['status'] == 'failed', error
         assert error['action'] == 'DELETE', error
@@ -504,7 +504,7 @@ class TestAPI:
         url = '/api/category/%s?api_key=%s' % (id_, Fixtures.api_key_2)
         res = self.app.delete(url, data=datajson)
         error_msg = 'Should not be able to delete apps of others'
-        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
         error = json.loads(res.data)
         assert error['status'] == 'failed', error
         assert error['action'] == 'DELETE', error
@@ -544,7 +544,7 @@ class TestAPI:
         data = json.dumps(data)
         # no api-key
         res = self.app.post('/api/app', data=data)
-        assert_equal(res.status, '403 FORBIDDEN',
+        assert_equal(res.status, '401 UNAUTHORIZED',
                      'Should not be allowed to create')
         # now a real user
         res = self.app.post('/api/app?api_key=' + Fixtures.api_key,
@@ -612,21 +612,21 @@ class TestAPI:
         res = self.app.put('/api/app/%s' % id_,
                            data=data)
         error_msg = 'Anonymous should not be allowed to update'
-        assert_equal(res.status, '403 FORBIDDEN', error_msg)
-        error = json.loads(res.data)
-        assert error['status'] == 'failed', error
-        assert error['action'] == 'PUT', error
-        assert error['exception_cls'] == 'Forbidden', error
-
-        ### real user but not allowed as not owner!
-        url = '/api/app/%s?api_key=%s' % (id_, Fixtures.api_key_2)
-        res = self.app.put(url, data=datajson)
-        error_msg = 'Should not be able to update apps of others'
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
         error = json.loads(res.data)
         assert error['status'] == 'failed', error
         assert error['action'] == 'PUT', error
         assert error['exception_cls'] == 'Unauthorized', error
+
+        ### real user but not allowed as not owner!
+        url = '/api/app/%s?api_key=%s' % (id_, Fixtures.api_key_2)
+        res = self.app.put(url, data=datajson)
+        error_msg = 'Should not be able to update apps of others'
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+        error = json.loads(res.data)
+        assert error['status'] == 'failed', error
+        assert error['action'] == 'PUT', error
+        assert error['exception_cls'] == 'Forbidden', error
 
         res = self.app.put('/api/app/%s?api_key=%s' % (id_, Fixtures.api_key),
                            data=datajson)
@@ -722,7 +722,7 @@ class TestAPI:
         ## anonymous
         res = self.app.delete('/api/app/%s' % id_, data=data)
         error_msg = 'Anonymous should not be allowed to delete'
-        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
         error = json.loads(res.data)
         assert error['status'] == 'failed', error
         assert error['action'] == 'DELETE', error
@@ -731,7 +731,7 @@ class TestAPI:
         url = '/api/app/%s?api_key=%s' % (id_, Fixtures.api_key_2)
         res = self.app.delete(url, data=datajson)
         error_msg = 'Should not be able to delete apps of others'
-        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
         error = json.loads(res.data)
         assert error['status'] == 'failed', error
         assert error['action'] == 'DELETE', error
@@ -889,14 +889,14 @@ class TestAPI:
         # no api-key
         res = self.app.post('/api/task', data=json.dumps(data))
         error_msg = 'Should not be allowed to create'
-        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         ### real user but not allowed as not owner!
         res = self.app.post('/api/task?api_key=' + Fixtures.api_key_2,
                             data=json.dumps(data))
 
         error_msg = 'Should not be able to post tasks for apps of others'
-        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
         # now a real user
         res = self.app.post('/api/task?api_key=' + Fixtures.api_key,
@@ -965,12 +965,12 @@ class TestAPI:
         ## anonymous
         res = self.app.put('/api/task/%s' % id_, data=data)
         error_msg = 'Anonymous should not be allowed to update'
-        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
         ### real user but not allowed as not owner!
         url = '/api/task/%s?api_key=%s' % (id_, Fixtures.api_key_2)
         res = self.app.put(url, data=datajson)
         error_msg = 'Should not be able to update tasks of others'
-        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
         ### real user
         url = '/api/task/%s?api_key=%s' % (id_, Fixtures.api_key)
@@ -1023,13 +1023,13 @@ class TestAPI:
         ## anonymous
         res = self.app.delete('/api/task/%s' % id_)
         error_msg = 'Anonymous should not be allowed to update'
-        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         ### real user but not allowed as not owner!
         url = '/api/task/%s?api_key=%s' % (id_, Fixtures.api_key_2)
         res = self.app.delete(url)
         error_msg = 'Should not be able to update tasks of others'
-        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
         #### real user
         # DELETE with not allowed args
@@ -1199,7 +1199,7 @@ class TestAPI:
         err_msg = ("Authorized users should be only allowed to post \
                     one task_run per task")
         task_runs = self.app.get('/api/taskrun')
-        assert tmp.status_code == 403, task_runs.data
+        assert tmp.status_code == 403, tmp.data
 
 
     def test_06_taskrun_post_with_bad_data(self):
@@ -1289,7 +1289,7 @@ class TestAPI:
         url = '/api/taskrun/%s?api_key=%s' % (_id, Fixtures.api_key_2)
         res = self.app.put(url, data=datajson)
         error_msg = 'Should not be able to update TaskRuns of others'
-        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
         # real user
         url = '/api/taskrun/%s' % _id
@@ -1352,20 +1352,20 @@ class TestAPI:
         ## anonymous
         res = self.app.delete('/api/taskrun/%s' % _id)
         error_msg = 'Anonymous should not be allowed to delete'
-        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         ### real user but not allowed to delete anonymous TaskRuns
         url = '/api/taskrun/%s?api_key=%s' % (_id_anonymous, Fixtures.api_key)
         res = self.app.delete(url)
         error_msg = 'Authenticated user should not be allowed ' \
                     'to delete anonymous TaskRuns'
-        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
         ### real user but not allowed as not owner!
         url = '/api/taskrun/%s?api_key=%s' % (_id, Fixtures.api_key_2)
         res = self.app.delete(url)
         error_msg = 'Should not be able to delete TaskRuns of others'
-        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
         #### real user
         # DELETE with not allowed args
@@ -1378,6 +1378,7 @@ class TestAPI:
         assert err['action'] == 'DELETE', err
         assert err['exception_cls'] == 'AttributeError', err
 
+        # Owner with valid args can delete
         res = self.app.delete(url)
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
