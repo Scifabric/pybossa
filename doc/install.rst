@@ -342,4 +342,24 @@ second one will perform the migration.
 .. _Alembic: http://pypi.python.org/pypi/alembic
 
 
+Configuring Apache
+==================
 
+Example Apache configuration using mod_wsgi for a pybossa installed in /srv/pybossa:
+
+    LimitRequestFieldSize 32760
+
+    WSGIDaemonProcess pybossa user=pybossa group=www-data threads=5
+    WSGIScriptAlias / /srv/pybossa/contrib/pybossa.wsgi
+
+    <Directory /srv/pybossa>
+        WSGIProcessGroup pybossa
+        WSGIApplicationGroup %{GLOBAL}
+        Order deny,allow
+        Allow from all
+    </Directory>
+
+
+/srv/pybossa/contrib/pybossa.wsgi.tmpl has been copied to /srv/pybossa/contrib/pybossa.wsgi and modified to reference the correct path to the virtualenv.
+
+The LimitRequestFieldSize is needed as PyBossa creats just slightly too big cookies for the default config of Apache.
