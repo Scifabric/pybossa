@@ -17,10 +17,19 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask.ext.login import current_user
+from pybossa.model import TaskRun
+from werkzeug.exceptions import Forbidden
 
 
 def create(taskrun=None):
-    return True
+    authorized = (TaskRun.query.filter_by(app_id=taskrun.app_id)
+                    .filter_by(task_id=taskrun.task_id)
+                    .filter_by(user=taskrun.user)
+                    .filter_by(user_ip=taskrun.user_ip)
+                    .first()) is None
+    if not authorized:
+        raise Forbidden
+    return authorized
 
 
 def read(taskrun=None):
@@ -28,18 +37,19 @@ def read(taskrun=None):
 
 
 def update(taskrun):
+    if taskrun.user is None:
+        raise Forbidden
     if current_user.is_anonymous():
         return False
     else:
-        # User authenticated
-        if current_user.admin:
-            return True
-        else:
-            if taskrun.user is not None and taskrun.user.id == current_user.id:
-                return True
-            else:
-                return False
+        return current_user.admin or taskrun.user.id == current_user.id
 
 
-def delete(app):
-    return update(app)
+def delete(taskrun):
+    if current_user.is_anonymous():
+        return False
+    if taskrun.user is None:
+        return current_user.admin
+    else:
+        return current_user.admin or taskrun.user.id == current_user.id
+

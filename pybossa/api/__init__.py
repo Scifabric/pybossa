@@ -107,13 +107,9 @@ def new_task(app_id):
         user_ip = request.remote_addr if current_user.is_anonymous() else None
         task = sched.new_task(app_id, user_id, user_ip, offset)
         # If there is a task for the user, return it
-
         if task:
-            s = URLSafeSerializer(current_app.config.get('SECRET_KEY'))
             r = make_response(json.dumps(task.dictize()))
             r.mimetype = "application/json"
-            cookie_id = 'task_run_for_task_id_%s' % task.id
-            r.set_cookie(cookie_id, s.dumps(task.dictize()))
             return r
 
         else:

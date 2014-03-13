@@ -109,26 +109,6 @@ PyBossa, as it is really simple to check those values:
         pass # Do your stuff
 
 
-.. _api-security:
-
-Security
---------
-
-While applications and tasks can only be created by owners using an API-KEY,
-the task_runs can be created by any user without problems. For this reason,
-a secured cookie based system has been enabled to avoid attacks on the server.
-
-In order to POST a task_run you will need to request first the task associated
-for that task_run using the **newtask** API endpoint. This request will create
-a secured cookie (using your server SECRET key) that will be sent to the user.
-
-Then in order to post the task_run, the previous cookie should be sent. The
-cookie will be validated for the current task, and if it is not valid it will
-be forbidden to post a task_run.
-
-Every PyBossa application using the PyBossa.JS and web interface do not need to
-change anything, as the browser always attaches the cookies created for the
-tasks the user is participating.
 
 
 Operations

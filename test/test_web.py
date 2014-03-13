@@ -465,7 +465,7 @@ class TestWeb(web.Helper):
         assert self.html_title("Application: Sample App") in res.data, res
         assert "Start Contributing Now" in res.data, err_msg
         res = self.app.get('/app/sampleapp/settings')
-        assert res.status == '401 UNAUTHORIZED', res.status
+        assert res.status == '403 FORBIDDEN', res.status
 
     def test_11_create_application(self):
         """Test WEB create an application works"""
@@ -603,7 +603,7 @@ class TestWeb(web.Helper):
 
         url = '/app/newshortname/update'
         res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 401, res.status_code
+        assert res.status_code == 403, res.status_code
 
         tmp.hidden = 1
         db.session.add(tmp)
@@ -679,7 +679,7 @@ class TestWeb(web.Helper):
 
         self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
         res = self.delete_application(short_name=Fixtures.app_short_name)
-        assert res.status_code == 401, res.status_code
+        assert res.status_code == 403, res.status_code
 
 
     def test_15_twitter_email_warning(self):
@@ -1158,7 +1158,7 @@ class TestWeb(web.Helper):
         Fixtures.create()
         self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
         res = self.app.get('/app/sampleapp/settings', follow_redirects=True)
-        assert res.status_code == 401, res.status_code
+        assert res.status_code == 403, res.status_code
 
     @patch('pybossa.ckan.requests.get')
     def test_30_app_id_anonymous_user(self, Mock):
@@ -2316,7 +2316,7 @@ class TestWeb(web.Helper):
 
         self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
         res = self.app.get('/app/sampleapp/tasks/import', follow_redirects=True)
-        assert res.status_code == 401, res.status_code
+        assert res.status_code == 403, res.status_code
 
     def test_55_facebook_account_warning(self):
         """Test WEB Facebook OAuth user gets a hint to sign in"""
@@ -2715,7 +2715,7 @@ class TestWeb(web.Helper):
         self.register(fullname="juan", username="juan")
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should not be allowed to access this page"
-        assert res.status_code == 401, err_msg
+        assert res.status_code == 403, err_msg
         self.signout()
 
         # As an anonymous user
@@ -2794,7 +2794,7 @@ class TestWeb(web.Helper):
         self.register(fullname="juan", username="juan")
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should not be allowed to access this page"
-        assert res.status_code == 401, err_msg
+        assert res.status_code == 403, err_msg
         self.signout()
 
         # As an anonymous user
@@ -2882,7 +2882,7 @@ class TestWeb(web.Helper):
         self.register(fullname="juan", username="juan")
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should not be allowed to access this page"
-        assert res.status_code == 401, err_msg
+        assert res.status_code == 403, err_msg
         self.signout()
 
         # As an anonymous user
