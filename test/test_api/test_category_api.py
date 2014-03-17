@@ -79,17 +79,17 @@ class TestCategoryAPI(HelperAPI):
         res = self.app.post(url, data=data)
         err = json.loads(res.data)
         err_msg = 'Should not be allowed to create'
-        assert res.status_code == 403, err_msg
+        assert res.status_code == 401, err_msg
         assert err['action'] == 'POST', err_msg
-        assert err['exception_cls'] == 'Forbidden', err_msg
+        assert err['exception_cls'] == 'Unauthorized', err_msg
 
         # now a real user but not admin
         res = self.app.post(url + '?api_key=' + Fixtures.api_key, data=data)
         err = json.loads(res.data)
         err_msg = 'Should not be allowed to create'
-        assert res.status_code == 401, err_msg
+        assert res.status_code == 403, err_msg
         assert err['action'] == 'POST', err_msg
-        assert err['exception_cls'] == 'Unauthorized', err_msg
+        assert err['exception_cls'] == 'Forbidden', err_msg
 
         # now as an admin
         res = self.app.post(url + '?api_key=' + Fixtures.root_api_key,
@@ -142,21 +142,21 @@ class TestCategoryAPI(HelperAPI):
         res = self.app.put(url + '/%s' % id_,
                            data=data)
         error_msg = 'Anonymous should not be allowed to update'
-        assert_equal(res.status, '403 FORBIDDEN', error_msg)
-        error = json.loads(res.data)
-        assert error['status'] == 'failed', error
-        assert error['action'] == 'PUT', error
-        assert error['exception_cls'] == 'Forbidden', error
-
-        ### real user but not allowed as not admin!
-        url = '/api/category/%s?api_key=%s' % (id_, Fixtures.api_key)
-        res = self.app.put(url, data=datajson)
-        error_msg = 'Should not be able to update apps of others'
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
         error = json.loads(res.data)
         assert error['status'] == 'failed', error
         assert error['action'] == 'PUT', error
         assert error['exception_cls'] == 'Unauthorized', error
+
+        ### real user but not allowed as not admin!
+        url = '/api/category/%s?api_key=%s' % (id_, Fixtures.api_key)
+        res = self.app.put(url, data=datajson)
+        error_msg = 'Should not be able to update apps of others'
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+        error = json.loads(res.data)
+        assert error['status'] == 'failed', error
+        assert error['action'] == 'PUT', error
+        assert error['exception_cls'] == 'Forbidden', error
 
         # Now as an admin
         res = self.app.put('/api/category/%s?api_key=%s' % (id_, Fixtures.root_api_key),
@@ -199,7 +199,6 @@ class TestCategoryAPI(HelperAPI):
         res = self.app.put('/api/category/%s?api_key=%s&search=select1' % (id_, Fixtures.root_api_key),
                            data=datajson)
         err = json.loads(res.data)
-        print err
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
         assert err['action'] == 'PUT', err
@@ -209,7 +208,7 @@ class TestCategoryAPI(HelperAPI):
         ## anonymous
         res = self.app.delete(url + '/%s' % id_, data=data)
         error_msg = 'Anonymous should not be allowed to delete'
-        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
         error = json.loads(res.data)
         assert error['status'] == 'failed', error
         assert error['action'] == 'DELETE', error
@@ -218,7 +217,7 @@ class TestCategoryAPI(HelperAPI):
         url = '/api/category/%s?api_key=%s' % (id_, Fixtures.api_key_2)
         res = self.app.delete(url, data=datajson)
         error_msg = 'Should not be able to delete apps of others'
-        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
         error = json.loads(res.data)
         assert error['status'] == 'failed', error
         assert error['action'] == 'DELETE', error

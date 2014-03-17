@@ -77,15 +77,3 @@ class HelperAPI:
         """Helper function to sign out current user"""
         return self.app.get('/account/signout', follow_redirects=True)
 
-    def get_task_run_cookie(self, app_id):
-        """Return cookie and init task_run to post it."""
-        # Get first the cookie and post should be valid
-        url = '/api/app/%s/newtask' % app_id
-        res = self.app.get(url)
-        cookie = res.headers['set-cookie']
-        task = json.loads(res.data)
-        task_run = dict(app_id=task['app_id'],
-                        task_id=task['id'],
-                        info='my task result')
-        return cookie, task_run
-

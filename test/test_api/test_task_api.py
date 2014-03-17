@@ -50,7 +50,6 @@ class TestTaskAPI(HelperAPI):
 
         # Limits
         res = self.app.get("/api/task?app_id=1&limit=5")
-        print res.data
         data = json.loads(res.data)
         for item in data:
             assert item['app_id'] == 1, item
@@ -87,14 +86,14 @@ class TestTaskAPI(HelperAPI):
         # no api-key
         res = self.app.post('/api/task', data=json.dumps(data))
         error_msg = 'Should not be allowed to create'
-        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         ### real user but not allowed as not owner!
         res = self.app.post('/api/task?api_key=' + Fixtures.api_key_2,
                             data=json.dumps(data))
 
         error_msg = 'Should not be able to post tasks for apps of others'
-        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
         # now a real user
         res = self.app.post('/api/task?api_key=' + Fixtures.api_key,
@@ -163,12 +162,12 @@ class TestTaskAPI(HelperAPI):
         ## anonymous
         res = self.app.put('/api/task/%s' % id_, data=data)
         error_msg = 'Anonymous should not be allowed to update'
-        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
         ### real user but not allowed as not owner!
         url = '/api/task/%s?api_key=%s' % (id_, Fixtures.api_key_2)
         res = self.app.put(url, data=datajson)
         error_msg = 'Should not be able to update tasks of others'
-        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
         ### real user
         url = '/api/task/%s?api_key=%s' % (id_, Fixtures.api_key)
@@ -221,13 +220,13 @@ class TestTaskAPI(HelperAPI):
         ## anonymous
         res = self.app.delete('/api/task/%s' % id_)
         error_msg = 'Anonymous should not be allowed to update'
-        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         ### real user but not allowed as not owner!
         url = '/api/task/%s?api_key=%s' % (id_, Fixtures.api_key_2)
         res = self.app.delete(url)
         error_msg = 'Should not be able to update tasks of others'
-        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
+        assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
         #### real user
         # DELETE with not allowed args
@@ -295,7 +294,6 @@ class TestTaskAPI(HelperAPI):
         res = self.app.get(url, follow_redirects=True)
         task = json.loads(res.data)
         err_msg = "The task.app_id should be null"
-        print task
         assert task['app_id'] is None, err_msg
         err_msg = "There should be an error message"
         err = "This application does not allow anonymous contributors"
@@ -305,7 +303,6 @@ class TestTaskAPI(HelperAPI):
 
         # As registered user
         res = self.signin()
-        print res.data
         url = '/api/app/%s/newtask' % app.id
         res = self.app.get(url, follow_redirects=True)
         task = json.loads(res.data)
@@ -316,4 +313,3 @@ class TestTaskAPI(HelperAPI):
         err_msg = "There should be a question"
         assert task['info'].get('question') == 'My random question', err_msg
         self.signout()
-

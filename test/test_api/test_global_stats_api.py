@@ -21,6 +21,7 @@ from test_api import HelperAPI
 
 
 class TestGlobalStatsAPI(HelperAPI):
+
     def test_global_stats(self):
         """Test Global Stats works."""
         res = self.app.get('api/globalstats')
