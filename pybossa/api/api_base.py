@@ -22,6 +22,7 @@ This package adds GET, POST, PUT and DELETE methods for any class:
     * applications,
     * tasks,
     * task_runs,
+    * users,
     * etc.
 
 """

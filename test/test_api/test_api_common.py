@@ -23,7 +23,6 @@ from test_api import HelperAPI
 
 
 
-
 class TestApiCommon(HelperAPI):
 
     def test_00_limits_query(self):

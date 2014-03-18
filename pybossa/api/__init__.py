@@ -114,7 +114,6 @@ def new_task(app_id):
             r = make_response(json.dumps(task.dictize()))
             r.mimetype = "application/json"
             return r
-
         else:
             return Response(json.dumps({}), mimetype="application/json")
     except Exception as e:
@@ -157,7 +156,6 @@ def user_progress(app_id=None, short_name=None):
                        .filter(model.TaskRun.user_id == current_user.id)
             tasks = db.session.query(model.Task)\
                 .filter(model.Task.app_id == app.id)
-            # Return
             tmp = dict(done=tr.count(), total=tasks.count())
             return Response(json.dumps(tmp), mimetype="application/json")
         else:
