@@ -118,6 +118,7 @@ class TestApiCommon(HelperAPI):
                 # The output should have a mime-type: application/json
                 assert res.mimetype == 'application/json', res
 
+
     def test_query_search_wrongfield(self):
         """ Test API query search works"""
         # Test first a non-existant field for all end-points

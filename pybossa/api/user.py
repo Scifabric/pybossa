@@ -92,7 +92,3 @@ class UserAPI(APIBase):
 
     def put(self):
         raise MethodNotAllowed(valid_methods=['GET'])
-
-
-
-

@@ -43,4 +43,5 @@ class AppAPI(APIBase):
         cached_apps.delete_app(obj.short_name)
 
     def _update_object(self, obj):
-        obj.owner = current_user
+        if not current_user.is_anonymous():
+            obj.owner = current_user

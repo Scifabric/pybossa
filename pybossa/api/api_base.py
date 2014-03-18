@@ -158,8 +158,8 @@ class APIBase(MethodView):
             # Clean HATEOAS args
             data = self.hateoas.remove_links(data)
             inst = self.__class__(**data)
-            getattr(require, self.__class__.__name__.lower()).create(inst)
             self._update_object(inst)
+            getattr(require, self.__class__.__name__.lower()).create(inst)
             db.session.add(inst)
             db.session.commit()
             return json.dumps(inst.dictize())
@@ -246,6 +246,7 @@ class APIBase(MethodView):
         """
         pass
 
+
     def _refresh_cache(self, data_dict):
         """Refresh cache.
 
@@ -255,11 +256,14 @@ class APIBase(MethodView):
         """
         pass
 
+
     def _select_attributes(self, item_data):
         """Method to be overriden in inheriting classes in case it is not
         desired that every object attribute is returned by the API
         """
         return item_data
+
+
     def _custom_filter(self, query):
         """Method to be overriden in inheriting classes which wish to consider
         specific filtering criteria

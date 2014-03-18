@@ -35,8 +35,7 @@ class TestHateoas(web_helper.Helper):
     # Tests
 
     def test_00_link_object(self):
-        """Test HATEOAS object link is created when
-        'GETting' a specific id resource"""
+        """Test HATEOAS object link is created"""
         # For app
         res = self.app.get("/api/app/1", follow_redirects=True)
         output = json.loads(res.data)
@@ -123,11 +122,8 @@ class TestHateoas(web_helper.Helper):
         # assert output.get('links') == None, err_msg
 
 
-
-
     def test_01_link_object(self):
-        """Test HATEOAS object link is created when 'GETting' all of the resources
-        of a kind"""
+        """Test HATEOAS object link is created"""
         # For app
         res = self.app.get("/api/app", follow_redirects=True)
         output = json.loads(res.data)[0]
