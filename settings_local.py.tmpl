@@ -87,6 +87,9 @@ MAIL_DEFAULT_SENDER = 'PyBossa Support <info@pybossa.com>'
 ## Stats, top users, leaderboard, etc
 ENFORCE_PRIVACY = False
 
+# Where to store uploaded files, for example application static files
+import os.path
+UPLOADS_DEFAULT_DEST=os.path.abspath('uploads')
 
 ## Cache setup. By default it is enabled
 ## Redis Sentinel

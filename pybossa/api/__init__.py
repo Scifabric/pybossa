@@ -30,11 +30,12 @@ This package adds GET, POST, PUT and DELETE methods for:
 
 import json
 from flask import Blueprint, request, abort, Response, \
-    current_app, make_response
+    current_app, make_response, redirect
 from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound
 from pybossa.util import jsonpify, crossdomain
 import pybossa.model as model
+from pybossa.core import app, appfiles
 from pybossa.core import db
 from itsdangerous import URLSafeSerializer
 from pybossa.ratelimit import ratelimit
@@ -46,6 +47,8 @@ from task_run import TaskRunAPI
 from app import AppAPI
 from category import CategoryAPI
 from vmcp import VmcpAPI
+import flaskext.uploads
+import os.path
 
 blueprint = Blueprint('api', __name__)
 
@@ -86,6 +89,39 @@ register_api(TaskAPI, 'api_task', '/task', pk='id', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
 register_api(GlobalStatsAPI, 'api_globalstats', '/globalstats')
 register_api(VmcpAPI, 'api_vmcp', '/vmcp')
+
+
+@jsonpify
+@blueprint.route('/app/<app_id>/addfile', methods=['POST'])
+@crossdomain(origin='*', headers=cors_headers)
+def add_file(app_id):
+    try:
+        if request.method != 'POST' or 'file' not in request.files:
+            raise ValueError("Please POST the variable 'file' set to the file to upload")
+
+        app = db.session.query(model.App).get(app_id)
+        if app is None:
+            raise NotFound
+
+        appfile = {"storage": request.files['file'], "folder": app.short_name}
+
+        if 'filename' in request.args:
+            # Note: normpath is important for security!
+            dirname, filename = os.path.split(os.path.normpath(request.args['filename']))
+            if dirname.startswith('/'):
+                dirname = dirname[1:]
+            appfile['folder'] = os.path.join(appfile['folder'], dirname)
+            appfile['name'] = filename
+
+        filename = appfiles.save(**appfile)
+        res = {'status': 'ok', 'filename': filename}
+    except Exception, e:
+        print e
+        import traceback
+        traceback.print_exc()
+        res = {'status': 'error', 'error': str(e)}
+    return Response(json.dumps(res), 200,
+                    mimetype='application/json')
 
 
 @jsonpify

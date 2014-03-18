@@ -27,6 +27,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 #from flask.ext.debugtoolbar import DebugToolbarExtension
 from flask.ext.heroku import Heroku
 from flask.ext.babel import Babel
+import flaskext.uploads
 from redis.sentinel import Sentinel
 
 from pybossa import default_settings as settings
@@ -124,3 +125,10 @@ def get_locale():
     if lang is None:
         lang = 'en'
     return lang
+
+# Overwrite old files...
+class AppFilesUploadSet(flaskext.uploads.UploadSet):
+    def resolve_conflict(self, target_folder, basename):
+        return basename
+appfiles = AppFilesUploadSet('appfiles', flaskext.uploads.ALL)
+flaskext.uploads.configure_uploads(app, [appfiles])
