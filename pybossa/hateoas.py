@@ -31,9 +31,9 @@ class Hateoas(object):
 
     def create_links(self, item):
         cls = item.__class__.__name__.lower()
+        links = []
         if cls == 'taskrun':
             link = self.create_link(item)
-            links = []
             if item.app_id is not None:
                 links.append(self.create_link(item.app, rel='parent'))
             if item.task_id is not None:
@@ -41,7 +41,6 @@ class Hateoas(object):
             return links, link
         elif cls == 'task':
             link = self.create_link(item)
-            links = []
             if item.app_id is not None:
                 links = [self.create_link(item.app, rel='parent')]
             return links, link
@@ -49,10 +48,13 @@ class Hateoas(object):
             return None, self.create_link(item)
         elif cls == 'app':
             link = self.create_link(item)
-            links = []
             if item.category_id is not None:
                 links.append(self.create_link(item.category, rel='category'))
             return links, link
+        elif cls == 'user':
+            link = self.create_link(item)
+            # TODO: add the apps created by the user as the links with rel=? (maybe 'app'??)
+            return None, link
         else: # pragma: no cover
             return False
 
