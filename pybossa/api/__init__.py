@@ -47,6 +47,7 @@ from task_run import TaskRunAPI
 from app import AppAPI
 from category import CategoryAPI
 from vmcp import VmcpAPI
+from user import UserAPI
 
 blueprint = Blueprint('api', __name__)
 
