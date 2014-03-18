@@ -19,7 +19,7 @@
 from bs4 import BeautifulSoup
 
 from helper import web as web_helper
-from base import web, db, model, Fixtures
+from base import web, db, model, Fixtures, redis_flushall
 
 
 class TestPrivacyWebPublic(web_helper.Helper):
@@ -36,6 +36,7 @@ class TestPrivacyWebPublic(web_helper.Helper):
     @classmethod
     def teardown_class(cls):
         model.rebuild_db()
+        redis_flushall()
 
     # Tests
     def test_00_footer(self):

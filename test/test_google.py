@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-from base import web, model, Fixtures
+from base import web, model, Fixtures, redis_flushall
 import pybossa.view.google as google
 
 
@@ -24,6 +24,11 @@ class TestGoogle:
         self.app = web.app
         model.rebuild_db()
         Fixtures.create()
+
+    @classmethod
+    def teardown_class(cls):
+        model.rebuild_db()
+        redis_flushall()
 
     def test_manage_user(self):
         """Test GOOGLE manage_user works."""

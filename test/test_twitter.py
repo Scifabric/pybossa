@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-from base import web, model, Fixtures
+from base import web, model, Fixtures, db, redis_flushall
 import pybossa.view.twitter as twitter
 
 
@@ -24,6 +24,10 @@ class TestTwitter:
         self.app = web.app
         model.rebuild_db()
         Fixtures.create()
+
+    def tearDown(self):
+        db.session.remove()
+        redis_flushall()
 
     def test_manage_user(self):
         """Test TWITTER manage_user works."""

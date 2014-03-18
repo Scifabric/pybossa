@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-from base import web, model, Fixtures, db
+from base import web, model, Fixtures, db, redis_flushall
 import pybossa.validator
 from pybossa.view.account import LoginForm
 from flaskext.wtf import ValidationError
@@ -30,6 +30,7 @@ class TestValidator:
 
     def tearDown(self):
         db.session.remove()
+        redis_flushall()
 
     @raises(ValidationError)
     def test_unique(self):

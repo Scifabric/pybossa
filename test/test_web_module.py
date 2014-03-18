@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-from base import web, model, Fixtures
+from base import web, model, Fixtures, redis_flushall
 from pybossa.web import url_for_other_page, get_port
 from mock import patch
 
@@ -25,6 +25,11 @@ class TestWebModule:
         self.app = web.app
         model.rebuild_db()
         Fixtures.create()
+
+    @classmethod
+    def teardown_class(cls):
+        model.rebuild_db()
+        redis_flushall()
 
     def test_url_for_other_page(self):
         """Test url_for_other page works."""

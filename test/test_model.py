@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from base import model, db
+from base import model, db, redis_flushall
 from nose.tools import raises, assert_raises
 from sqlalchemy.exc import IntegrityError
 
@@ -28,6 +28,11 @@ class TestModel:
 
     def tearDown(self):
         db.session.remove()
+
+    @classmethod
+    def teardown_class(cls):
+        model.rebuild_db()
+        redis_flushall()
 
     @raises(NotImplementedError)
     def test_domain_object_error(self):
