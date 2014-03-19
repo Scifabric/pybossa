@@ -420,7 +420,6 @@ class TestSched(sched.Helper):
 
         assert 'app_id' in data.keys()
         assert data['app_id'] == app_id, data['app_id']
-        assert 1 == 0, data
 
 
 class TestGetBreadthFirst:
