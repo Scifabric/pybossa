@@ -385,6 +385,43 @@ class TestSched(sched.Helper):
         err_msg = "Task.priority_0 should be the 1"
         assert task1.get('priority_0') == 1, err_msg
 
+    def _add_task_run(self, app, task, user=None):
+        tr = model.TaskRun(app=app, task=task, user=user)
+        db.session.add(tr)
+        db.session.commit()
+
+    def test_no_more_tasks(self):
+        """Test that a users gets always tasks"""
+        app = model.App(short_name='egil', name='egil',
+                        description='egil')
+        owner = db.session.query(model.User).get(1)
+        app.owner_id = owner.id
+        db.session.add(app)
+        db.session.commit()
+
+        app_id = app.id
+
+        for i in range(0, 100):
+            task = model.Task(app=app, info={'i': i}, n_answers=1)
+            db.session.add(task)
+            db.session.commit()
+
+        tasks = db.session.query(model.Task).filter_by(app_id=app.id).limit(10).all()
+        for t in tasks:
+            self._add_task_run(app, t)
+            self._add_task_run(app, t)
+
+        task_runs = db.session.query(model.TaskRun).filter_by(app_id=app.id).all()
+        assert tasks[0].n_answers == 1
+
+        url = 'api/app/%s/newtask' % app_id
+        res = self.app.get(url)
+        data = json.loads(res.data)
+
+        assert 'app_id' in data.keys()
+        assert data['app_id'] == app_id, data['app_id']
+        assert 1 == 0, data
+
 
 class TestGetBreadthFirst:
     def setUp(self):
