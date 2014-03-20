@@ -401,18 +401,18 @@ class TestSched(sched.Helper):
 
         app_id = app.id
 
-        for i in range(0, 100):
-            task = model.Task(app=app, info={'i': i}, n_answers=1)
+        for i in range(0, 10000):
+            task = model.Task(app=app, info={'i': i}, n_answers=10)
             db.session.add(task)
             db.session.commit()
 
         tasks = db.session.query(model.Task).filter_by(app_id=app.id).limit(10).all()
         for t in tasks:
-            self._add_task_run(app, t)
-            self._add_task_run(app, t)
+            for x in range(10):
+                self._add_task_run(app, t)
 
         task_runs = db.session.query(model.TaskRun).filter_by(app_id=app.id).all()
-        assert tasks[0].n_answers == 1
+        assert tasks[0].n_answers == 10
 
         url = 'api/app/%s/newtask' % app_id
         res = self.app.get(url)
