@@ -93,6 +93,35 @@ class TestHateoas(web_helper.Helper):
                                      href='http://localhost/api/task/1')
         assert output.get('links')[1] == app_link, err_msg
 
+        # For category
+        res = self.app.get("/api/category/1", follow_redirects=True)
+        output = json.loads(res.data)
+        err_msg = "There should be a Link with the object URI"
+        assert output['link'] is not None, err_msg
+        category_link = self.hateoas.link(rel='self', title='category',
+                                          href='http://localhost/api/category/1')
+        err_msg = "The object link is wrong: %s" % output['link']
+        assert category_link == output['link'], err_msg
+        err_msg = "There should be no other links"
+        assert output.get('links') is None, err_msg
+        err_msg = "The object links should are wrong"
+
+        # For user
+        # Pending define what user fields will be visible through the API
+        # Issue #626. For now let's suppose link and links are not visible
+        # res = self.app.get("/api/user/1?api_key=" + Fixtures.root_api_key, follow_redirects=True)
+        # output = json.loads(res.data)
+        # err_msg = "There should be a Link with the object URI"
+        # assert output['link'] is not None, err_msg
+        # user_link = self.hateoas.link(rel='self', title='user',
+        #                               href='http://localhost/api/user/1')
+        # err_msg = "The object link ir wrong: %s" % output['link']
+        # assert user_link == output['link'], err_msg
+        # # when the links specification of a user will be set, modify the following
+        # err_msg = "The list of links should be empty for now"
+        # assert output.get('links') == None, err_msg
+
+
     def test_01_link_object(self):
         """Test HATEOAS object link is created"""
         # For app
@@ -151,3 +180,31 @@ class TestHateoas(web_helper.Helper):
         app_link = self.hateoas.link(rel='parent', title='task',
                                      href='http://localhost/api/task/1')
         assert output.get('links')[1] == app_link, err_msg
+
+        # For category
+        res = self.app.get("/api/category", follow_redirects=True)
+        output = json.loads(res.data)[0]
+        err_msg = "There should be a Link with the object URI"
+        assert output['link'] is not None, err_msg
+        category_link = self.hateoas.link(rel='self', title='category',
+                                      href='http://localhost/api/category/1')
+        err_msg = "The object link is wrong: %s" % output['link']
+        assert category_link == output['link'], err_msg
+        err_msg = "There should be no other links"
+        assert output.get('links') is None, err_msg
+        err_msg = "The object links should are wrong"
+
+        # For user
+        # Pending define what user fields will be visible through the API
+        # Issue #626. For now let's suppose link and links are not visible
+        # res = self.app.get("/api/user?api_key=" + Fixtures.root_api_key, follow_redirects=True)
+        # output = json.loads(res.data)[0]
+        # err_msg = "There should be a Link with the object URI"
+        # assert output['link'] is not None, err_msg
+        # user_link = self.hateoas.link(rel='self', title='user',
+        #                               href='http://localhost/api/user/1')
+        # err_msg = "The object link ir wrong: %s" % output['link']
+        # assert user_link == output['link'], err_msg
+        # # when the links specification of a user will be set, modify the following
+        # err_msg = "The list of links should be empty for now"
+        # assert output.get('links') == None, err_msg

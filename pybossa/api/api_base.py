@@ -22,6 +22,7 @@ This package adds GET, POST, PUT and DELETE methods for any class:
     * applications,
     * tasks,
     * task_runs,
+    * users,
     * etc.
 
 """
@@ -74,59 +75,73 @@ class APIBase(MethodView):
 
         """
         try:
-            self._get()
             getattr(require, self.__class__.__name__.lower()).read()
-            if id is None:
-                query = db.session.query(self.__class__)
-                for k in request.args.keys():
-                    if k not in ['limit', 'offset', 'api_key']:
-                        # Raise an error if the k arg is not a column
-                        getattr(self.__class__, k)
-                        query = query.filter(
-                            getattr(self.__class__, k) == request.args[k])
-                try:
-                    limit = min(10000, int(request.args.get('limit')))
-                except (ValueError, TypeError):
-                    limit = 20
-
-                try:
-                    offset = int(request.args.get('offset'))
-                except (ValueError, TypeError):
-                    offset = 0
-
-                query = query.order_by(self.__class__.id)
-                query = query.limit(limit)
-                query = query.offset(offset)
-                items = []
-                for item in query.all():
-                    obj = item.dictize()
-                    links, link = self.hateoas.create_links(item)
-                    if links:
-                        obj['links'] = links
-                    if link:
-                        obj['link'] = link
-                    items.append(obj)
-                return Response(json.dumps(items), mimetype='application/json')
-            else:
-                item = db.session.query(self.__class__).get(id)
-                if item is None:
-                    raise abort(404)
-                else:
-                    getattr(require,
-                            self.__class__.__name__.lower()).read(item)
-                    obj = item.dictize()
-                    links, link = self.hateoas.create_links(item)
-                    if links:
-                        obj['links'] = links
-                    if link:
-                        obj['link'] = link
-                    return Response(json.dumps(obj),
-                                    mimetype='application/json')
+            query = self._db_query(self.__class__, id)
+            json_response = self._create_json_response(query, id)
+            return Response(json_response, mimetype='application/json')
         except Exception as e:
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
                 action='GET')
+
+    def _create_json_response(self, query_result, id):
+        if len (query_result) == 1 and query_result[0] is None:
+            raise abort(404)
+        items = list(self._create_dict_from_model(item) for item in query_result)
+        if id:
+            getattr(require, self.__class__.__name__.lower()).read(query_result[0])
+            items = items[0]
+        return json.dumps(items)
+
+    def _create_dict_from_model(self, model):
+        return self._select_attributes(self._add_hateoas_links(model))
+
+    def _add_hateoas_links(self, item):
+        obj = item.dictize()
+        links, link = self.hateoas.create_links(item)
+        if links:
+            obj['links'] = links
+        if link:
+            obj['link'] = link
+        return obj
+
+    def _db_query(self, cls, id):
+        """ Returns a list with the results of the query"""
+        query = db.session.query(self.__class__)
+        if not id:
+            limit, offset = self._set_limit_and_offset()
+            query = self._filter_query(query, limit, offset)
+        else:
+            query = [query.get(id)]
+        return query
+
+    def _filter_query(self, query, limit, offset):
+        for k in request.args.keys():
+            if k not in ['limit', 'offset', 'api_key']:
+                # Raise an error if the k arg is not a column
+                getattr(self.__class__, k)
+                query = query.filter(
+                    getattr(self.__class__, k) == request.args[k])
+        query = self._custom_filter(query)
+        return self._format_query_result(query, limit, offset)
+
+    def _format_query_result(self, query, limit, offset):
+        query = query.order_by(self.__class__.id)
+        query = query.limit(limit)
+        query = query.offset(offset)
+        return query.all()
+
+    def _set_limit_and_offset(self):
+        try:
+            limit = min(10000, int(request.args.get('limit')))
+        except (ValueError, TypeError):
+            limit = 20
+        try:
+            offset = int(request.args.get('offset'))
+        except (ValueError, TypeError):
+            offset = 0
+        return limit, offset
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
@@ -139,7 +154,6 @@ class APIBase(MethodView):
 
         """
         try:
-            self._post()
             self.valid_args()
             data = json.loads(request.data)
             # Clean HATEOAS args
@@ -171,7 +185,6 @@ class APIBase(MethodView):
 
         """
         try:
-            self._delete()
             self.valid_args()
             inst = db.session.query(self.__class__).get(id)
             if inst is None:
@@ -202,7 +215,6 @@ class APIBase(MethodView):
 
         """
         try:
-            self._put()
             self.valid_args()
             existing = db.session.query(self.__class__).get(id)
             if existing is None:
@@ -225,21 +237,6 @@ class APIBase(MethodView):
                 target=self.__class__.__name__.lower(),
                 action='PUT')
 
-    def _get(self):
-        """GET method to override."""
-        pass
-
-    def _post(self):
-        """POST method to override."""
-        pass
-
-    def _put(self):
-        """PUT method to override."""
-        pass
-
-    def _delete(self):
-        """DELETE method to override."""
-        pass
 
     def _update_object(self, data_dict):
         """Update object.
@@ -250,6 +247,7 @@ class APIBase(MethodView):
         """
         pass
 
+
     def _refresh_cache(self, data_dict):
         """Refresh cache.
 
@@ -258,3 +256,17 @@ class APIBase(MethodView):
 
         """
         pass
+
+
+    def _select_attributes(self, item_data):
+        """Method to be overriden in inheriting classes in case it is not
+        desired that every object attribute is returned by the API
+        """
+        return item_data
+
+
+    def _custom_filter(self, query):
+        """Method to be overriden in inheriting classes which wish to consider
+        specific filtering criteria
+        """
+        return query

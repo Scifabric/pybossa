@@ -388,12 +388,14 @@ class User(db.Model, DomainObject, flask.ext.login.UserMixin):
     #: full name
     fullname = Column(Unicode(length=500), nullable=False)
     #: locale
-    locale = Column(Unicode(length=254))
+    locale = Column(Unicode(length=254), default=u'en', nullable=False)
     #: api key
     api_key = Column(String(length=36), default=make_uuid, unique=True)
     passwd_hash = Column(Unicode(length=254), unique=True)
     #: Admin flag Boolean Integer (0,1)
     admin = Column(Boolean, default=False)
+    # Privacy mode flag
+    privacy_mode = Column(Boolean, default=True, nullable=False)
     #: TODO: find out ... bossa specific
     category = Column(Integer)
     #: TODO: find out ...

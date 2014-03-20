@@ -23,7 +23,6 @@ from test_api import HelperAPI
 
 
 
-
 class TestApiCommon(HelperAPI):
 
     def test_00_limits_query(self):
@@ -63,6 +62,24 @@ class TestApiCommon(HelperAPI):
         data = json.loads(res.data)
         assert len(data) == 20, len(data)
 
+        # Register 30 new users to test limit on users too
+        for i in range(30):
+            self.register(fullname="User%s" %i, username="user%s" %i)
+
+        res = self.app.get('/api/user')
+        data = json.loads(res.data)
+        assert len(data) == 20, len(data)
+
+        res = self.app.get('/api/user?limit=10')
+        data = json.loads(res.data)
+        print data
+        assert len(data) == 10, len(data)
+
+        res = self.app.get('/api/user?limit=10&offset=10')
+        data = json.loads(res.data)
+        assert len(data) == 10, len(data)
+        assert data[0].get('name') == 'user7', data
+
 
     def test_get_query_with_api_key(self):
         """ Test API GET query with an API-KEY"""
@@ -91,6 +108,15 @@ class TestApiCommon(HelperAPI):
                 assert taskrun['info']['answer'] == 'annakarenina', data
                 # The output should have a mime-type: application/json
                 assert res.mimetype == 'application/json', res
+
+            if endpoint == 'user':
+                # With Fixtures.create() 3 users are created in the DB
+                assert len(data) == 3, data
+                user = data[0]
+                assert user['name'] == 'root', data
+                # The output should have a mime-type: application/json
+                assert res.mimetype == 'application/json', res
+
 
     def test_query_search_wrongfield(self):
         """ Test API query search works"""
