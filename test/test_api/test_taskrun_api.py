@@ -440,3 +440,60 @@ class TestTaskrunAPI(HelperAPI):
         assert res, res
         task = json.loads(res.data)
         assert_equal(task['app_id'], app.id)
+
+    def test_09_taskrun_updates_task_state(self):
+        """Test API TaskRun POST updates task state"""
+        app = db.session.query(model.App)\
+                .filter_by(short_name=Fixtures.app_short_name)\
+                .one()
+        task = db.session.query(model.Task)\
+                  .filter_by(app_id=app.id).first()
+
+        task_id = task.id
+        # For 2 n_answers
+        task.n_answers = 2
+        task.state = 'ongoing'
+        db.session.add(task)
+        db.session.commit()
+
+        task_runs = db.session.query(model.TaskRun).all()
+        for tr in task_runs:
+            db.session.delete(tr)
+        db.session.commit()
+        app_id = app.id
+
+        # Create taskrun
+        data = dict(
+            app_id=app_id,
+            task_id=task_id,
+            info='my task result')
+
+        # Now with everything fine
+        url = '/api/taskrun?api_key=%s' % Fixtures.api_key
+        data = dict(
+            app_id=task.app_id,
+            task_id=task_id,
+            info='my task result')
+        datajson = json.dumps(data)
+        tmp = self.app.post(url, data=datajson)
+        r_taskrun = json.loads(tmp.data)
+
+        task = db.session.query(model.Task).get(task_id)
+        assert tmp.status_code == 200, r_taskrun
+        err_msg = "Task state should be different from completed"
+        assert task.state == 'ongoing', err_msg
+
+        # Now with everything fine
+        url = '/api/taskrun'
+        data = dict(
+            app_id=task.app_id,
+            task_id=task_id,
+            info='my task result anon')
+        datajson = json.dumps(data)
+        tmp = self.app.post(url, data=datajson)
+        r_taskrun = json.loads(tmp.data)
+
+        task = db.session.query(model.Task).get(task_id)
+        assert tmp.status_code == 200, r_taskrun
+        err_msg = "Task state should be equal to completed"
+        assert task.state == 'completed', err_msg
