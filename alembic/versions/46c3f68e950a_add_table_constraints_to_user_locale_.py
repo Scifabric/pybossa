@@ -15,8 +15,11 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.alter_column('user', 'locale', nullable=False)
+    query = 'UPDATE "user" SET locale="en";'
+    op.execute(query)
+    op.alter_column('user', 'locale', nullable=False, default='en')
     op.alter_column('user', 'privacy_mode', nullable=False)
+
 
 
 def downgrade():
