@@ -18,7 +18,8 @@
 
 from base import web, model, Fixtures, db
 from pybossa.auth import taskrun as taskrun_authorization
-from pybossa.model import User, TaskRun, Task, App
+from pybossa.auth import token as token_authorization
+from pybossa.model import TaskRun, Task
 from nose.tools import assert_equal, assert_raises
 from werkzeug.exceptions import Forbidden
 
@@ -375,3 +376,58 @@ class TestTaskrunCreateAuthorization:
 
         assert taskrun_authorization.current_user.admin
         assert taskrun_authorization.delete(user_taskrun)
+
+
+class TestTokenAuthorization:
+
+    auth_providers = ('twitter', 'facebook', 'google')
+    root, user1, user2 = Fixtures.create_users()
+
+
+    def test_anonymous_user_delete(self):
+        token_authorization.current_user = FakeCurrentUser()
+
+        for token in self.auth_providers:
+            assert not token_authorization.delete(token)
+
+    def test_authenticated_user_delete(self):
+        token_authorization.current_user = FakeCurrentUser(self.root)
+
+        for token in self.auth_providers:
+            assert not token_authorization.delete(token)
+
+    def test_anonymous_user_create(self):
+        token_authorization.current_user = FakeCurrentUser()
+
+        for token in self.auth_providers:
+            assert not token_authorization.create(token)
+
+    def test_authenticated_user_create(self):
+        token_authorization.current_user = FakeCurrentUser(self.root)
+
+        for token in self.auth_providers:
+            assert not token_authorization.create(token)
+
+    def test_anonymous_user_update(self):
+        token_authorization.current_user = FakeCurrentUser()
+
+        for token in self.auth_providers:
+            assert not token_authorization.update(token)
+
+    def test_authenticated_user_update(self):
+        token_authorization.current_user = FakeCurrentUser(self.root)
+
+        for token in self.auth_providers:
+            assert not token_authorization.update(token)
+
+    def test_anonymous_user_read(self):
+        token_authorization.current_user = FakeCurrentUser()
+
+        for token in self.auth_providers:
+            assert not token_authorization.read(token)
+
+    def test_authenticated_user_read(self):
+        token_authorization.current_user = FakeCurrentUser(self.root)
+
+        for token in self.auth_providers:
+            assert token_authorization.read(token)
