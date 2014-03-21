@@ -23,6 +23,7 @@ This package adds GET, POST, PUT and DELETE methods for:
     * categories,
     * tasks,
     * task_runs,
+    * users,
     * global_stats,
     * vmcp
 
@@ -46,6 +47,7 @@ from task_run import TaskRunAPI
 from app import AppAPI
 from category import CategoryAPI
 from vmcp import VmcpAPI
+from user import UserAPI
 
 blueprint = Blueprint('api', __name__)
 
@@ -84,6 +86,7 @@ register_api(AppAPI, 'api_app', '/app', pk='id', pk_type='int')
 register_api(CategoryAPI, 'api_category', '/category', pk='id', pk_type='int')
 register_api(TaskAPI, 'api_task', '/task', pk='id', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
+register_api(UserAPI, 'api_user', '/user', pk='id', pk_type='int')
 register_api(GlobalStatsAPI, 'api_globalstats', '/globalstats')
 register_api(VmcpAPI, 'api_vmcp', '/vmcp')
 
@@ -111,7 +114,6 @@ def new_task(app_id):
             r = make_response(json.dumps(task.dictize()))
             r.mimetype = "application/json"
             return r
-
         else:
             return Response(json.dumps({}), mimetype="application/json")
     except Exception as e:
@@ -154,7 +156,6 @@ def user_progress(app_id=None, short_name=None):
                        .filter(model.TaskRun.user_id == current_user.id)
             tasks = db.session.query(model.Task)\
                 .filter(model.Task.app_id == app.id)
-            # Return
             tmp = dict(done=tr.count(), total=tasks.count())
             return Response(json.dumps(tmp), mimetype="application/json")
         else:

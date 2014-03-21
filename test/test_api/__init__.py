@@ -28,7 +28,7 @@ def teardown_package(cls):
 
 class HelperAPI:
 
-    endpoints = ['app', 'task', 'taskrun']
+    endpoints = ['app', 'task', 'taskrun', 'user']
 
 
     def setUp(self):

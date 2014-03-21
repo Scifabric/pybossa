@@ -135,6 +135,16 @@ For a list of TaskRuns use::
 
     GET http://{pybossa-site-url}/api/taskrun
 
+Finally, you can get a list of users by doing::
+
+    GET http://{pybossa-site-url}/api/user
+
+.. note::
+    Please, notice that in order to keep users privacy, only their locale and
+    nickname will be shared by default. Optionally, users can disable privacy
+    mode in their settings. By doing so, also their fullname and account
+    creation date will be visible for everyone through the API.
+
 .. note::
     By default PyBossa limits the list of items to 20. If you want to get more
     items, use the keyword **limit=N** with **N** being a number to get that

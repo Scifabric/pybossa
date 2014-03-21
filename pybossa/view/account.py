@@ -37,7 +37,7 @@ from flask.ext.login import login_required, login_user, logout_user, \
     current_user
 from flask.ext.mail import Message
 from flaskext.wtf import Form, TextField, PasswordField, validators, \
-    IntegerField, HiddenInput, SelectField
+    IntegerField, HiddenInput, SelectField, BooleanField
 #    ValidationError, IntegerField, HiddenInput, SelectField
 
 import pybossa.validator as pb_validator
@@ -221,6 +221,7 @@ class UpdateProfileForm(Form):
 
     locale = SelectField(lazy_gettext('Default Language'))
     ckan_api = TextField(lazy_gettext('CKAN API Key'))
+    privacy_mode = BooleanField(lazy_gettext('Privacy Mode'))
 
     def set_locales(self, locales):
         """Fill the locale.choices."""
@@ -395,7 +396,8 @@ def update_profile():
                                      name=form.name.data,
                                      email_addr=form.email_addr.data,
                                      locale=form.locale.data,
-                                     ckan_api=form.ckan_api.data)
+                                     ckan_api=form.ckan_api.data,
+                                     privacy_mode=form.privacy_mode.data)
             db.session.query(model.User)\
               .filter(model.User.id == current_user.id)\
               .first()
