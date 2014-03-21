@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from base import web, model, Fixtures, db
+from base import web, model, Fixtures, db, redis_flushall
 from pybossa.auth import taskrun as taskrun_authorization
 from pybossa.auth import token as token_authorization
 from pybossa.model import TaskRun, Task
@@ -43,6 +43,9 @@ def setup_module():
 def teardown_module():
     db.session.remove()
     model.rebuild_db()
+    redis_flushall()
+
+
 
 class TestTaskrunCreateAuthorization:
 
@@ -60,6 +63,7 @@ class TestTaskrunCreateAuthorization:
 
     def tearDown(self):
         db.session.remove()
+        redis_flushall()
 
 
 

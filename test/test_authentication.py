@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from base import web, model, Fixtures
+from base import web, model, Fixtures, redis_flushall
 
 
 class TestAuthentication:
@@ -29,6 +29,7 @@ class TestAuthentication:
     @classmethod
     def teardown_class(cls):
         model.rebuild_db()
+        redis_flushall()
 
     def test_api_authenticate(self):
         """Test AUTHENTICATION works"""

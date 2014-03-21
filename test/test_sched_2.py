@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from helper import sched
-from base import Fixtures, redis_flushall
+from base import Fixtures, redis_flushall, model
 import json
 
 
@@ -25,6 +25,10 @@ class TestSched(sched.Helper):
     def setUp(self):
         super(TestSched, self).setUp()
         self.endpoints = ['app', 'task', 'taskrun']
+
+    def tearDown(self):
+        model.rebuild_db()
+        redis_flushall()
 
     # Tests
     def test_incremental_tasks(self):

@@ -18,7 +18,7 @@
 
 import datetime
 import time
-from base import web, model, db, Fixtures
+from base import web, model, db, Fixtures, redis_flushall
 import pybossa.stats as stats
 
 
@@ -34,6 +34,7 @@ class TestStats:
     @classmethod
     def teardown_class(cls):
         model.rebuild_db()
+        redis_flushall()
 
     # Tests
     # Fixtures will create 10 tasks and will need 10 answers per task, so

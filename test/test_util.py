@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import pybossa.util
-from base import web, model, Fixtures
+from base import web, model, Fixtures, redis_flushall
 from mock import patch
 from datetime import datetime, timedelta
 import dateutil.parser
@@ -32,6 +32,11 @@ class TestWebModule:
         self.app = web.app.test_client()
         model.rebuild_db()
         Fixtures.create()
+
+    @classmethod
+    def teardown_class(cls):
+        model.rebuild_db()
+        redis_flushall()
 
     def test_jsonpify(self):
         """Test jsonpify decorator works."""

@@ -23,6 +23,7 @@ from base import web, model, Fixtures, db, redis_flushall
 
 def teardown_package(cls):
     model.rebuild_db()
+    redis_flushall()
 
 
 class HelperAPI:

@@ -31,8 +31,8 @@ class TestAPI:
     def setUp(self):
         self.app = web.app.test_client()
         model.rebuild_db()
+        redis_flushall()
         Fixtures.create()
-        self.endpoints = ['app', 'task', 'taskrun']
 
     def tearDown(self):
         db.session.remove()
@@ -41,10 +41,9 @@ class TestAPI:
     @classmethod
     def teardown_class(cls):
         model.rebuild_db()
+        redis_flushall()
 
     def check_limit(self, url, action, obj, data=None):
-        # Reset keys in Redis
-        redis_flushall()
         # Set the limit
         limit = 299
         # Start check
