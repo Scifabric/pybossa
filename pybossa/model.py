@@ -453,3 +453,18 @@ def empty_string_to_none(mapper, conn, target):
         target.short_name = None
     if target.description == '':
         target.description = None
+
+
+@event.listens_for(TaskRun, 'after_insert')
+def update_task_state(mapper, conn, target):
+    """Update the task.state when n_answers condition is met."""
+    sql_query = ('select count(id) from task_run \
+                 where task_run.task_id=%s') % target.task_id
+    n_answers = conn.scalar(sql_query)
+    sql_query = ('select n_answers from task \
+                 where task.id=%s') % target.task_id
+    task_n_answers = conn.scalar(sql_query)
+    if (n_answers) >= task_n_answers:
+        sql_query = ("UPDATE task SET state=\'completed\' \
+                     where id=%s") % target.task_id
+        conn.execute(sql_query)

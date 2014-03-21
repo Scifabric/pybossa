@@ -43,11 +43,6 @@ class TaskRunAPI(APIBase):
             raise Forbidden('Invalid task_id')
         if (task.app_id != taskrun.app_id):
             raise Forbidden('Invalid app_id')
-        # update the state of the task if n_aswers condition is met
-        if ((len(task.task_runs) + 1) >= task.n_answers):
-            task.state = 'completed'
-            db.session.add(task)
-            db.session.commit()
 
         # Add the user info so it cannot post again the same taskrun
         if current_user.is_anonymous():

@@ -174,26 +174,4 @@ def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30, offset
     tasks = []
     for t in rows:
         tasks.append(db.session.query(model.Task).get(t.id))
-
-    candidate_tasks = []
-
-    for t in tasks:
-        # DEPRECATED: t.info.n_answers will be removed
-        # DEPRECATED: so if your task has a different value for n_answers
-        # DEPRECATED: use t.n_answers instead
-        #print t.id
-        if (t.info.get('n_answers')):
-            t.n_answers = int(t.info['n_answers'])
-        # NEW WAY!
-        if t.n_answers is None:  # pragma: no cover
-            t.n_answers = 30
-
-        if (len(t.task_runs) >= t.n_answers):
-                t.state = "completed"
-                db.session.merge(t)
-                db.session.commit()
-        else:
-            candidate_tasks.append(t)
-            if (offset == 0):
-                break
-    return candidate_tasks
+    return tasks
