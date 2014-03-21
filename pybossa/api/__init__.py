@@ -48,6 +48,7 @@ from app import AppAPI
 from category import CategoryAPI
 from vmcp import VmcpAPI
 from user import UserAPI
+from token import TokenAPI
 
 blueprint = Blueprint('api', __name__)
 
@@ -89,6 +90,7 @@ register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
 register_api(UserAPI, 'api_user', '/user', pk='id', pk_type='int')
 register_api(GlobalStatsAPI, 'api_globalstats', '/globalstats')
 register_api(VmcpAPI, 'api_vmcp', '/vmcp')
+register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
 
 
 @jsonpify
