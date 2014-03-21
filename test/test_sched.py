@@ -406,8 +406,8 @@ class TestSched(sched.Helper):
             db.session.add(task)
             db.session.commit()
 
-        tasks = db.session.query(model.Task).filter_by(app_id=app.id).limit(10).all()
-        for t in tasks:
+        tasks = db.session.query(model.Task).filter_by(app_id=app.id).limit(11).all()
+        for t in tasks[0:10]:
             for x in range(10):
                 self._add_task_run(app, t)
 
@@ -418,8 +418,10 @@ class TestSched(sched.Helper):
         res = self.app.get(url)
         data = json.loads(res.data)
 
-        assert 'app_id' in data.keys()
-        assert data['app_id'] == app_id, data['app_id']
+        err_msg = "User should get a task"
+        assert 'app_id' in data.keys(), err_msg
+        assert data['app_id'] == app_id, err_msg
+        assert data['id'] == tasks[10].id, err_msg
 
 
 class TestGetBreadthFirst:
