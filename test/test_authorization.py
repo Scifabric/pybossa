@@ -385,48 +385,56 @@ class TestTokenAuthorization:
 
 
     def test_anonymous_user_delete(self):
+        """Test anonymous user is not allowed to delete an oauth token"""
         token_authorization.current_user = FakeCurrentUser()
 
         for token in self.auth_providers:
             assert not token_authorization.delete(token)
 
     def test_authenticated_user_delete(self):
+        """Test authenticated user is not allowed to delete an oauth token"""
         token_authorization.current_user = FakeCurrentUser(self.root)
 
         for token in self.auth_providers:
             assert not token_authorization.delete(token)
 
     def test_anonymous_user_create(self):
+        """Test anonymous user is not allowed to create an oauth token"""
         token_authorization.current_user = FakeCurrentUser()
 
         for token in self.auth_providers:
             assert not token_authorization.create(token)
 
     def test_authenticated_user_create(self):
+        """Test authenticated user is not allowed to create an oauth token"""
         token_authorization.current_user = FakeCurrentUser(self.root)
 
         for token in self.auth_providers:
             assert not token_authorization.create(token)
 
     def test_anonymous_user_update(self):
+        """Test anonymous user is not allowed to update an oauth token"""
         token_authorization.current_user = FakeCurrentUser()
 
         for token in self.auth_providers:
             assert not token_authorization.update(token)
 
     def test_authenticated_user_update(self):
+        """Test authenticated user is not allowed to update an oauth token"""
         token_authorization.current_user = FakeCurrentUser(self.root)
 
         for token in self.auth_providers:
             assert not token_authorization.update(token)
 
     def test_anonymous_user_read(self):
+        """Test anonymous user is not allowed to read an oauth token"""
         token_authorization.current_user = FakeCurrentUser()
 
         for token in self.auth_providers:
             assert not token_authorization.read(token)
 
     def test_authenticated_user_read(self):
+        """Test authenticated user is allowed to read his own oauth tokens"""
         token_authorization.current_user = FakeCurrentUser(self.root)
 
         for token in self.auth_providers:
