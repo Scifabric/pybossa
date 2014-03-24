@@ -37,8 +37,6 @@ def read(taskrun=None):
 
 
 def update(taskrun):
-    if taskrun.user is None:
-        raise Forbidden
     if current_user.is_anonymous():
         return False
     else:
