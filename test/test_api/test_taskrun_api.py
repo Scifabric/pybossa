@@ -290,7 +290,7 @@ class TestTaskrunAPI(HelperAPI):
         assert taskrun, taskrun
         assert_equal(taskrun.user, None)
         error_msg = 'Should not be allowed to update'
-        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         # real user but not allowed as not owner!
         url = '/api/taskrun/%s?api_key=%s' % (_id, Fixtures.api_key_2)
