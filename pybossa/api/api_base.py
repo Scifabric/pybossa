@@ -62,7 +62,7 @@ class APIBase(MethodView):
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
-    @ratelimit(limit=300, per=15 * 60)
+    @ratelimit()
     def get(self, id):
         """Get an object.
 
@@ -145,7 +145,7 @@ class APIBase(MethodView):
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
-    @ratelimit(limit=300, per=15 * 60)
+    @ratelimit()
     def post(self):
         """Post an item to the DB with the request.data JSON object.
 
@@ -172,7 +172,7 @@ class APIBase(MethodView):
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
-    @ratelimit(limit=300, per=15 * 60)
+    @ratelimit()
     def delete(self, id):
         """Delete a single item from the DB.
 
@@ -202,7 +202,7 @@ class APIBase(MethodView):
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
-    @ratelimit(limit=300, per=15 * 60)
+    @ratelimit()
     def put(self, id):
         """Update a single item in the DB.
 

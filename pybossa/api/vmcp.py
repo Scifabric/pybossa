@@ -41,7 +41,7 @@ class VmcpAPI(APIBase):
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
-    @ratelimit(limit=300, per=15 * 60)
+    @ratelimit()
     def get(self, id):
         """Return signed VMCP for CernVM requests."""
         error = dict(action=request.method,
