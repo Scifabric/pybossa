@@ -25,8 +25,7 @@ This package adds GET, POST, PUT and DELETE methods for:
 from flask import request
 from flask.ext.login import current_user
 from api_base import APIBase
-from pybossa.model import Task, TaskRun
-from itsdangerous import URLSafeSerializer
+from pybossa.model import db, Task, TaskRun
 from werkzeug.exceptions import Forbidden
 
 
@@ -50,4 +49,3 @@ class TaskRunAPI(APIBase):
             taskrun.user_ip = request.remote_addr
         else:
             taskrun.user = current_user
-

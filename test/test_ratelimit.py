@@ -75,6 +75,8 @@ class TestAPI:
             # Error message
             err_msg = "GET X-RateLimit-Remaining not working"
             # Tests
+            print "X-RateLimit-Remaining: %s" % res.headers['X-RateLimit-Remaining']
+            print "Expected value: %s" % i
             assert int(res.headers['X-RateLimit-Remaining']) == i, err_msg
             if res.headers['X-RateLimit-Remaining'] == 0:
                 error = json.loads(res.data)

@@ -287,10 +287,11 @@ class TestTaskrunAPI(HelperAPI):
         taskrun = db.session.query(model.TaskRun)\
                     .filter_by(id=_id_anonymous)\
                     .one()
+        print res.status
         assert taskrun, taskrun
         assert_equal(taskrun.user, None)
         error_msg = 'Should not be allowed to update'
-        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         # real user but not allowed as not owner!
         url = '/api/taskrun/%s?api_key=%s' % (_id, Fixtures.api_key_2)
@@ -299,7 +300,7 @@ class TestTaskrunAPI(HelperAPI):
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
         # real user
-        url = '/api/taskrun/%s' % _id
+        url = '/api/taskrun/%s?api_key=%s' % (_id, Fixtures.api_key)
         out = self.app.get(url, follow_redirects=True)
         task = json.loads(out.data)
         datajson = json.loads(datajson)
@@ -309,20 +310,16 @@ class TestTaskrunAPI(HelperAPI):
         url = '/api/taskrun/%s?api_key=%s' % (_id, Fixtures.api_key)
         res = self.app.put(url, data=datajson)
         out = json.loads(res.data)
-        assert_equal(res.status, '200 OK', res.data)
-        out2 = db.session.query(model.TaskRun).get(_id)
-        assert_equal(out2.info, task_run['info'])
-        assert_equal(out2.user.name, Fixtures.name)
-        assert out2.id == out['id'], out
+        assert_equal(res.status, '403 FORBIDDEN', res.data)
 
         # PUT with not JSON data
         res = self.app.put(url, data=task_run)
         err = json.loads(res.data)
-        assert res.status_code == 415, err
+        assert res.status_code == 403, err
         assert err['status'] == 'failed', err
         assert err['target'] == 'taskrun', err
         assert err['action'] == 'PUT', err
-        assert err['exception_cls'] == 'ValueError', err
+        assert err['exception_cls'] == 'Forbidden', err
 
         # PUT with not allowed args
         res = self.app.put(url + "&foo=bar", data=json.dumps(task_run))
@@ -337,20 +334,17 @@ class TestTaskrunAPI(HelperAPI):
         task_run['wrongfield'] = 13
         res = self.app.put(url, data=json.dumps(task_run))
         err = json.loads(res.data)
-        assert res.status_code == 415, err
+        assert res.status_code == 403, err
         assert err['status'] == 'failed', err
         assert err['target'] == 'taskrun', err
         assert err['action'] == 'PUT', err
-        assert err['exception_cls'] == 'TypeError', err
+        assert err['exception_cls'] == 'Forbidden', err
         task_run.pop('wrongfield')
 
         # root user
         url = '/api/taskrun/%s?api_key=%s' % (_id, Fixtures.root_api_key)
         res = self.app.put(url, data=datajson)
-        assert_equal(res.status, '200 OK', res.data)
-        out2 = db.session.query(model.TaskRun).get(_id)
-        assert_equal(out2.info, task_run['info'])
-        assert_equal(out2.user.name, Fixtures.name)
+        assert_equal(res.status, '403 FORBIDDEN', res.data)
 
         ##########
         # DELETE #
@@ -440,3 +434,60 @@ class TestTaskrunAPI(HelperAPI):
         assert res, res
         task = json.loads(res.data)
         assert_equal(task['app_id'], app.id)
+
+    def test_09_taskrun_updates_task_state(self):
+        """Test API TaskRun POST updates task state"""
+        app = db.session.query(model.App)\
+                .filter_by(short_name=Fixtures.app_short_name)\
+                .one()
+        task = db.session.query(model.Task)\
+                  .filter_by(app_id=app.id).first()
+
+        task_id = task.id
+        # For 2 n_answers
+        task.n_answers = 2
+        task.state = 'ongoing'
+        db.session.add(task)
+        db.session.commit()
+
+        task_runs = db.session.query(model.TaskRun).all()
+        for tr in task_runs:
+            db.session.delete(tr)
+        db.session.commit()
+        app_id = app.id
+
+        # Create taskrun
+        data = dict(
+            app_id=app_id,
+            task_id=task_id,
+            info='my task result')
+
+        # Now with everything fine
+        url = '/api/taskrun?api_key=%s' % Fixtures.api_key
+        data = dict(
+            app_id=task.app_id,
+            task_id=task_id,
+            info='my task result')
+        datajson = json.dumps(data)
+        tmp = self.app.post(url, data=datajson)
+        r_taskrun = json.loads(tmp.data)
+
+        task = db.session.query(model.Task).get(task_id)
+        assert tmp.status_code == 200, r_taskrun
+        err_msg = "Task state should be different from completed"
+        assert task.state == 'ongoing', err_msg
+
+        # Now with everything fine
+        url = '/api/taskrun'
+        data = dict(
+            app_id=task.app_id,
+            task_id=task_id,
+            info='my task result anon')
+        datajson = json.dumps(data)
+        tmp = self.app.post(url, data=datajson)
+        r_taskrun = json.loads(tmp.data)
+
+        task = db.session.query(model.Task).get(task_id)
+        assert tmp.status_code == 200, r_taskrun
+        err_msg = "Task state should be equal to completed"
+        assert task.state == 'completed', err_msg
