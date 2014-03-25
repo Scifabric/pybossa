@@ -18,10 +18,12 @@
 
 from base import web, model, Fixtures, db, redis_flushall
 from pybossa.auth import taskrun as taskrun_authorization
+from pybossa.auth import require
 from pybossa.auth import token as token_authorization
 from pybossa.model import TaskRun, Task
 from nose.tools import assert_equal, assert_raises
-from werkzeug.exceptions import Forbidden
+from werkzeug.exceptions import Forbidden, Unauthorized
+from mock import patch, Mock
 
 
 class FakeCurrentUser:
@@ -70,7 +72,7 @@ class TestTaskrunCreateAuthorization:
     def test_anonymous_user_create_first_taskrun(self):
         """Test anonymous user can create a taskrun for a given task if it
         is the first taskrun posted to that particular task"""
-        
+
         taskrun_authorization.current_user = FakeCurrentUser()
 
         taskrun = model.TaskRun(app_id=self.app.id,
@@ -82,7 +84,7 @@ class TestTaskrunCreateAuthorization:
 
 
     def test_anonymous_user_create_repeated_taskrun(self):
-        """Test anonymous user cannot create a taskrun for a task to which 
+        """Test anonymous user cannot create a taskrun for a task to which
         he has previously posted a taskrun"""
 
         taskrun_authorization.current_user = FakeCurrentUser()
@@ -127,7 +129,7 @@ class TestTaskrunCreateAuthorization:
 
 
     def test_authenticated_user_create_repeated_taskrun(self):
-        """Test authenticated user cannot create a taskrun for a task to which 
+        """Test authenticated user cannot create a taskrun for a task to which
         he has previously posted a taskrun"""
 
         taskrun_authorization.current_user = FakeCurrentUser(self.user1)
@@ -200,59 +202,75 @@ class TestTaskrunCreateAuthorization:
 
     def test_anonymous_user_update_anoymous_taskrun(self):
         """Test anonymous users cannot update an anonymously posted taskrun"""
+        with web.app.test_request_context('/'):
+            with patch('pybossa.auth.current_user') as mock_is_anonymous:
+                mock_is_anonymous.is_anonymous = Mock(return_value=True)
+                taskrun_authorization.current_user = FakeCurrentUser()
 
-        taskrun_authorization.current_user = FakeCurrentUser()
+                anonymous_taskrun = model.TaskRun(app_id=self.app.id,
+                                        task_id=self.task.id,
+                                        user_ip='127.0.0.0',
+                                        info="some taskrun info")
 
-        anonymous_taskrun = model.TaskRun(app_id=self.app.id,
-                                task_id=self.task.id,
-                                user_ip='127.0.0.0',
-                                info="some taskrun info")
-
-        assert taskrun_authorization.current_user.is_anonymous()
-        assert_raises(Forbidden, taskrun_authorization.update, anonymous_taskrun)
+                assert taskrun_authorization.current_user.is_anonymous()
+                assert_raises(Unauthorized,
+                              getattr(require, 'taskrun').update,
+                              anonymous_taskrun)
 
 
     def test_authenticated_user_update_anonymous_taskrun(self):
         """Test authenticated users cannot update an anonymously posted taskrun"""
+        with web.app.test_request_context('/'):
+            with patch('pybossa.auth.current_user') as mock_is_anonymous:
+                mock_is_anonymous.is_anonymous = Mock(return_value=False)
+                taskrun_authorization.current_user = FakeCurrentUser(self.user1)
 
-        taskrun_authorization.current_user = FakeCurrentUser(self.user1)
+                anonymous_taskrun = model.TaskRun(app_id=self.app.id,
+                                        task_id=self.task.id,
+                                        user_ip='127.0.0.0',
+                                        info="some taskrun info")
 
-        anonymous_taskrun = model.TaskRun(app_id=self.app.id,
-                                task_id=self.task.id,
-                                user_ip='127.0.0.0',
-                                info="some taskrun info")
-
-        assert not taskrun_authorization.current_user.is_anonymous()
-        assert_raises(Forbidden, taskrun_authorization.update, anonymous_taskrun)
+                assert not taskrun_authorization.current_user.is_anonymous()
+                assert_raises(Forbidden,
+                              getattr(require, 'taskrun').update,
+                              anonymous_taskrun)
 
 
     def test_admin_update_anonymous_taskrun(self):
         """Test admins cannot update anonymously posted taskruns"""
+        with web.app.test_request_context('/'):
+            with patch('pybossa.auth.current_user') as mock_is_anonymous:
+                mock_is_anonymous.is_anonymous = Mock(return_value=False)
+                self.root.admin = True
+                taskrun_authorization.current_user = FakeCurrentUser(self.root)
 
-        self.root.admin = True
-        taskrun_authorization.current_user = FakeCurrentUser(self.root)
+                anonymous_taskrun = model.TaskRun(app_id=self.app.id,
+                                        task_id=self.task.id,
+                                        user_ip='127.0.0.0',
+                                        info="some taskrun info")
 
-        anonymous_taskrun = model.TaskRun(app_id=self.app.id,
-                                task_id=self.task.id,
-                                user_ip='127.0.0.0',
-                                info="some taskrun info")
-
-        assert taskrun_authorization.current_user.admin
-        assert_raises(Forbidden, taskrun_authorization.update, anonymous_taskrun)
+                assert taskrun_authorization.current_user.admin
+                assert_raises(Forbidden,
+                              getattr(require, 'taskrun').update,
+                              anonymous_taskrun)
 
 
     def test_anonymous_user_update_user_taskrun(self):
         """Test anonymous user cannot update taskruns posted by authenticated users"""
+        with web.app.test_request_context('/'):
+            with patch('pybossa.auth.current_user') as mock_is_anonymous:
+                mock_is_anonymous.is_anonymous = Mock(return_value=True)
+                taskrun_authorization.current_user = FakeCurrentUser()
 
-        taskrun_authorization.current_user = FakeCurrentUser()
+                user_taskrun = model.TaskRun(app_id=self.app.id,
+                                        task_id=self.task.id,
+                                        user_id=self.root.id,
+                                        info="some taskrun info")
 
-        user_taskrun = model.TaskRun(app_id=self.app.id,
-                                task_id=self.task.id,
-                                user_id=self.root.id,
-                                info="some taskrun info")
-
-        assert taskrun_authorization.current_user.is_anonymous()
-        assert_raises(Forbidden, taskrun_authorization.update, user_taskrun)
+                assert taskrun_authorization.current_user.is_anonymous()
+                assert_raises(Unauthorized,
+                              getattr(require, 'taskrun').update,
+                              user_taskrun)
 
 
     def test_authenticated_user_update_other_users_taskrun(self):
