@@ -26,8 +26,6 @@ from werkzeug.exceptions import MethodNotAllowed
 
 class TestTaskrunAPI(HelperAPI):
 
-    #checkear que el endpoint está bien.
-    #que los formatos de los tokens que devuelve son los apropiados para cada provider
 
 
     def test_not_allowed_methods(self):
