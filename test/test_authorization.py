@@ -205,7 +205,6 @@ class TestTaskrunCreateAuthorization:
         with web.app.test_request_context('/'):
             with patch('pybossa.auth.current_user') as mock_is_anonymous:
                 mock_is_anonymous.is_anonymous = Mock(return_value=True)
-                taskrun_authorization.current_user = FakeCurrentUser()
 
                 anonymous_taskrun = model.TaskRun(app_id=self.app.id,
                                         task_id=self.task.id,
@@ -223,7 +222,6 @@ class TestTaskrunCreateAuthorization:
         with web.app.test_request_context('/'):
             with patch('pybossa.auth.current_user') as mock_is_anonymous:
                 mock_is_anonymous.is_anonymous = Mock(return_value=False)
-                taskrun_authorization.current_user = FakeCurrentUser(self.user1)
 
                 anonymous_taskrun = model.TaskRun(app_id=self.app.id,
                                         task_id=self.task.id,
@@ -242,7 +240,6 @@ class TestTaskrunCreateAuthorization:
             with patch('pybossa.auth.current_user') as mock_is_anonymous:
                 mock_is_anonymous.is_anonymous = Mock(return_value=False)
                 self.root.admin = True
-                taskrun_authorization.current_user = FakeCurrentUser(self.root)
 
                 anonymous_taskrun = model.TaskRun(app_id=self.app.id,
                                         task_id=self.task.id,
@@ -260,7 +257,6 @@ class TestTaskrunCreateAuthorization:
         with web.app.test_request_context('/'):
             with patch('pybossa.auth.current_user') as mock_is_anonymous:
                 mock_is_anonymous.is_anonymous = Mock(return_value=True)
-                taskrun_authorization.current_user = FakeCurrentUser()
 
                 user_taskrun = model.TaskRun(app_id=self.app.id,
                                         task_id=self.task.id,
@@ -274,22 +270,21 @@ class TestTaskrunCreateAuthorization:
 
 
     def test_authenticated_user_update_other_users_taskrun(self):
-        """Test authenticated user cannot update a taskrun if it was created
-        by another authenticated user, but can update his own taskruns"""
+        """Test authenticated user cannot update any taskrun"""
 
         taskrun_authorization.current_user = FakeCurrentUser(self.user1)
 
-        user_taskrun = model.TaskRun(app_id=self.app.id,
+        own_taskrun = model.TaskRun(app_id=self.app.id,
                                 task_id=self.task.id,
                                 user=self.user1,
                                 info="some taskrun info")
-        own_users_taskrun = model.TaskRun(app_id=self.app.id,
+        other_users_taskrun = model.TaskRun(app_id=self.app.id,
                                 task_id=self.task.id,
                                 user=self.root,
                                 info="a different taskrun info")
 
         assert not taskrun_authorization.current_user.is_anonymous()
-        assert taskrun_authorization.update(own_taskrun)
+        assert not taskrun_authorization.update(own_taskrun)
         assert not taskrun_authorization.update(other_users_taskrun)
 
 
@@ -365,7 +360,7 @@ class TestTaskrunCreateAuthorization:
         assert not taskrun_authorization.delete(user_taskrun)
 
 
-    def test_authenticated_user_update_other_users_taskrun(self):
+    def test_authenticated_user_delete_other_users_taskrun(self):
         """Test authenticated user cannot delete a taskrun if it was created
         by another authenticated user, but can delete his own taskruns"""
 
