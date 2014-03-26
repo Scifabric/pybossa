@@ -70,8 +70,8 @@ class TestTaskrunCreateAuthorization:
 
 
     def test_anonymous_user_create_first_taskrun(self):
-        """Test anonymous user can create a taskrun for a given task if it
-        is the first taskrun posted to that particular task"""
+        """Test anonymous user can create a taskrun for a given task if he
+        hasn't already done it"""
 
         taskrun_authorization.current_user = FakeCurrentUser()
 
@@ -115,8 +115,8 @@ class TestTaskrunCreateAuthorization:
 
 
     def test_authenticated_user_create_first_taskrun(self):
-        """Test authenticated user can create a taskrun for a given task if it
-        is the first taskrun posted to that particular task"""
+        """Test authenticated user can create a taskrun for a given task if he
+        hasn't already done it"""
 
         taskrun_authorization.current_user = FakeCurrentUser(self.user1)
 
