@@ -1060,7 +1060,7 @@ def export_to(short_name):
                                ckan_name=current_app.config.get('CKAN_NAME'),
                                app=app)
     if fmt not in export_formats:
-        abort(404)
+        abort(415)
     return {"json": respond_json, "csv": respond_csv, 'ckan': respond_ckan}[fmt](ty)
 
 
