@@ -32,13 +32,14 @@ from werkzeug.exceptions import HTTPException
 
 import pybossa.model as model
 from pybossa.core import db
-from pybossa.util import admin_required
+from pybossa.util import admin_required, UnicodeWriter
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
 from pybossa.auth import require
 import pybossa.validator as pb_validator
 from sqlalchemy import or_, func
 import json
+from StringIO import StringIO
 
 
 blueprint = Blueprint('admin', __name__)
@@ -152,6 +153,56 @@ def users(user_id=None):
     except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
+
+
+@blueprint.route('/users/export')
+@login_required
+@admin_required
+def export_users():
+    """Export Users list in the given format, only for admins"""
+
+    exportable_attributes = ('id', 'name', 'fullname', 'email_addr', 'created', 'locale', 'admin')
+
+    def respond_json():
+        return Response(gen_json(), mimetype='application/json')
+
+    def gen_json():
+        users = db.session.query(model.User).all()
+        json_users = []
+        for user in users:
+            json_users.append(dictize_with_exportable_attributes(user))
+        return json.dumps(json_users)
+
+    def dictize_with_exportable_attributes(user):
+        dict_user = {}
+        for attr in exportable_attributes:
+            dict_user[attr] = getattr(user, attr)
+        return dict_user
+
+    def respond_csv():
+        out = StringIO()
+        writer = UnicodeWriter(out)
+        return Response(gen_csv(out, writer, write_user), mimetype='text/csv')
+
+    def gen_csv(out, writer, write_user):
+        add_headers(writer)
+        for user in db.session.query(model.User).yield_per(1):
+            write_user(writer, user)
+        yield out.getvalue()
+
+    def write_user(writer, user):
+        values = [getattr(user, attr) for attr in sorted(exportable_attributes)]
+        writer.writerow(values)
+
+    def add_headers(writer):
+        writer.writerow(sorted(exportable_attributes))
+
+    export_formats = ["json", "csv"]
+
+    fmt = request.args.get('format')
+    if not fmt or fmt not in export_formats:
+        abort(415)
+    return {"json": respond_json, "csv": respond_csv}[fmt]()
 
 
 @blueprint.route('/users/add/<int:user_id>')
