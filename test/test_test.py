@@ -17,24 +17,12 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from base import web, model, Fixtures, db, redis_flushall
-from pybossa.auth import require
-from pybossa.auth import token as token_authorization
+from pybossa.auth import require, taskrun
 from pybossa.model import TaskRun, Task
 from nose.tools import assert_equal, assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
 from mock import patch, Mock
 
-
-
-class FakeCurrentUser:
-    def __init__(self, user=None):
-        if user:
-            self.id = user.id
-            self.admin = user.admin
-        self.anonymous = user is None
-
-    def is_anonymous(self):
-        return self.anonymous
 
 
 def setup_module():
@@ -468,64 +456,7 @@ class TestTaskrunCreateAuthorization:
 
 
 
-class TestTokenAuthorization:
-
-    auth_providers = ('twitter', 'facebook', 'google')
-    root, user1, user2 = Fixtures.create_users()
 
 
-    def test_anonymous_user_delete(self):
-        """Test anonymous user is not allowed to delete an oauth token"""
-        token_authorization.current_user = FakeCurrentUser()
 
-        for token in self.auth_providers:
-            assert not token_authorization.delete(token)
 
-    def test_authenticated_user_delete(self):
-        """Test authenticated user is not allowed to delete an oauth token"""
-        token_authorization.current_user = FakeCurrentUser(self.root)
-
-        for token in self.auth_providers:
-            assert not token_authorization.delete(token)
-
-    def test_anonymous_user_create(self):
-        """Test anonymous user is not allowed to create an oauth token"""
-        token_authorization.current_user = FakeCurrentUser()
-
-        for token in self.auth_providers:
-            assert not token_authorization.create(token)
-
-    def test_authenticated_user_create(self):
-        """Test authenticated user is not allowed to create an oauth token"""
-        token_authorization.current_user = FakeCurrentUser(self.root)
-
-        for token in self.auth_providers:
-            assert not token_authorization.create(token)
-
-    def test_anonymous_user_update(self):
-        """Test anonymous user is not allowed to update an oauth token"""
-        token_authorization.current_user = FakeCurrentUser()
-
-        for token in self.auth_providers:
-            assert not token_authorization.update(token)
-
-    def test_authenticated_user_update(self):
-        """Test authenticated user is not allowed to update an oauth token"""
-        token_authorization.current_user = FakeCurrentUser(self.root)
-
-        for token in self.auth_providers:
-            assert not token_authorization.update(token)
-
-    def test_anonymous_user_read(self):
-        """Test anonymous user is not allowed to read an oauth token"""
-        token_authorization.current_user = FakeCurrentUser()
-
-        for token in self.auth_providers:
-            assert not token_authorization.read(token)
-
-    def test_authenticated_user_read(self):
-        """Test authenticated user is allowed to read his own oauth tokens"""
-        token_authorization.current_user = FakeCurrentUser(self.root)
-
-        for token in self.auth_providers:
-            assert token_authorization.read(token)

@@ -24,7 +24,7 @@ from werkzeug.exceptions import Forbidden
 def create(taskrun=None):
     authorized = (TaskRun.query.filter_by(app_id=taskrun.app_id)
                     .filter_by(task_id=taskrun.task_id)
-                    .filter_by(user=taskrun.user)
+                    .filter_by(user_id=taskrun.user_id)
                     .filter_by(user_ip=taskrun.user_ip)
                     .first()) is None
     if not authorized:
@@ -42,8 +42,8 @@ def update(taskrun):
 def delete(taskrun):
     if current_user.is_anonymous():
         return False
-    if taskrun.user is None:
+    if taskrun.user_id is None:
         return current_user.admin
     else:
-        return current_user.admin or taskrun.user.id == current_user.id
+        return current_user.admin or taskrun.user_id == current_user.id
 
