@@ -53,9 +53,18 @@ def assert_not_raises(exception, call, *args, **kwargs):
     except exception as ex:
         assert False, str(ex)
 
+def mock_current_user(anonymous=True, admin=None, id=None):
+    mock = Mock(spec=model.User)
+    mock.is_anonymous.return_value = anonymous
+    mock.admin = admin
+    mock.id = id
 
 
 class TestTaskrunCreateAuthorization:
+
+    mock_anonymous = mock_current_user()
+    mock_authenticated = mock_current_user(anonymous=False, admin=False, id=2)
+    mock_admin = mock_current_user(anonymous=False, admin=True, id=1)
 
     mock_anonymous = Mock()
     mock_anonymous.is_anonymous.return_value = True
