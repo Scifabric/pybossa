@@ -58,6 +58,7 @@ def mock_current_user(anonymous=True, admin=None, id=None):
     mock.is_anonymous.return_value = anonymous
     mock.admin = admin
     mock.id = id
+    return mock
 
 
 class TestTaskrunCreateAuthorization:
@@ -66,16 +67,6 @@ class TestTaskrunCreateAuthorization:
     mock_authenticated = mock_current_user(anonymous=False, admin=False, id=2)
     mock_admin = mock_current_user(anonymous=False, admin=True, id=1)
 
-    mock_anonymous = Mock()
-    mock_anonymous.is_anonymous.return_value = True
-    mock_authenticated = Mock(spec=model.User)
-    mock_authenticated.is_anonymous.return_value = False
-    mock_authenticated.admin = False
-    mock_authenticated.id = 2
-    mock_admin = Mock(spec=model.User)
-    mock_admin.is_anonymous.return_value = False
-    mock_admin.admin = True
-    mock_admin.id = 1
 
     def setUp(self):
         model.rebuild_db()
@@ -421,28 +412,27 @@ class TestTaskrunCreateAuthorization:
                                   getattr(require, 'taskrun').delete,
                                   anonymous_taskrun)
 
-
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    @patch('pybossa.auth.taskrun.current_user', new=mock_anonymous)
     def test_anonymous_user_delete_user_taskrun(self):
         """Test anonymous user cannot delete taskruns posted by authenticated users"""
+
         with web.app.test_request_context('/'):
-            with patch('pybossa.auth.current_user') as mock_is_anonymous:
-                with patch('pybossa.auth.taskrun.current_user') as mock_is_anonymous:
-                    mock_is_anonymous.is_anonymous = Mock(return_value=True)
+            user_taskrun = model.TaskRun(app_id=self.app.id,
+                                    task_id=self.task.id,
+                                    user_id=self.root.id,
+                                    info="some taskrun info")
 
-                    user_taskrun = model.TaskRun(app_id=self.app.id,
-                                            task_id=self.task.id,
-                                            user_id=self.root.id,
-                                            info="some taskrun info")
-
-                    assert_raises(Unauthorized,
-                              getattr(require, 'taskrun').delete,
-                              user_taskrun)
+            assert_raises(Unauthorized,
+                      getattr(require, 'taskrun').delete,
+                      user_taskrun)
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     @patch('pybossa.auth.taskrun.current_user', new=mock_authenticated)
     def test_authenticated_user_delete_other_users_taskrun(self):
         """Test authenticated user cannot delete a taskrun if it was created
         by another authenticated user, but can delete his own taskruns"""
+
         with web.app.test_request_context('/'):
             own_taskrun = model.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
@@ -465,10 +455,11 @@ class TestTaskrunCreateAuthorization:
     @patch('pybossa.auth.taskrun.current_user', new=mock_admin)
     def test_admin_delete_user_taskrun(self):
         """Test admins can delete taskruns posted by authenticated users"""
+
         with web.app.test_request_context('/'):
             user_taskrun = model.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
-                                    user=self.user1,
+                                    user_id=self.user1.id,
                                     info="some taskrun info")
 
             assert_not_raises(Exception,
