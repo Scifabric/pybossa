@@ -32,7 +32,7 @@ sys.path.insert(0, os.path.abspath('../'))
     #html_theme = 'nature'
 sys.path.append(os.path.abspath('_themes'))
 html_theme_path = ['_themes']
-html_theme = 'sphinx-theme-okfn'
+html_theme = 'sphinx-theme-pybossa'
 html_theme_options = {
         'logo_icon': 'logo.png',
         'show_okfn_logo': False,
@@ -105,7 +105,7 @@ exclude_patterns = ['_build']
 #show_authors = False
 
 # The name of the Pygments (syntax highlighting) style to use.
-pygments_style = 'sphinx'
+pygments_style = 'fruity'
 
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
