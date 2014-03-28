@@ -193,8 +193,6 @@ class TestSched(sched.Helper):
             self.register(fullname=self.user.username + str(i),
                           username=self.user.username + str(i),
                           password=self.user.username + str(i))
-            print "Number of users %s" % len(db.session.query(model.User).all())
-            print "Giving answers as User: %s" % self.user.username + str(i)
             self.signin()
             # Get Task until scheduler returns None
             res = self.app.get('api/app/1/newtask')
@@ -220,7 +218,6 @@ class TestSched(sched.Helper):
         # Check if there are 30 TaskRuns per Task
         tasks = db.session.query(model.Task).filter_by(app_id=1).all()
         for t in tasks:
-            print len(t.task_runs)
             assert len(t.task_runs) == 10, t.task_runs
         # Check that all the answers are from different IPs
         err_msg = "There are two or more Answers from same User"
@@ -247,11 +244,6 @@ class TestSched(sched.Helper):
                 self.register(fullname=self.user.username + str(i),
                               username=self.user.username + str(i),
                               password=self.user.username + str(i))
-
-            if signin:
-                print "Giving answers as User: %s" % self.user.username + str(i)
-            else:
-                print "Giving answers as User IP: 127.0.0.%s" % str(i)
 
             if signin:
                 self.signin()
@@ -287,7 +279,6 @@ class TestSched(sched.Helper):
         # Check if there are 30 TaskRuns per Task
         tasks = db.session.query(model.Task).filter_by(app_id=1).all()
         for t in tasks:
-            print len(t.task_runs)
             assert len(t.task_runs) == 10, t.task_runs
         # Check that all the answers are from different IPs and IDs
         err_msg1 = "There are two or more Answers from same User ID"
@@ -348,7 +339,6 @@ class TestSched(sched.Helper):
         assert task2.get('id') != task4.get('id'), "Tasks should be different"
         # Check that a big offset returns None
         res = self.app.get('api/app/1/newtask?offset=11')
-        print json.loads(res.data)
         assert json.loads(res.data) == {}, res.data
 
     def test_task_priority(self):
@@ -401,7 +391,7 @@ class TestSched(sched.Helper):
 
         app_id = app.id
 
-        for i in range(0, 10000):
+        for i in range(20):
             task = model.Task(app=app, info={'i': i}, n_answers=10)
             db.session.add(task)
             db.session.commit()
@@ -411,7 +401,6 @@ class TestSched(sched.Helper):
             for x in range(10):
                 self._add_task_run(app, t)
 
-        task_runs = db.session.query(model.TaskRun).filter_by(app_id=app.id).all()
         assert tasks[0].n_answers == 10
 
         url = 'api/app/%s/newtask' % app_id
