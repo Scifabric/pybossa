@@ -375,6 +375,50 @@ class TestAdmin(web.Helper):
         assert res.status_code == 200, res.status_code
         assert res.mimetype == 'text/csv', res.mimetype
 
+    def test_17_admin_user_export_anonymous(self):
+        """Test ADMIN user list export works as anonymous user"""
+        self.register()
+        self.signout()
+
+        # Whichever the args of the request are, the user is redirected to login
+        res = self.app.get('/admin/users/export', follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous users should be redirected to sign in"
+        assert dom.find(id='signin') is not None, err_msg
+        res = self.app.get('/admin/users/export?firmit=', follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous users should be redirected to sign in"
+        assert dom.find(id='signin') is not None, err_msg
+        res = self.app.get('/admin/users/export?format=bad',
+                            follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous users should be redirected to sign in"
+        assert dom.find(id='signin') is not None, err_msg
+        res = self.app.get('/admin/users/export?format=json',
+                            follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous users should be redirected to sign in"
+        assert dom.find(id='signin') is not None, err_msg
+
+    def test_18_admin_user_export_authenticated(self):
+        """Test ADMIN user list export works as authenticated non-admin user"""
+        self.register()
+        self.signout()
+        self.register(fullname="Juan Jose", username="juan",
+                      email="juan@juan.com", password="juan")
+
+        # No matter what params in the request, Forbidden is raised
+        res = self.app.get('/admin/users/export', follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+        res = self.app.get('/admin/users/export?firmit=', follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+        res = self.app.get('/admin/users/export?format=bad',
+                            follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+        res = self.app.get('/admin/users/export?format=json',
+                            follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+
     @patch('pybossa.ckan.requests.get')
     def test_16_admin_update_app(self, Mock):
         """Test ADMIN can update an app that belongs to another user"""
