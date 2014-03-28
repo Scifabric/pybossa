@@ -24,7 +24,6 @@ from pybossa.hateoas import Hateoas
 
 
 class TestHateoas(web_helper.Helper):
-    url = "/app/%s/tasks/export" % Fixtures.app_short_name
 
     hateoas = Hateoas()
 

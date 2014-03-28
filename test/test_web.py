@@ -1970,11 +1970,11 @@ class TestWeb(web.Helper):
         uri = '/app/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
-        # Now get the tasks in JSON format
+        # Now get the tasks in CSV format
         uri = "/app/somethingnotexists/tasks/export?type=task&format=csv"
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
-        # Now get the wrong table name in JSON format
+        # Now get the wrong table name in CSV format
         uri = "/app/%s/tasks/export?type=wrong&format=csv" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
@@ -1984,7 +1984,7 @@ class TestWeb(web.Helper):
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
-        # Now get the tasks in JSON format
+        # Now get the tasks in CSV format
         uri = "/app/%s/tasks/export?type=task&format=csv" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         csv_content = StringIO.StringIO(res.data)
@@ -2004,7 +2004,7 @@ class TestWeb(web.Helper):
         # With an empty app
         self.register()
         self.new_application()
-        # Now get the tasks in JSON format
+        # Now get the tasks in CSV format
         uri = "/app/sampleapp/tasks/export?type=task&format=csv"
         res = self.app.get(uri, follow_redirects=True)
         msg = "application does not have tasks"
@@ -2017,7 +2017,7 @@ class TestWeb(web.Helper):
         uri = '/app/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
-        # Now get the tasks in JSON format
+        # Now get the tasks in CSV format
         uri = "/app/somethingnotexists/tasks/export?type=tas&format=csv"
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
@@ -2027,7 +2027,7 @@ class TestWeb(web.Helper):
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
-        # Now get the tasks in JSON format
+        # Now get the tasks in CSV format
         uri = "/app/%s/tasks/export?type=task_run&format=csv" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         csv_content = StringIO.StringIO(res.data)
@@ -2078,7 +2078,7 @@ class TestWeb(web.Helper):
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
-        # Now get the tasks in JSON format
+        # Now get the tasks in CKAN format
         uri = "/app/%s/tasks/export?type=task&format=ckan" % Fixtures.app_short_name
         with patch.dict(webapp.app.config, {'CKAN_URL': 'http://ckan.com'}):
             # First time exporting the package
@@ -2118,7 +2118,7 @@ class TestWeb(web.Helper):
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
-        # Now get the tasks in JSON format
+        # Now get the tasks in CKAN format
         uri = "/app/%s/tasks/export?type=task&format=ckan" % Fixtures.app_short_name
         with patch.dict(webapp.app.config, {'CKAN_URL': 'http://ckan.com'}):
             # First time exporting the package
@@ -2159,11 +2159,11 @@ class TestWeb(web.Helper):
         uri = '/app/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
-        # Now get the tasks in JSON format
+        # Now get the tasks in CKAN format
         uri = "/app/somethingnotexists/tasks/export?type=task&format=ckan"
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
-        # Now get the tasks in JSON format
+        # Now get the tasks in CKAN format
         uri = "/app/somethingnotexists/tasks/export?type=other&format=ckan"
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
@@ -2174,7 +2174,7 @@ class TestWeb(web.Helper):
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
-        # Now get the tasks in JSON format
+        # Now get the tasks in CKAN format
         uri = "/app/%s/tasks/export?type=task&format=ckan" % Fixtures.app_short_name
         #res = self.app.get(uri, follow_redirects=True)
         with patch.dict(webapp.app.config, {'CKAN_URL': 'http://ckan.com'}):
@@ -2218,7 +2218,7 @@ class TestWeb(web.Helper):
         uri = '/app/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
-        # Now get the tasks in JSON format
+        # Now get the tasks in CKAN format
         uri = "/app/somethingnotexists/tasks/export?type=task&format=ckan"
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
@@ -2228,7 +2228,7 @@ class TestWeb(web.Helper):
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
-        # Now get the tasks in JSON format
+        # Now get the tasks in CKAN format
         uri = "/app/%s/tasks/export?type=task&format=ckan" % Fixtures.app_short_name
         #res = self.app.get(uri, follow_redirects=True)
         with patch.dict(webapp.app.config, {'CKAN_URL': 'http://ckan.com'}):
@@ -2266,7 +2266,7 @@ class TestWeb(web.Helper):
         uri = '/app/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
-        # Now get the tasks in JSON format
+        # Now get the tasks in CKAN format
         uri = "/app/somethingnotexists/tasks/export?type=task&format=ckan"
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
@@ -2276,7 +2276,7 @@ class TestWeb(web.Helper):
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
-        # Now get the tasks in JSON format
+        # Now get the tasks in CKAN format
         uri = "/app/%s/tasks/export?type=task&format=ckan" % Fixtures.app_short_name
         #res = self.app.get(uri, follow_redirects=True)
         with patch.dict(webapp.app.config, {'CKAN_URL': 'http://ckan.com'}):
