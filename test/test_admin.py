@@ -343,6 +343,38 @@ class TestAdmin(web.Helper):
         assert res.status == "403 FORBIDDEN",\
             "This action should be forbidden, not enought privileges"
 
+    def test_16_admin_user_export(self):
+        """Test ADMIN user list export works as admin"""
+        self.register()
+        self.signout()
+        self.register(fullname="Juan Jose", username="juan",
+                      email="juan@juan.com", password="juan")
+        self.signout()
+        self.register(fullname="Juan Jose2", username="juan2",
+                      email="juan2@juan.com", password="juan2")
+        self.signin()
+        # The user is redirected to '/admin/' if no format is specified
+        res = self.app.get('/admin/users/export', follow_redirects=True)
+        assert 'Featured Applications' in res.data, res.data
+        assert 'Administrators' in res.data, res.data
+        res = self.app.get('/admin/users/export?firmit=', follow_redirects=True)
+        assert 'Featured Applications' in res.data, res.data
+        assert 'Administrators' in res.data, res.data
+        # A 415 error is raised if the format is not supported (is not either json or csv)
+        res = self.app.get('/admin/users/export?format=bad',
+                            follow_redirects=True)
+        assert res.status_code == 415, res.status_code
+        # JSON is a valid format for exports
+        res = self.app.get('/admin/users/export?format=json',
+                            follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        assert res.mimetype == 'application/json', res.mimetype
+        #CSV is a valid format for exports
+        res = self.app.get('/admin/users/export?format=csv',
+                            follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        assert res.mimetype == 'text/csv', res.mimetype
+
     @patch('pybossa.ckan.requests.get')
     def test_16_admin_update_app(self, Mock):
         """Test ADMIN can update an app that belongs to another user"""

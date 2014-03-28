@@ -200,7 +200,9 @@ def export_users():
     export_formats = ["json", "csv"]
 
     fmt = request.args.get('format')
-    if not fmt or fmt not in export_formats:
+    if not fmt:
+        return redirect(url_for('.index'))
+    if fmt not in export_formats:
         abort(415)
     return {"json": respond_json, "csv": respond_csv}[fmt]()
 
