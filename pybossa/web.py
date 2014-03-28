@@ -41,6 +41,7 @@ from pybossa.view.stats import blueprint as stats
 from pybossa.view.help import blueprint as help
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import users as cached_users
+from pybossa.cache import categories as cached_cat
 from pybossa.ratelimit import get_view_rate_limit
 
 
@@ -216,6 +217,11 @@ def home():
     d = {'featured': cached_apps.get_featured_front_page(),
          'top_apps': cached_apps.get_top(),
          'top_users': None}
+
+    # Get all the categories with apps
+    categories = cached_cat.get_used()
+
+    d['categories'] = categories
 
     if app.config['ENFORCE_PRIVACY'] and current_user.is_authenticated():
         if current_user.admin:
