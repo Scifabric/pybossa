@@ -420,7 +420,7 @@ class TestAdmin(web.Helper):
         assert res.status_code == 403, res.status_code
 
     @patch('pybossa.ckan.requests.get')
-    def test_16_admin_update_app(self, Mock):
+    def test_19_admin_update_app(self, Mock):
         """Test ADMIN can update an app that belongs to another user"""
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
                                    {'content-type': 'application/json'})
@@ -456,7 +456,7 @@ class TestAdmin(web.Helper):
         err_msg = "The long description should have been updated"
         assert "New Long Desc" in res.data, err_msg
 
-    def test_17_admin_delete_app(self):
+    def test_20_admin_delete_app(self):
         """Test ADMIN can delete an app that belongs to another user"""
         self.register()
         self.signout()
@@ -473,7 +473,7 @@ class TestAdmin(web.Helper):
         err_msg = "The app should be deleted by admin users"
         assert "Application deleted!" in res.data, err_msg
 
-    def test_18_admin_delete_tasks(self):
+    def test_21_admin_delete_tasks(self):
         """Test ADMIN can delete an app's tasks that belongs to another user"""
         # Admin
         Fixtures.create()
@@ -489,7 +489,7 @@ class TestAdmin(web.Helper):
         tasks = db.session.query(model.Task).filter_by(app_id=1).all()
         assert len(tasks) == 0, "len(app.tasks) != 0"
 
-    def test_19_admin_list_categories(self):
+    def test_22_admin_list_categories(self):
         """Test ADMIN list categories works"""
         Fixtures.create()
         # Anonymous user
@@ -513,7 +513,7 @@ class TestAdmin(web.Helper):
         err_msg = "Admin users should be get a list of Categories"
         assert dom.find(id='categories') is not None, err_msg
 
-    def test_20_admin_add_category(self):
+    def test_23_admin_add_category(self):
         """Test ADMIN add category works"""
         Fixtures.create()
         category = {'name': 'cat', 'short_name': 'cat',
@@ -548,7 +548,7 @@ class TestAdmin(web.Helper):
         assert "Please correct the errors" in res.data, err_msg
 
 
-    def test_21_admin_update_category(self):
+    def test_24_admin_update_category(self):
         """Test ADMIN update category works"""
         Fixtures.create()
         obj = db.session.query(model.Category).get(1)
@@ -599,7 +599,7 @@ class TestAdmin(web.Helper):
         res = self.app.post(url, data=category, follow_redirects=True)
         assert "Please correct the errors" in res.data, err_msg
 
-    def test_22_admin_delete_category(self):
+    def test_25_admin_delete_category(self):
         """Test ADMIN delete category works"""
         Fixtures.create()
         obj = db.session.query(model.Category).get(2)
