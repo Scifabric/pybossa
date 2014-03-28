@@ -24,7 +24,7 @@ from werkzeug.exceptions import Forbidden
 def create(taskrun=None):
     authorized = (TaskRun.query.filter_by(app_id=taskrun.app_id)
                     .filter_by(task_id=taskrun.task_id)
-                    .filter_by(user_id=taskrun.user_id)
+                    .filter_by(user=taskrun.user)
                     .filter_by(user_ip=taskrun.user_ip)
                     .first()) is None
     if not authorized:

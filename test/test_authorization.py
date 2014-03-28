@@ -169,13 +169,13 @@ class TestTaskrunCreateAuthorization:
 
                 taskrun1 = model.TaskRun(app_id=self.app.id,
                                         task_id=self.task.id,
-                                        user_id=mock_is_authenticated.id,
+                                        user=self.user1,
                                         info="some taskrun info")
                 db.session.add(taskrun1)
                 db.session.commit()
                 taskrun2 = model.TaskRun(app_id=self.app.id,
                                         task_id=self.task.id,
-                                        user_id=mock_is_authenticated.id,
+                                        user=self.user1,
                                         info="a different taskrun info")
                 assert_raises(Forbidden, getattr(require, 'taskrun').create, taskrun2)
 
