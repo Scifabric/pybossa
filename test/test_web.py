@@ -2932,7 +2932,7 @@ class TestWeb(web.Helper):
         assert dom.find(id='cookies_warning') is not None, err_msg
         self.signout()
 
-    def test_49_cookies_warning2(self):
+    def test_79_cookies_warning2(self):
         """Test WEB cookies warning is hidden"""
         # As Anonymous
         self.app.set_cookie("localhost", "PyBossa_accept_cookies", "Yes")
