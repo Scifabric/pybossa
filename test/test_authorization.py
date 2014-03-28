@@ -26,16 +26,6 @@ from mock import patch, Mock
 
 
 
-class FakeCurrentUser:
-    def __init__(self, user=None):
-        if user:
-            self.id = user.id
-            self.admin = user.admin
-        self.anonymous = user is None
-
-    def is_anonymous(self):
-        return self.anonymous
-
 
 def setup_module():
     model.rebuild_db()
@@ -450,61 +440,93 @@ class TestTaskrunCreateAuthorization:
 class TestTokenAuthorization:
 
     auth_providers = ('twitter', 'facebook', 'google')
-    root, user1, user2 = Fixtures.create_users()
+    mock_anonymous = mock_current_user()
+    mock_authenticated = mock_current_user(anonymous=False, admin=False, id=2)
 
 
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    @patch('pybossa.auth.taskrun.current_user', new=mock_anonymous)
     def test_anonymous_user_delete(self):
         """Test anonymous user is not allowed to delete an oauth token"""
-        token_authorization.current_user = FakeCurrentUser()
+        with web.app.test_request_context('/'):
+            for token in self.auth_providers:
+                assert_raises(Unauthorized,
+                          getattr(require, 'token').delete,
+                          token)
 
-        for token in self.auth_providers:
-            assert not token_authorization.delete(token)
 
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.taskrun.current_user', new=mock_authenticated)
     def test_authenticated_user_delete(self):
         """Test authenticated user is not allowed to delete an oauth token"""
-        token_authorization.current_user = FakeCurrentUser(self.root)
+        with web.app.test_request_context('/'):
+            for token in self.auth_providers:
+                assert_raises(Forbidden,
+                          getattr(require, 'token').delete,
+                          token)
 
-        for token in self.auth_providers:
-            assert not token_authorization.delete(token)
 
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    @patch('pybossa.auth.taskrun.current_user', new=mock_anonymous)
     def test_anonymous_user_create(self):
         """Test anonymous user is not allowed to create an oauth token"""
-        token_authorization.current_user = FakeCurrentUser()
+        with web.app.test_request_context('/'):
+            for token in self.auth_providers:
+                assert_raises(Unauthorized,
+                          getattr(require, 'token').create,
+                          token)
 
-        for token in self.auth_providers:
-            assert not token_authorization.create(token)
 
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.taskrun.current_user', new=mock_authenticated)
     def test_authenticated_user_create(self):
         """Test authenticated user is not allowed to create an oauth token"""
-        token_authorization.current_user = FakeCurrentUser(self.root)
+        with web.app.test_request_context('/'):
+            for token in self.auth_providers:
+                assert_raises(Forbidden,
+                          getattr(require, 'token').create,
+                          token)
 
-        for token in self.auth_providers:
-            assert not token_authorization.create(token)
 
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    @patch('pybossa.auth.taskrun.current_user', new=mock_anonymous)
     def test_anonymous_user_update(self):
         """Test anonymous user is not allowed to update an oauth token"""
-        token_authorization.current_user = FakeCurrentUser()
+        with web.app.test_request_context('/'):
+            for token in self.auth_providers:
+                assert_raises(Unauthorized,
+                          getattr(require, 'token').update,
+                          token)
 
-        for token in self.auth_providers:
-            assert not token_authorization.update(token)
 
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.taskrun.current_user', new=mock_authenticated)
     def test_authenticated_user_update(self):
         """Test authenticated user is not allowed to update an oauth token"""
-        token_authorization.current_user = FakeCurrentUser(self.root)
+        with web.app.test_request_context('/'):
+            for token in self.auth_providers:
+                assert_raises(Forbidden,
+                          getattr(require, 'token').update,
+                          token)
 
-        for token in self.auth_providers:
-            assert not token_authorization.update(token)
 
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    @patch('pybossa.auth.taskrun.current_user', new=mock_anonymous)
     def test_anonymous_user_read(self):
         """Test anonymous user is not allowed to read an oauth token"""
-        token_authorization.current_user = FakeCurrentUser()
+        with web.app.test_request_context('/'):
+            for token in self.auth_providers:
+                assert_raises(Unauthorized,
+                          getattr(require, 'token').read,
+                          token)
 
-        for token in self.auth_providers:
-            assert not token_authorization.read(token)
 
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.taskrun.current_user', new=mock_authenticated)
     def test_authenticated_user_read(self):
         """Test authenticated user is allowed to read his own oauth tokens"""
-        token_authorization.current_user = FakeCurrentUser(self.root)
-
-        for token in self.auth_providers:
-            assert token_authorization.read(token)
+        with web.app.test_request_context('/'):
+            for token in self.auth_providers:
+                assert_raises(Forbidden,
+                          getattr(require, 'token').read,
+                          token)
