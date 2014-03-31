@@ -1,0 +1,295 @@
+/*
+* bootstrap-sphinx.css
+* ~~~~~~~~~~~~~~~~~~~~
+*
+* Sphinx stylesheet -- Twitter Bootstrap theme.
+*/
+
+@import url(http://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700);
+@import url(http://fonts.googleapis.com/css?family=PT+Mono);
+
+html, body {
+  background-color: #eee;
+}
+
+
+/**************** Typo *************************/
+
+body, p, blockquote p {
+  font-family: 'PT Sans',Helvetica,Arial,sans-serif;
+  font-size: 18px;
+  line-height: 24px;
+}
+
+li {
+  line-height: 25px;
+}
+
+h1 {
+  font-size: 42px;
+  line-height: 50px;
+  margin-bottom: 15px;
+}
+
+h2 {
+  line-height: 50px;
+  font-size: 36px;
+}
+
+h3 {
+  font-size: 30px;
+  line-height: 40px;
+}
+
+h4 {
+  font-size: 24px;
+  line-height: 30px;
+}
+
+blockquote p {
+  font-style: italic;
+  margin-bottom: 1em;
+}
+
+a {
+  color: #005580;
+}
+
+/* code styling */
+
+.docutils.literal, code, pre {
+  font-family: "PT Mono", Menlo, Monaco, "Courier New", monospace;
+}
+
+.docutils.literal {
+  padding: 0 2px;
+  color: #d14;
+}
+
+pre, code {
+  margin: 1em 0 1em 2em;;
+  font-size: 14px;
+  white-space: pre;
+}
+
+/****************** Admonitions *********************/
+
+/* Shared by admonitions, warnings and sidebars */
+div.admonition,
+div.warning {
+    font-size: 0.9em;
+    margin: 2em;
+    padding: 0;
+    /*
+    border-radius: 6px;
+    -moz-border-radius: 6px;
+    -webkit-border-radius: 6px;
+    */
+}
+div.admonition p,
+div.warning p {
+    margin: 0.5em 1em 0.5em 1em;
+    padding: 0;
+}
+div.admonition pre,
+div.warning pre {
+    margin: 0.4em 1em 0.4em 1em;
+}
+div.admonition p.admonition-title,
+div.warning p.admonition-title {
+    margin: 0;
+    padding: 0.1em 0 0.1em 0.5em;
+    color: white;
+    font-weight: bold;
+    font-size: 1.1em;
+    text-shadow: 0 1px rgba(0, 0, 0, 0.5);
+}
+div.admonition ul, div.admonition ol,
+div.warning ul, div.warning ol {
+    margin: 0.1em 0.5em 0.5em 3em;
+    padding: 0;
+}
+
+/* Admonitions and sidebars only */
+div.admonition {
+    border: 1px solid #609060;
+    background-color: #e9ffe9;
+}
+div.admonition p.admonition-title {
+    background-color: #70A070;
+    border-bottom: 1px solid #609060;
+}
+
+
+/* Warnings only */
+div.warning {
+    border: 1px solid #900000;
+    background-color: #ffe9e9;
+}
+div.warning p.admonition-title {
+    background-color: #b04040;
+    border-bottom: 1px solid #900000;
+}
+
+/****************** Simpler Navbar *********************/
+
+.navbar {
+  font-family: "PT Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 13px;
+}
+
+.navbar-inner {
+  border-radius: 4px;
+  -webkit-box-shadow: 0 1px 10px rgba(0, 0, 0, 0.25), inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 0 1px 10px rgba(0, 0, 0, 0.25), inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 10px rgba(0, 0, 0, 0.25), inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+  padding-top: 0.3em;
+  padding-bottom: 0.2em;
+}
+
+.navbar .brand,
+.navbar-search .search-query,
+.navbar-search .search-query:hover {
+}
+
+.navbar .brand .version {
+  font-size: 90%;
+}
+
+.navbar-search.pull-right {
+    float: right !important;
+}
+
+.navbar-search {
+    padding: 0px !important;
+    margin: none !important;
+    border-top: none !important;
+    border-top: 0px !important;
+    border-bottom: 0px !important;
+    box-shadow: none !important
+}
+
+/**************** Sidebar **********************/
+
+div.sphinxsidebar {
+  float: none;
+  width: auto;
+  margin-left: auto;
+  font-size: inherit;
+}
+
+div.sphinxsidebarwrapper {
+  padding: 0;
+}
+
+div.sphinxsidebar, div.sphinxsidebar p {
+  font-size: 14px;
+}
+
+div.sphinxsidebar ul, div.sphinxsidebar ul ul {
+  list-style-type: none;
+}
+
+.toc > ul {
+  margin-left: 0;
+  border-bottom: solid 2px #ddd;
+}
+
+.toc li a.current {
+  display: block;
+  color: #ffffff;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.2);
+  background-color: #0088cc;
+  margin-left: -19px;
+  margin-right: -19px;
+  padding-left: 19px;
+}
+
+
+/**************** Main Page **********************/
+
+.content {
+  background-color: #fff;
+  padding: 20px;
+  margin: 0 -20px; /* negative indent the amount of the padding to maintain the grid system */
+  -webkit-box-shadow: 0 1px 2px rgba(0,0,0,.15);
+     -moz-box-shadow: 0 1px 2px rgba(0,0,0,.15);
+          box-shadow: 0 1px 2px rgba(0,0,0,.15);
+}
+
+/* fix for fixed topbar which can obscure section headings */
+div.section h1, div.section h2, div.section h3, div.section h4, div.section h5 {
+  padding-top: 50px;
+}
+
+/* do not do this for first item on the page ...*/
+.content div.section:first-child h1 {
+  padding-top: 0px;
+}
+
+footer {
+  margin: 15px 0px;
+}
+
+div.documentwrapper {
+  float: left;
+  width: 100%;
+}
+
+.navbar .logo-icon img {
+  float: left;
+  max-height: 28px;
+  padding: 5px 10px 0 0;
+}
+
+.navbar .okfn-logo img {
+  margin-top: 5px;
+  margin-left: 4px;
+}
+
+/* OKFN Footer */
+
+body {
+  padding-bottom: 0px;
+}
+
+footer {
+  margin-bottom: 0px;
+}
+
+footer,
+footer p {
+  font-size: 13px;
+  line-height: 22px;
+}
+
+footer {
+  background: #222222 url('img/okfn-watermark.png') top right no-repeat;
+  margin-top: 50px;
+  padding: 0;
+}
+
+footer > .inner {
+  background: url('img/footer-bevel.png') top repeat-x;
+  padding: 10px 0 30px 0;
+  color: #fff;
+  text-shadow: 0 -1px 1px rgba(0, 0, 0, 0.2);
+  min-height: 190px;
+}
+
+footer ul.footer-links {
+}
+
+footer a, footer a:hover {
+  color: #AEEBDF;
+}
+
+/**************** Auto docs **********************/
+dl.function {
+  margin-top: 80px;
+}
+
+dl.function th {
+  vertical-align: top;
+}
+

@@ -1,0 +1,15 @@
+      <p class="copyright">
+      {%- if show_copyright %}
+        {% trans copyright=copyright|safe|e %}{{ copyright }}{% endtrans %}<br/>
+      {%- endif %}
+      </p>
+
+      <p class="meta">
+      {%- if last_updated %}
+        {% trans last_updated=last_updated|e %}Last updated on {{ last_updated }}.{% endtrans %}<br/>
+      {%- endif %}
+      {%- if show_sphinx %}
+        {% trans sphinx_version=sphinx_version|e %}Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> {{ sphinx_version }}.{% endtrans %}<br/>
+      {%- endif %}
+      </p>
+

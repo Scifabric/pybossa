@@ -1,0 +1,84 @@
+{% extends "basic/layout.html" %}
+{% set script_files = script_files + ['_static/bootstrap-css-tweaks.js'] %}
+{% set css_files = ['_static/css/bootstrap.css', '_static/css/fix.css', '_static/css/bootstrap-responsive.css', '_static/bootstrap-sphinx.css'] + css_files %}
+
+
+{%- block extrahead %}
+{% endblock %}
+
+{% block header %}
+  {% if theme_git_repo %}
+    <a href="{{ theme_git_repo }}"><img style="position: fixed; top: 0; right: 0; border: 0; z-index: 50000;"
+    src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png" alt="Fork me on GitHub" /></a>
+  {% endif %}
+  <div class="navbar navbar-fixed-top">
+    <div class="navbar-inner">
+      <div class="container-fluid">
+        {% if theme_logo_icon %}
+        <a class="logo-icon pull-left" href="{{ pathto(master_doc) }}"><img src="{{ pathto('_static/' + theme_logo_icon, 1) }}" alt="{{ project|e }}" /></a>
+        {% endif %}
+        <a class="brand" href="{{ pathto(master_doc) }}">{{ project|e }}{% if theme_show_version %}<span class="version"> v{{release}}</span>{% endif %}</a>
+        {% include "navbar-nav.html" ignore missing %}
+        {% if theme_show_okfn_logo %}
+        <a class="okfn-logo pull-right" href="http://okfn.org/" title="An Open Knowledge Foundation Project">
+          <img src="https://s3.amazonaws.com/assets.okfn.org/p/okfn/img/logo_28x30.png" alt="Open Knowledge Foundation logo" />
+        </a>
+        {% endif %}
+        {% block sidebarsearch %}
+          {% include "searchbox.html" %}
+        {% endblock %}
+      </div>
+    </div>
+  </div>
+{% endblock %}
+
+{# Silence the sidebar's, relbar's #}
+{% block sidebar1 %}{% endblock %}
+{% block relbar1 %}{% endblock %}
+{% block relbar2 %}{% endblock %}
+
+{%- block content %}
+<div class="container-fluid">
+  <div class="row-fluid">
+    <div class="span4">
+      <div class="well sidebar-nav">
+        {% block sidebar2 %}
+          {{ sidebar() }}
+        {% endblock %}
+      </div><!--/.well -->
+    </div><!--/span-->
+    <div class="span8">
+      <div class="content">
+       {% block body %} {% endblock %}
+      </div>
+    </div>
+  </div> <!-- / row -->
+</div>
+{%- endblock %}
+
+{%- block footer %}
+
+<footer>
+  <div class="inner">
+    <div class="container-fluid">
+      {% include "footer.html" %}
+    </div>
+  </div>
+</footer>
+
+
+{% if theme_google_analytics_id %}
+<script type="text/javascript">
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', '{{ theme_google_analytics_id }}']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+</script>
+{% endif %}
+{%- endblock %}
+
