@@ -227,7 +227,7 @@ def home():
         d['categories_apps'][str(c['short_name'])] = tmp_apps
 
     # Add featured
-    tmp_apps, count = cached_apps.get_featured(per_page=20)
+    tmp_apps, count = cached_apps.get_featured('featured', per_page=20)
     if count > 0:
         featured = model.Category(name='Featured', short_name='featured')
         d['categories'].append(featured)
