@@ -220,8 +220,11 @@ def home():
 
     # Get all the categories with apps
     categories = cached_cat.get_used()
-
     d['categories'] = categories
+    d['categories_apps'] = {}
+    for c in categories:
+        tmp_apps, count = cached_apps.get(c['short_name'], per_page=20)
+        d['categories_apps'][str(c['short_name'])] = tmp_apps
 
     if app.config['ENFORCE_PRIVACY'] and current_user.is_authenticated():
         if current_user.admin:
