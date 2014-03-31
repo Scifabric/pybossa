@@ -226,6 +226,13 @@ def home():
         tmp_apps, count = cached_apps.get(c['short_name'], per_page=20)
         d['categories_apps'][str(c['short_name'])] = tmp_apps
 
+    # Add featured
+    tmp_apps, count = cached_apps.get_featured(per_page=20)
+    if count > 0:
+        featured = model.Category(name='Featured', short_name='featured')
+        d['categories'].append(featured)
+        d['categories_apps']['featured'] = tmp_apps
+
     if app.config['ENFORCE_PRIVACY'] and current_user.is_authenticated():
         if current_user.admin:
             d['top_users'] = cached_users.get_top()
