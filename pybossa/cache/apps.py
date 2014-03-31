@@ -152,8 +152,8 @@ def n_featured():
 
 # This function does not change too much, so cache it for a longer time
 @memoize(timeout=STATS_FRONTPAGE_TIMEOUT)
-def get_featured(category, page=1, per_page=5):
-    """Return a list of featured apps with a pagination"""
+def get_featured(page=1, per_page=5):
+    """Return a list of featured apps with a pagination."""
 
     count = n_featured()
 
