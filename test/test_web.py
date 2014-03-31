@@ -496,7 +496,7 @@ class TestWeb(web.Helper):
         assert self.html_title("Create an Application") in res.data, res
         assert "Create the application" in res.data, res
 
-        res = self.new_application()
+        res = self.new_application(long_description='My Description')
         assert "<strong>Sample App</strong>: Settings" in res.data, res
         assert "Application created!" in res.data, res
 
@@ -506,7 +506,7 @@ class TestWeb(web.Helper):
             'Different names %s' % app.short_name
         assert app.info['thumbnail'] == 'An Icon link', \
             "Thumbnail should be the same: %s" % app.info['thumbnail']
-        assert app.long_description == '<div id="long_desc">Long desc</div>', \
+        assert app.long_description == 'My Description', \
             "Long desc should be the same: %s" % app.long_description
 
     def test_11_a_create_application_errors(self):
