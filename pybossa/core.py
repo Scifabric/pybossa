@@ -27,6 +27,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 #from flask.ext.debugtoolbar import DebugToolbarExtension
 from flask.ext.heroku import Heroku
 from flask.ext.babel import Babel
+from flask.ext.misaka import Misaka
 from redis.sentinel import Sentinel
 
 from pybossa import default_settings as settings
@@ -45,6 +46,7 @@ def create_app(theme='default'):
     setup_error_email(app)
     setup_logging(app)
     login_manager.setup_app(app)
+    Misaka(app)
     # Set up Gravatar for users
     gravatar = Gravatar(app, size = 100, rating = 'g', default = 'mm', force_default = False, force_lower = False)
     return app
