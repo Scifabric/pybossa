@@ -467,6 +467,17 @@ class TestWeb(web.Helper):
         res = self.app.get('/app/sampleapp/settings')
         assert res.status == '403 FORBIDDEN', res.status
 
+    def test_10b_application_long_description_allows_markdown(self):
+        """Test WEB long description markdown is supported"""
+
+        markdown_description = u'Markdown\n======='
+        self.register()
+        self.new_application(long_description=markdown_description)
+
+        res = self.app.get('/app/sampleapp', follow_redirects=True)
+        data = res.data
+        assert '<h1>Markdown</h1>' in data, 'Markdown text not being rendered!'
+
     def test_11_create_application(self):
         """Test WEB create an application works"""
         # Create an app as an anonymous user
@@ -809,7 +820,6 @@ class TestWeb(web.Helper):
         db.session.commit()
         res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
                            follow_redirects=True)
-        print res.data
         data = json.loads(res.data)
         assert len(data) == 10, data
         for tr in data:
