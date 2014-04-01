@@ -128,6 +128,11 @@ folder.
 As you can see, you will be able to give a full personality to your own PyBossa
 server without problems.
 
+.. note::
+    You can specify a different amount of apps per page if you want. Change the
+    default value in your settings_local.py file of APPS_PER_PAGE to the number
+    that you want. By default it gives you access to 20.
+
 .. _`repository pybossa-default-theme`: https://github.com/PyBossa/pybossa-default-theme
 
 Adding your Contact Information
