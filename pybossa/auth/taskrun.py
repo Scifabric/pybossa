@@ -42,8 +42,8 @@ def update(taskrun):
 def delete(taskrun):
     if current_user.is_anonymous():
         return False
-    if taskrun.user is None:
+    if taskrun.user_id is None:
         return current_user.admin
     else:
-        return current_user.admin or taskrun.user.id == current_user.id
+        return current_user.admin or taskrun.user_id == current_user.id
 
