@@ -171,7 +171,7 @@ def index(page):
 def app_index(page, lookup, category, fallback, use_count):
     """Show apps of app_type"""
 
-    per_page = 5
+    per_page = current_app.config['APPS_PER_PAGE']
 
     apps, count = lookup(category, page, per_page)
 

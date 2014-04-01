@@ -39,3 +39,6 @@ LOCALES = ['en', 'es']
 
 ## Default THEME
 THEME = 'default'
+
+## Default number of apps per page
+APPS_PER_PAGE = 20
