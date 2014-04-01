@@ -1,7 +1,7 @@
 """ckan api key constraint
 
 Revision ID: 3da51a88205a
-Revises: 43c3a523af05
+Revises: 46c3f68e950a
 Create Date: 2014-04-01 11:33:01.394220
 
 """
