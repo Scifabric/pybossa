@@ -22,9 +22,7 @@ def upgrade():
     query_result = conn.execute(query)
     old_descriptions = query_result.fetchall()
     for old_desc in old_descriptions:
-        print old_desc.long_description
         new_descritpion = html2text(old_desc.long_description)
-        print new_descritpion.__class__
         query = ("UPDATE \"app\" SET long_description=\'%s\' WHERE id=%s;"
                 % (new_descritpion, old_desc.id))
         conn.execute(query)
