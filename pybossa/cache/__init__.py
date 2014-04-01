@@ -104,7 +104,7 @@ def memoize(timeout=300, debug=False):
                 key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, f.__name__)
                 key_to_hash = get_key_to_hash(*args, **kwargs)
                 key = get_hash_key(key, key_to_hash)
-                print "Memoize %s" % key
+                # print "Memoize %s" % key
                 output = redis_slave.get(key)
                 if output:
                     return pickle.loads(output)
@@ -141,7 +141,7 @@ def delete_memoized(function, *args, **kwargs):
         key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, function.__name__)
         key_to_hash = get_key_to_hash(*args, **kwargs)
         key = get_hash_key(key, key_to_hash)
-        print "Deleting memoized key: %s" % key
+        # print "Deleting memoized key: %s" % key
         #for k in keys:
         #    redis_master.delete(k)
         redis_master.delete(key)
