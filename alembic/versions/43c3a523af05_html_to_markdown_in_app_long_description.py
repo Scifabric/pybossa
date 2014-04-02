@@ -1,14 +1,14 @@
 """html to markdown in app long_description
 
 Revision ID: 43c3a523af05
-Revises: 46c3f68e950a
+Revises: 3da51a88205a
 Create Date: 2014-03-31 15:47:57.151875
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '43c3a523af05'
-down_revision = '46c3f68e950a'
+down_revision = '3da51a88205a'
 
 from alembic import op
 import sqlalchemy as sa
