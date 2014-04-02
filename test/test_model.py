@@ -292,16 +292,17 @@ class TestModel:
         user = model.User.by_name(username)
         assert user.apps[0].id == app_id, user
 
-#    def test_user(self):
-#        """Test MODEL User works"""
-#        user = model.User(name=u'test-user', email_addr=u'test@xyz.org')
-#        db.session.add(user)
-#        db.session.commit()
-#
-#        db.session.remove()
-#        user = model.User.by_name(u'test-user')
-#        assert user, user
-#        assert len(user.api_key) == 36, user
-#
-#        out = user.dictize()
-#        assert out['name'] == u'test-user', out
+
+class TestBlogpostModel:
+
+    def setUp(self):
+        model.rebuild_db()
+
+    def tearDown(self):
+        db.session.remove()
+
+    @classmethod
+    def tear_down_class(cls):
+        db.session.remove()
+        model.rebuild_db()
+

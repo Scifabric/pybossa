@@ -221,6 +221,7 @@ class App(db.Model, DomainObject):
     featured = relationship('Featured', cascade='all, delete, delete-orphan')
     #: `category` or not for this app
     category = relationship('Category')
+    blogposts = relationship('Blogpost', cascade='all, delete-orphan', backref='app')
 
     #: Percentage of completed tasks based on Task.state
     #: (0 not done, 1 completed)
@@ -434,6 +435,7 @@ class User(db.Model, DomainObject, flask.ext.login.UserMixin):
     #: `Task`s for this user
     task_runs = relationship('TaskRun', backref='user')
     apps = relationship('App', backref='owner')
+    blogposts = relationship('Blogpost', backref='owner')
 
 
 @event.listens_for(User, 'before_insert')
@@ -441,7 +443,18 @@ def make_admin(mapper, conn, target):
     users = conn.scalar('select count(*) from "user"')
     if users == 0:
         target.admin = True
-        #print "User %s is the first one, so we make it an admin" % target.name
+
+
+class Blogpost(db.Model, DomainObject):
+    """A blog post associated to a given app"""
+    __tablename__ = 'blogpost'
+
+    id = Column(Integer, primary_key=True)
+    created = Column(Text, default=make_timestamp)
+    app_id = Column(Integer, ForeignKey('app.id', ondelete='CASCADE'), nullable=False)
+    user_id = Column(Integer, ForeignKey('user.id'))
+    title = Column(Unicode(length=255))
+    body = Column(UnicodeText)
 
 
 @event.listens_for(App, 'before_update')
