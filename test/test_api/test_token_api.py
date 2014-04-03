@@ -26,8 +26,6 @@ from werkzeug.exceptions import MethodNotAllowed
 
 class TestTaskrunAPI(HelperAPI):
 
-
-
     def test_not_allowed_methods(self):
         """Test POST, DELETE, PUT methods are not allowed for resource token"""
         token_api_instance = TokenAPI()
