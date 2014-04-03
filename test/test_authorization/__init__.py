@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from base import web, model, Fixtures, db, redis_flushall
-from mock import patch, Mock
+from mock import Mock
 
 
 

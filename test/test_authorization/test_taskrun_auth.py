@@ -18,11 +18,9 @@
 
 from base import web, model, Fixtures, db, redis_flushall, assert_not_raises
 from pybossa.auth import require
-from pybossa.auth import token as token_authorization
-from pybossa.model import TaskRun, Task
-from nose.tools import assert_equal, assert_raises
+from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
-from mock import patch, Mock
+from mock import patch
 from test_authorization import mock_current_user
 
 

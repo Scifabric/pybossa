@@ -20,7 +20,7 @@ from base import web, model, Fixtures, db, redis_flushall, assert_not_raises
 from pybossa.auth import require
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
-from mock import patch, Mock
+from mock import patch
 from test_authorization import mock_current_user
 
 
