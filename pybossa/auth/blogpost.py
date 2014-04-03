@@ -20,7 +20,7 @@ from flask.ext.login import current_user
 from pybossa.model import Blogpost
 
 
-def create(blogpost):
+def create(blogpost=None):
     if current_user.is_anonymous():
         return False
     return blogpost.owner == blogpost.app.owner
@@ -30,9 +30,11 @@ def read(blogpost=None):
     return True
 
 
-def update():
-    pass
+def update(blogpost):
+    if current_user.is_anonymous():
+        return False
+    return blogpost.owner.id == current_user.id
 
 
-def delete():
+def delete(blogpost):
     pass
