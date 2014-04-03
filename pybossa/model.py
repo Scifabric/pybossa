@@ -457,6 +457,7 @@ class Blogpost(db.Model, DomainObject):
     body = Column(UnicodeText)
 
 
+
 @event.listens_for(App, 'before_update')
 @event.listens_for(App, 'before_insert')
 def empty_string_to_none(mapper, conn, target):
