@@ -111,6 +111,53 @@ class TestBlogpostAuthorization:
             assert_not_raises(Exception, getattr(require, 'blogpost').create, blogpost)
 
 
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_anonymous)
+    def test_anonymous_user_read_blogpost(self):
+        """Test anonymous users can read blogposts"""
+
+        with web.app.test_request_context('/'):
+            root, user1, user2 = Fixtures.create_users()
+            app = Fixtures.create_app('')
+            app.owner = user1
+            blogpost = model.Blogpost(title='title', app=app, owner=None)
+            db.session.add_all([app, user1, blogpost])
+            db.session.commit()
+
+            assert_not_raises(Exception, getattr(require, 'blogpost').read, blogpost)
+
+
+    @patch('pybossa.auth.current_user', new=mock_admin)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_admin)
+    def test_non_owner_authenticated_user_read_blogpost(self):
+        """Test authenticated user can read blogpost if is not the app owner"""
+
+        with web.app.test_request_context('/'):
+            root, user1, user2 = Fixtures.create_users()
+            app = Fixtures.create_app('')
+            app.owner = user1
+            blogpost = model.Blogpost(title='title', app=app, owner=root)
+            db.session.add_all([app, root, user1, blogpost])
+            db.session.commit()
+
+            assert_not_raises(Exception, getattr(require, 'blogpost').read, blogpost)
+
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
+    def test_owner_read_blogpost(self):
+        """Test authenticated user can read blogpost if is the app owner"""
+
+        with web.app.test_request_context('/'):
+            root, user1, user2 = Fixtures.create_users()
+            app = Fixtures.create_app('')
+            app.owner = user1
+            blogpost = model.Blogpost(title='title', app=app, owner=user1)
+            db.session.add_all([app, user1, blogpost])
+            db.session.commit()
+
+            assert_not_raises(Exception, getattr(require, 'blogpost').read, blogpost)
+
 
 
 

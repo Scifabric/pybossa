@@ -26,8 +26,8 @@ def create(blogpost):
     return blogpost.owner == blogpost.app.owner
 
 
-def read():
-    pass
+def read(blogpost=None):
+    return True
 
 
 def update():
