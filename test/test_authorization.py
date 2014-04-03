@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from base import web, model, Fixtures, db, redis_flushall
+from base import web, model, Fixtures, db, redis_flushall, assert_not_raises
 from pybossa.auth import require
 from pybossa.auth import token as token_authorization
 from pybossa.model import TaskRun, Task
@@ -36,12 +36,6 @@ def teardown_module():
     model.rebuild_db()
     redis_flushall()
 
-def assert_not_raises(exception, call, *args, **kwargs):
-    try:
-        call(*args, **kwargs)
-        assert True
-    except exception as ex:
-        assert False, str(ex)
 
 def mock_current_user(anonymous=True, admin=None, id=None):
     mock = Mock(spec=model.User)
@@ -530,3 +524,6 @@ class TestTokenAuthorization:
                 assert_raises(Forbidden,
                           getattr(require, 'token').read,
                           token)
+
+
+

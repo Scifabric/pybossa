@@ -50,6 +50,13 @@ mail.init_app(web.app)
 def redis_flushall():
     redis_master.flushall()
 
+def assert_not_raises(exception, call, *args, **kwargs):
+    try:
+        call(*args, **kwargs)
+        assert True
+    except exception as ex:
+        assert False, str(ex)
+
 class Fixtures:
     fullname = u'T Tester'
     fullname2 = u'T Tester 2'

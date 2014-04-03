@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from base import model, db, redis_flushall
+from base import model, db, redis_flushall, assert_not_raises
 from nose.tools import raises, assert_raises
 from sqlalchemy.exc import IntegrityError, DataError
 
@@ -292,13 +292,6 @@ class TestModel:
         user = model.User.by_name(username)
         assert user.apps[0].id == app_id, user
 
-
-def assert_not_raises(exception, call, *args, **kwargs):
-    try:
-        call(*args, **kwargs)
-        assert True
-    except exception as ex:
-        assert False, str(ex)
 
 
 class TestBlogpostModel:
