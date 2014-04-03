@@ -25,6 +25,11 @@ Administrators can manage three different areas of the server:
     as **Draft**: applications that do not have at least one task and
     a :ref:`task-presenter` to allow other volunteers to participate.
 
+.. note::
+    A fourth option is available on the Admin Site menu. Here, admins will be able
+    to obtain a list of all registered users in the PyBossa system, in either
+    json or csv formats.
+
 
 .. _featured-apps:
 
