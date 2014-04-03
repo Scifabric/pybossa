@@ -23,7 +23,6 @@ from pybossa.model import TaskRun, Task
 from nose.tools import assert_equal, assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
 from mock import patch, Mock
-import pybossa
 
 
 
@@ -228,6 +227,69 @@ class TestBlogpostAuthorization:
             assert_not_raises(Exception, getattr(require, 'blogpost').update, blogpost)
 
 
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_anonymous)
+    def test_anonymous_user_delete_blogpost(self):
+        """Test anonymous users cannot delete blogposts"""
+
+        with web.app.test_request_context('/'):
+            root, user1, user2 = Fixtures.create_users()
+            app = Fixtures.create_app('')
+            app.owner = user1
+            blogpost = model.Blogpost(title='title', app=app, owner=None)
+            db.session.add_all([root, user1, app, blogpost])
+            db.session.commit()
+
+            assert_raises(Unauthorized, getattr(require, 'blogpost').delete, blogpost)
+
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
+    def test_non_owner_authenticated_user_delete_blogpost(self):
+        """Test authenticated user cannot delete a blogpost if is not the post
+        owner or is not admin"""
+
+        with web.app.test_request_context('/'):
+            root, user1, user2 = Fixtures.create_users()
+            app = Fixtures.create_app('')
+            app.owner = user1
+            blogpost = model.Blogpost(title='title', app=app, owner=root)
+            db.session.add_all([root, user1, app, blogpost])
+            db.session.commit()
+
+            assert_raises(Forbidden, getattr(require, 'blogpost').delete, blogpost)
+
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
+    def test_owner_delete_blogpost(self):
+        """Test authenticated user can delete blogpost if is the post owner"""
+
+        with web.app.test_request_context('/'):
+            root, user1, user2 = Fixtures.create_users()
+            app = Fixtures.create_app('')
+            app.owner = user1
+            blogpost = model.Blogpost(title='title', app=app, owner=user1)
+            db.session.add_all([root, user1, app, blogpost])
+            db.session.commit()
+
+            assert_not_raises(Exception, getattr(require, 'blogpost').delete, blogpost)
+
+
+    @patch('pybossa.auth.current_user', new=mock_admin)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_admin)
+    def test_admin_authenticated_user_delete_blogpost(self):
+        """Test authenticated user can delete a blogpost if is admin"""
+
+        with web.app.test_request_context('/'):
+            root, user1, user2 = Fixtures.create_users()
+            app = Fixtures.create_app('')
+            app.owner = user1
+            blogpost = model.Blogpost(title='title', app=app, owner=user1)
+            db.session.add_all([root, user1, app, blogpost])
+            db.session.commit()
+
+            assert_not_raises(Exception, getattr(require, 'blogpost').delete, blogpost)
 
 
 

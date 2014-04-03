@@ -17,10 +17,9 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask.ext.login import current_user
-from pybossa.model import Blogpost
 
 
-def create(blogpost=None):
+def create(blogpost):
     if current_user.is_anonymous():
         return False
     return blogpost.owner.id == blogpost.app.owner.id == current_user.id
@@ -37,4 +36,7 @@ def update(blogpost):
 
 
 def delete(blogpost):
-    pass
+    if current_user.is_anonymous():
+        return False
+    else:
+        return current_user.admin or blogpost.owner.id == current_user.id
