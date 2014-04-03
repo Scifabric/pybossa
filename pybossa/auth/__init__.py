@@ -26,6 +26,7 @@ import taskrun
 import category
 import user
 import token
+import blogpost
 
 class Requirement(object):
     """ Checks a function call and raises an exception if the
@@ -40,7 +41,7 @@ class Requirement(object):
 
     def __call__(self, *args, **kwargs):
         fc = self.wrapped(*args, **kwargs)
-        if fc is not True:
+        if fc is False:
             if current_user.is_anonymous():
                 raise abort(401)
             else:
