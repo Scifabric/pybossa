@@ -104,7 +104,6 @@ def memoize(timeout=300, debug=False):
                 key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, f.__name__)
                 key_to_hash = get_key_to_hash(*args, **kwargs)
                 key = get_hash_key(key, key_to_hash)
-                print "Memoize %s" % key
                 output = redis_slave.get(key)
                 if output:
                     return pickle.loads(output)
@@ -126,24 +125,9 @@ def delete_memoized(function, *args, **kwargs):
 
     """
     if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:  # pragma: no cover
-        keys = []
-        #if arg:
-        #    key_to_hash = ":%s" % arg
-        #    key_to_hash = key_to_hash.encode('utf-8')
-        #    key = "%s:%s_args::%s" % (settings.REDIS_KEYPREFIX,
-        #                              function.__name__,
-        #                              hashlib.md5(key_to_hash).hexdigest())
-        #    keys.append(key)
-        #else:
-        #    key = "%s:%s_args::*" % (settings.REDIS_KEYPREFIX,
-        #                             function.__name__)
-        #    keys = redis_master.keys(key)
         key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, function.__name__)
         key_to_hash = get_key_to_hash(*args, **kwargs)
         key = get_hash_key(key, key_to_hash)
-        print "Deleting memoized key: %s" % key
-        #for k in keys:
-        #    redis_master.delete(k)
         redis_master.delete(key)
         return True
 
