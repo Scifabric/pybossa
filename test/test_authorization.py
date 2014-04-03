@@ -113,6 +113,24 @@ class TestBlogpostAuthorization:
             assert_not_raises(Exception, getattr(require, 'blogpost').create, blogpost)
 
 
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
+    def test_owner_create_blogpost_as_other_user(self):
+        """Test authenticated user cannot create blogpost if is app owner but
+        sets another person as the author of the blogpost"""
+
+        with web.app.test_request_context('/'):
+            root, user1, user2 = Fixtures.create_users()
+            app = Fixtures.create_app('')
+            app.owner = user1
+            db.session.add_all([root, user1, user2, app])
+            db.session.commit()
+
+            blogpost = model.Blogpost(title='title', app=app, owner=user2)
+
+            assert_raises(Forbidden, getattr(require, 'blogpost').create, blogpost)
+
+
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     @patch('pybossa.auth.blogpost.current_user', new=mock_anonymous)
     def test_anonymous_user_read_blogpost(self):
@@ -208,6 +226,9 @@ class TestBlogpostAuthorization:
             db.session.commit()
 
             assert_not_raises(Exception, getattr(require, 'blogpost').update, blogpost)
+
+
+
 
 
 

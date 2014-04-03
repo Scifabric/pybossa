@@ -23,7 +23,7 @@ from pybossa.model import Blogpost
 def create(blogpost=None):
     if current_user.is_anonymous():
         return False
-    return blogpost.owner == blogpost.app.owner
+    return blogpost.owner.id == blogpost.app.owner.id == current_user.id
 
 
 def read(blogpost=None):
