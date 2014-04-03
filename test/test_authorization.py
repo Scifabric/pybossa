@@ -54,6 +54,11 @@ class TestBlogpostAuthorization:
 
     def setUp(self):
         model.rebuild_db()
+        self.root, self.user1, self.user2 = Fixtures.create_users()
+        self.app = Fixtures.create_app('')
+        self.app.owner = self.user1
+        db.session.add_all([self.root, self.user1, self.user2, self.app])
+        db.session.commit()
 
     def tearDown(self):
         db.session.remove()
@@ -66,13 +71,7 @@ class TestBlogpostAuthorization:
         """Test anonymous users cannot create blogposts"""
 
         with web.app.test_request_context('/'):
-            root, user1, user2 = Fixtures.create_users()
-            app = Fixtures.create_app('')
-            app.owner = user1
-            db.session.add_all([root, user1, app])
-            db.session.commit()
-
-            blogpost = model.Blogpost(title='title', app=app, owner=None)
+            blogpost = model.Blogpost(title='title', app=self.app, owner=None)
 
             assert_raises(Unauthorized, getattr(require, 'blogpost').create, blogpost)
 
@@ -84,13 +83,7 @@ class TestBlogpostAuthorization:
         owner, even if is admin"""
 
         with web.app.test_request_context('/'):
-            root, user1, user2 = Fixtures.create_users()
-            app = Fixtures.create_app('')
-            app.owner = user1
-            db.session.add_all([root, user1, app])
-            db.session.commit()
-
-            blogpost = model.Blogpost(title='title', app=app, owner=root)
+            blogpost = model.Blogpost(title='title', app=self.app, owner=self.root)
 
             assert_raises(Forbidden, getattr(require, 'blogpost').create, blogpost)
 
@@ -101,13 +94,7 @@ class TestBlogpostAuthorization:
         """Test authenticated user can create blogpost if is app owner"""
 
         with web.app.test_request_context('/'):
-            root, user1, user2 = Fixtures.create_users()
-            app = Fixtures.create_app('')
-            app.owner = user1
-            db.session.add_all([root, user1, app])
-            db.session.commit()
-
-            blogpost = model.Blogpost(title='title', app=app, owner=user1)
+            blogpost = model.Blogpost(title='title', app=self.app, owner=self.user1)
 
             assert_not_raises(Exception, getattr(require, 'blogpost').create, blogpost)
 
@@ -119,13 +106,7 @@ class TestBlogpostAuthorization:
         sets another person as the author of the blogpost"""
 
         with web.app.test_request_context('/'):
-            root, user1, user2 = Fixtures.create_users()
-            app = Fixtures.create_app('')
-            app.owner = user1
-            db.session.add_all([root, user1, user2, app])
-            db.session.commit()
-
-            blogpost = model.Blogpost(title='title', app=app, owner=user2)
+            blogpost = model.Blogpost(title='title', app=self.app, owner=self.user2)
 
             assert_raises(Forbidden, getattr(require, 'blogpost').create, blogpost)
 
@@ -136,11 +117,8 @@ class TestBlogpostAuthorization:
         """Test anonymous users can read blogposts"""
 
         with web.app.test_request_context('/'):
-            root, user1, user2 = Fixtures.create_users()
-            app = Fixtures.create_app('')
-            app.owner = user1
-            blogpost = model.Blogpost(title='title', app=app, owner=None)
-            db.session.add_all([root, user1, app, blogpost])
+            blogpost = model.Blogpost(title='title', app=self.app, owner=None)
+            db.session.add(blogpost)
             db.session.commit()
 
             assert_not_raises(Exception, getattr(require, 'blogpost').read, blogpost)
@@ -152,11 +130,8 @@ class TestBlogpostAuthorization:
         """Test authenticated user can read blogpost if is not the app owner"""
 
         with web.app.test_request_context('/'):
-            root, user1, user2 = Fixtures.create_users()
-            app = Fixtures.create_app('')
-            app.owner = user1
-            blogpost = model.Blogpost(title='title', app=app, owner=root)
-            db.session.add_all([root, user1, app, blogpost])
+            blogpost = model.Blogpost(title='title', app=self.app, owner=self.root)
+            db.session.add(blogpost)
             db.session.commit()
 
             assert_not_raises(Exception, getattr(require, 'blogpost').read, blogpost)
@@ -168,11 +143,8 @@ class TestBlogpostAuthorization:
         """Test authenticated user can read blogpost if is the app owner"""
 
         with web.app.test_request_context('/'):
-            root, user1, user2 = Fixtures.create_users()
-            app = Fixtures.create_app('')
-            app.owner = user1
-            blogpost = model.Blogpost(title='title', app=app, owner=user1)
-            db.session.add_all([root, user1, app, blogpost])
+            blogpost = model.Blogpost(title='title', app=self.app, owner=self.user1)
+            db.session.add(blogpost)
             db.session.commit()
 
             assert_not_raises(Exception, getattr(require, 'blogpost').read, blogpost)
@@ -184,11 +156,8 @@ class TestBlogpostAuthorization:
         """Test anonymous users cannot update blogposts"""
 
         with web.app.test_request_context('/'):
-            root, user1, user2 = Fixtures.create_users()
-            app = Fixtures.create_app('')
-            app.owner = user1
-            blogpost = model.Blogpost(title='title', app=app, owner=None)
-            db.session.add_all([root, user1, app, blogpost])
+            blogpost = model.Blogpost(title='title', app=self.app, owner=None)
+            db.session.add(blogpost)
             db.session.commit()
 
             assert_raises(Unauthorized, getattr(require, 'blogpost').update, blogpost)
@@ -201,11 +170,8 @@ class TestBlogpostAuthorization:
         owner, even if is admin"""
 
         with web.app.test_request_context('/'):
-            root, user1, user2 = Fixtures.create_users()
-            app = Fixtures.create_app('')
-            app.owner = user1
-            blogpost = model.Blogpost(title='title', app=app, owner=user1)
-            db.session.add_all([root, user1, app, blogpost])
+            blogpost = model.Blogpost(title='title', app=self.app, owner=self.user1)
+            db.session.add(blogpost)
             db.session.commit()
 
             assert_raises(Forbidden, getattr(require, 'blogpost').update, blogpost)
@@ -217,11 +183,8 @@ class TestBlogpostAuthorization:
         """Test authenticated user can update blogpost if is the post owner"""
 
         with web.app.test_request_context('/'):
-            root, user1, user2 = Fixtures.create_users()
-            app = Fixtures.create_app('')
-            app.owner = user1
-            blogpost = model.Blogpost(title='title', app=app, owner=user1)
-            db.session.add_all([root, user1, app, blogpost])
+            blogpost = model.Blogpost(title='title', app=self.app, owner=self.user1)
+            db.session.add(blogpost)
             db.session.commit()
 
             assert_not_raises(Exception, getattr(require, 'blogpost').update, blogpost)
@@ -233,11 +196,8 @@ class TestBlogpostAuthorization:
         """Test anonymous users cannot delete blogposts"""
 
         with web.app.test_request_context('/'):
-            root, user1, user2 = Fixtures.create_users()
-            app = Fixtures.create_app('')
-            app.owner = user1
-            blogpost = model.Blogpost(title='title', app=app, owner=None)
-            db.session.add_all([root, user1, app, blogpost])
+            blogpost = model.Blogpost(title='title', app=self.app, owner=None)
+            db.session.add(blogpost)
             db.session.commit()
 
             assert_raises(Unauthorized, getattr(require, 'blogpost').delete, blogpost)
@@ -250,11 +210,8 @@ class TestBlogpostAuthorization:
         owner or is not admin"""
 
         with web.app.test_request_context('/'):
-            root, user1, user2 = Fixtures.create_users()
-            app = Fixtures.create_app('')
-            app.owner = user1
-            blogpost = model.Blogpost(title='title', app=app, owner=root)
-            db.session.add_all([root, user1, app, blogpost])
+            blogpost = model.Blogpost(title='title', app=self.app, owner=self.root)
+            db.session.add(blogpost)
             db.session.commit()
 
             assert_raises(Forbidden, getattr(require, 'blogpost').delete, blogpost)
@@ -266,11 +223,8 @@ class TestBlogpostAuthorization:
         """Test authenticated user can delete blogpost if is the post owner"""
 
         with web.app.test_request_context('/'):
-            root, user1, user2 = Fixtures.create_users()
-            app = Fixtures.create_app('')
-            app.owner = user1
-            blogpost = model.Blogpost(title='title', app=app, owner=user1)
-            db.session.add_all([root, user1, app, blogpost])
+            blogpost = model.Blogpost(title='title', app=self.app, owner=self.user1)
+            db.session.add(blogpost)
             db.session.commit()
 
             assert_not_raises(Exception, getattr(require, 'blogpost').delete, blogpost)
@@ -282,11 +236,8 @@ class TestBlogpostAuthorization:
         """Test authenticated user can delete a blogpost if is admin"""
 
         with web.app.test_request_context('/'):
-            root, user1, user2 = Fixtures.create_users()
-            app = Fixtures.create_app('')
-            app.owner = user1
-            blogpost = model.Blogpost(title='title', app=app, owner=user1)
-            db.session.add_all([root, user1, app, blogpost])
+            blogpost = model.Blogpost(title='title', app=self.app, owner=self.user1)
+            db.session.add(blogpost)
             db.session.commit()
 
             assert_not_raises(Exception, getattr(require, 'blogpost').delete, blogpost)
