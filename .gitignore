@@ -39,3 +39,13 @@ keys/*
 *.swl
 *.log
 log
+
+vagrant_start.sh
+
+doc/_themes/sphinx-theme-okfn/
+
+pybossa/themes/crowdcrafting-theme/
+
+pybossa_2013_12_19.sql
+
+pybossa_2014_01_02.sql
