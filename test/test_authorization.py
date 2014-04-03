@@ -45,6 +45,76 @@ def mock_current_user(anonymous=True, admin=None, id=None):
     return mock
 
 
+
+class TestBlogpostAuthorization:
+
+    mock_anonymous = mock_current_user()
+    mock_authenticated = mock_current_user(anonymous=False, admin=False, id=2)
+    mock_admin = mock_current_user(anonymous=False, admin=True, id=1)
+
+    def setUp(self):
+        model.rebuild_db()
+
+    def tearDown(self):
+        db.session.remove()
+        redis_flushall()
+
+
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_anonymous)
+    def test_anonymous_user_create_blogpost(self):
+        """Test anonymous users cannot create blogposts"""
+
+        with web.app.test_request_context('/'):
+            root, user1, user2 = Fixtures.create_users()
+            app = Fixtures.create_app('')
+            app.owner = user1
+            db.session.add_all([app, user1])
+            db.session.commit()
+
+            blogpost = model.Blogpost(title='title', app=app, owner=None)
+
+            assert_raises(Unauthorized, getattr(require, 'blogpost').create, blogpost)
+
+
+    @patch('pybossa.auth.current_user', new=mock_admin)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_admin)
+    def test_non_owner_authenticated_user_create_blogpost(self):
+        """Test authenticated user cannot create blogpost if is not the app owner"""
+
+        with web.app.test_request_context('/'):
+            root, user1, user2 = Fixtures.create_users()
+            app = Fixtures.create_app('')
+            app.owner = user1
+            db.session.add_all([app, root, user1])
+            db.session.commit()
+
+            blogpost = model.Blogpost(title='title', app=app, owner=root)
+
+            assert_raises(Forbidden, getattr(require, 'blogpost').create, blogpost)
+
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
+    def test_owner_create_blogpost(self):
+        """Test authenticated user can create blogpost if is app owner"""
+
+        with web.app.test_request_context('/'):
+            root, user1, user2 = Fixtures.create_users()
+            app = Fixtures.create_app('')
+            app.owner = user1
+            db.session.add_all([app, user1])
+            db.session.commit()
+
+            blogpost = model.Blogpost(title='title', app=app, owner=user1)
+
+            assert_not_raises(Exception, getattr(require, 'blogpost').create, blogpost)
+
+
+
+
+
+
 class TestTaskrunAuthorization:
 
     mock_anonymous = mock_current_user()
@@ -55,9 +125,7 @@ class TestTaskrunAuthorization:
     def setUp(self):
         model.rebuild_db()
         self.root, self.user1, self.user2 = Fixtures.create_users()
-        db.session.add(self.root)
-        db.session.add(self.user1)
-        db.session.add(self.user2)
+        db.session.add_all([self.root, self.user1, self.user2])
         self.app = Fixtures.create_app('')
         self.app.owner = self.root
         db.session.add(self.app)
@@ -524,6 +592,4 @@ class TestTokenAuthorization:
                 assert_raises(Forbidden,
                           getattr(require, 'token').read,
                           token)
-
-
 
