@@ -51,7 +51,7 @@ def mock_current_user(anonymous=True, admin=None, id=None):
     return mock
 
 
-class TestTaskrunCreateAuthorization:
+class TestTaskrunAuthorization:
 
     mock_anonymous = mock_current_user()
     mock_authenticated = mock_current_user(anonymous=False, admin=False, id=2)
