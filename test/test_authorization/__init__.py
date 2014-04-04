@@ -23,6 +23,7 @@ from mock import Mock
 
 def setup_package():
     model.rebuild_db()
+    redis_flushall()
 
 
 def teardown_package():
