@@ -171,7 +171,7 @@ def index(page):
 def app_index(page, lookup, category, fallback, use_count):
     """Show apps of app_type"""
 
-    per_page = 5
+    per_page = current_app.config['APPS_PER_PAGE']
 
     apps, count = lookup(category, page, per_page)
 
@@ -1060,7 +1060,7 @@ def export_to(short_name):
                                ckan_name=current_app.config.get('CKAN_NAME'),
                                app=app)
     if fmt not in export_formats:
-        abort(404)
+        abort(415)
     return {"json": respond_json, "csv": respond_csv, 'ckan': respond_ckan}[fmt](ty)
 
 

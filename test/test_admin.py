@@ -49,7 +49,7 @@ class TestAdmin(web.Helper):
         dom = BeautifulSoup(res.data)
         err_msg = "There should be an index page for admin users and apps"
         assert "Settings" in res.data, err_msg
-        divs = ['featured-apps', 'users', 'categories']
+        divs = ['featured-apps', 'users', 'categories', 'users-list']
         for div in divs:
             err_msg = "There should be a button for managing %s" % div
             assert dom.find(id=div) is not None, err_msg
@@ -343,8 +343,84 @@ class TestAdmin(web.Helper):
         assert res.status == "403 FORBIDDEN",\
             "This action should be forbidden, not enought privileges"
 
+    def test_16_admin_user_export(self):
+        """Test ADMIN user list export works as admin"""
+        self.register()
+        self.signout()
+        self.register(fullname="Juan Jose", username="juan",
+                      email="juan@juan.com", password="juan")
+        self.signout()
+        self.register(fullname="Juan Jose2", username="juan2",
+                      email="juan2@juan.com", password="juan2")
+        self.signin()
+        # The user is redirected to '/admin/' if no format is specified
+        res = self.app.get('/admin/users/export', follow_redirects=True)
+        assert 'Featured Applications' in res.data, res.data
+        assert 'Administrators' in res.data, res.data
+        res = self.app.get('/admin/users/export?firmit=', follow_redirects=True)
+        assert 'Featured Applications' in res.data, res.data
+        assert 'Administrators' in res.data, res.data
+        # A 415 error is raised if the format is not supported (is not either json or csv)
+        res = self.app.get('/admin/users/export?format=bad',
+                            follow_redirects=True)
+        assert res.status_code == 415, res.status_code
+        # JSON is a valid format for exports
+        res = self.app.get('/admin/users/export?format=json',
+                            follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        assert res.mimetype == 'application/json', res.mimetype
+        #CSV is a valid format for exports
+        res = self.app.get('/admin/users/export?format=csv',
+                            follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        assert res.mimetype == 'text/csv', res.mimetype
+
+    def test_17_admin_user_export_anonymous(self):
+        """Test ADMIN user list export works as anonymous user"""
+        self.register()
+        self.signout()
+
+        # Whichever the args of the request are, the user is redirected to login
+        res = self.app.get('/admin/users/export', follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous users should be redirected to sign in"
+        assert dom.find(id='signin') is not None, err_msg
+        res = self.app.get('/admin/users/export?firmit=', follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous users should be redirected to sign in"
+        assert dom.find(id='signin') is not None, err_msg
+        res = self.app.get('/admin/users/export?format=bad',
+                            follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous users should be redirected to sign in"
+        assert dom.find(id='signin') is not None, err_msg
+        res = self.app.get('/admin/users/export?format=json',
+                            follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous users should be redirected to sign in"
+        assert dom.find(id='signin') is not None, err_msg
+
+    def test_18_admin_user_export_authenticated(self):
+        """Test ADMIN user list export works as authenticated non-admin user"""
+        self.register()
+        self.signout()
+        self.register(fullname="Juan Jose", username="juan",
+                      email="juan@juan.com", password="juan")
+
+        # No matter what params in the request, Forbidden is raised
+        res = self.app.get('/admin/users/export', follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+        res = self.app.get('/admin/users/export?firmit=', follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+        res = self.app.get('/admin/users/export?format=bad',
+                            follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+        res = self.app.get('/admin/users/export?format=json',
+                            follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+
     @patch('pybossa.ckan.requests.get')
-    def test_16_admin_update_app(self, Mock):
+    def test_19_admin_update_app(self, Mock):
         """Test ADMIN can update an app that belongs to another user"""
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
                                    {'content-type': 'application/json'})
@@ -380,7 +456,7 @@ class TestAdmin(web.Helper):
         err_msg = "The long description should have been updated"
         assert "New Long Desc" in res.data, err_msg
 
-    def test_17_admin_delete_app(self):
+    def test_20_admin_delete_app(self):
         """Test ADMIN can delete an app that belongs to another user"""
         self.register()
         self.signout()
@@ -397,7 +473,7 @@ class TestAdmin(web.Helper):
         err_msg = "The app should be deleted by admin users"
         assert "Application deleted!" in res.data, err_msg
 
-    def test_18_admin_delete_tasks(self):
+    def test_21_admin_delete_tasks(self):
         """Test ADMIN can delete an app's tasks that belongs to another user"""
         # Admin
         Fixtures.create()
@@ -413,7 +489,7 @@ class TestAdmin(web.Helper):
         tasks = db.session.query(model.Task).filter_by(app_id=1).all()
         assert len(tasks) == 0, "len(app.tasks) != 0"
 
-    def test_19_admin_list_categories(self):
+    def test_22_admin_list_categories(self):
         """Test ADMIN list categories works"""
         Fixtures.create()
         # Anonymous user
@@ -437,7 +513,7 @@ class TestAdmin(web.Helper):
         err_msg = "Admin users should be get a list of Categories"
         assert dom.find(id='categories') is not None, err_msg
 
-    def test_20_admin_add_category(self):
+    def test_23_admin_add_category(self):
         """Test ADMIN add category works"""
         Fixtures.create()
         category = {'name': 'cat', 'short_name': 'cat',
@@ -472,7 +548,7 @@ class TestAdmin(web.Helper):
         assert "Please correct the errors" in res.data, err_msg
 
 
-    def test_21_admin_update_category(self):
+    def test_24_admin_update_category(self):
         """Test ADMIN update category works"""
         Fixtures.create()
         obj = db.session.query(model.Category).get(1)
@@ -523,7 +599,7 @@ class TestAdmin(web.Helper):
         res = self.app.post(url, data=category, follow_redirects=True)
         assert "Please correct the errors" in res.data, err_msg
 
-    def test_22_admin_delete_category(self):
+    def test_25_admin_delete_category(self):
         """Test ADMIN delete category works"""
         Fixtures.create()
         obj = db.session.query(model.Category).get(2)

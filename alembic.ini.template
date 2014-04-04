@@ -9,7 +9,7 @@ script_location = alembic
 
 # under Heroku, the line below needs to be inferred from
 # the environment
-sqlalchemy.url = postgresql://tester:tester@localhost/pybossa
+sqlalchemy.url = postgresql://pybossa:tester@localhost/pybossa
 
 # Logging configuration
 [loggers]
