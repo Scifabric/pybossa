@@ -20,6 +20,8 @@
 from base import web, model, Fixtures, db, redis_flushall
 from pybossa.uploader import Uploader
 from pybossa.uploader.local import LocalUploader
+from mock import patch
+from werkzeug.datastructures import FileStorage
 
 
 class TestUploader:
@@ -76,3 +78,25 @@ class TestUploader:
         assert expected_extensions == new_uploader.allowed_extensions, err_msg
         err_msg = "Upload folder by default is /tmp/"
         assert new_uploader.upload_folder == '/tmp/', err_msg
+
+    @patch('werkzeug.datastructures.FileStorage.save', return_value=None)
+    def test_local_uploader_upload_correct_file(self, mock):
+        """Test LOCAL UPLOADER upload works."""
+        mock.save.return_value = None
+        u = LocalUploader()
+        file = FileStorage(filename='test.jpg')
+        res = u.upload_file(file)
+        err_msg = ("Upload file should return True, \
+                   as this extension is not allowed")
+        assert res is True, err_msg
+
+    @patch('werkzeug.datastructures.FileStorage.save', return_value=None)
+    def test_local_uploader_upload_wrong_file(self, mock):
+        """Test LOCAL UPLOADER upload works with wrong extension."""
+        mock.save.return_value = None
+        u = LocalUploader()
+        file = FileStorage(filename='test.txt')
+        res = u.upload_file(file)
+        err_msg = ("Upload file should return False, \
+                   as this extension is not allowed")
+        assert res is False, err_msg
