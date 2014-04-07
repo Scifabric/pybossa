@@ -19,6 +19,7 @@
 
 from base import web, model, Fixtures, db, redis_flushall
 from pybossa.uploader import Uploader
+from pybossa.uploader.local import LocalUploader
 
 
 class TestUploader:
@@ -63,3 +64,15 @@ class TestUploader:
 
         err_msg = "Non allowed extensions should return false"
         assert u.allowed_file('wrong.pdf') is False, err_msg
+
+    def test_local_uploader_init(self):
+        """Test LOCAL UPLOADER init works."""
+        u = LocalUploader()
+        new_extensions = set(['pdf', 'doe'])
+        new_uploader = LocalUploader(upload_folder='/tmp/',
+                                     allowed_extensions=new_extensions)
+        expected_extensions = set.union(u.allowed_extensions, new_extensions)
+        err_msg = "The new uploader should support two extra extensions"
+        assert expected_extensions == new_uploader.allowed_extensions, err_msg
+        err_msg = "Upload folder by default is /tmp/"
+        assert new_uploader.upload_folder == '/tmp/', err_msg
