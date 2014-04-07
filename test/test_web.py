@@ -1908,15 +1908,16 @@ class TestWeb(web.Helper):
         uri = "/app/%s/tasks/export?type=ask&format=json" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
-        uri = "/app/%s/tasks/export?type=task&format=gson" % Fixtures.app_short_name
-        res = self.app.get(uri, follow_redirects=True)
-        assert res.status == '404 NOT FOUND', res.status
         uri = "/app/%s/tasks/export?format=json" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
         uri = "/app/%s/tasks/export?type=task" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
+        # And a 415 is raised if the requested format is not supported or invalid
+        uri = "/app/%s/tasks/export?type=task&format=gson" % Fixtures.app_short_name
+        res = self.app.get(uri, follow_redirects=True)
+        assert res.status == '415 UNSUPPORTED MEDIA TYPE', res.status
 
         # Now get the tasks in JSON format
         uri = "/app/%s/tasks/export?type=task&format=json" % Fixtures.app_short_name
@@ -2941,7 +2942,7 @@ class TestWeb(web.Helper):
         assert dom.find(id='cookies_warning') is not None, err_msg
         self.signout()
 
-    def test_49_cookies_warning2(self):
+    def test_79_cookies_warning2(self):
         """Test WEB cookies warning is hidden"""
         # As Anonymous
         self.app.set_cookie("localhost", "PyBossa_accept_cookies", "Yes")

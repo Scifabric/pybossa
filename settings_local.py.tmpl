@@ -25,7 +25,7 @@
 SECRET = 'foobar'
 SECRET_KEY = 'my-session-secret'
 
-SQLALCHEMY_DATABASE_URI = 'postgresql://tester:tester@localhost/pybossa'
+SQLALCHEMY_DATABASE_URI = 'postgresql://pybossa:tester@localhost/pybossa'
 SQLALCHEMY_DATABASE_TEST_URI = 'postgresql://rtester:rtester@localhost/pybossa_test'
 ITSDANGEORUSKEY = 'its-dangerous-key'
 
@@ -40,6 +40,8 @@ DATAUSE = 'http://opendatacommons.org/licenses/by/'
 CONTACT_EMAIL = 'info@pybossa.com'
 CONTACT_TWITTER = 'PyBossa'
 
+## Default number of apps per page
+## APPS_PER_PAGE = 20
 
 ## External Auth providers
 # TWITTER_CONSUMER_KEY=''
