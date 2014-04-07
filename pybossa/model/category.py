@@ -16,35 +16,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-#import os
-#from glob import iglob
-import logging
-import datetime
-#import time
-import json
-import uuid
-
-from werkzeug import generate_password_hash, check_password_hash
-import flask.ext.login
-from sqlalchemy import BigInteger, Integer, Boolean, Unicode,\
-        Float, UnicodeText, Text, String
-from sqlalchemy.schema import Table, MetaData, Column, ForeignKey
-from sqlalchemy.orm import relationship, backref, class_mapper
-from sqlalchemy.types import MutableType, TypeDecorator
-from sqlalchemy import event, text
-from sqlalchemy.engine import reflection
-from sqlalchemy import create_engine
-from sqlalchemy.schema import (
-    MetaData,
-    Table,
-    DropTable,
-    ForeignKeyConstraint,
-    DropConstraint,
-    )
+from sqlalchemy import Integer, Text
+from sqlalchemy.schema import Column, ForeignKey
 
 from pybossa.core import db
-from pybossa.util import pretty_date
-from util import DomainObject, make_timestamp, JSONType
+from util import DomainObject, make_timestamp
 
 
 
