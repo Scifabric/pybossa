@@ -59,7 +59,8 @@ class TestUploader:
         """Test UPLOADER allowed_file method works."""
         u = Uploader()
         for ext in u.allowed_extensions:
-            filename = 'test.%s' % ext
+            # Change extension to uppercase to check that it works too
+            filename = 'test.%s' % ext.upper()
             err_msg = ("This file: %s should be allowed, but it failed"
                        % filename)
             assert u.allowed_file(filename) is True, err_msg
