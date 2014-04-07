@@ -51,3 +51,15 @@ class TestUploader:
         expected_extensions = set.union(u.allowed_extensions, new_extensions)
         err_msg = "The new uploader should support two extra extensions"
         assert expected_extensions == new_uploader.allowed_extensions, err_msg
+
+    def test_allowed_file(self):
+        """Test UPLOADER allowed_file method works."""
+        u = Uploader()
+        for ext in u.allowed_extensions:
+            filename = 'test.%s' % ext
+            err_msg = ("This file: %s should be allowed, but it failed"
+                       % filename)
+            assert u.allowed_file(filename) is True, err_msg
+
+        err_msg = "Non allowed extensions should return false"
+        assert u.allowed_file('wrong.pdf') is False, err_msg
