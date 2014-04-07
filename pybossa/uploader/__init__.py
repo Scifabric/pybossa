@@ -23,6 +23,7 @@ This module exports:
     * Uploader class: for uploading files.
 
 """
+import sys
 
 
 class Uploader(object):
@@ -37,15 +38,33 @@ class Uploader(object):
             self.allowed_extensions = set.union(self.allowed_extensions,
                                                 allowed_extensions)
 
+    def _lookup_url(self, endpoint, values):
+        """Override by the uploader handler."""
+        pass
+
     def allowed_file(self, filename):
-        """Return filename if valid, otherwise false."""
+        """Return True if valid, otherwise false."""
         return '.' in filename and \
-            filename.rsplit('.', 1)[1] in self.allowed_extensions
+            filename.rsplit('.', 1)[1].lower() in self.allowed_extensions
 
     def upload_file(self):
         """Override by teh uploader handler: local, cloud, etc."""
         pass
 
-    def external_url_handler(self):
-        """Override by teh uploader handler: local, cloud, etc."""
+    def external_url_handler(self, error, endpoint, values):
+        """Build up an external URL when url_for cannot build a URL."""
+        # This is an example of hooking the build_error_handler.
+        # Here, lookup_url is some utility function you've built
+        # which looks up the endpoint in some external URL registry.
+        url = self._lookup_url(endpoint, values)
+        if url is None:
+            # External lookup did not have a URL.
+            # Re-raise the BuildError, in context of original traceback.
+            exc_type, exc_value, tb = sys.exc_info()
+            if exc_value is error:
+                raise exc_type, exc_value, tb
+            else:
+                raise error
+        # url_for will use this result, instead of raising BuildError.
+        return url
         pass
