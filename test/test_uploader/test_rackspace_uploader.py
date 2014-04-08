@@ -97,14 +97,13 @@ class TestRackspaceUploader:
     @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
            return_value=True)
     def test_rackspace_uploader_lookup_url(self, mock1):
-        """Test RACKSPACE UPLOADER upload wrong file extension works."""
+        """Test RACKSPACE UPLOADER lookup returns a valid link."""
         uri = 'http://rackspace.com'
         with patch('pyrax.fakes.FakeContainer.cdn_enabled', new_callable=PropertyMock) as mock_cdn_enabled:
             mock_cdn_enabled.return_value = True
             with patch('pyrax.fakes.FakeContainer.cdn_uri', new_callable=PropertyMock) as mock_cdn_uri:
                 mock_cdn_uri.return_value = uri
                 fake_container = FakeContainer('a', 'b', 0, 0)
-                #fake_container.cdn_enabled = True
                 filename = 'test.jpg'
                 with patch('pybossa.uploader.rackspace.pyrax.cloudfiles.get_container',
                            return_value=fake_container):
@@ -116,3 +115,23 @@ class TestRackspaceUploader:
                     expected_url = "%s/%s" % (uri, filename)
                     err_msg = "We should get the following URL: %s" % expected_url
                     assert res == expected_url, err_msg
+
+    @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
+           return_value=True)
+    def test_rackspace_uploader_lookup_url_none(self, mock1):
+        """Test RACKSPACE UPLOADER lookup returns None for non enabled CDN."""
+        uri = 'http://rackspace.com'
+        with patch('pyrax.fakes.FakeContainer.cdn_enabled', new_callable=PropertyMock) as mock_cdn_enabled:
+            mock_cdn_enabled.return_value = False
+            fake_container = FakeContainer('a', 'b', 0, 0)
+            #fake_container.cdn_enabled = True
+            filename = 'test.jpg'
+            with patch('pybossa.uploader.rackspace.pyrax.cloudfiles.get_container',
+                       return_value=fake_container):
+
+                u = RackspaceUploader("username",
+                                      "apikey",
+                                      "ORD")
+                res = u._lookup_url('rackspace', {'filename': filename})
+                err_msg = "We should get the None"
+                assert res is None, err_msg
