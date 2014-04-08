@@ -34,7 +34,6 @@ class RackspaceUploader(Uploader):
 
     cf = None
     cont_name = "pybossa"
-    container = None
 
     def __init__(self, username, api_key, region, cont_name=None, **kwargs):
         """Init method to create a generic uploader."""
@@ -44,11 +43,11 @@ class RackspaceUploader(Uploader):
             self.cf = pyrax.cloudfiles
             if cont_name:
                 self.cont_name = cont_name
-            self.container = self.cf.get_container(self.cont_name)
+            self.cf.get_container(self.cont_name)
             super(self.__class__, self).__init__(**kwargs)
         except pyrax.exceptions.NoSuchContainer:
             self.cf.create_container(self.cont_name)
-            self.container = self.cf.get_container(self.cont_name)
+            self.cf.make_container_public(self.cont_name)
 
     def upload_file(self, file):
         """Upload a file into a container."""
@@ -61,3 +60,12 @@ class RackspaceUploader(Uploader):
             return True
         except pyrax.exceptions.UploadFailed:
             return False
+
+    def _lookup_url(self, endpoint, values):
+        """Return Rackspace URL for object."""
+        try:
+            cont = self.cf.get_container(self.cont_name)
+            if cont.cdn_enabled:
+                return "%s/%s" % (cont.cdn_uri, values['filename'])
+        except:
+            return None
