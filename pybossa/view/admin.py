@@ -168,7 +168,7 @@ def export_users():
         return Response(gen_json(), mimetype='application/json')
 
     def gen_json():
-        users = db.session.query(model.User).all()
+        users = db.session.query(model.user.User).all()
         json_users = []
         for user in users:
             json_users.append(dictize_with_exportable_attributes(user))
@@ -187,7 +187,7 @@ def export_users():
 
     def gen_csv(out, writer, write_user):
         add_headers(writer)
-        for user in db.session.query(model.User).yield_per(1):
+        for user in db.session.query(model.user.User).yield_per(1):
             write_user(writer, user)
         yield out.getvalue()
 
