@@ -32,38 +32,20 @@ class Task(db.Model, DomainObject):
     associated to an App.
     '''
     __tablename__ = 'task'
-    #: unique id (automatically generated)
+
+
     id = Column(Integer, primary_key=True)
-    #: created timestamp (automatically set)
     created = Column(Text, default=make_timestamp)
-    #: ForeignKey to App.id (NB: use task relationship rather than this field
-    #: in normal use
     app_id = Column(Integer, ForeignKey('app.id', ondelete='CASCADE'), nullable=False)
-    #: a StateEnum instance
-    # TODO: state should be an integer?
     state = Column(UnicodeText, default=u'ongoing')
-    #: Quorum (number of times this task should be done by different users)
     quorum = Column(Integer, default=0)
-    #: Boolean indicating whether this is a calibration Task or not.
     calibration = Column(Integer, default=0)
-    #: Value between 0 and 1 indicating priority of task within App
-    #: (higher = more important)
     priority_0 = Column(Float, default=0)
-    #: all configuration / details of the Task is stored in info which is
-    #: an arbitrary JSON object. (Usually expected to be a hash/dict)
-    #: For example for an image classification project this would be::
-    #:
-    #:    {
-    #:       url: [image-url],
-    #:       question: [is this a person]
-    #:    }
     info = Column(JSONType, default=dict)
-    #: Number of answers or TaskRuns per task
     n_answers = Column(Integer, default=30)
 
-    ## Relationships
-    #: `TaskRun`s for this task`
     task_runs = relationship(TaskRun, cascade='all, delete, delete-orphan', backref='task')
+
 
     def pct_status(self):
         """Returns the percentage of Tasks that are completed"""

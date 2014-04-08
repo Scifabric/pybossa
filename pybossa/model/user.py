@@ -33,46 +33,37 @@ from pybossa.model.blogpost import Blogpost
 
 
 class User(db.Model, DomainObject, UserMixin):
+    '''A registered user of the PyBossa system'''
+
     __tablename__ = 'user'
+
     id = Column(Integer, primary_key=True)
-    #: created timestamp (automatically set)
     created = Column(Text, default=make_timestamp)
-    #: email address ...
     email_addr = Column(Unicode(length=254), unique=True, nullable=False)
-    #: user name
     name = Column(Unicode(length=254), unique=True, nullable=False)
-    #: full name
     fullname = Column(Unicode(length=500), nullable=False)
-    #: locale
     locale = Column(Unicode(length=254), default=u'en', nullable=False)
-    #: api key
     api_key = Column(String(length=36), default=make_uuid, unique=True)
     passwd_hash = Column(Unicode(length=254), unique=True)
-    #: Admin flag Boolean Integer (0,1)
     admin = Column(Boolean, default=False)
-    # Privacy mode flag
     privacy_mode = Column(Boolean, default=True, nullable=False)
-    #: TODO: find out ... bossa specific
     category = Column(Integer)
-    #: TODO: find out ...
     flags = Column(Integer)
-    # Twitter user_id field
     twitter_user_id = Column(BigInteger, unique=True)
-    # Facebook user_id field
     facebook_user_id = Column(BigInteger, unique=True)
-    # Google user_id field
     google_user_id = Column(String, unique=True)
-    # CKAN API key field
     ckan_api = Column(String, unique=True)
-    #: arbitrary additional information about the user in a JSON dict.
     info = Column(JSONType, default=dict)
+
 
     def get_id(self):
         '''id for login system. equates to name'''
         return self.name
 
+
     def set_password(self, password):
         self.passwd_hash = generate_password_hash(password)
+
 
     def check_password(self, password):
         # OAuth users do not have a password
@@ -80,6 +71,7 @@ class User(db.Model, DomainObject, UserMixin):
             return check_password_hash(self.passwd_hash, password)
         else:
             return False
+
 
     @classmethod
     def by_name(cls, name):

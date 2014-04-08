@@ -24,9 +24,9 @@ from pybossa.model import DomainObject, make_timestamp
 
 
 
-
 class Blogpost(db.Model, DomainObject):
     """A blog post associated to a given app"""
+
     __tablename__ = 'blogpost'
 
     id = Column(Integer, primary_key=True)

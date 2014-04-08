@@ -30,25 +30,16 @@ class TaskRun(db.Model, DomainObject):
     '''A run of a given task by a specific user.
     '''
     __tablename__ = 'task_run'
-    #: id
+
     id = Column(Integer, primary_key=True)
-    #: created timestamp (automatically set)
     created = Column(Text, default=make_timestamp)
-    #: application id of this task run
     app_id = Column(Integer, ForeignKey('app.id'), nullable=False)
-    #: task id of this task run
     task_id = Column(Integer, ForeignKey('task.id', ondelete='CASCADE'),
                      nullable=False)
-    #: user id of performer of this task
     user_id = Column(Integer, ForeignKey('user.id'))
-    # ip address of this user (only if anonymous)
     user_ip = Column(Text)
-    #: finish time (iso8601 formatted string)
     finish_time = Column(Text, default=make_timestamp)
-
-    #: timeout for task
     timeout = Column(Integer)
-    #: See same attribute in Task
     calibration = Column(Integer)
     info = Column(JSONType, default=dict)
     '''General writable field that should be used by clients to record results\

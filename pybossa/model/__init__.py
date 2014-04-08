@@ -68,9 +68,32 @@ class DomainObject(object):
         repr += '>'
         return repr
 
+
+
+class JSONType(MutableType, TypeDecorator):
+    '''Additional Database Type for handling JSON values.
+    '''
+    impl = Text
+
+    def __init__(self):
+        super(JSONType, self).__init__()
+
+    def process_bind_param(self, value, dialect):
+        return json.dumps(value)
+
+    def process_result_value(self, value, dialiect):
+        return json.loads(value)
+
+    def copy_value(self, value):
+        return json.loads(json.dumps(value))
+
+
+
+
 def make_timestamp():
     now = datetime.datetime.utcnow()
     return now.isoformat()
+
 
 def make_uuid():
     return str(uuid.uuid4())
@@ -108,22 +131,3 @@ def rebuild_db():
 
     db.session.commit()
     db.create_all()
-
-
-
-class JSONType(MutableType, TypeDecorator):
-    '''Additional Database Type for handling JSON values.
-    '''
-    impl = Text
-
-    def __init__(self):
-        super(JSONType, self).__init__()
-
-    def process_bind_param(self, value, dialect):
-        return json.dumps(value)
-
-    def process_result_value(self, value, dialiect):
-        return json.loads(value)
-
-    def copy_value(self, value):
-        return json.loads(json.dumps(value))
