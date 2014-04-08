@@ -65,7 +65,6 @@ class TestLocalUploader:
         u = LocalUploader()
         file = FileStorage(filename='test.jpg')
         res = u.upload_file(file)
-        print res
         err_msg = ("Upload file should return True, \
                    as this extension is not allowed")
         assert res is True, err_msg
