@@ -20,7 +20,7 @@ from sqlalchemy import Integer, Text
 from sqlalchemy.schema import Column, ForeignKey
 
 from pybossa.core import db
-from util import DomainObject, make_timestamp
+from pybossa.model import DomainObject, make_timestamp
 
 
 

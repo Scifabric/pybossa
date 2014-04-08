@@ -21,7 +21,7 @@ from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
 
 from pybossa.core import db
-from util import DomainObject, make_timestamp, JSONType
+from pybossa.model import DomainObject, JSONType, make_timestamp
 
 
 
