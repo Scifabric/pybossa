@@ -22,6 +22,7 @@ from sqlalchemy.orm import relationship, backref
 
 from pybossa.core import db
 from pybossa.model import DomainObject, JSONType, make_timestamp
+from pybossa.model.task_run import TaskRun
 
 
 
@@ -62,7 +63,7 @@ class Task(db.Model, DomainObject):
 
     ## Relationships
     #: `TaskRun`s for this task`
-    task_runs = relationship('TaskRun', cascade='all, delete, delete-orphan', backref='task')
+    task_runs = relationship(TaskRun, cascade='all, delete, delete-orphan', backref='task')
 
     def pct_status(self):
         """Returns the percentage of Tasks that are completed"""

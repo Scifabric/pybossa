@@ -24,6 +24,11 @@ from sqlalchemy import event
 
 from pybossa.core import db
 from pybossa.model import DomainObject, JSONType, make_timestamp
+from pybossa.model.task import Task
+from pybossa.model.task_run import TaskRun
+from pybossa.model.featured import Featured
+from pybossa.model.category import Category
+from pybossa.model.blogpost import Blogpost
 
 
 
@@ -79,16 +84,16 @@ class App(db.Model, DomainObject):
 
     ## Relationships
     #: `Task`s for this app.`
-    tasks = relationship('Task', cascade='all, delete, delete-orphan', backref='app')
+    tasks = relationship(Task, cascade='all, delete, delete-orphan', backref='app')
     #: `TaskRun`s for this app.`
-    task_runs = relationship('TaskRun', backref='app',
+    task_runs = relationship(TaskRun, backref='app',
                              cascade='all, delete-orphan',
                              order_by='TaskRun.finish_time.desc()')
     #: `Featured` or not for this app
-    featured = relationship('Featured', cascade='all, delete, delete-orphan')
+    featured = relationship(Featured, cascade='all, delete, delete-orphan')
     #: `category` or not for this app
-    category = relationship('Category')
-    blogposts = relationship('Blogpost', cascade='all, delete-orphan', backref='app')
+    category = relationship(Category)
+    blogposts = relationship(Blogpost, cascade='all, delete-orphan', backref='app')
 
 
 @event.listens_for(App, 'before_update')
