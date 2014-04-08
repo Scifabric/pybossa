@@ -230,7 +230,7 @@ def home():
     tmp_apps, count = cached_apps.get_featured('featured', per_page=20)
     if count > 0:
         featured = model.category.Category(name='Featured', short_name='featured')
-        d['categories'].append(featured)
+        d['categories'].insert(0,featured)
         d['categories_apps']['featured'] = tmp_apps
 
     if app.config['ENFORCE_PRIVACY'] and current_user.is_authenticated():

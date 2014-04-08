@@ -41,15 +41,15 @@ execute "setup pybossa DB" do
     cwd "/vagrant"
 end
 
-execute "create user db tester" do
+execute "create user db pybossa" do
     command <<-EOH
-    psql -c "CREATE USER tester WITH CREATEDB LOGIN PASSWORD 'tester'"
+    psql -c "CREATE USER pybossa WITH CREATEDB LOGIN PASSWORD 'tester'"
     EOH
     user "postgres"
 end
 
 execute "create pybossa DB" do
-    command "createdb pybossa -O tester"
+    command "createdb pybossa -O pybossa --encoding='utf-8' --locale=en_US.utf8 --template=template0"
     user "postgres"
 end
 
