@@ -67,37 +67,3 @@ class TestUploader:
 
         err_msg = "Non allowed extensions should return false"
         assert u.allowed_file('wrong.pdf') is False, err_msg
-
-    def test_local_uploader_init(self):
-        """Test LOCAL UPLOADER init works."""
-        u = LocalUploader()
-        new_extensions = set(['pdf', 'doe'])
-        new_uploader = LocalUploader(upload_folder='/tmp/',
-                                     allowed_extensions=new_extensions)
-        expected_extensions = set.union(u.allowed_extensions, new_extensions)
-        err_msg = "The new uploader should support two extra extensions"
-        assert expected_extensions == new_uploader.allowed_extensions, err_msg
-        err_msg = "Upload folder by default is /tmp/"
-        assert new_uploader.upload_folder == '/tmp/', err_msg
-
-    @patch('werkzeug.datastructures.FileStorage.save', return_value=None)
-    def test_local_uploader_upload_correct_file(self, mock):
-        """Test LOCAL UPLOADER upload works."""
-        mock.save.return_value = None
-        u = LocalUploader()
-        file = FileStorage(filename='test.jpg')
-        res = u.upload_file(file)
-        err_msg = ("Upload file should return True, \
-                   as this extension is not allowed")
-        assert res is True, err_msg
-
-    @patch('werkzeug.datastructures.FileStorage.save', return_value=None)
-    def test_local_uploader_upload_wrong_file(self, mock):
-        """Test LOCAL UPLOADER upload works with wrong extension."""
-        mock.save.return_value = None
-        u = LocalUploader()
-        file = FileStorage(filename='test.txt')
-        res = u.upload_file(file)
-        err_msg = ("Upload file should return False, \
-                   as this extension is not allowed")
-        assert res is False, err_msg
