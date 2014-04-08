@@ -23,7 +23,6 @@ This module exports:
     * Local class: for uploading files to a local filesystem.
 
 """
-import os
 import pyrax
 from pybossa.uploader import Uploader
 from werkzeug import secure_filename
@@ -33,11 +32,32 @@ class RackspaceUploader(Uploader):
 
     """Rackspace Cloud Files uploader class."""
 
-    def __init__(self, upload_folder=None, **kwargs):
+    cf = None
+    cont_name = "pybossa"
+    container = None
+
+    def __init__(self, username, api_key, region, cont_name=None, **kwargs):
         """Init method to create a generic uploader."""
-        cf = pyrax.cloudfiles
-        super(self.__class__, self).__init__(**kwargs)
+        try:
+            pyrax.set_setting("identity_type", "rackspace")
+            pyrax.set_credentials(username, api_key, region=region)
+            self.cf = pyrax.cloudfiles
+            if cont_name:
+                self.cont_name = cont_name
+            self.container = self.cf.get_container(self.cont_name)
+            super(self.__class__, self).__init__(**kwargs)
+        except pyrax.exceptions.NoSuchContainer:
+            self.cf.create_container(self.cont_name)
+            self.container = self.cf.get_container(self.cont_name)
 
     def upload_file(self, file):
         """Upload a file into a container."""
-        pass
+        try:
+            chksum = pyrax.utils.get_checksum(file)
+            self.cf.upload_file(self.cont_name,
+                                file,
+                                obj_name=secure_filename(file.filename),
+                                etag=chksum)
+            return True
+        except pyrax.exceptions.UploadFailed:
+            return False
