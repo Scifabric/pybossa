@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask.ext.login import current_user
-from pybossa.model import TaskRun
+from pybossa.model.task_run import TaskRun
 from werkzeug.exceptions import Forbidden
 
 

@@ -21,11 +21,10 @@ from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy import event
 from werkzeug import generate_password_hash, check_password_hash
-import flask.ext.login
 from flask.ext.login import UserMixin
 
 from pybossa.core import db
-from util import DomainObject, make_timestamp, JSONType, make_uuid
+from pybossa.model import DomainObject, make_timestamp, JSONType, make_uuid
 
 
 

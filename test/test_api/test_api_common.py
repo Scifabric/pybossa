@@ -28,14 +28,14 @@ class TestApiCommon(HelperAPI):
     def test_00_limits_query(self):
         """Test API GET limits works"""
         for i in range(30):
-            app = model.App(name="name%s" % i,
+            app = model.app.App(name="name%s" % i,
                             short_name="short_name%s" % i,
                             description="desc",
                             owner_id=1)
 
             info = dict(a=0)
-            task = model.Task(app_id=1, info=info)
-            taskrun = model.TaskRun(app_id=1, task_id=1)
+            task = model.task.Task(app_id=1, info=info)
+            taskrun = model.task_run.TaskRun(app_id=1, task_id=1)
             db.session.add(app)
             db.session.add(task)
             db.session.add(taskrun)
@@ -163,13 +163,13 @@ class TestApiCommon(HelperAPI):
         self.app.delete(url)
 
         for task in tasks:
-            t = db.session.query(model.Task)\
+            t = db.session.query(model.task.Task)\
                   .filter_by(app_id=1)\
                   .filter_by(id=task['id'])\
                   .all()
             assert len(t) == 0, "There should not be any task"
 
-            tr = db.session.query(model.TaskRun)\
+            tr = db.session.query(model.task_run.TaskRun)\
                    .filter_by(app_id=1)\
                    .filter_by(task_id=task['id'])\
                    .all()
@@ -185,7 +185,7 @@ class TestApiCommon(HelperAPI):
             res = self.app.delete(url)
             assert_equal(res.status, '204 NO CONTENT', res.data)
             tr = []
-            tr = db.session.query(model.TaskRun)\
+            tr = db.session.query(model.task_run.TaskRun)\
                    .filter_by(app_id=1)\
                    .filter_by(task_id=t['id'])\
                    .all()

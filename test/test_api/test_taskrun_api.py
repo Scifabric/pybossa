@@ -68,12 +68,12 @@ class TestTaskrunAPI(HelperAPI):
 
     def test_06_taskrun_post(self):
         """Test API TaskRun creation and auth for anonymous users"""
-        app = db.session.query(model.App)\
+        app = db.session.query(model.app.App)\
                 .filter_by(short_name=Fixtures.app_short_name)\
                 .one()
-        task = db.session.query(model.Task)\
+        task = db.session.query(model.task.Task)\
                   .filter_by(app_id=app.id).first()
-        task_runs = db.session.query(model.TaskRun).all()
+        task_runs = db.session.query(model.task_run.TaskRun).all()
         for tr in task_runs:
             db.session.delete(tr)
         db.session.commit()
@@ -148,12 +148,12 @@ class TestTaskrunAPI(HelperAPI):
 
     def test_06_taskrun_authenticated_post(self):
         """Test API TaskRun creation and auth for authenticated users"""
-        app = db.session.query(model.App)\
+        app = db.session.query(model.app.App)\
                 .filter_by(short_name=Fixtures.app_short_name)\
                 .one()
-        task = db.session.query(model.Task)\
+        task = db.session.query(model.task.Task)\
                   .filter_by(app_id=app.id).first()
-        task_runs = db.session.query(model.TaskRun).all()
+        task_runs = db.session.query(model.task_run.TaskRun).all()
         for tr in task_runs:
             db.session.delete(tr)
         db.session.commit()
@@ -212,10 +212,10 @@ class TestTaskrunAPI(HelperAPI):
 
     def test_06_taskrun_post_with_bad_data(self):
         """Test API TaskRun error messages."""
-        app = db.session.query(model.App)\
+        app = db.session.query(model.app.App)\
                 .filter_by(short_name=Fixtures.app_short_name)\
                 .one()
-        task = db.session.query(model.Task)\
+        task = db.session.query(model.task.Task)\
                   .filter_by(app_id=app.id).first()
         app_id = app.id
         task_run = dict(app_id=app_id, task_id=task.id, info='my task result')
@@ -252,12 +252,12 @@ class TestTaskrunAPI(HelperAPI):
 
     def test_06_taskrun_update(self):
         """Test TaskRun API update works."""
-        app = db.session.query(model.App)\
+        app = db.session.query(model.app.App)\
                 .filter_by(short_name=Fixtures.app_short_name)\
                 .one()
-        task = db.session.query(model.Task)\
+        task = db.session.query(model.task.Task)\
                   .filter_by(app_id=app.id).first()
-        task_runs = db.session.query(model.TaskRun).all()
+        task_runs = db.session.query(model.task_run.TaskRun).all()
         for tr in task_runs:
             db.session.delete(tr)
         db.session.commit()
@@ -284,7 +284,7 @@ class TestTaskrunAPI(HelperAPI):
         # No one can update anonymous TaskRuns
         url = '/api/taskrun/%s' % _id_anonymous
         res = self.app.put(url, data=datajson)
-        taskrun = db.session.query(model.TaskRun)\
+        taskrun = db.session.query(model.task_run.TaskRun)\
                     .filter_by(id=_id_anonymous)\
                     .one()
         print res.status
@@ -383,7 +383,7 @@ class TestTaskrunAPI(HelperAPI):
         res = self.app.delete(url)
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
-        tasks = db.session.query(model.Task)\
+        tasks = db.session.query(model.task.Task)\
                   .filter_by(app_id=app_id)\
                   .all()
         assert tasks, tasks
@@ -396,7 +396,7 @@ class TestTaskrunAPI(HelperAPI):
 
     def test_taskrun_newtask(self):
         """Test API App.new_task method and authentication"""
-        app = db.session.query(model.App)\
+        app = db.session.query(model.app.App)\
                 .filter_by(short_name=Fixtures.app_short_name)\
                 .one()
 
@@ -418,7 +418,7 @@ class TestTaskrunAPI(HelperAPI):
         assert_equal(task['app_id'], app.id)
 
         # test wit no TaskRun items in the db
-        db.session.query(model.TaskRun).delete()
+        db.session.query(model.task_run.TaskRun).delete()
         db.session.commit()
 
         # anonymous
@@ -437,10 +437,10 @@ class TestTaskrunAPI(HelperAPI):
 
     def test_09_taskrun_updates_task_state(self):
         """Test API TaskRun POST updates task state"""
-        app = db.session.query(model.App)\
+        app = db.session.query(model.app.App)\
                 .filter_by(short_name=Fixtures.app_short_name)\
                 .one()
-        task = db.session.query(model.Task)\
+        task = db.session.query(model.task.Task)\
                   .filter_by(app_id=app.id).first()
 
         task_id = task.id
@@ -450,7 +450,7 @@ class TestTaskrunAPI(HelperAPI):
         db.session.add(task)
         db.session.commit()
 
-        task_runs = db.session.query(model.TaskRun).all()
+        task_runs = db.session.query(model.task_run.TaskRun).all()
         for tr in task_runs:
             db.session.delete(tr)
         db.session.commit()
@@ -472,7 +472,7 @@ class TestTaskrunAPI(HelperAPI):
         tmp = self.app.post(url, data=datajson)
         r_taskrun = json.loads(tmp.data)
 
-        task = db.session.query(model.Task).get(task_id)
+        task = db.session.query(model.task.Task).get(task_id)
         assert tmp.status_code == 200, r_taskrun
         err_msg = "Task state should be different from completed"
         assert task.state == 'ongoing', err_msg
@@ -487,7 +487,7 @@ class TestTaskrunAPI(HelperAPI):
         tmp = self.app.post(url, data=datajson)
         r_taskrun = json.loads(tmp.data)
 
-        task = db.session.query(model.Task).get(task_id)
+        task = db.session.query(model.task.Task).get(task_id)
         assert tmp.status_code == 200, r_taskrun
         err_msg = "Task state should be equal to completed"
         assert task.state == 'completed', err_msg

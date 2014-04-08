@@ -41,7 +41,7 @@ class TestTaskrunAuthorization:
         self.app.owner = self.root
         db.session.add(self.app)
         db.session.commit()
-        self.task = model.Task(app_id=self.app.id, state='0', n_answers=10)
+        self.task = model.task.Task(app_id=self.app.id, state='0', n_answers=10)
         self.task.app = self.app
         db.session.add(self.task)
         db.session.commit()
@@ -59,7 +59,7 @@ class TestTaskrunAuthorization:
         hasn't already done it"""
 
         with web.app.test_request_context('/'):
-            taskrun = model.TaskRun(app_id=self.app.id,
+            taskrun = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user_ip='127.0.0.0',
                                     info="some taskrun info")
@@ -75,13 +75,13 @@ class TestTaskrunAuthorization:
         he has previously posted a taskrun"""
 
         with web.app.test_request_context('/'):
-            taskrun1 = model.TaskRun(app_id=self.app.id,
+            taskrun1 = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user_ip='127.0.0.0',
                                     info="some taskrun info")
             db.session.add(taskrun1)
             db.session.commit()
-            taskrun2 = model.TaskRun(app_id=self.app.id,
+            taskrun2 = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user_ip='127.0.0.0',
                                     info="a different taskrun info")
@@ -90,11 +90,11 @@ class TestTaskrunAuthorization:
                         taskrun2)
 
             # But the user can still create taskruns for different tasks
-            task2 = model.Task(app_id=self.app.id, state='0', n_answers=10)
+            task2 = model.task.Task(app_id=self.app.id, state='0', n_answers=10)
             task2.app = self.app
             db.session.add(task2)
             db.session.commit()
-            taskrun3 = model.TaskRun(app_id=self.app.id,
+            taskrun3 = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=task2.id,
                                     user_ip='127.0.0.0',
                                     info="some taskrun info")
@@ -110,7 +110,7 @@ class TestTaskrunAuthorization:
         hasn't already done it"""
 
         with web.app.test_request_context('/'):
-            taskrun = model.TaskRun(app_id=self.app.id,
+            taskrun = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user_id=self.mock_authenticated.id,
                                     info="some taskrun info")
@@ -126,24 +126,24 @@ class TestTaskrunAuthorization:
         he has previously posted a taskrun"""
 
         with web.app.test_request_context('/'):
-            taskrun1 = model.TaskRun(app_id=self.app.id,
+            taskrun1 = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user=self.user1,
                                     info="some taskrun info")
             db.session.add(taskrun1)
             db.session.commit()
-            taskrun2 = model.TaskRun(app_id=self.app.id,
+            taskrun2 = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user=self.user1,
                                     info="a different taskrun info")
             assert_raises(Forbidden, getattr(require, 'taskrun').create, taskrun2)
 
             # But the user can still create taskruns for different tasks
-            task2 = model.Task(app_id=self.app.id, state='0', n_answers=10)
+            task2 = model.task.Task(app_id=self.app.id, state='0', n_answers=10)
             task2.app = self.app
             db.session.add(task2)
             db.session.commit()
-            taskrun3 = model.TaskRun(app_id=self.app.id,
+            taskrun3 = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=task2.id,
                                     user_id=self.mock_authenticated.id,
                                     info="some taskrun info")
@@ -158,11 +158,11 @@ class TestTaskrunAuthorization:
         """Test anonymous user can read any taskrun"""
 
         with web.app.test_request_context('/'):
-            anonymous_taskrun = model.TaskRun(app_id=self.app.id,
+            anonymous_taskrun = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user_ip='127.0.0.0',
                                     info="some taskrun info")
-            user_taskrun = model.TaskRun(app_id=self.app.id,
+            user_taskrun = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user_id=self.root.id,
                                     info="another taskrun info")
@@ -181,15 +181,15 @@ class TestTaskrunAuthorization:
         """Test authenticated user can read any taskrun"""
 
         with web.app.test_request_context('/'):
-            anonymous_taskrun = model.TaskRun(app_id=self.app.id,
+            anonymous_taskrun = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user_ip='127.0.0.0',
                                     info="some taskrun info")
-            other_users_taskrun = model.TaskRun(app_id=self.app.id,
+            other_users_taskrun = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user_id=self.root.id,
                                     info="a different taskrun info")
-            own_taskrun = model.TaskRun(app_id=self.app.id,
+            own_taskrun = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user_id=self.mock_authenticated.id,
                                     info="another taskrun info")
@@ -211,7 +211,7 @@ class TestTaskrunAuthorization:
         """Test anonymous users cannot update an anonymously posted taskrun"""
 
         with web.app.test_request_context('/'):
-            anonymous_taskrun = model.TaskRun(app_id=self.app.id,
+            anonymous_taskrun = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user_ip='127.0.0.0',
                                     info="some taskrun info")
@@ -227,7 +227,7 @@ class TestTaskrunAuthorization:
         """Test authenticated users cannot update an anonymously posted taskrun"""
 
         with web.app.test_request_context('/'):
-            anonymous_taskrun = model.TaskRun(app_id=self.app.id,
+            anonymous_taskrun = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user_ip='127.0.0.0',
                                     info="some taskrun info")
@@ -243,7 +243,7 @@ class TestTaskrunAuthorization:
         """Test admins cannot update anonymously posted taskruns"""
 
         with web.app.test_request_context('/'):
-            anonymous_taskrun = model.TaskRun(app_id=self.app.id,
+            anonymous_taskrun = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user_ip='127.0.0.0',
                                     info="some taskrun info")
@@ -258,7 +258,7 @@ class TestTaskrunAuthorization:
     def test_anonymous_user_update_user_taskrun(self):
         """Test anonymous user cannot update taskruns posted by authenticated users"""
         with web.app.test_request_context('/'):
-            user_taskrun = model.TaskRun(app_id=self.app.id,
+            user_taskrun = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user_id=self.root.id,
                                     info="some taskrun info")
@@ -274,11 +274,11 @@ class TestTaskrunAuthorization:
         """Test authenticated user cannot update any taskrun"""
 
         with web.app.test_request_context('/'):
-            own_taskrun = model.TaskRun(app_id=self.app.id,
+            own_taskrun = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user_id=self.mock_authenticated.id,
                                     info="some taskrun info")
-            other_users_taskrun = model.TaskRun(app_id=self.app.id,
+            other_users_taskrun = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user_id=self.root.id,
                                     info="a different taskrun info")
@@ -297,7 +297,7 @@ class TestTaskrunAuthorization:
         """Test admins cannot update taskruns posted by authenticated users"""
 
         with web.app.test_request_context('/'):
-                user_taskrun = model.TaskRun(app_id=self.app.id,
+                user_taskrun = model.task_run.TaskRun(app_id=self.app.id,
                                         task_id=self.task.id,
                                         user_id=self.user1.id,
                                         info="some taskrun info")
@@ -313,7 +313,7 @@ class TestTaskrunAuthorization:
         """Test anonymous users cannot delete an anonymously posted taskrun"""
 
         with web.app.test_request_context('/'):
-            anonymous_taskrun = model.TaskRun(app_id=self.app.id,
+            anonymous_taskrun = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user_ip='127.0.0.0',
                                     info="some taskrun info")
@@ -329,7 +329,7 @@ class TestTaskrunAuthorization:
         """Test authenticated users cannot delete an anonymously posted taskrun"""
 
         with web.app.test_request_context('/'):
-                    anonymous_taskrun = model.TaskRun(app_id=self.app.id,
+                    anonymous_taskrun = model.task_run.TaskRun(app_id=self.app.id,
                                             task_id=self.task.id,
                                             user_ip='127.0.0.0',
                                             info="some taskrun info")
@@ -345,7 +345,7 @@ class TestTaskrunAuthorization:
         """Test admins can delete anonymously posted taskruns"""
 
         with web.app.test_request_context('/'):
-            anonymous_taskrun = model.TaskRun(app_id=self.app.id,
+            anonymous_taskrun = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user_ip='127.0.0.0',
                                     info="some taskrun info")
@@ -360,7 +360,7 @@ class TestTaskrunAuthorization:
         """Test anonymous user cannot delete taskruns posted by authenticated users"""
 
         with web.app.test_request_context('/'):
-            user_taskrun = model.TaskRun(app_id=self.app.id,
+            user_taskrun = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user_id=self.root.id,
                                     info="some taskrun info")
@@ -376,11 +376,11 @@ class TestTaskrunAuthorization:
         by another authenticated user, but can delete his own taskruns"""
 
         with web.app.test_request_context('/'):
-            own_taskrun = model.TaskRun(app_id=self.app.id,
+            own_taskrun = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user_id=self.mock_authenticated.id,
                                     info="some taskrun info")
-            other_users_taskrun = model.TaskRun(app_id=self.app.id,
+            other_users_taskrun = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user_id=self.root.id,
                                     info="a different taskrun info")
@@ -399,7 +399,7 @@ class TestTaskrunAuthorization:
         """Test admins can delete taskruns posted by authenticated users"""
 
         with web.app.test_request_context('/'):
-            user_taskrun = model.TaskRun(app_id=self.app.id,
+            user_taskrun = model.task_run.TaskRun(app_id=self.app.id,
                                     task_id=self.task.id,
                                     user_id=self.user1.id,
                                     info="some taskrun info")

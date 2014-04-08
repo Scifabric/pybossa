@@ -114,12 +114,12 @@ class TestUserAPI(HelperAPI):
         """Test API user queries for privacy mode"""
 
         # Add user with fullname 'Public user', privacy mode disabled
-        user_with_privacy_disabled = model.User(email_addr='public@user.com',
+        user_with_privacy_disabled = model.user.User(email_addr='public@user.com',
                                     name='publicUser', fullname='Public user',
                                     privacy_mode=False)
         db.session.add(user_with_privacy_disabled)
         # Add user with fullname 'Private user', privacy mode enabled
-        user_with_privacy_enabled = model.User(email_addr='private@user.com',
+        user_with_privacy_enabled = model.user.User(email_addr='private@user.com',
                                     name='privateUser', fullname='Private user',
                                     privacy_mode=True)
         db.session.add(user_with_privacy_enabled)
@@ -211,12 +211,12 @@ class TestUserAPI(HelperAPI):
         """
 
         # Add user with fullname 'Public user', privacy mode disabled
-        user_with_privacy_disabled = model.User(email_addr='public@user.com',
+        user_with_privacy_disabled = model.user.User(email_addr='public@user.com',
                                     name='publicUser', fullname='User',
                                     privacy_mode=False)
         db.session.add(user_with_privacy_disabled)
         # Add user with fullname 'Private user', privacy mode enabled
-        user_with_privacy_enabled = model.User(email_addr='private@user.com',
+        user_with_privacy_enabled = model.user.User(email_addr='private@user.com',
                                     name='privateUser', fullname='User',
                                     privacy_mode=True)
         db.session.add(user_with_privacy_enabled)

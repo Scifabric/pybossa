@@ -18,7 +18,7 @@
 from sqlalchemy.sql import text
 from pybossa.core import db
 from pybossa.cache import cache, memoize, delete_memoized, ONE_DAY, ONE_HOUR
-from pybossa.model import User
+from pybossa.model.user import User
 import json
 
 

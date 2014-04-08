@@ -32,7 +32,7 @@ class TestModelTaskRun:
 
     def test_task_run_errors(self):
         """Test TASK_RUN model errors."""
-        user = model.User(
+        user = model.user.User(
             email_addr="john.doe@example.com",
             name="johndoe",
             fullname="John Doe",
@@ -40,8 +40,8 @@ class TestModelTaskRun:
         db.session.add(user)
         db.session.commit()
 
-        user = db.session.query(model.User).first()
-        app = model.App(
+        user = db.session.query(model.user.User).first()
+        app = model.app.App(
             name='Application',
             short_name='app',
             description='desc',
@@ -49,16 +49,16 @@ class TestModelTaskRun:
         db.session.add(app)
         db.session.commit()
 
-        task = model.Task(app_id=app.id)
+        task = model.task.Task(app_id=app.id)
         db.session.add(task)
         db.session.commit()
 
-        task_run = model.TaskRun(app_id=None, task_id=task.id)
+        task_run = model.task_run.TaskRun(app_id=None, task_id=task.id)
         db.session.add(task_run)
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
 
-        task_run = model.TaskRun(app_id=app.id, task_id=None)
+        task_run = model.task_run.TaskRun(app_id=app.id, task_id=None)
         db.session.add(task_run)
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()

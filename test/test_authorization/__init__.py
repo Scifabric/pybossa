@@ -33,7 +33,7 @@ def teardown_package():
 
 
 def mock_current_user(anonymous=True, admin=None, id=None):
-    mock = Mock(spec=model.User)
+    mock = Mock(spec=model.user.User)
     mock.is_anonymous.return_value = anonymous
     mock.admin = admin
     mock.id = id

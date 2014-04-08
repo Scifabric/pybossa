@@ -192,7 +192,7 @@ def global_template_context():
 
 @login_manager.user_loader
 def load_user(username):
-    return db.session.query(model.User).filter_by(name=username).first()
+    return db.session.query(model.user.User).filter_by(name=username).first()
 
 
 @app.before_request
@@ -203,7 +203,7 @@ def api_authentication():
     if 'Authorization' in request.headers:
         apikey = request.headers.get('Authorization')
     if apikey:
-        user = db.session.query(model.User).filter_by(api_key=apikey).first()
+        user = db.session.query(model.user.User).filter_by(api_key=apikey).first()
         ## HACK:
         # login_user sets a session cookie which we really don't want.
         # login_user(user)
@@ -229,7 +229,7 @@ def home():
     # Add featured
     tmp_apps, count = cached_apps.get_featured('featured', per_page=20)
     if count > 0:
-        featured = model.Category(name='Featured', short_name='featured')
+        featured = model.category.Category(name='Featured', short_name='featured')
         d['categories'].append(featured)
         d['categories_apps']['featured'] = tmp_apps
 

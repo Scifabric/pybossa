@@ -69,7 +69,7 @@ class TestTaskrunAPI(HelperAPI):
     def test_get_all_tokens_authenticated_user(self):
         """Test authenticated user is able to retrieve all his tokens"""
 
-        user = db.session.query(model.User).get(2)
+        user = db.session.query(model.user.User).get(2)
         twitter_token = {'oauth_token': 'token-for-%s' % user.name,
                          'oauth_token_secret': 'secret-for-%s' % user.name}
         facebook_token = {'oauth_token': 'facebook_token'}
@@ -89,7 +89,7 @@ class TestTaskrunAPI(HelperAPI):
     def test_get_all_existing_tokens_authenticated_user(self):
         """Test if a user lacks one of the valid tokens, it won't be retrieved"""
 
-        user = db.session.query(model.User).get(2)
+        user = db.session.query(model.user.User).get(2)
         twitter_token = {'oauth_token': 'token-for-%s' % user.name,
                          'oauth_token_secret': 'secret-for-%s' % user.name}
         facebook_token = {'oauth_token': 'facebook_token'}
@@ -108,7 +108,7 @@ class TestTaskrunAPI(HelperAPI):
     def test_get_existing_token_authenticated_user(self):
         """Test authenticated user retrieves a given existing token"""
 
-        user = db.session.query(model.User).get(2)
+        user = db.session.query(model.user.User).get(2)
         twitter_token = {'oauth_token': 'token-for-%s' % user.name,
                          'oauth_token_secret': 'secret-for-%s' % user.name}
         facebook_token = {'oauth_token': 'facebook_token'}
@@ -131,7 +131,7 @@ class TestTaskrunAPI(HelperAPI):
     def test_get_non_existing_token_authenticated_user(self):
         """Test authenticated user cannot get non-existing tokens"""
 
-        user_without_tokens = db.session.query(model.User).get(3)
+        user_without_tokens = db.session.query(model.user.User).get(3)
 
         res = self.app.get('/api/token/twitter?api_key=' + Fixtures.api_key_2)
         error = json.loads(res.data)

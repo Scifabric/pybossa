@@ -32,7 +32,7 @@ class TestModelApp:
 
     def test_app_repr(self):
         """Test APP model repr works."""
-        app = model.App(
+        app = model.app.App(
             id=1,
             name='Application',
             short_name='app',
@@ -43,7 +43,7 @@ class TestModelApp:
 
     def test_app_errors(self):
         """Test APP model errors."""
-        app = model.App(
+        app = model.app.App(
             name='Application',
             short_name='app',
             description='desc',
@@ -55,14 +55,14 @@ class TestModelApp:
         db.session.rollback()
 
         # App.name shoult not be nullable
-        user = model.User(
+        user = model.user.User(
             email_addr="john.doe@example.com",
             name="johndoe",
             fullname="John Doe",
             locale="en")
         db.session.add(user)
         db.session.commit()
-        user = db.session.query(model.User).first()
+        user = db.session.query(model.user.User).first()
         app.owner_id = user.id
         app.name = None
         db.session.add(app)

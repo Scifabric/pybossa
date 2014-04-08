@@ -23,7 +23,7 @@ This package adds GET method for:
 
 """
 from api_base import APIBase
-from pybossa.model import User
+from pybossa.model.user import User
 import pybossa.cache.users as cached_users
 from werkzeug.exceptions import MethodNotAllowed
 from flask import request

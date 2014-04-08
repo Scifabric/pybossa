@@ -32,15 +32,15 @@ class TestModelTask:
 
     def test_task_errors(self):
         """Test TASK model errors."""
-        user = model.User(
+        user = model.user.User(
             email_addr="john.doe@example.com",
             name="johndoe",
             fullname="John Doe",
             locale="en")
         db.session.add(user)
         db.session.commit()
-        user = db.session.query(model.User).first()
-        app = model.App(
+        user = db.session.query(model.user.User).first()
+        app = model.app.App(
             name='Application',
             short_name='app',
             description='desc',
@@ -48,7 +48,7 @@ class TestModelTask:
         db.session.add(app)
         db.session.commit()
 
-        task = model.Task(app_id=None)
+        task = model.task.Task(app_id=None)
         db.session.add(task)
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()

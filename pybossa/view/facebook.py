@@ -67,7 +67,7 @@ def oauth_authorized(resp):  # pragma: no cover
     user = manage_user(access_token, user_data, next_url)
     if user is None:
         # Give a hint for the user
-        user = db.session.query(model.User)\
+        user = db.session.query(model.user.User)\
                  .filter_by(email_addr=user_data['email'])\
                  .first()
         msg, method = get_user_signup_method(user)
@@ -94,25 +94,25 @@ def oauth_authorized(resp):  # pragma: no cover
 
 def manage_user(access_token, user_data, next_url):
     """Manage the user after signin"""
-    user = db.session.query(model.User)\
+    user = db.session.query(model.user.User)\
              .filter_by(facebook_user_id=user_data['id']).first()
 
     if user is None:
         facebook_token = dict(oauth_token=access_token)
         info = dict(facebook_token=facebook_token)
-        user = db.session.query(model.User)\
+        user = db.session.query(model.user.User)\
                  .filter_by(name=user_data['username']).first()
         # NOTE: Sometimes users at Facebook validate their accounts without
         # registering an e-mail (see this http://stackoverflow.com/a/17809808)
         email = None
         if user_data.get('email'):
-            email = db.session.query(model.User)\
+            email = db.session.query(model.user.User)\
                       .filter_by(email_addr=user_data['email']).first()
 
         if user is None and email is None:
             if not user_data.get('email'):
                 user_data['email'] = "None"
-            user = model.User(fullname=user_data['name'],
+            user = model.user.User(fullname=user_data['name'],
                               name=user_data['username'],
                               email_addr=user_data['email'],
                               facebook_user_id=user_data['id'],

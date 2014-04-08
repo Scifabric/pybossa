@@ -25,12 +25,12 @@ class TestBlogpostModel:
 
     def setUp(self):
         model.rebuild_db()
-        self.user = model.User(
+        self.user = model.user.User(
             email_addr="john.doe@example.com",
             name="johndoe",
             fullname="John Doe",
             locale="en")
-        self.app = model.App(
+        self.app = model.app.App(
             name='Application',
             short_name='app',
             description='desc',
@@ -47,7 +47,7 @@ class TestBlogpostModel:
         """Test BLOGPOST model title length has a limit"""
         valid_title = 'a' * 255
         invalid_title = 'a' * 256
-        blogpost = model.Blogpost(title=valid_title, body="body", app=self.app)
+        blogpost = model.blogpost.Blogpost(title=valid_title, body="body", app=self.app)
         db.session.add(blogpost)
 
         assert_not_raises(DataError, db.session.commit)
@@ -57,14 +57,14 @@ class TestBlogpostModel:
 
     def test_blogpost_belongs_to_app(self):
         """Test BLOGPOSTS must belong to an app"""
-        blogpost = model.Blogpost(title='title', app = None)
+        blogpost = model.blogpost.Blogpost(title='title', app = None)
         db.session.add(blogpost)
 
         assert_raises(IntegrityError, db.session.commit)
 
     def test_blogpost_is_deleted_after_app_deletion(self):
         """Test BLOGPOST no blogposts can exist after it's app has been removed"""
-        blogpost = model.Blogpost(title='title', app=self.app)
+        blogpost = model.blogpost.Blogpost(title='title', app=self.app)
         db.session.add(blogpost)
         db.session.commit()
 
@@ -78,7 +78,7 @@ class TestBlogpostModel:
 
     def test_blogpost_deletion_doesnt_delete_app(self):
         """Test BLOGPOST when deleting a blogpost it's parent app is not affected"""
-        blogpost = model.Blogpost(title='title', app=self.app)
+        blogpost = model.blogpost.Blogpost(title='title', app=self.app)
         db.session.add(blogpost)
         db.session.commit()
 
@@ -93,7 +93,7 @@ class TestBlogpostModel:
     def test_blogpost_owner_is_nullable(self):
         """Test BLOGPOST a blogpost owner can be null
         (if the user is removed from the system)"""
-        blogpost = model.Blogpost(title='title', app=self.app, owner=None)
+        blogpost = model.blogpost.Blogpost(title='title', app=self.app, owner=None)
         db.session.add(blogpost)
 
         assert_not_raises(IntegrityError, db.session.commit)
@@ -101,12 +101,12 @@ class TestBlogpostModel:
     def test_blogpost_is_not_deleted_after_owner_deletion(self):
         """Test BLOGPOST a blogpost remains when it's owner user is removed
         from the system"""
-        owner = model.User(
+        owner = model.user.User(
             email_addr="john.doe2@example.com",
             name="johndoe2",
             fullname="John Doe2",
             locale="en")
-        blogpost = model.Blogpost(title='title', app=self.app, owner=owner)
+        blogpost = model.blogpost.Blogpost(title='title', app=self.app, owner=owner)
         db.session.add(blogpost)
         db.session.commit()
 

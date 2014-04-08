@@ -94,7 +94,7 @@ class TestAppAPI(HelperAPI):
         # now a real user
         res = self.app.post('/api/app?api_key=' + Fixtures.api_key,
                             data=data)
-        out = db.session.query(model.App).filter_by(name=name).one()
+        out = db.session.query(model.app.App).filter_by(name=name).one()
         assert out, out
         assert_equal(out.short_name, 'xxxx-project'), out
         assert_equal(out.owner.name, 'tester')
@@ -113,7 +113,7 @@ class TestAppAPI(HelperAPI):
         new_app = json.dumps(new_app)
         res = self.app.post('/api/app', headers=headers,
                             data=new_app)
-        out = db.session.query(model.App).filter_by(name=name + '2').one()
+        out = db.session.query(model.app.App).filter_by(name=name + '2').one()
         assert out, out
         assert_equal(out.short_name, 'xxxx-project2'), out
         assert_equal(out.owner.name, 'tester')
@@ -177,7 +177,7 @@ class TestAppAPI(HelperAPI):
                            data=datajson)
 
         assert_equal(res.status, '200 OK', res.data)
-        out2 = db.session.query(model.App).get(id_)
+        out2 = db.session.query(model.app.App).get(id_)
         assert_equal(out2.name, data['name'])
         out = json.loads(res.data)
         assert out.get('status') is None, error
@@ -305,7 +305,7 @@ class TestAppAPI(HelperAPI):
     def test_04_admin_app_post(self):
         """Test API App update/delete for ADMIN users"""
         self.register()
-        user = db.session.query(model.User).first()
+        user = db.session.query(model.user.User).first()
         name = u'XXXX Project'
         data = dict(
             name=name,
@@ -320,7 +320,7 @@ class TestAppAPI(HelperAPI):
                             data=datajson)
 
 
-        out = db.session.query(model.App).filter_by(name=name).one()
+        out = db.session.query(model.app.App).filter_by(name=name).one()
         assert out, out
         assert_equal(out.short_name, 'xxxx-project'), out
         assert_equal(out.owner.name, 'tester-2')
@@ -367,7 +367,7 @@ class TestAppAPI(HelperAPI):
         res = self.app.put(url, data=datajson)
 
         assert_equal(res.status, '200 OK', res.data)
-        out2 = db.session.query(model.App).get(id_)
+        out2 = db.session.query(model.app.App).get(id_)
         assert_equal(out2.name, data['name'])
 
         # PUT with not JSON data
@@ -417,15 +417,15 @@ class TestAppAPI(HelperAPI):
     def test_07_user_progress_anonymous(self):
         """Test API userprogress as anonymous works"""
         self.signout()
-        app = db.session.query(model.App).get(1)
-        tasks = db.session.query(model.Task)\
-                  .filter(model.Task.app_id == app.id)\
+        app = db.session.query(model.app.App).get(1)
+        tasks = db.session.query(model.task.Task)\
+                  .filter(model.task.Task.app_id == app.id)\
                   .all()
 
         # User ID = 2 because, the 1 is the root user
-        taskruns = db.session.query(model.TaskRun)\
-                     .filter(model.TaskRun.app_id == app.id)\
-                     .filter(model.TaskRun.user_id == 2)\
+        taskruns = db.session.query(model.task_run.TaskRun)\
+                     .filter(model.task_run.TaskRun.app_id == app.id)\
+                     .filter(model.task_run.TaskRun.user_id == 2)\
                      .all()
 
         res = self.app.get('/api/app/1/userprogress', follow_redirects=True)
@@ -440,7 +440,7 @@ class TestAppAPI(HelperAPI):
         res = self.app.get('/api/app/1/newtask')
         data = json.loads(res.data)
         # Add a new TaskRun and check again
-        tr = model.TaskRun(app_id=1, task_id=data['id'], user_id=1,
+        tr = model.task_run.TaskRun(app_id=1, task_id=data['id'], user_id=1,
                            info={'answer': u'annakarenina'})
         db.session.add(tr)
         db.session.commit()
@@ -457,18 +457,18 @@ class TestAppAPI(HelperAPI):
         """Test API userprogress as an authenticated user works"""
         self.register()
         self.signin()
-        user = db.session.query(model.User)\
-                 .filter(model.User.name == 'johndoe')\
+        user = db.session.query(model.user.User)\
+                 .filter(model.user.User.name == 'johndoe')\
                  .first()
-        app = db.session.query(model.App)\
+        app = db.session.query(model.app.App)\
                 .get(1)
-        tasks = db.session.query(model.Task)\
-                  .filter(model.Task.app_id == app.id)\
+        tasks = db.session.query(model.task.Task)\
+                  .filter(model.task.Task.app_id == app.id)\
                   .all()
 
-        taskruns = db.session.query(model.TaskRun)\
-                     .filter(model.TaskRun.app_id == app.id)\
-                     .filter(model.TaskRun.user_id == user.id)\
+        taskruns = db.session.query(model.task_run.TaskRun)\
+                     .filter(model.task_run.TaskRun.app_id == app.id)\
+                     .filter(model.task_run.TaskRun.user_id == user.id)\
                      .all()
 
         res = self.app.get('/api/app/1/userprogress', follow_redirects=True)
@@ -497,7 +497,7 @@ class TestAppAPI(HelperAPI):
         data = json.loads(res.data)
 
         # Add a new TaskRun and check again
-        tr = model.TaskRun(app_id=1, task_id=data['id'], user_id=user.id,
+        tr = model.task_run.TaskRun(app_id=1, task_id=data['id'], user_id=user.id,
                            info={'answer': u'annakarenina'})
         db.session.add(tr)
         db.session.commit()

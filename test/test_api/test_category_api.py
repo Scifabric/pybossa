@@ -97,7 +97,7 @@ class TestCategoryAPI(HelperAPI):
         err = json.loads(res.data)
         err_msg = 'Admin should be able to create a Category'
         assert res.status_code == 200, err_msg
-        cat = db.session.query(model.Category)\
+        cat = db.session.query(model.category.Category)\
                 .filter_by(short_name=category['short_name']).first()
         id_ = err['id']
         assert err['id'] == cat.id, err_msg
@@ -162,7 +162,7 @@ class TestCategoryAPI(HelperAPI):
         res = self.app.put('/api/category/%s?api_key=%s' % (id_, Fixtures.root_api_key),
                            data=datajson)
         assert_equal(res.status, '200 OK', res.data)
-        out2 = db.session.query(model.Category).get(id_)
+        out2 = db.session.query(model.category.Category).get(id_)
         assert_equal(out2.name, data['name'])
         out = json.loads(res.data)
         assert out.get('status') is None, error

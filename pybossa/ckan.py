@@ -19,7 +19,8 @@
 import requests
 import json
 
-from pybossa.model import Task, TaskRun
+from pybossa.model.task import Task
+from pybossa.model.task_run import TaskRun
 
 
 class Ckan(object):
