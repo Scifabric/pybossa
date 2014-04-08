@@ -42,14 +42,21 @@ class Uploader(object):
         """Override by the uploader handler."""
         pass
 
+    def _upload_file(self, file):
+        """Override by the specific uploader handler."""
+        pass
+
     def allowed_file(self, filename):
         """Return True if valid, otherwise false."""
         return '.' in filename and \
             filename.rsplit('.', 1)[1].lower() in self.allowed_extensions
 
-    def upload_file(self):
+    def upload_file(self, file):
         """Override by teh uploader handler: local, cloud, etc."""
-        pass
+        if file and self.allowed_file(file.filename):
+            return self._upload_file(file)
+        else:
+            return False
 
     def external_url_handler(self, error, endpoint, values):
         """Build up an external URL when url_for cannot build a URL."""
@@ -67,4 +74,3 @@ class Uploader(object):
                 raise error
         # url_for will use this result, instead of raising BuildError.
         return url
-        pass

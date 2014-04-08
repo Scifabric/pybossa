@@ -49,7 +49,7 @@ class RackspaceUploader(Uploader):
             self.cf.create_container(self.cont_name)
             self.cf.make_container_public(self.cont_name)
 
-    def upload_file(self, file):
+    def _upload_file(self, file):
         """Upload a file into a container."""
         try:
             chksum = pyrax.utils.get_checksum(file)

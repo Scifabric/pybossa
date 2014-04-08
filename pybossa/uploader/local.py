@@ -40,11 +40,11 @@ class LocalUploader(Uploader):
             self.upload_folder = upload_folder
         super(self.__class__, self).__init__(**kwargs)
 
-    def upload_file(self, file):
+    def _upload_file(self, file):
         """Upload a file into a local folder."""
-        if file and self.allowed_file(file.filename):
+        try:
             filename = secure_filename(file.filename)
             file.save(os.path.join(self.upload_folder, filename))
             return True
-        else:
+        except:
             return False
