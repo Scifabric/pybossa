@@ -30,16 +30,6 @@ class TestModelApp:
         db.session.remove()
 
 
-    def test_app_repr(self):
-        """Test APP model repr works."""
-        app = model.app.App(
-            id=1,
-            name='Application',
-            short_name='app',
-            description='desc',
-            owner_id=None)
-
-        assert app.__repr__() == 'App(1)'
 
     def test_app_errors(self):
         """Test APP model errors."""
