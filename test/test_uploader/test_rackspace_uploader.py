@@ -84,8 +84,8 @@ class TestRackspaceUploader:
            return_value="1234abcd")
     def test_rackspace_uploader_upload_wrong_file(self, mock, mock2):
         """Test RACKSPACE UPLOADER upload wrong file extension works."""
-        with patch('pybossa.uploader.rackspace.pyrax.cloudfiles.upload_file',
-                   return_value=True):
+        with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
+            mycf.upload_file.return_value = True
             u = RackspaceUploader("username",
                                   "apikey",
                                   "ORD")
