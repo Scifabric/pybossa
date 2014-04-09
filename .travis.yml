@@ -12,7 +12,7 @@ before_install:
   - redis-server contrib/redis/sentinel.conf --sentinel
   - pip install coveralls --use-mirrors
 install:
-  - python setup.py install
+  - pip install -e .
   - pip install -r cache_requirements.txt
 before_script:
   - psql -c 'create database pybossa;' -U postgres
