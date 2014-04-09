@@ -72,9 +72,9 @@ def markdown_db_migrate():
     query_result = db.engine.execute(query)
     old_descriptions = query_result.fetchall()
     for old_desc in old_descriptions:
-        new_descritpion = html2text(old_desc.long_description)
+        new_description = html2text(old_desc.long_description)
         query = ("UPDATE \"app\" SET long_description=\'%s\' WHERE id=%s;"
-                % (new_descritpion, old_desc.id))
+                % (new_description, old_desc.id))
         db.engine.execute(query)
 
 
