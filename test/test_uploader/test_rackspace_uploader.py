@@ -117,18 +117,15 @@ class TestRackspaceUploader:
            return_value=True)
     def test_rackspace_uploader_lookup_url_none(self, mock1):
         """Test RACKSPACE UPLOADER lookup returns None for non enabled CDN."""
-        uri = 'http://rackspace.com'
-        with patch('pyrax.fakes.FakeContainer.cdn_enabled', new_callable=PropertyMock) as mock_cdn_enabled:
-            mock_cdn_enabled.return_value = False
-            fake_container = FakeContainer('a', 'b', 0, 0)
-            #fake_container.cdn_enabled = True
-            filename = 'test.jpg'
-            with patch('pybossa.uploader.rackspace.pyrax.cloudfiles.get_container',
-                       return_value=fake_container):
+        filename = 'test.jpg'
+        with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
+            cdn_enabled_mock = PropertyMock(return_value=False)
+            type(fake_container).cdn_enabled = cdn_enabled_mock
+            mycf.get_container.return_value = fake_container
 
-                u = RackspaceUploader("username",
-                                      "apikey",
-                                      "ORD")
-                res = u._lookup_url('rackspace', {'filename': filename})
-                err_msg = "We should get the None"
-                assert res is None, err_msg
+            u = RackspaceUploader("username",
+                                  "apikey",
+                                  "ORD")
+            res = u._lookup_url('rackspace', {'filename': filename})
+            err_msg = "We should get the None"
+            assert res is None, err_msg
