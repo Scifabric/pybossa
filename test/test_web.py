@@ -467,6 +467,17 @@ class TestWeb(web.Helper):
         res = self.app.get('/app/sampleapp/settings')
         assert res.status == '403 FORBIDDEN', res.status
 
+    def test_10b_application_long_description_allows_markdown(self):
+        """Test WEB long description markdown is supported"""
+
+        markdown_description = u'Markdown\n======='
+        self.register()
+        self.new_application(long_description=markdown_description)
+
+        res = self.app.get('/app/sampleapp', follow_redirects=True)
+        data = res.data
+        assert '<h1>Markdown</h1>' in data, 'Markdown text not being rendered!'
+
     def test_11_create_application(self):
         """Test WEB create an application works"""
         # Create an app as an anonymous user
@@ -485,7 +496,7 @@ class TestWeb(web.Helper):
         assert self.html_title("Create an Application") in res.data, res
         assert "Create the application" in res.data, res
 
-        res = self.new_application()
+        res = self.new_application(long_description='My Description')
         assert "<strong>Sample App</strong>: Settings" in res.data, res
         assert "Application created!" in res.data, res
 
@@ -495,7 +506,7 @@ class TestWeb(web.Helper):
             'Different names %s' % app.short_name
         assert app.info['thumbnail'] == 'An Icon link', \
             "Thumbnail should be the same: %s" % app.info['thumbnail']
-        assert app.long_description == '<div id="long_desc">Long desc</div>', \
+        assert app.long_description == 'My Description', \
             "Long desc should be the same: %s" % app.long_description
 
     def test_11_a_create_application_errors(self):
@@ -809,7 +820,6 @@ class TestWeb(web.Helper):
         db.session.commit()
         res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
                            follow_redirects=True)
-        print res.data
         data = json.loads(res.data)
         assert len(data) == 10, data
         for tr in data:

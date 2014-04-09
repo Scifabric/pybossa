@@ -84,8 +84,7 @@ class TestAppAPI(HelperAPI):
             short_name='xxxx-project',
             description='description',
             owner_id=1,
-            long_description=u'<div id="longdescription">\
-                               Long Description</div>')
+            long_description=u'Long Description\n================')
         data = json.dumps(data)
         # no api-key
         res = self.app.post('/api/app', data=data)
@@ -108,8 +107,7 @@ class TestAppAPI(HelperAPI):
             short_name='xxxx-project2',
             description='description2',
             owner_id=1,
-            long_description=u'<div id="longdescription">\
-                               Long Description</div>')
+            long_description=u'Long Description\n================')
         new_app = json.dumps(new_app)
         res = self.app.post('/api/app', headers=headers,
                             data=new_app)
@@ -251,8 +249,7 @@ class TestAppAPI(HelperAPI):
         data = dict(
             name=name,
             short_name='xxxx-project',
-            long_description=u'<div id="longdescription">\
-                               Long Description</div>')
+            long_description=u'Long Description\n================')
 
         datajson = json.dumps(data)
         res = self.app.put('/api/app/%s?api_key=%s&search=select1' % (id_, Fixtures.api_key),
@@ -312,8 +309,7 @@ class TestAppAPI(HelperAPI):
             short_name='xxxx-project',
             owner_id=user.id,
             description='description',
-            long_description=u'<div id="longdescription">\
-                               Long Description</div>')
+            long_description=u'Long Description\n================')
         datajson = json.dumps(data)
         # now a real user (we use the second api_key as first user is an admin)
         res = self.app.post('/api/app?api_key=' + Fixtures.api_key_2,

@@ -113,7 +113,7 @@ class Helper(object):
                         thumbnail='An Icon link',
                         allow_anonymous_contributors='True',
                         category_id="1",
-                        long_description=u'<div id="long_desc">Long desc</div>',
+                        long_description=u'Long Description\n================',
                         hidden=False):
         """Helper function to create an application"""
         if method == "POST":

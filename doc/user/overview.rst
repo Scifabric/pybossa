@@ -79,7 +79,7 @@ figure:
      6. **Category**: Select a category that fits your application.
         :ref:`categories` 
         are added and managed by the server :ref:`administrators`.
-     7. **Long Description**: A *long* description where you can use HTML
+     7. **Long Description**: A *long* description where you can use Markdown
         to format the description of your application. This field is
         usually used to provide information about the application, the
         developer, the researcher group or institutions involved in the
