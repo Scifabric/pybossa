@@ -32,7 +32,9 @@ import pybossa.validator as pb_validator
 
 from pybossa.core import db
 from pybossa.cache import ONE_DAY, ONE_HOUR
-from pybossa.model import App, Task, User
+from pybossa.model.app import App
+from pybossa.model.task import Task
+from pybossa.model.user import User
 from pybossa.util import Pagination, UnicodeWriter, admin_required
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
@@ -53,13 +55,13 @@ class AppForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
     name = TextField(lazy_gettext('Name'),
                      [validators.Required(),
-                      pb_validator.Unique(db.session, model.App, model.App.name,
+                      pb_validator.Unique(db.session, model.app.App, model.app.App.name,
                                           message="Name is already taken.")])
     short_name = TextField(lazy_gettext('Short Name'),
                            [validators.Required(),
                             pb_validator.NotAllowedChars(),
                             pb_validator.Unique(
-                                db.session, model.App, model.App.short_name,
+                                db.session, model.app.App, model.app.App.short_name,
                                 message=lazy_gettext(
                                     "Short Name is already taken."))])
     description = TextField(lazy_gettext('Description'),
@@ -144,7 +146,7 @@ def redirect_old_featured(page):
 @blueprint.route('/published/<int:page>/', defaults={'page': 1})
 def redirect_old_published(page):  # pragma: no cover
     """DEPRECATED only to redirect old links"""
-    category = db.session.query(model.Category).first()
+    category = db.session.query(model.category.Category).first()
     return redirect(url_for('.app_cat_index', category=category.short_name, page=page), 301)
 
 
@@ -189,17 +191,17 @@ def app_index(page, lookup, category, fallback, use_count):
     pagination = Pagination(page, per_page, count)
     categories = cached_cat.get_all()
     # Check for pre-defined categories featured and draft
-    featured_cat = model.Category(name='Featured',
+    featured_cat = model.category.Category(name='Featured',
                                   short_name='featured',
                                   description='Featured applications')
     if category == 'featured':
         active_cat = featured_cat
     elif category == 'draft':
-        active_cat = model.Category(name='Draft',
+        active_cat = model.category.Category(name='Draft',
                                     short_name='draft',
                                     description='Draft applications')
     else:
-        active_cat = db.session.query(model.Category)\
+        active_cat = db.session.query(model.category.Category)\
                        .filter_by(short_name=category).first()
 
     # Check if we have to add the section Featured to local nav
@@ -240,7 +242,7 @@ def new():
     if not require.app.create():  # pragma: no cover
         abort(403)
     form = AppForm(request.form)
-    categories = db.session.query(model.Category).all()
+    categories = db.session.query(model.category.Category).all()
     form.category_id.choices = [(c.id, c.name) for c in categories]
 
     def respond(errors):
@@ -260,7 +262,7 @@ def new():
     if form.thumbnail.data:
         info['thumbnail'] = form.thumbnail.data
 
-    app = model.App(name=form.name.data,
+    app = model.app.App(name=form.name.data,
                     short_name=form.short_name.data,
                     description=form.description.data,
                     long_description=form.long_description.data,
@@ -299,7 +301,7 @@ def task_presenter_editor(short_name):
 
         form = TaskPresenterForm(request.form)
         if request.method == 'POST' and form.validate():
-            db_app = db.session.query(model.App).filter_by(id=app.id).first()
+            db_app = db.session.query(model.app.App).filter_by(id=app.id).first()
             db_app.info['task_presenter'] = form.editor.data
             db.session.add(db_app)
             db.session.commit()
@@ -406,7 +408,7 @@ def update(short_name):
         # Merge info object
         info = dict(app.info.items() + new_info.items())
 
-        new_application = model.App(
+        new_application = model.app.App(
             id=form.id.data,
             name=form.name.data,
             short_name=form.short_name.data,
@@ -436,7 +438,7 @@ def update(short_name):
         title = app_title(app, "Update")
         if request.method == 'GET':
             form = AppForm(obj=app)
-            categories = db.session.query(model.Category).all()
+            categories = db.session.query(model.category.Category).all()
             form.category_id.choices = [(c.id, c.name) for c in categories]
             if app.category_id is None:
                 app.category_id = categories[0].id
@@ -602,9 +604,9 @@ def _import_task(app, handler, form, render_forms):
         n_data = 0
         for task_data in handler.tasks(form):
             n_data += 1
-            task = model.Task(app_id=app.id)
+            task = model.task.Task(app_id=app.id)
             [setattr(task, k, v) for k, v in task_data.iteritems()]
-            data = db.session.query(model.Task).filter_by(app_id=app.id).filter_by(info=task.info).first()
+            data = db.session.query(model.task.Task).filter_by(app_id=app.id).filter_by(info=task.info).first()
             if data is None:
                 db.session.add(task)
                 db.session.commit()
@@ -681,15 +683,15 @@ def task_presenter(short_name, task_id):
     #return render_template('/applications/presenter.html', app = app)
     # Check if the user has submitted a task before
 
-    tr_search = db.session.query(model.TaskRun)\
-                  .filter(model.TaskRun.task_id == task_id)\
-                  .filter(model.TaskRun.app_id == app.id)
+    tr_search = db.session.query(model.task_run.TaskRun)\
+                  .filter(model.task_run.TaskRun.task_id == task_id)\
+                  .filter(model.task_run.TaskRun.app_id == app.id)
 
     if current_user.is_anonymous():
         remote_addr = request.remote_addr or "127.0.0.1"
-        tr = tr_search.filter(model.TaskRun.user_ip == remote_addr)
+        tr = tr_search.filter(model.task_run.TaskRun.user_ip == remote_addr)
     else:
-        tr = tr_search.filter(model.TaskRun.user_id == current_user.id)
+        tr = tr_search.filter(model.task_run.TaskRun.user_id == current_user.id)
 
     tr_first = tr.first()
     if tr_first is None:
@@ -767,10 +769,10 @@ def export(short_name, task_id):
             raise
 
     # Check if the task belongs to the app and exists
-    task = db.session.query(model.Task).filter_by(app_id=app.id)\
+    task = db.session.query(model.task.Task).filter_by(app_id=app.id)\
                                        .filter_by(id=task_id).first()
     if task:
-        taskruns = db.session.query(model.TaskRun).filter_by(task_id=task_id)\
+        taskruns = db.session.query(model.task_run.TaskRun).filter_by(task_id=task_id)\
                              .filter_by(app_id=app.id).all()
         results = [tr.dictize() for tr in taskruns]
         return Response(json.dumps(results), mimetype='application/json')
@@ -805,12 +807,12 @@ def tasks_browse(short_name, page):
 
     def respond():
         per_page = 10
-        count = db.session.query(model.Task)\
+        count = db.session.query(model.task.Task)\
             .filter_by(app_id=app.id)\
             .count()
-        app_tasks = db.session.query(model.Task)\
+        app_tasks = db.session.query(model.task.Task)\
             .filter_by(app_id=app.id)\
-            .order_by(model.Task.id)\
+            .order_by(model.task.Task.id)\
             .limit(per_page)\
             .offset((page - 1) * per_page)\
             .all()
@@ -852,7 +854,7 @@ def delete_tasks(short_name):
                                    last_activity=last_activity,
                                    title=title)
         else:
-            tasks = db.session.query(model.Task).filter_by(app_id=app.id).all()
+            tasks = db.session.query(model.task.Task).filter_by(app_id=app.id).all()
             for t in tasks:
                 db.session.delete(t)
             db.session.commit()
@@ -931,7 +933,7 @@ def export_to(short_name):
         yield out.getvalue()
 
     def respond_json(ty):
-        tables = {"task": model.Task, "task_run": model.TaskRun}
+        tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}
         try:
             table = tables[ty]
         except KeyError:
@@ -939,7 +941,7 @@ def export_to(short_name):
         return Response(gen_json(table), mimetype='application/json')
 
     def create_ckan_datastore(ckan, table, package_id):
-        tables = {"task": model.Task, "task_run": model.TaskRun}
+        tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}
         new_resource = ckan.resource_create(name=table,
                                             package_id=package_id)
         ckan.datastore_create(name=table,
@@ -950,7 +952,7 @@ def export_to(short_name):
 
     def respond_ckan(ty):
         # First check if there is a package (dataset) in CKAN
-        tables = {"task": model.Task, "task_run": model.TaskRun}
+        tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}
         msg_1 = gettext("Data exported to ")
         msg = msg_1 + "%s ..." % current_app.config['CKAN_URL']
         ckan = Ckan(url=current_app.config['CKAN_URL'],
@@ -1013,13 +1015,13 @@ def export_to(short_name):
         # Export Task(/Runs) to CSV
         types = {
             "task": (
-                model.Task, handle_task,
+                model.task.Task, handle_task,
                 (lambda x: True),
                 gettext(
                     "Oops, the application does not have tasks to \
                     export, if you are the owner add some tasks")),
             "task_run": (
-                model.TaskRun, handle_task_run,
+                model.task_run.TaskRun, handle_task_run,
                 (lambda x: type(x.info) == dict),
                 gettext(
                     "Oops, there are no Task Runs yet to export, invite \
@@ -1234,7 +1236,7 @@ def task_priority(short_name):
         tasks = []
         for task_id in form.task_ids.data.split(","):
             if task_id != '':
-                t = db.session.query(model.Task).filter_by(app_id=app.id)\
+                t = db.session.query(model.task.Task).filter_by(app_id=app.id)\
                               .filter_by(id=int(task_id)).first()
                 if t:
                     t.priority_0 = form.priority_0.data

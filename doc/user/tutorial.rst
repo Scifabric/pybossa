@@ -287,10 +287,7 @@ explaining different aspects of it.
 This information is not mandatory, however it will be very useful for the users
 as they will get a bit more of information about the application goals.
 
-The file can be composed using HTML or plain text. As PyBossa is using `Twitter
-Bootstrap <http://twitter.github.com/bootstrap/>`_ you can use all the available 
-CSS styles that this framework provides, as well as the icons provided by the
-project `Font Awesome <http://fortawesome.github.com/Font-Awesome/>`_
+The file can be composed using Markdown or plain text.
 
 The long description will be shown in the application home page::
 

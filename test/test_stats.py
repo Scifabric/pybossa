@@ -89,7 +89,7 @@ class TestStats:
                     tmp = (hours_anon[str(i).zfill(2)] + hours_auth[str(i).zfill(2)])
                     assert tmp == 0, "There should be 0 answers"
             err_msg = "It should be 10, as all answers are submitted in the same hour"
-            tr = db.session.query(model.TaskRun).all()
+            tr = db.session.query(model.task_run.TaskRun).all()
             for t in tr:
                 print t.finish_time
             assert max_hours == 10, err_msg

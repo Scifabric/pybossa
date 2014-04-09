@@ -25,9 +25,9 @@ The documentation is organized as follows:
 
 .. _BOSSA: http://bossa.berkeley.edu/
 
-=========
-Changelog
-=========
+====
+News
+====
 
 The latest version of PyBossa is 0.2.0 and has several changes regarding how
 the web service caches domain objects. If you are running a previous version,

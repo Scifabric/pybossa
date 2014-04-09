@@ -18,7 +18,10 @@
 
 from sqlalchemy.sql import func, text
 from pybossa.core import db
-from pybossa.model import Featured, App, TaskRun, Task
+from pybossa.model.featured import Featured
+from pybossa.model.app import App
+from pybossa.model.task import Task
+from pybossa.model.task_run import TaskRun
 from pybossa.util import pretty_date
 from pybossa.cache import memoize, cache, delete_memoized, delete_cached
 

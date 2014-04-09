@@ -10,6 +10,7 @@ import pybossa.web as web
 
 from alembic.config import Config
 from alembic import command
+from html2text import html2text
 
 def setup_alembic_config():
     if "DATABASE_URL" not in os.environ:
@@ -36,10 +37,10 @@ def db_create():
     setup_alembic_config()
     # finally, add a minimum set of categories: Volunteer Thinking, Volunteer Sensing, Published and Draft
     categories = []
-    categories.append(model.Category(name="Thinking",
+    categories.append(model.category.Category(name="Thinking",
                                      short_name='thinking',
                                      description='Volunteer Thinking apps'))
-    categories.append(model.Category(name="Volunteer Sensing",
+    categories.append(model.category.Category(name="Volunteer Sensing",
                                      short_name='sensing',
                                      description='Volunteer Sensing apps'))
     db.session.add_all(categories)
@@ -55,7 +56,7 @@ def db_rebuild():
 
 def fixtures():
     '''Create some fixtures!'''
-    user = model.User(
+    user = model.user.User(
         name=u'tester',
         email_addr=u'tester@tester.org',
         api_key='tester'
@@ -63,6 +64,18 @@ def fixtures():
     user.set_password(u'tester')
     db.session.add(user)
     db.session.commit()
+
+def markdown_db_migrate():
+    '''Perform a migration of the app long descriptions from HTML to
+    Markdown for existing database records'''
+    query = 'SELECT id, long_description FROM "app";'
+    query_result = db.engine.execute(query)
+    old_descriptions = query_result.fetchall()
+    for old_desc in old_descriptions:
+        new_descritpion = html2text(old_desc.long_description)
+        query = ("UPDATE \"app\" SET long_description=\'%s\' WHERE id=%s;"
+                % (new_descritpion, old_desc.id))
+        db.engine.execute(query)
 
 
 ## ==================================================
