@@ -11,6 +11,7 @@ import pybossa.web as web
 from alembic.config import Config
 from alembic import command
 from html2text import html2text
+from sqlalchemy.sql import text
 
 def setup_alembic_config():
     if "DATABASE_URL" not in os.environ:
@@ -74,9 +75,10 @@ def markdown_db_migrate():
     for old_desc in old_descriptions:
         if old_desc.long_description:
             new_description = html2text(old_desc.long_description)
-            query = ("UPDATE \"app\" SET long_description=\'%s\' WHERE id=%s;"
-                    % (new_description, old_desc.id))
-            db.engine.execute(query)
+            query = text('''
+                       UPDATE app SET long_description=:long_description
+                       WHERE id=:id''')
+            db.engine.execute(query, long_description = new_description, id = old_desc.id)
 
 
 ## ==================================================
