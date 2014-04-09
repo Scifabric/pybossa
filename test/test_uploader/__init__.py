@@ -17,7 +17,8 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from base import web, model, Fixtures, db, redis_flushall
-from mock import MagicMock
+from mock import Mock, MagicMock, PropertyMock
+from pyrax.fakes import FakeContainer
 
 
 
@@ -31,5 +32,13 @@ def teardown_package():
     model.rebuild_db()
     redis_flushall()
 
+
+#fake_container = Mock(spec=FakeContainer)
+fake_container = MagicMock()
+cdn_uri_mock = PropertyMock(return_value='http://rackspace.com')
+type(fake_container).cdn_uri = cdn_uri_mock
+cdn_enabled_mock = PropertyMock(return_value=True)
+type(fake_container).cdn_enabled = cdn_enabled_mock
+
 cloudfiles_mock = MagicMock()
-cloudfiles_mock.return_value = 'pybossa'
+cloudfiles_mock.get_container.return_value = fake_container
