@@ -21,5 +21,5 @@ pygeoip
 flask-babel
 beautifulsoup4
 python-memcached
-M2Crypto==0.22.dev
 pyrax
+-e git+https://github.com/Hypernode/M2Crypto#egg=M2Crypto-0.22.dev
