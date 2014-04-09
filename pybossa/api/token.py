@@ -24,7 +24,7 @@ This package adds GET method for:
 """
 import json
 from api_base import APIBase, error, require
-from pybossa.model import User
+from pybossa.model.user import User
 import pybossa.cache.users as cached_users
 from werkzeug.exceptions import MethodNotAllowed, NotFound
 from flask import request, Response

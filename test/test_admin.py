@@ -39,7 +39,7 @@ class TestAdmin(web.Helper):
     def test_00_first_user_is_admin(self):
         """Test ADMIN First Created user is admin works"""
         self.register()
-        user = db.session.query(model.User).get(1)
+        user = db.session.query(model.user.User).get(1)
         assert user.admin == 1, "User ID:1 should be admin, but it is not"
 
     def test_01_admin_index(self):
@@ -79,7 +79,7 @@ class TestAdmin(web.Helper):
         self.register(username="tester2", email="tester2@tester.com",
                       password="tester")
         self.signout()
-        user = db.session.query(model.User).get(2)
+        user = db.session.query(model.user.User).get(2)
         assert user.admin == 0, "User ID: 2 should not be admin, but it is"
 
     def test_03_admin_featured_apps_as_admin(self):
@@ -115,7 +115,7 @@ class TestAdmin(web.Helper):
             " as it is not featured"
         # Only apps that have been published can be featured
         self.new_task(1)
-        app = db.session.query(model.App).get(1)
+        app = db.session.query(model.app.App).get(1)
         app.info = dict(task_presenter="something")
         db.session.add(app)
         db.session.commit()
@@ -444,9 +444,9 @@ class TestAdmin(web.Helper):
         res = self.app.get('/app/rootsampleapp', follow_redirects=True)
         assert "Root" in res.data, "The app should be updated by admin users"
 
-        app = db.session.query(model.App)\
+        app = db.session.query(model.app.App)\
                 .filter_by(short_name="rootsampleapp").first()
-        juan = db.session.query(model.User).filter_by(name="juan").first()
+        juan = db.session.query(model.user.User).filter_by(name="juan").first()
         assert app.owner_id == juan.id, "Owner_id should be: %s" % juan.id
         assert app.owner_id != 1, "The owner should be not updated"
         res = self.update_application(short_name="rootsampleapp",
@@ -477,7 +477,7 @@ class TestAdmin(web.Helper):
         """Test ADMIN can delete an app's tasks that belongs to another user"""
         # Admin
         Fixtures.create()
-        tasks = db.session.query(model.Task).filter_by(app_id=1).all()
+        tasks = db.session.query(model.task.Task).filter_by(app_id=1).all()
         assert len(tasks) > 0, "len(app.tasks) > 0"
         res = self.signin(email=u'root@root.com', password=u'tester' + 'root')
         res = self.app.get('/app/test-app/tasks/delete', follow_redirects=True)
@@ -486,7 +486,7 @@ class TestAdmin(web.Helper):
         res = self.app.post('/app/test-app/tasks/delete', follow_redirects=True)
         err_msg = "Admin should get 200 in POST"
         assert res.status_code == 200, err_msg
-        tasks = db.session.query(model.Task).filter_by(app_id=1).all()
+        tasks = db.session.query(model.task.Task).filter_by(app_id=1).all()
         assert len(tasks) == 0, "len(app.tasks) != 0"
 
     def test_22_admin_list_categories(self):
@@ -551,7 +551,7 @@ class TestAdmin(web.Helper):
     def test_24_admin_update_category(self):
         """Test ADMIN update category works"""
         Fixtures.create()
-        obj = db.session.query(model.Category).get(1)
+        obj = db.session.query(model.category.Category).get(1)
         _name = obj.name
         category = obj.dictize()
 
@@ -592,7 +592,7 @@ class TestAdmin(web.Helper):
         err_msg = "Category should be updated"
         assert "Category updated" in res.data, err_msg
         assert category['name'] in res.data, err_msg
-        updated_category = db.session.query(model.Category).get(obj.id)
+        updated_category = db.session.query(model.category.Category).get(obj.id)
         assert updated_category.name == obj.name, err_msg
         # With not valid form
         category['name'] = None
@@ -602,7 +602,7 @@ class TestAdmin(web.Helper):
     def test_25_admin_delete_category(self):
         """Test ADMIN delete category works"""
         Fixtures.create()
-        obj = db.session.query(model.Category).get(2)
+        obj = db.session.query(model.category.Category).get(2)
         category = obj.dictize()
 
         # Anonymous user GET
@@ -638,7 +638,7 @@ class TestAdmin(web.Helper):
         err_msg = "Category should be deleted"
         assert "Category deleted" in res.data, err_msg
         assert category['name'] not in res.data, err_msg
-        output = db.session.query(model.Category).get(obj.id)
+        output = db.session.query(model.category.Category).get(obj.id)
         assert output is None, err_msg
         # Non existant category
         category['id'] = 5000
@@ -647,7 +647,7 @@ class TestAdmin(web.Helper):
         assert res.status_code == 404, res.status_code
 
         # Now try to delete the only available Category
-        obj = db.session.query(model.Category).first()
+        obj = db.session.query(model.category.Category).first()
         url = '/admin/categories/del/%s' % obj.id
         category = obj.dictize()
         res = self.app.post(url, data=category, follow_redirects=True)
@@ -655,5 +655,5 @@ class TestAdmin(web.Helper):
         err_msg = "Category should not be deleted"
         assert "Category deleted" not in res.data, err_msg
         assert category['name'] in res.data, err_msg
-        output = db.session.query(model.Category).get(obj.id)
+        output = db.session.query(model.category.Category).get(obj.id)
         assert output.id == category['id'], err_msg

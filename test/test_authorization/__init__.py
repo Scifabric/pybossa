@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2014 SF Isle of Man Limited
+# Copyright (C) 2013 SF Isle of Man Limited
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,19 +15,26 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-"""
-PyBossa api module for domain object Category via an API.
 
-This package adds GET, POST, PUT and DELETE methods for:
-    * categories
-
-"""
-from api_base import APIBase
-from pybossa.model.category import Category
+from base import web, model, Fixtures, db, redis_flushall
+from mock import Mock
 
 
-class CategoryAPI(APIBase):
 
-    """Class API for domain object Category."""
+def setup_package():
+    model.rebuild_db()
+    redis_flushall()
 
-    __class__ = Category
+
+def teardown_package():
+    db.session.remove()
+    model.rebuild_db()
+    redis_flushall()
+
+
+def mock_current_user(anonymous=True, admin=None, id=None):
+    mock = Mock(spec=model.user.User)
+    mock.is_anonymous.return_value = anonymous
+    mock.admin = admin
+    mock.id = id
+    return mock

@@ -57,7 +57,7 @@ def manage_user(access_token, user_data, next_url):
     """Manage the user after signin"""
     # We have to store the oauth_token in the session to get the USER fields
 
-    user = db.session.query(model.User)\
+    user = db.session.query(model.user.User)\
              .filter_by(google_user_id=user_data['id'])\
              .first()
 
@@ -65,17 +65,17 @@ def manage_user(access_token, user_data, next_url):
     if user is None:
         google_token = dict(oauth_token=access_token)
         info = dict(google_token=google_token)
-        user = db.session.query(model.User)\
+        user = db.session.query(model.user.User)\
                  .filter_by(name=user_data['name'].encode('ascii', 'ignore')
                                                   .lower().replace(" ", ""))\
                  .first()
 
-        email = db.session.query(model.User)\
+        email = db.session.query(model.user.User)\
                   .filter_by(email_addr=user_data['email'])\
                   .first()
 
         if ((user is None) and (email is None)):
-            user = model.User(fullname=user_data['name'],
+            user = model.user.User(fullname=user_data['name'],
                               name=user_data['name'].encode('ascii', 'ignore')
                                                     .lower().replace(" ", ""),
                               email_addr=user_data['email'],
@@ -125,11 +125,11 @@ def oauth_authorized(resp):  # pragma: no cover
     user = manage_user(access_token, user_data, next_url)
     if user is None:
         # Give a hint for the user
-        user = db.session.query(model.User)\
+        user = db.session.query(model.user.User)\
                  .filter_by(email_addr=user_data['email'])\
                  .first()
         if user is None:
-            user = db.session.query(model.User)\
+            user = db.session.query(model.user.User)\
                      .filter_by(name=user_data['name'].encode('ascii', 'ignore')
                                                       .lower().replace(' ', ''))\
                      .first()

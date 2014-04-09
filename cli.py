@@ -37,10 +37,10 @@ def db_create():
     setup_alembic_config()
     # finally, add a minimum set of categories: Volunteer Thinking, Volunteer Sensing, Published and Draft
     categories = []
-    categories.append(model.Category(name="Thinking",
+    categories.append(model.category.Category(name="Thinking",
                                      short_name='thinking',
                                      description='Volunteer Thinking apps'))
-    categories.append(model.Category(name="Volunteer Sensing",
+    categories.append(model.category.Category(name="Volunteer Sensing",
                                      short_name='sensing',
                                      description='Volunteer Sensing apps'))
     db.session.add_all(categories)
@@ -56,7 +56,7 @@ def db_rebuild():
 
 def fixtures():
     '''Create some fixtures!'''
-    user = model.User(
+    user = model.user.User(
         name=u'tester',
         email_addr=u'tester@tester.org',
         api_key='tester'

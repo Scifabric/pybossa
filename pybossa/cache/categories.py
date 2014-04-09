@@ -25,7 +25,7 @@ import pybossa.model as model
 @cache(key_prefix="categories_all", timeout=ONE_DAY)
 def get_all():
     """Return all categories"""
-    return db.session.query(model.Category).all()
+    return db.session.query(model.category.Category).all()
 
 
 @cache(key_prefix="categories_used", timeout=ONE_DAY)

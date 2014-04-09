@@ -66,19 +66,19 @@ class TestWeb(web.Helper):
         returns[0].GeoIP.record_by_addr.return_value = {}
         mock1.side_effects = returns
 
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         # Without stats
         url = '/app/%s/stats' % app.short_name
         res = self.app.get(url)
         assert "Sorry" in res.data, res.data
 
         # We use a string here to check that it works too
-        task = model.Task(app_id=app.id, n_answers=10)
+        task = model.task.Task(app_id=app.id, n_answers=10)
         db.session.add(task)
         db.session.commit()
 
         for i in range(10):
-            task_run = model.TaskRun(app_id=app.id, task_id=1,
+            task_run = model.task_run.TaskRun(app_id=app.id, task_id=1,
                                      user_id=1,
                                      info={'answer': 1})
             db.session.add(task_run)
@@ -407,7 +407,7 @@ class TestWeb(web.Helper):
         """Test WEB application index shows featured apps in all the pages works"""
         Fixtures.create()
 
-        f = model.Featured()
+        f = model.featured.Featured()
         f.app_id = 1
         db.session.add(f)
         db.session.commit()
@@ -419,12 +419,12 @@ class TestWeb(web.Helper):
         assert '<h2><a href="/app/test-app/">My New App</a></h2>' in res.data, res.data
 
         # Update one task to have more answers than expected
-        task = db.session.query(model.Task).get(1)
+        task = db.session.query(model.task.Task).get(1)
         task.n_answers=1
         db.session.add(task)
         db.session.commit()
-        task = db.session.query(model.Task).get(1)
-        cat = db.session.query(model.Category).get(1)
+        task = db.session.query(model.task.Task).get(1)
+        cat = db.session.query(model.category.Category).get(1)
         url = '/app/category/featured/'
         res = self.app.get(url, follow_redirects=True)
         tmp = '1 Featured Applications'
@@ -500,7 +500,7 @@ class TestWeb(web.Helper):
         assert "<strong>Sample App</strong>: Settings" in res.data, res
         assert "Application created!" in res.data, res
 
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         assert app.name == 'Sample App', 'Different names %s' % app.name
         assert app.short_name == 'sampleapp', \
             'Different names %s' % app.short_name
@@ -574,7 +574,7 @@ class TestWeb(web.Helper):
                                       new_thumbnail="New Icon Link",
                                       new_long_description='New long desc',
                                       new_hidden=True)
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         assert "Application updated!" in res.data, res
         err_msg = "App name not updated %s" % app.name
         assert app.name == "New Sample App", err_msg
@@ -592,7 +592,7 @@ class TestWeb(web.Helper):
 
         # Check that the owner can access it even though is hidden
 
-        user = db.session.query(model.User).filter_by(name='johndoe').first()
+        user = db.session.query(model.user.User).filter_by(name='johndoe').first()
         user.admin = False
         db.session.add(user)
         db.session.commit()
@@ -607,7 +607,7 @@ class TestWeb(web.Helper):
         assert "Forbidden" in res.data, res.data
         assert res.status_code == 403
 
-        tmp = db.session.query(model.App).first()
+        tmp = db.session.query(model.app.App).first()
         tmp.hidden = 0
         db.session.add(tmp)
         db.session.commit()
@@ -621,7 +621,7 @@ class TestWeb(web.Helper):
         db.session.commit()
 
 
-        user = db.session.query(model.User).filter_by(name='paco').first()
+        user = db.session.query(model.user.User).filter_by(name='paco').first()
         user.admin = True
         db.session.add(user)
         db.session.commit()
@@ -676,7 +676,7 @@ class TestWeb(web.Helper):
         assert self.html_title(msg) in res.data, res
         assert "No, do not delete it" in res.data, res
 
-        app = db.session.query(model.App).filter_by(short_name='sampleapp').first()
+        app = db.session.query(model.app.App).filter_by(short_name='sampleapp').first()
         app.hidden = 1
         db.session.add(app)
         db.session.commit()
@@ -699,20 +699,20 @@ class TestWeb(web.Helper):
         #  returning a valid resp. The only difference is a user object
         #  without a password
         #  Register a user and sign out
-        user = model.User(name="tester", passwd_hash="tester",
+        user = model.user.User(name="tester", passwd_hash="tester",
                           fullname="tester",
                           email_addr="tester")
         user.set_password('tester')
         db.session.add(user)
         db.session.commit()
-        db.session.query(model.User).all()
+        db.session.query(model.user.User).all()
 
         # Sign in again and check the warning message
         self.signin(email="tester", password="tester")
         res = self.app.get('/', follow_redirects=True)
         msg = "Please update your e-mail address in your profile page, " \
               "right now it is empty!"
-        user = db.session.query(model.User).get(1)
+        user = db.session.query(model.user.User).get(1)
         assert msg in res.data, res.data
 
     def test_16_task_status_completed(self):
@@ -720,9 +720,9 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
 
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         # We use a string here to check that it works too
-        task = model.Task(app_id=app.id, info={'n_answers': '10'})
+        task = model.task.Task(app_id=app.id, info={'n_answers': '10'})
         db.session.add(task)
         db.session.commit()
 
@@ -735,7 +735,7 @@ class TestWeb(web.Helper):
         assert dom.find(id='nothingtodownload') is not None, err_msg
 
         for i in range(5):
-            task_run = model.TaskRun(app_id=app.id, task_id=1,
+            task_run = model.task_run.TaskRun(app_id=app.id, task_id=1,
                                      info={'answer': 1})
             db.session.add(task_run)
             db.session.commit()
@@ -750,7 +750,7 @@ class TestWeb(web.Helper):
         assert dom.find(id='partialdownload') is not None, err_msg
 
         for i in range(5):
-            task_run = model.TaskRun(app_id=app.id, task_id=1,
+            task_run = model.task_run.TaskRun(app_id=app.id, task_id=1,
                                      info={'answer': 1})
             db.session.add(task_run)
             db.session.commit()
@@ -758,7 +758,7 @@ class TestWeb(web.Helper):
 
         self.signout()
 
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
 
         res = self.app.get('app/%s/tasks/browse' % (app.short_name),
                            follow_redirects=True)
@@ -789,19 +789,19 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
 
-        app = db.session.query(model.App).first()
-        task = model.Task(app_id=app.id, info={'n_answers': 10})
+        app = db.session.query(model.app.App).first()
+        task = model.task.Task(app_id=app.id, info={'n_answers': 10})
         db.session.add(task)
         db.session.commit()
 
         for i in range(10):
-            task_run = model.TaskRun(app_id=app.id, task_id=1,
+            task_run = model.task_run.TaskRun(app_id=app.id, task_id=1,
                                      info={'answer': 1})
             db.session.add(task_run)
             db.session.commit()
 
 
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
                            follow_redirects=True)
         data = json.loads(res.data)
@@ -837,13 +837,13 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
 
-        app = db.session.query(model.App).first()
-        task = model.Task(app_id=app.id, info={'n_answers': 10})
+        app = db.session.query(model.app.App).first()
+        task = model.task.Task(app_id=app.id, info={'n_answers': 10})
         db.session.add(task)
         db.session.commit()
         self.signout()
 
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
 
         res = self.app.get('app/%s/tasks/browse' % (app.short_name),
                            follow_redirects=True)
@@ -869,13 +869,13 @@ class TestWeb(web.Helper):
         assert "Applications" in res.data, res.data
         assert Fixtures.cat_1 in res.data, res.data
 
-        task = db.session.query(model.Task).get(1)
+        task = db.session.query(model.task.Task).get(1)
         # Update one task to have more answers than expected
         task.n_answers=1
         db.session.add(task)
         db.session.commit()
-        task = db.session.query(model.Task).get(1)
-        cat = db.session.query(model.Category).get(1)
+        task = db.session.query(model.task.Task).get(1)
+        cat = db.session.query(model.category.Category).get(1)
         url = '/app/category/%s/' % Fixtures.cat_1
         res = self.app.get(url, follow_redirects=True)
         tmp = '1 %s Applications' % Fixtures.cat_1
@@ -885,11 +885,11 @@ class TestWeb(web.Helper):
         """Test WEB Application Index published works"""
         self.register()
         self.new_application()
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         info = dict(task_presenter="some html")
         app.info = info
         db.session.commit()
-        task = model.Task(app_id=app.id, info={'n_answers': 10})
+        task = model.task.Task(app_id=app.id, info={'n_answers': 10})
         db.session.add(task)
         db.session.commit()
         self.signout()
@@ -936,9 +936,9 @@ class TestWeb(web.Helper):
 
         Fixtures.create()
         self.delTaskRuns()
-        app = db.session.query(model.App).first()
-        task = db.session.query(model.Task)\
-                 .filter(model.App.id == app.id)\
+        app = db.session.query(model.app.App).first()
+        task = db.session.query(model.task.Task)\
+                 .filter(model.app.App.id == app.id)\
                  .first()
         res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
                            follow_redirects=True)
@@ -969,18 +969,18 @@ class TestWeb(web.Helper):
 
         model.rebuild_db()
         Fixtures.create()
-        app = db.session.query(model.App).first()
-        task = db.session.query(model.Task)\
-                 .filter(model.App.id == app.id)\
+        app = db.session.query(model.app.App).first()
+        task = db.session.query(model.task.Task)\
+                 .filter(model.app.App.id == app.id)\
                  .first()
 
         for i in range(10):
-            task_run = model.TaskRun(app_id=app.id, task_id=task.id,
+            task_run = model.task_run.TaskRun(app_id=app.id, task_id=task.id,
                                      user_ip="127.0.0.1", info={'answer': 1})
             db.session.add(task_run)
             db.session.commit()
 
-        ntask = model.Task(id=task.id, state='completed')
+        ntask = model.task.Task(id=task.id, state='completed')
 
         assert ntask not in db.session
         db.session.merge(ntask)
@@ -999,9 +999,9 @@ class TestWeb(web.Helper):
         self.delTaskRuns()
         self.register()
         self.signin()
-        app = db.session.query(model.App).first()
-        task = db.session.query(model.Task)\
-                 .filter(model.App.id == app.id)\
+        app = db.session.query(model.app.App).first()
+        task = db.session.query(model.task.Task)\
+                 .filter(model.app.App.id == app.id)\
                  .first()
         res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
                            follow_redirects=True)
@@ -1016,21 +1016,21 @@ class TestWeb(web.Helper):
         Fixtures.create()
         self.register()
 
-        user = db.session.query(model.User)\
-                 .filter(model.User.name == self.user.username)\
+        user = db.session.query(model.user.User)\
+                 .filter(model.user.User.name == self.user.username)\
                  .first()
-        app = db.session.query(model.App).first()
-        task = db.session.query(model.Task)\
-                 .filter(model.App.id == app.id)\
+        app = db.session.query(model.app.App).first()
+        task = db.session.query(model.task.Task)\
+                 .filter(model.app.App.id == app.id)\
                  .first()
         for i in range(10):
-            task_run = model.TaskRun(app_id=app.id, task_id=task.id, user_id=user.id,
+            task_run = model.task_run.TaskRun(app_id=app.id, task_id=task.id, user_id=user.id,
                                      info={'answer': 1})
             db.session.add(task_run)
             db.session.commit()
             #self.app.get('api/app/%s/newtask' % app.id)
 
-        ntask = model.Task(id=task.id, state='completed')
+        ntask = model.task.Task(id=task.id, state='completed')
         #self.signin()
         assert ntask not in db.session
         db.session.merge(ntask)
@@ -1048,19 +1048,19 @@ class TestWeb(web.Helper):
 
         model.rebuild_db()
         Fixtures.create()
-        app1 = db.session.query(model.App).get(1)
+        app1 = db.session.query(model.app.App).get(1)
         app1_short_name = app1.short_name
 
-        db.session.query(model.Task)\
-                  .filter(model.Task.app_id == 1)\
+        db.session.query(model.task.Task)\
+                  .filter(model.task.Task.app_id == 1)\
                   .first()
 
         self.register()
         self.new_application()
-        app2 = db.session.query(model.App).get(2)
+        app2 = db.session.query(model.app.App).get(2)
         self.new_task(app2.id)
-        task2 = db.session.query(model.Task)\
-                  .filter(model.Task.app_id == 2)\
+        task2 = db.session.query(model.task.Task)\
+                  .filter(model.task.Task.app_id == 2)\
                   .first()
         task2_id = task2.id
         self.signout()
@@ -1073,7 +1073,7 @@ class TestWeb(web.Helper):
     def test_26_tutorial_signed_user(self):
         """Test WEB tutorials work as signed in user"""
         Fixtures.create()
-        app1 = db.session.query(model.App).get(1)
+        app1 = db.session.query(model.app.App).get(1)
         app1.info = dict(tutorial="some help")
         db.session.commit()
         self.register()
@@ -1102,7 +1102,7 @@ class TestWeb(web.Helper):
     def test_27_tutorial_anonymous_user(self):
         """Test WEB tutorials work as an anonymous user"""
         Fixtures.create()
-        app1 = db.session.query(model.App).get(1)
+        app1 = db.session.query(model.app.App).get(1)
         app1.info = dict(tutorial="some help")
         db.session.commit()
         #self.register()
@@ -1191,12 +1191,12 @@ class TestWeb(web.Helper):
         """Test WEB user progress profile page works"""
         self.register()
         self.new_application()
-        app = db.session.query(model.App).first()
-        task = model.Task(app_id=app.id, info={'n_answers': '10'})
+        app = db.session.query(model.app.App).first()
+        task = model.task.Task(app_id=app.id, info={'n_answers': '10'})
         db.session.add(task)
         db.session.commit()
         for i in range(10):
-            task_run = model.TaskRun(app_id=app.id, task_id=1, user_id=1,
+            task_run = model.task_run.TaskRun(app_id=app.id, task_id=1, user_id=1,
                                      info={'answer': 1})
             db.session.add(task_run)
             db.session.commit()
@@ -1209,7 +1209,7 @@ class TestWeb(web.Helper):
 
     def test_32_oauth_password(self):
         """Test WEB user sign in without password works"""
-        user = model.User(email_addr="johndoe@johndoe.com",
+        user = model.user.User(email_addr="johndoe@johndoe.com",
                           name=self.user.username,
                           passwd_hash=None,
                           fullname=self.user.fullname,
@@ -1227,7 +1227,7 @@ class TestWeb(web.Helper):
         Mock.return_value = unauthorized_request
         self.register()
         self.new_application()
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv'},
@@ -1243,7 +1243,7 @@ class TestWeb(web.Helper):
         Mock.return_value = html_request
         self.register()
         self.new_application()
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com'},
                             follow_redirects=True)
@@ -1257,7 +1257,7 @@ class TestWeb(web.Helper):
         Mock.return_value = empty_file
         self.register()
         self.new_application()
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv'},
@@ -1272,7 +1272,7 @@ class TestWeb(web.Helper):
         Mock.return_value = empty_file
         self.register()
         self.new_application()
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv'},
@@ -1288,12 +1288,12 @@ class TestWeb(web.Helper):
         Mock.return_value = empty_file
         self.register()
         self.new_application()
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv'},
                             follow_redirects=True)
-        task = db.session.query(model.Task).first()
+        task = db.session.query(model.task.Task).first()
         assert {u'Bar': u'2', u'Foo': u'1', u'Baz': u'3'} == task.info
         assert "1 Task imported successfully!" in res.data
 
@@ -1305,12 +1305,12 @@ class TestWeb(web.Helper):
         Mock.return_value = empty_file
         self.register()
         self.new_application()
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv'},
                             follow_redirects=True)
-        task = db.session.query(model.Task).first()
+        task = db.session.query(model.task.Task).first()
         assert {u'Bar': u'2', u'Foo': u'1'} == task.info
         assert task.priority_0 == 3
         assert "1 Task imported successfully!" in res.data
@@ -1319,12 +1319,12 @@ class TestWeb(web.Helper):
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
                                  {'content-type': 'text/plain'})
         Mock.return_value = empty_file
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv'},
                             follow_redirects=True)
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         assert len(app.tasks) == 2, "There should be only 2 tasks"
         n = 0
         csv_tasks = [{u'Foo': u'1', u'Bar': u'2'}, {u'Foo': u'4', u'Bar': u'5'}]
@@ -1340,12 +1340,12 @@ class TestWeb(web.Helper):
         Mock.return_value = empty_file
         self.register()
         self.new_application()
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
                                        'formtype': 'gdocs'},
                             follow_redirects=True)
-        task = db.session.query(model.Task).first()
+        task = db.session.query(model.task.Task).first()
         assert {u'Bar': u'2', u'Foo': u'1'} == task.info
         assert task.priority_0 == 3
         assert "1 Task imported successfully!" in res.data
@@ -1354,12 +1354,12 @@ class TestWeb(web.Helper):
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
                                  {'content-type': 'text/plain'})
         Mock.return_value = empty_file
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
                                        'formtype': 'gdocs'},
                             follow_redirects=True)
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         assert len(app.tasks) == 2, "There should be only 2 tasks"
         n = 0
         csv_tasks = [{u'Foo': u'1', u'Bar': u'2'}, {u'Foo': u'4', u'Bar': u'5'}]
@@ -1371,12 +1371,12 @@ class TestWeb(web.Helper):
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
                                  {'content-type': 'text/plain'})
         Mock.return_value = empty_file
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
                                        'formtype': 'gdocs'},
                             follow_redirects=True)
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         assert len(app.tasks) == 2, "There should be only 2 tasks"
         n = 0
         csv_tasks = [{u'Foo': u'1', u'Bar': u'2'}, {u'Foo': u'4', u'Bar': u'5'}]
@@ -1409,7 +1409,7 @@ class TestWeb(web.Helper):
         response_user = google.manage_user(fake_response['access_token'],
                                            fake_user, None)
 
-        user = db.session.query(model.User).get(1)
+        user = db.session.query(model.user.User).get(1)
 
         assert user.email_addr == response_user.email_addr, response_user
 
@@ -1469,7 +1469,7 @@ class TestWeb(web.Helper):
         response_user = facebook.manage_user(fake_response['access_token'],
                                              fake_user, None)
 
-        user = db.session.query(model.User).get(1)
+        user = db.session.query(model.user.User).get(1)
 
         assert user.email_addr == response_user.email_addr, response_user
 
@@ -1521,7 +1521,7 @@ class TestWeb(web.Helper):
         response_user = twitter.manage_user(fake_response['access_token'],
                                             fake_user, None)
 
-        user = db.session.query(model.User).get(1)
+        user = db.session.query(model.user.User).get(1)
 
         assert user.email_addr == response_user.email_addr, response_user
 
@@ -1585,7 +1585,7 @@ class TestWeb(web.Helper):
         self.register()
         res = self.app.get('/account/profile/settings')
         assert "Change your Password" in res.data
-        user = model.User.query.get(1)
+        user = model.user.User.query.get(1)
         user.twitter_user_id = 1234
         db.session.add(user)
         db.session.commit()
@@ -1606,7 +1606,7 @@ class TestWeb(web.Helper):
     def test_44_password_reset_key_errors(self, Mock):
         """Test WEB password reset key errors are caught"""
         self.register()
-        user = model.User.query.get(1)
+        user = model.user.User.query.get(1)
         userdict = {'user': user.name, 'password': user.passwd_hash}
         fakeuserdict = {'user': user.name, 'password': 'wronghash'}
         fakeuserdict_err = {'user': user.name, 'passwd': 'some'}
@@ -1667,11 +1667,11 @@ class TestWeb(web.Helper):
         self.register(username='janedoe')
         self.register(username='google')
         self.register(username='facebook')
-        jane = model.User.query.get(2)
+        jane = model.user.User.query.get(2)
         jane.twitter_user_id = 10
-        google = model.User.query.get(3)
+        google = model.user.User.query.get(3)
         google.google_user_id = 103
-        facebook = model.User.query.get(4)
+        facebook = model.user.User.query.get(4)
         facebook.facebook_user_id = 104
         db.session.add_all([jane, google, facebook])
         db.session.commit()
@@ -1710,7 +1710,7 @@ class TestWeb(web.Helper):
         assert "Edit the task presenter" in res.data, \
             "Task Presenter Editor should be an option"
 
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         app.hidden = 1
         db.session.add(app)
         db.session.commit()
@@ -1753,7 +1753,7 @@ class TestWeb(web.Helper):
         """Test WEB task presenter editor works"""
         self.register()
         self.new_application()
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         err_msg = "Task Presenter should be empty"
         assert not app.info.get('task_presenter'), err_msg
 
@@ -1766,7 +1766,7 @@ class TestWeb(web.Helper):
                             data={'editor': 'Some HTML code!'},
                             follow_redirects=True)
         assert "Sample App" in res.data, "Does not return to app details"
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         err_msg = "Task Presenter failed to update"
         assert app.info['task_presenter'] == 'Some HTML code!', err_msg
 
@@ -1789,7 +1789,7 @@ class TestWeb(web.Helper):
                             data={'editor': 'Some HTML code!'},
                             follow_redirects=True)
         assert "Sample App" in res.data, "Does not return to app details"
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         err_msg = "Task Presenter failed to update"
         assert app.info['task_presenter'] == 'Some HTML code!', err_msg
 
@@ -1815,7 +1815,7 @@ class TestWeb(web.Helper):
 
         self.register()
         self.new_application()
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         err_msg = "Task Presenter should be empty"
         assert not app.info.get('task_presenter'), err_msg
 
@@ -1823,7 +1823,7 @@ class TestWeb(web.Helper):
                             data={'editor': 'Some HTML code!'},
                             follow_redirects=True)
         assert "Sample App" in res.data, "Does not return to app details"
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         for i in range(10):
             key = "key_%s" % i
             app.info[key] = i
@@ -1832,7 +1832,7 @@ class TestWeb(web.Helper):
         _info = app.info
 
         self.update_application()
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         for key in _info:
             assert key in app.info.keys(), \
                 "The key %s is lost and it should be here" % key
@@ -1923,7 +1923,7 @@ class TestWeb(web.Helper):
         uri = "/app/%s/tasks/export?type=task&format=json" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         exported_tasks = json.loads(res.data)
-        app = db.session.query(model.App)\
+        app = db.session.query(model.app.App)\
                 .filter_by(short_name=Fixtures.app_short_name)\
                 .first()
         err_msg = "The number of exported tasks is different from App Tasks"
@@ -1967,7 +1967,7 @@ class TestWeb(web.Helper):
         uri = "/app/%s/tasks/export?type=task_run&format=json" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         exported_task_runs = json.loads(res.data)
-        app = db.session.query(model.App)\
+        app = db.session.query(model.app.App)\
                 .filter_by(short_name=Fixtures.app_short_name)\
                 .first()
         err_msg = "The number of exported task runs is different from App Tasks"
@@ -1999,7 +1999,7 @@ class TestWeb(web.Helper):
         res = self.app.get(uri, follow_redirects=True)
         csv_content = StringIO.StringIO(res.data)
         csvreader = unicode_csv_reader(csv_content)
-        app = db.session.query(model.App)\
+        app = db.session.query(model.app.App)\
                 .filter_by(short_name=Fixtures.app_short_name)\
                 .first()
         exported_tasks = []
@@ -2042,7 +2042,7 @@ class TestWeb(web.Helper):
         res = self.app.get(uri, follow_redirects=True)
         csv_content = StringIO.StringIO(res.data)
         csvreader = unicode_csv_reader(csv_content)
-        app = db.session.query(model.App)\
+        app = db.session.query(model.app.App)\
                 .filter_by(short_name=Fixtures.app_short_name)\
                 .first()
         exported_task_runs = []
@@ -2074,8 +2074,8 @@ class TestWeb(web.Helper):
 
         """Test WEB Export CKAN Tasks works."""
         Fixtures.create()
-        user = db.session.query(model.User).filter_by(name=Fixtures.name).first()
-        app = db.session.query(model.App).first()
+        user = db.session.query(model.user.User).filter_by(name=Fixtures.name).first()
+        app = db.session.query(model.app.App).first()
         user.ckan_api = 'ckan-api-key'
         app.owner_id = user.id
         db.session.add(user)
@@ -2114,8 +2114,8 @@ class TestWeb(web.Helper):
 
         """Test WEB Export CKAN Tasks works."""
         Fixtures.create()
-        user = db.session.query(model.User).filter_by(name=Fixtures.name).first()
-        app = db.session.query(model.App).first()
+        user = db.session.query(model.user.User).filter_by(name=Fixtures.name).first()
+        app = db.session.query(model.app.App).first()
         user.ckan_api = 'ckan-api-key'
         app.owner_id = user.id
         db.session.add(user)
@@ -2156,8 +2156,8 @@ class TestWeb(web.Helper):
         mock1.side_effect = mocks
 
         Fixtures.create()
-        user = db.session.query(model.User).filter_by(name=Fixtures.name).first()
-        app = db.session.query(model.App).first()
+        user = db.session.query(model.user.User).filter_by(name=Fixtures.name).first()
+        app = db.session.query(model.app.App).first()
         user.ckan_api = 'ckan-api-key'
         app.owner_id = user.id
         db.session.add(user)
@@ -2215,8 +2215,8 @@ class TestWeb(web.Helper):
         mock1.side_effect = mocks
 
         Fixtures.create()
-        user = db.session.query(model.User).filter_by(name=Fixtures.name).first()
-        app = db.session.query(model.App).first()
+        user = db.session.query(model.user.User).filter_by(name=Fixtures.name).first()
+        app = db.session.query(model.app.App).first()
         user.ckan_api = 'ckan-api-key'
         app.owner_id = user.id
         db.session.add(user)
@@ -2263,8 +2263,8 @@ class TestWeb(web.Helper):
         mock1.side_effect = mocks
 
         Fixtures.create()
-        user = db.session.query(model.User).filter_by(name=Fixtures.name).first()
-        app = db.session.query(model.App).first()
+        user = db.session.query(model.user.User).filter_by(name=Fixtures.name).first()
+        app = db.session.query(model.app.App).first()
         user.ckan_api = 'ckan-api-key'
         app.owner_id = user.id
         db.session.add(user)
@@ -2331,7 +2331,7 @@ class TestWeb(web.Helper):
 
     def test_55_facebook_account_warning(self):
         """Test WEB Facebook OAuth user gets a hint to sign in"""
-        user = model.User(fullname='John',
+        user = model.user.User(fullname='John',
                           name='john',
                           email_addr='john@john.com',
                           info={})
@@ -2379,7 +2379,7 @@ class TestWeb(web.Helper):
         self.signout()
 
         # Owner
-        tasks = db.session.query(model.Task).filter_by(app_id=1).all()
+        tasks = db.session.query(model.task.Task).filter_by(app_id=1).all()
         res = self.signin(email=u'tester@tester.com', password=u'tester')
         res = self.app.get('/app/test-app/tasks/delete', follow_redirects=True)
         err_msg = "Owner user should get 200 in GET"
@@ -2388,7 +2388,7 @@ class TestWeb(web.Helper):
         res = self.app.post('/app/test-app/tasks/delete', follow_redirects=True)
         err_msg = "Owner should get 200 in POST"
         assert res.status == '200 OK', err_msg
-        tasks = db.session.query(model.Task).filter_by(app_id=1).all()
+        tasks = db.session.query(model.task.Task).filter_by(app_id=1).all()
         assert len(tasks) == 0, "len(app.tasks) != 0"
 
         # Admin
@@ -2412,7 +2412,7 @@ class TestWeb(web.Helper):
 
         # Authenticated user
         self.register()
-        user = db.session.query(model.User).get(1)
+        user = db.session.query(model.user.User).get(1)
         api_key = user.api_key
         res = self.app.get(url, follow_redirects=True)
         err_msg = "Authenticated user should get access to reset api key page"
@@ -2421,7 +2421,7 @@ class TestWeb(web.Helper):
         res = self.app.post(url, follow_redirects=True)
         err_msg = "Authenticated user should be able to reset his api key"
         assert res.status_code == 200, err_msg
-        user = db.session.query(model.User).get(1)
+        user = db.session.query(model.user.User).get(1)
         err_msg = "New generated API key should be different from old one"
         assert api_key != user.api_key, err_msg
 
@@ -2478,7 +2478,7 @@ class TestWeb(web.Helper):
     def test_69_allow_anonymous_contributors(self):
         """Test WEB allow anonymous contributors works"""
         Fixtures.create()
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         url = '/app/%s/newtask' % app.short_name
 
         # All users are allowed to participate by default
@@ -2503,7 +2503,7 @@ class TestWeb(web.Helper):
         # As Anonymous user
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should be redirected to sign in"
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         msg = "Oops! You have to sign in to participate in <strong>%s</strong>" % app.name
         assert msg in res.data, err_msg
 
@@ -2581,7 +2581,7 @@ class TestWeb(web.Helper):
         Mock.return_value = unauthorized_request
         self.register()
         self.new_application()
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'epicollect_project': 'fakeproject',
                                        'epicollect_form': 'fakeform',
@@ -2599,7 +2599,7 @@ class TestWeb(web.Helper):
         Mock.return_value = html_request
         self.register()
         self.new_application()
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'epicollect_project': 'fakeproject',
                                        'epicollect_form': 'fakeform',
@@ -2617,17 +2617,17 @@ class TestWeb(web.Helper):
         Mock.return_value = html_request
         self.register()
         self.new_application()
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         res = self.app.post(('/app/%s/tasks/import' % (app.short_name)),
                             data={'epicollect_project': 'fakeproject',
                                   'epicollect_form': 'fakeform',
                                   'formtype': 'json'},
                             follow_redirects=True)
 
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         err_msg = "Tasks should be imported"
         assert "1 Task imported successfully!" in res.data, err_msg
-        tasks = db.session.query(model.Task).filter_by(app_id=app.id).all()
+        tasks = db.session.query(model.task.Task).filter_by(app_id=app.id).all()
         err_msg = "The imported task from EpiCollect is wrong"
         assert tasks[0].info['DeviceID'] == 23, err_msg
 
@@ -2640,7 +2640,7 @@ class TestWeb(web.Helper):
                                   'epicollect_form': 'fakeform',
                                   'formtype': 'json'},
                             follow_redirects=True)
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
         assert len(app.tasks) == 2, "There should be only 2 tasks"
         n = 0
         epi_tasks = [{u'DeviceID': 23}, {u'DeviceID': 24}]
@@ -2718,7 +2718,7 @@ class TestWeb(web.Helper):
             dom = BeautifulSoup(res.data)
             err_msg = "Task Scheduler should be updated"
             assert dom.find(id='msg_success') is not None, err_msg
-            app = db.session.query(model.App).get(1)
+            app = db.session.query(model.app.App).get(1)
             assert app.info['sched'] == sched, err_msg
             self.signout()
 
@@ -2783,7 +2783,7 @@ class TestWeb(web.Helper):
             dom = BeautifulSoup(res.data)
             err_msg = "Task Redundancy should be updated"
             assert dom.find(id='msg_success') is not None, err_msg
-            app = db.session.query(model.App).get(1)
+            app = db.session.query(model.app.App).get(1)
             for t in app.tasks:
                 assert t.n_answers == n_answers, err_msg
             # Wrong values, triggering the validators
@@ -2843,7 +2843,7 @@ class TestWeb(web.Helper):
         self.signout()
 
         # As owner and root
-        app = db.session.query(model.App).get(1)
+        app = db.session.query(model.app.App).get(1)
         _id = app.tasks[0].id
         for i in range(0, 1):
             if i == 0:
@@ -2866,7 +2866,7 @@ class TestWeb(web.Helper):
             dom = BeautifulSoup(res.data)
             err_msg = "Task Priority should be updated"
             assert dom.find(id='msg_success') is not None, err_msg
-            task = db.session.query(model.Task).get(_id)
+            task = db.session.query(model.task.Task).get(_id)
             assert task.id == int(task_ids), err_msg
             assert task.priority_0 == priority_0, err_msg
             # Wrong values, triggering the validators

@@ -45,7 +45,7 @@ import pybossa.model as model
 from flask.ext.babel import lazy_gettext, gettext
 #from sqlalchemy.sql import func, text
 from sqlalchemy.sql import text
-from pybossa.model import User
+from pybossa.model.user import User
 from pybossa.core import db, signer, mail, get_locale
 from pybossa.util import Pagination
 #from pybossa.util import Twitter
@@ -103,7 +103,7 @@ def signin():
     if request.method == 'POST' and form.validate():
         password = form.password.data
         email = form.email.data
-        user = model.User.query.filter_by(email_addr=email).first()
+        user = model.user.User.query.filter_by(email_addr=email).first()
         if user and user.check_password(password):
             login_user(user, remember=True)
             msg_1 = gettext("Welcome back") + " " + user.fullname
@@ -169,8 +169,8 @@ class RegisterForm(Form):
     username = TextField(lazy_gettext('User name'),
                          [validators.Length(min=3, max=35, message=err_msg),
                           pb_validator.NotAllowedChars(),
-                          pb_validator.Unique(db.session, model.User,
-                                              model.User.name, err_msg_2)])
+                          pb_validator.Unique(db.session, model.user.User,
+                                              model.user.User.name, err_msg_2)])
 
     err_msg = lazy_gettext("Email must be between 3 and 35 characters long")
     err_msg_2 = lazy_gettext("Email is already taken")
@@ -178,8 +178,8 @@ class RegisterForm(Form):
                            [validators.Length(min=3, max=35, message=err_msg),
                             validators.Email(),
                             pb_validator.Unique(
-                                db.session, model.User,
-                                model.User.email_addr, err_msg_2)])
+                                db.session, model.user.User,
+                                model.user.User.email_addr, err_msg_2)])
 
     err_msg = lazy_gettext("Password cannot be empty")
     err_msg_2 = lazy_gettext("Passwords must match")
@@ -208,7 +208,7 @@ class UpdateProfileForm(Form):
                      [validators.Length(min=3, max=35, message=err_msg),
                       pb_validator.NotAllowedChars(),
                       pb_validator.Unique(
-                          db.session, model.User, model.User.name, err_msg_2)])
+                          db.session, model.user.User, model.user.User.name, err_msg_2)])
 
     err_msg = lazy_gettext("Email must be between 3 and 35 characters long")
     err_msg_2 = lazy_gettext("Email is already taken")
@@ -216,8 +216,8 @@ class UpdateProfileForm(Form):
                            [validators.Length(min=3, max=35, message=err_msg),
                             validators.Email(),
                             pb_validator.Unique(
-                                db.session, model.User,
-                                model.User.email_addr, err_msg_2)])
+                                db.session, model.user.User,
+                                model.user.User.email_addr, err_msg_2)])
 
     locale = SelectField(lazy_gettext('Default Language'))
     ckan_api = TextField(lazy_gettext('CKAN API Key'))
@@ -248,7 +248,7 @@ def register():
     # TODO: re-enable csrf
     form = RegisterForm(request.form)
     if request.method == 'POST' and form.validate():
-        account = model.User(fullname=form.fullname.data,
+        account = model.user.User(fullname=form.fullname.data,
                              name=form.username.data,
                              email_addr=form.email_addr.data)
         account.set_password(form.password.data)
@@ -273,7 +273,7 @@ def profile():
     Returns a Jinja2 template with the user information.
 
     """
-    user = db.session.query(model.User).get(current_user.id)
+    user = db.session.query(model.user.User).get(current_user.id)
 
     sql = text('''
                SELECT app.name, app.short_name, app.info,
@@ -310,7 +310,7 @@ def profile():
         user.rank = row.rank
         user.score = row.score
 
-    user.total = db.session.query(model.User).count()
+    user.total = db.session.query(model.user.User).count()
     return render_template('account/profile.html', title=gettext("Profile"),
                            apps_contrib=apps_contrib,
                            user=user)
@@ -391,15 +391,15 @@ def update_profile():
         form = UpdateProfileForm(request.form)
         form.set_locales(current_app.config['LOCALES'])
         if form.validate():
-            new_profile = model.User(id=form.id.data,
+            new_profile = model.user.User(id=form.id.data,
                                      fullname=form.fullname.data,
                                      name=form.name.data,
                                      email_addr=form.email_addr.data,
                                      locale=form.locale.data,
                                      ckan_api=form.ckan_api.data,
                                      privacy_mode=form.privacy_mode.data)
-            db.session.query(model.User)\
-              .filter(model.User.id == current_user.id)\
+            db.session.query(model.user.User)\
+              .filter(model.user.User.id == current_user.id)\
               .first()
             db.session.merge(new_profile)
             db.session.commit()
@@ -438,7 +438,7 @@ def change_password():
     """
     form = ChangePasswordForm(request.form)
     if form.validate_on_submit():
-        user = db.session.query(model.User).get(current_user.id)
+        user = db.session.query(model.user.User).get(current_user.id)
         if user.check_password(form.current_password.data):
             user.set_password(form.new_password.data)
             db.session.add(user)
@@ -486,7 +486,7 @@ def reset_password():
     username = userdict.get('user')
     if not username or not userdict.get('password'):
         abort(403)
-    user = model.User.query.filter_by(name=username).first_or_404()
+    user = model.user.User.query.filter_by(name=username).first_or_404()
     if user.passwd_hash != userdict.get('password'):
         abort(403)
     form = ChangePasswordForm(request.form)
@@ -522,7 +522,7 @@ def forgot_password():
     """
     form = ForgotPasswordForm(request.form)
     if form.validate_on_submit():
-        user = model.User.query\
+        user = model.user.User.query\
                     .filter_by(email_addr=form.email_addr.data)\
                     .first()
         if user and user.email_addr:
@@ -580,7 +580,7 @@ def reset_api_key():
             return render_template('account/reset-api-key.html',
                                    title=title)
         else:
-            user = db.session.query(model.User).get(current_user.id)
+            user = db.session.query(model.user.User).get(current_user.id)
             user.api_key = model.make_uuid()
             db.session.commit()
             cached_users.delete_user_summary(user.name)

@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2014 SF Isle of Man Limited
+# Copyright (C) 2013 SF Isle of Man Limited
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,19 +15,28 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-"""
-PyBossa api module for domain object Category via an API.
 
-This package adds GET, POST, PUT and DELETE methods for:
-    * categories
-
-"""
-from api_base import APIBase
-from pybossa.model.category import Category
+from flask.ext.login import current_user
 
 
-class CategoryAPI(APIBase):
+def create(blogpost):
+    if current_user.is_anonymous():
+        return False
+    return blogpost.owner.id == blogpost.app.owner.id == current_user.id
 
-    """Class API for domain object Category."""
 
-    __class__ = Category
+def read(blogpost=None):
+    return True
+
+
+def update(blogpost):
+    if current_user.is_anonymous():
+        return False
+    return blogpost.owner.id == current_user.id
+
+
+def delete(blogpost):
+    if current_user.is_anonymous():
+        return False
+    else:
+        return current_user.admin or blogpost.owner.id == current_user.id

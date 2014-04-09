@@ -55,7 +55,7 @@ class TestI18n(web.Helper):
             assert "Community" in res.data, err_msg
 
             # Change it to Spanish
-            user = db.session.query(model.User).filter_by(name='johndoe').first()
+            user = db.session.query(model.user.User).filter_by(name='johndoe').first()
             user.locale = 'es'
             db.session.add(user)
             db.session.commit()

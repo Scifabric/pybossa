@@ -38,8 +38,8 @@ class TestValidator:
         with self.app.test_request_context('/'):
             f = LoginForm()
             f.email.data = Fixtures.email_addr
-            u = pybossa.validator.Unique(db.session, model.User,
-                                         model.User.email_addr)
+            u = pybossa.validator.Unique(db.session, model.user.User,
+                                         model.user.User.email_addr)
             u.__call__(f, f.email)
 
     @raises(ValidationError)

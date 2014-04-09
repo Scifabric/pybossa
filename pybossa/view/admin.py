@@ -79,16 +79,16 @@ def featured(app_id=None):
             return render_template('/admin/applications.html', apps=apps,
                                    categories=categories)
         else:
-            app = db.session.query(model.App).get(app_id)
+            app = db.session.query(model.app.App).get(app_id)
             if app:
                 if request.method == 'POST':
                     cached_apps.reset()
-                    f = model.Featured()
+                    f = model.featured.Featured()
                     f.app_id = app_id
                     require.app.update(app)
                     # Check if the app is already in this table
-                    tmp = db.session.query(model.Featured)\
-                            .filter(model.Featured.app_id == app_id)\
+                    tmp = db.session.query(model.featured.Featured)\
+                            .filter(model.featured.Featured.app_id == app_id)\
                             .first()
                     if (tmp is None):
                         db.session.add(f)
@@ -99,8 +99,8 @@ def featured(app_id=None):
                         return format_error(msg, 415)
                 if request.method == 'DELETE':
                     cached_apps.reset()
-                    f = db.session.query(model.Featured)\
-                          .filter(model.Featured.app_id == app_id)\
+                    f = db.session.query(model.featured.Featured)\
+                          .filter(model.featured.Featured.app_id == app_id)\
                           .first()
                     if (f):
                         db.session.delete(f)
@@ -128,17 +128,17 @@ def users(user_id=None):
     """Manage users of PyBossa"""
     try:
         form = SearchForm(request.form)
-        users = db.session.query(model.User)\
-                  .filter(model.User.admin == True)\
-                  .filter(model.User.id != current_user.id)\
+        users = db.session.query(model.user.User)\
+                  .filter(model.user.User.admin == True)\
+                  .filter(model.user.User.id != current_user.id)\
                   .all()
 
         if request.method == 'POST' and form.user.data:
             query = '%' + form.user.data.lower() + '%'
-            found = db.session.query(model.User)\
-                      .filter(or_(func.lower(model.User.name).like(query),
-                                  func.lower(model.User.fullname).like(query)))\
-                      .filter(model.User.id != current_user.id)\
+            found = db.session.query(model.user.User)\
+                      .filter(or_(func.lower(model.user.User.name).like(query),
+                                  func.lower(model.user.User.fullname).like(query)))\
+                      .filter(model.user.User.id != current_user.id)\
                       .all()
             require.user.update(found)
             if not found:
@@ -168,7 +168,7 @@ def export_users():
         return Response(gen_json(), mimetype='application/json')
 
     def gen_json():
-        users = db.session.query(model.User).all()
+        users = db.session.query(model.user.User).all()
         json_users = []
         for user in users:
             json_users.append(dictize_with_exportable_attributes(user))
@@ -187,7 +187,7 @@ def export_users():
 
     def gen_csv(out, writer, write_user):
         add_headers(writer)
-        for user in db.session.query(model.User).yield_per(1):
+        for user in db.session.query(model.user.User).yield_per(1):
             write_user(writer, user)
         yield out.getvalue()
 
@@ -215,7 +215,7 @@ def add_admin(user_id=None):
     """Add admin flag for user_id"""
     try:
         if user_id:
-            user = db.session.query(model.User)\
+            user = db.session.query(model.user.User)\
                      .get(user_id)
             require.user.update(user)
             if user:
@@ -237,7 +237,7 @@ def del_admin(user_id=None):
     """Del admin flag for user_id"""
     try:
         if user_id:
-            user = db.session.query(model.User)\
+            user = db.session.query(model.user.User)\
                      .get(user_id)
             require.user.update(user)
             if user:
@@ -259,7 +259,7 @@ class CategoryForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
     name = TextField(lazy_gettext('Name'),
                      [validators.Required(),
-                      pb_validator.Unique(db.session, model.Category, model.Category.name,
+                      pb_validator.Unique(db.session, model.category.Category, model.category.Category.name,
                                           message="Name is already taken.")])
     description = TextField(lazy_gettext('Description'),
                             [validators.Required()])
@@ -279,7 +279,7 @@ def categories():
             form = CategoryForm(request.form)
             if form.validate():
                 slug = form.name.data.lower().replace(" ", "")
-                category = model.Category(name=form.name.data,
+                category = model.category.Category(name=form.name.data,
                                           short_name=slug,
                                           description=form.description.data)
                 db.session.add(category)
@@ -310,7 +310,7 @@ def categories():
 def del_category(id):
     """Deletes a category"""
     try:
-        category = db.session.query(model.Category).get(id)
+        category = db.session.query(model.category.Category).get(id)
         if category:
             if len(cached_cat.get_all()) > 1:
                 require.category.delete(category)
@@ -346,7 +346,7 @@ def del_category(id):
 def update_category(id):
     """Updates a category"""
     try:
-        category = db.session.query(model.Category).get(id)
+        category = db.session.query(model.category.Category).get(id)
         if category:
             require.category.update(category)
             form = CategoryForm(obj=category)
@@ -360,7 +360,7 @@ def update_category(id):
                 form = CategoryForm(request.form)
                 if form.validate():
                     slug = form.name.data.lower().replace(" ", "")
-                    new_category = model.Category(id=form.id.data,
+                    new_category = model.category.Category(id=form.id.data,
                                                   name=form.name.data,
                                                   short_name=slug)
                     # print new_category.id

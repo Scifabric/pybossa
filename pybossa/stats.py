@@ -20,7 +20,8 @@ from flask import current_app
 from sqlalchemy.sql import text
 from pybossa.core import db
 from pybossa.cache import cache, memoize, ONE_DAY
-from pybossa.model import TaskRun, Task
+from pybossa.model.task import Task
+from pybossa.model.task_run import TaskRun
 from pybossa.cache import FIVE_MINUTES, memoize
 
 import string

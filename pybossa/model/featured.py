@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2014 SF Isle of Man Limited
+# Copyright (C) 2013 SF Isle of Man Limited
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,19 +15,20 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-"""
-PyBossa api module for domain object Category via an API.
 
-This package adds GET, POST, PUT and DELETE methods for:
-    * categories
+from sqlalchemy import Integer, Text
+from sqlalchemy.schema import Column, ForeignKey
 
-"""
-from api_base import APIBase
-from pybossa.model.category import Category
+from pybossa.core import db
+from pybossa.model import DomainObject, make_timestamp
 
 
-class CategoryAPI(APIBase):
 
-    """Class API for domain object Category."""
+class Featured(db.Model, DomainObject):
+    '''A Table with Featured Apps.'''
 
-    __class__ = Category
+    __tablename__ = 'featured'
+
+    id = Column(Integer, primary_key=True)
+    created = Column(Text, default=make_timestamp)
+    app_id = Column(Integer, ForeignKey('app.id'))
