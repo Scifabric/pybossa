@@ -342,4 +342,30 @@ second one will perform the migration.
 .. _Alembic: http://pypi.python.org/pypi/alembic
 
 
+Migrating Your Old DB Records
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Previously, HTML was supported as the default option for the long_description
+field in apps. In new versions of PyBossa, Markdown has been adopted as the
+default option. However, you can use HTML instead of Markdown by modifying the
+default PyBossa theme or using your own forked from the default one.
+
+If you were have been using PyBossa for a while you may have apps in your
+database whose long_description is in HTML format. Hence, if you are using the default
+theme for PyBossa you will no longer see them rendered as HTML and may have some
+issues.
+
+In order to fix this issue, you can run a simple script to convert all the DB app's
+long_description field from HTML to Markdown, just by running the following
+commands::
+
+  pip install html2text
+  python cli.py markdown_db_migrate
+
+The first command will install a Python package that will handle the HTML to
+Markdown conversion, while the second one will convert your DB entries.
+
+.. note::
+    As always, if you are using the virtualenv_ be sure to activate it before
+    running the pip install command.
 

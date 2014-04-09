@@ -10,6 +10,7 @@ import pybossa.web as web
 
 from alembic.config import Config
 from alembic import command
+from html2text import html2text
 
 def setup_alembic_config():
     if "DATABASE_URL" not in os.environ:
@@ -63,6 +64,18 @@ def fixtures():
     user.set_password(u'tester')
     db.session.add(user)
     db.session.commit()
+
+def markdown_db_migrate():
+    '''Perform a migration of the app long descriptions from HTML to
+    Markdown for existing database records'''
+    query = 'SELECT id, long_description FROM "app";'
+    query_result = db.engine.execute(query)
+    old_descriptions = query_result.fetchall()
+    for old_desc in old_descriptions:
+        new_descritpion = html2text(old_desc.long_description)
+        query = ("UPDATE \"app\" SET long_description=\'%s\' WHERE id=%s;"
+                % (new_descritpion, old_desc.id))
+        db.engine.execute(query)
 
 
 ## ==================================================

@@ -9,6 +9,12 @@ The most interesting changes are the following:
  * Breadth First Scheduler improved: now users can only participate once in
    every task.
  * Refactor API and add a new endpoint: globalstats.
+ * Allow admins to download a list of users in CSV/JSON format.
+ * Fix CKAN key uniqueness in DB.
+ * Load 20 apps per page (customized in the settings page).
+ * Send categories to the front page.
+ * Use Markdown as default for App's long description field (with migration
+   script for older versions).
 
 For a full list of changes, see associated `Github milestone`_.
 
