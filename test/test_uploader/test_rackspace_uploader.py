@@ -19,7 +19,7 @@
 
 from base import web, model, Fixtures, db, redis_flushall
 from pybossa.uploader.rackspace import RackspaceUploader
-from mock import patch, PropertyMock
+from mock import patch, PropertyMock, MagicMock
 from werkzeug.datastructures import FileStorage
 from pyrax.fakes import FakeContainer
 
@@ -52,8 +52,10 @@ class TestRackspaceUploader:
     def test_rackspace_uploader_init(self, Mock):
         """Test RACKSPACE UPLOADER init works."""
         new_extensions = set(['pdf', 'doe'])
-        with patch('pybossa.uploader.rackspace.pyrax.cloudfiles.get_container',
-                   return_value='pybossa'):
+        mycloudfiles = MagicMock()
+        mycloudfiles.get_container.return_value = 'pybossa'
+        with patch('pybossa.uploader.rackspace.pyrax.cloudfiles',
+                   return_value=mycloudfiles):
             u = RackspaceUploader("username",
                                   "apikey",
                                   "ORD",
