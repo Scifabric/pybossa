@@ -101,7 +101,7 @@ def new_task(app_id):
     """Return a new task for an application."""
     # Check if the request has an arg:
     try:
-        app = db.session.query(model.App).get(app_id)
+        app = db.session.query(model.app.App).get(app_id)
         if app is None:
             raise NotFound
         if request.args.get('offset'):
@@ -140,24 +140,24 @@ def user_progress(app_id=None, short_name=None):
     """
     if app_id or short_name:
         if short_name:
-            app = db.session.query(model.App)\
-                    .filter(model.App.short_name == short_name)\
+            app = db.session.query(model.app.App)\
+                    .filter(model.app.App.short_name == short_name)\
                     .first()
         if app_id:
-            app = db.session.query(model.App)\
+            app = db.session.query(model.app.App)\
                     .get(app_id)
 
         if app:
             if current_user.is_anonymous():
-                tr = db.session.query(model.TaskRun)\
-                       .filter(model.TaskRun.app_id == app.id)\
-                       .filter(model.TaskRun.user_ip == request.remote_addr)
+                tr = db.session.query(model.task_run.TaskRun)\
+                       .filter(model.task_run.TaskRun.app_id == app.id)\
+                       .filter(model.task_run.TaskRun.user_ip == request.remote_addr)
             else:
-                tr = db.session.query(model.TaskRun)\
-                       .filter(model.TaskRun.app_id == app.id)\
-                       .filter(model.TaskRun.user_id == current_user.id)
-            tasks = db.session.query(model.Task)\
-                .filter(model.Task.app_id == app.id)
+                tr = db.session.query(model.task_run.TaskRun)\
+                       .filter(model.task_run.TaskRun.app_id == app.id)\
+                       .filter(model.task_run.TaskRun.user_id == current_user.id)
+            tasks = db.session.query(model.task.Task)\
+                .filter(model.task.Task.app_id == app.id)
             tmp = dict(done=tr.count(), total=tasks.count())
             return Response(json.dumps(tmp), mimetype="application/json")
         else:

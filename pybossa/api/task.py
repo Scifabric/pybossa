@@ -22,7 +22,7 @@ This package adds GET, POST, PUT and DELETE methods for:
     * tasks
 
 """
-from pybossa.model import Task
+from pybossa.model.task import Task
 from api_base import APIBase
 
 

@@ -24,7 +24,7 @@ This package adds GET, POST, PUT and DELETE methods for:
 """
 from flask.ext.login import current_user
 from api_base import APIBase
-from pybossa.model import App
+from pybossa.model.app import App
 import pybossa.cache.apps as cached_apps
 
 

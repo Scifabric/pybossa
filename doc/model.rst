@@ -39,29 +39,29 @@ documentation of main model attributes.
 App
 ---
 
-.. autoclass:: pybossa.model.App
+.. autoclass:: pybossa.model.app.App
    :members:
 
 Category
 --------
 
-.. autoclass:: pybossa.model.Category
+.. autoclass:: pybossa.model.category.Category
     :members:
 
 Task
 ----
 
-.. autoclass:: pybossa.model.Task
+.. autoclass:: pybossa.model.task.Task
    :members:
 
 TaskRun
 -------
 
-.. autoclass:: pybossa.model.TaskRun
+.. autoclass:: pybossa.model.task_run.TaskRun
    :members:
 
 User
 ----
 
-.. autoclass:: pybossa.model.User
+.. autoclass:: pybossa.model.user.User
     :members:

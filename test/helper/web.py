@@ -102,7 +102,7 @@ class Helper(object):
         return self.app.get('/account/signout', follow_redirects=True)
 
     def create_categories(self):
-        categories = db.session.query(model.Category).all()
+        categories = db.session.query(model.category.Category).all()
         if len(categories) == 0:
             print "Categories 0"
             print "Creating default ones"
@@ -113,7 +113,7 @@ class Helper(object):
                         thumbnail='An Icon link',
                         allow_anonymous_contributors='True',
                         category_id="1",
-                        long_description=u'<div id="long_desc">Long desc</div>',
+                        long_description=u'Long Description\n================',
                         hidden=False):
         """Helper function to create an application"""
         if method == "POST":
@@ -146,13 +146,13 @@ class Helper(object):
         """Helper function to create tasks for an app"""
         tasks = []
         for i in range(0, 10):
-            tasks.append(model.Task(app_id=appid, state='0', info={}))
+            tasks.append(model.task.Task(app_id=appid, state='0', info={}))
         db.session.add_all(tasks)
         db.session.commit()
 
     def delTaskRuns(self, app_id=1):
         """Deletes all TaskRuns for a given app_id"""
-        db.session.query(model.TaskRun).filter_by(app_id=1).delete()
+        db.session.query(model.task_run.TaskRun).filter_by(app_id=1).delete()
         db.session.commit()
 
     def task_settings_scheduler(self, method="POST", short_name='sampleapp',

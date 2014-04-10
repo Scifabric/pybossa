@@ -54,7 +54,7 @@ def manage_user(access_token, user_data, next_url):
     # Twitter API does not provide a way
     # to get the e-mail so we will ask for it
     # only the first time
-    user = db.session.query(model.User)\
+    user = db.session.query(model.user.User)\
              .filter_by(twitter_user_id=user_data['user_id'])\
              .first()
 
@@ -64,14 +64,14 @@ def manage_user(access_token, user_data, next_url):
     twitter_token = dict(oauth_token=access_token['oauth_token'],
                          oauth_token_secret=access_token['oauth_token_secret'])
     info = dict(twitter_token=twitter_token)
-    user = db.session.query(model.User)\
+    user = db.session.query(model.user.User)\
         .filter_by(name=user_data['screen_name'])\
         .first()
 
     if user is not None:
         return None
 
-    user = model.User(fullname=user_data['screen_name'],
+    user = model.user.User(fullname=user_data['screen_name'],
                       name=user_data['screen_name'],
                       email_addr=user_data['screen_name'],
                       twitter_user_id=user_data['user_id'],
@@ -111,7 +111,7 @@ def oauth_authorized(resp):  # pragma: no cover
     user = manage_user(access_token, user_data, next_url)
 
     if user is None:
-        user = db.session.query(model.User)\
+        user = db.session.query(model.user.User)\
                  .filter_by(name=user_data['screen_name'])\
                  .first()
         msg, method = get_user_signup_method(user)

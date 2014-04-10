@@ -68,10 +68,10 @@ class TestTaskAPI(HelperAPI):
 
     def test_05_task_post(self):
         '''Test API Task creation and auth'''
-        user = db.session.query(model.User)\
+        user = db.session.query(model.user.User)\
                  .filter_by(name=Fixtures.name)\
                  .one()
-        app = db.session.query(model.App)\
+        app = db.session.query(model.app.App)\
                 .filter_by(owner_id=user.id)\
                 .one()
         data = dict(app_id=app.id, state='0', info='my task data')
@@ -100,7 +100,7 @@ class TestTaskAPI(HelperAPI):
                             data=json.dumps(data))
         assert res.data, res
         datajson = json.loads(res.data)
-        out = db.session.query(model.Task)\
+        out = db.session.query(model.task.Task)\
                 .filter_by(id=datajson['id'])\
                 .one()
         assert out, out
@@ -113,7 +113,7 @@ class TestTaskAPI(HelperAPI):
                             data=root_data)
         assert res.data, res
         datajson = json.loads(res.data)
-        out = db.session.query(model.Task)\
+        out = db.session.query(model.task.Task)\
                 .filter_by(id=datajson['id'])\
                 .one()
         assert out, out
@@ -174,7 +174,7 @@ class TestTaskAPI(HelperAPI):
         res = self.app.put(url, data=datajson)
         out = json.loads(res.data)
         assert_equal(res.status, '200 OK', res.data)
-        out2 = db.session.query(model.Task).get(id_)
+        out2 = db.session.query(model.task.Task).get(id_)
         assert_equal(out2.state, data['state'])
         assert out2.id == out['id'], out
 
@@ -182,7 +182,7 @@ class TestTaskAPI(HelperAPI):
         res = self.app.put('/api/task/%s?api_key=%s' % (root_id_, Fixtures.root_api_key),
                            data=root_datajson)
         assert_equal(res.status, '200 OK', res.data)
-        out2 = db.session.query(model.Task).get(root_id_)
+        out2 = db.session.query(model.task.Task).get(root_id_)
         assert_equal(out2.state, root_data['state'])
 
         # PUT with not JSON data
@@ -249,14 +249,14 @@ class TestTaskAPI(HelperAPI):
         res = self.app.delete(url)
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
-        tasks = db.session.query(model.Task)\
+        tasks = db.session.query(model.task.Task)\
                   .filter_by(app_id=app.id)\
                   .all()
         assert tasks, tasks
 
     def test_11_allow_anonymous_contributors(self):
         """Test API allow anonymous contributors works"""
-        app = db.session.query(model.App).first()
+        app = db.session.query(model.app.App).first()
 
         # All users are allowed to participate by default
         # As Anonymous user

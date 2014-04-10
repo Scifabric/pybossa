@@ -28,9 +28,9 @@ import random
 def new_task(app_id, user_id=None, user_ip=None, offset=0):
     '''Get a new task by calling the appropriate scheduler function.
     '''
-    app = db.session.query(model.App).get(app_id)
+    app = db.session.query(model.app.App).get(app_id)
     if not app.allow_anonymous_contributors and user_id is None:
-        error = model.Task(info=dict(error="This application does not allow anonymous contributors"))
+        error = model.task.Task(info=dict(error="This application does not allow anonymous contributors"))
         return error
     else:
         sched_map = {
@@ -86,10 +86,10 @@ def get_breadth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, off
     tasks = [x[0] for x in tasks]
     if tasks:
         if (offset == 0):
-            return db.session.query(model.Task).get(tasks[0])
+            return db.session.query(model.task.Task).get(tasks[0])
         else:
             if (offset < len(tasks)):
-                return db.session.query(model.Task).get(tasks[offset])
+                return db.session.query(model.task.Task).get(tasks[offset])
             else:
                 return None
     else: # pragma: no cover
@@ -119,7 +119,7 @@ def get_depth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, offse
 
 def get_random_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
     """Returns a random task for the user"""
-    app = db.session.query(model.App).get(app_id)
+    app = db.session.query(model.app.App).get(app_id)
     from random import choice
     if len(app.tasks) > 0:
         return choice(app.tasks)
@@ -138,9 +138,9 @@ def get_incremental_task(app_id, user_id=None, user_ip=None, n_answers=30, offse
     rand = random.randrange(0, total_remaining)
     task = candidate_tasks[rand]
     #Find last answer for the task
-    q = db.session.query(model.TaskRun)\
-          .filter(model.TaskRun.task_id == task.id)\
-          .order_by(model.TaskRun.finish_time.desc())
+    q = db.session.query(model.task_run.TaskRun)\
+          .filter(model.task_run.TaskRun.task_id == task.id)\
+          .order_by(model.task_run.TaskRun.finish_time.desc())
     last_task_run = q.first()
     if last_task_run:
         task.info['last_answer'] = last_task_run.info
@@ -173,5 +173,5 @@ def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30, offset
 
     tasks = []
     for t in rows:
-        tasks.append(db.session.query(model.Task).get(t.id))
+        tasks.append(db.session.query(model.task.Task).get(t.id))
     return tasks

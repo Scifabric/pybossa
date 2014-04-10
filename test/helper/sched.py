@@ -45,10 +45,10 @@ class Helper(web.Helper):
 
     def del_task_runs(self, app_id=1):
         """Deletes all TaskRuns for a given app_id"""
-        db.session.query(model.TaskRun).filter_by(app_id=app_id).delete()
+        db.session.query(model.task_run.TaskRun).filter_by(app_id=app_id).delete()
         db.session.commit()
         # Update task.state
-        db.session.query(model.Task).filter_by(app_id=app_id)\
+        db.session.query(model.task.Task).filter_by(app_id=app_id)\
                   .update({"state": "ongoing"})
         db.session.commit()
         db.session.remove()

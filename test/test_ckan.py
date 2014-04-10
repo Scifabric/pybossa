@@ -69,7 +69,7 @@ class TestCkanWeb(web_helper.Helper):
         err_msg = "There should be a warning about adding a CKAN api Key"
         assert dom.find(id="ckan_warning") is not None, err_msg
         # Add a CKAN API key to the user
-        u = db.session.query(model.User).filter_by(name=Fixtures.name).first()
+        u = db.session.query(model.user.User).filter_by(name=Fixtures.name).first()
         u.ckan_api = "ckan-api-key"
         db.session.add(u)
         db.session.commit()
@@ -319,8 +319,8 @@ class TestCkanModule(object):
         Mock.return_value = html_request
         with self.app.test_request_context('/'):
             # Resource that exists
-            app = model.App(short_name='urbanpark', name='Urban Parks')
-            user = model.User(fullname='Daniel Lombrana Gonzalez')
+            app = model.app.App(short_name='urbanpark', name='Urban Parks')
+            user = model.user.User(fullname='Daniel Lombrana Gonzalez')
             out = self.ckan.package_create(app=app, user=user, url="http://something.com")
             err_msg = "The package ID should be the same"
             assert out['id'] == self.package_id, err_msg
@@ -348,8 +348,8 @@ class TestCkanModule(object):
         Mock.return_value = pkg_request
         with self.app.test_request_context('/'):
             # Resource that exists
-            app = model.App(short_name='urbanpark', name='Urban Parks')
-            user = model.User(fullname='Daniel Lombrana Gonzalez')
+            app = model.app.App(short_name='urbanpark', name='Urban Parks')
+            user = model.user.User(fullname='Daniel Lombrana Gonzalez')
             self.ckan.package_create(app=app, user=user, url="http://something.com")
             Mock.return_value = rsrc_request
             out = self.ckan.resource_create(name='task')
@@ -494,8 +494,8 @@ class TestCkanModule(object):
         Mock.return_value = html_request
         with self.app.test_request_context('/'):
             # Resource that exists
-            app = model.App(short_name='urbanpark', name='Urban Parks')
-            user = model.User(fullname='Daniel Lombrana Gonzalez')
+            app = model.app.App(short_name='urbanpark', name='Urban Parks')
+            user = model.user.User(fullname='Daniel Lombrana Gonzalez')
             out = self.ckan.package_update(app=app, user=user,
                                            url="http://something.com",
                                            resources=self.pkg_json_found['result']['resources'])

@@ -50,6 +50,13 @@ mail.init_app(web.app)
 def redis_flushall():
     redis_master.flushall()
 
+def assert_not_raises(exception, call, *args, **kwargs):
+    try:
+        call(*args, **kwargs)
+        assert True
+    except exception as ex:
+        assert False, str(ex)
+
 class Fixtures:
     fullname = u'T Tester'
     fullname2 = u'T Tester 2'
@@ -140,7 +147,7 @@ class Fixtures:
 
     @classmethod
     def create_users(cls):
-        root = model.User(
+        root = model.user.User(
                 email_addr = cls.root_addr,
                 name = cls.root_name,
                 passwd_hash = cls.root_password,
@@ -148,7 +155,7 @@ class Fixtures:
                 api_key = cls.root_api_key)
         root.set_password(cls.root_password)
 
-        user = model.User(
+        user = model.user.User(
                 email_addr = cls.email_addr,
                 name = cls.name,
                 passwd_hash = cls.password,
@@ -157,7 +164,7 @@ class Fixtures:
 
         user.set_password(cls.password)
 
-        user2 = model.User(
+        user2 = model.user.User(
                 email_addr = cls.email_addr2,
                 name = cls.name2,
                 passwd_hash = cls.password + "2",
@@ -170,11 +177,11 @@ class Fixtures:
 
     @classmethod
     def create_app(cls,info):
-        category = db.session.query(model.Category).first()
+        category = db.session.query(model.category.Category).first()
         if category is None:
             cls.create_categories()
-            category = db.session.query(model.Category).first()
-        app = model.App(
+            category = db.session.query(model.category.Category).first()
+        app = model.app.App(
                 name=cls.app_name,
                 short_name=cls.app_short_name,
                 description=u'description',
@@ -186,18 +193,18 @@ class Fixtures:
 
     @classmethod
     def create_task_and_run(cls,task_info, task_run_info, app, user, order):
-        task = model.Task(app_id = 1, state = '0', info = task_info, n_answers=10)
+        task = model.task.Task(app_id = 1, state = '0', info = task_info, n_answers=10)
         task.app = app
         # Taskruns will be assigned randomly to a signed user or an anonymous one
         if random.randint(0,1) == 1:
-            task_run = model.TaskRun(
+            task_run = model.task_run.TaskRun(
                     app_id = 1,
                     task_id = 1,
                     user_id = 1,
                     info = task_run_info)
             task_run.user = user
         else:
-            task_run = model.TaskRun(
+            task_run = model.task_run.TaskRun(
                     app_id = 1,
                     task_id = 1,
                     user_ip = '127.0.0.%s' % order,
@@ -208,7 +215,7 @@ class Fixtures:
     @classmethod
     def create_categories(cls):
         names = [cls.cat_1, cls.cat_2]
-        db.session.add_all([model.Category(name=c_name,
+        db.session.add_all([model.category.Category(name=c_name,
                                            short_name=c_name.lower().replace(" ",""),
                                            description=c_name)
                             for c_name in names])

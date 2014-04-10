@@ -40,8 +40,8 @@ In this section you can change the following parameters of your application:
   participate in your application. By default anonymous users are allowed to
   participate in all the applications, so change the value to *No* if you want
   to disable anonymous contributions.
-* **Long Description**: change the text (you can use HTML and also the
-  `Bootstrap`_ CSS classes) describing the goals of your application.
+* **Long Description**: change the text (you can use `Markdown`) describing
+  the goals of your application.
 * **Hide**: tick this field, if you want to hide the application from the
   public listings. You will be the only one with access to it (except admin
   users).
@@ -49,7 +49,7 @@ In this section you can change the following parameters of your application:
 .. image:: http://i.imgur.com/LemKrKJ.png
     :width: 100%
 
-.. _`Bootstrap`: http://twitter.github.io/bootstrap/
+.. _`Markdown`: http://daringfireball.net/projects/markdown/
 
 .. _task-settings:
 
