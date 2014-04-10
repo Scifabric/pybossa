@@ -50,7 +50,7 @@ class TestBlogpostAuthorization:
         """Test anonymous users cannot create blogposts"""
 
         with web.app.test_request_context('/'):
-            blogpost = model.blogpost.Blogpost(title='title', app=self.app, owner=None)
+            blogpost = model.blogpost.Blogpost(title='title', body='body', app=self.app, owner=None)
 
             assert_raises(Unauthorized, getattr(require, 'blogpost').create, blogpost)
 
@@ -62,7 +62,7 @@ class TestBlogpostAuthorization:
         owner, even if is admin"""
 
         with web.app.test_request_context('/'):
-            blogpost = model.blogpost.Blogpost(title='title', app=self.app, owner=self.root)
+            blogpost = model.blogpost.Blogpost(title='title', body='body', app=self.app, owner=self.root)
 
             assert_raises(Forbidden, getattr(require, 'blogpost').create, blogpost)
 
@@ -73,7 +73,7 @@ class TestBlogpostAuthorization:
         """Test authenticated user can create blogpost if is app owner"""
 
         with web.app.test_request_context('/'):
-            blogpost = model.blogpost.Blogpost(title='title', app=self.app, owner=self.user1)
+            blogpost = model.blogpost.Blogpost(title='title', body='body', app=self.app, user_id=self.user1.id)
 
             assert_not_raises(Exception, getattr(require, 'blogpost').create, blogpost)
 
@@ -85,7 +85,7 @@ class TestBlogpostAuthorization:
         sets another person as the author of the blogpost"""
 
         with web.app.test_request_context('/'):
-            blogpost = model.blogpost.Blogpost(title='title', app=self.app, owner=self.user2)
+            blogpost = model.blogpost.Blogpost(title='title', body='body', app=self.app, owner=self.user2)
 
             assert_raises(Forbidden, getattr(require, 'blogpost').create, blogpost)
 
@@ -96,7 +96,7 @@ class TestBlogpostAuthorization:
         """Test anonymous users can read blogposts"""
 
         with web.app.test_request_context('/'):
-            blogpost = model.blogpost.Blogpost(title='title', app=self.app, owner=None)
+            blogpost = model.blogpost.Blogpost(title='title', body='body', app=self.app, owner=None)
             db.session.add(blogpost)
             db.session.commit()
 
@@ -109,7 +109,7 @@ class TestBlogpostAuthorization:
         """Test authenticated user can read blogpost if is not the app owner"""
 
         with web.app.test_request_context('/'):
-            blogpost = model.blogpost.Blogpost(title='title', app=self.app, owner=self.root)
+            blogpost = model.blogpost.Blogpost(title='title', body='body', app=self.app, owner=self.root)
             db.session.add(blogpost)
             db.session.commit()
 
@@ -122,7 +122,7 @@ class TestBlogpostAuthorization:
         """Test authenticated user can read blogpost if is the app owner"""
 
         with web.app.test_request_context('/'):
-            blogpost = model.blogpost.Blogpost(title='title', app=self.app, owner=self.user1)
+            blogpost = model.blogpost.Blogpost(title='title', body='body', app=self.app, owner=self.user1)
             db.session.add(blogpost)
             db.session.commit()
 
@@ -135,7 +135,7 @@ class TestBlogpostAuthorization:
         """Test anonymous users cannot update blogposts"""
 
         with web.app.test_request_context('/'):
-            blogpost = model.blogpost.Blogpost(title='title', app=self.app, owner=None)
+            blogpost = model.blogpost.Blogpost(title='title', body='body', app=self.app, owner=None)
             db.session.add(blogpost)
             db.session.commit()
 
@@ -149,7 +149,7 @@ class TestBlogpostAuthorization:
         owner, even if is admin"""
 
         with web.app.test_request_context('/'):
-            blogpost = model.blogpost.Blogpost(title='title', app=self.app, owner=self.user1)
+            blogpost = model.blogpost.Blogpost(title='title', body='body', app=self.app, owner=self.user1)
             db.session.add(blogpost)
             db.session.commit()
 
@@ -162,7 +162,7 @@ class TestBlogpostAuthorization:
         """Test authenticated user can update blogpost if is the post owner"""
 
         with web.app.test_request_context('/'):
-            blogpost = model.blogpost.Blogpost(title='title', app=self.app, owner=self.user1)
+            blogpost = model.blogpost.Blogpost(title='title', body='body', app=self.app, owner=self.user1)
             db.session.add(blogpost)
             db.session.commit()
 
@@ -175,7 +175,7 @@ class TestBlogpostAuthorization:
         """Test anonymous users cannot delete blogposts"""
 
         with web.app.test_request_context('/'):
-            blogpost = model.blogpost.Blogpost(title='title', app=self.app, owner=None)
+            blogpost = model.blogpost.Blogpost(title='title', body='body', app=self.app, owner=None)
             db.session.add(blogpost)
             db.session.commit()
 
@@ -189,7 +189,7 @@ class TestBlogpostAuthorization:
         owner or is not admin"""
 
         with web.app.test_request_context('/'):
-            blogpost = model.blogpost.Blogpost(title='title', app=self.app, owner=self.root)
+            blogpost = model.blogpost.Blogpost(title='title', body='body', app=self.app, owner=self.root)
             db.session.add(blogpost)
             db.session.commit()
 
@@ -202,7 +202,7 @@ class TestBlogpostAuthorization:
         """Test authenticated user can delete blogpost if is the post owner"""
 
         with web.app.test_request_context('/'):
-            blogpost = model.blogpost.Blogpost(title='title', app=self.app, owner=self.user1)
+            blogpost = model.blogpost.Blogpost(title='title', body='body', app=self.app, owner=self.user1)
             db.session.add(blogpost)
             db.session.commit()
 
@@ -215,7 +215,7 @@ class TestBlogpostAuthorization:
         """Test authenticated user can delete a blogpost if is admin"""
 
         with web.app.test_request_context('/'):
-            blogpost = model.blogpost.Blogpost(title='title', app=self.app, owner=self.user1)
+            blogpost = model.blogpost.Blogpost(title='title', body='body', app=self.app, owner=self.user1)
             db.session.add(blogpost)
             db.session.commit()
 

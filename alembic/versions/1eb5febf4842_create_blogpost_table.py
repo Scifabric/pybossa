@@ -24,8 +24,8 @@ def upgrade():
     op.create_table(
     'blogpost',
     sa.Column('id', sa.Integer, primary_key=True),
-    sa.Column('title', sa.Unicode(length=255)),
-    sa.Column('body', sa.UnicodeText),
+    sa.Column('title', sa.Unicode(length=255), nullable=False),
+    sa.Column('body', sa.UnicodeText, nullable=False),
     sa.Column('app_id', sa.Integer, sa.ForeignKey('app.id', ondelete='CASCADE'), nullable=False),
     sa.Column('user_id', sa.Integer, sa.ForeignKey('user.id')),
     sa.Column('created', sa.Text, default=make_timestamp),
