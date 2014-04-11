@@ -53,7 +53,7 @@ class RateLimit(object):
         self.per = per
         self.send_x_headers = send_x_headers
 
-        redis_master = sentinel.master_for('mymaster')
+        redis_master = sentinel.connection.master_for('mymaster')
         p = redis_master.pipeline()
         p.incr(self.key)
         p.expireat(self.key, self.reset + self.expiration_window)
