@@ -29,7 +29,11 @@ It exports:
 import os
 import hashlib
 from functools import wraps
-from pybossa.core import redis_master, redis_slave
+from pybossa.core import sentinel
+
+redis_master = sentinel.connection.master_for('mymaster')
+redis_slave = sentinel.connection.slave_for('mymaster')
+
 try:
     import cPickle as pickle
 except ImportError:  # pragma: no cover

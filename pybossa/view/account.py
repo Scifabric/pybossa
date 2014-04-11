@@ -46,7 +46,7 @@ from flask.ext.babel import lazy_gettext, gettext
 #from sqlalchemy.sql import func, text
 from sqlalchemy.sql import text
 from pybossa.model.user import User
-from pybossa.core import db, signer, mail, get_locale
+from pybossa.core import db, signer, mail
 from pybossa.util import Pagination
 #from pybossa.util import Twitter
 #from pybossa.util import Facebook
@@ -108,7 +108,7 @@ def signin():
             login_user(user, remember=True)
             msg_1 = gettext("Welcome back") + " " + user.fullname
             flash(msg_1, 'success')
-            return redirect(request.args.get("next") or url_for("home"))
+            return redirect(request.args.get("next") or url_for("home.home"))
         elif user:
             msg, method = get_user_signup_method(user)
             if method == 'local':
@@ -138,7 +138,7 @@ def signin():
                                next=request.args.get('next'))
     else:
         # User already signed in, so redirect to home page
-        return redirect(url_for("home"))
+        return redirect(url_for("home.home"))
 
 
 @blueprint.route('/signout')
@@ -151,7 +151,7 @@ def signout():
     """
     logout_user()
     flash(gettext('You are now signed out'), 'success')
-    return redirect(url_for('home'))
+    return redirect(url_for('home.home'))
 
 
 class RegisterForm(Form):
@@ -252,12 +252,12 @@ def register():
                              name=form.username.data,
                              email_addr=form.email_addr.data)
         account.set_password(form.password.data)
-        account.locale = get_locale()
+        # account.locale = get_locale()
         db.session.add(account)
         db.session.commit()
         login_user(account, remember=True)
         flash(gettext('Thanks for signing-up'), 'success')
-        return redirect(url_for('home'))
+        return redirect(url_for('home.home'))
     if request.method == 'POST' and not form.validate():
         flash(gettext('Please correct the errors'), 'error')
     return render_template('account/register.html',
@@ -480,7 +480,7 @@ def reset_password():
         abort(403)
     userdict = {}
     try:
-        userdict = signer.loads(key, max_age=3600, salt='password-reset')
+        userdict = signer.signer.loads(key, max_age=3600, salt='password-reset')
     except BadData:
         abort(403)
     username = userdict.get('user')
@@ -542,7 +542,7 @@ def forgot_password():
                     user=user, account_name='Google')
             else:
                 userdict = {'user': user.name, 'password': user.passwd_hash}
-                key = signer.dumps(userdict, salt='password-reset')
+                key = signer.signer.dumps(userdict, salt='password-reset')
                 recovery_url = url_for('.reset_password',
                                        key=key, _external=True)
                 msg.body = render_template(

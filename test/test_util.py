@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import pybossa.util
-from base import web, model, Fixtures, redis_flushall
+from base import app, model, Fixtures, redis_flushall
 from mock import patch
 from datetime import datetime, timedelta
 import dateutil.parser
@@ -29,7 +29,7 @@ import tempfile
 class TestWebModule:
     def setUp(self):
         #self.app = web.app
-        self.app = web.app.test_client()
+        self.app = app.test_client()
         model.rebuild_db()
         Fixtures.create()
 

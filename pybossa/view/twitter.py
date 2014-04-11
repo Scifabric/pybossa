@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-from flask import Blueprint, request, url_for, flash, redirect
+from flask import Blueprint, request, url_for, flash, redirect, current_app
 from flask.ext.login import login_user, current_user
 
 import pybossa.model as model
@@ -24,14 +24,13 @@ from pybossa.util import Twitter, get_user_signup_method
 # Required to access the config parameters outside a
 # context as we are using Flask 0.8
 # See http://goo.gl/tbhgF for more info
-from pybossa.core import app
 
 # This blueprint will be activated in web.py
 # if the TWITTER CONSUMER KEY and SECRET
 # are available
 blueprint = Blueprint('twitter', __name__)
-twitter = Twitter(app.config['TWITTER_CONSUMER_KEY'],
-                  app.config['TWITTER_CONSUMER_SECRET'])
+twitter = Twitter(current_app.config['TWITTER_CONSUMER_KEY'],
+                  current_app.config['TWITTER_CONSUMER_SECRET'])
 
 
 @blueprint.route('/', methods=['GET', 'POST'])

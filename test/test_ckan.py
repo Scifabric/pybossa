@@ -21,7 +21,11 @@ from mock import patch
 from collections import namedtuple
 from bs4 import BeautifulSoup
 
-from base import web, db, model, Fixtures
+#from base import web, db, model, Fixtures
+from default import db
+from pybossa.model import rebuild_db
+from pybossa.model.user import User
+from pybossa.model.app import App
 from helper import web as web_helper
 from pybossa.ckan import Ckan
 
@@ -30,11 +34,11 @@ FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
 
 class TestCkanWeb(web_helper.Helper):
-    url = "/app/%s/tasks/export" % Fixtures.app_short_name
+    url = "/app/%s/tasks/export" % "sampleapp"
 
     def setUp(self):
         super(TestCkanWeb, self).setUp()
-        Fixtures.create()
+        self.create()
 
     # Tests
 
@@ -47,7 +51,7 @@ class TestCkanWeb(web_helper.Helper):
 
     def test_01_authenticated(self):
         """Test CKAN authenticated app owners can export data via CKAN"""
-        res = self.signin(email=Fixtures.email_addr, password=Fixtures.password)
+        res = self.signin(email=self.email_addr, password=self.password)
         res = self.app.get(self.url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
         err_msg = "The CKAN exporter should be available for the owner of the app"
@@ -55,7 +59,7 @@ class TestCkanWeb(web_helper.Helper):
 
         self.signout()
 
-        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
+        self.signin(email=self.email_addr2, password=self.password)
         res = self.app.get(self.url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
         err_msg = "The CKAN exporter should be ONLY available for the owner of the app"
@@ -63,13 +67,13 @@ class TestCkanWeb(web_helper.Helper):
 
     def test_02_export_links(self):
         """Test CKAN export links task and task run are available"""
-        self.signin(email=Fixtures.email_addr, password=Fixtures.password)
+        self.signin(email=self.email_addr, password=self.password)
         res = self.app.get(self.url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
         err_msg = "There should be a warning about adding a CKAN api Key"
         assert dom.find(id="ckan_warning") is not None, err_msg
         # Add a CKAN API key to the user
-        u = db.session.query(model.user.User).filter_by(name=Fixtures.name).first()
+        u = db.session.query(User).filter_by(name=self.name).first()
         u.ckan_api = "ckan-api-key"
         db.session.add(u)
         db.session.commit()
@@ -227,7 +231,7 @@ class TestCkanModule(object):
     def setUp(self):
         self.app = web.app
         model.rebuild_db()
-        Fixtures.create()
+        self.create()
 
     def tearDown(self):
         db.session.remove()
@@ -319,8 +323,8 @@ class TestCkanModule(object):
         Mock.return_value = html_request
         with self.app.test_request_context('/'):
             # Resource that exists
-            app = model.app.App(short_name='urbanpark', name='Urban Parks')
-            user = model.user.User(fullname='Daniel Lombrana Gonzalez')
+            app = App(short_name='urbanpark', name='Urban Parks')
+            user = User(fullname='Daniel Lombrana Gonzalez')
             out = self.ckan.package_create(app=app, user=user, url="http://something.com")
             err_msg = "The package ID should be the same"
             assert out['id'] == self.package_id, err_msg
@@ -348,8 +352,8 @@ class TestCkanModule(object):
         Mock.return_value = pkg_request
         with self.app.test_request_context('/'):
             # Resource that exists
-            app = model.app.App(short_name='urbanpark', name='Urban Parks')
-            user = model.user.User(fullname='Daniel Lombrana Gonzalez')
+            app = App(short_name='urbanpark', name='Urban Parks')
+            user = User(fullname='Daniel Lombrana Gonzalez')
             self.ckan.package_create(app=app, user=user, url="http://something.com")
             Mock.return_value = rsrc_request
             out = self.ckan.resource_create(name='task')
@@ -494,8 +498,8 @@ class TestCkanModule(object):
         Mock.return_value = html_request
         with self.app.test_request_context('/'):
             # Resource that exists
-            app = model.app.App(short_name='urbanpark', name='Urban Parks')
-            user = model.user.User(fullname='Daniel Lombrana Gonzalez')
+            app = App(short_name='urbanpark', name='Urban Parks')
+            user = User(fullname='Daniel Lombrana Gonzalez')
             out = self.ckan.package_update(app=app, user=user,
                                            url="http://something.com",
                                            resources=self.pkg_json_found['result']['resources'])

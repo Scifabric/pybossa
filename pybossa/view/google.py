@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from flask import Blueprint, request, url_for, flash, redirect, session
+from flask import Blueprint, request, url_for, flash, redirect, session, current_app
 from flask.ext.login import login_user, current_user
 
 import pybossa.model as model
@@ -24,14 +24,14 @@ from pybossa.util import Google, get_user_signup_method
 # Required to access the config parameters outside a context as we are using
 # Flask 0.8
 # See http://goo.gl/tbhgF for more info
-from pybossa.core import app, db
+from pybossa.core import db
 import requests
 
 # This blueprint will be activated in web.py if the FACEBOOK APP ID and SECRET
 # are available
 blueprint = Blueprint('google', __name__)
-google = Google(app.config['GOOGLE_CLIENT_ID'],
-                app.config['GOOGLE_CLIENT_SECRET'])
+google = Google(current_app.config['GOOGLE_CLIENT_ID'],
+                current_app.config['GOOGLE_CLIENT_SECRET'])
 
 
 @blueprint.route('/', methods=['GET', 'POST'])

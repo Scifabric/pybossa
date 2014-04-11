@@ -19,20 +19,23 @@
 import os
 import logging
 from itsdangerous import URLSafeTimedSerializer
-from flask import Flask, url_for, session, request
+from flask import Flask, url_for, session, request, render_template, flash
 from flask.ext.login import LoginManager, current_user
 from flaskext.gravatar import Gravatar
-from flask.ext.mail import Mail
 from flask.ext.sqlalchemy import SQLAlchemy
-#from flask.ext.debugtoolbar import DebugToolbarExtension
 from flask.ext.heroku import Heroku
-from flask.ext.babel import Babel
+from flask.ext.babel import Babel, lazy_gettext
 from flask.ext.misaka import Misaka
 from redis.sentinel import Sentinel
 
 from pybossa import default_settings as settings
+from pybossa.extensions import signer, mail, login_manager, sentinel, toolbar
+from pybossa.ratelimit import get_view_rate_limit
 
 from raven.contrib.flask import Sentry
+from pybossa.model import db
+from pybossa import model
+
 
 
 def create_app(theme='default'):
@@ -43,12 +46,29 @@ def create_app(theme='default'):
     if 'DATABASE_URL' in os.environ:  # pragma: no cover
         heroku = Heroku(app)
     configure_app(app)
+    #setup_cache(app)
     setup_error_email(app)
     setup_logging(app)
+    setup_login_manager(app)
     login_manager.setup_app(app)
+    setup_babel(app)
     Misaka(app)
     # Set up Gravatar for users
     gravatar = Gravatar(app, size = 100, rating = 'g', default = 'mm', force_default = False, force_lower = False)
+    db.init_app(app)
+    mail.init_app(app)
+    sentinel.init_app(app)
+    signer.init_app(app)
+    if app.config.get('SENTRY_DSN'): # pragma: no cover
+        sentr = Sentry(app)
+
+    setup_blueprints(app)
+    setup_hooks(app)
+    setup_error_handlers(app)
+    setup_social_networks(app)
+    setup_jinja(app)
+    setup_geocoding(app)
+    #toolbar.init_app(app)
     return app
 
 
@@ -56,10 +76,14 @@ def configure_app(app):
     app.config.from_object(settings)
     app.config.from_envvar('PYBOSSA_SETTINGS', silent=True)
     # parent directory
-    here = os.path.dirname(os.path.abspath( __file__ ))
-    config_path = os.path.join(os.path.dirname(here), 'settings_local.py')
-    if os.path.exists(config_path): # pragma: no cover
-        app.config.from_pyfile(config_path)
+    if not os.environ.get('PYBOSSA_SETTINGS'):
+        here = os.path.dirname(os.path.abspath( __file__ ))
+        config_path = os.path.join(os.path.dirname(here), 'settings_local.py')
+        if os.path.exists(config_path): # pragma: no cover
+            app.config.from_pyfile(config_path)
+    # Override DB in case of testing
+    if app.config.get('SQLALCHEMY_DATABASE_TEST_URI'):
+        app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_TEST_URI']
 
 from logging.handlers import SMTPHandler
 def setup_error_email(app):
@@ -88,9 +112,13 @@ def setup_logging(app):
         logger.setLevel(log_level)
         logger.addHandler(file_handler)
 
-login_manager = LoginManager()
-login_manager.login_view = 'account.signin'
-login_manager.login_message = u"Please sign in to access this page."
+def setup_login_manager(app):
+    login_manager.login_view = 'account.signin'
+    login_manager.login_message = u"Please sign in to access this page."
+    @login_manager.user_loader
+    def load_user(username):
+        return db.session.query(model.user.User).filter_by(name=username).first()
+
 # Configure theme
 try: # pragma: no cover
     # First with local settings
@@ -100,29 +128,209 @@ except:
     # Otherwise try with default theme
     theme = settings.THEME
 # Create app
-app = create_app(theme=theme)
+# app = create_app(theme=theme)
+#
 
-sentinel = Sentinel(app.config['REDIS_SENTINEL'], socket_timeout=0.1)
-redis_master = sentinel.master_for('mymaster')
-redis_slave = sentinel.slave_for('mymaster')
-
-#toolbar = DebugToolbarExtension(app)
-db = SQLAlchemy(app)
-mail = Mail(app)
-signer = URLSafeTimedSerializer(app.config['ITSDANGEORUSKEY'])
-if app.config.get('SENTRY_DSN'): # pragma: no cover
-    sentr = Sentry(app)
-
-babel = Babel(app)
+#def setup_cache(app):
+#    """Return handlers to cache."""
+#    mysentinel = Sentinel(app.config['REDIS_SENTINEL'], socket_timeout=0.1)
+#    redis_master = mysentinel.master_for('mymaster')
+#    redis_slave = mysentinel.slave_for('mymaster')
 
 
-@babel.localeselector
-def get_locale():
-    if current_user.is_authenticated():
-        lang = current_user.locale
-    else:
-        lang = session.get('lang',
-                           request.accept_languages.best_match(app.config['LOCALES']))
-    if lang is None:
-        lang = 'en'
-    return lang
+
+def setup_babel(app):
+    """Return babel handler."""
+    babel = Babel()
+    babel.init_app(app)
+
+    @babel.localeselector
+    def get_locale():
+        if current_user.is_authenticated():
+            lang = current_user.locale
+        else:
+            lang = session.get('lang',
+                               request.accept_languages.best_match(app.config['LOCALES']))
+        if lang is None:
+            lang = 'en'
+        return lang
+    return babel
+#
+def setup_blueprints(app):
+    """Configure blueprints."""
+    from pybossa.api import blueprint as api
+    from pybossa.view.account import blueprint as account
+    from pybossa.view.applications import blueprint as applications
+    from pybossa.view.admin import blueprint as admin
+    from pybossa.view.leaderboard import blueprint as leaderboard
+    from pybossa.view.stats import blueprint as stats
+    from pybossa.view.help import blueprint as help
+    from pybossa.view.home import blueprint as home
+
+    blueprints = [{'handler': home, 'url_prefix': '/'},
+                  {'handler': api,  'url_prefix': '/api'},
+                  {'handler': account, 'url_prefix': '/account'},
+                  {'handler': applications, 'url_prefix': '/app'},
+                  {'handler': admin, 'url_prefix': '/admin'},
+                  {'handler': leaderboard, 'url_prefix': '/leaderboard'},
+                  {'handler': help, 'url_prefix': '/help'},
+                  {'handler': stats, 'url_prefix': '/stats'},
+                  ]
+
+    for bp in blueprints:
+        app.register_blueprint(bp['handler'], url_prefix=bp['url_prefix'])
+
+
+def setup_social_networks(app):
+    try:  # pragma: no cover
+        if (app.config['TWITTER_CONSUMER_KEY'] and
+                app.config['TWITTER_CONSUMER_SECRET']):
+            from pybossa.view.twitter import blueprint as twitter
+            app.register_blueprint(twitter, url_prefix='/twitter')
+    except Exception as inst:  # pragma: no cover
+        print type(inst)
+        print inst.args
+        print inst
+        print "Twitter signin disabled"
+
+    # Enable Facebook if available
+    try:  # pragma: no cover
+        if (app.config['FACEBOOK_APP_ID'] and app.config['FACEBOOK_APP_SECRET']):
+            from pybossa.view.facebook import blueprint as facebook
+            app.register_blueprint(facebook, url_prefix='/facebook')
+    except Exception as inst: # pragma: no cover
+        print type(inst)
+        print inst.args
+        print inst
+        print "Facebook signin disabled"
+
+    # Enable Google if available
+    try:  # pragma: no cover
+        if (app.config['GOOGLE_CLIENT_ID'] and app.config['GOOGLE_CLIENT_SECRET']):
+            from pybossa.view.google import blueprint as google
+            app.register_blueprint(google, url_prefix='/google')
+    except Exception as inst:  # pragma: no cover
+        print type(inst)
+        print inst.args
+        print inst
+        print "Google signin disabled"
+
+
+def setup_geocoding(app):
+    # Check if app stats page can generate the map
+    geolite = app.root_path + '/../dat/GeoLiteCity.dat'
+    if not os.path.exists(geolite):  # pragma: no cover
+        app.config['GEO'] = False
+        print("GeoLiteCity.dat file not found")
+        print("App page stats web map disabled")
+    else:  # pragma: no cover
+        app.config['GEO'] = True
+
+
+def url_for_other_page(page):
+    args = request.view_args.copy()
+    args['page'] = page
+    return url_for(request.endpoint, **args)
+
+def setup_jinja(app):
+    app.jinja_env.globals['url_for_other_page'] = url_for_other_page
+
+
+def setup_error_handlers(app):
+    @app.errorhandler(404)
+    def page_not_found(e):
+        return render_template('404.html'), 404
+
+
+    @app.errorhandler(500)
+    def server_error(e):  # pragma: no cover
+        return render_template('500.html'), 500
+
+
+    @app.errorhandler(403)
+    def forbidden(e):
+        return render_template('403.html'), 403
+
+
+    @app.errorhandler(401)
+    def unauthorized(e):
+        return render_template('401.html'), 401
+
+
+def setup_hooks(app):
+    @app.after_request
+    def inject_x_rate_headers(response):
+        limit = get_view_rate_limit()
+        if limit and limit.send_x_headers:
+            h = response.headers
+            h.add('X-RateLimit-Remaining', str(limit.remaining))
+            h.add('X-RateLimit-Limit', str(limit.limit))
+            h.add('X-RateLimit-Reset', str(limit.reset))
+        return response
+
+    @app.before_request
+    def api_authentication():
+        """ Attempt API authentication on a per-request basis."""
+        apikey = request.args.get('api_key', None)
+        from flask import _request_ctx_stack
+        if 'Authorization' in request.headers:
+            apikey = request.headers.get('Authorization')
+        if apikey:
+            user = db.session.query(model.user.User).filter_by(api_key=apikey).first()
+            ## HACK:
+            # login_user sets a session cookie which we really don't want.
+            # login_user(user)
+            if user:
+                _request_ctx_stack.top.user = user
+
+    @app.context_processor
+    def global_template_context():
+        if current_user.is_authenticated():
+            if (current_user.email_addr == current_user.name or
+                    current_user.email_addr == "None"):
+                flash(lazy_gettext("Please update your e-mail address in your profile page,"
+                      " right now it is empty!"), 'error')
+
+        # Cookies warning
+        cookie_name = app.config['BRAND'] + "_accept_cookies"
+        show_cookies_warning = False
+        #print request.cookies.get(cookie_name)
+        if not request.cookies.get(cookie_name):
+            show_cookies_warning = True
+
+        # Announcement sections
+        if app.config.get('ANNOUNCEMENT'):
+            announcement = app.config['ANNOUNCEMENT']
+            if current_user.is_authenticated():
+                for key in announcement.keys():
+                    if key == 'admin' and current_user.admin:
+                        flash(announcement[key], 'info')
+                    if key == 'owner' and len(current_user.apps) != 0:
+                        flash(announcement[key], 'info')
+                    if key == 'user':
+                        flash(announcement[key], 'info')
+
+        if app.config.get('CONTACT_EMAIL'):  # pragma: no cover
+            contact_email = app.config.get('CONTACT_EMAIL')
+        else:
+            contact_email = 'info@pybossa.com'
+
+        if app.config.get('CONTACT_TWITTER'):  # pragma: no cover
+            contact_twitter = app.config.get('CONTACT_TWITTER')
+        else:
+            contact_twitter = 'PyBossa'
+
+        return dict(
+            brand=app.config['BRAND'],
+            title=app.config['TITLE'],
+            logo=app.config['LOGO'],
+            copyright=app.config['COPYRIGHT'],
+            description=app.config['DESCRIPTION'],
+            terms_of_use=app.config['TERMSOFUSE'],
+            data_use=app.config['DATAUSE'],
+            enforce_privacy=app.config['ENFORCE_PRIVACY'],
+            #version=pybossa.__version__,
+            current_user=current_user,
+            show_cookies_warning=show_cookies_warning,
+            contact_email=contact_email,
+            contact_twitter=contact_twitter)
