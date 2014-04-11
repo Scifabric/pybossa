@@ -16,31 +16,33 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from base import web, model, Fixtures, db, redis_flushall
+#from base import web, model, Fixtures, db, redis_flushall
+from default import Test, db, with_context
+from pybossa.model import rebuild_db
 from mock import patch, Mock
 
 
+#def teardown_package(cls):
+#    rebuild_db()
+#    #redis_flushall()
 
-def teardown_package(cls):
-    model.rebuild_db()
-    redis_flushall()
 
-
-class HelperAPI:
+class HelperAPI(Test):
 
     endpoints = ['app', 'task', 'taskrun', 'user']
 
-
+    @with_context
     def setUp(self):
-        self.app = web.app.test_client()
-        model.rebuild_db()
-        Fixtures.create()
+        super(HelperAPI, self).setUp()
+        self.create()
 
+    @with_context
     def tearDown(self):
         db.session.remove()
-        redis_flushall()
+        #redis_flushall()
 
     # Helper functions
+    @with_context
     def register(self, method="POST", fullname="John Doe", username="johndoe",
                  password="p4ssw0rd", password2=None, email=None):
         """Helper function to register and sign in a user"""
@@ -60,6 +62,7 @@ class HelperAPI:
         else:
             return self.app.get('/account/register', follow_redirects=True)
 
+    @with_context
     def signin(self, method="POST", email="johndoe@example.com", password="p4ssw0rd",
                next=None):
         """Helper function to sign in current user"""
@@ -74,6 +77,7 @@ class HelperAPI:
         else:
             return self.app.get(url, follow_redirects=True)
 
+    @with_context
     def signout(self):
         """Helper function to sign out current user"""
         return self.app.get('/account/signout', follow_redirects=True)
