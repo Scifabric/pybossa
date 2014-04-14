@@ -69,10 +69,13 @@ def oauth_authorized(resp):  # pragma: no cover
         user = db.session.query(User)\
                  .filter_by(email_addr=user_data['email'])\
                  .first()
-        msg, method = get_user_signup_method(user)
-        flash(msg, 'info')
-        if method == 'local':
-            return redirect(url_for('account.forgot_password'))
+        if user is not None:
+            msg, method = get_user_signup_method(user)
+            flash(msg, 'info')
+            if method == 'local':
+                return redirect(url_for('account.forgot_password'))
+            else:
+                return redirect(url_for('account.signin'))
         else:
             return redirect(url_for('account.signin'))
     else:
@@ -95,8 +98,6 @@ def manage_user(access_token, user_data, next_url):
     """Manage the user after signin"""
     user = db.session.query(User)\
              .filter_by(facebook_user_id=user_data['id']).first()
-
-    print user
 
     if user is None:
         facebook_token = dict(oauth_token=access_token)
