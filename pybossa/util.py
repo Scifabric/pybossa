@@ -320,3 +320,12 @@ def get_user_signup_method(user):
         msg += " <strong>It seems that you created an account locally.</strong>"
         msg += " <br/>You can reset your password if you don't remember it."
         return (msg, 'local')
+
+def get_port():
+    import os
+    port = os.environ.get('PORT', '')
+    if port.isdigit():
+        return int(port)
+    else:
+        return current_app.config['PORT']
+

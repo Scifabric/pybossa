@@ -101,12 +101,6 @@ def search():
     """Render search results page"""
     return render_template("/home/search.html")
 
-def get_port():
-    port = os.environ.get('PORT', '')
-    if port.isdigit():
-        return int(port)
-    else:
-        return app.config['PORT']
 
 #if __name__ == "__main__":  # pragma: no cover
 #    logging.basicConfig(level=logging.NOTSET)
