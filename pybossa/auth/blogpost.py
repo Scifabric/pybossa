@@ -17,12 +17,16 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask.ext.login import current_user
-
+import pybossa.model as model
+from pybossa.core import db
 
 def create(blogpost):
     if current_user.is_anonymous():
         return False
-    return blogpost.owner.id == blogpost.app.owner.id == current_user.id
+    if blogpost.app is None:
+        app = db.session.query(model.app.App).filter_by(id=blogpost.app_id).first()
+        blogpost.app = app
+    return blogpost.user_id == blogpost.app.owner_id == current_user.id
 
 
 def read(blogpost=None):
@@ -32,11 +36,11 @@ def read(blogpost=None):
 def update(blogpost):
     if current_user.is_anonymous():
         return False
-    return blogpost.owner.id == current_user.id
+    return blogpost.user_id == current_user.id
 
 
 def delete(blogpost):
     if current_user.is_anonymous():
         return False
     else:
-        return current_user.admin or blogpost.owner.id == current_user.id
+        return current_user.admin or blogpost.user_id == current_user.id
