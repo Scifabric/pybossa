@@ -26,6 +26,10 @@ class Test(object):
         with self.flask_app.app_context():
             rebuild_db()
 
+    def tearDown(self):
+        with self.flask_app.app_context():
+            db.session.remove()
+
     fullname = u'T Tester'
     fullname2 = u'T Tester 2'
     email_addr = u'tester@tester.com'
@@ -184,6 +188,9 @@ class Test(object):
                                            description=c_name)
                             for c_name in names])
         db.session.commit()
+
+    def redis_flushall(self):
+        sentinel.connection.master_for('mymaster').flushall()
 
 class Fixtures:
     fullname = u'T Tester'
