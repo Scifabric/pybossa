@@ -29,6 +29,7 @@ class Test(object):
     def tearDown(self):
         with self.flask_app.app_context():
             db.session.remove()
+            self.redis_flushall()
 
     fullname = u'T Tester'
     fullname2 = u'T Tester 2'

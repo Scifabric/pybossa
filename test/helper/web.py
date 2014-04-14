@@ -37,11 +37,6 @@ class Helper(Test):
     #    with self.flask_app.app_context():
     #        model.rebuild_db()
 
-    def tearDown(self):
-        with self.flask_app.app_context():
-            db.session.remove()
-            #redis_flushall()
-
     #@classmethod
     #def teardown_class(cls):
     #    model.rebuild_db()
