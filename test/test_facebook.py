@@ -15,9 +15,8 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-from default import Test, db, with_context
+from default import Test, with_context
 from pybossa.view.facebook import manage_user
-from pybossa.model.user import User
 
 
 class TestFacebook(Test):
