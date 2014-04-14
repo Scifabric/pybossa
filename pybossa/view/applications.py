@@ -248,8 +248,7 @@ def app_cat_index(category, page):
 @blueprint.route('/new', methods=['GET', 'POST'])
 @login_required
 def new():
-    if not require.app.create():  # pragma: no cover
-        abort(403)
+    require.app.create()
     form = AppForm(request.form)
     categories = db.session.query(model.category.Category).all()
     form.category_id.choices = [(c.id, c.name) for c in categories]
@@ -1277,6 +1276,7 @@ def show_blogpost(short_name, id):
                                                         app_id=app.id).first()
     if blogpost is None:
         raise abort(404)
+    require.blogpost.read(blogpost)
     return render_template('applications/blog_post.html', blogpost=blogpost)
 
 
