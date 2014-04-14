@@ -11,3 +11,5 @@ class Sentinel(object):
     def init_app(self, app):
         self.connection = redis.sentinel.Sentinel(app.config['REDIS_SENTINEL'],
                                                   socket_timeout=0.1)
+        self.master = self.connection.master_for('mymaster')
+        self.slave = self.connection.slave_for('mymaster')
