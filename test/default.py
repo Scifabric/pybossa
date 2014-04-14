@@ -1,5 +1,5 @@
 from pybossa.model import db, rebuild_db
-from pybossa.core import create_app
+from pybossa.core import create_app, sentinel
 from pybossa.model.app import App
 from pybossa.model.category import Category
 from pybossa.model.task import Task
@@ -347,3 +347,7 @@ class Fixtures:
                                            description=c_name)
                             for c_name in names])
         db.session.commit()
+
+    @classmethod
+    def redis_flushall(cls):
+        sentinel.connection.master_for('mymaster').flushall()
