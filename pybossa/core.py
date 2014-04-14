@@ -29,7 +29,7 @@ from flask.ext.misaka import Misaka
 from redis.sentinel import Sentinel
 
 from pybossa import default_settings as settings
-from pybossa.extensions import signer, mail, login_manager, sentinel, toolbar, facebook, twitter, google
+from pybossa.extensions import signer, mail, login_manager, sentinel, facebook, twitter, google
 from pybossa.ratelimit import get_view_rate_limit
 
 from raven.contrib.flask import Sentry

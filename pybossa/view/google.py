@@ -96,7 +96,7 @@ def manage_user(access_token, user_data, next_url):
 @google.oauth.authorized_handler
 def oauth_authorized(resp):  # pragma: no cover
     #print "OAUTH authorized method called"
-    next_url = url_for('home')
+    next_url = url_for('home.home')
 
     if resp is None or request.args.get('error'):
         flash(u'You denied the request to sign in.', 'error')
