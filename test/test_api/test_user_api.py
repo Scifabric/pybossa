@@ -16,15 +16,17 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import json
-from base import model, Fixtures, db
+from default import db, with_context
 from nose.tools import assert_raises
 from werkzeug.exceptions import MethodNotAllowed
 from pybossa.api.user import UserAPI
+from pybossa.model.user import User
 from test_api import HelperAPI
 
 
 class TestUserAPI(HelperAPI):
 
+    @with_context
     def test_user_get(self):
         """Test API User GET"""
         # Test a GET all users
@@ -53,6 +55,7 @@ class TestUserAPI(HelperAPI):
         assert err['action'] == 'GET', err
 
 
+    @with_context
     def test_query_user(self):
         """Test API query for user endpoint works"""
 
@@ -94,6 +97,7 @@ class TestUserAPI(HelperAPI):
         assert err['exception_cls'] == 'AttributeError', err_msg
 
 
+    @with_context
     def test_user_not_allowed_actions(self):
         """Test POST, PUT and DELETE actions are not allowed for user
         in the API"""
@@ -110,16 +114,17 @@ class TestUserAPI(HelperAPI):
         assert_raises(MethodNotAllowed, user_api_instance.put)
 
 
+    @with_context
     def test_privacy_mode_user_get(self):
         """Test API user queries for privacy mode"""
 
         # Add user with fullname 'Public user', privacy mode disabled
-        user_with_privacy_disabled = model.user.User(email_addr='public@user.com',
+        user_with_privacy_disabled = User(email_addr='public@user.com',
                                     name='publicUser', fullname='Public user',
                                     privacy_mode=False)
         db.session.add(user_with_privacy_disabled)
         # Add user with fullname 'Private user', privacy mode enabled
-        user_with_privacy_enabled = model.user.User(email_addr='private@user.com',
+        user_with_privacy_enabled = User(email_addr='private@user.com',
                                     name='privateUser', fullname='Private user',
                                     privacy_mode=True)
         db.session.add(user_with_privacy_enabled)
@@ -154,7 +159,7 @@ class TestUserAPI(HelperAPI):
 
         # With a non-admin API-KEY
         # User with privacy disabled
-        res = self.app.get('/api/user/4?api_key=' + Fixtures.api_key)
+        res = self.app.get('/api/user/4?api_key=' + self.api_key)
         data = json.loads(res.data)
         user_with_privacy_disabled = data
         # When checking a public field it should be returned
@@ -162,7 +167,7 @@ class TestUserAPI(HelperAPI):
         # When checking a private field it should be returned too
         assert user_with_privacy_disabled['fullname'] == 'Public user', data
         # User with privacy enabled
-        res = self.app.get('/api/user/5?api_key=' + Fixtures.api_key)
+        res = self.app.get('/api/user/5?api_key=' + self.api_key)
         data = json.loads(res.data)
         user_with_privacy_enabled = data
         # When checking a public field it should be returned
@@ -170,7 +175,7 @@ class TestUserAPI(HelperAPI):
         # When checking a private field it should not be returned
         assert 'fullname' not in user_with_privacy_enabled, data
         # Users with privacy enabled and disabled, mixed together
-        res = self.app.get('/api/user?api_key=' + Fixtures.api_key)
+        res = self.app.get('/api/user?api_key=' + self.api_key)
         data = json.loads(res.data)
         user_with_privacy_disabled = data[3]
         user_with_privacy_enabled = data[4]
@@ -180,7 +185,7 @@ class TestUserAPI(HelperAPI):
         assert 'fullname' not in user_with_privacy_enabled, data
 
         # Admin API-KEY should be able to retrieve every field in user
-        res = self.app.get('/api/user/4?api_key=' + Fixtures.root_api_key)
+        res = self.app.get('/api/user/4?api_key=' + self.root_api_key)
         data = json.loads(res.data)
         user_with_privacy_disabled = data
         # When checking a public field it should be returned
@@ -188,7 +193,7 @@ class TestUserAPI(HelperAPI):
         # When checking a private field it should be returned too
         assert user_with_privacy_disabled['fullname'] == 'Public user', data
         # User with privacy enabled
-        res = self.app.get('/api/user/5?api_key=' + Fixtures.root_api_key)
+        res = self.app.get('/api/user/5?api_key=' + self.root_api_key)
         data = json.loads(res.data)
         user_with_privacy_enabled = data
         # When checking a public field it should be returned
@@ -196,7 +201,7 @@ class TestUserAPI(HelperAPI):
         # When checking a private field it should be returned too
         assert user_with_privacy_enabled['fullname'] == 'Private user', data
         # Users with privacy enabled and disabled, mixed together
-        res = self.app.get('/api/user?api_key=' + Fixtures.root_api_key)
+        res = self.app.get('/api/user?api_key=' + self.root_api_key)
         data = json.loads(res.data)
         user_with_privacy_disabled = data[3]
         user_with_privacy_enabled = data[4]
@@ -206,17 +211,18 @@ class TestUserAPI(HelperAPI):
         assert user_with_privacy_enabled['fullname'] == 'Private user', data
 
 
+    @with_context
     def test_privacy_mode_user_queries(self):
         """Test API user queries for privacy mode with private fields in query
         """
 
         # Add user with fullname 'Public user', privacy mode disabled
-        user_with_privacy_disabled = model.user.User(email_addr='public@user.com',
+        user_with_privacy_disabled = User(email_addr='public@user.com',
                                     name='publicUser', fullname='User',
                                     privacy_mode=False)
         db.session.add(user_with_privacy_disabled)
         # Add user with fullname 'Private user', privacy mode enabled
-        user_with_privacy_enabled = model.user.User(email_addr='private@user.com',
+        user_with_privacy_enabled = User(email_addr='private@user.com',
                                     name='privateUser', fullname='User',
                                     privacy_mode=True)
         db.session.add(user_with_privacy_enabled)
@@ -233,14 +239,14 @@ class TestUserAPI(HelperAPI):
         assert public_user['name'] == 'publicUser', public_user
 
         # with a non-admin API-KEY, the result should be the same
-        res = self.app.get(query + '&api_key=' + Fixtures.api_key)
+        res = self.app.get(query + '&api_key=' + self.api_key)
         data = json.loads(res.data)
         assert len(data) == 1, data
         public_user = data[0]
         assert public_user['name'] == 'publicUser', public_user
 
         # with an admin API-KEY, all the matching results should be returned
-        res = self.app.get(query + '&api_key=' + Fixtures.root_api_key)
+        res = self.app.get(query + '&api_key=' + self.root_api_key)
         data = json.loads(res.data)
         assert len(data) == 2, data
         public_user = data[0]
