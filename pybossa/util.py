@@ -186,28 +186,20 @@ class Pagination(object):
 class Twitter:
     oauth = OAuth()
 
-    def __init__(self, c_k, c_s):
-        #oauth = OAuth()
-        # Use Twitter as example remote application
+    def __init__(self, app=None):
+        self.app = app
+        if app is not None:
+            self.init_app(app)
+
+    def init_app(self, app):
         self.oauth = self.oauth.remote_app(
             'twitter',
-            # unless absolute urls are used to make requests,
-            # this will be added before all URLs. This is also true for
-            # request_token_url and others.
             base_url='https://api.twitter.com/1/',
-            # where flask should look for new request tokens
             request_token_url='https://api.twitter.com/oauth/request_token',
-            # where flask should exchange the token with the remote application
             access_token_url='https://api.twitter.com/oauth/access_token',
-            # twitter knows two authorizatiom URLs. /authorize and
-            # /authenticate. They mostly work the same, but for sign
-            # on /authenticate is expected because this will give
-            # the user a slightly different
-            # user interface on the twitter side.
             authorize_url='https://api.twitter.com/oauth/authenticate',
-            # the consumer keys from the twitter application registry.
-            consumer_key=c_k,  # app.config['TWITTER_CONSUMER_KEY'],
-            consumer_secret=c_s)  # app.config['TWITTER_CONSUMER_KEY']
+            consumer_key=app.config['TWITTER_CONSUMER_KEY'],
+            consumer_secret=app.config['TWITTER_CONSUMER_SECRET'])
 
 
 class Facebook(object):
@@ -219,7 +211,7 @@ class Facebook(object):
             self.init_app(app)
 
     def init_app(self, app):
-        self.app = self.oauth.remote_app(
+        self.oauth = self.oauth.remote_app(
             'facebook',
             base_url='https://graph.facebook.com/',
             request_token_url=None,

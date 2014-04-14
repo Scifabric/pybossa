@@ -35,12 +35,12 @@ blueprint = Blueprint('facebook', __name__)
 
 @blueprint.route('/', methods=['GET', 'POST'])
 def login():  # pragma: no cover
-    return facebook.app.authorize(callback=url_for('.oauth_authorized',
+    return facebook.oauth.authorize(callback=url_for('.oauth_authorized',
                                                      next=request.args.get("next"),
                                                      _external=True))
 
 
-@facebook.app.tokengetter
+@facebook.oauth.tokengetter
 def get_facebook_token():  # pragma: no cover
     if current_user.is_anonymous():
         return session.get('oauth_token')
@@ -49,9 +49,9 @@ def get_facebook_token():  # pragma: no cover
 
 
 @blueprint.route('/oauth-authorized')
-@facebook.app.authorized_handler
+@facebook.oauth.authorized_handler
 def oauth_authorized(resp):  # pragma: no cover
-    next_url = request.args.get('next') or url_for('home')
+    next_url = request.args.get('next') or url_for('home.home')
     if resp is None:
         flash(u'You denied the request to sign in.', 'error')
         flash(u'Reason: ' + request.args['error_reason'] +
