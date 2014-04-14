@@ -22,3 +22,4 @@ flask-babel
 beautifulsoup4
 python-memcached
 -e git+https://github.com/Hypernode/M2Crypto.git#egg=M2Crypto
+html2text
