@@ -17,3 +17,7 @@ login_manager = LoginManager()
 # Toolbar
 from flask.ext.debugtoolbar import DebugToolbarExtension
 toolbar = DebugToolbarExtension()
+
+# Social Networks
+from pybossa.util import Facebook
+facebook = Facebook()

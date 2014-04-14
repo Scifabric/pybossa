@@ -29,7 +29,7 @@ from flask.ext.misaka import Misaka
 from redis.sentinel import Sentinel
 
 from pybossa import default_settings as settings
-from pybossa.extensions import signer, mail, login_manager, sentinel, toolbar
+from pybossa.extensions import signer, mail, login_manager, sentinel, toolbar, facebook
 from pybossa.ratelimit import get_view_rate_limit
 
 from raven.contrib.flask import Sentry
@@ -182,38 +182,40 @@ def setup_blueprints(app):
 
 
 def setup_social_networks(app):
-    try:  # pragma: no cover
-        if (app.config['TWITTER_CONSUMER_KEY'] and
-                app.config['TWITTER_CONSUMER_SECRET']):
-            from pybossa.view.twitter import blueprint as twitter
-            app.register_blueprint(twitter, url_prefix='/twitter')
-    except Exception as inst:  # pragma: no cover
-        print type(inst)
-        print inst.args
-        print inst
-        print "Twitter signin disabled"
+    #try:  # pragma: no cover
+    #    if (app.config['TWITTER_CONSUMER_KEY'] and
+    #            app.config['TWITTER_CONSUMER_SECRET']):
+    #        from pybossa.view.twitter import blueprint as twitter
+    #        app.register_blueprint(twitter, url_prefix='/twitter')
+    #except Exception as inst:  # pragma: no cover
+    #    print type(inst)
+    #    print inst.args
+    #    print inst
+    #    print "Twitter signin disabled"
 
     # Enable Facebook if available
     try:  # pragma: no cover
         if (app.config['FACEBOOK_APP_ID'] and app.config['FACEBOOK_APP_SECRET']):
-            from pybossa.view.facebook import blueprint as facebook
-            app.register_blueprint(facebook, url_prefix='/facebook')
+            facebook.init_app(app)
+            from pybossa.view.facebook import blueprint as facebook_bp
+            app.register_blueprint(facebook_bp, url_prefix='/facebook')
     except Exception as inst: # pragma: no cover
+        raise
         print type(inst)
         print inst.args
         print inst
         print "Facebook signin disabled"
 
     # Enable Google if available
-    try:  # pragma: no cover
-        if (app.config['GOOGLE_CLIENT_ID'] and app.config['GOOGLE_CLIENT_SECRET']):
-            from pybossa.view.google import blueprint as google
-            app.register_blueprint(google, url_prefix='/google')
-    except Exception as inst:  # pragma: no cover
-        print type(inst)
-        print inst.args
-        print inst
-        print "Google signin disabled"
+    #try:  # pragma: no cover
+    #    if (app.config['GOOGLE_CLIENT_ID'] and app.config['GOOGLE_CLIENT_SECRET']):
+    #        from pybossa.view.google import blueprint as google
+    #        app.register_blueprint(google, url_prefix='/google')
+    #except Exception as inst:  # pragma: no cover
+    #    print type(inst)
+    #    print inst.args
+    #    print inst
+    #    print "Google signin disabled"
 
 
 def setup_geocoding(app):

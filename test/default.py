@@ -125,7 +125,8 @@ class Test(object):
                 name = self.name,
                 passwd_hash = self.password,
                 fullname = self.fullname,
-                api_key = self.api_key)
+                api_key = self.api_key
+                )
 
         user.set_password(self.password)
 
