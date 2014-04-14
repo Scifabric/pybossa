@@ -29,7 +29,7 @@ from flask.ext.misaka import Misaka
 from redis.sentinel import Sentinel
 
 from pybossa import default_settings as settings
-from pybossa.extensions import signer, mail, login_manager, sentinel, toolbar, facebook
+from pybossa.extensions import signer, mail, login_manager, sentinel, toolbar, facebook, twitter
 from pybossa.ratelimit import get_view_rate_limit
 
 from raven.contrib.flask import Sentry
@@ -182,16 +182,17 @@ def setup_blueprints(app):
 
 
 def setup_social_networks(app):
-    #try:  # pragma: no cover
-    #    if (app.config['TWITTER_CONSUMER_KEY'] and
-    #            app.config['TWITTER_CONSUMER_SECRET']):
-    #        from pybossa.view.twitter import blueprint as twitter
-    #        app.register_blueprint(twitter, url_prefix='/twitter')
-    #except Exception as inst:  # pragma: no cover
-    #    print type(inst)
-    #    print inst.args
-    #    print inst
-    #    print "Twitter signin disabled"
+    try:  # pragma: no cover
+        if (app.config['TWITTER_CONSUMER_KEY'] and
+                app.config['TWITTER_CONSUMER_SECRET']):
+            twitter.init_app(app)
+            from pybossa.view.twitter import blueprint as twitter_bp
+            app.register_blueprint(twitter_bp, url_prefix='/twitter')
+    except Exception as inst:  # pragma: no cover
+        print type(inst)
+        print inst.args
+        print inst
+        print "Twitter signin disabled"
 
     # Enable Facebook if available
     try:  # pragma: no cover

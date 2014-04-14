@@ -21,3 +21,6 @@ toolbar = DebugToolbarExtension()
 # Social Networks
 from pybossa.util import Facebook
 facebook = Facebook()
+
+from pybossa.util import Twitter
+twitter = Twitter()
