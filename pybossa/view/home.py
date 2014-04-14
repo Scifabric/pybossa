@@ -32,6 +32,7 @@
 #import pybossa
 #from pybossa.core import app, login_manager, db, babel
 from flask import current_app
+from flask.ext.login import current_user
 import pybossa.model as model
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import users as cached_users
