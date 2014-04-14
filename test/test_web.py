@@ -935,7 +935,7 @@ class TestWeb(web.Helper):
         an app works as anonymous"""
 
         Fixtures.create()
-        self.delTaskRuns()
+        self.delete_task_runs()
         app = db.session.query(model.app.App).first()
         task = db.session.query(model.task.Task)\
                  .filter(model.app.App.id == app.id)\
@@ -996,7 +996,7 @@ class TestWeb(web.Helper):
         """Test WEB get specific ongoing task_id for an app works as an user"""
 
         Fixtures.create()
-        self.delTaskRuns()
+        self.delete_task_runs()
         self.register()
         self.signin()
         app = db.session.query(model.app.App).first()

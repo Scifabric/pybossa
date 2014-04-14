@@ -150,7 +150,7 @@ class Helper(object):
         db.session.add_all(tasks)
         db.session.commit()
 
-    def delTaskRuns(self, app_id=1):
+    def delete_task_runs(self, app_id=1):
         """Deletes all TaskRuns for a given app_id"""
         db.session.query(model.task_run.TaskRun).filter_by(app_id=1).delete()
         db.session.commit()
@@ -190,7 +190,7 @@ class Helper(object):
             return self.app.get(url, follow_redirects=True)
 
     def delete_application(self, method="POST", short_name="sampleapp"):
-        """Helper function to create an application"""
+        """Helper function to delete an application"""
         if method == "POST":
             return self.app.post("/app/%s/delete" % short_name,
                                  follow_redirects=True)
@@ -207,7 +207,7 @@ class Helper(object):
                            new_long_description="Long desc",
                            new_sched="random",
                            new_hidden=False):
-        """Helper function to create an application"""
+        """Helper function to update an application"""
         if method == "POST":
             if new_hidden:
                 return self.app.post("/app/%s/update" % short_name,
