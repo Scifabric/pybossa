@@ -241,7 +241,12 @@ def utf_8_encoder(unicode_csv_data):
 class Google:
     oauth = OAuth()
 
-    def __init__(self, c_k, c_s):
+    def __init__(self, app=None):
+        self.app = app
+        if app is not None:
+            self.init_app(app)
+
+    def init_app(self, app):
         self.oauth = self.oauth.remote_app(
             'google',
             base_url='https://www.google.com/accounts/',
@@ -252,8 +257,8 @@ class Google:
             access_token_url='https://accounts.google.com/o/oauth2/token',
             access_token_method='POST',
             access_token_params={'grant_type': 'authorization_code'},
-            consumer_key=c_k,
-            consumer_secret=c_s)
+            consumer_key=app.config['GOOGLE_CLIENT_ID'],
+            consumer_secret=app.config['GOOGLE_CLIENT_SECRET'])
 
 
 class UnicodeWriter:

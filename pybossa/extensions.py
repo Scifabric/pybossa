@@ -24,3 +24,6 @@ facebook = Facebook()
 
 from pybossa.util import Twitter
 twitter = Twitter()
+
+from pybossa.util import Google
+google = Google()

@@ -29,7 +29,7 @@ from flask.ext.misaka import Misaka
 from redis.sentinel import Sentinel
 
 from pybossa import default_settings as settings
-from pybossa.extensions import signer, mail, login_manager, sentinel, toolbar, facebook, twitter
+from pybossa.extensions import signer, mail, login_manager, sentinel, toolbar, facebook, twitter, google
 from pybossa.ratelimit import get_view_rate_limit
 
 from raven.contrib.flask import Sentry
@@ -208,15 +208,16 @@ def setup_social_networks(app):
         print "Facebook signin disabled"
 
     # Enable Google if available
-    #try:  # pragma: no cover
-    #    if (app.config['GOOGLE_CLIENT_ID'] and app.config['GOOGLE_CLIENT_SECRET']):
-    #        from pybossa.view.google import blueprint as google
-    #        app.register_blueprint(google, url_prefix='/google')
-    #except Exception as inst:  # pragma: no cover
-    #    print type(inst)
-    #    print inst.args
-    #    print inst
-    #    print "Google signin disabled"
+    try:  # pragma: no cover
+        if (app.config['GOOGLE_CLIENT_ID'] and app.config['GOOGLE_CLIENT_SECRET']):
+            google.init_app(app)
+            from pybossa.view.google import blueprint as google_bp
+            app.register_blueprint(google_bp, url_prefix='/google')
+    except Exception as inst:  # pragma: no cover
+        print type(inst)
+        print inst.args
+        print inst
+        print "Google signin disabled"
 
 
 def setup_geocoding(app):
