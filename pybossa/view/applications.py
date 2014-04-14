@@ -1281,6 +1281,7 @@ def show_blogpost(short_name, id):
 
 
 @blueprint.route('/<short_name>/blog/new', methods=['GET', 'POST'])
+@login_required
 def new_blogpost(short_name):
 
     def respond():
@@ -1292,6 +1293,7 @@ def new_blogpost(short_name):
     form = BlogpostForm(request.form)
 
     if request.method != 'POST':
+        require.blogpost.create(app_id=app.id)
         return respond()
 
     if not form.validate():
@@ -1323,7 +1325,7 @@ def update_blogpost(short_name, id):
 
     def respond():
         return render_template('applications/update_blogpost.html',
-                               title=gettext("Write a new post"),
+                               title=gettext("Edit a post"),
                                form=form, app=app,
                                blogpost=blogpost)
     form = BlogpostForm()
@@ -1342,7 +1344,6 @@ def update_blogpost(short_name, id):
                                 body=form.body.data,
                                 user_id=current_user.id,
                                 app_id=app.id)
-    require.blogpost.update(blogpost)
     db.session.merge(blogpost)
     db.session.commit()
     cached_apps.delete_app(short_name)
