@@ -6,7 +6,7 @@ PyBossa is a python web application built using the Flask micro-framework.
 
 Pre-requisites:
 
-  * Python >= 2.7, <3.0
+  * Python >= 2.7.2, <3.0
   * PostgreSQL version 9.1 and the Python bindings for PostgreSQL database. 
   * Redis >= 2.6
   * pip for installing python packages (e.g. on ubuntu python-pip)
@@ -282,13 +282,15 @@ Configuring the DataBase
 You need first to add a user to your PostgreSQL_ DB::
 
     sudo su postgres
-    createuser -P tester 
+    createuser -d -P pybossa
+
+Use password `tester` when prompted.
 
 .. note::
     You should use the same user name that you have used in the
-    settings_local.py and alembic.ini files.    
+    settings_local.py and alembic.ini files.
 
-After running the last command, you will have to answer to these questions:
+After running the last command, you maybe also have to answer to these questions:
 
 * Shall the new role be a super user? Answer **n** (press the **n** key).
 * Shall the new role be allowed to create databases? Answer **y** (press the **y** key).
@@ -296,7 +298,7 @@ After running the last command, you will have to answer to these questions:
 
 And now, you can create the database::
 
-    createdb pybossa -O tester
+    createdb pybossa -O pybossa
 
 Finally, exit the postgresql user::
 
