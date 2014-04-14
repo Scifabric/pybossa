@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import pybossa.util
-from base import app, model, Fixtures, redis_flushall
+from default import Test, db
 from mock import patch
 from datetime import datetime, timedelta
 import dateutil.parser
@@ -26,17 +26,11 @@ import csv
 import tempfile
 
 
-class TestWebModule:
+class TestWebModule(Test):
     def setUp(self):
-        #self.app = web.app
-        self.app = app.test_client()
-        model.rebuild_db()
-        Fixtures.create()
-
-    @classmethod
-    def teardown_class(cls):
-        model.rebuild_db()
-        redis_flushall()
+        super(TestWebModule, self).setUp()
+        with self.flask_app.app_context():
+            self.create()
 
     def test_jsonpify(self):
         """Test jsonpify decorator works."""
