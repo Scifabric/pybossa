@@ -31,9 +31,6 @@ import hashlib
 from functools import wraps
 from pybossa.core import sentinel
 
-redis_master = sentinel.connection.master_for('mymaster')
-redis_slave = sentinel.connection.slave_for('mymaster')
-
 try:
     import cPickle as pickle
 except ImportError:  # pragma: no cover
@@ -81,12 +78,12 @@ def cache(key_prefix, timeout=300):
         def wrapper(*args, **kwargs):
             if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:  # pragma: no cover
                 key = "%s::%s" % (settings.REDIS_KEYPREFIX, key_prefix)
-                output = redis_slave.get(key)
+                output = sentinel.slave.get(key)
                 if output:
                     return pickle.loads(output)
                 else:
                     output = f(*args, **kwargs)
-                    redis_master.setex(key, timeout, pickle.dumps(output))
+                    sentinel.master.setex(key, timeout, pickle.dumps(output))
                     return output
             else:
                 return f(*args, **kwargs)
@@ -108,12 +105,12 @@ def memoize(timeout=300, debug=False):
                 key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, f.__name__)
                 key_to_hash = get_key_to_hash(*args, **kwargs)
                 key = get_hash_key(key, key_to_hash)
-                output = redis_slave.get(key)
+                output = sentinel.slave.get(key)
                 if output:
                     return pickle.loads(output)
                 else:
                     output = f(*args, **kwargs)
-                    redis_master.setex(key, timeout, pickle.dumps(output))
+                    sentinel.master.setex(key, timeout, pickle.dumps(output))
                     return output
             else:
                 return f(*args, **kwargs)
@@ -132,7 +129,7 @@ def delete_memoized(function, *args, **kwargs):
         key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, function.__name__)
         key_to_hash = get_key_to_hash(*args, **kwargs)
         key = get_hash_key(key, key_to_hash)
-        redis_master.delete(key)
+        sentinel.master.delete(key)
         return True
 
 
@@ -145,4 +142,4 @@ def delete_cached(key):
     """
     if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:  # pragma: no cover
         key = "%s::%s" % (settings.REDIS_KEYPREFIX, key)
-        return redis_master.delete(key)
+        return sentinel.master.delete(key)
