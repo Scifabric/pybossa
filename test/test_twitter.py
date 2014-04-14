@@ -20,15 +20,6 @@ from pybossa.view.twitter import manage_user
 
 
 class TestTwitter(Test):
-    #def setUp(self):
-    #    self.app = web.app
-    #    model.rebuild_db()
-    #    Fixtures.create()
-
-    #def tearDown(self):
-    #    db.session.remove()
-    #    redis_flushall()
-
     @with_context
     def test_manage_user(self):
         """Test TWITTER manage_user works."""
