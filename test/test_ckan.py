@@ -21,9 +21,7 @@ from mock import patch
 from collections import namedtuple
 from bs4 import BeautifulSoup
 
-#from base import web, db, model, Fixtures
-from default import db
-from pybossa.model import rebuild_db
+from default import Test, db, with_context
 from pybossa.model.user import User
 from pybossa.model.app import App
 from helper import web as web_helper
@@ -34,11 +32,12 @@ FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
 
 class TestCkanWeb(web_helper.Helper):
-    url = "/app/%s/tasks/export" % "sampleapp"
+    url = "/app/test-app/tasks/export"
 
     def setUp(self):
         super(TestCkanWeb, self).setUp()
-        self.create()
+        with self.flask_app.app_context():
+            self.create()
 
     # Tests
 
@@ -65,6 +64,7 @@ class TestCkanWeb(web_helper.Helper):
         err_msg = "The CKAN exporter should be ONLY available for the owner of the app"
         assert dom.find(id="ckan") is None, err_msg
 
+    @with_context
     def test_02_export_links(self):
         """Test CKAN export links task and task run are available"""
         self.signin(email=self.email_addr, password=self.password)
@@ -85,7 +85,7 @@ class TestCkanWeb(web_helper.Helper):
         assert dom.find(id="ckan_task_run") is not None, err_msg
 
 
-class TestCkanModule(object):
+class TestCkanModule(Test, object):
 
     ckan = Ckan(url="http://datahub.io", api_key="fake-api-key")
     task_resource_id = "0dde48c7-a0e9-445f-bc84-6365ec057450"
@@ -228,18 +228,6 @@ class TestCkanModule(object):
 
     server_error = FakeRequest("Server Error", 500, {'content-type': 'text/html'})
 
-    def setUp(self):
-        self.app = web.app
-        model.rebuild_db()
-        self.create()
-
-    def tearDown(self):
-        db.session.remove()
-
-    @classmethod
-    def teardown_class(cls):
-        model.rebuild_db()
-
     # Tests
 
     @patch('pybossa.ckan.requests.get')
@@ -248,7 +236,7 @@ class TestCkanModule(object):
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
                                    {'content-type': 'application/json'})
         Mock.return_value = html_request
-        with self.app.test_request_context('/'):
+        with self.flask_app.test_request_context('/'):
             # Resource that exists
             out, e = self.ckan.package_exists(name='not-found')
             assert out is False, "It should return False as pkg does not exist"
@@ -284,7 +272,7 @@ class TestCkanModule(object):
         html_request = FakeRequest(json.dumps(self.pkg_json_found), 200,
                                    {'content-type': 'application/json'})
         Mock.return_value = html_request
-        with self.app.test_request_context('/'):
+        with self.flask_app.test_request_context('/'):
             # Resource that exists
             out, e = self.ckan.package_exists(name='urbanpark')
             assert out is not False, "It should return a pkg"
@@ -297,7 +285,7 @@ class TestCkanModule(object):
         html_request = FakeRequest(json.dumps(self.pkg_json_found), 200,
                                    {'content-type': 'application/json'})
         Mock.return_value = html_request
-        with self.app.test_request_context('/'):
+        with self.flask_app.test_request_context('/'):
             # Resource that exists
             # Get the package
             out, e = self.ckan.package_exists(name='urbanpark')
@@ -321,7 +309,7 @@ class TestCkanModule(object):
         html_request = FakeRequest(json.dumps(self.pkg_json_found), 200,
                                    {'content-type': 'application/json'})
         Mock.return_value = html_request
-        with self.app.test_request_context('/'):
+        with self.flask_app.test_request_context('/'):
             # Resource that exists
             app = App(short_name='urbanpark', name='Urban Parks')
             user = User(fullname='Daniel Lombrana Gonzalez')
@@ -350,7 +338,7 @@ class TestCkanModule(object):
             200,
             {'content-type': 'text/html'})
         Mock.return_value = pkg_request
-        with self.app.test_request_context('/'):
+        with self.flask_app.test_request_context('/'):
             # Resource that exists
             app = App(short_name='urbanpark', name='Urban Parks')
             user = User(fullname='Daniel Lombrana Gonzalez')
@@ -375,7 +363,7 @@ class TestCkanModule(object):
                                    {'content-type': 'application/json'})
 
         Mock.return_value = html_request
-        with self.app.test_request_context('/'):
+        with self.flask_app.test_request_context('/'):
             out = self.ckan.datastore_create(name='task',
                                              resource_id=None)
             err_msg = "It should ref the task resource ID"
@@ -398,7 +386,7 @@ class TestCkanModule(object):
                                    {'content-type': 'application/json'})
 
         Mock.return_value = html_request
-        with self.app.test_request_context('/'):
+        with self.flask_app.test_request_context('/'):
             out = self.ckan.datastore_create(name='task',
                                              resource_id=self.task_resource_id)
             err_msg = "It should ref the task resource ID"
@@ -422,7 +410,7 @@ class TestCkanModule(object):
 
         record = dict(info=dict(foo="bar"))
         Mock.return_value = html_request
-        with self.app.test_request_context('/'):
+        with self.flask_app.test_request_context('/'):
             out = self.ckan.datastore_upsert(name='task',
                                              records=json.dumps([record]),
                                              resource_id=None)
@@ -449,7 +437,7 @@ class TestCkanModule(object):
 
         record = dict(info=dict(foo="bar"))
         Mock.return_value = html_request
-        with self.app.test_request_context('/'):
+        with self.flask_app.test_request_context('/'):
             out = self.ckan.datastore_upsert(name='task',
                                              records=json.dumps([record]),
                                              resource_id=self.task_resource_id)
@@ -474,7 +462,7 @@ class TestCkanModule(object):
                                    {'content-type': 'application/json'})
 
         Mock.return_value = html_request
-        with self.app.test_request_context('/'):
+        with self.flask_app.test_request_context('/'):
             out = self.ckan.datastore_delete(name='task',
                                              resource_id=self.task_resource_id)
             err_msg = "It should return True"
@@ -496,7 +484,7 @@ class TestCkanModule(object):
         html_request = FakeRequest(json.dumps(self.pkg_json_found), 200,
                                    {'content-type': 'application/json'})
         Mock.return_value = html_request
-        with self.app.test_request_context('/'):
+        with self.flask_app.test_request_context('/'):
             # Resource that exists
             app = App(short_name='urbanpark', name='Urban Parks')
             user = User(fullname='Daniel Lombrana Gonzalez')
