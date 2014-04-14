@@ -18,7 +18,7 @@
 
 import json
 
-from base import Fixtures
+from default import db, with_context
 from helper import web as web_helper
 from pybossa.hateoas import Hateoas
 
@@ -29,10 +29,11 @@ class TestHateoas(web_helper.Helper):
 
     def setUp(self):
         super(TestHateoas, self).setUp()
-        Fixtures.create()
+        with self.flask_app.app_context():
+            self.create()
 
     # Tests
-
+    @with_context
     def test_00_link_object(self):
         """Test HATEOAS object link is created"""
         # For app
@@ -108,7 +109,7 @@ class TestHateoas(web_helper.Helper):
         # For user
         # Pending define what user fields will be visible through the API
         # Issue #626. For now let's suppose link and links are not visible
-        # res = self.app.get("/api/user/1?api_key=" + Fixtures.root_api_key, follow_redirects=True)
+        # res = self.app.get("/api/user/1?api_key=" + self.root_api_key, follow_redirects=True)
         # output = json.loads(res.data)
         # err_msg = "There should be a Link with the object URI"
         # assert output['link'] is not None, err_msg
@@ -121,6 +122,7 @@ class TestHateoas(web_helper.Helper):
         # assert output.get('links') == None, err_msg
 
 
+    @with_context
     def test_01_link_object(self):
         """Test HATEOAS object link is created"""
         # For app
@@ -196,7 +198,7 @@ class TestHateoas(web_helper.Helper):
         # For user
         # Pending define what user fields will be visible through the API
         # Issue #626. For now let's suppose link and links are not visible
-        # res = self.app.get("/api/user?api_key=" + Fixtures.root_api_key, follow_redirects=True)
+        # res = self.app.get("/api/user?api_key=" + self.root_api_key, follow_redirects=True)
         # output = json.loads(res.data)[0]
         # err_msg = "There should be a Link with the object URI"
         # assert output['link'] is not None, err_msg
