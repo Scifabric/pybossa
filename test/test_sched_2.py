@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from helper import sched
-from base import Fixtures, redis_flushall, model
+from default import with_context
 import json
 
 
@@ -26,15 +26,11 @@ class TestSched(sched.Helper):
         super(TestSched, self).setUp()
         self.endpoints = ['app', 'task', 'taskrun']
 
-    def tearDown(self):
-        model.rebuild_db()
-        redis_flushall()
-
     # Tests
+    @with_context
     def test_incremental_tasks(self):
         """ Test incremental SCHED strategy - second TaskRun receives first gaven answer"""
-        redis_flushall()
-        Fixtures.create_2(sched='incremental')
+        self.create_2(sched='incremental')
 
         # Del previous TaskRuns
         self.del_task_runs()
