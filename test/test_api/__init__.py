@@ -34,6 +34,7 @@ class HelperAPI(Test):
     @with_context
     def setUp(self):
         super(HelperAPI, self).setUp()
+        rebuild_db()
         self.create()
 
     @with_context
