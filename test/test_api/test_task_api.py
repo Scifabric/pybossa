@@ -16,14 +16,18 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import json
-from base import model, Fixtures, db
+from default import db, with_context
 from nose.tools import assert_equal
 from test_api import HelperAPI
+from pybossa.model.user import User
+from pybossa.model.app import App
+from pybossa.model.task import Task
 
 
 
 class TestTaskAPI(HelperAPI):
 
+    @with_context
     def test_query_task(self):
         """Test API query for task endpoint works"""
         # Test for real field
@@ -55,6 +59,7 @@ class TestTaskAPI(HelperAPI):
             assert item['app_id'] == 1, item
         assert len(data) == 5, data
 
+    @with_context
     def test_02_task_query(self):
         """ Test API Task query"""
         res = self.app.get('/api/task')
@@ -66,12 +71,13 @@ class TestTaskAPI(HelperAPI):
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
 
+    @with_context
     def test_05_task_post(self):
         '''Test API Task creation and auth'''
-        user = db.session.query(model.user.User)\
-                 .filter_by(name=Fixtures.name)\
+        user = db.session.query(User)\
+                 .filter_by(name=self.name)\
                  .one()
-        app = db.session.query(model.app.App)\
+        app = db.session.query(App)\
                 .filter_by(owner_id=user.id)\
                 .one()
         data = dict(app_id=app.id, state='0', info='my task data')
@@ -89,18 +95,18 @@ class TestTaskAPI(HelperAPI):
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         ### real user but not allowed as not owner!
-        res = self.app.post('/api/task?api_key=' + Fixtures.api_key_2,
+        res = self.app.post('/api/task?api_key=' + self.api_key_2,
                             data=json.dumps(data))
 
         error_msg = 'Should not be able to post tasks for apps of others'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
         # now a real user
-        res = self.app.post('/api/task?api_key=' + Fixtures.api_key,
+        res = self.app.post('/api/task?api_key=' + self.api_key,
                             data=json.dumps(data))
         assert res.data, res
         datajson = json.loads(res.data)
-        out = db.session.query(model.task.Task)\
+        out = db.session.query(Task)\
                 .filter_by(id=datajson['id'])\
                 .one()
         assert out, out
@@ -109,11 +115,11 @@ class TestTaskAPI(HelperAPI):
         id_ = out.id
 
         # now the root user
-        res = self.app.post('/api/task?api_key=' + Fixtures.root_api_key,
+        res = self.app.post('/api/task?api_key=' + self.root_api_key,
                             data=root_data)
         assert res.data, res
         datajson = json.loads(res.data)
-        out = db.session.query(model.task.Task)\
+        out = db.session.query(Task)\
                 .filter_by(id=datajson['id'])\
                 .one()
         assert out, out
@@ -122,7 +128,7 @@ class TestTaskAPI(HelperAPI):
         root_id_ = out.id
 
         # POST with not JSON data
-        url = '/api/task?api_key=%s' % Fixtures.api_key
+        url = '/api/task?api_key=%s' % self.api_key
         res = self.app.post(url, data=data)
         err = json.loads(res.data)
         assert res.status_code == 415, err
@@ -164,25 +170,25 @@ class TestTaskAPI(HelperAPI):
         error_msg = 'Anonymous should not be allowed to update'
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
         ### real user but not allowed as not owner!
-        url = '/api/task/%s?api_key=%s' % (id_, Fixtures.api_key_2)
+        url = '/api/task/%s?api_key=%s' % (id_, self.api_key_2)
         res = self.app.put(url, data=datajson)
         error_msg = 'Should not be able to update tasks of others'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
         ### real user
-        url = '/api/task/%s?api_key=%s' % (id_, Fixtures.api_key)
+        url = '/api/task/%s?api_key=%s' % (id_, self.api_key)
         res = self.app.put(url, data=datajson)
         out = json.loads(res.data)
         assert_equal(res.status, '200 OK', res.data)
-        out2 = db.session.query(model.task.Task).get(id_)
+        out2 = db.session.query(Task).get(id_)
         assert_equal(out2.state, data['state'])
         assert out2.id == out['id'], out
 
         ### root
-        res = self.app.put('/api/task/%s?api_key=%s' % (root_id_, Fixtures.root_api_key),
+        res = self.app.put('/api/task/%s?api_key=%s' % (root_id_, self.root_api_key),
                            data=root_datajson)
         assert_equal(res.status, '200 OK', res.data)
-        out2 = db.session.query(model.task.Task).get(root_id_)
+        out2 = db.session.query(Task).get(root_id_)
         assert_equal(out2.state, root_data['state'])
 
         # PUT with not JSON data
@@ -223,7 +229,7 @@ class TestTaskAPI(HelperAPI):
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         ### real user but not allowed as not owner!
-        url = '/api/task/%s?api_key=%s' % (id_, Fixtures.api_key_2)
+        url = '/api/task/%s?api_key=%s' % (id_, self.api_key_2)
         res = self.app.delete(url)
         error_msg = 'Should not be able to update tasks of others'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
@@ -239,24 +245,25 @@ class TestTaskAPI(HelperAPI):
         assert err['exception_cls'] == 'AttributeError', err
 
         # DELETE returns 204
-        url = '/api/task/%s?api_key=%s' % (id_, Fixtures.api_key)
+        url = '/api/task/%s?api_key=%s' % (id_, self.api_key)
         res = self.app.delete(url)
         assert_equal(res.status, '204 NO CONTENT', res.data)
         assert res.data == '', res.data
 
         #### root user
-        url = '/api/task/%s?api_key=%s' % (root_id_, Fixtures.root_api_key)
+        url = '/api/task/%s?api_key=%s' % (root_id_, self.root_api_key)
         res = self.app.delete(url)
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
-        tasks = db.session.query(model.task.Task)\
+        tasks = db.session.query(Task)\
                   .filter_by(app_id=app.id)\
                   .all()
         assert tasks, tasks
 
+    @with_context
     def test_11_allow_anonymous_contributors(self):
         """Test API allow anonymous contributors works"""
-        app = db.session.query(model.app.App).first()
+        app = db.session.query(App).first()
 
         # All users are allowed to participate by default
         # As Anonymous user
@@ -273,6 +280,7 @@ class TestTaskAPI(HelperAPI):
         # As registered user
         self.register()
         self.signin()
+        app = db.session.query(App).first()
         url = '/api/app/%s/newtask' % app.id
         res = self.app.get(url, follow_redirects=True)
         task = json.loads(res.data)
@@ -285,6 +293,7 @@ class TestTaskAPI(HelperAPI):
         self.signout()
 
         # Now only allow authenticated users
+        app = db.session.query(App).first()
         app.allow_anonymous_contributors = False
         db.session.add(app)
         db.session.commit()
@@ -302,6 +311,7 @@ class TestTaskAPI(HelperAPI):
         assert task['info'].get('question') is None, err_msg
 
         # As registered user
+        app = db.session.query(App).first()
         res = self.signin()
         url = '/api/app/%s/newtask' % app.id
         res = self.app.get(url, follow_redirects=True)
