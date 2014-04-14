@@ -30,6 +30,7 @@ import json
 from flask import request, abort, Response
 from flask.views import MethodView
 from werkzeug.exceptions import NotFound
+from sqlalchemy.exc import IntegrityError
 from pybossa.util import jsonpify, crossdomain
 from pybossa.core import db
 from pybossa.auth import require
@@ -79,8 +80,10 @@ class APIBase(MethodView):
             query = self._db_query(self.__class__, id)
             json_response = self._create_json_response(query, id)
             return Response(json_response, mimetype='application/json')
-        except Exception as e:
+        except IntegrityError:
             db.session.rollback()
+            raise
+        except Exception as e:
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
@@ -165,8 +168,10 @@ class APIBase(MethodView):
             db.session.add(inst)
             db.session.commit()
             return json.dumps(inst.dictize())
-        except Exception as e:
+        except IntegrityError:
             db.session.rollback()
+            raise
+        except Exception as e:
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
@@ -196,8 +201,10 @@ class APIBase(MethodView):
             db.session.commit()
             self._refresh_cache(inst)
             return '', 204
-        except Exception as e:
+        except IntegrityError:
             db.session.rollback()
+            raise
+        except Exception as e:
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
@@ -234,8 +241,10 @@ class APIBase(MethodView):
             self._refresh_cache(inst)
             return Response(json.dumps(inst.dictize()), 200,
                             mimetype='application/json')
-        except Exception as e:
+        except IntegrityError:
             db.session.rollback()
+            raise
+        except Exception as e:
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
