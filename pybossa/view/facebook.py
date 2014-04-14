@@ -31,9 +31,7 @@ from pybossa.util import get_user_signup_method
 # This blueprint will be activated in web.py if the FACEBOOK APP ID and SECRET
 # are available
 blueprint = Blueprint('facebook', __name__)
-#facebook = Facebook(current_app.config['FACEBOOK_APP_ID'],
-#                    current_app.config['FACEBOOK_APP_SECRET'])
-#
+
 
 @blueprint.route('/', methods=['GET', 'POST'])
 def login():  # pragma: no cover
