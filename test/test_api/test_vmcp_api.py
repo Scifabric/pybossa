@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import json
-from default import flask_app, db, with_context
+from default import flask_app, with_context
 from mock import patch
 from test_api import HelperAPI
 
