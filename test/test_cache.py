@@ -17,11 +17,11 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 import hashlib
-from default import flask_app
+from default import Test
 from pybossa.cache import get_key_to_hash, get_hash_key
 
 
-class TestCache():
+class TestCache(Test):
     def test_00_get_key_to_hash_with_args(self):
         """Test CACHE get_key_to_hash with args works."""
         expected = ':1:a'
