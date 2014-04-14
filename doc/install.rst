@@ -140,7 +140,7 @@ this::
   # Access the source code folder
   cd pybossa
   # Install the required libraries
-  pip install -e .
+  pip install -r requirements.txt
   # Install the CACHE required libraries
   pip install -r cache_requirements.txt
 
