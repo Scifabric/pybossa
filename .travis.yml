@@ -15,7 +15,8 @@ install:
   - python setup.py install
   - pip install -r cache_requirements.txt
 before_script:
-  - psql -c 'create database pybossa;' -U postgres
+  - psql -c "create user rtester with createdb login password 'rtester'" -U postgres
+  - psql -c "createdb pybossa_test -O rtester --encoding='utf-8' --locale=en_US.utf8 --template=template0;" -U postgres
 script: nosetests -v --with-coverage --cover-erase --cover-package=pybossa
 notifications:
   email: false
