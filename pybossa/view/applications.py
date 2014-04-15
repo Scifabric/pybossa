@@ -1357,6 +1357,7 @@ def update_blogpost(short_name, id):
 
 
 @blueprint.route('/<short_name>/blog/<int:id>/delete', methods=['POST'])
+@login_required
 def delete_blogpost(short_name, id):
     app = app_by_shortname(short_name)[0]
     blogpost = db.session.query(model.blogpost.Blogpost).filter_by(id=id,
@@ -1364,6 +1365,7 @@ def delete_blogpost(short_name, id):
     if blogpost is None:
         raise abort(404)
 
+    require.blogpost.delete(blogpost)
     db.session.delete(blogpost)
     db.session.commit()
     cached_apps.delete_app(short_name)

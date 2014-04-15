@@ -294,7 +294,6 @@ class TestBlogpostView(web.Helper):
         mock_redirect.assert_called_with('/app/%s/blog' % app.short_name)
 
         blogpost = db.session.query(Blogpost).first()
-        print blogpost
         assert blogpost.title == 'blogpost title', blogpost.title
         assert blogpost.body == 'new body', blogpost.body
 
@@ -382,7 +381,92 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 404, res.status_code
 
 
+    @patch('pybossa.view.applications.redirect', wraps=redirect)
+    def test_blogpost_delete_by_owner(self, mock_redirect):
+        """Test blogposts, app owners can delete"""
+        self.register()
+        user = db.session.query(User).get(1)
+        app = Fixtures.create_app(info=None)
+        app.owner = user
+        blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
+        db.session.add_all([app, blogpost])
+        db.session.commit()
+        url = "/app/%s/blog/%s/delete" % (app.short_name, blogpost.id)
+        redirect_url = '/app/%s/blog' % app.short_name
 
+        res = self.app.post(url, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        mock_redirect.assert_called_with(redirect_url)
+
+        blogpost = db.session.query(Blogpost).first()
+        assert blogpost is None, blogpost
+
+
+
+    def test_blogpost_delete_by_anonymous(self):
+        """Test blogpost delete, anonymous users are redirected to signin"""
+        user = Fixtures.create_users()[1]
+        app = Fixtures.create_app(info=None)
+        app.owner = user
+        blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
+        db.session.add_all([user, app, blogpost])
+        db.session.commit()
+        url = "/app/%s/blog/%s/delete" % (app.short_name, blogpost.id)
+
+        res = self.app.post(url, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        assert "Please sign in to access this page" in res.data
+
+        blogpost = db.session.query(Blogpost).first()
+        assert blogpost is not None
+
+
+    def test_blogpost_delete_by_non_owner(self):
+        """Test blogpost delete by non owner of the app is forbidden"""
+        user = Fixtures.create_users()[1]
+        app = Fixtures.create_app(info=None)
+        app.owner = user
+        blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
+        db.session.add_all([user, app, blogpost])
+        db.session.commit()
+        url = "/app/%s/blog/%s/delete" % (app.short_name, blogpost.id)
+        self.register()
+
+        res = self.app.post(url, follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+
+        blogpost = db.session.query(Blogpost).first()
+        assert blogpost is not None
+
+
+    def test_blogpost_delete_errors(self):
+        """Test blogposts delete for non existing apps raises errors"""
+        self.register()
+        user = db.session.query(User).get(1)
+        app1 = model.app.App(name='app1',
+                short_name='app1',
+                description=u'description')
+        app2 = Fixtures.create_app(info=None)
+        app1.owner = user
+        app2.owner = user
+        blogpost = Blogpost(owner=user, app=app1, title='thisisatitle', body='body')
+        db.session.add_all([app1, app2, blogpost])
+        db.session.commit()
+
+        # To a non-existing app
+        url = "/app/non-existing-app/blog/%s/delete" % blogpost.id
+        res = self.app.post(url, follow_redirects=True)
+        assert res.status_code == 404, res.status_code
+
+        # To a non-existing post
+        url = "/app/%s/blog/999999/delete" % app1.short_name
+        res = self.app.post(url, follow_redirects=True)
+        assert res.status_code == 404, res.status_code
+
+        # To an existing post but with an app in the URL it does not belong to
+        url = "/app/%s/blog/%s/delete" % (app2.short_name, blogpost.id)
+        res = self.app.post(url, follow_redirects=True)
+        assert res.status_code == 404, res.status_code
 
 
 
