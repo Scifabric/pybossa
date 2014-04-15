@@ -322,8 +322,11 @@ completed:
 .. image:: http://i.imgur.com/hPtgo6S.png
 
 
-Migrating the Database Table Structure
-======================================
+Updating PyBossa
+================
+
+Update PyBossa core and migrating the database table structure
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Sometimes, the PyBossa developers add a new column or table to the PyBossa
 server, forcing you to carry out a **migration** of the database. PyBossa uses
@@ -331,11 +334,12 @@ Alembic_ for performing the migrations, so in case that your production server
 need to upgrade the DB structure to a new version, all you have to do is to::
 
   git pull origin master
+  pip install -r requirements.txt
   alembic upgrade head
 
 
-The first command will get you the latest source code of the server, and the
-second one will perform the migration.
+The first command will get you the latest source code. Then new libraries are
+installed or upgraded. And Alembic is upgrading the database structure.
 
 .. note::
     If you are using the virtualenv_ be sure to activate it before running the
@@ -361,7 +365,7 @@ In order to fix this issue, you can run a simple script to convert all the DB ap
 long_description field from HTML to Markdown, just by running the following
 commands::
 
-  pip install html2text
+  pip install -r requirements.txt
   python cli.py markdown_db_migrate
 
 The first command will install a Python package that will handle the HTML to
