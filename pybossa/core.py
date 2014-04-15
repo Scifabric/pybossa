@@ -18,16 +18,12 @@
 
 import os
 import logging
-# from itsdangerous import URLSafeTimedSerializer
 from flask import Flask, url_for, session, request, render_template, flash
-# from flask.ext.login import LoginManager, current_user
 from flask.ext.login import current_user
 from flaskext.gravatar import Gravatar
-# from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.heroku import Heroku
 from flask.ext.babel import Babel, lazy_gettext
 from flask.ext.misaka import Misaka
-# from redis.sentinel import Sentinel
 
 from pybossa import default_settings as settings
 from pybossa.extensions import (signer, mail, login_manager, sentinel,
