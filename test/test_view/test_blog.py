@@ -191,7 +191,7 @@ class TestBlogpostView(web.Helper):
 
     @patch('pybossa.view.applications.redirect', wraps=redirect)
     def test_blogpost_create_by_owner(self, mock_redirect):
-        """Test blogposts, only app owners can create"""
+        """Test blogposts, app owners can create"""
         self.register()
         user = db.session.query(User).get(1)
         app = Fixtures.create_app(info=None)
@@ -270,7 +270,116 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 404, res.status_code
 
 
+    @patch('pybossa.view.applications.redirect', wraps=redirect)
+    def test_blogpost_update_by_owner(self, mock_redirect):
+        """Test blogposts, app owners can update"""
+        self.register()
+        user = db.session.query(User).get(1)
+        app = Fixtures.create_app(info=None)
+        app.owner = user
+        blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
+        db.session.add_all([app, blogpost])
+        db.session.commit()
+        url = "/app/%s/blog/%s/update" % (app.short_name, blogpost.id)
 
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+
+        res = self.app.post(url,
+                            data={'id': blogpost.id,
+                                  'title':'blogpost title',
+                                  'body':'new body'},
+                            follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        mock_redirect.assert_called_with('/app/%s/blog' % app.short_name)
+
+        blogpost = db.session.query(Blogpost).first()
+        print blogpost
+        assert blogpost.title == 'blogpost title', blogpost.title
+        assert blogpost.body == 'new body', blogpost.body
+
+
+
+    def test_blogpost_update_by_anonymous(self):
+        """Test blogpost update, anonymous users are redirected to signin"""
+        user = Fixtures.create_users()[1]
+        app = Fixtures.create_app(info=None)
+        app.owner = user
+        blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
+        db.session.add_all([user, app, blogpost])
+        db.session.commit()
+        url = "/app/%s/blog/%s/update" % (app.short_name, blogpost.id)
+
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        assert "Please sign in to access this page" in res.data, res.data
+
+        res = self.app.post(url,
+                            data={'id':blogpost.id,
+                                  'title':'new title',
+                                  'body':'new body'},
+                            follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        assert "Please sign in to access this page" in res.data
+
+        blogpost = db.session.query(Blogpost).first()
+        assert blogpost.title == 'thisisatitle', blogpost.title
+
+
+    def test_blogpost_update_by_non_owner(self):
+        """Test blogpost update by non owner of the app is forbidden"""
+        user = Fixtures.create_users()[1]
+        app = Fixtures.create_app(info=None)
+        app.owner = user
+        blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
+        db.session.add_all([user, app, blogpost])
+        db.session.commit()
+        url = "/app/%s/blog/%s/update" % (app.short_name, blogpost.id)
+        self.register()
+
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+
+        res = self.app.post(url,
+                            data={'title':'new title', 'body':'body'},
+                            follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+
+        blogpost = db.session.query(Blogpost).first()
+        assert blogpost.title == 'thisisatitle', blogpost.title
+
+
+    def test_blogpost_update_errors(self):
+        """Test blogposts update for non existing apps raises errors"""
+        self.register()
+        user = db.session.query(User).get(1)
+        app1 = model.app.App(name='app1',
+                short_name='app1',
+                description=u'description')
+        app2 = Fixtures.create_app(info=None)
+        app1.owner = user
+        app2.owner = user
+        blogpost = Blogpost(owner=user, app=app1, title='thisisatitle', body='body')
+        db.session.add_all([app1, app2, blogpost])
+        db.session.commit()
+
+        # To a non-existing app
+        url = "/app/non-existing-app/blog/%s/update" % blogpost.id
+        res = self.app.post(url, data={'title':'new title', 'body':'body'},
+                            follow_redirects=True)
+        assert res.status_code == 404, res.status_code
+
+        # To a non-existing post
+        url = "/app/%s/blog/999999/update" % app1.short_name
+        res = self.app.post(url, data={'title':'new title', 'body':'body'},
+                            follow_redirects=True)
+        assert res.status_code == 404, res.status_code
+
+        # To an existing post but with an app in the URL it does not belong to
+        url = "/app/%s/blog/%s/update" % (app2.short_name, blogpost.id)
+        res = self.app.post(url, data={'title':'new title', 'body':'body'},
+                            follow_redirects=True)
+        assert res.status_code == 404, res.status_code
 
 
 

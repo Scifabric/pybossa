@@ -1316,6 +1316,7 @@ def new_blogpost(short_name):
 
 
 @blueprint.route('/<short_name>/blog/<int:id>/update', methods=['GET', 'POST'])
+@login_required
 def update_blogpost(short_name, id):
     app = app_by_shortname(short_name)[0]
     blogpost = db.session.query(model.blogpost.Blogpost).filter_by(id=id,
@@ -1331,6 +1332,7 @@ def update_blogpost(short_name, id):
     form = BlogpostForm()
 
     if request.method != 'POST':
+        require.blogpost.update(blogpost)
         form = BlogpostForm(obj=blogpost)
         return respond()
 
@@ -1338,7 +1340,7 @@ def update_blogpost(short_name, id):
         flash(gettext('Please correct the errors'), 'error')
         return respond()
 
-
+    require.blogpost.update(blogpost)
     blogpost = model.blogpost.Blogpost(id=form.id.data,
                                 title=form.title.data,
                                 body=form.body.data,
