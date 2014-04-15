@@ -33,7 +33,6 @@ blueprint = Blueprint('twitter', __name__)
 
 @blueprint.route('/', methods=['GET', 'POST'])
 def login():  # pragma: no cover
-    print current_app.config['TWITTER_CONSUMER_KEY']
     return twitter.oauth.authorize(callback=url_for('.oauth_authorized',
                                                     next=request.args.get("next")))
 
