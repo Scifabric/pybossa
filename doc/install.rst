@@ -127,7 +127,7 @@ with **#** are comments)::
   # Activate the virtual environment
   source env/bin/activate
   # Install the required libraries
-  pip install -e .
+  pip install -r requirements.txt
   # Install the CACHE required libraries
   pip install -r cache_requirements.txt
 
