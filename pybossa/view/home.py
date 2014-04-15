@@ -30,7 +30,6 @@ from pybossa.cache import categories as cached_cat
 blueprint = Blueprint('home', __name__)
 
 @blueprint.route('/')
-
 def home():
     """ Render home page with the cached apps and users"""
     d = {'featured': cached_apps.get_featured_front_page(),
