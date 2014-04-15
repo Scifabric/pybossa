@@ -20,11 +20,10 @@
 from helper import web
 from pybossa.model.blogpost import Blogpost
 from pybossa.model.user import User
-from base import redis_flushall, model, Fixtures
-from mock import patch, Mock
-from flask import Response, url_for
+from pybossa.model.app import App
+from base import Fixtures
+from mock import patch
 from pybossa.core import db
-from werkzeug.exceptions import NotFound
 
 
 
@@ -161,7 +160,7 @@ class TestBlogpostView(web.Helper):
         """Test blogposts GET non existing posts raises errors"""
         self.register()
         user = db.session.query(User).get(1)
-        app1 = model.app.App(name='app1',
+        app1 = App(name='app1',
                 short_name='app1',
                 description=u'description')
         app2 = Fixtures.create_app(info=None)
@@ -352,7 +351,7 @@ class TestBlogpostView(web.Helper):
         """Test blogposts update for non existing apps raises errors"""
         self.register()
         user = db.session.query(User).get(1)
-        app1 = model.app.App(name='app1',
+        app1 = App(name='app1',
                 short_name='app1',
                 description=u'description')
         app2 = Fixtures.create_app(info=None)
@@ -443,7 +442,7 @@ class TestBlogpostView(web.Helper):
         """Test blogposts delete for non existing apps raises errors"""
         self.register()
         user = db.session.query(User).get(1)
-        app1 = model.app.App(name='app1',
+        app1 = App(name='app1',
                 short_name='app1',
                 description=u'description')
         app2 = Fixtures.create_app(info=None)
