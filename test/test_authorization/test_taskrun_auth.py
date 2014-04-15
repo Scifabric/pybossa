@@ -41,16 +41,6 @@ class TestTaskrunAuthorization(Test):
         super(TestTaskrunAuthorization, self).setUp()
         with self.flask_app.app_context():
             self.create()
-            #model.rebuild_db()
-            #self.root, self.user1, self.user2 = Fixtures.create_users()
-            #db.session.add_all([self.root, self.user1, self.user2])
-            #self.app.owner = self.root
-            #db.session.add(self.app)
-            #db.session.commit()
-            #self.task = Task(app_id=self.app.id, state='0', n_answers=10)
-            #self.task.app = self.app
-            #db.session.add(self.task)
-            #db.session.commit()
 
     def configure_fixtures(self):
         self.app = db.session.query(App).first()

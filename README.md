@@ -61,15 +61,13 @@ It has the instructions to become a contributor.
 
 * [Daniel Lombraña González](http://daniellombrana.es) - [Citizen Cyberscience Centre](http://citizencyberscience.net/), [Shuttleworth Fellow](http://www.shuttleworthfoundation.org/fellows/daniel-lombrana/)
 * Rufus Pollock - [Open Knowledge Foundation](http://okfn.org/)
-* David Anderson - BOINC / Berkeley (via BOSSA)
 
-* [Twitter Bootstrap Icons by Glyphicons](http://http://glyphicons.com/)
 * [FontAwesome fonts](http://fortawesome.github.com/Font-Awesome/)
 * [GeoLite data by MaxMind](http://www.maxmind.com)
 
 ## Copyright / License
 
-Copyright 2013 SF Isle of Man Limited. 
+Copyright 2014 SF Isle of Man Limited. 
 
 Source Code License: The GNU Affero General Public License, either version 3 of the License
 or (at your option) any later version. (see COPYING file)
