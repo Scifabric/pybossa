@@ -16,31 +16,18 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-#from base import model, db, web, Fixtures, redis_flushall
 from default import Test, db, Fixtures, with_context
 from helper.user import User
 from pybossa.model.app import App
 from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
-#from pybossa.model.user import User
 
 
 class Helper(Test):
     """Class to help testing the web interface"""
 
     user = User()
-    #app_short_name = "sampleapp"
-
-    #def setUp(self):
-    #    #self.app = web.app.test_client()
-    #    with self.flask_app.app_context():
-    #        model.rebuild_db()
-
-    #@classmethod
-    #def teardown_class(cls):
-    #    model.rebuild_db()
-    #    redis_flushall
 
     def html_title(self, title=None):
         """Helper function to create an HTML title"""
