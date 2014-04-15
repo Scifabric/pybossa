@@ -360,3 +360,10 @@ class Fixtures:
     @classmethod
     def redis_flushall(cls):
         sentinel.connection.master_for('mymaster').flushall()
+
+def assert_not_raises(exception, call, *args, **kwargs):
+    try:
+        call(*args, **kwargs)
+        assert True
+    except exception as ex:
+        assert False, str(ex)
