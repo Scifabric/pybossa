@@ -54,7 +54,3 @@ def tos():
 def cookies_policy():
     """Render help/cookies-policy page"""
     return render_template('help/cookies_policy.html', title='Help: Cookies Policy')
-
-@blueprint.route('/mi')
-def mi():
-    return "mi"
