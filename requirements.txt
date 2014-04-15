@@ -25,3 +25,4 @@ M2Crypto==0.22.dev
 nose
 coverage
 mock
+sphinx
