@@ -18,24 +18,25 @@
 
 import os
 import logging
-from itsdangerous import URLSafeTimedSerializer
+# from itsdangerous import URLSafeTimedSerializer
 from flask import Flask, url_for, session, request, render_template, flash
-from flask.ext.login import LoginManager, current_user
+# from flask.ext.login import LoginManager, current_user
+from flask.ext.login import current_user
 from flaskext.gravatar import Gravatar
-from flask.ext.sqlalchemy import SQLAlchemy
+# from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.heroku import Heroku
 from flask.ext.babel import Babel, lazy_gettext
 from flask.ext.misaka import Misaka
-from redis.sentinel import Sentinel
+# from redis.sentinel import Sentinel
 
 from pybossa import default_settings as settings
-from pybossa.extensions import signer, mail, login_manager, sentinel, facebook, twitter, google
+from pybossa.extensions import (signer, mail, login_manager, sentinel,
+                                facebook, twitter, google)
 from pybossa.ratelimit import get_view_rate_limit
 
 from raven.contrib.flask import Sentry
 from pybossa.model import db
 from pybossa import model
-
 
 
 def create_app(theme='default'):
@@ -46,7 +47,6 @@ def create_app(theme='default'):
     if 'DATABASE_URL' in os.environ:  # pragma: no cover
         heroku = Heroku(app)
     configure_app(app)
-    #setup_cache(app)
     setup_error_email(app)
     setup_logging(app)
     setup_login_manager(app)
@@ -54,14 +54,14 @@ def create_app(theme='default'):
     setup_babel(app)
     Misaka(app)
     # Set up Gravatar for users
-    gravatar = Gravatar(app, size = 100, rating = 'g', default = 'mm', force_default = False, force_lower = False)
+    gravatar = Gravatar(app, size=100, rating='g', default='mm',
+                        force_default=False, force_lower=False)
     db.init_app(app)
     mail.init_app(app)
     sentinel.init_app(app)
     signer.init_app(app)
     if app.config.get('SENTRY_DSN'): # pragma: no cover
         sentr = Sentry(app)
-
     setup_blueprints(app)
     setup_hooks(app)
     setup_error_handlers(app)
@@ -77,7 +77,7 @@ def configure_app(app):
     app.config.from_envvar('PYBOSSA_SETTINGS', silent=True)
     # parent directory
     if not os.environ.get('PYBOSSA_SETTINGS'):
-        here = os.path.dirname(os.path.abspath( __file__ ))
+        here = os.path.dirname(os.path.abspath(__file__))
         config_path = os.path.join(os.path.dirname(here), 'settings_local.py')
         if os.path.exists(config_path): # pragma: no cover
             app.config.from_pyfile(config_path)
@@ -127,17 +127,6 @@ try: # pragma: no cover
 except:
     # Otherwise try with default theme
     theme = settings.THEME
-# Create app
-# app = create_app(theme=theme)
-#
-
-#def setup_cache(app):
-#    """Return handlers to cache."""
-#    mysentinel = Sentinel(app.config['REDIS_SENTINEL'], socket_timeout=0.1)
-#    redis_master = mysentinel.master_for('mymaster')
-#    redis_slave = mysentinel.slave_for('mymaster')
-
-
 
 def setup_babel(app):
     """Return babel handler."""
