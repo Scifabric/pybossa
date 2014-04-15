@@ -20,17 +20,32 @@ from flask.ext.login import current_user
 import pybossa.model as model
 from pybossa.core import db
 
-def create(blogpost):
-    if current_user.is_anonymous():
+def create(blogpost=None, app_id=None):
+    if current_user.is_anonymous() or (blogpost is None and app_id is None):
         return False
+    if app_id is not None:
+        app = db.session.query(model.app.App).get(app_id)
+        return app.owner_id == current_user.id
     if blogpost.app is None:
-        app = db.session.query(model.app.App).filter_by(id=blogpost.app_id).first()
+        app = db.session.query(model.app.App).get(blogpost.app_id)
         blogpost.app = app
     return blogpost.user_id == blogpost.app.owner_id == current_user.id
 
 
-def read(blogpost=None):
-    return True
+def read(blogpost=None, app_id=None):
+    if blogpost is not None:
+        app = db.session.query(model.app.App).filter_by(id=blogpost.app_id).first()
+        blogpost.app = app
+    if app_id is not None:
+        app = db.session.query(model.app.App).get(app_id)
+    if blogpost is None and app_id is None:
+        return False
+    visible = not app.hidden
+    if visible:
+        return True
+    if current_user.is_anonymous():
+        return False
+    return current_user.admin or current_user.id == app.owner_id
 
 
 def update(blogpost):
