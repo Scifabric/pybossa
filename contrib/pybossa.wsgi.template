@@ -6,4 +6,4 @@ execfile(activate_this, dict(__file__=activate_this))
 import sys
 sys.path.insert(0,'/home/user/pybossa')
 # Run the web-app
-from pybossa.web import app as application
+from run import app as application
