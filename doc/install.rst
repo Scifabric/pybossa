@@ -308,7 +308,7 @@ Then, populate the database with its tables::
 
 Run the web server::
 
-  python pybossa/web.py
+  python run.py
 
 Open in your web browser the following URL::
 
