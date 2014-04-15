@@ -183,7 +183,7 @@ class Pagination(object):
                 last = num
 
 
-class Twitter:
+class Twitter(object):
     oauth = OAuth()
 
     def __init__(self, app=None):
@@ -238,7 +238,7 @@ def utf_8_encoder(unicode_csv_data):
         yield line.encode('utf-8')
 
 
-class Google:
+class Google(object):
     oauth = OAuth()
 
     def __init__(self, app=None):

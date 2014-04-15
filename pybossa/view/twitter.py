@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-from flask import Blueprint, request, url_for, flash, redirect, current_app
+from flask import Blueprint, request, url_for, flash, redirect
 from flask.ext.login import login_user, current_user
 
 from pybossa.core import db, twitter

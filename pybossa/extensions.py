@@ -27,3 +27,16 @@ twitter = Twitter()
 
 from pybossa.util import Google
 google = Google()
+
+# Markdown support
+from flask.ext.misaka import Misaka
+misaka = Misaka()
+
+# Babel
+from flask.ext.babel import Babel
+babel = Babel()
+
+# Gravatar
+from flask.ext.gravatar import Gravatar
+gravatar = Gravatar(size=100, rating='g', default='mm',
+                    force_default=False, force_lower=False)

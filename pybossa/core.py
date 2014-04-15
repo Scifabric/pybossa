@@ -20,14 +20,14 @@ import os
 import logging
 from flask import Flask, url_for, session, request, render_template, flash
 from flask.ext.login import current_user
-from flaskext.gravatar import Gravatar
+#from flaskext.gravatar import Gravatar
 from flask.ext.heroku import Heroku
-from flask.ext.babel import Babel, lazy_gettext
-from flask.ext.misaka import Misaka
+from flask.ext.babel import lazy_gettext
 
 from pybossa import default_settings as settings
 from pybossa.extensions import (signer, mail, login_manager, sentinel,
-                                facebook, twitter, google)
+                                facebook, twitter, google, misaka,
+                                babel, gravatar)
 from pybossa.ratelimit import get_view_rate_limit
 
 from raven.contrib.flask import Sentry
@@ -48,10 +48,11 @@ def create_app(theme='default'):
     setup_login_manager(app)
     login_manager.setup_app(app)
     setup_babel(app)
-    Misaka(app)
+    setup_markdown(app)
     # Set up Gravatar for users
-    gravatar = Gravatar(app, size=100, rating='g', default='mm',
-                        force_default=False, force_lower=False)
+    setup_gravatar(app)
+    #gravatar = Gravatar(app, size=100, rating='g', default='mm',
+                        #force_default=False, force_lower=False)
     db.init_app(app)
     mail.init_app(app)
     sentinel.init_app(app)
@@ -80,6 +81,14 @@ def configure_app(app):
     # Override DB in case of testing
     if app.config.get('SQLALCHEMY_DATABASE_TEST_URI'):
         app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_TEST_URI']
+
+
+def setup_markdown(app):
+    misaka.init_app(app)
+
+
+def setup_gravatar(app):
+    gravatar.init_app(app)
 
 from logging.handlers import SMTPHandler
 def setup_error_email(app):
@@ -126,7 +135,6 @@ except:
 
 def setup_babel(app):
     """Return babel handler."""
-    babel = Babel()
     babel.init_app(app)
 
     @babel.localeselector
