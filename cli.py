@@ -76,17 +76,17 @@ def fixtures():
 def markdown_db_migrate():
     '''Perform a migration of the app long descriptions from HTML to
     Markdown for existing database records'''
-	with app.app_context():
-    	query = 'SELECT id, long_description FROM "app";'
-	    query_result = db.engine.execute(query)
-	    old_descriptions = query_result.fetchall()
-	    for old_desc in old_descriptions:
-    	    if old_desc.long_description:
-	            new_description = html2text(old_desc.long_description)
-	            query = text('''
-    	                   UPDATE app SET long_description=:long_description
-	                       WHERE id=:id''')
-    	        db.engine.execute(query, long_description = new_description, id = old_desc.id)
+    with app.app_context():
+        query = 'SELECT id, long_description FROM "app";'
+        query_result = db.engine.execute(query)
+        old_descriptions = query_result.fetchall()
+        for old_desc in old_descriptions:
+            if old_desc.long_description:
+                new_description = html2text(old_desc.long_description)
+                query = text('''
+                           UPDATE app SET long_description=:long_description
+                           WHERE id=:id''')
+                db.engine.execute(query, long_description = new_description, id = old_desc.id)
 
 
 ## ==================================================
