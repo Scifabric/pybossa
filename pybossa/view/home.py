@@ -16,44 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-#import os
-#import logging
-#import json
-#import os
-#
-#from flask import Response, request, g, render_template,\
-#        abort, flash, redirect, session, url_for
-#from flask.ext.login import login_user, logout_user, current_user
-#from flask.ext.babel import lazy_gettext
-#from sqlalchemy.exc import UnboundExecutionError
-#from sqlalchemy import func, desc
-#from werkzeug.exceptions import *
-#
-#import pybossa
-#from pybossa.core import app, login_manager, db, babel
 from flask import current_app
 from flask.ext.login import current_user
 import pybossa.model as model
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import users as cached_users
 from pybossa.cache import categories as cached_cat
-#from pybossa.ratelimit import get_view_rate_limit
-#
-#
-#logger = logging.getLogger('pybossa')
-#
-## other views ...
-#app.register_blueprint(home, url_prefix='/')
-#app.register_blueprint(api, url_prefix='/api')
-#app.register_blueprint(account, url_prefix='/account')
-#app.register_blueprint(applications, url_prefix='/app')
-#app.register_blueprint(admin, url_prefix='/admin')
-#app.register_blueprint(leaderboard, url_prefix='/leaderboard')
-#app.register_blueprint(stats, url_prefix='/stats')
-#app.register_blueprint(help, url_prefix='/help')
-
-# Enable Twitter if available
-
 from flask import Blueprint
 from flask import render_template
 from pybossa.cache import apps as cached_apps
@@ -62,6 +30,7 @@ from pybossa.cache import categories as cached_cat
 blueprint = Blueprint('home', __name__)
 
 @blueprint.route('/')
+
 def home():
     """ Render home page with the cached apps and users"""
     d = {'featured': cached_apps.get_featured_front_page(),
@@ -100,9 +69,3 @@ def about():
 def search():
     """Render search results page"""
     return render_template("/home/search.html")
-
-
-#if __name__ == "__main__":  # pragma: no cover
-#    logging.basicConfig(level=logging.NOTSET)
-#    app.run(host=app.config['HOST'], port=get_port(),
-#            debug=app.config.get('DEBUG', True))
