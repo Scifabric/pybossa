@@ -55,7 +55,7 @@ handle everything from small to very large projects with seepd and efficiency.
 
 In order to install the software, all you have to do is::
 
-    sudo aptitude install git
+    sudo apt-get install git
 
 Installing the PostgreSQL database
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -67,7 +67,7 @@ has earned it a strong reputation for reliability, data integrity, and correctne
 PyBossa uses PostgreSQL_ as the main database for storing all the data, and you
 the required steps for installing it are the following::
 
-    sudo aptitude install postgresql-9.1
+    sudo apt-get install postgresql-9.1
 
 .. _PostgreSQL: http://www.postgresql.org/
 
@@ -90,7 +90,7 @@ solution.
 
 Installing virtualenv_ in the Ubuntu server could be done like this::
 
-    sudo aptitude install python-virtualenv
+    sudo apt-get install python-virtualenv
 
 After installing the software, now you will be able to create independent virtual
 environments for the PyBossa installation as well as for the template
@@ -103,7 +103,7 @@ Installing the required libraries for PyBossa is a step that will need to use
 some compilers and dev libraries in order to work. Thus, you will need to
 install the following packages::
 
-    sudo aptitude install postgresql-server-dev-9.1 python-dev swig
+    sudo apt-get install postgresql-server-dev-9.1 python-dev swig
 
 Then, you are ready to download the code and install the required libraries for
 running PyBossa.
