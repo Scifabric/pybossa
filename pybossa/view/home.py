@@ -32,6 +32,7 @@ blueprint = Blueprint('home', __name__)
 @blueprint.route('/')
 def home():
     """ Render home page with the cached apps and users"""
+    print "HOLA"
     d = {'featured': cached_apps.get_featured_front_page(),
          'top_apps': cached_apps.get_top(),
          'top_users': None}
@@ -59,12 +60,13 @@ def home():
     return render_template('/home/index.html', **d)
 
 
-@blueprint.route("/about")
+
+@blueprint.route("about")
 def about():
     """Render the about template"""
     return render_template("/home/about.html")
 
-@blueprint.route("/search")
+@blueprint.route("search")
 def search():
     """Render search results page"""
     return render_template("/home/search.html")
