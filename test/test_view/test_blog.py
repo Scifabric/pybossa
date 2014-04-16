@@ -18,21 +18,22 @@
 
 
 from helper import web
+from default import db, with_context
 from pybossa.model.blogpost import Blogpost
 from pybossa.model.user import User
 from pybossa.model.app import App
-from base import Fixtures
 from mock import patch
-from pybossa.core import db
+
 
 
 
 class TestBlogpostView(web.Helper):
 
+    @with_context
     def test_blogposts_get_all(self):
         """Test blogpost GET all blogposts"""
-        user = Fixtures.create_users()[1]
-        app = Fixtures.create_app(info=None)
+        user = self.create_users()[1]
+        app = self.create_app(info=None)
         app.owner = user
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([user, app, blogpost])
@@ -51,6 +52,7 @@ class TestBlogpostView(web.Helper):
         assert 'thisisatitle' in res.data
 
 
+    @with_context
     def test_blogposts_get_all_with_hidden_app(self):
         """Test blogpost GET does not show hidden apps"""
         self.register()
@@ -58,7 +60,7 @@ class TestBlogpostView(web.Helper):
         self.signout()
         self.register(username='user', email='user@user.com')
         user = db.session.query(User).get(2)
-        app = Fixtures.create_app(info=None)
+        app = self.create_app(info=None)
         app.owner = user
         app.hidden = 1
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
@@ -97,10 +99,11 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 404, res.status_code
 
 
+    @with_context
     def test_blogpost_get_one(self):
         """Test blogpost GET with id shows one blogpost"""
-        user = Fixtures.create_users()[1]
-        app = Fixtures.create_app(info=None)
+        user = self.create_users()[1]
+        app = self.create_app(info=None)
         app.owner = user
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([user, app, blogpost])
@@ -119,6 +122,7 @@ class TestBlogpostView(web.Helper):
         assert 'thisisatitle' in res.data
 
 
+    @with_context
     def test_blogpost_get_one_with_hidden_app(self):
         """Test blogpost GET a given post id with hidden app does not show the post"""
         self.register()
@@ -126,7 +130,7 @@ class TestBlogpostView(web.Helper):
         self.signout()
         self.register(username='user', email='user@user.com')
         user = db.session.query(User).get(2)
-        app = Fixtures.create_app(info=None)
+        app = self.create_app(info=None)
         app.owner = user
         app.hidden = 1
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
@@ -156,6 +160,8 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 200, res.status_code
         assert 'thisisatitle' in res.data
 
+
+    @with_context
     def test_blogpost_get_one_errors(self):
         """Test blogposts GET non existing posts raises errors"""
         self.register()
@@ -163,7 +169,7 @@ class TestBlogpostView(web.Helper):
         app1 = App(name='app1',
                 short_name='app1',
                 description=u'description')
-        app2 = Fixtures.create_app(info=None)
+        app2 = self.create_app(info=None)
         app1.owner = user
         app2.owner = user
         blogpost = Blogpost(owner=user, app=app1, title='thisisatitle', body='body')
@@ -188,12 +194,13 @@ class TestBlogpostView(web.Helper):
 
     from pybossa.view.applications import redirect
 
+    @with_context
     @patch('pybossa.view.applications.redirect', wraps=redirect)
     def test_blogpost_create_by_owner(self, mock_redirect):
         """Test blogposts, app owners can create"""
         self.register()
         user = db.session.query(User).get(1)
-        app = Fixtures.create_app(info=None)
+        app = self.create_app(info=None)
         app.owner = user
         db.session.add(app)
         db.session.commit()
@@ -214,10 +221,11 @@ class TestBlogpostView(web.Helper):
         assert blogpost.user_id == user.id, blogpost.user_id
 
 
+    @with_context
     def test_blogpost_create_by_anonymous(self):
         """Test blogpost create, anonymous users are redirected to signin"""
-        user = Fixtures.create_users()[1]
-        app = Fixtures.create_app(info=None)
+        user = self.create_users()[1]
+        app = self.create_app(info=None)
         app.owner = user
         db.session.add_all([user, app])
         db.session.commit()
@@ -237,10 +245,11 @@ class TestBlogpostView(web.Helper):
         assert blogpost == None, blogpost
 
 
+    @with_context
     def test_blogpost_create_by_non_owner(self):
         """Test blogpost create by non owner of the app is forbidden"""
-        user = Fixtures.create_users()[1]
-        app = Fixtures.create_app(info=None)
+        user = self.create_users()[1]
+        app = self.create_app(info=None)
         app.owner = user
         db.session.add_all([user, app])
         db.session.commit()
@@ -269,12 +278,13 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 404, res.status_code
 
 
+    @with_context
     @patch('pybossa.view.applications.redirect', wraps=redirect)
     def test_blogpost_update_by_owner(self, mock_redirect):
         """Test blogposts, app owners can update"""
         self.register()
         user = db.session.query(User).get(1)
-        app = Fixtures.create_app(info=None)
+        app = self.create_app(info=None)
         app.owner = user
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([app, blogpost])
@@ -298,10 +308,11 @@ class TestBlogpostView(web.Helper):
 
 
 
+    @with_context
     def test_blogpost_update_by_anonymous(self):
         """Test blogpost update, anonymous users are redirected to signin"""
-        user = Fixtures.create_users()[1]
-        app = Fixtures.create_app(info=None)
+        user = self.create_users()[1]
+        app = self.create_app(info=None)
         app.owner = user
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([user, app, blogpost])
@@ -324,10 +335,11 @@ class TestBlogpostView(web.Helper):
         assert blogpost.title == 'thisisatitle', blogpost.title
 
 
+    @with_context
     def test_blogpost_update_by_non_owner(self):
         """Test blogpost update by non owner of the app is forbidden"""
-        user = Fixtures.create_users()[1]
-        app = Fixtures.create_app(info=None)
+        user = self.create_users()[1]
+        app = self.create_app(info=None)
         app.owner = user
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([user, app, blogpost])
@@ -347,6 +359,7 @@ class TestBlogpostView(web.Helper):
         assert blogpost.title == 'thisisatitle', blogpost.title
 
 
+    @with_context
     def test_blogpost_update_errors(self):
         """Test blogposts update for non existing apps raises errors"""
         self.register()
@@ -354,7 +367,7 @@ class TestBlogpostView(web.Helper):
         app1 = App(name='app1',
                 short_name='app1',
                 description=u'description')
-        app2 = Fixtures.create_app(info=None)
+        app2 = self.create_app(info=None)
         app1.owner = user
         app2.owner = user
         blogpost = Blogpost(owner=user, app=app1, title='thisisatitle', body='body')
@@ -380,12 +393,13 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 404, res.status_code
 
 
+    @with_context
     @patch('pybossa.view.applications.redirect', wraps=redirect)
     def test_blogpost_delete_by_owner(self, mock_redirect):
         """Test blogposts, app owners can delete"""
         self.register()
         user = db.session.query(User).get(1)
-        app = Fixtures.create_app(info=None)
+        app = self.create_app(info=None)
         app.owner = user
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([app, blogpost])
@@ -402,10 +416,11 @@ class TestBlogpostView(web.Helper):
 
 
 
+    @with_context
     def test_blogpost_delete_by_anonymous(self):
         """Test blogpost delete, anonymous users are redirected to signin"""
-        user = Fixtures.create_users()[1]
-        app = Fixtures.create_app(info=None)
+        user = self.create_users()[1]
+        app = self.create_app(info=None)
         app.owner = user
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([user, app, blogpost])
@@ -420,10 +435,11 @@ class TestBlogpostView(web.Helper):
         assert blogpost is not None
 
 
+    @with_context
     def test_blogpost_delete_by_non_owner(self):
         """Test blogpost delete by non owner of the app is forbidden"""
-        user = Fixtures.create_users()[1]
-        app = Fixtures.create_app(info=None)
+        user = self.create_users()[1]
+        app = self.create_app(info=None)
         app.owner = user
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([user, app, blogpost])
@@ -438,6 +454,7 @@ class TestBlogpostView(web.Helper):
         assert blogpost is not None
 
 
+    @with_context
     def test_blogpost_delete_errors(self):
         """Test blogposts delete for non existing apps raises errors"""
         self.register()
@@ -445,7 +462,7 @@ class TestBlogpostView(web.Helper):
         app1 = App(name='app1',
                 short_name='app1',
                 description=u'description')
-        app2 = Fixtures.create_app(info=None)
+        app2 = self.create_app(info=None)
         app1.owner = user
         app2.owner = user
         blogpost = Blogpost(owner=user, app=app1, title='thisisatitle', body='body')
