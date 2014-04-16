@@ -32,7 +32,6 @@ blueprint = Blueprint('home', __name__)
 @blueprint.route('/')
 def home():
     """ Render home page with the cached apps and users"""
-    print "HOLA"
     d = {'featured': cached_apps.get_featured_front_page(),
          'top_apps': cached_apps.get_top(),
          'top_users': None}
