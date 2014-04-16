@@ -25,7 +25,7 @@ PORT = 5000
 SECRET = 'foobar'
 SECRET_KEY = 'my-session-secret'
 
-ITSDANGEORUSKEY = 'its-dangerous-key'
+ITSDANGEROUSKEY = 'its-dangerous-key'
 
 ## project configuration
 BRAND = 'PyBossa'

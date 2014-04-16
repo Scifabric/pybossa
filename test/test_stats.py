@@ -18,23 +18,16 @@
 
 import datetime
 import time
-from base import web, model, db, Fixtures, redis_flushall
+from default import Test, db, with_context
+from pybossa.model.task_run import TaskRun
 import pybossa.stats as stats
 
 
-class TestStats:
+class TestStats(Test):
     def setUp(self):
-        self.app = web.app
-        model.rebuild_db()
-        Fixtures.create()
-
-    def tearDown(self):
-        db.session.remove()
-
-    @classmethod
-    def teardown_class(cls):
-        model.rebuild_db()
-        redis_flushall()
+        super(TestStats, self).setUp()
+        with self.flask_app.app_context():
+            self.create()
 
     # Tests
     # Fixtures will create 10 tasks and will need 10 answers per task, so
@@ -43,7 +36,7 @@ class TestStats:
 
     def test_00_avg_n_tasks(self):
         """Test STATS avg and n of tasks method works"""
-        with self.app.test_request_context('/'):
+        with self.flask_app.test_request_context('/'):
             avg, n_tasks = stats.get_avg_n_tasks(1)
             err_msg = "The average number of answer per task is wrong"
             assert avg == 10, err_msg
@@ -53,7 +46,7 @@ class TestStats:
     def test_01_stats_dates(self):
         """Test STATS dates method works"""
         today = unicode(datetime.date.today())
-        with self.app.test_request_context('/'):
+        with self.flask_app.test_request_context('/'):
             dates, dates_n_tasks, dates_anon, dates_auth = stats.stats_dates(1)
             err_msg = "There should be 10 answers today"
             assert dates[today] == 10, err_msg
@@ -65,7 +58,7 @@ class TestStats:
     def test_02_stats_hours(self):
         """Test STATS hours method works"""
         hour = unicode(datetime.datetime.utcnow().strftime('%H'))
-        with self.app.test_request_context('/'):
+        with self.flask_app.test_request_context('/'):
             hours, hours_anon, hours_auth, max_hours,\
                 max_hours_anon, max_hours_auth = stats.stats_hours(1)
             print hours
@@ -89,7 +82,7 @@ class TestStats:
                     tmp = (hours_anon[str(i).zfill(2)] + hours_auth[str(i).zfill(2)])
                     assert tmp == 0, "There should be 0 answers"
             err_msg = "It should be 10, as all answers are submitted in the same hour"
-            tr = db.session.query(model.task_run.TaskRun).all()
+            tr = db.session.query(TaskRun).all()
             for t in tr:
                 print t.finish_time
             assert max_hours == 10, err_msg
@@ -102,7 +95,7 @@ class TestStats:
         date_ms = time.mktime(time.strptime(today, "%Y-%m-%d")) * 1000
         anon = 0
         auth = 0
-        with self.app.test_request_context('/'):
+        with self.flask_app.test_request_context('/'):
             dates_stats, hours_stats, user_stats = stats.get_stats(1)
             for item in dates_stats:
                 if item['label'] == 'Anon + Auth':

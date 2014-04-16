@@ -21,12 +21,7 @@ end
 
 
 execute "install pybossa requirements" do
-    command ". /opt/vagrant_env/bin/activate; pip install -e ."
-    cwd "/vagrant"
-end
-
-execute "install pybossa cache requirements" do
-    command ". /opt/vagrant_env/bin/activate; pip install -r cache_requirements.txt"
+    command ". /opt/vagrant_env/bin/activate; pip install -r requirements.txt"
     cwd "/vagrant"
 end
 

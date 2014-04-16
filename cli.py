@@ -4,14 +4,18 @@ import sys
 import optparse
 import inspect
 
-import pybossa.model as model
-from pybossa.core import db
-import pybossa.web as web
+#import pybossa.model as model
+from pybossa.core import db, create_app
+from pybossa.model.app import App
+from pybossa.model.user import User
+from pybossa.model.category import Category
 
 from alembic.config import Config
 from alembic import command
 from html2text import html2text
 from sqlalchemy.sql import text
+
+app = create_app()
 
 def setup_alembic_config():
     if "DATABASE_URL" not in os.environ:
@@ -32,53 +36,57 @@ def setup_alembic_config():
 
 def db_create():
     '''Create the db'''
-    db.create_all()
-    # then, load the Alembic configuration and generate the
-    # version table, "stamping" it with the most recent rev:
-    setup_alembic_config()
-    # finally, add a minimum set of categories: Volunteer Thinking, Volunteer Sensing, Published and Draft
-    categories = []
-    categories.append(model.category.Category(name="Thinking",
-                                     short_name='thinking',
-                                     description='Volunteer Thinking apps'))
-    categories.append(model.category.Category(name="Volunteer Sensing",
-                                     short_name='sensing',
-                                     description='Volunteer Sensing apps'))
-    db.session.add_all(categories)
-    db.session.commit()
+    with app.app_context():
+        db.create_all()
+        # then, load the Alembic configuration and generate the
+        # version table, "stamping" it with the most recent rev:
+        setup_alembic_config()
+        # finally, add a minimum set of categories: Volunteer Thinking, Volunteer Sensing, Published and Draft
+        categories = []
+        categories.append(Category(name="Thinking",
+                          short_name='thinking',
+                          description='Volunteer Thinking apps'))
+        categories.append(Category(name="Volunteer Sensing",
+                          short_name='sensing',
+                          description='Volunteer Sensing apps'))
+        db.session.add_all(categories)
+        db.session.commit()
 
 def db_rebuild():
     '''Rebuild the db'''
-    db.drop_all()
-    db.create_all()
-    # then, load the Alembic configuration and generate the
-    # version table, "stamping" it with the most recent rev:
-    setup_alembic_config()
+    with app.app_context():
+        db.drop_all()
+        db.create_all()
+        # then, load the Alembic configuration and generate the
+        # version table, "stamping" it with the most recent rev:
+        setup_alembic_config()
 
 def fixtures():
     '''Create some fixtures!'''
-    user = model.user.User(
-        name=u'tester',
-        email_addr=u'tester@tester.org',
-        api_key='tester'
-        )
-    user.set_password(u'tester')
-    db.session.add(user)
-    db.session.commit()
+    with app.app_context():
+        user = User(
+            name=u'tester',
+            email_addr=u'tester@tester.org',
+            api_key='tester'
+            )
+        user.set_password(u'tester')
+        db.session.add(user)
+        db.session.commit()
 
 def markdown_db_migrate():
     '''Perform a migration of the app long descriptions from HTML to
     Markdown for existing database records'''
-    query = 'SELECT id, long_description FROM "app";'
-    query_result = db.engine.execute(query)
-    old_descriptions = query_result.fetchall()
-    for old_desc in old_descriptions:
-        if old_desc.long_description:
-            new_description = html2text(old_desc.long_description)
-            query = text('''
-                       UPDATE app SET long_description=:long_description
-                       WHERE id=:id''')
-            db.engine.execute(query, long_description = new_description, id = old_desc.id)
+    with app.app_context():
+        query = 'SELECT id, long_description FROM "app";'
+        query_result = db.engine.execute(query)
+        old_descriptions = query_result.fetchall()
+        for old_desc in old_descriptions:
+            if old_desc.long_description:
+                new_description = html2text(old_desc.long_description)
+                query = text('''
+                           UPDATE app SET long_description=:long_description
+                           WHERE id=:id''')
+                db.engine.execute(query, long_description = new_description, id = old_desc.id)
 
 
 ## ==================================================

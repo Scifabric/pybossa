@@ -15,73 +15,62 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-from base import web, model, Fixtures, db, redis_flushall
-import pybossa.view.facebook as facebook
+from default import Test, with_context
+from pybossa.view.facebook import manage_user
 
 
-class TestFacebook:
-    def setUp(self):
-        self.app = web.app
-        model.rebuild_db()
-        Fixtures.create()
-
-    def tearDown(self):
-        db.session.remove()
-
-    @classmethod
-    def teardown_class(cls):
-        model.rebuild_db()
-        redis_flushall()
-
-    def test_manage_user(self):
+class TestFacebook(Test):
+    @with_context
+    def test_manage_user_with_email(self):
         """Test FACEBOOK manage_user works."""
-        with self.app.test_request_context('/'):
-            # First with a new user
-            user_data = dict(id=1, username='facebook',
-                             email='f@f.com', name='name')
-            token = 't'
-            user = facebook.manage_user(token, user_data, None)
-            assert user.email_addr == user_data['email'], user
-            assert user.name == user_data['username'], user
-            assert user.fullname == user_data['name'], user
-            assert user.facebook_user_id == user_data['id'], user
+        # First with a new user
+        user_data = dict(id=1, username='facebook',
+                         email='f@f.com', name='name')
+        token = 't'
+        user = manage_user(token, user_data, None)
+        assert user.email_addr == user_data['email'], user
+        assert user.name == user_data['username'], user
+        assert user.fullname == user_data['name'], user
+        assert user.facebook_user_id == user_data['id'], user
 
-            # Second with the same user
-            user = facebook.manage_user(token, user_data, None)
-            assert user.email_addr == user_data['email'], user
-            assert user.name == user_data['username'], user
-            assert user.fullname == user_data['name'], user
-            assert user.facebook_user_id == user_data['id'], user
+        # Second with the same user
+        user = manage_user(token, user_data, None)
+        assert user.email_addr == user_data['email'], user
+        assert user.name == user_data['username'], user
+        assert user.fullname == user_data['name'], user
+        assert user.facebook_user_id == user_data['id'], user
 
-            # Finally with a user that already is in the system
-            user_data = dict(id=10, username=Fixtures.name,
-                             email=Fixtures.email_addr, name=Fixtures.fullname)
-            token = 'tA'
-            user = facebook.manage_user(token, user_data, None)
-            assert user is None
+        # Finally with a user that already is in the system
+        user_data = dict(id=10, username=self.name,
+                         email=self.email_addr, name=self.fullname)
+        token = 'tA'
+        user = manage_user(token, user_data, None)
+        err_msg = "It should return the same user"
+        assert user.facebook_user_id == 10, err_msg
 
-    def test_manage_user(self):
+    @with_context
+    def test_manage_user_without_email(self):
         """Test FACEBOOK manage_user without e-mail works."""
-        with self.app.test_request_context('/'):
-            # First with a new user
-            user_data = dict(id=1, username='facebook', name='name')
-            token = 't'
-            user = facebook.manage_user(token, user_data, None)
-            assert user.email_addr == user_data['email'], user
-            assert user.name == user_data['username'], user
-            assert user.fullname == user_data['name'], user
-            assert user.facebook_user_id == user_data['id'], user
+        # First with a new user
+        user_data = dict(id=1, username='facebook', name='name')
+        token = 't'
+        user = manage_user(token, user_data, None)
+        assert user.email_addr == user_data['email'], user
+        assert user.name == user_data['username'], user
+        assert user.fullname == user_data['name'], user
+        assert user.facebook_user_id == user_data['id'], user
 
-            # Second with the same user
-            user = facebook.manage_user(token, user_data, None)
-            assert user.email_addr == user_data['email'], user
-            assert user.name == user_data['username'], user
-            assert user.fullname == user_data['name'], user
-            assert user.facebook_user_id == user_data['id'], user
+        # Second with the same user
+        user = manage_user(token, user_data, None)
+        assert user.email_addr == user_data['email'], user
+        assert user.name == user_data['username'], user
+        assert user.fullname == user_data['name'], user
+        assert user.facebook_user_id == user_data['id'], user
 
-            # Finally with a user that already is in the system
-            user_data = dict(id=10, username=Fixtures.name,
-                             email=Fixtures.email_addr, name=Fixtures.fullname)
-            token = 'tA'
-            user = facebook.manage_user(token, user_data, None)
-            assert user is None
+        # Finally with a user that already is in the system
+        user_data = dict(id=10, username=self.name,
+                         email=self.email_addr, name=self.fullname)
+        token = 'tA'
+        user = manage_user(token, user_data, None)
+        err_msg = "It should return the same user"
+        assert user.facebook_user_id == 10, err_msg

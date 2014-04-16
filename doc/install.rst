@@ -127,9 +127,7 @@ with **#** are comments)::
   # Activate the virtual environment
   source env/bin/activate
   # Install the required libraries
-  pip install -e .
-  # Install the CACHE required libraries
-  pip install -r cache_requirements.txt
+  pip install -r requirements.txt
 
 
 Otherwise you should be able to install the libraries in your system like
@@ -310,7 +308,7 @@ Then, populate the database with its tables::
 
 Run the web server::
 
-  python pybossa/web.py
+  python run.py
 
 Open in your web browser the following URL::
 

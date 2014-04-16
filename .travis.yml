@@ -12,10 +12,10 @@ before_install:
   - redis-server contrib/redis/sentinel.conf --sentinel
   - pip install coveralls --use-mirrors
 install:
-  - python setup.py install
-  - pip install -r cache_requirements.txt
+  - pip install -r requirements.txt
 before_script:
-  - psql -c 'create database pybossa;' -U postgres
+  - psql -c "create user rtester with createdb login password 'rtester'" -U postgres
+  - psql -c "create database pybossa_test owner rtester encoding 'utf-8' lc_collate 'en_US.utf8' lc_ctype 'en_US.utf8' template template0;" -U postgres
 script: nosetests -v --with-coverage --cover-erase --cover-package=pybossa
 notifications:
   email: false

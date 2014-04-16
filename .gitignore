@@ -1,4 +1,5 @@
 *.egg-info
+*.tox
 .*.swp
 *.pyc
 *.db

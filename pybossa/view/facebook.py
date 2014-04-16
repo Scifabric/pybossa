@@ -19,19 +19,18 @@
 from flask import Blueprint, request, url_for, flash, redirect, session
 from flask.ext.login import login_user, current_user
 
-import pybossa.model as model
-from pybossa.core import db
-from pybossa.util import Facebook, get_user_signup_method
+from pybossa.core import db, facebook
+from pybossa.model.user import User
+#from pybossa.util import Facebook, get_user_signup_method
+from pybossa.util import get_user_signup_method
 # Required to access the config parameters outside a context as we are using
 # Flask 0.8
 # See http://goo.gl/tbhgF for more info
-from pybossa.core import app
+#from pybossa.core import app
 
 # This blueprint will be activated in web.py if the FACEBOOK APP ID and SECRET
 # are available
 blueprint = Blueprint('facebook', __name__)
-facebook = Facebook(app.config['FACEBOOK_APP_ID'],
-                    app.config['FACEBOOK_APP_SECRET'])
 
 
 @blueprint.route('/', methods=['GET', 'POST'])
@@ -52,7 +51,7 @@ def get_facebook_token():  # pragma: no cover
 @blueprint.route('/oauth-authorized')
 @facebook.oauth.authorized_handler
 def oauth_authorized(resp):  # pragma: no cover
-    next_url = request.args.get('next') or url_for('home')
+    next_url = request.args.get('next') or url_for('home.home')
     if resp is None:
         flash(u'You denied the request to sign in.', 'error')
         flash(u'Reason: ' + request.args['error_reason'] +
@@ -67,13 +66,16 @@ def oauth_authorized(resp):  # pragma: no cover
     user = manage_user(access_token, user_data, next_url)
     if user is None:
         # Give a hint for the user
-        user = db.session.query(model.user.User)\
+        user = db.session.query(User)\
                  .filter_by(email_addr=user_data['email'])\
                  .first()
-        msg, method = get_user_signup_method(user)
-        flash(msg, 'info')
-        if method == 'local':
-            return redirect(url_for('account.forgot_password'))
+        if user is not None:
+            msg, method = get_user_signup_method(user)
+            flash(msg, 'info')
+            if method == 'local':
+                return redirect(url_for('account.forgot_password'))
+            else:
+                return redirect(url_for('account.signin'))
         else:
             return redirect(url_for('account.signin'))
     else:
@@ -94,29 +96,29 @@ def oauth_authorized(resp):  # pragma: no cover
 
 def manage_user(access_token, user_data, next_url):
     """Manage the user after signin"""
-    user = db.session.query(model.user.User)\
+    user = db.session.query(User)\
              .filter_by(facebook_user_id=user_data['id']).first()
 
     if user is None:
         facebook_token = dict(oauth_token=access_token)
         info = dict(facebook_token=facebook_token)
-        user = db.session.query(model.user.User)\
+        user = db.session.query(User)\
                  .filter_by(name=user_data['username']).first()
         # NOTE: Sometimes users at Facebook validate their accounts without
         # registering an e-mail (see this http://stackoverflow.com/a/17809808)
         email = None
         if user_data.get('email'):
-            email = db.session.query(model.user.User)\
+            email = db.session.query(User)\
                       .filter_by(email_addr=user_data['email']).first()
 
         if user is None and email is None:
             if not user_data.get('email'):
                 user_data['email'] = "None"
-            user = model.user.User(fullname=user_data['name'],
-                              name=user_data['username'],
-                              email_addr=user_data['email'],
-                              facebook_user_id=user_data['id'],
-                              info=info)
+            user = User(fullname=user_data['name'],
+                   name=user_data['username'],
+                   email_addr=user_data['email'],
+                   facebook_user_id=user_data['id'],
+                   info=info)
             db.session.add(user)
             db.session.commit()
             return user

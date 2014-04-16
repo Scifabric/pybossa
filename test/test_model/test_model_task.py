@@ -16,31 +16,29 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from base import model, db
+from default import Test, db, with_context
 from nose.tools import assert_raises
 from sqlalchemy.exc import IntegrityError
+from pybossa.model.user import User
+from pybossa.model.app import App
+from pybossa.model.task import Task
 
 
-class TestModelTask:
-
-    def setUp(self):
-        model.rebuild_db()
-
-    def tearDown(self):
-        db.session.remove()
+class TestModelTask(Test):
 
 
+    @with_context
     def test_task_errors(self):
         """Test TASK model errors."""
-        user = model.user.User(
+        user = User(
             email_addr="john.doe@example.com",
             name="johndoe",
             fullname="John Doe",
             locale="en")
         db.session.add(user)
         db.session.commit()
-        user = db.session.query(model.user.User).first()
-        app = model.app.App(
+        user = db.session.query(User).first()
+        app = App(
             name='Application',
             short_name='app',
             description='desc',
@@ -48,7 +46,7 @@ class TestModelTask:
         db.session.add(app)
         db.session.commit()
 
-        task = model.task.Task(app_id=None)
+        task = Task(app_id=None)
         db.session.add(task)
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()

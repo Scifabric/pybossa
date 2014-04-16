@@ -16,31 +16,25 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from base import model, db
+from default import Test, db, with_context
 from nose.tools import assert_raises
 from sqlalchemy.exc import IntegrityError
+from pybossa.model.user import User
 
 
-class TestModelUser:
+class TestModelUser(Test):
 
-    def setUp(self):
-        model.rebuild_db()
-
-    def tearDown(self):
-        db.session.remove()
-
-
-
+    @with_context
     def test_user(self):
         """Test USER model."""
         # First user
-        user = model.user.User(
+        user = User(
             email_addr="john.doe@example.com",
             name="johndoe",
             fullname="John Doe",
             locale="en")
 
-        user2 = model.user.User(
+        user2 = User(
             email_addr="john.doe2@example.com",
             name="johndoe2",
             fullname="John Doe2",
@@ -48,7 +42,7 @@ class TestModelUser:
 
         db.session.add(user)
         db.session.commit()
-        tmp = db.session.query(model.user.User).get(1)
+        tmp = db.session.query(User).get(1)
         assert tmp.email_addr == user.email_addr, tmp
         assert tmp.name == user.name, tmp
         assert tmp.fullname == user.fullname, tmp
@@ -62,7 +56,7 @@ class TestModelUser:
 
         db.session.add(user2)
         db.session.commit()
-        tmp = db.session.query(model.user.User).get(2)
+        tmp = db.session.query(User).get(2)
         assert tmp.email_addr == user2.email_addr, tmp
         assert tmp.name == user2.name, tmp
         assert tmp.fullname == user2.fullname, tmp
@@ -72,9 +66,10 @@ class TestModelUser:
         err_msg = "Second user should be not an admin"
         assert tmp.admin is False, err_msg
 
+    @with_context
     def test_user_errors(self):
         """Test USER model errors."""
-        user = model.user.User(
+        user = User(
             email_addr="john.doe@example.com",
             name="johndoe",
             fullname="John Doe",
