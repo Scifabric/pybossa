@@ -198,9 +198,6 @@ class APIBase(MethodView):
             db.session.commit()
             self._refresh_cache(inst)
             return '', 204
-        except IntegrityError:
-            db.session.rollback()
-            raise
         except Exception as e:
             return error.format_exception(
                 e,
