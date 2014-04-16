@@ -194,7 +194,6 @@ def setup_social_networks(app):
             from pybossa.view.facebook import blueprint as facebook_bp
             app.register_blueprint(facebook_bp, url_prefix='/facebook')
     except Exception as inst: # pragma: no cover
-        raise
         print type(inst)
         print inst.args
         print inst
