@@ -15,16 +15,3 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-
-#from import model, db, redis_flushall
-#
-#
-#def setup_package():
-#    model.rebuild_db()
-#    redis_flushall()
-#
-#
-#def teardown_package():
-#    db.session.remove()
-#    model.rebuild_db()
-#    redis_flushall()
