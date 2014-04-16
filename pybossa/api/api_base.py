@@ -80,9 +80,6 @@ class APIBase(MethodView):
             query = self._db_query(self.__class__, id)
             json_response = self._create_json_response(query, id)
             return Response(json_response, mimetype='application/json')
-        except IntegrityError:
-            db.session.rollback()
-            raise
         except Exception as e:
             return error.format_exception(
                 e,
