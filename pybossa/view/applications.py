@@ -1277,7 +1277,9 @@ def show_blogpost(short_name, id):
     if blogpost is None:
         raise abort(404)
     require.blogpost.read(blogpost)
-    return render_template('applications/blog_post.html', blogpost=blogpost)
+    return render_template('applications/blog_post.html',
+                            app=app,
+                            blogpost=blogpost)
 
 
 @blueprint.route('/<short_name>/blog/new', methods=['GET', 'POST'])
