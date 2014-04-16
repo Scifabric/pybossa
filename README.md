@@ -33,16 +33,10 @@ version (pinned in requirements.txt):
 
 # Running Tests
 
-Set SQLALCHEMY_DATABASE_TEST_URI e.g.:
+Just run the following command:
 
 ```
-  SQLALCHEMY_DATABASE_URI = 'postgres://pybossa:pass@localhost/pybossa'
-```
-
-Then run the tests (requires nose):
-
-```
-  nosetests -v test/
+  tox
 ```
 
 # Useful Links
