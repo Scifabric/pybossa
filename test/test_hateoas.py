@@ -92,6 +92,7 @@ class TestHateoas(web_helper.Helper):
         app_link = self.hateoas.link(rel='parent', title='task',
                                      href='http://localhost/api/task/1')
         assert output.get('links')[1] == app_link, err_msg
+        res = self.app.post("/api/taskrun")
 
         # For category
         res = self.app.get("/api/category/1", follow_redirects=True)
@@ -181,6 +182,12 @@ class TestHateoas(web_helper.Helper):
         app_link = self.hateoas.link(rel='parent', title='task',
                                      href='http://localhost/api/task/1')
         assert output.get('links')[1] == app_link, err_msg
+
+        # Check that hateoas removes all link and links from item
+        without_links = self.hateoas.remove_links(output)
+        err_msg = "There should not be any link or links keys"
+        assert without_links.get('link') is None, err_msg
+        assert without_links.get('links') is None, err_msg
 
         # For category
         res = self.app.get("/api/category", follow_redirects=True)
