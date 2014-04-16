@@ -73,7 +73,7 @@ def configure_app(app):
     app.config.from_object(settings)
     app.config.from_envvar('PYBOSSA_SETTINGS', silent=True)
     # parent directory
-    if not os.environ.get('PYBOSSA_SETTINGS'):
+    if not os.environ.get('PYBOSSA_SETTINGS'): # pragma: no cover
         here = os.path.dirname(os.path.abspath(__file__))
         config_path = os.path.join(os.path.dirname(here), 'settings_local.py')
         if os.path.exists(config_path): # pragma: no cover
