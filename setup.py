@@ -22,10 +22,15 @@ requirements = [
     "psycopg2>=2.5.2, <3.0",
     "pygeoip>=0.3.1, <1.0",
     "python-dateutil>=2.2, <3.0",
-    "python-memcached>=1.53, <2.0",
     "raven>=4.1.1, <5.0",
     "requests>=2.2.1, <3.0",
-    "SQLAlchemy>=0.7.8, <0.7.9"         # was pinned to SQLAlchemy==0.7.8
+    "SQLAlchemy>=0.7.8, <0.7.9",         # was pinned to SQLAlchemy==0.7.8
+    "nose",
+    "redis",
+    "sphinx",
+    "coverage",
+    "mock",
+    "tox"
 ]
 
 setup(
@@ -33,7 +38,8 @@ setup(
     version = '0.2.1',
     packages = find_packages(),
     install_requires = requirements,
-    dependency_links = ['git+https://github.com/Hypernode/M2Crypto#egg=M2Crypto-0.22.dev'],
+    dependency_links = ['git+https://github.com/Hypernode/M2Crypto#egg=M2Crypto-0.22.dev',
+                        'git+https://github.com/andymccurdy/redis-py.git@976e72be529fdf741b75a71746f34c6530fc8ae9#egg=redis-dev'],
     # metadata for upload to PyPI
     author = 'SF Isle of Man Limited',
     # TODO: change
