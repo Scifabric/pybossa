@@ -15,41 +15,33 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-from base import web, model, Fixtures, db, redis_flushall
-import pybossa.view.twitter as twitter
+from default import Test, db, with_context
+from pybossa.view.twitter import manage_user
 
 
-class TestTwitter:
-    def setUp(self):
-        self.app = web.app
-        model.rebuild_db()
-        Fixtures.create()
-
-    def tearDown(self):
-        db.session.remove()
-        redis_flushall()
-
+class TestTwitter(Test):
+    @with_context
     def test_manage_user(self):
         """Test TWITTER manage_user works."""
-        with self.app.test_request_context('/'):
-            # First with a new user
-            user_data = dict(user_id=1, screen_name='twitter')
-            token = dict(oauth_token='token', oauth_token_secret='secret')
-            user = twitter.manage_user(token, user_data, None)
-            assert user.email_addr == user_data['screen_name'], user
-            assert user.name == user_data['screen_name'], user
-            assert user.fullname == user_data['screen_name'], user
-            assert user.twitter_user_id == user_data['user_id'], user
+        # First with a new user
+        user_data = dict(user_id=1, screen_name='twitter')
+        token = dict(oauth_token='token', oauth_token_secret='secret')
+        user = manage_user(token, user_data, None)
+        assert user.email_addr == user_data['screen_name'], user
+        assert user.name == user_data['screen_name'], user
+        assert user.fullname == user_data['screen_name'], user
+        assert user.twitter_user_id == user_data['user_id'], user
 
-            # Second with the same user
-            user = twitter.manage_user(token, user_data, None)
-            assert user.email_addr == user_data['screen_name'], user
-            assert user.name == user_data['screen_name'], user
-            assert user.fullname == user_data['screen_name'], user
-            assert user.twitter_user_id == user_data['user_id'], user
+        # Second with the same user
+        user = manage_user(token, user_data, None)
+        assert user.email_addr == user_data['screen_name'], user
+        assert user.name == user_data['screen_name'], user
+        assert user.fullname == user_data['screen_name'], user
+        assert user.twitter_user_id == user_data['user_id'], user
 
-            # Finally with a user that already is in the system
-            user_data = dict(user_id=10, screen_name=Fixtures.name)
-            token = dict(oauth_token='token2', oauth_token_secret='secret2')
-            user = twitter.manage_user(token, user_data, None)
-            assert user is None
+        # Finally with a user that already is in the system
+        user_data = dict(user_id=10, screen_name=self.name)
+        token = dict(oauth_token='token2', oauth_token_secret='secret2')
+        user = manage_user(token, user_data, None)
+        err_msg = "It should return the same user"
+        assert user.twitter_user_id == 10, err_msg

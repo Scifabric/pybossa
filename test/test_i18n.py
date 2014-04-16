@@ -17,16 +17,18 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from helper import web
-from base import model, db, Fixtures
+from default import db, with_context
+from pybossa.model.user import User
 
 
 class TestI18n(web.Helper):
     def setUp(self):
         super(TestI18n, self).setUp()
-        Fixtures.create()
+        with self.flask_app.app_context():
+            self.create()
 
     # Tests
-
+    @with_context
     def test_00_i18n_anonymous(self):
         """Test i18n anonymous works"""
         # First default 'en' locale
@@ -40,6 +42,7 @@ class TestI18n(web.Helper):
             res = c.get('/', headers=[('Accept-Language', 'es')])
             assert "Comunidad" in res.data, err_msg
 
+    @with_context
     def test_01_i18n_authenticated(self):
         """Test i18n as an authenticated user works"""
         with self.app as c:
@@ -55,7 +58,7 @@ class TestI18n(web.Helper):
             assert "Community" in res.data, err_msg
 
             # Change it to Spanish
-            user = db.session.query(model.user.User).filter_by(name='johndoe').first()
+            user = db.session.query(User).filter_by(name='johndoe').first()
             user.locale = 'es'
             db.session.add(user)
             db.session.commit()

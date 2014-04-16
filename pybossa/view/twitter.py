@@ -18,20 +18,17 @@
 from flask import Blueprint, request, url_for, flash, redirect
 from flask.ext.login import login_user, current_user
 
-import pybossa.model as model
-from pybossa.core import db
-from pybossa.util import Twitter, get_user_signup_method
+from pybossa.core import db, twitter
+from pybossa.model.user import User
+from pybossa.util import get_user_signup_method
 # Required to access the config parameters outside a
 # context as we are using Flask 0.8
 # See http://goo.gl/tbhgF for more info
-from pybossa.core import app
 
 # This blueprint will be activated in web.py
 # if the TWITTER CONSUMER KEY and SECRET
 # are available
 blueprint = Blueprint('twitter', __name__)
-twitter = Twitter(app.config['TWITTER_CONSUMER_KEY'],
-                  app.config['TWITTER_CONSUMER_SECRET'])
 
 
 @blueprint.route('/', methods=['GET', 'POST'])
@@ -54,7 +51,7 @@ def manage_user(access_token, user_data, next_url):
     # Twitter API does not provide a way
     # to get the e-mail so we will ask for it
     # only the first time
-    user = db.session.query(model.user.User)\
+    user = db.session.query(User)\
              .filter_by(twitter_user_id=user_data['user_id'])\
              .first()
 
@@ -64,18 +61,18 @@ def manage_user(access_token, user_data, next_url):
     twitter_token = dict(oauth_token=access_token['oauth_token'],
                          oauth_token_secret=access_token['oauth_token_secret'])
     info = dict(twitter_token=twitter_token)
-    user = db.session.query(model.user.User)\
+    user = db.session.query(User)\
         .filter_by(name=user_data['screen_name'])\
         .first()
 
     if user is not None:
         return None
 
-    user = model.user.User(fullname=user_data['screen_name'],
-                      name=user_data['screen_name'],
-                      email_addr=user_data['screen_name'],
-                      twitter_user_id=user_data['user_id'],
-                      info=info)
+    user = User(fullname=user_data['screen_name'],
+           name=user_data['screen_name'],
+           email_addr=user_data['screen_name'],
+           twitter_user_id=user_data['user_id'],
+           info=info)
     db.session.add(user)
     db.session.commit()
     return user
@@ -97,7 +94,7 @@ def oauth_authorized(resp):  # pragma: no cover
     the application submitted. Note that Twitter itself does not really
     redirect back unless the user clicks on the application name.
     """
-    next_url = request.args.get('next') or url_for('home')
+    next_url = request.args.get('next') or url_for('home.home')
     if resp is None:
         flash(u'You denied the request to sign in.', 'error')
         return redirect(next_url)
@@ -111,7 +108,7 @@ def oauth_authorized(resp):  # pragma: no cover
     user = manage_user(access_token, user_data, next_url)
 
     if user is None:
-        user = db.session.query(model.user.User)\
+        user = db.session.query(User)\
                  .filter_by(name=user_data['screen_name'])\
                  .first()
         msg, method = get_user_signup_method(user)

@@ -15,46 +15,43 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-from base import web, model, Fixtures, db, redis_flushall
+from default import Test, db
+from pybossa.model.user import User
 import pybossa.validator
 from pybossa.view.account import LoginForm
 from flaskext.wtf import ValidationError
 from nose.tools import raises
 
 
-class TestValidator:
+class TestValidator(Test):
     def setUp(self):
-        self.app = web.app
-        model.rebuild_db()
-        Fixtures.create()
-
-    def tearDown(self):
-        db.session.remove()
-        redis_flushall()
+        super(TestValidator, self).setUp()
+        with self.flask_app.app_context():
+            self.create()
 
     @raises(ValidationError)
     def test_unique(self):
         """Test VALIDATOR Unique works."""
-        with self.app.test_request_context('/'):
+        with self.flask_app.test_request_context('/'):
             f = LoginForm()
-            f.email.data = Fixtures.email_addr
-            u = pybossa.validator.Unique(db.session, model.user.User,
-                                         model.user.User.email_addr)
+            f.email.data = self.email_addr
+            u = pybossa.validator.Unique(db.session, User,
+                                         User.email_addr)
             u.__call__(f, f.email)
 
     @raises(ValidationError)
     def test_not_allowed_chars(self):
         """Test VALIDATOR NotAllowedChars works."""
-        with self.app.test_request_context('/'):
+        with self.flask_app.test_request_context('/'):
             f = LoginForm()
-            f.email.data = Fixtures.email_addr + "$"
+            f.email.data = self.email_addr + "$"
             u = pybossa.validator.NotAllowedChars()
             u.__call__(f, f.email)
 
     @raises(ValidationError)
     def test_comma_separated_integers(self):
         """Test VALIDATOR CommaSeparatedIntegers works."""
-        with self.app.test_request_context('/'):
+        with self.flask_app.test_request_context('/'):
             f = LoginForm()
             f.email.data = '1 2 3'
             u = pybossa.validator.CommaSeparatedIntegers()

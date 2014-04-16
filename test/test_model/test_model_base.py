@@ -16,8 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from base import model, db
+from default import Test, db, with_context
 from nose.tools import raises
+from pybossa.model.user import User
+from pybossa.model.app import App
+from pybossa.model.task import Task
+from pybossa.model.task_run import TaskRun
 
 
 """Tests for inter-model relations and base classes and helper functions
@@ -25,33 +29,27 @@ of model package."""
 
 
 
-class TestModelBase:
-
-    def setUp(self):
-        model.rebuild_db()
-
-    def tearDown(self):
-        db.session.remove()
-
-
+class TestModelBase(Test):
 
     @raises(NotImplementedError)
+    @with_context
     def test_domain_object_error(self):
         """Test DomainObject errors work."""
-        user = model.user.User()
+        user = User()
         user.name = "John"
         d = user.dictize()
         user.undictize(d)
 
 
+    @with_context
     def test_all(self):
         """Test MODEL works"""
         username = u'test-user-1'
-        user = model.user.User(name=username, fullname=username, email_addr=username)
+        user = User(name=username, fullname=username, email_addr=username)
         info = {
             'total': 150,
             'long_description': 'hello world'}
-        app = model.app.App(
+        app = App(
             name=u'My New App',
             short_name=u'my-new-app',
             description=u'description',
@@ -60,9 +58,9 @@ class TestModelBase:
         task_info = {
             'question': 'My random question',
             'url': 'my url'}
-        task = model.task.Task(info=task_info)
+        task = Task(info=task_info)
         task_run_info = {'answer': u'annakarenina'}
-        task_run = model.task_run.TaskRun(info=task_run_info)
+        task_run = TaskRun(info=task_run_info)
         task.app = app
         task_run.task = task
         task_run.app = app
@@ -73,7 +71,7 @@ class TestModelBase:
 
         db.session.remove()
 
-        app = db.session.query(model.app.App).get(app_id)
+        app = db.session.query(App).get(app_id)
         assert app.name == u'My New App', app
         # year would start with 201...
         assert app.created.startswith('201'), app.created
@@ -96,6 +94,6 @@ class TestModelBase:
         assert outrun.info['answer'] == task_run_info['answer'], outrun
         assert outrun.user.name == username, outrun
 
-        user = model.user.User.by_name(username)
+        user = User.by_name(username)
         assert user.apps[0].id == app_id, user
 

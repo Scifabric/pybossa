@@ -30,6 +30,7 @@ import json
 from flask import request, abort, Response
 from flask.views import MethodView
 from werkzeug.exceptions import NotFound
+from sqlalchemy.exc import IntegrityError
 from pybossa.util import jsonpify, crossdomain
 from pybossa.core import db
 from pybossa.auth import require
@@ -164,6 +165,9 @@ class APIBase(MethodView):
             db.session.add(inst)
             db.session.commit()
             return json.dumps(inst.dictize())
+        except IntegrityError:
+            db.session.rollback()
+            raise
         except Exception as e:
             return error.format_exception(
                 e,
@@ -231,6 +235,9 @@ class APIBase(MethodView):
             self._refresh_cache(inst)
             return Response(json.dumps(inst.dictize()), 200,
                             mimetype='application/json')
+        except IntegrityError:
+            db.session.rollback()
+            raise
         except Exception as e:
             return error.format_exception(
                 e,

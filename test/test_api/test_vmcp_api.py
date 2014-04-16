@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import json
-from base import web
+from default import flask_app, with_context
 from mock import patch
 from test_api import HelperAPI
 
@@ -24,10 +24,11 @@ from test_api import HelperAPI
 
 class TestVmcpAPI(HelperAPI):
 
+    @with_context
     def test_vcmp(self):
         """Test VCMP without key fail works."""
-        if web.app.config.get('VMCP_KEY'):
-            web.app.config.pop('VMCP_KEY')
+        if self.flask_app.config.get('VMCP_KEY'):
+            self.flask_app.config.pop('VMCP_KEY')
         res = self.app.get('api/vmcp', follow_redirects=True)
         err = json.loads(res.data)
         assert res.status_code == 501, err
@@ -36,7 +37,8 @@ class TestVmcpAPI(HelperAPI):
         assert err['target'] == "vmcp", err
         assert err['action'] == "GET", err
 
-    @patch.dict(web.app.config, {'VMCP_KEY': 'invalid.key'})
+    @with_context
+    @patch.dict(flask_app.config, {'VMCP_KEY': 'invalid.key'})
     def test_vmcp_file_not_found(self):
         """Test VMCP with invalid file key works."""
         res = self.app.get('api/vmcp', follow_redirects=True)
@@ -47,7 +49,8 @@ class TestVmcpAPI(HelperAPI):
         assert err['target'] == "vmcp", err
         assert err['action'] == "GET", err
 
-    @patch.dict(web.app.config, {'VMCP_KEY': 'invalid.key'})
+    @with_context
+    @patch.dict(flask_app.config, {'VMCP_KEY': 'invalid.key'})
     def test_vmcp_01(self):
         """Test VMCP errors works"""
         # Even though the key does not exists, let's patch it to test
@@ -62,7 +65,8 @@ class TestVmcpAPI(HelperAPI):
             assert err['action'] == "GET", err
             assert err['exception_msg'] == 'cvm_salt parameter is missing'
 
-    @patch.dict(web.app.config, {'VMCP_KEY': 'invalid.key'})
+    @with_context
+    @patch.dict(flask_app.config, {'VMCP_KEY': 'invalid.key'})
     def test_vmcp_02(self):
         """Test VMCP signing works."""
         signature = dict(signature='XX')

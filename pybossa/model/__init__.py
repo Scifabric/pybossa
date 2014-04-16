@@ -33,9 +33,10 @@ from sqlalchemy.schema import (
     DropConstraint,
     )
 
-from pybossa.core import db
 import logging
+from flask.ext.sqlalchemy import SQLAlchemy
 
+db = SQLAlchemy()
 
 log = logging.getLogger(__name__)
 
