@@ -128,8 +128,6 @@ with **#** are comments)::
   source env/bin/activate
   # Install the required libraries
   pip install -r requirements.txt
-  # Install the CACHE required libraries
-  pip install -r cache_requirements.txt
 
 
 Otherwise you should be able to install the libraries in your system like
