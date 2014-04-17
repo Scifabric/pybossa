@@ -5,7 +5,7 @@ assistance to perform tasks that require human cognition, knowledge or
 intelligence (e.g. image classification, transcription, information location
 etc). 
 
-![Shuttleworth Foundation Funded](http://daniellombrana.es/static/images/project/shuttleworth_funded.png)
+![Shuttleworth Foundation Funded](http://pybossa.com/assets/img/shuttleworth-funded.png)
 
 PyBossa was inspired by the [BOSSA](http://bossa.berkeley.edu/) crowdsourcing engine but is written in
 python (hence the name!). It can be used for any distributed tasks application
