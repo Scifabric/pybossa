@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """This module tests the Uploader class."""
 
-from base import web, model, Fixtures, db, redis_flushall
+from default import Test
 from pybossa.uploader.rackspace import RackspaceUploader
 from mock import patch, PropertyMock
 from werkzeug.datastructures import FileStorage
@@ -25,43 +25,24 @@ from pyrax.fakes import FakeContainer
 from test_uploader import cloudfiles_mock, fake_container
 
 
-class TestRackspaceUploader:
+class TestRackspaceUploader(Test):
 
     """Test PyBossa Rackspace Uploader module."""
-
-
-    def setUp(self):
-        """SetUp method."""
-        self.app = web.app.test_client()
-        model.rebuild_db()
-        redis_flushall()
-        Fixtures.create()
-
-    def tearDown(self):
-        """Tear Down method."""
-        db.session.remove()
-        redis_flushall()
-
-    @classmethod
-    def teardown_class(cls):
-        """Tear Down class."""
-        model.rebuild_db()
-        redis_flushall()
 
     @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
            return_value=True)
     def test_rackspace_uploader_init(self, Mock):
         """Test RACKSPACE UPLOADER init works."""
-        new_extensions = set(['pdf', 'doe'])
+        new_extensions = ['pdf', 'doe']
         with patch('pybossa.uploader.rackspace.pyrax.cloudfiles',
                    return_value=cloudfiles_mock):
-            u = RackspaceUploader("username",
-                                  "apikey",
-                                  "ORD",
-                                  allowed_extensions=new_extensions)
-            for ext in new_extensions:
-                err_msg = "The .%s extension should be allowed" % ext
-                assert ext in u.allowed_extensions, err_msg
+            with patch.dict(self.flask_app.config,
+                            {'ALLOWED_EXTENSIONS': new_extensions}):
+                u = RackspaceUploader()
+                u.init_app(self.flask_app)
+                for ext in new_extensions:
+                    err_msg = "The .%s extension should be allowed" % ext
+                    assert ext in u.allowed_extensions, err_msg
 
     @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
            return_value=True)
@@ -71,9 +52,8 @@ class TestRackspaceUploader:
         """Test RACKSPACE UPLOADER upload file works."""
         with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
             mycf.upload_file.return_value=True
-            u = RackspaceUploader("username",
-                                  "apikey",
-                                  "ORD")
+            u = RackspaceUploader()
+            u.init_app(self.flask_app)
             file = FileStorage(filename='test.jpg')
             err_msg = "Upload file should return True"
             assert u.upload_file(file) is True, err_msg
@@ -86,13 +66,11 @@ class TestRackspaceUploader:
         """Test RACKSPACE UPLOADER upload wrong file extension works."""
         with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
             mycf.upload_file.return_value = True
-            u = RackspaceUploader("username",
-                                  "apikey",
-                                  "ORD")
+            u = RackspaceUploader()
+            u.init_app(self.flask_app)
             file = FileStorage(filename='test.docs')
             err_msg = "Upload file should return False"
             res = u.upload_file(file)
-            print res
             assert res is False, err_msg
 
     @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
@@ -104,9 +82,8 @@ class TestRackspaceUploader:
         with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
             mycf.get_container.return_value = fake_container
 
-            u = RackspaceUploader("username",
-                                  "apikey",
-                                  "ORD")
+            u = RackspaceUploader()
+            u.init_app(self.flask_app)
             res = u._lookup_url('rackspace', {'filename': filename})
             expected_url = "%s/%s" % (uri, filename)
             print res
@@ -123,9 +100,8 @@ class TestRackspaceUploader:
             type(fake_container).cdn_enabled = cdn_enabled_mock
             mycf.get_container.return_value = fake_container
 
-            u = RackspaceUploader("username",
-                                  "apikey",
-                                  "ORD")
+            u = RackspaceUploader()
+            u.init_app(self.flask_app)
             res = u._lookup_url('rackspace', {'filename': filename})
             err_msg = "We should get the None"
             assert res is None, err_msg
