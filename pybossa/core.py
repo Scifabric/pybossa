@@ -53,6 +53,7 @@ def create_app(theme='default'):
     setup_gravatar(app)
     #gravatar = Gravatar(app, size=100, rating='g', default='mm',
                         #force_default=False, force_lower=False)
+    db.app = app
     db.init_app(app)
     mail.init_app(app)
     sentinel.init_app(app)
