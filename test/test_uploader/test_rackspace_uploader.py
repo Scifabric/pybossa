@@ -38,13 +38,35 @@ class TestRackspaceUploader(Test):
                    return_value=cloudfiles_mock):
             with patch.dict(self.flask_app.config,
                             {'ALLOWED_EXTENSIONS': new_extensions}):
-                u = RackspaceUploader()
-                u.init_app(self.flask_app, cont_name='mycontainer')
-                err_msg = "The container name should be updated."
-                assert u.cont_name == 'mycontainer', err_msg
-                for ext in new_extensions:
-                    err_msg = "The .%s extension should be allowed" % ext
-                    assert ext in u.allowed_extensions, err_msg
+
+                with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
+                    mycf.get_container.return_value = True
+                    u = RackspaceUploader()
+                    res = u.init_app(self.flask_app, cont_name='mycontainer')
+                    err_msg = "It should return the container."
+                    assert res is True, err_msg
+                    err_msg = "The container name should be updated."
+                    assert u.cont_name == 'mycontainer', err_msg
+                    for ext in new_extensions:
+                        err_msg = "The .%s extension should be allowed" % ext
+                        assert ext in u.allowed_extensions, err_msg
+
+    @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
+           return_value=True)
+    @patch('pybossa.uploader.rackspace.pyrax.utils.get_checksum',
+           return_value="1234abcd")
+    def test_rackspace_uploader_creates_container(self, mock, mock2):
+        """Test RACKSPACE UPLOADER creates container works."""
+        with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
+            from pyrax.exceptions import NoSuchContainer
+            mycf.get_container.side_effect = NoSuchContainer
+            mycf.create_container.return_value = True
+            mycf.make_container_public.return_value = True
+            u = RackspaceUploader()
+            res = u.init_app(self.flask_app)
+            err_msg = "Init app should return the container."
+            assert res is True, err_msg
+
 
     @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
            return_value=True)
