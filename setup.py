@@ -30,7 +30,8 @@ requirements = [
     "sphinx",
     "coverage",
     "mock",
-    "tox"
+    "tox",
+    "pyrax"
 ]
 
 setup(
