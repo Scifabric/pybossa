@@ -46,10 +46,11 @@ class RackspaceUploader(Uploader):
             self.cf = pyrax.cloudfiles
             if cont_name:
                 self.cont_name = cont_name
-            self.cf.get_container()
+            return self.cf.get_container()
         except pyrax.exceptions.NoSuchContainer:
-            self.cf.create_container(self.cont_name)
+            c = self.cf.create_container(self.cont_name)
             self.cf.make_container_public(self.cont_name)
+            return c
 
 
     def _upload_file(self, file):
