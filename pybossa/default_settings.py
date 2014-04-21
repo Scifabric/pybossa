@@ -42,3 +42,6 @@ THEME = 'default'
 
 ## Default number of apps per page
 APPS_PER_PAGE = 20
+
+## Default allowed extensions
+ALLOWED_EXTENSIONS = ['js', 'css', 'png', 'jpg', 'jpeg', 'gif']

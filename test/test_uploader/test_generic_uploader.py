@@ -17,44 +17,35 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """This module tests the Uploader class."""
 
-from base import web, model, Fixtures, db, redis_flushall
+from default import Test, with_context
 from pybossa.uploader import Uploader
-from pybossa.uploader.local import LocalUploader
 from mock import patch
-from werkzeug.datastructures import FileStorage
 
 
-class TestUploader:
+class TestUploader(Test):
 
     """Test PyBossa Uploader module."""
 
     def setUp(self):
         """SetUp method."""
-        self.app = web.app.test_client()
-        model.rebuild_db()
-        redis_flushall()
-        Fixtures.create()
+        super(TestUploader, self).setUp()
+        with self.flask_app.app_context():
+            self.create()
 
-    def tearDown(self):
-        """Tear Down method."""
-        db.session.remove()
-        redis_flushall()
-
-    @classmethod
-    def teardown_class(cls):
-        """Tear Down class."""
-        model.rebuild_db()
-        redis_flushall()
-
+    @with_context
     def test_uploader_init(self):
         """Test UPLOADER init method works."""
         u = Uploader()
-        new_extensions = set(['pdf', 'doe'])
-        new_uploader = Uploader(new_extensions)
-        expected_extensions = set.union(u.allowed_extensions, new_extensions)
-        err_msg = "The new uploader should support two extra extensions"
-        assert expected_extensions == new_uploader.allowed_extensions, err_msg
+        new_extensions = ['pdf', 'doe']
+        new_uploader = Uploader()
+        with patch.dict(self.flask_app.config,
+                        {'ALLOWED_EXTENSIONS': new_extensions}):
+            new_uploader.init_app(self.flask_app)
+            expected_extensions = set.union(u.allowed_extensions, new_extensions)
+            err_msg = "The new uploader should support two extra extensions"
+            assert expected_extensions == new_uploader.allowed_extensions, err_msg
 
+    @with_context
     def test_allowed_file(self):
         """Test UPLOADER allowed_file method works."""
         u = Uploader()
