@@ -4,4 +4,4 @@
 # export PYBOSSA_REDIS_CACHE_DISABLED='1'
 
 . /opt/vagrant_env/bin/activate
-python pybossa/web.py
+python run.py

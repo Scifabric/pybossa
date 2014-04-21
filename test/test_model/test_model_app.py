@@ -16,28 +16,22 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from base import model, db
+from default import Test, db, with_context
 from nose.tools import assert_raises
+from pybossa.model.app import App
+from pybossa.model.user import User
 from sqlalchemy.exc import IntegrityError
 
 
-class TestModelApp:
+class TestModelApp(Test):
 
-    def setUp(self):
-        model.rebuild_db()
-
-    def tearDown(self):
-        db.session.remove()
-
-
-
+    @with_context
     def test_app_errors(self):
         """Test APP model errors."""
-        app = model.app.App(
-            name='Application',
-            short_name='app',
-            description='desc',
-            owner_id=None)
+        app = App(name='Application',
+                  short_name='app',
+                  description='desc',
+                  owner_id=None)
 
         # App.owner_id shoult not be nullable
         db.session.add(app)
@@ -45,14 +39,13 @@ class TestModelApp:
         db.session.rollback()
 
         # App.name shoult not be nullable
-        user = model.user.User(
-            email_addr="john.doe@example.com",
-            name="johndoe",
-            fullname="John Doe",
-            locale="en")
+        user = User(email_addr="john.doe@example.com",
+                    name="johndoe",
+                    fullname="John Doe",
+                    locale="en")
         db.session.add(user)
         db.session.commit()
-        user = db.session.query(model.user.User).first()
+        user = db.session.query(User).first()
         app.owner_id = user.id
         app.name = None
         db.session.add(app)

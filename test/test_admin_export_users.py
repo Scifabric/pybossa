@@ -18,6 +18,7 @@
 
 import json
 import StringIO
+from default import with_context
 from pybossa.util import unicode_csv_reader
 from helper import web
 
@@ -28,6 +29,7 @@ class TestExportUsers(web.Helper):
     exportable_attributes = ('id', 'name', 'fullname', 'email_addr',
                              'created', 'locale', 'admin')
 
+    @with_context
     def test_json_contains_all_attributes(self):
         self.register()
 
@@ -38,6 +40,7 @@ class TestExportUsers(web.Helper):
         for attribute in self.exportable_attributes:
             assert attribute in data[0], data
 
+    @with_context
     def test_json_returns_all_users(self):
         self.register(fullname="Manolita")
         self.signout()
@@ -58,6 +61,7 @@ class TestExportUsers(web.Helper):
         assert "Juan Jose2" in data, data
         assert len(json_data) == 3
 
+    @with_context
     def test_csv_contains_all_attributes(self):
         self.register()
 
@@ -68,6 +72,7 @@ class TestExportUsers(web.Helper):
         for attribute in self.exportable_attributes:
             assert attribute in data, data
 
+    @with_context
     def test_csv_returns_all_users(self):
         self.register(fullname="Manolita")
         self.signout()

@@ -24,25 +24,19 @@ API endpoints like userprogress or vmcp.
 """
 import json
 
-from base import web, model, Fixtures, db, redis_flushall
+from default import Test, db, with_context
+from pybossa.model.app import App
 
 
-class TestAPI:
+class TestAPI(Test):
     def setUp(self):
-        self.app = web.app.test_client()
-        model.rebuild_db()
-        redis_flushall()
-        Fixtures.create()
+        super(TestAPI, self).setUp()
+        with self.flask_app.app_context():
+            self.create()
+            self.redis_flushall()
 
-    def tearDown(self):
-        db.session.remove()
-        redis_flushall()
 
-    @classmethod
-    def teardown_class(cls):
-        model.rebuild_db()
-        redis_flushall()
-
+    @with_context
     def check_limit(self, url, action, obj, data=None):
         # Set the limit
         limit = 299
@@ -87,6 +81,7 @@ class TestAPI:
                 err_msg = "The exception_cls should be TooManyRequests"
                 assert error['exception_cls'] == 'TooManyRequests', err_msg
 
+    @with_context
     def test_00_api_get(self):
         """Test API GET rate limit."""
         # GET as Anonymous
@@ -94,6 +89,7 @@ class TestAPI:
         action = 'get'
         self.check_limit(url, action, 'app')
 
+    @with_context
     def test_00_app_get(self):
         """Test API.app GET rate limit."""
         # GET as Anonymous
@@ -101,43 +97,49 @@ class TestAPI:
         action = 'get'
         self.check_limit(url, action, 'app')
 
+    @with_context
     def test_01_app_post(self):
         """Test API.app POST rate limit."""
-        url = '/api/app?api_key=' + Fixtures.api_key
+        url = '/api/app?api_key=' + self.api_key
         self.check_limit(url, 'post', 'app')
 
+    @with_context
     def test_02_app_delete(self):
         """Test API.app DELETE rate limit."""
         for i in range(300):
-            app = model.app.App(name=str(i), short_name=str(i),
-                            description=str(i), owner_id=1)
+            app = App(name=str(i), short_name=str(i),
+                      description=str(i), owner_id=1)
             db.session.add(app)
-        db.session.commit()
+            db.session.commit()
 
-        url = '?api_key=%s' % (Fixtures.api_key)
+        url = '?api_key=%s' % (self.api_key)
         self.check_limit(url, 'delete', 'app')
 
+    @with_context
     def test_03_app_put(self):
         """Test API.app PUT rate limit."""
         for i in range(300):
-            app = model.app.App(name=str(i), short_name=str(i),
-                            description=str(i), owner_id=1)
+            app = App(name=str(i), short_name=str(i),
+                      description=str(i), owner_id=1)
             db.session.add(app)
         db.session.commit()
 
-        url = '?api_key=%s' % (Fixtures.api_key)
+        url = '?api_key=%s' % (self.api_key)
         self.check_limit(url, 'put', 'app')
 
+    @with_context
     def test_04_new_task(self):
         """Test API.new_task(app_id) GET rate limit."""
         url = '/api/app/1/newtask'
         self.check_limit(url, 'get', 'app')
 
+    @with_context
     def test_05_vmcp(self):
         """Test API.vmcp GET rate limit."""
         url = '/api/vmcp'
         self.check_limit(url, 'get', 'app')
 
+    @with_context
     def test_05_user_progress(self):
         """Test API.user_progress GET rate limit."""
         url = '/api/app/1/userprogress'

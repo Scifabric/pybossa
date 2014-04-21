@@ -1,25 +1,4 @@
-Flask==0.10.1
-SQLAlchemy==0.7.8
-Flask-Login==0.2.3
-Flask-WTF==0.6
-Flask-Gravatar
-Flask-OAuth==0.12
-Flask-SQLAlchemy
-Flask-Mail
-Flask-Misaka
-python-dateutil
-alembic
-psycopg2
-requests
-itsdangerous
-markdown
-raven
-blinker
-flask-cache
-flask-heroku
-pygeoip
-flask-babel
-beautifulsoup4
-python-memcached
-pyrax
--e git+https://github.com/Hypernode/M2Crypto#egg=M2Crypto-0.22.dev
+--index-url https://pypi.python.org/simple/
+
+-e git+https://github.com/Hypernode/M2Crypto.git#egg=M2Crypto-0.22.dev
+-e .

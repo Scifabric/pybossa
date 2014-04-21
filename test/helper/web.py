@@ -16,28 +16,18 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from base import model, db, web, Fixtures, redis_flushall
+from default import Test, db, Fixtures, with_context
 from helper.user import User
+from pybossa.model.app import App
+from pybossa.model.category import Category
+from pybossa.model.task import Task
+from pybossa.model.task_run import TaskRun
 
 
-class Helper(object):
+class Helper(Test):
     """Class to help testing the web interface"""
 
     user = User()
-    app_short_name = "sampleapp"
-
-    def setUp(self):
-        self.app = web.app.test_client()
-        model.rebuild_db()
-
-    def tearDown(self):
-        db.session.remove()
-        redis_flushall()
-
-    @classmethod
-    def teardown_class(cls):
-        model.rebuild_db()
-        redis_flushall
 
     def html_title(self, title=None):
         """Helper function to create an HTML title"""
@@ -102,11 +92,12 @@ class Helper(object):
         return self.app.get('/account/signout', follow_redirects=True)
 
     def create_categories(self):
-        categories = db.session.query(model.category.Category).all()
-        if len(categories) == 0:
-            print "Categories 0"
-            print "Creating default ones"
-            Fixtures.create_categories()
+        with self.flask_app.app_context():
+            categories = db.session.query(Category).all()
+            if len(categories) == 0:
+                print "Categories 0"
+                print "Creating default ones"
+                self._create_categories()
 
     def new_application(self, method="POST", name="Sample App",
                         short_name="sampleapp", description="Description",
@@ -146,13 +137,13 @@ class Helper(object):
         """Helper function to create tasks for an app"""
         tasks = []
         for i in range(0, 10):
-            tasks.append(model.task.Task(app_id=appid, state='0', info={}))
+            tasks.append(Task(app_id=appid, state='0', info={}))
         db.session.add_all(tasks)
         db.session.commit()
 
     def delTaskRuns(self, app_id=1):
         """Deletes all TaskRuns for a given app_id"""
-        db.session.query(model.task_run.TaskRun).filter_by(app_id=1).delete()
+        db.session.query(TaskRun).filter_by(app_id=1).delete()
         db.session.commit()
 
     def task_settings_scheduler(self, method="POST", short_name='sampleapp',

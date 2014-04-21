@@ -19,20 +19,17 @@
 from flask import Blueprint, request, url_for, flash, redirect, session
 from flask.ext.login import login_user, current_user
 
-import pybossa.model as model
-from pybossa.util import Google, get_user_signup_method
+from pybossa.core import db, google
+from pybossa.model.user import User
+from pybossa.util import get_user_signup_method
 # Required to access the config parameters outside a context as we are using
 # Flask 0.8
 # See http://goo.gl/tbhgF for more info
-from pybossa.core import app, db
 import requests
 
 # This blueprint will be activated in web.py if the FACEBOOK APP ID and SECRET
 # are available
 blueprint = Blueprint('google', __name__)
-google = Google(app.config['GOOGLE_CLIENT_ID'],
-                app.config['GOOGLE_CLIENT_SECRET'])
-
 
 @blueprint.route('/', methods=['GET', 'POST'])
 def login():  # pragma: no cover
@@ -57,7 +54,7 @@ def manage_user(access_token, user_data, next_url):
     """Manage the user after signin"""
     # We have to store the oauth_token in the session to get the USER fields
 
-    user = db.session.query(model.user.User)\
+    user = db.session.query(User)\
              .filter_by(google_user_id=user_data['id'])\
              .first()
 
@@ -65,22 +62,22 @@ def manage_user(access_token, user_data, next_url):
     if user is None:
         google_token = dict(oauth_token=access_token)
         info = dict(google_token=google_token)
-        user = db.session.query(model.user.User)\
+        user = db.session.query(User)\
                  .filter_by(name=user_data['name'].encode('ascii', 'ignore')
                                                   .lower().replace(" ", ""))\
                  .first()
 
-        email = db.session.query(model.user.User)\
+        email = db.session.query(User)\
                   .filter_by(email_addr=user_data['email'])\
                   .first()
 
         if ((user is None) and (email is None)):
-            user = model.user.User(fullname=user_data['name'],
-                              name=user_data['name'].encode('ascii', 'ignore')
-                                                    .lower().replace(" ", ""),
-                              email_addr=user_data['email'],
-                              google_user_id=user_data['id'],
-                              info=info)
+            user = User(fullname=user_data['name'],
+                   name=user_data['name'].encode('ascii', 'ignore')
+                                         .lower().replace(" ", ""),
+                   email_addr=user_data['email'],
+                   google_user_id=user_data['id'],
+                   info=info)
             db.session.add(user)
             db.session.commit()
             return user
@@ -99,7 +96,7 @@ def manage_user(access_token, user_data, next_url):
 @google.oauth.authorized_handler
 def oauth_authorized(resp):  # pragma: no cover
     #print "OAUTH authorized method called"
-    next_url = url_for('home')
+    next_url = url_for('home.home')
 
     if resp is None or request.args.get('error'):
         flash(u'You denied the request to sign in.', 'error')
@@ -125,11 +122,11 @@ def oauth_authorized(resp):  # pragma: no cover
     user = manage_user(access_token, user_data, next_url)
     if user is None:
         # Give a hint for the user
-        user = db.session.query(model.user.User)\
+        user = db.session.query(User)\
                  .filter_by(email_addr=user_data['email'])\
                  .first()
         if user is None:
-            user = db.session.query(model.user.User)\
+            user = db.session.query(User)\
                      .filter_by(name=user_data['name'].encode('ascii', 'ignore')
                                                       .lower().replace(' ', ''))\
                      .first()

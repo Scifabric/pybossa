@@ -16,24 +16,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from base import web, model, Fixtures, db, redis_flushall
+from default import db
 from mock import Mock
-
-
-
-def setup_package():
-    model.rebuild_db()
-    redis_flushall()
-
-
-def teardown_package():
-    db.session.remove()
-    model.rebuild_db()
-    redis_flushall()
+from pybossa.model.user import User
 
 
 def mock_current_user(anonymous=True, admin=None, id=None):
-    mock = Mock(spec=model.user.User)
+    mock = Mock(spec=User)
     mock.is_anonymous.return_value = anonymous
     mock.admin = admin
     mock.id = id

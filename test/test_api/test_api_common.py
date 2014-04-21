@@ -17,31 +17,37 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import json
 from mock import patch
-from base import web, model, Fixtures, db
+#from base import web, model, self, db
+from default import db, with_context
 from nose.tools import assert_equal, assert_raises
 from test_api import HelperAPI
+from pybossa.model.app import App
+from pybossa.model.task import Task
+from pybossa.model.task_run import TaskRun
 
 
 
 class TestApiCommon(HelperAPI):
 
+    @with_context
     def test_00_limits_query(self):
         """Test API GET limits works"""
         for i in range(30):
-            app = model.app.App(name="name%s" % i,
-                            short_name="short_name%s" % i,
-                            description="desc",
-                            owner_id=1)
+            app = App(name="name%s" % i,
+                  short_name="short_name%s" % i,
+                  description="desc",
+                  owner_id=1)
 
             info = dict(a=0)
-            task = model.task.Task(app_id=1, info=info)
-            taskrun = model.task_run.TaskRun(app_id=1, task_id=1)
+            task = Task(app_id=1, info=info)
+            taskrun = TaskRun(app_id=1, task_id=1)
             db.session.add(app)
             db.session.add(task)
             db.session.add(taskrun)
         db.session.commit()
 
         res = self.app.get('/api/app')
+        print res.data
         data = json.loads(res.data)
         assert len(data) == 20, len(data)
 
@@ -81,10 +87,11 @@ class TestApiCommon(HelperAPI):
         assert data[0].get('name') == 'user7', data
 
 
+    @with_context
     def test_get_query_with_api_key(self):
         """ Test API GET query with an API-KEY"""
         for endpoint in self.endpoints:
-            url = '/api/' + endpoint + '?api_key=' + Fixtures.api_key
+            url = '/api/' + endpoint + '?api_key=' + self.api_key
             res = self.app.get(url)
             data = json.loads(res.data)
 
@@ -110,7 +117,7 @@ class TestApiCommon(HelperAPI):
                 assert res.mimetype == 'application/json', res
 
             if endpoint == 'user':
-                # With Fixtures.create() 3 users are created in the DB
+                # With self.create() 3 users are created in the DB
                 assert len(data) == 3, data
                 user = data[0]
                 assert user['name'] == 'root', data
@@ -118,6 +125,7 @@ class TestApiCommon(HelperAPI):
                 assert res.mimetype == 'application/json', res
 
 
+    @with_context
     def test_query_search_wrongfield(self):
         """ Test API query search works"""
         # Test first a non-existant field for all end-points
@@ -129,6 +137,7 @@ class TestApiCommon(HelperAPI):
             assert err['action'] == 'GET', err
             assert err['exception_cls'] == 'AttributeError', err
 
+    @with_context
     def test_query_sql_injection(self):
         """Test API SQL Injection is not allowed works"""
 
@@ -152,6 +161,7 @@ class TestApiCommon(HelperAPI):
         res = self.app.get('/api' + q)
         assert res.status_code == 404, res.data
 
+    @with_context
     def test_09_delete_app_cascade(self):
         """Test API delete app deletes associated tasks and taskruns"""
         tasks = self.app.get('/api/task?app_id=1&limit=1000')
@@ -159,33 +169,34 @@ class TestApiCommon(HelperAPI):
 
         task_runs = self.app.get('/api/taskrun?app_id=1&limit=1000')
         task_runs = json.loads(task_runs.data)
-        url = '/api/app/%s?api_key=%s' % (1, Fixtures.api_key)
+        url = '/api/app/%s?api_key=%s' % (1, self.api_key)
         self.app.delete(url)
 
         for task in tasks:
-            t = db.session.query(model.task.Task)\
+            t = db.session.query(Task)\
                   .filter_by(app_id=1)\
                   .filter_by(id=task['id'])\
                   .all()
             assert len(t) == 0, "There should not be any task"
 
-            tr = db.session.query(model.task_run.TaskRun)\
+            tr = db.session.query(TaskRun)\
                    .filter_by(app_id=1)\
                    .filter_by(task_id=task['id'])\
                    .all()
             assert len(tr) == 0, "There should not be any task run"
 
+    @with_context
     def test_10_delete_task_cascade(self):
         """Test API delete app deletes associated tasks and taskruns"""
         tasks = self.app.get('/api/task?app_id=1&limit=1000')
         tasks = json.loads(tasks.data)
 
         for t in tasks:
-            url = '/api/task/%s?api_key=%s' % (t['id'], Fixtures.api_key)
+            url = '/api/task/%s?api_key=%s' % (t['id'], self.api_key)
             res = self.app.delete(url)
             assert_equal(res.status, '204 NO CONTENT', res.data)
             tr = []
-            tr = db.session.query(model.task_run.TaskRun)\
+            tr = db.session.query(TaskRun)\
                    .filter_by(app_id=1)\
                    .filter_by(task_id=t['id'])\
                    .all()
