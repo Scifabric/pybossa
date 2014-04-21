@@ -35,16 +35,18 @@ class RackspaceUploader(Uploader):
     cf = None
     cont_name = "pybossa"
 
-    def __init__(self, username, api_key, region, cont_name=None, **kwargs):
+    def init_app(self, app, cont_name=None):
         """Init method to create a generic uploader."""
+        super(self.__class__, self).init_app(app)
         try:
             pyrax.set_setting("identity_type", "rackspace")
-            pyrax.set_credentials(username, api_key, region=region)
+            pyrax.set_credentials(app.config['RACKSPACE_USERNAME'],
+                                  app.config['RACKSPACE_API_KEY'],
+                                  app.config['RACKSPACE_REGION'])
             self.cf = pyrax.cloudfiles
             if cont_name:
                 self.cont_name = cont_name
             self.cf.get_container(self.cont_name)
-            super(self.__class__, self).__init__(**kwargs)
         except pyrax.exceptions.NoSuchContainer:
             self.cf.create_container(self.cont_name)
             self.cf.make_container_public(self.cont_name)

@@ -32,11 +32,17 @@ class Uploader(object):
 
     allowed_extensions = set(['js', 'css', 'png', 'jpg', 'jpeg', 'gif'])
 
-    def __init__(self, allowed_extensions=None):
+    def __init__(self, app=None):
         """Init method to create a generic uploader."""
-        if allowed_extensions:
+        self.app = app
+        if app is not None:
+            self.init_app(app)
+
+    def init_app(self, app):
+        """Config allowed extensions."""
+        if app.config.get('ALLOWED_EXTENSIONS'):
             self.allowed_extensions = set.union(self.allowed_extensions,
-                                                allowed_extensions)
+                                                set(app.config['ALLOWED_EXTENSIONS']))
 
     def _lookup_url(self, endpoint, values):
         """Override by the uploader handler."""

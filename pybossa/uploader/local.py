@@ -34,11 +34,11 @@ class LocalUploader(Uploader):
 
     upload_folder = 'uploads'
 
-    def __init__(self, upload_folder=None, **kwargs):
-        """Init method to create a generic uploader."""
-        if upload_folder:
-            self.upload_folder = upload_folder
-        super(self.__class__, self).__init__(**kwargs)
+    def init_app(self, app):
+        """Config upload folder."""
+        super(self.__class__, self).init_app(app)
+        if app.config.get('UPLOAD_FOLDER'):
+            self.upload_folder = app.config['UPLOAD_FOLDER']
 
     def _upload_file(self, file):
         """Upload a file into a local folder."""
