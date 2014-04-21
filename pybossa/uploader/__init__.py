@@ -35,7 +35,7 @@ class Uploader(object):
     def __init__(self, app=None):
         """Init method to create a generic uploader."""
         self.app = app
-        if app is not None:
+        if app is not None: # pragma: no cover
             self.init_app(app)
 
     def init_app(self, app):
