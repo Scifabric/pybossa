@@ -39,7 +39,9 @@ class TestRackspaceUploader(Test):
             with patch.dict(self.flask_app.config,
                             {'ALLOWED_EXTENSIONS': new_extensions}):
                 u = RackspaceUploader()
-                u.init_app(self.flask_app)
+                u.init_app(self.flask_app, cont_name='mycontainer')
+                err_msg = "The container name should be updated."
+                assert u.cont_name == 'mycontainer', err_msg
                 for ext in new_extensions:
                     err_msg = "The .%s extension should be allowed" % ext
                     assert ext in u.allowed_extensions, err_msg
