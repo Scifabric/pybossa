@@ -53,8 +53,7 @@ def create_app(theme='default'):
     setup_gravatar(app)
     #gravatar = Gravatar(app, size=100, rating='g', default='mm',
                         #force_default=False, force_lower=False)
-    db.app = app
-    db.init_app(app)
+    setup_db(app)
     mail.init_app(app)
     sentinel.init_app(app)
     signer.init_app(app)
@@ -86,6 +85,11 @@ def configure_app(app):
 
 def setup_markdown(app):
     misaka.init_app(app)
+
+
+def setup_db(app):
+    db.app = app
+    db.init_app(app)
 
 
 def setup_gravatar(app):
