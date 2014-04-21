@@ -17,47 +17,37 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """This module tests the Uploader class."""
 
-from base import web, model, Fixtures, db, redis_flushall
-from pybossa.uploader import Uploader
+from default import Test, with_context
 from pybossa.uploader.local import LocalUploader
 from mock import patch
 from werkzeug.datastructures import FileStorage
 
 
-class TestLocalUploader:
+class TestLocalUploader(Test):
 
     """Test PyBossa Uploader module."""
 
-    def setUp(self):
-        """SetUp method."""
-        self.app = web.app.test_client()
-        model.rebuild_db()
-        redis_flushall()
-        Fixtures.create()
-
-    def tearDown(self):
-        """Tear Down method."""
-        db.session.remove()
-        redis_flushall()
-
-    @classmethod
-    def teardown_class(cls):
-        """Tear Down class."""
-        model.rebuild_db()
-        redis_flushall()
-
+    @with_context
     def test_local_uploader_init(self):
         """Test LOCAL UPLOADER init works."""
         u = LocalUploader()
-        new_extensions = set(['pdf', 'doe'])
-        new_uploader = LocalUploader(upload_folder='/tmp/',
-                                     allowed_extensions=new_extensions)
-        expected_extensions = set.union(u.allowed_extensions, new_extensions)
-        err_msg = "The new uploader should support two extra extensions"
-        assert expected_extensions == new_uploader.allowed_extensions, err_msg
-        err_msg = "Upload folder by default is /tmp/"
-        assert new_uploader.upload_folder == '/tmp/', err_msg
+        u.init_app(self.flask_app)
+        new_extensions = ['pdf', 'doe']
+        new_upload_folder = '/tmp/'
+        new_config_ext = {'ALLOWED_EXTENSIONS': new_extensions}
+        new_config_uf = {'UPLOAD_FOLDER': new_upload_folder}
+        with patch.dict(self.flask_app.config, new_config_ext):
+            with patch.dict(self.flask_app.config, new_config_uf):
+                new_uploader = LocalUploader()
+                new_uploader.init_app(self.flask_app)
+                expected_extensions = set.union(u.allowed_extensions,
+                                                new_extensions)
+                err_msg = "The new uploader should support two extra extensions"
+                assert expected_extensions == new_uploader.allowed_extensions, err_msg
+                err_msg = "Upload folder by default is /tmp/"
+                assert new_uploader.upload_folder == '/tmp/', err_msg
 
+    @with_context
     @patch('werkzeug.datastructures.FileStorage.save', return_value=None)
     def test_local_uploader_upload_correct_file(self, mock):
         """Test LOCAL UPLOADER upload works."""
@@ -69,6 +59,7 @@ class TestLocalUploader:
                    as this extension is not allowed")
         assert res is True, err_msg
 
+    @with_context
     @patch('werkzeug.datastructures.FileStorage.save', return_value=None)
     def test_local_uploader_upload_wrong_file(self, mock):
         """Test LOCAL UPLOADER upload works with wrong extension."""
