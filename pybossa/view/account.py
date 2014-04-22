@@ -218,6 +218,10 @@ class UpdateProfileForm(Form):
     ckan_api = TextField(lazy_gettext('CKAN API Key'))
     privacy_mode = BooleanField(lazy_gettext('Privacy Mode'))
     avatar = FileField(lazy_gettext('Avatar'), )
+    x1 = IntegerField(label=None, widget=HiddenInput())
+    y1 = IntegerField(label=None, widget=HiddenInput())
+    x2 = IntegerField(label=None, widget=HiddenInput())
+    y2 = IntegerField(label=None, widget=HiddenInput())
 
     def set_locales(self, locales):
         """Fill the locale.choices."""
@@ -388,7 +392,9 @@ def update_profile():
         form.set_locales(current_app.config['LOCALES'])
         if form.validate():
             file = request.files['avatar']
-            res = uploader.upload_file(file)
+            coordinates = (form.x1.data, form.y1.data,
+                           form.x2.data, form.y2.data)
+            res = uploader.upload_file(file, coordinates)
             if res:
                 print "File uploaded"
             else:
