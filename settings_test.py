@@ -36,6 +36,7 @@ MAIL_FAIL_SILENTLY = False
 MAIL_DEFAULT_SENDER = 'PyBossa Support <info@pybossa.com>'
 ALLOWED_EXTENSIONS = ['js', 'css', 'png', 'jpg', 'jpeg', 'gif']
 UPLOAD_FOLDER = '/tmp/'
+UPLOAD_METHOD = 'local'
 RACKSPACE_USERNAME = 'username'
 RACKSPACE_API_KEY = 'apikey'
 RACKSPACE_REGION = 'ORD'
