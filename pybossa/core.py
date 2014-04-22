@@ -88,10 +88,12 @@ def setup_uploader(app):
     if app.config.get('UPLOAD_METHOD') == 'local':
         from pybossa.uploader.local import LocalUploader
         uploader = LocalUploader()
+        uploader.init_app(app)
     if app.config.get('UPLOAD_METHOD') == 'rackspace':
         from pybossa.uploader.rackspace import RackspaceUploader
         uploader = RackspaceUploader()
-    uploader.init_app(app)
+        app.url_build_error_handlers.append(uploader.external_url_handler)
+        uploader.init_app(app)
 
 def setup_markdown(app):
     misaka.init_app(app)
@@ -340,4 +342,5 @@ def setup_hooks(app):
             current_user=current_user,
             show_cookies_warning=show_cookies_warning,
             contact_email=contact_email,
-            contact_twitter=contact_twitter)
+            contact_twitter=contact_twitter,
+            upload_method=app.config['UPLOAD_METHOD'])
