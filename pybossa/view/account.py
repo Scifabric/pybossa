@@ -394,11 +394,7 @@ def update_profile():
             file = request.files['avatar']
             coordinates = (form.x1.data, form.y1.data,
                            form.x2.data, form.y2.data)
-            res = uploader.upload_file(file, coordinates)
-            if res:
-                print "File uploaded"
-            else:
-                print "Error uploading file"
+            uploader.upload_file(file, coordinates)
             new_profile = model.user.User(id=form.id.data,
                                      fullname=form.fullname.data,
                                      name=form.name.data,

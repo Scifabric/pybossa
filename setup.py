@@ -32,7 +32,7 @@ requirements = [
     "mock",
     "tox",
     "pyrax",
-    "pil"
+    "pillow"
 ]
 
 setup(
