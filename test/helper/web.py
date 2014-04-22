@@ -81,7 +81,8 @@ class Helper(Test):
                                        'fullname': fullname,
                                        'name': name,
                                        'locale': locale,
-                                       'email_addr': email_addr},
+                                       'email_addr': email_addr,
+                                       'btn': 'Save'},
                                  follow_redirects=True)
         else:
             return self.app.get("/account/profile/update",
