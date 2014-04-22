@@ -1,14 +1,14 @@
 """Create blogpost table
 
 Revision ID: 1eb5febf4842
-Revises: 43c3a523af05
+Revises: 3da51a88205a
 Create Date: 2014-04-07 15:18:09.024341
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '1eb5febf4842'
-down_revision = '43c3a523af05'
+down_revision = '3da51a88205a'
 
 from alembic import op
 import sqlalchemy as sa
