@@ -30,26 +30,21 @@ from itsdangerous import BadData
 from markdown import markdown
 import json
 
-#from flask import Blueprint, request, url_for, flash, redirect, session, abort
 from flask import Blueprint, request, url_for, flash, redirect, abort
 from flask import render_template, current_app
 from flask.ext.login import login_required, login_user, logout_user, \
     current_user
 from flask.ext.mail import Message
 from flaskext.wtf import Form, TextField, PasswordField, validators, \
-    IntegerField, HiddenInput, SelectField, BooleanField
-#    ValidationError, IntegerField, HiddenInput, SelectField
+    IntegerField, HiddenInput, SelectField, BooleanField, FileField
 
 import pybossa.validator as pb_validator
 import pybossa.model as model
 from flask.ext.babel import lazy_gettext, gettext
-#from sqlalchemy.sql import func, text
 from sqlalchemy.sql import text
 from pybossa.model.user import User
-from pybossa.core import db, signer, mail
+from pybossa.core import db, signer, mail, uploader
 from pybossa.util import Pagination
-#from pybossa.util import Twitter
-#from pybossa.util import Facebook
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
 
@@ -222,6 +217,7 @@ class UpdateProfileForm(Form):
     locale = SelectField(lazy_gettext('Default Language'))
     ckan_api = TextField(lazy_gettext('CKAN API Key'))
     privacy_mode = BooleanField(lazy_gettext('Privacy Mode'))
+    avatar = FileField(lazy_gettext('Avatar'), )
 
     def set_locales(self, locales):
         """Fill the locale.choices."""
@@ -391,13 +387,20 @@ def update_profile():
         form = UpdateProfileForm(request.form)
         form.set_locales(current_app.config['LOCALES'])
         if form.validate():
+            file = request.files['avatar']
+            res = uploader.upload_file(file)
+            if res:
+                print "File uploaded"
+            else:
+                print "Error uploading file"
             new_profile = model.user.User(id=form.id.data,
                                      fullname=form.fullname.data,
                                      name=form.name.data,
                                      email_addr=form.email_addr.data,
                                      locale=form.locale.data,
                                      ckan_api=form.ckan_api.data,
-                                     privacy_mode=form.privacy_mode.data)
+                                     privacy_mode=form.privacy_mode.data,
+                                     info={'avatar':file.filename})
             db.session.query(model.user.User)\
               .filter(model.user.User.id == current_user.id)\
               .first()

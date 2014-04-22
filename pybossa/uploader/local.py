@@ -43,8 +43,12 @@ class LocalUploader(Uploader):
     def _upload_file(self, file):
         """Upload a file into a local folder."""
         try:
+            print "HOLA"
             filename = secure_filename(file.filename)
+            print filename
+            print self.upload_folder
             file.save(os.path.join(self.upload_folder, filename))
             return True
         except:
+            raise
             return False
