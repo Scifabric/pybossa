@@ -270,21 +270,15 @@ supported keys are:
     You can use a mix of messages at the same time without problems, so for
     example you can display a message for Admins and Owners at the same time.
 
-Enabling a Cache
-================
+Disabling the Cache
+===================
 
-PyBossa comes with a Cache system (based on `flask-cache <http://packages.python.org/Flask-Cache/>`_) that it is
-disabled by default. If you want to start caching some pages of the PyBossa server, you
-only have to modify your settings and change the following value from::
+PyBossa comes with its own Cache system (based on Redis) that it is
+enabled by default. If you want to disable the cache, you
+only have to export the following env variable::
 
-    CACHE_TYPE = 'null'
+    PYBOSSA_REDIS_CACHE_DISABLED='1'
 
-to::
-
-    CACHE_TYPE = 'simple'
-
-The cache also supports other configurations, so please, check the official
-documentation of `flask-cache <http://packages.python.org/Flask-Cache/>`_.
 
 Customizing the Layout and Front Page text
 ==========================================
