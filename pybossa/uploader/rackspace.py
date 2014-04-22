@@ -40,13 +40,13 @@ class RackspaceUploader(Uploader):
         super(self.__class__, self).init_app(app)
         try:
             pyrax.set_setting("identity_type", "rackspace")
-            pyrax.set_credentials(app.config['RACKSPACE_USERNAME'],
-                                  app.config['RACKSPACE_API_KEY'],
-                                  app.config['RACKSPACE_REGION'])
+            pyrax.set_credentials(username=app.config['RACKSPACE_USERNAME'],
+                                  api_key=app.config['RACKSPACE_API_KEY'],
+                                  region=app.config['RACKSPACE_REGION'])
             self.cf = pyrax.cloudfiles
             if cont_name:
                 self.cont_name = cont_name
-            return self.cf.get_container()
+            return self.cf.get_container(self.cont_name)
         except pyrax.exceptions.NoSuchContainer:
             c = self.cf.create_container(self.cont_name)
             self.cf.make_container_public(self.cont_name)

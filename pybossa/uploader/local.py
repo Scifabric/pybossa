@@ -47,5 +47,4 @@ class LocalUploader(Uploader):
             file.save(os.path.join(self.upload_folder, filename))
             return True
         except:
-            raise
             return False
