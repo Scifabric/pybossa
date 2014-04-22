@@ -24,6 +24,7 @@ This module exports:
 
 """
 import sys
+from PIL import Image
 
 
 class Uploader(object):
@@ -52,14 +53,31 @@ class Uploader(object):
         """Override by the specific uploader handler."""
         pass
 
+    def crop(self, file, coordinates):
+        """Crop filename and overwrite it."""
+        filename = file.filename
+        extension = filename.rsplit('.', 1)[1].lower()
+        if extension == 'jpg':
+            extension = 'jpeg'
+        from io import BytesIO
+        m = BytesIO()
+        im = Image.open(file)
+        target = im.crop(coordinates)
+        target.save(m, format=extension)
+        file.stream = m
+        file.stream.seek(0)
+
+
     def allowed_file(self, filename):
         """Return True if valid, otherwise false."""
         return '.' in filename and \
             filename.rsplit('.', 1)[1].lower() in self.allowed_extensions
 
-    def upload_file(self, file):
-        """Override by teh uploader handler: local, cloud, etc."""
+    def upload_file(self, file, coordinates=None):
+        """Override by the uploader handler: local, cloud, etc."""
         if file and self.allowed_file(file.filename):
+            if coordinates:
+                self.crop(file, coordinates)
             return self._upload_file(file)
         else:
             return False
