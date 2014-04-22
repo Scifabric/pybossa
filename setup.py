@@ -31,7 +31,8 @@ requirements = [
     "coverage",
     "mock",
     "tox",
-    "pyrax"
+    "pyrax",
+    "pil"
 ]
 
 setup(
