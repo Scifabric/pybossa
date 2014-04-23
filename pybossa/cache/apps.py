@@ -97,6 +97,48 @@ def n_tasks(app_id):
 
 
 @memoize()
+def n_completed_tasks(app_id):
+    sql = text('''SELECT COUNT(task.id) AS n_completed_tasks FROM task
+                WHERE task.app_id=:app_id AND task.state=\'completed\';''')
+    results = db.engine.execute(sql, app_id=app_id)
+    n_completed_tasks = 0
+    for row in results:
+        n_completed_tasks = row.n_completed_tasks
+    return n_completed_tasks
+
+
+@memoize()
+def n_registered_volunteers(app_id):
+    sql = text('''SELECT COUNT(DISTINCT(task_run.user_id)) AS n_registered_volunteers FROM task_run
+           WHERE task_run.user_id IS NOT NULL AND
+           task_run.user_ip IS NULL AND
+           task_run.app_id=:app_id;''')
+    results = db.engine.execute(sql, app_id=app_id)
+    n_registered_volunteers = 0
+    for row in results:
+        n_registered_volunteers = row.n_registered_volunteers
+    return n_registered_volunteers
+
+
+@memoize()
+def n_anonymous_volunteers(app_id):
+    sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip)) AS n_anonymous_volunteers FROM task_run
+           WHERE task_run.user_ip IS NOT NULL AND
+           task_run.user_id IS NULL AND
+           task_run.app_id=:app_id;''')
+    results = db.engine.execute(sql, app_id=app_id)
+    n_anonymous_volunteers = 0
+    for row in results:
+        n_anonymous_volunteers = row.n_anonymous_volunteers
+    return n_anonymous_volunteers
+
+
+@memoize()
+def n_volunteers(app_id):
+    return n_anonymous_volunteers() + n_registered_volunteers()
+
+
+@memoize()
 def n_task_runs(app_id):
     sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
                   WHERE task_run.app_id=:app_id''')
@@ -197,41 +239,6 @@ def n_published():
     for row in results:
         count = row[0]
     return count
-
-#@memoize()
-#def get_published(category, page=1, per_page=5):
-#    """Return a list of apps with a pagination"""
-#
-#    count = n_published()
-#
-#    sql = text('''
-#               SELECT app.id, app.name, app.short_name, app.description,
-#               app.info, app.created, "user".fullname AS owner,
-#               featured.app_id as featured
-#               FROM task, "user", app LEFT OUTER JOIN featured ON app.id=featured.app_id
-#               WHERE
-#               app.id=task.app_id AND app.info LIKE('%task_presenter%')
-#               AND app.hidden=0
-#               AND "user".id=app.owner_id
-#               GROUP BY app.id, "user".id, featured.id ORDER BY app.name
-#               OFFSET :offset
-#               LIMIT :limit;''')
-#
-#    offset = (page - 1) * per_page
-#    results = db.engine.execute(sql, limit=per_page, offset=offset)
-#    apps = []
-#    for row in results:
-#        app = dict(id=row.id,
-#                   name=row.name, short_name=row.short_name,
-#                   created=row.created,
-#                   description=row.description,
-#                   owner=row.owner,
-#                   featured=row.featured,
-#                   last_activity=last_activity(row.id),
-#                   overall_progress=overall_progress(row.id),
-#                   info=dict(json.loads(row.info)))
-#        apps.append(app)
-#    return apps, count
 
 
 # Cache it for longer times, as this is only shown to admin users
@@ -355,7 +362,6 @@ def reset():
     delete_cached('number_featured_apps')
     delete_cached('number_published_apps')
     delete_cached('number_draft_apps')
-    #delete_memoized(get_published)
     delete_memoized(get_featured)
     delete_memoized(get_draft)
     delete_memoized(n_count)
@@ -370,6 +376,11 @@ def delete_app(short_name):
 def delete_n_tasks(app_id):
     """Reset n_tasks value in cache"""
     delete_memoized(n_tasks, app_id)
+
+
+def delete_n_completed_tasks(app_id):
+    """Reset n_completed_tasks value in cache"""
+    delete_memoized(n_completed_tasks, app_id)
 
 
 def delete_n_task_runs(app_id):
@@ -387,10 +398,29 @@ def delete_last_activity(app_id):
     delete_memoized(last_activity, app_id)
 
 
+def delete_n_registered_volunteers(app_id):
+    """Reset n_registered_volunteers value in cache"""
+    delete_memoized(n_registered_volunteers, app_id)
+
+
+def delete_n_anonymous_volunteers(app_id):
+    """Reset n_anonymous_volunteers value in cache"""
+    delete_memoized(n_anonymous_volunteers, app_id)
+
+
+def delete_n_volunteers(app_id):
+    """Reset n_volunteers value in cache"""
+    delete_memoized(n_volunteers, app_id)
+
+
 def clean(app_id):
     """Clean all items in cache"""
     reset()
-    delete_memoized(n_tasks, app_id)
-    delete_memoized(n_task_runs, app_id)
-    delete_memoized(last_activity, app_id)
-    delete_memoized(overall_progress, app_id)
+    delete_n_tasks(app_id)
+    delete_n_completed_tasks(app_id)
+    delete_n_task_runs(app_id)
+    delete_overall_progress(app_id)
+    delete_last_activity(app_id)
+    delete_n_registered_volunteers(app_id)
+    delete_n_anonymous_volunteers(app_id)
+    delete_n_volunteers(app_id)
