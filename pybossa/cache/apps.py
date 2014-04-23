@@ -61,7 +61,9 @@ def get_featured_front_page():
     featured = []
     for row in results:
         app = dict(id=row.id, name=row.name, short_name=row.short_name,
-                   info=dict(json.loads(row.info)))
+                   info=dict(json.loads(row.info)),
+                   n_volunteers=n_volunteers(row.id),
+                   n_completed_tasks=n_completed_tasks(row.id))
         featured.append(app)
     return featured
 
@@ -80,7 +82,9 @@ def get_top(n=4):
     for row in results:
         app = dict(name=row.name, short_name=row.short_name,
                    description=row.description,
-                   info=json.loads(row.info))
+                   info=json.loads(row.info),
+                   n_volunteers=n_volunteers(row.id),
+                   n_completed_tasks=n_completed_tasks(row.id))
         top_apps.append(app)
     return top_apps
 
