@@ -139,8 +139,6 @@ this::
   cd pybossa
   # Install the required libraries
   pip install -r requirements.txt
-  # Install the CACHE required libraries
-  pip install -r cache_requirements.txt
 
 .. note::
     Vim_ editor is a very popular text editor in GNU/Linux systems, however it
@@ -282,7 +280,7 @@ You need first to add a user to your PostgreSQL_ DB::
     sudo su postgres
     createuser -d -P pybossa
 
-Use password `tester` when prompted.
+Use password ``tester`` when prompted.
 
 .. note::
     You should use the same user name that you have used in the
