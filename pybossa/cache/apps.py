@@ -135,7 +135,7 @@ def n_anonymous_volunteers(app_id):
 
 @memoize()
 def n_volunteers(app_id):
-    return n_anonymous_volunteers() + n_registered_volunteers()
+    return n_anonymous_volunteers(app_id) + n_registered_volunteers(app_id)
 
 
 @memoize()
