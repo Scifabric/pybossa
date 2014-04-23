@@ -109,7 +109,8 @@ class TaskSchedulerForm(Form):
                         choices=[('default', lazy_gettext('Default')),
                                  ('breadth_first', lazy_gettext('Breadth First')),
                                  ('depth_first', lazy_gettext('Depth First')),
-                                 ('random', lazy_gettext('Random'))],)
+                                 ('random', lazy_gettext('Random'))])
+
 
 
 def app_title(app, page_name):
@@ -182,7 +183,9 @@ def app_index(page, lookup, category, fallback, use_count):
         data.append(dict(app=app, n_tasks=cached_apps.n_tasks(app['id']),
                          overall_progress=cached_apps.overall_progress(app['id']),
                          last_activity=app['last_activity'],
-                         last_activity_raw=app['last_activity_raw']))
+                         last_activity_raw=app['last_activity_raw'],
+                         n_completed_tasks=cached_apps.n_completed_tasks(app['id']),
+                         n_volunteers=cached_apps.n_volunteers(app['id'])))
 
 
     if fallback and not apps:  # pragma: no cover
@@ -239,8 +242,7 @@ def app_cat_index(category, page):
 @blueprint.route('/new', methods=['GET', 'POST'])
 @login_required
 def new():
-    if not require.app.create():  # pragma: no cover
-        abort(403)
+    require.app.create()
     form = AppForm(request.form)
     categories = db.session.query(model.category.Category).all()
     form.category_id.choices = [(c.id, c.name) for c in categories]
@@ -270,7 +272,7 @@ def new():
                     allow_anonymous_contributors=form.allow_anonymous_contributors.data,
                     hidden=int(form.hidden.data),
                     owner_id=current_user.id,
-                    info=info,)
+                    info=info)
 
     #cached_apps.reset()
     db.session.add(app)
@@ -488,7 +490,9 @@ def details(short_name):
     template_args = {"app": app, "title": title,
                      "n_tasks": n_tasks,
                      "overall_progress": overall_progress,
-                     "last_activity": last_activity}
+                     "last_activity": last_activity,
+                     "n_completed_tasks": cached_apps.n_completed_tasks(app.id),
+                     "n_volunteers": cached_apps.n_volunteers(app.id)}
     if current_app.config.get('CKAN_URL'):
         template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
         template_args['ckan_url'] = current_app.config.get('CKAN_URL')
@@ -791,7 +795,9 @@ def tasks(short_name):
                                app=app,
                                n_tasks=n_tasks,
                                overall_progress=overall_progress,
-                               last_activity=last_activity)
+                               last_activity=last_activity,
+                               n_completed_tasks=cached_apps.n_completed_tasks(app.id),
+                               n_volunteers=cached_apps.n_volunteers(app.id))
     except HTTPException:
         if app.hidden:
             raise abort(403)
