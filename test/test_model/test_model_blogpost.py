@@ -62,6 +62,30 @@ class TestBlogpostModel(Test):
         assert_raises(DataError, db.session.commit)
 
     @with_context
+    def test_blogpost_title_presence(self):
+        """Test BLOGPOST a blogpost must have a title"""
+        self.configure_fixtures()
+        blogpost = Blogpost(title=None, body="body", app=self.app)
+        db.session.add(blogpost)
+
+        assert_raises(IntegrityError, db.session.commit)
+
+    @with_context
+    def test_blogpost_body_presence(self):
+        """Test BLOGPOST a blogpost must have a body"""
+        self.configure_fixtures()
+        blogpost = Blogpost(title='title', body=None, app=self.app)
+        db.session.add(blogpost)
+
+        assert_raises(IntegrityError, db.session.commit)
+
+    @with_context
+    def test_blogpost_belongs_to_app(self):
+        """Test BLOGPOSTS must belong to an app"""
+        self.configure_fixtures()
+        blogpost = Blogpost(title='title', body="body", app=None)
+
+    @with_context
     def test_blogpost_belongs_to_app(self):
         """Test BLOGPOSTS must belong to an app"""
         self.configure_fixtures()
@@ -74,7 +98,7 @@ class TestBlogpostModel(Test):
     def test_blogpost_is_deleted_after_app_deletion(self):
         """Test BLOGPOST no blogposts can exist after it's app has been removed"""
         self.configure_fixtures()
-        blogpost = Blogpost(title='title', app=self.app)
+        blogpost = Blogpost(title='title', body="body", app=self.app)
         db.session.add(blogpost)
         db.session.commit()
 
@@ -90,7 +114,7 @@ class TestBlogpostModel(Test):
     def test_blogpost_deletion_doesnt_delete_app(self):
         """Test BLOGPOST when deleting a blogpost it's parent app is not affected"""
         self.configure_fixtures()
-        blogpost = Blogpost(title='title', app=self.app)
+        blogpost = Blogpost(title='title', body="body", app=self.app)
         db.session.add(blogpost)
         db.session.commit()
 
@@ -104,10 +128,10 @@ class TestBlogpostModel(Test):
 
     @with_context
     def test_blogpost_owner_is_nullable(self):
-        """Test BLOGPOST a blogpost owner can be null
+        """Test BLOGPOST a blogpost owner can be none
         (if the user is removed from the system)"""
         self.configure_fixtures()
-        blogpost = Blogpost(title='title', app=self.app, owner=None)
+        blogpost = Blogpost(title='title', body="body", app=self.app, owner=None)
         db.session.add(blogpost)
 
         assert_not_raises(IntegrityError, db.session.commit)
@@ -122,7 +146,7 @@ class TestBlogpostModel(Test):
             name="johndoe2",
             fullname="John Doe2",
             locale="en")
-        blogpost = Blogpost(title='title', app=self.app, owner=owner)
+        blogpost = Blogpost(title='title', body="body", app=self.app, owner=owner)
         db.session.add(blogpost)
         db.session.commit()
 

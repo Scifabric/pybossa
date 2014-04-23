@@ -17,26 +17,46 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask.ext.login import current_user
+import pybossa.model as model
+from pybossa.core import db
 
-
-def create(blogpost):
-    if current_user.is_anonymous():
+def create(blogpost=None, app_id=None):
+    if current_user.is_anonymous() or (blogpost is None and app_id is None):
         return False
-    return blogpost.owner.id == blogpost.app.owner.id == current_user.id
+    app = _get_app(blogpost, app_id)
+    if blogpost is None:
+        return app.owner_id == current_user.id
+    return blogpost.user_id == app.owner_id == current_user.id
 
 
-def read(blogpost=None):
-    return True
+def read(blogpost=None, app_id=None):
+    app = _get_app(blogpost, app_id)
+    if app and not app.hidden:
+        return True
+    if current_user.is_anonymous() or (blogpost is None and app_id is None):
+        return False
+    return current_user.admin or current_user.id == app.owner_id
 
 
 def update(blogpost):
     if current_user.is_anonymous():
         return False
-    return blogpost.owner.id == current_user.id
+    return blogpost.user_id == current_user.id
 
 
 def delete(blogpost):
     if current_user.is_anonymous():
         return False
     else:
-        return current_user.admin or blogpost.owner.id == current_user.id
+        return current_user.admin or blogpost.user_id == current_user.id
+
+
+def _get_app(blogpost, app_id):
+    if blogpost is not None:
+        return db.session.query(model.app.App).get(blogpost.app_id)
+    else:
+        return db.session.query(model.app.App).get(app_id)
+
+
+
+

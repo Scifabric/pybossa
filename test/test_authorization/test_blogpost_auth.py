@@ -42,43 +42,88 @@ class TestBlogpostAuthorization(Test):
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     @patch('pybossa.auth.blogpost.current_user', new=mock_anonymous)
-    def test_anonymous_user_create_blogpost(self):
-        """Test anonymous users cannot create blogposts"""
+    def test_anonymous_user_create_given_blogpost(self):
+        """Test anonymous users cannot create a given blogpost"""
 
         with self.flask_app.test_request_context('/'):
             app = db.session.query(App).first()
-            blogpost = Blogpost(title='title', app=app, owner=None)
+            blogpost = Blogpost(title='title', app_id=app.id, owner=None)
 
             assert_raises(Unauthorized, getattr(require, 'blogpost').create, blogpost)
 
 
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_anonymous)
+    def test_anonymous_user_create_blogposts_for_given_app(self):
+        """Test anonymous users cannot create blogposts for a given app"""
+
+        with self.flask_app.test_request_context('/'):
+            app = db.session.query(App).first()
+
+            assert_raises(Unauthorized, getattr(require, 'blogpost').create, app_id=app.id)
+
+
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_anonymous)
+    def test_anonymous_user_create_blogposts(self):
+        """Test anonymous users cannot create any blogposts"""
+
+        with self.flask_app.test_request_context('/'):
+
+            assert_raises(Unauthorized, getattr(require, 'blogpost').create)
+
+
     @patch('pybossa.auth.current_user', new=mock_admin)
     @patch('pybossa.auth.blogpost.current_user', new=mock_admin)
-    def test_non_owner_authenticated_user_create_blogpost(self):
-        """Test authenticated user cannot create blogpost if is not the app
-        owner, even if is admin"""
+    def test_non_owner_authenticated_user_create_given_blogpost(self):
+        """Test authenticated user cannot create a given blogpost if is not the
+        app owner, even if is admin"""
 
         with self.flask_app.app_context():
             app = db.session.query(App).first()
             root = db.session.query(User).first()
-            blogpost = Blogpost(title='title', app=app, owner=root)
-            print blogpost
+            blogpost = Blogpost(title='title', body='body',
+                                        app_id=app.id, user_id=root.id)
 
             assert_raises(Forbidden, getattr(require, 'blogpost').create, blogpost)
 
 
+    @patch('pybossa.auth.current_user', new=mock_admin)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_admin)
+    def test_non_owner_authenticated_user_create_blogpost_for_given_app(self):
+        """Test authenticated user cannot create blogposts for a given app
+        if is not the app owner, even if is admin"""
+
+        with self.flask_app.app_context():
+            app = db.session.query(App).first()
+
+            assert_raises(Forbidden, getattr(require, 'blogpost').create, app_id=app.id)
+
+
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
-    def test_owner_create_blogpost(self):
-        """Test authenticated user can create blogpost if is app owner"""
+    def test_owner_create_given_blogpost(self):
+        """Test authenticated user can create a given blogpost if is app owner"""
 
         with self.flask_app.test_request_context('/'):
             app = db.session.query(App).first()
-            # User.id == 1 is root, so getting user1
             user1 = db.session.query(User).get(2)
-            blogpost = Blogpost(title='title', app=app, owner=user1)
+            blogpost = Blogpost(title='title', body='body',
+                                        app_id=app.id, user_id=user1.id)
 
             assert_not_raises(Exception, getattr(require, 'blogpost').create, blogpost)
+
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
+    def test_owner_create_blogpost_for_given_app(self):
+        """Test authenticated user can create blogposts for a given app
+        if is app owner"""
+
+        with self.flask_app.test_request_context('/'):
+            app = db.session.query(App).first()
+
+            assert_not_raises(Exception, getattr(require, 'blogpost').create, app_id=app.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -90,34 +135,73 @@ class TestBlogpostAuthorization(Test):
         with self.flask_app.test_request_context('/'):
             app = db.session.query(App).first()
             user2 = db.session.query(User).get(3)
-            blogpost = Blogpost(title='title', app=app, owner=user2)
+            blogpost = Blogpost(title='title', body='body',
+                                            app_id=app.id, user_id=user2.id)
 
             assert_raises(Forbidden, getattr(require, 'blogpost').create, blogpost)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     @patch('pybossa.auth.blogpost.current_user', new=mock_anonymous)
-    def test_anonymous_user_read_blogpost(self):
-        """Test anonymous users can read blogposts"""
+    def test_anonymous_user_read_given_blogpost(self):
+        """Test anonymous users can read a given blogpost"""
 
         with self.flask_app.test_request_context('/'):
             app = db.session.query(App).first()
-            blogpost = Blogpost(title='title', app=app, owner=None)
+            blogpost = Blogpost(title='title', body='body', app_id=app.id, owner=None)
             db.session.add(blogpost)
             db.session.commit()
 
             assert_not_raises(Exception, getattr(require, 'blogpost').read, blogpost)
 
 
-    @patch('pybossa.auth.current_user', new=mock_admin)
-    @patch('pybossa.auth.blogpost.current_user', new=mock_admin)
-    def test_non_owner_authenticated_user_read_blogpost(self):
-        """Test authenticated user can read blogpost if is not the app owner"""
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_anonymous)
+    def test_anonymous_user_read_blogposts_for_given_app(self):
+        """Test anonymous users can read blogposts of a given app"""
 
         with self.flask_app.test_request_context('/'):
             app = db.session.query(App).first()
-            root = db.session.query(User).first()
-            blogpost = Blogpost(title='title', app=app, owner=root)
+            assert_not_raises(Exception, getattr(require, 'blogpost').read, app_id=app.id)
+
+
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_anonymous)
+    def test_anonymous_user_read_given_blogpost_hidden_app(self):
+        """Test anonymous users cannot read a given blogpost of a hidden app"""
+
+        with self.flask_app.test_request_context('/'):
+            app = db.session.query(App).first()
+            app.hidden = 1
+            blogpost = Blogpost(title='title', body='body', app_id=app.id, owner=None)
+            db.session.add(blogpost)
+            db.session.commit()
+
+            assert_raises(Unauthorized, getattr(require, 'blogpost').read, blogpost)
+
+
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_anonymous)
+    def test_anonymous_user_read_blogposts_for_given_hidden_app(self):
+        """Test anonymous users cannot read blogposts of a given app if is hidden"""
+
+        with self.flask_app.test_request_context('/'):
+            app = db.session.query(App).first()
+            app.hidden = 1
+
+            assert_raises(Unauthorized, getattr(require, 'blogpost').read, app_id=app.id)
+
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
+    def test_non_owner_authenticated_user_read_given_blogpost(self):
+        """Test authenticated user can read a given blogpost if is not the app owner"""
+
+        with self.flask_app.test_request_context('/'):
+            app = db.session.query(App).first()
+            root = db.session.query(User).get(1)
+            app.owner = root
+            blogpost = Blogpost(title='title', body='body', app_id=app.id, user_id=root.id)
             db.session.add(blogpost)
             db.session.commit()
 
@@ -126,17 +210,134 @@ class TestBlogpostAuthorization(Test):
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
-    def test_owner_read_blogpost(self):
-        """Test authenticated user can read blogpost if is the app owner"""
+    def test_non_owner_authenticated_user_read_blogposts_for_given_app(self):
+        """Test authenticated user can read blogposts of a given app if
+        is not the app owner"""
+
+        with self.flask_app.test_request_context('/'):
+            app = db.session.query(App).first()
+            root = db.session.query(User).get(1)
+            app.owner = root
+            db.session.commit()
+
+            assert_not_raises(Exception, getattr(require, 'blogpost').read, app_id=app.id)
+
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
+    def test_non_owner_authenticated_user_read_given_blogpost_hidden_app(self):
+        """Test authenticated user cannot read a given blogpost of a hidden app
+        if is not the app owner"""
+
+        with self.flask_app.test_request_context('/'):
+            app = db.session.query(App).first()
+            root = db.session.query(User).get(1)
+            app.hidden = 1
+            app.owner = root
+            blogpost = Blogpost(title='title', body='body', app_id=app.id, user_id=root.id)
+            db.session.add(blogpost)
+            db.session.commit()
+
+            assert_raises(Forbidden, getattr(require, 'blogpost').read, blogpost)
+
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
+    def test_non_owner_authenticated_user_read_blogposts_for_given_hidden_app(self):
+        """Test authenticated user cannot read blogposts of a given app if is
+        hidden and is not the app owner"""
+
+        with self.flask_app.test_request_context('/'):
+            app = db.session.query(App).first()
+            root = db.session.query(User).get(1)
+            app.hidden = 1
+            app.owner = root
+            db.session.commit()
+
+            assert_raises(Forbidden, getattr(require, 'blogpost').read, app_id=app.id)
+
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
+    def test_owner_read_given_blogpost(self):
+        """Test authenticated user can read a given blogpost if is the app owner"""
 
         with self.flask_app.test_request_context('/'):
             app = db.session.query(App).first()
             user1 = db.session.query(User).get(2)
-            blogpost = Blogpost(title='title', app=app, owner=user1)
+            blogpost = Blogpost(title='title', body='body', app_id=app.id, user_id=user1.id)
             db.session.add(blogpost)
             db.session.commit()
 
             assert_not_raises(Exception, getattr(require, 'blogpost').read, blogpost)
+
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
+    def test_owner_read_blogposts_for_given_app(self):
+        """Test authenticated user can read blogposts of a given app if is the owner"""
+
+        with self.flask_app.test_request_context('/'):
+            app = db.session.query(App).first()
+
+            assert_not_raises(Exception, getattr(require, 'blogpost').read, app_id=app.id)
+
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
+    def test_owner_read_given_blogpost_hidden_app(self):
+        """Test authenticated user can read a given blogpost of a hidden app if
+        is the app owner"""
+
+        with self.flask_app.test_request_context('/'):
+            app = db.session.query(App).first()
+            user1 = db.session.query(User).get(2)
+            blogpost = Blogpost(title='title', body='body', app_id=app.id, user_id=user1.id)
+            db.session.add(blogpost)
+            db.session.commit()
+
+            assert_not_raises(Exception, getattr(require, 'blogpost').read, blogpost)
+
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
+    def test_owner_read_blogposts_for_given_hidden_app(self):
+        """Test authenticated user can read blogposts of a given hidden app if
+        is the app owner"""
+
+        with self.flask_app.test_request_context('/'):
+            app = db.session.query(App).first()
+            app.hidden = 1
+
+            assert_not_raises(Exception, getattr(require, 'blogpost').read, app_id=app.id)
+
+
+    @patch('pybossa.auth.current_user', new=mock_admin)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_admin)
+    def test_admin_read_given_blogpost_hidden_app(self):
+        """Test admin can read a given blogpost of a hidden app"""
+
+        with self.flask_app.test_request_context('/'):
+            app = db.session.query(App).first()
+            app.hidden = 1
+            user1 = db.session.query(User).get(2)
+            blogpost = Blogpost(title='title', body='body', app_id=app.id, user_id=user1.id)
+            db.session.add(blogpost)
+            db.session.commit()
+
+            assert_not_raises(Exception, getattr(require, 'blogpost').read, blogpost)
+
+
+    @patch('pybossa.auth.current_user', new=mock_admin)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_admin)
+    def test_admin_read_blogposts_for_given_hidden_app(self):
+        """Test admin can read blogposts of a given hidden app"""
+
+        with self.flask_app.test_request_context('/'):
+            app = db.session.query(App).first()
+            app.hidden = 1
+
+            assert_not_raises(Exception, getattr(require, 'blogpost').read, app_id=app.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -146,7 +347,7 @@ class TestBlogpostAuthorization(Test):
 
         with self.flask_app.test_request_context('/'):
             app = db.session.query(App).first()
-            blogpost = Blogpost(title='title', app=app, owner=None)
+            blogpost = Blogpost(title='title', body='body', app_id=app.id, owner=None)
             db.session.add(blogpost)
             db.session.commit()
 
@@ -162,7 +363,7 @@ class TestBlogpostAuthorization(Test):
         with self.flask_app.test_request_context('/'):
             app = db.session.query(App).first()
             user1 = db.session.query(User).get(2)
-            blogpost = Blogpost(title='title', app=app, owner=user1)
+            blogpost = Blogpost(title='title', body='body', app_id=app.id, user_id=user1.id)
             db.session.add(blogpost)
             db.session.commit()
 
@@ -177,7 +378,7 @@ class TestBlogpostAuthorization(Test):
         with self.flask_app.test_request_context('/'):
             app = db.session.query(App).first()
             user1 = db.session.query(User).get(2)
-            blogpost = Blogpost(title='title', app=app, owner=user1)
+            blogpost = Blogpost(title='title', body='body', app_id=app.id, user_id=user1.id)
             db.session.add(blogpost)
             db.session.commit()
 
@@ -191,7 +392,7 @@ class TestBlogpostAuthorization(Test):
 
         with self.flask_app.test_request_context('/'):
             app = db.session.query(App).first()
-            blogpost = Blogpost(title='title', app=app, owner=None)
+            blogpost = Blogpost(title='title', body='body', app_id=app.id, owner=None)
             db.session.add(blogpost)
             db.session.commit()
 
@@ -207,7 +408,7 @@ class TestBlogpostAuthorization(Test):
         with self.flask_app.test_request_context('/'):
             app = db.session.query(App).first()
             root = db.session.query(User).get(1)
-            blogpost = Blogpost(title='title', app=app, owner=root)
+            blogpost = Blogpost(title='title', body='body', app_id=app.id, user_id=root.id)
             db.session.add(blogpost)
             db.session.commit()
 
@@ -222,7 +423,7 @@ class TestBlogpostAuthorization(Test):
         with self.flask_app.test_request_context('/'):
             app = db.session.query(App).first()
             user1 = db.session.query(User).get(2)
-            blogpost = Blogpost(title='title', app=app, owner=user1)
+            blogpost = Blogpost(title='title', body='body', app_id=app.id, user_id=user1.id)
             db.session.add(blogpost)
             db.session.commit()
 
@@ -237,7 +438,7 @@ class TestBlogpostAuthorization(Test):
         with self.flask_app.test_request_context('/'):
             app = db.session.query(App).first()
             user1 = db.session.query(User).get(2)
-            blogpost = Blogpost(title='title', app=app, owner=user1)
+            blogpost = Blogpost(title='title', body='body', app_id=app.id, user_id=user1.id)
             db.session.add(blogpost)
             db.session.commit()
 
