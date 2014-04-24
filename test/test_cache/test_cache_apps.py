@@ -51,9 +51,9 @@ class TestAppsCache(Test):
         db.session.commit()
         return app
 
-    def create_app_with_contributors(self, anonymous, registered, two_tasks=False):
-        app = App(name='my_app',
-                  short_name='my_app_shortname',
+    def create_app_with_contributors(self, anonymous, registered, two_tasks=False, name='my_app'):
+        app = App(name=name,
+                  short_name='%s_shortname' % name,
                   description=u'description')
         app.owner = self.user
         db.session.add(app)
@@ -62,13 +62,14 @@ class TestAppsCache(Test):
         if two_tasks:
             task2 = Task(app=app)
             db.session.add(task2)
+        db.session.commit()
         for i in range(anonymous):
-            task_run = TaskRun(app_id = 1,
+            task_run = TaskRun(app_id = app.id,
                                task_id = 1,
                                user_ip = '127.0.0.%s' % i)
             db.session.add(task_run)
             if two_tasks:
-                task_run2 = TaskRun(app_id = 1,
+                task_run2 = TaskRun(app_id = app.id,
                                task_id = 2,
                                user_ip = '127.0.0.%s' % i)
                 db.session.add(task_run2)
@@ -78,12 +79,12 @@ class TestAppsCache(Test):
                         passwd_hash = "1234%s" % i,
                         fullname = "user_fullname%s" % i)
             db.session.add(user)
-            task_run = TaskRun(app_id = 1,
+            task_run = TaskRun(app_id = app.id,
                                task_id = 1,
                                user = user)
             db.session.add(task_run)
             if two_tasks:
-                task_run2 = TaskRun(app_id = 1,
+                task_run2 = TaskRun(app_id = app.id,
                                task_id = 2,
                                user = user)
                 db.session.add(task_run2)
@@ -163,6 +164,70 @@ class TestAppsCache(Test):
         for field in fields:
             assert featured.has_key(field), "%s not in app info" % field
 
+
+    @with_context
+    def test_get_top_returns_apps_with_most_taskruns(self):
+        """Test CACHE APPS get_top returns the apps with most taskruns in order"""
+
+        ranked_3_app = self.create_app_with_contributors(8, 0, name='three')
+        ranked_2_app = self.create_app_with_contributors(9, 0, name='two')
+        ranked_1_app = self.create_app_with_contributors(10, 0, name='one')
+        ranked_4_app = self.create_app_with_contributors(7, 0, name='four')
+
+        top_apps = cached_apps.get_top()
+
+        assert top_apps[0]['name'] == 'one', top_apps
+        assert top_apps[1]['name'] == 'two', top_apps
+        assert top_apps[2]['name'] == 'three', top_apps
+        assert top_apps[3]['name'] == 'four', top_apps
+
+
+    @with_context
+    def test_get_top_respects_limit(self):
+        """Test CACHE APPS get_top returns only the top n apps"""
+
+        ranked_3_app = self.create_app_with_contributors(8, 0, name='three')
+        ranked_2_app = self.create_app_with_contributors(9, 0, name='two')
+        ranked_1_app = self.create_app_with_contributors(10, 0, name='one')
+        ranked_4_app = self.create_app_with_contributors(7, 0, name='four')
+
+        top_apps = cached_apps.get_top(n=2)
+
+        assert len(top_apps) is 2, len(top_apps)
+
+
+    @with_context
+    def test_get_top_returns_four_apps_by_default(self):
+        """Test CACHE APPS get_top returns the top 4 apps by default"""
+
+        ranked_3_app = self.create_app_with_contributors(8, 0, name='three')
+        ranked_2_app = self.create_app_with_contributors(9, 0, name='two')
+        ranked_1_app = self.create_app_with_contributors(10, 0, name='one')
+        ranked_4_app = self.create_app_with_contributors(7, 0, name='four')
+        ranked_5_app = self.create_app_with_contributors(7, 0, name='five')
+
+        top_apps = cached_apps.get_top()
+
+        assert len(top_apps) is 4, len(top_apps)
+
+
+    @with_context
+    def test_get_top_doesnt_return_hidden_apps(self):
+        """Test CACHE APPS get_top does not return apps that are hidden"""
+
+        ranked_3_app = self.create_app_with_contributors(8, 0, name='three')
+        ranked_2_app = self.create_app_with_contributors(9, 0, name='two')
+        ranked_1_app = self.create_app_with_contributors(10, 0, name='one')
+        hidden_app = self.create_app_with_contributors(11, 0, name='hidden')
+        hidden_app.hidden = 1
+        db.session.add(hidden_app)
+        db.session.commit()
+
+        top_apps = cached_apps.get_top()
+
+        assert len(top_apps) is 3, len(top_apps)
+        for app in top_apps:
+            assert app['name'] != 'hidden', app['name']
 
     @with_context
     def test_n_completed_tasks_no_completed_tasks(self):
