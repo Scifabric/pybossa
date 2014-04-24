@@ -129,6 +129,23 @@ class TestAppsCache(Test):
 
 
     @with_context
+    def test_get_featured_front_page_not_returns_hidden_apps(self):
+        """Test CACHE APPS get_featured_front_page does not return hidden apps"""
+
+        featured_app = self.create_app(None)
+        featured_app.owner = self.user
+        featured_app.hidden = 1
+        db.session.add(featured_app)
+        featured = Featured(app=featured_app)
+        db.session.add(featured)
+        db.session.commit()
+
+        featured = cached_apps.get_featured_front_page()
+
+        assert len(featured) is 0, featured
+
+
+    @with_context
     def test_get_featured_front_page_returns_required_fields(self):
         """Test CACHE APPS get_featured_front_page returns the required info
         about each featured app"""
