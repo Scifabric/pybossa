@@ -153,11 +153,23 @@ class TestAppsCache(Test):
         """Test CACHE APPS n_anonymous_volunteers returns number of volunteers
         that contributed to an app when each only submited one task run"""
 
+        app = self.create_app_with_contributors(anonymous=3, registered=0)
+        anonymous_volunteers = cached_apps.n_anonymous_volunteers(app.id)
+
+        err_msg = "Volunteers is %s, it should be 3" % anonymous_volunteers
+        assert anonymous_volunteers == 3, err_msg
+
 
     @with_context
     def test_n_anonymous_volunteers_with_more_than_one_taskrun(self):
         """Test CACHE APPS n_anonymous_volunteers returns number of volunteers
         that contributed to an app when any submited more than one task run"""
+
+        app = self.create_app_with_contributors(anonymous=2, registered=0, two_tasks=True)
+        anonymous_volunteers = cached_apps.n_anonymous_volunteers(app.id)
+
+        err_msg = "Volunteers is %s, it should be 2" % anonymous_volunteers
+        assert anonymous_volunteers == 2, err_msg
 
 
     @with_context
