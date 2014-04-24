@@ -71,12 +71,10 @@ def get_featured_front_page():
 @cache(timeout=STATS_FRONTPAGE_TIMEOUT, key_prefix="front_page_top_apps")
 def get_top(n=4):
     """Return top n=4 apps"""
-    sql = text('''
-    SELECT app.id, app.name, app.short_name, app.description, app.info,
-    count(app_id) AS total FROM task_run, app WHERE app_id IS NOT NULL AND
-    app.id=app_id AND app.hidden=0 GROUP BY app.id ORDER BY total DESC LIMIT :limit;
-    ''')
-
+    sql = text('''SELECT app.id, app.name, app.short_name, app.description, app.info,
+              COUNT(app_id) AS total FROM task_run, app 
+              WHERE app_id IS NOT NULL AND app.id=app_id AND app.hidden=0
+              GROUP BY app.id ORDER BY total DESC LIMIT :limit;''')
     results = db.engine.execute(sql, limit=n)
     top_apps = []
     for row in results:
@@ -158,7 +156,7 @@ def overall_progress(app_id):
     """Returns the percentage of submitted Tasks Runs done when a task is
     completed"""
     sql = text('''SELECT task.id, n_answers,
-               count(task_run.task_id) AS n_task_runs
+               COUNT(task_run.task_id) AS n_task_runs
                FROM task LEFT OUTER JOIN task_run ON task.id=task_run.task_id
                WHERE task.app_id=:app_id GROUP BY task.id''')
     results = db.engine.execute(sql, app_id=app_id)
@@ -249,8 +247,7 @@ def n_published():
 @cache(timeout=STATS_FRONTPAGE_TIMEOUT, key_prefix="number_draft_apps")
 def n_draft():
     """Return number of draft applications"""
-    sql = text('''
-               SELECT count(app.id) FROM app
+    sql = text('''SELECT COUNT(app.id) FROM app
                LEFT JOIN task on app.id=task.app_id
                WHERE task.app_id IS NULL AND app.info NOT LIKE('%task_presenter%')
                AND app.hidden=0;''')
@@ -267,8 +264,7 @@ def get_draft(category, page=1, per_page=5):
 
     count = n_draft()
 
-    sql = text('''
-               SELECT app.id, app.name, app.short_name, app.created,
+    sql = text('''SELECT app.id, app.name, app.short_name, app.created,
                app.description, app.info, "user".fullname as owner
                FROM "user", app LEFT JOIN task ON app.id=task.app_id
                WHERE task.app_id IS NULL AND app.info NOT LIKE('%task_presenter%')
@@ -323,8 +319,7 @@ def get(category, page=1, per_page=5):
 
     count = n_count(category)
 
-    sql = text('''
-               SELECT app.id, app.name, app.short_name, app.description,
+    sql = text('''SELECT app.id, app.name, app.short_name, app.description,
                app.info, app.created, app.category_id, "user".fullname AS owner,
                featured.app_id as featured
                FROM "user", task, app
