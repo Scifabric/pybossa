@@ -22,6 +22,7 @@ from pybossa.model.app import App
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
+from pybossa.model.featured import Featured
 from pybossa.cache import apps as cached_apps
 
 
@@ -33,6 +34,7 @@ class TestAppsCache(Test):
         self.user = self.create_users()[0]
         db.session.add(self.user)
         db.session.commit()
+
 
     def create_app_with_tasks(self, completed_tasks, ongoing_tasks):
         app = App(name='my_app',
@@ -87,6 +89,62 @@ class TestAppsCache(Test):
                 db.session.add(task_run2)
         db.session.commit()
         return app
+
+
+    @with_context
+    def test_get_featured_front_page(self):
+        """Test CACHE APPS get_featured_front_page returns featured apps"""
+
+        app = self.create_app(None)
+        app.owner = self.user
+        db.session.add(app)
+        featured = Featured(app=app)
+        db.session.add(featured)
+        db.session.commit()
+
+        featured = cached_apps.get_featured_front_page()
+
+        assert len(featured) is 1, featured
+
+
+    @with_context
+    def test_get_featured_front_page_only_returns_featured(self):
+        """Test CACHE APPS get_featured_front_page returns only featured apps"""
+
+        featured_app = self.create_app(None)
+        non_featured_app = self.create_app(None)
+        non_featured_app.name = 'other_app'
+        non_featured_app.short_name = 'other_app'
+        featured_app.owner = self.user
+        non_featured_app.owner = self.user
+        db.session.add(featured_app)
+        db.session.add(non_featured_app)
+        featured = Featured(app=featured_app)
+        db.session.add(featured)
+        db.session.commit()
+
+        featured = cached_apps.get_featured_front_page()
+
+        assert len(featured) is 1, featured
+
+
+    @with_context
+    def test_get_featured_front_page_returns_required_fields(self):
+        """Test CACHE APPS get_featured_front_page returns the required info
+        about each featured app"""
+
+        app = self.create_app(None)
+        app.owner = self.user
+        db.session.add(app)
+        featured = Featured(app=app)
+        db.session.add(featured)
+        db.session.commit()
+        fields = ('id', 'name', 'short_name', 'info', 'n_volunteers', 'n_completed_tasks')
+
+        featured = cached_apps.get_featured_front_page()[0]
+
+        for field in fields:
+            assert featured.has_key(field), "%s not in app info" % field
 
 
     @with_context
