@@ -18,14 +18,69 @@
 
 import hashlib
 from default import Test, db, with_context
+from pybossa.model.app import App
+from pybossa.model.task import Task
+from pybossa.cache import apps as cached_apps
 
 
 class TestAppsCache(Test):
 
+    @with_context
+    def setUp(self):
+        super(TestAppsCache, self).setUp()
+        self.root, self.user1, self.user2 = self.create_users()
+        db.session.add_all([self.root, self.user1, self.user2])
+        db.session.commit()
+
+    def create_app_with_tasks(self, owner, completed_tasks, ongoing_tasks):
+        app = App(name='my_app',
+                  short_name='my_app_shortname',
+                  description=u'description')
+        app.owner = owner
+        db.session.add(app)
+        for i in range(completed_tasks):
+            task = Task(app_id = 1, state = 'completed', n_answers=3)
+            db.session.add(task)
+        for i in range(ongoing_tasks):
+            task = Task(app_id = 1, state = 'ongoing', n_answers=3)
+            db.session.add(task)
+        db.session.commit()
+        return app
+
 
     @with_context
-    def test_test_n_completed_tasks(self):
-        """Test CACHE APPS number of completed apps for a given app"""
+    def test_n_completed_tasks_no_completed_tasks(self):
+        """Test CACHE APPS n_completed_tasks returns 0 if no completed tasks"""
+
+        app = self.create_app_with_tasks(self.root, completed_tasks=0, ongoing_tasks=5)
+        completed_tasks = cached_apps.n_completed_tasks(app.id)
+
+        err_msg = "Completed tasks is %s, it should be 0" % completed_tasks
+        assert completed_tasks == 0, err_msg
+
+
+    @with_context
+    def test_n_completed_tasks_with_completed_tasks(self):
+        """Test CACHE APPS n_completed_tasks returns number of completed tasks
+        if there are any"""
+
+        app = self.create_app_with_tasks(self.root, completed_tasks=5, ongoing_tasks=5)
+        completed_tasks = cached_apps.n_completed_tasks(app.id)
+
+        err_msg = "Completed tasks is %s, it should be 5" % completed_tasks
+        assert completed_tasks == 5, err_msg
+
+
+    @with_context
+    def test_n_completed_tasks_with_all_tasks_completed(self):
+        """Test CACHE APPS n_completed_tasks returns number of tasks if all
+        tasks are completed"""
+
+        app = self.create_app_with_tasks(self.root, completed_tasks=5, ongoing_tasks=0)
+        completed_tasks = cached_apps.n_completed_tasks(app.id)
+
+        err_msg = "Completed tasks is %s, it should be 5" % completed_tasks
+        assert completed_tasks == 5, err_msg
 
 
     @with_context
