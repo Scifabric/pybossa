@@ -174,4 +174,11 @@ class TestAppsCache(Test):
 
     @with_context
     def test_n_volunteers(self):
-        """Test CACHE APPS total number of users contributed to a given app"""
+        """Test CACHE APPS n_volunteers returns the sum of the anonymous 
+        plus registered volunteers that contributed to an app"""
+
+        app = self.create_app_with_contributors(anonymous=2, registered=3, two_tasks=True)
+        total_volunteers = cached_apps.n_volunteers(app.id)
+
+        err_msg = "Volunteers is %s, it should be 5" % total_volunteers
+        assert total_volunteers == 5, err_msg
