@@ -31,7 +31,6 @@ flask_app = create_app()
 def with_context(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        print "calling Decorated function"
         with flask_app.app_context():
             return f(*args, **kwargs)
     return decorated_function
