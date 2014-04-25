@@ -709,8 +709,22 @@ def task_presenter(short_name, task_id):
 
 
 @blueprint.route('/<short_name>/presenter')
-@blueprint.route('/<short_name>/newtask')
 def presenter(short_name):
+    # Main entry point for an app - if there is a tutorial the user
+    # hasn't seen, show that, otherwise get the user a new task
+
+    app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
+
+    if app.info.get("tutorial") and \
+            request.cookies.get(app.short_name + "tutorial") is None:
+        return redirect(url_for('.tutorial', short_name=short_name))
+    else:
+        return redirect(url_for('.newtask', short_name=short_name))
+
+@blueprint.route('/<short_name>/newtask')
+def newtask(short_name):
+    # This is called when the tutorial is done, to get a new tasks
+
     app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, "Contribute")
     template_args = {"app": app, "title": title}
@@ -726,28 +740,19 @@ def presenter(short_name):
         msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
                application" % app.name
         flash(gettext(msg), 'warning')
-        return redirect(url_for('account.signin',
+        resp = redirect(url_for('account.signin',
                         next=url_for('.presenter', short_name=app.short_name)))
-
-    msg = "Ooops! You are an anonymous user and will not \
-           get any credit for your contributions. Sign in \
-           now!"
-
-    def respond(tmpl):
-        if (current_user.is_anonymous()):
-            msg_1 = gettext(msg)
-            flash(msg_1, "warning")
-        resp = make_response(render_template(tmpl, **template_args))
-        return resp
-
-    if app.info.get("tutorial") and \
-            request.cookies.get(app.short_name + "tutorial") is None:
-        resp = respond('/applications/tutorial.html')
-        resp.set_cookie(app.short_name + 'tutorial', 'seen')
-        return resp
     else:
-        return respond('/applications/presenter.html')
+        if (current_user.is_anonymous()):
+            msg = "Ooops! You are an anonymous user and will not \
+                   get any credit for your contributions. Sign in \
+                   now!"
+            flash(gettext(msg), "warning")
+        resp = make_response(render_template('/applications/presenter.html', **template_args))
 
+    resp.set_cookie(app.short_name + 'tutorial', 'seen')
+
+    return resp
 
 @blueprint.route('/<short_name>/tutorial')
 def tutorial(short_name):
