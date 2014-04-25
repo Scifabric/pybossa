@@ -17,7 +17,6 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from default import Test, db, Fixtures, with_context
-from helper.user import User
 from pybossa.model.app import App
 from pybossa.model.category import Category
 from pybossa.model.task import Task
@@ -27,7 +26,6 @@ from pybossa.model.task_run import TaskRun
 class Helper(Test):
     """Class to help testing the web interface"""
 
-    user = User()
 
     def html_title(self, title=None):
         """Helper function to create an HTML title"""
