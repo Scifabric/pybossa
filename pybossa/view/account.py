@@ -408,10 +408,13 @@ def update_profile():
             file = request.files['avatar']
             coordinates = (upload_form.x1.data, upload_form.y1.data,
                            upload_form.x2.data, upload_form.y2.data)
-            extension = uploader.get_filename_extension(file.filename)
-            file.filename = current_user.name + "." + extension
-            uploader.upload_file(file, asset='user', coordinates=coordinates)
-            current_user.info = {'avatar': 'user/' + file.filename}
+            file.filename = "avatar.png"
+            container = "user_%s" % current_user.id
+            uploader.upload_file(file,
+                                 container=container,
+                                 coordinates=coordinates)
+            current_user.info = {'avatar': file.filename,
+                                 'container': container}
             db.session.commit()
             cached_users.delete_user_summary(current_user.name)
             flash(gettext('Your avatar has been updated!'), 'success')
