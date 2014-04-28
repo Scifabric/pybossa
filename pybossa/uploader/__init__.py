@@ -49,16 +49,24 @@ class Uploader(object):
         """Override by the uploader handler."""
         pass
 
-    def _upload_file(self, file):
+    def _upload_file(self, file, asset):
         """Override by the specific uploader handler."""
         pass
+
+    def get_filename_extension(self, filename):
+        """Return filename extension."""
+        try:
+            extension = filename.rsplit('.', 1)[1].lower()
+            if extension == 'jpg':
+                extension = 'jpeg'
+            return extension
+        except:
+            return None
 
     def crop(self, file, coordinates):
         """Crop filename and overwrite it."""
         filename = file.filename
-        extension = filename.rsplit('.', 1)[1].lower()
-        if extension == 'jpg':
-            extension = 'jpeg'
+        extension = self.get_filename_extension(filename)
         from io import BytesIO
         m = BytesIO()
         im = Image.open(file)
@@ -73,12 +81,12 @@ class Uploader(object):
         return '.' in filename and \
             filename.rsplit('.', 1)[1].lower() in self.allowed_extensions
 
-    def upload_file(self, file, coordinates=None):
+    def upload_file(self, file, asset, coordinates=None):
         """Override by the uploader handler: local, cloud, etc."""
         if file and self.allowed_file(file.filename):
             if coordinates:
                 self.crop(file, coordinates)
-            return self._upload_file(file)
+            return self._upload_file(file, asset)
         else:
             return False
 
