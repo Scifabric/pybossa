@@ -31,10 +31,23 @@ import factory
 from factory.alchemy import SQLAlchemyModelFactory
 
 
-
-class AppFactory(SQLAlchemyModelFactory):
-    FACTORY_FOR = App
+class SQLAlchemyModelFactoryWithFlush(SQLAlchemyModelFactory):
     FACTORY_SESSION = db.session
+
+    @classmethod
+    def _create(cls, target_class, *args, **kwargs):
+        """The default beahaviour is to simply add the object to the SQLAlchemy
+        session. Here, we also flush it as autoflush is disabled in the 
+        flask-SQLAlchemy extension"""
+        session = cls.FACTORY_SESSION
+        obj = target_class(*args, **kwargs)
+        session.add(obj)
+        session.flush()
+        return obj
+
+
+class AppFactory(SQLAlchemyModelFactoryWithFlush):
+    FACTORY_FOR = App
 
     id = factory.Sequence(lambda n: n)
     name = factory.Sequence(lambda n: u'My App number %d' % n)
@@ -49,9 +62,8 @@ class AppFactory(SQLAlchemyModelFactory):
     category_id = factory.LazyAttribute(lambda app: app.category.id)
 
 
-class BlogpostFactory(SQLAlchemyModelFactory):
+class BlogpostFactory(SQLAlchemyModelFactoryWithFlush):
     FACTORY_FOR = Blogpost
-    FACTORY_SESSION = db.session
 
     id = factory.Sequence(lambda n: n)
     title = u'Blogpost title'
@@ -62,9 +74,8 @@ class BlogpostFactory(SQLAlchemyModelFactory):
     user_id = factory.LazyAttribute(lambda blogpost: blogpost.owner.id)
 
 
-class CategoryFactory(SQLAlchemyModelFactory):
+class CategoryFactory(SQLAlchemyModelFactoryWithFlush):
     FACTORY_FOR = Category
-    FACTORY_SESSION = db.session
 
     id = factory.Sequence(lambda n: n)
     name = factory.Sequence(lambda n: 'category_name_%d' % n)
@@ -72,18 +83,16 @@ class CategoryFactory(SQLAlchemyModelFactory):
     description = 'Category description for testing purposes'
 
 
-class FeaturedFactory(SQLAlchemyModelFactory):
+class FeaturedFactory(SQLAlchemyModelFactoryWithFlush):
     FACTORY_FOR = Featured
-    FACTORY_SESSION = db.session
 
     id = factory.Sequence(lambda n: n)
     app = factory.SubFactory('factories.AppFactory')
     app_id = factory.LazyAttribute(lambda featured: featured.app.id)
 
 
-class TaskFactory(SQLAlchemyModelFactory):
+class TaskFactory(SQLAlchemyModelFactoryWithFlush):
     FACTORY_FOR = Task
-    FACTORY_SESSION = db.session
 
     id = factory.Sequence(lambda n: n)
     app = factory.SubFactory('factories.AppFactory')
@@ -95,9 +104,8 @@ class TaskFactory(SQLAlchemyModelFactory):
     n_answers = 30
 
 
-class TaskRunFactory(SQLAlchemyModelFactory):
+class TaskRunFactory(SQLAlchemyModelFactoryWithFlush):
     FACTORY_FOR = TaskRun
-    FACTORY_SESSION = db.session
 
     id = factory.Sequence(lambda n: n)
     task = factory.SubFactory('factories.TaskFactory')
@@ -109,9 +117,8 @@ class TaskRunFactory(SQLAlchemyModelFactory):
     user_ip = None
 
 
-class UserFactory(SQLAlchemyModelFactory):
+class UserFactory(SQLAlchemyModelFactoryWithFlush):
     FACTORY_FOR = User
-    FACTORY_SESSION = db.session
 
     id = factory.Sequence(lambda n: n)
     name = factory.Sequence(lambda n: u'user%d' % n)
@@ -120,4 +127,4 @@ class UserFactory(SQLAlchemyModelFactory):
     locale = u'en'
     admin = False
     privacy_mode = True
-    api_key = 'tester'
+    api_key =  factory.Sequence(lambda n: u'api-key%d' % n)
