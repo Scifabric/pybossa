@@ -49,7 +49,7 @@ class Uploader(object):
         """Override by the uploader handler."""
         pass
 
-    def _upload_file(self, file, asset):
+    def _upload_file(self, file, container):
         """Override by the specific uploader handler."""
         pass
 
@@ -81,12 +81,12 @@ class Uploader(object):
         return '.' in filename and \
             filename.rsplit('.', 1)[1].lower() in self.allowed_extensions
 
-    def upload_file(self, file, asset, coordinates=None):
+    def upload_file(self, file, container, coordinates=None):
         """Override by the uploader handler: local, cloud, etc."""
         if file and self.allowed_file(file.filename):
             if coordinates:
                 self.crop(file, coordinates)
-            return self._upload_file(file, asset)
+            return self._upload_file(file, container)
         else:
             return False
 
