@@ -21,19 +21,6 @@ from mock import Mock, MagicMock, PropertyMock
 from pyrax.fakes import FakeContainer
 
 
-
-#def setup_package():
-#    model.rebuild_db()
-#    redis_flushall()
-#
-#
-#def teardown_package():
-#    db.session.remove()
-#    model.rebuild_db()
-#    redis_flushall()
-
-
-#fake_container = Mock(spec=FakeContainer)
 fake_container = MagicMock()
 cdn_uri_mock = PropertyMock(return_value='http://rackspace.com')
 type(fake_container).cdn_uri = cdn_uri_mock
