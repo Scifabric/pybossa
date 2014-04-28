@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2013 SF Isle of Man Limited
+# Copyright (C) 2014 SF Isle of Man Limited
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,34 +15,18 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+"""
+PyBossa Uploads view for LocalUploader application.
 
-DEBUG = False
+This module serves uploaded content like avatars.
 
-# webserver host and port
-HOST = '0.0.0.0'
-PORT = 5000
+"""
+from flask import Blueprint, send_from_directory
+from pybossa.core import uploader
 
-SECRET = 'foobar'
-SECRET_KEY = 'my-session-secret'
 
-ITSDANGEROUSKEY = 'its-dangerous-key'
+blueprint = Blueprint('uploads', __name__)
 
-## project configuration
-BRAND = 'PyBossa'
-TITLE = 'PyBossa'
-COPYRIGHT = 'Set Your Institution'
-DESCRIPTION = 'Set the description in your config'
-TERMSOFUSE = 'http://okfn.org/terms-of-use/'
-DATAUSE = 'http://opendatacommons.org/licenses/by/'
-LOGO = ''
-LOCALES = ['en', 'es']
-
-## Default THEME
-THEME = 'default'
-
-## Default number of apps per page
-APPS_PER_PAGE = 20
-
-## Default allowed extensions
-ALLOWED_EXTENSIONS = ['js', 'css', 'png', 'jpg', 'jpeg', 'gif']
-UPLOAD_METHOD = 'local'
+@blueprint.route('/<path:filename>')
+def uploaded_file(filename):
+    return send_from_directory(uploader.upload_folder, filename)

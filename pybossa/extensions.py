@@ -40,3 +40,6 @@ babel = Babel()
 from flask.ext.gravatar import Gravatar
 gravatar = Gravatar(size=100, rating='g', default='mm',
                     force_default=False, force_lower=False)
+
+# Uploader
+uploader = None

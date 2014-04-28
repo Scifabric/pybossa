@@ -20,14 +20,13 @@ import os
 import logging
 from flask import Flask, url_for, session, request, render_template, flash
 from flask.ext.login import current_user
-#from flaskext.gravatar import Gravatar
 from flask.ext.heroku import Heroku
 from flask.ext.babel import lazy_gettext
 
 from pybossa import default_settings as settings
 from pybossa.extensions import (signer, mail, login_manager, sentinel,
                                 facebook, twitter, google, misaka,
-                                babel, gravatar)
+                                babel, gravatar, uploader)
 from pybossa.ratelimit import get_view_rate_limit
 
 from raven.contrib.flask import Sentry
@@ -43,6 +42,7 @@ def create_app(theme='default'):
     if 'DATABASE_URL' in os.environ:  # pragma: no cover
         heroku = Heroku(app)
     configure_app(app)
+    setup_uploader(app)
     setup_error_email(app)
     setup_logging(app)
     setup_login_manager(app)
@@ -82,6 +82,18 @@ def configure_app(app):
     if app.config.get('SQLALCHEMY_DATABASE_TEST_URI'):
         app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_TEST_URI']
 
+
+def setup_uploader(app):
+    global uploader
+    if app.config.get('UPLOAD_METHOD') == 'local':
+        from pybossa.uploader.local import LocalUploader
+        uploader = LocalUploader()
+        uploader.init_app(app)
+    if app.config.get('UPLOAD_METHOD') == 'rackspace':
+        from pybossa.uploader.rackspace import RackspaceUploader
+        uploader = RackspaceUploader()
+        app.url_build_error_handlers.append(uploader.external_url_handler)
+        uploader.init_app(app)
 
 def setup_markdown(app):
     misaka.init_app(app)
@@ -164,6 +176,7 @@ def setup_blueprints(app):
     from pybossa.view.stats import blueprint as stats
     from pybossa.view.help import blueprint as help
     from pybossa.view.home import blueprint as home
+    from pybossa.view.uploads import blueprint as uploads
 
     blueprints = [{'handler': home, 'url_prefix': '/'},
                   {'handler': api,  'url_prefix': '/api'},
@@ -173,6 +186,7 @@ def setup_blueprints(app):
                   {'handler': leaderboard, 'url_prefix': '/leaderboard'},
                   {'handler': help, 'url_prefix': '/help'},
                   {'handler': stats, 'url_prefix': '/stats'},
+                  {'handler': uploads, 'url_prefix': '/uploads'},
                   ]
 
     for bp in blueprints:
@@ -333,4 +347,5 @@ def setup_hooks(app):
             current_user=current_user,
             show_cookies_warning=show_cookies_warning,
             contact_email=contact_email,
-            contact_twitter=contact_twitter)
+            contact_twitter=contact_twitter,
+            upload_method=app.config['UPLOAD_METHOD'])

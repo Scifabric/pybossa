@@ -30,26 +30,21 @@ from itsdangerous import BadData
 from markdown import markdown
 import json
 
-#from flask import Blueprint, request, url_for, flash, redirect, session, abort
 from flask import Blueprint, request, url_for, flash, redirect, abort
 from flask import render_template, current_app
 from flask.ext.login import login_required, login_user, logout_user, \
     current_user
 from flask.ext.mail import Message
 from flaskext.wtf import Form, TextField, PasswordField, validators, \
-    IntegerField, HiddenInput, SelectField, BooleanField
-#    ValidationError, IntegerField, HiddenInput, SelectField
+    IntegerField, HiddenInput, SelectField, BooleanField, FileField
 
 import pybossa.validator as pb_validator
 import pybossa.model as model
 from flask.ext.babel import lazy_gettext, gettext
-#from sqlalchemy.sql import func, text
 from sqlalchemy.sql import text
 from pybossa.model.user import User
-from pybossa.core import db, signer, mail
+from pybossa.core import db, signer, mail, uploader
 from pybossa.util import Pagination
-#from pybossa.util import Twitter
-#from pybossa.util import Facebook
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
 
@@ -222,6 +217,11 @@ class UpdateProfileForm(Form):
     locale = SelectField(lazy_gettext('Default Language'))
     ckan_api = TextField(lazy_gettext('CKAN API Key'))
     privacy_mode = BooleanField(lazy_gettext('Privacy Mode'))
+    #avatar = FileField(lazy_gettext('Avatar'), )
+    #x1 = IntegerField(label=None, widget=HiddenInput())
+    #y1 = IntegerField(label=None, widget=HiddenInput())
+    #x2 = IntegerField(label=None, widget=HiddenInput())
+    #y2 = IntegerField(label=None, widget=HiddenInput())
 
     def set_locales(self, locales):
         """Fill the locale.choices."""
@@ -235,6 +235,15 @@ class UpdateProfileForm(Form):
                 lang = gettext("French")
             choices.append((locale, lang))
         self.locale.choices = choices
+
+
+class AvatarUploadForm(Form):
+    avatar = FileField(lazy_gettext('Avatar'), )
+    x1 = IntegerField(label=None, widget=HiddenInput())
+    y1 = IntegerField(label=None, widget=HiddenInput())
+    x2 = IntegerField(label=None, widget=HiddenInput())
+    y2 = IntegerField(label=None, widget=HiddenInput())
+
 
 
 @blueprint.route('/register', methods=['GET', 'POST'])
@@ -388,38 +397,55 @@ def update_profile():
     Returns Jinja2 template.
 
     """
-    form = UpdateProfileForm(obj=current_user)
-    form.set_locales(current_app.config['LOCALES'])
-    form.populate_obj(current_user)
+    form = UpdateProfileForm()
+    upload_form = AvatarUploadForm()
     if request.method == 'GET':
+        form = UpdateProfileForm(obj=current_user)
+        form.set_locales(current_app.config['LOCALES'])
+        form.populate_obj(current_user)
+
         title_msg = "Update your profile: %s" % current_user.fullname
         return render_template('account/update.html',
                                title=title_msg,
-                               form=form)
+                               form=form,
+                               upload_form=upload_form)
     else:
         form = UpdateProfileForm(request.form)
+        upload_form = AvatarUploadForm(request.form)
         form.set_locales(current_app.config['LOCALES'])
-        if form.validate():
-            new_profile = model.user.User(id=form.id.data,
-                                     fullname=form.fullname.data,
-                                     name=form.name.data,
-                                     email_addr=form.email_addr.data,
-                                     locale=form.locale.data,
-                                     ckan_api=form.ckan_api.data,
-                                     privacy_mode=form.privacy_mode.data)
-            db.session.query(model.user.User)\
-              .filter(model.user.User.id == current_user.id)\
-              .first()
-            db.session.merge(new_profile)
+        if request.form['btn'] == 'Upload':
+            file = request.files['avatar']
+            coordinates = (upload_form.x1.data, upload_form.y1.data,
+                           upload_form.x2.data, upload_form.y2.data)
+            file.filename = "avatar.png"
+            container = "user_%s" % current_user.id
+            uploader.upload_file(file,
+                                 container=container,
+                                 coordinates=coordinates)
+            current_user.info = {'avatar': file.filename,
+                                 'container': container}
             db.session.commit()
             cached_users.delete_user_summary(current_user.name)
-            flash(gettext('Your profile has been updated!'), 'success')
+            flash(gettext('Your avatar has been updated!'), 'success')
             return redirect(url_for('.profile'))
         else:
-            flash(gettext('Please correct the errors'), 'error')
-            title_msg = 'Update your profile: %s' % current_user.fullname
-            return render_template('/account/update.html', form=form,
-                                   title=title_msg)
+            if form.validate():
+                current_user.id = form.id.data
+                current_user.fullname = form.fullname.data
+                current_user.name = form.name.data
+                current_user.email_addr = form.email_addr.data
+                current_user.ckan_api = form.ckan_api.data
+                current_user.privacy_mode = form.privacy_mode.data
+                db.session.commit()
+                cached_users.delete_user_summary(current_user.name)
+                flash(gettext('Your profile has been updated!'), 'success')
+                return redirect(url_for('.profile'))
+            else:
+                flash(gettext('Please correct the errors'), 'error')
+                title_msg = 'Update your profile: %s' % current_user.fullname
+                return render_template('/account/update.html', form=form,
+                                       upload_form=upload_form,
+                                       title=title_msg)
 
 
 class ChangePasswordForm(Form):

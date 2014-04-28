@@ -270,21 +270,49 @@ supported keys are:
     You can use a mix of messages at the same time without problems, so for
     example you can display a message for Admins and Owners at the same time.
 
-Enabling a Cache
-================
+Disabling the Cache
+===================
 
-PyBossa comes with a Cache system (based on `flask-cache <http://packages.python.org/Flask-Cache/>`_) that it is
-disabled by default. If you want to start caching some pages of the PyBossa server, you
-only have to modify your settings and change the following value from::
+PyBossa comes with its own Cache system (based on Redis) that it is
+enabled by default. If you want to disable the cache, you
+only have to export the following env variable::
 
-    CACHE_TYPE = 'null'
+    PYBOSSA_REDIS_CACHE_DISABLED='1'
 
-to::
 
-    CACHE_TYPE = 'simple'
+Configuring upload method
+=========================
 
-The cache also supports other configurations, so please, check the official
-documentation of `flask-cache <http://packages.python.org/Flask-Cache/>`_.
+PyBossa by default allows you to upload avatars for users, icons for apps, etc.
+using the local file system of your server. While this is nice for small
+setups, when you need to add more nodes to serve the same content, this feature
+could become a problem. For this reason, PyBossa also supports cloud solutions
+to save the files and serve them from there properly.
+
+Local Uploader
+--------------
+
+The local uploader is configured by default. We recommend to have a separate
+folder for the assets, outside the pybossa folder. In any case, for enabling
+this method use the following the config settings::
+
+    UPLOAD_METHOD = 'local'
+    UPLOAD_FOLDER = '/absolute/path/to/your/folder/to/store/assets/'
+
+Rackspace Cloud Files
+---------------------
+
+PyBossa comes with support for Rackspace CloudFiles service, allowing you to
+grow horizontally the services. Suportting cloud based system is as simple as
+having an account in Rackspace, and setting up the following config variables::
+
+    UPLOAD_METHOD = 'rackspace'
+    RACKSPACE_USERNAME = 'username'
+    RACKSPACE_API_KEY = 'api_key'
+    RACKSPACE_REGION = 'region'
+
+Once the server is started, it will authenticate against Rackspace and since
+that moment, your PyBossa server will save files in the cloud.
 
 Customizing the Layout and Front Page text
 ==========================================

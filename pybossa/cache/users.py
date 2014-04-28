@@ -43,7 +43,7 @@ def get_user_summary(name):
     sql = text('''
                SELECT "user".id, "user".name, "user".fullname, "user".created,
                "user".api_key, "user".twitter_user_id, "user".facebook_user_id,
-               "user".google_user_id,
+               "user".google_user_id, "user".info,
                "user".email_addr, COUNT(task_run.user_id) AS n_answers
                FROM "user" LEFT OUTER JOIN task_run ON "user".id=task_run.user_id
                WHERE "user".name=:name
@@ -57,8 +57,9 @@ def get_user_summary(name):
                     twitter_user_id=row.twitter_user_id,
                     google_user_id=row.google_user_id,
                     facebook_user_id=row.facebook_user_id,
+                    info=dict(json.loads(row.info)),
                     email_addr=row.email_addr, n_answers=row.n_answers,
-                    registered_ago=pretty_date(row.created))
+					registered_ago=pretty_date(row.created))
 
     # Rank
     # See: https://gist.github.com/tokumine/1583695
