@@ -19,9 +19,10 @@
 
 from default import Test
 from pybossa.uploader.rackspace import RackspaceUploader
-from mock import patch, PropertyMock
+from mock import patch, PropertyMock, call
 from werkzeug.datastructures import FileStorage
 from pyrax.fakes import FakeContainer
+from pyrax.exceptions import NoSuchObject
 from test_uploader import cloudfiles_mock, fake_container
 
 
@@ -76,11 +77,36 @@ class TestRackspaceUploader(Test):
         """Test RACKSPACE UPLOADER upload file works."""
         with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
             mycf.upload_file.return_value=True
+            mycf.get_object.side_effects = NoSuchObject
             u = RackspaceUploader()
             u.init_app(self.flask_app)
             file = FileStorage(filename='test.jpg')
             err_msg = "Upload file should return True"
             assert u.upload_file(file, container='user_3') is True, err_msg
+            calls = [call.get_container('user_3'),
+                     call.get_container().get_object('test.jpg')]
+            mycf.assert_has_calls(calls, any_order=True)
+
+    @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
+           return_value=True)
+    @patch('pybossa.uploader.rackspace.pyrax.utils.get_checksum',
+           return_value="1234abcd")
+    def test_rackspace_uploader_upload_correct_purgin_first_file(self, mock, mock2):
+        """Test RACKSPACE UPLOADER upload file purging first file works."""
+        with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
+            mycf.upload_file.return_value=True
+            mycf.get_object.side_effects = True
+            u = RackspaceUploader()
+            u.init_app(self.flask_app)
+            file = FileStorage(filename='test.jpg')
+            err_msg = "Upload file should return True"
+            assert u.upload_file(file, container='user_3') is True, err_msg
+            calls = [call.get_container('user_3'),
+                     call.get_container().get_object().delete(),
+                     call.get_container().get_object('test.jpg')]
+            print mycf.mock_calls
+            mycf.assert_has_calls(calls, any_order=True)
+
 
     @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
            return_value=True)
@@ -142,6 +168,7 @@ class TestRackspaceUploader(Test):
 
             u = RackspaceUploader()
             u.init_app(self.flask_app)
-            res = u._lookup_url('rackspace', {'filename': filename})
+            res = u._lookup_url('rackspace', {'filename': filename,
+                                              'container': 'user_3'})
             err_msg = "We should get the None"
             assert res is None, err_msg
