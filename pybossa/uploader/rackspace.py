@@ -88,5 +88,7 @@ class RackspaceUploader(Uploader):
             cont = self.get_container(values['container'])
             if cont.cdn_enabled:
                 return "%s/%s" % (cont.cdn_uri, values['filename'])
-        except:
+            else:
+                return None
+        except: # pragma: no cover
             return None
