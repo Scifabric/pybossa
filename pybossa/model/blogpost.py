@@ -33,5 +33,5 @@ class Blogpost(db.Model, DomainObject):
     created = Column(Text, default=make_timestamp)
     app_id = Column(Integer, ForeignKey('app.id', ondelete='CASCADE'), nullable=False)
     user_id = Column(Integer, ForeignKey('user.id'))
-    title = Column(Unicode(length=255))
-    body = Column(UnicodeText)
+    title = Column(Unicode(length=255), nullable=False)
+    body = Column(UnicodeText, nullable=False)

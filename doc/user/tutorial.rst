@@ -324,6 +324,20 @@ field::
     }
 
 
+Creating a blog for the application
+===================================
+
+You can share the progress of the application creating a blog. Every PyBossa
+application includes a very simple blog where you will be able to write about
+your application regularly.
+
+You can use Markdown or plain text for the content of the posts. And you will
+also be able to edit them or delete after creation if you want.
+
+To write a post simply go to the application settings page and there you will
+find an option to write your blog posts.
+
+
 Presenting the Tasks to the user
 ================================
 

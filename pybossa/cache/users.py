@@ -18,6 +18,7 @@
 from sqlalchemy.sql import text
 from pybossa.core import db
 from pybossa.cache import cache, memoize, delete_memoized, ONE_DAY, ONE_HOUR
+from pybossa.util import pretty_date
 from pybossa.model.user import User
 import json
 
@@ -57,7 +58,8 @@ def get_user_summary(name):
                     google_user_id=row.google_user_id,
                     facebook_user_id=row.facebook_user_id,
                     info=dict(json.loads(row.info)),
-                    email_addr=row.email_addr, n_answers=row.n_answers)
+                    email_addr=row.email_addr, n_answers=row.n_answers,
+					registered_ago=pretty_date(row.created))
 
     # Rank
     # See: https://gist.github.com/tokumine/1583695
@@ -131,7 +133,8 @@ def get_users_page(page, per_page=24):
     for row in results:
         user = dict(id=row.id, name=row.name, fullname=row.fullname,
                     email_addr=row.email_addr, created=row.created,
-                    task_runs=row.task_runs)
+                    task_runs=row.task_runs,
+                    registered_ago=pretty_date(row.created))
         accounts.append(user)
     return accounts
 

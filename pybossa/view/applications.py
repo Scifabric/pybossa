@@ -109,7 +109,16 @@ class TaskSchedulerForm(Form):
                         choices=[('default', lazy_gettext('Default')),
                                  ('breadth_first', lazy_gettext('Breadth First')),
                                  ('depth_first', lazy_gettext('Depth First')),
-                                 ('random', lazy_gettext('Random'))],)
+                                 ('random', lazy_gettext('Random'))])
+
+class BlogpostForm(Form):
+    id = IntegerField(label=None, widget=HiddenInput())
+    title = TextField(lazy_gettext('Title'),
+                     [validators.Required(message=lazy_gettext(
+                                    "You must enter a title for the post."))])
+    body = TextAreaField(lazy_gettext('Body'),
+                           [validators.Required(message=lazy_gettext(
+                                    "You must enter some text for the post."))])
 
 
 def app_title(app, page_name):
@@ -239,8 +248,7 @@ def app_cat_index(category, page):
 @blueprint.route('/new', methods=['GET', 'POST'])
 @login_required
 def new():
-    if not require.app.create():  # pragma: no cover
-        abort(403)
+    require.app.create()
     form = AppForm(request.form)
     categories = db.session.query(model.category.Category).all()
     form.category_id.choices = [(c.id, c.name) for c in categories]
@@ -270,7 +278,7 @@ def new():
                     allow_anonymous_contributors=form.allow_anonymous_contributors.data,
                     hidden=int(form.hidden.data),
                     owner_id=current_user.id,
-                    info=info,)
+                    info=info)
 
     #cached_apps.reset()
     db.session.add(app)
@@ -1251,9 +1259,3 @@ def task_priority(short_name):
     else:
         flash(gettext('Please correct the errors'), 'error')
         return respond()
-
-
-@blueprint.route('/<short_name>/static/<filename>')
-def get_file(short_name, filename):
-    app = app_by_shortname(short_name)
-    return redirect(appfiles.url("%s/%s" % (short_name, filename)))
