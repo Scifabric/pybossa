@@ -17,6 +17,8 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """This module tests the Uploader class."""
 
+import os
+import tempfile
 from default import Test, with_context
 from pybossa.uploader.local import LocalUploader
 from mock import patch
@@ -70,3 +72,17 @@ class TestLocalUploader(Test):
         err_msg = ("Upload file should return False, \
                    as this extension is not allowed")
         assert res is False, err_msg
+
+    @with_context
+    @patch('werkzeug.datastructures.FileStorage.save', return_value=None)
+    def test_local_folder_is_created(self, mock):
+        """Test LOCAL UPLOADER folder creation works."""
+        mock.save.return_value = True
+        u = LocalUploader()
+        u.upload_folder = tempfile.mkdtemp()
+        file = FileStorage(filename='test.jpg')
+        container = 'mycontainer'
+        res = u.upload_file(file, container=container)
+        path = os.path.join(u.upload_folder, container)
+        err_msg = "This local path should exist: %s" % path
+        assert os.path.isdir(path) is True, err_msg
