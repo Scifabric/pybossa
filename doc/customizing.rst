@@ -286,8 +286,8 @@ Configuring upload method
 PyBossa by default allows you to upload avatars for users, icons for apps, etc.
 using the local file system of your server. While this is nice for small
 setups, when you need to add more nodes to serve the same content, this feature
-could become a problem. For this reason, PyBossa also supports Clous solutions,
-to save the files, and serve them from there properly.
+could become a problem. For this reason, PyBossa also supports cloud solutions
+to save the files and serve them from there properly.
 
 Local Uploader
 --------------
@@ -297,7 +297,7 @@ folder for the assets, outside the pybossa folder. In any case, for enabling
 this method use the following the config settings::
 
     UPLOAD_METHOD = 'local'
-    UPLOAD_FOLDER = '/your/folder/to/store/assets/'
+    UPLOAD_FOLDER = '/absolute/path/to/your/folder/to/store/assets/'
 
 Rackspace Cloud Files
 ---------------------
