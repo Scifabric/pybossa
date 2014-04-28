@@ -54,7 +54,7 @@ class TestLocalUploader(Test):
         mock.save.return_value = None
         u = LocalUploader()
         file = FileStorage(filename='test.jpg')
-        res = u.upload_file(file)
+        res = u.upload_file(file, container='user_3')
         err_msg = ("Upload file should return True, \
                    as this extension is not allowed")
         assert res is True, err_msg
@@ -66,7 +66,7 @@ class TestLocalUploader(Test):
         mock.save.return_value = None
         u = LocalUploader()
         file = FileStorage(filename='test.txt')
-        res = u.upload_file(file)
+        res = u.upload_file(file, container='user_3')
         err_msg = ("Upload file should return False, \
                    as this extension is not allowed")
         assert res is False, err_msg
