@@ -22,10 +22,6 @@ from pybossa.model import rebuild_db
 from mock import patch, Mock
 
 
-#def teardown_package(cls):
-#    rebuild_db()
-#    #redis_flushall()
-
 
 class HelperAPI(Test):
 

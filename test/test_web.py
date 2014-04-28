@@ -1004,7 +1004,7 @@ class TestWeb(web.Helper):
 
         with self.flask_app.app_context():
             self.create()
-            self.delTaskRuns()
+            self.delete_task_runs()
             app = db.session.query(App).first()
             task = db.session.query(Task)\
                      .filter(App.id == app.id)\
@@ -1069,7 +1069,7 @@ class TestWeb(web.Helper):
 
         with self.flask_app.app_context():
             self.create()
-            self.delTaskRuns()
+            self.delete_task_runs()
             self.register()
             self.signin()
             app = db.session.query(App).first()
