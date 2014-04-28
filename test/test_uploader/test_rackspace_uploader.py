@@ -22,7 +22,7 @@ from pybossa.uploader.rackspace import RackspaceUploader
 from mock import patch, PropertyMock, call
 from werkzeug.datastructures import FileStorage
 from pyrax.fakes import FakeContainer
-from pyrax.exceptions import NoSuchObject
+from pyrax.exceptions import NoSuchObject, NoSuchContainer
 from test_uploader import cloudfiles_mock, fake_container
 
 
@@ -59,7 +59,6 @@ class TestRackspaceUploader(Test):
     def test_rackspace_uploader_creates_container(self, mock, mock2):
         """Test RACKSPACE UPLOADER creates container works."""
         with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
-            from pyrax.exceptions import NoSuchContainer
             mycf.get_container.side_effect = NoSuchContainer
             mycf.create_container.return_value = True
             mycf.make_container_public.return_value = True
@@ -77,7 +76,7 @@ class TestRackspaceUploader(Test):
         """Test RACKSPACE UPLOADER upload file works."""
         with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
             mycf.upload_file.return_value=True
-            mycf.get_object.side_effects = NoSuchObject
+            mycf.get_object.side_effect = NoSuchObject
             u = RackspaceUploader()
             u.init_app(self.flask_app)
             file = FileStorage(filename='test.jpg')
@@ -95,7 +94,7 @@ class TestRackspaceUploader(Test):
         """Test RACKSPACE UPLOADER upload file purging first file works."""
         with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
             mycf.upload_file.return_value=True
-            mycf.get_object.side_effects = True
+            mycf.get_object.side_effect = True
             u = RackspaceUploader()
             u.init_app(self.flask_app)
             file = FileStorage(filename='test.jpg')
@@ -145,6 +144,8 @@ class TestRackspaceUploader(Test):
         uri = 'http://rackspace.com'
         filename = 'test.jpg'
         with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
+            cdn_enabled_mock = PropertyMock(return_value=True)
+            type(fake_container).cdn_enabled = cdn_enabled_mock
             mycf.get_container.return_value = fake_container
 
             u = RackspaceUploader()
@@ -172,3 +173,21 @@ class TestRackspaceUploader(Test):
                                               'container': 'user_3'})
             err_msg = "We should get the None"
             assert res is None, err_msg
+
+    @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
+           return_value=True)
+    def test_rackspace_uploader_get_container(self, mock1):
+        """Test RACKSPACE UPLOADER get_container method works."""
+        with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
+            cdn_enabled_mock = PropertyMock(return_value=False)
+            type(fake_container).cdn_enabled = cdn_enabled_mock
+            mycf.get_container.side_effect = NoSuchContainer
+
+            calls = [call.get_container('user_3'),
+                     call.create_container('user_3'),
+                     call.make_container_public('user_3')
+                     ]
+            u = RackspaceUploader()
+            u.init_app(self.flask_app)
+            assert u.get_container('user_3')
+            mycf.assert_has_calls(calls, any_order=True)
