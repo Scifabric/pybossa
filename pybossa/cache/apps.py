@@ -61,7 +61,9 @@ def get_featured_front_page():
     featured = []
     for row in results:
         app = dict(id=row.id, name=row.name, short_name=row.short_name,
-                   info=dict(json.loads(row.info)))
+                   info=dict(json.loads(row.info)),
+                   n_volunteers=n_volunteers(row.id),
+                   n_completed_tasks=n_completed_tasks(row.id))
         featured.append(app)
     return featured
 
@@ -69,18 +71,18 @@ def get_featured_front_page():
 @cache(timeout=STATS_FRONTPAGE_TIMEOUT, key_prefix="front_page_top_apps")
 def get_top(n=4):
     """Return top n=4 apps"""
-    sql = text('''
-    SELECT app.id, app.name, app.short_name, app.description, app.info,
-    count(app_id) AS total FROM task_run, app WHERE app_id IS NOT NULL AND
-    app.id=app_id AND app.hidden=0 GROUP BY app.id ORDER BY total DESC LIMIT :limit;
-    ''')
-
+    sql = text('''SELECT app.id, app.name, app.short_name, app.description, app.info,
+              COUNT(app_id) AS total FROM task_run, app 
+              WHERE app_id IS NOT NULL AND app.id=app_id AND app.hidden=0
+              GROUP BY app.id ORDER BY total DESC LIMIT :limit;''')
     results = db.engine.execute(sql, limit=n)
     top_apps = []
     for row in results:
         app = dict(name=row.name, short_name=row.short_name,
                    description=row.description,
-                   info=json.loads(row.info))
+                   info=json.loads(row.info),
+                   n_volunteers=n_volunteers(row.id),
+                   n_completed_tasks=n_completed_tasks(row.id))
         top_apps.append(app)
     return top_apps
 
@@ -94,6 +96,48 @@ def n_tasks(app_id):
     for row in results:
         n_tasks = row.n_tasks
     return n_tasks
+
+
+@memoize()
+def n_completed_tasks(app_id):
+    sql = text('''SELECT COUNT(task.id) AS n_completed_tasks FROM task
+                WHERE task.app_id=:app_id AND task.state=\'completed\';''')
+    results = db.engine.execute(sql, app_id=app_id)
+    n_completed_tasks = 0
+    for row in results:
+        n_completed_tasks = row.n_completed_tasks
+    return n_completed_tasks
+
+
+@memoize()
+def n_registered_volunteers(app_id):
+    sql = text('''SELECT COUNT(DISTINCT(task_run.user_id)) AS n_registered_volunteers FROM task_run
+           WHERE task_run.user_id IS NOT NULL AND
+           task_run.user_ip IS NULL AND
+           task_run.app_id=:app_id;''')
+    results = db.engine.execute(sql, app_id=app_id)
+    n_registered_volunteers = 0
+    for row in results:
+        n_registered_volunteers = row.n_registered_volunteers
+    return n_registered_volunteers
+
+
+@memoize()
+def n_anonymous_volunteers(app_id):
+    sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip)) AS n_anonymous_volunteers FROM task_run
+           WHERE task_run.user_ip IS NOT NULL AND
+           task_run.user_id IS NULL AND
+           task_run.app_id=:app_id;''')
+    results = db.engine.execute(sql, app_id=app_id)
+    n_anonymous_volunteers = 0
+    for row in results:
+        n_anonymous_volunteers = row.n_anonymous_volunteers
+    return n_anonymous_volunteers
+
+
+@memoize()
+def n_volunteers(app_id):
+    return n_anonymous_volunteers(app_id) + n_registered_volunteers(app_id)
 
 
 @memoize()
@@ -112,7 +156,7 @@ def overall_progress(app_id):
     """Returns the percentage of submitted Tasks Runs done when a task is
     completed"""
     sql = text('''SELECT task.id, n_answers,
-               count(task_run.task_id) AS n_task_runs
+               COUNT(task_run.task_id) AS n_task_runs
                FROM task LEFT OUTER JOIN task_run ON task.id=task_run.task_id
                WHERE task.app_id=:app_id GROUP BY task.id''')
     results = db.engine.execute(sql, app_id=app_id)
@@ -198,48 +242,12 @@ def n_published():
         count = row[0]
     return count
 
-#@memoize()
-#def get_published(category, page=1, per_page=5):
-#    """Return a list of apps with a pagination"""
-#
-#    count = n_published()
-#
-#    sql = text('''
-#               SELECT app.id, app.name, app.short_name, app.description,
-#               app.info, app.created, "user".fullname AS owner,
-#               featured.app_id as featured
-#               FROM task, "user", app LEFT OUTER JOIN featured ON app.id=featured.app_id
-#               WHERE
-#               app.id=task.app_id AND app.info LIKE('%task_presenter%')
-#               AND app.hidden=0
-#               AND "user".id=app.owner_id
-#               GROUP BY app.id, "user".id, featured.id ORDER BY app.name
-#               OFFSET :offset
-#               LIMIT :limit;''')
-#
-#    offset = (page - 1) * per_page
-#    results = db.engine.execute(sql, limit=per_page, offset=offset)
-#    apps = []
-#    for row in results:
-#        app = dict(id=row.id,
-#                   name=row.name, short_name=row.short_name,
-#                   created=row.created,
-#                   description=row.description,
-#                   owner=row.owner,
-#                   featured=row.featured,
-#                   last_activity=last_activity(row.id),
-#                   overall_progress=overall_progress(row.id),
-#                   info=dict(json.loads(row.info)))
-#        apps.append(app)
-#    return apps, count
-
 
 # Cache it for longer times, as this is only shown to admin users
 @cache(timeout=STATS_FRONTPAGE_TIMEOUT, key_prefix="number_draft_apps")
 def n_draft():
     """Return number of draft applications"""
-    sql = text('''
-               SELECT count(app.id) FROM app
+    sql = text('''SELECT COUNT(app.id) FROM app
                LEFT JOIN task on app.id=task.app_id
                WHERE task.app_id IS NULL AND app.info NOT LIKE('%task_presenter%')
                AND app.hidden=0;''')
@@ -256,8 +264,7 @@ def get_draft(category, page=1, per_page=5):
 
     count = n_draft()
 
-    sql = text('''
-               SELECT app.id, app.name, app.short_name, app.created,
+    sql = text('''SELECT app.id, app.name, app.short_name, app.created,
                app.description, app.info, "user".fullname as owner
                FROM "user", app LEFT JOIN task ON app.id=task.app_id
                WHERE task.app_id IS NULL AND app.info NOT LIKE('%task_presenter%')
@@ -312,8 +319,7 @@ def get(category, page=1, per_page=5):
 
     count = n_count(category)
 
-    sql = text('''
-               SELECT app.id, app.name, app.short_name, app.description,
+    sql = text('''SELECT app.id, app.name, app.short_name, app.description,
                app.info, app.created, app.category_id, "user".fullname AS owner,
                featured.app_id as featured
                FROM "user", task, app
@@ -355,7 +361,6 @@ def reset():
     delete_cached('number_featured_apps')
     delete_cached('number_published_apps')
     delete_cached('number_draft_apps')
-    #delete_memoized(get_published)
     delete_memoized(get_featured)
     delete_memoized(get_draft)
     delete_memoized(n_count)
@@ -370,6 +375,11 @@ def delete_app(short_name):
 def delete_n_tasks(app_id):
     """Reset n_tasks value in cache"""
     delete_memoized(n_tasks, app_id)
+
+
+def delete_n_completed_tasks(app_id):
+    """Reset n_completed_tasks value in cache"""
+    delete_memoized(n_completed_tasks, app_id)
 
 
 def delete_n_task_runs(app_id):
@@ -387,10 +397,29 @@ def delete_last_activity(app_id):
     delete_memoized(last_activity, app_id)
 
 
+def delete_n_registered_volunteers(app_id):
+    """Reset n_registered_volunteers value in cache"""
+    delete_memoized(n_registered_volunteers, app_id)
+
+
+def delete_n_anonymous_volunteers(app_id):
+    """Reset n_anonymous_volunteers value in cache"""
+    delete_memoized(n_anonymous_volunteers, app_id)
+
+
+def delete_n_volunteers(app_id):
+    """Reset n_volunteers value in cache"""
+    delete_memoized(n_volunteers, app_id)
+
+
 def clean(app_id):
     """Clean all items in cache"""
     reset()
-    delete_memoized(n_tasks, app_id)
-    delete_memoized(n_task_runs, app_id)
-    delete_memoized(last_activity, app_id)
-    delete_memoized(overall_progress, app_id)
+    delete_n_tasks(app_id)
+    delete_n_completed_tasks(app_id)
+    delete_n_task_runs(app_id)
+    delete_overall_progress(app_id)
+    delete_last_activity(app_id)
+    delete_n_registered_volunteers(app_id)
+    delete_n_anonymous_volunteers(app_id)
+    delete_n_volunteers(app_id)
