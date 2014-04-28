@@ -60,7 +60,7 @@ class App(db.Model, DomainObject):
     task_runs = relationship(TaskRun, backref='app',
                              cascade='all, delete-orphan',
                              order_by='TaskRun.finish_time.desc()')
-    featured = relationship(Featured, cascade='all, delete, delete-orphan')
+    featured = relationship(Featured, cascade='all, delete, delete-orphan', backref='app')
     category = relationship(Category)
     blogposts = relationship(Blogpost, cascade='all, delete-orphan', backref='app')
 

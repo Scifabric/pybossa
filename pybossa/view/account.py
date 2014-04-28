@@ -320,9 +320,14 @@ def profile():
         user.score = row.score
 
     user.total = db.session.query(model.user.User).count()
+
+    apps_published, apps_draft = _get_user_apps(current_user.id)
+
     return render_template('account/profile.html', title=gettext("Profile"),
-                           apps_contrib=apps_contrib,
-                           user=user)
+                          apps_contrib=apps_contrib,
+                          apps_published=apps_published,
+                          apps_draft=apps_draft,
+                          user=user)
 
 
 @blueprint.route('/profile/applications')
@@ -334,10 +339,18 @@ def applications():
     Returns a Jinja2 template with the list of applications of the user.
 
     """
-    user = User.query.get_or_404(current_user.id)
+    user = db.session.query(model.user.User).get(current_user.id)
+    apps_published, apps_draft = _get_user_apps(user.id)
+
+    return render_template('account/applications.html',
+                           title=gettext("Applications"),
+                           apps_published=apps_published,
+                           apps_draft=apps_draft)
+
+
+def _get_user_apps(user_id):
     apps_published = []
     apps_draft = []
-
     sql = text('''
                SELECT app.name, app.short_name, app.description,
                app.info, count(task.app_id) as n_tasks
@@ -346,7 +359,7 @@ def applications():
                app.description,
                app.info;''')
 
-    results = db.engine.execute(sql, user_id=user.id)
+    results = db.engine.execute(sql, user_id=user_id)
     for row in results:
         app = dict(name=row.name, short_name=row.short_name,
                    description=row.description,
@@ -355,11 +368,7 @@ def applications():
             apps_published.append(app)
         else:
             apps_draft.append(app)
-
-    return render_template('account/applications.html',
-                           title=gettext("Applications"),
-                           apps_published=apps_published,
-                           apps_draft=apps_draft)
+    return apps_published, apps_draft
 
 
 @blueprint.route('/profile/settings')

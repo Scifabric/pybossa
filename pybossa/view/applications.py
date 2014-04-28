@@ -111,6 +111,7 @@ class TaskSchedulerForm(Form):
                                  ('depth_first', lazy_gettext('Depth First')),
                                  ('random', lazy_gettext('Random'))])
 
+
 class BlogpostForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
     title = TextField(lazy_gettext('Title'),
@@ -191,7 +192,9 @@ def app_index(page, lookup, category, fallback, use_count):
         data.append(dict(app=app, n_tasks=cached_apps.n_tasks(app['id']),
                          overall_progress=cached_apps.overall_progress(app['id']),
                          last_activity=app['last_activity'],
-                         last_activity_raw=app['last_activity_raw']))
+                         last_activity_raw=app['last_activity_raw'],
+                         n_completed_tasks=cached_apps.n_completed_tasks(app['id']),
+                         n_volunteers=cached_apps.n_volunteers(app['id'])))
 
 
     if fallback and not apps:  # pragma: no cover
@@ -496,7 +499,9 @@ def details(short_name):
     template_args = {"app": app, "title": title,
                      "n_tasks": n_tasks,
                      "overall_progress": overall_progress,
-                     "last_activity": last_activity}
+                     "last_activity": last_activity,
+                     "n_completed_tasks": cached_apps.n_completed_tasks(app.id),
+                     "n_volunteers": cached_apps.n_volunteers(app.id)}
     if current_app.config.get('CKAN_URL'):
         template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
         template_args['ckan_url'] = current_app.config.get('CKAN_URL')
@@ -799,7 +804,9 @@ def tasks(short_name):
                                app=app,
                                n_tasks=n_tasks,
                                overall_progress=overall_progress,
-                               last_activity=last_activity)
+                               last_activity=last_activity,
+                               n_completed_tasks=cached_apps.n_completed_tasks(app.id),
+                               n_volunteers=cached_apps.n_volunteers(app.id))
     except HTTPException:
         if app.hidden:
             raise abort(403)
