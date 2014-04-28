@@ -52,23 +52,40 @@ class RackspaceUploader(Uploader):
             self.cf.make_container_public(self.cont_name)
             return c
 
+    def get_container(self, name):
+        """Create a container for the given asset."""
+        try:
+            return self.cf.get_container(name)
+        except pyrax.exceptions.NoSuchContainer:
+            c = self.cf.create_container(name)
+            self.cf.make_container_public(name)
+            return c
 
-    def _upload_file(self, file):
+    def _upload_file_to_rackspace(self, file, container):
+        """Upload file to rackspace."""
+        chksum = pyrax.utils.get_checksum(file)
+        self.cf.upload_file(container,
+                            file,
+                            obj_name=secure_filename(file.filename),
+                            etag=chksum)
+        return True
+
+    def _upload_file(self, file, container):
         """Upload a file into a container."""
         try:
-            chksum = pyrax.utils.get_checksum(file)
-            self.cf.upload_file(self.cont_name,
-                                file,
-                                obj_name=secure_filename(file.filename),
-                                etag=chksum)
-            return True
+            cnt = self.get_container(container)
+            obj = cnt.get_object(file.filename)
+            obj.delete()
+            return self._upload_file_to_rackspace(file, container)
+        except pyrax.exceptions.NoSuchObject:
+            return self._upload_file_to_rackspace(file, container)
         except pyrax.exceptions.UploadFailed:
             return False
 
     def _lookup_url(self, endpoint, values):
         """Return Rackspace URL for object."""
         try:
-            cont = self.cf.get_container(self.cont_name)
+            cont = self.get_container(values['container'])
             if cont.cdn_enabled:
                 return "%s/%s" % (cont.cdn_uri, values['filename'])
         except:
