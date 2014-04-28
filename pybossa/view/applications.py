@@ -1259,3 +1259,121 @@ def task_priority(short_name):
     else:
         flash(gettext('Please correct the errors'), 'error')
         return respond()
+
+
+@blueprint.route('/<short_name>/blog')
+def show_blogposts(short_name):
+    app = app_by_shortname(short_name)[0]
+    blogposts = db.session.query(model.blogpost.Blogpost).filter_by(app_id=app.id).all()
+    require.blogpost.read(app_id=app.id)
+    return render_template('applications/blog.html', app=app, blogposts=blogposts)
+
+
+@blueprint.route('/<short_name>/blog/<int:id>')
+def show_blogpost(short_name, id):
+    app = app_by_shortname(short_name)[0]
+    blogpost = db.session.query(model.blogpost.Blogpost).filter_by(id=id,
+                                                        app_id=app.id).first()
+    if blogpost is None:
+        raise abort(404)
+    require.blogpost.read(blogpost)
+    return render_template('applications/blog_post.html',
+                            app=app,
+                            blogpost=blogpost)
+
+
+@blueprint.route('/<short_name>/blog/new', methods=['GET', 'POST'])
+@login_required
+def new_blogpost(short_name):
+
+    def respond():
+        return render_template('applications/new_blogpost.html',
+                               title=gettext("Write a new post"),
+                               form=form, app=app)
+
+    app = app_by_shortname(short_name)[0]
+    form = BlogpostForm(request.form)
+
+    if request.method != 'POST':
+        require.blogpost.create(app_id=app.id)
+        return respond()
+
+    if not form.validate():
+        flash(gettext('Please correct the errors'), 'error')
+        return respond()
+
+    blogpost = model.blogpost.Blogpost(title=form.title.data,
+                                body=form.body.data,
+                                user_id=current_user.id,
+                                app_id=app.id)
+    require.blogpost.create(blogpost)
+    db.session.add(blogpost)
+    db.session.commit()
+    cached_apps.delete_app(short_name)
+
+    msg_1 = gettext('Blog post created!')
+    flash('<i class="icon-ok"></i> ' + msg_1, 'success')
+
+    return redirect(url_for('.show_blogposts', short_name=short_name))
+
+
+@blueprint.route('/<short_name>/blog/<int:id>/update', methods=['GET', 'POST'])
+@login_required
+def update_blogpost(short_name, id):
+    app = app_by_shortname(short_name)[0]
+    blogpost = db.session.query(model.blogpost.Blogpost).filter_by(id=id,
+                                                        app_id=app.id).first()
+    if blogpost is None:
+        raise abort(404)
+
+    def respond():
+        return render_template('applications/update_blogpost.html',
+                               title=gettext("Edit a post"),
+                               form=form, app=app,
+                               blogpost=blogpost)
+    form = BlogpostForm()
+
+    if request.method != 'POST':
+        require.blogpost.update(blogpost)
+        form = BlogpostForm(obj=blogpost)
+        return respond()
+
+    if not form.validate():
+        flash(gettext('Please correct the errors'), 'error')
+        return respond()
+
+    require.blogpost.update(blogpost)
+    blogpost = model.blogpost.Blogpost(id=form.id.data,
+                                title=form.title.data,
+                                body=form.body.data,
+                                user_id=current_user.id,
+                                app_id=app.id)
+    db.session.merge(blogpost)
+    db.session.commit()
+    cached_apps.delete_app(short_name)
+
+    msg_1 = gettext('Blog post updated!')
+    flash('<i class="icon-ok"></i> ' + msg_1, 'success')
+
+    return redirect(url_for('.show_blogposts', short_name=short_name))
+
+
+@blueprint.route('/<short_name>/blog/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_blogpost(short_name, id):
+    app = app_by_shortname(short_name)[0]
+    blogpost = db.session.query(model.blogpost.Blogpost).filter_by(id=id,
+                                                        app_id=app.id).first()
+    if blogpost is None:
+        raise abort(404)
+
+    require.blogpost.delete(blogpost)
+    db.session.delete(blogpost)
+    db.session.commit()
+    cached_apps.delete_app(short_name)
+    flash('<i class="icon-ok"></i> ' + 'Blog post deleted!', 'success')
+    return redirect(url_for('.show_blogposts', short_name=short_name))
+
+
+
+
