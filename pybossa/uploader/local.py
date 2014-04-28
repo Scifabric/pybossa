@@ -40,11 +40,13 @@ class LocalUploader(Uploader):
         if app.config.get('UPLOAD_FOLDER'):
             self.upload_folder = app.config['UPLOAD_FOLDER']
 
-    def _upload_file(self, file):
-        """Upload a file into a local folder."""
+    def _upload_file(self, file, asset):
+        """Upload a file into a local folder within an asset."""
         try:
             filename = secure_filename(file.filename)
-            file.save(os.path.join(self.upload_folder, filename))
+            if not os.path.isdir(os.path.join(self.upload_folder, asset)):
+                os.makedirs(os.path.join(self.upload_folder, asset))
+            file.save(os.path.join(self.upload_folder, asset, filename))
             return True
         except:
             return False
