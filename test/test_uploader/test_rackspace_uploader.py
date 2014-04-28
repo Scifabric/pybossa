@@ -80,7 +80,7 @@ class TestRackspaceUploader(Test):
             u.init_app(self.flask_app)
             file = FileStorage(filename='test.jpg')
             err_msg = "Upload file should return True"
-            assert u.upload_file(file) is True, err_msg
+            assert u.upload_file(file, container='user_3') is True, err_msg
 
     @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
            return_value=True)
@@ -95,7 +95,7 @@ class TestRackspaceUploader(Test):
             u.init_app(self.flask_app)
             file = FileStorage(filename='test.jpg')
             err_msg = "Upload file should return False"
-            assert u.upload_file(file) is False, err_msg
+            assert u.upload_file(file, container='user_3') is False, err_msg
 
     @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
            return_value=True)
@@ -109,7 +109,7 @@ class TestRackspaceUploader(Test):
             u.init_app(self.flask_app)
             file = FileStorage(filename='test.docs')
             err_msg = "Upload file should return False"
-            res = u.upload_file(file)
+            res = u.upload_file(file, container='user_3')
             assert res is False, err_msg
 
     @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
@@ -123,7 +123,8 @@ class TestRackspaceUploader(Test):
 
             u = RackspaceUploader()
             u.init_app(self.flask_app)
-            res = u._lookup_url('rackspace', {'filename': filename})
+            res = u._lookup_url('rackspace', {'filename': filename,
+                                              'container': 'user_3'})
             expected_url = "%s/%s" % (uri, filename)
             print res
             err_msg = "We should get the following URL: %s" % expected_url
