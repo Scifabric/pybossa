@@ -120,3 +120,4 @@ class UserFactory(SQLAlchemyModelFactory):
     locale = u'en'
     admin = False
     privacy_mode = True
+    api_key = 'tester'
