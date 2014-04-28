@@ -56,7 +56,7 @@ class TestLocalUploader(Test):
         file = FileStorage(filename='test.jpg')
         res = u.upload_file(file, container='user_3')
         err_msg = ("Upload file should return True, \
-                   as this extension is not allowed")
+                   as this extension is allowed")
         assert res is True, err_msg
 
     @with_context
