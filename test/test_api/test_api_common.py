@@ -16,14 +16,14 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import json
-from mock import patch
-#from base import web, model, self, db
 from default import db, with_context
 from nose.tools import assert_equal, assert_raises
 from test_api import HelperAPI
 from pybossa.model.app import App
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
+
+from factories import AppFactory, TaskFactory, TaskRunFactory, UserFactory
 
 
 
@@ -32,22 +32,13 @@ class TestApiCommon(HelperAPI):
     @with_context
     def test_00_limits_query(self):
         """Test API GET limits works"""
+        owner = UserFactory.create()
         for i in range(30):
-            app = App(name="name%s" % i,
-                  short_name="short_name%s" % i,
-                  description="desc",
-                  owner_id=1)
-
-            info = dict(a=0)
-            task = Task(app_id=1, info=info)
-            taskrun = TaskRun(app_id=1, task_id=1)
-            db.session.add(app)
-            db.session.add(task)
-            db.session.add(taskrun)
-        db.session.commit()
+            app = AppFactory.create(owner=owner)
+            task = TaskFactory(app=app)
+            taskrun = TaskRunFactory(task=task)
 
         res = self.app.get('/api/app')
-        print res.data
         data = json.loads(res.data)
         assert len(data) == 20, len(data)
 
@@ -58,7 +49,7 @@ class TestApiCommon(HelperAPI):
         res = self.app.get('/api/app?limit=10&offset=10')
         data = json.loads(res.data)
         assert len(data) == 10, len(data)
-        assert data[0].get('name') == 'name9'
+        assert data[0].get('name') == 'My App number 11', data[0]
 
         res = self.app.get('/api/task')
         data = json.loads(res.data)
@@ -68,9 +59,8 @@ class TestApiCommon(HelperAPI):
         data = json.loads(res.data)
         assert len(data) == 20, len(data)
 
-        # Register 30 new users to test limit on users too
         for i in range(30):
-            self.register(fullname="User%s" %i, username="user%s" %i)
+            UserFactory.create()
 
         res = self.app.get('/api/user')
         data = json.loads(res.data)
@@ -84,7 +74,7 @@ class TestApiCommon(HelperAPI):
         res = self.app.get('/api/user?limit=10&offset=10')
         data = json.loads(res.data)
         assert len(data) == 10, len(data)
-        assert data[0].get('name') == 'user7', data
+        assert data[0].get('name') == 'user11', data
 
 
     @with_context
