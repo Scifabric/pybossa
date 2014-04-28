@@ -36,7 +36,7 @@ from sqlalchemy.schema import (
 import logging
 from flask.ext.sqlalchemy import SQLAlchemy
 
-db = SQLAlchemy()
+db = SQLAlchemy(session_options={'autoflush': True})
 
 log = logging.getLogger(__name__)
 

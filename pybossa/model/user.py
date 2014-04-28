@@ -55,6 +55,11 @@ class User(db.Model, DomainObject, UserMixin):
     ckan_api = Column(String, unique=True)
     info = Column(JSONType, default=dict)
 
+    ## Relationships
+    task_runs = relationship(TaskRun, backref='user')
+    apps = relationship(App, backref='owner')
+    blogposts = relationship(Blogpost, backref='owner')
+
 
     def get_id(self):
         '''id for login system. equates to name'''
@@ -77,12 +82,6 @@ class User(db.Model, DomainObject, UserMixin):
     def by_name(cls, name):
         '''Lookup user by (user)name.'''
         return db.session.query(User).filter_by(name=name).first()
-
-    ## Relationships
-    #: `Task`s for this user
-    task_runs = relationship(TaskRun, backref='user')
-    apps = relationship(App, backref='owner')
-    blogposts = relationship(Blogpost, backref='owner')
 
 
 @event.listens_for(User, 'before_insert')
