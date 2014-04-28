@@ -27,6 +27,6 @@ from pybossa.core import uploader
 
 blueprint = Blueprint('uploads', __name__)
 
-@blueprint.route('/<filename>')
+@blueprint.route('/<path:filename>')
 def uploaded_file(filename):
     return send_from_directory(uploader.upload_folder, filename)
