@@ -18,7 +18,6 @@
 
 import os
 import logging
-import jinja2
 from flask import Flask, url_for, session, request, render_template, flash
 from flask.ext.login import current_user
 from flask.ext.heroku import Heroku
