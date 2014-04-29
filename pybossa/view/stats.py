@@ -34,7 +34,7 @@ def n_auth_users():
     results = db.engine.execute(sql)
     for row in results:
         n_auth = row.n_auth
-    return n_auth
+    return n_auth or 0
 
 @cache(timeout=ONE_DAY, key_prefix="site_n_anon_users")
 def n_anon_users():
@@ -44,7 +44,7 @@ def n_anon_users():
     results = db.engine.execute(sql)
     for row in results:
         n_anon = row.n_anon
-    return n_anon
+    return n_anon or 0
 
 
 @cache(timeout=ONE_DAY, key_prefix="site_n_tasks")
@@ -53,7 +53,7 @@ def n_tasks_site():
     results = db.engine.execute(sql)
     for row in results:
         n_tasks = row.n_tasks
-    return n_tasks
+    return n_tasks or 0
 
 
 @cache(timeout=ONE_DAY, key_prefix="site_n_total_tasks")
@@ -62,7 +62,7 @@ def n_total_tasks_site():
     results = db.engine.execute(sql)
     for row in results:
         total = row.n_tasks
-    return total
+    return total or 0
 
 
 @cache(timeout=ONE_DAY, key_prefix="site_n_task_runs")
@@ -71,7 +71,7 @@ def n_task_runs_site():
     results = db.engine.execute(sql)
     for row in results:
         n_task_runs = row.n_task_runs
-    return n_task_runs
+    return n_task_runs or 0
 
 
 @cache(timeout=ONE_DAY, key_prefix="site_top5_apps_24_hours")
