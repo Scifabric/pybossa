@@ -16,11 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-#from base import web, model, Fixtures, db, redis_flushall
-from default import Test, db, with_context
-from pybossa.model import rebuild_db
-from mock import patch, Mock
-
+from default import Test, with_context
 from factories import reset_all_pk_sequences
 
 
@@ -32,46 +28,4 @@ class TestAPI(Test):
     def setUp(self):
         super(TestAPI, self).setUp()
         reset_all_pk_sequences()
-
-
-    # Helper functions
-    @with_context
-    def register(self, method="POST", fullname="John Doe", username="johndoe",
-                 password="p4ssw0rd", password2=None, email=None):
-        """Helper function to register and sign in a user"""
-        if password2 is None:
-            password2 = password
-        if email is None:
-            email = username + '@example.com'
-        if method == "POST":
-            return self.app.post('/account/register',
-                                 data={'fullname': fullname,
-                                       'username': username,
-                                       'email_addr': email,
-                                       'password': password,
-                                       'confirm': password2,
-                                       },
-                                 follow_redirects=True)
-        else:
-            return self.app.get('/account/register', follow_redirects=True)
-
-    @with_context
-    def signin(self, method="POST", email="johndoe@example.com", password="p4ssw0rd",
-               next=None):
-        """Helper function to sign in current user"""
-        url = '/account/signin'
-        if next is not None:
-            url = url + '?next=' + next
-        if method == "POST":
-            return self.app.post(url,
-                                 data={'email': email,
-                                       'password': password},
-                                 follow_redirects=True)
-        else:
-            return self.app.get(url, follow_redirects=True)
-
-    @with_context
-    def signout(self):
-        """Helper function to sign out current user"""
-        return self.app.get('/account/signout', follow_redirects=True)
 
