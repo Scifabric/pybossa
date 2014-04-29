@@ -34,14 +34,12 @@ from pybossa.model import db
 from pybossa import model
 
 
-def create_app(theme='default'):
-    template_folder = os.path.join('themes', theme, 'templates')
-    static_folder = os.path.join('themes', theme, 'static')
-    app = Flask(__name__, template_folder=template_folder,
-                static_folder=static_folder)
+def create_app():
+    app = Flask(__name__)
     if 'DATABASE_URL' in os.environ:  # pragma: no cover
         heroku = Heroku(app)
     configure_app(app)
+    setup_theme(app)
     setup_uploader(app)
     setup_error_email(app)
     setup_logging(app)
@@ -81,6 +79,13 @@ def configure_app(app):
     # Override DB in case of testing
     if app.config.get('SQLALCHEMY_DATABASE_TEST_URI'):
         app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_TEST_URI']
+
+
+def setup_theme(app):
+    """Configure theme for PyBossa app."""
+    theme = app.config['THEME']
+    app.template_folder = os.path.join('themes', theme, 'templates')
+    app.static_folder = os.path.join('themes', theme, 'static')
 
 
 def setup_uploader(app):
@@ -141,14 +146,6 @@ def setup_login_manager(app):
     def load_user(username):
         return db.session.query(model.user.User).filter_by(name=username).first()
 
-# Configure theme
-try: # pragma: no cover
-    # First with local settings
-    import settings_local
-    theme = settings_local.THEME
-except:
-    # Otherwise try with default theme
-    theme = settings.THEME
 
 def setup_babel(app):
     """Return babel handler."""
@@ -165,7 +162,7 @@ def setup_babel(app):
             lang = 'en'
         return lang
     return babel
-#
+
 def setup_blueprints(app):
     """Configure blueprints."""
     from pybossa.api import blueprint as api
