@@ -18,6 +18,7 @@
 
 import os
 import logging
+import jinja2
 from flask import Flask, url_for, session, request, render_template, flash
 from flask.ext.login import current_user
 from flask.ext.heroku import Heroku
@@ -42,6 +43,7 @@ def create_app(theme='default'):
     if 'DATABASE_URL' in os.environ:  # pragma: no cover
         heroku = Heroku(app)
     configure_app(app)
+    setup_theme(app)
     setup_uploader(app)
     setup_error_email(app)
     setup_logging(app)
@@ -81,6 +83,12 @@ def configure_app(app):
     # Override DB in case of testing
     if app.config.get('SQLALCHEMY_DATABASE_TEST_URI'):
         app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_TEST_URI']
+
+
+def setup_theme(app):
+    """Configure theme for PyBossa app."""
+    app.template_folder = os.path.join('themes', theme, 'templates')
+    app.static_folder = os.path.join('themes', theme, 'static')
 
 
 def setup_uploader(app):
