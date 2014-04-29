@@ -23,6 +23,64 @@ from pybossa.model.user import User
 import json
 
 
+@memoize(timeout=ONE_HOUR)
+def get_leaderboard(n, user_id):
+    """Return the top n users with their rank."""
+    sql = text('''
+               WITH global_rank AS (
+                    WITH scores AS (
+                        SELECT user_id, COUNT(*) AS score FROM task_run
+                        WHERE user_id IS NOT NULL GROUP BY user_id)
+                    SELECT user_id, score, rank() OVER (ORDER BY score desc)
+                    FROM scores)
+               SELECT rank, id, name, fullname, email_addr, info, score FROM global_rank
+               JOIN public."user" on (user_id=public."user".id) ORDER BY rank
+               LIMIT :limit;
+               ''')
+
+    results = db.engine.execute(sql, limit=n)
+
+    top_users = []
+    user_in_top = False
+    for row in results:
+        if (row.id == user_id):
+            user_in_top = True
+        user=dict(
+            rank=row.rank,
+            id=row.id,
+            name=row.name,
+            fullname=row.fullname,
+            email_addr=row.email_addr,
+            info=dict(json.loads(row.info)),
+            score=row.score)
+        top_users.append(user)
+    if (user_id != 'anonymous'):
+        if not user_in_top:
+            sql = text('''
+                       WITH global_rank AS (
+                            WITH scores AS (
+                                SELECT user_id, COUNT(*) AS score FROM task_run
+                                WHERE user_id IS NOT NULL GROUP BY user_id)
+                            SELECT user_id, score, rank() OVER (ORDER BY score desc)
+                            FROM scores)
+                       SELECT rank, id, name, fullname, email_addr, info, score FROM global_rank
+                       JOIN public."user" on (user_id=public."user".id)
+                       WHERE user_id=:user_id ORDER BY rank;
+                       ''')
+            user_rank = db.engine.execute(sql, user_id=user_id)
+            for row in user_rank: # pragma: no cover
+                user=dict(
+                    rank=row.rank,
+                    id=row.id,
+                    name=row.name,
+                    fullname=row.fullname,
+                    email_addr=row.email_addr,
+                    info=dict(json.loads(row.info)),
+                    score=row.score)
+                top_users.append(user)
+    return top_users
+
+
 @cache(key_prefix="front_page_top_users", timeout=ONE_DAY)
 def get_top(n=10):
     """Return the n=10 top users"""

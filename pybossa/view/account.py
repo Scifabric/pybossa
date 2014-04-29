@@ -67,8 +67,15 @@ def index(page):
     if not accounts and page != 1:
         abort(404)
     pagination = Pagination(page, per_page, count)
+    if current_user.is_authenticated():
+        user_id = current_user.id
+    else:
+        user_id = 'anonymous'
+    top_users = cached_users.get_leaderboard(current_app.config['LEADERBOARD'],
+                                             user_id)
     return render_template('account/index.html', accounts=accounts,
                            total=count,
+                           top_users=top_users,
                            title="Community", pagination=pagination)
 
 
