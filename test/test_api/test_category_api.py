@@ -18,12 +18,12 @@
 import json
 from default import db, with_context
 from nose.tools import assert_equal
-from test_api import HelperAPI
+from test_api import TestAPI
 from pybossa.model.category import Category
 
 
 
-class TestCategoryAPI(HelperAPI):
+class TestCategoryAPI(TestAPI):
 
     @with_context
     def test_query_category(self):

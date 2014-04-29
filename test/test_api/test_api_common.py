@@ -18,7 +18,7 @@
 import json
 from default import db, with_context
 from nose.tools import assert_equal, assert_raises
-from test_api import HelperAPI
+from test_api import TestAPI
 from pybossa.model.app import App
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
@@ -27,7 +27,7 @@ from factories import AppFactory, TaskFactory, TaskRunFactory, UserFactory
 
 
 
-class TestApiCommon(HelperAPI):
+class TestApiCommon(TestAPI):
 
     @with_context
     def test_00_limits_query(self):

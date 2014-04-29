@@ -20,14 +20,14 @@ from mock import patch
 #from base import web, model, Fixtures, db, redis_flushall
 from default import db, with_context
 from nose.tools import assert_equal, assert_raises
-from test_api import HelperAPI
+from test_api import TestAPI
 from pybossa.model.app import App
 from pybossa.model.user import User
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 
 
-class TestAppAPI(HelperAPI):
+class TestAppAPI(TestAPI):
 
     @with_context
     def test_01_app_query(self):

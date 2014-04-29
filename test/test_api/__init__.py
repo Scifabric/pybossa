@@ -23,13 +23,13 @@ from mock import patch, Mock
 
 
 
-class HelperAPI(Test):
+class TestAPI(Test):
 
     endpoints = ['app', 'task', 'taskrun', 'user']
 
     @with_context
     def setUp(self):
-        super(HelperAPI, self).setUp()
+        super(TestAPI, self).setUp()
         rebuild_db()
         self.create()
 

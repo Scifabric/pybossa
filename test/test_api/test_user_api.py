@@ -21,10 +21,10 @@ from nose.tools import assert_raises
 from werkzeug.exceptions import MethodNotAllowed
 from pybossa.api.user import UserAPI
 from pybossa.model.user import User
-from test_api import HelperAPI
+from test_api import TestAPI
 
 
-class TestUserAPI(HelperAPI):
+class TestUserAPI(TestAPI):
 
     @with_context
     def test_user_get(self):

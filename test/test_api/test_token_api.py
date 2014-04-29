@@ -18,14 +18,14 @@
 import json
 from default import db, with_context
 from nose.tools import assert_equal, assert_raises
-from test_api import HelperAPI
+from test_api import TestAPI
 from pybossa.api.token import TokenAPI
 from pybossa.model.user import User
 from werkzeug.exceptions import MethodNotAllowed
 
 
 
-class TestTaskrunAPI(HelperAPI):
+class TestTaskrunAPI(TestAPI):
 
     @with_context
     def test_not_allowed_methods(self):
