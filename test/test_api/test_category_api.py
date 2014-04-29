@@ -21,6 +21,7 @@ from nose.tools import assert_equal
 from test_api import TestAPI
 from pybossa.model.category import Category
 
+from factories import AppFactory, TaskFactory, TaskRunFactory, UserFactory, CategoryFactory
 
 
 class TestCategoryAPI(TestAPI):
@@ -28,6 +29,7 @@ class TestCategoryAPI(TestAPI):
     @with_context
     def test_query_category(self):
         """Test API query for category endpoint works"""
+        CategoryFactory.create(name='thinking', short_name='thinking')
         # Test for real field
         url = "/api/category"
         res = self.app.get(url + "?short_name=thinking")
@@ -71,6 +73,8 @@ class TestCategoryAPI(TestAPI):
     @with_context
     def test_04_category_post(self):
         """Test API Category creation and auth"""
+        admin = UserFactory.create()
+        user = UserFactory.create()
         name = u'Category'
         category = dict(
             name=name,
@@ -87,7 +91,7 @@ class TestCategoryAPI(TestAPI):
         assert err['exception_cls'] == 'Unauthorized', err_msg
 
         # now a real user but not admin
-        res = self.app.post(url + '?api_key=' + self.api_key, data=data)
+        res = self.app.post(url + '?api_key=' + user.api_key, data=data)
         err = json.loads(res.data)
         err_msg = 'Should not be allowed to create'
         assert res.status_code == 403, err_msg
@@ -95,21 +99,20 @@ class TestCategoryAPI(TestAPI):
         assert err['exception_cls'] == 'Forbidden', err_msg
 
         # now as an admin
-        res = self.app.post(url + '?api_key=' + self.root_api_key,
+        res = self.app.post(url + '?api_key=' + admin.api_key,
                             data=data)
         err = json.loads(res.data)
         err_msg = 'Admin should be able to create a Category'
         assert res.status_code == 200, err_msg
         cat = db.session.query(Category)\
                 .filter_by(short_name=category['short_name']).first()
-        id_ = err['id']
         assert err['id'] == cat.id, err_msg
         assert err['name'] == category['name'], err_msg
         assert err['short_name'] == category['short_name'], err_msg
         assert err['description'] == category['description'], err_msg
 
         # test re-create should fail
-        res = self.app.post(url + '?api_key=' + self.root_api_key,
+        res = self.app.post(url + '?api_key=' + admin.api_key,
                             data=data)
         err = json.loads(res.data)
         assert res.status_code == 415, err
@@ -119,7 +122,7 @@ class TestCategoryAPI(TestAPI):
 
         # test create with non-allowed fields should fail
         data = dict(name='fail', short_name='fail', wrong=15)
-        res = self.app.post(url + '?api_key=' + self.root_api_key,
+        res = self.app.post(url + '?api_key=' + admin.api_key,
                             data=data)
         err = json.loads(res.data)
         err_msg = "ValueError exception should be raised"
@@ -129,7 +132,7 @@ class TestCategoryAPI(TestAPI):
         assert err['exception_cls'] == "ValueError", err_msg
         # Now with a JSON object but not valid
         data = json.dumps(data)
-        res = self.app.post(url + '?api_key=' + self.api_key,
+        res = self.app.post(url + '?api_key=' + user.api_key,
                             data=data)
         err = json.loads(res.data)
         err_msg = "TypeError exception should be raised"
@@ -142,7 +145,7 @@ class TestCategoryAPI(TestAPI):
         data = {'name': 'My New Title'}
         datajson = json.dumps(data)
         ## anonymous
-        res = self.app.put(url + '/%s' % id_,
+        res = self.app.put(url + '/%s' % cat.id,
                            data=data)
         error_msg = 'Anonymous should not be allowed to update'
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
@@ -152,7 +155,7 @@ class TestCategoryAPI(TestAPI):
         assert error['exception_cls'] == 'Unauthorized', error
 
         ### real user but not allowed as not admin!
-        url = '/api/category/%s?api_key=%s' % (id_, self.api_key)
+        url = '/api/category/%s?api_key=%s' % (cat.id, user.api_key)
         res = self.app.put(url, data=datajson)
         error_msg = 'Should not be able to update apps of others'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
@@ -162,19 +165,19 @@ class TestCategoryAPI(TestAPI):
         assert error['exception_cls'] == 'Forbidden', error
 
         # Now as an admin
-        res = self.app.put('/api/category/%s?api_key=%s' % (id_, self.root_api_key),
+        res = self.app.put('/api/category/%s?api_key=%s' % (cat.id, admin.api_key),
                            data=datajson)
         assert_equal(res.status, '200 OK', res.data)
-        out2 = db.session.query(Category).get(id_)
+        out2 = db.session.query(Category).get(cat.id)
         assert_equal(out2.name, data['name'])
         out = json.loads(res.data)
         assert out.get('status') is None, error
-        assert out.get('id') == id_, error
+        assert out.get('id') == cat.id, error
 
         # With fake data
         data['algo'] = 13
         datajson = json.dumps(data)
-        res = self.app.put('/api/category/%s?api_key=%s' % (id_, self.root_api_key),
+        res = self.app.put('/api/category/%s?api_key=%s' % (cat.id, admin.api_key),
                            data=datajson)
         err = json.loads(res.data)
         assert res.status_code == 415, err
@@ -184,7 +187,7 @@ class TestCategoryAPI(TestAPI):
 
         # With not JSON data
         datajson = data
-        res = self.app.put('/api/category/%s?api_key=%s' % (id_, self.root_api_key),
+        res = self.app.put('/api/category/%s?api_key=%s' % (cat.id, admin.api_key),
                            data=datajson)
         err = json.loads(res.data)
         assert res.status_code == 415, err
@@ -199,7 +202,7 @@ class TestCategoryAPI(TestAPI):
             description=u'description3')
 
         datajson = json.dumps(data)
-        res = self.app.put('/api/category/%s?api_key=%s&search=select1' % (id_, self.root_api_key),
+        res = self.app.put('/api/category/%s?api_key=%s&search=select1' % (cat.id, admin.api_key),
                            data=datajson)
         err = json.loads(res.data)
         assert res.status_code == 415, err
@@ -209,7 +212,7 @@ class TestCategoryAPI(TestAPI):
 
         # test delete
         ## anonymous
-        res = self.app.delete(url + '/%s' % id_, data=data)
+        res = self.app.delete(url + '/%s' % cat.id, data=data)
         error_msg = 'Anonymous should not be allowed to delete'
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
         error = json.loads(res.data)
@@ -217,7 +220,7 @@ class TestCategoryAPI(TestAPI):
         assert error['action'] == 'DELETE', error
         assert error['target'] == 'category', error
         ### real user but not admin
-        url = '/api/category/%s?api_key=%s' % (id_, self.api_key_2)
+        url = '/api/category/%s?api_key=%s' % (cat.id, user.api_key)
         res = self.app.delete(url, data=datajson)
         error_msg = 'Should not be able to delete apps of others'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
@@ -227,13 +230,13 @@ class TestCategoryAPI(TestAPI):
         assert error['target'] == 'category', error
 
         # As admin
-        url = '/api/category/%s?api_key=%s' % (id_, self.root_api_key)
+        url = '/api/category/%s?api_key=%s' % (cat.id, admin.api_key)
         res = self.app.delete(url, data=datajson)
 
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
         # delete a category that does not exist
-        url = '/api/category/5000?api_key=%s' % self.root_api_key
+        url = '/api/category/5000?api_key=%s' % admin.api_key
         res = self.app.delete(url, data=datajson)
         error = json.loads(res.data)
         assert res.status_code == 404, error
@@ -243,6 +246,6 @@ class TestCategoryAPI(TestAPI):
         assert error['exception_cls'] == 'NotFound', error
 
         # delete a category that does not exist
-        url = '/api/category/?api_key=%s' % self.root_api_key
+        url = '/api/category/?api_key=%s' % admin.api_key
         res = self.app.delete(url, data=datajson)
         assert res.status_code == 404, error
