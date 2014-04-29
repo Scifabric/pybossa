@@ -52,7 +52,7 @@ class SQLAlchemyPyBossaFactory(SQLAlchemyModelFactory):
         session = cls.FACTORY_SESSION
         obj = target_class(*args, **kwargs)
         session.add(obj)
-        session.flush()
+        session.commit()
         return obj
 
 
@@ -110,7 +110,7 @@ class TaskFactory(SQLAlchemyPyBossaFactory):
     state = u'ongoing'
     quorum = 0
     calibration = 0
-    priority_0 = 0
+    priority_0 = 0.0
     n_answers = 30
 
 
