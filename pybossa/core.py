@@ -86,6 +86,7 @@ def configure_app(app):
 
 def setup_theme(app):
     """Configure theme for PyBossa app."""
+    theme = app.config['THEME']
     app.template_folder = os.path.join('themes', theme, 'templates')
     app.static_folder = os.path.join('themes', theme, 'static')
 
@@ -148,14 +149,6 @@ def setup_login_manager(app):
     def load_user(username):
         return db.session.query(model.user.User).filter_by(name=username).first()
 
-# Configure theme
-try: # pragma: no cover
-    # First with local settings
-    import settings_local
-    theme = settings_local.THEME
-except:
-    # Otherwise try with default theme
-    theme = settings.THEME
 
 def setup_babel(app):
     """Return babel handler."""
@@ -172,7 +165,7 @@ def setup_babel(app):
             lang = 'en'
         return lang
     return babel
-#
+
 def setup_blueprints(app):
     """Configure blueprints."""
     from pybossa.api import blueprint as api
