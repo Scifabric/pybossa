@@ -21,11 +21,17 @@ from default import Test, db, with_context
 from pybossa.model import rebuild_db
 from mock import patch, Mock
 
+from factories import reset_all_pk_sequences
 
 
 class TestAPI(Test):
 
     endpoints = ['app', 'task', 'taskrun', 'user']
+
+    @with_context
+    def setUp(self):
+        super(TestAPI, self).setUp()
+        reset_all_pk_sequences()
 
 
     # Helper functions

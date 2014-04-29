@@ -24,15 +24,10 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 
 from factories import AppFactory, TaskFactory, TaskRunFactory, UserFactory
-from factories import reset_all_pk_sequences
 
 
 
 class TestApiCommon(TestAPI):
-
-    def setUp(self):
-        super(TestApiCommon, self).setUp()
-        reset_all_pk_sequences()
 
 
     @with_context
