@@ -31,7 +31,17 @@ import factory
 from factory.alchemy import SQLAlchemyModelFactory
 
 
-class SQLAlchemyModelFactoryWithFlush(SQLAlchemyModelFactory):
+def reset_all_pk_sequences():
+    AppFactory.reset_sequence()
+    BlogpostFactory.reset_sequence()
+    CategoryFactory.reset_sequence()
+    FeaturedFactory.reset_sequence()
+    TaskFactory.reset_sequence()
+    TaskRunFactory.reset_sequence()
+    UserFactory.reset_sequence()
+
+
+class SQLAlchemyPyBossaFactory(SQLAlchemyModelFactory):
     FACTORY_SESSION = db.session
 
     @classmethod
@@ -46,7 +56,7 @@ class SQLAlchemyModelFactoryWithFlush(SQLAlchemyModelFactory):
         return obj
 
 
-class AppFactory(SQLAlchemyModelFactoryWithFlush):
+class AppFactory(SQLAlchemyPyBossaFactory):
     FACTORY_FOR = App
 
     id = factory.Sequence(lambda n: n)
@@ -62,7 +72,7 @@ class AppFactory(SQLAlchemyModelFactoryWithFlush):
     category_id = factory.LazyAttribute(lambda app: app.category.id)
 
 
-class BlogpostFactory(SQLAlchemyModelFactoryWithFlush):
+class BlogpostFactory(SQLAlchemyPyBossaFactory):
     FACTORY_FOR = Blogpost
 
     id = factory.Sequence(lambda n: n)
@@ -74,7 +84,7 @@ class BlogpostFactory(SQLAlchemyModelFactoryWithFlush):
     user_id = factory.LazyAttribute(lambda blogpost: blogpost.owner.id)
 
 
-class CategoryFactory(SQLAlchemyModelFactoryWithFlush):
+class CategoryFactory(SQLAlchemyPyBossaFactory):
     FACTORY_FOR = Category
 
     id = factory.Sequence(lambda n: n)
@@ -83,7 +93,7 @@ class CategoryFactory(SQLAlchemyModelFactoryWithFlush):
     description = 'Category description for testing purposes'
 
 
-class FeaturedFactory(SQLAlchemyModelFactoryWithFlush):
+class FeaturedFactory(SQLAlchemyPyBossaFactory):
     FACTORY_FOR = Featured
 
     id = factory.Sequence(lambda n: n)
@@ -91,7 +101,7 @@ class FeaturedFactory(SQLAlchemyModelFactoryWithFlush):
     app_id = factory.LazyAttribute(lambda featured: featured.app.id)
 
 
-class TaskFactory(SQLAlchemyModelFactoryWithFlush):
+class TaskFactory(SQLAlchemyPyBossaFactory):
     FACTORY_FOR = Task
 
     id = factory.Sequence(lambda n: n)
@@ -104,7 +114,7 @@ class TaskFactory(SQLAlchemyModelFactoryWithFlush):
     n_answers = 30
 
 
-class TaskRunFactory(SQLAlchemyModelFactoryWithFlush):
+class TaskRunFactory(SQLAlchemyPyBossaFactory):
     FACTORY_FOR = TaskRun
 
     id = factory.Sequence(lambda n: n)
@@ -117,7 +127,7 @@ class TaskRunFactory(SQLAlchemyModelFactoryWithFlush):
     user_ip = None
 
 
-class UserFactory(SQLAlchemyModelFactoryWithFlush):
+class UserFactory(SQLAlchemyPyBossaFactory):
     FACTORY_FOR = User
 
     id = factory.Sequence(lambda n: n)

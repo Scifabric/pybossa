@@ -27,16 +27,6 @@ class TestAPI(Test):
 
     endpoints = ['app', 'task', 'taskrun', 'user']
 
-    @with_context
-    def setUp(self):
-        super(TestAPI, self).setUp()
-        rebuild_db()
-        self.create()
-
-    @with_context
-    def tearDown(self):
-        db.session.remove()
-        #redis_flushall()
 
     # Helper functions
     @with_context

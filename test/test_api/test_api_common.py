@@ -24,13 +24,19 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 
 from factories import AppFactory, TaskFactory, TaskRunFactory, UserFactory
+from factories import reset_all_pk_sequences
 
 
 
 class TestApiCommon(TestAPI):
 
+    def setUp(self):
+        super(TestApiCommon, self).setUp()
+        reset_all_pk_sequences()
+
+
     @with_context
-    def test_00_limits_query(self):
+    def test_limits_query(self):
         """Test API GET limits works"""
         owner = UserFactory.create()
         for i in range(30):
@@ -59,8 +65,7 @@ class TestApiCommon(TestAPI):
         data = json.loads(res.data)
         assert len(data) == 20, len(data)
 
-        for i in range(30):
-            UserFactory.create()
+        UserFactory.create_batch(30)
 
         res = self.app.get('/api/user')
         data = json.loads(res.data)
@@ -80,8 +85,13 @@ class TestApiCommon(TestAPI):
     @with_context
     def test_get_query_with_api_key(self):
         """ Test API GET query with an API-KEY"""
+        users = UserFactory.create_batch(3)
+        app = AppFactory.create(owner=users[0], info={'total': 150})
+        task = TaskFactory.create(app=app, info={'url': 'my url'})
+        taskrun = TaskRunFactory.create(task=task, user=users[0],
+                                        info={'answer': 'annakarenina'})
         for endpoint in self.endpoints:
-            url = '/api/' + endpoint + '?api_key=' + self.api_key
+            url = '/api/' + endpoint + '?api_key=' + users[1].api_key
             res = self.app.get(url)
             data = json.loads(res.data)
 
@@ -89,29 +99,24 @@ class TestApiCommon(TestAPI):
                 assert len(data) == 1, data
                 app = data[0]
                 assert app['info']['total'] == 150, data
-                # The output should have a mime-type: application/json
                 assert res.mimetype == 'application/json', res
 
             if endpoint == 'task':
-                assert len(data) == 10, data
+                assert len(data) == 1, data
                 task = data[0]
                 assert task['info']['url'] == 'my url', data
-                # The output should have a mime-type: application/json
                 assert res.mimetype == 'application/json', res
 
             if endpoint == 'taskrun':
-                assert len(data) == 10, data
+                assert len(data) == 1, data
                 taskrun = data[0]
                 assert taskrun['info']['answer'] == 'annakarenina', data
-                # The output should have a mime-type: application/json
                 assert res.mimetype == 'application/json', res
 
             if endpoint == 'user':
-                # With self.create() 3 users are created in the DB
                 assert len(data) == 3, data
                 user = data[0]
-                assert user['name'] == 'root', data
-                # The output should have a mime-type: application/json
+                assert user['name'] == 'user1', data
                 assert res.mimetype == 'application/json', res
 
 
@@ -152,42 +157,34 @@ class TestApiCommon(TestAPI):
         assert res.status_code == 404, res.data
 
     @with_context
-    def test_09_delete_app_cascade(self):
+    def test_delete_app_cascade(self):
         """Test API delete app deletes associated tasks and taskruns"""
-        tasks = self.app.get('/api/task?app_id=1&limit=1000')
-        tasks = json.loads(tasks.data)
-
-        task_runs = self.app.get('/api/taskrun?app_id=1&limit=1000')
-        task_runs = json.loads(task_runs.data)
-        url = '/api/app/%s?api_key=%s' % (1, self.api_key)
+        app = AppFactory.create()
+        tasks = TaskFactory.create_batch(2, app=app)
+        task_runs = TaskRunFactory.create_batch(2, app=app)
+        url = '/api/app/%s?api_key=%s' % (1, app.owner.api_key)
         self.app.delete(url)
 
-        for task in tasks:
-            t = db.session.query(Task)\
+        tasks = db.session.query(Task)\
                   .filter_by(app_id=1)\
-                  .filter_by(id=task['id'])\
                   .all()
-            assert len(t) == 0, "There should not be any task"
+        assert len(tasks) == 0, "There should not be any task"
 
-            tr = db.session.query(TaskRun)\
-                   .filter_by(app_id=1)\
-                   .filter_by(task_id=task['id'])\
-                   .all()
-            assert len(tr) == 0, "There should not be any task run"
+        task_runs = db.session.query(TaskRun)\
+                      .filter_by(app_id=1)\
+                      .all()
+        assert len(task_runs) == 0, "There should not be any task run"
 
     @with_context
-    def test_10_delete_task_cascade(self):
-        """Test API delete app deletes associated tasks and taskruns"""
-        tasks = self.app.get('/api/task?app_id=1&limit=1000')
-        tasks = json.loads(tasks.data)
+    def test_delete_task_cascade(self):
+        """Test API delete task deletes associated taskruns"""
+        task = TaskFactory.create()
+        task_runs = TaskRunFactory.create_batch(3, task=task)
+        url = '/api/task/%s?api_key=%s' % (task.id, task.app.owner.api_key)
+        res = self.app.delete(url)
 
-        for t in tasks:
-            url = '/api/task/%s?api_key=%s' % (t['id'], self.api_key)
-            res = self.app.delete(url)
-            assert_equal(res.status, '204 NO CONTENT', res.data)
-            tr = []
-            tr = db.session.query(TaskRun)\
-                   .filter_by(app_id=1)\
-                   .filter_by(task_id=t['id'])\
-                   .all()
-            assert len(tr) == 0, "There should not be any task run for task"
+        assert_equal(res.status, '204 NO CONTENT', res.data)
+        task_runs = db.session.query(TaskRun)\
+                      .filter_by(task_id=task.id)\
+                      .all()
+        assert len(task_runs) == 0, "There should not be any task run for task"
