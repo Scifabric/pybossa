@@ -34,11 +34,8 @@ from pybossa.model import db
 from pybossa import model
 
 
-def create_app(theme='default'):
-    template_folder = os.path.join('themes', theme, 'templates')
-    static_folder = os.path.join('themes', theme, 'static')
-    app = Flask(__name__, template_folder=template_folder,
-                static_folder=static_folder)
+def create_app():
+    app = Flask(__name__)
     if 'DATABASE_URL' in os.environ:  # pragma: no cover
         heroku = Heroku(app)
     configure_app(app)
