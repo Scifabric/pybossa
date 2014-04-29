@@ -46,3 +46,6 @@ APPS_PER_PAGE = 20
 ## Default allowed extensions
 ALLOWED_EXTENSIONS = ['js', 'css', 'png', 'jpg', 'jpeg', 'gif']
 UPLOAD_METHOD = 'local'
+
+## Default number of users shown in the leaderboard
+LEADERBOARD = 20
