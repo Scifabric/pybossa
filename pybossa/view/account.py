@@ -433,7 +433,8 @@ def update_profile():
                                  'container': container}
             db.session.commit()
             cached_users.delete_user_summary(current_user.name)
-            flash(gettext('Your avatar has been updated!'), 'success')
+            flash(gettext('Your avatar has been updated! It may \
+                          take some minutes to refresh...'), 'success')
             return redirect(url_for('.profile'))
         else:
             if form.validate():
