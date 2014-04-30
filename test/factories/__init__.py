@@ -124,7 +124,12 @@ class TaskRunFactory(SQLAlchemyPyBossaFactory):
     app_id = factory.LazyAttribute(lambda task_run: task_run.app.id)
     user = factory.SubFactory('factories.UserFactory')
     user_id = factory.LazyAttribute(lambda task_run: task_run.user.id)
-    user_ip = None
+
+
+class AnonymousTaskRunFactory(TaskRunFactory):
+    user = None
+    user_id = None
+    user_ip = '127.0.0.1'
 
 
 class UserFactory(SQLAlchemyPyBossaFactory):
