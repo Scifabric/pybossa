@@ -387,12 +387,66 @@ def settings():
     Returns a Jinja2 template.
 
     """
-    #user = User.query.get_or_404(current_user.id)
     user, apps, apps_created = cached_users.get_user_summary(current_user.name)
     title = "User: %s &middot; Settings" % user['fullname']
+    update_form = UpdateProfileForm()
+    avatar_form = AvatarUploadForm()
     return render_template('account/settings.html',
                            title=title,
-                           user=user)
+                           user=user,
+                           update_form=update_form,
+                           avatar_form=avatar_form)
+    if request.method == 'GET':
+        update_form = UpdateProfileForm(obj=current_user)
+        update_form.set_locales(current_app.config['LOCALES'])
+        update_form.populate_obj(current_user)
+
+        title_msg = "Update your profile: %s" % current_user.fullname
+        return render_template('account/settings.html',
+                               title=title,
+                               user=user,
+                               update_form=update_form,
+                               avatar_form=avatar_form)
+    else:
+        update_form = UpdateProfileForm(request.form)
+        avatar_form = AvatarUploadForm(request.form)
+        update_form.set_locales(current_app.config['LOCALES'])
+        if request.form['btn'] == 'Upload':
+            file = request.files['avatar']
+            coordinates = (avatar_form.x1.data, avatar_form.y1.data,
+                           avatar_form.x2.data, avatar_form.y2.data)
+            file.filename = "avatar.png"
+            container = "user_%s" % current_user.id
+            uploader.upload_file(file,
+                                 container=container,
+                                 coordinates=coordinates)
+            current_user.info = {'avatar': file.filename,
+                                 'container': container}
+            db.session.commit()
+            cached_users.delete_user_summary(current_user.name)
+            flash(gettext('Your avatar has been updated! It may \
+                          take some minutes to refresh...'), 'success')
+            return redirect(url_for('.profile'))
+        else:
+            if update_form.validate():
+                current_user.id = form.id.data
+                current_user.fullname = form.fullname.data
+                current_user.name = form.name.data
+                current_user.email_addr = form.email_addr.data
+                current_user.ckan_api = form.ckan_api.data
+                current_user.privacy_mode = form.privacy_mode.data
+                db.session.commit()
+                cached_users.delete_user_summary(current_user.name)
+                flash(gettext('Your profile has been updated!'), 'success')
+                return redirect(url_for('.profile'))
+            else:
+                flash(gettext('Please correct the errors'), 'error')
+                title_msg = 'Update your profile: %s' % current_user.fullname
+                return render_template('account/settings.html',
+                                       title=title,
+                                       user=user,
+                                       update_form=update_form,
+                                       avatar_form=avatar_form)
 
 
 @blueprint.route('/profile/update', methods=['GET', 'POST'])
@@ -404,26 +458,26 @@ def update_profile():
     Returns Jinja2 template.
 
     """
-    form = UpdateProfileForm()
-    upload_form = AvatarUploadForm()
+    update_form = UpdateProfileForm()
+    avatar_form = AvatarUploadForm()
     if request.method == 'GET':
-        form = UpdateProfileForm(obj=current_user)
-        form.set_locales(current_app.config['LOCALES'])
-        form.populate_obj(current_user)
+        update_form = UpdateProfileForm(obj=current_user)
+        update_form.set_locales(current_app.config['LOCALES'])
+        update_form.populate_obj(current_user)
 
         title_msg = "Update your profile: %s" % current_user.fullname
-        return render_template('account/update.html',
+        return render_template('account/settings.html',
                                title=title_msg,
-                               form=form,
-                               upload_form=upload_form)
+                               form=update_form,
+                               upload_form=avatar_form)
     else:
-        form = UpdateProfileForm(request.form)
-        upload_form = AvatarUploadForm(request.form)
+        update_form = UpdateProfileForm(request.form)
+        avatar_form = AvatarUploadForm(request.form)
         form.set_locales(current_app.config['LOCALES'])
         if request.form['btn'] == 'Upload':
             file = request.files['avatar']
-            coordinates = (upload_form.x1.data, upload_form.y1.data,
-                           upload_form.x2.data, upload_form.y2.data)
+            coordinates = (avatar_form.x1.data, avatar_form.y1.data,
+                           avatar_form.x2.data, avatar_form.y2.data)
             file.filename = "avatar.png"
             container = "user_%s" % current_user.id
             uploader.upload_file(file,
@@ -452,7 +506,7 @@ def update_profile():
                 flash(gettext('Please correct the errors'), 'error')
                 title_msg = 'Update your profile: %s' % current_user.fullname
                 return render_template('/account/update.html', form=form,
-                                       upload_form=upload_form,
+                                       upload_form=avatar_form,
                                        title=title_msg)
 
 
