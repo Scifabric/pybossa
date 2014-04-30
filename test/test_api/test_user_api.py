@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import json
-from default import db, with_context
+from default import with_context
 from nose.tools import assert_raises
 from werkzeug.exceptions import MethodNotAllowed
 from pybossa.api.user import UserAPI
@@ -222,13 +222,10 @@ class TestUserAPI(TestAPI):
         user_with_privacy_disabled = UserFactory(email_addr='public@user.com',
                                     name='publicUser', fullname='User',
                                     privacy_mode=False)
-        db.session.add(user_with_privacy_disabled)
         # Add user with fullname 'Private user', privacy mode enabled
         user_with_privacy_enabled = UserFactory(email_addr='private@user.com',
                                     name='privateUser', fullname='User',
                                     privacy_mode=True)
-        db.session.add(user_with_privacy_enabled)
-        db.session.commit()
 
         # When querying with private fields
         query = 'api/user?fullname=User'

@@ -16,12 +16,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import json
-from default import db, with_context
+from default import with_context
 from nose.tools import assert_equal, assert_raises
 from test_api import TestAPI
-from pybossa.model.app import App
-from pybossa.model.task import Task
-from pybossa.model.task_run import TaskRun
 
 from factories import AppFactory, TaskFactory, TaskRunFactory, UserFactory
 

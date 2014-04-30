@@ -21,7 +21,7 @@ from nose.tools import assert_equal
 from test_api import TestAPI
 from pybossa.model.category import Category
 
-from factories import AppFactory, TaskFactory, TaskRunFactory, UserFactory, CategoryFactory
+from factories import UserFactory, CategoryFactory
 
 
 class TestCategoryAPI(TestAPI):
@@ -71,7 +71,7 @@ class TestCategoryAPI(TestAPI):
         assert err['exception_cls'] == 'AttributeError', err_msg
 
     @with_context
-    def test_04_category_post(self):
+    def test_category_post(self):
         """Test API Category creation and auth"""
         admin = UserFactory.create()
         user = UserFactory.create()
