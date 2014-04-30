@@ -392,11 +392,7 @@ def settings():
     title = "User: %s &middot; Settings" % user['fullname']
     update_form = UpdateProfileForm()
     avatar_form = AvatarUploadForm()
-    return render_template('account/settings.html',
-                           title=title,
-                           user=user,
-                           update_form=update_form,
-                           avatar_form=avatar_form)
+
     if request.method == 'GET':
         update_form = UpdateProfileForm(obj=current_user)
         update_form.set_locales(current_app.config['LOCALES'])
