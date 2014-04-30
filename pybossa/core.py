@@ -24,9 +24,7 @@ from flask.ext.heroku import Heroku
 from flask.ext.babel import lazy_gettext
 
 from pybossa import default_settings as settings
-from pybossa.extensions import (signer, mail, login_manager, sentinel,
-                                facebook, twitter, google, misaka,
-                                babel, gravatar, uploader, csrf)
+from pybossa.extensions import *
 from pybossa.ratelimit import get_view_rate_limit
 
 from raven.contrib.flask import Sentry
