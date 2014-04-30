@@ -23,6 +23,8 @@ from pybossa.api.token import TokenAPI
 from pybossa.model.user import User
 from werkzeug.exceptions import MethodNotAllowed
 
+from factories import UserFactory
+
 
 
 class TestTokenAPI(TestAPI):
@@ -57,6 +59,7 @@ class TestTokenAPI(TestAPI):
         assert err['exception_cls'] == 'Unauthorized', err
         assert err['target'] == 'token', err
 
+
     @with_context
     def test_get_specific_token_anonymous_user(self):
         """Test anonymous users are unauthorized to request any of their tokens"""
@@ -70,63 +73,47 @@ class TestTokenAPI(TestAPI):
         assert err['exception_cls'] == 'Unauthorized', err
         assert err['target'] == 'token', err
 
+
     @with_context
     def test_get_all_tokens_authenticated_user(self):
         """Test authenticated user is able to retrieve all his tokens"""
 
-        user = db.session.query(User).get(2)
-        twitter_token = {'oauth_token': 'token-for-%s' % user.name,
-                         'oauth_token_secret': 'secret-for-%s' % user.name}
-        facebook_token = {'oauth_token': 'facebook_token'}
-        google_token = {'oauth_token': 'google_token'}
-        user.info['twitter_token'] = twitter_token
-        user.info['facebook_token'] = facebook_token
-        user.info['google_token'] = google_token
-        db.session.commit()
+        user = UserFactory.create_batch(2)[1]
+        user.info = create_tokens_for(user)
 
-        res = self.app.get('api/token?api_key=' + self.api_key)
+        res = self.app.get('api/token?api_key=' + user.api_key)
         data = json.loads(res.data)
 
         for provider in TokenAPI.oauth_providers:
             token_name = '%s_token' % provider
             assert data.get(token_name) is not None, data
 
+
     @with_context
     def test_get_all_existing_tokens_authenticated_user(self):
         """Test if a user lacks one of the valid tokens, it won't be retrieved"""
 
-        user = db.session.query(User).get(2)
-        twitter_token = {'oauth_token': 'token-for-%s' % user.name,
-                         'oauth_token_secret': 'secret-for-%s' % user.name}
-        facebook_token = {'oauth_token': 'facebook_token'}
-        google_token = {'oauth_token': 'google_token'}
-        user.info['twitter_token'] = twitter_token
-        user.info['facebook_token'] = facebook_token
-        db.session.commit()
+        user = UserFactory.create_batch(2)[1]
+        user.info = create_tokens_for(user)
+        del user.info['google_token']
 
-        res = self.app.get('api/token?api_key=' + self.api_key)
+        res = self.app.get('api/token?api_key=' + user.api_key)
         data = json.loads(res.data)
 
         assert data.get('twitter_token') is not None, data
         assert data.get('facebook_token') is not None, data
         assert data.get('google_token') is None, data
 
+
     @with_context
     def test_get_existing_token_authenticated_user(self):
         """Test authenticated user retrieves a given existing token"""
 
-        user = db.session.query(User).get(2)
-        twitter_token = {'oauth_token': 'token-for-%s' % user.name,
-                         'oauth_token_secret': 'secret-for-%s' % user.name}
-        facebook_token = {'oauth_token': 'facebook_token'}
-        google_token = {'oauth_token': 'google_token'}
-        user.info['twitter_token'] = twitter_token
-        user.info['facebook_token'] = facebook_token
-        user.info['google_token'] = google_token
-        db.session.commit()
+        user = UserFactory.create_batch(2)[1]
+        user.info = create_tokens_for(user)
 
         # If the token exists, it should be retrieved
-        res = self.app.get('/api/token/twitter?api_key=' + self.api_key)
+        res = self.app.get('/api/token/twitter?api_key=' + user.api_key)
         data = json.loads(res.data)
 
         assert data.get('twitter_token') is not None, data
@@ -135,13 +122,14 @@ class TestTokenAPI(TestAPI):
         # And no other tokens should
         assert data.get('facebook_token') is None, data
 
+
     @with_context
     def test_get_non_existing_token_authenticated_user(self):
         """Test authenticated user cannot get non-existing tokens"""
 
-        user_without_tokens = db.session.query(User).get(3)
+        user_no_tokens = UserFactory.create_batch(2)[1]
 
-        res = self.app.get('/api/token/twitter?api_key=' + self.api_key_2)
+        res = self.app.get('/api/token/twitter?api_key=' + user_no_tokens.api_key)
         error = json.loads(res.data)
 
         assert res.status_code == 404, error
@@ -149,12 +137,14 @@ class TestTokenAPI(TestAPI):
         assert error['action'] == 'GET', error
         assert error['target'] == 'token', error
         assert error['exception_cls'] == 'NotFound', error
+
 
     @with_context
     def test_get_non_valid_token(self):
         """Test authenticated user cannot get non-valid tokens"""
 
-        res = self.app.get('/api/token/non-valid?api_key=' + self.api_key)
+        user = UserFactory.create_batch(2)[1]
+        res = self.app.get('/api/token/non-valid?api_key=' + user.api_key)
         error = json.loads(res.data)
 
         assert res.status_code == 404, error
@@ -165,8 +155,16 @@ class TestTokenAPI(TestAPI):
 
 
 
-
-
+def create_tokens_for(user):
+    info = {}
+    twitter_token = {'oauth_token': 'token-for-%s' % user.name,
+                     'oauth_token_secret': 'secret-for-%s' % user.name}
+    facebook_token = {'oauth_token': 'facebook_token'}
+    google_token = {'oauth_token': 'google_token'}
+    info['twitter_token'] = twitter_token
+    info['facebook_token'] = facebook_token
+    info['google_token'] = google_token
+    return info
 
 
 
