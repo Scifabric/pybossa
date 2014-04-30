@@ -19,7 +19,7 @@
 
 from default import Test
 from pybossa.uploader.rackspace import RackspaceUploader
-from mock import patch, PropertyMock, call
+from mock import patch, PropertyMock, call, MagicMock
 from werkzeug.datastructures import FileStorage
 from pyrax.fakes import FakeContainer
 from pyrax.exceptions import NoSuchObject, NoSuchContainer
@@ -190,4 +190,41 @@ class TestRackspaceUploader(Test):
             u = RackspaceUploader()
             u.init_app(self.flask_app)
             assert u.get_container('user_3')
+            mycf.assert_has_calls(calls, any_order=True)
+
+    @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
+           return_value=True)
+    def test_rackspace_uploader_delete(self, mock1):
+        """Test RACKSPACE UPLOADER delete method works."""
+        with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
+            #cdn_enabled_mock = PropertyMock(return_value=False)
+            #type(fake_container).cdn_enabled = cdn_enabled_mock
+            #mycf.get_container.side_effect = NoSuchContainer
+
+            calls = [call.get_container('container'),
+                     call.get_container().get_object('file'),
+                     call.get_container().get_object().delete()
+                     ]
+            u = RackspaceUploader()
+            u.init_app(self.flask_app)
+            err_msg = "It should return True"
+            assert u.delete_file('file', 'container') is True, err_msg
+            mycf.assert_has_calls(calls, any_order=True)
+
+    @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
+           return_value=True)
+    def test_rackspace_uploader_delete_fails(self, mock1):
+        """Test RACKSPACE UPLOADER delete fails method works."""
+        with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
+            container = MagicMock()
+            #container.get_object.return_value = 'file'
+            container.get_object.side_effect = NoSuchObject
+            mycf.get_container.return_value = container
+
+            calls = [call.get_container('container'),
+                     ]
+            u = RackspaceUploader()
+            u.init_app(self.flask_app)
+            err_msg = "It should return False"
+            assert u.delete_file('file', 'container') is False, err_msg
             mycf.assert_has_calls(calls, any_order=True)
