@@ -197,10 +197,6 @@ class TestRackspaceUploader(Test):
     def test_rackspace_uploader_delete(self, mock1):
         """Test RACKSPACE UPLOADER delete method works."""
         with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
-            #cdn_enabled_mock = PropertyMock(return_value=False)
-            #type(fake_container).cdn_enabled = cdn_enabled_mock
-            #mycf.get_container.side_effect = NoSuchContainer
-
             calls = [call.get_container('container'),
                      call.get_container().get_object('file'),
                      call.get_container().get_object().delete()
