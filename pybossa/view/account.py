@@ -429,12 +429,12 @@ def settings():
             return redirect(url_for('.profile'))
         else:
             if update_form.validate():
-                current_user.id = form.id.data
-                current_user.fullname = form.fullname.data
-                current_user.name = form.name.data
-                current_user.email_addr = form.email_addr.data
-                current_user.ckan_api = form.ckan_api.data
-                current_user.privacy_mode = form.privacy_mode.data
+                current_user.id = update_form.id.data
+                current_user.fullname = update_form.fullname.data
+                current_user.name = update_form.name.data
+                current_user.email_addr = update_form.email_addr.data
+                current_user.ckan_api = update_form.ckan_api.data
+                current_user.privacy_mode = update_form.privacy_mode.data
                 db.session.commit()
                 cached_users.delete_user_summary(current_user.name)
                 flash(gettext('Your profile has been updated!'), 'success')
@@ -466,7 +466,7 @@ def update_profile():
         update_form.populate_obj(current_user)
 
         title_msg = "Update your profile: %s" % current_user.fullname
-        return render_template('account/settings.html',
+        return render_template('account/update.html',
                                title=title_msg,
                                form=update_form,
                                upload_form=avatar_form)
@@ -492,12 +492,12 @@ def update_profile():
             return redirect(url_for('.profile'))
         else:
             if update_form.validate():
-                current_user.id = form.id.data
-                current_user.fullname = form.fullname.data
-                current_user.name = form.name.data
-                current_user.email_addr = form.email_addr.data
-                current_user.ckan_api = form.ckan_api.data
-                current_user.privacy_mode = form.privacy_mode.data
+                current_user.id = update_form.id.data
+                current_user.fullname = update_form.fullname.data
+                current_user.name = update_form.name.data
+                current_user.email_addr = update_form.email_addr.data
+                current_user.ckan_api = update_form.ckan_api.data
+                current_user.privacy_mode = update_form.privacy_mode.data
                 db.session.commit()
                 cached_users.delete_user_summary(current_user.name)
                 flash(gettext('Your profile has been updated!'), 'success')
