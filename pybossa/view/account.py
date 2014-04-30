@@ -29,6 +29,7 @@ This module exports the following endpoints:
 from itsdangerous import BadData
 from markdown import markdown
 import json
+import time
 
 from flask import Blueprint, request, url_for, flash, redirect, abort
 from flask import render_template, current_app
@@ -424,11 +425,14 @@ def update_profile():
             file = request.files['avatar']
             coordinates = (upload_form.x1.data, upload_form.y1.data,
                            upload_form.x2.data, upload_form.y2.data)
-            file.filename = "avatar.png"
+            prefix = time.time()
+            file.filename = "%s_avatar.png" % prefix
             container = "user_%s" % current_user.id
             uploader.upload_file(file,
                                  container=container,
                                  coordinates=coordinates)
+            # Delete previous avatar from storage
+            uploader.delete_file(current_user.info['avatar'], container)
             current_user.info = {'avatar': file.filename,
                                  'container': container}
             db.session.commit()
