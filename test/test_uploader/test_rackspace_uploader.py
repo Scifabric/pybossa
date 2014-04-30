@@ -217,7 +217,6 @@ class TestRackspaceUploader(Test):
         """Test RACKSPACE UPLOADER delete fails method works."""
         with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
             container = MagicMock()
-            #container.get_object.return_value = 'file'
             container.get_object.side_effect = NoSuchObject
             mycf.get_container.return_value = container
 
