@@ -69,7 +69,7 @@ def get_leaderboard(n, user_id):
                        ''')
             user_rank = db.engine.execute(sql, user_id=user_id)
             u = User.query.get(user_id)
-            # Load by default user data wit no rank
+            # Load by default user data with no rank
             user=dict(
                 rank=-1,
                 id=u.id,
