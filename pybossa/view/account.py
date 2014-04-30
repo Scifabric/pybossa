@@ -36,8 +36,10 @@ from flask import render_template, current_app
 from flask.ext.login import login_required, login_user, logout_user, \
     current_user
 from flask.ext.mail import Message
-from flaskext.wtf import Form, TextField, PasswordField, validators, \
-    IntegerField, HiddenInput, SelectField, BooleanField, FileField
+from flask_wtf import Form
+from wtforms import TextField, PasswordField, validators, \
+    IntegerField, SelectField, BooleanField, FileField
+from wtforms.widgets import HiddenInput
 
 import pybossa.validator as pb_validator
 import pybossa.model as model

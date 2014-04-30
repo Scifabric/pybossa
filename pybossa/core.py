@@ -26,7 +26,7 @@ from flask.ext.babel import lazy_gettext
 from pybossa import default_settings as settings
 from pybossa.extensions import (signer, mail, login_manager, sentinel,
                                 facebook, twitter, google, misaka,
-                                babel, gravatar, uploader)
+                                babel, gravatar, uploader, csrf)
 from pybossa.ratelimit import get_view_rate_limit
 
 from raven.contrib.flask import Sentry
@@ -63,6 +63,7 @@ def create_app():
     setup_social_networks(app)
     setup_jinja(app)
     setup_geocoding(app)
+    setup_csrf_protection(app)
     #toolbar.init_app(app)
     return app
 
@@ -346,3 +347,6 @@ def setup_hooks(app):
             contact_email=contact_email,
             contact_twitter=contact_twitter,
             upload_method=app.config['UPLOAD_METHOD'])
+
+def setup_csrf_protection(app):
+    csrf.init_app(app)

@@ -26,7 +26,9 @@ from flask import url_for
 from flask import current_app
 from flask import Response
 from flask.ext.login import login_required, current_user
-from flaskext.wtf import Form, TextField, IntegerField, HiddenInput, validators
+from flask_wtf import Form
+from wtforms import TextField, IntegerField, validators
+from wtforms.widgets import HiddenInput
 from flask.ext.babel import lazy_gettext, gettext
 from werkzeug.exceptions import HTTPException
 
