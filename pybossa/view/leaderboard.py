@@ -18,7 +18,7 @@
 
 from flask import Blueprint, request, url_for, flash, redirect, abort, current_app
 from flask import render_template
-from flaskext.wtf import Form, IntegerField, TextField, BooleanField, validators, HiddenInput
+#from flaskext.wtf import Form, IntegerField, TextField, BooleanField, validators, HiddenInput
 from flask.ext.login import login_required, current_user
 from sqlalchemy.exc import UnboundExecutionError
 from sqlalchemy.sql import func, text

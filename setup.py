@@ -13,7 +13,7 @@ requirements = [
     "Flask-Misaka>=0.2.0, <1.0",
     "Flask-OAuth>=0.12, <0.13",         # was pinned to Flask-OAuth==0.12
     "Flask-SQLAlchemy>=1.0, <2.0",
-    "Flask-WTF>=0.6, <0.7",             # was pinned to Flask-WTF==0.6
+    "Flask-WTF>=0.9.5, <0.9.6",             # was pinned to Flask-WTF==0.9.5
     "Flask>=0.10.1, <0.10.2",           # was pinned to Flask==0.10.1
     "html2text>=2014.4.5, <2016.1.1",
     "itsdangerous>=0.24, <1.0",

@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask.ext.babel import lazy_gettext
-from flaskext.wtf import ValidationError
+from wtforms.validators import ValidationError
 import re
 
 
