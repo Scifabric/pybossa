@@ -127,6 +127,7 @@ class TestApiCommon(TestAPI):
             assert err['action'] == 'GET', err
             assert err['exception_cls'] == 'AttributeError', err
 
+
     @with_context
     def test_query_sql_injection(self):
         """Test API SQL Injection is not allowed works"""
@@ -150,36 +151,3 @@ class TestApiCommon(TestAPI):
         q = 'app_id=1%3D1;SELECT%20*%20FROM%20task%20WHERE%201'
         res = self.app.get('/api' + q)
         assert res.status_code == 404, res.data
-
-    @with_context
-    def test_delete_app_cascade(self):
-        """Test API delete app deletes associated tasks and taskruns"""
-        app = AppFactory.create()
-        tasks = TaskFactory.create_batch(2, app=app)
-        task_runs = TaskRunFactory.create_batch(2, app=app)
-        url = '/api/app/%s?api_key=%s' % (1, app.owner.api_key)
-        self.app.delete(url)
-
-        tasks = db.session.query(Task)\
-                  .filter_by(app_id=1)\
-                  .all()
-        assert len(tasks) == 0, "There should not be any task"
-
-        task_runs = db.session.query(TaskRun)\
-                      .filter_by(app_id=1)\
-                      .all()
-        assert len(task_runs) == 0, "There should not be any task run"
-
-    @with_context
-    def test_delete_task_cascade(self):
-        """Test API delete task deletes associated taskruns"""
-        task = TaskFactory.create()
-        task_runs = TaskRunFactory.create_batch(3, task=task)
-        url = '/api/task/%s?api_key=%s' % (task.id, task.app.owner.api_key)
-        res = self.app.delete(url)
-
-        assert_equal(res.status, '204 NO CONTENT', res.data)
-        task_runs = db.session.query(TaskRun)\
-                      .filter_by(task_id=task.id)\
-                      .all()
-        assert len(task_runs) == 0, "There should not be any task run for task"

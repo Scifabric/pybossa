@@ -22,8 +22,9 @@ from test_api import TestAPI
 from pybossa.model.user import User
 from pybossa.model.app import App
 from pybossa.model.task import Task
+from pybossa.model.task_run import TaskRun
 
-from factories import AppFactory, TaskFactory, UserFactory
+from factories import AppFactory, TaskFactory, TaskRunFactory, UserFactory
 
 
 
@@ -272,57 +273,15 @@ class TestTaskAPI(TestAPI):
 
 
     @with_context
-    def test_allow_anonymous_contributors(self):
-        """Test API allow anonymous contributors works"""
-        app = AppFactory.create()
-        user = UserFactory.create()
-        tasks = TaskFactory.create_batch(2, app=app, info={'question': 'answer'})
+    def test_delete_task_cascade(self):
+        """Test API delete task deletes associated taskruns"""
+        task = TaskFactory.create()
+        task_runs = TaskRunFactory.create_batch(3, task=task)
+        url = '/api/task/%s?api_key=%s' % (task.id, task.app.owner.api_key)
+        res = self.app.delete(url)
 
-        # All users are allowed to participate by default
-        # As Anonymous user
-        url = '/api/app/%s/newtask' % app.id
-        res = self.app.get(url, follow_redirects=True)
-        task = json.loads(res.data)
-        err_msg = "The task.app_id is different from the app.id"
-        assert task['app_id'] == app.id, err_msg
-        err_msg = "There should not be an error message"
-        assert task['info'].get('error') is None, err_msg
-        err_msg = "There should be a question"
-        assert task['info'].get('question') == 'answer', err_msg
-
-        # As registered user
-        url = '/api/app/%s/newtask?api_key=%s' % (app.id, user.api_key)
-        res = self.app.get(url, follow_redirects=True)
-        task = json.loads(res.data)
-        err_msg = "The task.app_id is different from the app.id"
-        assert task['app_id'] == app.id, err_msg
-        err_msg = "There should not be an error message"
-        assert task['info'].get('error') is None, err_msg
-        err_msg = "There should be a question"
-        assert task['info'].get('question') == 'answer', err_msg
-
-        # Now only allow authenticated users
-        app.allow_anonymous_contributors = False
-
-        # As Anonymous user
-        url = '/api/app/%s/newtask' % app.id
-        res = self.app.get(url, follow_redirects=True)
-        task = json.loads(res.data)
-        err_msg = "The task.app_id should be null"
-        assert task['app_id'] is None, err_msg
-        err_msg = "There should be an error message"
-        err = "This application does not allow anonymous contributors"
-        assert task['info'].get('error') == err, err_msg
-        err_msg = "There should not be a question"
-        assert task['info'].get('question') is None, err_msg
-
-        # As registered user
-        url = '/api/app/%s/newtask?api_key=%s' % (app.id, user.api_key)
-        res = self.app.get(url, follow_redirects=True)
-        task = json.loads(res.data)
-        err_msg = "The task.app_id is different from the app.id"
-        assert task['app_id'] == app.id, err_msg
-        err_msg = "There should not be an error message"
-        assert task['info'].get('error') is None, err_msg
-        err_msg = "There should be a question"
-        assert task['info'].get('question') == 'answer', err_msg
+        assert_equal(res.status, '204 NO CONTENT', res.data)
+        task_runs = db.session.query(TaskRun)\
+                      .filter_by(task_id=task.id)\
+                      .all()
+        assert len(task_runs) == 0, "There should not be any task run for task"

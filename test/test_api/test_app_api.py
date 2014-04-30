@@ -447,3 +447,120 @@ class TestAppAPI(TestAPI):
 
         error_msg = "Number of done tasks is wrong: %s" % len(taskruns)
         assert len(taskruns) + 1 == data['done'], error_msg
+
+
+    @with_context
+    def test_delete_app_cascade(self):
+        """Test API delete app deletes associated tasks and taskruns"""
+        app = AppFactory.create()
+        tasks = TaskFactory.create_batch(2, app=app)
+        task_runs = TaskRunFactory.create_batch(2, app=app)
+        url = '/api/app/%s?api_key=%s' % (1, app.owner.api_key)
+        self.app.delete(url)
+
+        tasks = db.session.query(Task)\
+                  .filter_by(app_id=1)\
+                  .all()
+        assert len(tasks) == 0, "There should not be any task"
+
+        task_runs = db.session.query(TaskRun)\
+                      .filter_by(app_id=1)\
+                      .all()
+        assert len(task_runs) == 0, "There should not be any task run"
+
+
+    @with_context
+    def test_newtask_allow_anonymous_contributors(self):
+        """Test API get a newtask - allow anonymous contributors"""
+        app = AppFactory.create()
+        user = UserFactory.create()
+        tasks = TaskFactory.create_batch(2, app=app, info={'question': 'answer'})
+
+        # All users are allowed to participate by default
+        # As Anonymous user
+        url = '/api/app/%s/newtask' % app.id
+        res = self.app.get(url, follow_redirects=True)
+        task = json.loads(res.data)
+        err_msg = "The task.app_id is different from the app.id"
+        assert task['app_id'] == app.id, err_msg
+        err_msg = "There should not be an error message"
+        assert task['info'].get('error') is None, err_msg
+        err_msg = "There should be a question"
+        assert task['info'].get('question') == 'answer', err_msg
+
+        # As registered user
+        url = '/api/app/%s/newtask?api_key=%s' % (app.id, user.api_key)
+        res = self.app.get(url, follow_redirects=True)
+        task = json.loads(res.data)
+        err_msg = "The task.app_id is different from the app.id"
+        assert task['app_id'] == app.id, err_msg
+        err_msg = "There should not be an error message"
+        assert task['info'].get('error') is None, err_msg
+        err_msg = "There should be a question"
+        assert task['info'].get('question') == 'answer', err_msg
+
+        # Now only allow authenticated users
+        app.allow_anonymous_contributors = False
+
+        # As Anonymous user
+        url = '/api/app/%s/newtask' % app.id
+        res = self.app.get(url, follow_redirects=True)
+        task = json.loads(res.data)
+        err_msg = "The task.app_id should be null"
+        assert task['app_id'] is None, err_msg
+        err_msg = "There should be an error message"
+        err = "This application does not allow anonymous contributors"
+        assert task['info'].get('error') == err, err_msg
+        err_msg = "There should not be a question"
+        assert task['info'].get('question') is None, err_msg
+
+        # As registered user
+        url = '/api/app/%s/newtask?api_key=%s' % (app.id, user.api_key)
+        res = self.app.get(url, follow_redirects=True)
+        task = json.loads(res.data)
+        err_msg = "The task.app_id is different from the app.id"
+        assert task['app_id'] == app.id, err_msg
+        err_msg = "There should not be an error message"
+        assert task['info'].get('error') is None, err_msg
+        err_msg = "There should be a question"
+        assert task['info'].get('question') == 'answer', err_msg
+
+
+    @with_context
+    def test_newtask(self):
+        """Test API App.new_task method and authentication"""
+        app = AppFactory.create()
+        TaskFactory.create_batch(2, app=app)
+        user = UserFactory.create()
+
+        # anonymous
+        # test getting a new task
+        res = self.app.get('/api/app/%s/newtask' % app.id)
+        assert res, res
+        task = json.loads(res.data)
+        assert_equal(task['app_id'], app.id)
+
+        # The output should have a mime-type: application/json
+        assert res.mimetype == 'application/json', res
+
+        # as a real user
+        url = '/api/app/%s/newtask?api_key=%s' % (app.id, user.api_key)
+        res = self.app.get(url)
+        assert res, res
+        task = json.loads(res.data)
+        assert_equal(task['app_id'], app.id)
+
+        # Get NotFound for an non-existing app
+        url = '/api/app/5000/newtask'
+        res = self.app.get(url)
+        err = json.loads(res.data)
+        err_msg = "The app does not exist"
+        assert err['status'] == 'failed', err_msg
+        assert err['status_code'] == 404, err_msg
+        assert err['exception_cls'] == 'NotFound', err_msg
+        assert err['target'] == 'app', err_msg
+
+        # Get an empty task
+        url = '/api/app/%s/newtask?offset=1000' % app.id
+        res = self.app.get(url)
+        assert res.data == '{}', res.data
