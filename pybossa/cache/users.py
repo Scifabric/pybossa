@@ -68,6 +68,16 @@ def get_leaderboard(n, user_id):
                        WHERE user_id=:user_id ORDER BY rank;
                        ''')
             user_rank = db.engine.execute(sql, user_id=user_id)
+            u = User.query.get(user_id)
+            # Load by default user data wit no rank
+            user=dict(
+                rank=-1,
+                id=u.id,
+                name=u.name,
+                fullname=u.fullname,
+                email_addr=u.email_addr,
+                info=u.info,
+                score=-1)
             for row in user_rank: # pragma: no cover
                 user=dict(
                     rank=row.rank,
@@ -77,7 +87,8 @@ def get_leaderboard(n, user_id):
                     email_addr=row.email_addr,
                     info=dict(json.loads(row.info)),
                     score=row.score)
-                top_users.append(user)
+            top_users.append(user)
+
     return top_users
 
 
