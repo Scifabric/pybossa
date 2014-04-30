@@ -41,3 +41,4 @@ uploads
 *.swl
 *.log
 log
+*.sql
