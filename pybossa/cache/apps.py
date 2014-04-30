@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from sqlalchemy.sql import func, text
-from pybossa.core import db
+from pybossa.core import db, timeouts
 from pybossa.model.featured import Featured
 from pybossa.model.app import App
 from pybossa.model.task import Task
@@ -34,7 +34,7 @@ from datetime import timedelta
 
 STATS_FRONTPAGE_TIMEOUT = 12 * 60 * 60
 
-@memoize()
+@memoize(timeout=timeouts['APP_TIMEOUT'])
 def get_app(short_name):
     sql = text('''SELECT * FROM
                   app WHERE app.short_name=:short_name''')
@@ -72,7 +72,7 @@ def get_featured_front_page():
 def get_top(n=4):
     """Return top n=4 apps"""
     sql = text('''SELECT app.id, app.name, app.short_name, app.description, app.info,
-              COUNT(app_id) AS total FROM task_run, app 
+              COUNT(app_id) AS total FROM task_run, app
               WHERE app_id IS NOT NULL AND app.id=app_id AND app.hidden=0
               GROUP BY app.id ORDER BY total DESC LIMIT :limit;''')
     results = db.engine.execute(sql, limit=n)
@@ -87,7 +87,7 @@ def get_top(n=4):
     return top_apps
 
 
-@memoize()
+@memoize(timeout=timeouts['APP_TIMEOUT'])
 def n_tasks(app_id):
     sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task
                   WHERE task.app_id=:app_id''')
@@ -98,7 +98,7 @@ def n_tasks(app_id):
     return n_tasks
 
 
-@memoize()
+@memoize(timeout=timeouts['APP_TIMEOUT'])
 def n_completed_tasks(app_id):
     sql = text('''SELECT COUNT(task.id) AS n_completed_tasks FROM task
                 WHERE task.app_id=:app_id AND task.state=\'completed\';''')
@@ -151,7 +151,7 @@ def n_task_runs(app_id):
     return n_task_runs
 
 
-@memoize()
+@memoize(timeout=timeouts['APP_TIMEOUT'])
 def overall_progress(app_id):
     """Returns the percentage of submitted Tasks Runs done when a task is
     completed"""
@@ -174,7 +174,7 @@ def overall_progress(app_id):
     return (pct * 100)
 
 
-@memoize()
+@memoize(timeout=timeouts['APP_TIMEOUT'])
 def last_activity(app_id):
     sql = text('''SELECT finish_time FROM task_run WHERE app_id=:app_id
                ORDER BY finish_time DESC LIMIT 1''')
