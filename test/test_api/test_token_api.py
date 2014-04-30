@@ -25,7 +25,7 @@ from werkzeug.exceptions import MethodNotAllowed
 
 
 
-class TestTaskrunAPI(TestAPI):
+class TestTokenAPI(TestAPI):
 
     @with_context
     def test_not_allowed_methods(self):
