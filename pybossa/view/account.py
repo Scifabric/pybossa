@@ -473,7 +473,7 @@ def update_profile():
     else:
         update_form = UpdateProfileForm(request.form)
         avatar_form = AvatarUploadForm(request.form)
-        form.set_locales(current_app.config['LOCALES'])
+        update_form.set_locales(current_app.config['LOCALES'])
         if request.form['btn'] == 'Upload':
             file = request.files['avatar']
             coordinates = (avatar_form.x1.data, avatar_form.y1.data,
@@ -491,7 +491,7 @@ def update_profile():
                           take some minutes to refresh...'), 'success')
             return redirect(url_for('.profile'))
         else:
-            if form.validate():
+            if update_form.validate():
                 current_user.id = form.id.data
                 current_user.fullname = form.fullname.data
                 current_user.name = form.name.data
@@ -505,7 +505,7 @@ def update_profile():
             else:
                 flash(gettext('Please correct the errors'), 'error')
                 title_msg = 'Update your profile: %s' % current_user.fullname
-                return render_template('/account/update.html', form=form,
+                return render_template('/account/update.html', form=update_form,
                                        upload_form=avatar_form,
                                        title=title_msg)
 
