@@ -49,3 +49,8 @@ UPLOAD_METHOD = 'local'
 
 ## Default number of users shown in the leaderboard
 LEADERBOARD = 20
+
+## Default cache timeouts
+APP_TIMEOUT = 15 * 60
+REGISTERED_USERS_TIMEOUT = 15 * 60
+ANON_USERS_TIMEOUT = 5 * 60 * 60
