@@ -37,6 +37,7 @@ def create_app():
     if 'DATABASE_URL' in os.environ:  # pragma: no cover
         heroku = Heroku(app)
     configure_app(app)
+    setup_cache_timeouts(app)
     setup_theme(app)
     setup_uploader(app)
     setup_error_email(app)
@@ -348,3 +349,8 @@ def setup_hooks(app):
 
 def setup_csrf_protection(app):
     csrf.init_app(app)
+
+
+def setup_cache_timeouts(app):
+    global timeouts
+    timeouts['APP_TIMEOUT'] = app.config['APP_TIMEOUT']
