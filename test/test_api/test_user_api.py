@@ -20,8 +20,10 @@ from default import db, with_context
 from nose.tools import assert_raises
 from werkzeug.exceptions import MethodNotAllowed
 from pybossa.api.user import UserAPI
-from pybossa.model.user import User
 from test_api import TestAPI
+
+from factories import UserFactory
+
 
 
 class TestUserAPI(TestAPI):
@@ -29,12 +31,13 @@ class TestUserAPI(TestAPI):
     @with_context
     def test_user_get(self):
         """Test API User GET"""
-        # Test a GET all users
+        expected_user = UserFactory.create()
+        # Test GET all users
         res = self.app.get('/api/user')
         data = json.loads(res.data)
         user = data[0]
-        assert len(data) == 3, data
-        assert user['name'] == 'root', data
+        assert len(data) == 1, data
+        assert user['name'] == expected_user.name, data
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
@@ -43,7 +46,7 @@ class TestUserAPI(TestAPI):
         res = self.app.get('/api/user/1')
         data = json.loads(res.data)
         user = data
-        assert user['name'] == 'root', data
+        assert user['name'] == expected_user.name, data
 
         # Test a non-existant ID
         res = self.app.get('/api/user/3434209')
@@ -58,13 +61,13 @@ class TestUserAPI(TestAPI):
     @with_context
     def test_query_user(self):
         """Test API query for user endpoint works"""
-
+        expected_user = UserFactory.create_batch(2)[0]
         # When querying with a valid existing field which is unique
         # It should return one correct result if exists
-        res = self.app.get('/api/user?name=root')
+        res = self.app.get('/api/user?name=%s' % expected_user.name)
         data = json.loads(res.data)
         assert len(data) == 1, data
-        assert data[0]['name'] == 'root', data
+        assert data[0]['name'] == expected_user.name, data
         # And it should return no results if there are no matches
         res = self.app.get('/api/user?name=Godzilla')
         data = json.loads(res.data)
@@ -74,17 +77,17 @@ class TestUserAPI(TestAPI):
         res = self.app.get("/api/user?locale=en")
         data = json.loads(res.data)
         # It should return 3 results, as every registered user has locale=en by default
-        assert len(data) == 3, data
+        assert len(data) == 2, data
         # And they should be the correct ones
         assert (data[0]['locale'] == data[1]['locale'] == 'en'
                and data[0] != data[1]), data
 
         # When querying with multiple valid fields
-        res = self.app.get('/api/user?name=root&locale=en')
+        res = self.app.get('/api/user?name=%s&locale=en' % expected_user.name)
         data = json.loads(res.data)
         # It should find and return one correct result
         assert len(data) == 1, data
-        assert data[0]['name'] == 'root', data
+        assert data[0]['name'] == expected_user.name, data
         assert data[0]['locale'] == 'en', data
 
         # When querying with non-valid fields -- Errors
@@ -117,22 +120,20 @@ class TestUserAPI(TestAPI):
     @with_context
     def test_privacy_mode_user_get(self):
         """Test API user queries for privacy mode"""
-
+        admin = UserFactory.create()
+        user = UserFactory.create()
         # Add user with fullname 'Public user', privacy mode disabled
-        user_with_privacy_disabled = User(email_addr='public@user.com',
+        user_with_privacy_disabled = UserFactory.create(email_addr='public@user.com',
                                     name='publicUser', fullname='Public user',
                                     privacy_mode=False)
-        db.session.add(user_with_privacy_disabled)
         # Add user with fullname 'Private user', privacy mode enabled
-        user_with_privacy_enabled = User(email_addr='private@user.com',
+        user_with_privacy_enabled = UserFactory.create(email_addr='private@user.com',
                                     name='privateUser', fullname='Private user',
                                     privacy_mode=True)
-        db.session.add(user_with_privacy_enabled)
-        db.session.commit()
 
         # With no API-KEY
         # User with privacy disabled
-        res = self.app.get('/api/user/4')
+        res = self.app.get('/api/user/3')
         data = json.loads(res.data)
         user_with_privacy_disabled = data
         # When checking a public field it should be returned
@@ -140,7 +141,7 @@ class TestUserAPI(TestAPI):
         # When checking a private field it should be returned too
         assert user_with_privacy_disabled['fullname'] == 'Public user', data
         # User with privacy enabled
-        res = self.app.get('/api/user/5')
+        res = self.app.get('/api/user/4')
         data = json.loads(res.data)
         user_with_privacy_enabled = data
         # When checking a public field it should be returned
@@ -150,8 +151,8 @@ class TestUserAPI(TestAPI):
         # Users with privacy enabled and disabled, mixed together
         res = self.app.get('/api/user')
         data = json.loads(res.data)
-        user_with_privacy_disabled = data[3]
-        user_with_privacy_enabled = data[4]
+        user_with_privacy_disabled = data[2]
+        user_with_privacy_enabled = data[3]
         assert user_with_privacy_disabled['locale'] == 'en', data
         assert user_with_privacy_disabled['fullname'] == 'Public user', data
         assert user_with_privacy_enabled['locale'] == 'en', data
@@ -159,7 +160,7 @@ class TestUserAPI(TestAPI):
 
         # With a non-admin API-KEY
         # User with privacy disabled
-        res = self.app.get('/api/user/4?api_key=' + self.api_key)
+        res = self.app.get('/api/user/3?api_key=' + user.api_key)
         data = json.loads(res.data)
         user_with_privacy_disabled = data
         # When checking a public field it should be returned
@@ -167,7 +168,7 @@ class TestUserAPI(TestAPI):
         # When checking a private field it should be returned too
         assert user_with_privacy_disabled['fullname'] == 'Public user', data
         # User with privacy enabled
-        res = self.app.get('/api/user/5?api_key=' + self.api_key)
+        res = self.app.get('/api/user/4?api_key=' + user.api_key)
         data = json.loads(res.data)
         user_with_privacy_enabled = data
         # When checking a public field it should be returned
@@ -175,17 +176,17 @@ class TestUserAPI(TestAPI):
         # When checking a private field it should not be returned
         assert 'fullname' not in user_with_privacy_enabled, data
         # Users with privacy enabled and disabled, mixed together
-        res = self.app.get('/api/user?api_key=' + self.api_key)
+        res = self.app.get('/api/user?api_key=' + user.api_key)
         data = json.loads(res.data)
-        user_with_privacy_disabled = data[3]
-        user_with_privacy_enabled = data[4]
+        user_with_privacy_disabled = data[2]
+        user_with_privacy_enabled = data[3]
         assert user_with_privacy_disabled['locale'] == 'en', data
         assert user_with_privacy_disabled['fullname'] == 'Public user', data
         assert user_with_privacy_enabled['locale'] == 'en', data
         assert 'fullname' not in user_with_privacy_enabled, data
 
         # Admin API-KEY should be able to retrieve every field in user
-        res = self.app.get('/api/user/4?api_key=' + self.root_api_key)
+        res = self.app.get('/api/user/3?api_key=' + admin.api_key)
         data = json.loads(res.data)
         user_with_privacy_disabled = data
         # When checking a public field it should be returned
@@ -193,7 +194,7 @@ class TestUserAPI(TestAPI):
         # When checking a private field it should be returned too
         assert user_with_privacy_disabled['fullname'] == 'Public user', data
         # User with privacy enabled
-        res = self.app.get('/api/user/5?api_key=' + self.root_api_key)
+        res = self.app.get('/api/user/4?api_key=' + admin.api_key)
         data = json.loads(res.data)
         user_with_privacy_enabled = data
         # When checking a public field it should be returned
@@ -201,10 +202,10 @@ class TestUserAPI(TestAPI):
         # When checking a private field it should be returned too
         assert user_with_privacy_enabled['fullname'] == 'Private user', data
         # Users with privacy enabled and disabled, mixed together
-        res = self.app.get('/api/user?api_key=' + self.root_api_key)
+        res = self.app.get('/api/user?api_key=' + admin.api_key)
         data = json.loads(res.data)
-        user_with_privacy_disabled = data[3]
-        user_with_privacy_enabled = data[4]
+        user_with_privacy_disabled = data[2]
+        user_with_privacy_enabled = data[3]
         assert user_with_privacy_disabled['locale'] == 'en', data
         assert user_with_privacy_disabled['fullname'] == 'Public user', data
         assert user_with_privacy_enabled['locale'] == 'en', data
@@ -215,14 +216,15 @@ class TestUserAPI(TestAPI):
     def test_privacy_mode_user_queries(self):
         """Test API user queries for privacy mode with private fields in query
         """
-
+        admin = UserFactory.create()
+        user = UserFactory.create()
         # Add user with fullname 'Public user', privacy mode disabled
-        user_with_privacy_disabled = User(email_addr='public@user.com',
+        user_with_privacy_disabled = UserFactory(email_addr='public@user.com',
                                     name='publicUser', fullname='User',
                                     privacy_mode=False)
         db.session.add(user_with_privacy_disabled)
         # Add user with fullname 'Private user', privacy mode enabled
-        user_with_privacy_enabled = User(email_addr='private@user.com',
+        user_with_privacy_enabled = UserFactory(email_addr='private@user.com',
                                     name='privateUser', fullname='User',
                                     privacy_mode=True)
         db.session.add(user_with_privacy_enabled)
@@ -239,14 +241,14 @@ class TestUserAPI(TestAPI):
         assert public_user['name'] == 'publicUser', public_user
 
         # with a non-admin API-KEY, the result should be the same
-        res = self.app.get(query + '&api_key=' + self.api_key)
+        res = self.app.get(query + '&api_key=' + user.api_key)
         data = json.loads(res.data)
         assert len(data) == 1, data
         public_user = data[0]
         assert public_user['name'] == 'publicUser', public_user
 
         # with an admin API-KEY, all the matching results should be returned
-        res = self.app.get(query + '&api_key=' + self.root_api_key)
+        res = self.app.get(query + '&api_key=' + admin.api_key)
         data = json.loads(res.data)
         assert len(data) == 2, data
         public_user = data[0]
