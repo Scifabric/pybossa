@@ -19,7 +19,7 @@ from default import Test, db
 from pybossa.model.user import User
 import pybossa.validator
 from pybossa.view.account import LoginForm
-from flaskext.wtf import ValidationError
+from wtforms import ValidationError
 from nose.tools import raises
 
 
