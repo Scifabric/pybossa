@@ -92,3 +92,13 @@ class RackspaceUploader(Uploader):
                 return None
         except: # pragma: no cover
             return None
+
+    def delete_file(self, name, container):
+        """Delete file from container."""
+        try:
+            cnt = self.get_container(container)
+            obj = cnt.get_object(name)
+            obj.delete()
+            return True
+        except:
+            return False
