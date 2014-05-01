@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
+from flask import current_app
 from sqlalchemy.sql import func, text
 from pybossa.core import db, timeouts
 from pybossa.model.featured import Featured
@@ -32,7 +33,8 @@ import datetime
 import time
 from datetime import timedelta
 
-@memoize(timeout=timeouts['APP_TIMEOUT'])
+
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def get_app(short_name):
     sql = text('''SELECT * FROM
                   app WHERE app.short_name=:short_name''')
@@ -50,7 +52,7 @@ def get_app(short_name):
     return app
 
 
-@cache(timeout=timeouts['STATS_FRONTPAGE_TIMEOUT'],
+@cache(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'),
        key_prefix="front_page_featured_apps")
 def get_featured_front_page():
     """Return featured apps"""
@@ -67,7 +69,7 @@ def get_featured_front_page():
     return featured
 
 
-@cache(timeout=timeouts['STATS_FRONTPAGE_TIMEOUT'],
+@cache(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'),
        key_prefix="front_page_top_apps")
 def get_top(n=4):
     """Return top n=4 apps"""
@@ -87,7 +89,7 @@ def get_top(n=4):
     return top_apps
 
 
-@memoize(timeout=timeouts['APP_TIMEOUT'])
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def n_tasks(app_id):
     sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task
                   WHERE task.app_id=:app_id''')
@@ -98,7 +100,7 @@ def n_tasks(app_id):
     return n_tasks
 
 
-@memoize(timeout=timeouts['APP_TIMEOUT'])
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def n_completed_tasks(app_id):
     sql = text('''SELECT COUNT(task.id) AS n_completed_tasks FROM task
                 WHERE task.app_id=:app_id AND task.state=\'completed\';''')
@@ -109,7 +111,7 @@ def n_completed_tasks(app_id):
     return n_completed_tasks
 
 
-@memoize(timeout=timeouts['REGISTERED_USERS_TIMEOUT'])
+@memoize(timeout=timeouts.get('REGISTERED_USERS_TIMEOUT'))
 def n_registered_volunteers(app_id):
     sql = text('''SELECT COUNT(DISTINCT(task_run.user_id)) AS n_registered_volunteers FROM task_run
            WHERE task_run.user_id IS NOT NULL AND
@@ -122,7 +124,7 @@ def n_registered_volunteers(app_id):
     return n_registered_volunteers
 
 
-@memoize(timeout=timeouts['ANON_USERS_TIMEOUT'])
+@memoize(timeout=timeouts.get('ANON_USERS_TIMEOUT'))
 def n_anonymous_volunteers(app_id):
     sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip)) AS n_anonymous_volunteers FROM task_run
            WHERE task_run.user_ip IS NOT NULL AND
@@ -140,7 +142,7 @@ def n_volunteers(app_id):
     return n_anonymous_volunteers(app_id) + n_registered_volunteers(app_id)
 
 
-@memoize(timeout=timeouts['APP_TIMEOUT'])
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def n_task_runs(app_id):
     sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
                   WHERE task_run.app_id=:app_id''')
@@ -151,7 +153,7 @@ def n_task_runs(app_id):
     return n_task_runs
 
 
-@memoize(timeout=timeouts['APP_TIMEOUT'])
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def overall_progress(app_id):
     """Returns the percentage of submitted Tasks Runs done when a task is
     completed"""
@@ -174,7 +176,7 @@ def overall_progress(app_id):
     return (pct * 100)
 
 
-@memoize(timeout=timeouts['APP_TIMEOUT'])
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def last_activity(app_id):
     sql = text('''SELECT finish_time FROM task_run WHERE app_id=:app_id
                ORDER BY finish_time DESC LIMIT 1''')
@@ -187,7 +189,8 @@ def last_activity(app_id):
 
 
 # This function does not change too much, so cache it for a longer time
-@cache(timeout=timeouts['STATS_FRONTPAGE_TIMEOUT'], key_prefix="number_featured_apps")
+@cache(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'),
+       key_prefix="number_featured_apps")
 def n_featured():
     """Return number of featured apps"""
     sql = text('''select count(*) from featured;''')
@@ -198,7 +201,7 @@ def n_featured():
 
 
 # This function does not change too much, so cache it for a longer time
-@memoize(timeout=timeouts['STATS_FRONTPAGE_TIMEOUT'])
+@memoize(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'))
 def get_featured(category, page=1, per_page=5):
     """Return a list of featured apps with a pagination"""
 
@@ -244,7 +247,7 @@ def n_published():
 
 
 # Cache it for longer times, as this is only shown to admin users
-@cache(timeout=timeouts['STATS_FRONTPAGE_TIMEOUT'],
+@cache(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'),
        key_prefix="number_draft_apps")
 def n_draft():
     """Return number of draft applications"""
@@ -259,7 +262,7 @@ def n_draft():
     return count
 
 
-@memoize(timeout=timeouts['STATS_FRONTPAGE_TIMEOUT'])
+@memoize(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'))
 def get_draft(category, page=1, per_page=5):
     """Return list of draft applications"""
 
@@ -290,7 +293,7 @@ def get_draft(category, page=1, per_page=5):
     return apps, count
 
 
-@memoize(timeout=timeouts['N_APPS_PER_CATEGORY'])
+@memoize(timeout=timeouts.get('N_APPS_PER_CATEGORY'))
 def n_count(category):
     """Count the number of apps in a given category"""
     sql = text('''
@@ -313,7 +316,7 @@ def n_count(category):
     return count
 
 
-@memoize(timeout=timeouts['APP_TIMEOUT'])
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def get(category, page=1, per_page=5):
     """Return a list of apps with at least one task and a task_presenter
        with a pagination for a given category"""
