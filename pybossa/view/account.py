@@ -434,7 +434,8 @@ def update_profile():
                                  container=container,
                                  coordinates=coordinates)
             # Delete previous avatar from storage
-            uploader.delete_file(current_user.info['avatar'], container)
+            if current_user.info.get('avatar'):
+                uploader.delete_file(current_user.info['avatar'], container)
             current_user.info = {'avatar': file.filename,
                                  'container': container}
             db.session.commit()

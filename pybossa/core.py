@@ -62,7 +62,7 @@ def create_app():
     setup_jinja(app)
     setup_geocoding(app)
     setup_csrf_protection(app)
-    #toolbar.init_app(app)
+    setup_debug_toolbar(app)
     return app
 
 
@@ -348,3 +348,8 @@ def setup_hooks(app):
 
 def setup_csrf_protection(app):
     csrf.init_app(app)
+
+
+def setup_debug_toolbar(app):
+    if app.config['ENABLE_DEBUG_TOOLBAR']:
+        debug_toolbar.init_app(app)
