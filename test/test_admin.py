@@ -446,7 +446,8 @@ class TestAdmin(web.Helper):
 
     @with_context
     @patch('pybossa.ckan.requests.get')
-    def test_19_admin_update_app(self, Mock):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_19_admin_update_app(self, Mock, Mock2):
         """Test ADMIN can update an app that belongs to another user"""
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
                                    {'content-type': 'application/json'})
