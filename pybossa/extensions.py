@@ -68,3 +68,6 @@ uploader = None
 # CSRF protection
 from flask_wtf.csrf import CsrfProtect
 csrf = CsrfProtect()
+
+# Timeouts
+timeouts = dict()

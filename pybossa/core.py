@@ -347,5 +347,15 @@ def setup_hooks(app):
             contact_twitter=contact_twitter,
             upload_method=app.config['UPLOAD_METHOD'])
 
+
 def setup_csrf_protection(app):
     csrf.init_app(app)
+
+
+def setup_cache_timeouts(app):
+    global timeouts
+    timeouts['APP_TIMEOUT'] = app.config['APP_TIMEOUT']
+    timeouts['REGISTERED_USERS_TIMEOUT'] = app.config['REGISTERED_USERS_TIMEOUT']
+    timeouts['ANON_USERS_TIMEOUT'] = app.config['ANON_USERS_TIMEOUT']
+    timeouts['STATS_FRONTPAGE_TIMEOUT'] = app.config['STATS_FRONTPAGE_TIMEOUT']
+    timeouts['N_APPS_PER_CATEGORY'] = app.config['N_APPS_PER_CATEGORY']
