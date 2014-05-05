@@ -352,6 +352,11 @@ def setup_csrf_protection(app):
     csrf.init_app(app)
 
 
+def setup_debug_toolbar(app):
+    if app.config['ENABLE_DEBUG_TOOLBAR']:
+        debug_toolbar.init_app(app)
+
+
 def setup_cache_timeouts(app):
     global timeouts
     timeouts['APP_TIMEOUT'] = app.config['APP_TIMEOUT']
