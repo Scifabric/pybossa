@@ -421,7 +421,8 @@ def settings():
                                  container=container,
                                  coordinates=coordinates)
             # Delete previous avatar from storage
-            uploader.delete_file(current_user.info['avatar'], container)
+            if current_user.info.get('avatar'):
+                uploader.delete_file(current_user.info['avatar'], container)
             current_user.info = {'avatar': file.filename,
                                  'container': container}
             db.session.commit()
@@ -480,7 +481,6 @@ def update_profile():
             file = request.files['avatar']
             coordinates = (avatar_form.x1.data, avatar_form.y1.data,
                            avatar_form.x2.data, avatar_form.y2.data)
-
             prefix = time.time()
             file.filename = "%s_avatar.png" % prefix
             container = "user_%s" % current_user.id
