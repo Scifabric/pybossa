@@ -37,6 +37,7 @@ def create_app():
     if 'DATABASE_URL' in os.environ:  # pragma: no cover
         heroku = Heroku(app)
     configure_app(app)
+    setup_cache_timeouts(app)
     setup_theme(app)
     setup_uploader(app)
     setup_error_email(app)
@@ -346,6 +347,7 @@ def setup_hooks(app):
             contact_twitter=contact_twitter,
             upload_method=app.config['UPLOAD_METHOD'])
 
+
 def setup_csrf_protection(app):
     csrf.init_app(app)
 
@@ -353,3 +355,21 @@ def setup_csrf_protection(app):
 def setup_debug_toolbar(app):
     if app.config['ENABLE_DEBUG_TOOLBAR']:
         debug_toolbar.init_app(app)
+
+
+def setup_cache_timeouts(app):
+    global timeouts
+    # Apps
+    timeouts['APP_TIMEOUT'] = app.config['APP_TIMEOUT']
+    timeouts['REGISTERED_USERS_TIMEOUT'] = app.config['REGISTERED_USERS_TIMEOUT']
+    timeouts['ANON_USERS_TIMEOUT'] = app.config['ANON_USERS_TIMEOUT']
+    timeouts['STATS_FRONTPAGE_TIMEOUT'] = app.config['STATS_FRONTPAGE_TIMEOUT']
+    timeouts['STATS_APP_TIMEOUT'] = app.config['STATS_APP_TIMEOUT']
+    timeouts['STATS_DRAFT_TIMEOUT'] = app.config['STATS_DRAFT_TIMEOUT']
+    timeouts['N_APPS_PER_CATEGORY_TIMEOUT'] = app.config['N_APPS_PER_CATEGORY_TIMEOUT']
+    # Categories
+    timeouts['CATEGORY_TIMEOUT'] = app.config['CATEGORY_TIMEOUT']
+    # Users
+    timeouts['USER_TIMEOUT'] = app.config['USER_TIMEOUT']
+    timeouts['USER_TOP_TIMEOUT'] = app.config['USER_TOP_TIMEOUT']
+    timeouts['USER_TOTAL_TIMEOUT'] = app.config['USER_TOTAL_TIMEOUT']
