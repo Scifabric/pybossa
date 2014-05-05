@@ -20,18 +20,21 @@ from mock import patch
 #from base import web, model, Fixtures, db, redis_flushall
 from default import db, with_context
 from nose.tools import assert_equal, assert_raises
-from test_api import HelperAPI
+from test_api import TestAPI
 from pybossa.model.app import App
 from pybossa.model.user import User
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 
+from factories import AppFactory, TaskFactory, TaskRunFactory, UserFactory
 
-class TestAppAPI(HelperAPI):
+
+class TestAppAPI(TestAPI):
 
     @with_context
-    def test_01_app_query(self):
+    def test_app_query(self):
         """ Test API App query"""
+        AppFactory.create(info={'total': 150})
         res = self.app.get('/api/app')
         data = json.loads(res.data)
         assert len(data) == 1, data
@@ -53,6 +56,7 @@ class TestAppAPI(HelperAPI):
     @with_context
     def test_query_app(self):
         """Test API query for app endpoint works"""
+        AppFactory.create(short_name='test-app', name='My New App')
         # Test for real field
         res = self.app.get("/api/app?short_name=test-app")
         data = json.loads(res.data)
@@ -75,16 +79,11 @@ class TestAppAPI(HelperAPI):
         assert data[0]['short_name'] == 'test-app', data
         assert data[0]['name'] == 'My New App', data
 
-        # Limits
-        res = self.app.get("/api/taskrun?app_id=1&limit=5")
-        data = json.loads(res.data)
-        for item in data:
-            assert item['app_id'] == 1, item
-        assert len(data) == 5, data
 
     @with_context
-    def test_04_app_post(self):
+    def test_app_post(self):
         """Test API App creation and auth"""
+        users = UserFactory.create_batch(2)
         name = u'XXXX Project'
         data = dict(
             name=name,
@@ -98,17 +97,17 @@ class TestAppAPI(HelperAPI):
         assert_equal(res.status, '401 UNAUTHORIZED',
                      'Should not be allowed to create')
         # now a real user
-        res = self.app.post('/api/app?api_key=' + self.api_key,
+        res = self.app.post('/api/app?api_key=' + users[1].api_key,
                             data=data)
         out = db.session.query(App).filter_by(name=name).one()
         assert out, out
         assert_equal(out.short_name, 'xxxx-project'), out
-        assert_equal(out.owner.name, 'tester')
+        assert_equal(out.owner.name, 'user2')
         id_ = out.id
         db.session.remove()
 
         # now a real user with headers auth
-        headers = [('Authorization', self.api_key)]
+        headers = [('Authorization', users[1].api_key)]
         new_app = dict(
             name=name + '2',
             short_name='xxxx-project2',
@@ -121,12 +120,12 @@ class TestAppAPI(HelperAPI):
         out = db.session.query(App).filter_by(name=name + '2').one()
         assert out, out
         assert_equal(out.short_name, 'xxxx-project2'), out
-        assert_equal(out.owner.name, 'tester')
+        assert_equal(out.owner.name, 'user2')
         id_ = out.id
         db.session.remove()
 
         # test re-create should fail
-        res = self.app.post('/api/app?api_key=' + self.api_key,
+        res = self.app.post('/api/app?api_key=' + users[1].api_key,
                             data=data)
         err = json.loads(res.data)
         assert res.status_code == 415, err
@@ -136,7 +135,7 @@ class TestAppAPI(HelperAPI):
 
         # test create with non-allowed fields should fail
         data = dict(name='fail', short_name='fail', link='hateoas', wrong=15)
-        res = self.app.post('/api/app?api_key=' + self.api_key,
+        res = self.app.post('/api/app?api_key=' + users[1].api_key,
                             data=data)
         err = json.loads(res.data)
         err_msg = "ValueError exception should be raised"
@@ -146,7 +145,7 @@ class TestAppAPI(HelperAPI):
         assert err['exception_cls'] == "ValueError", err_msg
         # Now with a JSON object but not valid
         data = json.dumps(data)
-        res = self.app.post('/api/app?api_key=' + self.api_key,
+        res = self.app.post('/api/app?api_key=' + users[1].api_key,
                             data=data)
         err = json.loads(res.data)
         err_msg = "TypeError exception should be raised"
@@ -159,8 +158,7 @@ class TestAppAPI(HelperAPI):
         data = {'name': 'My New Title'}
         datajson = json.dumps(data)
         ## anonymous
-        res = self.app.put('/api/app/%s' % id_,
-                           data=data)
+        res = self.app.put('/api/app/%s' % id_, data=data)
         error_msg = 'Anonymous should not be allowed to update'
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
         error = json.loads(res.data)
@@ -169,7 +167,8 @@ class TestAppAPI(HelperAPI):
         assert error['exception_cls'] == 'Unauthorized', error
 
         ### real user but not allowed as not owner!
-        url = '/api/app/%s?api_key=%s' % (id_, self.api_key_2)
+        non_owner = UserFactory.create()
+        url = '/api/app/%s?api_key=%s' % (id_, non_owner.api_key)
         res = self.app.put(url, data=datajson)
         error_msg = 'Should not be able to update apps of others'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
@@ -178,7 +177,7 @@ class TestAppAPI(HelperAPI):
         assert error['action'] == 'PUT', error
         assert error['exception_cls'] == 'Forbidden', error
 
-        res = self.app.put('/api/app/%s?api_key=%s' % (id_, self.api_key),
+        res = self.app.put('/api/app/%s?api_key=%s' % (id_, users[1].api_key),
                            data=datajson)
 
         assert_equal(res.status, '200 OK', res.data)
@@ -189,7 +188,7 @@ class TestAppAPI(HelperAPI):
         assert out.get('id') == id_, error
 
         # With wrong id
-        res = self.app.put('/api/app/5000?api_key=%s' % self.api_key,
+        res = self.app.put('/api/app/5000?api_key=%s' % users[1].api_key,
                            data=datajson)
         assert_equal(res.status, '404 NOT FOUND', res.data)
         error = json.loads(res.data)
@@ -200,7 +199,7 @@ class TestAppAPI(HelperAPI):
         # With fake data
         data['algo'] = 13
         datajson = json.dumps(data)
-        res = self.app.put('/api/app/%s?api_key=%s' % (id_, self.api_key),
+        res = self.app.put('/api/app/%s?api_key=%s' % (id_, users[1].api_key),
                            data=datajson)
         err = json.loads(res.data)
         assert res.status_code == 415, err
@@ -212,7 +211,7 @@ class TestAppAPI(HelperAPI):
         data.pop('algo')
         data['name'] = None
         datajson = json.dumps(data)
-        res = self.app.put('/api/app/%s?api_key=%s' % (id_, self.api_key),
+        res = self.app.put('/api/app/%s?api_key=%s' % (id_, users[1].api_key),
                            data=datajson)
         err = json.loads(res.data)
         assert res.status_code == 415, err
@@ -222,7 +221,7 @@ class TestAppAPI(HelperAPI):
 
         data['name'] = ''
         datajson = json.dumps(data)
-        res = self.app.put('/api/app/%s?api_key=%s' % (id_, self.api_key),
+        res = self.app.put('/api/app/%s?api_key=%s' % (id_, users[1].api_key),
                            data=datajson)
         err = json.loads(res.data)
         assert res.status_code == 415, err
@@ -233,7 +232,7 @@ class TestAppAPI(HelperAPI):
         data['name'] = 'something'
         data['short_name'] = ''
         datajson = json.dumps(data)
-        res = self.app.put('/api/app/%s?api_key=%s' % (id_, self.api_key),
+        res = self.app.put('/api/app/%s?api_key=%s' % (id_, users[1].api_key),
                            data=datajson)
         err = json.loads(res.data)
         assert res.status_code == 415, err
@@ -244,7 +243,7 @@ class TestAppAPI(HelperAPI):
 
         # With not JSON data
         datajson = data
-        res = self.app.put('/api/app/%s?api_key=%s' % (id_, self.api_key),
+        res = self.app.put('/api/app/%s?api_key=%s' % (id_, users[1].api_key),
                            data=datajson)
         err = json.loads(res.data)
         assert res.status_code == 415, err
@@ -259,7 +258,7 @@ class TestAppAPI(HelperAPI):
             long_description=u'Long Description\n================')
 
         datajson = json.dumps(data)
-        res = self.app.put('/api/app/%s?api_key=%s&search=select1' % (id_, self.api_key),
+        res = self.app.put('/api/app/%s?api_key=%s&search=select1' % (id_, users[1].api_key),
                            data=datajson)
         err = json.loads(res.data)
         assert res.status_code == 415, err
@@ -277,7 +276,7 @@ class TestAppAPI(HelperAPI):
         assert error['action'] == 'DELETE', error
         assert error['target'] == 'app', error
         ### real user but not allowed as not owner!
-        url = '/api/app/%s?api_key=%s' % (id_, self.api_key_2)
+        url = '/api/app/%s?api_key=%s' % (id_, non_owner.api_key)
         res = self.app.delete(url, data=datajson)
         error_msg = 'Should not be able to delete apps of others'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
@@ -286,13 +285,13 @@ class TestAppAPI(HelperAPI):
         assert error['action'] == 'DELETE', error
         assert error['target'] == 'app', error
 
-        url = '/api/app/%s?api_key=%s' % (id_, self.api_key)
+        url = '/api/app/%s?api_key=%s' % (id_, users[1].api_key)
         res = self.app.delete(url, data=datajson)
 
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
         # delete an app that does not exist
-        url = '/api/app/5000?api_key=%s' % self.api_key
+        url = '/api/app/5000?api_key=%s' % users[1].api_key
         res = self.app.delete(url, data=datajson)
         error = json.loads(res.data)
         assert res.status_code == 404, error
@@ -302,76 +301,27 @@ class TestAppAPI(HelperAPI):
         assert error['exception_cls'] == 'NotFound', error
 
         # delete an app that does not exist
-        url = '/api/app/?api_key=%s' % self.api_key
+        url = '/api/app/?api_key=%s' % users[1].api_key
         res = self.app.delete(url, data=datajson)
         assert res.status_code == 404, error
 
     @with_context
-    def test_04_admin_app_post(self):
+    def test_admin_app_post(self):
         """Test API App update/delete for ADMIN users"""
-        self.register()
-        user = db.session.query(User).first()
-        name = u'XXXX Project'
-        data = dict(
-            name=name,
-            short_name='xxxx-project',
-            owner_id=user.id,
-            description='description',
-            long_description=u'Long Description\n================')
-        datajson = json.dumps(data)
-        # now a real user (we use the second api_key as first user is an admin)
-        res = self.app.post('/api/app?api_key=' + self.api_key_2,
-                            data=datajson)
-
-
-        out = db.session.query(App).filter_by(name=name).one()
-        assert out, out
-        assert_equal(out.short_name, 'xxxx-project'), out
-        assert_equal(out.owner.name, 'tester-2')
-        id_ = out.id
-        db.session.remove()
-
-        # POST with not JSON data
-        res = self.app.post('/api/app?api_key=' + self.api_key_2,
-                            data=data)
-        err = json.loads(res.data)
-        assert res.status_code == 415, err
-        assert err['status'] == 'failed', err
-        assert err['target'] == 'app', err
-        assert err['action'] == 'POST', err
-        assert err['exception_cls'] == 'ValueError', err
-
-        # POST with not allowed args
-        res = self.app.post('/api/app?api_key=%s&foo=bar' % self.api_key_2,
-                            data=data)
-        err = json.loads(res.data)
-        assert res.status_code == 415, err
-        assert err['status'] == 'failed', err
-        assert err['target'] == 'app', err
-        assert err['action'] == 'POST', err
-        assert err['exception_cls'] == 'AttributeError', err
-
-        # POST with fake data
-        data['wrongfield'] = 13
-        res = self.app.post('/api/app?api_key=' + self.api_key_2,
-                            data=json.dumps(data))
-        err = json.loads(res.data)
-        assert res.status_code == 415, err
-        assert err['status'] == 'failed', err
-        assert err['target'] == 'app', err
-        assert err['action'] == 'POST', err
-        assert err['exception_cls'] == 'TypeError', err
-        data.pop('wrongfield')
+        admin = UserFactory.create()
+        assert admin.admin
+        user = UserFactory.create()
+        app = AppFactory.create(owner=user, short_name='xxxx-project')
 
         # test update
         data = {'name': 'My New Title'}
         datajson = json.dumps(data)
         ### admin user but not owner!
-        url = '/api/app/%s?api_key=%s' % (id_, self.root_api_key)
+        url = '/api/app/%s?api_key=%s' % (app.id, admin.api_key)
         res = self.app.put(url, data=datajson)
 
         assert_equal(res.status, '200 OK', res.data)
-        out2 = db.session.query(App).get(id_)
+        out2 = db.session.query(App).get(app.id)
         assert_equal(out2.name, data['name'])
 
         # PUT with not JSON data
@@ -404,7 +354,7 @@ class TestAppAPI(HelperAPI):
         data.pop('wrongfield')
 
         # test delete
-        url = '/api/app/%s?api_key=%s' % (id_, self.root_api_key)
+        url = '/api/app/%s?api_key=%s' % (app.id, admin.api_key)
         # DELETE with not allowed args
         res = self.app.delete(url + "&foo=bar", data=json.dumps(data))
         err = json.loads(res.data)
@@ -419,18 +369,16 @@ class TestAppAPI(HelperAPI):
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
     @with_context
-    def test_07_user_progress_anonymous(self):
+    def test_user_progress_anonymous(self):
         """Test API userprogress as anonymous works"""
-        self.signout()
-        app = db.session.query(App).get(1)
-        tasks = db.session.query(Task)\
-                  .filter(Task.app_id == app.id)\
-                  .all()
-
-        # User ID = 2 because, the 1 is the root user
+        user = UserFactory.create()
+        app = AppFactory.create(owner=user)
+        tasks = TaskFactory.create_batch(2, app=app)
+        for task in tasks:
+            taskruns = TaskRunFactory.create_batch(2, task=task, user=user)
         taskruns = db.session.query(TaskRun)\
                      .filter(TaskRun.app_id == app.id)\
-                     .filter(TaskRun.user_id == 2)\
+                     .filter(TaskRun.user_id == user.id)\
                      .all()
 
         res = self.app.get('/api/app/1/userprogress', follow_redirects=True)
@@ -442,13 +390,8 @@ class TestAppAPI(HelperAPI):
         error_msg = "The reported number of done tasks is wrong"
         assert len(taskruns) == data['done'], data
 
-        res = self.app.get('/api/app/1/newtask')
-        data = json.loads(res.data)
         # Add a new TaskRun and check again
-        tr = TaskRun(app_id=1, task_id=data['id'], user_id=1,
-                           info={'answer': u'annakarenina'})
-        db.session.add(tr)
-        db.session.commit()
+        taskrun = TaskRunFactory.create(task=tasks[0], info={'answer': u'hello'})
 
         res = self.app.get('/api/app/1/userprogress', follow_redirects=True)
         data = json.loads(res.data)
@@ -459,54 +402,43 @@ class TestAppAPI(HelperAPI):
         assert len(taskruns) + 1 == data['done'], error_msg
 
     @with_context
-    def test_08_user_progress_authenticated_user(self):
+    def test_user_progress_authenticated_user(self):
         """Test API userprogress as an authenticated user works"""
-        self.register()
-        self.signin()
-        user = db.session.query(User)\
-                 .filter(User.name == 'johndoe')\
-                 .first()
-        app = db.session.query(App)\
-                .get(1)
-        tasks = db.session.query(Task)\
-                  .filter(Task.app_id == app.id)\
-                  .all()
-
+        user = UserFactory.create()
+        app = AppFactory.create(owner=user)
+        tasks = TaskFactory.create_batch(2, app=app)
+        for task in tasks:
+            taskruns = TaskRunFactory.create_batch(2, task=task, user=user)
         taskruns = db.session.query(TaskRun)\
                      .filter(TaskRun.app_id == app.id)\
                      .filter(TaskRun.user_id == user.id)\
                      .all()
 
-        res = self.app.get('/api/app/1/userprogress', follow_redirects=True)
-        data = json.loads(res.data)
-        error_msg = "The reported total number of tasks is wrong"
-        assert len(tasks) == data['total'], error_msg
-
-        url = '/api/app/%s/userprogress' % app.short_name
+        url = '/api/app/1/userprogress?api_key=%s' % user.api_key
         res = self.app.get(url, follow_redirects=True)
         data = json.loads(res.data)
         error_msg = "The reported total number of tasks is wrong"
         assert len(tasks) == data['total'], error_msg
 
-        url = '/api/app/5000/userprogress'
+        url = '/api/app/%s/userprogress?api_key=%s' % (app.short_name, user.api_key)
+        res = self.app.get(url, follow_redirects=True)
+        data = json.loads(res.data)
+        error_msg = "The reported total number of tasks is wrong"
+        assert len(tasks) == data['total'], error_msg
+
+        url = '/api/app/5000/userprogress?api_key=%s' % user.api_key
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
-        url = '/api/app/userprogress'
+        url = '/api/app/userprogress?api_key=%s' % user.api_key
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
         error_msg = "The reported number of done tasks is wrong"
         assert len(taskruns) == data['done'], error_msg
 
-        res = self.app.get('/api/app/1/newtask')
-        data = json.loads(res.data)
-
         # Add a new TaskRun and check again
-        tr = TaskRun(app_id=1, task_id=data['id'], user_id=user.id,
-                           info={'answer': u'annakarenina'})
-        db.session.add(tr)
-        db.session.commit()
+        taskrun = TaskRunFactory.create(task=tasks[0], info={'answer': u'hello'})
 
         res = self.app.get('/api/app/1/userprogress', follow_redirects=True)
         data = json.loads(res.data)
@@ -515,4 +447,120 @@ class TestAppAPI(HelperAPI):
 
         error_msg = "Number of done tasks is wrong: %s" % len(taskruns)
         assert len(taskruns) + 1 == data['done'], error_msg
-        self.signout()
+
+
+    @with_context
+    def test_delete_app_cascade(self):
+        """Test API delete app deletes associated tasks and taskruns"""
+        app = AppFactory.create()
+        tasks = TaskFactory.create_batch(2, app=app)
+        task_runs = TaskRunFactory.create_batch(2, app=app)
+        url = '/api/app/%s?api_key=%s' % (1, app.owner.api_key)
+        self.app.delete(url)
+
+        tasks = db.session.query(Task)\
+                  .filter_by(app_id=1)\
+                  .all()
+        assert len(tasks) == 0, "There should not be any task"
+
+        task_runs = db.session.query(TaskRun)\
+                      .filter_by(app_id=1)\
+                      .all()
+        assert len(task_runs) == 0, "There should not be any task run"
+
+
+    @with_context
+    def test_newtask_allow_anonymous_contributors(self):
+        """Test API get a newtask - allow anonymous contributors"""
+        app = AppFactory.create()
+        user = UserFactory.create()
+        tasks = TaskFactory.create_batch(2, app=app, info={'question': 'answer'})
+
+        # All users are allowed to participate by default
+        # As Anonymous user
+        url = '/api/app/%s/newtask' % app.id
+        res = self.app.get(url, follow_redirects=True)
+        task = json.loads(res.data)
+        err_msg = "The task.app_id is different from the app.id"
+        assert task['app_id'] == app.id, err_msg
+        err_msg = "There should not be an error message"
+        assert task['info'].get('error') is None, err_msg
+        err_msg = "There should be a question"
+        assert task['info'].get('question') == 'answer', err_msg
+
+        # As registered user
+        url = '/api/app/%s/newtask?api_key=%s' % (app.id, user.api_key)
+        res = self.app.get(url, follow_redirects=True)
+        task = json.loads(res.data)
+        err_msg = "The task.app_id is different from the app.id"
+        assert task['app_id'] == app.id, err_msg
+        err_msg = "There should not be an error message"
+        assert task['info'].get('error') is None, err_msg
+        err_msg = "There should be a question"
+        assert task['info'].get('question') == 'answer', err_msg
+
+        # Now only allow authenticated users
+        app.allow_anonymous_contributors = False
+
+        # As Anonymous user
+        url = '/api/app/%s/newtask' % app.id
+        res = self.app.get(url, follow_redirects=True)
+        task = json.loads(res.data)
+        err_msg = "The task.app_id should be null"
+        assert task['app_id'] is None, err_msg
+        err_msg = "There should be an error message"
+        err = "This application does not allow anonymous contributors"
+        assert task['info'].get('error') == err, err_msg
+        err_msg = "There should not be a question"
+        assert task['info'].get('question') is None, err_msg
+
+        # As registered user
+        url = '/api/app/%s/newtask?api_key=%s' % (app.id, user.api_key)
+        res = self.app.get(url, follow_redirects=True)
+        task = json.loads(res.data)
+        err_msg = "The task.app_id is different from the app.id"
+        assert task['app_id'] == app.id, err_msg
+        err_msg = "There should not be an error message"
+        assert task['info'].get('error') is None, err_msg
+        err_msg = "There should be a question"
+        assert task['info'].get('question') == 'answer', err_msg
+
+
+    @with_context
+    def test_newtask(self):
+        """Test API App.new_task method and authentication"""
+        app = AppFactory.create()
+        TaskFactory.create_batch(2, app=app)
+        user = UserFactory.create()
+
+        # anonymous
+        # test getting a new task
+        res = self.app.get('/api/app/%s/newtask' % app.id)
+        assert res, res
+        task = json.loads(res.data)
+        assert_equal(task['app_id'], app.id)
+
+        # The output should have a mime-type: application/json
+        assert res.mimetype == 'application/json', res
+
+        # as a real user
+        url = '/api/app/%s/newtask?api_key=%s' % (app.id, user.api_key)
+        res = self.app.get(url)
+        assert res, res
+        task = json.loads(res.data)
+        assert_equal(task['app_id'], app.id)
+
+        # Get NotFound for an non-existing app
+        url = '/api/app/5000/newtask'
+        res = self.app.get(url)
+        err = json.loads(res.data)
+        err_msg = "The app does not exist"
+        assert err['status'] == 'failed', err_msg
+        assert err['status_code'] == 404, err_msg
+        assert err['exception_cls'] == 'NotFound', err_msg
+        assert err['target'] == 'app', err_msg
+
+        # Get an empty task
+        url = '/api/app/%s/newtask?offset=1000' % app.id
+        res = self.app.get(url)
+        assert res.data == '{}', res.data

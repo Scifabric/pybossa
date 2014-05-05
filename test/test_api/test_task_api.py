@@ -18,18 +18,37 @@
 import json
 from default import db, with_context
 from nose.tools import assert_equal
-from test_api import HelperAPI
-from pybossa.model.user import User
-from pybossa.model.app import App
+from test_api import TestAPI
 from pybossa.model.task import Task
+from pybossa.model.task_run import TaskRun
+
+from factories import AppFactory, TaskFactory, TaskRunFactory, UserFactory
 
 
 
-class TestTaskAPI(HelperAPI):
+class TestTaskAPI(TestAPI):
+
 
     @with_context
-    def test_query_task(self):
-        """Test API query for task endpoint works"""
+    def test_task_query_without_params(self):
+        """ Test API Task query"""
+        app = AppFactory.create()
+        TaskFactory.create_batch(10, app=app, info={'question': 'answer'})
+        res = self.app.get('/api/task')
+        tasks = json.loads(res.data)
+        assert len(tasks) == 10, tasks
+        task = tasks[0]
+        assert task['info']['question'] == 'answer', task
+
+        # The output should have a mime-type: application/json
+        assert res.mimetype == 'application/json', res
+
+
+    @with_context
+    def test_task_query_with_params(self):
+        """Test API query for task with params works"""
+        app = AppFactory.create()
+        TaskFactory.create_batch(10, app=app)
         # Test for real field
         res = self.app.get("/api/task?app_id=1")
         data = json.loads(res.data)
@@ -44,13 +63,13 @@ class TestTaskAPI(HelperAPI):
         assert len(data) == 0, data
 
         # Multiple fields
-        res = self.app.get('/api/task?app_id=1&state=0')
+        res = self.app.get('/api/task?app_id=1&state=ongoing')
         data = json.loads(res.data)
         # One result
         assert len(data) == 10, data
         # Correct result
         assert data[0]['app_id'] == 1, data
-        assert data[0]['state'] == '0', data
+        assert data[0]['state'] == u'ongoing', data
 
         # Limits
         res = self.app.get("/api/task?app_id=1&limit=5")
@@ -59,34 +78,16 @@ class TestTaskAPI(HelperAPI):
             assert item['app_id'] == 1, item
         assert len(data) == 5, data
 
-    @with_context
-    def test_02_task_query(self):
-        """ Test API Task query"""
-        res = self.app.get('/api/task')
-        tasks = json.loads(res.data)
-        assert len(tasks) == 10, tasks
-        task = tasks[0]
-        assert task['info']['question'] == 'My random question', task
-
-        # The output should have a mime-type: application/json
-        assert res.mimetype == 'application/json', res
 
     @with_context
-    def test_05_task_post(self):
-        '''Test API Task creation and auth'''
-        user = db.session.query(User)\
-                 .filter_by(name=self.name)\
-                 .one()
-        app = db.session.query(App)\
-                .filter_by(owner_id=user.id)\
-                .one()
+    def test_task_post(self):
+        """Test API Task creation"""
+        admin = UserFactory.create()
+        user = UserFactory.create()
+        non_owner = UserFactory.create()
+        app = AppFactory.create(owner=user)
         data = dict(app_id=app.id, state='0', info='my task data')
         root_data = dict(app_id=app.id, state='0', info='my root task data')
-        root_data = json.dumps(root_data)
-
-        ########
-        # POST #
-        ########
 
         # anonymous user
         # no api-key
@@ -95,14 +96,14 @@ class TestTaskAPI(HelperAPI):
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         ### real user but not allowed as not owner!
-        res = self.app.post('/api/task?api_key=' + self.api_key_2,
+        res = self.app.post('/api/task?api_key=' + non_owner.api_key,
                             data=json.dumps(data))
 
         error_msg = 'Should not be able to post tasks for apps of others'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
         # now a real user
-        res = self.app.post('/api/task?api_key=' + self.api_key,
+        res = self.app.post('/api/task?api_key=' + user.api_key,
                             data=json.dumps(data))
         assert res.data, res
         datajson = json.loads(res.data)
@@ -112,11 +113,10 @@ class TestTaskAPI(HelperAPI):
         assert out, out
         assert_equal(out.info, 'my task data'), out
         assert_equal(out.app_id, app.id)
-        id_ = out.id
 
         # now the root user
-        res = self.app.post('/api/task?api_key=' + self.root_api_key,
-                            data=root_data)
+        res = self.app.post('/api/task?api_key=' + admin.api_key,
+                            data=json.dumps(root_data))
         assert res.data, res
         datajson = json.loads(res.data)
         out = db.session.query(Task)\
@@ -125,10 +125,9 @@ class TestTaskAPI(HelperAPI):
         assert out, out
         assert_equal(out.info, 'my root task data'), out
         assert_equal(out.app_id, app.id)
-        root_id_ = out.id
 
         # POST with not JSON data
-        url = '/api/task?api_key=%s' % self.api_key
+        url = '/api/task?api_key=%s' % user.api_key
         res = self.app.post(url, data=data)
         err = json.loads(res.data)
         assert res.status_code == 415, err
@@ -155,41 +154,43 @@ class TestTaskAPI(HelperAPI):
         assert err['target'] == 'task', err
         assert err['action'] == 'POST', err
         assert err['exception_cls'] == 'TypeError', err
-        data.pop('wrongfield')
 
-        ##########
-        # UPDATE #
-        ##########
+
+    @with_context
+    def test_task_update(self):
+        """Test API task update"""
+        admin = UserFactory.create()
+        user = UserFactory.create()
+        non_owner = UserFactory.create()
+        app = AppFactory.create(owner=user)
+        task = TaskFactory.create(app=app)
+        root_task = TaskFactory.create(app=app)
         data = {'state': '1'}
         datajson = json.dumps(data)
         root_data = {'state': '4'}
         root_datajson = json.dumps(root_data)
 
         ## anonymous
-        res = self.app.put('/api/task/%s' % id_, data=data)
-        error_msg = 'Anonymous should not be allowed to update'
-        assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
+        res = self.app.put('/api/task/%s' % task.id, data=data)
+        assert_equal(res.status, '401 UNAUTHORIZED', res.status)
         ### real user but not allowed as not owner!
-        url = '/api/task/%s?api_key=%s' % (id_, self.api_key_2)
+        url = '/api/task/%s?api_key=%s' % (task.id, non_owner.api_key)
         res = self.app.put(url, data=datajson)
-        error_msg = 'Should not be able to update tasks of others'
-        assert_equal(res.status, '403 FORBIDDEN', error_msg)
+        assert_equal(res.status, '403 FORBIDDEN', res.status)
 
         ### real user
-        url = '/api/task/%s?api_key=%s' % (id_, self.api_key)
+        url = '/api/task/%s?api_key=%s' % (task.id, user.api_key)
         res = self.app.put(url, data=datajson)
         out = json.loads(res.data)
         assert_equal(res.status, '200 OK', res.data)
-        out2 = db.session.query(Task).get(id_)
-        assert_equal(out2.state, data['state'])
-        assert out2.id == out['id'], out
+        assert_equal(task.state, data['state'])
+        assert task.id == out['id'], out
 
         ### root
-        res = self.app.put('/api/task/%s?api_key=%s' % (root_id_, self.root_api_key),
+        res = self.app.put('/api/task/%s?api_key=%s' % (root_task.id, admin.api_key),
                            data=root_datajson)
         assert_equal(res.status, '200 OK', res.data)
-        out2 = db.session.query(Task).get(root_id_)
-        assert_equal(out2.state, root_data['state'])
+        assert_equal(root_task.state, root_data['state'])
 
         # PUT with not JSON data
         res = self.app.put(url, data=data)
@@ -218,25 +219,32 @@ class TestTaskAPI(HelperAPI):
         assert err['target'] == 'task', err
         assert err['action'] == 'PUT', err
         assert err['exception_cls'] == 'TypeError', err
-        data.pop('wrongfield')
 
-        ##########
-        # DELETE #
-        ##########
+
+    @with_context
+    def test_task_delete(self):
+        """Test API task delete"""
+        admin = UserFactory.create()
+        user = UserFactory.create()
+        non_owner = UserFactory.create()
+        app = AppFactory.create(owner=user)
+        task = TaskFactory.create(app=app)
+        root_task = TaskFactory.create(app=app)
+
         ## anonymous
-        res = self.app.delete('/api/task/%s' % id_)
+        res = self.app.delete('/api/task/%s' % task.id)
         error_msg = 'Anonymous should not be allowed to update'
         assert_equal(res.status, '401 UNAUTHORIZED', error_msg)
 
         ### real user but not allowed as not owner!
-        url = '/api/task/%s?api_key=%s' % (id_, self.api_key_2)
+        url = '/api/task/%s?api_key=%s' % (task.id, non_owner.api_key)
         res = self.app.delete(url)
         error_msg = 'Should not be able to update tasks of others'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
         #### real user
         # DELETE with not allowed args
-        res = self.app.delete(url + "&foo=bar", data=json.dumps(data))
+        res = self.app.delete(url + "&foo=bar")
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
@@ -245,81 +253,33 @@ class TestTaskAPI(HelperAPI):
         assert err['exception_cls'] == 'AttributeError', err
 
         # DELETE returns 204
-        url = '/api/task/%s?api_key=%s' % (id_, self.api_key)
+        url = '/api/task/%s?api_key=%s' % (task.id, user.api_key)
         res = self.app.delete(url)
         assert_equal(res.status, '204 NO CONTENT', res.data)
         assert res.data == '', res.data
 
         #### root user
-        url = '/api/task/%s?api_key=%s' % (root_id_, self.root_api_key)
+        url = '/api/task/%s?api_key=%s' % (root_task.id, admin.api_key)
         res = self.app.delete(url)
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
         tasks = db.session.query(Task)\
                   .filter_by(app_id=app.id)\
                   .all()
-        assert tasks, tasks
+        assert task not in tasks, tasks
+        assert root_task not in tasks, tasks
+
 
     @with_context
-    def test_11_allow_anonymous_contributors(self):
-        """Test API allow anonymous contributors works"""
-        app = db.session.query(App).first()
+    def test_delete_task_cascade(self):
+        """Test API delete task deletes associated taskruns"""
+        task = TaskFactory.create()
+        task_runs = TaskRunFactory.create_batch(3, task=task)
+        url = '/api/task/%s?api_key=%s' % (task.id, task.app.owner.api_key)
+        res = self.app.delete(url)
 
-        # All users are allowed to participate by default
-        # As Anonymous user
-        url = '/api/app/%s/newtask' % app.id
-        res = self.app.get(url, follow_redirects=True)
-        task = json.loads(res.data)
-        err_msg = "The task.app_id is different from the app.id"
-        assert task['app_id'] == app.id, err_msg
-        err_msg = "There should not be an error message"
-        assert task['info'].get('error') is None, err_msg
-        err_msg = "There should be a question"
-        assert task['info'].get('question') == 'My random question', err_msg
-
-        # As registered user
-        self.register()
-        self.signin()
-        app = db.session.query(App).first()
-        url = '/api/app/%s/newtask' % app.id
-        res = self.app.get(url, follow_redirects=True)
-        task = json.loads(res.data)
-        err_msg = "The task.app_id is different from the app.id"
-        assert task['app_id'] == app.id, err_msg
-        err_msg = "There should not be an error message"
-        assert task['info'].get('error') is None, err_msg
-        err_msg = "There should be a question"
-        assert task['info'].get('question') == 'My random question', err_msg
-        self.signout()
-
-        # Now only allow authenticated users
-        app = db.session.query(App).first()
-        app.allow_anonymous_contributors = False
-        db.session.add(app)
-        db.session.commit()
-
-        # As Anonymous user
-        url = '/api/app/%s/newtask' % app.id
-        res = self.app.get(url, follow_redirects=True)
-        task = json.loads(res.data)
-        err_msg = "The task.app_id should be null"
-        assert task['app_id'] is None, err_msg
-        err_msg = "There should be an error message"
-        err = "This application does not allow anonymous contributors"
-        assert task['info'].get('error') == err, err_msg
-        err_msg = "There should not be a question"
-        assert task['info'].get('question') is None, err_msg
-
-        # As registered user
-        app = db.session.query(App).first()
-        res = self.signin()
-        url = '/api/app/%s/newtask' % app.id
-        res = self.app.get(url, follow_redirects=True)
-        task = json.loads(res.data)
-        err_msg = "The task.app_id is different from the app.id"
-        assert task['app_id'] == app.id, err_msg
-        err_msg = "There should not be an error message"
-        assert task['info'].get('error') is None, err_msg
-        err_msg = "There should be a question"
-        assert task['info'].get('question') == 'My random question', err_msg
-        self.signout()
+        assert_equal(res.status, '204 NO CONTENT', res.data)
+        task_runs = db.session.query(TaskRun)\
+                      .filter_by(task_id=task.id)\
+                      .all()
+        assert len(task_runs) == 0, "There should not be any task run for task"

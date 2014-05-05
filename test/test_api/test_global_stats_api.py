@@ -16,11 +16,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import json
-from test_api import HelperAPI
+from test_api import TestAPI
 
 
 
-class TestGlobalStatsAPI(HelperAPI):
+class TestGlobalStatsAPI(TestAPI):
 
     def test_global_stats(self):
         """Test Global Stats works."""
