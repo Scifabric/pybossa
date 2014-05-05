@@ -16,14 +16,14 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from sqlalchemy.sql import text
-from pybossa.core import db
-from pybossa.cache import cache, memoize, delete_memoized, ONE_DAY, ONE_HOUR
+from pybossa.core import db, timeouts
+from pybossa.cache import cache, memoize, delete_memoized
 from pybossa.util import pretty_date
 from pybossa.model.user import User
 import json
 
 
-@memoize(timeout=ONE_HOUR)
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
 def get_leaderboard(n, user_id):
     """Return the top n users with their rank."""
     sql = text('''
@@ -92,7 +92,8 @@ def get_leaderboard(n, user_id):
     return top_users
 
 
-@cache(key_prefix="front_page_top_users", timeout=ONE_DAY)
+@cache(key_prefix="front_page_top_users",
+       timeout=timeouts.get('USER_TOP_TIMEOUT'))
 def get_top(n=10):
     """Return the n=10 top users"""
     sql = text('''SELECT "user".id, "user".name, "user".fullname, "user".email_addr,
@@ -106,7 +107,7 @@ def get_top(n=10):
     return top_users
 
 
-@memoize()
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
 def get_user_summary(name):
     # Get USER
     sql = text('''
@@ -128,7 +129,7 @@ def get_user_summary(name):
                     facebook_user_id=row.facebook_user_id,
                     info=dict(json.loads(row.info)),
                     email_addr=row.email_addr, n_answers=row.n_answers,
-					registered_ago=pretty_date(row.created))
+                    registered_ago=pretty_date(row.created))
 
     # Rank
     # See: https://gist.github.com/tokumine/1583695
@@ -184,13 +185,14 @@ def get_user_summary(name):
         return None, None, None
 
 
-@cache(timeout=ONE_HOUR, key_prefix="site_total_users")
+@cache(timeout=timeouts.get('USER_TOTAL_TIMEOUT'),
+       key_prefix="site_total_users")
 def get_total_users():
     count = User.query.count()
     return count
 
 
-@memoize(timeout=ONE_HOUR)
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
 def get_users_page(page, per_page=24):
     offset = (page - 1) * per_page
     sql = text('''SELECT "user".id, "user".name, "user".fullname, "user".email_addr,

@@ -17,18 +17,20 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from sqlalchemy.sql import text
-from pybossa.cache import cache, delete_cached, ONE_DAY
-from pybossa.core import db
+from pybossa.cache import cache, delete_cached
+from pybossa.core import db, timeouts
 import pybossa.model as model
 
 
-@cache(key_prefix="categories_all", timeout=ONE_DAY)
+@cache(key_prefix="categories_all",
+       timeout=timeouts.get('CATEGORY_TIMEOUT'))
 def get_all():
     """Return all categories"""
     return db.session.query(model.category.Category).all()
 
 
-@cache(key_prefix="categories_used", timeout=ONE_DAY)
+@cache(key_prefix="categories_used",
+       timeout=timeouts.get('CATEGORY_TIMEOUT'))
 def get_used():
     """Return categories only used by apps"""
     sql = text('''
