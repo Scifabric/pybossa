@@ -367,4 +367,7 @@ def setup_cache_timeouts(app):
     timeouts['N_APPS_PER_CATEGORY'] = app.config['N_APPS_PER_CATEGORY']
     # Categories
     timeouts['CATEGORY_TIMEOUT'] = app.config['CATEGORY_TIMEOUT']
-
+    # Users
+    timeouts['USER_TIMEOUT'] = app.config['USER_TIMEOUT']
+    timeouts['USER_TOP_TIMEOUT'] = app.config['USER_TOP_TIMEOUT']
+    timeouts['USER_TOTAL_TIMEOUT'] = app.config['USER_TOTAL_TIMEOUT']
