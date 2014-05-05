@@ -96,11 +96,50 @@ def bootstrap_avatars():
     import os
     import time
     from urlparse import urlparse
+    from PIL import Image
+
+    def get_gravatar_url(email, size):
+        # import code for encoding urls and generating md5 hashes
+        import urllib, hashlib
+
+        # construct the url
+        gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(email.lower()).hexdigest() + "?"
+        gravatar_url += urllib.urlencode({'d':404, 's':str(size)})
+        return gravatar_url
+
     with app.app_context():
         if app.config['UPLOAD_METHOD'] == 'local':
+            users = User.query.order_by('id').all()
+            print "Downloading avatars for %s users" % len(users)
+            for u in users[0:10]:
+                print "Downloading avatar for %s ..." % u.name
+                container = "user_%s" % u.id
+                path = os.path.join(app.config.get('UPLOAD_FOLDER'), container)
+                try:
+                    print get_gravatar_url(u.email_addr, 100)
+                    r = requests.get(get_gravatar_url(u.email_addr, 100), stream=True)
+                    if r.status_code == 200:
+                        if not os.path.isdir(path):
+                            os.makedirs(path)
+                        prefix = time.time()
+                        filename = "%s_avatar.png" % prefix
+                        with open(os.path.join(path, filename), 'wb') as f:
+                            for chunk in r.iter_content(1024):
+                                f.write(chunk)
+                        u.info['avatar'] = filename
+                        u.info['container'] = container
+                        db.session.commit()
+                        print "Done!"
+                    else:
+                        print "No Gravatar, this user will use the placeholder."
+                except:
+                    raise
+                    print "No gravatar, this user will use the placehoder."
+
+
             apps = App.query.all()
             print "Downloading avatars for %s apps" % len(apps)
-            for a in apps:
+            for a in apps[0:1]:
                 if a.info.get('thumbnail') and not a.info.get('container'):
                     print "Working on app: %s ..." % a.short_name
                     print "Saving avatar: %s ..." % a.info.get('thumbnail')
@@ -108,13 +147,13 @@ def bootstrap_avatars():
                     if url.scheme and url.netloc:
                         container = "user_%s" % a.owner_id
                         path = os.path.join(app.config.get('UPLOAD_FOLDER'), container)
-                        if not os.path.isdir(path):
-                            os.makedirs(path)
                         try:
                             r = requests.get(a.info.get('thumbnail'), stream=True)
                             if r.status_code == 200:
                                 prefix = time.time()
                                 filename = "app_%s_thumbnail_%i.png" % (a.id, prefix)
+                                if not os.path.isdir(path):
+                                    os.makedirs(path)
                                 with open(os.path.join(path, filename), 'wb') as f:
                                     for chunk in r.iter_content(1024):
                                         f.write(chunk)
@@ -125,7 +164,86 @@ def bootstrap_avatars():
                         except:
                             print "Something failed, this app will use the placehoder."
         else:
-            pass
+            import pyrax
+            import tempfile
+            pyrax.set_setting("identity_type", "rackspace")
+            pyrax.set_credentials(username=app.config['RACKSPACE_USERNAME'],
+                                  api_key=app.config['RACKSPACE_API_KEY'],
+                                  region=app.config['RACKSPACE_REGION'])
+
+            cf = pyrax.cloudfiles
+            users = User.query.all()
+            print "Downloading avatars for %s users" % len(users)
+            dirpath = tempfile.mkdtemp()
+            for u in users:
+                try:
+                    r = requests.get(get_gravatar_url(u.email_addr, 100), stream=True)
+                    if r.status_code == 200:
+                        print "Downloading avatar for %s ..." % u.name
+                        container = "user_%s" % u.id
+                        try:
+                            cf.get_container(container)
+                        except pyrax.exceptions.NoSuchContainer:
+                            cf.create_container(container)
+                            cf.make_container_public(container)
+                        prefix = time.time()
+                        filename = "%s_avatar.png" % prefix
+                        with open(os.path.join(dirpath, filename), 'wb') as f:
+                            for chunk in r.iter_content(1024):
+                                f.write(chunk)
+                        chksum = pyrax.utils.get_checksum(os.path.join(dirpath,
+                                                                       filename))
+                        cf.upload_file(container,
+                                       os.path.join(dirpath, filename),
+                                       obj_name=filename,
+                                       etag=chksum)
+                        u.info['avatar'] = filename
+                        u.info['container'] = container
+                        db.session.commit()
+                        print "Done!"
+                    else:
+                        print "No Gravatar, this user will use the placeholder."
+                except:
+                    print "No gravatar, this user will use the placehoder."
+
+
+            apps = App.query.all()
+            print "Downloading avatars for %s apps" % len(apps)
+            for a in apps:
+                if a.info.get('thumbnail') and not a.info.get('container'):
+                    print "Working on app: %s ..." % a.short_name
+                    print "Saving avatar: %s ..." % a.info.get('thumbnail')
+                    url = urlparse(a.info.get('thumbnail'))
+                    if url.scheme and url.netloc:
+                        container = "user_%s" % a.owner_id
+                        try:
+                            cf.get_container(container)
+                        except pyrax.exceptions.NoSuchContainer:
+                            cf.create_container(container)
+                            cf.make_container_public(container)
+
+                        try:
+                            r = requests.get(a.info.get('thumbnail'), stream=True)
+                            if r.status_code == 200:
+                                prefix = time.time()
+                                filename = "app_%s_thumbnail_%i.png" % (a.id, prefix)
+                                with open(os.path.join(dirpath, filename), 'wb') as f:
+                                    for chunk in r.iter_content(1024):
+                                        f.write(chunk)
+                                chksum = pyrax.utils.get_checksum(os.path.join(dirpath,
+                                                                               filename))
+                                cf.upload_file(container,
+                                               os.path.join(dirpath, filename),
+                                               obj_name=filename,
+                                               etag=chksum)
+                                a.info['thumbnail'] = filename
+                                a.info['container'] = container
+                                db.session.commit()
+                                print "Done!"
+                        except:
+                            print "Something failed, this app will use the placehoder."
+
+
 
 
 ## ==================================================
