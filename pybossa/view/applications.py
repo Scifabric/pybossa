@@ -268,6 +268,7 @@ def app_cat_index(category, page):
 def new():
     require.app.create()
     form = AppForm(request.form)
+    del form.id
     categories = db.session.query(model.category.Category).all()
     form.category_id.choices = [(c.id, c.name) for c in categories]
 
@@ -279,7 +280,6 @@ def new():
     if request.method != 'POST':
         return respond(False)
 
-    del form.id
     if not form.validate():
         flash(gettext('Please correct the errors'), 'error')
         return respond(True)
@@ -298,8 +298,8 @@ def new():
 
     db.session.add(app)
     db.session.commit()
-    # Upload the app
-    if form.avatar.data:
+    # Upload the avatar
+    if request.files.get('avatar'):
         file = request.files['avatar']
         coordinates = (form.x1.data, form.y1.data,
                        form.x2.data, form.y2.data)
