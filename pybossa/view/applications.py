@@ -281,18 +281,10 @@ def new():
 
     del form.id
     if not form.validate():
-        for field, errors in form.errors.items():
-            for error in errors:
-                flash(u"Error in the %s field - %s" % (
-                    getattr(form, field).label.text, error))
         flash(gettext('Please correct the errors'), 'error')
         return respond(True)
 
     info = {}
-    # Add the info items
-    #if form.thumbnail.data:
-    #    info['thumbnail'] = form.thumbnail.data
-
 
     app = model.app.App(name=form.name.data,
                     short_name=form.short_name.data,
