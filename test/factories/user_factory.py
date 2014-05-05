@@ -16,16 +16,19 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import Test, with_context
-from factories import reset_all_pk_sequences
+from pybossa.model import db
+from pybossa.model.user import User
+from . import BaseFactory, factory
 
 
-class TestAPI(Test):
+class UserFactory(BaseFactory):
+    FACTORY_FOR = User
 
-    endpoints = ['app', 'task', 'taskrun', 'user']
-
-    @with_context
-    def setUp(self):
-        super(TestAPI, self).setUp()
-        reset_all_pk_sequences()
-
+    id = factory.Sequence(lambda n: n)
+    name = factory.Sequence(lambda n: u'user%d' % n)
+    fullname = factory.Sequence(lambda n: u'User %d' % n)
+    email_addr = factory.LazyAttribute(lambda usr: u'%s@test.com' % usr.name)
+    locale = u'en'
+    admin = False
+    privacy_mode = True
+    api_key =  factory.Sequence(lambda n: u'api-key%d' % n)

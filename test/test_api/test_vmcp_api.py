@@ -18,11 +18,11 @@
 import json
 from default import flask_app, with_context
 from mock import patch
-from test_api import HelperAPI
+from test_api import TestAPI
 
 
 
-class TestVmcpAPI(HelperAPI):
+class TestVmcpAPI(TestAPI):
 
     @with_context
     def test_vcmp(self):

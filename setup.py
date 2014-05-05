@@ -33,7 +33,8 @@ requirements = [
     "tox",
     "pyrax",
     "pillow",
-    "flask-debugtoolbar"
+    "flask-debugtoolbar",
+    "factory_boy"
 ]
 
 setup(
