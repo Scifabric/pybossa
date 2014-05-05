@@ -248,7 +248,7 @@ def n_published():
 
 
 # Cache it for longer times, as this is only shown to admin users
-@cache(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'),
+@cache(timeout=timeouts.get('STATS_DRAFT_TIMEOUT'),
        key_prefix="number_draft_apps")
 def n_draft():
     """Return number of draft applications"""
@@ -260,7 +260,7 @@ def n_draft():
     results = db.engine.execute(sql)
     for row in results:
         count = row[0]
-    return count
+    return 1
 
 
 @memoize(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'))

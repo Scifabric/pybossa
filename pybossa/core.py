@@ -364,6 +364,8 @@ def setup_cache_timeouts(app):
     timeouts['REGISTERED_USERS_TIMEOUT'] = app.config['REGISTERED_USERS_TIMEOUT']
     timeouts['ANON_USERS_TIMEOUT'] = app.config['ANON_USERS_TIMEOUT']
     timeouts['STATS_FRONTPAGE_TIMEOUT'] = app.config['STATS_FRONTPAGE_TIMEOUT']
+    timeouts['STATS_APP_TIMEOUT'] = app.config['STATS_APP_TIMEOUT']
+    timeouts['STATS_DRAFT_TIMEOUT'] = app.config['STATS_DRAFT_TIMEOUT']
     timeouts['N_APPS_PER_CATEGORY'] = app.config['N_APPS_PER_CATEGORY']
     # Categories
     timeouts['CATEGORY_TIMEOUT'] = app.config['CATEGORY_TIMEOUT']
