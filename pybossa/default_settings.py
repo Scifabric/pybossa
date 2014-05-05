@@ -50,9 +50,9 @@ UPLOAD_METHOD = 'local'
 ## Default number of users shown in the leaderboard
 LEADERBOARD = 20
 
+## Default configuration for debug toolbar
+ENABLE_DEBUG_TOOLBAR = False
+
 ## Default cache timeouts
 APP_TIMEOUT = 15 * 60
 REGISTERED_USERS_TIMEOUT = 15 * 60
-ANON_USERS_TIMEOUT = 5 * 60 * 60
-STATS_FRONTPAGE_TIMEOUT = 12 * 60 * 60
-N_APPS_PER_CATEGORY = 60 * 60

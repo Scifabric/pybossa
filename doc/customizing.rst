@@ -24,6 +24,18 @@ PyBossa server
 
 .. _documentation: http://flask.pocoo.org/docs/quickstart/#debug-mode
 
+Debug Toolbar
+~~~~~~~~~~~~~
+
+PyBossa includes a flag to enable a debug toolbar that can give your more
+insights about the performance of PyBossa. We strongly recommend to keep the
+toolbar disabled in production environments, as it will slow down considerably
+all the execution of the code. However, if you are testing the server, feel
+free to enable it adding the following variable to the settings file::
+
+    ENABLE_DEBUG_TOOLBAR = True
+
+
 Host and Port
 =============
 

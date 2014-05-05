@@ -32,7 +32,8 @@ requirements = [
     "mock",
     "tox",
     "pyrax",
-    "pillow"
+    "pillow",
+    "flask-debugtoolbar"
 ]
 
 setup(
