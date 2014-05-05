@@ -230,7 +230,8 @@ def get_featured(category, page=1, per_page=5):
     return apps, count
 
 
-@cache(key_prefix="number_published_apps")
+@cache(key_prefix="number_published_apps",
+       timeout=timeouts.get('STATS_APP_TIMEOUT'))
 def n_published():
     """Return number of published apps"""
     sql = text('''
