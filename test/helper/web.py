@@ -213,7 +213,8 @@ class Helper(Test):
                                          'category_id': new_category_id,
                                          'long_description': new_long_description,
                                          'sched': new_sched,
-                                         'hidden': new_hidden},
+                                         'hidden': new_hidden,
+                                         'btn': 'Save'},
                                      follow_redirects=True)
             else:
                 return self.app.post("/app/%s/update" % short_name,
@@ -224,7 +225,9 @@ class Helper(Test):
                                            'category_id': new_category_id,
                                            'long_description': new_long_description,
                                            'sched': new_sched,
-                                           'description': new_description},
+                                           'description': new_description,
+                                           'btn': 'Save'
+                                           },
                                      follow_redirects=True)
         else:
             return self.app.get("/app/%s/update" % short_name,
