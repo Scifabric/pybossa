@@ -117,7 +117,8 @@ class TestAdmin(web.Helper):
         assert res.status == "403 FORBIDDEN", res.status
 
     @with_context
-    def test_06_admin_featured_apps_add_remove_app(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_06_admin_featured_apps_add_remove_app(self, mock):
         """Test ADMIN featured apps add-remove works as an admin user"""
         self.register()
         self.new_application()
@@ -175,7 +176,8 @@ class TestAdmin(web.Helper):
         assert err['error'] == err_msg, err_msg
 
     @with_context
-    def test_07_admin_featured_apps_add_remove_app_non_admin(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_07_admin_featured_apps_add_remove_app_non_admin(self, mock):
         """Test ADMIN featured apps add-remove works as an non-admin user"""
         self.register()
         self.signout()
@@ -203,7 +205,8 @@ class TestAdmin(web.Helper):
         assert "403 FORBIDDEN" in res.status, err_msg
 
     @with_context
-    def test_08_admin_featured_apps_add_remove_app_anonymous(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_08_admin_featured_apps_add_remove_app_anonymous(self, mock):
         """Test ADMIN featured apps add-remove works as an anonymous user"""
         self.register()
         self.new_application()
@@ -484,7 +487,8 @@ class TestAdmin(web.Helper):
         assert "New Long Desc" in res.data, err_msg
 
     @with_context
-    def test_20_admin_delete_app(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_20_admin_delete_app(self, mock):
         """Test ADMIN can delete an app that belongs to another user"""
         self.register()
         self.signout()
