@@ -18,7 +18,7 @@ The objects are:
 """
 __all__ = ['sentinel', 'signer', 'mail', 'login_manager', 'facebook',
            'twitter', 'google', 'misaka', 'babel', 'gravatar',
-           'uploader', 'csrf']
+           'uploader', 'csrf', 'debug_toolbar']
 # CACHE
 from pybossa.sentinel import Sentinel
 sentinel = Sentinel()
@@ -35,9 +35,9 @@ mail = Mail()
 from flask.ext.login import LoginManager
 login_manager = LoginManager()
 
-# Toolbar
-# from flask.ext.debugtoolbar import DebugToolbarExtension
-# toolbar = DebugToolbarExtension()
+# Debug Toolbar
+from flask.ext.debugtoolbar import DebugToolbarExtension
+debug_toolbar = DebugToolbarExtension()
 
 # Social Networks
 from pybossa.util import Facebook
