@@ -111,7 +111,8 @@ class Helper(Test):
         """Helper function to create an application"""
         if method == "POST":
             import tempfile
-            avatar = tempfile.TemporaryFile()
+            avatar, filename = tempfile.mkstemp()
+            print filename
             self.create_categories()
             if hidden:
                 return self.app.post("/app/new", data={
@@ -119,7 +120,7 @@ class Helper(Test):
                     'short_name': short_name,
                     'description': description,
                     'thumbnail': thumbnail,
-                    'avatar': avatar,
+                    'avatar': filename,
                     'allow_anonymou_contributors': allow_anonymous_contributors,
                     'category_id': category_id,
                     'long_description': long_description,
@@ -131,7 +132,7 @@ class Helper(Test):
                     'short_name': short_name,
                     'description': description,
                     'thumbnail': thumbnail,
-                    'avatar': (open("/tmp/file_name.jpg", 'rb'),"file_name.jpg"),
+                    'avatar': (open(filename, 'rb'), filename),
                     'allow_anonymous_contributors': allow_anonymous_contributors,
                     'category_id': category_id,
                     'long_description': long_description,
