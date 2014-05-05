@@ -50,3 +50,12 @@ class LocalUploader(Uploader):
             return True
         except:
             return False
+
+    def delete_file(self, name, container):
+        """Delete file from filesystem."""
+        try:
+            path = os.path.join(self.upload_folder, container, name)
+            os.remove(path)
+            return True
+        except:
+            return False

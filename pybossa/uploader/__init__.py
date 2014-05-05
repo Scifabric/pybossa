@@ -106,3 +106,7 @@ class Uploader(object):
                 raise error
         # url_for will use this result, instead of raising BuildError.
         return url
+
+    def delete_file(self, name, container):
+        """Override by the uploader handler."""
+        pass

@@ -41,3 +41,6 @@ uploads
 *.swl
 *.log
 log
+*.sql
+
+pybossa/themes/crowdcrafting-theme/

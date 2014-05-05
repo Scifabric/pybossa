@@ -49,3 +49,6 @@ UPLOAD_METHOD = 'local'
 
 ## Default number of users shown in the leaderboard
 LEADERBOARD = 20
+
+## Default configuration for debug toolbar
+ENABLE_DEBUG_TOOLBAR = False

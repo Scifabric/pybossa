@@ -19,8 +19,10 @@
 from StringIO import StringIO
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, make_response
-from flaskext.wtf import Form, IntegerField, DecimalField, TextField, BooleanField, \
-    SelectField, validators, HiddenInput, TextAreaField
+from flask_wtf import Form
+from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
+    SelectField, validators, TextAreaField
+from wtforms.widgets import HiddenInput
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import lazy_gettext, gettext
 from werkzeug.exceptions import HTTPException

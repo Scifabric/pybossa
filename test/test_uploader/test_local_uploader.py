@@ -86,3 +86,20 @@ class TestLocalUploader(Test):
         path = os.path.join(u.upload_folder, container)
         err_msg = "This local path should exist: %s" % path
         assert os.path.isdir(path) is True, err_msg
+
+    @with_context
+    @patch('os.remove', return_value=None)
+    def test_local_folder_delete(self, mock):
+        """Test LOCAL UPLOADER delete works."""
+        u = LocalUploader()
+        err_msg = "Delete should return true"
+        assert u.delete_file('file', 'container') is True, err_msg
+
+    @with_context
+    @patch('os.remove', side_effect=OSError)
+    def test_local_folder_delete_fails(self, mock):
+        """Test LOCAL UPLOADER delete fail works."""
+        u = LocalUploader()
+        err_msg = "Delete should return False"
+        assert u.delete_file('file', 'container') is False, err_msg
+

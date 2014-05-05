@@ -1,3 +1,24 @@
+"""
+This module exports all the extensions used by PyBossa.
+
+The objects are:
+    * sentinel: for caching data, ratelimiting, etc.
+    * signer: for signing emails, cookies, etc.
+    * mail: for sending emails,
+    * login_manager: to handle account sigin/signout
+    * facebook: for Facebook signin
+    * twitter: for Twitter signin
+    * google: for Google signin
+    * misaka: for app.long_description markdown support,
+    * babel: for i18n support,
+    * gravatar: for Gravatar support,
+    * uploader: for file uploads support,
+    * csrf: for CSRF protection
+
+"""
+__all__ = ['sentinel', 'signer', 'mail', 'login_manager', 'facebook',
+           'twitter', 'google', 'misaka', 'babel', 'gravatar',
+           'uploader', 'csrf', 'debug_toolbar']
 # CACHE
 from pybossa.sentinel import Sentinel
 sentinel = Sentinel()
@@ -14,9 +35,9 @@ mail = Mail()
 from flask.ext.login import LoginManager
 login_manager = LoginManager()
 
-# Toolbar
-#from flask.ext.debugtoolbar import DebugToolbarExtension
-#toolbar = DebugToolbarExtension()
+# Debug Toolbar
+from flask.ext.debugtoolbar import DebugToolbarExtension
+debug_toolbar = DebugToolbarExtension()
 
 # Social Networks
 from pybossa.util import Facebook
@@ -43,3 +64,7 @@ gravatar = Gravatar(size=100, rating='g', default='mm',
 
 # Uploader
 uploader = None
+
+# CSRF protection
+from flask_wtf.csrf import CsrfProtect
+csrf = CsrfProtect()

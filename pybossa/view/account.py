@@ -36,8 +36,10 @@ from flask import render_template, current_app
 from flask.ext.login import login_required, login_user, logout_user, \
     current_user
 from flask.ext.mail import Message
-from flaskext.wtf import Form, TextField, PasswordField, validators, \
-    IntegerField, HiddenInput, SelectField, BooleanField, FileField
+from flask_wtf import Form
+from wtforms import TextField, PasswordField, validators, \
+    IntegerField, SelectField, BooleanField, FileField
+from wtforms.widgets import HiddenInput
 
 import pybossa.validator as pb_validator
 import pybossa.model as model
@@ -478,6 +480,7 @@ def update_profile():
             file = request.files['avatar']
             coordinates = (avatar_form.x1.data, avatar_form.y1.data,
                            avatar_form.x2.data, avatar_form.y2.data)
+
             prefix = time.time()
             file.filename = "%s_avatar.png" % prefix
             container = "user_%s" % current_user.id
@@ -485,7 +488,8 @@ def update_profile():
                                  container=container,
                                  coordinates=coordinates)
             # Delete previous avatar from storage
-            uploader.delete_file(current_user.info['avatar'], container)
+            if current_user.info.get('avatar'):
+                uploader.delete_file(current_user.info['avatar'], container)
             current_user.info = {'avatar': file.filename,
                                  'container': container}
             db.session.commit()

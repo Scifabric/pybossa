@@ -24,9 +24,7 @@ from flask.ext.heroku import Heroku
 from flask.ext.babel import lazy_gettext
 
 from pybossa import default_settings as settings
-from pybossa.extensions import (signer, mail, login_manager, sentinel,
-                                facebook, twitter, google, misaka,
-                                babel, gravatar, uploader)
+from pybossa.extensions import *
 from pybossa.ratelimit import get_view_rate_limit
 
 from raven.contrib.flask import Sentry
@@ -63,7 +61,8 @@ def create_app():
     setup_social_networks(app)
     setup_jinja(app)
     setup_geocoding(app)
-    #toolbar.init_app(app)
+    setup_csrf_protection(app)
+    setup_debug_toolbar(app)
     return app
 
 
@@ -346,3 +345,11 @@ def setup_hooks(app):
             contact_email=contact_email,
             contact_twitter=contact_twitter,
             upload_method=app.config['UPLOAD_METHOD'])
+
+def setup_csrf_protection(app):
+    csrf.init_app(app)
+
+
+def setup_debug_toolbar(app):
+    if app.config['ENABLE_DEBUG_TOOLBAR']:
+        debug_toolbar.init_app(app)
