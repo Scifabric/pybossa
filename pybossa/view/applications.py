@@ -16,12 +16,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
+import time
 from StringIO import StringIO
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, make_response
 from flask_wtf import Form
 from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
-    SelectField, validators, TextAreaField
+    SelectField, validators, TextAreaField, FileField
 from wtforms.widgets import HiddenInput
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import lazy_gettext, gettext
@@ -32,7 +33,7 @@ import pybossa.model as model
 import pybossa.stats as stats
 import pybossa.validator as pb_validator
 
-from pybossa.core import db
+from pybossa.core import db, uploader
 from pybossa.cache import ONE_DAY, ONE_HOUR
 from pybossa.model.app import App
 from pybossa.model.task import Task
@@ -51,6 +52,13 @@ import math
 import requests
 
 blueprint = Blueprint('app', __name__)
+
+class AvatarUploadForm(Form):
+    avatar = FileField(lazy_gettext('Avatar'), )
+    x1 = IntegerField(label=None, widget=HiddenInput(), default=0)
+    y1 = IntegerField(label=None, widget=HiddenInput(), default=0)
+    x2 = IntegerField(label=None, widget=HiddenInput(), default=0)
+    y2 = IntegerField(label=None, widget=HiddenInput(), default=0)
 
 
 class AppForm(Form):
@@ -78,6 +86,11 @@ class AppForm(Form):
     category_id = SelectField(lazy_gettext('Category'), coerce=int)
     long_description = TextAreaField(lazy_gettext('Long Description'))
     hidden = BooleanField(lazy_gettext('Hide?'))
+    avatar = FileField(lazy_gettext('Avatar'))
+    x1 = IntegerField(label=None, widget=HiddenInput(), default=0)
+    y1 = IntegerField(label=None, widget=HiddenInput(), default=0)
+    x2 = IntegerField(label=None, widget=HiddenInput(), default=0)
+    y2 = IntegerField(label=None, widget=HiddenInput(), default=0)
 
 
 class TaskPresenterForm(Form):
@@ -266,14 +279,20 @@ def new():
     if request.method != 'POST':
         return respond(False)
 
+    del form.id
     if not form.validate():
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(u"Error in the %s field - %s" % (
+                    getattr(form, field).label.text, error))
         flash(gettext('Please correct the errors'), 'error')
         return respond(True)
 
     info = {}
     # Add the info items
-    if form.thumbnail.data:
-        info['thumbnail'] = form.thumbnail.data
+    #if form.thumbnail.data:
+    #    info['thumbnail'] = form.thumbnail.data
+
 
     app = model.app.App(name=form.name.data,
                     short_name=form.short_name.data,
@@ -288,6 +307,23 @@ def new():
     #cached_apps.reset()
     db.session.add(app)
     db.session.commit()
+    # Upload the app
+    if form.avatar.data:
+        file = request.files['avatar']
+        coordinates = (form.x1.data, form.y1.data,
+                       form.x2.data, form.y2.data)
+        prefix = time.time()
+        file.filename = "app_%s_thumbnail_%i.png" % (app.id, prefix)
+        container = "user_%s" % current_user.id
+        uploader.upload_file(file,
+                             container=container,
+                             coordinates=coordinates)
+
+        # Update thumbnail for app
+        app.info['thumbnail'] = file.filename
+        app.info['container'] = container
+        db.session.commit()
+
     # Clean cache
     msg_1 = gettext('Application created!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')
@@ -451,6 +487,7 @@ def update(short_name):
         title = app_title(app, "Update")
         if request.method == 'GET':
             form = AppForm(obj=app)
+            upload_form = AvatarUploadForm()
             categories = db.session.query(model.category.Category).all()
             form.category_id.choices = [(c.id, c.name) for c in categories]
             if app.category_id is None:
@@ -468,12 +505,36 @@ def update(short_name):
             form = AppForm(request.form)
             categories = cached_cat.get_all()
             form.category_id.choices = [(c.id, c.name) for c in categories]
-            if form.validate():
-                return handle_valid_form(form)
-            flash(gettext('Please correct the errors'), 'error')
+            upload_form = AvatarUploadForm(request.form)
+
+            if request.form['btn'] != 'Upload':
+                if form.validate():
+                    return handle_valid_form(form)
+                flash(gettext('Please correct the errors'), 'error')
+            else:
+                app = App.query.get(app.id)
+                file = request.files['avatar']
+                coordinates = (upload_form.x1.data, upload_form.y1.data,
+                               upload_form.x2.data, upload_form.y2.data)
+                prefix = time.time()
+                file.filename = "app_%s_thumbnail_%i.png" % (app.id, prefix)
+                container = "user_%s" % current_user.id
+                uploader.upload_file(file,
+                                     container=container,
+                                     coordinates=coordinates)
+                # Delete previous avatar from storage
+                if app.info.get('thumbnail'):
+                    uploader.delete_file(app.info['thumbnail'], container)
+                app.info['thumbnail'] = file.filename
+                app.info['container'] = container
+                db.session.commit()
+                cached_apps.delete_app(app.short_name)
+                flash(gettext('Your application thumbnail has been updated! It may \
+                              take some minutes to refresh...'), 'success')
 
         return render_template('/applications/update.html',
                                form=form,
+                               upload_form=upload_form,
                                title=title,
                                app=app)
     except HTTPException:
