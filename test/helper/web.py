@@ -100,6 +100,7 @@ class Helper(Test):
                 print "Creating default ones"
                 self._create_categories()
 
+
     def new_application(self, method="POST", name="Sample App",
                         short_name="sampleapp", description="Description",
                         thumbnail='An Icon link',
@@ -109,6 +110,8 @@ class Helper(Test):
                         hidden=False):
         """Helper function to create an application"""
         if method == "POST":
+            import tempfile
+            avatar = tempfile.TemporaryFile()
             self.create_categories()
             if hidden:
                 return self.app.post("/app/new", data={
@@ -116,6 +119,7 @@ class Helper(Test):
                     'short_name': short_name,
                     'description': description,
                     'thumbnail': thumbnail,
+                    'avatar': avatar,
                     'allow_anonymou_contributors': allow_anonymous_contributors,
                     'category_id': category_id,
                     'long_description': long_description,
@@ -127,6 +131,7 @@ class Helper(Test):
                     'short_name': short_name,
                     'description': description,
                     'thumbnail': thumbnail,
+                    'avatar': (open("/tmp/file_name.jpg", 'rb'),"file_name.jpg"),
                     'allow_anonymous_contributors': allow_anonymous_contributors,
                     'category_id': category_id,
                     'long_description': long_description,
