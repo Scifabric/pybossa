@@ -46,6 +46,7 @@ class BaseFactory(SQLAlchemyModelFactory):
         session.commit()
         return obj
 
+
 # Import the factories
 from app_factory import AppFactory
 from blogpost_factory import BlogpostFactory
@@ -54,20 +55,3 @@ from featured_factory import FeaturedFactory
 from task_factory import TaskFactory
 from taskrun_factory import TaskRunFactory, AnonymousTaskRunFactory
 from user_factory import UserFactory
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
