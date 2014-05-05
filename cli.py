@@ -89,6 +89,45 @@ def markdown_db_migrate():
                 db.engine.execute(query, long_description = new_description, id = old_desc.id)
 
 
+def bootstrap_avatars():
+    """Download current links from user avatar and apps to real images hosted in the
+    PyBossa server."""
+    import requests
+    import os
+    import time
+    from urlparse import urlparse
+    with app.app_context():
+        if app.config['UPLOAD_METHOD'] == 'local':
+            apps = App.query.all()
+            print "Downloading avatars for %s apps" % len(apps)
+            for a in apps:
+                if a.info.get('thumbnail') and not a.info.get('container'):
+                    print "Working on app: %s ..." % a.short_name
+                    print "Saving avatar: %s ..." % a.info.get('thumbnail')
+                    url = urlparse(a.info.get('thumbnail'))
+                    if url.scheme and url.netloc:
+                        container = "user_%s" % a.owner_id
+                        path = os.path.join(app.config.get('UPLOAD_FOLDER'), container)
+                        if not os.path.isdir(path):
+                            os.makedirs(path)
+                        try:
+                            r = requests.get(a.info.get('thumbnail'), stream=True)
+                            if r.status_code == 200:
+                                prefix = time.time()
+                                filename = "app_%s_thumbnail_%i.png" % (a.id, prefix)
+                                with open(os.path.join(path, filename), 'wb') as f:
+                                    for chunk in r.iter_content(1024):
+                                        f.write(chunk)
+                                a.info['thumbnail'] = filename
+                                a.info['container'] = container
+                                db.session.commit()
+                                print "Done!"
+                        except:
+                            print "Something failed, this app will use the placehoder."
+        else:
+            pass
+
+
 ## ==================================================
 ## Misc stuff for setting up a command line interface
 
