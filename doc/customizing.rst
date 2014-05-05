@@ -282,12 +282,28 @@ supported keys are:
     You can use a mix of messages at the same time without problems, so for
     example you can display a message for Admins and Owners at the same time.
 
-Disabling the Cache
-===================
+Cache
+=====
 
-PyBossa comes with its own Cache system (based on Redis) that it is
-enabled by default. If you want to disable the cache, you
-only have to export the following env variable::
+By default PyBossa uses Redis to cache a lot of data in order to serve it as
+fast as possible. PyBossa comes with a default set of timeouts for different
+views that you can change or modify to your own taste. All you have to do is
+modify the following variables in your settings file::
+
+    APP_TIMEOUT = 15 * 60
+    REGISTERED_USERS_TIMEOUT = 15 * 60
+    ANON_USERS_TIMEOUT = 5 * 60 * 60
+    STATS_FRONTPAGE_TIMEOUT = 12 * 60 * 60
+    N_APPS_PER_CATEGORY = 60 * 60
+
+.. note::
+    Every value is in seconds, so bear in mind to multiply it by 60 in order to
+    have minutes in the configuration values.
+
+Disabling the Cache
+~~~~~~~~~~~~~~~~~~~
+
+If you want to disable the cache, you only have to export the following env variable::
 
     PYBOSSA_REDIS_CACHE_DISABLED='1'
 
