@@ -288,10 +288,10 @@ def redirect_profile():
     if current_user.is_anonymous():
         return redirect(url_for('.signin'))
     else:
-        return redirect(url_for('.new_profile', name=current_user.name), 302)
+        return redirect(url_for('.profile', name=current_user.name), 302)
 
 @blueprint.route('/<name>/', methods=['GET'])
-def new_profile(name):
+def profile(name):
     """
     Get user profile.
 
@@ -456,7 +456,7 @@ def settings(name):
                 cached_users.delete_user_summary(current_user.name)
                 flash(gettext('Your avatar has been updated! It may \
                               take some minutes to refresh...'), 'success')
-                return redirect(url_for('.new_profile', name=name))
+                return redirect(url_for('.profile', name=name))
             else:
                 if update_form.validate():
                     current_user.id = update_form.id.data
@@ -468,7 +468,7 @@ def settings(name):
                     db.session.commit()
                     cached_users.delete_user_summary(current_user.name)
                     flash(gettext('Your profile has been updated!'), 'success')
-                    return redirect(url_for('.new_profile', name=name))
+                    return redirect(url_for('.profile', name=name))
                 else:
                     flash(gettext('Please correct the errors'), 'error')
                     title_msg = 'Update your profile: %s' % current_user.fullname
@@ -529,7 +529,7 @@ def update_profile(name):
             cached_users.delete_user_summary(current_user.name)
             flash(gettext('Your avatar has been updated! It may \
                           take some minutes to refresh...'), 'success')
-            return redirect(url_for('.new_profile', name=current_user.name))
+            return redirect(url_for('.profile', name=current_user.name))
         else:
             if update_form.validate():
                 current_user.id = update_form.id.data
@@ -541,7 +541,7 @@ def update_profile(name):
                 db.session.commit()
                 cached_users.delete_user_summary(current_user.name)
                 flash(gettext('Your profile has been updated!'), 'success')
-                return redirect(url_for('.new_profile', name=current_user.name))
+                return redirect(url_for('.profile', name=current_user.name))
             else:
                 flash(gettext('Please correct the errors'), 'error')
                 title_msg = 'Update your profile: %s' % current_user.fullname
@@ -584,7 +584,7 @@ def change_password(name):
             db.session.commit()
             flash(gettext('Yay, you changed your password succesfully!'),
                   'success')
-            return redirect(url_for('.new_profile', name=name))
+            return redirect(url_for('.profile', name=name))
         else:
             msg = gettext("Your current password doesn't match the "
                           "one in our records")
