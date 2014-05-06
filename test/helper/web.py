@@ -100,6 +100,7 @@ class Helper(Test):
                 print "Creating default ones"
                 self._create_categories()
 
+
     def new_application(self, method="POST", name="Sample App",
                         short_name="sampleapp", description="Description",
                         thumbnail='An Icon link',
@@ -109,6 +110,9 @@ class Helper(Test):
                         hidden=False):
         """Helper function to create an application"""
         if method == "POST":
+            import tempfile
+            avatar, filename = tempfile.mkstemp()
+            print filename
             self.create_categories()
             if hidden:
                 return self.app.post("/app/new", data={
@@ -116,6 +120,7 @@ class Helper(Test):
                     'short_name': short_name,
                     'description': description,
                     'thumbnail': thumbnail,
+                    'avatar': filename,
                     'allow_anonymou_contributors': allow_anonymous_contributors,
                     'category_id': category_id,
                     'long_description': long_description,
@@ -127,6 +132,7 @@ class Helper(Test):
                     'short_name': short_name,
                     'description': description,
                     'thumbnail': thumbnail,
+                    'avatar': (open(filename, 'rb'), filename),
                     'allow_anonymous_contributors': allow_anonymous_contributors,
                     'category_id': category_id,
                     'long_description': long_description,
@@ -213,7 +219,8 @@ class Helper(Test):
                                          'category_id': new_category_id,
                                          'long_description': new_long_description,
                                          'sched': new_sched,
-                                         'hidden': new_hidden},
+                                         'hidden': new_hidden,
+                                         'btn': 'Save'},
                                      follow_redirects=True)
             else:
                 return self.app.post("/app/%s/update" % short_name,
@@ -224,7 +231,9 @@ class Helper(Test):
                                            'category_id': new_category_id,
                                            'long_description': new_long_description,
                                            'sched': new_sched,
-                                           'description': new_description},
+                                           'description': new_description,
+                                           'btn': 'Save'
+                                           },
                                      follow_redirects=True)
         else:
             return self.app.get("/app/%s/update" % short_name,

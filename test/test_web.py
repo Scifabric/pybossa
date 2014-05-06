@@ -70,7 +70,8 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.stats.pygeoip', autospec=True)
-    def test_02_stats(self, mock1):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_02_stats(self, mock1, mock2):
         """Test WEB leaderboard or stats page works"""
         with self.flask_app.app_context():
             res = self.register()
@@ -271,7 +272,8 @@ class TestWeb(web.Helper):
         assert "Welcome back %s" % self.user.fullname in res.data, res
 
     @with_context
-    def test_profile_applications(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_profile_applications(self, mock):
         """Test WEB user profile applications page works."""
         with self.flask_app.app_context():
             self.create()
@@ -470,7 +472,8 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.ckan.requests.get')
-    def test_10_get_application(self, Mock):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_10_get_application(self, Mock, mock2):
         """Test WEB application URL/<short_name> works"""
         # Sign in and create an application
         with self.flask_app.app_context():
@@ -508,7 +511,8 @@ class TestWeb(web.Helper):
             assert res.status == '403 FORBIDDEN', res.status
 
     @with_context
-    def test_10b_application_long_description_allows_markdown(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_10b_application_long_description_allows_markdown(self, mock):
         """Test WEB long description markdown is supported"""
         with self.flask_app.app_context():
             markdown_description = u'Markdown\n======='
@@ -520,7 +524,9 @@ class TestWeb(web.Helper):
             assert '<h1>Markdown</h1>' in data, 'Markdown text not being rendered!'
 
     @with_context
-    def test_11_create_application(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_11_create_application(self, mock, mock2):
         """Test WEB create an application works"""
         # Create an app as an anonymous user
         with self.flask_app.app_context():
@@ -540,36 +546,38 @@ class TestWeb(web.Helper):
             assert "Create the application" in res.data, res
 
             res = self.new_application(long_description='My Description')
-            assert "<strong>Sample App</strong>: Settings" in res.data, res
+            assert "<strong>Sample App</strong>: Settings" in res.data, res.data
             assert "Application created!" in res.data, res
 
             app = db.session.query(App).first()
             assert app.name == 'Sample App', 'Different names %s' % app.name
             assert app.short_name == 'sampleapp', \
                 'Different names %s' % app.short_name
-            assert app.info['thumbnail'] == 'An Icon link', \
+            avatar = "app_%s_thumbnail" % app.id
+            assert avatar in app.info['thumbnail'], \
                 "Thumbnail should be the same: %s" % app.info['thumbnail']
             assert app.long_description == 'My Description', \
                 "Long desc should be the same: %s" % app.long_description
 
     @with_context
-    def test_11_a_create_application_errors(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_11_a_create_application_errors(self, mock):
         """Test WEB create an application issues the errors"""
         with self.flask_app.app_context():
             self.register()
             # Required fields checks
             # Issue the error for the app.name
-            res = self.new_application(name=None)
+            res = self.new_application(name="")
             err_msg = "An application must have a name"
             assert "This field is required" in res.data, err_msg
 
             # Issue the error for the app.short_name
-            res = self.new_application(short_name=None)
+            res = self.new_application(short_name="")
             err_msg = "An application must have a short_name"
             assert "This field is required" in res.data, err_msg
 
             # Issue the error for the app.description
-            res = self.new_application(description=None)
+            res = self.new_application(description="")
             err_msg = "An application must have a description"
             assert "You must provide a description" in res.data, err_msg
 
@@ -587,7 +595,8 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.ckan.requests.get')
-    def test_12_update_application(self, Mock):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_12_update_application(self, Mock, mock):
         """Test WEB update application works"""
         with self.flask_app.app_context():
             html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
@@ -678,7 +687,8 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.ckan.requests.get')
-    def test_13_hidden_applications(self, Mock):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_13_hidden_applications(self, Mock, mock):
         """Test WEB hidden application works"""
         with self.flask_app.app_context():
             html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
@@ -698,7 +708,8 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.ckan.requests.get')
-    def test_13a_hidden_applications_owner(self, Mock):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_13a_hidden_applications_owner(self, Mock, mock):
         """Test WEB hidden applications are shown to their owners"""
         with self.flask_app.app_context():
             html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
@@ -718,7 +729,8 @@ class TestWeb(web.Helper):
                                               "the owner")
 
     @with_context
-    def test_14_delete_application(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_14_delete_application(self, mock):
         """Test WEB delete application works"""
         with self.flask_app.app_context():
             self.create()
@@ -771,7 +783,8 @@ class TestWeb(web.Helper):
             assert msg in res.data, res.data
 
     @with_context
-    def test_16_task_status_completed(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_16_task_status_completed(self, mock):
         """Test WEB Task Status Completed works"""
         with self.flask_app.app_context():
             self.register()
@@ -842,7 +855,8 @@ class TestWeb(web.Helper):
 
 
     @with_context
-    def test_17_export_task_runs(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_17_export_task_runs(self, mock):
         """Test WEB TaskRun export works"""
         with self.flask_app.app_context():
             self.register()
@@ -892,7 +906,8 @@ class TestWeb(web.Helper):
             assert "Forbidden" in res.data, res.data
 
     @with_context
-    def test_18_task_status_wip(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_18_task_status_wip(self, mock):
         """Test WEB Task Status on going works"""
         with self.flask_app.app_context():
             self.register()
@@ -920,7 +935,8 @@ class TestWeb(web.Helper):
 
 
     @with_context
-    def test_19_app_index_categories(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_19_app_index_categories(self, mock):
         """Test WEB Application Index categories works"""
         with self.flask_app.app_context():
             self.register()
@@ -945,7 +961,8 @@ class TestWeb(web.Helper):
             assert tmp in res.data, res
 
     @with_context
-    def test_20_app_index_published(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_20_app_index_published(self, mock):
         """Test WEB Application Index published works"""
         with self.flask_app.app_context():
             self.register()
@@ -966,7 +983,8 @@ class TestWeb(web.Helper):
             assert "Sample App" in res.data, res.data
 
     @with_context
-    def test_20_app_index_draft(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_20_app_index_draft(self, mock):
         """Test WEB Application Index draft works"""
         # Create root
         with self.flask_app.app_context():
@@ -1119,7 +1137,8 @@ class TestWeb(web.Helper):
             self.signout()
 
     @with_context
-    def test_25_get_wrong_task_app(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_25_get_wrong_task_app(self, mock):
         """Test WEB get wrong task.id for an app works"""
 
         #model.rebuild_db()
@@ -1238,7 +1257,8 @@ class TestWeb(web.Helper):
             assert "some help" not in res.data
 
     @with_context
-    def test_30_app_id_owner(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_30_app_id_owner(self, mock):
         """Test WEB application settings page shows the ID to the owner"""
         self.register()
         self.new_application()
@@ -1258,8 +1278,9 @@ class TestWeb(web.Helper):
             assert res.status_code == 403, res.status_code
 
     @with_context
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
     @patch('pybossa.ckan.requests.get')
-    def test_30_app_id_anonymous_user(self, Mock):
+    def test_30_app_id_anonymous_user(self, Mock, mock):
         """Test WEB application page does not show the ID to anonymous users"""
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
                                    {'content-type': 'application/json'})
@@ -1276,7 +1297,8 @@ class TestWeb(web.Helper):
             res.data, "Application ID should be shown to the owner"
 
     @with_context
-    def test_31_user_profile_progress(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_31_user_profile_progress(self, mock):
         """Test WEB user progress profile page works"""
         self.register()
         self.new_application()
@@ -1310,8 +1332,9 @@ class TestWeb(web.Helper):
         assert "Ooops, we didn't find you in the system" in res.data, res.data
 
     @with_context
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
     @patch('pybossa.view.importer.requests.get')
-    def test_33_bulk_csv_import_unauthorized(self, Mock):
+    def test_33_bulk_csv_import_unauthorized(self, Mock, mock):
         """Test WEB bulk import unauthorized works"""
         unauthorized_request = FakeRequest('Unauthorized', 403,
                                            {'content-type': 'text/csv'})
@@ -1324,11 +1347,12 @@ class TestWeb(web.Helper):
                                        'formtype': 'csv'},
                             follow_redirects=True)
         msg = "Oops! It looks like you don't have permission to access that file"
-        assert msg in res.data
+        assert msg in res.data, res.data
 
     @with_context
     @patch('pybossa.view.importer.requests.get')
-    def test_34_bulk_csv_import_non_html(self, Mock):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_34_bulk_csv_import_non_html(self, Mock, mock):
         """Test WEB bulk import non html works"""
         html_request = FakeRequest('Not a CSV', 200,
                                    {'content-type': 'text/html'})
@@ -1342,8 +1366,9 @@ class TestWeb(web.Helper):
         assert "Oops! That file doesn't look like the right file." in res.data
 
     @with_context
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
     @patch('pybossa.view.importer.requests.get')
-    def test_35_bulk_csv_import_non_html(self, Mock):
+    def test_35_bulk_csv_import_non_html(self, Mock, mock):
         """Test WEB bulk import non html works"""
         empty_file = FakeRequest('CSV,with,no,content\n', 200,
                                  {'content-type': 'text/plain'})
@@ -1358,8 +1383,9 @@ class TestWeb(web.Helper):
         assert "Oops! It looks like the file is empty." in res.data
 
     @with_context
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
     @patch('pybossa.view.importer.requests.get')
-    def test_36_bulk_csv_import_dup_header(self, Mock):
+    def test_36_bulk_csv_import_dup_header(self, Mock, mock):
         """Test WEB bulk import duplicate header works"""
         empty_file = FakeRequest('Foo,Bar,Foo\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
@@ -1375,8 +1401,9 @@ class TestWeb(web.Helper):
         assert msg in res.data
 
     @with_context
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
     @patch('pybossa.view.importer.requests.get')
-    def test_37_bulk_csv_import_no_column_names(self, Mock):
+    def test_37_bulk_csv_import_no_column_names(self, Mock, mock):
         """Test WEB bulk import no column names works"""
         empty_file = FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
@@ -1393,8 +1420,9 @@ class TestWeb(web.Helper):
         assert "1 Task imported successfully!" in res.data
 
     @with_context
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
     @patch('pybossa.view.importer.requests.get')
-    def test_38_bulk_csv_import_with_column_name(self, Mock):
+    def test_38_bulk_csv_import_with_column_name(self, Mock, mock):
         """Test WEB bulk import with column name works"""
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
@@ -1429,8 +1457,9 @@ class TestWeb(web.Helper):
             n += 1
 
     @with_context
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
     @patch('pybossa.view.importer.requests.get')
-    def test_38_bulk_gdocs_import(self, Mock):
+    def test_38_bulk_gdocs_import(self, Mock, mock):
         """Test WEB bulk GDocs import works."""
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
@@ -1811,7 +1840,8 @@ class TestWeb(web.Helper):
 
 
     @with_context
-    def test_46_tasks_exists(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_46_tasks_exists(self, mock):
         """Test WEB tasks page works."""
         self.register()
         self.new_application()
@@ -1843,7 +1873,8 @@ class TestWeb(web.Helper):
         self.signout()
 
     @with_context
-    def test_47_task_presenter_editor_loads(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_47_task_presenter_editor_loads(self, mock):
         """Test WEB task presenter editor loads"""
         self.register()
         self.new_application()
@@ -1861,7 +1892,8 @@ class TestWeb(web.Helper):
         assert "PDF transcription template" in res.data, err_msg
 
     @with_context
-    def test_48_task_presenter_editor_works(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_48_task_presenter_editor_works(self, mock):
         """Test WEB task presenter editor works"""
         self.register()
         self.new_application()
@@ -1921,7 +1953,8 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.ckan.requests.get')
-    def test_48_update_app_info(self, Mock):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_48_update_app_info(self, Mock, mock):
         """Test WEB app update/edit works keeping previous info values"""
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
                                    {'content-type': 'application/json'})
@@ -1959,7 +1992,8 @@ class TestWeb(web.Helper):
         assert app.long_description == "Long desc", error_msg
 
     @with_context
-    def test_49_announcement_messages(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_49_announcement_messages(self, mock):
         """Test WEB announcement messages works"""
         self.register()
         res = self.app.get("/", follow_redirects=True)
@@ -2092,7 +2126,8 @@ class TestWeb(web.Helper):
         assert len(exported_task_runs) == len(app.task_runs), err_msg
 
     @with_context
-    def test_52_export_task_csv(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_52_export_task_csv(self, mock):
         """Test WEB export Tasks to CSV works"""
         Fixtures.create()
         # First test for a non-existant app
@@ -2422,7 +2457,8 @@ class TestWeb(web.Helper):
             assert msg in res.data, err_msg
 
     @with_context
-    def test_54_import_tasks(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_54_import_tasks(self, mock):
         """Test WEB import Task templates should work"""
         Fixtures.create()
         self.register()
@@ -2711,8 +2747,9 @@ class TestWeb(web.Helper):
         assert res.status_code == 404, err_msg
 
     @with_context
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
     @patch('pybossa.view.importer.requests.get')
-    def test_71_bulk_epicollect_import_unauthorized(self, Mock):
+    def test_71_bulk_epicollect_import_unauthorized(self, Mock, mock):
         """Test WEB bulk import unauthorized works"""
         unauthorized_request = FakeRequest('Unauthorized', 403,
                                            {'content-type': 'application/json'})
@@ -2730,8 +2767,9 @@ class TestWeb(web.Helper):
         assert msg in res.data
 
     @with_context
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
     @patch('pybossa.view.importer.requests.get')
-    def test_72_bulk_epicollect_import_non_html(self, Mock):
+    def test_72_bulk_epicollect_import_non_html(self, Mock, mock):
         """Test WEB bulk import non html works"""
         html_request = FakeRequest('Not an application/json', 200,
                                    {'content-type': 'text/html'})
@@ -2748,8 +2786,9 @@ class TestWeb(web.Helper):
         assert msg in res.data
 
     @with_context
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
     @patch('pybossa.view.importer.requests.get')
-    def test_73_bulk_epicollect_import_json(self, Mock):
+    def test_73_bulk_epicollect_import_json(self, Mock, mock):
         """Test WEB bulk import json works"""
         data = [dict(DeviceID=23)]
         html_request = FakeRequest(json.dumps(data), 200,
@@ -2789,7 +2828,8 @@ class TestWeb(web.Helper):
             n += 1
 
     @with_context
-    def test_74_task_settings_page(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_74_task_settings_page(self, mock):
         """Test WEB TASK SETTINGS page works"""
         # Creat root user
         self.register()
@@ -2830,7 +2870,8 @@ class TestWeb(web.Helper):
             assert dom.find(id=div) is not None, err_msg
 
     @with_context
-    def test_75_task_settings_scheduler(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_75_task_settings_scheduler(self, mock):
         """Test WEB TASK SETTINGS scheduler page works"""
         # Creat root user
         self.register()
@@ -2894,7 +2935,8 @@ class TestWeb(web.Helper):
 
 
     @with_context
-    def test_76_task_settings_redundancy(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_76_task_settings_redundancy(self, mock):
         """Test WEB TASK SETTINGS redundancy page works"""
         # Creat root user
         self.register()
@@ -2973,7 +3015,8 @@ class TestWeb(web.Helper):
         assert dom.find(id=form_id) is not None, err_msg
 
     @with_context
-    def test_77_task_settings_priority(self):
+    @patch('pybossa.core.uploader.upload_file', return_value=True)
+    def test_77_task_settings_priority(self, mock):
         """Test WEB TASK SETTINGS priority page works"""
         # Creat root user
         self.register()
