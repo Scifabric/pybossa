@@ -284,71 +284,92 @@ def register():
 
 
 @blueprint.route('/profile', methods=['GET'])
-@login_required
-def profile():
+def redirect_profile():
+    return redirect(url_for('.new_profile', name=current_user.name), 302)
+
+@blueprint.route('/<name>/', methods=['GET'])
+def new_profile(name):
     """
     Get user profile.
 
     Returns a Jinja2 template with the user information.
 
     """
-    user = db.session.query(model.user.User).get(current_user.id)
+    user = db.session.query(model.user.User).filter_by(name=name).first()
 
-    sql = text('''
-               SELECT app.name, app.short_name, app.info,
-               COUNT(*) as n_task_runs
-               FROM task_run JOIN app ON
-               (task_run.app_id=app.id) WHERE task_run.user_id=:user_id
-               GROUP BY app.name, app.short_name, app.info
-               ORDER BY n_task_runs DESC;''')
+    if user is None:
+        return abort(404)
 
-    # results will have the following format
-    # (app.name, app.short_name, n_task_runs)
-    results = db.engine.execute(sql, user_id=current_user.id)
+    # Show public profile from another user
+    if current_user.is_anonymous() or (user.id != current_user.id):
+        user, apps, apps_created = cached_users.get_user_summary(name)
+        if user:
+            title = "%s &middot; User Profile" % user['fullname']
+            return render_template('/account/public_profile.html',
+                                   title=title,
+                                   user=user,
+                                   apps=apps,
+                                   apps_created=apps_created)
 
-    apps_contrib = []
-    for row in results:
-        app = dict(name=row.name, short_name=row.short_name,
-                   info=json.loads(row.info), n_task_runs=row.n_task_runs)
-        apps_contrib.append(app)
+    # Show user profile page with admin, as it is the same user
+    if user.id == current_user.id and current_user.is_authenticated():
+        sql = text('''
+                   SELECT app.name, app.short_name, app.info,
+                   COUNT(*) as n_task_runs
+                   FROM task_run JOIN app ON
+                   (task_run.app_id=app.id) WHERE task_run.user_id=:user_id
+                   GROUP BY app.name, app.short_name, app.info
+                   ORDER BY n_task_runs DESC;''')
 
-    # Rank
-    # See: https://gist.github.com/tokumine/1583695
-    sql = text('''
-               WITH global_rank AS (
-                    WITH scores AS (
-                        SELECT user_id, COUNT(*) AS score FROM task_run
-                        WHERE user_id IS NOT NULL GROUP BY user_id)
-                    SELECT user_id, score, rank() OVER (ORDER BY score desc)
-                    FROM scores)
-               SELECT * from global_rank WHERE user_id=:user_id;
-               ''')
+        # results will have the following format
+        # (app.name, app.short_name, n_task_runs)
+        results = db.engine.execute(sql, user_id=current_user.id)
 
-    results = db.engine.execute(sql, user_id=current_user.id)
-    for row in results:
-        user.rank = row.rank
-        user.score = row.score
+        apps_contrib = []
+        for row in results:
+            app = dict(name=row.name, short_name=row.short_name,
+                       info=json.loads(row.info), n_task_runs=row.n_task_runs)
+            apps_contrib.append(app)
 
-    user.total = db.session.query(model.user.User).count()
+        # Rank
+        # See: https://gist.github.com/tokumine/1583695
+        sql = text('''
+                   WITH global_rank AS (
+                        WITH scores AS (
+                            SELECT user_id, COUNT(*) AS score FROM task_run
+                            WHERE user_id IS NOT NULL GROUP BY user_id)
+                        SELECT user_id, score, rank() OVER (ORDER BY score desc)
+                        FROM scores)
+                   SELECT * from global_rank WHERE user_id=:user_id;
+                   ''')
 
-    apps_published, apps_draft = _get_user_apps(current_user.id)
+        results = db.engine.execute(sql, user_id=current_user.id)
+        for row in results:
+            user.rank = row.rank
+            user.score = row.score
 
-    return render_template('account/profile.html', title=gettext("Profile"),
-                          apps_contrib=apps_contrib,
-                          apps_published=apps_published,
-                          apps_draft=apps_draft,
-                          user=user)
+        user.total = db.session.query(model.user.User).count()
+
+        apps_published, apps_draft = _get_user_apps(current_user.id)
+
+        return render_template('account/profile.html', title=gettext("Profile"),
+                              apps_contrib=apps_contrib,
+                              apps_published=apps_published,
+                              apps_draft=apps_draft,
+                              user=user)
 
 
-@blueprint.route('/profile/applications')
+@blueprint.route('/<name>/applications')
 @login_required
-def applications():
+def applications(name):
     """
     List user's application list.
 
     Returns a Jinja2 template with the list of applications of the user.
 
     """
+    if current_user.name != name:
+        return abort(403)
     user = db.session.query(model.user.User).get(current_user.id)
     apps_published, apps_draft = _get_user_apps(user.id)
 
@@ -381,86 +402,92 @@ def _get_user_apps(user_id):
     return apps_published, apps_draft
 
 
-@blueprint.route('/profile/settings')
+@blueprint.route('/<name>/settings')
 @login_required
-def settings():
+def settings(name):
     """
     Configure user settings.
 
     Returns a Jinja2 template.
 
     """
-    user, apps, apps_created = cached_users.get_user_summary(current_user.name)
-    title = "User: %s &middot; Settings" % user['fullname']
-    update_form = UpdateProfileForm()
-    avatar_form = AvatarUploadForm()
-
-    if request.method == 'GET':
-        update_form = UpdateProfileForm(obj=current_user)
-        update_form.set_locales(current_app.config['LOCALES'])
-        update_form.populate_obj(current_user)
-
-        title_msg = "Update your profile: %s" % current_user.fullname
-        return render_template('account/settings.html',
-                               title=title,
-                               user=user,
-                               update_form=update_form,
-                               avatar_form=avatar_form)
+    if current_user.name != name:
+        return abort(403)
     else:
-        update_form = UpdateProfileForm(request.form)
-        avatar_form = AvatarUploadForm(request.form)
-        update_form.set_locales(current_app.config['LOCALES'])
-        if request.form['btn'] == 'Upload':
-            file = request.files['avatar']
-            coordinates = (avatar_form.x1.data, avatar_form.y1.data,
-                           avatar_form.x2.data, avatar_form.y2.data)
-            prefix = time.time()
-            file.filename = "%s_avatar.png" % prefix
-            container = "user_%s" % current_user.id
-            uploader.upload_file(file,
-                                 container=container,
-                                 coordinates=coordinates)
-            # Delete previous avatar from storage
-            if current_user.info.get('avatar'):
-                uploader.delete_file(current_user.info['avatar'], container)
-            current_user.info = {'avatar': file.filename,
-                                 'container': container}
-            db.session.commit()
-            cached_users.delete_user_summary(current_user.name)
-            flash(gettext('Your avatar has been updated! It may \
-                          take some minutes to refresh...'), 'success')
-            return redirect(url_for('.profile'))
+        user, apps, apps_created = cached_users.get_user_summary(current_user.name)
+        title = "User: %s &middot; Settings" % user['fullname']
+        update_form = UpdateProfileForm()
+        avatar_form = AvatarUploadForm()
+
+        if request.method == 'GET':
+            update_form = UpdateProfileForm(obj=current_user)
+            update_form.set_locales(current_app.config['LOCALES'])
+            update_form.populate_obj(current_user)
+
+            title_msg = "Update your profile: %s" % current_user.fullname
+            return render_template('account/settings.html',
+                                   title=title,
+                                   user=user,
+                                   update_form=update_form,
+                                   avatar_form=avatar_form)
         else:
-            if update_form.validate():
-                current_user.id = update_form.id.data
-                current_user.fullname = update_form.fullname.data
-                current_user.name = update_form.name.data
-                current_user.email_addr = update_form.email_addr.data
-                current_user.ckan_api = update_form.ckan_api.data
-                current_user.privacy_mode = update_form.privacy_mode.data
+            update_form = UpdateProfileForm(request.form)
+            avatar_form = AvatarUploadForm(request.form)
+            update_form.set_locales(current_app.config['LOCALES'])
+            if request.form['btn'] == 'Upload':
+                file = request.files['avatar']
+                coordinates = (avatar_form.x1.data, avatar_form.y1.data,
+                               avatar_form.x2.data, avatar_form.y2.data)
+                prefix = time.time()
+                file.filename = "%s_avatar.png" % prefix
+                container = "user_%s" % current_user.id
+                uploader.upload_file(file,
+                                     container=container,
+                                     coordinates=coordinates)
+                # Delete previous avatar from storage
+                if current_user.info.get('avatar'):
+                    uploader.delete_file(current_user.info['avatar'], container)
+                current_user.info = {'avatar': file.filename,
+                                     'container': container}
                 db.session.commit()
                 cached_users.delete_user_summary(current_user.name)
-                flash(gettext('Your profile has been updated!'), 'success')
+                flash(gettext('Your avatar has been updated! It may \
+                              take some minutes to refresh...'), 'success')
                 return redirect(url_for('.profile'))
             else:
-                flash(gettext('Please correct the errors'), 'error')
-                title_msg = 'Update your profile: %s' % current_user.fullname
-                return render_template('account/settings.html',
-                                       title=title,
-                                       user=user,
-                                       update_form=update_form,
-                                       avatar_form=avatar_form)
+                if update_form.validate():
+                    current_user.id = update_form.id.data
+                    current_user.fullname = update_form.fullname.data
+                    current_user.name = update_form.name.data
+                    current_user.email_addr = update_form.email_addr.data
+                    current_user.ckan_api = update_form.ckan_api.data
+                    current_user.privacy_mode = update_form.privacy_mode.data
+                    db.session.commit()
+                    cached_users.delete_user_summary(current_user.name)
+                    flash(gettext('Your profile has been updated!'), 'success')
+                    return redirect(url_for('.profile'))
+                else:
+                    flash(gettext('Please correct the errors'), 'error')
+                    title_msg = 'Update your profile: %s' % current_user.fullname
+                    return render_template('account/settings.html',
+                                           title=title,
+                                           user=user,
+                                           update_form=update_form,
+                                           avatar_form=avatar_form)
 
 
-@blueprint.route('/profile/update', methods=['GET', 'POST'])
+@blueprint.route('/<name>/update', methods=['GET', 'POST'])
 @login_required
-def update_profile():
+def update_profile(name):
     """
     Update user's profile.
 
     Returns Jinja2 template.
 
     """
+    if current_user.name != name:
+        return abort(403)
+
     update_form = UpdateProfileForm()
     avatar_form = AvatarUploadForm()
     if request.method == 'GET':
@@ -496,7 +523,7 @@ def update_profile():
             cached_users.delete_user_summary(current_user.name)
             flash(gettext('Your avatar has been updated! It may \
                           take some minutes to refresh...'), 'success')
-            return redirect(url_for('.profile'))
+            return redirect(url_for('.new_profile', name=name))
         else:
             if update_form.validate():
                 current_user.id = update_form.id.data
@@ -531,15 +558,17 @@ class ChangePasswordForm(Form):
     confirm = PasswordField(lazy_gettext('Repeat Password'))
 
 
-@blueprint.route('/profile/password', methods=['GET', 'POST'])
+@blueprint.route('/<name>/password', methods=['GET', 'POST'])
 @login_required
-def change_password():
+def change_password(name):
     """
     Change user's password.
 
     Returns a Jinja2 template.
 
     """
+    if current_user.name != name:
+        return abort(403)
     form = ChangePasswordForm(request.form)
     if form.validate_on_submit():
         user = db.session.query(model.user.User).get(current_user.id)
@@ -549,7 +578,7 @@ def change_password():
             db.session.commit()
             flash(gettext('Yay, you changed your password succesfully!'),
                   'success')
-            return redirect(url_for('.profile'))
+            return redirect(url_for('.new_profile', name=name))
         else:
             msg = gettext("Your current password doesn't match the "
                           "one in our records")
@@ -668,48 +697,28 @@ def forgot_password():
     return render_template('/account/password_forgot.html', form=form)
 
 
-@blueprint.route('/profile/resetapikey', methods=['GET', 'POST'])
+@blueprint.route('/<name>/resetapikey', methods=['GET', 'POST'])
 @login_required
-def reset_api_key():
+def reset_api_key(name):
     """
     Reset API-KEY for user.
 
     Returns a Jinja2 template.
 
     """
-    if current_user.is_authenticated():
-        title = ("User: %s &middot; Settings"
-                 "- Reset API KEY") % current_user.fullname
-        if request.method == 'GET':
-            return render_template('account/reset-api-key.html',
-                                   title=title)
-        else:
-            user = db.session.query(model.user.User).get(current_user.id)
-            user.api_key = model.make_uuid()
-            db.session.commit()
-            cached_users.delete_user_summary(user.name)
-            msg = gettext('New API-KEY generated')
-            flash(msg, 'success')
-            return redirect(url_for('account.settings'))
-    else: # pragma: no cover
+    if current_user.name != name:
         return abort(403)
 
-
-@blueprint.route('/<name>/')
-def public_profile(name):
-    """
-    Render the public user profile.
-
-    Returns a Jinja2 template.
-
-    """
-    user, apps, apps_created = cached_users.get_user_summary(name)
-    if user:
-        title = "%s &middot; User Profile" % user['fullname']
-        return render_template('/account/public_profile.html',
-                               title=title,
-                               user=user,
-                               apps=apps,
-                               apps_created=apps_created)
+    title = ("User: %s &middot; Settings"
+             "- Reset API KEY") % current_user.fullname
+    if request.method == 'GET':
+        return render_template('account/reset-api-key.html',
+                               title=title)
     else:
-        abort(404)
+        user = db.session.query(model.user.User).get(current_user.id)
+        user.api_key = model.make_uuid()
+        db.session.commit()
+        cached_users.delete_user_summary(user.name)
+        msg = gettext('New API-KEY generated')
+        flash(msg, 'success')
+        return redirect(url_for('account.settings', name=name))
