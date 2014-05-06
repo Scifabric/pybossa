@@ -421,7 +421,7 @@ def delete(short_name):
         db.session.delete(app)
         db.session.commit()
         flash(gettext('Application deleted!'), 'success')
-        return redirect(url_for('account.profile'))
+        return redirect(url_for('account.profile', name=current_user.name))
     except HTTPException:  # pragma: no cover
         if app.hidden:
             raise abort(403)
