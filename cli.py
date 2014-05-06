@@ -163,7 +163,7 @@ def bootstrap_avatars():
                                 print "Done!"
                         except:
                             print "Something failed, this app will use the placehoder."
-        else:
+        if app.config['UPLOAD_METHOD'] == 'rackspace':
             import pyrax
             import tempfile
             pyrax.set_setting("identity_type", "rackspace")
