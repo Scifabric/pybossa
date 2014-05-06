@@ -261,11 +261,17 @@ class TestWeb(web.Helper):
         assert "You are now signed out" in res.data, res
 
         # Request profile as an anonymous user
+        # Check profile page with several information chunks
         res = self.profile()
+        assert self.user.fullname in res.data, res
+        assert self.user.email_addr not in res.data, res
+
+        # Try to access protected areas like settings
+        res = self.app.get('/account/johndoe/settings', follow_redirects=True)
         # As a user must be signed in to access, the page the title will be the
         # redirection to log in
-        assert self.html_title("Sign in") in res.data, res
-        assert "Please sign in to access this page." in res.data, res
+        assert self.html_title("Sign in") in res.data, res.data
+        assert "Please sign in to access this page." in res.data, res.data
 
         res = self.signin(next='%2Faccount%2Fprofile')
         assert self.html_title("Profile") in res.data, res
@@ -279,7 +285,7 @@ class TestWeb(web.Helper):
             self.create()
             self.signin(email=Fixtures.email_addr, password=Fixtures.password)
             self.new_application()
-            url = '/account/profile/applications'
+            url = '/account/%s/applications' % Fixtures.name
             res = self.app.get(url)
             assert "Applications" in res.data, res.data
             assert "Published" in res.data, res.data
@@ -296,13 +302,13 @@ class TestWeb(web.Helper):
         # Update profile with new data
         res = self.update_profile(method="GET")
         msg = "Update your profile: %s" % self.user.fullname
-        assert self.html_title(msg) in res.data, res
+        assert self.html_title(msg) in res.data, res.data
         msg = 'input id="id" name="id" type="hidden" value="1"'
         assert msg in res.data, res
         assert self.user.fullname in res.data, res
         assert "Save the changes" in res.data, res
-        msg = '<a href="/account/profile/settings" class="btn">Cancel</a>'
-        assert  msg in res.data, res
+        msg = '<a href="/account/johndoe/settings" class="btn">Cancel</a>'
+        assert  msg in res.data, res.data
 
         res = self.update_profile(fullname="John Doe 2",
                                   email_addr="johndoe2@example",
@@ -323,9 +329,9 @@ class TestWeb(web.Helper):
         res = self.update_profile(fullname="John Doe 2",
                                   email_addr="johndoe2@example.com",
                                   locale="en",
-                                  name="johndoe2")
+                                  new_name="johndoe2")
         assert "Your profile has been updated!" in res.data, res
-        assert "Please sign in to access this page" in res.data, res
+        assert "Nick: <small>johndoe2</small>" in res.data, res.data
 
         res = self.signin(method="POST", email="johndoe2@example.com",
                           password="p4ssw0rd",
@@ -1313,7 +1319,7 @@ class TestWeb(web.Helper):
             db.session.commit()
             self.app.get('api/app/%s/newtask' % app.id)
 
-        res = self.app.get('account/profile', follow_redirects=True)
+        res = self.app.get('account/johndoe', follow_redirects=True)
         assert "Sample App" in res.data, res.data
         assert "You have contributed <strong>10</strong> tasks" in res.data, res.data
         assert "Contribute!" in res.data, "There should be a Contribute button"
@@ -1687,16 +1693,16 @@ class TestWeb(web.Helper):
         """Test WEB password changing"""
         password = "mehpassword"
         self.register(password=password)
-        res = self.app.post('/account/profile/password',
+        res = self.app.post('/account/johndoe/password',
                             data={'current_password': password,
                                   'new_password': "p4ssw0rd",
                                   'confirm': "p4ssw0rd"},
                             follow_redirects=True)
-        assert "Yay, you changed your password succesfully!" in res.data
+        assert "Yay, you changed your password succesfully!" in res.data, res.data
 
         password = "mehpassword"
         self.register(password=password)
-        res = self.app.post('/account/profile/password',
+        res = self.app.post('/account/johndoe/password',
                             data={'current_password': "wrongpassword",
                                   'new_password': "p4ssw0rd",
                                   'confirm': "p4ssw0rd"},
@@ -1705,7 +1711,7 @@ class TestWeb(web.Helper):
         assert msg in res.data
 
         self.register(password=password)
-        res = self.app.post('/account/profile/password',
+        res = self.app.post('/account/johndoe/password',
                             data={'current_password': '',
                                   'new_password':'',
                                   'confirm': ''},
@@ -1717,13 +1723,13 @@ class TestWeb(web.Helper):
     def test_42_password_link(self):
         """Test WEB visibility of password change link"""
         self.register()
-        res = self.app.get('/account/profile/settings')
+        res = self.app.get('/account/johndoe/settings')
         assert "Change your Password" in res.data
         user = User.query.get(1)
         user.twitter_user_id = 1234
         db.session.add(user)
         db.session.commit()
-        res = self.app.get('/account/profile/settings')
+        res = self.app.get('/account/johndoe/settings')
         assert "Change your Password" not in res.data, res.data
 
     @with_context
@@ -2567,7 +2573,7 @@ class TestWeb(web.Helper):
     @with_context
     def test_57_reset_api_key(self):
         """Test WEB reset api key works"""
-        url = "/account/profile/resetapikey"
+        url = "/account/johndoe/resetapikey"
         # Anonymous user
         res = self.app.get(url, follow_redirects=True)
         err_msg = "Anonymous user should be redirected for authentication"
