@@ -68,15 +68,21 @@ class Helper(Test):
         else:
             return self.app.get(url, follow_redirects=True)
 
-    def profile(self):
+    def profile(self, name="johndoe"):
         """Helper function to check profile of signed in user"""
-        return self.app.get("/account/profile", follow_redirects=True)
+        url = "/account/%s" % name
+        return self.app.get(url, follow_redirects=True)
 
     def update_profile(self, method="POST", id=1, fullname="John Doe",
-                       name="johndoe", locale="es", email_addr="johndoe@example.com"):
+                       name="johndoe", locale="es",
+                       email_addr="johndoe@example.com",
+                       new_name=None):
         """Helper function to update the profile of users"""
+        url = "/account/%s/update" % name
+        if new_name:
+            name = new_name
         if (method == "POST"):
-            return self.app.post("/account/profile/update",
+            return self.app.post(url,
                                  data={'id': id,
                                        'fullname': fullname,
                                        'name': name,
@@ -85,7 +91,7 @@ class Helper(Test):
                                        'btn': 'Save'},
                                  follow_redirects=True)
         else:
-            return self.app.get("/account/profile/update",
+            return self.app.get(url,
                                 follow_redirects=True)
 
     def signout(self):
