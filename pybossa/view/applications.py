@@ -446,7 +446,9 @@ def update(short_name):
         #    new_info['sched'] = form.sched.data
 
         # Merge info object
+        print new_info
         info = dict(app.info.items() + new_info.items())
+        print info
 
         new_application = model.app.App(
             id=form.id.data,
@@ -498,7 +500,7 @@ def update(short_name):
             form.category_id.choices = [(c.id, c.name) for c in categories]
             upload_form = AvatarUploadForm(request.form)
 
-            if request.form['btn'] != 'Upload':
+            if request.form.get('btn') != 'Upload':
                 if form.validate():
                     return handle_valid_form(form)
                 flash(gettext('Please correct the errors'), 'error')
