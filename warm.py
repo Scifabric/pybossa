@@ -23,26 +23,34 @@ import inspect
 
 #import pybossa.model as model
 from pybossa.core import create_app
-import pybossa.cache.apps as cached_apps
-import pybossa.cache.categories as cached_cat
-import pybossa.cache.users as cached_users
 
 app = create_app()
 
 
 def warm_cache():
     '''Warm cache'''
+    # Cache 3 pages
+    pages = range(1, 4)
     with app.app_context():
+        import pybossa.cache.apps as cached_apps
+        import pybossa.cache.categories as cached_cat
+        import pybossa.cache.users as cached_users
         # Cache top apps
         cached_apps.get_featured_front_page()
-        cached_apps.get_featured('featured', per_page=40)
         cached_apps.get_top()
+        for page in pages:
+            cached_apps.get_featured('featured',
+                                     page,
+                                     app.config['APPS_PER_PAGE'])
         # Categories
         categories = cached_cat.get_used()
         for c in categories:
-            apps, count = cached_apps.get(c['short_name'], per_page=40)
-            for a in apps:
-                cached_apps.get_app(a['short_name'])
+            for page in pages:
+                 apps = cached_apps.get(c['short_name'],
+                                        page,
+                                        app.config['APPS_PER_PAGE'])
+                 for a in apps:
+                     cached_apps.get_app(a['short_name'])
         # Users
         cached_users.get_top()
 
