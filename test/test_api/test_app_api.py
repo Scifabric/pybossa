@@ -475,7 +475,7 @@ class TestAppAPI(TestAPI):
         user = UserFactory.create()
         tasks = TaskFactory.create_batch(2, app=app, info={'question': 'answer'})
 
-        # All users are allowed to participate by base
+        # All users are allowed to participate by default
         # As Anonymous user
         url = '/api/app/%s/newtask' % app.id
         res = self.app.get(url, follow_redirects=True)
