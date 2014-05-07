@@ -463,7 +463,7 @@ def settings(name):
                     current_user.fullname = update_form.fullname.data
                     current_user.name = update_form.name.data
                     current_user.email_addr = update_form.email_addr.data
-                    current_user.ckan_api = update_form.ckan_api.data
+                    current_user.ckan_api = update_form.ckan_api.data or None
                     current_user.privacy_mode = update_form.privacy_mode.data
                     db.session.commit()
                     cached_users.delete_user_summary(current_user.name)
@@ -536,7 +536,7 @@ def update_profile(name):
                 current_user.fullname = update_form.fullname.data
                 current_user.name = update_form.name.data
                 current_user.email_addr = update_form.email_addr.data
-                current_user.ckan_api = update_form.ckan_api.data
+                current_user.ckan_api = update_form.ckan_api.data or None
                 current_user.privacy_mode = update_form.privacy_mode.data
                 db.session.commit()
                 cached_users.delete_user_summary(current_user.name)
