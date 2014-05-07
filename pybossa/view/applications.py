@@ -446,9 +446,7 @@ def update(short_name):
         #    new_info['sched'] = form.sched.data
 
         # Merge info object
-        print new_info
         info = dict(app.info.items() + new_info.items())
-        print info
 
         new_application = model.app.App(
             id=form.id.data,
@@ -1042,7 +1040,6 @@ def export_to(short_name):
 
                 ckan.package = package
                 resource_found = False
-                # print len(package['resources'])
                 for r in package['resources']:
                     if r['name'] == ty:
                         ckan.datastore_delete(name=ty, resource_id=r['id'])
