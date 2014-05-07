@@ -39,18 +39,29 @@ def warm_cache():
         cached_apps.get_featured_front_page()
         cached_apps.get_top()
         for page in pages:
-            cached_apps.get_featured('featured',
-                                     page,
-                                     app.config['APPS_PER_PAGE'])
+            apps, count = cached_apps.get_featured('featured',
+                                                   page,
+                                                   app.config['APPS_PER_PAGE'])
+            for a in apps:
+                cached_apps.get_app(a['short_name'])
+                cached_apps.n_tasks(a['id'])
+                cached_apps.overall_progress(a['id'])
+                cached_apps.n_completed_tasks(a['id'])
+                cached_apps.n_volunteers(a['id'])
+
         # Categories
         categories = cached_cat.get_used()
         for c in categories:
             for page in pages:
-                 apps = cached_apps.get(c['short_name'],
-                                        page,
-                                        app.config['APPS_PER_PAGE'])
+                 apps, count = cached_apps.get(c['short_name'],
+                                               page,
+                                               app.config['APPS_PER_PAGE'])
                  for a in apps:
                      cached_apps.get_app(a['short_name'])
+                     cached_apps.n_tasks(a['id'])
+                     cached_apps.overall_progress(a['id'])
+                     cached_apps.n_completed_tasks(a['id'])
+                     cached_apps.n_volunteers(a['id'])
         # Users
         cached_users.get_top()
 
