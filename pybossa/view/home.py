@@ -32,6 +32,10 @@ blueprint = Blueprint('home', __name__)
 @blueprint.route('/')
 def home():
     """ Render home page with the cached apps and users"""
+    page = 1
+    per_page = current_app.config.get('APPS_PER_PAGE')
+    if per_page is None:
+        per_page = 5
     d = {'featured': cached_apps.get_featured_front_page(),
          'top_apps': cached_apps.get_top(),
          'top_users': None}
@@ -41,11 +45,11 @@ def home():
     d['categories'] = categories
     d['categories_apps'] = {}
     for c in categories:
-        tmp_apps, count = cached_apps.get(c['short_name'], per_page=20)
+        tmp_apps, count = cached_apps.get(c['short_name'], page, per_page)
         d['categories_apps'][str(c['short_name'])] = tmp_apps
 
     # Add featured
-    tmp_apps, count = cached_apps.get_featured('featured', per_page=20)
+    tmp_apps, count = cached_apps.get_featured('featured', page, per_page)
     if count > 0:
         featured = model.category.Category(name='Featured', short_name='featured')
         d['categories'].insert(0,featured)
