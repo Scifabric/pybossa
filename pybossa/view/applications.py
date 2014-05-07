@@ -498,7 +498,7 @@ def update(short_name):
             form.category_id.choices = [(c.id, c.name) for c in categories]
             upload_form = AvatarUploadForm(request.form)
 
-            if request.form['btn'] != 'Upload':
+            if request.form.get('btn') != 'Upload':
                 if form.validate():
                     return handle_valid_form(form)
                 flash(gettext('Please correct the errors'), 'error')
@@ -1040,7 +1040,6 @@ def export_to(short_name):
 
                 ckan.package = package
                 resource_found = False
-                # print len(package['resources'])
                 for r in package['resources']:
                     if r['name'] == ty:
                         ckan.datastore_delete(name=ty, resource_id=r['id'])
