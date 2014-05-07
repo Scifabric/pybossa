@@ -15,14 +15,12 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-from default import db, Fixtures
+
 import json
 import StringIO
 
-from default import with_context
+from default import db, Fixtures, with_context
 from helper import web
-#from base import model, Fixtures, mail
-#from base import web as webapp
 from mock import patch, Mock
 from flask import Response
 from itsdangerous import BadSignature
@@ -31,7 +29,6 @@ from pybossa.core import signer, mail
 from pybossa.util import unicode_csv_reader
 from pybossa.util import get_user_signup_method
 from pybossa.ckan import Ckan
-#from pybossa.model import model
 from bs4 import BeautifulSoup
 from requests.exceptions import ConnectionError
 from werkzeug.exceptions import NotFound
@@ -531,8 +528,7 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.core.uploader.upload_file', return_value=True)
-    @patch('pybossa.core.uploader.upload_file', return_value=True)
-    def test_11_create_application(self, mock, mock2):
+    def test_11_create_application(self, mock):
         """Test WEB create an application works"""
         # Create an app as an anonymous user
         with self.flask_app.app_context():
@@ -941,12 +937,10 @@ class TestWeb(web.Helper):
 
 
     @with_context
-    @patch('pybossa.core.uploader.upload_file', return_value=True)
-    def test_19_app_index_categories(self, mock):
+    def test_19_app_index_categories(self):
         """Test WEB Application Index categories works"""
         with self.flask_app.app_context():
             self.register()
-            #res = self.new_application()
             self.create()
             self.signout()
 
@@ -1147,7 +1141,6 @@ class TestWeb(web.Helper):
     def test_25_get_wrong_task_app(self, mock):
         """Test WEB get wrong task.id for an app works"""
 
-        #model.rebuild_db()
         with self.flask_app.app_context():
             self.create()
             app1 = db.session.query(App).get(1)
@@ -1211,7 +1204,6 @@ class TestWeb(web.Helper):
             app1 = db.session.query(App).get(1)
             app1.info = dict(tutorial="some help")
             db.session.commit()
-            #self.register()
             # First time accessing the app should redirect me to the tutorial
             res = self.app.get('/app/test-app/newtask', follow_redirects=True)
             err_msg = "There should be some tutorial for the application"
