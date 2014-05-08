@@ -1356,6 +1356,7 @@ def new_blogpost(short_name):
 
     if request.method != 'POST':
         require.blogpost.create(app_id=app.id)
+        del form.id
         return respond()
 
     if not form.validate():
