@@ -80,7 +80,7 @@ def get_top(n=4):
     results = db.engine.execute(sql, limit=n)
     top_apps = []
     for row in results:
-        app = dict(name=row.name, short_name=row.short_name,
+        app = dict(id=row.id, name=row.name, short_name=row.short_name,
                    description=row.description,
                    info=json.loads(row.info),
                    n_volunteers=n_volunteers(row.id),
