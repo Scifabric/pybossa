@@ -27,6 +27,9 @@ from pybossa.core import create_app
 app = create_app()
 
 
+
+
+
 def warm_cache():
     '''Warm cache'''
     # Cache 3 pages
@@ -35,19 +38,31 @@ def warm_cache():
         import pybossa.cache.apps as cached_apps
         import pybossa.cache.categories as cached_cat
         import pybossa.cache.users as cached_users
+        import pybossa.stats as stats
+
+        def warm_app(id, short_name):
+            cached_apps.get_app(short_name)
+            cached_apps.n_tasks(id)
+            n_task_runs = cached_apps.n_task_runs(id)
+            cached_apps.overall_progress(id)
+            cached_apps.last_activity(id)
+            cached_apps.n_completed_tasks(id)
+            cached_apps.n_volunteers(id)
+            if n_task_runs >= 1000:
+                print "Getting stats for %s as it has %s" % (id, n_task_runs)
+                stats.get_stats(id, app.config.get('GEO'))
+
         # Cache top apps
         cached_apps.get_featured_front_page()
-        cached_apps.get_top()
+        apps = cached_apps.get_top()
+        for a in apps:
+            warm_app(a['id'], a['short_name'])
         for page in pages:
             apps, count = cached_apps.get_featured('featured',
                                                    page,
                                                    app.config['APPS_PER_PAGE'])
             for a in apps:
-                cached_apps.get_app(a['short_name'])
-                cached_apps.n_tasks(a['id'])
-                cached_apps.overall_progress(a['id'])
-                cached_apps.n_completed_tasks(a['id'])
-                cached_apps.n_volunteers(a['id'])
+                warm_app(a['id'], a['short_name'])
 
         # Categories
         categories = cached_cat.get_used()
@@ -57,11 +72,7 @@ def warm_cache():
                                                page,
                                                app.config['APPS_PER_PAGE'])
                  for a in apps:
-                     cached_apps.get_app(a['short_name'])
-                     cached_apps.n_tasks(a['id'])
-                     cached_apps.overall_progress(a['id'])
-                     cached_apps.n_completed_tasks(a['id'])
-                     cached_apps.n_volunteers(a['id'])
+                     warm_app(a['id'], a['short_name'])
         # Users
         cached_users.get_top()
 
