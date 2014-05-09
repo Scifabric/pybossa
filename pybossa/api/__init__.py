@@ -36,7 +36,7 @@ from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound
 from pybossa.util import jsonpify, crossdomain
 import pybossa.model as model
-from pybossa.core import db
+from pybossa.core import db, csrf
 from itsdangerous import URLSafeSerializer
 from pybossa.ratelimit import ratelimit
 import pybossa.sched as sched
@@ -72,6 +72,7 @@ def register_api(view, endpoint, url, pk='id', pk_type='int'):
 
     """
     view_func = view.as_view(endpoint)
+    csrf.exempt(view_func)
     blueprint.add_url_rule(url,
                            view_func=view_func,
                            defaults={pk: None},

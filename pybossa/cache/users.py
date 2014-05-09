@@ -97,13 +97,18 @@ def get_leaderboard(n, user_id):
 def get_top(n=10):
     """Return the n=10 top users"""
     sql = text('''SELECT "user".id, "user".name, "user".fullname, "user".email_addr,
-               "user".created, COUNT(task_run.id) AS task_runs from task_run, "user"
-               WHERE "user".id=task_run.user_id group by "user".id
+               "user".created, "user".info, COUNT(task_run.id) AS task_runs FROM task_run, "user"
+               WHERE "user".id=task_run.user_id GROUP BY "user".id
                ORDER BY task_runs DESC LIMIT :limit''')
     results = db.engine.execute(sql, limit=n)
     top_users = []
     for row in results:
-        top_users.append(row)
+        user = dict(id=row.id, name=row.name, fullname=row.fullname,
+                    email_addr=row.email_addr,
+                    created=row.created,
+                    task_runs=row.task_runs,
+                    info=dict(json.loads(row.info)))
+        top_users.append(user)
     return top_users
 
 
@@ -196,15 +201,16 @@ def get_total_users():
 def get_users_page(page, per_page=24):
     offset = (page - 1) * per_page
     sql = text('''SELECT "user".id, "user".name, "user".fullname, "user".email_addr,
-               "user".created, COUNT(task_run.id) AS task_runs from task_run, "user"
-               WHERE "user".id=task_run.user_id group by "user".id
+               "user".created, "user".info, COUNT(task_run.id) AS task_runs
+               FROM task_run, "user"
+               WHERE "user".id=task_run.user_id GROUP BY "user".id
                ORDER BY "user".created DESC LIMIT :limit OFFSET :offset''')
     results = db.engine.execute(sql, limit=per_page, offset=offset)
     accounts = []
     for row in results:
         user = dict(id=row.id, name=row.name, fullname=row.fullname,
                     email_addr=row.email_addr, created=row.created,
-                    task_runs=row.task_runs,
+                    task_runs=row.task_runs, info=dict(json.loads(row.info)),
                     registered_ago=pretty_date(row.created))
         accounts.append(user)
     return accounts
