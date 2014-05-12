@@ -53,6 +53,13 @@ LEADERBOARD = 20
 ## Default configuration for debug toolbar
 ENABLE_DEBUG_TOOLBAR = False
 
+# Cache default key prefix
+REDIS_CACHE_ENABLED = False
+REDIS_SENTINEL = [('localhost', 26379)]
+REDIS_MASTER = 'mymaster'
+
+REDIS_KEYPREFIX = 'pybossa_cache'
+
 ## Default cache timeouts
 # App cache
 APP_TIMEOUT = 15 * 60
