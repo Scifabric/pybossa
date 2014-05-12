@@ -76,8 +76,8 @@ def cache(key_prefix, timeout=300):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
+            key = "%s::%s" % (settings.REDIS_KEYPREFIX, key_prefix)
             if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:  # pragma: no cover
-                key = "%s::%s" % (settings.REDIS_KEYPREFIX, key_prefix)
                 output = sentinel.slave.get(key)
                 if output:
                     return pickle.loads(output)
@@ -103,10 +103,10 @@ def memoize(timeout=300, debug=False):
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
+            key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, f.__name__)
+            key_to_hash = get_key_to_hash(*args, **kwargs)
+            key = get_hash_key(key, key_to_hash)
             if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:  # pragma: no cover
-                key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, f.__name__)
-                key_to_hash = get_key_to_hash(*args, **kwargs)
-                key = get_hash_key(key, key_to_hash)
                 output = sentinel.slave.get(key)
                 if output:
                     return pickle.loads(output)
