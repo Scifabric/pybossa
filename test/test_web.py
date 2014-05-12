@@ -3171,14 +3171,15 @@ class TestWeb(web.Helper):
         completed yet (overall progress < 100%)"""
 
         self.register()
-        app = AppFactory.create()
-        task = TaskFactory.create(app=app)
         user = User.query.first()
+        app = AppFactory.create(owner=user)
+        task = TaskFactory.create(app=app)
         taskrun = TaskRunFactory.create(task=task, user=user)
         res = self.app.get('/app/%s/newtask' % app.short_name)
 
         message = "Sorry, you've contributed to all the tasks for this project, but this project still needs more volunteers, so please spread the word!"
         assert message in res.data
+        self.signout()
 
 
     @with_context
@@ -3188,12 +3189,13 @@ class TestWeb(web.Helper):
         completed (overall progress = 100%)"""
 
         self.register()
-        app = AppFactory.create()
-        task = TaskFactory.create(app=app, n_answers=1)
         user = User.query.first()
+        app = AppFactory.create(owner=user)
+        task = TaskFactory.create(app=app, n_answers=1)
         taskrun = TaskRunFactory.create(task=task, user=user)
         res = self.app.get('/app/%s/newtask' % app.short_name)
 
         assert task.state == 'completed', task.state
         message = "Sorry, you've contributed to all the tasks for this project, but this project still needs more volunteers, so please spread the word!"
         assert message not in res.data
+        self.signout()
