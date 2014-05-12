@@ -776,7 +776,7 @@ def presenter(short_name):
         user_id = None if current_user.is_anonymous() else current_user.id
         user_ip = request.remote_addr if current_user.is_anonymous() else None
         task = sched.new_task(app.id, user_id, user_ip, 0)
-        return not task and overall_progress < 100.0
+        return task is None and overall_progress < 100.0
 
     def respond(tmpl):
         if (current_user.is_anonymous()):
