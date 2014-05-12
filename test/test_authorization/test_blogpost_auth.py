@@ -16,28 +16,27 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import Test, db, assert_not_raises #, redis_flushall, assert_not_raises
+from base import Test, db, assert_not_raises
 from pybossa.auth import require
-from pybossa.model.blogpost import Blogpost
-from pybossa.model.user import User
-from pybossa.model.app import App
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
 from mock import patch
 from test_authorization import mock_current_user
+from factories import AppFactory, BlogpostFactory, UserFactory
+from factories import reset_all_pk_sequences
 
 
 
 class TestBlogpostAuthorization(Test):
 
+    def setUp(self):
+        super(TestBlogpostAuthorization, self).setUp()
+        reset_all_pk_sequences()
+
     mock_anonymous = mock_current_user()
     mock_authenticated = mock_current_user(anonymous=False, admin=False, id=2)
     mock_admin = mock_current_user(anonymous=False, admin=True, id=1)
 
-    def setUp(self):
-        super(TestBlogpostAuthorization, self).setUp()
-        with self.flask_app.app_context():
-            self.create()
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -46,8 +45,8 @@ class TestBlogpostAuthorization(Test):
         """Test anonymous users cannot create a given blogpost"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
-            blogpost = Blogpost(title='title', app_id=app.id, owner=None)
+            app = AppFactory.create()
+            blogpost = BlogpostFactory.build(app=app, owner=None)
 
             assert_raises(Unauthorized, getattr(require, 'blogpost').create, blogpost)
 
@@ -58,7 +57,7 @@ class TestBlogpostAuthorization(Test):
         """Test anonymous users cannot create blogposts for a given app"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
+            app = AppFactory.create()
 
             assert_raises(Unauthorized, getattr(require, 'blogpost').create, app_id=app.id)
 
@@ -80,11 +79,11 @@ class TestBlogpostAuthorization(Test):
         app owner, even if is admin"""
 
         with self.flask_app.app_context():
-            app = db.session.query(App).first()
-            root = db.session.query(User).first()
-            blogpost = Blogpost(title='title', body='body',
-                                        app_id=app.id, user_id=root.id)
+            admin = UserFactory.create()
+            app = AppFactory.create()
+            blogpost = BlogpostFactory.build(app=app, owner=admin)
 
+            assert self.mock_admin.id != app.owner.id
             assert_raises(Forbidden, getattr(require, 'blogpost').create, blogpost)
 
 
@@ -95,8 +94,10 @@ class TestBlogpostAuthorization(Test):
         if is not the app owner, even if is admin"""
 
         with self.flask_app.app_context():
-            app = db.session.query(App).first()
+            owner = UserFactory.create_batch(2)[1]
+            app = AppFactory.create(owner=owner)
 
+            assert self.mock_admin.id != app.owner.id
             assert_raises(Forbidden, getattr(require, 'blogpost').create, app_id=app.id)
 
 
@@ -106,11 +107,11 @@ class TestBlogpostAuthorization(Test):
         """Test authenticated user can create a given blogpost if is app owner"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
-            user1 = db.session.query(User).get(2)
-            blogpost = Blogpost(title='title', body='body',
-                                        app_id=app.id, user_id=user1.id)
+            owner = UserFactory.create_batch(2)[1]
+            app = AppFactory.create(owner=owner)
+            blogpost = BlogpostFactory.build(app=app, owner=owner)
 
+            assert self.mock_authenticated.id == app.owner.id
             assert_not_raises(Exception, getattr(require, 'blogpost').create, blogpost)
 
 
@@ -121,8 +122,10 @@ class TestBlogpostAuthorization(Test):
         if is app owner"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
+            owner = UserFactory.create_batch(2)[1]
+            app = AppFactory.create(owner=owner)
 
+            assert self.mock_authenticated.id == app.owner.id
             assert_not_raises(Exception, getattr(require, 'blogpost').create, app_id=app.id)
 
 
@@ -133,11 +136,12 @@ class TestBlogpostAuthorization(Test):
         sets another person as the author of the blogpost"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
-            user2 = db.session.query(User).get(3)
-            blogpost = Blogpost(title='title', body='body',
-                                            app_id=app.id, user_id=user2.id)
+            another_user = UserFactory.create()
+            app = AppFactory.create()
+            blogpost = BlogpostFactory.build(app_id=app.id,
+                                              owner=another_user)
 
+            assert self.mock_authenticated.id == app.owner.id
             assert_raises(Forbidden, getattr(require, 'blogpost').create, blogpost)
 
 
@@ -147,10 +151,8 @@ class TestBlogpostAuthorization(Test):
         """Test anonymous users can read a given blogpost"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
-            blogpost = Blogpost(title='title', body='body', app_id=app.id, owner=None)
-            db.session.add(blogpost)
-            db.session.commit()
+            app = AppFactory.create()
+            blogpost = BlogpostFactory.create(app=app)
 
             assert_not_raises(Exception, getattr(require, 'blogpost').read, blogpost)
 
@@ -161,7 +163,7 @@ class TestBlogpostAuthorization(Test):
         """Test anonymous users can read blogposts of a given app"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
+            app = AppFactory.create()
             assert_not_raises(Exception, getattr(require, 'blogpost').read, app_id=app.id)
 
 
@@ -171,11 +173,8 @@ class TestBlogpostAuthorization(Test):
         """Test anonymous users cannot read a given blogpost of a hidden app"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
-            app.hidden = 1
-            blogpost = Blogpost(title='title', body='body', app_id=app.id, owner=None)
-            db.session.add(blogpost)
-            db.session.commit()
+            app = AppFactory.create(hidden=1)
+            blogpost = BlogpostFactory.create(app=app)
 
             assert_raises(Unauthorized, getattr(require, 'blogpost').read, blogpost)
 
@@ -186,8 +185,7 @@ class TestBlogpostAuthorization(Test):
         """Test anonymous users cannot read blogposts of a given app if is hidden"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
-            app.hidden = 1
+            app = AppFactory.create(hidden=1)
 
             assert_raises(Unauthorized, getattr(require, 'blogpost').read, app_id=app.id)
 
@@ -198,13 +196,11 @@ class TestBlogpostAuthorization(Test):
         """Test authenticated user can read a given blogpost if is not the app owner"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
-            root = db.session.query(User).get(1)
-            app.owner = root
-            blogpost = Blogpost(title='title', body='body', app_id=app.id, user_id=root.id)
-            db.session.add(blogpost)
-            db.session.commit()
+            app = AppFactory.create()
+            user = UserFactory.create()
+            blogpost = BlogpostFactory.create(app=app)
 
+            assert self.mock_authenticated.id != app.owner.id
             assert_not_raises(Exception, getattr(require, 'blogpost').read, blogpost)
 
 
@@ -215,11 +211,10 @@ class TestBlogpostAuthorization(Test):
         is not the app owner"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
-            root = db.session.query(User).get(1)
-            app.owner = root
-            db.session.commit()
+            app = AppFactory.create()
+            user = UserFactory.create()
 
+            assert self.mock_authenticated.id != app.owner.id
             assert_not_raises(Exception, getattr(require, 'blogpost').read, app_id=app.id)
 
 
@@ -230,14 +225,11 @@ class TestBlogpostAuthorization(Test):
         if is not the app owner"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
-            root = db.session.query(User).get(1)
-            app.hidden = 1
-            app.owner = root
-            blogpost = Blogpost(title='title', body='body', app_id=app.id, user_id=root.id)
-            db.session.add(blogpost)
-            db.session.commit()
+            app = AppFactory.create(hidden=1)
+            user = UserFactory.create()
+            blogpost = BlogpostFactory.create(app=app)
 
+            assert self.mock_authenticated.id != app.owner.id
             assert_raises(Forbidden, getattr(require, 'blogpost').read, blogpost)
 
 
@@ -248,12 +240,10 @@ class TestBlogpostAuthorization(Test):
         hidden and is not the app owner"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
-            root = db.session.query(User).get(1)
-            app.hidden = 1
-            app.owner = root
-            db.session.commit()
+            app = AppFactory.create(hidden=1)
+            user = UserFactory.create()
 
+            assert self.mock_authenticated.id != app.owner.id
             assert_raises(Forbidden, getattr(require, 'blogpost').read, app_id=app.id)
 
 
@@ -263,23 +253,25 @@ class TestBlogpostAuthorization(Test):
         """Test authenticated user can read a given blogpost if is the app owner"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
-            user1 = db.session.query(User).get(2)
-            blogpost = Blogpost(title='title', body='body', app_id=app.id, user_id=user1.id)
-            db.session.add(blogpost)
-            db.session.commit()
+            owner = UserFactory.create_batch(2)[1]
+            app = AppFactory.create(owner=owner)
+            blogpost = BlogpostFactory.create(app=app)
 
+            assert self.mock_authenticated.id == app.owner.id
             assert_not_raises(Exception, getattr(require, 'blogpost').read, blogpost)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
     def test_owner_read_blogposts_for_given_app(self):
-        """Test authenticated user can read blogposts of a given app if is the owner"""
+        """Test authenticated user can read blogposts of a given app if is the
+        app owner"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
+            owner = UserFactory.create_batch(2)[1]
+            app = AppFactory.create(owner=owner)
 
+            assert self.mock_authenticated.id == app.owner.id
             assert_not_raises(Exception, getattr(require, 'blogpost').read, app_id=app.id)
 
 
@@ -290,12 +282,11 @@ class TestBlogpostAuthorization(Test):
         is the app owner"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
-            user1 = db.session.query(User).get(2)
-            blogpost = Blogpost(title='title', body='body', app_id=app.id, user_id=user1.id)
-            db.session.add(blogpost)
-            db.session.commit()
+            owner = UserFactory.create_batch(2)[1]
+            app = AppFactory.create(owner=owner, hidden=1)
+            blogpost = BlogpostFactory.create(app=app)
 
+            assert self.mock_authenticated.id == app.owner.id
             assert_not_raises(Exception, getattr(require, 'blogpost').read, blogpost)
 
 
@@ -306,9 +297,10 @@ class TestBlogpostAuthorization(Test):
         is the app owner"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
-            app.hidden = 1
+            owner = UserFactory.create_batch(2)[1]
+            app = AppFactory.create(owner=owner, hidden=1)
 
+            assert self.mock_authenticated.id == app.owner.id
             assert_not_raises(Exception, getattr(require, 'blogpost').read, app_id=app.id)
 
 
@@ -318,13 +310,11 @@ class TestBlogpostAuthorization(Test):
         """Test admin can read a given blogpost of a hidden app"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
-            app.hidden = 1
-            user1 = db.session.query(User).get(2)
-            blogpost = Blogpost(title='title', body='body', app_id=app.id, user_id=user1.id)
-            db.session.add(blogpost)
-            db.session.commit()
+            admin = UserFactory.create()
+            app = AppFactory.create(hidden=1)
+            blogpost = BlogpostFactory.create(app=app)
 
+            assert self.mock_admin.id != app.owner.id
             assert_not_raises(Exception, getattr(require, 'blogpost').read, blogpost)
 
 
@@ -334,9 +324,10 @@ class TestBlogpostAuthorization(Test):
         """Test admin can read blogposts of a given hidden app"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
-            app.hidden = 1
+            admin = UserFactory.create()
+            app = AppFactory.create(hidden=1)
 
+            assert self.mock_admin.id != app.owner.id
             assert_not_raises(Exception, getattr(require, 'blogpost').read, app_id=app.id)
 
 
@@ -346,10 +337,7 @@ class TestBlogpostAuthorization(Test):
         """Test anonymous users cannot update blogposts"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
-            blogpost = Blogpost(title='title', body='body', app_id=app.id, owner=None)
-            db.session.add(blogpost)
-            db.session.commit()
+            blogpost = BlogpostFactory.create()
 
             assert_raises(Unauthorized, getattr(require, 'blogpost').update, blogpost)
 
@@ -361,12 +349,11 @@ class TestBlogpostAuthorization(Test):
         owner, even if is admin"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
-            user1 = db.session.query(User).get(2)
-            blogpost = Blogpost(title='title', body='body', app_id=app.id, user_id=user1.id)
-            db.session.add(blogpost)
-            db.session.commit()
+            admin = UserFactory.create()
+            app = AppFactory.create()
+            blogpost = BlogpostFactory.create(app=app)
 
+            assert self.mock_admin.id != blogpost.owner.id
             assert_raises(Forbidden, getattr(require, 'blogpost').update, blogpost)
 
 
@@ -376,12 +363,11 @@ class TestBlogpostAuthorization(Test):
         """Test authenticated user can update blogpost if is the post owner"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
-            user1 = db.session.query(User).get(2)
-            blogpost = Blogpost(title='title', body='body', app_id=app.id, user_id=user1.id)
-            db.session.add(blogpost)
-            db.session.commit()
+            owner = UserFactory.create_batch(2)[1]
+            app = AppFactory.create()
+            blogpost = BlogpostFactory.create(app=app, owner=owner)
 
+            assert self.mock_authenticated.id == blogpost.owner.id
             assert_not_raises(Exception, getattr(require, 'blogpost').update, blogpost)
 
 
@@ -391,10 +377,7 @@ class TestBlogpostAuthorization(Test):
         """Test anonymous users cannot delete blogposts"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
-            blogpost = Blogpost(title='title', body='body', app_id=app.id, owner=None)
-            db.session.add(blogpost)
-            db.session.commit()
+            blogpost = BlogpostFactory.create()
 
             assert_raises(Unauthorized, getattr(require, 'blogpost').delete, blogpost)
 
@@ -403,43 +386,38 @@ class TestBlogpostAuthorization(Test):
     @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
     def test_non_owner_authenticated_user_delete_blogpost(self):
         """Test authenticated user cannot delete a blogpost if is not the post
-        owner or is not admin"""
+        owner and is not admin"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
-            root = db.session.query(User).get(1)
-            blogpost = Blogpost(title='title', body='body', app_id=app.id, user_id=root.id)
-            db.session.add(blogpost)
-            db.session.commit()
+            blogpost = BlogpostFactory.create()
 
+            assert self.mock_authenticated.id != blogpost.owner.id
+            assert not self.mock_authenticated.admin
             assert_raises(Forbidden, getattr(require, 'blogpost').delete, blogpost)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
     def test_owner_delete_blogpost(self):
-        """Test authenticated user can delete blogpost if is the post owner"""
+        """Test authenticated user can delete a blogpost if is the post owner"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
-            user1 = db.session.query(User).get(2)
-            blogpost = Blogpost(title='title', body='body', app_id=app.id, user_id=user1.id)
-            db.session.add(blogpost)
-            db.session.commit()
+            owner = UserFactory.create_batch(2)[1]
+            app = AppFactory.create()
+            blogpost = BlogpostFactory.create(app=app, owner=owner)
 
+            assert self.mock_authenticated.id == blogpost.owner.id
             assert_not_raises(Exception, getattr(require, 'blogpost').delete, blogpost)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
     @patch('pybossa.auth.blogpost.current_user', new=mock_admin)
     def test_admin_authenticated_user_delete_blogpost(self):
-        """Test authenticated user can delete a blogpost if is admin"""
+        """Test authenticated user can delete any blogpost if is admin"""
 
         with self.flask_app.test_request_context('/'):
-            app = db.session.query(App).first()
-            user1 = db.session.query(User).get(2)
-            blogpost = Blogpost(title='title', body='body', app_id=app.id, user_id=user1.id)
-            db.session.add(blogpost)
-            db.session.commit()
+            admin = UserFactory.create()
+            blogpost = BlogpostFactory.create()
 
+            assert self.mock_admin.id != blogpost.owner.id
             assert_not_raises(Exception, getattr(require, 'blogpost').delete, blogpost)

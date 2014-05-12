@@ -39,6 +39,7 @@ def read(taskrun=None):
 def update(taskrun):
     return False
 
+
 def delete(taskrun):
     if current_user.is_anonymous():
         return False

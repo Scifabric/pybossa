@@ -30,4 +30,5 @@ class BlogpostFactory(BaseFactory):
     app = factory.SubFactory('factories.AppFactory')
     app_id = factory.LazyAttribute(lambda blogpost: blogpost.app.id)
     owner = factory.SelfAttribute('app.owner')
-    user_id = factory.LazyAttribute(lambda blogpost: blogpost.owner.id)
+    user_id = factory.LazyAttribute(
+        lambda blogpost: blogpost.owner.id if blogpost.owner else None)

@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from helper import web
-from base import model, db
+from default import model, db
 
 
 class Helper(web.Helper):
