@@ -39,6 +39,7 @@ except ImportError:  # pragma: no cover
 try:
     import settings_local as settings
 except ImportError:  # pragma: no cover
+    import default_settings as settings
     os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
 
 ONE_DAY = 24 * 60 * 60
