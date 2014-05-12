@@ -32,6 +32,7 @@ from sqlalchemy.sql import text
 import pybossa.model as model
 import pybossa.stats as stats
 import pybossa.validator as pb_validator
+import pybossa.sched as sched
 
 from pybossa.core import db, uploader
 from pybossa.cache import ONE_DAY, ONE_HOUR
@@ -770,9 +771,24 @@ def task_presenter(short_name, task_id):
 @blueprint.route('/<short_name>/presenter')
 @blueprint.route('/<short_name>/newtask')
 def presenter(short_name):
+
+    def invite_new_volunteers():
+        user_id = None if current_user.is_anonymous() else current_user.id
+        user_ip = request.remote_addr if current_user.is_anonymous() else None
+        task = sched.new_task(app.id, user_id, user_ip, 0)
+        return not task and overall_progress < 100.0
+
+    def respond(tmpl):
+        if (current_user.is_anonymous()):
+            msg_1 = gettext(msg)
+            flash(msg_1, "warning")
+        resp = make_response(render_template(tmpl, **template_args))
+        return resp
+
     app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, "Contribute")
-    template_args = {"app": app, "title": title}
+    template_args = {"app": app, "title": title,
+                     "invite_new_volunteers": invite_new_volunteers()}
     try:
         require.app.read(app)
     except HTTPException:
@@ -791,13 +807,6 @@ def presenter(short_name):
     msg = "Ooops! You are an anonymous user and will not \
            get any credit for your contributions. Sign in \
            now!"
-
-    def respond(tmpl):
-        if (current_user.is_anonymous()):
-            msg_1 = gettext(msg)
-            flash(msg_1, "warning")
-        resp = make_response(render_template(tmpl, **template_args))
-        return resp
 
     if app.info.get("tutorial") and \
             request.cookies.get(app.short_name + "tutorial") is None:
