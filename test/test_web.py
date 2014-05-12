@@ -3164,6 +3164,7 @@ class TestWeb(web.Helper):
         self.signout()
 
 
+    @with_context
     def test_user_with_no_more_tasks_find_volunteers(self):
         """Test WEB when a user has contributed to all available tasks, he is
         asked to find new volunteers for a project, if the project is not
