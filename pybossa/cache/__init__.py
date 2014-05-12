@@ -74,6 +74,8 @@ def cache(key_prefix, timeout=300):
     Returns the function value from cache, or the function if cache disabled
 
     """
+    if timeout is None:
+        timeout = 300
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
@@ -101,6 +103,8 @@ def memoize(timeout=300, debug=False):
     Returns the cached value, or the function if the cache is disabled
 
     """
+    if timeout is None:
+        timeout = 300
     def decorator(f):
         @wraps(f)
         def wrapper(*args, **kwargs):
