@@ -17,6 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 #!/usr/bin/env python
+import os
 import sys
 import optparse
 import inspect
@@ -27,11 +28,10 @@ from pybossa.core import create_app
 app = create_app()
 
 
-
-
-
 def warm_cache():
     '''Warm cache'''
+    # Disable cache, so we can refresh the data in Redis
+    os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
     # Cache 3 pages
     pages = range(1, 4)
     with app.app_context():
