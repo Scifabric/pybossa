@@ -33,6 +33,7 @@ def warm_cache():
     # Disable cache, so we can refresh the data in Redis
     os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
     # Cache 3 pages
+    apps_cached = []
     pages = range(1, 4)
     with app.app_context():
         import pybossa.cache.apps as cached_apps
@@ -41,16 +42,18 @@ def warm_cache():
         import pybossa.stats as stats
 
         def warm_app(id, short_name):
-            cached_apps.get_app(short_name)
-            cached_apps.n_tasks(id)
-            n_task_runs = cached_apps.n_task_runs(id)
-            cached_apps.overall_progress(id)
-            cached_apps.last_activity(id)
-            cached_apps.n_completed_tasks(id)
-            cached_apps.n_volunteers(id)
-            if n_task_runs >= 1000:
-                print "Getting stats for %s as it has %s" % (id, n_task_runs)
-                stats.get_stats(id, app.config.get('GEO'))
+            if id not in apps_cached:
+                cached_apps.get_app(short_name)
+                cached_apps.n_tasks(id)
+                n_task_runs = cached_apps.n_task_runs(id)
+                cached_apps.overall_progress(id)
+                cached_apps.last_activity(id)
+                cached_apps.n_completed_tasks(id)
+                cached_apps.n_volunteers(id)
+                if n_task_runs >= 1000:
+                    print "Getting stats for %s as it has %s" % (id, n_task_runs)
+                    stats.get_stats(id, app.config.get('GEO'))
+                apps_cached.append(id)
 
         # Cache top apps
         cached_apps.get_featured_front_page()
