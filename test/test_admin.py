@@ -122,6 +122,7 @@ class TestAdmin(web.Helper):
         """Test ADMIN featured apps add-remove works as an admin user"""
         self.register()
         self.new_application()
+        self.update_application()
         # The application is in the system but not in the front page
         res = self.app.get('/', follow_redirects=True)
         assert "Create an App" in res.data,\

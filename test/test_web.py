@@ -555,9 +555,7 @@ class TestWeb(web.Helper):
             assert app.name == 'Sample App', 'Different names %s' % app.name
             assert app.short_name == 'sampleapp', \
                 'Different names %s' % app.short_name
-            avatar = "app_%s_thumbnail" % app.id
-            assert avatar in app.info['thumbnail'], \
-                "Thumbnail should be the same: %s" % app.info['thumbnail']
+
             assert app.long_description == 'My Description', \
                 "Long desc should be the same: %s" % app.long_description
 
@@ -967,6 +965,7 @@ class TestWeb(web.Helper):
         with self.flask_app.app_context():
             self.register()
             self.new_application()
+            self.update_application(new_category_id="1")
             app = db.session.query(App).first()
             info = dict(task_presenter="some html")
             app.info = info
