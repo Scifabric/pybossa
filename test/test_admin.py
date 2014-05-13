@@ -149,7 +149,7 @@ class TestAdmin(web.Helper):
         # A rety should fail
         res = self.app.post('/admin/featured/1')
         err = json.loads(res.data)
-        err_msg = "App.id 1 alreay in Featured table"
+        err_msg = "App.id 1 already in Featured table"
         assert err['error'] == err_msg, err_msg
         assert err['status_code'] == 415, "Status code should be 415"
 
@@ -161,7 +161,7 @@ class TestAdmin(web.Helper):
         assert "Sample App" not in res.data,\
             "The application should not be listed in the front page"\
             " as it is not featured"
-        # If we try to delete again, it shoul return an error
+        # If we try to delete again, it should return an error
         res = self.app.delete('/admin/featured/1')
         err = json.loads(res.data)
         assert err['status_code'] == 404, "App should not be found"
