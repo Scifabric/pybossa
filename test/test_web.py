@@ -38,6 +38,7 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
 from pybossa.model.featured import Featured
+from factories import AppFactory, TaskFactory, TaskRunFactory
 
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
@@ -3152,4 +3153,41 @@ class TestWeb(web.Helper):
         dom = BeautifulSoup(res.data)
         err_msg = "If cookies are not accepted, cookies banner should be hidden"
         assert dom.find(id='cookies_warning') is None, err_msg
+        self.signout()
+
+
+    @with_context
+    def test_user_with_no_more_tasks_find_volunteers(self):
+        """Test WEB when a user has contributed to all available tasks, he is
+        asked to find new volunteers for a project, if the project is not
+        completed yet (overall progress < 100%)"""
+
+        self.register()
+        user = User.query.first()
+        app = AppFactory.create(owner=user)
+        task = TaskFactory.create(app=app)
+        taskrun = TaskRunFactory.create(task=task, user=user)
+        res = self.app.get('/app/%s/newtask' % app.short_name)
+
+        message = "Sorry, you've contributed to all the tasks for this project, but this project still needs more volunteers, so please spread the word!"
+        assert message in res.data
+        self.signout()
+
+
+    @with_context
+    def test_user_with_no_more_tasks_find_volunteers_project_completed(self):
+        """Test WEB when a user has contributed to all available tasks, he is
+        not asked to find new volunteers for a project, if the project is
+        completed (overall progress = 100%)"""
+
+        self.register()
+        user = User.query.first()
+        app = AppFactory.create(owner=user)
+        task = TaskFactory.create(app=app, n_answers=1)
+        taskrun = TaskRunFactory.create(task=task, user=user)
+        res = self.app.get('/app/%s/newtask' % app.short_name)
+
+        assert task.state == 'completed', task.state
+        message = "Sorry, you've contributed to all the tasks for this project, but this project still needs more volunteers, so please spread the word!"
+        assert message not in res.data
         self.signout()
