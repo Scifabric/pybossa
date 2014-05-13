@@ -437,7 +437,7 @@ def settings(name):
             update_form = UpdateProfileForm(request.form)
             avatar_form = AvatarUploadForm(request.form)
             update_form.set_locales(current_app.config['LOCALES'])
-            if request.form['btn'] == 'Upload':
+            if request.form.get('btn') == 'Upload':
                 file = request.files['avatar']
                 coordinates = (avatar_form.x1.data, avatar_form.y1.data,
                                avatar_form.x2.data, avatar_form.y2.data)
@@ -510,7 +510,7 @@ def update_profile(name):
         update_form = UpdateProfileForm(request.form)
         avatar_form = AvatarUploadForm(request.form)
         update_form.set_locales(current_app.config['LOCALES'])
-        if request.form['btn'] == 'Upload':
+        if request.form.get('btn') == 'Upload':
             file = request.files['avatar']
             coordinates = (avatar_form.x1.data, avatar_form.y1.data,
                            avatar_form.x2.data, avatar_form.y2.data)

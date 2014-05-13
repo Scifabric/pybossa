@@ -23,6 +23,7 @@ from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
+import pybossa.model as model
 from functools import wraps
 import random
 
