@@ -305,7 +305,7 @@ def new():
           '</a></strong> ' +
           gettext('for adding tasks, a thumbnail, using PyBossa.JS, etc.'),
           'info')
-    return redirect(url_for('.settings', short_name=app.short_name))
+    return redirect(url_for('.update', short_name=app.short_name))
 
 
 @blueprint.route('/<short_name>/tasks/taskpresentereditor', methods=['GET', 'POST'])

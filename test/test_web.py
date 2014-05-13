@@ -548,7 +548,7 @@ class TestWeb(web.Helper):
             assert "Create the application" in res.data, res
 
             res = self.new_application(long_description='My Description')
-            assert "<strong>Sample App</strong>: Settings" in res.data, res.data
+            assert "<strong>Sample App</strong>: Update the application" in res.data
             assert "Application created!" in res.data, res
 
             app = db.session.query(App).first()
