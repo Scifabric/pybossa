@@ -109,40 +109,16 @@ class Helper(Test):
 
     def new_application(self, method="POST", name="Sample App",
                         short_name="sampleapp", description="Description",
-                        thumbnail='An Icon link',
-                        allow_anonymous_contributors='True',
-                        category_id="1",
-                        long_description=u'Long Description\n================',
-                        hidden=False):
+                        long_description=u'Long Description\n================'):
         """Helper function to create an application"""
         if method == "POST":
-            import tempfile
-            avatar, filename = tempfile.mkstemp()
-            print filename
             self.create_categories()
-            if hidden:
-                return self.app.post("/app/new", data={
-                    'name': name,
-                    'short_name': short_name,
-                    'description': description,
-                    'thumbnail': thumbnail,
-                    'avatar': filename,
-                    'allow_anonymou_contributors': allow_anonymous_contributors,
-                    'category_id': category_id,
-                    'long_description': long_description,
-                    'hidden': hidden,
-                }, follow_redirects=True)
-            else:
-                return self.app.post("/app/new", data={
-                    'name': name,
-                    'short_name': short_name,
-                    'description': description,
-                    'thumbnail': thumbnail,
-                    'avatar': (open(filename, 'rb'), filename),
-                    'allow_anonymous_contributors': allow_anonymous_contributors,
-                    'category_id': category_id,
-                    'long_description': long_description,
-                }, follow_redirects=True)
+            return self.app.post("/app/new", data={
+                'name': name,
+                'short_name': short_name,
+                'description': description,
+                'long_description': long_description,
+            }, follow_redirects=True)
         else:
             return self.app.get("/app/new", follow_redirects=True)
 
