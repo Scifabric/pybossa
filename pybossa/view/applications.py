@@ -62,7 +62,6 @@ class AvatarUploadForm(Form):
 
 
 class AppForm(Form):
-    id = IntegerField(label=None, widget=HiddenInput())
     name = TextField(lazy_gettext('Name'),
                      [validators.Required(),
                       pb_validator.Unique(db.session, model.app.App, model.app.App.name,
@@ -78,13 +77,17 @@ class AppForm(Form):
                             [validators.Required(
                                 message=lazy_gettext(
                                     "You must provide a description."))])
+    long_description = TextAreaField(lazy_gettext('Long Description'))
+
+
+class AppUpdateForm(AppForm):
+    id = IntegerField(label=None, widget=HiddenInput())
     thumbnail = TextField(lazy_gettext('Icon Link'))
     allow_anonymous_contributors = SelectField(
         lazy_gettext('Allow Anonymous Contributors'),
         choices=[('True', lazy_gettext('Yes')),
                  ('False', lazy_gettext('No'))])
     category_id = SelectField(lazy_gettext('Category'), coerce=int)
-    long_description = TextAreaField(lazy_gettext('Long Description'))
     hidden = BooleanField(lazy_gettext('Hide?'))
     avatar = FileField(lazy_gettext('Avatar'))
     x1 = IntegerField(label=None, widget=HiddenInput(), default=0)
@@ -268,9 +271,6 @@ def app_cat_index(category, page):
 def new():
     require.app.create()
     form = AppForm(request.form)
-    del form.id
-    categories = db.session.query(model.category.Category).all()
-    form.category_id.choices = [(c.id, c.name) for c in categories]
 
     def respond(errors):
         return render_template('applications/new.html',
@@ -290,32 +290,12 @@ def new():
                     short_name=form.short_name.data,
                     description=form.description.data,
                     long_description=form.long_description.data,
-                    category_id=form.category_id.data,
-                    allow_anonymous_contributors=form.allow_anonymous_contributors.data,
-                    hidden=int(form.hidden.data),
                     owner_id=current_user.id,
                     info=info)
 
     db.session.add(app)
     db.session.commit()
-    # Upload the avatar
-    if request.files.get('avatar'):
-        file = request.files['avatar']
-        coordinates = (form.x1.data, form.y1.data,
-                       form.x2.data, form.y2.data)
-        prefix = time.time()
-        file.filename = "app_%s_thumbnail_%i.png" % (app.id, prefix)
-        container = "user_%s" % current_user.id
-        uploader.upload_file(file,
-                             container=container,
-                             coordinates=coordinates)
 
-        # Update thumbnail for app
-        app.info['thumbnail'] = file.filename
-        app.info['container'] = container
-        db.session.commit()
-
-    # Clean cache
     msg_1 = gettext('Application created!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')
     flash('<i class="icon-bullhorn"></i> ' +
@@ -477,7 +457,7 @@ def update(short_name):
 
         title = app_title(app, "Update")
         if request.method == 'GET':
-            form = AppForm(obj=app)
+            form = AppUpdateForm(obj=app)
             upload_form = AvatarUploadForm()
             categories = db.session.query(model.category.Category).all()
             form.category_id.choices = [(c.id, c.name) for c in categories]
@@ -493,7 +473,7 @@ def update(short_name):
             #            break
 
         if request.method == 'POST':
-            form = AppForm(request.form)
+            form = AppUpdateForm(request.form)
             categories = cached_cat.get_all()
             form.category_id.choices = [(c.id, c.name) for c in categories]
             upload_form = AvatarUploadForm(request.form)
