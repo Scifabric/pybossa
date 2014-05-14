@@ -495,6 +495,9 @@ def update_profile(name):
         return abort(403)
 
     user, apps, apps_created = cached_users.get_user_summary(name)
+    # Extend the values
+    current_user.rank = user['rank']
+    current_user.score = user['score']
 
     update_form = UpdateProfileForm()
     avatar_form = AvatarUploadForm()
