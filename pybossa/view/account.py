@@ -209,7 +209,7 @@ class UpdateProfileForm(Form):
     err_msg = lazy_gettext("User name must be between 3 and 35 "
                            "characters long")
     err_msg_2 = lazy_gettext("The user name is already taken")
-    name = TextField(lazy_gettext('User name'),
+    name = TextField(lazy_gettext('Username'),
                      [validators.Length(min=3, max=35, message=err_msg),
                       pb_validator.NotAllowedChars(),
                       pb_validator.Unique(
@@ -224,7 +224,7 @@ class UpdateProfileForm(Form):
                                 db.session, model.user.User,
                                 model.user.User.email_addr, err_msg_2)])
 
-    locale = SelectField(lazy_gettext('Default Language'))
+    locale = SelectField(lazy_gettext('Language'))
     ckan_api = TextField(lazy_gettext('CKAN API Key'))
     privacy_mode = BooleanField(lazy_gettext('Privacy Mode'))
     #avatar = FileField(lazy_gettext('Avatar'), )
@@ -496,16 +496,22 @@ def update_profile(name):
 
     update_form = UpdateProfileForm()
     avatar_form = AvatarUploadForm()
+    password_form = ChangePasswordForm()
+    external_form = update_form
+
     if request.method == 'GET':
         update_form = UpdateProfileForm(obj=current_user)
         update_form.set_locales(current_app.config['LOCALES'])
         update_form.populate_obj(current_user)
+        external_form = UpdateProfileForm(obj=current_user)
 
         title_msg = "Update your profile: %s" % current_user.fullname
         return render_template('account/update.html',
                                title=title_msg,
                                form=update_form,
-                               upload_form=avatar_form)
+                               upload_form=avatar_form,
+                               password_form=password_form,
+                               external_form=external_form)
     else:
         update_form = UpdateProfileForm(request.form)
         avatar_form = AvatarUploadForm(request.form)
@@ -530,7 +536,7 @@ def update_profile(name):
             flash(gettext('Your avatar has been updated! It may \
                           take some minutes to refresh...'), 'success')
             return redirect(url_for('.profile', name=current_user.name))
-        else:
+        if request.form.get('btn') == 'Profile':
             if update_form.validate():
                 current_user.id = update_form.id.data
                 current_user.fullname = update_form.fullname.data
@@ -545,23 +551,48 @@ def update_profile(name):
             else:
                 flash(gettext('Please correct the errors'), 'error')
                 title_msg = 'Update your profile: %s' % current_user.fullname
-                return render_template('/account/update.html', form=update_form,
+                return render_template('/account/update.html',
+                                       form=update_form,
                                        upload_form=avatar_form,
+                                       password_form=password_form,
+                                       external_form=external_form,
                                        title=title_msg)
+
+        if request.form.get('btn') == 'External':
+            del external_form.locale
+            del external_form.email_addr
+            del external_form.fullname
+            del external_form.name
+            if external_form.validate():
+                current_user.ckan_api = external_form.ckan_api.data or None
+                db.session.commit()
+                cached_users.delete_user_summary(current_user.name)
+                flash(gettext('Your profile has been updated!'), 'success')
+                return redirect(url_for('.profile', name=current_user.name))
+            else:
+                flash(gettext('Please correct the errors'), 'error')
+                title_msg = 'Update your profile: %s' % current_user.fullname
+                return render_template('/account/update.html',
+                                       form=update_form,
+                                       upload_form=avatar_form,
+                                       password_form=password_form,
+                                       external_form=external_form,
+                                       title=title_msg)
+
 
 
 class ChangePasswordForm(Form):
 
     """Form for changing user's password."""
 
-    current_password = PasswordField(lazy_gettext('Old Password'))
+    current_password = PasswordField(lazy_gettext('Current password'))
 
     err_msg = lazy_gettext("Password cannot be empty")
     err_msg_2 = lazy_gettext("Passwords must match")
-    new_password = PasswordField(lazy_gettext('New Password'),
+    new_password = PasswordField(lazy_gettext('New password'),
                                  [validators.Required(err_msg),
                                   validators.EqualTo('confirm', err_msg_2)])
-    confirm = PasswordField(lazy_gettext('Repeat Password'))
+    confirm = PasswordField(lazy_gettext('Repeat password'))
 
 
 @blueprint.route('/<name>/password', methods=['GET', 'POST'])
