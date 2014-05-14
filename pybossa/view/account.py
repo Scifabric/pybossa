@@ -494,6 +494,8 @@ def update_profile(name):
     if current_user.id != user.id:
         return abort(403)
 
+    user, apps, apps_created = cached_users.get_user_summary(name)
+
     update_form = UpdateProfileForm()
     avatar_form = AvatarUploadForm()
     password_form = ChangePasswordForm()
@@ -508,6 +510,7 @@ def update_profile(name):
         title_msg = "Update your profile: %s" % current_user.fullname
         return render_template('account/update.html',
                                title=title_msg,
+                               user=user,
                                form=update_form,
                                upload_form=avatar_form,
                                password_form=password_form,
