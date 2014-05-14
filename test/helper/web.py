@@ -88,7 +88,7 @@ class Helper(Test):
                                        'name': name,
                                        'locale': locale,
                                        'email_addr': email_addr,
-                                       'btn': 'Save'},
+                                       'btn': 'Profile'},
                                  follow_redirects=True)
         else:
             return self.app.get(url,
