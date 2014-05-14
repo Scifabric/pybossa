@@ -305,13 +305,13 @@ def profile(name):
 
     # Show public profile from another user
     if current_user.is_anonymous() or (user.id != current_user.id):
-        user, apps, apps_created = cached_users.get_user_summary(name)
+        user, apps_contributed, apps_created = cached_users.get_user_summary(name)
         if user:
             title = "%s &middot; User Profile" % user['fullname']
             return render_template('/account/public_profile.html',
                                    title=title,
                                    user=user,
-                                   apps=apps,
+                                   apps=apps_contributed,
                                    apps_created=apps_created)
 
     # Show user profile page with admin, as it is the same user

@@ -163,12 +163,12 @@ def get_user_summary(name):
                    ORDER BY n_answers DESC;
                    ''')
         results = db.engine.execute(sql, user_id=user['id'])
-        apps = []
+        apps_contributed = []
         for row in results:
             app = dict(id=row.id, name=row.name, info=dict(json.loads(row.info)),
                        short_name=row.short_name,
                        n_answers=row.n_answers)
-            apps.append(app)
+            apps_contributed.append(app)
 
         # Get the CREATED APPS by the USER
         sql = text('''
@@ -185,7 +185,7 @@ def get_user_summary(name):
                        info=dict(json.loads(row.info)))
             apps_created.append(app)
 
-        return user, apps, apps_created
+        return user, apps_contributed, apps_created
     else:
         return None, None, None
 
