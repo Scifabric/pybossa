@@ -536,7 +536,7 @@ def update_profile(name):
             flash(gettext('Your avatar has been updated! It may \
                           take some minutes to refresh...'), 'success')
             return redirect(url_for('.profile', name=current_user.name))
-        if request.form.get('btn') == 'Profile':
+        elif request.form.get('btn') == 'Profile':
             if update_form.validate():
                 current_user.id = update_form.id.data
                 current_user.fullname = update_form.fullname.data
@@ -558,7 +558,7 @@ def update_profile(name):
                                        external_form=external_form,
                                        title=title_msg)
 
-        if request.form.get('btn') == 'External':
+        elif request.form.get('btn') == 'External':
             del external_form.locale
             del external_form.email_addr
             del external_form.fullname
@@ -578,6 +578,8 @@ def update_profile(name):
                                        password_form=password_form,
                                        external_form=external_form,
                                        title=title_msg)
+        else:
+            return abort(415)
 
 
 
