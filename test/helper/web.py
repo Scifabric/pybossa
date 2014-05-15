@@ -107,14 +107,14 @@ class Helper(Test):
                 self._create_categories()
 
 
-    def new_application(self, method="POST", name="Sample App",
+    def new_application(self, method="POST", name="Sample Project",
                         short_name="sampleapp", description="Description",
                         thumbnail='An Icon link',
                         allow_anonymous_contributors='True',
                         category_id="1",
                         long_description=u'Long Description\n================',
                         hidden=False):
-        """Helper function to create an application"""
+        """Helper function to create a project"""
         if method == "POST":
             import tempfile
             avatar, filename = tempfile.mkstemp()
@@ -194,7 +194,7 @@ class Helper(Test):
             return self.app.get(url, follow_redirects=True)
 
     def delete_application(self, method="POST", short_name="sampleapp"):
-        """Helper function to delete an application"""
+        """Helper function to delete a project"""
         if method == "POST":
             return self.app.post("/app/%s/delete" % short_name,
                                  follow_redirects=True)
@@ -203,7 +203,7 @@ class Helper(Test):
                                 follow_redirects=True)
 
     def update_application(self, method="POST", short_name="sampleapp", id=1,
-                           new_name="Sample App", new_short_name="sampleapp",
+                           new_name="Sample Project", new_short_name="sampleapp",
                            new_description="Description",
                            new_thumbnail="New Icon link",
                            new_allow_anonymous_contributors="False",
@@ -211,7 +211,7 @@ class Helper(Test):
                            new_long_description="Long desc",
                            new_sched="random",
                            new_hidden=False):
-        """Helper function to update an application"""
+        """Helper function to update a project"""
         if method == "POST":
             if new_hidden:
                 return self.app.post("/app/%s/update" % short_name,

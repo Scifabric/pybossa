@@ -25,7 +25,7 @@ from pybossa.model import DomainObject, make_timestamp
 
 
 class Category(db.Model, DomainObject):
-    '''A Table with Categories for Applications.'''
+    '''A Table with Categories for Projects.'''
 
     __tablename__ = 'category'
 

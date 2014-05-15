@@ -170,7 +170,7 @@ class BulkTaskEpiCollectPlusImportForm(BulkTaskImportForm):
                                 "project name")
     msg_form_required = lazy_gettext("You must provide a Form name "
                                      "for the project")
-    epicollect_project = TextField(lazy_gettext('Project Name'),
+    epicollect_project = TextField(lazy_gettext('Application Name'),
                                    [validators.Required(message=msg_required)])
     epicollect_form = TextField(lazy_gettext('Form name'),
                                 [validators.Required(message=msg_required)])

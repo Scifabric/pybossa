@@ -30,7 +30,7 @@ def new_task(app_id, user_id=None, user_ip=None, offset=0):
     '''
     app = db.session.query(model.app.App).get(app_id)
     if not app.allow_anonymous_contributors and user_id is None:
-        error = model.task.Task(info=dict(error="This application does not allow anonymous contributors"))
+        error = model.task.Task(info=dict(error="This project does not allow anonymous contributors"))
         return error
     else:
         sched_map = {
@@ -97,7 +97,7 @@ def get_breadth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, off
 
 
 def get_depth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
-    """Gets a new task for a given application"""
+    """Gets a new task for a given project"""
     # Uncomment the next three lines to profile the sched function
     #import timeit
     #T = timeit.Timer(lambda: get_candidate_tasks(app_id, user_id,
@@ -128,7 +128,7 @@ def get_random_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
 
 
 def get_incremental_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
-    """Get a new task for a given application with its last given answer.
+    """Get a new task for a given project with its last given answer.
        It is an important strategy when dealing with large tasks, as
        transcriptions"""
     candidate_tasks = get_candidate_tasks(app_id, user_id, user_ip, n_answers, offset=0)
@@ -150,7 +150,7 @@ def get_incremental_task(app_id, user_id=None, user_ip=None, n_answers=30, offse
 
 
 def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
-    """Gets all available tasks for a given application and user"""
+    """Gets all available tasks for a given project and user"""
     rows = None
     if user_id and not user_ip:
         query = text('''

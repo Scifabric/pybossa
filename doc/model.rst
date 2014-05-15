@@ -10,7 +10,7 @@ Overview
 
 PyBossa has 5 main domain objects:
 
-  * App: the overall Application to which Tasks are associated.
+  * App: the overall Project (formerly named Application) to which Tasks are associated.
 
     * HasMany: Tasks
     * HasA: Category
@@ -26,7 +26,7 @@ PyBossa has 5 main domain objects:
     * HasA: User
 
   * User: a user account
-  * Category: an application category
+  * Category: a project category
 
 There are some attributes common across most of the domain objects notably:
 

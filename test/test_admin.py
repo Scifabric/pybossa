@@ -53,7 +53,7 @@ class TestAdmin(web.Helper):
         self.register()
         res = self.app.get("/admin", follow_redirects=True)
         dom = BeautifulSoup(res.data)
-        err_msg = "There should be an index page for admin users and apps"
+        err_msg = "There should be an index page for admin users and projects"
         assert "Settings" in res.data, err_msg
         divs = ['featured-apps', 'users', 'categories', 'users-list']
         for div in divs:
@@ -135,7 +135,7 @@ class TestAdmin(web.Helper):
         db.session.commit()
         res = self.app.get('/admin/featured', follow_redirects=True)
         assert "Featured" in res.data, res.data
-        assert "Sample App" in res.data, res.data
+        assert "Sample Project" in res.data, res.data
         # Add it to the Featured list
         res = self.app.post('/admin/featured/1')
         f = json.loads(res.data)
@@ -143,7 +143,7 @@ class TestAdmin(web.Helper):
         assert f['app_id'] == 1, f
         # Check that it is listed in the front page
         res = self.app.get('/', follow_redirects=True)
-        assert "Sample App" in res.data,\
+        assert "Sample Project" in res.data,\
             "The application should be listed in the front page"\
             " as it is featured"
         # A rety should fail
@@ -158,7 +158,7 @@ class TestAdmin(web.Helper):
         assert res.status == "204 NO CONTENT", res.status
         # Check that it is not listed in the front page
         res = self.app.get('/', follow_redirects=True)
-        assert "Sample App" not in res.data,\
+        assert "Sample Project" not in res.data,\
             "The application should not be listed in the front page"\
             " as it is not featured"
         # If we try to delete again, it shoul return an error

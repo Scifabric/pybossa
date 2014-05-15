@@ -28,8 +28,8 @@ class TestModelApp(Test):
     @with_context
     def test_app_errors(self):
         """Test APP model errors."""
-        app = App(name='Application',
-                  short_name='app',
+        app = App(name='Project',
+                  short_name='proj',
                   description='desc',
                   owner_id=None)
 
@@ -58,7 +58,7 @@ class TestModelApp(Test):
         db.session.rollback()
 
         # App.short_name shoult not be nullable
-        app.name = "Application"
+        app.name = "Project"
         app.short_name = None
         db.session.add(app)
         assert_raises(IntegrityError, db.session.commit)
@@ -71,7 +71,7 @@ class TestModelApp(Test):
 
         # App.description shoult not be nullable
         db.session.add(app)
-        app.short_name = "app"
+        app.short_name = "project"
         app.description = None
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()

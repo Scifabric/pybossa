@@ -55,7 +55,7 @@ def warm_cache():
                     stats.get_stats(id, app.config.get('GEO'))
                 apps_cached.append(id)
 
-        # Cache top apps
+        # Cache top projects
         cached_apps.get_featured_front_page()
         apps = cached_apps.get_top()
         for a in apps:

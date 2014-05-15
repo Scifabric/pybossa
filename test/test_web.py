@@ -57,7 +57,7 @@ class TestWeb(web.Helper):
         """Test WEB home page works"""
         res = self.app.get("/", follow_redirects=True)
         assert self.html_title() in res.data, res
-        assert "Create an App" in res.data, res
+        assert "Create a Project" in res.data, res
 
     @with_context
     def test_01_search(self):
@@ -278,14 +278,14 @@ class TestWeb(web.Helper):
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_profile_applications(self, mock):
-        """Test WEB user profile applications page works."""
+        """Test WEB user profile project page works."""
         with self.flask_app.app_context():
             self.create()
             self.signin(email=Fixtures.email_addr, password=Fixtures.password)
             self.new_application()
             url = '/account/%s/applications' % Fixtures.name
             res = self.app.get(url)
-            assert "Applications" in res.data, res.data
+            assert "Projects" in res.data, res.data
             assert "Published" in res.data, res.data
             assert "Draft" in res.data, res.data
             assert Fixtures.app_name in res.data, res.data
@@ -425,29 +425,29 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_06_applications_without_apps(self):
-        """Test WEB applications index without apps works"""
+        """Test WEB projects index without apps works"""
         # Check first without apps
         with self.flask_app.app_context():
             self.create_categories()
             res = self.app.get('/app', follow_redirects=True)
-            assert "Applications" in res.data, res.data
+            assert "Projects" in res.data, res.data
             assert Fixtures.cat_1 in res.data, res.data
 
     @with_context
     def test_06_applications_2(self):
-        """Test WEB applications index with apps"""
+        """Test WEB projects index with apps"""
         with self.flask_app.app_context():
             self.create()
 
             res = self.app.get('/app', follow_redirects=True)
-            assert self.html_title("Applications") in res.data, res.data
-            assert "Applications" in res.data, res.data
+            assert self.html_title("Projects") in res.data, res.data
+            assert "Projects" in res.data, res.data
             assert Fixtures.app_short_name in res.data, res.data
 
 
     @with_context
     def test_06_featured_apps(self):
-        """Test WEB application index shows featured apps in all the pages works"""
+        """Test WEB projects index shows featured projects in all the pages works"""
         with self.flask_app.app_context():
             self.create()
 
@@ -457,10 +457,10 @@ class TestWeb(web.Helper):
             db.session.commit()
 
             res = self.app.get('/app', follow_redirects=True)
-            assert self.html_title("Applications") in res.data, res.data
-            assert "Applications" in res.data, res.data
+            assert self.html_title("Projects") in res.data, res.data
+            assert "Projects" in res.data, res.data
             assert '/app/test-app' in res.data, res.data
-            assert '<h2><a href="/app/test-app/">My New App</a></h2>' in res.data, res.data
+            assert '<h2><a href="/app/test-app/">My New Project</a></h2>' in res.data, res.data
 
             # Update one task to have more answers than expected
             task = db.session.query(Task).get(1)
@@ -471,15 +471,15 @@ class TestWeb(web.Helper):
             cat = db.session.query(Category).get(1)
             url = '/app/category/featured/'
             res = self.app.get(url, follow_redirects=True)
-            tmp = '1 Featured Applications'
+            tmp = '1 Featured Projects'
             assert tmp in res.data, res.data
 
     @with_context
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_10_get_application(self, Mock, mock2):
-        """Test WEB application URL/<short_name> works"""
-        # Sign in and create an application
+        """Test WEB project URL/<short_name> works"""
+        # Sign in and create a project
         with self.flask_app.app_context():
             html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
                                        {'content-type': 'application/json'})
@@ -488,7 +488,7 @@ class TestWeb(web.Helper):
             res = self.new_application()
 
             res = self.app.get('/app/sampleapp', follow_redirects=True)
-            msg = "Application: Sample App"
+            msg = "Project: Sample Project"
             assert self.html_title(msg) in res.data, res
             err_msg = "There should be a contribute button"
             assert "Start Contributing Now" in res.data, err_msg
@@ -499,7 +499,7 @@ class TestWeb(web.Helper):
 
             # Now as an anonymous user
             res = self.app.get('/app/sampleapp', follow_redirects=True)
-            assert self.html_title("Application: Sample App") in res.data, res
+            assert self.html_title("Project: Sample Project") in res.data, res
             assert "Start Contributing Now" in res.data, err_msg
             res = self.app.get('/app/sampleapp/settings', follow_redirects=True)
             assert res.status == '200 OK', res.status
@@ -509,7 +509,7 @@ class TestWeb(web.Helper):
             # Now with a different user
             self.register(fullname="Perico Palotes", username="perico")
             res = self.app.get('/app/sampleapp', follow_redirects=True)
-            assert self.html_title("Application: Sample App") in res.data, res
+            assert self.html_title("Project: Sample Project") in res.data, res
             assert "Start Contributing Now" in res.data, err_msg
             res = self.app.get('/app/sampleapp/settings')
             assert res.status == '403 FORBIDDEN', res.status
@@ -530,7 +530,7 @@ class TestWeb(web.Helper):
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_11_create_application(self, mock):
-        """Test WEB create an application works"""
+        """Test WEB create a project works"""
         # Create an app as an anonymous user
         with self.flask_app.app_context():
             res = self.new_application(method="GET")
@@ -541,20 +541,20 @@ class TestWeb(web.Helper):
             assert self.html_title("Sign in") in res.data, res.data
             assert "Please sign in to access this page." in res.data, res.data
 
-            # Sign in and create an application
+            # Sign in and create a project
             res = self.register()
 
             res = self.new_application(method="GET")
-            assert self.html_title("Create an Application") in res.data, res
-            assert "Create the application" in res.data, res
+            assert self.html_title("Create a Project") in res.data, res
+            assert "Create the project" in res.data, res
 
             res = self.new_application(long_description='My Description')
-            assert "<strong>Sample App</strong>: Settings" in res.data, res.data
-            assert "Application created!" in res.data, res
+            assert "<strong>Sample Project</strong>: Settings" in res.data, res.data
+            assert "Project created!" in res.data, res
 
             app = db.session.query(App).first()
-            assert app.name == 'Sample App', 'Different names %s' % app.name
-            assert app.short_name == 'sampleapp', \
+            assert app.name == 'Sample Project', 'Different names %s' % app.name
+            assert app.short_name == 'sampleproject', \
                 'Different names %s' % app.short_name
             avatar = "app_%s_thumbnail" % app.id
             assert avatar in app.info['thumbnail'], \
@@ -565,28 +565,28 @@ class TestWeb(web.Helper):
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_11_a_create_application_errors(self, mock):
-        """Test WEB create an application issues the errors"""
+        """Test WEB create a project issues the errors"""
         with self.flask_app.app_context():
             self.register()
             # Required fields checks
             # Issue the error for the app.name
             res = self.new_application(name="")
-            err_msg = "An application must have a name"
+            err_msg = "A project must have a name"
             assert "This field is required" in res.data, err_msg
 
             # Issue the error for the app.short_name
             res = self.new_application(short_name="")
-            err_msg = "An application must have a short_name"
+            err_msg = "A project must have a short_name"
             assert "This field is required" in res.data, err_msg
 
             # Issue the error for the app.description
             res = self.new_application(description="")
-            err_msg = "An application must have a description"
+            err_msg = "A project must have a description"
             assert "You must provide a description" in res.data, err_msg
 
             # Issue the error for the app.short_name
             res = self.new_application(short_name='$#/|')
-            err_msg = "An application must have a short_name without |/$# chars"
+            err_msg = "A project must have a short_name without |/$# chars"
             assert '$#&amp;\/| and space symbols are forbidden' in res.data, err_msg
 
             # Now Unique checks
@@ -609,9 +609,9 @@ class TestWeb(web.Helper):
             self.register()
             self.new_application()
 
-            # Get the Update App web page
+            # Get the Update Project web page
             res = self.update_application(method="GET")
-            msg = "Application: Sample App &middot; Update"
+            msg = "Project: Sample Project &middot; Update"
             assert self.html_title(msg) in res.data, res
             msg = 'input id="id" name="id" type="hidden" value="1"'
             assert msg in res.data, res
@@ -626,26 +626,26 @@ class TestWeb(web.Helper):
                                           new_hidden=True)
             assert "Please correct the errors" in res.data, res.data
 
-            # Update the application
-            res = self.update_application(new_name="New Sample App",
+            # Update the project
+            res = self.update_application(new_name="New Sample Project",
                                           new_short_name="newshortname",
                                           new_description="New description",
                                           new_thumbnail="New Icon Link",
                                           new_long_description='New long desc',
                                           new_hidden=True)
             app = db.session.query(App).first()
-            assert "Application updated!" in res.data, res
-            err_msg = "App name not updated %s" % app.name
-            assert app.name == "New Sample App", err_msg
-            err_msg = "App short name not updated %s" % app.short_name
+            assert "Project updated!" in res.data, res
+            err_msg = "Project name not updated %s" % app.name
+            assert app.name == "New Sample Project", err_msg
+            err_msg = "Project short name not updated %s" % app.short_name
             assert app.short_name == "newshortname", err_msg
-            err_msg = "App description not updated %s" % app.description
+            err_msg = "Project description not updated %s" % app.description
             assert app.description == "New description", err_msg
-            err_msg = "App thumbnail not updated %s" % app.info['thumbnail']
+            err_msg = "Project thumbnail not updated %s" % app.info['thumbnail']
             assert app.info['thumbnail'] == "New Icon Link", err_msg
-            err_msg = "App long description not updated %s" % app.long_description
+            err_msg = "Project long description not updated %s" % app.long_description
             assert app.long_description == "New long desc", err_msg
-            err_msg = "App hidden not updated %s" % app.hidden
+            err_msg = "Project hidden not updated %s" % app.hidden
             assert app.hidden == 1, err_msg
 
 
@@ -703,7 +703,7 @@ class TestWeb(web.Helper):
             self.signout()
 
             res = self.app.get('/app/', follow_redirects=True)
-            assert "Sample App" not in res.data, res
+            assert "Sample Project" not in res.data, res
 
             res = self.app.get('/app/sampleapp', follow_redirects=True)
             err_msg = "Hidden apps should return a 403"
@@ -713,7 +713,7 @@ class TestWeb(web.Helper):
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_13a_hidden_applications_owner(self, Mock, mock):
-        """Test WEB hidden applications are shown to their owners"""
+        """Test WEB hidden projects are shown to their owners"""
         with self.flask_app.app_context():
             html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
                                        {'content-type': 'application/json'})
@@ -724,23 +724,23 @@ class TestWeb(web.Helper):
             self.update_application(new_hidden=True)
 
             res = self.app.get('/app/', follow_redirects=True)
-            assert "Sample App" not in res.data, ("Applications should be hidden"
+            assert "Sample Project" not in res.data, ("Projects should be hidden"
                                                   "in the index")
 
             res = self.app.get('/app/sampleapp', follow_redirects=True)
-            assert "Sample App" in res.data, ("Application should be shown to"
+            assert "Sample Project" in res.data, ("Project should be shown to"
                                               "the owner")
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_14_delete_application(self, mock):
-        """Test WEB delete application works"""
+        """Test WEB delete project works"""
         with self.flask_app.app_context():
             self.create()
             self.register()
             self.new_application()
             res = self.delete_application(method="GET")
-            msg = "Application: Sample App &middot; Delete"
+            msg = "Project: Sample Project &middot; Delete"
             assert self.html_title(msg) in res.data, res
             assert "No, do not delete it" in res.data, res
 
@@ -749,12 +749,12 @@ class TestWeb(web.Helper):
             db.session.add(app)
             db.session.commit()
             res = self.delete_application(method="GET")
-            msg = "Application: Sample App &middot; Delete"
+            msg = "Project: Sample Project &middot; Delete"
             assert self.html_title(msg) in res.data, res
             assert "No, do not delete it" in res.data, res
 
             res = self.delete_application()
-            assert "Application deleted!" in res.data, res
+            assert "Project deleted!" in res.data, res
 
             self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
             res = self.delete_application(short_name=Fixtures.app_short_name)
@@ -802,7 +802,7 @@ class TestWeb(web.Helper):
             res = self.app.get('app/%s/tasks/browse' % (app.short_name),
                                follow_redirects=True)
             dom = BeautifulSoup(res.data)
-            assert "Sample App" in res.data, res.data
+            assert "Sample Project" in res.data, res.data
             assert '0 of 10' in res.data, res.data
             err_msg = "Download button should be disabled"
             assert dom.find(id='nothingtodownload') is not None, err_msg
@@ -817,7 +817,7 @@ class TestWeb(web.Helper):
             res = self.app.get('app/%s/tasks/browse' % (app.short_name),
                                follow_redirects=True)
             dom = BeautifulSoup(res.data)
-            assert "Sample App" in res.data, res.data
+            assert "Sample Project" in res.data, res.data
             assert '5 of 10' in res.data, res.data
             err_msg = "Download Partial results button should be shown"
             assert dom.find(id='partialdownload') is not None, err_msg
@@ -835,7 +835,7 @@ class TestWeb(web.Helper):
 
             res = self.app.get('app/%s/tasks/browse' % (app.short_name),
                                follow_redirects=True)
-            assert "Sample App" in res.data, res.data
+            assert "Sample Project" in res.data, res.data
             msg = 'Task <span class="label label-success">#1</span>'
             assert msg in res.data, res.data
             assert '10 of 10' in res.data, res.data
@@ -926,7 +926,7 @@ class TestWeb(web.Helper):
 
             res = self.app.get('app/%s/tasks/browse' % (app.short_name),
                                follow_redirects=True)
-            assert "Sample App" in res.data, res.data
+            assert "Sample Project" in res.data, res.data
             msg = 'Task <span class="label label-info">#1</span>'
             assert msg in res.data, res.data
             assert '0 of 10' in res.data, res.data
@@ -939,14 +939,14 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_19_app_index_categories(self):
-        """Test WEB Application Index categories works"""
+        """Test WEB Project Index categories works"""
         with self.flask_app.app_context():
             self.register()
             self.create()
             self.signout()
 
             res = self.app.get('app', follow_redirects=True)
-            assert "Applications" in res.data, res.data
+            assert "Projects" in res.data, res.data
             assert Fixtures.cat_1 in res.data, res.data
 
             task = db.session.query(Task).get(1)
@@ -958,13 +958,13 @@ class TestWeb(web.Helper):
             cat = db.session.query(Category).get(1)
             url = '/app/category/%s/' % Fixtures.cat_1
             res = self.app.get(url, follow_redirects=True)
-            tmp = '1 %s Applications' % Fixtures.cat_1
+            tmp = '1 %s Projects' % Fixtures.cat_1
             assert tmp in res.data, res
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_20_app_index_published(self, mock):
-        """Test WEB Application Index published works"""
+        """Test WEB Project Index published works"""
         with self.flask_app.app_context():
             self.register()
             self.new_application()
@@ -978,15 +978,15 @@ class TestWeb(web.Helper):
             self.signout()
 
             res = self.app.get('app', follow_redirects=True)
-            assert "Applications" in res.data, res.data
+            assert "Projects" in res.data, res.data
             assert Fixtures.cat_1 in res.data, res.data
             assert "draft" not in res.data, res.data
-            assert "Sample App" in res.data, res.data
+            assert "Sample Project" in res.data, res.data
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_20_app_index_draft(self, mock):
-        """Test WEB Application Index draft works"""
+        """Test WEB Project Index draft works"""
         # Create root
         with self.flask_app.app_context():
             self.register()
@@ -1011,10 +1011,10 @@ class TestWeb(web.Helper):
             # As Admin
             self.signin()
             res = self.app.get('/app/draft', follow_redirects=True)
-            assert "Applications" in res.data, res.data
-            assert "app-published" not in res.data, res.data
+            assert "Projects" in res.data, res.data
+            assert "project-published" not in res.data, res.data
             assert "draft" in res.data, res.data
-            assert "Sample App" in res.data, res.data
+            assert "Sample Project" in res.data, res.data
 
     @with_context
     def test_21_get_specific_ongoing_task_anonymous(self):
@@ -1177,7 +1177,7 @@ class TestWeb(web.Helper):
             self.register()
             # First time accessing the app should redirect me to the tutorial
             res = self.app.get('/app/test-app/newtask', follow_redirects=True)
-            err_msg = "There should be some tutorial for the application"
+            err_msg = "There should be some tutorial for the project"
             assert "some help" in res.data, err_msg
             # Second time should give me a task, and not the tutorial
             res = self.app.get('/app/test-app/newtask', follow_redirects=True)
@@ -1185,7 +1185,7 @@ class TestWeb(web.Helper):
 
             # Check if the tutorial can be accessed directly
             res = self.app.get('/app/test-app/tutorial', follow_redirects=True)
-            err_msg = "There should be some tutorial for the application"
+            err_msg = "There should be some tutorial for the project"
             assert "some help" in res.data, err_msg
 
             # Hidden app
@@ -1207,7 +1207,7 @@ class TestWeb(web.Helper):
             db.session.commit()
             # First time accessing the app should redirect me to the tutorial
             res = self.app.get('/app/test-app/newtask', follow_redirects=True)
-            err_msg = "There should be some tutorial for the application"
+            err_msg = "There should be some tutorial for the project"
             assert "some help" in res.data, err_msg
             # Second time should give me a task, and not the tutorial
             res = self.app.get('/app/test-app/newtask', follow_redirects=True)
@@ -1215,7 +1215,7 @@ class TestWeb(web.Helper):
 
             # Check if the tutorial can be accessed directly
             res = self.app.get('/app/test-app/tutorial', follow_redirects=True)
-            err_msg = "There should be some tutorial for the application"
+            err_msg = "There should be some tutorial for the project"
             assert "some help" in res.data, err_msg
 
             # Hidden app
@@ -1234,7 +1234,7 @@ class TestWeb(web.Helper):
             self.register()
             # First time accessing the app should redirect me to the tutorial
             res = self.app.get('/app/test-app/newtask', follow_redirects=True)
-            err_msg = "There should not be a tutorial for the application"
+            err_msg = "There should not be a tutorial for the project"
             assert "some help" not in res.data, err_msg
             # Second time should give me a task, and not the tutorial
             res = self.app.get('/app/test-app/newtask', follow_redirects=True)
@@ -1249,7 +1249,7 @@ class TestWeb(web.Helper):
             self.register()
             # First time accessing the app should redirect me to the tutorial
             res = self.app.get('/app/test-app/newtask', follow_redirects=True)
-            err_msg = "There should not be a tutorial for the application"
+            err_msg = "There should not be a tutorial for the project"
             assert "some help" not in res.data, err_msg
             # Second time should give me a task, and not the tutorial
             res = self.app.get('/app/test-app/newtask', follow_redirects=True)
@@ -1258,15 +1258,15 @@ class TestWeb(web.Helper):
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_30_app_id_owner(self, mock):
-        """Test WEB application settings page shows the ID to the owner"""
+        """Test WEB project settings page shows the ID to the owner"""
         self.register()
         self.new_application()
 
         res = self.app.get('/app/sampleapp/settings', follow_redirects=True)
-        assert "Sample App" in res.data, ("Application should be shown to "
+        assert "Sample Project" in res.data, ("Project should be shown to "
                                           "the owner")
         msg = '<strong><i class="icon-cog"></i> ID</strong>: 1'
-        err_msg = "Application ID should be shown to the owner"
+        err_msg = "Project ID should be shown to the owner"
         assert msg in res.data, err_msg
 
         self.signout()
@@ -1280,7 +1280,7 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     @patch('pybossa.ckan.requests.get')
     def test_30_app_id_anonymous_user(self, Mock, mock):
-        """Test WEB application page does not show the ID to anonymous users"""
+        """Test WEB project page does not show the ID to anonymous users"""
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
                                    {'content-type': 'application/json'})
         Mock.return_value = html_request
@@ -1290,10 +1290,10 @@ class TestWeb(web.Helper):
         self.signout()
 
         res = self.app.get('/app/sampleapp', follow_redirects=True)
-        assert "Sample App" in res.data, ("Application name should be shown"
+        assert "Sample Project" in res.data, ("Project name should be shown"
                                           " to users")
         assert '<strong><i class="icon-cog"></i> ID</strong>: 1' not in \
-            res.data, "Application ID should be shown to the owner"
+            res.data, "Project ID should be shown to the owner"
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
@@ -1313,7 +1313,7 @@ class TestWeb(web.Helper):
             self.app.get('api/app/%s/newtask' % app.id)
 
         res = self.app.get('account/johndoe', follow_redirects=True)
-        assert "Sample App" in res.data, res.data
+        assert "Sample Project" in res.data, res.data
         assert "You have contributed <strong>10</strong> tasks" in res.data, res.data
         assert "Contribute!" in res.data, "There should be a Contribute button"
 
@@ -1908,7 +1908,7 @@ class TestWeb(web.Helper):
         res = self.app.post('/app/sampleapp/tasks/taskpresentereditor',
                             data={'editor': 'Some HTML code!'},
                             follow_redirects=True)
-        assert "Sample App" in res.data, "Does not return to app details"
+        assert "Sample Project" in res.data, "Does not return to app details"
         app = db.session.query(App).first()
         err_msg = "Task Presenter failed to update"
         assert app.info['task_presenter'] == 'Some HTML code!', err_msg
@@ -1931,7 +1931,7 @@ class TestWeb(web.Helper):
         res = self.app.post('/app/sampleapp/tasks/taskpresentereditor',
                             data={'editor': 'Some HTML code!'},
                             follow_redirects=True)
-        assert "Sample App" in res.data, "Does not return to app details"
+        assert "Sample Project" in res.data, "Does not return to app details"
         app = db.session.query(App).first()
         err_msg = "Task Presenter failed to update"
         assert app.info['task_presenter'] == 'Some HTML code!', err_msg
@@ -1968,7 +1968,7 @@ class TestWeb(web.Helper):
         res = self.app.post('/app/sampleapp/tasks/taskpresentereditor',
                             data={'editor': 'Some HTML code!'},
                             follow_redirects=True)
-        assert "Sample App" in res.data, "Does not return to app details"
+        assert "Sample Project" in res.data, "Does not return to app details"
         app = db.session.query(App).first()
         for i in range(10):
             key = "key_%s" % i
@@ -1982,12 +1982,12 @@ class TestWeb(web.Helper):
         for key in _info:
             assert key in app.info.keys(), \
                 "The key %s is lost and it should be here" % key
-        assert app.name == "Sample App", "The app has not been updated"
-        error_msg = "The app description has not been updated"
+        assert app.name == "Sample project", "The project has not been updated"
+        error_msg = "The project description has not been updated"
         assert app.description == "Description", error_msg
-        error_msg = "The app icon has not been updated"
+        error_msg = "The project icon has not been updated"
         assert app.info['thumbnail'] == "New Icon link", error_msg
-        error_msg = "The app long description has not been updated"
+        error_msg = "The project long description has not been updated"
         assert app.long_description == "Long desc", error_msg
 
     @with_context
@@ -2170,7 +2170,7 @@ class TestWeb(web.Helper):
         # Now get the tasks in CSV format
         uri = "/app/sampleapp/tasks/export?type=task&format=csv"
         res = self.app.get(uri, follow_redirects=True)
-        msg = "application does not have tasks"
+        msg = "project does not have tasks"
         assert msg in res.data, msg
 
     @with_context
@@ -2770,7 +2770,7 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.importer.requests.get')
     def test_72_bulk_epicollect_import_non_html(self, Mock, mock):
         """Test WEB bulk import non html works"""
-        html_request = FakeRequest('Not an application/json', 200,
+        html_request = FakeRequest('Not a application/json', 200,
                                    {'content-type': 'text/html'})
         Mock.return_value = html_request
         self.register()

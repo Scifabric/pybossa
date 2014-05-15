@@ -19,7 +19,7 @@
 PyBossa api module for domain object APP via an API.
 
 This package adds GET, POST, PUT and DELETE methods for:
-    * applications,
+    * projects,
 
 """
 from flask.ext.login import current_user
@@ -33,7 +33,7 @@ class AppAPI(APIBase):
     """
     Class for the domain object App.
 
-    It refreshes automatically the cache, and updates the app properly.
+    It refreshes automatically the cache, and updates the project properly.
 
     """
 

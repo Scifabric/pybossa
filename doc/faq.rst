@@ -11,22 +11,22 @@ Users
 =====
 Do I need to create an account to participate in the project?
 -------------------------------------------------------------
-It depends. The owners of the applications can disable anonymous contributions
+It depends. The owners of the projects can disable anonymous contributions
 (usually due to privacy issues with the data), forcing you to create an account
-if you want to contribute to that specific application.
+if you want to contribute to that specific project.
 
 
-Applications
-============
-How can I create an application?
+Projects
+========
+How can I create a project?
 --------------------------------
-You can create an application using web forms, or if you prefer it using the
+You can create a project using web forms, or if you prefer it using the
 API. We recommend you to read the :doc:`user/overview` and :doc:`user/tutorial` 
 sections.
 
 Can I disable anonymous contributions?
 --------------------------------------
-Yes, you can. Check your application settings and toggle the drop down menu:
+Yes, you can. Check your project settings and toggle the drop down menu:
 *Allow Anonymous Contributors* from Yes to No. Check the :ref:`app-details`
 for further information.
 
@@ -41,25 +41,25 @@ give a weight of 1 point to all his/her answers, while if the user only
 answered 50% of them correctly, the answers for the rest of the tasks could be
 given a weight of 0.5 points.
 
-Can I delete my application and all the task and task runs?
+Can I delete my project and all the task and task runs?
 -----------------------------------------------------------
-Yes, you can. If you are the owner of the application you can delete the
-application, and automatically all the task and associated task runs will be
+Yes, you can. If you are the owner of the project you can delete the
+project, and automatically all the task and associated task runs will be
 deleted (**note**: this cannot be undone!). Check the :ref:`app-delete` section
 for further details.
 
-Do you provide any statistics about the users for my application?
+Do you provide any statistics about the users for my project?
 -----------------------------------------------------------------
-Yes, every application has its own statistics page that shows information about
+Yes, every project has its own statistics page that shows information about
 the distribution of answers per type of user, an estimation about how long it
 will take to complete all your tasks, the top 5 authenticated and anonymous
 users, etc. Check the *Statistics* link in the left local sidebar of your
-application.
+project.
 
-My application is not getting too much attention, how can it be a *featured* app?
+My project is not getting too much attention, how can it be a *featured* app?
 ---------------------------------------------------------------------------------
-Featured applications are managed by the administrators of the site. Contact
-them about this issue, and they will decide about your application.
+Featured projects are managed by the administrators of the site. Contact
+them about this issue, and they will decide about your project.
 
 I have all my data in a CSV file, can I import it?
 --------------------------------------------------
@@ -76,29 +76,29 @@ section. See :ref:`csv-import` section for further details.
 
 All my tasks have been completed, how do I download the results to analyze them?
 --------------------------------------------------------------------------------
-You can export all the data of your application whenever you want. The data can
+You can export all the data of your project whenever you want. The data can
 be exported directly from the *Tasks* section (check the *Tasks* link in the
-left sidebar of your application and click in the export box). PyBossa can
+left sidebar of your project and click in the export box). PyBossa can
 export your tasks and task runs (or answers) to a CSV file, JSON format or to
 a CKAN server. See the :ref:`export-results` section for further details.
 
 What is a Task Run?
 -------------------
 A Task Run is a submitted answer sent by one user (authenticated or anonymous)
-to one of the tasks of your application. In other words, it is the work done by
+to one of the tasks of your project. In other words, it is the work done by
 one volunteer for one task.
 
 What is the Task Presenter?
 ---------------------------
-The task presenter is the web application that will load the tasks of your
-application and present them to the user. It is an HTML + JavaScript
-application. See the :ref:`task-presenter` section for further details.
+The task presenter is the web project that will load the tasks of your
+project and present them to the user. It is an HTML + JavaScript
+project. See the :ref:`task-presenter` section for further details.
 
 PyBossa
 =======
 Does PyBossa have an API?
 -------------------------
-Yes, it does. PyBossa has a :ref:`api` that allows you to create applications,
+Yes, it does. PyBossa has a :ref:`api` that allows you to create projects,
 download results, import tasks, etc. Please see the :ref:`api` section for more
 details and the :doc:`user/tutorial` for a full example about how you can use
 it.
@@ -110,9 +110,9 @@ version 3.0`_.
 
 .. _`GNU Affero general public license version 3.0`: http://www.gnu.org/licenses/agpl-3.0.html
 
-Do you provide application templates or examples apps?
+Do you provide project templates or examples apps?
 ------------------------------------------------------
-Yes, we do. You can find several open source application examples that can be
+Yes, we do. You can find several open source project examples that can be
 re-used for image/sound pattern recognition problems, geo-coding, PDF transcription, 
 etc. Check the official `Git repository`_ for all the available apps.
 

@@ -45,10 +45,10 @@ def db_create():
         categories = []
         categories.append(Category(name="Thinking",
                           short_name='thinking',
-                          description='Volunteer Thinking apps'))
+                          description='Volunteer Thinking projects'))
         categories.append(Category(name="Volunteer Sensing",
                           short_name='sensing',
-                          description='Volunteer Sensing apps'))
+                          description='Volunteer Sensing projects'))
         db.session.add_all(categories)
         db.session.commit()
 
@@ -90,7 +90,7 @@ def markdown_db_migrate():
 
 
 def bootstrap_avatars():
-    """Download current links from user avatar and apps to real images hosted in the
+    """Download current links from user avatar and projects to real images hosted in the
     PyBossa server."""
     import requests
     import os
@@ -138,10 +138,10 @@ def bootstrap_avatars():
 
 
             apps = App.query.all()
-            print "Downloading avatars for %s apps" % len(apps)
+            print "Downloading avatars for %s projects" % len(apps)
             for a in apps[0:1]:
                 if a.info.get('thumbnail') and not a.info.get('container'):
-                    print "Working on app: %s ..." % a.short_name
+                    print "Working on project: %s ..." % a.short_name
                     print "Saving avatar: %s ..." % a.info.get('thumbnail')
                     url = urlparse(a.info.get('thumbnail'))
                     if url.scheme and url.netloc:
@@ -162,7 +162,7 @@ def bootstrap_avatars():
                                 db.session.commit()
                                 print "Done!"
                         except:
-                            print "Something failed, this app will use the placehoder."
+                            print "Something failed, this project will use the placehoder."
         if app.config['UPLOAD_METHOD'] == 'rackspace':
             import pyrax
             import tempfile
@@ -208,10 +208,10 @@ def bootstrap_avatars():
 
 
             apps = App.query.all()
-            print "Downloading avatars for %s apps" % len(apps)
+            print "Downloading avatars for %s projects" % len(apps)
             for a in apps:
                 if a.info.get('thumbnail') and not a.info.get('container'):
-                    print "Working on app: %s ..." % a.short_name
+                    print "Working on project: %s ..." % a.short_name
                     print "Saving avatar: %s ..." % a.info.get('thumbnail')
                     url = urlparse(a.info.get('thumbnail'))
                     if url.scheme and url.netloc:
@@ -241,7 +241,7 @@ def bootstrap_avatars():
                                 db.session.commit()
                                 print "Done!"
                         except:
-                            print "Something failed, this app will use the placehoder."
+                            print "Something failed, this project will use the placehoder."
 
 
 

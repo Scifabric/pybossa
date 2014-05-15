@@ -44,7 +44,7 @@ Installing git -a distributed version control system
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 PyBossa uses the git_ distributed version control system for handling the
-PyBossa server source code as well as the template applications. 
+PyBossa server source code as well as the template projects. 
 
 Git_ is a freen and open source distributed version control system designed to
 handle everything from small to very large projects with seepd and efficiency.
@@ -94,7 +94,7 @@ Installing virtualenv_ in the Ubuntu server could be done like this::
 
 After installing the software, now you will be able to create independent virtual
 environments for the PyBossa installation as well as for the template
-applications (see :doc:`user/tutorial`).
+projects (see :doc:`user/tutorial`).
 
 Installing the PyBossa Python requirements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -241,7 +241,7 @@ Speeding up the site
 ====================
 
 PyBossa comes with a Cache system that it is enabled by default. PyBossa uses
-a Redis_ server to cache some objects like applications, statistics, etc. The
+a Redis_ server to cache some objects like projects, statistics, etc. The
 system uses the Sentinel_ feature of Redis_, so you can have several
 master/slave nodes configured with Sentinel_, and your PyBossa server will use
 them "automagically".
@@ -265,7 +265,7 @@ Then start the server, and nothing will be cached.
 .. note::
    **Important**: We highly recommend you to not disable the cache, as it will boost
    the performance of the server caching SQL queries as well as page views. If
-   you have lots of applications with hundreds of tasks, you should enable it.
+   you have lots of projects with hundreds of tasks, you should enable it.
 
 .. note::
    **Important**: Sometimes Redis is a bit outdated in your Linux distribution.

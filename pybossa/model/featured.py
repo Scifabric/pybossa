@@ -25,7 +25,7 @@ from pybossa.model import DomainObject, make_timestamp
 
 
 class Featured(db.Model, DomainObject):
-    '''A Table with Featured Apps.'''
+    '''A Table with Featured Projects.'''
 
     __tablename__ = 'featured'
 
