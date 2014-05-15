@@ -341,6 +341,7 @@ def task_presenter_editor(short_name):
         require.app.update(app)
 
         form = TaskPresenterForm(request.form)
+        form.id.data = app.id
         if request.method == 'POST' and form.validate():
             db_app = db.session.query(model.app.App).filter_by(id=app.id).first()
             db_app.info['task_presenter'] = form.editor.data
