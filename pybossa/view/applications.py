@@ -76,7 +76,8 @@ class AppForm(Form):
     description = TextField(lazy_gettext('Description'),
                             [validators.Required(
                                 message=lazy_gettext(
-                                    "You must provide a description."))])
+                                    "You must provide a description.")),
+                             validators.Length(max=255)])
     long_description = TextAreaField(lazy_gettext('Long Description'))
 
 
