@@ -1312,7 +1312,7 @@ class TestWeb(web.Helper):
 
         res = self.app.get('account/johndoe', follow_redirects=True)
         assert "Sample App" in res.data, res.data
-        assert "You have contributed <strong>10</strong> tasks" in res.data, res.data
+        assert "You have contributed to <strong>10</strong> tasks" in res.data, res.data
         assert "Contribute!" in res.data, "There should be a Contribute button"
 
     @with_context
