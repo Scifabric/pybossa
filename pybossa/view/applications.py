@@ -43,7 +43,9 @@ from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
 from pybossa.ckan import Ckan
+from pybossa.extensions import misaka
 
+import re
 import json
 import importer
 import presenter as presenter_module
@@ -65,7 +67,7 @@ class AppForm(Form):
     name = TextField(lazy_gettext('Name'),
                      [validators.Required(),
                       pb_validator.Unique(db.session, model.app.App, model.app.App.name,
-                                          message="Name is already taken.")])
+                                          message=lazy_gettext("Name is already taken."))])
     short_name = TextField(lazy_gettext('Short Name'),
                            [validators.Required(),
                             pb_validator.NotAllowedChars(),
@@ -73,16 +75,17 @@ class AppForm(Form):
                                 db.session, model.app.App, model.app.App.short_name,
                                 message=lazy_gettext(
                                     "Short Name is already taken."))])
+    long_description = TextAreaField(lazy_gettext('Long Description'),
+                                     [validators.Required()])
+
+
+class AppUpdateForm(AppForm):
+    id = IntegerField(label=None, widget=HiddenInput())
     description = TextField(lazy_gettext('Description'),
                             [validators.Required(
                                 message=lazy_gettext(
                                     "You must provide a description.")),
                              validators.Length(max=255)])
-    long_description = TextAreaField(lazy_gettext('Long Description'))
-
-
-class AppUpdateForm(AppForm):
-    id = IntegerField(label=None, widget=HiddenInput())
     thumbnail = TextField(lazy_gettext('Icon Link'))
     allow_anonymous_contributors = SelectField(
         lazy_gettext('Allow Anonymous Contributors'),
@@ -278,6 +281,17 @@ def new():
                                title=gettext("Create an Application"),
                                form=form, errors=errors)
 
+    def _description_from_long_description():
+        long_desc = form.long_description.data
+        html_long_desc = misaka.render(long_desc)
+        remove_html_tags_regex = re.compile('<[^>]*>')
+        blank_space_regex = re.compile('\n')
+        text_desc = remove_html_tags_regex.sub("", html_long_desc)[:255]
+        if len(text_desc) >= 252:
+            text_desc = text_desc[:-3]
+            text_desc += "..."
+        return blank_space_regex.sub(" ", text_desc)
+
     if request.method != 'POST':
         return respond(False)
 
@@ -289,7 +303,7 @@ def new():
 
     app = model.app.App(name=form.name.data,
                     short_name=form.short_name.data,
-                    description=form.description.data,
+                    description=_description_from_long_description(),
                     long_description=form.long_description.data,
                     owner_id=current_user.id,
                     info=info)

@@ -577,9 +577,9 @@ class TestWeb(web.Helper):
             assert "This field is required" in res.data, err_msg
 
             # Issue the error for the app.description
-            res = self.new_application(description="")
+            res = self.new_application(long_description="")
             err_msg = "An application must have a description"
-            assert "You must provide a description" in res.data, err_msg
+            assert "This field is required" in res.data, err_msg
 
             # Issue the error for the app.short_name
             res = self.new_application(short_name='$#/|')
