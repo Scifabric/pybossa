@@ -173,12 +173,12 @@ class TestWeb(web.Helper):
             msg = "Full name must be between 3 and 35 characters long"
             assert msg in res.data, res.data
 
-            res = self.register(username='')
+            res = self.register(name='')
             assert self.html_title("Register") in res.data, res
             msg = "User name must be between 3 and 35 characters long"
             assert msg in res.data, res.data
 
-            res = self.register(username='%a/$|')
+            res = self.register(name='%a/$|')
             assert self.html_title("Register") in res.data, res
             msg = '$#&amp;\/| and space symbols are forbidden'
             assert msg in res.data, res.data
@@ -506,7 +506,7 @@ class TestWeb(web.Helper):
             assert "Please sign in to access this page" in res.data, err_msg
 
             # Now with a different user
-            self.register(fullname="Perico Palotes", username="perico")
+            self.register(fullname="Perico Palotes", name="perico")
             res = self.app.get('/app/sampleapp', follow_redirects=True)
             assert self.html_title("Application: Sample App") in res.data, res
             assert "Start Contributing Now" in res.data, err_msg
@@ -657,7 +657,7 @@ class TestWeb(web.Helper):
             assert app.name in res.data, err_msg
             self.signout()
 
-            res = self.register(fullname='Paco', username='paco')
+            res = self.register(fullname='Paco', name='paco')
             url = '/app/newshortname/'
             res = self.app.get(url, follow_redirects=True)
             assert "Forbidden" in res.data, res.data
@@ -991,7 +991,7 @@ class TestWeb(web.Helper):
             self.new_application()
             self.signout()
             # Create a user
-            self.register(fullname="jane", username="jane", email="jane@jane.com")
+            self.register(fullname="jane", name="jane", email="jane@jane.com")
             self.signout()
 
             # As Anonymous
@@ -1798,9 +1798,9 @@ class TestWeb(web.Helper):
                 "Facebook, or Google to sign-in") in res.data
 
         self.register()
-        self.register(username='janedoe')
-        self.register(username='google')
-        self.register(username='facebook')
+        self.register(name='janedoe')
+        self.register(name='google')
+        self.register(name='facebook')
         jane = User.query.get(2)
         jane.twitter_user_id = 10
         google = User.query.get(3)
@@ -2013,7 +2013,7 @@ class TestWeb(web.Helper):
         self.signout()
 
         # Register another user
-        self.register(method="POST", fullname="Jane Doe", username="janedoe",
+        self.register(method="POST", fullname="Jane Doe", name="janedoe",
                       password="janedoe", password2="janedoe",
                       email="jane@jane.com")
         res = self.app.get("/", follow_redirects=True)
@@ -2832,7 +2832,7 @@ class TestWeb(web.Helper):
         self.register()
         self.signout()
         # As owner
-        self.register(fullname="owner", username="owner")
+        self.register(fullname="owner", name="owner")
         res = self.new_application()
         url = "/app/sampleapp/tasks/settings"
 
@@ -2845,7 +2845,7 @@ class TestWeb(web.Helper):
 
         self.signout()
         # As an authenticated user
-        self.register(fullname="juan", username="juan")
+        self.register(fullname="juan", name="juan")
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should not be allowed to access this page"
         assert res.status_code == 403, err_msg
@@ -2874,7 +2874,7 @@ class TestWeb(web.Helper):
         self.register()
         self.signout()
         # Create owner
-        self.register(fullname="owner", username="owner")
+        self.register(fullname="owner", name="owner")
         self.new_application()
         url = "/app/sampleapp/tasks/scheduler"
         form_id = 'task_scheduler'
@@ -2903,7 +2903,7 @@ class TestWeb(web.Helper):
             self.signout()
 
         # As an authenticated user
-        self.register(fullname="juan", username="juan")
+        self.register(fullname="juan", name="juan")
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should not be allowed to access this page"
         assert res.status_code == 403, err_msg
@@ -2919,7 +2919,7 @@ class TestWeb(web.Helper):
         app.hidden = 1
         db.session.add(app)
         db.session.commit()
-        self.register(fullname="daniel", username="daniel")
+        self.register(fullname="daniel", name="daniel")
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 403, res.status_code
         self.signout()
@@ -2939,7 +2939,7 @@ class TestWeb(web.Helper):
         self.register()
         self.signout()
         # Create owner
-        self.register(fullname="owner", username="owner")
+        self.register(fullname="owner", name="owner")
         self.new_application()
         self.new_task(1)
         url = "/app/sampleapp/tasks/redundancy"
@@ -2984,7 +2984,7 @@ class TestWeb(web.Helper):
             self.signout()
 
         # As an authenticated user
-        self.register(fullname="juan", username="juan")
+        self.register(fullname="juan", name="juan")
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should not be allowed to access this page"
         assert res.status_code == 403, err_msg
@@ -3000,7 +3000,7 @@ class TestWeb(web.Helper):
         app.hidden = 1
         db.session.add(app)
         db.session.commit()
-        self.register(fullname="daniel", username="daniel")
+        self.register(fullname="daniel", name="daniel")
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 403, res.status_code
         self.signout()
@@ -3019,7 +3019,7 @@ class TestWeb(web.Helper):
         self.register()
         self.signout()
         # Create owner
-        self.register(fullname="owner", username="owner")
+        self.register(fullname="owner", name="owner")
         self.new_application()
         self.new_task(1)
         url = "/app/sampleapp/tasks/priority"
@@ -3074,7 +3074,7 @@ class TestWeb(web.Helper):
             self.signout()
 
         # As an authenticated user
-        self.register(fullname="juan", username="juan")
+        self.register(fullname="juan", name="juan")
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should not be allowed to access this page"
         assert res.status_code == 403, err_msg
@@ -3090,7 +3090,7 @@ class TestWeb(web.Helper):
         app.hidden = 1
         db.session.add(app)
         db.session.commit()
-        self.register(fullname="daniel", username="daniel")
+        self.register(fullname="daniel", name="daniel")
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 403, res.status_code
         self.signout()

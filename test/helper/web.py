@@ -36,18 +36,18 @@ class Helper(Test):
         else:
             return "<title>PyBossa &middot; %s</title>" % title
 
-    def register(self, method="POST", fullname="John Doe", username="johndoe",
+    def register(self, method="POST", fullname="John Doe", name="johndoe",
                  password="p4ssw0rd", password2=None, email=None):
         """Helper function to register and sign in a user"""
         if password2 is None:
             password2 = password
         if email is None:
-            email = username + '@example.com'
+            email = name + '@example.com'
         if method == "POST":
             return self.app.post('/account/register',
                                  data={
                                      'fullname': fullname,
-                                     'username': username,
+                                     'name': name,
                                      'email_addr': email,
                                      'password': password,
                                      'confirm': password2},

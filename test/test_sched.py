@@ -193,7 +193,7 @@ class TestSched(sched.Helper):
         # We need one extra loop to allow the scheduler to mark a task as completed
         for i in range(11):
             self.register(fullname=self.user.username + str(i),
-                          username=self.user.username + str(i),
+                          name=self.user.username + str(i),
                           password=self.user.username + str(i))
             self.signin()
             # Get Task until scheduler returns None
@@ -245,7 +245,7 @@ class TestSched(sched.Helper):
             if random.random >= 0.5:
                 signin = True
                 self.register(fullname=self.user.username + str(i),
-                              username=self.user.username + str(i),
+                              name=self.user.username + str(i),
                               password=self.user.username + str(i))
 
             if signin:
