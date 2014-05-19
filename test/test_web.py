@@ -703,6 +703,9 @@ class TestWeb(web.Helper):
             res = self.update_application(new_description="")
             assert "You must provide a description." in res.data
 
+            res = self.update_application(new_description="a"*256)
+            assert "Field cannot be longer than 255 characters." in res.data
+
             res = self.update_application(new_long_description="")
             assert "This field is required" not in res.data
 
