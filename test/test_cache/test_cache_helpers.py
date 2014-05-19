@@ -67,6 +67,8 @@ class TestHelpersCache(Test):
 
 
     def test_n_available_tasks_all_tasks_completed_authenticated_user(self):
+        """Test n_available_tasks returns 0 for authenticated user if all the
+        tasks are completed"""
         app = AppFactory.create()
         task = TaskFactory.create(app=app, state='completed')
 
@@ -76,6 +78,8 @@ class TestHelpersCache(Test):
 
 
     def test_n_available_tasks_all_tasks_completed_anonymous_user(self):
+        """Test n_available_tasks returns 0 for anonymous user if all the
+        tasks are completed"""
         app = AppFactory.create()
         task = TaskFactory.create(app=app, state='completed')
 
@@ -85,6 +89,8 @@ class TestHelpersCache(Test):
 
 
     def test_n_available_tasks_all_tasks_answered_by_authenticated_user(self):
+        """Test n_available_tasks returns 0 for authenticated user if he has
+        submitted taskruns for all the tasks"""
         app = AppFactory.create()
         task = TaskFactory.create(app=app, n_answers=2)
         user = UserFactory.create()
@@ -97,6 +103,8 @@ class TestHelpersCache(Test):
 
 
     def test_n_available_tasks_all_tasks_answered_by_anonymous_user(self):
+        """Test n_available_tasks returns 0 for anonymous user if he has
+        submitted taskruns for all the tasks"""
         app = AppFactory.create()
         task = TaskFactory.create(app=app, n_answers=2)
         taskrun = TaskRunFactory.create(task=task)
