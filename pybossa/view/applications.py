@@ -79,7 +79,7 @@ class AppForm(Form):
                                      [validators.Required()])
 
 
-class AppUpdateForm(AppForm):
+class AppUpdateForm(AppForm, AvatarUploadForm):
     id = IntegerField(label=None, widget=HiddenInput())
     description = TextField(lazy_gettext('Description'),
                             [validators.Required(
@@ -93,11 +93,6 @@ class AppUpdateForm(AppForm):
                  ('False', lazy_gettext('No'))])
     category_id = SelectField(lazy_gettext('Category'), coerce=int)
     hidden = BooleanField(lazy_gettext('Hide?'))
-    avatar = FileField(lazy_gettext('Avatar'))
-    x1 = IntegerField(label=None, widget=HiddenInput(), default=0)
-    y1 = IntegerField(label=None, widget=HiddenInput(), default=0)
-    x2 = IntegerField(label=None, widget=HiddenInput(), default=0)
-    y2 = IntegerField(label=None, widget=HiddenInput(), default=0)
 
 
 class TaskPresenterForm(Form):
@@ -473,7 +468,6 @@ def update(short_name):
         title = app_title(app, "Update")
         if request.method == 'GET':
             form = AppUpdateForm(obj=app)
-            upload_form = AvatarUploadForm()
             categories = db.session.query(model.category.Category).all()
             form.category_id.choices = [(c.id, c.name) for c in categories]
             if app.category_id is None:
@@ -491,7 +485,6 @@ def update(short_name):
             form = AppUpdateForm(request.form)
             categories = cached_cat.get_all()
             form.category_id.choices = [(c.id, c.name) for c in categories]
-            upload_form = AvatarUploadForm(request.form)
 
             if request.form.get('btn') != 'Upload':
                 if form.validate():
@@ -500,8 +493,8 @@ def update(short_name):
             else:
                 app = App.query.get(app.id)
                 file = request.files['avatar']
-                coordinates = (upload_form.x1.data, upload_form.y1.data,
-                               upload_form.x2.data, upload_form.y2.data)
+                coordinates = (form.x1.data, form.y1.data,
+                               form.x2.data, form.y2.data)
                 prefix = time.time()
                 file.filename = "app_%s_thumbnail_%i.png" % (app.id, prefix)
                 container = "user_%s" % current_user.id
@@ -520,7 +513,6 @@ def update(short_name):
 
         return render_template('/applications/update.html',
                                form=form,
-                               upload_form=upload_form,
                                title=title,
                                app=app)
     except HTTPException:
