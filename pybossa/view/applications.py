@@ -86,6 +86,7 @@ class AppUpdateForm(AppForm, AvatarUploadForm):
                                 message=lazy_gettext(
                                     "You must provide a description.")),
                              validators.Length(max=255)])
+    long_description = TextAreaField(lazy_gettext('Long Description'))
     thumbnail = TextField(lazy_gettext('Icon Link'))
     allow_anonymous_contributors = SelectField(
         lazy_gettext('Allow Anonymous Contributors'),
@@ -432,8 +433,6 @@ def update(short_name):
         app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
         if form.thumbnail.data:
             new_info['thumbnail'] = form.thumbnail.data
-        #if form.sched.data:
-        #    new_info['sched'] = form.sched.data
 
         # Merge info object
         info = dict(app.info.items() + new_info.items())
@@ -475,11 +474,6 @@ def update(short_name):
             form.populate_obj(app)
             if app.info.get('thumbnail'):
                 form.thumbnail.data = app.info['thumbnail']
-            #if app.info.get('sched'):
-            #    for s in form.sched.choices:
-            #        if app.info['sched'] == s[0]:
-            #            form.sched.data = s[0]
-            #            break
 
         if request.method == 'POST':
             form = AppUpdateForm(request.form)

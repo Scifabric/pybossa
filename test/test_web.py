@@ -685,6 +685,28 @@ class TestWeb(web.Helper):
             err_msg = "Root user should be able to see his hidden app"
             assert app.name in res.data, err_msg
 
+
+    @with_context
+    def test_update_application_errors(self):
+        """Test WEB update form validation issues the errors"""
+        with self.flask_app.app_context():
+
+            self.register()
+            self.new_application()
+
+            res = self.update_application(new_name="")
+            assert "This field is required" in res.data
+
+            res = self.update_application(new_short_name="")
+            assert "This field is required" in res.data
+
+            res = self.update_application(new_description="")
+            assert "You must provide a description." in res.data
+
+            res = self.update_application(new_long_description="")
+            assert "This field is required" not in res.data
+
+
     @with_context
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
