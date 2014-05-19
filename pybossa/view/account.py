@@ -405,80 +405,6 @@ def _get_user_apps(user_id):
     return apps_published, apps_draft
 
 
-@blueprint.route('/<name>/settings')
-@login_required
-def settings(name):
-    """
-    Configure user settings.
-
-    Returns a Jinja2 template.
-
-    """
-    if current_user.name != name:
-        return abort(403)
-    else:
-        user, apps, apps_created = cached_users.get_user_summary(current_user.name)
-        title = "User: %s &middot; Settings" % user['fullname']
-        update_form = UpdateProfileForm()
-        avatar_form = AvatarUploadForm()
-
-        if request.method == 'GET':
-            update_form = UpdateProfileForm(obj=current_user)
-            update_form.set_locales(current_app.config['LOCALES'])
-            update_form.populate_obj(current_user)
-
-            title_msg = "Update your profile: %s" % current_user.fullname
-            return render_template('account/settings.html',
-                                   title=title,
-                                   user=user,
-                                   update_form=update_form,
-                                   avatar_form=avatar_form)
-        else:
-            update_form = UpdateProfileForm(request.form)
-            avatar_form = AvatarUploadForm(request.form)
-            update_form.set_locales(current_app.config['LOCALES'])
-            if request.form.get('btn') == 'Upload':
-                file = request.files['avatar']
-                coordinates = (avatar_form.x1.data, avatar_form.y1.data,
-                               avatar_form.x2.data, avatar_form.y2.data)
-                prefix = time.time()
-                file.filename = "%s_avatar.png" % prefix
-                container = "user_%s" % current_user.id
-                uploader.upload_file(file,
-                                     container=container,
-                                     coordinates=coordinates)
-                # Delete previous avatar from storage
-                if current_user.info.get('avatar'):
-                    uploader.delete_file(current_user.info['avatar'], container)
-                current_user.info = {'avatar': file.filename,
-                                     'container': container}
-                db.session.commit()
-                cached_users.delete_user_summary(current_user.name)
-                flash(gettext('Your avatar has been updated! It may \
-                              take some minutes to refresh...'), 'success')
-                return redirect(url_for('.profile', name=name))
-            else:
-                if update_form.validate():
-                    current_user.id = update_form.id.data
-                    current_user.fullname = update_form.fullname.data
-                    current_user.name = update_form.name.data
-                    current_user.email_addr = update_form.email_addr.data
-                    current_user.ckan_api = update_form.ckan_api.data or None
-                    current_user.privacy_mode = update_form.privacy_mode.data
-                    db.session.commit()
-                    cached_users.delete_user_summary(current_user.name)
-                    flash(gettext('Your profile has been updated!'), 'success')
-                    return redirect(url_for('.profile', name=name))
-                else:
-                    flash(gettext('Please correct the errors'), 'error')
-                    title_msg = 'Update your profile: %s' % current_user.fullname
-                    return render_template('account/settings.html',
-                                           title=title,
-                                           user=user,
-                                           update_form=update_form,
-                                           avatar_form=avatar_form)
-
-
 @blueprint.route('/<name>/update', methods=['GET', 'POST'])
 @login_required
 def update_profile(name):
@@ -512,7 +438,7 @@ def update_profile(name):
         title_msg = "Update your profile: %s" % current_user.fullname
         return render_template('account/update.html',
                                title=title_msg,
-                               user=user,
+                               user=usr,
                                form=update_form,
                                upload_form=avatar_form,
                                password_form=password_form,
