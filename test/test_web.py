@@ -559,6 +559,39 @@ class TestWeb(web.Helper):
             assert app.long_description == 'My Description', \
                 "Long desc should be the same: %s" % app.long_description
 
+    # After refactoring applications view, these 3 tests should be more isolated and moved to another place
+    @with_context
+    def test_description_is_generated_from_long_desc(self):
+        """Test WEB when creating an application, the description field is
+        automatically filled in by truncating the long_description"""
+        self.register()
+        res = self.new_application(long_description="Hello")
+
+        app = db.session.query(App).first()
+        assert app.description == "Hello", app.description
+
+    @with_context
+    def test_description_is_generated_from_long_desc_formats(self):
+        """Test WEB when when creating an application, the description generated
+        from the long_description is only text (no html, no markdown)"""
+        self.register()
+        res = self.new_application(long_description="## Hello")
+
+        app = db.session.query(App).first()
+        assert '##' not in app.description, app.description
+        assert '<h2>' not in app.description, app.description
+
+    @with_context
+    def test_description_is_generated_from_long_desc_truncates(self):
+        """Test WEB when when creating an application, the description generated
+        from the long_description is only text (no html, no markdown)"""
+        self.register()
+        res = self.new_application(long_description="a"*300)
+
+        app = db.session.query(App).first()
+        assert len(app.description) == 255, len(app.description)
+        assert app.description[-3:] == '...'
+
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_11_a_create_application_errors(self, mock):

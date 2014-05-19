@@ -278,7 +278,7 @@ def new():
 
     def _description_from_long_description():
         long_desc = form.long_description.data
-        html_long_desc = misaka.render(long_desc)
+        html_long_desc = misaka.render(long_desc)[:-1]
         remove_html_tags_regex = re.compile('<[^>]*>')
         blank_space_regex = re.compile('\n')
         text_desc = remove_html_tags_regex.sub("", html_long_desc)[:255]
