@@ -510,6 +510,7 @@ def update(short_name):
                 cached_apps.delete_app(app.short_name)
                 flash(gettext('Your application thumbnail has been updated! It may \
                               take some minutes to refresh...'), 'success')
+                return redirect(url_for('.update', short_name=short_name))
 
         return render_template('/applications/update.html',
                                form=form,
