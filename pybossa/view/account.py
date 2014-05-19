@@ -428,6 +428,7 @@ def update_profile(name):
     avatar_form = AvatarUploadForm()
     password_form = ChangePasswordForm()
     external_form = update_form
+    title_msg = "Update your profile: %s" % current_user.fullname
 
     if request.method == 'GET':
         update_form = UpdateProfileForm(obj=current_user)
@@ -435,7 +436,6 @@ def update_profile(name):
         update_form.populate_obj(current_user)
         external_form = UpdateProfileForm(obj=current_user)
 
-        title_msg = "Update your profile: %s" % current_user.fullname
         return render_template('account/update.html',
                                title=title_msg,
                                user=usr,
@@ -489,6 +489,36 @@ def update_profile(name):
                                        external_form=external_form,
                                        title=title_msg)
 
+        elif request.form.get('btn') == 'Password':
+            password_form = ChangePasswordForm(request.form)
+            if password_form.validate_on_submit():
+                user = db.session.query(model.user.User).get(current_user.id)
+                if user.check_password(password_form.current_password.data):
+                    user.set_password(password_form.new_password.data)
+                    db.session.add(user)
+                    db.session.commit()
+                    flash(gettext('Yay, you changed your password succesfully!'),
+                          'success')
+                    return redirect(url_for('.profile', name=name))
+                else:
+                    msg = gettext("Your current password doesn't match the "
+                                  "one in our records")
+                    flash(msg, 'error')
+                    return render_template('/account/update.html',
+                                           form=update_form,
+                                           upload_form=avatar_form,
+                                           password_form=password_form,
+                                           external_form=external_form,
+                                           title=title_msg)
+            else:
+                flash(gettext('Please correct the errors'), 'error')
+                return render_template('/account/update.html',
+                                       form=update_form,
+                                       upload_form=avatar_form,
+                                       password_form=password_form,
+                                       external_form=external_form,
+                                       title=title_msg)
+
         elif request.form.get('btn') == 'External':
             del external_form.locale
             del external_form.email_addr
@@ -526,36 +556,6 @@ class ChangePasswordForm(Form):
                                  [validators.Required(err_msg),
                                   validators.EqualTo('confirm', err_msg_2)])
     confirm = PasswordField(lazy_gettext('Repeat password'))
-
-
-@blueprint.route('/<name>/password', methods=['GET', 'POST'])
-@login_required
-def change_password(name):
-    """
-    Change user's password.
-
-    Returns a Jinja2 template.
-
-    """
-    if current_user.name != name:
-        return abort(403)
-    form = ChangePasswordForm(request.form)
-    if form.validate_on_submit():
-        user = db.session.query(model.user.User).get(current_user.id)
-        if user.check_password(form.current_password.data):
-            user.set_password(form.new_password.data)
-            db.session.add(user)
-            db.session.commit()
-            flash(gettext('Yay, you changed your password succesfully!'),
-                  'success')
-            return redirect(url_for('.profile', name=name))
-        else:
-            msg = gettext("Your current password doesn't match the "
-                          "one in our records")
-            flash(msg, 'error')
-    if request.method == 'POST' and not form.validate():
-        flash(gettext('Please correct the errors'), 'error')
-    return render_template('/account/password.html', form=form)
 
 
 class ResetPasswordForm(Form):
@@ -667,7 +667,7 @@ def forgot_password():
     return render_template('/account/password_forgot.html', form=form)
 
 
-@blueprint.route('/<name>/resetapikey', methods=['GET', 'POST'])
+@blueprint.route('/<name>/resetapikey', methods=['POST'])
 @login_required
 def reset_api_key(name):
     """
@@ -676,19 +676,16 @@ def reset_api_key(name):
     Returns a Jinja2 template.
 
     """
+    print "hola"
     if current_user.name != name:
         return abort(403)
 
     title = ("User: %s &middot; Settings"
              "- Reset API KEY") % current_user.fullname
-    if request.method == 'GET':
-        return render_template('account/reset-api-key.html',
-                               title=title)
-    else:
-        user = db.session.query(model.user.User).get(current_user.id)
-        user.api_key = model.make_uuid()
-        db.session.commit()
-        cached_users.delete_user_summary(user.name)
-        msg = gettext('New API-KEY generated')
-        flash(msg, 'success')
-        return redirect(url_for('account.settings', name=name))
+    user = db.session.query(model.user.User).get(current_user.id)
+    user.api_key = model.make_uuid()
+    db.session.commit()
+    cached_users.delete_user_summary(user.name)
+    msg = gettext('New API-KEY generated')
+    flash(msg, 'success')
+    return redirect(url_for('account.profile', name=name))
