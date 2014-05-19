@@ -618,7 +618,6 @@ class TestWeb(web.Helper):
             res = self.update_application(new_name="",
                                           new_short_name="",
                                           new_description="New description",
-                                          new_thumbnail="New Icon Link",
                                           new_long_description='New long desc',
                                           new_hidden=True)
             assert "Please correct the errors" in res.data, res.data
@@ -627,7 +626,6 @@ class TestWeb(web.Helper):
             res = self.update_application(new_name="New Sample App",
                                           new_short_name="newshortname",
                                           new_description="New description",
-                                          new_thumbnail="New Icon Link",
                                           new_long_description='New long desc',
                                           new_hidden=True)
             app = db.session.query(App).first()
@@ -638,8 +636,6 @@ class TestWeb(web.Helper):
             assert app.short_name == "newshortname", err_msg
             err_msg = "App description not updated %s" % app.description
             assert app.description == "New description", err_msg
-            err_msg = "App thumbnail not updated %s" % app.info['thumbnail']
-            assert app.info['thumbnail'] == "New Icon Link", err_msg
             err_msg = "App long description not updated %s" % app.long_description
             assert app.long_description == "New long desc", err_msg
             err_msg = "App hidden not updated %s" % app.hidden
@@ -2008,8 +2004,6 @@ class TestWeb(web.Helper):
         assert app.name == "Sample App", "The app has not been updated"
         error_msg = "The app description has not been updated"
         assert app.description == "Description", error_msg
-        error_msg = "The app icon has not been updated"
-        assert app.info['thumbnail'] == "New Icon link", error_msg
         error_msg = "The app long description has not been updated"
         assert app.long_description == "Long desc", error_msg
 

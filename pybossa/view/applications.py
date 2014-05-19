@@ -87,7 +87,6 @@ class AppUpdateForm(AppForm, AvatarUploadForm):
                                     "You must provide a description.")),
                              validators.Length(max=255)])
     long_description = TextAreaField(lazy_gettext('Long Description'))
-    thumbnail = TextField(lazy_gettext('Icon Link'))
     allow_anonymous_contributors = SelectField(
         lazy_gettext('Allow Anonymous Contributors'),
         choices=[('True', lazy_gettext('Yes')),
@@ -431,8 +430,6 @@ def update(short_name):
         new_info = {}
         # Add the info items
         app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
-        if form.thumbnail.data:
-            new_info['thumbnail'] = form.thumbnail.data
 
         # Merge info object
         info = dict(app.info.items() + new_info.items())
@@ -472,8 +469,6 @@ def update(short_name):
             if app.category_id is None:
                 app.category_id = categories[0].id
             form.populate_obj(app)
-            if app.info.get('thumbnail'):
-                form.thumbnail.data = app.info['thumbnail']
 
         if request.method == 'POST':
             form = AppUpdateForm(request.form)
