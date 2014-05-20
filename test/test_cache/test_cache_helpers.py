@@ -113,3 +113,59 @@ class TestHelpersCache(Test):
 
         assert task.state != 'completed', task.state
         assert n_available_tasks == 0, n_available_tasks
+
+
+    def test_check_contributing_state_completed(self):
+        """Test check_contributing_state returns 'completed' for an app with all
+        tasks completed and user that has contributed to it"""
+        app = AppFactory.create()
+        task = TaskFactory.create(app=app, n_answers=1)
+        user = UserFactory.create()
+        TaskRunFactory.create_batch(1, task=task, user=user)
+
+        contributing_state = helpers.check_contributing_state(app_id=app.id,
+                                                              user_id=user.id)
+
+        assert task.state == 'completed', task.state
+        assert contributing_state == 'completed', contributing_state
+
+
+    def test_check_contributing_state_completed_user_not_contributed(self):
+        """Test check_contributing_state returns 'completed' for an app with all
+        tasks completed even if the user has not contributed to it"""
+        app = AppFactory.create()
+        task = TaskFactory.create(app=app, n_answers=2)
+        TaskRunFactory.create_batch(2, task=task)
+        user = UserFactory.create()
+
+        contributing_state = helpers.check_contributing_state(app_id=app.id,
+                                                              user_id=user.id)
+
+        assert task.state == 'completed', task.state
+        assert contributing_state == 'completed', contributing_state
+
+
+    def test_check_contributing_state_ongoing_tasks_not_contributed(self):
+        """Test check_contributing_state returns 'can_contribute' for an app
+        with ongoing tasks a user has not contributed to"""
+        app = AppFactory.create()
+        task = TaskFactory.create(app=app)
+        user = UserFactory.create()
+
+        contributing_state = helpers.check_contributing_state(app_id=app.id,
+                                                              user_id=user.id)
+
+        assert contributing_state == 'can_contribute', contributing_state
+
+
+    def test_check_contributing_state_ongoing_tasks_contributed(self):
+        """Test check_contributing_state returns 'cannot_contribute' for an app
+        with ongoing tasks to which the user has already contributed"""
+        app = AppFactory.create()
+        task = TaskFactory.create(app=app, n_answers=3)
+        user = UserFactory.create()
+        TaskRunFactory.create(task=task, user=user)
+        contributing_state = helpers.check_contributing_state(app_id=app.id,
+                                                              user_id=user.id)
+
+        assert contributing_state == 'cannot_contribute', contributing_state
