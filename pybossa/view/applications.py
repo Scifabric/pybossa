@@ -509,7 +509,7 @@ def update(short_name):
                 else:
                     flash(gettext('You must provide a file to change the avatar'),
                           'error')
-                    return redirect(url_for('.update', short_name=short_name))
+                return redirect(url_for('.update', short_name=short_name))
 
         return render_template('/applications/update.html',
                                form=form,
