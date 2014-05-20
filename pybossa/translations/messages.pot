@@ -498,7 +498,7 @@ msgid "Add to admin group"
 msgstr ""
 
 #: themes/default/templates/admin/applications.html:13
-msgid "Manage featured applications"
+msgid "Manage featured projects"
 msgstr ""
 
 #: themes/default/templates/admin/categories.html:13
