@@ -93,21 +93,21 @@ class TestAdmin(web.Helper):
 
     @with_context
     def test_03_admin_featured_apps_as_admin(self):
-        """Test ADMIN featured apps works as an admin user"""
+        """Test ADMIN featured projects works as an admin user"""
         self.register()
         self.signin()
         res = self.app.get('/admin/featured', follow_redirects=True)
-        assert "Manage featured applications" in res.data, res.data
+        assert "Manage featured projects" in res.data, res.data
 
     @with_context
     def test_04_admin_featured_apps_as_anonymous(self):
-        """Test ADMIN featured apps works as an anonymous user"""
+        """Test ADMIN featured projects works as an anonymous user"""
         res = self.app.get('/admin/featured', follow_redirects=True)
         assert "Please sign in to access this page" in res.data, res.data
 
     @with_context
     def test_05_admin_featured_apps_as_user(self):
-        """Test ADMIN featured apps works as a signed in user"""
+        """Test ADMIN featured projects works as a signed in user"""
         self.register()
         self.signout()
         self.register()
@@ -119,15 +119,15 @@ class TestAdmin(web.Helper):
     @with_context
     @patch('pybossa.core.uploader.upload_file', return_value=True)
     def test_06_admin_featured_apps_add_remove_app(self, mock):
-        """Test ADMIN featured apps add-remove works as an admin user"""
+        """Test ADMIN featured projects add-remove works as an admin user"""
         self.register()
         self.new_application()
-        # The application is in the system but not in the front page
+        # The project is in the system but not in the front page
         res = self.app.get('/', follow_redirects=True)
-        assert "Create an App" in res.data,\
-            "The application should not be listed in the front page"\
+        assert "Create a Project" in res.data,\
+            "The project should not be listed in the front page"\
             " as it is not featured"
-        # Only apps that have been published can be featured
+        # Only projects that have been published can be featured
         self.new_task(1)
         app = db.session.query(App).get(1)
         app.info = dict(task_presenter="something")
@@ -164,36 +164,36 @@ class TestAdmin(web.Helper):
         # If we try to delete again, it shoul return an error
         res = self.app.delete('/admin/featured/1')
         err = json.loads(res.data)
-        assert err['status_code'] == 404, "App should not be found"
+        assert err['status_code'] == 404, "Project should not be found"
         err_msg = 'App.id 1 is not in Featured table'
         assert err['error'] == err_msg, err_msg
 
         # Try with an id that does not exist
         res = self.app.delete('/admin/featured/999')
         err = json.loads(res.data)
-        assert err['status_code'] == 404, "App should not be found"
+        assert err['status_code'] == 404, "Project should not be found"
         err_msg = 'App.id 999 not found'
         assert err['error'] == err_msg, err_msg
 
     @with_context
     @patch('pybossa.core.uploader.upload_file', return_value=True)
     def test_07_admin_featured_apps_add_remove_app_non_admin(self, mock):
-        """Test ADMIN featured apps add-remove works as an non-admin user"""
+        """Test ADMIN featured projects add-remove works as an non-admin user"""
         self.register()
         self.signout()
         self.register(username="John2", email="john2@john.com",
                       password="passwd")
         self.new_application()
-        # The application is in the system but not in the front page
+        # The project is in the system but not in the front page
         res = self.app.get('/', follow_redirects=True)
-        err_msg = ("The application should not be listed in the front page"
+        err_msg = ("The project should not be listed in the front page"
                    "as it is not featured")
-        assert "Create an App" in res.data, err_msg
+        assert "Create a Project" in res.data, err_msg
         res = self.app.get('/admin/featured', follow_redirects=True)
         err_msg = ("The user should not be able to access this page"
                    " but the returned status is %s" % res.status)
         assert "403 FORBIDDEN" in res.status, err_msg
-        # Try to add the app to the featured list
+        # Try to add the project to the featured list
         res = self.app.post('/admin/featured/1')
         err_msg = ("The user should not be able to POST to this page"
                    " but the returned status is %s" % res.status)
@@ -207,21 +207,21 @@ class TestAdmin(web.Helper):
     @with_context
     @patch('pybossa.core.uploader.upload_file', return_value=True)
     def test_08_admin_featured_apps_add_remove_app_anonymous(self, mock):
-        """Test ADMIN featured apps add-remove works as an anonymous user"""
+        """Test ADMIN featured projects add-remove works as an anonymous user"""
         self.register()
         self.new_application()
         self.signout()
-        # The application is in the system but not in the front page
+        # The project is in the system but not in the front page
         res = self.app.get('/', follow_redirects=True)
-        assert "Create an App" in res.data,\
-            "The application should not be listed in the front page"\
+        assert "Create a Project" in res.data,\
+            "The project should not be listed in the front page"\
             " as it is not featured"
         res = self.app.get('/admin/featured', follow_redirects=True)
         err_msg = ("The user should not be able to access this page"
                    " but the returned status is %s" % res.data)
         assert "Please sign in to access this page" in res.data, err_msg
 
-        # Try to add the app to the featured list
+        # Try to add the project to the featured list
         res = self.app.post('/admin/featured/1', follow_redirects=True)
         err_msg = ("The user should not be able to POST to this page"
                    " but the returned status is %s" % res.data)
@@ -381,10 +381,10 @@ class TestAdmin(web.Helper):
         self.signin()
         # The user is redirected to '/admin/' if no format is specified
         res = self.app.get('/admin/users/export', follow_redirects=True)
-        assert 'Featured Applications' in res.data, res.data
+        assert 'Featured Projects' in res.data, res.data
         assert 'Administrators' in res.data, res.data
         res = self.app.get('/admin/users/export?firmit=', follow_redirects=True)
-        assert 'Featured Applications' in res.data, res.data
+        assert 'Featured Projects' in res.data, res.data
         assert 'Administrators' in res.data, res.data
         # A 415 error is raised if the format is not supported (is not either json or csv)
         res = self.app.get('/admin/users/export?format=bad',
@@ -451,7 +451,7 @@ class TestAdmin(web.Helper):
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.core.uploader.upload_file', return_value=True)
     def test_19_admin_update_app(self, Mock, Mock2):
-        """Test ADMIN can update an app that belongs to another user"""
+        """Test ADMIN can update a project that belongs to another user"""
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
                                    {'content-type': 'application/json'})
         Mock.return_value = html_request
@@ -464,11 +464,11 @@ class TestAdmin(web.Helper):
         # Sign in with the root user
         self.signin()
         res = self.app.get('/app/sampleapp/settings')
-        err_msg = "Admin users should be able to get the settings page for any app"
+        err_msg = "Admin users should be able to get the settings page for any project"
         assert res.status == "200 OK", err_msg
         res = self.update_application(method="GET")
-        assert "Update the application" in res.data,\
-            "The app should be updated by admin users"
+        assert "Update the project" in res.data,\
+            "The project should be updated by admin users"
         res = self.update_application(new_name="Root",
                                       new_short_name="rootsampleapp")
         res = self.app.get('/app/rootsampleapp', follow_redirects=True)
@@ -489,7 +489,7 @@ class TestAdmin(web.Helper):
     @with_context
     @patch('pybossa.core.uploader.upload_file', return_value=True)
     def test_20_admin_delete_app(self, mock):
-        """Test ADMIN can delete an app that belongs to another user"""
+        """Test ADMIN can delete a project that belongs to another user"""
         self.register()
         self.signout()
         self.register(fullname="Juan Jose", username="juan",
@@ -500,14 +500,14 @@ class TestAdmin(web.Helper):
         self.signin()
         res = self.delete_application(method="GET")
         assert "Yes, delete it" in res.data,\
-            "The app should be deleted by admin users"
+            "The project should be deleted by admin users"
         res = self.delete_application()
-        err_msg = "The app should be deleted by admin users"
-        assert "Application deleted!" in res.data, err_msg
+        err_msg = "The project should be deleted by admin users"
+        assert "Project deleted!" in res.data, err_msg
 
     @with_context
     def test_21_admin_delete_tasks(self):
-        """Test ADMIN can delete an app's tasks that belongs to another user"""
+        """Test ADMIN can delete a project's tasks that belongs to another user"""
         # Admin
         self.create()
         tasks = db.session.query(Task).filter_by(app_id=1).all()
