@@ -506,7 +506,7 @@ msgid "Add to admin group"
 msgstr "Ajouter au groupe admin"
 
 #: themes/default/templates/admin/applications.html:13
-msgid "Manage featured applications"
+msgid "Manage featured projects"
 msgstr "Gérer les applications selectionnées"
 
 #: themes/default/templates/admin/categories.html:13
