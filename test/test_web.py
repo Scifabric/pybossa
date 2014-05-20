@@ -264,8 +264,8 @@ class TestWeb(web.Helper):
         assert self.user.fullname in res.data, res
         assert self.user.email_addr not in res.data, res
 
-        # Try to access protected areas like settings
-        res = self.app.get('/account/johndoe/settings', follow_redirects=True)
+        # Try to access protected areas like update
+        res = self.app.get('/account/johndoe/update', follow_redirects=True)
         # As a user must be signed in to access, the page the title will be the
         # redirection to log in
         assert self.html_title("Sign in") in res.data, res.data
@@ -305,7 +305,7 @@ class TestWeb(web.Helper):
         assert msg in res.data, res
         assert self.user.fullname in res.data, res
         assert "Save the changes" in res.data, res
-        msg = '<a href="/account/johndoe/settings" class="btn">Cancel</a>'
+        msg = '<a href="/account/johndoe/update" class="btn">Cancel</a>'
         assert  msg in res.data, res.data
 
         res = self.update_profile(fullname="John Doe 2",
@@ -1686,28 +1686,31 @@ class TestWeb(web.Helper):
         """Test WEB password changing"""
         password = "mehpassword"
         self.register(password=password)
-        res = self.app.post('/account/johndoe/password',
+        res = self.app.post('/account/johndoe/update',
                             data={'current_password': password,
                                   'new_password': "p4ssw0rd",
-                                  'confirm': "p4ssw0rd"},
+                                  'confirm': "p4ssw0rd",
+                                  'btn': 'Password'},
                             follow_redirects=True)
         assert "Yay, you changed your password succesfully!" in res.data, res.data
 
         password = "mehpassword"
         self.register(password=password)
-        res = self.app.post('/account/johndoe/password',
+        res = self.app.post('/account/johndoe/update',
                             data={'current_password': "wrongpassword",
                                   'new_password': "p4ssw0rd",
-                                  'confirm': "p4ssw0rd"},
+                                  'confirm': "p4ssw0rd",
+                                  'btn': 'Password'},
                             follow_redirects=True)
         msg = "Your current password doesn't match the one in our records"
         assert msg in res.data
 
         self.register(password=password)
-        res = self.app.post('/account/johndoe/password',
+        res = self.app.post('/account/johndoe/update',
                             data={'current_password': '',
                                   'new_password':'',
-                                  'confirm': ''},
+                                  'confirm': '',
+                                  'btn': 'Password'},
                             follow_redirects=True)
         msg = "Please correct the errors"
         assert msg in res.data
@@ -1716,13 +1719,13 @@ class TestWeb(web.Helper):
     def test_42_password_link(self):
         """Test WEB visibility of password change link"""
         self.register()
-        res = self.app.get('/account/johndoe/settings')
+        res = self.app.get('/account/johndoe/update')
         assert "Change your Password" in res.data
         user = User.query.get(1)
         user.twitter_user_id = 1234
         db.session.add(user)
         db.session.commit()
-        res = self.app.get('/account/johndoe/settings')
+        res = self.app.get('/account/johndoe/update')
         assert "Change your Password" not in res.data, res.data
 
     @with_context
@@ -2566,7 +2569,7 @@ class TestWeb(web.Helper):
     @with_context
     def test_57_reset_api_key(self):
         """Test WEB reset api key works"""
-        url = "/account/johndoe/resetapikey"
+        url = "/account/johndoe/update"
         # Anonymous user
         res = self.app.get(url, follow_redirects=True)
         err_msg = "Anonymous user should be redirected for authentication"
@@ -2577,11 +2580,13 @@ class TestWeb(web.Helper):
         # Authenticated user
         self.register()
         user = db.session.query(User).get(1)
+        url = "/account/%s/update" % user.name
         api_key = user.api_key
         res = self.app.get(url, follow_redirects=True)
         err_msg = "Authenticated user should get access to reset api key page"
         assert res.status_code == 200, err_msg
-        assert "Reset API Key" in res.data, err_msg
+        assert "reset your personal API Key" in res.data, err_msg
+        url = "/account/%s/resetapikey" % user.name
         res = self.app.post(url, follow_redirects=True)
         err_msg = "Authenticated user should be able to reset his api key"
         assert res.status_code == 200, err_msg

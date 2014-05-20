@@ -76,7 +76,8 @@ class Helper(Test):
     def update_profile(self, method="POST", id=1, fullname="John Doe",
                        name="johndoe", locale="es",
                        email_addr="johndoe@example.com",
-                       new_name=None):
+                       new_name=None,
+                       btn='Profile'):
         """Helper function to update the profile of users"""
         url = "/account/%s/update" % name
         if new_name:
@@ -88,7 +89,7 @@ class Helper(Test):
                                        'name': name,
                                        'locale': locale,
                                        'email_addr': email_addr,
-                                       'btn': 'Save'},
+                                       'btn': btn},
                                  follow_redirects=True)
         else:
             return self.app.get(url,
