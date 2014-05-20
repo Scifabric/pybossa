@@ -21,8 +21,9 @@ from StringIO import StringIO
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, make_response
 from flask_wtf import Form
+from flask_wtf.file import FileField, FileRequired
 from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
-    SelectField, validators, TextAreaField, FileField
+    SelectField, validators, TextAreaField
 from wtforms.widgets import HiddenInput
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import lazy_gettext, gettext
@@ -55,7 +56,7 @@ import requests
 blueprint = Blueprint('app', __name__)
 
 class AvatarUploadForm(Form):
-    avatar = FileField(lazy_gettext('Avatar'), )
+    avatar = FileField(lazy_gettext('Avatar'), validators=[FileRequired()])
     x1 = IntegerField(label=None, widget=HiddenInput(), default=0)
     y1 = IntegerField(label=None, widget=HiddenInput(), default=0)
     x2 = IntegerField(label=None, widget=HiddenInput(), default=0)
@@ -495,35 +496,39 @@ def update(short_name):
             #            break
 
         if request.method == 'POST':
+            upload_form = AvatarUploadForm()
             form = AppForm(request.form)
             categories = cached_cat.get_all()
             form.category_id.choices = [(c.id, c.name) for c in categories]
-            upload_form = AvatarUploadForm(request.form)
 
             if request.form.get('btn') != 'Upload':
                 if form.validate():
                     return handle_valid_form(form)
                 flash(gettext('Please correct the errors'), 'error')
             else:
-                app = App.query.get(app.id)
-                file = request.files['avatar']
-                coordinates = (upload_form.x1.data, upload_form.y1.data,
-                               upload_form.x2.data, upload_form.y2.data)
-                prefix = time.time()
-                file.filename = "app_%s_thumbnail_%i.png" % (app.id, prefix)
-                container = "user_%s" % current_user.id
-                uploader.upload_file(file,
-                                     container=container,
-                                     coordinates=coordinates)
-                # Delete previous avatar from storage
-                if app.info.get('thumbnail'):
-                    uploader.delete_file(app.info['thumbnail'], container)
-                app.info['thumbnail'] = file.filename
-                app.info['container'] = container
-                db.session.commit()
-                cached_apps.delete_app(app.short_name)
-                flash(gettext('Your application thumbnail has been updated! It may \
-                              take some minutes to refresh...'), 'success')
+                if upload_form.validate_on_submit():
+                    app = App.query.get(app.id)
+                    file = request.files['avatar']
+                    coordinates = (upload_form.x1.data, upload_form.y1.data,
+                                   upload_form.x2.data, upload_form.y2.data)
+                    prefix = time.time()
+                    file.filename = "app_%s_thumbnail_%i.png" % (app.id, prefix)
+                    container = "user_%s" % current_user.id
+                    uploader.upload_file(file,
+                                         container=container,
+                                         coordinates=coordinates)
+                    # Delete previous avatar from storage
+                    if app.info.get('thumbnail'):
+                        uploader.delete_file(app.info['thumbnail'], container)
+                    app.info['thumbnail'] = file.filename
+                    app.info['container'] = container
+                    db.session.commit()
+                    cached_apps.delete_app(app.short_name)
+                    flash(gettext('Your application thumbnail has been updated! It may \
+                                  take some minutes to refresh...'), 'success')
+                else:
+                    flash(gettext('You must provide a file to change the avatar'),
+                          'error')
 
         return render_template('/applications/update.html',
                                form=form,
