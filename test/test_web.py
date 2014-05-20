@@ -2569,7 +2569,7 @@ class TestWeb(web.Helper):
     @with_context
     def test_57_reset_api_key(self):
         """Test WEB reset api key works"""
-        url = "/account/johndoe/resetapikey"
+        url = "/account/johndoe/update"
         # Anonymous user
         res = self.app.get(url, follow_redirects=True)
         err_msg = "Anonymous user should be redirected for authentication"
@@ -2580,11 +2580,14 @@ class TestWeb(web.Helper):
         # Authenticated user
         self.register()
         user = db.session.query(User).get(1)
+        url = "/account/%s/update" % user.name
+        print url
         api_key = user.api_key
         res = self.app.get(url, follow_redirects=True)
         err_msg = "Authenticated user should get access to reset api key page"
         assert res.status_code == 200, err_msg
-        assert "Reset API Key" in res.data, err_msg
+        assert "reset your personal API Key" in res.data, err_msg
+        url = "/account/%s/resetapikey" % user.name
         res = self.app.post(url, follow_redirects=True)
         err_msg = "Authenticated user should be able to reset his api key"
         assert res.status_code == 200, err_msg
