@@ -88,7 +88,7 @@ class Uploader(object):
     def upload_file(self, file, container, coordinates=None):
         """Override by the uploader handler: local, cloud, etc."""
         if file and self.allowed_file(file.filename):
-            if coordinates:
+            if coordinates: # pragma: no cover
                 self.crop(file, coordinates)
             return self._upload_file(file, container)
         else:
