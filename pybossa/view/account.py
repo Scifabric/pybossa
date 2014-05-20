@@ -415,6 +415,9 @@ def update_profile(name):
         return abort(404)
     if current_user.id != user.id:
         return abort(403)
+    show_passwd_form = True
+    if user.twitter_user_id or user.google_user_id or user.facebook_user_id:
+        show_passwd_form = False
     usr, apps, apps_created = cached_users.get_user_summary(name)
     # Extend the values
     current_user.rank = usr.get('rank')
@@ -436,7 +439,8 @@ def update_profile(name):
                                form=update_form,
                                upload_form=avatar_form,
                                password_form=password_form,
-                               external_form=external_form)
+                               external_form=external_form,
+                               show_passwd_form=show_passwd_form)
     else:
         # Update user avatar
         if request.form.get('btn') == 'Upload':
@@ -469,7 +473,8 @@ def update_profile(name):
                                        upload_form=avatar_form,
                                        password_form=password_form,
                                        external_form=external_form,
-                                       title=title_msg)
+                                       title=title_msg,
+                                       show_passwd_form=show_passwd_form)
         # Update user profile
         elif request.form.get('btn') == 'Profile':
             update_form = UpdateProfileForm()
@@ -493,7 +498,8 @@ def update_profile(name):
                                        upload_form=avatar_form,
                                        password_form=password_form,
                                        external_form=external_form,
-                                       title=title_msg)
+                                       title=title_msg,
+                                       show_passwd_form=show_passwd_form)
 
         # Update user password
         elif request.form.get('btn') == 'Password':
@@ -521,7 +527,8 @@ def update_profile(name):
                                            upload_form=avatar_form,
                                            password_form=password_form,
                                            external_form=external_form,
-                                           title=title_msg)
+                                           title=title_msg,
+                                           show_passwd_form=show_passwd_form)
             else:
                 flash(gettext('Please correct the errors'), 'error')
                 return render_template('/account/update.html',
@@ -529,7 +536,8 @@ def update_profile(name):
                                        upload_form=avatar_form,
                                        password_form=password_form,
                                        external_form=external_form,
-                                       title=title_msg)
+                                       title=title_msg,
+                                       show_passwd_form=show_passwd_form)
         # Update user external services
         elif request.form.get('btn') == 'External':
             del external_form.locale
@@ -550,7 +558,8 @@ def update_profile(name):
                                        upload_form=avatar_form,
                                        password_form=password_form,
                                        external_form=external_form,
-                                       title=title_msg)
+                                       title=title_msg,
+                                       show_passwd_form=show_passwd_form)
         # Otherwise return 415
         else:
             return abort(415)
