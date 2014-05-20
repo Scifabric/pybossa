@@ -2581,7 +2581,6 @@ class TestWeb(web.Helper):
         self.register()
         user = db.session.query(User).get(1)
         url = "/account/%s/update" % user.name
-        print url
         api_key = user.api_key
         res = self.app.get(url, follow_redirects=True)
         err_msg = "Authenticated user should get access to reset api key page"
