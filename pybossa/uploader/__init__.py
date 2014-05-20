@@ -65,15 +65,19 @@ class Uploader(object):
 
     def crop(self, file, coordinates):
         """Crop filename and overwrite it."""
-        filename = file.filename
-        extension = self.get_filename_extension(filename)
-        from io import BytesIO
-        m = BytesIO()
-        im = Image.open(file)
-        target = im.crop(coordinates)
-        target.save(m, format=extension)
-        file.stream = m
-        file.stream.seek(0)
+        try:
+            filename = file.filename
+            extension = self.get_filename_extension(filename)
+            from io import BytesIO
+            m = BytesIO()
+            im = Image.open(file)
+            target = im.crop(coordinates)
+            target.save(m, format=extension)
+            file.stream = m
+            file.stream.seek(0)
+            return True
+        except:
+            return False
 
 
     def allowed_file(self, filename):
