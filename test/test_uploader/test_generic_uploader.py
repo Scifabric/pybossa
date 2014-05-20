@@ -19,7 +19,11 @@
 
 from default import Test, with_context
 from pybossa.uploader import Uploader
+from werkzeug.datastructures import FileStorage
 from mock import patch
+from PIL import Image
+import tempfile
+import os
 
 
 class TestUploader(Test):
@@ -61,6 +65,7 @@ class TestUploader(Test):
 
     @with_context
     def test_get_filename_extension(self):
+        """Test UPLOADER get_filename_extension works."""
         u = Uploader()
         filename = "image.png"
         err_msg = "The extension should be PNG"
@@ -68,3 +73,23 @@ class TestUploader(Test):
         filename = "image.jpg"
         err_msg = "The extension should be JPEG"
         assert u.get_filename_extension(filename) == 'jpeg', err_msg
+
+    @with_context
+    def test_crop(self):
+        """Test UPLOADER crop works."""
+        u = Uploader()
+        size = (100, 100)
+        im = Image.new('RGB', size)
+        folder = tempfile.mkdtemp()
+        u.upload_folder = folder
+        im.save(os.path.join(folder, 'image.png'))
+        coordinates = (0, 0, 50, 50)
+        file = FileStorage(filename=os.path.join(folder, 'image.png'))
+        with patch('pybossa.uploader.Image', return_value=True):
+            err_msg = "It should crop the image"
+            assert u.crop(file, coordinates) is True, err_msg
+
+        with patch('pybossa.uploader.Image.open', side_effect=IOError):
+            err_msg = "It should return false"
+            assert u.crop(file, coordinates) is False, err_msg
+
