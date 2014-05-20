@@ -1686,28 +1686,31 @@ class TestWeb(web.Helper):
         """Test WEB password changing"""
         password = "mehpassword"
         self.register(password=password)
-        res = self.app.post('/account/johndoe/password',
+        res = self.app.post('/account/johndoe/update',
                             data={'current_password': password,
                                   'new_password': "p4ssw0rd",
-                                  'confirm': "p4ssw0rd"},
+                                  'confirm': "p4ssw0rd",
+                                  'btn': 'Password'},
                             follow_redirects=True)
         assert "Yay, you changed your password succesfully!" in res.data, res.data
 
         password = "mehpassword"
         self.register(password=password)
-        res = self.app.post('/account/johndoe/password',
+        res = self.app.post('/account/johndoe/update',
                             data={'current_password': "wrongpassword",
                                   'new_password': "p4ssw0rd",
-                                  'confirm': "p4ssw0rd"},
+                                  'confirm': "p4ssw0rd",
+                                  'btn': 'Password'},
                             follow_redirects=True)
         msg = "Your current password doesn't match the one in our records"
         assert msg in res.data
 
         self.register(password=password)
-        res = self.app.post('/account/johndoe/password',
+        res = self.app.post('/account/johndoe/update',
                             data={'current_password': '',
                                   'new_password':'',
-                                  'confirm': ''},
+                                  'confirm': '',
+                                  'btn': 'Password'},
                             follow_redirects=True)
         msg = "Please correct the errors"
         assert msg in res.data
