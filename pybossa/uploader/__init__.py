@@ -45,11 +45,11 @@ class Uploader(object):
             self.allowed_extensions = set.union(self.allowed_extensions,
                                                 set(app.config['ALLOWED_EXTENSIONS']))
 
-    def _lookup_url(self, endpoint, values):
+    def _lookup_url(self, endpoint, values): # pragma: no cover
         """Override by the uploader handler."""
         pass
 
-    def _upload_file(self, file, container):
+    def _upload_file(self, file, container): # pragma: no cover
         """Override by the specific uploader handler."""
         pass
 
@@ -107,6 +107,6 @@ class Uploader(object):
         # url_for will use this result, instead of raising BuildError.
         return url
 
-    def delete_file(self, name, container):
+    def delete_file(self, name, container): # pragma: no cover
         """Override by the uploader handler."""
         pass
