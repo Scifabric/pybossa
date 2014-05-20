@@ -58,3 +58,13 @@ class TestUploader(Test):
 
         err_msg = "Non allowed extensions should return false"
         assert u.allowed_file('wrong.pdf') is False, err_msg
+
+    @with_context
+    def test_get_filename_extension(self):
+        u = Uploader()
+        filename = "image.png"
+        err_msg = "The extension should be PNG"
+        assert u.get_filename_extension(filename) == 'png', err_msg
+        filename = "image.jpg"
+        err_msg = "The extension should be JPEG"
+        assert u.get_filename_extension(filename) == 'jpeg', err_msg
