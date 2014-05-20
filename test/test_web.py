@@ -38,6 +38,7 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
 from pybossa.model.featured import Featured
+from factories import AppFactory, TaskFactory, TaskRunFactory
 
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
@@ -263,8 +264,8 @@ class TestWeb(web.Helper):
         assert self.user.fullname in res.data, res
         assert self.user.email_addr not in res.data, res
 
-        # Try to access protected areas like settings
-        res = self.app.get('/account/johndoe/settings', follow_redirects=True)
+        # Try to access protected areas like update
+        res = self.app.get('/account/johndoe/update', follow_redirects=True)
         # As a user must be signed in to access, the page the title will be the
         # redirection to log in
         assert self.html_title("Sign in") in res.data, res.data
@@ -304,7 +305,7 @@ class TestWeb(web.Helper):
         assert msg in res.data, res
         assert self.user.fullname in res.data, res
         assert "Save the changes" in res.data, res
-        msg = '<a href="/account/johndoe/settings" class="btn">Cancel</a>'
+        msg = '<a href="/account/johndoe/update" class="btn">Cancel</a>'
         assert  msg in res.data, res.data
 
         res = self.update_profile(fullname="John Doe 2",
@@ -1738,28 +1739,31 @@ class TestWeb(web.Helper):
         """Test WEB password changing"""
         password = "mehpassword"
         self.register(password=password)
-        res = self.app.post('/account/johndoe/password',
+        res = self.app.post('/account/johndoe/update',
                             data={'current_password': password,
                                   'new_password': "p4ssw0rd",
-                                  'confirm': "p4ssw0rd"},
+                                  'confirm': "p4ssw0rd",
+                                  'btn': 'Password'},
                             follow_redirects=True)
         assert "Yay, you changed your password succesfully!" in res.data, res.data
 
         password = "mehpassword"
         self.register(password=password)
-        res = self.app.post('/account/johndoe/password',
+        res = self.app.post('/account/johndoe/update',
                             data={'current_password': "wrongpassword",
                                   'new_password': "p4ssw0rd",
-                                  'confirm': "p4ssw0rd"},
+                                  'confirm': "p4ssw0rd",
+                                  'btn': 'Password'},
                             follow_redirects=True)
         msg = "Your current password doesn't match the one in our records"
         assert msg in res.data
 
         self.register(password=password)
-        res = self.app.post('/account/johndoe/password',
+        res = self.app.post('/account/johndoe/update',
                             data={'current_password': '',
                                   'new_password':'',
-                                  'confirm': ''},
+                                  'confirm': '',
+                                  'btn': 'Password'},
                             follow_redirects=True)
         msg = "Please correct the errors"
         assert msg in res.data
@@ -1768,13 +1772,13 @@ class TestWeb(web.Helper):
     def test_42_password_link(self):
         """Test WEB visibility of password change link"""
         self.register()
-        res = self.app.get('/account/johndoe/settings')
+        res = self.app.get('/account/johndoe/update')
         assert "Change your Password" in res.data
         user = User.query.get(1)
         user.twitter_user_id = 1234
         db.session.add(user)
         db.session.commit()
-        res = self.app.get('/account/johndoe/settings')
+        res = self.app.get('/account/johndoe/update')
         assert "Change your Password" not in res.data, res.data
 
     @with_context
@@ -2616,7 +2620,7 @@ class TestWeb(web.Helper):
     @with_context
     def test_57_reset_api_key(self):
         """Test WEB reset api key works"""
-        url = "/account/johndoe/resetapikey"
+        url = "/account/johndoe/update"
         # Anonymous user
         res = self.app.get(url, follow_redirects=True)
         err_msg = "Anonymous user should be redirected for authentication"
@@ -2627,11 +2631,13 @@ class TestWeb(web.Helper):
         # Authenticated user
         self.register()
         user = db.session.query(User).get(1)
+        url = "/account/%s/update" % user.name
         api_key = user.api_key
         res = self.app.get(url, follow_redirects=True)
         err_msg = "Authenticated user should get access to reset api key page"
         assert res.status_code == 200, err_msg
-        assert "Reset API Key" in res.data, err_msg
+        assert "reset your personal API Key" in res.data, err_msg
+        url = "/account/%s/resetapikey" % user.name
         res = self.app.post(url, follow_redirects=True)
         err_msg = "Authenticated user should be able to reset his api key"
         assert res.status_code == 200, err_msg
@@ -3203,4 +3209,41 @@ class TestWeb(web.Helper):
         dom = BeautifulSoup(res.data)
         err_msg = "If cookies are not accepted, cookies banner should be hidden"
         assert dom.find(id='cookies_warning') is None, err_msg
+        self.signout()
+
+
+    @with_context
+    def test_user_with_no_more_tasks_find_volunteers(self):
+        """Test WEB when a user has contributed to all available tasks, he is
+        asked to find new volunteers for a project, if the project is not
+        completed yet (overall progress < 100%)"""
+
+        self.register()
+        user = User.query.first()
+        app = AppFactory.create(owner=user)
+        task = TaskFactory.create(app=app)
+        taskrun = TaskRunFactory.create(task=task, user=user)
+        res = self.app.get('/app/%s/newtask' % app.short_name)
+
+        message = "Sorry, you've contributed to all the tasks for this project, but this project still needs more volunteers, so please spread the word!"
+        assert message in res.data
+        self.signout()
+
+
+    @with_context
+    def test_user_with_no_more_tasks_find_volunteers_project_completed(self):
+        """Test WEB when a user has contributed to all available tasks, he is
+        not asked to find new volunteers for a project, if the project is
+        completed (overall progress = 100%)"""
+
+        self.register()
+        user = User.query.first()
+        app = AppFactory.create(owner=user)
+        task = TaskFactory.create(app=app, n_answers=1)
+        taskrun = TaskRunFactory.create(task=task, user=user)
+        res = self.app.get('/app/%s/newtask' % app.short_name)
+
+        assert task.state == 'completed', task.state
+        message = "Sorry, you've contributed to all the tasks for this project, but this project still needs more volunteers, so please spread the word!"
+        assert message not in res.data
         self.signout()

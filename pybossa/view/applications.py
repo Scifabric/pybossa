@@ -21,8 +21,9 @@ from StringIO import StringIO
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, make_response
 from flask_wtf import Form
+from flask_wtf.file import FileField, FileRequired
 from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
-    SelectField, validators, TextAreaField, FileField
+    SelectField, validators, TextAreaField
 from wtforms.widgets import HiddenInput
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import lazy_gettext, gettext
@@ -32,6 +33,7 @@ from sqlalchemy.sql import text
 import pybossa.model as model
 import pybossa.stats as stats
 import pybossa.validator as pb_validator
+import pybossa.sched as sched
 
 from pybossa.core import db, uploader
 from pybossa.cache import ONE_DAY, ONE_HOUR
@@ -56,7 +58,8 @@ import requests
 blueprint = Blueprint('app', __name__)
 
 class AvatarUploadForm(Form):
-    avatar = FileField(lazy_gettext('Avatar'), )
+    id = IntegerField(label=None, widget=HiddenInput())
+    avatar = FileField(lazy_gettext('Avatar'), validators=[FileRequired()])
     x1 = IntegerField(label=None, widget=HiddenInput(), default=0)
     y1 = IntegerField(label=None, widget=HiddenInput(), default=0)
     x2 = IntegerField(label=None, widget=HiddenInput(), default=0)
@@ -79,7 +82,7 @@ class AppForm(Form):
                                      [validators.Required()])
 
 
-class AppUpdateForm(AppForm, AvatarUploadForm):
+class AppUpdateForm(AppForm):
     id = IntegerField(label=None, widget=HiddenInput())
     description = TextField(lazy_gettext('Description'),
                             [validators.Required(
@@ -330,6 +333,7 @@ def task_presenter_editor(short_name):
         require.app.update(app)
 
         form = TaskPresenterForm(request.form)
+        form.id.data = app.id
         if request.method == 'POST' and form.validate():
             db_app = db.session.query(model.app.App).filter_by(id=app.id).first()
             db_app.info['task_presenter'] = form.editor.data
@@ -464,6 +468,7 @@ def update(short_name):
         title = app_title(app, "Update")
         if request.method == 'GET':
             form = AppUpdateForm(obj=app)
+            upload_form = AvatarUploadForm()
             categories = db.session.query(model.category.Category).all()
             form.category_id.choices = [(c.id, c.name) for c in categories]
             if app.category_id is None:
@@ -471,6 +476,7 @@ def update(short_name):
             form.populate_obj(app)
 
         if request.method == 'POST':
+            upload_form = AvatarUploadForm()
             form = AppUpdateForm(request.form)
             categories = cached_cat.get_all()
             form.category_id.choices = [(c.id, c.name) for c in categories]
@@ -480,29 +486,34 @@ def update(short_name):
                     return handle_valid_form(form)
                 flash(gettext('Please correct the errors'), 'error')
             else:
-                app = App.query.get(app.id)
-                file = request.files['avatar']
-                coordinates = (form.x1.data, form.y1.data,
-                               form.x2.data, form.y2.data)
-                prefix = time.time()
-                file.filename = "app_%s_thumbnail_%i.png" % (app.id, prefix)
-                container = "user_%s" % current_user.id
-                uploader.upload_file(file,
-                                     container=container,
-                                     coordinates=coordinates)
-                # Delete previous avatar from storage
-                if app.info.get('thumbnail'):
-                    uploader.delete_file(app.info['thumbnail'], container)
-                app.info['thumbnail'] = file.filename
-                app.info['container'] = container
-                db.session.commit()
-                cached_apps.delete_app(app.short_name)
-                flash(gettext('Your application thumbnail has been updated! It may \
-                              take some minutes to refresh...'), 'success')
-                return redirect(url_for('.update', short_name=short_name))
+                if upload_form.validate_on_submit():
+                    app = App.query.get(app.id)
+                    file = request.files['avatar']
+                    coordinates = (upload_form.x1.data, upload_form.y1.data,
+                                   upload_form.x2.data, upload_form.y2.data)
+                    prefix = time.time()
+                    file.filename = "app_%s_thumbnail_%i.png" % (app.id, prefix)
+                    container = "user_%s" % current_user.id
+                    uploader.upload_file(file,
+                                         container=container,
+                                         coordinates=coordinates)
+                    # Delete previous avatar from storage
+                    if app.info.get('thumbnail'):
+                        uploader.delete_file(app.info['thumbnail'], container)
+                    app.info['thumbnail'] = file.filename
+                    app.info['container'] = container
+                    db.session.commit()
+                    cached_apps.delete_app(app.short_name)
+                    flash(gettext('Your application thumbnail has been updated! It may \
+                                  take some minutes to refresh...'), 'success')
+                else:
+                    flash(gettext('You must provide a file to change the avatar'),
+                          'error')
+                    return redirect(url_for('.update', short_name=short_name))
 
         return render_template('/applications/update.html',
                                form=form,
+                               upload_form=upload_form,
                                title=title,
                                app=app)
     except HTTPException:
@@ -747,9 +758,24 @@ def task_presenter(short_name, task_id):
 @blueprint.route('/<short_name>/presenter')
 @blueprint.route('/<short_name>/newtask')
 def presenter(short_name):
+
+    def invite_new_volunteers():
+        user_id = None if current_user.is_anonymous() else current_user.id
+        user_ip = request.remote_addr if current_user.is_anonymous() else None
+        task = sched.new_task(app.id, user_id, user_ip, 0)
+        return task is None and overall_progress < 100.0
+
+    def respond(tmpl):
+        if (current_user.is_anonymous()):
+            msg_1 = gettext(msg)
+            flash(msg_1, "warning")
+        resp = make_response(render_template(tmpl, **template_args))
+        return resp
+
     app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
     title = app_title(app, "Contribute")
-    template_args = {"app": app, "title": title}
+    template_args = {"app": app, "title": title,
+                     "invite_new_volunteers": invite_new_volunteers()}
     try:
         require.app.read(app)
     except HTTPException:
@@ -768,13 +794,6 @@ def presenter(short_name):
     msg = "Ooops! You are an anonymous user and will not \
            get any credit for your contributions. Sign in \
            now!"
-
-    def respond(tmpl):
-        if (current_user.is_anonymous()):
-            msg_1 = gettext(msg)
-            flash(msg_1, "warning")
-        resp = make_response(render_template(tmpl, **template_args))
-        return resp
 
     if app.info.get("tutorial") and \
             request.cookies.get(app.short_name + "tutorial") is None:
