@@ -73,6 +73,9 @@ class TestUploader(Test):
         filename = "image.jpg"
         err_msg = "The extension should be JPEG"
         assert u.get_filename_extension(filename) == 'jpeg', err_msg
+        filename = "imagenoextension"
+        err_msg = "The extension should be None"
+        assert u.get_filename_extension(filename) == None, err_msg
 
     @with_context
     def test_crop(self):
