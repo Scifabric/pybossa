@@ -411,7 +411,6 @@ def update_profile(name):
 
     """
     user = User.query.filter_by(name=name).first()
-    print user.locale
     if not user:
         return abort(404)
     if current_user.id != user.id:
