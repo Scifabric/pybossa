@@ -24,6 +24,7 @@ from mock import patch
 from PIL import Image
 import tempfile
 import os
+from nose.tools import assert_raises
 
 
 class TestUploader(Test):
@@ -96,3 +97,35 @@ class TestUploader(Test):
             err_msg = "It should return false"
             assert u.crop(file, coordinates) is False, err_msg
 
+    @with_context
+    def test_external_url_handler(self):
+        """Test UPLOADER external_url_handler works."""
+        u = Uploader()
+        with patch.object(u, '_lookup_url', return_value='url'):
+            assert u.external_url_handler(BaseException, 'endpoint', 'values') == 'url'
+
+    @with_context
+    def test_external_url_handler_fails(self):
+        """Test UPLOADER external_url_handler fails works."""
+        u = Uploader()
+        with patch.object(u, '_lookup_url', return_value=None):
+            with patch('pybossa.uploader.sys') as mysys:
+                mysys.exc_info.return_value=(BaseException, BaseException, None)
+                assert_raises(BaseException,
+                              u.external_url_handler,
+                              BaseException,
+                              'endpoint',
+                              'values')
+
+    @with_context
+    def test_external_url_handler_fails_2(self):
+        """Test UPLOADER external_url_handler fails works."""
+        u = Uploader()
+        with patch.object(u, '_lookup_url', return_value=None):
+            with patch('pybossa.uploader.sys') as mysys:
+                mysys.exc_info.return_value=(BaseException, BaseException, None)
+                assert_raises(IOError,
+                              u.external_url_handler,
+                              IOError,
+                              'endpoint',
+                              'values')
