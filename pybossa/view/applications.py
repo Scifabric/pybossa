@@ -506,7 +506,6 @@ def update(short_name):
                     return handle_valid_form(form)
                 flash(gettext('Please correct the errors'), 'error')
             else:
-                print "HOLA"
                 if upload_form.validate_on_submit():
                     app = App.query.get(app.id)
                     file = request.files['avatar']
