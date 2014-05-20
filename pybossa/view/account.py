@@ -422,14 +422,15 @@ def update_profile(name):
     current_user.score = usr.get('score')
     # Title page
     title_msg = "Update your profile: %s" % current_user.fullname
+    # Creation of forms
+    update_form = UpdateProfileForm(obj=user)
+    update_form.set_locales(current_app.config['LOCALES'])
+    avatar_form = AvatarUploadForm()
+    password_form = ChangePasswordForm()
+    external_form = update_form
+
 
     if request.method == 'GET':
-        # Creation of forms
-        update_form = UpdateProfileForm(obj=user)
-        update_form.set_locales(current_app.config['LOCALES'])
-        avatar_form = AvatarUploadForm()
-        password_form = ChangePasswordForm()
-        external_form = update_form
         return render_template('account/update.html',
                                title=title_msg,
                                user=usr,
@@ -479,7 +480,6 @@ def update_profile(name):
                 current_user.fullname = update_form.fullname.data
                 current_user.name = update_form.name.data
                 current_user.email_addr = update_form.email_addr.data
-                current_user.ckan_api = update_form.ckan_api.data or None
                 current_user.privacy_mode = update_form.privacy_mode.data
                 current_user.locale = update_form.locale.data
                 db.session.commit()
@@ -498,7 +498,12 @@ def update_profile(name):
 
         # Update user password
         elif request.form.get('btn') == 'Password':
-            password_form = ChangePasswordForm()
+            # Update the data because passing it in the constructor does not work
+            update_form.name.data = user.name
+            update_form.fullname.data = user.fullname
+            update_form.email_addr.data = user.email_addr
+            update_form.ckan_api.data = user.ckan_api
+            external_form = update_form
             if password_form.validate_on_submit():
                 user = db.session.query(model.user.User).get(current_user.id)
                 if user.check_password(password_form.current_password.data):
