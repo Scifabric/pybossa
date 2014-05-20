@@ -1380,7 +1380,7 @@ msgid " Start Contributing"
 msgstr " Únete y Participa"
 
 #: themes/default/templates/home/index.html:39
-msgid "Create an App"
+msgid "Create a Project"
 msgstr "Crea una Aplicación"
 
 #: themes/default/templates/home/index.html:44
@@ -1400,7 +1400,7 @@ msgid "could be here!"
 msgstr "podría estar aquí!"
 
 #: themes/default/templates/home/index.html:66
-msgid "Create an app"
+msgid "Create a project"
 msgstr "Crear una aplicación"
 
 #: themes/default/templates/home/index.html:75

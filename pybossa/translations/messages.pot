@@ -1311,7 +1311,7 @@ msgid " Start Contributing"
 msgstr ""
 
 #: themes/default/templates/home/index.html:39
-msgid "Create an App"
+msgid "Create a Project"
 msgstr ""
 
 #: themes/default/templates/home/index.html:44
@@ -1331,7 +1331,7 @@ msgid "could be here!"
 msgstr ""
 
 #: themes/default/templates/home/index.html:66
-msgid "Create an app"
+msgid "Create a project"
 msgstr ""
 
 #: themes/default/templates/home/index.html:75
