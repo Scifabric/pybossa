@@ -37,8 +37,9 @@ from flask.ext.login import login_required, login_user, logout_user, \
     current_user
 from flask.ext.mail import Message
 from flask_wtf import Form
+from flask_wtf.file import FileField, FileRequired
 from wtforms import TextField, PasswordField, validators, \
-    IntegerField, SelectField, BooleanField, FileField
+    IntegerField, SelectField, BooleanField
 from wtforms.widgets import HiddenInput
 
 import pybossa.validator as pb_validator
@@ -227,11 +228,6 @@ class UpdateProfileForm(Form):
     locale = SelectField(lazy_gettext('Language'))
     ckan_api = TextField(lazy_gettext('CKAN API Key'))
     privacy_mode = BooleanField(lazy_gettext('Privacy Mode'))
-    #avatar = FileField(lazy_gettext('Avatar'), )
-    #x1 = IntegerField(label=None, widget=HiddenInput())
-    #y1 = IntegerField(label=None, widget=HiddenInput())
-    #x2 = IntegerField(label=None, widget=HiddenInput())
-    #y2 = IntegerField(label=None, widget=HiddenInput())
 
     def set_locales(self, locales):
         """Fill the locale.choices."""
@@ -248,7 +244,7 @@ class UpdateProfileForm(Form):
 
 
 class AvatarUploadForm(Form):
-    avatar = FileField(lazy_gettext('Avatar'), )
+    avatar = FileField(lazy_gettext('Avatar'), validators=[FileRequired()])
     x1 = IntegerField(label=None, widget=HiddenInput())
     y1 = IntegerField(label=None, widget=HiddenInput())
     x2 = IntegerField(label=None, widget=HiddenInput())
@@ -415,6 +411,7 @@ def update_profile(name):
 
     """
     user = User.query.filter_by(name=name).first()
+    print user.locale
     if not user:
         return abort(404)
     if current_user.id != user.id:
@@ -423,19 +420,16 @@ def update_profile(name):
     # Extend the values
     current_user.rank = usr.get('rank')
     current_user.score = usr.get('score')
-
-    update_form = UpdateProfileForm()
-    avatar_form = AvatarUploadForm()
-    password_form = ChangePasswordForm()
-    external_form = update_form
+    # Title page
     title_msg = "Update your profile: %s" % current_user.fullname
 
     if request.method == 'GET':
-        update_form = UpdateProfileForm(obj=current_user)
+        # Creation of forms
+        update_form = UpdateProfileForm(obj=user)
         update_form.set_locales(current_app.config['LOCALES'])
-        update_form.populate_obj(current_user)
-        external_form = UpdateProfileForm(obj=current_user)
-
+        avatar_form = AvatarUploadForm()
+        password_form = ChangePasswordForm()
+        external_form = update_form
         return render_template('account/update.html',
                                title=title_msg,
                                user=usr,
@@ -444,30 +438,42 @@ def update_profile(name):
                                password_form=password_form,
                                external_form=external_form)
     else:
-        update_form = UpdateProfileForm(request.form)
-        avatar_form = AvatarUploadForm(request.form)
-        update_form.set_locales(current_app.config['LOCALES'])
+        # Update user avatar
         if request.form.get('btn') == 'Upload':
-            file = request.files['avatar']
-            coordinates = (avatar_form.x1.data, avatar_form.y1.data,
-                           avatar_form.x2.data, avatar_form.y2.data)
-            prefix = time.time()
-            file.filename = "%s_avatar.png" % prefix
-            container = "user_%s" % current_user.id
-            uploader.upload_file(file,
-                                 container=container,
-                                 coordinates=coordinates)
-            # Delete previous avatar from storage
-            if current_user.info.get('avatar'):
-                uploader.delete_file(current_user.info['avatar'], container)
-            current_user.info = {'avatar': file.filename,
-                                 'container': container}
-            db.session.commit()
-            cached_users.delete_user_summary(current_user.name)
-            flash(gettext('Your avatar has been updated! It may \
-                          take some minutes to refresh...'), 'success')
-            return redirect(url_for('.profile', name=current_user.name))
+            avatar_form = AvatarUploadForm()
+            if avatar_form.validate_on_submit():
+                file = request.files['avatar']
+                coordinates = (avatar_form.x1.data, avatar_form.y1.data,
+                               avatar_form.x2.data, avatar_form.y2.data)
+                prefix = time.time()
+                file.filename = "%s_avatar.png" % prefix
+                container = "user_%s" % current_user.id
+                uploader.upload_file(file,
+                                     container=container,
+                                     coordinates=coordinates)
+                # Delete previous avatar from storage
+                if current_user.info.get('avatar'):
+                    uploader.delete_file(current_user.info['avatar'], container)
+                current_user.info = {'avatar': file.filename,
+                                     'container': container}
+                db.session.commit()
+                cached_users.delete_user_summary(current_user.name)
+                flash(gettext('Your avatar has been updated! It may \
+                              take some minutes to refresh...'), 'success')
+                return redirect(url_for('.profile', name=current_user.name))
+            else:
+                flash("You have to provide an image file to update your avatar",
+                      "error")
+                return render_template('/account/update.html',
+                                       form=update_form,
+                                       upload_form=avatar_form,
+                                       password_form=password_form,
+                                       external_form=external_form,
+                                       title=title_msg)
+        # Update user profile
         elif request.form.get('btn') == 'Profile':
+            update_form = UpdateProfileForm()
+            update_form.set_locales(current_app.config['LOCALES'])
             if update_form.validate():
                 current_user.id = update_form.id.data
                 current_user.fullname = update_form.fullname.data
@@ -475,6 +481,7 @@ def update_profile(name):
                 current_user.email_addr = update_form.email_addr.data
                 current_user.ckan_api = update_form.ckan_api.data or None
                 current_user.privacy_mode = update_form.privacy_mode.data
+                current_user.locale = update_form.locale.data
                 db.session.commit()
                 cached_users.delete_user_summary(current_user.name)
                 flash(gettext('Your profile has been updated!'), 'success')
@@ -489,8 +496,9 @@ def update_profile(name):
                                        external_form=external_form,
                                        title=title_msg)
 
+        # Update user password
         elif request.form.get('btn') == 'Password':
-            password_form = ChangePasswordForm(request.form)
+            password_form = ChangePasswordForm()
             if password_form.validate_on_submit():
                 user = db.session.query(model.user.User).get(current_user.id)
                 if user.check_password(password_form.current_password.data):
@@ -518,7 +526,7 @@ def update_profile(name):
                                        password_form=password_form,
                                        external_form=external_form,
                                        title=title_msg)
-
+        # Update user external services
         elif request.form.get('btn') == 'External':
             del external_form.locale
             del external_form.email_addr
@@ -539,9 +547,9 @@ def update_profile(name):
                                        password_form=password_form,
                                        external_form=external_form,
                                        title=title_msg)
+        # Otherwise return 415
         else:
             return abort(415)
-
 
 
 class ChangePasswordForm(Form):
@@ -676,7 +684,6 @@ def reset_api_key(name):
     Returns a Jinja2 template.
 
     """
-    print "hola"
     if current_user.name != name:
         return abort(403)
 
