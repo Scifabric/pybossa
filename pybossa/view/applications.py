@@ -76,7 +76,7 @@ class AppForm(Form):
                                 db.session, model.app.App, model.app.App.short_name,
                                 message=lazy_gettext(
                                     "Short Name is already taken."))])
-    description = TextField(lazy_gettext('Description'),
+    description = TextAreaField(lazy_gettext('Description'),
                             [validators.Required(
                                 message=lazy_gettext(
                                     "You must provide a description."))])
