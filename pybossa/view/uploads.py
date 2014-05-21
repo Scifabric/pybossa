@@ -28,5 +28,5 @@ from pybossa.core import uploader
 blueprint = Blueprint('uploads', __name__)
 
 @blueprint.route('/<path:filename>')
-def uploaded_file(filename):
+def uploaded_file(filename): # pragma: no cover
     return send_from_directory(uploader.upload_folder, filename)
