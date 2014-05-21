@@ -304,7 +304,7 @@ class TestWeb(web.Helper):
         """Test WEB update user profile"""
 
         # Check first for a non existant user
-        url = "/account/fake/"
+        url = "/account/fake/update"
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404
 
