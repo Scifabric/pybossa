@@ -281,7 +281,7 @@ def register():
 
 @blueprint.route('/profile', methods=['GET'])
 def redirect_profile():
-    if current_user.is_anonymous():
+    if current_user.is_anonymous(): # pragma: no cover
         return redirect(url_for('.signin'))
     else:
         return redirect(url_for('.profile', name=current_user.name), 302)
@@ -367,8 +367,13 @@ def applications(name):
     Returns a Jinja2 template with the list of applications of the user.
 
     """
-    if current_user.name != name:
-        return abort(403)
+    user = User.query.filter_by(name=name).first()
+    if user:
+        if current_user.name != name:
+            return abort(403)
+    else:
+        return abort(404)
+
     user = db.session.query(model.user.User).get(current_user.id)
     apps_published, apps_draft = _get_user_apps(user.id)
 
