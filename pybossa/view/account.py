@@ -468,7 +468,7 @@ def update_profile(name):
                 cached_users.delete_user_summary(current_user.name)
                 flash(gettext('Your avatar has been updated! It may \
                               take some minutes to refresh...'), 'success')
-                return redirect(url_for('.profile', name=current_user.name))
+                return redirect(url_for('.update_profile', name=current_user.name))
             else:
                 flash("You have to provide an image file to update your avatar",
                       "error")
@@ -493,7 +493,7 @@ def update_profile(name):
                 db.session.commit()
                 cached_users.delete_user_summary(current_user.name)
                 flash(gettext('Your profile has been updated!'), 'success')
-                return redirect(url_for('.profile', name=current_user.name))
+                return redirect(url_for('.update_profile', name=current_user.name))
             else:
                 flash(gettext('Please correct the errors'), 'error')
                 title_msg = 'Update your profile: %s' % current_user.fullname
@@ -521,7 +521,7 @@ def update_profile(name):
                     db.session.commit()
                     flash(gettext('Yay, you changed your password succesfully!'),
                           'success')
-                    return redirect(url_for('.profile', name=name))
+                    return redirect(url_for('.update_profile', name=name))
                 else:
                     msg = gettext("Your current password doesn't match the "
                                   "one in our records")
@@ -553,7 +553,7 @@ def update_profile(name):
                 db.session.commit()
                 cached_users.delete_user_summary(current_user.name)
                 flash(gettext('Your profile has been updated!'), 'success')
-                return redirect(url_for('.profile', name=current_user.name))
+                return redirect(url_for('.update_profile', name=current_user.name))
             else:
                 flash(gettext('Please correct the errors'), 'error')
                 title_msg = 'Update your profile: %s' % current_user.fullname
