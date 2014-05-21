@@ -1153,6 +1153,8 @@ def export_to(short_name):
 def show_stats(short_name):
     """Returns App Stats"""
     app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
+    n_volunteers = cached_apps.n_volunteers(app.id)
+    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
     title = app_title(app, "Statistics")
 
     try:
@@ -1196,7 +1198,11 @@ def show_stats(short_name):
                            title=title,
                            appStats=json.dumps(tmp),
                            userStats=userStats,
-                           app=app)
+                           app=app,
+                           n_tasks=n_tasks,
+                           overall_progress=overall_progress,
+                           n_volunteers=n_volunteers,
+                           n_completed_tasks=n_completed_tasks)
 
 
 @blueprint.route('/<short_name>/tasks/settings')
