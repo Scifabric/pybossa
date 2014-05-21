@@ -43,6 +43,7 @@ from pybossa.util import Pagination, UnicodeWriter, admin_required
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
+from pybossa.cache.helpers import check_contributing_state
 from pybossa.ckan import Ckan
 
 import json
@@ -199,12 +200,18 @@ def index(page):
 def app_index(page, lookup, category, fallback, use_count):
     """Show apps of app_type"""
 
+    def _add_contribute_button_to(app):
+        user_id = current_user.id if current_user.is_authenticated() else None
+        user_ip = request.remote_addr if current_user.is_anonymous() else None
+        app['contrib_button'] = check_contributing_state(app['id'],
+                                                         user_id=user_id, user_ip=user_ip)
     per_page = current_app.config['APPS_PER_PAGE']
 
     apps, count = lookup(category, page, per_page)
 
     data = []
     for app in apps:
+        _add_contribute_button_to(app)
         data.append(dict(app=app, n_tasks=cached_apps.n_tasks(app['id']),
                          overall_progress=cached_apps.overall_progress(app['id']),
                          last_activity=app['last_activity'],
