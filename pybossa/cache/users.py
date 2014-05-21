@@ -186,7 +186,7 @@ def get_user_summary(name):
             apps_created.append(app)
 
         return user, apps_contributed, apps_created
-    else:
+    else: # pragma: no cover
         return None, None, None
 
 
