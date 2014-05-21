@@ -352,7 +352,7 @@ def setup_csrf_protection(app):
     csrf.init_app(app)
 
 
-def setup_debug_toolbar(app):
+def setup_debug_toolbar(app): # pragma: no cover
     if app.config['ENABLE_DEBUG_TOOLBAR']:
         debug_toolbar.init_app(app)
 
