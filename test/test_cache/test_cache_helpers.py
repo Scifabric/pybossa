@@ -35,7 +35,7 @@ class TestHelpersCache(Test):
 
 
     def test_n_available_tasks_no_tasks_anonymous_user(self):
-        """Test n_available_tasks returns 0  for anonymous user if the app
+        """Test n_available_tasks returns 0 for anonymous user if the app
         has no tasks"""
         app = AppFactory.create()
 
@@ -113,6 +113,44 @@ class TestHelpersCache(Test):
 
         assert task.state != 'completed', task.state
         assert n_available_tasks == 0, n_available_tasks
+
+
+    def test_n_available_tasks_some_tasks_answered_by_authenticated_user(self):
+        """Test n_available_tasks returns 1 for authenticated user if he has
+        submitted taskruns for one of the tasks but there is still another task"""
+        app = AppFactory.create()
+        answered_task = TaskFactory.create(app=app)
+        available_task = TaskFactory.create(app=app)
+        user = UserFactory.create()
+        taskrun = TaskRunFactory.create(task=answered_task, user=user)
+
+        n_available_tasks = helpers.n_available_tasks(app.id, user_id=user.id)
+        assert n_available_tasks == 1, n_available_tasks
+
+
+    def test_n_available_some_all_tasks_answered_by_anonymous_user(self):
+        """Test n_available_tasks returns 1 for anonymous user if he has
+        submitted taskruns for one of the tasks but there is still another task"""
+        app = AppFactory.create()
+        answered_task = TaskFactory.create(app=app)
+        available_task = TaskFactory.create(app=app)
+        taskrun = TaskRunFactory.create(task=answered_task)
+
+        n_available_tasks = helpers.n_available_tasks(app.id, user_ip=taskrun.user_ip)
+
+        assert n_available_tasks == 1, n_available_tasks
+
+
+    def test_n_available_tasks_task_answered_by_another_user(self):
+        """Test n_available_tasks returns 1 for a user if another
+        user has submitted taskruns for the task but he hasn't"""
+        app = AppFactory.create()
+        task = TaskFactory.create(app=app)
+        user = UserFactory.create()
+        taskrun = TaskRunFactory.create(task=task)
+
+        n_available_tasks = helpers.n_available_tasks(app.id, user_id=user.id)
+        assert n_available_tasks == 1, n_available_tasks
 
 
     def test_check_contributing_state_completed(self):

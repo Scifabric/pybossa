@@ -32,9 +32,9 @@ def n_available_tasks(app_id, user_id=None, user_ip=None):
     app = App.query.get(app_id)
     n_tasks = 0
     for task in app.tasks:
-        user_answered = user_id in [tr.user_id for tr in task.task_runs]
-        anon_answered = user_ip in [tr.user_ip for tr in task.task_runs]
-        if task.state != 'completed' and not user_answered and not anon_answered:
+        user_answered = (user_id in [tr.user_id for tr in task.task_runs] if user_id
+        else user_ip in [tr.user_ip for tr in task.task_runs])
+        if task.state != 'completed' and not user_answered:
             n_tasks += 1
     return n_tasks
 
