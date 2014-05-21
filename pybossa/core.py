@@ -94,7 +94,7 @@ def setup_uploader(app):
         from pybossa.uploader.local import LocalUploader
         uploader = LocalUploader()
         uploader.init_app(app)
-    if app.config.get('UPLOAD_METHOD') == 'rackspace':
+    if app.config.get('UPLOAD_METHOD') == 'rackspace': # pragma: no cover
         from pybossa.uploader.rackspace import RackspaceUploader
         uploader = RackspaceUploader()
         app.url_build_error_handlers.append(uploader.external_url_handler)
