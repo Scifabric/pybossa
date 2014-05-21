@@ -303,13 +303,12 @@ class TestWeb(web.Helper):
     def test_05_update_user_profile(self):
         """Test WEB update user profile"""
 
-        # Check first for a non existant user
-        url = "/account/fake/update"
-        res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 404
 
         # Create an account and log in
         self.register()
+        url = "/account/fake/update"
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 404, res.status_code
 
         # Update profile with new data
         res = self.update_profile(method="GET")
@@ -2615,8 +2614,12 @@ class TestWeb(web.Helper):
         assert api_key != user.api_key, err_msg
 
         self.register(fullname="new", username="new")
-        res = self.app.get(url)
+        res = self.app.post(url)
         res.status_code == 403
+
+        url = "/account/fake/resetapikey"
+        res = self.app.post(url)
+        assert res.status_code == 404
 
 
     @with_context
