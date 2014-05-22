@@ -50,6 +50,7 @@ from pybossa.core import db, signer, mail, uploader
 from pybossa.util import Pagination
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
+from pybossa.cache.helpers import check_contributing_state
 
 
 blueprint = Blueprint('account', __name__)
@@ -299,7 +300,11 @@ def profile(name):
 
     """
     user = db.session.query(model.user.User).filter_by(name=name).first()
-
+    def _add_contribute_button_to(app):
+        user_id = current_user.id if current_user.is_authenticated() else None
+        user_ip = request.remote_addr if current_user.is_anonymous() else None
+        app['contrib_button'] = check_contributing_state(app['id'],
+                                                         user_id=user_id, user_ip=user_ip)
     if user is None:
         return abort(404)
 
@@ -307,6 +312,10 @@ def profile(name):
     if current_user.is_anonymous() or (user.id != current_user.id):
         user, apps, apps_created = cached_users.get_user_summary(name)
         if user:
+            for app in apps:
+                _add_contribute_button_to(app)
+            for app in apps_created:
+                _add_contribute_button_to(app)
             title = "%s &middot; User Profile" % user['fullname']
             return render_template('/account/public_profile.html',
                                    title=title,
