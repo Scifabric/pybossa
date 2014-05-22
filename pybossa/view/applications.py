@@ -45,7 +45,9 @@ from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
 from pybossa.ckan import Ckan
+from pybossa.extensions import misaka
 
+import re
 import json
 import importer
 import presenter as presenter_module
@@ -56,6 +58,7 @@ import requests
 blueprint = Blueprint('app', __name__)
 
 class AvatarUploadForm(Form):
+    id = IntegerField(label=None, widget=HiddenInput())
     avatar = FileField(lazy_gettext('Avatar'), validators=[FileRequired()])
     x1 = IntegerField(label=None, widget=HiddenInput(), default=0)
     y1 = IntegerField(label=None, widget=HiddenInput(), default=0)
@@ -64,11 +67,10 @@ class AvatarUploadForm(Form):
 
 
 class AppForm(Form):
-    id = IntegerField(label=None, widget=HiddenInput())
     name = TextField(lazy_gettext('Name'),
                      [validators.Required(),
                       pb_validator.Unique(db.session, model.app.App, model.app.App.name,
-                                          message="Name is already taken.")])
+                                          message=lazy_gettext("Name is already taken."))])
     short_name = TextField(lazy_gettext('Short Name'),
                            [validators.Required(),
                             pb_validator.NotAllowedChars(),
@@ -76,23 +78,24 @@ class AppForm(Form):
                                 db.session, model.app.App, model.app.App.short_name,
                                 message=lazy_gettext(
                                     "Short Name is already taken."))])
+    long_description = TextAreaField(lazy_gettext('Long Description'),
+                                     [validators.Required()])
+
+
+class AppUpdateForm(AppForm):
+    id = IntegerField(label=None, widget=HiddenInput())
     description = TextAreaField(lazy_gettext('Description'),
                             [validators.Required(
                                 message=lazy_gettext(
-                                    "You must provide a description."))])
-    thumbnail = TextField(lazy_gettext('Icon Link'))
+                                    "You must provide a description.")),
+                             validators.Length(max=255)])
+    long_description = TextAreaField(lazy_gettext('Long Description'))
     allow_anonymous_contributors = SelectField(
         lazy_gettext('Allow Anonymous Contributors'),
         choices=[('True', lazy_gettext('Yes')),
                  ('False', lazy_gettext('No'))])
     category_id = SelectField(lazy_gettext('Category'), coerce=int)
-    long_description = TextAreaField(lazy_gettext('Long Description'))
     hidden = BooleanField(lazy_gettext('Hide?'))
-    avatar = FileField(lazy_gettext('Avatar'))
-    x1 = IntegerField(label=None, widget=HiddenInput(), default=0)
-    y1 = IntegerField(label=None, widget=HiddenInput(), default=0)
-    x2 = IntegerField(label=None, widget=HiddenInput(), default=0)
-    y2 = IntegerField(label=None, widget=HiddenInput(), default=0)
 
 
 class TaskPresenterForm(Form):
@@ -270,14 +273,22 @@ def app_cat_index(category, page):
 def new():
     require.app.create()
     form = AppForm(request.form)
-    del form.id
-    categories = db.session.query(model.category.Category).all()
-    form.category_id.choices = [(c.id, c.name) for c in categories]
 
     def respond(errors):
         return render_template('applications/new.html',
                                title=gettext("Create an Application"),
                                form=form, errors=errors)
+
+    def _description_from_long_description():
+        long_desc = form.long_description.data
+        html_long_desc = misaka.render(long_desc)[:-1]
+        remove_html_tags_regex = re.compile('<[^>]*>')
+        blank_space_regex = re.compile('\n')
+        text_desc = remove_html_tags_regex.sub("", html_long_desc)[:255]
+        if len(text_desc) >= 252:
+            text_desc = text_desc[:-3]
+            text_desc += "..."
+        return blank_space_regex.sub(" ", text_desc)
 
     if request.method != 'POST':
         return respond(False)
@@ -290,34 +301,14 @@ def new():
 
     app = model.app.App(name=form.name.data,
                     short_name=form.short_name.data,
-                    description=form.description.data,
+                    description=_description_from_long_description(),
                     long_description=form.long_description.data,
-                    category_id=form.category_id.data,
-                    allow_anonymous_contributors=form.allow_anonymous_contributors.data,
-                    hidden=int(form.hidden.data),
                     owner_id=current_user.id,
                     info=info)
 
     db.session.add(app)
     db.session.commit()
-    # Upload the avatar
-    if request.files.get('avatar'):
-        file = request.files['avatar']
-        coordinates = (form.x1.data, form.y1.data,
-                       form.x2.data, form.y2.data)
-        prefix = time.time()
-        file.filename = "app_%s_thumbnail_%i.png" % (app.id, prefix)
-        container = "user_%s" % current_user.id
-        uploader.upload_file(file,
-                             container=container,
-                             coordinates=coordinates)
 
-        # Update thumbnail for app
-        app.info['thumbnail'] = file.filename
-        app.info['container'] = container
-        db.session.commit()
-
-    # Clean cache
     msg_1 = gettext('Application created!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')
     flash('<i class="icon-bullhorn"></i> ' +
@@ -327,7 +318,7 @@ def new():
           '</a></strong> ' +
           gettext('for adding tasks, a thumbnail, using PyBossa.JS, etc.'),
           'info')
-    return redirect(url_for('.settings', short_name=app.short_name))
+    return redirect(url_for('.update', short_name=app.short_name))
 
 
 @blueprint.route('/<short_name>/tasks/taskpresentereditor', methods=['GET', 'POST'])
@@ -443,10 +434,6 @@ def update(short_name):
         new_info = {}
         # Add the info items
         app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
-        if form.thumbnail.data:
-            new_info['thumbnail'] = form.thumbnail.data
-        #if form.sched.data:
-        #    new_info['sched'] = form.sched.data
 
         # Merge info object
         info = dict(app.info.items() + new_info.items())
@@ -480,24 +467,17 @@ def update(short_name):
 
         title = app_title(app, "Update")
         if request.method == 'GET':
-            form = AppForm(obj=app)
+            form = AppUpdateForm(obj=app)
             upload_form = AvatarUploadForm()
             categories = db.session.query(model.category.Category).all()
             form.category_id.choices = [(c.id, c.name) for c in categories]
             if app.category_id is None:
                 app.category_id = categories[0].id
             form.populate_obj(app)
-            if app.info.get('thumbnail'):
-                form.thumbnail.data = app.info['thumbnail']
-            #if app.info.get('sched'):
-            #    for s in form.sched.choices:
-            #        if app.info['sched'] == s[0]:
-            #            form.sched.data = s[0]
-            #            break
 
         if request.method == 'POST':
             upload_form = AvatarUploadForm()
-            form = AppForm(request.form)
+            form = AppUpdateForm(request.form)
             categories = cached_cat.get_all()
             form.category_id.choices = [(c.id, c.name) for c in categories]
 
@@ -529,6 +509,7 @@ def update(short_name):
                 else:
                     flash(gettext('You must provide a file to change the avatar'),
                           'error')
+                return redirect(url_for('.update', short_name=short_name))
 
         return render_template('/applications/update.html',
                                form=form,

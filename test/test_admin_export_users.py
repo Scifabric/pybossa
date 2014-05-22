@@ -44,10 +44,10 @@ class TestExportUsers(web.Helper):
     def test_json_returns_all_users(self):
         self.register(fullname="Manolita")
         self.signout()
-        self.register(fullname="Juan Jose", username="juan",
+        self.register(fullname="Juan Jose", name="juan",
                       email="juan@juan.com", password="juan")
         self.signout()
-        self.register(fullname="Juan Jose2", username="juan2",
+        self.register(fullname="Juan Jose2", name="juan2",
                       email="juan2@juan.com", password="juan2")
         self.signin()
 
@@ -76,10 +76,10 @@ class TestExportUsers(web.Helper):
     def test_csv_returns_all_users(self):
         self.register(fullname="Manolita")
         self.signout()
-        self.register(fullname="Juan Jose", username="juan",
+        self.register(fullname="Juan Jose", name="juan",
                       email="juan@juan.com", password="juan")
         self.signout()
-        self.register(fullname="Juan Jose2", username="juan2",
+        self.register(fullname="Juan Jose2", name="juan2",
                       email="juan2@juan.com", password="juan2")
         self.signin()
 

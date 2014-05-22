@@ -172,7 +172,7 @@ class RegisterForm(Form):
     err_msg = lazy_gettext("User name must be between 3 and 35 "
                            "characters long")
     err_msg_2 = lazy_gettext("The user name is already taken")
-    username = TextField(lazy_gettext('User name'),
+    name = TextField(lazy_gettext('User name'),
                          [validators.Length(min=3, max=35, message=err_msg),
                           pb_validator.NotAllowedChars(),
                           pb_validator.Unique(db.session, model.user.User,
@@ -264,7 +264,7 @@ def register():
     form = RegisterForm(request.form)
     if request.method == 'POST' and form.validate():
         account = model.user.User(fullname=form.fullname.data,
-                             name=form.username.data,
+                             name=form.name.data,
                              email_addr=form.email_addr.data)
         account.set_password(form.password.data)
         # account.locale = get_locale()

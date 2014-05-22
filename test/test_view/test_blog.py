@@ -58,7 +58,7 @@ class TestBlogpostView(web.Helper):
         self.register()
         admin = db.session.query(User).get(1)
         self.signout()
-        self.register(username='user', email='user@user.com')
+        self.register(name='user', email='user@user.com')
         user = db.session.query(User).get(2)
         app = self.create_app(info=None)
         app.owner = user
@@ -75,7 +75,7 @@ class TestBlogpostView(web.Helper):
 
         # As authenticated
         self.signout()
-        self.register(username='notowner', email='user2@user.com')
+        self.register(name='notowner', email='user2@user.com')
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 403, res.status_code
 
@@ -128,7 +128,7 @@ class TestBlogpostView(web.Helper):
         self.register()
         admin = db.session.query(User).get(1)
         self.signout()
-        self.register(username='user', email='user@user.com')
+        self.register(name='user', email='user@user.com')
         user = db.session.query(User).get(2)
         app = self.create_app(info=None)
         app.owner = user
@@ -145,7 +145,7 @@ class TestBlogpostView(web.Helper):
 
         # As authenticated
         self.signout()
-        self.register(username='notowner', email='user2@user.com')
+        self.register(name='notowner', email='user2@user.com')
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 403, res.status_code
 
