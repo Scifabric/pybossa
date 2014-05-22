@@ -547,6 +547,12 @@ def update(short_name):
 @blueprint.route('/<short_name>/')
 def details(short_name):
     app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
+    def _add_contribute_button_to(app):
+        user_id = current_user.id if current_user.is_authenticated() else None
+        user_ip = request.remote_addr if current_user.is_anonymous() else None
+        app.contrib_button = check_contributing_state(app.id,
+                                                         user_id=user_id, user_ip=user_ip)
+    _add_contribute_button_to(app)
 
     try:
         require.app.read(app)
