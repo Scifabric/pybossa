@@ -84,7 +84,7 @@ class AppForm(Form):
 
 class AppUpdateForm(AppForm):
     id = IntegerField(label=None, widget=HiddenInput())
-    description = TextField(lazy_gettext('Description'),
+    description = TextAreaField(lazy_gettext('Description'),
                             [validators.Required(
                                 message=lazy_gettext(
                                     "You must provide a description.")),

@@ -317,7 +317,8 @@ class TestWeb(web.Helper):
         res = self.update_profile(fullname="John Doe 2",
                                   email_addr="johndoe2@example.com",
                                   locale="en")
-        assert self.html_title("Profile") in res.data, res.data
+        title = "Update your profile: John Doe 2"
+        assert self.html_title(title) in res.data, res.data
         assert "Your profile has been updated!" in res.data, res.data
         assert "John Doe 2" in res.data, res
         assert "johndoe" in res.data, res
@@ -329,7 +330,7 @@ class TestWeb(web.Helper):
                                   locale="en",
                                   new_name="johndoe2")
         assert "Your profile has been updated!" in res.data, res
-        assert "Nick: <small>johndoe2</small>" in res.data, res.data
+        assert "Please sign in" in res.data, res.data
 
         res = self.signin(method="POST", email="johndoe2@example.com",
                           password="p4ssw0rd",
