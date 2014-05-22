@@ -369,7 +369,7 @@ class TestWeb(web.Helper):
         assert self.html_title("Sign in") in res.data, res
         assert "Please sign in to access this page." in res.data, res
 
-        self.register(fullname="new", username="new")
+        self.register(fullname="new", name="new")
         url = "/account/johndoe2/update"
         res = self.app.get(url)
         assert res.status_code == 403
@@ -2664,7 +2664,7 @@ class TestWeb(web.Helper):
         err_msg = "New generated API key should be different from old one"
         assert api_key != user.api_key, err_msg
 
-        self.register(fullname="new", username="new")
+        self.register(fullname="new", name="new")
         res = self.app.post(url)
         res.status_code == 403
 
