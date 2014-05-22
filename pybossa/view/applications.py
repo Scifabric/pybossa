@@ -39,10 +39,11 @@ from pybossa.cache import ONE_DAY, ONE_HOUR
 from pybossa.model.app import App
 from pybossa.model.task import Task
 from pybossa.model.user import User
-from pybossa.util import Pagination, UnicodeWriter, admin_required
+from pybossa.util import Pagination, UnicodeWriter, admin_required, get_user_id_or_ip
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
+from pybossa.cache.helpers import add_custom_contrib_button_to
 from pybossa.ckan import Ckan
 
 import json
