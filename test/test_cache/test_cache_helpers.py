@@ -107,7 +107,7 @@ class TestHelpersCache(Test):
         submitted taskruns for all the tasks"""
         app = AppFactory.create()
         task = TaskFactory.create(app=app, n_answers=2)
-        taskrun = TaskRunFactory.create(task=task)
+        taskrun = AnonymousTaskRunFactory.create(task=task)
 
         n_available_tasks = helpers.n_available_tasks(app.id, user_ip=taskrun.user_ip)
 
@@ -134,7 +134,7 @@ class TestHelpersCache(Test):
         app = AppFactory.create()
         answered_task = TaskFactory.create(app=app)
         available_task = TaskFactory.create(app=app)
-        taskrun = TaskRunFactory.create(task=answered_task)
+        taskrun = AnonymousTaskRunFactory.create(task=answered_task)
 
         n_available_tasks = helpers.n_available_tasks(app.id, user_ip=taskrun.user_ip)
 
