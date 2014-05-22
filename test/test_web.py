@@ -290,12 +290,25 @@ class TestWeb(web.Helper):
             assert "Draft" in res.data, res.data
             assert Fixtures.app_name in res.data, res.data
 
+            url = '/account/fakename/applications'
+            res = self.app.get(url)
+            assert res.status_code == 404, res.status_code
+
+            url = '/account/%s/applications' % Fixtures.name2
+            res = self.app.get(url)
+            assert res.status_code == 403, res.status_code
+
+
     @with_context
     def test_05_update_user_profile(self):
         """Test WEB update user profile"""
 
+
         # Create an account and log in
         self.register()
+        url = "/account/fake/update"
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 404, res.status_code
 
         # Update profile with new data
         res = self.update_profile(method="GET")
@@ -355,6 +368,11 @@ class TestWeb(web.Helper):
         res = self.update_profile()
         assert self.html_title("Sign in") in res.data, res
         assert "Please sign in to access this page." in res.data, res
+
+        self.register(fullname="new", username="new")
+        url = "/account/johndoe2/update"
+        res = self.app.get(url)
+        assert res.status_code == 403
 
     @with_context
     def test_05a_get_nonexistant_app(self):
@@ -2594,6 +2612,15 @@ class TestWeb(web.Helper):
         user = db.session.query(User).get(1)
         err_msg = "New generated API key should be different from old one"
         assert api_key != user.api_key, err_msg
+
+        self.register(fullname="new", username="new")
+        res = self.app.post(url)
+        res.status_code == 403
+
+        url = "/account/fake/resetapikey"
+        res = self.app.post(url)
+        assert res.status_code == 404
+
 
     @with_context
     @patch('pybossa.view.stats.get_locs', return_value=[{'latitude':0, 'longitude':0}])
