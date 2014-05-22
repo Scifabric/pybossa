@@ -17,6 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import json
 from test_api import TestAPI
+from factories import AppFactory
 
 
 
@@ -24,10 +25,12 @@ class TestGlobalStatsAPI(TestAPI):
 
     def test_global_stats(self):
         """Test Global Stats works."""
+        AppFactory()
         res = self.app.get('api/globalstats')
         stats = json.loads(res.data)
         assert res.status_code == 200, res.status_code
-        keys = ['n_projects', 'n_pending_tasks', 'n_users', 'n_task_runs']
+        keys = ['n_projects', 'n_pending_tasks',
+                'n_users', 'n_task_runs', 'categories']
         for k in keys:
             err_msg = "%s should be in stats JSON object" % k
             assert k in stats.keys(), err_msg

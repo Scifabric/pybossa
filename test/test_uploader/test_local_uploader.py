@@ -50,6 +50,18 @@ class TestLocalUploader(Test):
                 assert new_uploader.upload_folder == '/tmp/', err_msg
 
     @with_context
+    @patch('werkzeug.datastructures.FileStorage.save', side_effect=IOError)
+    def test_local_uploader_upload_fails(self, mock):
+        """Test LOCAL UPLOADER upload fails."""
+        u = LocalUploader()
+        file = FileStorage(filename='test.jpg')
+        res = u.upload_file(file, container='user_3')
+        err_msg = ("Upload file should return False, \
+                   as there is an exception")
+        assert res is False, err_msg
+
+
+    @with_context
     @patch('werkzeug.datastructures.FileStorage.save', return_value=None)
     def test_local_uploader_upload_correct_file(self, mock):
         """Test LOCAL UPLOADER upload works."""

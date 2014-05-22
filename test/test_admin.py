@@ -73,7 +73,7 @@ class TestAdmin(web.Helper):
         """Test ADMIN index page works as signed in user"""
         self.register()
         self.signout()
-        self.register(username="tester2", email="tester2@tester.com",
+        self.register(name="tester2", email="tester2@tester.com",
                       password="tester")
         res = self.app.get("/admin", follow_redirects=True)
         err_msg = ("The user should not be able to access this page"
@@ -85,7 +85,7 @@ class TestAdmin(web.Helper):
         """Test ADMIN Second Created user is NOT admin works"""
         self.register()
         self.signout()
-        self.register(username="tester2", email="tester2@tester.com",
+        self.register(name="tester2", email="tester2@tester.com",
                       password="tester")
         self.signout()
         user = db.session.query(User).get(2)
@@ -111,7 +111,7 @@ class TestAdmin(web.Helper):
         self.register()
         self.signout()
         self.register()
-        self.register(username="tester2", email="tester2@tester.com",
+        self.register(name="tester2", email="tester2@tester.com",
                       password="tester")
         res = self.app.get('/admin/featured', follow_redirects=True)
         assert res.status == "403 FORBIDDEN", res.status
@@ -122,6 +122,7 @@ class TestAdmin(web.Helper):
         """Test ADMIN featured apps add-remove works as an admin user"""
         self.register()
         self.new_application()
+        self.update_application()
         # The application is in the system but not in the front page
         res = self.app.get('/', follow_redirects=True)
         assert "Create an App" in res.data,\
@@ -146,7 +147,7 @@ class TestAdmin(web.Helper):
         assert "Sample App" in res.data,\
             "The application should be listed in the front page"\
             " as it is featured"
-        # A rety should fail
+        # A retry should fail
         res = self.app.post('/admin/featured/1')
         err = json.loads(res.data)
         err_msg = "App.id 1 alreay in Featured table"
@@ -161,7 +162,7 @@ class TestAdmin(web.Helper):
         assert "Sample App" not in res.data,\
             "The application should not be listed in the front page"\
             " as it is not featured"
-        # If we try to delete again, it shoul return an error
+        # If we try to delete again, it should return an error
         res = self.app.delete('/admin/featured/1')
         err = json.loads(res.data)
         assert err['status_code'] == 404, "App should not be found"
@@ -181,7 +182,7 @@ class TestAdmin(web.Helper):
         """Test ADMIN featured apps add-remove works as an non-admin user"""
         self.register()
         self.signout()
-        self.register(username="John2", email="john2@john.com",
+        self.register(name="John2", email="john2@john.com",
                       password="passwd")
         self.new_application()
         # The application is in the system but not in the front page
@@ -265,7 +266,7 @@ class TestAdmin(web.Helper):
         # Create two users
         self.register()
         self.signout()
-        self.register(fullname="Juan Jose", username="juan",
+        self.register(fullname="Juan Jose", name="juan",
                       email="juan@juan.com", password="juan")
         self.signout()
         # Signin with admin user
@@ -300,7 +301,7 @@ class TestAdmin(web.Helper):
         """Test ADMIN add/del user to admin group works"""
         self.register()
         self.signout()
-        self.register(fullname="Juan Jose", username="juan",
+        self.register(fullname="Juan Jose", name="juan",
                       email="juan@juan.com", password="juan")
         self.signout()
         # Signin with admin user
@@ -335,7 +336,7 @@ class TestAdmin(web.Helper):
         """Test ADMIN add/del user to admin group works as anonymous"""
         self.register()
         self.signout()
-        self.register(fullname="Juan Jose", username="juan",
+        self.register(fullname="Juan Jose", name="juan",
                       email="juan@juan.com", password="juan")
         self.signout()
         # Add user.id=2 to admin group
@@ -352,10 +353,10 @@ class TestAdmin(web.Helper):
         """Test ADMIN add/del user to admin group works as authenticated"""
         self.register()
         self.signout()
-        self.register(fullname="Juan Jose", username="juan",
+        self.register(fullname="Juan Jose", name="juan",
                       email="juan@juan.com", password="juan")
         self.signout()
-        self.register(fullname="Juan Jose2", username="juan2",
+        self.register(fullname="Juan Jose2", name="juan2",
                       email="juan2@juan.com", password="juan2")
         self.signout()
         self.signin(email="juan2@juan.com", password="juan2")
@@ -373,10 +374,10 @@ class TestAdmin(web.Helper):
         """Test ADMIN user list export works as admin"""
         self.register()
         self.signout()
-        self.register(fullname="Juan Jose", username="juan",
+        self.register(fullname="Juan Jose", name="juan",
                       email="juan@juan.com", password="juan")
         self.signout()
-        self.register(fullname="Juan Jose2", username="juan2",
+        self.register(fullname="Juan Jose2", name="juan2",
                       email="juan2@juan.com", password="juan2")
         self.signin()
         # The user is redirected to '/admin/' if no format is specified
@@ -432,7 +433,7 @@ class TestAdmin(web.Helper):
         """Test ADMIN user list export works as authenticated non-admin user"""
         self.register()
         self.signout()
-        self.register(fullname="Juan Jose", username="juan",
+        self.register(fullname="Juan Jose", name="juan",
                       email="juan@juan.com", password="juan")
 
         # No matter what params in the request, Forbidden is raised
@@ -457,7 +458,7 @@ class TestAdmin(web.Helper):
         Mock.return_value = html_request
         self.register()
         self.signout()
-        self.register(fullname="Juan Jose", username="juan",
+        self.register(fullname="Juan Jose", name="juan",
                       email="juan@juan.com", password="juan")
         self.new_application()
         self.signout()
@@ -492,7 +493,7 @@ class TestAdmin(web.Helper):
         """Test ADMIN can delete an app that belongs to another user"""
         self.register()
         self.signout()
-        self.register(fullname="Juan Jose", username="juan",
+        self.register(fullname="Juan Jose", name="juan",
                       email="juan@juan.com", password="juan")
         self.new_application()
         self.signout()

@@ -174,12 +174,12 @@ class TestWeb(web.Helper):
             msg = "Full name must be between 3 and 35 characters long"
             assert msg in res.data, res.data
 
-            res = self.register(username='')
+            res = self.register(name='')
             assert self.html_title("Register") in res.data, res
             msg = "User name must be between 3 and 35 characters long"
             assert msg in res.data, res.data
 
-            res = self.register(username='%a/$|')
+            res = self.register(name='%a/$|')
             assert self.html_title("Register") in res.data, res
             msg = '$#&amp;\/| and space symbols are forbidden'
             assert msg in res.data, res.data
@@ -264,8 +264,8 @@ class TestWeb(web.Helper):
         assert self.user.fullname in res.data, res
         assert self.user.email_addr not in res.data, res
 
-        # Try to access protected areas like settings
-        res = self.app.get('/account/johndoe/settings', follow_redirects=True)
+        # Try to access protected areas like update
+        res = self.app.get('/account/johndoe/update', follow_redirects=True)
         # As a user must be signed in to access, the page the title will be the
         # redirection to log in
         assert self.html_title("Sign in") in res.data, res.data
@@ -290,12 +290,25 @@ class TestWeb(web.Helper):
             assert "Draft" in res.data, res.data
             assert Fixtures.app_name in res.data, res.data
 
+            url = '/account/fakename/applications'
+            res = self.app.get(url)
+            assert res.status_code == 404, res.status_code
+
+            url = '/account/%s/applications' % Fixtures.name2
+            res = self.app.get(url)
+            assert res.status_code == 403, res.status_code
+
+
     @with_context
     def test_05_update_user_profile(self):
         """Test WEB update user profile"""
 
+
         # Create an account and log in
         self.register()
+        url = "/account/fake/update"
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 404, res.status_code
 
         # Update profile with new data
         res = self.update_profile(method="GET")
@@ -305,7 +318,7 @@ class TestWeb(web.Helper):
         assert msg in res.data, res
         assert self.user.fullname in res.data, res
         assert "Save the changes" in res.data, res
-        msg = '<a href="/account/johndoe/settings" class="btn">Cancel</a>'
+        msg = '<a href="/account/johndoe/update" class="btn">Cancel</a>'
         assert  msg in res.data, res.data
 
         res = self.update_profile(fullname="John Doe 2",
@@ -317,7 +330,8 @@ class TestWeb(web.Helper):
         res = self.update_profile(fullname="John Doe 2",
                                   email_addr="johndoe2@example.com",
                                   locale="en")
-        assert self.html_title("Profile") in res.data, res.data
+        title = "Update your profile: John Doe 2"
+        assert self.html_title(title) in res.data, res.data
         assert "Your profile has been updated!" in res.data, res.data
         assert "John Doe 2" in res.data, res
         assert "johndoe" in res.data, res
@@ -329,7 +343,7 @@ class TestWeb(web.Helper):
                                   locale="en",
                                   new_name="johndoe2")
         assert "Your profile has been updated!" in res.data, res
-        assert "Nick: <small>johndoe2</small>" in res.data, res.data
+        assert "Please sign in" in res.data, res.data
 
         res = self.signin(method="POST", email="johndoe2@example.com",
                           password="p4ssw0rd",
@@ -354,6 +368,11 @@ class TestWeb(web.Helper):
         res = self.update_profile()
         assert self.html_title("Sign in") in res.data, res
         assert "Please sign in to access this page." in res.data, res
+
+        self.register(fullname="new", name="new")
+        url = "/account/johndoe2/update"
+        res = self.app.get(url)
+        assert res.status_code == 403
 
     @with_context
     def test_05a_get_nonexistant_app(self):
@@ -507,7 +526,7 @@ class TestWeb(web.Helper):
             assert "Please sign in to access this page" in res.data, err_msg
 
             # Now with a different user
-            self.register(fullname="Perico Palotes", username="perico")
+            self.register(fullname="Perico Palotes", name="perico")
             res = self.app.get('/app/sampleapp', follow_redirects=True)
             assert self.html_title("Application: Sample App") in res.data, res
             assert "Start Contributing Now" in res.data, err_msg
@@ -549,18 +568,49 @@ class TestWeb(web.Helper):
             assert "Create the application" in res.data, res
 
             res = self.new_application(long_description='My Description')
-            assert "<strong>Sample App</strong>: Settings" in res.data, res.data
+            assert "<strong>Sample App</strong>: Update the application" in res.data
             assert "Application created!" in res.data, res
 
             app = db.session.query(App).first()
             assert app.name == 'Sample App', 'Different names %s' % app.name
             assert app.short_name == 'sampleapp', \
                 'Different names %s' % app.short_name
-            avatar = "app_%s_thumbnail" % app.id
-            assert avatar in app.info['thumbnail'], \
-                "Thumbnail should be the same: %s" % app.info['thumbnail']
+
             assert app.long_description == 'My Description', \
                 "Long desc should be the same: %s" % app.long_description
+
+    # After refactoring applications view, these 3 tests should be more isolated and moved to another place
+    @with_context
+    def test_description_is_generated_from_long_desc(self):
+        """Test WEB when creating an application, the description field is
+        automatically filled in by truncating the long_description"""
+        self.register()
+        res = self.new_application(long_description="Hello")
+
+        app = db.session.query(App).first()
+        assert app.description == "Hello", app.description
+
+    @with_context
+    def test_description_is_generated_from_long_desc_formats(self):
+        """Test WEB when when creating an application, the description generated
+        from the long_description is only text (no html, no markdown)"""
+        self.register()
+        res = self.new_application(long_description="## Hello")
+
+        app = db.session.query(App).first()
+        assert '##' not in app.description, app.description
+        assert '<h2>' not in app.description, app.description
+
+    @with_context
+    def test_description_is_generated_from_long_desc_truncates(self):
+        """Test WEB when when creating an application, the description generated
+        from the long_description is only text (no html, no markdown)"""
+        self.register()
+        res = self.new_application(long_description="a"*300)
+
+        app = db.session.query(App).first()
+        assert len(app.description) == 255, len(app.description)
+        assert app.description[-3:] == '...'
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
@@ -580,9 +630,9 @@ class TestWeb(web.Helper):
             assert "This field is required" in res.data, err_msg
 
             # Issue the error for the app.description
-            res = self.new_application(description="")
+            res = self.new_application(long_description="")
             err_msg = "An application must have a description"
-            assert "You must provide a description" in res.data, err_msg
+            assert "This field is required" in res.data, err_msg
 
             # Issue the error for the app.short_name
             res = self.new_application(short_name='$#/|')
@@ -621,7 +671,6 @@ class TestWeb(web.Helper):
             res = self.update_application(new_name="",
                                           new_short_name="",
                                           new_description="New description",
-                                          new_thumbnail="New Icon Link",
                                           new_long_description='New long desc',
                                           new_hidden=True)
             assert "Please correct the errors" in res.data, res.data
@@ -630,7 +679,6 @@ class TestWeb(web.Helper):
             res = self.update_application(new_name="New Sample App",
                                           new_short_name="newshortname",
                                           new_description="New description",
-                                          new_thumbnail="New Icon Link",
                                           new_long_description='New long desc',
                                           new_hidden=True)
             app = db.session.query(App).first()
@@ -641,8 +689,6 @@ class TestWeb(web.Helper):
             assert app.short_name == "newshortname", err_msg
             err_msg = "App description not updated %s" % app.description
             assert app.description == "New description", err_msg
-            err_msg = "App thumbnail not updated %s" % app.info['thumbnail']
-            assert app.info['thumbnail'] == "New Icon Link", err_msg
             err_msg = "App long description not updated %s" % app.long_description
             assert app.long_description == "New long desc", err_msg
             err_msg = "App hidden not updated %s" % app.hidden
@@ -660,7 +706,7 @@ class TestWeb(web.Helper):
             assert app.name in res.data, err_msg
             self.signout()
 
-            res = self.register(fullname='Paco', username='paco')
+            res = self.register(fullname='Paco', name='paco')
             url = '/app/newshortname/'
             res = self.app.get(url, follow_redirects=True)
             assert "Forbidden" in res.data, res.data
@@ -687,6 +733,31 @@ class TestWeb(web.Helper):
             res = self.app.get('/app/newshortname/')
             err_msg = "Root user should be able to see his hidden app"
             assert app.name in res.data, err_msg
+
+
+    @with_context
+    def test_update_application_errors(self):
+        """Test WEB update form validation issues the errors"""
+        with self.flask_app.app_context():
+
+            self.register()
+            self.new_application()
+
+            res = self.update_application(new_name="")
+            assert "This field is required" in res.data
+
+            res = self.update_application(new_short_name="")
+            assert "This field is required" in res.data
+
+            res = self.update_application(new_description="")
+            assert "You must provide a description." in res.data
+
+            res = self.update_application(new_description="a"*256)
+            assert "Field cannot be longer than 255 characters." in res.data
+
+            res = self.update_application(new_long_description="")
+            assert "This field is required" not in res.data
+
 
     @with_context
     @patch('pybossa.ckan.requests.get')
@@ -968,6 +1039,7 @@ class TestWeb(web.Helper):
         with self.flask_app.app_context():
             self.register()
             self.new_application()
+            self.update_application(new_category_id="1")
             app = db.session.query(App).first()
             info = dict(task_presenter="some html")
             app.info = info
@@ -993,7 +1065,7 @@ class TestWeb(web.Helper):
             self.new_application()
             self.signout()
             # Create a user
-            self.register(fullname="jane", username="jane", email="jane@jane.com")
+            self.register(fullname="jane", name="jane", email="jane@jane.com")
             self.signout()
 
             # As Anonymous
@@ -1314,7 +1386,7 @@ class TestWeb(web.Helper):
 
         res = self.app.get('account/johndoe', follow_redirects=True)
         assert "Sample App" in res.data, res.data
-        assert "You have contributed <strong>10</strong> tasks" in res.data, res.data
+        assert "You have contributed to <strong>10</strong> tasks" in res.data, res.data
         assert "Contribute!" in res.data, "There should be a Contribute button"
 
     @with_context
@@ -1686,28 +1758,31 @@ class TestWeb(web.Helper):
         """Test WEB password changing"""
         password = "mehpassword"
         self.register(password=password)
-        res = self.app.post('/account/johndoe/password',
+        res = self.app.post('/account/johndoe/update',
                             data={'current_password': password,
                                   'new_password': "p4ssw0rd",
-                                  'confirm': "p4ssw0rd"},
+                                  'confirm': "p4ssw0rd",
+                                  'btn': 'Password'},
                             follow_redirects=True)
         assert "Yay, you changed your password succesfully!" in res.data, res.data
 
         password = "mehpassword"
         self.register(password=password)
-        res = self.app.post('/account/johndoe/password',
+        res = self.app.post('/account/johndoe/update',
                             data={'current_password': "wrongpassword",
                                   'new_password': "p4ssw0rd",
-                                  'confirm': "p4ssw0rd"},
+                                  'confirm': "p4ssw0rd",
+                                  'btn': 'Password'},
                             follow_redirects=True)
         msg = "Your current password doesn't match the one in our records"
         assert msg in res.data
 
         self.register(password=password)
-        res = self.app.post('/account/johndoe/password',
+        res = self.app.post('/account/johndoe/update',
                             data={'current_password': '',
                                   'new_password':'',
-                                  'confirm': ''},
+                                  'confirm': '',
+                                  'btn': 'Password'},
                             follow_redirects=True)
         msg = "Please correct the errors"
         assert msg in res.data
@@ -1716,13 +1791,13 @@ class TestWeb(web.Helper):
     def test_42_password_link(self):
         """Test WEB visibility of password change link"""
         self.register()
-        res = self.app.get('/account/johndoe/settings')
+        res = self.app.get('/account/johndoe/update')
         assert "Change your Password" in res.data
         user = User.query.get(1)
         user.twitter_user_id = 1234
         db.session.add(user)
         db.session.commit()
-        res = self.app.get('/account/johndoe/settings')
+        res = self.app.get('/account/johndoe/update')
         assert "Change your Password" not in res.data, res.data
 
     @with_context
@@ -1800,9 +1875,9 @@ class TestWeb(web.Helper):
                 "Facebook, or Google to sign-in") in res.data
 
         self.register()
-        self.register(username='janedoe')
-        self.register(username='google')
-        self.register(username='facebook')
+        self.register(name='janedoe')
+        self.register(name='google')
+        self.register(name='facebook')
         jane = User.query.get(2)
         jane.twitter_user_id = 10
         google = User.query.get(3)
@@ -1985,8 +2060,6 @@ class TestWeb(web.Helper):
         assert app.name == "Sample App", "The app has not been updated"
         error_msg = "The app description has not been updated"
         assert app.description == "Description", error_msg
-        error_msg = "The app icon has not been updated"
-        assert app.info['thumbnail'] == "New Icon link", error_msg
         error_msg = "The app long description has not been updated"
         assert app.long_description == "Long desc", error_msg
 
@@ -2015,7 +2088,7 @@ class TestWeb(web.Helper):
         self.signout()
 
         # Register another user
-        self.register(method="POST", fullname="Jane Doe", username="janedoe",
+        self.register(method="POST", fullname="Jane Doe", name="janedoe",
                       password="janedoe", password2="janedoe",
                       email="jane@jane.com")
         res = self.app.get("/", follow_redirects=True)
@@ -2566,7 +2639,7 @@ class TestWeb(web.Helper):
     @with_context
     def test_57_reset_api_key(self):
         """Test WEB reset api key works"""
-        url = "/account/johndoe/resetapikey"
+        url = "/account/johndoe/update"
         # Anonymous user
         res = self.app.get(url, follow_redirects=True)
         err_msg = "Anonymous user should be redirected for authentication"
@@ -2577,17 +2650,28 @@ class TestWeb(web.Helper):
         # Authenticated user
         self.register()
         user = db.session.query(User).get(1)
+        url = "/account/%s/update" % user.name
         api_key = user.api_key
         res = self.app.get(url, follow_redirects=True)
         err_msg = "Authenticated user should get access to reset api key page"
         assert res.status_code == 200, err_msg
-        assert "Reset API Key" in res.data, err_msg
+        assert "reset your personal API Key" in res.data, err_msg
+        url = "/account/%s/resetapikey" % user.name
         res = self.app.post(url, follow_redirects=True)
         err_msg = "Authenticated user should be able to reset his api key"
         assert res.status_code == 200, err_msg
         user = db.session.query(User).get(1)
         err_msg = "New generated API key should be different from old one"
         assert api_key != user.api_key, err_msg
+
+        self.register(fullname="new", name="new")
+        res = self.app.post(url)
+        res.status_code == 403
+
+        url = "/account/fake/resetapikey"
+        res = self.app.post(url)
+        assert res.status_code == 404
+
 
     @with_context
     @patch('pybossa.view.stats.get_locs', return_value=[{'latitude':0, 'longitude':0}])
@@ -2834,7 +2918,7 @@ class TestWeb(web.Helper):
         self.register()
         self.signout()
         # As owner
-        self.register(fullname="owner", username="owner")
+        self.register(fullname="owner", name="owner")
         res = self.new_application()
         url = "/app/sampleapp/tasks/settings"
 
@@ -2847,7 +2931,7 @@ class TestWeb(web.Helper):
 
         self.signout()
         # As an authenticated user
-        self.register(fullname="juan", username="juan")
+        self.register(fullname="juan", name="juan")
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should not be allowed to access this page"
         assert res.status_code == 403, err_msg
@@ -2876,7 +2960,7 @@ class TestWeb(web.Helper):
         self.register()
         self.signout()
         # Create owner
-        self.register(fullname="owner", username="owner")
+        self.register(fullname="owner", name="owner")
         self.new_application()
         url = "/app/sampleapp/tasks/scheduler"
         form_id = 'task_scheduler'
@@ -2905,7 +2989,7 @@ class TestWeb(web.Helper):
             self.signout()
 
         # As an authenticated user
-        self.register(fullname="juan", username="juan")
+        self.register(fullname="juan", name="juan")
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should not be allowed to access this page"
         assert res.status_code == 403, err_msg
@@ -2921,7 +3005,7 @@ class TestWeb(web.Helper):
         app.hidden = 1
         db.session.add(app)
         db.session.commit()
-        self.register(fullname="daniel", username="daniel")
+        self.register(fullname="daniel", name="daniel")
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 403, res.status_code
         self.signout()
@@ -2941,7 +3025,7 @@ class TestWeb(web.Helper):
         self.register()
         self.signout()
         # Create owner
-        self.register(fullname="owner", username="owner")
+        self.register(fullname="owner", name="owner")
         self.new_application()
         self.new_task(1)
         url = "/app/sampleapp/tasks/redundancy"
@@ -2986,7 +3070,7 @@ class TestWeb(web.Helper):
             self.signout()
 
         # As an authenticated user
-        self.register(fullname="juan", username="juan")
+        self.register(fullname="juan", name="juan")
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should not be allowed to access this page"
         assert res.status_code == 403, err_msg
@@ -3002,7 +3086,7 @@ class TestWeb(web.Helper):
         app.hidden = 1
         db.session.add(app)
         db.session.commit()
-        self.register(fullname="daniel", username="daniel")
+        self.register(fullname="daniel", name="daniel")
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 403, res.status_code
         self.signout()
@@ -3021,7 +3105,7 @@ class TestWeb(web.Helper):
         self.register()
         self.signout()
         # Create owner
-        self.register(fullname="owner", username="owner")
+        self.register(fullname="owner", name="owner")
         self.new_application()
         self.new_task(1)
         url = "/app/sampleapp/tasks/priority"
@@ -3076,7 +3160,7 @@ class TestWeb(web.Helper):
             self.signout()
 
         # As an authenticated user
-        self.register(fullname="juan", username="juan")
+        self.register(fullname="juan", name="juan")
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should not be allowed to access this page"
         assert res.status_code == 403, err_msg
@@ -3092,7 +3176,7 @@ class TestWeb(web.Helper):
         app.hidden = 1
         db.session.add(app)
         db.session.commit()
-        self.register(fullname="daniel", username="daniel")
+        self.register(fullname="daniel", name="daniel")
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 403, res.status_code
         self.signout()
