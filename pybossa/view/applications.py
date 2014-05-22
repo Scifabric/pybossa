@@ -43,7 +43,7 @@ from pybossa.util import Pagination, UnicodeWriter, admin_required, get_user_id_
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
-from pybossa.cache.helpers import add_custom_contrib_button_to, check_contributing_state
+from pybossa.cache.helpers import add_custom_contrib_button_to
 from pybossa.ckan import Ckan
 
 import json
@@ -542,12 +542,6 @@ def update(short_name):
 @blueprint.route('/<short_name>/')
 def details(short_name):
     app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
-    def _add_contribute_button_to(app):
-        user_id = current_user.id if current_user.is_authenticated() else None
-        user_ip = request.remote_addr if current_user.is_anonymous() else None
-        app.contrib_button = check_contributing_state(app.id,
-                                                         user_id=user_id, user_ip=user_ip)
-    _add_contribute_button_to(app)
 
     try:
         require.app.read(app)
@@ -559,8 +553,9 @@ def details(short_name):
             raise
 
     title = app_title(app, None)
-
-    template_args = {"app": app, "title": title,
+    dict_app = app.dictize()
+    add_custom_contrib_button_to(dict_app, get_user_id_or_ip())
+    template_args = {"app": dict_app, "title": title,
                      "n_tasks": n_tasks,
                      "overall_progress": overall_progress,
                      "last_activity": last_activity,
@@ -577,20 +572,15 @@ def details(short_name):
 @login_required
 def settings(short_name):
     app, n_tasks, n_task_runs, overall_progress, last_activity = app_by_shortname(short_name)
-    def _add_contribute_button_to(app):
-        user_id = current_user.id if current_user.is_authenticated() else None
-        user_ip = request.remote_addr if current_user.is_anonymous() else None
-        app.contrib_button = check_contributing_state(app.id,
-                                                         user_id=user_id, user_ip=user_ip)
-    _add_contribute_button_to(app)
 
     title = app_title(app, "Settings")
     try:
         require.app.read(app)
         require.app.update(app)
-
+        dict_app = app.dictize()
+        add_custom_contrib_button_to(dict_app, get_user_id_or_ip())
         return render_template('/applications/settings.html',
-                               app=app,
+                               app=dict_app,
                                n_tasks=n_tasks,
                                overall_progress=overall_progress,
                                last_activity=last_activity,
