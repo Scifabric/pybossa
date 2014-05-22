@@ -43,7 +43,7 @@ from pybossa.util import Pagination, UnicodeWriter, admin_required, get_user_id_
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
-from pybossa.cache.helpers import add_custom_contrib_button_to
+from pybossa.cache.helpers import add_custom_contrib_button_to, check_contributing_state
 from pybossa.ckan import Ckan
 
 import json
