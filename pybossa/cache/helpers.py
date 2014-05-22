@@ -20,6 +20,7 @@ from pybossa.model.app import App
 from pybossa.core import timeouts
 from pybossa.cache import memoize
 from pybossa.cache.apps import overall_progress
+from pybossa.sched import new_task
 
 
 
@@ -28,15 +29,8 @@ def n_available_tasks(app_id, user_id=None, user_ip=None):
     """Returns the number of tasks for a given app a user can contribute to,
     based on the completion of the app tasks, and previous task_runs submitted
     by the user"""
-
-    app = App.query.get(app_id)
-    n_tasks = 0
-    for task in app.tasks:
-        user_answered = (user_id in [tr.user_id for tr in task.task_runs] if user_id
-            else user_ip in [tr.user_ip for tr in task.task_runs])
-        if task.state != 'completed' and not user_answered:
-            n_tasks += 1
-    return n_tasks
+    tasks = new_task(app_id, user_id=user_id, user_ip=user_ip)
+    return tasks
 
 
 def check_contributing_state(app_id, user_id=None, user_ip=None):
@@ -46,7 +40,7 @@ def check_contributing_state(app_id, user_id=None, user_ip=None):
     states = ('completed', 'can_contribute', 'cannot_contribute')
     if overall_progress(app_id) >= 100:
         return states[0]
-    if n_available_tasks(app_id, user_id=user_id, user_ip=user_ip) > 0:
+    if n_available_tasks(app_id, user_id=user_id, user_ip=user_ip) is not None:
         return states[1]
     return states[2]
 
