@@ -16,11 +16,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.model.app import App
-from pybossa.core import timeouts
+from sqlalchemy.sql import text
+from pybossa.core import db, timeouts
 from pybossa.cache import memoize
 from pybossa.cache.apps import overall_progress
-from pybossa.sched import new_task
 
 
 
@@ -29,8 +28,25 @@ def n_available_tasks(app_id, user_id=None, user_ip=None):
     """Returns the number of tasks for a given app a user can contribute to,
     based on the completion of the app tasks, and previous task_runs submitted
     by the user"""
-    tasks = new_task(app_id, user_id=user_id, user_ip=user_ip)
-    return tasks
+
+    if user_id and not user_ip:
+        query = text('''SELECT COUNT(id) AS n_tasks FROM task WHERE NOT EXISTS
+                       (SELECT task_id FROM task_run WHERE
+                       app_id=:app_id AND user_id=:user_id AND task_id=task.id)
+                       AND app_id=:app_id AND state !='completed';''')
+        result = db.engine.execute(query, app_id=app_id, user_id=user_id)
+    else:
+        if not user_ip:
+            user_ip = '127.0.0.1'
+        query = text('''SELECT COUNT(id) AS n_tasks FROM task WHERE NOT EXISTS
+                       (SELECT task_id FROM task_run WHERE
+                       app_id=:app_id AND user_ip=:user_ip AND task_id=task.id)
+                       AND app_id=:app_id AND state !='completed';''')
+        result = db.engine.execute(query, app_id=app_id, user_ip=user_ip)
+    n_tasks = 0
+    for row in result:
+        n_tasks = row.n_tasks
+    return n_tasks
 
 
 def check_contributing_state(app_id, user_id=None, user_ip=None):
@@ -40,7 +56,7 @@ def check_contributing_state(app_id, user_id=None, user_ip=None):
     states = ('completed', 'can_contribute', 'cannot_contribute')
     if overall_progress(app_id) >= 100:
         return states[0]
-    if n_available_tasks(app_id, user_id=user_id, user_ip=user_ip) is not None:
+    if n_available_tasks(app_id, user_id=user_id, user_ip=user_ip) > 0:
         return states[1]
     return states[2]
 
