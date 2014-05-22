@@ -52,5 +52,4 @@ def add_custom_contrib_button_to(app, user_id_ip):
         app_id = app.id
         app = app.dictize()
     app['contrib_button'] = check_contributing_state(app_id, **user_id_ip)
-    print app['contrib_button']
     return app
