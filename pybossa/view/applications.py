@@ -153,6 +153,8 @@ def app_title(app, page_name):
 def app_by_shortname(short_name):
     app = cached_apps.get_app(short_name)
     if app.id:
+        # Get owner
+        app.owner = User.query.get(app.owner_id)
         # Populate CACHE with the data of the app
         return (app,
                 cached_apps.n_tasks(app.id),
