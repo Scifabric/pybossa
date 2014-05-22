@@ -33,7 +33,7 @@ def n_available_tasks(app_id, user_id=None, user_ip=None):
     n_tasks = 0
     for task in app.tasks:
         user_answered = (user_id in [tr.user_id for tr in task.task_runs] if user_id
-        else user_ip in [tr.user_ip for tr in task.task_runs])
+            else user_ip in [tr.user_ip for tr in task.task_runs])
         if task.state != 'completed' and not user_answered:
             n_tasks += 1
     return n_tasks
@@ -49,3 +49,12 @@ def check_contributing_state(app_id, user_id=None, user_ip=None):
     if n_available_tasks(app_id, user_id=user_id, user_ip=user_ip) > 0:
         return states[1]
     return states[2]
+
+
+def add_custom_contrib_button_to(app, user_id_ip):
+    app['contrib_button'] = check_contributing_state(app['id'], **user_id_ip)
+    return app
+
+
+
+

@@ -19,26 +19,19 @@
 from flask import current_app, request
 from flask.ext.login import current_user
 import pybossa.model as model
-from pybossa.cache import apps as cached_apps
-from pybossa.cache import users as cached_users
-from pybossa.cache import categories as cached_cat
+from pybossa.util import Pagination, get_user_id_or_ip
 from flask import Blueprint
 from flask import render_template
 from pybossa.cache import apps as cached_apps
+from pybossa.cache import users as cached_users
 from pybossa.cache import categories as cached_cat
-from pybossa.cache.helpers import check_contributing_state
+from pybossa.cache.helpers import add_custom_contrib_button_to
 
 blueprint = Blueprint('home', __name__)
 
 @blueprint.route('/')
 def home():
     """ Render home page with the cached apps and users"""
-
-    def _add_contribute_button_to(app):
-        user_id = current_user.id if current_user.is_authenticated() else None
-        user_ip = request.remote_addr if current_user.is_anonymous() else None
-        app['contrib_button'] = check_contributing_state(app['id'],
-                                                         user_id=user_id, user_ip=user_ip)
 
     page = 1
     per_page = current_app.config.get('APPS_PER_PAGE')
@@ -65,7 +58,7 @@ def home():
 
     for apps in d['categories_apps'].values():
         for app in apps:
-            _add_contribute_button_to(app)
+            add_custom_contrib_button_to(app, get_user_id_or_ip())
 
     if current_app.config['ENFORCE_PRIVACY'] and current_user.is_authenticated():
         if current_user.admin:

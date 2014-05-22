@@ -47,10 +47,10 @@ from flask.ext.babel import lazy_gettext, gettext
 from sqlalchemy.sql import text
 from pybossa.model.user import User
 from pybossa.core import db, signer, mail, uploader
-from pybossa.util import Pagination
+from pybossa.util import Pagination, get_user_id_or_ip
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
-from pybossa.cache.helpers import check_contributing_state
+from pybossa.cache.helpers import add_custom_contrib_button_to
 
 
 blueprint = Blueprint('account', __name__)
@@ -300,11 +300,7 @@ def profile(name):
 
     """
     user = db.session.query(model.user.User).filter_by(name=name).first()
-    def _add_contribute_button_to(app):
-        user_id = current_user.id if current_user.is_authenticated() else None
-        user_ip = request.remote_addr if current_user.is_anonymous() else None
-        app['contrib_button'] = check_contributing_state(app['id'],
-                                                         user_id=user_id, user_ip=user_ip)
+
     if user is None:
         return abort(404)
 
@@ -313,9 +309,9 @@ def profile(name):
         user, apps, apps_created = cached_users.get_user_summary(name)
         if user:
             for app in apps:
-                _add_contribute_button_to(app)
+                add_custom_contrib_button_to(app, get_user_id_or_ip())
             for app in apps_created:
-                _add_contribute_button_to(app)
+                add_custom_contrib_button_to(app, get_user_id_or_ip())
             title = "%s &middot; User Profile" % user['fullname']
             return render_template('/account/public_profile.html',
                                    title=title,
