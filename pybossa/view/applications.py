@@ -576,13 +576,15 @@ def details(short_name):
 
     title = app_title(app, None)
 
+    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+
     template_args = {"app": app, "title": title,
                      "owner": owner,
                      "n_tasks": n_tasks,
                      "overall_progress": overall_progress,
                      "last_activity": last_activity,
-                     "n_completed_tasks": cached_apps.n_completed_tasks(app.id),
-                     "n_volunteers": cached_apps.n_volunteers(app.id)}
+                     "n_completed_tasks": cached_apps.n_completed_tasks(app.get('id')),
+                     "n_volunteers": cached_apps.n_volunteers(app.get('id'))}
     if current_app.config.get('CKAN_URL'):
         template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
         template_args['ckan_url'] = current_app.config.get('CKAN_URL')
