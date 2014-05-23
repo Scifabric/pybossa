@@ -143,7 +143,7 @@ following content::
         "question": "Do you see a human in this photo?"
     }
 
-You will need to modify the **name** and **short_name** fiels in order to
+You will need to modify the **name** and **short_name** fields in order to
 create an application in crowdcrafting.org, as there is already an application
 registered with those values.
 
