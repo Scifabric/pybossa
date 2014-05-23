@@ -304,7 +304,7 @@ def profile(name):
     if current_user.is_anonymous() or (user.id != current_user.id):
         user, apps_contributed, apps_created = cached_users.get_user_summary(name)
         if user:
-            for app in apps:
+            for app in apps_contributed:
                 add_custom_contrib_button_to(app, get_user_id_or_ip())
             for app in apps_created:
                 add_custom_contrib_button_to(app, get_user_id_or_ip())
