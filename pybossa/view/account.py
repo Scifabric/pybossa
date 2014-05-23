@@ -37,8 +37,9 @@ from flask.ext.login import login_required, login_user, logout_user, \
     current_user
 from flask.ext.mail import Message
 from flask_wtf import Form
+from flask_wtf.file import FileField, FileRequired
 from wtforms import TextField, PasswordField, validators, \
-    IntegerField, SelectField, BooleanField, FileField
+    IntegerField, SelectField, BooleanField
 from wtforms.widgets import HiddenInput
 
 import pybossa.validator as pb_validator
@@ -172,7 +173,7 @@ class RegisterForm(Form):
     err_msg = lazy_gettext("User name must be between 3 and 35 "
                            "characters long")
     err_msg_2 = lazy_gettext("The user name is already taken")
-    username = TextField(lazy_gettext('User name'),
+    name = TextField(lazy_gettext('User name'),
                          [validators.Length(min=3, max=35, message=err_msg),
                           pb_validator.NotAllowedChars(),
                           pb_validator.Unique(db.session, model.user.User,
@@ -210,7 +211,7 @@ class UpdateProfileForm(Form):
     err_msg = lazy_gettext("User name must be between 3 and 35 "
                            "characters long")
     err_msg_2 = lazy_gettext("The user name is already taken")
-    name = TextField(lazy_gettext('User name'),
+    name = TextField(lazy_gettext('Username'),
                      [validators.Length(min=3, max=35, message=err_msg),
                       pb_validator.NotAllowedChars(),
                       pb_validator.Unique(
@@ -225,14 +226,9 @@ class UpdateProfileForm(Form):
                                 db.session, model.user.User,
                                 model.user.User.email_addr, err_msg_2)])
 
-    locale = SelectField(lazy_gettext('Default Language'))
+    locale = SelectField(lazy_gettext('Language'))
     ckan_api = TextField(lazy_gettext('CKAN API Key'))
     privacy_mode = BooleanField(lazy_gettext('Privacy Mode'))
-    #avatar = FileField(lazy_gettext('Avatar'), )
-    #x1 = IntegerField(label=None, widget=HiddenInput())
-    #y1 = IntegerField(label=None, widget=HiddenInput())
-    #x2 = IntegerField(label=None, widget=HiddenInput())
-    #y2 = IntegerField(label=None, widget=HiddenInput())
 
     def set_locales(self, locales):
         """Fill the locale.choices."""
@@ -249,7 +245,7 @@ class UpdateProfileForm(Form):
 
 
 class AvatarUploadForm(Form):
-    avatar = FileField(lazy_gettext('Avatar'), )
+    avatar = FileField(lazy_gettext('Avatar'), validators=[FileRequired()])
     x1 = IntegerField(label=None, widget=HiddenInput())
     y1 = IntegerField(label=None, widget=HiddenInput())
     x2 = IntegerField(label=None, widget=HiddenInput())
@@ -269,7 +265,7 @@ def register():
     form = RegisterForm(request.form)
     if request.method == 'POST' and form.validate():
         account = model.user.User(fullname=form.fullname.data,
-                             name=form.username.data,
+                             name=form.name.data,
                              email_addr=form.email_addr.data)
         account.set_password(form.password.data)
         # account.locale = get_locale()
@@ -286,7 +282,7 @@ def register():
 
 @blueprint.route('/profile', methods=['GET'])
 def redirect_profile():
-    if current_user.is_anonymous():
+    if current_user.is_anonymous(): # pragma: no cover
         return redirect(url_for('.signin'))
     else:
         return redirect(url_for('.profile', name=current_user.name), 302)
@@ -306,7 +302,7 @@ def profile(name):
 
     # Show public profile from another user
     if current_user.is_anonymous() or (user.id != current_user.id):
-        user, apps, apps_created = cached_users.get_user_summary(name)
+        user, apps_contributed, apps_created = cached_users.get_user_summary(name)
         if user:
             for app in apps:
                 add_custom_contrib_button_to(app, get_user_id_or_ip())
@@ -316,7 +312,7 @@ def profile(name):
             return render_template('/account/public_profile.html',
                                    title=title,
                                    user=user,
-                                   apps=apps,
+                                   apps=apps_contributed,
                                    apps_created=apps_created)
 
     # Show user profile page with admin, as it is the same user
@@ -376,8 +372,12 @@ def applications(name):
     Returns a Jinja2 template with the list of applications of the user.
 
     """
+    user = User.query.filter_by(name=name).first()
+    if not user:
+        return abort(404)
     if current_user.name != name:
         return abort(403)
+
     user = db.session.query(model.user.User).get(current_user.id)
     apps_published, apps_draft = _get_user_apps(user.id)
 
@@ -410,39 +410,51 @@ def _get_user_apps(user_id):
     return apps_published, apps_draft
 
 
-@blueprint.route('/<name>/settings')
+@blueprint.route('/<name>/update', methods=['GET', 'POST'])
 @login_required
-def settings(name):
+def update_profile(name):
     """
-    Configure user settings.
+    Update user's profile.
 
-    Returns a Jinja2 template.
+    Returns Jinja2 template.
 
     """
-    if current_user.name != name:
+    user = User.query.filter_by(name=name).first()
+    if not user:
+        return abort(404)
+    if current_user.id != user.id:
         return abort(403)
+    show_passwd_form = True
+    if user.twitter_user_id or user.google_user_id or user.facebook_user_id:
+        show_passwd_form = False
+    usr, apps, apps_created = cached_users.get_user_summary(name)
+    # Extend the values
+    current_user.rank = usr.get('rank')
+    current_user.score = usr.get('score')
+    # Title page
+    title_msg = "Update your profile: %s" % current_user.fullname
+    # Creation of forms
+    update_form = UpdateProfileForm(obj=user)
+    update_form.set_locales(current_app.config['LOCALES'])
+    avatar_form = AvatarUploadForm()
+    password_form = ChangePasswordForm()
+    external_form = update_form
+
+
+    if request.method == 'GET':
+        return render_template('account/update.html',
+                               title=title_msg,
+                               user=usr,
+                               form=update_form,
+                               upload_form=avatar_form,
+                               password_form=password_form,
+                               external_form=external_form,
+                               show_passwd_form=show_passwd_form)
     else:
-        user, apps, apps_created = cached_users.get_user_summary(current_user.name)
-        title = "User: %s &middot; Settings" % user['fullname']
-        update_form = UpdateProfileForm()
-        avatar_form = AvatarUploadForm()
-
-        if request.method == 'GET':
-            update_form = UpdateProfileForm(obj=current_user)
-            update_form.set_locales(current_app.config['LOCALES'])
-            update_form.populate_obj(current_user)
-
-            title_msg = "Update your profile: %s" % current_user.fullname
-            return render_template('account/settings.html',
-                                   title=title,
-                                   user=user,
-                                   update_form=update_form,
-                                   avatar_form=avatar_form)
-        else:
-            update_form = UpdateProfileForm(request.form)
-            avatar_form = AvatarUploadForm(request.form)
-            update_form.set_locales(current_app.config['LOCALES'])
-            if request.form.get('btn') == 'Upload':
+        # Update user avatar
+        if request.form.get('btn') == 'Upload':
+            avatar_form = AvatarUploadForm()
+            if avatar_form.validate_on_submit():
                 file = request.files['avatar']
                 coordinates = (avatar_form.x1.data, avatar_form.y1.data,
                                avatar_form.x2.data, avatar_form.y2.data)
@@ -461,142 +473,119 @@ def settings(name):
                 cached_users.delete_user_summary(current_user.name)
                 flash(gettext('Your avatar has been updated! It may \
                               take some minutes to refresh...'), 'success')
-                return redirect(url_for('.profile', name=name))
+                return redirect(url_for('.update_profile', name=current_user.name))
             else:
-                if update_form.validate():
-                    current_user.id = update_form.id.data
-                    current_user.fullname = update_form.fullname.data
-                    current_user.name = update_form.name.data
-                    current_user.email_addr = update_form.email_addr.data
-                    current_user.ckan_api = update_form.ckan_api.data or None
-                    current_user.privacy_mode = update_form.privacy_mode.data
-                    db.session.commit()
-                    cached_users.delete_user_summary(current_user.name)
-                    flash(gettext('Your profile has been updated!'), 'success')
-                    return redirect(url_for('.profile', name=name))
-                else:
-                    flash(gettext('Please correct the errors'), 'error')
-                    title_msg = 'Update your profile: %s' % current_user.fullname
-                    return render_template('account/settings.html',
-                                           title=title,
-                                           user=user,
-                                           update_form=update_form,
-                                           avatar_form=avatar_form)
-
-
-@blueprint.route('/<name>/update', methods=['GET', 'POST'])
-@login_required
-def update_profile(name):
-    """
-    Update user's profile.
-
-    Returns Jinja2 template.
-
-    """
-    user = User.query.filter_by(name=name).first()
-    if not user:
-        return abort(404)
-    if current_user.id != user.id:
-        return abort(403)
-
-    update_form = UpdateProfileForm()
-    avatar_form = AvatarUploadForm()
-    if request.method == 'GET':
-        update_form = UpdateProfileForm(obj=current_user)
-        update_form.set_locales(current_app.config['LOCALES'])
-        update_form.populate_obj(current_user)
-
-        title_msg = "Update your profile: %s" % current_user.fullname
-        return render_template('account/update.html',
-                               title=title_msg,
-                               form=update_form,
-                               upload_form=avatar_form)
-    else:
-        update_form = UpdateProfileForm(request.form)
-        avatar_form = AvatarUploadForm(request.form)
-        update_form.set_locales(current_app.config['LOCALES'])
-        if request.form.get('btn') == 'Upload':
-            file = request.files['avatar']
-            coordinates = (avatar_form.x1.data, avatar_form.y1.data,
-                           avatar_form.x2.data, avatar_form.y2.data)
-            prefix = time.time()
-            file.filename = "%s_avatar.png" % prefix
-            container = "user_%s" % current_user.id
-            uploader.upload_file(file,
-                                 container=container,
-                                 coordinates=coordinates)
-            # Delete previous avatar from storage
-            if current_user.info.get('avatar'):
-                uploader.delete_file(current_user.info['avatar'], container)
-            current_user.info = {'avatar': file.filename,
-                                 'container': container}
-            db.session.commit()
-            cached_users.delete_user_summary(current_user.name)
-            flash(gettext('Your avatar has been updated! It may \
-                          take some minutes to refresh...'), 'success')
-            return redirect(url_for('.profile', name=current_user.name))
-        else:
+                flash("You have to provide an image file to update your avatar",
+                      "error")
+                return render_template('/account/update.html',
+                                       form=update_form,
+                                       upload_form=avatar_form,
+                                       password_form=password_form,
+                                       external_form=external_form,
+                                       title=title_msg,
+                                       show_passwd_form=show_passwd_form)
+        # Update user profile
+        elif request.form.get('btn') == 'Profile':
+            update_form = UpdateProfileForm()
+            update_form.set_locales(current_app.config['LOCALES'])
             if update_form.validate():
                 current_user.id = update_form.id.data
                 current_user.fullname = update_form.fullname.data
                 current_user.name = update_form.name.data
                 current_user.email_addr = update_form.email_addr.data
-                current_user.ckan_api = update_form.ckan_api.data or None
                 current_user.privacy_mode = update_form.privacy_mode.data
+                current_user.locale = update_form.locale.data
                 db.session.commit()
                 cached_users.delete_user_summary(current_user.name)
                 flash(gettext('Your profile has been updated!'), 'success')
-                return redirect(url_for('.profile', name=current_user.name))
+                return redirect(url_for('.update_profile', name=current_user.name))
             else:
                 flash(gettext('Please correct the errors'), 'error')
                 title_msg = 'Update your profile: %s' % current_user.fullname
-                return render_template('/account/update.html', form=update_form,
+                return render_template('/account/update.html',
+                                       form=update_form,
                                        upload_form=avatar_form,
-                                       title=title_msg)
+                                       password_form=password_form,
+                                       external_form=external_form,
+                                       title=title_msg,
+                                       show_passwd_form=show_passwd_form)
+
+        # Update user password
+        elif request.form.get('btn') == 'Password':
+            # Update the data because passing it in the constructor does not work
+            update_form.name.data = user.name
+            update_form.fullname.data = user.fullname
+            update_form.email_addr.data = user.email_addr
+            update_form.ckan_api.data = user.ckan_api
+            external_form = update_form
+            if password_form.validate_on_submit():
+                user = db.session.query(model.user.User).get(current_user.id)
+                if user.check_password(password_form.current_password.data):
+                    user.set_password(password_form.new_password.data)
+                    db.session.add(user)
+                    db.session.commit()
+                    flash(gettext('Yay, you changed your password succesfully!'),
+                          'success')
+                    return redirect(url_for('.update_profile', name=name))
+                else:
+                    msg = gettext("Your current password doesn't match the "
+                                  "one in our records")
+                    flash(msg, 'error')
+                    return render_template('/account/update.html',
+                                           form=update_form,
+                                           upload_form=avatar_form,
+                                           password_form=password_form,
+                                           external_form=external_form,
+                                           title=title_msg,
+                                           show_passwd_form=show_passwd_form)
+            else:
+                flash(gettext('Please correct the errors'), 'error')
+                return render_template('/account/update.html',
+                                       form=update_form,
+                                       upload_form=avatar_form,
+                                       password_form=password_form,
+                                       external_form=external_form,
+                                       title=title_msg,
+                                       show_passwd_form=show_passwd_form)
+        # Update user external services
+        elif request.form.get('btn') == 'External':
+            del external_form.locale
+            del external_form.email_addr
+            del external_form.fullname
+            del external_form.name
+            if external_form.validate():
+                current_user.ckan_api = external_form.ckan_api.data or None
+                db.session.commit()
+                cached_users.delete_user_summary(current_user.name)
+                flash(gettext('Your profile has been updated!'), 'success')
+                return redirect(url_for('.update_profile', name=current_user.name))
+            else:
+                flash(gettext('Please correct the errors'), 'error')
+                title_msg = 'Update your profile: %s' % current_user.fullname
+                return render_template('/account/update.html',
+                                       form=update_form,
+                                       upload_form=avatar_form,
+                                       password_form=password_form,
+                                       external_form=external_form,
+                                       title=title_msg,
+                                       show_passwd_form=show_passwd_form)
+        # Otherwise return 415
+        else:
+            return abort(415)
 
 
 class ChangePasswordForm(Form):
 
     """Form for changing user's password."""
 
-    current_password = PasswordField(lazy_gettext('Old Password'))
+    current_password = PasswordField(lazy_gettext('Current password'))
 
     err_msg = lazy_gettext("Password cannot be empty")
     err_msg_2 = lazy_gettext("Passwords must match")
-    new_password = PasswordField(lazy_gettext('New Password'),
+    new_password = PasswordField(lazy_gettext('New password'),
                                  [validators.Required(err_msg),
                                   validators.EqualTo('confirm', err_msg_2)])
-    confirm = PasswordField(lazy_gettext('Repeat Password'))
-
-
-@blueprint.route('/<name>/password', methods=['GET', 'POST'])
-@login_required
-def change_password(name):
-    """
-    Change user's password.
-
-    Returns a Jinja2 template.
-
-    """
-    if current_user.name != name:
-        return abort(403)
-    form = ChangePasswordForm(request.form)
-    if form.validate_on_submit():
-        user = db.session.query(model.user.User).get(current_user.id)
-        if user.check_password(form.current_password.data):
-            user.set_password(form.new_password.data)
-            db.session.add(user)
-            db.session.commit()
-            flash(gettext('Yay, you changed your password succesfully!'),
-                  'success')
-            return redirect(url_for('.profile', name=name))
-        else:
-            msg = gettext("Your current password doesn't match the "
-                          "one in our records")
-            flash(msg, 'error')
-    if request.method == 'POST' and not form.validate():
-        flash(gettext('Please correct the errors'), 'error')
-    return render_template('/account/password.html', form=form)
+    confirm = PasswordField(lazy_gettext('Repeat password'))
 
 
 class ResetPasswordForm(Form):
@@ -708,7 +697,7 @@ def forgot_password():
     return render_template('/account/password_forgot.html', form=form)
 
 
-@blueprint.route('/<name>/resetapikey', methods=['GET', 'POST'])
+@blueprint.route('/<name>/resetapikey', methods=['POST'])
 @login_required
 def reset_api_key(name):
     """
@@ -717,19 +706,18 @@ def reset_api_key(name):
     Returns a Jinja2 template.
 
     """
-    if current_user.name != name:
+    user = User.query.filter_by(name=name).first()
+    if not user:
+        return abort(404)
+    if current_user.name != user.name:
         return abort(403)
 
     title = ("User: %s &middot; Settings"
              "- Reset API KEY") % current_user.fullname
-    if request.method == 'GET':
-        return render_template('account/reset-api-key.html',
-                               title=title)
-    else:
-        user = db.session.query(model.user.User).get(current_user.id)
-        user.api_key = model.make_uuid()
-        db.session.commit()
-        cached_users.delete_user_summary(user.name)
-        msg = gettext('New API-KEY generated')
-        flash(msg, 'success')
-        return redirect(url_for('account.settings', name=name))
+    user = db.session.query(model.user.User).get(current_user.id)
+    user.api_key = model.make_uuid()
+    db.session.commit()
+    cached_users.delete_user_summary(user.name)
+    msg = gettext('New API-KEY generated')
+    flash(msg, 'success')
+    return redirect(url_for('account.profile', name=name))

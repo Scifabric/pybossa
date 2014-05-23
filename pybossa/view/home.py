@@ -35,7 +35,7 @@ def home():
 
     page = 1
     per_page = current_app.config.get('APPS_PER_PAGE')
-    if per_page is None:
+    if per_page is None: # pragma: no cover
         per_page = 5
     d = {'featured': cached_apps.get_featured_front_page(),
          'top_apps': cached_apps.get_top(),

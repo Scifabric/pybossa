@@ -45,11 +45,11 @@ class Uploader(object):
             self.allowed_extensions = set.union(self.allowed_extensions,
                                                 set(app.config['ALLOWED_EXTENSIONS']))
 
-    def _lookup_url(self, endpoint, values):
+    def _lookup_url(self, endpoint, values): # pragma: no cover
         """Override by the uploader handler."""
         pass
 
-    def _upload_file(self, file, container):
+    def _upload_file(self, file, container): # pragma: no cover
         """Override by the specific uploader handler."""
         pass
 
@@ -65,15 +65,19 @@ class Uploader(object):
 
     def crop(self, file, coordinates):
         """Crop filename and overwrite it."""
-        filename = file.filename
-        extension = self.get_filename_extension(filename)
-        from io import BytesIO
-        m = BytesIO()
-        im = Image.open(file)
-        target = im.crop(coordinates)
-        target.save(m, format=extension)
-        file.stream = m
-        file.stream.seek(0)
+        try:
+            filename = file.filename
+            extension = self.get_filename_extension(filename)
+            from io import BytesIO
+            m = BytesIO()
+            im = Image.open(file)
+            target = im.crop(coordinates)
+            target.save(m, format=extension)
+            file.stream = m
+            file.stream.seek(0)
+            return True
+        except:
+            return False
 
 
     def allowed_file(self, filename):
@@ -84,7 +88,7 @@ class Uploader(object):
     def upload_file(self, file, container, coordinates=None):
         """Override by the uploader handler: local, cloud, etc."""
         if file and self.allowed_file(file.filename):
-            if coordinates:
+            if coordinates: # pragma: no cover
                 self.crop(file, coordinates)
             return self._upload_file(file, container)
         else:
@@ -107,6 +111,6 @@ class Uploader(object):
         # url_for will use this result, instead of raising BuildError.
         return url
 
-    def delete_file(self, name, container):
+    def delete_file(self, name, container): # pragma: no cover
         """Override by the uploader handler."""
         pass
