@@ -25,7 +25,7 @@ from flask import render_template
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import users as cached_users
 from pybossa.cache import categories as cached_cat
-from pybossa.cache.helpers import add_custom_contrib_button_to
+
 
 blueprint = Blueprint('home', __name__)
 
@@ -55,10 +55,6 @@ def home():
         featured = model.category.Category(name='Featured', short_name='featured')
         d['categories'].insert(0,featured)
         d['categories_apps']['featured'] = tmp_apps
-
-    for apps in d['categories_apps'].values():
-        for app in apps:
-            add_custom_contrib_button_to(app, get_user_id_or_ip())
 
     if current_app.config['ENFORCE_PRIVACY'] and current_user.is_authenticated():
         if current_user.admin:

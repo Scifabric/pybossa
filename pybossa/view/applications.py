@@ -213,7 +213,6 @@ def app_index(page, lookup, category, fallback, use_count):
 
     data = []
     for app in apps:
-        add_custom_contrib_button_to(app, get_user_id_or_ip())
         data.append(dict(app=app, n_tasks=cached_apps.n_tasks(app['id']),
                          overall_progress=cached_apps.overall_progress(app['id']),
                          last_activity=app['last_activity'],

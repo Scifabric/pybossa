@@ -51,7 +51,6 @@ from pybossa.core import db, signer, mail, uploader
 from pybossa.util import Pagination, get_user_id_or_ip
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
-from pybossa.cache.helpers import add_custom_contrib_button_to
 
 
 blueprint = Blueprint('account', __name__)
@@ -305,10 +304,6 @@ def profile(name):
         user, apps_contributed, _ = cached_users.get_user_summary(name)
         apps_created, apps_draft = _get_user_apps(user['id'])
         if user:
-            for app in apps_contributed:
-                add_custom_contrib_button_to(app, get_user_id_or_ip())
-            for app in apps_created:
-                add_custom_contrib_button_to(app, get_user_id_or_ip())
             title = "%s &middot; User Profile" % user['fullname']
             return render_template('/account/public_profile.html',
                                    title=title,
