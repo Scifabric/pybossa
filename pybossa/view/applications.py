@@ -21,6 +21,7 @@ from StringIO import StringIO
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, make_response
 from flask_wtf import Form
+from flask_wtf.file import FileField, FileRequired
 from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
     SelectField, validators, TextAreaField, FileField
 from wtforms.widgets import HiddenInput
@@ -45,7 +46,9 @@ from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
 from pybossa.cache.helpers import add_custom_contrib_button_to
 from pybossa.ckan import Ckan
+from pybossa.extensions import misaka
 
+import re
 import json
 import importer
 import presenter as presenter_module
@@ -56,7 +59,8 @@ import requests
 blueprint = Blueprint('app', __name__)
 
 class AvatarUploadForm(Form):
-    avatar = FileField(lazy_gettext('Avatar'), )
+    id = IntegerField(label=None, widget=HiddenInput())
+    avatar = FileField(lazy_gettext('Avatar'), validators=[FileRequired()])
     x1 = IntegerField(label=None, widget=HiddenInput(), default=0)
     y1 = IntegerField(label=None, widget=HiddenInput(), default=0)
     x2 = IntegerField(label=None, widget=HiddenInput(), default=0)
@@ -64,11 +68,10 @@ class AvatarUploadForm(Form):
 
 
 class AppForm(Form):
-    id = IntegerField(label=None, widget=HiddenInput())
     name = TextField(lazy_gettext('Name'),
                      [validators.Required(),
                       pb_validator.Unique(db.session, model.app.App, model.app.App.name,
-                                          message="Name is already taken.")])
+                                          message=lazy_gettext("Name is already taken."))])
     short_name = TextField(lazy_gettext('Short Name'),
                            [validators.Required(),
                             pb_validator.NotAllowedChars(),
@@ -76,23 +79,24 @@ class AppForm(Form):
                                 db.session, model.app.App, model.app.App.short_name,
                                 message=lazy_gettext(
                                     "Short Name is already taken."))])
-    description = TextField(lazy_gettext('Description'),
+    long_description = TextAreaField(lazy_gettext('Long Description'),
+                                     [validators.Required()])
+
+
+class AppUpdateForm(AppForm):
+    id = IntegerField(label=None, widget=HiddenInput())
+    description = TextAreaField(lazy_gettext('Description'),
                             [validators.Required(
                                 message=lazy_gettext(
-                                    "You must provide a description."))])
-    thumbnail = TextField(lazy_gettext('Icon Link'))
+                                    "You must provide a description.")),
+                             validators.Length(max=255)])
+    long_description = TextAreaField(lazy_gettext('Long Description'))
     allow_anonymous_contributors = SelectField(
         lazy_gettext('Allow Anonymous Contributors'),
         choices=[('True', lazy_gettext('Yes')),
                  ('False', lazy_gettext('No'))])
     category_id = SelectField(lazy_gettext('Category'), coerce=int)
-    long_description = TextAreaField(lazy_gettext('Long Description'))
     hidden = BooleanField(lazy_gettext('Hide?'))
-    avatar = FileField(lazy_gettext('Avatar'))
-    x1 = IntegerField(label=None, widget=HiddenInput(), default=0)
-    y1 = IntegerField(label=None, widget=HiddenInput(), default=0)
-    x2 = IntegerField(label=None, widget=HiddenInput(), default=0)
-    y2 = IntegerField(label=None, widget=HiddenInput(), default=0)
 
 
 class TaskPresenterForm(Form):
