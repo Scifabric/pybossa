@@ -16,22 +16,23 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from flask import current_app
+from flask import current_app, request
 from flask.ext.login import current_user
 import pybossa.model as model
-from pybossa.cache import apps as cached_apps
-from pybossa.cache import users as cached_users
-from pybossa.cache import categories as cached_cat
+from pybossa.util import Pagination, get_user_id_or_ip
 from flask import Blueprint
 from flask import render_template
 from pybossa.cache import apps as cached_apps
+from pybossa.cache import users as cached_users
 from pybossa.cache import categories as cached_cat
+from pybossa.cache.helpers import add_custom_contrib_button_to
 
 blueprint = Blueprint('home', __name__)
 
 @blueprint.route('/')
 def home():
     """ Render home page with the cached apps and users"""
+
     page = 1
     per_page = current_app.config.get('APPS_PER_PAGE')
     if per_page is None: # pragma: no cover
@@ -54,6 +55,10 @@ def home():
         featured = model.category.Category(name='Featured', short_name='featured')
         d['categories'].insert(0,featured)
         d['categories_apps']['featured'] = tmp_apps
+
+    for apps in d['categories_apps'].values():
+        for app in apps:
+            add_custom_contrib_button_to(app, get_user_id_or_ip())
 
     if current_app.config['ENFORCE_PRIVACY'] and current_user.is_authenticated():
         if current_user.admin:

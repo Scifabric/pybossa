@@ -23,7 +23,7 @@ from flask import render_template, make_response
 from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
 from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
-    SelectField, validators, TextAreaField
+    SelectField, validators, TextAreaField, FileField
 from wtforms.widgets import HiddenInput
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import lazy_gettext, gettext
@@ -40,10 +40,11 @@ from pybossa.cache import ONE_DAY, ONE_HOUR
 from pybossa.model.app import App
 from pybossa.model.task import Task
 from pybossa.model.user import User
-from pybossa.util import Pagination, UnicodeWriter, admin_required
+from pybossa.util import Pagination, UnicodeWriter, admin_required, get_user_id_or_ip
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
+from pybossa.cache.helpers import add_custom_contrib_button_to
 from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 
@@ -212,6 +213,7 @@ def app_index(page, lookup, category, fallback, use_count):
 
     data = []
     for app in apps:
+        add_custom_contrib_button_to(app, get_user_id_or_ip())
         data.append(dict(app=app, n_tasks=cached_apps.n_tasks(app['id']),
                          overall_progress=cached_apps.overall_progress(app['id']),
                          last_activity=app['last_activity'],
@@ -276,6 +278,9 @@ def app_cat_index(category, page):
 def new():
     require.app.create()
     form = AppForm(request.form)
+    del form.id
+    categories = db.session.query(model.category.Category).all()
+    form.category_id.choices = [(c.id, c.name) for c in categories]
 
     def respond(errors):
         return render_template('applications/new.html',
@@ -297,6 +302,7 @@ def new():
         return respond(False)
 
     if not form.validate():
+        print form.errors
         flash(gettext('Please correct the errors'), 'error')
         return respond(True)
 
@@ -306,12 +312,32 @@ def new():
                     short_name=form.short_name.data,
                     description=_description_from_long_description(),
                     long_description=form.long_description.data,
+                    category_id=form.category_id.data,
+                    allow_anonymous_contributors=form.allow_anonymous_contributors.data,
+                    hidden=int(form.hidden.data),
                     owner_id=current_user.id,
                     info=info)
 
     db.session.add(app)
     db.session.commit()
+    # Upload the avatar
+    if request.files.get('avatar'):
+        file = request.files['avatar']
+        coordinates = (form.x1.data, form.y1.data,
+                       form.x2.data, form.y2.data)
+        prefix = time.time()
+        file.filename = "app_%s_thumbnail_%i.png" % (app.id, prefix)
+        container = "user_%s" % current_user.id
+        uploader.upload_file(file,
+                             container=container,
+                             coordinates=coordinates)
 
+        # Update thumbnail for app
+        app.info['thumbnail'] = file.filename
+        app.info['container'] = container
+        db.session.commit()
+
+    # Clean cache
     msg_1 = gettext('Application created!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')
     flash('<i class="icon-bullhorn"></i> ' +
@@ -482,12 +508,20 @@ def update(short_name):
             if app.category_id is None:
                 app.category_id = categories[0].id
             form.populate_obj(app)
+            if app.info.get('thumbnail'):
+                form.thumbnail.data = app.info['thumbnail']
+            #if app.info.get('sched'):
+            #    for s in form.sched.choices:
+            #        if app.info['sched'] == s[0]:
+            #            form.sched.data = s[0]
+            #            break
 
         if request.method == 'POST':
             upload_form = AvatarUploadForm()
             form = AppUpdateForm(request.form)
             categories = cached_cat.get_all()
             form.category_id.choices = [(c.id, c.name) for c in categories]
+            upload_form = AvatarUploadForm(request.form)
 
             if request.form.get('btn') != 'Upload':
                 if form.validate():
@@ -547,13 +581,15 @@ def details(short_name):
 
     title = app_title(app, None)
 
+    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+
     template_args = {"app": app, "title": title,
                      "owner": owner,
                      "n_tasks": n_tasks,
                      "overall_progress": overall_progress,
                      "last_activity": last_activity,
-                     "n_completed_tasks": cached_apps.n_completed_tasks(app.id),
-                     "n_volunteers": cached_apps.n_volunteers(app.id)}
+                     "n_completed_tasks": cached_apps.n_completed_tasks(app.get('id')),
+                     "n_volunteers": cached_apps.n_volunteers(app.get('id'))}
     if current_app.config.get('CKAN_URL'):
         template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
         template_args['ckan_url'] = current_app.config.get('CKAN_URL')

@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from flask import current_app
 from sqlalchemy.sql import func, text
 from pybossa.core import db, timeouts
 from pybossa.model.featured import Featured

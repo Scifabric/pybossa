@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-import hashlib
 from default import Test, db, with_context
 from pybossa.model.app import App
 from pybossa.model.task import Task
