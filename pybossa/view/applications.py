@@ -575,7 +575,7 @@ def settings(short_name):
     try:
         require.app.read(app)
         require.app.update(app)
-        app = add_custom_contrib_button_to(dict_app, get_user_id_or_ip())
+        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
         return render_template('/applications/settings.html',
 
                                app=app,
