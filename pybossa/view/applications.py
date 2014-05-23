@@ -298,6 +298,7 @@ def new():
         return respond(False)
 
     if not form.validate():
+        print form.errors
         flash(gettext('Please correct the errors'), 'error')
         return respond(True)
 
