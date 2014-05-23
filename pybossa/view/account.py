@@ -302,7 +302,8 @@ def profile(name):
 
     # Show public profile from another user
     if current_user.is_anonymous() or (user.id != current_user.id):
-        user, apps_contributed, apps_created = cached_users.get_user_summary(name)
+        user, apps_contributed, _ = cached_users.get_user_summary(name)
+        apps_created, apps_draft = _get_user_apps(user['id'])
         if user:
             for app in apps_contributed:
                 add_custom_contrib_button_to(app, get_user_id_or_ip())
@@ -392,9 +393,11 @@ def _get_user_apps(user_id):
     apps_draft = []
     sql = text('''
                SELECT app.name, app.short_name, app.description,
-               app.info, count(task.app_id) as n_tasks
-               FROM app LEFT OUTER JOIN task ON (task.app_id=app.id)
-               WHERE app.owner_id=:user_id GROUP BY app.name, app.short_name,
+               app.info
+               FROM app, task
+               WHERE app.id=task.app_id AND app.owner_id=:user_id AND
+               app.hidden=0 AND app.info LIKE('%task_presenter%')
+               GROUP BY app.name, app.short_name,
                app.description,
                app.info;''')
 
@@ -402,11 +405,24 @@ def _get_user_apps(user_id):
     for row in results:
         app = dict(name=row.name, short_name=row.short_name,
                    description=row.description,
-                   info=json.loads(row.info), n_tasks=row.n_tasks)
-        if app['n_tasks'] > 0:
-            apps_published.append(app)
-        else:
-            apps_draft.append(app)
+                   info=json.loads(row.info))
+        apps_published.append(app)
+
+    sql = text('''
+               SELECT app.name, app.short_name, app.description,
+               app.info
+               FROM app
+               WHERE app.owner_id=:user_id
+               AND app.info NOT LIKE('%task_presenter%')
+               GROUP BY app.name, app.short_name,
+               app.description,
+               app.info;''')
+    results = db.engine.execute(sql, user_id=user_id)
+    for row in results:
+        app = dict(name=row.name, short_name=row.short_name,
+                   description=row.description,
+                   info=json.loads(row.info))
+        apps_draft.append(app)
     return apps_published, apps_draft
 
 
