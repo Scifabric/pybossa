@@ -843,8 +843,8 @@ your application regularly.
 You can use Markdown or plain text for the content of the posts. And you will
 also be able to edit them or delete after creation if you want.
 
-To write a post simply go to the application settings page and there you will
-find an option to write your blog posts.
+To write a post simply go to the application **Settings tab and there you will
+find an option to write, read or delete your blog posts.
 
 
 .. _export-results:
