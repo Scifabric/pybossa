@@ -392,34 +392,34 @@ def _get_user_apps(user_id):
     apps_published = []
     apps_draft = []
     sql = text('''
-               SELECT app.name, app.short_name, app.description,
+               SELECT app.id, app.name, app.short_name, app.description,
                app.info
                FROM app, task
                WHERE app.id=task.app_id AND app.owner_id=:user_id AND
                app.hidden=0 AND app.info LIKE('%task_presenter%')
-               GROUP BY app.name, app.short_name,
+               GROUP BY app.id, app.name, app.short_name,
                app.description,
                app.info;''')
 
     results = db.engine.execute(sql, user_id=user_id)
     for row in results:
-        app = dict(name=row.name, short_name=row.short_name,
+        app = dict(id=row.id, name=row.name, short_name=row.short_name,
                    description=row.description,
                    info=json.loads(row.info))
         apps_published.append(app)
 
     sql = text('''
-               SELECT app.name, app.short_name, app.description,
+               SELECT app.id, app.name, app.short_name, app.description,
                app.info
                FROM app
                WHERE app.owner_id=:user_id
                AND app.info NOT LIKE('%task_presenter%')
-               GROUP BY app.name, app.short_name,
+               GROUP BY app.id, app.name, app.short_name,
                app.description,
                app.info;''')
     results = db.engine.execute(sql, user_id=user_id)
     for row in results:
-        app = dict(name=row.name, short_name=row.short_name,
+        app = dict(id=row.id, name=row.name, short_name=row.short_name,
                    description=row.description,
                    info=json.loads(row.info))
         apps_draft.append(app)
