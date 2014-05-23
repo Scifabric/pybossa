@@ -828,21 +828,9 @@ It is possible also to add a nice icon for the application. By default PyBossa
 will render a 100x100 pixels empty thumbnail for those applications that do not
 provide it. 
 
-If you want to add an icon you only have to upload the thumbnail of
-size 100x100 pixels to a hosting service like Flickr, Imgur, ImageShack, etc. 
-
-In order to include a thumbnail all you have to do is to modify the
-`app.json <https://github.com/PyBossa/app-flickrperson/blob/master/app.json>`_
-file and paste the direct link to the icon in the **thumbnail**
-field::
-
-    {
-        "name": "Flickr Person Finder",
-        "short_name": "flickrperson",
-        "thumbnail": "http://imageshack.us/a/img37/156/flickrpersonthumbnail.png",
-        "description": "Image pattern recognition",
-        "question": "Do you see a human in this photo?"
-    }
+If you want to add an icon you can do it by using the web interface. Just go to
+the **Settings** tab within your application. There, select the image file you
+want to use and push the **Upload** button. That's all!
 
 
 Creating a blog for the application
