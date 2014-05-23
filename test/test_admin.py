@@ -123,14 +123,16 @@ class TestAdmin(web.Helper):
         self.register()
         self.new_application()
         self.update_application()
+        app = db.session.query(App).filter_by(short_name='sampleapp').first()
+        app_id = app.id
         # The application is in the system but not in the front page
         res = self.app.get('/', follow_redirects=True)
         assert "Create an App" in res.data,\
             "The application should not be listed in the front page"\
             " as it is not featured"
         # Only apps that have been published can be featured
-        self.new_task(1)
-        app = db.session.query(App).get(1)
+        self.new_task(app_id)
+        app = db.session.query(App).get(app_id)
         app.info = dict(task_presenter="something")
         db.session.add(app)
         db.session.commit()
@@ -140,8 +142,8 @@ class TestAdmin(web.Helper):
         # Add it to the Featured list
         res = self.app.post('/admin/featured/1')
         f = json.loads(res.data)
-        assert f['id'] == 1, f
-        assert f['app_id'] == 1, f
+        assert f['id'] == app_id, f
+        assert f['app_id'] == app_id, f
         # Check that it is listed in the front page
         res = self.app.get('/', follow_redirects=True)
         assert "Sample App" in res.data,\
