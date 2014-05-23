@@ -40,10 +40,11 @@ from pybossa.cache import ONE_DAY, ONE_HOUR
 from pybossa.model.app import App
 from pybossa.model.task import Task
 from pybossa.model.user import User
-from pybossa.util import Pagination, UnicodeWriter, admin_required
+from pybossa.util import Pagination, UnicodeWriter, admin_required, get_user_id_or_ip
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
+from pybossa.cache.helpers import add_custom_contrib_button_to
 from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 
@@ -547,13 +548,15 @@ def details(short_name):
 
     title = app_title(app, None)
 
+    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+
     template_args = {"app": app, "title": title,
                      "owner": owner,
                      "n_tasks": n_tasks,
                      "overall_progress": overall_progress,
                      "last_activity": last_activity,
-                     "n_completed_tasks": cached_apps.n_completed_tasks(app.id),
-                     "n_volunteers": cached_apps.n_volunteers(app.id)}
+                     "n_completed_tasks": cached_apps.n_completed_tasks(app.get('id')),
+                     "n_volunteers": cached_apps.n_volunteers(app.get('id'))}
     if current_app.config.get('CKAN_URL'):
         template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
         template_args['ckan_url'] = current_app.config.get('CKAN_URL')
@@ -571,8 +574,9 @@ def settings(short_name):
     try:
         require.app.read(app)
         require.app.update(app)
-
+        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
         return render_template('/applications/settings.html',
+
                                app=app,
                                owner=owner,
                                n_tasks=n_tasks,
