@@ -44,5 +44,3 @@ log
 *.sql
 
 pybossa/themes/crowdcrafting-theme/
-
-test/test_cache.py
