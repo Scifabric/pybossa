@@ -1234,8 +1234,11 @@ def task_settings(short_name):
         return render_template('applications/task_settings.html',
                                app=app,
                                owner=owner)
-    except:  # pragma: no cover
-        return abort(403)
+    except HTTPException:
+        if app.hidden:
+            raise abort(403)
+        else:
+            raise
 
 
 @blueprint.route('/<short_name>/tasks/redundancy', methods=['GET', 'POST'])
