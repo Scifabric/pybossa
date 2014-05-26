@@ -411,6 +411,7 @@ def delete(short_name):
             return render_template('/applications/delete.html',
                                    title=title,
                                    app=app,
+                                   owner=owner,
                                    n_tasks=n_tasks,
                                    overall_progress=overall_progress,
                                    last_activity=last_activity)
@@ -524,7 +525,7 @@ def update(short_name):
                                form=form,
                                upload_form=upload_form,
                                title=title,
-                               app=app)
+                               app=app, owner=owner)
     except HTTPException:
         if app.hidden:  # pragma: no cover
             raise abort(403)
