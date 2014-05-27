@@ -1380,7 +1380,7 @@ def show_blogposts(short_name):
                            owner=owner, blogposts=blogposts)
 
 
-@blueprint.route('/<short_name>/blog/<int:id>')
+@blueprint.route('/<short_name>/<int:id>')
 def show_blogpost(short_name, id):
     app, owner, _, _, _, _ = app_by_shortname(short_name)
     blogpost = db.session.query(model.blogpost.Blogpost).filter_by(id=id,
@@ -1394,7 +1394,7 @@ def show_blogpost(short_name, id):
                             blogpost=blogpost)
 
 
-@blueprint.route('/<short_name>/blog/new', methods=['GET', 'POST'])
+@blueprint.route('/<short_name>/new-blogpost', methods=['GET', 'POST'])
 @login_required
 def new_blogpost(short_name):
 
@@ -1431,7 +1431,7 @@ def new_blogpost(short_name):
     return redirect(url_for('.show_blogposts', short_name=short_name))
 
 
-@blueprint.route('/<short_name>/blog/<int:id>/update', methods=['GET', 'POST'])
+@blueprint.route('/<short_name>/<int:id>/update', methods=['GET', 'POST'])
 @login_required
 def update_blogpost(short_name, id):
     app, owner, _, _, _, _ = app_by_shortname(short_name)
@@ -1473,7 +1473,7 @@ def update_blogpost(short_name, id):
     return redirect(url_for('.show_blogposts', short_name=short_name))
 
 
-@blueprint.route('/<short_name>/blog/<int:id>/delete', methods=['POST'])
+@blueprint.route('/<short_name>/<int:id>/delete', methods=['POST'])
 @login_required
 def delete_blogpost(short_name, id):
     app = app_by_shortname(short_name)[0]
