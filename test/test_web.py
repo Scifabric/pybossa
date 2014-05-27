@@ -554,7 +554,7 @@ class TestWeb(web.Helper):
 
             app = db.session.query(App).first()
             assert app.name == 'Sample Project', 'Different names %s' % app.name
-            assert app.short_name == 'sampleproject', \
+            assert app.short_name == 'sampleapp', \
                 'Different names %s' % app.short_name
             avatar = "app_%s_thumbnail" % app.id
             assert avatar in app.info['thumbnail'], \
