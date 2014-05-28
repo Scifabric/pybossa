@@ -61,7 +61,7 @@ A PyBossa project has two main components:
 * A **Task Creator**: usually a script that will upload the tasks for the
   project into the PyBossa server (see :ref:`task-presenter`).
 
-Applications can be easily created using two approaches:
+Projects can be easily created using two approaches:
 
 * **Using the Web interface**: where you can create a project, write the 
   *Task Presenter*  and upload the tasks using the *simplified built-in 
@@ -110,7 +110,7 @@ The template projects provide the:
 * **Task Creator**: check in the repository the *createTasks.py* script,
 * **Task Presenter**: check in the repository the *template.html* file,
 * **Tutorial**: check in the repository the *tutorial.html* file,
-* **Application description**: check in the repository the **app.json**
+* **Project description**: check in the repository the **app.json**
   and **long_description.html** files.
 
 
@@ -151,7 +151,7 @@ The template projects provide the:
 * **Task Creator**: check in the repository the *createTasks.py* script,
 * **Task Presenter**: check in the repository the *template.html* file,
 * **Tutorial**: check in the repository the *tutorial.html* file,
-* **Application description**: check in the repository the **app.json**
+* **Project description**: check in the repository the **app.json**
   and **long_description.html** files.
 
 We recommend you to read the :doc:`user/tutorial` as it gives *a step by step*

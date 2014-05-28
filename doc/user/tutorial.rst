@@ -115,7 +115,7 @@ and tasks using the API.
 If you are new to Github and the GIT software, we recommend you to take this
 `free and on-line course <http://try.github.com>`_ (it will take you only
 15 minutes!) where you will learn the basics, which are the main concepts that
-you will need for cloning the demo app repository.
+you will need for cloning the demo project repository.
 
 If you prefer to skip the course and take it in a later stage, the commands
 that you need to clone the repository are::
@@ -818,29 +818,29 @@ endpoint::
   http://server/app/tutorial
   
 
-Adding an icon to the application
-=================================
+Adding an icon to the project
+=============================
 
-It is possible also to add a nice icon for the application. By default PyBossa
-will render a 100x100 pixels empty thumbnail for those applications that do not
+It is possible also to add a nice icon for the project. By default PyBossa
+will render a 100x100 pixels empty thumbnail for those projects that do not
 provide it. 
 
 If you want to add an icon you can do it by using the web interface. Just go to
-the **Settings** tab within your application. There, select the image file you
+the **Settings** tab within your project. There, select the image file you
 want to use and push the **Upload** button. That's all!
 
 
-Creating a blog for the application
-===================================
+Creating a blog for the project
+===============================
 
-You can share the progress of the application creating a blog. Every PyBossa
-application includes a very simple blog where you will be able to write about
-your application regularly.
+You can share the progress of the project creating a blog. Every PyBossa
+project includes a very simple blog where you will be able to write about
+your project regularly.
 
 You can use Markdown or plain text for the content of the posts. And you will
 also be able to edit them or delete after creation if you want.
 
-To write a post simply go to the application **Settings tab and there you will
+To write a post simply go to the project **Settings tab and there you will
 find an option to write, read or delete your blog posts.
 
 
