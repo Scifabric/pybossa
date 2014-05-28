@@ -58,7 +58,7 @@ class TestBlogpostView(web.Helper):
         self.register()
         admin = db.session.query(User).get(1)
         self.signout()
-        self.register(username='user', email='user@user.com')
+        self.register(name='user', email='user@user.com')
         user = db.session.query(User).get(2)
         app = self.create_app(info=None)
         app.owner = user
@@ -75,7 +75,7 @@ class TestBlogpostView(web.Helper):
 
         # As authenticated
         self.signout()
-        self.register(username='notowner', email='user2@user.com')
+        self.register(name='notowner', email='user2@user.com')
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 403, res.status_code
 
@@ -108,7 +108,7 @@ class TestBlogpostView(web.Helper):
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([user, app, blogpost])
         db.session.commit()
-        url = "/app/%s/blog/%s" % (app.short_name, blogpost.id)
+        url = "/app/%s/%s" % (app.short_name, blogpost.id)
 
         # As anonymous
         res = self.app.get(url, follow_redirects=True)
@@ -128,7 +128,7 @@ class TestBlogpostView(web.Helper):
         self.register()
         admin = db.session.query(User).get(1)
         self.signout()
-        self.register(username='user', email='user@user.com')
+        self.register(name='user', email='user@user.com')
         user = db.session.query(User).get(2)
         app = self.create_app(info=None)
         app.owner = user
@@ -136,7 +136,7 @@ class TestBlogpostView(web.Helper):
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([app, blogpost])
         db.session.commit()
-        url = "/app/%s/blog/%s" % (app.short_name, blogpost.id)
+        url = "/app/%s/%s" % (app.short_name, blogpost.id)
 
         # As app owner
         res = self.app.get(url, follow_redirects=True)
@@ -145,7 +145,7 @@ class TestBlogpostView(web.Helper):
 
         # As authenticated
         self.signout()
-        self.register(username='notowner', email='user2@user.com')
+        self.register(name='notowner', email='user2@user.com')
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 403, res.status_code
 
@@ -177,17 +177,17 @@ class TestBlogpostView(web.Helper):
         db.session.commit()
 
         # To a non-existing app
-        url = "/app/non-existing-app/blog/%s" % blogpost.id
+        url = "/app/non-existing-app/%s" % blogpost.id
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
         # To a non-existing post
-        url = "/app/%s/blog/999999" % app1.short_name
+        url = "/app/%s/999999" % app1.short_name
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
         # To an existing post but with an app in the URL it does not belong to
-        url = "/app/%s/blog/%s" % (app2.short_name, blogpost.id)
+        url = "/app/%s/%s" % (app2.short_name, blogpost.id)
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
@@ -204,7 +204,7 @@ class TestBlogpostView(web.Helper):
         app.owner = user
         db.session.add(app)
         db.session.commit()
-        url = "/app/%s/blog/new" % app.short_name
+        url = "/app/%s/new-blogpost" % app.short_name
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
@@ -229,7 +229,7 @@ class TestBlogpostView(web.Helper):
         app.owner = user
         db.session.add_all([user, app])
         db.session.commit()
-        url = "/app/%s/blog/new" % app.short_name
+        url = "/app/%s/new-blogpost" % app.short_name
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
@@ -253,7 +253,7 @@ class TestBlogpostView(web.Helper):
         app.owner = user
         db.session.add_all([user, app])
         db.session.commit()
-        url = "/app/%s/blog/new" % app.short_name
+        url = "/app/%s/new-blogpost" % app.short_name
         self.register()
 
         res = self.app.get(url, follow_redirects=True)
@@ -268,7 +268,7 @@ class TestBlogpostView(web.Helper):
     def test_blogpost_create_errors(self):
         """Test blogposts create for non existing apps raises errors"""
         self.register()
-        url = "/app/non-existing-app/blog/new"
+        url = "/app/non-existing-app/new-blogpost"
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
@@ -289,7 +289,7 @@ class TestBlogpostView(web.Helper):
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([app, blogpost])
         db.session.commit()
-        url = "/app/%s/blog/%s/update" % (app.short_name, blogpost.id)
+        url = "/app/%s/%s/update" % (app.short_name, blogpost.id)
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
@@ -317,7 +317,7 @@ class TestBlogpostView(web.Helper):
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([user, app, blogpost])
         db.session.commit()
-        url = "/app/%s/blog/%s/update" % (app.short_name, blogpost.id)
+        url = "/app/%s/%s/update" % (app.short_name, blogpost.id)
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
@@ -344,7 +344,7 @@ class TestBlogpostView(web.Helper):
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([user, app, blogpost])
         db.session.commit()
-        url = "/app/%s/blog/%s/update" % (app.short_name, blogpost.id)
+        url = "/app/%s/%s/update" % (app.short_name, blogpost.id)
         self.register()
 
         res = self.app.get(url, follow_redirects=True)
@@ -375,19 +375,19 @@ class TestBlogpostView(web.Helper):
         db.session.commit()
 
         # To a non-existing app
-        url = "/app/non-existing-app/blog/%s/update" % blogpost.id
+        url = "/app/non-existing-app/%s/update" % blogpost.id
         res = self.app.post(url, data={'title':'new title', 'body':'body'},
                             follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
         # To a non-existing post
-        url = "/app/%s/blog/999999/update" % app1.short_name
+        url = "/app/%s/999999/update" % app1.short_name
         res = self.app.post(url, data={'title':'new title', 'body':'body'},
                             follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
         # To an existing post but with an app in the URL it does not belong to
-        url = "/app/%s/blog/%s/update" % (app2.short_name, blogpost.id)
+        url = "/app/%s/%s/update" % (app2.short_name, blogpost.id)
         res = self.app.post(url, data={'title':'new title', 'body':'body'},
                             follow_redirects=True)
         assert res.status_code == 404, res.status_code
@@ -404,7 +404,7 @@ class TestBlogpostView(web.Helper):
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([app, blogpost])
         db.session.commit()
-        url = "/app/%s/blog/%s/delete" % (app.short_name, blogpost.id)
+        url = "/app/%s/%s/delete" % (app.short_name, blogpost.id)
         redirect_url = '/app/%s/blog' % app.short_name
 
         res = self.app.post(url, follow_redirects=True)
@@ -425,7 +425,7 @@ class TestBlogpostView(web.Helper):
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([user, app, blogpost])
         db.session.commit()
-        url = "/app/%s/blog/%s/delete" % (app.short_name, blogpost.id)
+        url = "/app/%s/%s/delete" % (app.short_name, blogpost.id)
 
         res = self.app.post(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
@@ -444,7 +444,7 @@ class TestBlogpostView(web.Helper):
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([user, app, blogpost])
         db.session.commit()
-        url = "/app/%s/blog/%s/delete" % (app.short_name, blogpost.id)
+        url = "/app/%s/%s/delete" % (app.short_name, blogpost.id)
         self.register()
 
         res = self.app.post(url, follow_redirects=True)
@@ -470,17 +470,17 @@ class TestBlogpostView(web.Helper):
         db.session.commit()
 
         # To a non-existing app
-        url = "/app/non-existing-app/blog/%s/delete" % blogpost.id
+        url = "/app/non-existing-app/%s/delete" % blogpost.id
         res = self.app.post(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
         # To a non-existing post
-        url = "/app/%s/blog/999999/delete" % app1.short_name
+        url = "/app/%s/999999/delete" % app1.short_name
         res = self.app.post(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
         # To an existing post but with an app in the URL it does not belong to
-        url = "/app/%s/blog/%s/delete" % (app2.short_name, blogpost.id)
+        url = "/app/%s/%s/delete" % (app2.short_name, blogpost.id)
         res = self.app.post(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
 

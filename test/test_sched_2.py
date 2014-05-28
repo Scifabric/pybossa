@@ -36,9 +36,9 @@ class TestSched(sched.Helper):
         self.del_task_runs()
 
         # Register
-        self.register(fullname=self.user.fullname, username=self.user.username,
+        self.register(fullname=self.user.fullname, name=self.user.username,
                       password=self.user.password)
-        self.register(fullname="Marie Doe", username="mariedoe", password="dr0wss4p")
+        self.register(fullname="Marie Doe", name="mariedoe", password="dr0wss4p")
         self.signin()
 
         # Get the only task with no runs!

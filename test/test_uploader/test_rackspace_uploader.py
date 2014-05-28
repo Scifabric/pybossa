@@ -126,6 +126,23 @@ class TestRackspaceUploader(Test):
            return_value=True)
     @patch('pybossa.uploader.rackspace.pyrax.utils.get_checksum',
            return_value="1234abcd")
+    def test_rackspace_uploader_upload_file_object_fails(self, mock, mock2):
+        """Test RACKSPACE UPLOADER upload file object fail works."""
+        with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
+            from pyrax.exceptions import NoSuchObject
+            container = MagicMock()
+            container.get_object.side_effect = NoSuchObject
+            mycf.get_container.return_value = container
+            u = RackspaceUploader()
+            u.init_app(self.flask_app)
+            file = FileStorage(filename='test.jpg')
+            err_msg = "Upload file should return True"
+            assert u.upload_file(file, container='user_3') is True, err_msg
+
+    @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
+           return_value=True)
+    @patch('pybossa.uploader.rackspace.pyrax.utils.get_checksum',
+           return_value="1234abcd")
     def test_rackspace_uploader_upload_wrong_file(self, mock, mock2):
         """Test RACKSPACE UPLOADER upload wrong file extension works."""
         with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:

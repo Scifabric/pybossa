@@ -26,6 +26,7 @@ requirements = [
     "requests>=2.2.1, <3.0",
     "SQLAlchemy>=0.7.8, <0.7.9",         # was pinned to SQLAlchemy==0.7.8
     "nose",
+    "rednose",
     "redis",
     "sphinx",
     "coverage",

@@ -329,3 +329,10 @@ def get_port():
     else:
         return current_app.config['PORT']
 
+
+def get_user_id_or_ip():
+    """Returns the id of the current user if is authenticated. Otherwise
+    returns its IP address (defaults to 127.0.0.1)"""
+    user_id = current_user.id if current_user.is_authenticated() else None
+    user_ip = request.remote_addr or "127.0.0.1" if current_user.is_anonymous() else None
+    return dict(user_id=user_id, user_ip=user_ip)

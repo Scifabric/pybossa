@@ -36,18 +36,18 @@ class Helper(Test):
         else:
             return "<title>PyBossa &middot; %s</title>" % title
 
-    def register(self, method="POST", fullname="John Doe", username="johndoe",
+    def register(self, method="POST", fullname="John Doe", name="johndoe",
                  password="p4ssw0rd", password2=None, email=None):
         """Helper function to register and sign in a user"""
         if password2 is None:
             password2 = password
         if email is None:
-            email = username + '@example.com'
+            email = name + '@example.com'
         if method == "POST":
             return self.app.post('/account/register',
                                  data={
                                      'fullname': fullname,
-                                     'username': username,
+                                     'name': name,
                                      'email_addr': email,
                                      'password': password,
                                      'confirm': password2},
@@ -76,7 +76,8 @@ class Helper(Test):
     def update_profile(self, method="POST", id=1, fullname="John Doe",
                        name="johndoe", locale="es",
                        email_addr="johndoe@example.com",
-                       new_name=None):
+                       new_name=None,
+                       btn='Profile'):
         """Helper function to update the profile of users"""
         url = "/account/%s/update" % name
         if new_name:
@@ -88,7 +89,7 @@ class Helper(Test):
                                        'name': name,
                                        'locale': locale,
                                        'email_addr': email_addr,
-                                       'btn': 'Save'},
+                                       'btn': btn},
                                  follow_redirects=True)
         else:
             return self.app.get(url,
@@ -109,40 +110,16 @@ class Helper(Test):
 
     def new_application(self, method="POST", name="Sample Project",
                         short_name="sampleapp", description="Description",
-                        thumbnail='An Icon link',
-                        allow_anonymous_contributors='True',
-                        category_id="1",
-                        long_description=u'Long Description\n================',
-                        hidden=False):
+                        long_description=u'Long Description\n================'):
         """Helper function to create a project"""
         if method == "POST":
-            import tempfile
-            avatar, filename = tempfile.mkstemp()
-            print filename
             self.create_categories()
-            if hidden:
-                return self.app.post("/app/new", data={
-                    'name': name,
-                    'short_name': short_name,
-                    'description': description,
-                    'thumbnail': thumbnail,
-                    'avatar': filename,
-                    'allow_anonymou_contributors': allow_anonymous_contributors,
-                    'category_id': category_id,
-                    'long_description': long_description,
-                    'hidden': hidden,
-                }, follow_redirects=True)
-            else:
-                return self.app.post("/app/new", data={
-                    'name': name,
-                    'short_name': short_name,
-                    'description': description,
-                    'thumbnail': thumbnail,
-                    'avatar': (open(filename, 'rb'), filename),
-                    'allow_anonymous_contributors': allow_anonymous_contributors,
-                    'category_id': category_id,
-                    'long_description': long_description,
-                }, follow_redirects=True)
+            return self.app.post("/app/new", data={
+                'name': name,
+                'short_name': short_name,
+                'description': description,
+                'long_description': long_description,
+            }, follow_redirects=True)
         else:
             return self.app.get("/app/new", follow_redirects=True)
 
@@ -205,7 +182,6 @@ class Helper(Test):
     def update_application(self, method="POST", short_name="sampleapp", id=1,
                            new_name="Sample Project", new_short_name="sampleapp",
                            new_description="Description",
-                           new_thumbnail="New Icon link",
                            new_allow_anonymous_contributors="False",
                            new_category_id="2",
                            new_long_description="Long desc",
@@ -220,7 +196,6 @@ class Helper(Test):
                                          'name': new_name,
                                          'short_name': new_short_name,
                                          'description': new_description,
-                                         'thumbnail': new_thumbnail,
                                          'allow_anonymous_contributors': new_allow_anonymous_contributors,
                                          'category_id': new_category_id,
                                          'long_description': new_long_description,
@@ -232,7 +207,6 @@ class Helper(Test):
                 return self.app.post("/app/%s/update" % short_name,
                                      data={'id': id, 'name': new_name,
                                            'short_name': new_short_name,
-                                           'thumbnail': new_thumbnail,
                                            'allow_anonymous_contributors': new_allow_anonymous_contributors,
                                            'category_id': new_category_id,
                                            'long_description': new_long_description,

@@ -16,25 +16,26 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from flask import current_app
+from flask import current_app, request
 from flask.ext.login import current_user
 import pybossa.model as model
-from pybossa.cache import apps as cached_apps
-from pybossa.cache import users as cached_users
-from pybossa.cache import categories as cached_cat
+from pybossa.util import Pagination, get_user_id_or_ip
 from flask import Blueprint
 from flask import render_template
 from pybossa.cache import apps as cached_apps
+from pybossa.cache import users as cached_users
 from pybossa.cache import categories as cached_cat
+
 
 blueprint = Blueprint('home', __name__)
 
 @blueprint.route('/')
 def home():
     """ Render home page with the cached apps and users"""
+
     page = 1
     per_page = current_app.config.get('APPS_PER_PAGE')
-    if per_page is None:
+    if per_page is None: # pragma: no cover
         per_page = 5
     d = {'featured': cached_apps.get_featured_front_page(),
          'top_apps': cached_apps.get_top(),

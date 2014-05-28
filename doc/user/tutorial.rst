@@ -17,6 +17,7 @@ The demo project Flickr Person has two main components:
 
 Both items use the PyBossa API.
 
+
 Setting Things Up
 =================
 
@@ -143,7 +144,7 @@ following content::
         "question": "Do you see a human in this photo?"
     }
 
-You will need to modify the **name** and **short_name** fiels in order to
+You will need to modify the **name** and **short_name** fields in order to
 create a project in crowdcrafting.org, as there is already a project
 registered with those values.
 
@@ -225,6 +226,7 @@ when using the API.
     the number of allowed requests, getting a 429 error. Please see
     :ref:`rate-limiting` section.
 
+
 Number of answers or task runs per task
 =======================================
 
@@ -253,6 +255,7 @@ obtain 100 different answers from different users for each task.
 The `createTasks.py script <https://github.com/PyBossa/app-flickrperson/blob/master/createTasks.py>`_ has a command line argument that allows you to
 change the number of task runs that you want per task. Check the source code
 for more information.
+
 
 Changing the Priority of the tasks
 ==================================
@@ -298,44 +301,6 @@ If you want to modify the description you have two options:
  * Edit it via the web interface, or
  * modify locally the *long_description.html* file and run the command again
    with the **-t** option to update it.
-
-
-Adding an icon to the project
-=============================
-
-It is possible also to add a nice icon for the project. By default PyBossa
-will render a 100x100 pixels empty thumbnail for those projects that do not
-provide it. 
-
-If you want to add an icon you only have to upload the thumbnail of
-size 100x100 pixels to a hosting service like Flickr, Imgur, ImageShack, etc. 
-
-In order to include a thumbnail all you have to do is to modify the
-`app.json <https://github.com/PyBossa/app-flickrperson/blob/master/app.json>`_
-file and paste the direct link to the icon in the **thumbnail**
-field::
-
-    {
-        "name": "Flickr Person Finder",
-        "short_name": "flickrperson",
-        "thumbnail": "http://imageshack.us/a/img37/156/flickrpersonthumbnail.png",
-        "description": "Image pattern recognition",
-        "question": "Do you see a human in this photo?"
-    }
-
-
-Creating a blog for the project
-===============================
-
-You can share the progress of the project creating a blog. Every PyBossa
-project includes a very simple blog where you will be able to write about
-your project regularly.
-
-You can use Markdown or plain text for the content of the posts. And you will
-also be able to edit them or delete after creation if you want.
-
-To write a post simply go to the project settings page and there you will
-find an option to write your blog posts.
 
 
 Presenting the Tasks to the user
@@ -559,7 +524,7 @@ will be like this:
 
 
 2. Loading the Task data
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 Now that we have set up the *skeleton* to load the task data, let's see what
 JavaScript should we write to populate with the pictures from Flickr and how we
@@ -732,7 +697,7 @@ Finally, we only need in our application to run the PyBossa project:
     pybossa.run('flickrperson')
 
 
-4. Saving the answer
+3. Saving the answer
 --------------------
 
 Once the task has been presented, the users can click on the answer buttons:
@@ -771,7 +736,7 @@ has been successfully saved:
   );
 
 
-2. Updating the template for all the tasks
+4. Updating the template for all the tasks
 ------------------------------------------
 
 It is possible to update the template of the project without
@@ -786,7 +751,7 @@ before saving the results. Check your project page, and click in the button
 **Edit the task presenter**
 
 
-3. Test the task presenter
+5. Test the task presenter
 --------------------------
 
 In order to test the project task presenter, go to the following URL::
@@ -796,7 +761,8 @@ In order to test the project task presenter, go to the following URL::
 The presenter will load one task, and you will be able to submit and save one
 answer for the current task.
 
-4. Check the results
+
+6. Check the results
 --------------------
 
 In order to see the answers from the volunteers, you can open in your web
@@ -813,6 +779,7 @@ The results page is created using the `D3.JS library <http://d3js.org>`_.
 .. note::
     You can see a demo of the results page `here
     <http://dev.pybossa.com/app-flickrperson>`_
+
 
 Creating a tutorial for the users
 =================================
@@ -850,6 +817,32 @@ endpoint::
 
   http://server/app/tutorial
   
+
+Adding an icon to the application
+=================================
+
+It is possible also to add a nice icon for the application. By default PyBossa
+will render a 100x100 pixels empty thumbnail for those applications that do not
+provide it. 
+
+If you want to add an icon you can do it by using the web interface. Just go to
+the **Settings** tab within your application. There, select the image file you
+want to use and push the **Upload** button. That's all!
+
+
+Creating a blog for the application
+===================================
+
+You can share the progress of the application creating a blog. Every PyBossa
+application includes a very simple blog where you will be able to write about
+your application regularly.
+
+You can use Markdown or plain text for the content of the posts. And you will
+also be able to edit them or delete after creation if you want.
+
+To write a post simply go to the application **Settings tab and there you will
+find an option to write, read or delete your blog posts.
+
 
 .. _export-results:
 
