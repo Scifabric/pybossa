@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-05-28 23:48+0200\n"
+"POT-Creation-Date: 2014-05-29 00:45+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -44,6 +44,7 @@ msgstr ""
 #: themes/default/templates/_navbar.html:13
 #: themes/default/templates/base.html:78
 #: themes/default/templates/account/applications.html:13
+#: themes/default/templates/stats/global.html:89 view/account.py:381
 #: view/applications.py:248
 msgid "Projects"
 msgstr ""
@@ -1219,7 +1220,7 @@ msgid "Explain the project (use Markdown!)"
 msgstr ""
 
 #: themes/default/templates/applications/update.html:43
-msgid "Do you want to hide your app?"
+msgid "Do you want to hide your project?"
 msgstr ""
 
 #: themes/default/templates/applications/update_blogpost.html:14
@@ -1458,10 +1459,6 @@ msgstr ""
 
 #: themes/default/templates/stats/global.html:60
 msgid "No active users in the last 24 hours"
-msgstr ""
-
-#: themes/default/templates/stats/global.html:89 view/account.py:381
-msgid "Applications"
 msgstr ""
 
 #: themes/default/templates/stats/global.html:92
@@ -1815,8 +1812,8 @@ msgstr ""
 
 #: view/applications.py:364
 msgid ""
-" or download the app bundle and run the <strong>createTasks.py</strong> "
-"script in your computer"
+" or download the project bundle and run the "
+"<strong>createTasks.py</strong> script in your computer"
 msgstr ""
 
 #: view/applications.py:424

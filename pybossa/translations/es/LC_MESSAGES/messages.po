@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: daniel@shuttleworthfoundation.org\n"
-"POT-Creation-Date: 2014-05-28 23:48+0200\n"
+"POT-Creation-Date: 2014-05-29 00:45+0200\n"
 "PO-Revision-Date: 2013-03-26 18:24+0100\n"
 "Last-Translator: Daniel Lombraña González "
 "<daniel@shuttleworthfoundation.org>\n"
@@ -47,6 +47,7 @@ msgstr "Comunidad"
 #: themes/default/templates/_navbar.html:13
 #: themes/default/templates/base.html:78
 #: themes/default/templates/account/applications.html:13
+#: themes/default/templates/stats/global.html:89 view/account.py:381
 #: view/applications.py:248
 #, fuzzy
 msgid "Projects"
@@ -1276,7 +1277,8 @@ msgid "Explain the project (use Markdown!)"
 msgstr ""
 
 #: themes/default/templates/applications/update.html:43
-msgid "Do you want to hide your app?"
+#, fuzzy
+msgid "Do you want to hide your project?"
 msgstr "¿Quieres ocultar la aplicación?"
 
 #: themes/default/templates/applications/update_blogpost.html:14
@@ -1562,10 +1564,6 @@ msgstr "tareas contribuidas"
 #: themes/default/templates/stats/global.html:60
 msgid "No active users in the last 24 hours"
 msgstr ""
-
-#: themes/default/templates/stats/global.html:89 view/account.py:381
-msgid "Applications"
-msgstr "Aplicaciones"
 
 #: themes/default/templates/stats/global.html:92
 #, fuzzy
@@ -1939,9 +1937,10 @@ msgid "CSV importer"
 msgstr "importador CSV"
 
 #: view/applications.py:364
+#, fuzzy
 msgid ""
-" or download the app bundle and run the <strong>createTasks.py</strong> "
-"script in your computer"
+" or download the project bundle and run the "
+"<strong>createTasks.py</strong> script in your computer"
 msgstr ""
 " o descargar la aplicación y ejecutar el script "
 "<strong>createTasks.py</strong>  en su PC"
@@ -2125,9 +2124,6 @@ msgstr "Nombre del Formulario"
 #~ msgstr "te solicitaremos que inicies sesión de nuevo."
 
 #~ msgid ""
-#~ "Deleting the category will remove it "
-#~ "from all the applications! This "
-#~ "operation cannot be undone!"
 #~ msgstr ""
 
 #~ msgid "Featured Applications"
@@ -2180,4 +2176,7 @@ msgstr "Nombre del Formulario"
 
 #~ msgid "Icon Link"
 #~ msgstr "Enlace del icono"
+
+#~ msgid "Applications"
+#~ msgstr "Aplicaciones"
 
