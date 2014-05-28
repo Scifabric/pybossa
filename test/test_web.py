@@ -1982,7 +1982,7 @@ class TestWeb(web.Helper):
         for key in _info:
             assert key in app.info.keys(), \
                 "The key %s is lost and it should be here" % key
-        assert app.name == "Sample project", "The project has not been updated"
+        assert app.name == "Sample Project", "The project has not been updated"
         error_msg = "The project description has not been updated"
         assert app.description == "Description", error_msg
         error_msg = "The project icon has not been updated"
