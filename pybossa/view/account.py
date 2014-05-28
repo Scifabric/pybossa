@@ -378,7 +378,7 @@ def applications(name):
     apps_published, apps_draft = _get_user_apps(user.id)
 
     return render_template('account/applications.html',
-                           title=gettext("Applications"),
+                           title=gettext("Projects"),
                            apps_published=apps_published,
                            apps_draft=apps_draft)
 
