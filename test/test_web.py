@@ -2854,7 +2854,7 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.importer.requests.get')
     def test_72_bulk_epicollect_import_non_html(self, Mock, mock):
         """Test WEB bulk import non html works"""
-        html_request = FakeRequest('Not a application/json', 200,
+        html_request = FakeRequest('Not an application/json', 200,
                                    {'content-type': 'text/html'})
         Mock.return_value = html_request
         self.register()
