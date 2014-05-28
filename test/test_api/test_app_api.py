@@ -55,7 +55,7 @@ class TestAppAPI(TestAPI):
     @with_context
     def test_query_app(self):
         """Test API query for app endpoint works"""
-        AppFactory.create(short_name='test-app', name='My New App')
+        AppFactory.create(short_name='test-app', name='My New Project')
         # Test for real field
         res = self.app.get("/api/app?short_name=test-app")
         data = json.loads(res.data)
@@ -70,13 +70,13 @@ class TestAppAPI(TestAPI):
         assert len(data) == 0, data
 
         # Multiple fields
-        res = self.app.get('/api/app?short_name=test-app&name=My New App')
+        res = self.app.get('/api/app?short_name=test-app&name=My New Project')
         data = json.loads(res.data)
         # One result
         assert len(data) == 1, data
         # Correct result
         assert data[0]['short_name'] == 'test-app', data
-        assert data[0]['name'] == 'My New App', data
+        assert data[0]['name'] == 'My New Project', data
 
 
     @with_context
