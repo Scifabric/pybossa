@@ -514,8 +514,8 @@ def update(short_name):
                     app.info['container'] = container
                     db.session.commit()
                     cached_apps.delete_app(app.short_name)
-                flash(gettext('Your project thumbnail has been updated! It may \
-                                  take some minutes to refresh...'), 'success')
+                    flash(gettext('Your project thumbnail has been updated! It may \
+                                      take some minutes to refresh...'), 'success')
                 else:
                     flash(gettext('You must provide a file to change the avatar'),
                           'error')
