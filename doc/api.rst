@@ -312,12 +312,12 @@ A user who has registered or signed in with any of the third parties supported
 by PyBossa (currently Twitter, Facebook and Google) can request his own oAuth
 tokens by doing::
 
-    GET http://{pybossa-site-url}/api/{app.id}/token
+    GET http://{pybossa-site-url}/api/token[?api_key=API-KEY]
 
 Additionally, the user can specify any of the tokens if only its retrieval is
 desired::
 
-    GET http://{pybossa-site-url}/api/{app.id}/token/{provider}
+    GET http://{pybossa-site-url}/api/token/{provider}[?api_key=API-KEY]
 
 Where 'provider' will be any of the third parties supported, i.e. 'twitter',
 'facebook' or 'google'.
