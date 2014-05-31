@@ -582,7 +582,7 @@ class TestWeb(web.Helper):
     # After refactoring applications view, these 3 tests should be more isolated and moved to another place
     @with_context
     def test_description_is_generated_from_long_desc(self):
-        """Test WEB when creating an project, the description field is
+        """Test WEB when creating a project, the description field is
         automatically filled in by truncating the long_description"""
         self.register()
         res = self.new_application(long_description="Hello")
@@ -592,7 +592,7 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_description_is_generated_from_long_desc_formats(self):
-        """Test WEB when when creating an project, the description generated
+        """Test WEB when when creating a project, the description generated
         from the long_description is only text (no html, no markdown)"""
         self.register()
         res = self.new_application(long_description="## Hello")
@@ -603,7 +603,7 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_description_is_generated_from_long_desc_truncates(self):
-        """Test WEB when when creating an project, the description generated
+        """Test WEB when when creating a project, the description generated
         from the long_description is only text (no html, no markdown)"""
         self.register()
         res = self.new_application(long_description="a"*300)
@@ -1156,7 +1156,7 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_23_get_specific_ongoing_task_user(self):
-        """Test WEB get specific ongoing task_id for an project works as an user"""
+        """Test WEB get specific ongoing task_id for a project works as an user"""
 
         with self.flask_app.app_context():
             self.create()
@@ -1212,7 +1212,7 @@ class TestWeb(web.Helper):
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_25_get_wrong_task_app(self, mock):
-        """Test WEB get wrong task.id for an project works"""
+        """Test WEB get wrong task.id for a project works"""
 
         with self.flask_app.app_context():
             self.create()
