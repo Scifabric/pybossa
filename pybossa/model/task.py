@@ -29,7 +29,7 @@ from pybossa.model.task_run import TaskRun
 
 class Task(db.Model, DomainObject):
     '''An individual Task which can be performed by a user. A Task is
-    associated to an App.
+    associated to a project.
     '''
     __tablename__ = 'task'
 

@@ -15,7 +15,7 @@ PyBossa has 5 main domain objects:
     * HasMany: Tasks
     * HasA: Category
 
-  * Task: an individual Task which can be performed by a user. A Task is associated to an App.
+  * Task: an individual Task which can be performed by a user. A Task is associated to a project.
 
     * HasA: App
     * HasMany: TaskRuns

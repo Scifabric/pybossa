@@ -550,7 +550,7 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_11_create_application(self, mock):
         """Test WEB create a project works"""
-        # Create an app as an anonymous user
+        # Create a project as an anonymous user
         with self.flask_app.app_context():
             res = self.new_application(method="GET")
             assert self.html_title("Sign in") in res.data, res
@@ -1091,7 +1091,7 @@ class TestWeb(web.Helper):
     @with_context
     def test_21_get_specific_ongoing_task_anonymous(self):
         """Test WEB get specific ongoing task_id for
-        an app works as anonymous"""
+        a project works as anonymous"""
 
         with self.flask_app.app_context():
             self.create()
@@ -1126,7 +1126,7 @@ class TestWeb(web.Helper):
     @with_context
     def test_22_get_specific_completed_task_anonymous(self):
         """Test WEB get specific completed task_id
-        for an app works as anonymous"""
+        for a project works as anonymous"""
 
         #model.rebuild_db()
         with self.flask_app.app_context():
@@ -1175,7 +1175,7 @@ class TestWeb(web.Helper):
     @with_context
     def test_24_get_specific_completed_task_user(self):
         """Test WEB get specific completed task_id
-        for an app works as an user"""
+        for a project works as an user"""
 
         #model.rebuild_db()
         with self.flask_app.app_context():
@@ -2076,7 +2076,7 @@ class TestWeb(web.Helper):
         assert "User Message" in res.data, error_msg
         error_msg = "There should not be an owner message"
         assert "Owner Message" not in res.data, error_msg
-        # Now make the user an app owner
+        # Now make the user a project owner
         self.new_application()
         res = self.app.get("/", follow_redirects=True)
         error_msg = "There should be a message for the root user"

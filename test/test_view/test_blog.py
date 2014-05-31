@@ -186,7 +186,7 @@ class TestBlogpostView(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
-        # To an existing post but with an app in the URL it does not belong to
+        # To an existing post but with a project in the URL it does not belong to
         url = "/app/%s/%s" % (app2.short_name, blogpost.id)
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
@@ -386,7 +386,7 @@ class TestBlogpostView(web.Helper):
                             follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
-        # To an existing post but with an app in the URL it does not belong to
+        # To an existing post but with a project in the URL it does not belong to
         url = "/app/%s/%s/update" % (app2.short_name, blogpost.id)
         res = self.app.post(url, data={'title':'new title', 'body':'body'},
                             follow_redirects=True)
@@ -479,7 +479,7 @@ class TestBlogpostView(web.Helper):
         res = self.app.post(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
-        # To an existing post but with an app in the URL it does not belong to
+        # To an existing post but with a project in the URL it does not belong to
         url = "/app/%s/%s/delete" % (app2.short_name, blogpost.id)
         res = self.app.post(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code

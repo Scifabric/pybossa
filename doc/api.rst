@@ -233,7 +233,7 @@ If an error occurs, the action will return a JSON object like this:
         "exception_cls": "AttributeError"
     }
 
-Where **target** will refer to an App, Task or TaskRun object.
+Where **target** will refer to a Project, Task or TaskRun object.
 
 Update
 ~~~~~~
@@ -259,7 +259,7 @@ If an error occurs, the action will return a JSON object like this:
         "exception_cls": "AttributeError"
     }
 
-Where **target** will refer to an App, Task or TaskRun object.
+Where **target** will refer to an Project, Task or TaskRun object.
 
 Delete
 ~~~~~~
@@ -285,7 +285,7 @@ If an error occurs, the action will return a JSON object like this:
         "exception_cls": "AttributeError"
     }
 
-Where **target** will refer to an App, Task or TaskRun object.
+Where **target** will refer to a Project, Task or TaskRun object.
 
 
 Requesting a new task for current user

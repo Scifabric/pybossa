@@ -289,7 +289,7 @@ class TestAppAPI(TestAPI):
 
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
-        # delete an app that does not exist
+        # delete a project that does not exist
         url = '/api/app/5000?api_key=%s' % users[1].api_key
         res = self.app.delete(url, data=datajson)
         error = json.loads(res.data)
@@ -299,7 +299,7 @@ class TestAppAPI(TestAPI):
         assert error['target'] == 'app', error
         assert error['exception_cls'] == 'NotFound', error
 
-        # delete an app that does not exist
+        # delete a project that does not exist
         url = '/api/app/?api_key=%s' % users[1].api_key
         res = self.app.delete(url, data=datajson)
         assert res.status_code == 404, error
