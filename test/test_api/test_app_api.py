@@ -32,7 +32,7 @@ class TestAppAPI(TestAPI):
 
     @with_context
     def test_app_query(self):
-        """ Test API App query"""
+        """ Test API project query"""
         AppFactory.create(info={'total': 150})
         res = self.app.get('/api/app')
         data = json.loads(res.data)
@@ -54,7 +54,7 @@ class TestAppAPI(TestAPI):
 
     @with_context
     def test_query_app(self):
-        """Test API query for app endpoint works"""
+        """Test API query for project endpoint works"""
         AppFactory.create(short_name='test-app', name='My New Project')
         # Test for real field
         res = self.app.get("/api/app?short_name=test-app")
@@ -81,7 +81,7 @@ class TestAppAPI(TestAPI):
 
     @with_context
     def test_app_post(self):
-        """Test API App creation and auth"""
+        """Test API project creation and auth"""
         users = UserFactory.create_batch(2)
         name = u'XXXX Project'
         data = dict(
@@ -306,7 +306,7 @@ class TestAppAPI(TestAPI):
 
     @with_context
     def test_admin_app_post(self):
-        """Test API App update/delete for ADMIN users"""
+        """Test API project update/delete for ADMIN users"""
         admin = UserFactory.create()
         assert admin.admin
         user = UserFactory.create()
@@ -450,7 +450,7 @@ class TestAppAPI(TestAPI):
 
     @with_context
     def test_delete_app_cascade(self):
-        """Test API delete app deletes associated tasks and taskruns"""
+        """Test API delete project deletes associated tasks and taskruns"""
         app = AppFactory.create()
         tasks = TaskFactory.create_batch(2, app=app)
         task_runs = TaskRunFactory.create_batch(2, app=app)
@@ -527,7 +527,7 @@ class TestAppAPI(TestAPI):
 
     @with_context
     def test_newtask(self):
-        """Test API App.new_task method and authentication"""
+        """Test API project new_task method and authentication"""
         app = AppFactory.create()
         TaskFactory.create_batch(2, app=app)
         user = UserFactory.create()

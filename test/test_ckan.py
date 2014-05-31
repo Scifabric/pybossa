@@ -49,7 +49,7 @@ class TestCkanWeb(web_helper.Helper):
         assert dom.find(id="ckan") is None, err_msg
 
     def test_01_authenticated(self):
-        """Test CKAN authenticated app owners can export data via CKAN"""
+        """Test CKAN authenticated project owners can export data via CKAN"""
         res = self.signin(email=self.email_addr, password=self.password)
         res = self.app.get(self.url, follow_redirects=True)
         dom = BeautifulSoup(res.data)

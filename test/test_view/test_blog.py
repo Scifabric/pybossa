@@ -54,7 +54,7 @@ class TestBlogpostView(web.Helper):
 
     @with_context
     def test_blogposts_get_all_with_hidden_app(self):
-        """Test blogpost GET does not show hidden apps"""
+        """Test blogpost GET does not show hidden projects"""
         self.register()
         admin = db.session.query(User).get(1)
         self.signout()
@@ -92,7 +92,7 @@ class TestBlogpostView(web.Helper):
 
 
     def test_blogpost_get_all_errors(self):
-        """Test blogpost GET all raises error if the app does not exist"""
+        """Test blogpost GET all raises error if the project does not exist"""
         url = "/app/non-existing-app/blog"
 
         res = self.app.get(url, follow_redirects=True)
@@ -124,7 +124,7 @@ class TestBlogpostView(web.Helper):
 
     @with_context
     def test_blogpost_get_one_with_hidden_app(self):
-        """Test blogpost GET a given post id with hidden app does not show the post"""
+        """Test blogpost GET a given post id with hidden project does not show the post"""
         self.register()
         admin = db.session.query(User).get(1)
         self.signout()
@@ -197,7 +197,7 @@ class TestBlogpostView(web.Helper):
     @with_context
     @patch('pybossa.view.applications.redirect', wraps=redirect)
     def test_blogpost_create_by_owner(self, mock_redirect):
-        """Test blogposts, app owners can create"""
+        """Test blogposts, project owners can create"""
         self.register()
         user = db.session.query(User).get(1)
         app = self.create_app(info=None)
@@ -247,7 +247,7 @@ class TestBlogpostView(web.Helper):
 
     @with_context
     def test_blogpost_create_by_non_owner(self):
-        """Test blogpost create by non owner of the app is forbidden"""
+        """Test blogpost create by non owner of the project is forbidden"""
         user = self.create_users()[1]
         app = self.create_app(info=None)
         app.owner = user
@@ -266,7 +266,7 @@ class TestBlogpostView(web.Helper):
 
 
     def test_blogpost_create_errors(self):
-        """Test blogposts create for non existing apps raises errors"""
+        """Test blogposts create for non existing projects raises errors"""
         self.register()
         url = "/app/non-existing-app/new-blogpost"
 

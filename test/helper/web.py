@@ -124,7 +124,7 @@ class Helper(Test):
             return self.app.get("/app/new", follow_redirects=True)
 
     def new_task(self, appid):
-        """Helper function to create tasks for an app"""
+        """Helper function to create tasks for a project"""
         tasks = []
         for i in range(0, 10):
             tasks.append(Task(app_id=appid, state='0', info={}))

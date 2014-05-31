@@ -25,7 +25,7 @@ from pybossa.cache import helpers
 class TestHelpersCache(Test):
 
     def test_n_available_tasks_no_tasks_authenticated_user(self):
-        """Test n_available_tasks returns 0 for authenticated user if the app
+        """Test n_available_tasks returns 0 for authenticated user if the project
         has no tasks"""
         app = AppFactory.create()
 
@@ -35,7 +35,7 @@ class TestHelpersCache(Test):
 
 
     def test_n_available_tasks_no_tasks_anonymous_user(self):
-        """Test n_available_tasks returns 0 for anonymous user if the app
+        """Test n_available_tasks returns 0 for anonymous user if the project
         has no tasks"""
         app = AppFactory.create()
 
@@ -154,7 +154,7 @@ class TestHelpersCache(Test):
 
 
     def test_check_contributing_state_completed(self):
-        """Test check_contributing_state returns 'completed' for an app with all
+        """Test check_contributing_state returns 'completed' for a project with all
         tasks completed and user that has contributed to it"""
         app = AppFactory.create()
         task = TaskFactory.create(app=app, n_answers=1)
@@ -169,7 +169,7 @@ class TestHelpersCache(Test):
 
 
     def test_check_contributing_state_completed_user_not_contributed(self):
-        """Test check_contributing_state returns 'completed' for an app with all
+        """Test check_contributing_state returns 'completed' for a project with all
         tasks completed even if the user has not contributed to it"""
         app = AppFactory.create()
         task = TaskFactory.create(app=app, n_answers=2)
@@ -184,7 +184,7 @@ class TestHelpersCache(Test):
 
 
     def test_check_contributing_state_ongoing_tasks_not_contributed(self):
-        """Test check_contributing_state returns 'can_contribute' for an app
+        """Test check_contributing_state returns 'can_contribute' for a project
         with ongoing tasks a user has not contributed to"""
         app = AppFactory.create()
         task = TaskFactory.create(app=app)
@@ -197,7 +197,7 @@ class TestHelpersCache(Test):
 
 
     def test_check_contributing_state_ongoing_tasks_contributed(self):
-        """Test check_contributing_state returns 'cannot_contribute' for an app
+        """Test check_contributing_state returns 'cannot_contribute' for a project
         with ongoing tasks to which the user has already contributed"""
         app = AppFactory.create()
         task = TaskFactory.create(app=app, n_answers=3)

@@ -114,7 +114,7 @@ class TestWeb(web.Helper):
             assert self.html_title("Community Leaderboard") in res.data, res
             assert self.user.fullname in res.data, res.data
 
-            # With hidden app
+            # With hidden project
             app.hidden = 1
             db.session.add(app)
             db.session.commit()
@@ -376,13 +376,13 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_05a_get_nonexistant_app(self):
-        """Test WEB get not existant app should return 404"""
+        """Test WEB get not existant project should return 404"""
         res = self.app.get('/app/nonapp', follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
 
     @with_context
     def test_05b_get_nonexistant_app_newtask(self):
-        """Test WEB get non existant app newtask should return 404"""
+        """Test WEB get non existant project newtask should return 404"""
         res = self.app.get('/app/noapp/presenter', follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
         res = self.app.get('/app/noapp/newtask', follow_redirects=True)
@@ -390,13 +390,13 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_05c_get_nonexistant_app_tutorial(self):
-        """Test WEB get non existant app tutorial should return 404"""
+        """Test WEB get non existant project tutorial should return 404"""
         res = self.app.get('/app/noapp/tutorial', follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
 
     @with_context
     def test_05d_get_nonexistant_app_delete(self):
-        """Test WEB get non existant app delete should return 404"""
+        """Test WEB get non existant project delete should return 404"""
         self.register()
         # GET
         res = self.app.get('/app/noapp/delete', follow_redirects=True)
@@ -407,7 +407,7 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_05d_get_nonexistant_app_update(self):
-        """Test WEB get non existant app update should return 404"""
+        """Test WEB get non existant project update should return 404"""
         self.register()
         # GET
         res = self.app.get('/app/noapp/update', follow_redirects=True)
@@ -418,7 +418,7 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_05d_get_nonexistant_app_import(self):
-        """Test WEB get non existant app import should return 404"""
+        """Test WEB get non existant project import should return 404"""
         self.register()
         # GET
         res = self.app.get('/app/noapp/import', follow_redirects=True)
@@ -429,7 +429,7 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_05d_get_nonexistant_app_task(self):
-        """Test WEB get non existant app task should return 404"""
+        """Test WEB get non existant project task should return 404"""
         res = self.app.get('/app/noapp/task', follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
         # Pagination
@@ -438,13 +438,13 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_05d_get_nonexistant_app_results_json(self):
-        """Test WEB get non existant app results json should return 404"""
+        """Test WEB get non existant project results json should return 404"""
         res = self.app.get('/app/noapp/24/results.json', follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
 
     @with_context
     def test_06_applications_without_apps(self):
-        """Test WEB projects index without apps works"""
+        """Test WEB projects index without projects works"""
         # Check first without apps
         with self.flask_app.app_context():
             self.create_categories()
@@ -454,7 +454,7 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_06_applications_2(self):
-        """Test WEB projects index with apps"""
+        """Test WEB projects index with projects"""
         with self.flask_app.app_context():
             self.create()
 
@@ -582,7 +582,7 @@ class TestWeb(web.Helper):
     # After refactoring applications view, these 3 tests should be more isolated and moved to another place
     @with_context
     def test_description_is_generated_from_long_desc(self):
-        """Test WEB when creating an application, the description field is
+        """Test WEB when creating an project, the description field is
         automatically filled in by truncating the long_description"""
         self.register()
         res = self.new_application(long_description="Hello")
@@ -592,7 +592,7 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_description_is_generated_from_long_desc_formats(self):
-        """Test WEB when when creating an application, the description generated
+        """Test WEB when when creating an project, the description generated
         from the long_description is only text (no html, no markdown)"""
         self.register()
         res = self.new_application(long_description="## Hello")
@@ -603,7 +603,7 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_description_is_generated_from_long_desc_truncates(self):
-        """Test WEB when when creating an application, the description generated
+        """Test WEB when when creating an project, the description generated
         from the long_description is only text (no html, no markdown)"""
         self.register()
         res = self.new_application(long_description="a"*300)
@@ -650,7 +650,7 @@ class TestWeb(web.Helper):
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_12_update_application(self, Mock, mock):
-        """Test WEB update application works"""
+        """Test WEB update project works"""
         with self.flask_app.app_context():
             html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
                                        {'content-type': 'application/json'})
@@ -763,7 +763,7 @@ class TestWeb(web.Helper):
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_13_hidden_applications(self, Mock, mock):
-        """Test WEB hidden application works"""
+        """Test WEB hidden project works"""
         with self.flask_app.app_context():
             html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
                                        {'content-type': 'application/json'})
@@ -1156,7 +1156,7 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_23_get_specific_ongoing_task_user(self):
-        """Test WEB get specific ongoing task_id for an app works as an user"""
+        """Test WEB get specific ongoing task_id for an project works as an user"""
 
         with self.flask_app.app_context():
             self.create()
@@ -1212,7 +1212,7 @@ class TestWeb(web.Helper):
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_25_get_wrong_task_app(self, mock):
-        """Test WEB get wrong task.id for an app works"""
+        """Test WEB get wrong task.id for an project works"""
 
         with self.flask_app.app_context():
             self.create()
@@ -1299,7 +1299,7 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_28_non_tutorial_signed_user(self):
-        """Test WEB app without tutorial work as signed in user"""
+        """Test WEB project without tutorial work as signed in user"""
         with self.flask_app.app_context():
             self.create()
             db.session.commit()
@@ -1314,7 +1314,7 @@ class TestWeb(web.Helper):
 
     @with_context
     def test_29_tutorial_anonymous_user(self):
-        """Test WEB app without tutorials work as an anonymous user"""
+        """Test WEB project without tutorials work as an anonymous user"""
         with self.flask_app.app_context():
             self.create()
             db.session.commit()
@@ -2029,7 +2029,7 @@ class TestWeb(web.Helper):
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_48_update_app_info(self, Mock, mock):
-        """Test WEB app update/edit works keeping previous info values"""
+        """Test WEB project update/edit works keeping previous info values"""
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
                                    {'content-type': 'application/json'})
         Mock.return_value = html_request

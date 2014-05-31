@@ -27,7 +27,7 @@ class TestModelApp(Test):
 
     @with_context
     def test_app_errors(self):
-        """Test APP model errors."""
+        """Test project model errors."""
         app = App(name='Project',
                   short_name='proj',
                   description='desc',
