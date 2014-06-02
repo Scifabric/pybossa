@@ -19,7 +19,7 @@
 PyBossa api module for exposing domain objects via an API.
 
 This package adds GET, POST, PUT and DELETE methods for:
-    * applications,
+    * projects,
     * categories,
     * tasks,
     * task_runs,
@@ -99,7 +99,7 @@ register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
 @crossdomain(origin='*', headers=cors_headers)
 @ratelimit(limit=300, per=15 * 60)
 def new_task(app_id):
-    """Return a new task for an application."""
+    """Return a new task for a project."""
     # Check if the request has an arg:
     try:
         app = db.session.query(model.app.App).get(app_id)

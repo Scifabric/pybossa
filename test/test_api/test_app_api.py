@@ -32,7 +32,7 @@ class TestAppAPI(TestAPI):
 
     @with_context
     def test_app_query(self):
-        """ Test API App query"""
+        """ Test API project query"""
         AppFactory.create(info={'total': 150})
         res = self.app.get('/api/app')
         data = json.loads(res.data)
@@ -54,8 +54,8 @@ class TestAppAPI(TestAPI):
 
     @with_context
     def test_query_app(self):
-        """Test API query for app endpoint works"""
-        AppFactory.create(short_name='test-app', name='My New App')
+        """Test API query for project endpoint works"""
+        AppFactory.create(short_name='test-app', name='My New Project')
         # Test for real field
         res = self.app.get("/api/app?short_name=test-app")
         data = json.loads(res.data)
@@ -70,18 +70,18 @@ class TestAppAPI(TestAPI):
         assert len(data) == 0, data
 
         # Multiple fields
-        res = self.app.get('/api/app?short_name=test-app&name=My New App')
+        res = self.app.get('/api/app?short_name=test-app&name=My New Project')
         data = json.loads(res.data)
         # One result
         assert len(data) == 1, data
         # Correct result
         assert data[0]['short_name'] == 'test-app', data
-        assert data[0]['name'] == 'My New App', data
+        assert data[0]['name'] == 'My New Project', data
 
 
     @with_context
     def test_app_post(self):
-        """Test API App creation and auth"""
+        """Test API project creation and auth"""
         users = UserFactory.create_batch(2)
         name = u'XXXX Project'
         data = dict(
@@ -289,7 +289,7 @@ class TestAppAPI(TestAPI):
 
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
-        # delete an app that does not exist
+        # delete a project that does not exist
         url = '/api/app/5000?api_key=%s' % users[1].api_key
         res = self.app.delete(url, data=datajson)
         error = json.loads(res.data)
@@ -299,14 +299,14 @@ class TestAppAPI(TestAPI):
         assert error['target'] == 'app', error
         assert error['exception_cls'] == 'NotFound', error
 
-        # delete an app that does not exist
+        # delete a project that does not exist
         url = '/api/app/?api_key=%s' % users[1].api_key
         res = self.app.delete(url, data=datajson)
         assert res.status_code == 404, error
 
     @with_context
     def test_admin_app_post(self):
-        """Test API App update/delete for ADMIN users"""
+        """Test API project update/delete for ADMIN users"""
         admin = UserFactory.create()
         assert admin.admin
         user = UserFactory.create()
@@ -450,7 +450,7 @@ class TestAppAPI(TestAPI):
 
     @with_context
     def test_delete_app_cascade(self):
-        """Test API delete app deletes associated tasks and taskruns"""
+        """Test API delete project deletes associated tasks and taskruns"""
         app = AppFactory.create()
         tasks = TaskFactory.create_batch(2, app=app)
         task_runs = TaskRunFactory.create_batch(2, app=app)
@@ -508,7 +508,7 @@ class TestAppAPI(TestAPI):
         err_msg = "The task.app_id should be null"
         assert task['app_id'] is None, err_msg
         err_msg = "There should be an error message"
-        err = "This application does not allow anonymous contributors"
+        err = "This project does not allow anonymous contributors"
         assert task['info'].get('error') == err, err_msg
         err_msg = "There should not be a question"
         assert task['info'].get('question') is None, err_msg
@@ -527,7 +527,7 @@ class TestAppAPI(TestAPI):
 
     @with_context
     def test_newtask(self):
-        """Test API App.new_task method and authentication"""
+        """Test API project new_task method and authentication"""
         app = AppFactory.create()
         TaskFactory.create_batch(2, app=app)
         user = UserFactory.create()

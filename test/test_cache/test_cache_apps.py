@@ -93,7 +93,7 @@ class TestAppsCache(Test):
 
     @with_context
     def test_get_featured_front_page(self):
-        """Test CACHE APPS get_featured_front_page returns featured apps"""
+        """Test CACHE PROJECTS get_featured_front_page returns featured projects"""
 
         app = self.create_app(None)
         app.owner = self.user
@@ -109,7 +109,7 @@ class TestAppsCache(Test):
 
     @with_context
     def test_get_featured_front_page_only_returns_featured(self):
-        """Test CACHE APPS get_featured_front_page returns only featured apps"""
+        """Test CACHE PROJECTS get_featured_front_page returns only featured projects"""
 
         featured_app = self.create_app(None)
         non_featured_app = self.create_app(None)
@@ -130,7 +130,7 @@ class TestAppsCache(Test):
 
     @with_context
     def test_get_featured_front_page_not_returns_hidden_apps(self):
-        """Test CACHE APPS get_featured_front_page does not return hidden apps"""
+        """Test CACHE PROJECTS get_featured_front_page does not return hidden projects"""
 
         featured_app = self.create_app(None)
         featured_app.owner = self.user
@@ -147,8 +147,8 @@ class TestAppsCache(Test):
 
     @with_context
     def test_get_featured_front_page_returns_required_fields(self):
-        """Test CACHE APPS get_featured_front_page returns the required info
-        about each featured app"""
+        """Test CACHE PROJECTS get_featured_front_page returns the required info
+        about each featured project"""
 
         app = self.create_app(None)
         app.owner = self.user
@@ -166,7 +166,7 @@ class TestAppsCache(Test):
 
     @with_context
     def test_get_top_returns_apps_with_most_taskruns(self):
-        """Test CACHE APPS get_top returns the apps with most taskruns in order"""
+        """Test CACHE PROJECTS get_top returns the projects with most taskruns in order"""
 
         ranked_3_app = self.create_app_with_contributors(8, 0, name='three')
         ranked_2_app = self.create_app_with_contributors(9, 0, name='two')
@@ -183,7 +183,7 @@ class TestAppsCache(Test):
 
     @with_context
     def test_get_top_respects_limit(self):
-        """Test CACHE APPS get_top returns only the top n apps"""
+        """Test CACHE PROJECTS get_top returns only the top n projects"""
 
         ranked_3_app = self.create_app_with_contributors(8, 0, name='three')
         ranked_2_app = self.create_app_with_contributors(9, 0, name='two')
@@ -197,7 +197,7 @@ class TestAppsCache(Test):
 
     @with_context
     def test_get_top_returns_four_apps_by_default(self):
-        """Test CACHE APPS get_top returns the top 4 apps by default"""
+        """Test CACHE PROJECTS get_top returns the top 4 projects by default"""
 
         ranked_3_app = self.create_app_with_contributors(8, 0, name='three')
         ranked_2_app = self.create_app_with_contributors(9, 0, name='two')
@@ -212,7 +212,7 @@ class TestAppsCache(Test):
 
     @with_context
     def test_get_top_doesnt_return_hidden_apps(self):
-        """Test CACHE APPS get_top does not return apps that are hidden"""
+        """Test CACHE PROJECTS get_top does not return projects that are hidden"""
 
         ranked_3_app = self.create_app_with_contributors(8, 0, name='three')
         ranked_2_app = self.create_app_with_contributors(9, 0, name='two')
@@ -230,7 +230,7 @@ class TestAppsCache(Test):
 
     @with_context
     def test_n_completed_tasks_no_completed_tasks(self):
-        """Test CACHE APPS n_completed_tasks returns 0 if no completed tasks"""
+        """Test CACHE PROJECTS n_completed_tasks returns 0 if no completed tasks"""
 
         app = self.create_app_with_tasks(completed_tasks=0, ongoing_tasks=5)
         completed_tasks = cached_apps.n_completed_tasks(app.id)
@@ -241,7 +241,7 @@ class TestAppsCache(Test):
 
     @with_context
     def test_n_completed_tasks_with_completed_tasks(self):
-        """Test CACHE APPS n_completed_tasks returns number of completed tasks
+        """Test CACHE PROJECTS n_completed_tasks returns number of completed tasks
         if there are any"""
 
         app = self.create_app_with_tasks(completed_tasks=5, ongoing_tasks=5)
@@ -253,7 +253,7 @@ class TestAppsCache(Test):
 
     @with_context
     def test_n_completed_tasks_with_all_tasks_completed(self):
-        """Test CACHE APPS n_completed_tasks returns number of tasks if all
+        """Test CACHE PROJECTS n_completed_tasks returns number of tasks if all
         tasks are completed"""
 
         app = self.create_app_with_tasks(completed_tasks=4, ongoing_tasks=0)
@@ -265,8 +265,8 @@ class TestAppsCache(Test):
 
     @with_context
     def test_n_registered_volunteers(self):
-        """Test CACHE APPS n_registered_volunteers returns number of volunteers
-        that contributed to an app when each only submited one task run"""
+        """Test CACHE PROJECTS n_registered_volunteers returns number of volunteers
+        that contributed to a project when each only submited one task run"""
 
         app = self.create_app_with_contributors(anonymous=0, registered=3)
         registered_volunteers = cached_apps.n_registered_volunteers(app.id)
@@ -277,8 +277,8 @@ class TestAppsCache(Test):
 
     @with_context
     def test_n_registered_volunteers_with_more_than_one_taskrun(self):
-        """Test CACHE APPS n_registered_volunteers returns number of volunteers
-        that contributed to an app when any submited more than one task run"""
+        """Test CACHE PROJECTS n_registered_volunteers returns number of volunteers
+        that contributed to a project when any submited more than one task run"""
 
         app = self.create_app_with_contributors(anonymous=0, registered=2, two_tasks=True)
         registered_volunteers = cached_apps.n_registered_volunteers(app.id)
@@ -289,8 +289,8 @@ class TestAppsCache(Test):
 
     @with_context
     def test_n_anonymous_volunteers(self):
-        """Test CACHE APPS n_anonymous_volunteers returns number of volunteers
-        that contributed to an app when each only submited one task run"""
+        """Test CACHE PROJECTS n_anonymous_volunteers returns number of volunteers
+        that contributed to a project when each only submited one task run"""
 
         app = self.create_app_with_contributors(anonymous=3, registered=0)
         anonymous_volunteers = cached_apps.n_anonymous_volunteers(app.id)
@@ -301,8 +301,8 @@ class TestAppsCache(Test):
 
     @with_context
     def test_n_anonymous_volunteers_with_more_than_one_taskrun(self):
-        """Test CACHE APPS n_anonymous_volunteers returns number of volunteers
-        that contributed to an app when any submited more than one task run"""
+        """Test CACHE PROJECTS n_anonymous_volunteers returns number of volunteers
+        that contributed to a project when any submited more than one task run"""
 
         app = self.create_app_with_contributors(anonymous=2, registered=0, two_tasks=True)
         anonymous_volunteers = cached_apps.n_anonymous_volunteers(app.id)
@@ -313,8 +313,8 @@ class TestAppsCache(Test):
 
     @with_context
     def test_n_volunteers(self):
-        """Test CACHE APPS n_volunteers returns the sum of the anonymous 
-        plus registered volunteers that contributed to an app"""
+        """Test CACHE PROJECTS n_volunteers returns the sum of the anonymous 
+        plus registered volunteers that contributed to a project"""
 
         app = self.create_app_with_contributors(anonymous=2, registered=3, two_tasks=True)
         total_volunteers = cached_apps.n_volunteers(app.id)

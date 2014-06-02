@@ -71,7 +71,7 @@ the type of the object: task, taskrun or app.
 Apps will not have a **links** field, because these objects do not have
 parents.
 
-Tasks will have only one parent: the associated application.
+Tasks will have only one parent: the associated project (application).
 
 Task Runs will have only two parents: the associated task and associated app.
 
@@ -123,7 +123,7 @@ List domain objects::
      
     GET http://{pybossa-site-url}/api/{domain-object}
     
-For example, you can get a list of registered applications like this::
+For example, you can get a list of registered projects (applications) like this::
 
     GET http://{pybossa-site-url}/api/app
 
@@ -233,7 +233,7 @@ If an error occurs, the action will return a JSON object like this:
         "exception_cls": "AttributeError"
     }
 
-Where **target** will refer to an App, Task or TaskRun object.
+Where **target** will refer to a Project, Task or TaskRun object.
 
 Update
 ~~~~~~
@@ -259,7 +259,7 @@ If an error occurs, the action will return a JSON object like this:
         "exception_cls": "AttributeError"
     }
 
-Where **target** will refer to an App, Task or TaskRun object.
+Where **target** will refer to a project, Task or TaskRun object.
 
 Delete
 ~~~~~~
@@ -285,7 +285,7 @@ If an error occurs, the action will return a JSON object like this:
         "exception_cls": "AttributeError"
     }
 
-Where **target** will refer to an App, Task or TaskRun object.
+Where **target** will refer to a Project, Task or TaskRun object.
 
 
 Requesting a new task for current user
@@ -300,7 +300,7 @@ This will return a domain Task object in JSON format if there is a task
 available for the user, otherwise it will return **None**.
 
 .. note::
-    Some applications will want to pre-load the next task for the current user.
+    Some projects will want to pre-load the next task for the current user.
     This is possible by passing the argument **?offset=1** to the **newtask**
     endpoint.
 
@@ -325,6 +325,6 @@ Where 'provider' will be any of the third parties supported, i.e. 'twitter',
 Example Usage
 -------------
 
-Create an Application object::
+Create a Project (Application) object::
 
   curl -X POST -H "Content-Type:application/json" -s -d '{"name":"myapp", "info":{"xyz":1}}' 'http://localhost:5000/api/app?api_key=API-KEY'

@@ -1,15 +1,15 @@
-====================
-Application Tutorial
-====================
+================
+Project Tutorial
+================
 
-This tutorial is based in the demo application **Flickr Person** (`source code`_) provided with
-PyBossa. This demo application is a simple microtasking application where users have to
+This tutorial is based in the demo project **Flickr Person** (`source code`_) provided with
+PyBossa. This demo project is a simple microtasking project where users have to
 answer the following question: *Do you see a human in this photo?* The possible
 answers are: *Yes, No* and *I don't know*.
 
 .. _source code: https://github.com/PyBossa/app-flickrperson
 
-The demo application Flickr Person has two main components:
+The demo project Flickr Person has two main components:
 
   * The :ref:`task-creator` a Python script that creates the tasks in PyBossa, and
   * the :ref:`task-presenter`: an HTML + Javascript structure that will show the tasks 
@@ -40,14 +40,14 @@ Then, you will be able to copy the
 .. image:: http://i.imgur.com/aTooi6Q.png
 
 This **API-KEY** allows you to create the
-application in PyBossa (only authenticated users can create applications and
+project in PyBossa (only authenticated users can create projects and
 tasks, while everyone can collaborate solving the tasks).
 
 .. note::
 
-    The Flickr Person Finder demo application uses the third party libraries
+    The Flickr Person Finder demo project uses the third party libraries
     that need to be installed in your system before proceeding. For this
-    reason, we recommend you to configure a `virtualenv`_  for the application 
+    reason, we recommend you to configure a `virtualenv`_  for the project 
     as it will create a an isolated Python environment in a folder, 
     helping you to manage different dependencies and
     versions without having to deal with root permissions in your server machine.
@@ -77,18 +77,17 @@ tasks, while everyone can collaborate solving the tasks).
     If you need to install **pip** in your system, check `the official
     documentation. <http://www.pip-installer.org/en/latest/installing.html>`_
 
+Creating the Project
+====================
 
-Creating the Application
-========================
-
-There two possible ways for creating an application:
+There two possible ways for creating a project:
 
   * :ref:`web-interface`: click in your user name, and you will
-    see a section named **applications** list. In that section you will be able
-    to create an application using the web interface.
+    see a section named **projects** list. In that section you will be able
+    to create a project using the web interface.
   * :ref:`api-interface`: you can check the source code of the
     `createTasks.py script <https://github.com/PyBossa/app-flickrperson/blob/master/createTasks.py>`_ 
-    for more details about creating an application using the API.
+    for more details about creating a project using the API.
 
 For this tutorial we are going to use the second option, the :doc:`../api` via
 the `createTasks.py script <https://github.com/PyBossa/app-flickrperson/blob/master/createTasks.py>`_. 
@@ -108,7 +107,7 @@ Cloning the Flickr Person Finder source code
 
 In order to follow the tutorial, you will need to clone the `Flickr Person
 Finder public Github Repository <http://github.com/PyBossa/app-flickrperson>`_
-so you will have a local copy of the required files to create the application
+so you will have a local copy of the required files to create the project
 and tasks using the API.
 
 .. image:: http://i.imgur.com/CYPnPft.png
@@ -116,7 +115,7 @@ and tasks using the API.
 If you are new to Github and the GIT software, we recommend you to take this
 `free and on-line course <http://try.github.com>`_ (it will take you only
 15 minutes!) where you will learn the basics, which are the main concepts that
-you will need for cloning the demo app repository.
+you will need for cloning the demo project repository.
 
 If you prefer to skip the course and take it in a later stage, the commands
 that you need to clone the repository are::
@@ -146,26 +145,25 @@ following content::
     }
 
 You will need to modify the **name** and **short_name** fields in order to
-create an application in crowdcrafting.org, as there is already an application
+create a project in crowdcrafting.org, as there is already a project
 registered with those values.
 
 .. note::
 
-    The **name** and **short_name** of the application **must be unique**!
-    Otherwise you will get an error (IntegrityError) when creating the application.
+    The **name** and **short_name** of the project **must be unique**!
+    Otherwise you will get an error (IntegrityError) when creating the project.
 
 You can re-use the other fields if you want. **Description** will be the text
-shown in the application listing page, and the **question** field is the
+shown in the project listing page, and the **question** field is the
 question that will be shown to the users when they collaborate with your
 project.
 
-
-Creating the Tasks and Application
-==================================
+Creating the Tasks and Project
+==============================
 
 The `createTasks.py script <https://github.com/PyBossa/app-flickrperson/blob/master/createTasks.py>`_
 has a full example about how to create
-an application and several tasks for the application. PyBossa will deliver the
+a project and several tasks for the project. PyBossa will deliver the
 tasks for the users (authenticated and anonymous ones) and store the submittedd
 answers in the PyBossa data base.
 
@@ -196,8 +194,8 @@ And saved into the task field **info** of the task model. As Flickr only
 publishes the latest 20 uploaded photos in their public feed, the script will
 create only 20 tasks in PyBossa.
 
-Finally the script will read the `app.json <https://github.com/PyBossa/app-flickrperson/blob/master/app.json>`_ file to create the application
-and associated tasks. In order to create the application and its tasks, 
+Finally the script will read the `app.json <https://github.com/PyBossa/app-flickrperson/blob/master/app.json>`_ file to create the project
+and associated tasks. In order to create the project and its tasks, 
 run the following script::
 
   python createTasks.py -s http://PYBOSSA-SERVER -k API-KEY -c
@@ -246,7 +244,7 @@ the data when you will analyze it, you can specify it in the task JSON object
 if you use the API::
 
     { 
-        'app_id': your application id,
+        'app_id': your project id,
         'info': the previous JSON object,
         'n_answers': 100
     }
@@ -274,7 +272,7 @@ Using the API for changing the priority will be as simple as specifying in the t
 JSON object the following::
 
     { 
-        'app_id': your application id,
+        'app_id': your project id,
         'info': the previous JSON object,
         'priority_0': 0.9
     }
@@ -282,20 +280,19 @@ JSON object the following::
 The priority is a number between 0.0 and 1.0. The highest priority is 1.0 and
 the lowest is 0.0. 
 
-
-Providing more details about the application
-============================================
+Providing more details about the project
+========================================
 
 If you check the source code, you will see that there is a file named
-*long_description.html*. This file has a long description of the application,
+*long_description.html*. This file has a long description of the project,
 explaining different aspects of it.
 
 This information is not mandatory, however it will be very useful for the users
-as they will get a bit more of information about the application goals.
+as they will get a bit more of information about the project goals.
 
 The file can be composed using Markdown or plain text.
 
-The long description will be shown in the application home page::
+The long description will be shown in the project home page::
 
  http://crowdcrafting.org/app/flickrperson
 
@@ -347,19 +344,19 @@ tasks and saving the answers from the users: <script></script>.
 .. _file: https://github.com/PyBossa/app-flickrperson/blob/master/app-flickrperson/template.html
 
 This template file will be used by the `createTasks.py <https://github.com/PyBossa/app-flickrperson/blob/master/createTasks.py>`_ script to send the
-template as part of the JSON object that will create the application. 
+template as part of the JSON object that will create the project. 
 
 .. note::
     You can also edit the HTML skeleton using the web interface. Once the
-    application has been created in PyBossa you will see a button that allows
+    project has been created in PyBossa you will see a button that allows
     you to edit the skeleton using a WYSIWYG editor.
 
-In PyBossa every application has a **presenter** endpoint:
+In PyBossa every project has a **presenter** endpoint:
 
  * http://PYBOSSA-SERVER/app/SLUG/newtask
 
 .. note::
-   The **slug** is the short name for the application, in this case 
+   The **slug** is the short name for the project, in this case 
    **flickrperson**. 
 
 Loading the above endpoint will load the skeleton and trigger the JavaScript 
@@ -400,7 +397,7 @@ that a new task is being loaded:
           <br/>
           <div class="alert-actions">
             <a class="btn small" href="/">Go back</a>
-            <a class="btn small" href="/app">or, Check other applications</a>
+            <a class="btn small" href="/app">or, Check other projects</a>
           </div>
         </div>
         <div id="error" class="alert alert-error" style="display:none;">
@@ -453,7 +450,7 @@ completed and how many are left. The code is the following:
             <div id="progress" rel="tooltip" title="#" class="bar" style="width: 0%;"></div>
         </div>
         <!-- 
-            This application uses Disqus to allow users to provide some feedback.
+            This project uses Disqus to allow users to provide some feedback.
             The next section includes a button that when a user clicks on it will
             load the comments, if any, for the given task
         -->
@@ -507,7 +504,7 @@ will be like this:
                 <div id="progress" rel="tooltip" title="#" class="bar" style="width: 0%;"></div>
             </div>
             <!-- 
-                This application uses Disqus to allow users to provide some feedback.
+                This project uses Disqus to allow users to provide some feedback.
                 The next section includes a button that when a user clicks on it will
                 load the comments, if any, for the given task
             -->
@@ -541,8 +538,8 @@ The script is very simple, it uses the  `PyBossa.JS library
 to submit and save the answer in the server.
 
 `PyBossa.JS <http://pybossajs.rtfd.org>`_ provides two methods that have to
-been overridden with some logic, as each application will have a different
-need, i.e. some applications will be loading other type of data in a different
+been overridden with some logic, as each project will have a different
+need, i.e. some projects will be loading other type of data in a different
 skeleton:
 
   * pybossa.taskLoaded(function(task, deferred){});
@@ -578,7 +575,7 @@ from the server:
 
 .. code-block:: javascript
 
-  { question: application.description,
+  { question: project.description,
     task: { 
             id: value,
             ...,
@@ -594,10 +591,10 @@ That JSON object will be accessible via the task object passed as an argument
 to the pybossa.presentTask method. First we will need to check that we are not
 getting an empty object, as it will mean that there are no more available tasks
 for the current user. In that case, we should hide the skeleton, and say thanks
-to the user as he has participated in all the tasks of the application.
+to the user as he has participated in all the tasks of the project.
 
 If the task object is not empty, then we have task to load into the *skeleton*.
-In this demo application, we will basically updating the question, adding the
+In this demo project, we will basically updating the question, adding the
 photo to the DOM, updating the user progress and add some actions to the 
 submission buttons so we can save the answer of the volunteer.
 
@@ -668,8 +665,8 @@ snippet:
     });
 
 
-If your application uses other input methods, you will have to adapt this to
-fit your application needs.
+If your project uses other input methods, you will have to adapt this to
+fit your project needs.
 
 Finally, the pybossa.presentTask calls a method named
 **loadUserProgress**. This method is in charge of getting the user progress of
@@ -693,7 +690,7 @@ completely, however the volunteers will benefit from this type of information
 as they will be able to know how many tasks they have to do, giving an idea of
 progress while the contribute to the project.
 
-Finally, we only need in our application to run the PyBossa application:
+Finally, we only need in our application to run the PyBossa project:
 
 .. code-block:: javascript
 
@@ -742,22 +739,22 @@ has been successfully saved:
 4. Updating the template for all the tasks
 ------------------------------------------
 
-It is possible to update the template of the application without
-having to re-create the application and its tasks. In order to update the
+It is possible to update the template of the project without
+having to re-create the project and its tasks. In order to update the
 template, you only have to modify the file *template.html* and run the following
 command::
 
   python createTasks.py -u http://PYBOSSA-SERVER -k API-KEY -t
 
 You can also use the web interface to do it, and see the changes in real time
-before saving the results. Check your application page, and click in the button
+before saving the results. Check your project page, and click in the button
 **Edit the task presenter**
 
 
 5. Test the task presenter
 --------------------------
 
-In order to test the application task presenter, go to the following URL::
+In order to test the project task presenter, go to the following URL::
 
   http://PYBOSSA-SERVER/app/SLUG/presenter
 
@@ -788,12 +785,12 @@ Creating a tutorial for the users
 =================================
 
 In general, users will like to have some feedback when accessing for the very
-first time your application. Usually, the overview page of your application
+first time your project. Usually, the overview page of your project
 will not be enough, so you can actually build a tutorial (a web page) that
-will explain to the volunteer how he can participate in the application.
+will explain to the volunteer how he can participate in the project.
 
 PyBossa will detect if the user is accessing for the very first time your
-application, so in that case, it will load the **tutorial** if your application
+project, so in that case, it will load the **tutorial** if your project
 has one.
 
 Adding a tutorial is really simple: you only have to create a file named
@@ -815,35 +812,35 @@ focus on the content. You can actually copy the template.html file and use it
 as a draft of your tutorial or just include a video of yourself explaining why 
 your project is important and how, as a volunteer, you can contribute.
 
-If your application has a tutorial, you can actually access it directly in this
+If your project has a tutorial, you can actually access it directly in this
 endpoint::
 
   http://server/app/tutorial
   
 
-Adding an icon to the application
-=================================
+Adding an icon to the project
+=============================
 
-It is possible also to add a nice icon for the application. By default PyBossa
-will render a 100x100 pixels empty thumbnail for those applications that do not
+It is possible also to add a nice icon for the project. By default PyBossa
+will render a 100x100 pixels empty thumbnail for those projects that do not
 provide it. 
 
 If you want to add an icon you can do it by using the web interface. Just go to
-the **Settings** tab within your application. There, select the image file you
+the **Settings** tab within your project. There, select the image file you
 want to use and push the **Upload** button. That's all!
 
 
-Creating a blog for the application
-===================================
+Creating a blog for the project
+===============================
 
-You can share the progress of the application creating a blog. Every PyBossa
-application includes a very simple blog where you will be able to write about
-your application regularly.
+You can share the progress of the project creating a blog. Every PyBossa
+project includes a very simple blog where you will be able to write about
+your project regularly.
 
 You can use Markdown or plain text for the content of the posts. And you will
 also be able to edit them or delete after creation if you want.
 
-To write a post simply go to the application **Settings tab and there you will
+To write a post simply go to the project **Settings tab and there you will
 find an option to write, read or delete your blog posts.
 
 
@@ -852,7 +849,7 @@ find an option to write, read or delete your blog posts.
 Exporting the obtained results
 ================================
 
-You can export all the available tasks and task runs for your application in 
+You can export all the available tasks and task runs for your project in 
 three different ways:
 
 * JSON_, an open standard designed for human-readable data interchange, or 
@@ -884,7 +881,7 @@ task has collected the number of answers specified by the task
 **Download results** will pop up, and if you 
 click it all the answers for the given task will be shown in JSON format.
 
-You can check which tasks are completed, going to the application URL::
+You can check which tasks are completed, going to the project URL::
 
     http://PYBOSSA-SERVER/app/slug
 
@@ -906,7 +903,7 @@ of tasks that have been completed using this url::
     GET http://PYBOSSA-SERVER/api/task?state=completed
 
 .. note::
-    If your application has more than 20 tasks, then you will need to use the
+    If your project has more than 20 tasks, then you will need to use the
     **offset** and **limit** parameters to get the next tasks, as by default
     PyBossa only returns the first 20 items.
 
@@ -917,7 +914,7 @@ requesting the collected answers for the given tasks::
 
 .. note::
 
-    If your application is collecting more than 20 answers per task, by default
+    If your project is collecting more than 20 answers per task, by default
     PyBossa will be collecting 30, you will need to add the following to the
     query: &limit=n_answers so you can get all the submitted answers by the
     volunteers for the given task.
@@ -943,7 +940,7 @@ Exporting the task and task runs to a CKAN server
 -------------------------------------------------
 
 If the server has been configured to allow you to export your aplication's data
-to a CKAN server (see :ref:`config-ckan`), the owner of the application will see another box that will
+to a CKAN server (see :ref:`config-ckan`), the owner of the project will see another box that will
 give you the option to export the data to the CKAN server.
 
 .. image:: http://i.imgur.com/cAEBjez.png
@@ -961,7 +958,7 @@ the section **External Services**.
 .. image:: http://i.imgur.com/f3gGQji.png
 
 Then, you will be able to actually export the data to the CKAN server and host
-it there. Your application will show in the info page at the bottom a link to
+it there. Your project will show in the info page at the bottom a link to
 your published data in the CKAN server so other people, citizens or researchers
 can actually cite your work.
 

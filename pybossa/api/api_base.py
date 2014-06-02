@@ -19,7 +19,7 @@
 PyBossa api module for exposing domain objects via an API.
 
 This package adds GET, POST, PUT and DELETE methods for any class:
-    * applications,
+    * projects,
     * tasks,
     * task_runs,
     * users,

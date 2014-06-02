@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """
-PyBossa Account view for web application.
+PyBossa Account view for web projects.
 
 This module exports the following endpoints:
     * Accounts index: list of all registered users in PyBossa
@@ -363,9 +363,9 @@ def profile(name):
 @login_required
 def applications(name):
     """
-    List user's application list.
+    List user's project list.
 
-    Returns a Jinja2 template with the list of applications of the user.
+    Returns a Jinja2 template with the list of projects of the user.
 
     """
     user = User.query.filter_by(name=name).first()
@@ -378,7 +378,7 @@ def applications(name):
     apps_published, apps_draft = _get_user_apps(user.id)
 
     return render_template('account/applications.html',
-                           title=gettext("Applications"),
+                           title=gettext("Projects"),
                            apps_published=apps_published,
                            apps_draft=apps_draft)
 

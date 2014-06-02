@@ -1,28 +1,28 @@
-=============================================
-Quickstart: Creating an Application
-=============================================
+===============================
+Quickstart: Creating a Project
+===============================
 
-This is a short guide about how you can create an application in a PyBossa
+This is a short guide about how you can create a project in a PyBossa
 server. Readers may wish to start with the :doc:`Step by step tutorial on creating an
-Application <tutorial>` which walks through creating a
-simple photo classification application if they want to understand all the
-details about how you create an application.
+Project <tutorial>` which walks through creating a
+simple photo classification project if they want to understand all the
+details about how you create a project.
 
-First of all we have to create an application for the project. An application
-represents a set of tasks that have to be resolved by people, so an application
+First of all we have to create a project for the project. A project
+represents a set of tasks that have to be resolved by people, so a project
 will have the following items:
 
     1. **Name**,
     2. **Short name** or **slug**, and
     3. **Description** and
 
-The **slug** or **short name** is a shortcut for accessing the application via
+The **slug** or **short name** is a shortcut for accessing the project via
 the web (short urls like this http://domain.com/app/slug).
 
 The **description** is a short sentence that will be used to describe your
-application.
+project.
 
-An application can be created using two different methods:
+A project can be created using two different methods:
 
 * :ref:`web-interface`, or
 * :ref:`api-interface`.
@@ -33,18 +33,18 @@ An application can be created using two different methods:
 Using the Web Interface
 =======================
 
-Creating an application using the web interface involves three steps:
+Creating a project using the web interface involves three steps:
 
-    1. Create the application,
+    1. Create the project,
     2. Import the tasks using the *simple built-in* :ref:`task-creator` 
        (uploading a CSV file or Google Spreadsheet link exported
        as CSV), and
     3. Write the :ref:`task-presenter` for the users.
 
-Creating the application
-~~~~~~~~~~~~~~~~~~~~~~~~
+Creating the project
+~~~~~~~~~~~~~~~~~~~~
 
-In order to create an application in PyBossa via the web interface you have to:
+In order to create a project in PyBossa via the web interface you have to:
 
 1. Sign in into your PyBossa server (or create an account)
 
@@ -63,16 +63,16 @@ figure:
    named: **Or using a web form and a CSV file importer for the tasks**.
 
 3. After clicking in the previous button, you will have to fill in a form
-   with the very basic to create your application:
-     1. **Name**: the full name of your application, i.e. Flickr Person
+   with the very basic to create your project:
+     1. **Name**: the full name of your project, i.e. Flickr Person
         Finder
      2. **Short Name**: the *slug* or short name used in the URL for
-        accessing your application, i.e. *flickrperson*.
+        accessing your project, i.e. *flickrperson*.
      3. **Long Description**: A *long* description where you can use Markdown
-        to format the description of your application. This field is
-        usually used to provide information about the application, the
+        to format the description of your project. This field is
+        usually used to provide information about the project, the
         developer, the researcher group or institutions involved in the
-        application, etc.
+        project, etc.
 
 .. image:: http://i.imgur.com/C8PpqYh.png
     :alt: PyBossa Create link
@@ -80,40 +80,40 @@ figure:
 .. note::
     PyBossa usually provides two Categories by default: *thinking* and
     *sensing*. The *thinking* category represents the standard PyBossa
-    application where users contribute helping with their skills. *Sensing*
-    category refers to applications that are using a volunter sensing tool like
+    project where users contribute helping with their skills. *Sensing*
+    category refers to projects that are using a volunter sensing tool like
     EpiCollect for gathering data.
 
 4. Once you have filled all the fields, click in the **Create the
-   application** button, and you will have created your first application.
+   project** button, and you will have created your first project.
 
-After creating the application, you should be redirected to the
-**Settings** application page, where you will be able to customize your app by
+After creating the project, you should be redirected to the
+**Settings** project page, where you will be able to customize your project by
 adding some extra information or changing some settings. There, you will find a
 form with the same fields as in the previous step (just in case you've changed
 your mind and wanted to change any of them) plus the following:
-     · **Description**: A **short** description of the application, e.g.
+     · **Description**: A **short** description of the project, e.g.
         *Image pattern recognition*. By default, it will have been autogenerated
         for you from the **Long description** you filled in the previous step
         (but without the Markdown!).
      · **Allow Anonymous Contributors**: By default anonymous and
-        authenticated users can participate in all the applications, however
+        authenticated users can participate in all the projects, however
         you can change it to only allow authenticated volunteers to
         participate.
-     · **Category**: Select a category that fits your application.
+     · **Category**: Select a category that fits your project.
         :ref:`categories`
         are added and managed by the server :ref:`administrators`.
      · **Long Description**: A *long* description where you can use Markdown
-        to format the description of your application. This field is
-        usually used to provide information about the application, the
+        to format the description of your project. This field is
+        usually used to provide information about the project, the
         developer, the researcher group or institutions involved in the
-        application, etc.
-     · **Hide**: Click in this field if you want to hide the application.
+        project, etc.
+     · **Hide**: Click in this field if you want to hide the project.
      · In addition, you will be able to select and upload an **image** from your
-        local computer to set it as the application image thoroughout the server.
+        local computer to set it as the project image thoroughout the server.
 
 .. image:: http://i.imgur.com/IiB0sMG.png
-    :alt: PyBossa Application Settings page
+    :alt: PyBossa Project Settings page
 
 
 .. _csv-import:
@@ -124,8 +124,8 @@ Importing the tasks via the built-in CSV Task Creator
 Tasks can be imported from a CSV file or a Google Spreadsheet via the simple
 built-in :ref:`task-creator`. You have to do the following:
 
-1. Navigate to your application's page (you can directly access it using 
-   the *slug* application name: http://server/app/slug).
+1. Navigate to your project's page (you can directly access it using 
+   the *slug* project name: http://server/app/slug).
 
 .. image:: http://i.imgur.com/98o4ixD.png
 
@@ -161,7 +161,7 @@ The **CSV** template, allows you to upload your own CSV file:
    columns. Your spreadsheet must be visible to public or everyone with URL.
 
 The other options pre-load a Google Docs URL to a public spreadsheet, 
-that you can automatically import for your application (the URL will
+that you can automatically import for your project (the URL will
 automatically copy and pasted into the input field for importing the tasks).
 
 Finally, you will see that there is an option for importing tasks from an
@@ -193,7 +193,7 @@ available templates are the following:
 
 .. note::
     If you import again the same URL, only new records will be added to the
-    application.
+    project.
 
 
 .. _`Image Pattern Recognition`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE&usp=sharing#gid=0
@@ -208,7 +208,7 @@ available templates are the following:
 Importing the tasks from an EpiCollect Plus Public Project
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-EpiCollect_ provides a web application for the generation of forms and freely hosted
+EpiCollect_ provides a web project for the generation of forms and freely hosted
 project websites (using Google's AppEngine) for many kinds of mobile data 
 collection projects.
 
@@ -236,8 +236,8 @@ EpiCollect.
 If you want to import the data points submitted to a **public** EpiCollect_
 project, you will have to follow the next steps:
 
-1. Navigate to your application's page (you can directly access it using 
-   the *slug* application name: http://server/app/slug).
+1. Navigate to your project's page (you can directly access it using 
+   the *slug* project name: http://server/app/slug).
 
 .. image:: http://i.imgur.com/98o4ixD.png
 
@@ -259,7 +259,7 @@ project, you will have to follow the next steps:
 
 .. image:: http://i.imgur.com/bCuTtl0.png
 
-All the data points should be imported now in your application.
+All the data points should be imported now in your project.
 
 .. _`EpiCollect`: http://plus.epicollect.net
 
@@ -267,20 +267,20 @@ All the data points should be imported now in your application.
     EpiCollect projects will be gathering data mostly all the time, for this
     reason, if you import again the same EpiCollect project, only **new data
     points** will be imported. This feature will allow you to easily add new data
-    points to the PyBossa application without having to do anything special.
+    points to the PyBossa project without having to do anything special.
 
 Flushing all the tasks
 ~~~~~~~~~~~~~~~~~~~~~~
 
-The application settings gives you an option to automatically **delete all the
-tasks and associated task runs** from your application.
+The project settings gives you an option to automatically **delete all the
+tasks and associated task runs** from your project.
 
 .. note::
     **This action cannot be un-done, so please, be sure that you want to actually
     delete all the tasks.**
 
 If you are sure that you want to flush all the tasks and task runs for your
-application, go to the application page (http://server/app/slug/tasks/) and click in
+project, go to the project page (http://server/app/slug/tasks/) and click in
 the **Settings** option of the left local navigation menu:
 
 .. image:: http://i.imgur.com/XsAOjnb.png
@@ -294,35 +294,35 @@ page will be shown:
     :width:100%
 
 As you can see, a **red warning alert** is shown, warning you that if you click
-in the **yes** button, you will be deleting not only the application tasks, but
-also the answers (task runs) that you have recollected for your application. Be
+in the **yes** button, you will be deleting not only the project tasks, but
+also the answers (task runs) that you have recollected for your project. Be
 sure before proceeding that you want to delete all the tasks. After clicking in
 the **yes** button, you will see that all the tasks have been flushed.
 
 Creating the Task Presenter
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Once you have the application and the tasks in the server, you can start
-working with the :ref:`task-presenter`, which will be the web application that 
-will get the tasks of your application, present them to the volunteer and save the
+Once you have the project and the tasks in the server, you can start
+working with the :ref:`task-presenter`, which will be the web project that 
+will get the tasks of your project, present them to the volunteer and save the
 answers provided by the users.
 
 If you have followed all the steps described in this section, you will be
-already in the page of your application, however, if you are not, you only need
-to access your application URL to work with your application. If your application
+already in the page of your project, however, if you are not, you only need
+to access your project URL to work with your project. If your project
 *slug* or *short name* is *flickrperson* you will be able to access the
-application managing options in this URL::
+project managing options in this URL::
 
     http://PYBOSSA-SERVER/app/flickrperson
 
 .. note::
     
     You need to be logged in, otherwise you will not be able to modify the
-    application.
+    project.
 
-Another way for accessing your application (or applications) is clicking in
-your *user name* and select the *My Applications* item from the drop down menu.
-From there you will be able to manage your applications:
+Another way for accessing your project (or projects) is clicking in
+your *user name* and select the *My Projects* item from the drop down menu.
+From there you will be able to manage your projects:
 
 .. image:: http://i.imgur.com/nH9u2nk.png
     :alt: PyBossa User Account
@@ -330,7 +330,7 @@ From there you will be able to manage your applications:
 .. image:: http://i.imgur.com/abu0SsT.png
     :width: 100%
 
-Once you have chosen your application, you can add :ref:`task-presenter` by
+Once you have chosen your project, you can add :ref:`task-presenter` by
 clicking in the **Tasks** local navigation link, and then click in the 
 button named **Editor** under the **Task Presenter** box. 
 
@@ -338,13 +338,13 @@ button named **Editor** under the **Task Presenter** box.
     :width: 100%
 
 After clicking in this button, a new web page will be shown where you can
-choose a template to start coding your application, so you don't have to
+choose a template to start coding your project, so you don't have to
 actually start from scratch. 
 
 .. image:: http://i.imgur.com/Xmq7qTq.png
 
 After choosing one of the templates, you will be able to adapt it to fit your
-application needs in a web text editor.
+project needs in a web text editor.
 
 .. image:: http://i.imgur.com/Z2myJrU.png
     :width: 100%
@@ -355,16 +355,16 @@ Click in the **Preview button** to get an idea about how it will look like your
 .. image:: http://i.imgur.com/daRJyLa.png
     :width: 100%
 
-After saving it, you will be able to access your app using the slug, or under
-your account in the *Published* applications section:
+After saving it, you will be able to access your project using the slug, or
+under your account in the *Published* projects section:
 
 .. image:: http://i.imgur.com/BXtsCba.png
-    :alt: Application Published
+    :alt: Project Published
     :width: 100%
 
 We recommend to read the 
 :doc:`Step by step tutorial on
-creating an Application <tutorial>`, as you will understand
+creating a Project <tutorial>`, as you will understand
 how to create the task presenter, which is basically adding some HTML skeleton
 to load the task data, input fields to get the answer of the users, and some
 JavaScript to make it to work.
@@ -374,20 +374,20 @@ JavaScript to make it to work.
 
 Using the API
 =============
-Creating an application using the API involves also three steps:
+Creating a project using the API involves also three steps:
 
-    1. Create the application,
+    1. Create the project,
     2. Create the :ref:`task-creator`, and 
     3. Create the :ref:`task-presenter` for the users.
 
-Creating the application
+Creating the project
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can create an application via the API URL **/api/app** with a POST request.
+You can create a project via the API URL **/api/app** with a POST request.
 
-You have to provide the following information about the application and convert
+You have to provide the following information about the project and convert
 it to a JSON object (the actual values are taken from the `Flickr Person demo
-application <http://github.com/PyBossa/app-flickrperson>`_)::
+project <http://github.com/PyBossa/app-flickrperson>`_)::
 
   name = u'Flickr Person Finder'
   short_name = u'FlickrPerson'
@@ -399,7 +399,7 @@ application <http://github.com/PyBossa/app-flickrperson>`_)::
 
 
 Flickr Person Finder, which is a **demo template** that **you can re-use**
-to create your own application, simplifies this step by using a simple
+to create your own project, simplifies this step by using a simple
 file named **app.json**:
 
 .. code-block:: javascript
@@ -415,11 +415,11 @@ file named **app.json**:
 
 As Flickr Person is trying to figure out if there is a person in
 the photo, the question is: *Do you see a human in this photo?*. The file
-provides a basic configuration for your application, where you can even specify
-the icon thumbnail for your application.
+provides a basic configuration for your project, where you can even specify
+the icon thumbnail for your project.
 
 The **Thumbnail** is a field that you can use to include a nice icon for the
-application. Flickr Person Finder uses as a thumbnail a cropped version
+project. Flickr Person Finder uses as a thumbnail a cropped version
 (100x100 pixels) of a `Flickr photo from Sean McGrath (license CC BY 2.0)
 <http://www.flickr.com/photos/mcgraths/3289448299/>`_. If you decide to not
 include a thumbnail, PyBossa will render for you a place holder
@@ -430,11 +430,11 @@ Creating the tasks
 
 As in all the previous step, we are going to create a JSON
 object and POST it using the following API URL **/api/task** in order to add
-tasks to an application that you own. 
+tasks to a project that you own. 
 
 For PyBossa all the tasks are JSON objects with a field named **info** where
-the owners of the application can add any JSON object that will represent
-a task for their application. For example, using again the `Flickr Person demo application
+the owners of the project can add any JSON object that will represent
+a task for their project. For example, using again the `Flickr Person demo project
 <http://github.com/PyBossa/app-flickrperson>`_ example, we need to create a JSON object
 that should have the link to the photo that we want to identify:
 
@@ -457,11 +457,11 @@ not in a photo, the provided information is:
     2. the direct URL to the image, the <img src> value.
 
 The **info** field is a free-form field that can be populated with any
-structure. If your application needs more fields, you can add them and use the
+structure. If your project needs more fields, you can add them and use the
 format that best fits your needs.
 
 These steps are usually coded in the :ref:`task-creator`. The Flickr Person
-Finder applications provides a template for the :ref:`task-creator` that can
+Finder projects provides a template for the :ref:`task-creator` that can
 be re-used without any problems. Check the createTasks.py_ script for further
 details.
 
@@ -483,7 +483,7 @@ details.
 One of the benefits of using the API is that you can create tasks polling other
 web services like Flickr, where you can basically use an API. Once we have
 created the tasks, we will need to create the :ref:`task-presenter` for the
-application.
+project.
 
 
 Creating the Task Presenter
@@ -491,7 +491,7 @@ Creating the Task Presenter
 
 The :ref:`task-presenter` is usually a template of HTML and JavaScript that will present the
 tasks to the users, and save the answers in the database. The `Flickr Person demo
-application <http://github.com/PyBossa/app-flickersperson>`_ provides a simple template
+project <http://github.com/PyBossa/app-flickersperson>`_ provides a simple template
 which has a <div> to load the input files, in this case the photo, and another
 <div> to load the action buttons that the users will be able to to press to
 answer the question and save it in the database. Please, check the :doc:`tutorial` for more details
@@ -501,7 +501,7 @@ As we will be using the API for creating the task presenter, we will basically
 have to create an HTML file in our computer, read it from a script, and post 
 it into PyBossa using the API.
 
-Once the presenter has been posted to the application, you can edit it locally
+Once the presenter has been posted to the project, you can edit it locally
 with your own editor, or using the PyBossa interface (see previous section).
 
 .. note::
@@ -518,7 +518,7 @@ with your own editor, or using the PyBossa interface (see previous section).
 
 We recommend to read the 
 :doc:`Step by step tutorial on
-creating an Application <tutorial>`, as you will understand
+creating a Project <tutorial>`, as you will understand
 how to create the task presenter, which is basically adding some HTML skeleton
 to load the task data, input fields to get the answer of the users, and some
 JavaScript to make it to work.

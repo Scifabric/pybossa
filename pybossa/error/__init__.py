@@ -19,7 +19,7 @@
 PyBossa error module for processing error status.
 
 This package adds GET, POST, PUT and DELETE errors for the API:
-    * applications,
+    * projects,
     * tasks and
     * task_runs
 

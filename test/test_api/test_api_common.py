@@ -47,7 +47,7 @@ class TestApiCommon(TestAPI):
         res = self.app.get('/api/app?limit=10&offset=10')
         data = json.loads(res.data)
         assert len(data) == 10, len(data)
-        assert data[0].get('name') == 'My App number 11', data[0]
+        assert data[0].get('name') == 'My Project number 11', data[0]
 
         res = self.app.get('/api/task')
         data = json.loads(res.data)

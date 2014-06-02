@@ -81,13 +81,13 @@ class TestBlogpostModel(Test):
 
     @with_context
     def test_blogpost_belongs_to_app(self):
-        """Test BLOGPOSTS must belong to an app"""
+        """Test BLOGPOSTS must belong to a project"""
         self.configure_fixtures()
         blogpost = Blogpost(title='title', body="body", app=None)
 
     @with_context
     def test_blogpost_belongs_to_app(self):
-        """Test BLOGPOSTS must belong to an app"""
+        """Test BLOGPOSTS must belong to a project"""
         self.configure_fixtures()
         blogpost = Blogpost(title='title', app = None)
         db.session.add(blogpost)
@@ -96,7 +96,7 @@ class TestBlogpostModel(Test):
 
     @with_context
     def test_blogpost_is_deleted_after_app_deletion(self):
-        """Test BLOGPOST no blogposts can exist after it's app has been removed"""
+        """Test BLOGPOST no blogposts can exist after it's project has been removed"""
         self.configure_fixtures()
         blogpost = Blogpost(title='title', body="body", app=self.app)
         db.session.add(blogpost)
@@ -112,7 +112,7 @@ class TestBlogpostModel(Test):
 
     @with_context
     def test_blogpost_deletion_doesnt_delete_app(self):
-        """Test BLOGPOST when deleting a blogpost it's parent app is not affected"""
+        """Test BLOGPOST when deleting a blogpost it's parent project is not affected"""
         self.configure_fixtures()
         blogpost = Blogpost(title='title', body="body", app=self.app)
         db.session.add(blogpost)

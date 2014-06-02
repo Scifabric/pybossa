@@ -4,15 +4,15 @@ DEPRECATED: Using the task ID with FlickrPerson
 
 .. note:: 
     This documentation is deprecated. The new PyBossa.JS_ library, will do
-    automatically all the described elements in this page for your application,
+    automatically all the described elements in this page for your project,
     simplifying your code. The :doc:`tutorial` uses the new PyBossa.JS
-    version and explain how to use it. Please, upgrade your application.
+    version and explain how to use it. Please, upgrade your project.
 
 .. _PyBossa.JS: https://github.com/PyBossa/pybossa.js/
-PyBossa features a new endpoint system that allows every application to load
-a specific Task for a given application.
+PyBossa features a new endpoint system that allows every project to load
+a specific Task for a given project.
 
-The following URL is available for every application::
+The following URL is available for every project::
 
   http://pybossa.com/app/slug/task/id
 
@@ -33,12 +33,12 @@ This new endpoint opens the possibility to use the following work flow:
 
 
 Therefore, while this new work flow is more powerful, the owner of the
-application will have to code a bit more for loading the tasks in its own URL
+project will have to code a bit more for loading the tasks in its own URL
 
-DEPRECATED: Checking if the application has to load a Task or request a new one
+DEPRECATED: Checking if the project has to load a Task or request a new one
 ===============================================================================
 
-The following code shows how any PyBossa application can check if it has to
+The following code shows how any PyBossa project can check if it has to
 load a specific task, or request a new one for the user using PyBossa.JS::
 
   pathArray = window.location.pathname.split('/');
@@ -76,7 +76,7 @@ participated in all the available tasks.
 DEPRECATED: Loading the specific task
 =====================================
 
-Once the application has obtained a task for the user, the function loadTask
+Once the project has obtained a task for the user, the function loadTask
 will be called::
 
   function loadTask( task_id ) {
@@ -128,6 +128,6 @@ This will trigger the right methods described in the beginning of this section,
 checking if the URL has the **task** keyword in the pathname, and acting
 accordingly.
 
-With this set of changes, the application will be able to load external tools
+With this set of changes, the project will be able to load external tools
 like Disqus forums, as each task will have its own URL, so users can talk about
 it.

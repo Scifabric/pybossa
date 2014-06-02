@@ -25,9 +25,9 @@ class AppFactory(BaseFactory):
     FACTORY_FOR = App
 
     id = factory.Sequence(lambda n: n)
-    name = factory.Sequence(lambda n: u'My App number %d' % n)
+    name = factory.Sequence(lambda n: u'My Project number %d' % n)
     short_name = factory.Sequence(lambda n: u'app%d' % n)
-    description = u'App description'
+    description = u'Project description'
     allow_anonymous_contributors = True
     long_tasks = 0
     hidden = 0

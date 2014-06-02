@@ -153,7 +153,7 @@ class TestPrivacyWebPublic(web_helper.Helper):
 
     @with_context
     def test_05_app_stats_index(self):
-        """Test PRIVACY app stats privacy is respected"""
+        """Test PRIVACY project stats privacy is respected"""
         # As Anonymou user
         url = "/app/%s/stats" % self.app_short_name
         res = self.app.get(url, follow_redirects=True)
@@ -337,7 +337,7 @@ class TestPrivacyWebPrivacy(web_helper.Helper):
     @patch.dict(flask_app.config, {'ENFORCE_PRIVACY': True})
     @with_context
     def test_05_app_stats_index(self):
-        """Test PRIVACY app stats privacy is respected"""
+        """Test PRIVACY project stats privacy is respected"""
         # As Anonymou user
         url = "/app/%s/stats" % self.app_short_name
         res = self.app.get(url, follow_redirects=True)

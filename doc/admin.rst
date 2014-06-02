@@ -13,7 +13,7 @@ name and then in the link *Admin site*.
 
 Administrators can manage three different areas of the server:
 
- 1. Featured applications
+ 1. Featured projects
  2. Categories, and
  3. Administrators
 
@@ -21,8 +21,8 @@ Administrators can manage three different areas of the server:
     :width:100%
 
 .. note::
-    Admins can also modify all applications, and also see which applications are marked
-    as **Draft**: applications that do not have at least one task and
+    Admins can also modify all projects, and also see which projects are marked
+    as **Draft**: projects that do not have at least one task and
     a :ref:`task-presenter` to allow other volunteers to participate.
 
 .. note::
@@ -33,16 +33,16 @@ Administrators can manage three different areas of the server:
 
 .. _featured-apps:
 
-Featured Applications
-=====================
+Featured Projects
+=================
 
-In this section, admins can add/remove applications to the front page of the
+In this section, admins can add/remove projects to the front page of the
 site. 
 
 .. image:: http://i.imgur.com/Jpr3bGh.png
     :width:100%
 
-Basically, you will see a green button to add an application to the Featured
+Basically, you will see a green button to add a project to the Featured
 selection, or a red one to remove it from the front page.
 
 
@@ -53,9 +53,9 @@ Categories
 
 PyBossa provides by default two type of categories:
 
-1. **Thinking**: for applications where the users can use their skills to solve
+1. **Thinking**: for projects where the users can use their skills to solve
    a problem (i.e. image or sound pattern recognition).
-2. **Sensing**: for applications where the users can help gathering data using
+2. **Sensing**: for projects where the users can help gathering data using
    tools like EpiCollect_ and then analyze the data in the PyBossa server.
 
 Admins can add as many categories as they want, just type then and its
@@ -67,9 +67,9 @@ description and click in the green button labeled: Add category.
     :width: 100%
 
 .. note::
-    You cannot delete a category if it has one or more applications associated
+    You cannot delete a category if it has one or more projects associated
     with it. You can however rename the category or delete it when all the
-    associated apps are not linked to the given category.
+    associated projects are not linked to the given category.
 
 
 .. _administrators:

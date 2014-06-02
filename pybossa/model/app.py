@@ -33,7 +33,7 @@ from pybossa.model.blogpost import Blogpost
 
 
 class App(db.Model, DomainObject):
-    '''A microtasking Application to which Tasks are associated.
+    '''A microtasking Project to which Tasks are associated.
     '''
 
     __tablename__ = 'app'

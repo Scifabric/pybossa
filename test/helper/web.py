@@ -108,10 +108,10 @@ class Helper(Test):
                 self._create_categories()
 
 
-    def new_application(self, method="POST", name="Sample App",
+    def new_application(self, method="POST", name="Sample Project",
                         short_name="sampleapp", description="Description",
                         long_description=u'Long Description\n================'):
-        """Helper function to create an application"""
+        """Helper function to create a project"""
         if method == "POST":
             self.create_categories()
             return self.app.post("/app/new", data={
@@ -124,7 +124,7 @@ class Helper(Test):
             return self.app.get("/app/new", follow_redirects=True)
 
     def new_task(self, appid):
-        """Helper function to create tasks for an app"""
+        """Helper function to create tasks for a project"""
         tasks = []
         for i in range(0, 10):
             tasks.append(Task(app_id=appid, state='0', info={}))
@@ -171,7 +171,7 @@ class Helper(Test):
             return self.app.get(url, follow_redirects=True)
 
     def delete_application(self, method="POST", short_name="sampleapp"):
-        """Helper function to delete an application"""
+        """Helper function to delete a project"""
         if method == "POST":
             return self.app.post("/app/%s/delete" % short_name,
                                  follow_redirects=True)
@@ -180,14 +180,14 @@ class Helper(Test):
                                 follow_redirects=True)
 
     def update_application(self, method="POST", short_name="sampleapp", id=1,
-                           new_name="Sample App", new_short_name="sampleapp",
+                           new_name="Sample Project", new_short_name="sampleapp",
                            new_description="Description",
                            new_allow_anonymous_contributors="False",
                            new_category_id="2",
                            new_long_description="Long desc",
                            new_sched="random",
                            new_hidden=False):
-        """Helper function to update an application"""
+        """Helper function to update a project"""
         if method == "POST":
             if new_hidden:
                 return self.app.post("/app/%s/update" % short_name,

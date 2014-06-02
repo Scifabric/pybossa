@@ -50,7 +50,7 @@ class TestModelBase(Test):
             'total': 150,
             'long_description': 'hello world'}
         app = App(
-            name=u'My New App',
+            name=u'My New Project',
             short_name=u'my-new-app',
             description=u'description',
             info=info)
@@ -72,7 +72,7 @@ class TestModelBase(Test):
         db.session.remove()
 
         app = db.session.query(App).get(app_id)
-        assert app.name == u'My New App', app
+        assert app.name == u'My New Project', app
         # year would start with 201...
         assert app.created.startswith('201'), app.created
         assert app.long_tasks == 0, app.long_tasks

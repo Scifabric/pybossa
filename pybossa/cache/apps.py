@@ -250,7 +250,7 @@ def n_published():
 @cache(timeout=timeouts.get('STATS_DRAFT_TIMEOUT'),
        key_prefix="number_draft_apps")
 def n_draft():
-    """Return number of draft applications"""
+    """Return number of draft projects"""
     sql = text('''SELECT COUNT(app.id) FROM app
                LEFT JOIN task on app.id=task.app_id
                WHERE task.app_id IS NULL AND app.info NOT LIKE('%task_presenter%')
@@ -264,7 +264,7 @@ def n_draft():
 
 @memoize(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'))
 def get_draft(category, page=1, per_page=5):
-    """Return list of draft applications"""
+    """Return list of draft projects"""
 
     count = n_draft()
 

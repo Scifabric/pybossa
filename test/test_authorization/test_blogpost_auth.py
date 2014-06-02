@@ -54,7 +54,7 @@ class TestBlogpostAuthorization(Test):
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     @patch('pybossa.auth.blogpost.current_user', new=mock_anonymous)
     def test_anonymous_user_create_blogposts_for_given_app(self):
-        """Test anonymous users cannot create blogposts for a given app"""
+        """Test anonymous users cannot create blogposts for a given project"""
 
         with self.flask_app.test_request_context('/'):
             app = AppFactory.create()
@@ -76,7 +76,7 @@ class TestBlogpostAuthorization(Test):
     @patch('pybossa.auth.blogpost.current_user', new=mock_admin)
     def test_non_owner_authenticated_user_create_given_blogpost(self):
         """Test authenticated user cannot create a given blogpost if is not the
-        app owner, even if is admin"""
+        project owner, even if is admin"""
 
         with self.flask_app.app_context():
             admin = UserFactory.create()
@@ -90,8 +90,8 @@ class TestBlogpostAuthorization(Test):
     @patch('pybossa.auth.current_user', new=mock_admin)
     @patch('pybossa.auth.blogpost.current_user', new=mock_admin)
     def test_non_owner_authenticated_user_create_blogpost_for_given_app(self):
-        """Test authenticated user cannot create blogposts for a given app
-        if is not the app owner, even if is admin"""
+        """Test authenticated user cannot create blogposts for a given project
+        if is not the project owner, even if is admin"""
 
         with self.flask_app.app_context():
             owner = UserFactory.create_batch(2)[1]
@@ -104,7 +104,7 @@ class TestBlogpostAuthorization(Test):
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
     def test_owner_create_given_blogpost(self):
-        """Test authenticated user can create a given blogpost if is app owner"""
+        """Test authenticated user can create a given blogpost if is project owner"""
 
         with self.flask_app.test_request_context('/'):
             owner = UserFactory.create_batch(2)[1]
@@ -118,8 +118,8 @@ class TestBlogpostAuthorization(Test):
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
     def test_owner_create_blogpost_for_given_app(self):
-        """Test authenticated user can create blogposts for a given app
-        if is app owner"""
+        """Test authenticated user can create blogposts for a given project
+        if is project owner"""
 
         with self.flask_app.test_request_context('/'):
             owner = UserFactory.create_batch(2)[1]
@@ -132,7 +132,7 @@ class TestBlogpostAuthorization(Test):
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
     def test_owner_create_blogpost_as_other_user(self):
-        """Test authenticated user cannot create blogpost if is app owner but
+        """Test authenticated user cannot create blogpost if is project owner but
         sets another person as the author of the blogpost"""
 
         with self.flask_app.test_request_context('/'):
@@ -160,7 +160,7 @@ class TestBlogpostAuthorization(Test):
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     @patch('pybossa.auth.blogpost.current_user', new=mock_anonymous)
     def test_anonymous_user_read_blogposts_for_given_app(self):
-        """Test anonymous users can read blogposts of a given app"""
+        """Test anonymous users can read blogposts of a given project"""
 
         with self.flask_app.test_request_context('/'):
             app = AppFactory.create()
@@ -170,7 +170,7 @@ class TestBlogpostAuthorization(Test):
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     @patch('pybossa.auth.blogpost.current_user', new=mock_anonymous)
     def test_anonymous_user_read_given_blogpost_hidden_app(self):
-        """Test anonymous users cannot read a given blogpost of a hidden app"""
+        """Test anonymous users cannot read a given blogpost of a hidden project"""
 
         with self.flask_app.test_request_context('/'):
             app = AppFactory.create(hidden=1)
@@ -182,7 +182,7 @@ class TestBlogpostAuthorization(Test):
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     @patch('pybossa.auth.blogpost.current_user', new=mock_anonymous)
     def test_anonymous_user_read_blogposts_for_given_hidden_app(self):
-        """Test anonymous users cannot read blogposts of a given app if is hidden"""
+        """Test anonymous users cannot read blogposts of a given project if is hidden"""
 
         with self.flask_app.test_request_context('/'):
             app = AppFactory.create(hidden=1)
@@ -193,7 +193,7 @@ class TestBlogpostAuthorization(Test):
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
     def test_non_owner_authenticated_user_read_given_blogpost(self):
-        """Test authenticated user can read a given blogpost if is not the app owner"""
+        """Test authenticated user can read a given blogpost if is not the project owner"""
 
         with self.flask_app.test_request_context('/'):
             app = AppFactory.create()
@@ -207,8 +207,8 @@ class TestBlogpostAuthorization(Test):
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
     def test_non_owner_authenticated_user_read_blogposts_for_given_app(self):
-        """Test authenticated user can read blogposts of a given app if
-        is not the app owner"""
+        """Test authenticated user can read blogposts of a given project if
+        is not the project owner"""
 
         with self.flask_app.test_request_context('/'):
             app = AppFactory.create()
@@ -221,8 +221,8 @@ class TestBlogpostAuthorization(Test):
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
     def test_non_owner_authenticated_user_read_given_blogpost_hidden_app(self):
-        """Test authenticated user cannot read a given blogpost of a hidden app
-        if is not the app owner"""
+        """Test authenticated user cannot read a given blogpost of a hidden project
+        if is not the project owner"""
 
         with self.flask_app.test_request_context('/'):
             app = AppFactory.create(hidden=1)
@@ -236,8 +236,8 @@ class TestBlogpostAuthorization(Test):
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
     def test_non_owner_authenticated_user_read_blogposts_for_given_hidden_app(self):
-        """Test authenticated user cannot read blogposts of a given app if is
-        hidden and is not the app owner"""
+        """Test authenticated user cannot read blogposts of a given project if is
+        hidden and is not the project owner"""
 
         with self.flask_app.test_request_context('/'):
             app = AppFactory.create(hidden=1)
@@ -250,7 +250,7 @@ class TestBlogpostAuthorization(Test):
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
     def test_owner_read_given_blogpost(self):
-        """Test authenticated user can read a given blogpost if is the app owner"""
+        """Test authenticated user can read a given blogpost if is the project owner"""
 
         with self.flask_app.test_request_context('/'):
             owner = UserFactory.create_batch(2)[1]
@@ -264,8 +264,8 @@ class TestBlogpostAuthorization(Test):
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
     def test_owner_read_blogposts_for_given_app(self):
-        """Test authenticated user can read blogposts of a given app if is the
-        app owner"""
+        """Test authenticated user can read blogposts of a given project if is the
+        project owner"""
 
         with self.flask_app.test_request_context('/'):
             owner = UserFactory.create_batch(2)[1]
@@ -278,8 +278,8 @@ class TestBlogpostAuthorization(Test):
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
     def test_owner_read_given_blogpost_hidden_app(self):
-        """Test authenticated user can read a given blogpost of a hidden app if
-        is the app owner"""
+        """Test authenticated user can read a given blogpost of a hidden project if
+        is the project owner"""
 
         with self.flask_app.test_request_context('/'):
             owner = UserFactory.create_batch(2)[1]
@@ -293,8 +293,8 @@ class TestBlogpostAuthorization(Test):
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
     def test_owner_read_blogposts_for_given_hidden_app(self):
-        """Test authenticated user can read blogposts of a given hidden app if
-        is the app owner"""
+        """Test authenticated user can read blogposts of a given hidden project if
+        is the project owner"""
 
         with self.flask_app.test_request_context('/'):
             owner = UserFactory.create_batch(2)[1]
@@ -307,7 +307,7 @@ class TestBlogpostAuthorization(Test):
     @patch('pybossa.auth.current_user', new=mock_admin)
     @patch('pybossa.auth.blogpost.current_user', new=mock_admin)
     def test_admin_read_given_blogpost_hidden_app(self):
-        """Test admin can read a given blogpost of a hidden app"""
+        """Test admin can read a given blogpost of a hidden project"""
 
         with self.flask_app.test_request_context('/'):
             admin = UserFactory.create()
@@ -321,7 +321,7 @@ class TestBlogpostAuthorization(Test):
     @patch('pybossa.auth.current_user', new=mock_admin)
     @patch('pybossa.auth.blogpost.current_user', new=mock_admin)
     def test_admin_read_blogposts_for_given_hidden_app(self):
-        """Test admin can read blogposts of a given hidden app"""
+        """Test admin can read blogposts of a given hidden project"""
 
         with self.flask_app.test_request_context('/'):
             admin = UserFactory.create()

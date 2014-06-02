@@ -1,10 +1,10 @@
-===========================
-Configuring the Application
-===========================
+=======================
+Configuring the Project
+=======================
 
-If you are the owner of an application, you can configure it using the web
+If you are the owner of a project, you can configure it using the web
 interface. When you are the owner (also an administrator of the PyBossa server) a new 
-link in the left local navigation bar of the application will appear with the
+link in the left local navigation bar of the project will appear with the
 name **Settings**.
 
 .. image:: http://i.imgur.com/IiB0sMG.png
@@ -13,7 +13,7 @@ name **Settings**.
 The **Settings** page will give you three basic options:
 
 #. :ref:`app-details`: here you will be able to change the name
-   of the application, the description, icon, etc.
+   of the project, the description, icon, etc.
 #. :ref:`task-settings`: this button will open the :ref:`task-settings` page where you
    will be able to configure the :ref:`task-scheduler`, change the
    :ref:`task-priority`, modify the
@@ -21,28 +21,28 @@ The **Settings** page will give you three basic options:
    and :ref:`delete-tasks` and its associated task runs (also known as
    answers).
 #. :ref:`app-delete`: if you click in this button you will be able to
-   completely remove the application from the system. A big warning message
-   will be shown before allowing you to delete the application.
+   completely remove the project from the system. A big warning message
+   will be shown before allowing you to delete the project.
 
 .. _app-details:
 
-Edit the application details
+Edit the project details
 ============================
 
-In this section you can change the following parameters of your application:
+In this section you can change the following parameters of your project:
 
-* **Name**: the name of the application.
+* **Name**: the name of the project.
 * **Short name**: (also known as *slug*) the string that will be used to access
-  your application, http://server/app/short_name.
-* **Description**: the short description text of the application.
-* **Icon link**: the URL of the icon of the application.
+  your project, http://server/app/short_name.
+* **Description**: the short description text of the project.
+* **Icon link**: the URL of the icon of the project.
 * **Allow Anonymous Contributors**: force users to sign in, in order to
-  participate in your application. By default anonymous users are allowed to
-  participate in all the applications, so change the value to *No* if you want
+  participate in your project. By default anonymous users are allowed to
+  participate in all the projects, so change the value to *No* if you want
   to disable anonymous contributions.
 * **Long Description**: change the text (you can use `Markdown`) describing
-  the goals of your application.
-* **Hide**: tick this field, if you want to hide the application from the
+  the goals of your project.
+* **Hide**: tick this field, if you want to hide the project from the
   public listings. You will be the only one with access to it (except admin
   users).
 
@@ -56,7 +56,7 @@ In this section you can change the following parameters of your application:
 Task Settings
 =============
 
-The *Task Settings* is only accessible for the application owner and server
+The *Task Settings* is only accessible for the project owner and server
 administrators. The page can be reached via the **Settings** menu, but also
 from the **Tasks** link in the left local navigation bar. 
 
@@ -65,7 +65,7 @@ from the **Tasks** link in the left local navigation bar.
 
 The page shows four different blocks:
 
-#. **Task Scheduler**: this block allows you to specify how the application
+#. **Task Scheduler**: this block allows you to specify how the project
    should send tasks to the volunteers.
 #. **Task Priority**: this block allows you to change the priority of the tasks.
 #. **Task Redundancy**: use this block to change the default number of answers
@@ -103,12 +103,12 @@ features:
    will send to the same user the next task.
 
 In summary, from the point of view of a user (authenticated or anonymous) the
-system will be sending the application tasks in the order they were created. If
+system will be sending the project tasks in the order they were created. If
 the user tries to reload a task that he or she already participated, the system
 will detect it, and warn the user giving the option to try with another task
 (the scheduler will search for the proper task for the given user).
 
-From the point of view of the application, the scheduler will be trying to
+From the point of view of the project, the scheduler will be trying to
 complete (get all the answers requested by the :ref:`task-redundancy` value) all
 the tasks as soon as possible.
 
@@ -125,16 +125,16 @@ The Breadth First scheduler has the following features:
    not respected.
 
 In summary, from the point of view of a user (authenticated or anonymous) the
-system will be sending the application's tasks that have less answers (in case of
+system will be sending the project's tasks that have less answers (in case of
 not having an answer, the creation time will be used to send them like in
 a FIFO --first in first out). 
 
-From the point of view of the application, the scheduler will be trying to obtain 
+From the point of view of the project, the scheduler will be trying to obtain 
 as soon as possible an answer for all the available tasks. 
 
 .. note::
 
-    If your application needs to do an statistical analysis, be sure to check if
+    If your project needs to do an statistical analysis, be sure to check if
     the answer has been submitted by the same user, and how many answers you have
     obtained per task.
 
@@ -153,7 +153,7 @@ In summary, from the point of view of a user (authenticated or anonymous) the
 system will be sending tasks randomly as the user could receive in a row the
 same task several times. 
 
-From the point of view of the application, the scheduler will be sending tasks
+From the point of view of the project, the scheduler will be sending tasks
 randomly.
 
 .. note::
@@ -177,7 +177,7 @@ should be delivered first to the volunteers.
 
 The page shows you two input boxes:
 
-#. **Task IDs**: comma separated Task IDs of your application tasks. Note: not
+#. **Task IDs**: comma separated Task IDs of your project tasks. Note: not
    spaces between the values or commas.
 #. **Priority**: the priority that you want to set for the Task IDs. This must
    be a value between 0.0 and 1.0.
@@ -192,7 +192,7 @@ Task Redundancy
 ---------------
 
 The Task Redundancy is a feature that will allow you to analyze statistically
-the results that your application are getting for each of its tasks.
+the results that your project are getting for each of its tasks.
 
 PyBossa by default assigns a value of 30 task runs --answers-- per task, as
 this value is commonly used for analyzing the population statistically.
@@ -218,7 +218,7 @@ Delete Tasks
 ------------
 
 This section will allow you to complete remove all the Tasks and associated
-Task Runs (answers) of your application.
+Task Runs (answers) of your project.
 
 .. image:: http://i.imgur.com/VmUeaWq.png
     :width: 100%
@@ -227,16 +227,16 @@ Task Runs (answers) of your application.
     This step cannot be undone, once you delete all the tasks and associated
     task runs they will be lost forever.
 
-This feature is useful when you are testing your application, and you are
+This feature is useful when you are testing your project, and you are
 deciding the structure that you are going to build in your answers. 
 
 .. _app-delete:
 
-Delete the application
-======================
+Delete the project
+==================
 
-In case that you want to completely remove the application and all its tasks
-and task runs, use this section to delete the application.
+In case that you want to completely remove the project and all its tasks
+and task runs, use this section to delete the project.
 
 .. image:: http://i.imgur.com/Et4EAyj.png
     :width: 100%

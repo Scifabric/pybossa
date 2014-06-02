@@ -145,10 +145,10 @@ class BlogpostForm(Form):
 
 def app_title(app, page_name):
     if not app:  # pragma: no cover
-        return "Application not found"
+        return "Project not found"
     if page_name is None:
-        return "Application: %s" % (app.name)
-    return "Application: %s &middot; %s" % (app.name, page_name)
+        return "Project: %s" % (app.name)
+    return "Project: %s &middot; %s" % (app.name, page_name)
 
 
 def app_by_shortname(short_name):
@@ -229,13 +229,13 @@ def app_index(page, lookup, category, fallback, use_count):
     # Check for pre-defined categories featured and draft
     featured_cat = model.category.Category(name='Featured',
                                   short_name='featured',
-                                  description='Featured applications')
+                                  description='Featured projects')
     if category == 'featured':
         active_cat = featured_cat
     elif category == 'draft':
         active_cat = model.category.Category(name='Draft',
                                     short_name='draft',
-                                    description='Draft applications')
+                                    description='Draft projects')
     else:
         active_cat = db.session.query(model.category.Category)\
                        .filter_by(short_name=category).first()
@@ -245,7 +245,7 @@ def app_index(page, lookup, category, fallback, use_count):
         categories.insert(0, featured_cat)
     template_args = {
         "apps": data,
-        "title": gettext("Applications"),
+        "title": gettext("Projects"),
         "pagination": pagination,
         "active_cat": active_cat,
         "categories": categories}
@@ -280,7 +280,7 @@ def new():
 
     def respond(errors):
         return render_template('applications/new.html',
-                               title=gettext("Create an Application"),
+                               title=gettext("Create a Project"),
                                form=form, errors=errors)
 
     def _description_from_long_description():
@@ -313,7 +313,7 @@ def new():
     db.session.add(app)
     db.session.commit()
 
-    msg_1 = gettext('Application created!')
+    msg_1 = gettext('Project created!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')
     flash('<i class="icon-bullhorn"></i> ' +
           gettext('You can check the ') +
@@ -361,7 +361,7 @@ def task_presenter_editor(short_name):
                 msg_1 = gettext('<strong>Note</strong> You will need to upload the'
                                 ' tasks using the')
                 msg_2 = gettext('CSV importer')
-                msg_3 = gettext(' or download the app bundle and run the'
+                msg_3 = gettext(' or download the project bundle and run the'
                                 ' <strong>createTasks.py</strong> script in your'
                                 ' computer')
                 url = '<a href="%s"> %s</a>' % (url_for('app.import_task',
@@ -421,7 +421,7 @@ def delete(short_name):
         app = App.query.get(app.id)
         db.session.delete(app)
         db.session.commit()
-        flash(gettext('Application deleted!'), 'success')
+        flash(gettext('Project deleted!'), 'success')
         return redirect(url_for('account.profile', name=current_user.name))
     except HTTPException:  # pragma: no cover
         if app.hidden:
@@ -467,7 +467,7 @@ def update(short_name):
         cached_apps.reset()
         cached_cat.reset()
         cached_apps.get_app(new_application.short_name)
-        flash(gettext('Application updated!'), 'success')
+        flash(gettext('Project updated!'), 'success')
         return redirect(url_for('.details',
                                 short_name=new_application.short_name))
 
@@ -514,8 +514,8 @@ def update(short_name):
                     app.info['container'] = container
                     db.session.commit()
                     cached_apps.delete_app(app.short_name)
-                    flash(gettext('Your application thumbnail has been updated! It may \
-                                  take some minutes to refresh...'), 'success')
+                    flash(gettext('Your project thumbnail has been updated! It may \
+                                      take some minutes to refresh...'), 'success')
                 else:
                     flash(gettext('You must provide a file to change the avatar'),
                           'error')
@@ -727,7 +727,7 @@ def task_presenter(short_name, task_id):
         if not app.allow_anonymous_contributors:
             msg = ("Oops! You have to sign in to participate in "
                    "<strong>%s</strong>"
-                   "application" % app.name)
+                   "project" % app.name)
             flash(gettext(msg), 'warning')
             return redirect(url_for('account.signin',
                                     next=url_for('.presenter',
@@ -807,7 +807,7 @@ def presenter(short_name):
 
     if not app.allow_anonymous_contributors and current_user.is_anonymous():
         msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
-               application" % app.name
+               project" % app.name
         flash(gettext(msg), 'warning')
         return redirect(url_for('account.signin',
                         next=url_for('.presenter', short_name=app.short_name)))
@@ -933,7 +933,7 @@ def tasks_browse(short_name, page):
 @blueprint.route('/<short_name>/tasks/delete', methods=['GET', 'POST'])
 @login_required
 def delete_tasks(short_name):
-    """Delete ALL the tasks for a given application"""
+    """Delete ALL the tasks for a given project"""
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
     try:
@@ -1114,7 +1114,7 @@ def export_to(short_name):
                 model.task.Task, handle_task,
                 (lambda x: True),
                 gettext(
-                    "Oops, the application does not have tasks to \
+                    "Oops, the project does not have tasks to \
                     export, if you are the owner add some tasks")),
             "task_run": (
                 model.task_run.TaskRun, handle_task_run,
@@ -1225,7 +1225,7 @@ def show_stats(short_name):
 @blueprint.route('/<short_name>/tasks/settings')
 @login_required
 def task_settings(short_name):
-    """Settings page for tasks of the application"""
+    """Settings page for tasks of the project"""
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
     try:
@@ -1317,7 +1317,7 @@ def task_scheduler(short_name):
         db.session.add(app)
         db.session.commit()
         cached_apps.delete_app(app.short_name)
-        msg = gettext("Application Task Scheduler updated!")
+        msg = gettext("Project Task Scheduler updated!")
         flash(msg, 'success')
         return redirect(url_for('.tasks', short_name=app.short_name))
     else: # pragma: no cover

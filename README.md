@@ -8,7 +8,7 @@ etc).
 ![Shuttleworth Foundation Funded](http://pybossa.com/assets/img/shuttleworth-funded.png)
 
 PyBossa was inspired by the [BOSSA](http://bossa.berkeley.edu/) crowdsourcing engine but is written in
-python (hence the name!). It can be used for any distributed tasks application
+python (hence the name!). It can be used for any distributed tasks project
 but was initially developed to help scientists and other researchers
 crowd-source human problem-solving skills!
 
