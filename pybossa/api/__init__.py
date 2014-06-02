@@ -59,9 +59,8 @@ error = ErrorStatus()
 api_versions = ['v0', 'v1.0']
 
 
-#@blueprint.route('/', defaults={'version': 'v0'})
-#@blueprint.route('/<version>/')
-@blueprint.route('/')
+@blueprint.route('/', defaults={'version': 'v0'})
+@blueprint.route('/<version>/')
 @crossdomain(origin='*', headers=cors_headers)
 @ratelimit(limit=300, per=15 * 60)
 def index(version):  # pragma: no cover
