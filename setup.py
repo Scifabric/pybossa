@@ -13,11 +13,11 @@ requirements = [
     "Flask-Misaka>=0.2.0, <1.0",
     "Flask-OAuth>=0.12, <0.13",         # was pinned to Flask-OAuth==0.12
     "Flask-SQLAlchemy>=1.0, <2.0",
-    "Flask-WTF>=0.9.5, <0.9.6",             # was pinned to Flask-WTF==0.9.5
+    "Flask-WTF>=0.9.5, <0.9.6",         # was pinned to Flask-WTF==0.9.5
     "Flask>=0.10.1, <0.10.2",           # was pinned to Flask==0.10.1
     "html2text>=2014.4.5, <2016.1.1",
     "itsdangerous>=0.24, <1.0",
-    "M2Crypto",
+    "M2Crypto",                         # will be installed from git @ requirements.txt 
     "markdown>=2.4, <3.0",
     "psycopg2>=2.5.2, <3.0",
     "pygeoip>=0.3.1, <1.0",
@@ -28,14 +28,14 @@ requirements = [
     "nose",
     "rednose",
     "redis>=2.9, <2.10",
-    "sphinx",
+    "sphinx>=1.2.2, <2.0",
     "coverage",
     "mock",
     "tox",
-    "pyrax",
-    "pillow",
-    "flask-debugtoolbar",
-    "factory_boy"
+    "pyrax>=1.8, <1.9",
+    "pillow>=2.4, <2.5",
+    "flask-debugtoolbar>=0.9.0, <1.0",
+    "factory_boy>=2.3.1, <2.4"
 ]
 
 setup(
