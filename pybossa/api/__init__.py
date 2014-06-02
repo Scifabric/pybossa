@@ -56,13 +56,19 @@ cors_headers = ['Content-Type', 'Authorization']
 
 error = ErrorStatus()
 
+api_versions = ['v0', 'v1.0']
 
-@blueprint.route('/')
+
+@blueprint.route('/', defaults={'version': 'v0'})
+@blueprint.route('/<version>/')
 @crossdomain(origin='*', headers=cors_headers)
 @ratelimit(limit=300, per=15 * 60)
-def index():  # pragma: no cover
+def index(version):  # pragma: no cover
     """Return dummy text for welcome page."""
-    return 'The PyBossa API'
+    if version in api_versions:
+        return 'The PyBossa API %s' % version
+    else:
+        return abort(404)
 
 
 def register_api(view, endpoint, url, pk='id', pk_type='int'):
