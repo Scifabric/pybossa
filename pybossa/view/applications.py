@@ -1373,16 +1373,24 @@ def task_priority(short_name):
 
 @blueprint.route('/<short_name>/blog')
 def show_blogposts(short_name):
-    app, owner, _, _, _, _ = app_by_shortname(short_name)
+    (app, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = app_by_shortname(short_name)
+
     blogposts = db.session.query(model.blogpost.Blogpost).filter_by(app_id=app.id).all()
     require.blogpost.read(app_id=app.id)
     return render_template('applications/blog.html', app=app,
-                           owner=owner, blogposts=blogposts)
+                           owner=owner, blogposts=blogposts,
+                           overall_progress=overall_progress,
+                           n_tasks=n_tasks,
+                           n_task_runs=n_task_runs,
+                           n_completed_tasks=cached_apps.n_completed_tasks(app.id),
+                           n_volunteers=cached_apps.n_volunteers(app.id))
 
 
 @blueprint.route('/<short_name>/<int:id>')
 def show_blogpost(short_name, id):
-    app, owner, _, _, _, _ = app_by_shortname(short_name)
+    (app, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = app_by_shortname(short_name)
     blogpost = db.session.query(model.blogpost.Blogpost).filter_by(id=id,
                                                         app_id=app.id).first()
     if blogpost is None:
@@ -1391,7 +1399,12 @@ def show_blogpost(short_name, id):
     return render_template('applications/blog_post.html',
                             app=app,
                             owner=owner,
-                            blogpost=blogpost)
+                            blogpost=blogpost,
+                            overall_progress=overall_progress,
+                            n_tasks=n_tasks,
+                            n_task_runs=n_task_runs,
+                            n_completed_tasks=cached_apps.n_completed_tasks(app.id),
+                            n_volunteers=cached_apps.n_volunteers(app.id))
 
 
 @blueprint.route('/<short_name>/new-blogpost', methods=['GET', 'POST'])
@@ -1401,9 +1414,15 @@ def new_blogpost(short_name):
     def respond():
         return render_template('applications/new_blogpost.html',
                                title=gettext("Write a new post"),
-                               form=form, app=app, owner=owner)
+                               form=form, app=app, owner=owner,
+                               overall_progress=overall_progress,
+                               n_task_runs=n_task_runs,
+                               n_completed_tasks=cached_apps.n_completed_tasks(app.id),
+                               n_volunteers=cached_apps.n_volunteers(app.id))
 
-    app, owner, _, _, _, _ = app_by_shortname(short_name)
+
+    (app, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = app_by_shortname(short_name)
 
     form = BlogpostForm(request.form)
     del form.id
@@ -1434,7 +1453,8 @@ def new_blogpost(short_name):
 @blueprint.route('/<short_name>/<int:id>/update', methods=['GET', 'POST'])
 @login_required
 def update_blogpost(short_name, id):
-    app, owner, _, _, _, _ = app_by_shortname(short_name)
+    (app, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = app_by_shortname(short_name)
 
     blogpost = db.session.query(model.blogpost.Blogpost).filter_by(id=id,
                                                         app_id=app.id).first()
@@ -1445,7 +1465,12 @@ def update_blogpost(short_name, id):
         return render_template('applications/update_blogpost.html',
                                title=gettext("Edit a post"),
                                form=form, app=app, owner=owner,
-                               blogpost=blogpost)
+                               blogpost=blogpost,
+                               overall_progress=overall_progress,
+                               n_task_runs=n_task_runs,
+                               n_completed_tasks=cached_apps.n_completed_tasks(app.id),
+                               n_volunteers=cached_apps.n_volunteers(app.id))
+
     form = BlogpostForm()
 
     if request.method != 'POST':
