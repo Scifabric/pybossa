@@ -59,8 +59,9 @@ error = ErrorStatus()
 api_versions = ['v0', 'v1.0']
 
 
-@blueprint.route('/', defaults={'version': 'v0'})
-@blueprint.route('/<version>/')
+#@blueprint.route('/', defaults={'version': 'v0'})
+#@blueprint.route('/<version>/')
+@blueprint.route('/')
 @crossdomain(origin='*', headers=cors_headers)
 @ratelimit(limit=300, per=15 * 60)
 def index(version):  # pragma: no cover
@@ -81,14 +82,21 @@ def register_api(view, endpoint, url, pk='id', pk_type='int'):
     csrf.exempt(view_func)
     blueprint.add_url_rule(url,
                            view_func=view_func,
-                           defaults={pk: None},
+                           defaults={pk: None, 'version': 'v0'},
                            methods=['GET', 'OPTIONS'])
     blueprint.add_url_rule(url,
                            view_func=view_func,
+                           defaults={'version': 'v0'},
                            methods=['POST', 'OPTIONS'])
     blueprint.add_url_rule('%s/<%s:%s>' % (url, pk_type, pk),
                            view_func=view_func,
+                           defaults={'version': 'v0'},
                            methods=['GET', 'PUT', 'DELETE', 'OPTIONS'])
+
+    blueprint.add_url_rule('/<version>%s/<%s:%s>' % (url, pk_type, pk),
+                           view_func=view_func,
+                           methods=['GET', 'PUT', 'DELETE', 'OPTIONS'])
+
 
 register_api(AppAPI, 'api_app', '/app', pk='id', pk_type='int')
 register_api(CategoryAPI, 'api_category', '/category', pk='id', pk_type='int')
