@@ -330,8 +330,8 @@ def new():
 def task_presenter_editor(short_name):
     try:
         errors = False
-        (app, owner, n_tasks,
-        n_task_runs, overall_progress, last_activty) = app_by_shortname(short_name)
+        (app, owner, n_tasks, n_task_runs,
+         overall_progress, last_activity) = app_by_shortname(short_name)
 
         title = app_title(app, "Task Presenter Editor")
         require.app.read(app)
@@ -372,10 +372,18 @@ def task_presenter_editor(short_name):
                 wrap = lambda i: "applications/presenters/%s.html" % i
                 pres_tmpls = map(wrap, presenter_module.presenters)
 
+                app = add_custom_contrib_button_to(app, get_user_id_or_ip())
                 return render_template(
                     'applications/task_presenter_options.html',
                     title=title,
                     app=app,
+                    owner=owner,
+                    overall_progress=overall_progress,
+                    n_tasks=n_tasks,
+                    n_task_runs=n_task_runs,
+                    last_activity=last_activity,
+                    n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                    n_volunteers=cached_apps.n_volunteers(app.get('id')),
                     presenters=pres_tmpls)
 
             tmpl_uri = "applications/snippets/%s.html" \
@@ -386,10 +394,18 @@ def task_presenter_editor(short_name):
                           the <strong>preview section</strong>. Click in the \
                           preview button!'
             flash(gettext(msg), 'info')
+        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
         return render_template('applications/task_presenter_editor.html',
                                title=title,
                                form=form,
                                app=app,
+                               owner=owner,
+                               overall_progress=overall_progress,
+                               n_tasks=n_tasks,
+                               n_task_runs=n_task_runs,
+                               last_activity=last_activity,
+                               n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                               n_volunteers=cached_apps.n_volunteers(app.get('id')),
                                errors=errors)
     except HTTPException as e:
         if app.hidden:
@@ -576,13 +592,17 @@ def settings(short_name):
         require.app.read(app)
         require.app.update(app)
         app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+        print cached_apps.n_completed_tasks(app.get('id'))
         return render_template('/applications/settings.html',
 
                                app=app,
                                owner=owner,
                                n_tasks=n_tasks,
                                overall_progress=overall_progress,
+                               n_task_runs=n_task_runs,
                                last_activity=last_activity,
+                               n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                               n_volunteers=cached_apps.n_volunteers(app.get('id')),
                                title=title)
     except HTTPException:
         if app.hidden:  # pragma: no cover
@@ -614,10 +634,18 @@ def compute_importer_variant_pairs(forms):
 def import_task(short_name):
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
+    n_volunteers = cached_apps.n_volunteers(app.id)
+    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
     title = app_title(app, "Import Tasks")
     loading_text = gettext("Importing tasks, this may take a while, wait...")
-    template_args = {"title": title, "app": app, "loading_text": loading_text,
-                     "owner": owner}
+    dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    template_args = dict(title=title, loading_text=loading_text,
+                         app=dict_app,
+                         owner=owner,
+                         n_tasks=n_tasks,
+                         overall_progress=overall_progress,
+                         n_volunteers=n_volunteers,
+                         n_completed_tasks=n_completed_tasks)
     try:
         require.app.read(app)
         require.app.update(app)
@@ -872,8 +900,11 @@ def tasks(short_name):
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
     title = app_title(app, "Tasks")
+
     try:
         require.app.read(app)
+        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+
         return render_template('/applications/tasks.html',
                                title=title,
                                app=app,
@@ -881,8 +912,8 @@ def tasks(short_name):
                                n_tasks=n_tasks,
                                overall_progress=overall_progress,
                                last_activity=last_activity,
-                               n_completed_tasks=cached_apps.n_completed_tasks(app.id),
-                               n_volunteers=cached_apps.n_volunteers(app.id))
+                               n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                               n_volunteers=cached_apps.n_volunteers(app.get('id')))
     except HTTPException:
         if app.hidden:
             raise abort(403)
@@ -896,6 +927,8 @@ def tasks_browse(short_name, page):
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
     title = app_title(app, "Tasks")
+    n_volunteers = cached_apps.n_volunteers(app.id)
+    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
 
     def respond():
         per_page = 10
@@ -918,7 +951,11 @@ def tasks_browse(short_name, page):
                                owner=owner,
                                tasks=app_tasks,
                                title=title,
-                               pagination=pagination)
+                               pagination=pagination,
+                               n_tasks=n_tasks,
+                               overall_progress=overall_progress,
+                               n_volunteers=n_volunteers,
+                               n_completed_tasks=n_completed_tasks)
 
     try:
         require.app.read(app)
@@ -941,10 +978,16 @@ def delete_tasks(short_name):
         require.app.update(app)
         if request.method == 'GET':
             title = app_title(app, "Delete")
+            n_volunteers = cached_apps.n_volunteers(app.id)
+            n_completed_tasks = cached_apps.n_completed_tasks(app.id)
+            app = add_custom_contrib_button_to(app, get_user_id_or_ip())
             return render_template('applications/tasks/delete.html',
                                    app=app,
                                    owner=owner,
                                    n_tasks=n_tasks,
+                                   n_task_runs=n_task_runs,
+                                   n_volunteers=n_volunteers,
+                                   n_completed_tasks=n_completed_tasks,
                                    overall_progress=overall_progress,
                                    last_activity=last_activity,
                                    title=title)
@@ -969,6 +1012,8 @@ def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
+    n_volunteers = cached_apps.n_volunteers(app.id)
+    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
     title = app_title(app, gettext("Export"))
     loading_text = gettext("Exporting data..., this may take a while")
 
@@ -1152,12 +1197,18 @@ def export_to(short_name):
     if not (fmt and ty):
         if len(request.args) >= 1:
             abort(404)
+        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
         return render_template('/applications/export.html',
                                title=title,
                                loading_text=loading_text,
                                ckan_name=current_app.config.get('CKAN_NAME'),
                                app=app,
-                               owner=owner)
+                               owner=owner,
+                               n_tasks=n_tasks,
+                               n_task_runs=n_task_runs,
+                               n_volunteers=n_volunteers,
+                               n_completed_tasks=n_completed_tasks,
+                               overall_progress=overall_progress)
     if fmt not in export_formats:
         abort(415)
     return {"json": respond_json, "csv": respond_csv, 'ckan': respond_ckan}[fmt](ty)
@@ -1181,10 +1232,15 @@ def show_stats(short_name):
             raise
 
     if not ((n_tasks > 0) and (n_task_runs > 0)):
+        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
         return render_template('/applications/non_stats.html',
                                title=title,
                                app=app,
-                               owner=owner)
+                               owner=owner,
+                               n_tasks=n_tasks,
+                               overall_progress=overall_progress,
+                               n_volunteers=n_volunteers,
+                               n_completed_tasks=n_completed_tasks)
 
     dates_stats, hours_stats, users_stats = stats.get_stats(
         app.id,
@@ -1210,6 +1266,7 @@ def show_stats(short_name):
                dayStats=dates_stats,
                hourStats=hours_stats)
 
+    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     return render_template('/applications/stats.html',
                            title=title,
                            appStats=json.dumps(tmp),
@@ -1228,12 +1285,19 @@ def task_settings(short_name):
     """Settings page for tasks of the project"""
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
+    n_volunteers = cached_apps.n_volunteers(app.id)
+    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
     try:
         require.app.read(app)
         require.app.update(app)
+        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
         return render_template('applications/task_settings.html',
                                app=app,
-                               owner=owner)
+                               owner=owner,
+                               n_tasks=n_tasks,
+                               overall_progress=overall_progress,
+                               n_volunteers=n_volunteers,
+                               n_completed_tasks=n_completed_tasks)
     except HTTPException:
         if app.hidden:
             raise abort(403)
@@ -1378,13 +1442,14 @@ def show_blogposts(short_name):
 
     blogposts = db.session.query(model.blogpost.Blogpost).filter_by(app_id=app.id).all()
     require.blogpost.read(app_id=app.id)
+    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     return render_template('applications/blog.html', app=app,
                            owner=owner, blogposts=blogposts,
                            overall_progress=overall_progress,
                            n_tasks=n_tasks,
                            n_task_runs=n_task_runs,
-                           n_completed_tasks=cached_apps.n_completed_tasks(app.id),
-                           n_volunteers=cached_apps.n_volunteers(app.id))
+                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                           n_volunteers=cached_apps.n_volunteers(app.get('id')))
 
 
 @blueprint.route('/<short_name>/<int:id>')
@@ -1396,6 +1461,7 @@ def show_blogpost(short_name, id):
     if blogpost is None:
         raise abort(404)
     require.blogpost.read(blogpost)
+    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     return render_template('applications/blog_post.html',
                             app=app,
                             owner=owner,
@@ -1403,8 +1469,8 @@ def show_blogpost(short_name, id):
                             overall_progress=overall_progress,
                             n_tasks=n_tasks,
                             n_task_runs=n_task_runs,
-                            n_completed_tasks=cached_apps.n_completed_tasks(app.id),
-                            n_volunteers=cached_apps.n_volunteers(app.id))
+                            n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                            n_volunteers=cached_apps.n_volunteers(app.get('id')))
 
 
 @blueprint.route('/<short_name>/new-blogpost', methods=['GET', 'POST'])
