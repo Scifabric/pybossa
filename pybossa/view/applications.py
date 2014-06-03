@@ -1383,13 +1383,14 @@ def show_blogposts(short_name):
 
     blogposts = db.session.query(model.blogpost.Blogpost).filter_by(app_id=app.id).all()
     require.blogpost.read(app_id=app.id)
+    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     return render_template('applications/blog.html', app=app,
                            owner=owner, blogposts=blogposts,
                            overall_progress=overall_progress,
                            n_tasks=n_tasks,
                            n_task_runs=n_task_runs,
-                           n_completed_tasks=cached_apps.n_completed_tasks(app.id),
-                           n_volunteers=cached_apps.n_volunteers(app.id))
+                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                           n_volunteers=cached_apps.n_volunteers(app.get('id')))
 
 
 @blueprint.route('/<short_name>/<int:id>')
