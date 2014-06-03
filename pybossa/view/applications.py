@@ -1402,6 +1402,7 @@ def show_blogpost(short_name, id):
     if blogpost is None:
         raise abort(404)
     require.blogpost.read(blogpost)
+    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     return render_template('applications/blog_post.html',
                             app=app,
                             owner=owner,
@@ -1409,8 +1410,8 @@ def show_blogpost(short_name, id):
                             overall_progress=overall_progress,
                             n_tasks=n_tasks,
                             n_task_runs=n_task_runs,
-                            n_completed_tasks=cached_apps.n_completed_tasks(app.id),
-                            n_volunteers=cached_apps.n_volunteers(app.id))
+                            n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                            n_volunteers=cached_apps.n_volunteers(app.get('id')))
 
 
 @blueprint.route('/<short_name>/new-blogpost', methods=['GET', 'POST'])
