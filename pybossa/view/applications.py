@@ -621,10 +621,9 @@ def import_task(short_name):
     n_completed_tasks = cached_apps.n_completed_tasks(app.id)
     title = app_title(app, "Import Tasks")
     loading_text = gettext("Importing tasks, this may take a while, wait...")
-    template_args = {"title": title, "app": app, "loading_text": loading_text,
-                     "owner": owner}
+    dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     template_args = dict(title=title, loading_text=loading_text,
-                         app=app,
+                         app=dict_app,
                          owner=owner,
                          n_tasks=n_tasks,
                          overall_progress=overall_progress,
@@ -1175,6 +1174,7 @@ def export_to(short_name):
     if not (fmt and ty):
         if len(request.args) >= 1:
             abort(404)
+        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
         return render_template('/applications/export.html',
                                title=title,
                                loading_text=loading_text,
@@ -1267,6 +1267,7 @@ def task_settings(short_name):
     try:
         require.app.read(app)
         require.app.update(app)
+        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
         return render_template('applications/task_settings.html',
                                app=app,
                                owner=owner,
