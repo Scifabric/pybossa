@@ -961,10 +961,16 @@ def delete_tasks(short_name):
         require.app.update(app)
         if request.method == 'GET':
             title = app_title(app, "Delete")
+            n_volunteers = cached_apps.n_volunteers(app.id)
+            n_completed_tasks = cached_apps.n_completed_tasks(app.id)
+            app = add_custom_contrib_button_to(app, get_user_id_or_ip())
             return render_template('applications/tasks/delete.html',
                                    app=app,
                                    owner=owner,
                                    n_tasks=n_tasks,
+                                   n_task_runs=n_task_runs,
+                                   n_volunteers=n_volunteers,
+                                   n_completed_tasks=n_completed_tasks,
                                    overall_progress=overall_progress,
                                    last_activity=last_activity,
                                    title=title)
