@@ -330,8 +330,8 @@ def new():
 def task_presenter_editor(short_name):
     try:
         errors = False
-        (app, owner, n_tasks,
-        n_task_runs, overall_progress, last_activty) = app_by_shortname(short_name)
+        (app, owner, n_tasks, n_task_runs,
+         overall_progress, last_activity) = app_by_shortname(short_name)
 
         title = app_title(app, "Task Presenter Editor")
         require.app.read(app)
@@ -372,10 +372,18 @@ def task_presenter_editor(short_name):
                 wrap = lambda i: "applications/presenters/%s.html" % i
                 pres_tmpls = map(wrap, presenter_module.presenters)
 
+                app = add_custom_contrib_button_to(app, get_user_id_or_ip())
                 return render_template(
                     'applications/task_presenter_options.html',
                     title=title,
                     app=app,
+                    owner=owner,
+                    overall_progress=overall_progress,
+                    n_tasks=n_tasks,
+                    n_task_runs=n_task_runs,
+                    last_activity=last_activity,
+                    n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                    n_volunteers=cached_apps.n_volunteers(app.get('id')),
                     presenters=pres_tmpls)
 
             tmpl_uri = "applications/snippets/%s.html" \
@@ -386,10 +394,18 @@ def task_presenter_editor(short_name):
                           the <strong>preview section</strong>. Click in the \
                           preview button!'
             flash(gettext(msg), 'info')
+        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
         return render_template('applications/task_presenter_editor.html',
                                title=title,
                                form=form,
                                app=app,
+                               owner=owner,
+                               overall_progress=overall_progress,
+                               n_tasks=n_tasks,
+                               n_task_runs=n_task_runs,
+                               last_activity=last_activity,
+                               n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                               n_volunteers=cached_apps.n_volunteers(app.get('id')),
                                errors=errors)
     except HTTPException as e:
         if app.hidden:
@@ -576,6 +592,7 @@ def settings(short_name):
         require.app.read(app)
         require.app.update(app)
         app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+        print cached_apps.n_completed_tasks(app.get('id'))
         return render_template('/applications/settings.html',
 
                                app=app,
