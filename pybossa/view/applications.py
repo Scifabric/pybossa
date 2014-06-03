@@ -617,10 +617,19 @@ def compute_importer_variant_pairs(forms):
 def import_task(short_name):
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
+    n_volunteers = cached_apps.n_volunteers(app.id)
+    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
     title = app_title(app, "Import Tasks")
     loading_text = gettext("Importing tasks, this may take a while, wait...")
     template_args = {"title": title, "app": app, "loading_text": loading_text,
                      "owner": owner}
+    template_args = dict(title=title, loading_text=loading_text,
+                         app=app,
+                         owner=owner,
+                         n_tasks=n_tasks,
+                         overall_progress=overall_progress,
+                         n_volunteers=n_volunteers,
+                         n_completed_tasks=n_completed_tasks)
     try:
         require.app.read(app)
         require.app.update(app)
@@ -902,6 +911,8 @@ def tasks_browse(short_name, page):
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
     title = app_title(app, "Tasks")
+    n_volunteers = cached_apps.n_volunteers(app.id)
+    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
 
     def respond():
         per_page = 10
@@ -924,7 +935,11 @@ def tasks_browse(short_name, page):
                                owner=owner,
                                tasks=app_tasks,
                                title=title,
-                               pagination=pagination)
+                               pagination=pagination,
+                               n_tasks=n_tasks,
+                               overall_progress=overall_progress,
+                               n_volunteers=n_volunteers,
+                               n_completed_tasks=n_completed_tasks)
 
     try:
         require.app.read(app)
@@ -975,6 +990,8 @@ def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
+    n_volunteers = cached_apps.n_volunteers(app.id)
+    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
     title = app_title(app, gettext("Export"))
     loading_text = gettext("Exporting data..., this may take a while")
 
@@ -1163,7 +1180,12 @@ def export_to(short_name):
                                loading_text=loading_text,
                                ckan_name=current_app.config.get('CKAN_NAME'),
                                app=app,
-                               owner=owner)
+                               owner=owner,
+                               n_tasks=n_tasks,
+                               n_task_runs=n_task_runs,
+                               n_volunteers=n_volunteers,
+                               n_completed_tasks=n_completed_tasks,
+                               overall_progress=overall_progress)
     if fmt not in export_formats:
         abort(415)
     return {"json": respond_json, "csv": respond_csv, 'ckan': respond_ckan}[fmt](ty)
@@ -1191,7 +1213,11 @@ def show_stats(short_name):
         return render_template('/applications/non_stats.html',
                                title=title,
                                app=app,
-                               owner=owner)
+                               owner=owner,
+                               n_tasks=n_tasks,
+                               overall_progress=overall_progress,
+                               n_volunteers=n_volunteers,
+                               n_completed_tasks=n_completed_tasks)
 
     dates_stats, hours_stats, users_stats = stats.get_stats(
         app.id,
@@ -1236,12 +1262,18 @@ def task_settings(short_name):
     """Settings page for tasks of the project"""
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
+    n_volunteers = cached_apps.n_volunteers(app.id)
+    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
     try:
         require.app.read(app)
         require.app.update(app)
         return render_template('applications/task_settings.html',
                                app=app,
-                               owner=owner)
+                               owner=owner,
+                               n_tasks=n_tasks,
+                               overall_progress=overall_progress,
+                               n_volunteers=n_volunteers,
+                               n_completed_tasks=n_completed_tasks)
     except HTTPException:
         if app.hidden:
             raise abort(403)
