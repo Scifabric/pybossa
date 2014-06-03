@@ -1184,6 +1184,7 @@ def show_stats(short_name):
             raise
 
     if not ((n_tasks > 0) and (n_task_runs > 0)):
+        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
         return render_template('/applications/non_stats.html',
                                title=title,
                                app=app,
@@ -1213,6 +1214,7 @@ def show_stats(short_name):
                dayStats=dates_stats,
                hourStats=hours_stats)
 
+    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     return render_template('/applications/stats.html',
                            title=title,
                            appStats=json.dumps(tmp),
