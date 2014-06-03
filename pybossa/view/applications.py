@@ -582,7 +582,10 @@ def settings(short_name):
                                owner=owner,
                                n_tasks=n_tasks,
                                overall_progress=overall_progress,
+                               n_task_runs=n_task_runs,
                                last_activity=last_activity,
+                               n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                               n_volunteers=cached_apps.n_volunteers(app.get('id')),
                                title=title)
     except HTTPException:
         if app.hidden:  # pragma: no cover
