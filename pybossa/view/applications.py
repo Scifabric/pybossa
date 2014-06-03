@@ -872,8 +872,11 @@ def tasks(short_name):
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
     title = app_title(app, "Tasks")
+
     try:
         require.app.read(app)
+        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+
         return render_template('/applications/tasks.html',
                                title=title,
                                app=app,
@@ -881,8 +884,8 @@ def tasks(short_name):
                                n_tasks=n_tasks,
                                overall_progress=overall_progress,
                                last_activity=last_activity,
-                               n_completed_tasks=cached_apps.n_completed_tasks(app.id),
-                               n_volunteers=cached_apps.n_volunteers(app.id))
+                               n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                               n_volunteers=cached_apps.n_volunteers(app.get('id')))
     except HTTPException:
         if app.hidden:
             raise abort(403)
