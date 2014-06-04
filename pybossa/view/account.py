@@ -388,6 +388,7 @@ def _get_user_apps(user_id):
     apps_draft = []
     sql = text('''
                SELECT app.id, app.name, app.short_name, app.description,
+               app.owner_id,
                app.info
                FROM app, task
                WHERE app.id=task.app_id AND app.owner_id=:user_id AND
@@ -399,12 +400,14 @@ def _get_user_apps(user_id):
     results = db.engine.execute(sql, user_id=user_id)
     for row in results:
         app = dict(id=row.id, name=row.name, short_name=row.short_name,
+                   owner_id=row.owner_id,
                    description=row.description,
                    info=json.loads(row.info))
         apps_published.append(app)
 
     sql = text('''
                SELECT app.id, app.name, app.short_name, app.description,
+               owner_id,
                app.info
                FROM app
                WHERE app.owner_id=:user_id
@@ -415,6 +418,7 @@ def _get_user_apps(user_id):
     results = db.engine.execute(sql, user_id=user_id)
     for row in results:
         app = dict(id=row.id, name=row.name, short_name=row.short_name,
+                   owner_id=row.owner_id,
                    description=row.description,
                    info=json.loads(row.info))
         apps_draft.append(app)
