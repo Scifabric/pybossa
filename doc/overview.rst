@@ -111,7 +111,7 @@ The template projects provide the:
 * **Task Presenter**: check in the repository the *template.html* file,
 * **Tutorial**: check in the repository the *tutorial.html* file,
 * **Project description**: check in the repository the **app.json**
-  and **long_description.html** files.
+  and **long_description.md** files.
 
 
 We recommend you to read the :doc:`user/tutorial` as it gives *a step by step*
@@ -152,7 +152,7 @@ The template projects provide the:
 * **Task Presenter**: check in the repository the *template.html* file,
 * **Tutorial**: check in the repository the *tutorial.html* file,
 * **Project description**: check in the repository the **app.json**
-  and **long_description.html** files.
+  and **long_description.md** files.
 
 We recommend you to read the :doc:`user/tutorial` as it gives *a step by step*
 guide about how you can create a project, write the Task Creator and
