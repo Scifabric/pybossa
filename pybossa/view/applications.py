@@ -1324,8 +1324,26 @@ def task_n_answers(short_name):
         elif request.method == 'POST' and form.validate():
             sql = text('''
                        UPDATE task SET n_answers=:n_answers,
-                       state='ongoing' WHERE app_id=:app_id''')
+                       state='ongoing' WHERE app_id=:app_id''').execution_options(autocommit=True)
+
             db.engine.execute(sql, n_answers=form.n_answers.data, app_id=app.id)
+
+            # Update task.state according to their new n_answers value
+            sql = text('''
+                       WITH myquery AS (
+                       SELECT task.id, task.n_answers,
+                       COUNT(task_run.id) AS n_task_runs, task.state
+                       FROM task, task_run
+                       WHERE task_run.task_id=task.id AND task.app_id=:app_id
+                       GROUP BY task.id)
+                       UPDATE task SET state='completed'
+                       FROM myquery
+                       WHERE (myquery.n_task_runs >=:n_answers)
+                       and myquery.id=task.id
+                       ''').execution_options(autocommit=True)
+
+            db.engine.execute(sql, n_answers=form.n_answers.data, app_id=app.id)
+
             msg = gettext('Redundancy of Tasks updated!')
             flash(msg, 'success')
             return redirect(url_for('.tasks', short_name=app.short_name))
