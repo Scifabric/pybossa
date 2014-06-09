@@ -3028,6 +3028,7 @@ class TestWeb(web.Helper):
         self.register(fullname="owner", name="owner")
         self.new_application()
         self.new_task(1)
+
         url = "/app/sampleapp/tasks/redundancy"
         form_id = 'task_redundancy'
         self.signout()
@@ -3066,6 +3067,21 @@ class TestWeb(web.Helper):
             err_msg = "Task Redundancy should be a value between 0 and 1000"
             assert dom.find(id='msg_error') is not None, err_msg
 
+
+            app = db.session.query(App).get(1)
+            for t in app.tasks:
+                #taskrun = TaskRunFactory.create(task=t)
+                tr = TaskRun(app_id=app.id, task_id=t.id)
+                db.session.add(tr)
+                db.session.commit()
+
+            err_msg = "Task state should be completed"
+            res = self.task_settings_redundancy(short_name="sampleapp",
+                                                n_answers=1)
+            assert "Redundancy of Tasks updated!" in res.data, err_msg
+
+            for t in app.tasks:
+                assert t.state == 'completed', err_msg
 
             self.signout()
 
