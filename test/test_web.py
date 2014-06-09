@@ -3098,34 +3098,9 @@ class TestWeb(web.Helper):
         assert dom.find(id=form_id) is not None, err_msg
 
     @with_context
-    def test_task_redundancy_update_updates_task_state_increasing(self):
-        """Test WEB when decreasing the redundancy of the tasks in a project, the
-        state of the task is set to completed if the task is now completed"""
-        # Creat root user
-        self.register()
-        self.new_application()
-        self.new_task(1)
-
-        url = "/app/sampleapp/tasks/redundancy"
-
-        app = db.session.query(App).get(1)
-        for t in app.tasks:
-            tr = TaskRun(app_id=app.id, task_id=t.id)
-            db.session.add(tr)
-            db.session.commit()
-
-        err_msg = "Task state should be completed"
-        res = self.task_settings_redundancy(short_name="sampleapp",
-                                            n_answers=1)
-
-        for t in app.tasks:
-            assert t.state == 'completed', err_msg
-
-
-    @with_context
-    def test_task_redundancy_update_updates_task_state_decreasing(self):
-        """Test WEB when increasing the redundancy of the tasks in a project, the
-        state of the task is set to ongoing if the task is again not completed"""
+    def test_task_redundancy_update_updates_task_state(self):
+        """Test WEB when updating the redundancy of the tasks in a project, the
+        state of the task is updated in consecuence"""
         # Creat root user
         self.register()
         self.new_application()
