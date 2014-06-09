@@ -3067,22 +3067,6 @@ class TestWeb(web.Helper):
             err_msg = "Task Redundancy should be a value between 0 and 1000"
             assert dom.find(id='msg_error') is not None, err_msg
 
-
-            app = db.session.query(App).get(1)
-            for t in app.tasks:
-                #taskrun = TaskRunFactory.create(task=t)
-                tr = TaskRun(app_id=app.id, task_id=t.id)
-                db.session.add(tr)
-                db.session.commit()
-
-            err_msg = "Task state should be completed"
-            res = self.task_settings_redundancy(short_name="sampleapp",
-                                                n_answers=1)
-            assert "Redundancy of Tasks updated!" in res.data, err_msg
-
-            for t in app.tasks:
-                assert t.state == 'completed', err_msg
-
             self.signout()
 
         # As an authenticated user
@@ -3112,6 +3096,65 @@ class TestWeb(web.Helper):
         # Correct values
         err_msg = "There should be a %s section" % form_id
         assert dom.find(id=form_id) is not None, err_msg
+
+    @with_context
+    def test_task_redundancy_update_updates_task_state_increasing(self):
+        """Test WEB when decreasing the redundancy of the tasks in a project, the
+        state of the task is set to completed if the task is now completed"""
+        # Creat root user
+        self.register()
+        self.new_application()
+        self.new_task(1)
+
+        url = "/app/sampleapp/tasks/redundancy"
+
+        app = db.session.query(App).get(1)
+        for t in app.tasks:
+            tr = TaskRun(app_id=app.id, task_id=t.id)
+            db.session.add(tr)
+            db.session.commit()
+
+        err_msg = "Task state should be completed"
+        res = self.task_settings_redundancy(short_name="sampleapp",
+                                            n_answers=1)
+
+        for t in app.tasks:
+            assert t.state == 'completed', err_msg
+
+
+    @with_context
+    def test_task_redundancy_update_updates_task_state_decreasing(self):
+        """Test WEB when increasing the redundancy of the tasks in a project, the
+        state of the task is set to ongoing if the task is again not completed"""
+        # Creat root user
+        self.register()
+        self.new_application()
+        self.new_task(1)
+
+        url = "/app/sampleapp/tasks/redundancy"
+
+        app = db.session.query(App).get(1)
+        for t in app.tasks:
+            tr = TaskRun(app_id=app.id, task_id=t.id)
+            db.session.add(tr)
+            db.session.commit()
+
+        err_msg = "Task state should be completed"
+        res = self.task_settings_redundancy(short_name="sampleapp",
+                                            n_answers=1)
+
+        for t in app.tasks:
+            assert t.state == 'completed', err_msg
+
+        res = self.task_settings_redundancy(short_name="sampleapp",
+                                            n_answers=2)
+        err_msg = "Task state should be ongoing"
+        db.session.add(app)
+        db.session.commit()
+
+        for t in app.tasks:
+            assert t.state == 'ongoing', t.state
+
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
