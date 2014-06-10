@@ -284,7 +284,7 @@ Providing more details about the project
 ========================================
 
 If you check the source code, you will see that there is a file named
-*long_description.html*. This file has a long description of the project,
+*long_description.md*. This file has a long description of the project,
 explaining different aspects of it.
 
 This information is not mandatory, however it will be very useful for the users
@@ -299,7 +299,7 @@ The long description will be shown in the project home page::
 If you want to modify the description you have two options:
 
  * Edit it via the web interface, or
- * modify locally the *long_description.html* file and run the command again
+ * modify locally the *long_description.md* file and run the command again
    with the **-t** option to update it.
 
 
