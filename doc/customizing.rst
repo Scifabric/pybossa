@@ -536,3 +536,33 @@ To:
 
 .. note::
     This feature is disabled by default.
+
+
+Adding your own templates
+=========================
+
+PyBossa supports different types of templates that you can offer for every
+project. By default, PyBossa comes with the following templates:
+
+ * **Basic**: the most basic template. It only has the basic structure to
+   develop your project. 
+ * **Image**: this template is for image pattern recognition.
+ * **Sound**: similar to the image template, but for sound clips hosted in
+   SoundCloud.
+ * **Video**: similar to the imaage template, but for video clips hostes in
+   Vimeo.
+ * **Map**: this template is for geocoding prorjects.
+ * **PDF**: this template is for transcribing documents.
+
+If you want to add your own template, or remove one, just create in the
+settings_local.py file a variable named **PRESENTERS** and add remove the ones
+you want::
+
+    PRESENTERS = ["basic", "image", "sound", "video", "map", "pdf", "yourtemplate"]
+
+**Yourtemplate** should be a template that you have to save in the theme
+folder: **/templates/applications/snippets/** with the same name. Check the
+other templates to use them as a base layer for your template.
+
+After adding the template, the server will start offering this new template to
+your users.
