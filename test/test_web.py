@@ -3028,6 +3028,7 @@ class TestWeb(web.Helper):
         self.register(fullname="owner", name="owner")
         self.new_application()
         self.new_task(1)
+
         url = "/app/sampleapp/tasks/redundancy"
         form_id = 'task_redundancy'
         self.signout()
@@ -3066,7 +3067,6 @@ class TestWeb(web.Helper):
             err_msg = "Task Redundancy should be a value between 0 and 1000"
             assert dom.find(id='msg_error') is not None, err_msg
 
-
             self.signout()
 
         # As an authenticated user
@@ -3096,6 +3096,40 @@ class TestWeb(web.Helper):
         # Correct values
         err_msg = "There should be a %s section" % form_id
         assert dom.find(id=form_id) is not None, err_msg
+
+    @with_context
+    def test_task_redundancy_update_updates_task_state(self):
+        """Test WEB when updating the redundancy of the tasks in a project, the
+        state of the task is updated in consecuence"""
+        # Creat root user
+        self.register()
+        self.new_application()
+        self.new_task(1)
+
+        url = "/app/sampleapp/tasks/redundancy"
+
+        app = db.session.query(App).get(1)
+        for t in app.tasks:
+            tr = TaskRun(app_id=app.id, task_id=t.id)
+            db.session.add(tr)
+            db.session.commit()
+
+        err_msg = "Task state should be completed"
+        res = self.task_settings_redundancy(short_name="sampleapp",
+                                            n_answers=1)
+
+        for t in app.tasks:
+            assert t.state == 'completed', err_msg
+
+        res = self.task_settings_redundancy(short_name="sampleapp",
+                                            n_answers=2)
+        err_msg = "Task state should be ongoing"
+        db.session.add(app)
+        db.session.commit()
+
+        for t in app.tasks:
+            assert t.state == 'ongoing', t.state
+
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
