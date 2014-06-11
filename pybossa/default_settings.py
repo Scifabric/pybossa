@@ -75,3 +75,5 @@ CATEGORY_TIMEOUT = 24 * 60 * 60
 USER_TIMEOUT = 15 * 60
 USER_TOP_TIMEOUT = 24 * 60 * 60
 USER_TOTAL_TIMEOUT = 24 * 60 * 60
+# Project Presenters
+PRESENTERS = ["basic", "image", "sound", "video", "map", "pdf"]

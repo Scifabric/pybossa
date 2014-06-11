@@ -51,7 +51,6 @@ from pybossa.extensions import misaka
 import re
 import json
 import importer
-import presenter as presenter_module
 import operator
 import math
 import requests
@@ -370,7 +369,7 @@ def task_presenter_editor(short_name):
                 flash(msg, 'info')
 
                 wrap = lambda i: "applications/presenters/%s.html" % i
-                pres_tmpls = map(wrap, presenter_module.presenters)
+                pres_tmpls = map(wrap, current_app.config.get('PRESENTERS'))
 
                 app = add_custom_contrib_button_to(app, get_user_id_or_ip())
                 return render_template(
