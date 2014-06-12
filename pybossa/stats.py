@@ -35,7 +35,10 @@ from datetime import timedelta
 @memoize(timeout=ONE_DAY)
 def get_task_runs(app_id):
     """Return all the Task Runs for a given app_id"""
-    task_runs = db.session.query(TaskRun).filter_by(app_id=app_id).all()
+    #task_runs = db.session.query(TaskRun).filter_by(app_id=app_id).all()
+    task_runs = []
+    for tr in db.session.query(TaskRun).filter_by(app_id=app_id).yield_per(100):
+        task_runs.append(tr)
     return task_runs
 
 
@@ -95,7 +98,7 @@ def stats_users(app_id):
                WHERE task_run.user_ip IS NOT NULL AND
                task_run.user_id IS NULL AND
                task_run.app_id=:app_id
-               GROUP BY task_run.user_ip ORDER BY n_tasks DESC;''')
+               GROUP BY task_run.user_ip ORDER BY n_tasks DESC;''').execution_options(stream=True)
     results = db.engine.execute(sql, app_id=app_id)
 
     for row in results:
@@ -120,37 +123,49 @@ def stats_dates(app_id):
     dates_auth = {}
     dates_n_tasks = {}
 
-    task_runs = get_task_runs(app_id)
-
     avg, total_n_tasks = get_avg_n_tasks(app_id)
 
-    for tr in task_runs:
-        # Data for dates
-        date, hour = string.split(tr.finish_time, "T")
-        tr.finish_time = string.split(tr.finish_time, '.')[0]
-        hour = string.split(hour, ":")[0]
+    # Get all answers per date
+    sql = text('''
+                WITH myquery AS (
+                    SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') as d,
+                                   COUNT(id)
+                    FROM task_run WHERE app_id=:app_id GROUP BY d)
+               SELECT to_char(d, 'YYYY-MM-DD') as d, count from myquery;
+               ''').execution_options(stream=True)
 
-        # Dates
-        if date in dates.keys():
-            dates[date] += 1
-        else:
-            dates[date] = 1
+    results = db.engine.execute(sql, app_id=app_id)
+    for row in results:
+        dates[row.d] = row.count
+        dates_n_tasks[row.d] = total_n_tasks * avg
 
-        if date in dates_n_tasks.keys():
-            dates_n_tasks[date] = total_n_tasks * avg
-        else:
-            dates_n_tasks[date] = total_n_tasks * avg
 
-        if tr.user_id is None:
-            if date in dates_anon.keys():
-                dates_anon[date] += 1
-            else:
-                dates_anon[date] = 1
-        else:
-            if date in dates_auth.keys():
-                dates_auth[date] += 1
-            else:
-                dates_auth[date] = 1
+    # Get all answers per date for auth
+    sql = text('''
+                WITH myquery AS (
+                    SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') as d,
+                                   COUNT(id)
+                    FROM task_run WHERE app_id=:app_id AND user_ip IS NULL GROUP BY d)
+               SELECT to_char(d, 'YYYY-MM-DD') as d, count from myquery;
+               ''').execution_options(stream=True)
+
+    results = db.engine.execute(sql, app_id=app_id)
+    for row in results:
+        dates_auth[row.d] = row.count
+
+    # Get all answers per date for anon
+    sql = text('''
+                WITH myquery AS (
+                    SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') as d,
+                                   COUNT(id)
+                    FROM task_run WHERE app_id=:app_id AND user_id IS NULL GROUP BY d)
+               SELECT to_char(d, 'YYYY-MM-DD') as d, count  from myquery;
+               ''').execution_options(stream=True)
+
+    results = db.engine.execute(sql, app_id=app_id)
+    for row in results:
+        dates_anon[row.d] = row.count
+
     return dates, dates_n_tasks, dates_anon, dates_auth
 
 
@@ -163,36 +178,112 @@ def stats_hours(app_id):
     max_hours_anon = 0
     max_hours_auth = 0
 
-    task_runs = get_task_runs(app_id)
-
     # initialize hours keys
     for i in range(0, 24):
         hours[str(i).zfill(2)] = 0
         hours_anon[str(i).zfill(2)] = 0
         hours_auth[str(i).zfill(2)] = 0
 
-    for tr in task_runs:
-        # Hours
-        date, hour = string.split(tr.finish_time, "T")
-        tr.finish_time = string.split(tr.finish_time, '.')[0]
-        hour = string.split(hour, ":")[0]
+    # Get hour stats for all users
+    sql = text('''
+               WITH myquery AS
+                (SELECT to_char(
+                    DATE_TRUNC('hour',
+                        TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                    ),
+                    'HH24') AS h, COUNT(id)
+                    FROM task_run WHERE app_id=:app_id GROUP BY h)
+               SELECT h, count from myquery;
+               ''').execution_options(stream=True)
 
-        if hour in hours.keys():
-            hours[hour] += 1
-            if (hours[hour] > max_hours):
-                max_hours = hours[hour]
+    results = db.engine.execute(sql, app_id=app_id)
 
-        if tr.user_id is None:
-            if hour in hours_anon.keys():
-                hours_anon[hour] += 1
-                if (hours_anon[hour] > max_hours_anon):
-                    max_hours_anon = hours_anon[hour]
+    for row in results:
+        hours[row.h] = row.count
 
-        else:
-            if hour in hours_auth.keys():
-                hours_auth[hour] += 1
-                if (hours_auth[hour] > max_hours_auth):
-                    max_hours_auth = hours_auth[hour]
+    # Get maximum stats for all users
+    sql = text('''
+               WITH myquery AS
+                (SELECT to_char(
+                    DATE_TRUNC('hour',
+                        TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                    ),
+                    'HH24') AS h, COUNT(id)
+                    FROM task_run WHERE app_id=:app_id GROUP BY h)
+               SELECT max(count) from myquery;
+               ''').execution_options(stream=True)
+
+    results = db.engine.execute(sql, app_id=app_id)
+    for row in results:
+        max_hours = row.max
+
+    # Get hour stats for Anonymous users
+    sql = text('''
+               WITH myquery AS
+                (SELECT to_char(
+                    DATE_TRUNC('hour',
+                        TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                    ),
+                    'HH24') AS h, COUNT(id)
+                    FROM task_run WHERE app_id=:app_id AND user_id IS NULL GROUP BY h)
+               SELECT h, count from myquery;
+               ''').execution_options(stream=True)
+
+    results = db.engine.execute(sql, app_id=app_id)
+
+    for row in results:
+        hours_anon[row.h] = row.count
+
+    # Get maximum stats for Anonymous users
+    sql = text('''
+               WITH myquery AS
+                (SELECT to_char(
+                    DATE_TRUNC('hour',
+                        TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                    ),
+                    'HH24') AS h, COUNT(id)
+                    FROM task_run WHERE app_id=:app_id AND user_id IS NULL GROUP BY h)
+               SELECT max(count) from myquery;
+               ''').execution_options(stream=True)
+
+    results = db.engine.execute(sql, app_id=app_id)
+    for row in results:
+        max_hours_anon = row.max
+
+
+    # Get hour stats for Auth users
+    sql = text('''
+               WITH myquery AS
+                (SELECT to_char(
+                    DATE_TRUNC('hour',
+                        TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                    ),
+                    'HH24') AS h, COUNT(id)
+                    FROM task_run WHERE app_id=:app_id AND user_ip IS NULL GROUP BY h)
+               SELECT h, count from myquery;
+               ''').execution_options(stream=True)
+
+    results = db.engine.execute(sql, app_id=app_id)
+
+    for row in results:
+        hours_auth[row.h] = row.count
+
+    # Get hour stats for Anon users
+    sql = text('''
+               WITH myquery AS
+                (SELECT to_char(
+                    DATE_TRUNC('hour',
+                        TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                    ),
+                    'HH24') AS h, COUNT(id)
+                    FROM task_run WHERE app_id=:app_id AND user_ip IS NULL GROUP BY h)
+               SELECT max(count) from myquery;
+               ''').execution_options(stream=True)
+
+    results = db.engine.execute(sql, app_id=app_id)
+    for row in results:
+        max_hours_auth = row.max
+
     return hours, hours_anon, hours_auth, max_hours, max_hours_anon, max_hours_auth
 
 
@@ -361,7 +452,7 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
 
 @memoize(timeout=ONE_DAY)
 def get_stats(app_id, geo=False):
-    """Return the stats a given app"""
+    """Return the stats of a given app"""
     hours, hours_anon, hours_auth, max_hours, \
         max_hours_anon, max_hours_auth = stats_hours(app_id)
     users, anon_users, auth_users = stats_users(app_id)
