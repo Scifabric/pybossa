@@ -422,18 +422,6 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
             loc['longitude'] = 0
         top5_anon.append(dict(ip=u[0], loc=loc, tasks=u[1]))
 
-    for u in anon_users:
-        if geo: # pragma: no cover
-            loc = gic.record_by_addr(u[0])
-        else:
-            loc = {}
-        if loc is None: # pragma: no cover
-            loc = {}
-        if (len(loc.keys()) == 0):
-            loc['latitude'] = 0
-            loc['longitude'] = 0
-        loc_anon.append(dict(ip=u[0], loc=loc, tasks=u[1]))
-
     for u in auth_users:
         sql = text('''SELECT name, fullname from "user" where id=:id;''')
         results = db.engine.execute(sql, id=u[0])
