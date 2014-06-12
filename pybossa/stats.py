@@ -452,7 +452,7 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
 
 @memoize(timeout=ONE_DAY)
 def get_stats(app_id, geo=False):
-    """Return the stats a given app"""
+    """Return the stats of a given app"""
     hours, hours_anon, hours_auth, max_hours, \
         max_hours_anon, max_hours_auth = stats_hours(app_id)
     users, anon_users, auth_users = stats_users(app_id)
