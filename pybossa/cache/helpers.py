@@ -57,7 +57,7 @@ def check_contributing_state(app, user_id=None, user_ip=None):
     states = ('completed', 'draft', 'can_contribute', 'cannot_contribute')
     if overall_progress(app_id) >= 100:
         return states[0]
-    if _has_no_presenter(app):
+    if _has_no_presenter(app) or _has_no_tasks(app_id):
         return states[1]
     if n_available_tasks(app_id, user_id=user_id, user_ip=user_ip) > 0:
         return states[2]
@@ -83,3 +83,11 @@ def _has_no_presenter(app):
         except AttributeError:
             return True
 
+def _has_no_tasks(app_id):
+    query = text('''SELECT id FROM task
+               WHERE app_id=:app_id;''')
+    result = db.engine.execute(query, app_id=app_id)
+    n_tasks = 0
+    for row in result:
+        n_tasks += row.id
+    return n_tasks == 0

@@ -221,3 +221,15 @@ class TestHelpersCache(Test):
 
         assert 'task_presenter' not in app.info
         assert contributing_state == 'draft', contributing_state
+
+    def test_check_contributing_state_draft_presenter(self):
+        """Test check_contributing_state returns 'draft' for a project that has
+        no tasks but has a presenter"""
+        app = AppFactory.create()
+        user = UserFactory.create()
+
+        contributing_state = helpers.check_contributing_state(app=app,
+                                                              user_id=user.id)
+
+        assert 'task_presenter' in app.info
+        assert contributing_state == 'draft', contributing_state
