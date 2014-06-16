@@ -536,11 +536,19 @@ def update(short_name):
                           'error')
                 return redirect(url_for('.update', short_name=short_name))
 
+        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
         return render_template('/applications/update.html',
                                form=form,
                                upload_form=upload_form,
-                               title=title,
-                               app=app, owner=owner)
+                               app=app,
+                               owner=owner,
+                               n_tasks=n_tasks,
+                               overall_progress=overall_progress,
+                               n_task_runs=n_task_runs,
+                               last_activity=last_activity,
+                               n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                               n_volunteers=cached_apps.n_volunteers(app.get('id')),
+                               title=title)
     except HTTPException:
         if app.hidden:  # pragma: no cover
             raise abort(403)
@@ -593,7 +601,6 @@ def settings(short_name):
         app = add_custom_contrib_button_to(app, get_user_id_or_ip())
         print cached_apps.n_completed_tasks(app.get('id'))
         return render_template('/applications/settings.html',
-
                                app=app,
                                owner=owner,
                                n_tasks=n_tasks,
