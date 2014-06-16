@@ -579,6 +579,9 @@ class TestWeb(web.Helper):
             assert app.long_description == 'My Description', \
                 "Long desc should be the same: %s" % app.long_description
 
+            assert app.category is not None, \
+                "A project should have a category after being created"
+
     # After refactoring applications view, these 3 tests should be more isolated and moved to another place
     @with_context
     def test_description_is_generated_from_long_desc(self):

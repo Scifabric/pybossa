@@ -301,13 +301,15 @@ def new():
         return respond(True)
 
     info = {}
+    category_by_default = cached_cat.get_all()[0]
 
     app = model.app.App(name=form.name.data,
                     short_name=form.short_name.data,
                     description=_description_from_long_description(),
                     long_description=form.long_description.data,
                     owner_id=current_user.id,
-                    info=info)
+                    info=info,
+                    category_id=category_by_default.id)
 
     db.session.add(app)
     db.session.commit()
