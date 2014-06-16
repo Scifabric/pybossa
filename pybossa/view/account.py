@@ -70,7 +70,7 @@ def index(page):
     Returns a Jinja2 rendered template with the users.
 
     """
-    data = sentinel.slave.zrevrange('pybossa_feed', 0, -1, withscores=True)
+    data = sentinel.slave.zrevrange('pybossa_feed', 0, 100, withscores=True)
     update_feed = []
     for u in data:
         tmp = pickle.loads(u[0])
