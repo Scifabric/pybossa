@@ -61,12 +61,11 @@ def check_contributing_state(app_id, user_id=None, user_ip=None):
     return states[2]
 
 
-def add_custom_contrib_button_to(app, user_id_ip):
+def add_custom_contrib_button_to(app, user_id_or_ip):
     if type(app) == dict:
         app_id = app['id']
     else:
         app_id = app.id
         app = app.dictize()
-    app['contrib_button'] = check_contributing_state(app_id, **user_id_ip)
-    print app['contrib_button']
+    app['contrib_button'] = check_contributing_state(app_id, **user_id_or_ip)
     return app
