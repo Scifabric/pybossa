@@ -19,9 +19,10 @@
 from sqlalchemy import Integer, Boolean, Float, UnicodeText, Text
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
+from sqlalchemy import event
 
 from pybossa.core import db
-from pybossa.model import DomainObject, JSONType, make_timestamp
+from pybossa.model import DomainObject, JSONType, make_timestamp, update_redis
 from pybossa.model.task_run import TaskRun
 
 
@@ -57,3 +58,20 @@ class Task(db.Model, DomainObject):
             return float(len(self.task_runs)) / self.n_answers
         else:  # pragma: no cover
             return float(0)
+
+@event.listens_for(Task, 'after_insert')
+def add_event(mapper, conn, target):
+    """Update PyBossa feed with new task."""
+    sql_query = ('select name, short_name, info from app \
+                 where id=%s') % target.app_id
+    results = conn.execute(sql_query)
+    obj = dict(id=target.app_id,
+               name=None,
+               short_name=None,
+               info=None,
+               action_updated='Task')
+    for r in results:
+        obj['name'] = r.name
+        obj['short_name'] = r.short_name
+        obj['info'] = r.info
+    update_redis(obj)

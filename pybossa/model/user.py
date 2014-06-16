@@ -24,7 +24,7 @@ from werkzeug import generate_password_hash, check_password_hash
 from flask.ext.login import UserMixin
 
 from pybossa.core import db
-from pybossa.model import DomainObject, make_timestamp, JSONType, make_uuid
+from pybossa.model import DomainObject, make_timestamp, JSONType, make_uuid, update_redis
 from pybossa.model.app import App
 from pybossa.model.task_run import TaskRun
 from pybossa.model.blogpost import Blogpost
@@ -89,3 +89,11 @@ def make_admin(mapper, conn, target):
     users = conn.scalar('select count(*) from "user"')
     if users == 0:
         target.admin = True
+
+
+@event.listens_for(User, 'after_insert')
+def add_event(mapper, conn, target):
+    """Update PyBossa feed with new user."""
+    obj = target.dictize()
+    obj['action_updated']='User'
+    update_redis(obj)

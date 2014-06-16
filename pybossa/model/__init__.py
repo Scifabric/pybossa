@@ -35,6 +35,16 @@ from sqlalchemy.schema import (
 
 import logging
 from flask.ext.sqlalchemy import SQLAlchemy
+from pybossa.core import sentinel
+from time import time
+
+
+try:
+    import cPickle as pickle
+except ImportError:  # pragma: no cover
+    import pickle
+
+
 
 db = SQLAlchemy()
 
@@ -68,7 +78,6 @@ class DomainObject(object):
 
         repr += '>'
         return repr
-
 
 
 class JSONType(MutableType, TypeDecorator):
@@ -132,3 +141,10 @@ def rebuild_db():
 
     db.session.commit()
     db.create_all()
+
+def update_redis(obj):
+    """Add domain object to update feed in Redis."""
+    p = sentinel.master.pipeline()
+    tmp = pickle.dumps(obj)
+    p.zadd('pybossa_feed', time(), tmp)
+    p.execute()
