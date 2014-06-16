@@ -259,7 +259,7 @@ def n_draft():
     results = db.engine.execute(sql)
     for row in results:
         count = row[0]
-    return 1
+    return count
 
 
 @memoize(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'))
