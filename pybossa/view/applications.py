@@ -1502,13 +1502,17 @@ def show_blogpost(short_name, id):
 def new_blogpost(short_name):
 
     def respond():
+        dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
         return render_template('applications/new_blogpost.html',
                                title=gettext("Write a new post"),
-                               form=form, app=app, owner=owner,
+                               form=form,
+                               app=dict_app,
+                               owner=owner,
                                overall_progress=overall_progress,
+                               n_tasks=n_tasks,
                                n_task_runs=n_task_runs,
-                               n_completed_tasks=cached_apps.n_completed_tasks(app.id),
-                               n_volunteers=cached_apps.n_volunteers(app.id))
+                               n_completed_tasks=cached_apps.n_completed_tasks(dict_app.get('id')),
+                               n_volunteers=cached_apps.n_volunteers(dict_app.get('id')))
 
 
     (app, owner, n_tasks, n_task_runs,
