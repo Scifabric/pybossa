@@ -30,6 +30,7 @@ from pybossa.ratelimit import get_view_rate_limit
 from raven.contrib.flask import Sentry
 from pybossa.model import db
 from pybossa import model
+from pybossa.util import pretty_date
 
 
 def create_app():
@@ -64,6 +65,7 @@ def create_app():
     setup_geocoding(app)
     setup_csrf_protection(app)
     setup_debug_toolbar(app)
+    setup_jinja2_filters(app)
     return app
 
 
@@ -346,6 +348,11 @@ def setup_hooks(app):
             contact_email=contact_email,
             contact_twitter=contact_twitter,
             upload_method=app.config['UPLOAD_METHOD'])
+
+def setup_jinja2_filters(app):
+    @app.template_filter('pretty_date')
+    def pretty_date_filter(s):
+        return pretty_date(s)
 
 
 def setup_csrf_protection(app):
