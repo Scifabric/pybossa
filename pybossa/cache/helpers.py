@@ -78,5 +78,8 @@ def _has_no_presenter(app):
     try:
         return 'task_presenter' not in app.info
     except AttributeError:
-        return True
+        try:
+            return 'task_presenter' not in app.get('info')
+        except AttributeError:
+            return True
 
