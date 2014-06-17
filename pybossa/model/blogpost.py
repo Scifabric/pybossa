@@ -44,7 +44,6 @@ def add_event(mapper, conn, target):
     sql_query = ('select name, short_name, info from app \
                  where id=%s') % target.app_id
     results = conn.execute(sql_query)
-    obj = target.dictize()
     obj = dict(id=target.app_id,
                name=None,
                short_name=None,
