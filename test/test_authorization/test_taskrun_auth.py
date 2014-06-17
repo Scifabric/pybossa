@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from base import Test, db, assert_not_raises
+from default import Test, db, assert_not_raises
 from pybossa.auth import require
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
@@ -37,7 +37,7 @@ class TestTaskrunAuthorization(Test):
 
     mock_anonymous = mock_current_user()
     mock_authenticated = mock_current_user(anonymous=False, admin=False, id=2)
-    mock_admin = mock_current_user(anonymous=False, admin=True, id=1)
+    mock_admin = mock_current_user(anonymous=False, admin=True, id=15)
 
 
     def configure_fixtures(self):
@@ -330,7 +330,7 @@ class TestTaskrunAuthorization(Test):
         with self.flask_app.test_request_context('/'):
             user_taskrun = TaskRunFactory.create()
 
-            assert self.mock_admin.id != user_taskrun.user.id
+            assert self.mock_admin.id != user_taskrun.user.id, user_taskrun.user.id
             assert_not_raises(Exception,
                       getattr(require, 'taskrun').delete,
                       user_taskrun)

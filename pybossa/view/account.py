@@ -47,14 +47,31 @@ import pybossa.model as model
 from flask.ext.babel import lazy_gettext, gettext
 from sqlalchemy.sql import text
 from pybossa.model.user import User
-from pybossa.core import db, signer, mail, uploader
-from pybossa.util import Pagination, get_user_id_or_ip
+from pybossa.core import db, signer, mail, uploader, sentinel
+from pybossa.util import Pagination, get_user_id_or_ip, pretty_date
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
+
+try:
+    import cPickle as pickle
+except ImportError:  # pragma: no cover
+    import pickle
 
 
 blueprint = Blueprint('account', __name__)
 
+
+def get_update_feed():
+    """Return update feed list."""
+    data = sentinel.slave.zrevrange('pybossa_feed', 0, 99, withscores=True)
+    update_feed = []
+    for u in data:
+        tmp = pickle.loads(u[0])
+        tmp['updated'] = u[1]
+        if tmp.get('info'):
+            tmp['info'] = json.loads(tmp['info'])
+        update_feed.append(tmp)
+    return update_feed
 
 @blueprint.route('/', defaults={'page': 1})
 @blueprint.route('/page/<int:page>')
@@ -65,6 +82,7 @@ def index(page):
     Returns a Jinja2 rendered template with the users.
 
     """
+    update_feed = get_update_feed()
     per_page = 24
     count = cached_users.get_total_users()
     accounts = cached_users.get_users_page(page, per_page)
@@ -80,7 +98,8 @@ def index(page):
     return render_template('account/index.html', accounts=accounts,
                            total=count,
                            top_users=top_users,
-                           title="Community", pagination=pagination)
+                           title="Community", pagination=pagination,
+                           update_feed=update_feed)
 
 
 class LoginForm(Form):

@@ -16,7 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.model import db, rebuild_db
+from pybossa.core import db
+#from pybossa.model import rebuild_db
 from pybossa.core import create_app, sentinel
 from pybossa.model.app import App
 from pybossa.model.category import Category
@@ -35,6 +36,11 @@ def with_context(f):
         with flask_app.app_context():
             return f(*args, **kwargs)
     return decorated_function
+
+def rebuild_db():
+    """Rebuild the DB."""
+    db.drop_all()
+    db.create_all()
 
 
 class Test(object):

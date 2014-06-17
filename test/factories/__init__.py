@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.model import db
+from pybossa.core import db
 
 import factory
 from factory.alchemy import SQLAlchemyModelFactory
@@ -38,7 +38,7 @@ class BaseFactory(SQLAlchemyModelFactory):
     @classmethod
     def _create(cls, target_class, *args, **kwargs):
         """The default beahaviour is to simply add the object to the SQLAlchemy
-        session. Here, we also flush it as autoflush is disabled in the 
+        session. Here, we also flush it as autoflush is disabled in the
         flask-SQLAlchemy extension"""
         session = cls.FACTORY_SESSION
         obj = target_class(*args, **kwargs)

@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import json
 from mock import patch
-from base import db, with_context
+from default import db, with_context
 from nose.tools import assert_equal, assert_raises
 from test_api import TestAPI
 from pybossa.model.app import App
