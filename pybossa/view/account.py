@@ -63,7 +63,7 @@ blueprint = Blueprint('account', __name__)
 
 def get_update_feed():
     """Return update feed list."""
-    data = sentinel.slave.zrevrange('pybossa_feed', 0, 100, withscores=True)
+    data = sentinel.slave.zrevrange('pybossa_feed', 0, 99, withscores=True)
     update_feed = []
     for u in data:
         tmp = pickle.loads(u[0])
