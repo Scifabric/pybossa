@@ -34,8 +34,6 @@ from sqlalchemy.schema import (
     )
 
 import logging
-from flask.ext.sqlalchemy import SQLAlchemy
-from pybossa.core import sentinel
 from time import time
 
 
@@ -45,8 +43,6 @@ except ImportError:  # pragma: no cover
     import pickle
 
 
-
-db = SQLAlchemy()
 
 log = logging.getLogger(__name__)
 
@@ -144,6 +140,7 @@ def rebuild_db():
 
 def update_redis(obj):
     """Add domain object to update feed in Redis."""
+    from pybossa.core import sentinel
     p = sentinel.master.pipeline()
     tmp = pickle.dumps(obj)
     p.zadd('pybossa_feed', time(), tmp)

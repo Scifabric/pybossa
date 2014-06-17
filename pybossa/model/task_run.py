@@ -55,10 +55,6 @@ class TaskRun(db.Model, DomainObject):
 def update_task_state(mapper, conn, target):
     """Update the task.state when n_answers condition is met."""
     # Get app details
-    sql_query = ("UPDATE task SET state=\'completed\' \
-                 where id=%s") % target.task_id
-    conn.execute(sql_query)
-    # Add an update event
     sql_query = ('select name, short_name, info from app \
                  where id=%s') % target.app_id
     results = conn.execute(sql_query)
@@ -72,7 +68,7 @@ def update_task_state(mapper, conn, target):
         app_obj['short_name'] = r.short_name
         app_obj['info'] = r.info
 
-    # Check if user Authenticated
+    # Check if user is Authenticated
     if target.user_id is not None:
         sql_query = ('select fullname, name, info from "user" \
                      where id=%s') % target.user_id
@@ -85,8 +81,9 @@ def update_task_state(mapper, conn, target):
                        app_name=app_obj['name'],
                        app_short_name=app_obj['short_name'],
                        action_updated='UserContribution')
+        # Add the event
         update_redis(obj)
-    # Task.state update
+    # Check if Task.state should be updated
     sql_query = ('select count(id) from task_run \
                  where task_run.task_id=%s') % target.task_id
     n_answers = conn.scalar(sql_query)
@@ -94,4 +91,7 @@ def update_task_state(mapper, conn, target):
                  where task.id=%s') % target.task_id
     task_n_answers = conn.scalar(sql_query)
     if (n_answers) >= task_n_answers:
+        sql_query = ("UPDATE task SET state=\'completed\' \
+                     where id=%s") % target.task_id
+        conn.execute(sql_query)
         update_redis(app_obj)

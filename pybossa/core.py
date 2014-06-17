@@ -28,7 +28,7 @@ from pybossa.extensions import *
 from pybossa.ratelimit import get_view_rate_limit
 
 from raven.contrib.flask import Sentry
-from pybossa.model import db
+#from pybossa.model import db
 from pybossa import model
 from pybossa.util import pretty_date
 
