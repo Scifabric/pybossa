@@ -24,6 +24,8 @@ from pybossa.model.user import User
 from pybossa.model.featured import Featured
 from pybossa.cache import apps as cached_apps
 
+from factories import AppFactory, TaskFactory
+
 
 class TestAppsCache(Test):
 
@@ -321,3 +323,25 @@ class TestAppsCache(Test):
 
         err_msg = "Volunteers is %s, it should be 5" % total_volunteers
         assert total_volunteers == 5, err_msg
+
+
+    def test_n_draft_no_drafts(self):
+        """Test CACHE PROJECTS n_draft returns 0 if no there are no draft projects"""
+
+        app = AppFactory.create(info={})
+        TaskFactory.create_batch(2, app=app)
+
+        number_of_drafts = cached_apps.n_draft()
+
+        assert number_of_drafts == 0, number_of_drafts
+
+
+    def test_n_draft_with_drafts(self):
+        """Test CACHE PROJECTS n_draft returns 2 if no there are 2 draft projects"""
+
+        app_with_no_presenter = AppFactory.create(info={})
+        app_with_presenter_but_no_tasks = AppFactory.create()
+
+        number_of_drafts = cached_apps.n_draft()
+
+        assert number_of_drafts == 2, number_of_drafts
