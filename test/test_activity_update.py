@@ -97,3 +97,13 @@ class TestActivityFeed(Test):
         assert update_feed[0].get('info') is not None, err_msg
         err_msg = "The update action should be Project"
         assert update_feed[0]['action_updated'] == 'TaskCompleted', err_msg
+
+    def test_max_limit(self):
+        """Test ACTIVITY FEED limit works."""
+        for i in range(0,105):
+            app = AppFactory.create()
+
+        update_feed = get_update_feed()
+        err_msg = "There should be at max 100 updates."
+        print len(update_feed)
+        assert len(update_feed) == 100, err_msg
