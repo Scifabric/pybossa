@@ -43,6 +43,7 @@ except ImportError:  # pragma: no cover
     import pickle
 
 
+from pybossa.core import sentinel
 
 log = logging.getLogger(__name__)
 
@@ -140,7 +141,6 @@ def rebuild_db():
 
 def update_redis(obj):
     """Add domain object to update feed in Redis."""
-    from pybossa.core import sentinel
     p = sentinel.master.pipeline()
     tmp = pickle.dumps(obj)
     p.zadd('pybossa_feed', time(), tmp)
