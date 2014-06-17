@@ -61,6 +61,18 @@ except ImportError:  # pragma: no cover
 blueprint = Blueprint('account', __name__)
 
 
+def get_update_feed():
+    """Return update feed list."""
+    data = sentinel.slave.zrevrange('pybossa_feed', 0, 100, withscores=True)
+    update_feed = []
+    for u in data:
+        tmp = pickle.loads(u[0])
+        tmp['updated'] = u[1]
+        if tmp.get('info'):
+            tmp['info'] = json.loads(tmp['info'])
+        update_feed.append(tmp)
+    return update_feed
+
 @blueprint.route('/', defaults={'page': 1})
 @blueprint.route('/page/<int:page>')
 def index(page):
@@ -70,15 +82,7 @@ def index(page):
     Returns a Jinja2 rendered template with the users.
 
     """
-    data = sentinel.slave.zrevrange('pybossa_feed', 0, 100, withscores=True)
-    update_feed = []
-    for u in data:
-        tmp = pickle.loads(u[0])
-        tmp['updated'] = u[1]
-        if tmp.get('info'):
-            tmp['info'] = json.loads(tmp['info'])
-        update_feed.append(tmp)
-
+    update_feed = get_update_feed()
     per_page = 24
     count = cached_users.get_total_users()
     accounts = cached_users.get_users_page(page, per_page)
