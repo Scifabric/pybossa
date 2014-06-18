@@ -1182,8 +1182,10 @@ def export_to(short_name):
             if test(t):
                 writer.writerow(sorted(t.info.keys()))
 
-            return Response(get_csv(out, writer, table, handle_row),
-                            mimetype='text/csv')
+            res =Response(get_csv(out, writer, table, handle_row),
+                          mimetype='text/csv')
+            res.headers['Content-Disposition'] = 'attachment; filename=%s_%s.csv' % (app.short_name, ty)
+            return res
         else:
             flash(msg, 'info')
             return respond()
