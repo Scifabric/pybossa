@@ -65,6 +65,10 @@ class App(db.Model, DomainObject):
     blogposts = relationship(Blogpost, cascade='all, delete-orphan', backref='app')
 
 
+    def needs_password(self):
+        return (self.info.get('password') is not None
+                and self.info.get('password') != '')
+
 @event.listens_for(App, 'before_update')
 @event.listens_for(App, 'before_insert')
 def empty_string_to_none(mapper, conn, target):
