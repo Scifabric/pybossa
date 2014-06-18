@@ -23,7 +23,7 @@ from flask import render_template, make_response
 from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
 from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
-    SelectField, validators, TextAreaField
+    SelectField, validators, TextAreaField, PasswordField
 from wtforms.widgets import HiddenInput
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import lazy_gettext, gettext
@@ -96,6 +96,7 @@ class AppUpdateForm(AppForm):
                  ('False', lazy_gettext('No'))])
     category_id = SelectField(lazy_gettext('Category'), coerce=int)
     hidden = BooleanField(lazy_gettext('Hide?'))
+    password = TextField(lazy_gettext('Password (leave blank for no password)'))
 
 
 class TaskPresenterForm(Form):
@@ -140,6 +141,12 @@ class BlogpostForm(Form):
     body = TextAreaField(lazy_gettext('Body'),
                            [validators.Required(message=lazy_gettext(
                                     "You must enter some text for the post."))])
+
+
+class PasswordForm(Form):
+    password = PasswordField(lazy_gettext('Password'),
+                        [validators.Required(message=lazy_gettext(
+                                    "You must enter a password"))])
 
 
 def app_title(app, page_name):
@@ -458,6 +465,7 @@ def update(short_name):
 
         new_info = {}
         # Add the info items
+        new_info['password'] = form.password.data
         (app, owner, n_tasks, n_task_runs,
          overall_progress, last_activity) = app_by_shortname(short_name)
 
@@ -494,7 +502,7 @@ def update(short_name):
 
         title = app_title(app, "Update")
         if request.method == 'GET':
-            form = AppUpdateForm(obj=app)
+            form = AppUpdateForm(obj=app, password=app.info.get('password'))
             upload_form = AvatarUploadForm()
             categories = db.session.query(model.category.Category).all()
             form.category_id.choices = [(c.id, c.name) for c in categories]
