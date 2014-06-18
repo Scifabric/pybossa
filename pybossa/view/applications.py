@@ -463,14 +463,8 @@ def update(short_name):
     def handle_valid_form(form):
         hidden = int(form.hidden.data)
 
-        new_info = {}
-        # Add the info items
-        new_info['password'] = form.password.data
         (app, owner, n_tasks, n_task_runs,
          overall_progress, last_activity) = app_by_shortname(short_name)
-
-        # Merge info object
-        info = dict(app.info.items() + new_info.items())
 
         new_application = model.app.App(
             id=form.id.data,
@@ -479,13 +473,12 @@ def update(short_name):
             description=form.description.data,
             long_description=form.long_description.data,
             hidden=hidden,
-            info=info,
+            info=app.info,
             owner_id=app.owner_id,
             allow_anonymous_contributors=form.allow_anonymous_contributors.data,
             category_id=form.category_id.data)
 
-        (app, owner, n_tasks,
-         n_task_runs, overall_progress, last_activity) = app_by_shortname(short_name)
+        new_application.set_password(form.password.data)
         db.session.merge(new_application)
         db.session.commit()
         cached_apps.delete_app(short_name)
@@ -603,7 +596,6 @@ def settings(short_name):
         app = add_custom_contrib_button_to(app, get_user_id_or_ip())
         print cached_apps.n_completed_tasks(app.get('id'))
         return render_template('/applications/settings.html',
-
                                app=app,
                                owner=owner,
                                n_tasks=n_tasks,
@@ -747,6 +739,21 @@ def _import_task(app, handler, form, render_forms):
     return render_forms()
 
 
+@blueprint.route('/<short_name>/password', methods=['GET', 'POST'])
+def password_required(short_name):
+    (app, owner,
+     n_tasks, n_task_runs, overall_progress, last_activity) = app_by_shortname(short_name)
+    form = PasswordForm(request.form)
+    if request.method == 'POST' and form.validate():
+        password = request.form.get('password')
+        if app.check_password(password):
+            resp = make_response(redirect(url_for('.presenter', short_name=short_name, next=request.args.get('next'))))
+            resp.set_cookie(app.short_name + 'pswd', 'Yes', max_age=3600)
+            return resp
+        flash('Sorry, incorrect password')
+    return render_template('applications/password.html', form=form, short_name=short_name, next=request.args.get('next'))
+
+
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
     (app, owner,
@@ -759,6 +766,11 @@ def task_presenter(short_name, task_id):
             raise abort(403)
         else:  # pragma: no cover
             raise
+    if app.needs_password() and not (current_user.admin or current_user.id == app.owner_id):
+        authorized = request.cookies.get(app.short_name + 'pswd') == 'Yes'
+        if not authorized:
+            return redirect(url_for('.password_required',
+                                 short_name=short_name, next=request.path))
 
     if current_user.is_anonymous():
         if not app.allow_anonymous_contributors:
@@ -841,6 +853,11 @@ def presenter(short_name):
             raise abort(403)
         else:  # pragma: no cover
             raise
+    if app.needs_password() and not (current_user.admin or current_user.id == app.owner_id):
+        authorized = request.cookies.get(app.short_name + 'pswd') == 'Yes'
+        if not authorized:
+            return redirect(url_for('.password_required',
+                                 short_name=short_name, next=request.path))
 
     if not app.allow_anonymous_contributors and current_user.is_anonymous():
         msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
