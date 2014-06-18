@@ -85,15 +85,15 @@ class TestModelApp(Test):
 
     def test_needs_password_no_password_key(self):
         """Test needs_password returns false if the app has not a password"""
-        app = AppFactory.create(info={})
+        app = AppFactory.build(info={})
 
         assert app.needs_password() is False
 
 
     def test_needs_password_empty_password_key(self):
         """Test needs_password returns false if the app has an empty password"""
-        app_with_empty_string_psw = AppFactory.create(info={'password': ''})
-        app_with_None_psw = AppFactory.create(info={'password': None})
+        app_with_empty_string_psw = AppFactory.build(info={'password': ''})
+        app_with_None_psw = AppFactory.build(info={'password': None})
 
         assert app_with_empty_string_psw.needs_password() is False
         assert app_with_None_psw.needs_password() is False
@@ -101,6 +101,18 @@ class TestModelApp(Test):
 
     def test_needs_password_with_password_key_and_value(self):
         """Test needs_password returns true if the app has a password"""
-        app = AppFactory.create(info={'password': 'mypassword'})
+        app = AppFactory.build(info={'password': 'mypassword'})
 
         assert app.needs_password() is True
+
+
+    def test_check_password(self):
+        app = AppFactory.build(info={'password': 'mypassword'})
+
+        assert app.check_password('mypassword')
+
+
+    def test_check_password_bad_password(self):
+        app = AppFactory.build(info={'password': 'mypassword'})
+
+        assert not app.check_password('notmypassword')
