@@ -770,7 +770,7 @@ def task_presenter(short_name, task_id):
             raise abort(403)
         else:  # pragma: no cover
             raise
-    if app.needs_password() and not (current_user.admin or current_user.id == app.owner_id):
+    if app.needs_password() and current_user.is_anonymous() or not (current_user.admin or current_user.id == app.owner_id):
         authorized = request.cookies.get(app.short_name + 'pswd') == 'Yes'
         if not authorized:
             return redirect(url_for('.password_required',
@@ -857,7 +857,7 @@ def presenter(short_name):
             raise abort(403)
         else:  # pragma: no cover
             raise
-    if app.needs_password() and not (current_user.admin or current_user.id == app.owner_id):
+    if app.needs_password() and current_user.is_anonymous() or not (current_user.admin or current_user.id == app.owner_id):
         authorized = request.cookies.get(app.short_name + 'pswd') == 'Yes'
         if not authorized:
             return redirect(url_for('.password_required',
