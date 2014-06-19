@@ -751,7 +751,11 @@ def password_required(short_name):
             resp.set_cookie(app.short_name + 'pswd', 'Yes', max_age=3600)
             return resp
         flash('Sorry, incorrect password')
-    return render_template('applications/password.html', form=form, short_name=short_name, next=request.args.get('next'))
+    return render_template('applications/password.html',
+                            app=app,
+                            form=form,
+                            short_name=short_name,
+                            next=request.args.get('next'))
 
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
