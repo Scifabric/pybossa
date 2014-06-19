@@ -21,7 +21,7 @@ from nose.tools import assert_raises
 from pybossa.model.app import App
 from pybossa.model.user import User
 from sqlalchemy.exc import IntegrityError
-from Factories import AppFactory
+from factories import AppFactory
 
 
 class TestModelApp(Test):
