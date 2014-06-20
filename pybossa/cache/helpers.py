@@ -84,10 +84,9 @@ def _has_no_presenter(app):
             return True
 
 def _has_no_tasks(app_id):
-    query = text('''SELECT id FROM task
+    query = text('''SELECT COUNT(id) AS n_tasks FROM task
                WHERE app_id=:app_id;''')
     result = db.engine.execute(query, app_id=app_id)
-    n_tasks = 0
     for row in result:
-        n_tasks += row.id
+        n_tasks = row.n_tasks
     return n_tasks == 0
