@@ -28,8 +28,7 @@ from pybossa.extensions import *
 from pybossa.ratelimit import get_view_rate_limit
 
 from raven.contrib.flask import Sentry
-from pybossa.model import db
-from pybossa import model
+from pybossa.util import pretty_date
 
 
 def create_app():
@@ -64,6 +63,7 @@ def create_app():
     setup_geocoding(app)
     setup_csrf_protection(app)
     setup_debug_toolbar(app)
+    setup_jinja2_filters(app)
     return app
 
 
@@ -140,6 +140,7 @@ def setup_logging(app):
         logger.addHandler(file_handler)
 
 def setup_login_manager(app):
+    from pybossa import model
     login_manager.login_view = 'account.signin'
     login_manager.login_message = u"Please sign in to access this page."
     @login_manager.user_loader
@@ -270,6 +271,7 @@ def setup_error_handlers(app):
 
 
 def setup_hooks(app):
+    from pybossa import model
     @app.after_request
     def inject_x_rate_headers(response):
         limit = get_view_rate_limit()
@@ -346,6 +348,11 @@ def setup_hooks(app):
             contact_email=contact_email,
             contact_twitter=contact_twitter,
             upload_method=app.config['UPLOAD_METHOD'])
+
+def setup_jinja2_filters(app):
+    @app.template_filter('pretty_date')
+    def pretty_date_filter(s):
+        return pretty_date(s)
 
 
 def setup_csrf_protection(app):
