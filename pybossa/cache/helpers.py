@@ -49,24 +49,44 @@ def n_available_tasks(app_id, user_id=None, user_ip=None):
     return n_tasks
 
 
-def check_contributing_state(app_id, user_id=None, user_ip=None):
+def check_contributing_state(app, user_id=None, user_ip=None):
     """Returns the state of a given app for a given user, depending on whether
     the app is completed or not and the user can contribute more to it or not"""
 
-    states = ('completed', 'can_contribute', 'cannot_contribute')
+    app_id = app['id'] if type(app) == dict else app.id
+    states = ('completed', 'draft', 'can_contribute', 'cannot_contribute')
     if overall_progress(app_id) >= 100:
         return states[0]
-    if n_available_tasks(app_id, user_id=user_id, user_ip=user_ip) > 0:
+    if _has_no_presenter(app) or _has_no_tasks(app_id):
         return states[1]
-    return states[2]
+    if n_available_tasks(app_id, user_id=user_id, user_ip=user_ip) > 0:
+        return states[2]
+    return states[3]
 
 
-def add_custom_contrib_button_to(app, user_id_ip):
+def add_custom_contrib_button_to(app, user_id_or_ip):
     if type(app) == dict:
         app_id = app['id']
     else:
         app_id = app.id
         app = app.dictize()
-    app['contrib_button'] = check_contributing_state(app_id, **user_id_ip)
-    print app['contrib_button']
+    app['contrib_button'] = check_contributing_state(app, **user_id_or_ip)
     return app
+
+
+def _has_no_presenter(app):
+    try:
+        return 'task_presenter' not in app.info
+    except AttributeError:
+        try:
+            return 'task_presenter' not in app.get('info')
+        except AttributeError:
+            return True
+
+def _has_no_tasks(app_id):
+    query = text('''SELECT COUNT(id) AS n_tasks FROM task
+               WHERE app_id=:app_id;''')
+    result = db.engine.execute(query, app_id=app_id)
+    for row in result:
+        n_tasks = row.n_tasks
+    return n_tasks == 0
