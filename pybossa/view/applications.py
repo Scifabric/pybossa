@@ -939,7 +939,6 @@ def tasks_browse(short_name, page):
     n_completed_tasks = cached_apps.n_completed_tasks(app.id)
 
     def respond():
-        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
         per_page = 10
         count = db.session.query(model.task.Task)\
             .filter_by(app_id=app.get('id'))\
@@ -966,14 +965,11 @@ def tasks_browse(short_name, page):
                                n_volunteers=n_volunteers,
                                n_completed_tasks=n_completed_tasks)
 
-    try:
-        require.app.read(app)
-        return respond()
-    except HTTPException:
-        if app.hidden:
-            raise abort(403)
-        else: # pragma: no cover
-            raise
+    require.app.read(app)
+    if app.hidden:
+        raise abort(403)
+    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    return respond()
 
 
 @blueprint.route('/<short_name>/tasks/delete', methods=['GET', 'POST'])
