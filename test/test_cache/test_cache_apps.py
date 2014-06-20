@@ -326,7 +326,8 @@ class TestAppsCache(Test):
 
 
     def test_n_draft_no_drafts(self):
-        """Test CACHE PROJECTS n_draft returns 0 if no there are no draft projects"""
+        """Test CACHE PROJECTS n_draft returns 0 if there are no draft projects"""
+        # Here, we are suposing that a project is draft iff has no presenter AND has no tasks
 
         app = AppFactory.create(info={})
         TaskFactory.create_batch(2, app=app)
@@ -337,10 +338,10 @@ class TestAppsCache(Test):
 
 
     def test_n_draft_with_drafts(self):
-        """Test CACHE PROJECTS n_draft returns 2 if no there are 2 draft projects"""
+        """Test CACHE PROJECTS n_draft returns 2 if there are 2 draft projects"""
+        # Here, we are suposing that a project is draft iff has no presenter AND has no tasks
 
-        app_with_no_presenter = AppFactory.create(info={})
-        app_with_presenter_but_no_tasks = AppFactory.create()
+        AppFactory.create_batch(2, info={})
 
         number_of_drafts = cached_apps.n_draft()
 
