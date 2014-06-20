@@ -941,10 +941,10 @@ def tasks_browse(short_name, page):
     def respond():
         per_page = 10
         count = db.session.query(model.task.Task)\
-            .filter_by(app_id=app.id)\
+            .filter_by(app_id=app.get('id'))\
             .count()
         app_tasks = db.session.query(model.task.Task)\
-            .filter_by(app_id=app.id)\
+            .filter_by(app_id=app.get('id'))\
             .order_by(model.task.Task.id)\
             .limit(per_page)\
             .offset((page - 1) * per_page)\
@@ -967,6 +967,7 @@ def tasks_browse(short_name, page):
 
     try:
         require.app.read(app)
+        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
         return respond()
     except HTTPException:
         if app.hidden:
