@@ -1180,11 +1180,13 @@ def export_to(short_name):
             .first()
         if t is not None:
             if test(t):
-                writer.writerow(sorted(t.info.keys()))
+                #writer.writerow(sorted(t.info.keys()))
+                writer.writerow(sorted(model.task.Task.__table__.columns))
 
-            res =Response(get_csv(out, writer, table, handle_row),
-                          mimetype='text/csv')
-            res.headers['Content-Disposition'] = 'attachment; filename=%s_%s.csv' % (app.short_name, ty)
+            res = Response(get_csv(out, writer, table, handle_row),
+                           mimetype='text/csv')
+            tmp = 'attachment; filename=%s_%s.csv' % (app.short_name, ty)
+            res.headers['Content-Disposition'] = tmp
             return res
         else:
             flash(msg, 'info')
