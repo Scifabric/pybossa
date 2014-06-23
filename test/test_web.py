@@ -2204,7 +2204,7 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_52_export_task_csv(self, mock):
         """Test WEB export Tasks to CSV works"""
-        Fixtures.create()
+        #Fixtures.create()
         # First test for a non-existant app
         uri = '/app/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
@@ -2219,32 +2219,63 @@ class TestWeb(web.Helper):
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real app
-        uri = '/app/%s/tasks/export' % Fixtures.app_short_name
+        app = AppFactory.create()
+        for i in range(0, 5):
+            task = TaskFactory.create(app=app, info={'question': i})
+        uri = '/app/%s/tasks/export' % app.short_name
         res = self.app.get(uri, follow_redirects=True)
-        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % app.name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in CSV format
-        uri = "/app/%s/tasks/export?type=task&format=csv" % Fixtures.app_short_name
+        uri = "/app/%s/tasks/export?type=task&format=csv" % app.short_name
         res = self.app.get(uri, follow_redirects=True)
         csv_content = StringIO.StringIO(res.data)
         csvreader = unicode_csv_reader(csv_content)
         app = db.session.query(App)\
-                .filter_by(short_name=Fixtures.app_short_name)\
+                .filter_by(short_name=app.short_name)\
                 .first()
         exported_tasks = []
         n = 0
         for row in csvreader:
+            print row
             if n != 0:
                 exported_tasks.append(row)
+            else:
+                keys = row
             n = n + 1
         err_msg = "The number of exported tasks is different from App Tasks"
         assert len(exported_tasks) == len(app.tasks), err_msg
+        for t in app.tasks:
+            err_msg = "All the task column names should be included"
+            for tk in t.dictize().keys():
+                expected_key = "task__%s" % tk
+                assert expected_key in keys, err_msg
+            err_msg = "All the task.info column names should be included"
+            for tk in t.info.keys():
+                expected_key = "taskinfo__%s" % tk
+                assert expected_key in keys, err_msg
+
+        for et in exported_tasks:
+            task_id = et[keys.index('task__id')]
+            task = db.session.query(Task).get(task_id)
+            task_dict = task.dictize()
+            for k in task_dict:
+                slug = 'task__%s' % k
+                err_msg = "%s != %s" % (task_dict[k], et[keys.index(slug)])
+                if k != 'info':
+                    assert unicode(task_dict[k]) == et[keys.index(slug)], err_msg
+                else:
+                    assert json.dumps(task_dict[k]) == et[keys.index(slug)], err_msg
+            for k in task_dict['info'].keys():
+                slug = 'taskinfo__%s' % k
+                err_msg = "%s != %s" % (task_dict['info'][k], et[keys.index(slug)])
+                assert unicode(task_dict['info'][k]) == et[keys.index(slug)], err_msg
+
 
         # With an empty app
-        self.register()
-        self.new_application()
+        app = AppFactory.create()
         # Now get the tasks in CSV format
-        uri = "/app/sampleapp/tasks/export?type=task&format=csv"
+        uri = "/app/%s/tasks/export?type=task&format=csv" % app.short_name
         res = self.app.get(uri, follow_redirects=True)
         msg = "project does not have tasks"
         assert msg in res.data, msg
@@ -2252,7 +2283,6 @@ class TestWeb(web.Helper):
     @with_context
     def test_53_export_task_runs_csv(self):
         """Test WEB export Task Runs to CSV works"""
-        Fixtures.create()
         # First test for a non-existant app
         uri = '/app/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
@@ -2263,27 +2293,58 @@ class TestWeb(web.Helper):
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real app
-        uri = '/app/%s/tasks/export' % Fixtures.app_short_name
+        app = AppFactory.create()
+        task = TaskFactory.create(app=app)
+        for i in range(2):
+            task_run = TaskRunFactory.create(app=app, task=task, info={'answer': i})
+        uri = '/app/%s/tasks/export' % app.short_name
         res = self.app.get(uri, follow_redirects=True)
-        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % app.name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in CSV format
-        uri = "/app/%s/tasks/export?type=task_run&format=csv" % Fixtures.app_short_name
+        uri = "/app/%s/tasks/export?type=task_run&format=csv" % app.short_name
         res = self.app.get(uri, follow_redirects=True)
         csv_content = StringIO.StringIO(res.data)
         csvreader = unicode_csv_reader(csv_content)
         app = db.session.query(App)\
-                .filter_by(short_name=Fixtures.app_short_name)\
+                .filter_by(short_name=app.short_name)\
                 .first()
         exported_task_runs = []
         n = 0
         for row in csvreader:
             if n != 0:
                 exported_task_runs.append(row)
+            else:
+                keys = row
             n = n + 1
         err_msg = "The number of exported task runs is different \
-                   from App Tasks Runs"
+                   from App Tasks Runs: %s != %s" % (len(exported_task_runs), len(app.task_runs))
         assert len(exported_task_runs) == len(app.task_runs), err_msg
+
+        for t in app.tasks[0].task_runs:
+            for tk in t.dictize().keys():
+                expected_key = "task_run__%s" % tk
+                assert expected_key in keys, expected_key
+            for tk in t.info.keys():
+                expected_key = "task_runinfo__%s" % tk
+                assert expected_key in keys, expected_key
+
+        for et in exported_task_runs:
+            task_run_id = et[keys.index('task_run__id')]
+            task_run = db.session.query(TaskRun).get(task_run_id)
+            task_run_dict = task_run.dictize()
+            for k in task_run_dict:
+                slug = 'task_run__%s' % k
+                err_msg = "%s != %s" % (task_run_dict[k], et[keys.index(slug)])
+                if k != 'info':
+                    assert unicode(task_run_dict[k]) == et[keys.index(slug)], err_msg
+                else:
+                    assert json.dumps(task_run_dict[k]) == et[keys.index(slug)], err_msg
+            for k in task_run_dict['info'].keys():
+                slug = 'task_runinfo__%s' % k
+                err_msg = "%s != %s" % (task_run_dict['info'][k], et[keys.index(slug)])
+                assert unicode(task_run_dict['info'][k]) == et[keys.index(slug)], err_msg
+
 
     @with_context
     @patch('pybossa.view.applications.Ckan', autospec=True)
