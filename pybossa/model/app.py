@@ -66,7 +66,7 @@ class App(db.Model, DomainObject):
 
 
     def needs_password(self):
-        return self.get_passwd_hash()) is not None and self.get_passwd_hash() != ''
+        return self.get_passwd_hash() is not None and self.get_passwd_hash() != ''
 
 
     def get_passwd_hash(self):
