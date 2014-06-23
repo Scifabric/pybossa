@@ -73,8 +73,7 @@ class User(db.Model, DomainObject, UserMixin):
         # OAuth users do not have a password
         if self.passwd_hash:
             return signer.check_password_hash(self.passwd_hash, password)
-        else:
-            return False
+        return False
 
 
     @classmethod
