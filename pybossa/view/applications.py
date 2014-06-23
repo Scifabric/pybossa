@@ -57,7 +57,6 @@ import requests
 
 blueprint = Blueprint('app', __name__)
 
-PROJECT_COOKIE_EXP = 3600
 
 class AvatarUploadForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
@@ -763,7 +762,7 @@ def password_required(short_name):
             cookie = signer.loads(cookie) if cookie else []
             cookie.append(get_user_id_or_ip())
             cookie = signer.dumps(cookie)
-            resp.set_cookie(cookie_name, cookie, max_age=PROJECT_COOKIE_EXP)
+            resp.set_cookie(cookie_name, cookie, max_age=current_app.config.get('PASSWD_COOKIE_TIMEOUT'))
             return resp
         flash('Sorry, incorrect password')
     return render_template('applications/password.html',
