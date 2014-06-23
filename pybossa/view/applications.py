@@ -1098,7 +1098,11 @@ def export_to(short_name):
             table = tables[ty]
         except KeyError:
             return abort(404)
-        return Response(gen_json(table), mimetype='application/json')
+
+        tmp = 'attachment; filename=%s_%s.json' % (app.short_name, ty)
+        res = Response(gen_json(table), mimetype='application/json')
+        res.headers['Content-Disposition'] = tmp
+        return res
 
     def create_ckan_datastore(ckan, table, package_id):
         tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}
