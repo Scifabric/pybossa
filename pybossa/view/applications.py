@@ -1192,7 +1192,6 @@ def export_to(short_name):
         try:
             table, handle_row, test, msg = types[ty]
         except KeyError:
-            raise
             return abort(404)
 
         out = StringIO()
