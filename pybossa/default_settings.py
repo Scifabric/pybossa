@@ -77,3 +77,7 @@ USER_TOP_TIMEOUT = 24 * 60 * 60
 USER_TOTAL_TIMEOUT = 24 * 60 * 60
 # Project Presenters
 PRESENTERS = ["basic", "image", "sound", "video", "map", "pdf"]
+
+# Rate limits default values
+LIMIT = 300
+PER = 15 * 60
