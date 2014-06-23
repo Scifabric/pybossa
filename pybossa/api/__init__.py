@@ -59,7 +59,7 @@ error = ErrorStatus()
 
 @blueprint.route('/')
 @crossdomain(origin='*', headers=cors_headers)
-@ratelimit(limit=ratelimits['LIMIT'], per=ratelimits['PER'])
+@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
 def index():  # pragma: no cover
     """Return dummy text for welcome page."""
     return 'The PyBossa API'

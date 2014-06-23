@@ -85,5 +85,5 @@ PER = 15 * 60
 PASSWD_COOKIE_TIMEOUT = 60 * 30
 
 # Rate limits default values
-LIMIT = 300
+LIMIT = 500
 PER = 15 * 60
