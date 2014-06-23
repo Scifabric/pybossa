@@ -1815,7 +1815,7 @@ class TestWeb(web.Helper):
         assert "http://opendatacommons.org/licenses/by/" in res.data, res.data
 
     @with_context
-    @patch('pybossa.view.account.signer.signer.loads')
+    @patch('pybossa.view.account.signer.loads')
     def test_44_password_reset_key_errors(self, Mock):
         """Test WEB password reset key errors are caught"""
         self.register()
@@ -1824,7 +1824,7 @@ class TestWeb(web.Helper):
         fakeuserdict = {'user': user.name, 'password': 'wronghash'}
         fakeuserdict_err = {'user': user.name, 'passwd': 'some'}
         fakeuserdict_form = {'user': user.name, 'passwd': 'p4ssw0rD'}
-        key = signer.signer.dumps(userdict, salt='password-reset')
+        key = signer.dumps(userdict, salt='password-reset')
         returns = [BadSignature('Fake Error'), BadSignature('Fake Error'), userdict,
                    fakeuserdict, userdict, userdict, fakeuserdict_err]
 

@@ -11,3 +11,9 @@ class Signer(object):
     def init_app(self, app):
         key = app.config['ITSDANGEROUSKEY']
         self.signer = URLSafeTimedSerializer(key)
+
+    def loads(self, string, **kwargs):
+        return self.signer.loads(string, **kwargs)
+
+    def dumps(self, key, **kwargs):
+        return self.signer.dumps(key, **kwargs)
