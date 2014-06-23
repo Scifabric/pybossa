@@ -18,6 +18,7 @@
 
 from default import Test, db, with_context
 from nose.tools import assert_raises
+from mock import patch
 from pybossa.model.app import App
 from pybossa.model.user import User
 from sqlalchemy.exc import IntegrityError
@@ -90,29 +91,35 @@ class TestModelApp(Test):
         assert app.needs_password() is False
 
 
-    def test_needs_password_empty_password_key(self):
+    @patch('pybossa.model.app.signer')
+    def test_needs_password_empty_password_key(self, mock_signer):
         """Test needs_password returns false if the app has an empty password"""
-        app_with_empty_string_psw = AppFactory.build(info={'password': ''})
-        app_with_None_psw = AppFactory.build(info={'password': None})
+        mock_signer.loads = lambda x: x
+        app = AppFactory.build(info={'passwd_hash': None})
 
-        assert app_with_empty_string_psw.needs_password() is False
-        assert app_with_None_psw.needs_password() is False
+        assert app.needs_password() is False
 
 
-    def test_needs_password_with_password_key_and_value(self):
+    @patch('pybossa.model.app.signer')
+    def test_needs_password_with_password_key_and_value(self, mock_signer):
         """Test needs_password returns true if the app has a password"""
-        app = AppFactory.build(info={'password': 'mypassword'})
+        mock_signer.loads = lambda x: x
+        app = AppFactory.build(info={'passwd_hash': 'mypassword'})
 
         assert app.needs_password() is True
 
 
-    def test_check_password(self):
-        app = AppFactory.build(info={'password': 'mypassword'})
+    @patch('pybossa.model.app.signer')
+    def test_check_password(self, mock_signer):
+        mock_signer.loads = lambda x: x
+        app = AppFactory.build(info={'passwd_hash': 'mypassword'})
 
         assert app.check_password('mypassword')
 
 
-    def test_check_password_bad_password(self):
-        app = AppFactory.build(info={'password': 'mypassword'})
+    @patch('pybossa.model.app.signer')
+    def test_check_password_bad_password(self, mock_signer):
+        mock_signer.loads = lambda x: x
+        app = AppFactory.build(info={'passwd_hash': 'mypassword'})
 
         assert not app.check_password('notmypassword')
