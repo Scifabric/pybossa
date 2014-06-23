@@ -496,7 +496,7 @@ def update(short_name):
 
         title = app_title(app, "Update")
         if request.method == 'GET':
-            form = AppUpdateForm(obj=app, password=app.info.get('password'))
+            form = AppUpdateForm(obj=app, password=app.get_passwd())
             upload_form = AvatarUploadForm()
             categories = db.session.query(model.category.Category).all()
             form.category_id.choices = [(c.id, c.name) for c in categories]

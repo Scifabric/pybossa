@@ -73,13 +73,17 @@ class App(db.Model, DomainObject):
         return self.info.get('passwd_hash')
 
 
+    def get_passwd(self):
+        return signer.loads(self.get_passwd_hash())
+
+
     def set_password(self, password):
-        self.info['passwd_hash'] = signer.generate_password_hash(password)
+        self.info['passwd_hash'] = signer.dumps(password)
 
 
     def check_password(self, password):
         if self.needs_password():
-            return signer.check_password_hash(self.get_passwd_hash(), password)
+            return self.get_passwd() == password
         return False
 
 
