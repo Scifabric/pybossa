@@ -32,7 +32,7 @@ from flask.views import MethodView
 from werkzeug.exceptions import NotFound
 from sqlalchemy.exc import IntegrityError
 from pybossa.util import jsonpify, crossdomain
-from pybossa.core import db
+from pybossa.core import db, ratelimits
 from pybossa.auth import require
 from pybossa.hateoas import Hateoas
 from pybossa.ratelimit import ratelimit
@@ -63,7 +63,7 @@ class APIBase(MethodView):
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
-    @ratelimit(limit=300, per=15 * 60)
+    @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def get(self, id):
         """Get an object.
 
@@ -146,7 +146,7 @@ class APIBase(MethodView):
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
-    @ratelimit(limit=300, per=15 * 60)
+    @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def post(self):
         """Post an item to the DB with the request.data JSON object.
 
@@ -176,7 +176,7 @@ class APIBase(MethodView):
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
-    @ratelimit(limit=300, per=15 * 60)
+    @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def delete(self, id):
         """Delete a single item from the DB.
 
@@ -206,7 +206,7 @@ class APIBase(MethodView):
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
-    @ratelimit(limit=300, per=15 * 60)
+    @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def put(self, id):
         """Update a single item in the DB.
 
