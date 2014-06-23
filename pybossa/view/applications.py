@@ -35,7 +35,7 @@ import pybossa.stats as stats
 import pybossa.validator as pb_validator
 import pybossa.sched as sched
 
-from pybossa.core import db, uploader
+from pybossa.core import db, uploader, signer
 from pybossa.cache import ONE_DAY, ONE_HOUR
 from pybossa.model.app import App
 from pybossa.model.task import Task
@@ -56,6 +56,8 @@ import math
 import requests
 
 blueprint = Blueprint('app', __name__)
+
+PROJECT_COOKIE_EXP = 3600
 
 class AvatarUploadForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
@@ -756,7 +758,12 @@ def password_required(short_name):
         password = request.form.get('password')
         if app.check_password(password):
             resp = make_response(redirect(url_for('.presenter', short_name=short_name, next=request.args.get('next'))))
-            resp.set_cookie(app.short_name + 'pswd', 'Yes', max_age=3600)
+            cookie_name = '%spswd' % app.short_name
+            cookie = request.cookies.get(cookie_name)
+            cookie = signer.loads(cookie) if cookie else []
+            cookie.append(get_user_id_or_ip())
+            cookie = signer.dumps(cookie)
+            resp.set_cookie(cookie_name, cookie, max_age=PROJECT_COOKIE_EXP)
             return resp
         flash('Sorry, incorrect password')
     return render_template('applications/password.html',
@@ -778,8 +785,11 @@ def task_presenter(short_name, task_id):
             raise abort(403)
         else:  # pragma: no cover
             raise
-    if app.needs_password() and current_user.is_anonymous() or not (current_user.admin or current_user.id == app.owner_id):
-        authorized = request.cookies.get(app.short_name + 'pswd') == 'Yes'
+    if app.needs_password():# and current_user.is_anonymous() or not (current_user.admin or current_user.id == app.owner_id):
+        cookie_name = '%spswd' % app.short_name
+        cookie = request.cookies.get(cookie_name)
+        cookie = signer.loads(cookie) if cookie else []
+        authorized = get_user_id_or_ip() in cookie
         if not authorized:
             return redirect(url_for('.password_required',
                                  short_name=short_name, next=request.path))
@@ -865,8 +875,11 @@ def presenter(short_name):
             raise abort(403)
         else:  # pragma: no cover
             raise
-    if app.needs_password() and current_user.is_anonymous() or not (current_user.admin or current_user.id == app.owner_id):
-        authorized = request.cookies.get(app.short_name + 'pswd') == 'Yes'
+    if app.needs_password():# and current_user.is_anonymous() or not (current_user.admin or current_user.id == app.owner_id):
+        cookie_name = '%spswd' % app.short_name
+        cookie = request.cookies.get(cookie_name)
+        cookie = signer.loads(cookie) if cookie else []
+        authorized = get_user_id_or_ip() in cookie
         if not authorized:
             return redirect(url_for('.password_required',
                                  short_name=short_name, next=request.path))
