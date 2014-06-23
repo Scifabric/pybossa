@@ -1046,27 +1046,44 @@ def export_to(short_name):
             yield item + sep
         yield "]"
 
-    def format_csv_properly(row):
-        keys = sorted(row.keys())
+    def format_csv_properly(row, ty=None):
+        tmp = row.keys()
+        task_keys = []
+        for k in tmp:
+            k = "%s__%s" % (ty, k)
+            task_keys.append(k)
+        if (type(row['info']) == dict):
+            task_info_keys = []
+            tmp = row['info'].keys()
+            for k in tmp:
+                k = "%sinfo__%s" % (ty, k)
+                task_info_keys.append(k)
+        else:
+            task_info_keys = []
+
+        keys = sorted(task_keys + task_info_keys)
         values = []
+        _prefix = "%sinfo" % ty
         for k in keys:
-            values.append(row[k])
+            prefix, k = k.split("__")
+            if prefix == _prefix:
+                if row['info'].get(k):
+                    values.append(row['info'][k])
+                else:
+                    values.append(None)
+            else:
+                if row.get(k):
+                    values.append(row[k])
+                else:
+                    values.append(None)
+
         return values
 
-
     def handle_task(writer, t):
-        if (type(t.info) == dict):
-            values = format_csv_properly(t.info)
-            writer.writerow(values)
-        else: # pragma: no cover
-            writer.writerow([t.info])
+        writer.writerow(format_csv_properly(t.dictize(), ty='task'))
 
     def handle_task_run(writer, t):
-        if (type(t.info) == dict):
-            values = format_csv_properly(t.info)
-            writer.writerow(values)
-        else: # pragma: no cover
-            writer.writerow([t.info])
+        writer.writerow(format_csv_properly(t.dictize(), ty='taskrun'))
 
     def get_csv(out, writer, table, handle_row):
         for tr in db.session.query(table)\
@@ -1164,13 +1181,14 @@ def export_to(short_name):
                     export, if you are the owner add some tasks")),
             "task_run": (
                 model.task_run.TaskRun, handle_task_run,
-                (lambda x: type(x.info) == dict),
+                (lambda x: True),
                 gettext(
                     "Oops, there are no Task Runs yet to export, invite \
                      some users to participate"))}
         try:
             table, handle_row, test, msg = types[ty]
         except KeyError:
+            raise
             return abort(404)
 
         out = StringIO()
@@ -1180,8 +1198,21 @@ def export_to(short_name):
             .first()
         if t is not None:
             if test(t):
-                #writer.writerow(sorted(t.info.keys()))
-                writer.writerow(sorted(model.task.Task.__table__.columns))
+                tmp = t.dictize().keys()
+                task_keys = []
+                for k in tmp:
+                    k = "%s__%s" % (ty, k)
+                    task_keys.append(k)
+                if (type(t.info) == dict):
+                    task_info_keys = []
+                    tmp = t.info.keys()
+                    for k in tmp:
+                        k = "%sinfo__%s" % (ty, k)
+                        task_info_keys.append(k)
+                else:
+                    task_info_keys = []
+                keys = task_keys + task_info_keys
+                writer.writerow(sorted(keys))
 
             res = Response(get_csv(out, writer, table, handle_row),
                            mimetype='text/csv')
