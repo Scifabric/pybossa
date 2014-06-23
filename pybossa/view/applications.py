@@ -1067,12 +1067,12 @@ def export_to(short_name):
         for k in keys:
             prefix, k = k.split("__")
             if prefix == _prefix:
-                if row['info'].get(k):
+                if row['info'].get(k) is not None:
                     values.append(row['info'][k])
                 else:
                     values.append(None)
             else:
-                if row.get(k):
+                if row.get(k) is not None:
                     values.append(row[k])
                 else:
                     values.append(None)
