@@ -23,13 +23,12 @@ from sqlalchemy import event
 
 
 from pybossa.core import db
-from pybossa.model import DomainObject, JSONType, make_timestamp
+from pybossa.model import DomainObject, JSONType, make_timestamp, update_redis
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.featured import Featured
 from pybossa.model.category import Category
 from pybossa.model.blogpost import Blogpost
-
 
 
 class App(db.Model, DomainObject):
@@ -88,3 +87,12 @@ def empty_string_to_none(mapper, conn, target):
         target.short_name = None
     if target.description == '':
         target.description = None
+
+@event.listens_for(App, 'after_insert')
+def add_event(mapper, conn, target):
+    """Update PyBossa feed with new app."""
+    obj = dict(id=target.id,
+               name=target.name,
+               short_name=target.short_name,
+               action_updated='Project')
+    update_redis(obj)

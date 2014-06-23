@@ -922,7 +922,7 @@ class TestWeb(web.Helper):
             db.session.commit()
             res = self.app.get('app/%s/tasks/browse' % (app.short_name),
                                follow_redirects=True)
-            assert res.status_code == 403, res.status_code
+            assert res.status_code == 401, res.status_code
 
             self.create()
             self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
