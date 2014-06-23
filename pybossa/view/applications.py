@@ -538,11 +538,19 @@ def update(short_name):
                           'error')
                 return redirect(url_for('.update', short_name=short_name))
 
+        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
         return render_template('/applications/update.html',
                                form=form,
                                upload_form=upload_form,
-                               title=title,
-                               app=app, owner=owner)
+                               app=app,
+                               owner=owner,
+                               n_tasks=n_tasks,
+                               overall_progress=overall_progress,
+                               n_task_runs=n_task_runs,
+                               last_activity=last_activity,
+                               n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                               n_volunteers=cached_apps.n_volunteers(app.get('id')),
+                               title=title)
     except HTTPException:
         if app.hidden:  # pragma: no cover
             raise abort(403)
@@ -595,7 +603,6 @@ def settings(short_name):
         app = add_custom_contrib_button_to(app, get_user_id_or_ip())
         print cached_apps.n_completed_tasks(app.get('id'))
         return render_template('/applications/settings.html',
-
                                app=app,
                                owner=owner,
                                n_tasks=n_tasks,
@@ -934,10 +941,10 @@ def tasks_browse(short_name, page):
     def respond():
         per_page = 10
         count = db.session.query(model.task.Task)\
-            .filter_by(app_id=app.id)\
+            .filter_by(app_id=app.get('id'))\
             .count()
         app_tasks = db.session.query(model.task.Task)\
-            .filter_by(app_id=app.id)\
+            .filter_by(app_id=app.get('id'))\
             .order_by(model.task.Task.id)\
             .limit(per_page)\
             .offset((page - 1) * per_page)\
@@ -958,14 +965,11 @@ def tasks_browse(short_name, page):
                                n_volunteers=n_volunteers,
                                n_completed_tasks=n_completed_tasks)
 
-    try:
-        require.app.read(app)
-        return respond()
-    except HTTPException:
-        if app.hidden:
-            raise abort(403)
-        else: # pragma: no cover
-            raise
+    require.app.read(app)
+    if app.hidden:
+        raise abort(403)
+    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    return respond()
 
 
 @blueprint.route('/<short_name>/tasks/delete', methods=['GET', 'POST'])
@@ -1535,13 +1539,17 @@ def show_blogpost(short_name, id):
 def new_blogpost(short_name):
 
     def respond():
+        dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
         return render_template('applications/new_blogpost.html',
                                title=gettext("Write a new post"),
-                               form=form, app=app, owner=owner,
+                               form=form,
+                               app=dict_app,
+                               owner=owner,
                                overall_progress=overall_progress,
+                               n_tasks=n_tasks,
                                n_task_runs=n_task_runs,
-                               n_completed_tasks=cached_apps.n_completed_tasks(app.id),
-                               n_volunteers=cached_apps.n_volunteers(app.id))
+                               n_completed_tasks=cached_apps.n_completed_tasks(dict_app.get('id')),
+                               n_volunteers=cached_apps.n_volunteers(dict_app.get('id')))
 
 
     (app, owner, n_tasks, n_task_runs,

@@ -68,7 +68,7 @@ def get_update_feed():
     for u in data:
         tmp = pickle.loads(u[0])
         tmp['updated'] = u[1]
-        if tmp.get('info'):
+        if tmp.get('info') and type(tmp.get('info')) == unicode:
             tmp['info'] = json.loads(tmp['info'])
         update_feed.append(tmp)
     return update_feed

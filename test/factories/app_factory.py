@@ -35,3 +35,4 @@ class AppFactory(BaseFactory):
     owner_id = factory.LazyAttribute(lambda app: app.owner.id)
     category = factory.SubFactory('factories.CategoryFactory')
     category_id = factory.LazyAttribute(lambda app: app.category.id)
+    info = {'task_presenter': '<div></div>'}
