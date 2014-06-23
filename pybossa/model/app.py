@@ -68,14 +68,13 @@ class App(db.Model, DomainObject):
         return (self.info.get('password') is not None
                 and self.info.get('password') != '')
 
-    # def get_password(self):
-    #     return self.info.get('password')
 
     def set_password(self, password):
         self.info['password'] = password
 
+
     def check_password(self, password):
-        return password == self.info.get('password')
+        return self.needs_password() and password == self.info.get('password')
 
 
 @event.listens_for(App, 'before_update')
