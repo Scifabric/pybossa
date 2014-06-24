@@ -1034,8 +1034,15 @@ def export_to(short_name):
         return render_template('/applications/export.html',
                                title=title,
                                loading_text=loading_text,
+                               ckan_name=current_app.config.get('CKAN_NAME'),
                                app=app,
-                               owner=owner)
+                               owner=owner,
+                               n_tasks=n_tasks,
+                               n_task_runs=n_task_runs,
+                               n_volunteers=n_volunteers,
+                               n_completed_tasks=n_completed_tasks,
+                               overall_progress=overall_progress)
+
 
     def gen_json(table):
         n = db.session.query(table)\
