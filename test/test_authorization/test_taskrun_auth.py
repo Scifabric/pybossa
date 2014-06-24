@@ -96,6 +96,7 @@ class TestTaskrunAuthorization(Test):
         with self.flask_app.test_request_context('/'):
             taskrun = TaskRunFactory.build()
 
+            err_msg ="The user id should be the same: self.mock_authenticated.id -> %s != taskrun.user.id -> %s" % (self.mock_authenticated.id, taskrun.user.id)
             assert self.mock_authenticated.id == taskrun.user.id
             assert_not_raises(Exception,
                           getattr(require, 'taskrun').create,
