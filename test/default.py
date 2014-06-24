@@ -26,6 +26,7 @@ from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
 import pybossa.model as model
 from functools import wraps
+from factories import reset_all_pk_sequences
 import random
 
 flask_app = create_app()
@@ -54,6 +55,7 @@ class Test(object):
         with self.flask_app.app_context():
             db.session.remove()
             self.redis_flushall()
+            reset_all_pk_sequences()
 
     fullname = u'T Tester'
     fullname2 = u'T Tester 2'
