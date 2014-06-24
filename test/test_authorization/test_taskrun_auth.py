@@ -37,7 +37,7 @@ class TestTaskrunAuthorization(Test):
 
     mock_anonymous = mock_current_user()
     mock_authenticated = mock_current_user(anonymous=False, admin=False, id=2)
-    mock_admin = mock_current_user(anonymous=False, admin=True, id=15)
+    mock_admin = mock_current_user(anonymous=False, admin=True, id=1)
 
 
     def configure_fixtures(self):
