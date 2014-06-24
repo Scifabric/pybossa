@@ -97,7 +97,7 @@ class TestTaskrunAuthorization(Test):
             taskrun = TaskRunFactory.build()
 
             err_msg ="The user id should be the same: self.mock_authenticated.id -> %s != taskrun.user.id -> %s" % (self.mock_authenticated.id, taskrun.user.id)
-            assert self.mock_authenticated.id == taskrun.user.id
+            assert self.mock_authenticated.id == taskrun.user.id, err_msg
             assert_not_raises(Exception,
                           getattr(require, 'taskrun').create,
                           taskrun)
