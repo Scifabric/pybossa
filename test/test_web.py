@@ -38,7 +38,7 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
 from pybossa.model.featured import Featured
-from factories import AppFactory, CategoryFactory, TaskFactory, TaskRunFactory, UserFactory
+from factories import AppFactory, CategoryFactory, TaskFactory, TaskRunFactory
 
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])

@@ -771,6 +771,13 @@ def password_required(short_name):
                             short_name=short_name,
                             next=request.args.get('next'))
 
+class ProjectPasswordChecker(object):
+    def __init__(self, cookie_handler):
+        self.cookie_handler = cookie_handler
+
+    def check_password(project, user_id_or_ip):
+        pass
+
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
@@ -784,7 +791,7 @@ def task_presenter(short_name, task_id):
             raise abort(403)
         else:  # pragma: no cover
             raise
-    if app.needs_password():# and current_user.is_anonymous() or not (current_user.admin or current_user.id == app.owner_id):
+    if app.needs_password() and current_user.is_anonymous() or not (current_user.admin or current_user.id == app.owner_id):
         cookie_name = '%spswd' % app.short_name
         cookie = request.cookies.get(cookie_name)
         cookie = signer.loads(cookie) if cookie else []
@@ -874,7 +881,7 @@ def presenter(short_name):
             raise abort(403)
         else:  # pragma: no cover
             raise
-    if app.needs_password():# and current_user.is_anonymous() or not (current_user.admin or current_user.id == app.owner_id):
+    if app.needs_password() and current_user.is_anonymous() or not (current_user.admin or current_user.id == app.owner_id):
         cookie_name = '%spswd' % app.short_name
         cookie = request.cookies.get(cookie_name)
         cookie = signer.loads(cookie) if cookie else []
