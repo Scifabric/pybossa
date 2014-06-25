@@ -79,7 +79,7 @@ class TestProjectPassword(Test):
         db.session.add(app)
         db.session.commit()
         user = UserFactory.create()
-        mock_user = configure_mock_current_user_from(user, mock_user)
+        configure_mock_current_user_from(user, mock_user)
 
         res = self.app.get('/app/%s/newtask' % app.short_name, follow_redirects=True)
         assert 'Enter the password to contribute' in res.data
@@ -91,11 +91,32 @@ class TestProjectPassword(Test):
     @patch('pybossa.view.applications.current_user')
     def test_password_not_required_for_admins(self, mock_user):
         """Test when an admin wants to contribute to a password
-        protected project is redirected to the password view"""
+        protected project is able to do it"""
         user = UserFactory.create()
-        mock_user = configure_mock_current_user_from(user, mock_user)
+        configure_mock_current_user_from(user, mock_user)
         assert mock_user.admin
         app = AppFactory.create()
+        TaskFactory.create(app=app)
+        app.set_password('mysecret')
+        db.session.add(app)
+        db.session.commit()
+
+        res = self.app.get('/app/%s/newtask' % app.short_name, follow_redirects=True)
+        assert 'Enter the password to contribute' not in res.data
+
+        res = self.app.get('/app/%s/task/1' % app.short_name, follow_redirects=True)
+        assert 'Enter the password to contribute' not in res.data
+
+
+    @patch('pybossa.view.applications.current_user')
+    def test_password_not_required_for_owner(self, mock_user):
+        """Test when the owner wants to contribute to a password
+        protected project is able to do it"""
+        owner = UserFactory.create_batch(2)[1]
+        configure_mock_current_user_from(owner, mock_user)
+        assert owner.admin is False
+        app = AppFactory.create(owner=owner)
+        assert app.owner.id == owner.id
         TaskFactory.create(app=app)
         app.set_password('mysecret')
         db.session.add(app)
