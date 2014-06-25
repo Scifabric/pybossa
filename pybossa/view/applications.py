@@ -791,7 +791,7 @@ def task_presenter(short_name, task_id):
             raise abort(403)
         else:  # pragma: no cover
             raise
-    if app.needs_password() and current_user.is_anonymous() or not (current_user.admin or current_user.id == app.owner_id):
+    if app.needs_password() and (current_user.is_anonymous() or not (current_user.admin or current_user.id == app.owner_id)):
         cookie_name = '%spswd' % app.short_name
         cookie = request.cookies.get(cookie_name)
         cookie = signer.loads(cookie) if cookie else []
@@ -881,7 +881,7 @@ def presenter(short_name):
             raise abort(403)
         else:  # pragma: no cover
             raise
-    if app.needs_password() and current_user.is_anonymous() or not (current_user.admin or current_user.id == app.owner_id):
+    if app.needs_password() and (current_user.is_anonymous() or not (current_user.admin or current_user.id == app.owner_id)):
         cookie_name = '%spswd' % app.short_name
         cookie = request.cookies.get(cookie_name)
         cookie = signer.loads(cookie) if cookie else []
