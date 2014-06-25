@@ -47,6 +47,7 @@ from pybossa.cache import categories as cached_cat
 from pybossa.cache.helpers import add_custom_contrib_button_to
 from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
+from pybossa.cookies import CookieHandler
 
 import re
 import json
@@ -755,13 +756,12 @@ def password_required(short_name):
     form = PasswordForm(request.form)
     if request.method == 'POST' and form.validate():
         password = request.form.get('password')
-        cookie_handler = CookieHandler(request, signer)
-        password_checker = ProjectPasswordChecker(cookie_handler)
-        if password_checker.validates(password, app):
+        passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer))
+        if passwd_mngr.validates(password, app):
             response = make_response(redirect(url_for('.presenter',
                                      short_name=short_name,
                                      next=request.args.get('next'))))
-            return cookie_handler.add_cookie_to(response, app, get_user_id_or_ip())
+            return passwd_mngr.update_response(response, app, get_user_id_or_ip())
         flash('Sorry, incorrect password')
     return render_template('applications/password.html',
                             app=app,
@@ -770,7 +770,7 @@ def password_required(short_name):
                             next=request.args.get('next'))
 
 
-class ProjectPasswordChecker(object):
+class ProjectPasswdManager(object):
     def __init__(self, cookie_handler):
         self.cookie_handler = cookie_handler
 
@@ -785,33 +785,8 @@ class ProjectPasswordChecker(object):
     def validates(self, password, project):
         return project.check_password(password)
 
-
-class CookieHandler(object):
-
-    def __init__(self, request, signer):
-        self.request = request
-        self.signer = signer
-        self.max_age = current_app.config.get('PASSWD_COOKIE_TIMEOUT') or 1200
-
-    def _create_or_update_cookie(self, project, user):
-        cookie_name = '%spswd' % project.short_name
-        cookie = request.cookies.get(cookie_name)
-        cookie = signer.loads(cookie) if cookie else []
-        cookie.append(get_user_id_or_ip())
-        cookie = signer.dumps(cookie)
-        return cookie
-
-    def add_cookie_to(self, response, project, user):
-        cookie_name = '%spswd' % project.short_name
-        cookie = self._create_or_update_cookie(project, user)
-        response.set_cookie(cookie_name, cookie, max_age=self.max_age)
-        return response
-
-    def get_cookie_from(self, project):
-        cookie_name = '%spswd' % project.short_name
-        signed_cookie = request.cookies.get(cookie_name)
-        cookie = signer.loads(signed_cookie) if signed_cookie else []
-        return cookie
+    def update_response(self, response, project, user):
+        return self.cookie_handler.add_cookie_to(response, project, user)
 
 
 
@@ -827,8 +802,8 @@ def task_presenter(short_name, task_id):
             raise abort(403)
         else:  # pragma: no cover
             raise
-    password_checker = ProjectPasswordChecker(CookieHandler(request, signer))
-    if password_checker.password_needed(app, get_user_id_or_ip()):
+    passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer))
+    if passwd_mngr.password_needed(app, get_user_id_or_ip()):
         return redirect(url_for('.password_required',
                                  short_name=short_name, next=request.path))
 
@@ -913,8 +888,8 @@ def presenter(short_name):
             raise abort(403)
         else:  # pragma: no cover
             raise
-    password_checker = ProjectPasswordChecker(CookieHandler(request, signer))
-    if password_checker.password_needed(app, get_user_id_or_ip()):
+    passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer))
+    if passwd_mngr.password_needed(app, get_user_id_or_ip()):
         return redirect(url_for('.password_required',
                                  short_name=short_name, next=request.path))
 
