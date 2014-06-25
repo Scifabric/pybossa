@@ -89,6 +89,24 @@ class TestProjectPassword(Test):
 
 
     @patch('pybossa.view.applications.current_user')
+    def test_password_not_required_for_authenticated_contributors(self, mock_user):
+        """Test when an authenticated user wants to contribute to a non-password
+        protected project is able to do it"""
+        app = AppFactory.create()
+        TaskFactory.create(app=app)
+        db.session.add(app)
+        db.session.commit()
+        user = UserFactory.create()
+        configure_mock_current_user_from(user, mock_user)
+
+        res = self.app.get('/app/%s/newtask' % app.short_name, follow_redirects=True)
+        assert 'Enter the password to contribute' not in res.data
+
+        res = self.app.get('/app/%s/task/1' % app.short_name, follow_redirects=True)
+        assert 'Enter the password to contribute' not in res.data
+
+
+    @patch('pybossa.view.applications.current_user')
     def test_password_not_required_for_admins(self, mock_user):
         """Test when an admin wants to contribute to a password
         protected project is able to do it"""
