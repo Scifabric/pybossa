@@ -791,10 +791,10 @@ class CookieHandler(object):
     def __init__(self, request, signer):
         self.request = request
         self.signer = signer
-        max_age = current_app.config.get('PASSWD_COOKIE_TIMEOUT') or 30 * 60
+        self.max_age = current_app.config.get('PASSWD_COOKIE_TIMEOUT') or 1200
 
     def _create_or_update_cookie(self, project, user):
-        cookie_name = '%spswd' % app.short_name
+        cookie_name = '%spswd' % project.short_name
         cookie = request.cookies.get(cookie_name)
         cookie = signer.loads(cookie) if cookie else []
         cookie.append(get_user_id_or_ip())
@@ -802,7 +802,8 @@ class CookieHandler(object):
         return cookie
 
     def add_cookie_to(self, response, project, user):
-        cookie = _create_or_update_cookie(project, user)
+        cookie_name = '%spswd' % project.short_name
+        cookie = self._create_or_update_cookie(project, user)
         response.set_cookie(cookie_name, cookie, max_age=self.max_age)
         return response
 
