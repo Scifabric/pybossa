@@ -755,15 +755,13 @@ def password_required(short_name):
     form = PasswordForm(request.form)
     if request.method == 'POST' and form.validate():
         password = request.form.get('password')
-        if app.check_password(password):
-            resp = make_response(redirect(url_for('.presenter', short_name=short_name, next=request.args.get('next'))))
-            cookie_name = '%spswd' % app.short_name
-            cookie = request.cookies.get(cookie_name)
-            cookie = signer.loads(cookie) if cookie else []
-            cookie.append(get_user_id_or_ip())
-            cookie = signer.dumps(cookie)
-            resp.set_cookie(cookie_name, cookie, max_age=current_app.config.get('PASSWD_COOKIE_TIMEOUT'))
-            return resp
+        cookie_handler = CookieHandler(request, signer)
+        password_checker = ProjectPasswordChecker(cookie_handler)
+        if password_checker.validates(password, app):
+            response = make_response(redirect(url_for('.presenter',
+                                     short_name=short_name,
+                                     next=request.args.get('next'))))
+            return cookie_handler.add_cookie_to(response, app, get_user_id_or_ip())
         flash('Sorry, incorrect password')
     return render_template('applications/password.html',
                             app=app,
@@ -784,16 +782,24 @@ class ProjectPasswordChecker(object):
         return False
 
 class CookieHandler(object):
+
     def __init__(self, request, signer):
         self.request = request
         self.signer = signer
+        max_age = current_app.config.get('PASSWD_COOKIE_TIMEOUT') or 30 * 60
 
-    def _add_cookie_to(self, response, cookie_name, cookie, **kwargs):
-        response.set_cookie(cookie_name, cookie, **kwargs)
+    def _create_or_update_cookie(self, project, user):
+        cookie_name = '%spswd' % app.short_name
+        cookie = request.cookies.get(cookie_name)
+        cookie = signer.loads(cookie) if cookie else []
+        cookie.append(get_user_id_or_ip())
+        cookie = signer.dumps(cookie)
+        return cookie
+
+    def add_cookie_to(self, response, project, user):
+        cookie = _create_or_update_cookie(project, user)
+        response.set_cookie(cookie_name, cookie, max_age=self.max_age)
         return response
-
-    def create_cookie_for(self, project, user):
-        pass
 
     def get_cookie_from(self, project):
         cookie_name = '%spswd' % project.short_name
