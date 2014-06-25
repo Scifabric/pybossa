@@ -329,7 +329,8 @@ class TestTaskrunAuthorization(Test):
         """Test admins can delete taskruns posted by authenticated users"""
 
         with self.flask_app.test_request_context('/'):
-            user_taskrun = TaskRunFactory.create()
+            new_user = UserFactory.create(id=999)
+            user_taskrun = TaskRunFactory.create(user=new_user)
 
             assert self.mock_admin.id != user_taskrun.user_id, user_taskrun.user_id
             assert_not_raises(Exception,
