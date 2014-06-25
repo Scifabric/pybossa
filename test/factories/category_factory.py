@@ -22,7 +22,8 @@ from . import BaseFactory, factory
 
 
 class CategoryFactory(BaseFactory):
-    FACTORY_FOR = Category
+    class Meta:
+        model = Category
 
     id = factory.Sequence(lambda n: n)
     name = factory.Sequence(lambda n: 'category_name_%d' % n)
