@@ -772,19 +772,30 @@ def password_required(short_name):
                             next=request.args.get('next'))
 
 class ProjectPasswordChecker(object):
+    def __init__(self, cookie_handler):
+        self.cookie_handler = cookie_handler
 
     def password_needed(self, project, user_id_or_ip):
         if project.needs_password() and (current_user.is_anonymous() or not
         (current_user.admin or current_user.id == project.owner_id)):
-            cookie_name = '%spswd' % project.short_name
-            cookie = request.cookies.get(cookie_name)
-            cookie = signer.loads(cookie) if cookie else []
+            cookie = self.cookie_handler.get_cookie_from(project)
             request_passwd = user_id_or_ip not in cookie
             return request_passwd
         return False
 
+class CookieHandler(object):
+    def __init__(self, request, signer):
+        self.request = request
+        self.signer = signer
 
-password_checker = ProjectPasswordChecker()
+    def get_cookie_from(self, project):
+        cookie_name = '%spswd' % project.short_name
+        signed_cookie = request.cookies.get(cookie_name)
+        cookie = signer.loads(signed_cookie) if signed_cookie else []
+        return cookie
+
+
+password_checker = ProjectPasswordChecker(CookieHandler(request, signer))
 
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
