@@ -788,14 +788,19 @@ class CookieHandler(object):
         self.request = request
         self.signer = signer
 
+    def _add_cookie_to(self, response, cookie_name, cookie, **kwargs):
+        response.set_cookie(cookie_name, cookie, **kwargs)
+        return response
+
+    def create_cookie_for(self, project, user):
+        pass
+
     def get_cookie_from(self, project):
         cookie_name = '%spswd' % project.short_name
         signed_cookie = request.cookies.get(cookie_name)
         cookie = signer.loads(signed_cookie) if signed_cookie else []
         return cookie
 
-
-password_checker = ProjectPasswordChecker(CookieHandler(request, signer))
 
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
@@ -810,6 +815,7 @@ def task_presenter(short_name, task_id):
             raise abort(403)
         else:  # pragma: no cover
             raise
+    password_checker = ProjectPasswordChecker(CookieHandler(request, signer))
     if password_checker.password_needed(app, get_user_id_or_ip()):
         return redirect(url_for('.password_required',
                                  short_name=short_name, next=request.path))
@@ -895,13 +901,9 @@ def presenter(short_name):
             raise abort(403)
         else:  # pragma: no cover
             raise
-    if app.needs_password() and (current_user.is_anonymous() or not (current_user.admin or current_user.id == app.owner_id)):
-        cookie_name = '%spswd' % app.short_name
-        cookie = request.cookies.get(cookie_name)
-        cookie = signer.loads(cookie) if cookie else []
-        authorized = get_user_id_or_ip() in cookie
-        if not authorized:
-            return redirect(url_for('.password_required',
+    password_checker = ProjectPasswordChecker(CookieHandler(request, signer))
+    if password_checker.password_needed(app, get_user_id_or_ip()):
+        return redirect(url_for('.password_required',
                                  short_name=short_name, next=request.path))
 
     if not app.allow_anonymous_contributors and current_user.is_anonymous():
