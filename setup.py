@@ -35,7 +35,7 @@ requirements = [
     "pyrax>=1.8, <1.9",
     "pillow>=2.4, <2.5",
     "flask-debugtoolbar>=0.9.0, <1.0",
-    "factory_boy"
+    "factory_boy>=2.4.1"
 ]
 
 setup(
