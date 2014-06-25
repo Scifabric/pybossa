@@ -769,6 +769,7 @@ def password_required(short_name):
                             short_name=short_name,
                             next=request.args.get('next'))
 
+
 class ProjectPasswordChecker(object):
     def __init__(self, cookie_handler):
         self.cookie_handler = cookie_handler
@@ -780,6 +781,10 @@ class ProjectPasswordChecker(object):
             request_passwd = user_id_or_ip not in cookie
             return request_passwd
         return False
+
+    def validates(self, password, project):
+        return project.check_password(password)
+
 
 class CookieHandler(object):
 
