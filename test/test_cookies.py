@@ -39,3 +39,25 @@ class TestCookieHandler(object):
         mock_response.set_cookie.assert_called_with('my_projectpswd',
                                                     [user], max_age=1200)
 
+    def test_cookie_habdler_updates_cookie(self):
+        """Test that a CookieHandler updates the cookie with another user's info"""
+        mock_signer = MagicMock()
+        mock_signer.loads = lambda x: x
+        mock_signer.dumps = lambda x: x
+        mock_request = MagicMock(cookies={'my_projectpswd': ['first_user']})
+        mock_response = MagicMock()
+        project = MagicMock(short_name='my_project')
+        user = 'second_user'
+        cookie_handler = CookieHandler(request=mock_request, signer=mock_signer)
+
+        cookie_handler.add_cookie_to(mock_response, project, user)
+
+        mock_response.set_cookie.assert_called_with('my_projectpswd',
+                                                    ['first_user', user],
+                                                    max_age=1200)
+
+
+
+
+
+
