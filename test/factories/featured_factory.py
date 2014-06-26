@@ -22,7 +22,8 @@ from . import BaseFactory, factory
 
 
 class FeaturedFactory(BaseFactory):
-    FACTORY_FOR = Featured
+    class Meta:
+        model = Featured
 
     id = factory.Sequence(lambda n: n)
     app = factory.SubFactory('factories.AppFactory')

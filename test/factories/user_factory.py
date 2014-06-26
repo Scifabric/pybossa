@@ -22,7 +22,8 @@ from . import BaseFactory, factory
 
 
 class UserFactory(BaseFactory):
-    FACTORY_FOR = User
+    class Meta:
+        model = User
 
     id = factory.Sequence(lambda n: n)
     name = factory.Sequence(lambda n: u'user%d' % n)

@@ -22,7 +22,8 @@ from . import BaseFactory, factory
 
 
 class AppFactory(BaseFactory):
-    FACTORY_FOR = App
+    class Meta:
+        model = App
 
     id = factory.Sequence(lambda n: n)
     name = factory.Sequence(lambda n: u'My Project number %d' % n)
