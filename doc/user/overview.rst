@@ -59,8 +59,7 @@ figure:
 .. image:: http://i.imgur.com/g4mFENC.png
     :alt: PyBossa sign in methods
 
-2. Click in **create** link of the top bar and click again in the button
-   named: **Or using a web form and a CSV file importer for the tasks**.
+2. Click in **create** link of the top bar.
 
 3. After clicking in the previous button, you will have to fill in a form
    with the very basic to create your project:
@@ -75,7 +74,7 @@ figure:
    developer, the researcher group or institutions involved in the
    project, etc.
 
-.. image:: http://i.imgur.com/C8PpqYh.png
+.. image:: http://i.imgur.com/z3kWKcl.png
     :alt: PyBossa Create link
 
 .. note::
@@ -111,8 +110,8 @@ your mind and wanted to change any of them) plus the following:
 * In addition, you will be able to select and upload an **image** from your
   local computer to set it as the project image thoroughout the server.
 
-.. image:: http://i.imgur.com/IiB0sMG.png
-    :alt: PyBossa Project Settings page
+.. image:: http://i.imgur.com/DH8Qa8c.png
+    :alt: PyBossa Project Update page
 
 
 .. _csv-import:

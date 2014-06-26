@@ -60,7 +60,7 @@ In this section you can change the following parameters of your project:
 * In addition, you will be able to select and upload an **image** from your
   local computer to set it as the project image thoroughout the server.
 
-.. image:: http://i.imgur.com/LemKrKJ.png
+.. image:: http://i.imgur.com/DH8Qa8c.png
     :width: 100%
 
 .. _`Markdown`: http://daringfireball.net/projects/markdown/

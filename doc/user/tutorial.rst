@@ -967,7 +967,7 @@ the supported CKAN server (i.e. `the Data hub`_), check your profile and copy
 the API-KEY. Then, open your PyBossa account page, edit it and paste the key in
 the section **External Services**.
 
-.. image:: http://i.imgur.com/f3gGQji.png
+.. image:: http://i.imgur.com/nYw9rcj.png
 
 Then, you will be able to actually export the data to the CKAN server and host
 it there. Your project will show in the info page at the bottom a link to
