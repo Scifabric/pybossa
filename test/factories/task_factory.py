@@ -22,7 +22,8 @@ from . import BaseFactory, factory
 
 
 class TaskFactory(BaseFactory):
-    FACTORY_FOR = Task
+    class Meta:
+        model = Task
 
     id = factory.Sequence(lambda n: n)
     app = factory.SubFactory('factories.AppFactory')

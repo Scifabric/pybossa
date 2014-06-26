@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -* -coding: utf8 -*-
 # This file is part of PyBossa.
 #
 # Copyright (C) 2013 SF Isle of Man Limited
@@ -167,7 +167,10 @@ def export_users():
                              'created', 'locale', 'admin')
 
     def respond_json():
-        return Response(gen_json(), mimetype='application/json')
+        tmp = 'attachment; filename=all_users.json'
+        res = Response(gen_json(), mimetype='application/json')
+        res.headers['Content-Disposition'] = tmp
+        return res
 
     def gen_json():
         users = db.session.query(model.user.User).all()
@@ -185,7 +188,10 @@ def export_users():
     def respond_csv():
         out = StringIO()
         writer = UnicodeWriter(out)
-        return Response(gen_csv(out, writer, write_user), mimetype='text/csv')
+        tmp = 'attachment; filename=all_users.csv'
+        res = Response(gen_csv(out, writer, write_user), mimetype='text/csv')
+        res.headers['Content-Disposition'] = tmp
+        return res
 
     def gen_csv(out, writer, write_user):
         add_headers(writer)

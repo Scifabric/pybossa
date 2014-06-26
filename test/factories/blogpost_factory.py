@@ -22,7 +22,8 @@ from . import BaseFactory, factory
 
 
 class BlogpostFactory(BaseFactory):
-    FACTORY_FOR = Blogpost
+    class Meta:
+        model = Blogpost
 
     id = factory.Sequence(lambda n: n)
     title = u'Blogpost title'
