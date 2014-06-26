@@ -84,5 +84,3 @@ class TestCookieHandler(object):
         cookie = cookie_handler.get_cookie_from(project)
 
         assert cookie == [], cookie
-
-

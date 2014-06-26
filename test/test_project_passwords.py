@@ -19,8 +19,7 @@
 from default import Test, db
 from factories import AppFactory, TaskFactory, UserFactory
 from factories import reset_all_pk_sequences
-from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
-from mock import Mock, MagicMock, patch
+from mock import patch
 
 
 
@@ -145,3 +144,45 @@ class TestProjectPassword(Test):
 
         res = self.app.get('/app/%s/task/1' % app.short_name, follow_redirects=True)
         assert 'Enter the password to contribute' not in res.data
+
+
+    from pybossa.view.applications import redirect
+    @patch('pybossa.view.applications.redirect', wraps=redirect)
+    def test_password_view_func_post(self, redirect):
+        """Test when posting to /app/short_name/password and password is correct
+        the user is redirected to where they came from"""
+        app = AppFactory.create()
+        task = TaskFactory.create(app=app)
+        app.set_password('mysecret')
+        db.session.add(app)
+        db.session.commit()
+        user = UserFactory.create()
+        redirect_url = '/app/%s/task/%s' % (app.short_name, task.id)
+        url = '/app/%s/password?next=%s' % (app.short_name, redirect_url)
+
+        res = self.app.post(url, data={'password': 'mysecret'})
+        redirect.assert_called_with(redirect_url)
+
+
+    def test_password_view_func_post_wrong_passwd(self):
+        """Test when posting to /app/short_name/password and password is incorrect
+        an error message is flashed"""
+        app = AppFactory.create()
+        task = TaskFactory.create(app=app)
+        app.set_password('mysecret')
+        db.session.add(app)
+        db.session.commit()
+        user = UserFactory.create()
+        url = '/app/%s/password?next=/app/%s/task/%s' % (app.short_name, app.short_name, task.id)
+
+        res = self.app.post(url, data={'password': 'bad_passwd'})
+        assert 'Sorry, incorrect password' in res.data, "No error message shown"
+
+
+    def test_password_view_func_no_project(self):
+        """Test when receiving a request to a non-existing app, return 404"""
+        get_res = self.app.get('/app/noapp/password')
+        post_res = self.app.post('/app/noapp/password')
+
+        assert get_res.status_code == 404, get_res.status_code
+        assert post_res.status_code == 404, post_res.status_code
