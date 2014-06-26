@@ -758,9 +758,7 @@ def password_required(short_name):
         password = request.form.get('password')
         passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer))
         if passwd_mngr.validates(password, app):
-            response = make_response(redirect(url_for('.presenter',
-                                     short_name=short_name,
-                                     next=request.args.get('next'))))
+            response = make_response(redirect(request.args.get('next')))
             return passwd_mngr.update_response(response, app, get_user_id_or_ip())
         flash('Sorry, incorrect password')
     return render_template('applications/password.html',
