@@ -751,12 +751,13 @@ def _import_task(app, handler, form, render_forms):
 
 @blueprint.route('/<short_name>/password', methods=['GET', 'POST'])
 def password_required(short_name):
-    (app, owner,
-     n_tasks, n_task_runs, overall_progress, last_activity) = app_by_shortname(short_name)
+    (app, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = app_by_shortname(short_name)
     form = PasswordForm(request.form)
     if request.method == 'POST' and form.validate():
         password = request.form.get('password')
-        passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer))
+        cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
+        passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
         if passwd_mngr.validates(password, app):
             response = make_response(redirect(request.args.get('next')))
             return passwd_mngr.update_response(response, app, get_user_id_or_ip())
@@ -800,7 +801,8 @@ def task_presenter(short_name, task_id):
             raise abort(403)
         else:  # pragma: no cover
             raise
-    passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer))
+    cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
+    passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
     if passwd_mngr.password_needed(app, get_user_id_or_ip()):
         return redirect(url_for('.password_required',
                                  short_name=short_name, next=request.path))
@@ -886,7 +888,8 @@ def presenter(short_name):
             raise abort(403)
         else:  # pragma: no cover
             raise
-    passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer))
+    cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
+    passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
     if passwd_mngr.password_needed(app, get_user_id_or_ip()):
         return redirect(url_for('.password_required',
                                  short_name=short_name, next=request.path))
