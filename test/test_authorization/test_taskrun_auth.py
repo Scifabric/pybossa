@@ -315,8 +315,8 @@ class TestTaskrunAuthorization(Test):
             own_taskrun = TaskRunFactory.create()
             other_users_taskrun = TaskRunFactory.create(user=new_user)
 
-            assert self.mock_authenticated.id == own_taskrun.user.id
-            assert self.mock_authenticated.id != other_users_taskrun.user.id
+            assert self.mock_authenticated.id == own_taskrun.user_id, own_taskrun.user_id
+            assert self.mock_authenticated.id != other_users_taskrun.user_id, other_users_taskrun.user_id
             assert_not_raises(Exception,
                       getattr(require, 'taskrun').delete,
                       own_taskrun)
