@@ -80,7 +80,7 @@ class App(db.Model, DomainObject):
 
 
     def set_password(self, password):
-        if password != '':
+        if len(password) > 1:
             self.info['passwd_hash'] = signer.dumps(password)
             return True
         self.info['passwd_hash'] = None
