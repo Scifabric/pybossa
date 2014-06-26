@@ -243,9 +243,10 @@ class TestTaskrunAuthorization(Test):
         """Test admins cannot update taskruns posted by authenticated users"""
 
         with self.flask_app.test_request_context('/'):
-            user_taskrun = TaskRunFactory.create()
+            new_user = UserFactory.create(id=999)
+            user_taskrun = TaskRunFactory.create(user=new_user)
 
-            assert self.mock_admin.id != user_taskrun.user.id
+            assert self.mock_admin.id != user_taskrun.user_id, user_taskrun.user_id
             assert_raises(Forbidden,
                           getattr(require, 'taskrun').update,
                           user_taskrun)
@@ -310,8 +311,9 @@ class TestTaskrunAuthorization(Test):
         by another authenticated user, but can delete his own taskruns"""
 
         with self.flask_app.test_request_context('/'):
+            new_user = UserFactory.create(id=999)
             own_taskrun = TaskRunFactory.create()
-            other_users_taskrun = TaskRunFactory.create()
+            other_users_taskrun = TaskRunFactory.create(user=new_user)
 
             assert self.mock_authenticated.id == own_taskrun.user.id
             assert self.mock_authenticated.id != other_users_taskrun.user.id
