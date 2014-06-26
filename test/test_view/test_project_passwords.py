@@ -68,7 +68,7 @@ class TestProjectPassword(Test):
         assert 'Enter the password to contribute' not in res.data
 
 
-    @patch('pybossa.view.applications.current_user')
+    @patch('pybossa.password_manager.current_user')
     def test_password_required_for_authenticated_contributors(self, mock_user):
         """Test when an authenticated user wants to contribute to a password
         protected project is redirected to the password view"""
@@ -87,7 +87,7 @@ class TestProjectPassword(Test):
         assert 'Enter the password to contribute' in res.data
 
 
-    @patch('pybossa.view.applications.current_user')
+    @patch('pybossa.password_manager.current_user')
     def test_password_not_required_for_authenticated_contributors(self, mock_user):
         """Test when an authenticated user wants to contribute to a non-password
         protected project is able to do it"""
@@ -105,7 +105,7 @@ class TestProjectPassword(Test):
         assert 'Enter the password to contribute' not in res.data
 
 
-    @patch('pybossa.view.applications.current_user')
+    @patch('pybossa.password_manager.current_user')
     def test_password_not_required_for_admins(self, mock_user):
         """Test when an admin wants to contribute to a password
         protected project is able to do it"""
@@ -125,7 +125,7 @@ class TestProjectPassword(Test):
         assert 'Enter the password to contribute' not in res.data
 
 
-    @patch('pybossa.view.applications.current_user')
+    @patch('pybossa.password_manager.current_user')
     def test_password_not_required_for_owner(self, mock_user):
         """Test when the owner wants to contribute to a password
         protected project is able to do it"""

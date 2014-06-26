@@ -48,6 +48,7 @@ from pybossa.cache.helpers import add_custom_contrib_button_to
 from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
+from pybossa.password_manager import ProjectPasswdManager
 
 import re
 import json
@@ -767,26 +768,6 @@ def password_required(short_name):
                             form=form,
                             short_name=short_name,
                             next=request.args.get('next'))
-
-
-class ProjectPasswdManager(object):
-    def __init__(self, cookie_handler):
-        self.cookie_handler = cookie_handler
-
-    def password_needed(self, project, user_id_or_ip):
-        if project.needs_password() and (current_user.is_anonymous() or not
-        (current_user.admin or current_user.id == project.owner_id)):
-            cookie = self.cookie_handler.get_cookie_from(project)
-            request_passwd = user_id_or_ip not in cookie
-            return request_passwd
-        return False
-
-    def validates(self, password, project):
-        return project.check_password(password)
-
-    def update_response(self, response, project, user):
-        return self.cookie_handler.add_cookie_to(response, project, user)
-
 
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
