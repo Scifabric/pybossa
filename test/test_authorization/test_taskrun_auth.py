@@ -312,6 +312,7 @@ class TestTaskrunAuthorization(Test):
 
         with self.flask_app.test_request_context('/'):
             new_user = UserFactory.create(id=999)
+            user = UserFactory.create(id=self.mock_authenticated.id)
             own_taskrun = TaskRunFactory.create()
             other_users_taskrun = TaskRunFactory.create(user=new_user)
 
