@@ -102,14 +102,11 @@ your mind and wanted to change any of them) plus the following:
   authenticated users can participate in all the projects, however
   you can change it to only allow authenticated volunteers to
   participate.
+* **Password**: If you want to control who can contribute to your project, you
+  can set a password here to share with those you allow to do it.
 * **Category**: Select a category that fits your project.
   :ref:`categories`
   are added and managed by the server :ref:`administrators`.
-* **Long Description**: A *long* description where you can use Markdown
-  to format the description of your project. This field is
-  usually used to provide information about the project, the
-  developer, the researcher group or institutions involved in the
-  project, etc.
 * **Hide**: Click in this field if you want to hide the project.
 * In addition, you will be able to select and upload an **image** from your
   local computer to set it as the project image thoroughout the server.
