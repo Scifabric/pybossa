@@ -330,6 +330,7 @@ class TestTaskrunAuthorization(Test):
 
         with self.flask_app.test_request_context('/'):
             new_user = UserFactory.create(id=999)
+            print new_user.id
             user_taskrun = TaskRunFactory.create(user=new_user)
 
             assert self.mock_admin.id != user_taskrun.user_id, user_taskrun.user_id
