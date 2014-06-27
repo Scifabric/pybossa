@@ -27,9 +27,9 @@ def read(token=None):
     return not current_user.is_anonymous()
 
 
-def update(token=None):
+def update(token):
     return False
 
 
-def delete(token=None):
+def delete(token):
     return False
