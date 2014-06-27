@@ -10,10 +10,12 @@ before_install:
   - redis-server --version
   - redis-server contrib/redis/sentinel.conf --sentinel
   - pip install coveralls --use-mirrors
+install:
+  - pip install -r requirements.txt
 before_script:
   - psql -c "create user rtester with createdb login password 'rtester'" -U postgres
   - psql -c "create database pybossa_test owner rtester encoding 'utf-8' lc_collate 'en_US.utf8' lc_ctype 'en_US.utf8' template template0;" -U postgres
-script: tox 
+script: nosetests test/
 notifications:
   email: false
   irc: "irc.freenode.net#okfn-dev"
