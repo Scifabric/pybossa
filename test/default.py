@@ -28,6 +28,11 @@ import pybossa.model as model
 from functools import wraps
 from factories import reset_all_pk_sequences
 import random
+import os
+
+
+os.environ['PYBOSSA_SETTINGS'] = '../settings_test.py'
+os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
 
 flask_app = create_app()
 
