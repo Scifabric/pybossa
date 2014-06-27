@@ -40,17 +40,6 @@ class TestTaskrunAuthorization(Test):
     mock_admin = mock_current_user(anonymous=False, admin=True, id=1)
 
 
-    def configure_fixtures(self):
-        self.app = db.session.query(App).first()
-        self.root = db.session.query(User).first()
-        self.user1 = db.session.query(User).get(2)
-        self.user2 = db.session.query(User).get(3)
-        self.task = Task(app_id=self.app.id, state='0', n_answers=10)
-        self.task.app = self.app
-        db.session.add(self.task)
-        db.session.commit()
-
-
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     @patch('pybossa.auth.taskrun.current_user', new=mock_anonymous)
     def test_anonymous_user_create_first_taskrun(self):
@@ -96,8 +85,7 @@ class TestTaskrunAuthorization(Test):
         with self.flask_app.test_request_context('/'):
             taskrun = TaskRunFactory.build()
 
-            err_msg ="The user id should be the same: self.mock_authenticated.id -> %s != taskrun.user.id -> %s" % (self.mock_authenticated.id, taskrun.user.id)
-            assert self.mock_authenticated.id == taskrun.user.id, err_msg
+            assert self.mock_authenticated.id == taskrun.user.id
             assert_not_raises(Exception,
                           getattr(require, 'taskrun').create,
                           taskrun)
@@ -243,10 +231,9 @@ class TestTaskrunAuthorization(Test):
         """Test admins cannot update taskruns posted by authenticated users"""
 
         with self.flask_app.test_request_context('/'):
-            new_user = UserFactory.create(id=999)
-            user_taskrun = TaskRunFactory.create(user=new_user)
+            user_taskrun = TaskRunFactory.create()
 
-            assert self.mock_admin.id != user_taskrun.user_id, user_taskrun.user_id
+            assert self.mock_admin.id != user_taskrun.user.id
             assert_raises(Forbidden,
                           getattr(require, 'taskrun').update,
                           user_taskrun)
@@ -311,13 +298,11 @@ class TestTaskrunAuthorization(Test):
         by another authenticated user, but can delete his own taskruns"""
 
         with self.flask_app.test_request_context('/'):
-            new_user = UserFactory.create(id=999)
-            user = UserFactory.create(id=self.mock_authenticated.id)
             own_taskrun = TaskRunFactory.create()
-            other_users_taskrun = TaskRunFactory.create(user=new_user)
+            other_users_taskrun = TaskRunFactory.create()
 
-            assert self.mock_authenticated.id == own_taskrun.user_id, own_taskrun.user_id
-            assert self.mock_authenticated.id != other_users_taskrun.user_id, other_users_taskrun.user_id
+            assert self.mock_authenticated.id == own_taskrun.user.id
+            assert self.mock_authenticated.id != other_users_taskrun.user.id
             assert_not_raises(Exception,
                       getattr(require, 'taskrun').delete,
                       own_taskrun)
@@ -332,11 +317,10 @@ class TestTaskrunAuthorization(Test):
         """Test admins can delete taskruns posted by authenticated users"""
 
         with self.flask_app.test_request_context('/'):
-            new_user = UserFactory.create(id=999)
-            print new_user.id
-            user_taskrun = TaskRunFactory.create(user=new_user)
+            UserFactory.reset_sequence()
+            user_taskrun = TaskRunFactory.create()
 
-            assert self.mock_admin.id != user_taskrun.user_id, user_taskrun.user_id
+            assert self.mock_admin.id != user_taskrun.user.id, user_taskrun.user.id
             assert_not_raises(Exception,
                       getattr(require, 'taskrun').delete,
                       user_taskrun)
