@@ -329,90 +329,84 @@ def new():
 @blueprint.route('/<short_name>/tasks/taskpresentereditor', methods=['GET', 'POST'])
 @login_required
 def task_presenter_editor(short_name):
-    try:
-        errors = False
-        (app, owner, n_tasks, n_task_runs,
-         overall_progress, last_activity) = app_by_shortname(short_name)
+    errors = False
+    (app, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = app_by_shortname(short_name)
 
-        title = app_title(app, "Task Presenter Editor")
-        require.app.read(app)
-        require.app.update(app)
+    title = app_title(app, "Task Presenter Editor")
+    require.app.read(app)
+    require.app.update(app)
 
-        form = TaskPresenterForm(request.form)
-        form.id.data = app.id
-        if request.method == 'POST' and form.validate():
-            db_app = db.session.query(model.app.App).filter_by(id=app.id).first()
-            db_app.info['task_presenter'] = form.editor.data
-            db.session.add(db_app)
-            db.session.commit()
-            cached_apps.delete_app(app.short_name)
-            msg_1 = gettext('Task presenter added!')
-            flash('<i class="icon-ok"></i> ' + msg_1, 'success')
-            return redirect(url_for('.tasks', short_name=app.short_name))
+    form = TaskPresenterForm(request.form)
+    form.id.data = app.id
+    if request.method == 'POST' and form.validate():
+        db_app = db.session.query(model.app.App).filter_by(id=app.id).first()
+        db_app.info['task_presenter'] = form.editor.data
+        db.session.add(db_app)
+        db.session.commit()
+        cached_apps.delete_app(app.short_name)
+        msg_1 = gettext('Task presenter added!')
+        flash('<i class="icon-ok"></i> ' + msg_1, 'success')
+        return redirect(url_for('.tasks', short_name=app.short_name))
 
-        # It does not have a validation
-        if request.method == 'POST' and not form.validate():  # pragma: no cover
-            flash(gettext('Please correct the errors'), 'error')
-            errors = True
+    # It does not have a validation
+    if request.method == 'POST' and not form.validate():  # pragma: no cover
+        flash(gettext('Please correct the errors'), 'error')
+        errors = True
 
-        if app.info.get('task_presenter'):
-            form.editor.data = app.info['task_presenter']
-        else:
-            if not request.args.get('template'):
-                msg_1 = gettext('<strong>Note</strong> You will need to upload the'
-                                ' tasks using the')
-                msg_2 = gettext('CSV importer')
-                msg_3 = gettext(' or download the project bundle and run the'
-                                ' <strong>createTasks.py</strong> script in your'
-                                ' computer')
-                url = '<a href="%s"> %s</a>' % (url_for('app.import_task',
-                                                        short_name=app.short_name), msg_2)
-                msg = msg_1 + url + msg_3
-                flash(msg, 'info')
+    if app.info.get('task_presenter'):
+        form.editor.data = app.info['task_presenter']
+    else:
+        if not request.args.get('template'):
+            msg_1 = gettext('<strong>Note</strong> You will need to upload the'
+                            ' tasks using the')
+            msg_2 = gettext('CSV importer')
+            msg_3 = gettext(' or download the project bundle and run the'
+                            ' <strong>createTasks.py</strong> script in your'
+                            ' computer')
+            url = '<a href="%s"> %s</a>' % (url_for('app.import_task',
+                                                    short_name=app.short_name), msg_2)
+            msg = msg_1 + url + msg_3
+            flash(msg, 'info')
 
-                wrap = lambda i: "applications/presenters/%s.html" % i
-                pres_tmpls = map(wrap, current_app.config.get('PRESENTERS'))
+            wrap = lambda i: "applications/presenters/%s.html" % i
+            pres_tmpls = map(wrap, current_app.config.get('PRESENTERS'))
 
-                app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-                return render_template(
-                    'applications/task_presenter_options.html',
-                    title=title,
-                    app=app,
-                    owner=owner,
-                    overall_progress=overall_progress,
-                    n_tasks=n_tasks,
-                    n_task_runs=n_task_runs,
-                    last_activity=last_activity,
-                    n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                    n_volunteers=cached_apps.n_volunteers(app.get('id')),
-                    presenters=pres_tmpls)
+            app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+            return render_template(
+                'applications/task_presenter_options.html',
+                title=title,
+                app=app,
+                owner=owner,
+                overall_progress=overall_progress,
+                n_tasks=n_tasks,
+                n_task_runs=n_task_runs,
+                last_activity=last_activity,
+                n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                n_volunteers=cached_apps.n_volunteers(app.get('id')),
+                presenters=pres_tmpls)
 
-            tmpl_uri = "applications/snippets/%s.html" \
-                % request.args.get('template')
-            tmpl = render_template(tmpl_uri, app=app)
-            form.editor.data = tmpl
-            msg = 'Your code will be <em>automagically</em> rendered in \
-                          the <strong>preview section</strong>. Click in the \
-                          preview button!'
-            flash(gettext(msg), 'info')
-        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-        return render_template('applications/task_presenter_editor.html',
-                               title=title,
-                               form=form,
-                               app=app,
-                               owner=owner,
-                               overall_progress=overall_progress,
-                               n_tasks=n_tasks,
-                               n_task_runs=n_task_runs,
-                               last_activity=last_activity,
-                               n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                               n_volunteers=cached_apps.n_volunteers(app.get('id')),
-                               errors=errors)
-    except HTTPException as e:
-        if app.hidden:
-            raise abort(403)
-        else:  # pragma: no cover
-            raise e
+        tmpl_uri = "applications/snippets/%s.html" \
+            % request.args.get('template')
+        tmpl = render_template(tmpl_uri, app=app)
+        form.editor.data = tmpl
+        msg = 'Your code will be <em>automagically</em> rendered in \
+                      the <strong>preview section</strong>. Click in the \
+                      preview button!'
+        flash(gettext(msg), 'info')
+    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    return render_template('applications/task_presenter_editor.html',
+                           title=title,
+                           form=form,
+                           app=app,
+                           owner=owner,
+                           overall_progress=overall_progress,
+                           n_tasks=n_tasks,
+                           n_task_runs=n_task_runs,
+                           last_activity=last_activity,
+                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                           n_volunteers=cached_apps.n_volunteers(app.get('id')),
+                           errors=errors)
 
 
 @blueprint.route('/<short_name>/delete', methods=['GET', 'POST'])
@@ -420,31 +414,25 @@ def task_presenter_editor(short_name):
 def delete(short_name):
     (app, owner, n_tasks,
     n_task_runs, overall_progress, last_activity) = app_by_shortname(short_name)
-    try:
-        title = app_title(app, "Delete")
-        require.app.read(app)
-        require.app.delete(app)
-        if request.method == 'GET':
-            return render_template('/applications/delete.html',
-                                   title=title,
-                                   app=app,
-                                   owner=owner,
-                                   n_tasks=n_tasks,
-                                   overall_progress=overall_progress,
-                                   last_activity=last_activity)
-        # Clean cache
-        cached_apps.delete_app(app.short_name)
-        cached_apps.clean(app.id)
-        app = App.query.get(app.id)
-        db.session.delete(app)
-        db.session.commit()
-        flash(gettext('Project deleted!'), 'success')
-        return redirect(url_for('account.profile', name=current_user.name))
-    except HTTPException:  # pragma: no cover
-        if app.hidden:
-            raise abort(403)
-        else:
-            raise
+    title = app_title(app, "Delete")
+    require.app.read(app)
+    require.app.delete(app)
+    if request.method == 'GET':
+        return render_template('/applications/delete.html',
+                               title=title,
+                               app=app,
+                               owner=owner,
+                               n_tasks=n_tasks,
+                               overall_progress=overall_progress,
+                               last_activity=last_activity)
+    # Clean cache
+    cached_apps.delete_app(app.short_name)
+    cached_apps.clean(app.id)
+    app = App.query.get(app.id)
+    db.session.delete(app)
+    db.session.commit()
+    flash(gettext('Project deleted!'), 'success')
+    return redirect(url_for('account.profile', name=current_user.name))
 
 
 @blueprint.route('/<short_name>/update', methods=['GET', 'POST'])
@@ -488,74 +476,68 @@ def update(short_name):
         return redirect(url_for('.details',
                                 short_name=new_application.short_name))
 
-    try:
-        require.app.read(app)
-        require.app.update(app)
+    require.app.read(app)
+    require.app.update(app)
 
-        title = app_title(app, "Update")
-        if request.method == 'GET':
-            form = AppUpdateForm(obj=app)
-            upload_form = AvatarUploadForm()
-            categories = db.session.query(model.category.Category).all()
-            form.category_id.choices = [(c.id, c.name) for c in categories]
-            if app.category_id is None:
-                app.category_id = categories[0].id
-            form.populate_obj(app)
+    title = app_title(app, "Update")
+    if request.method == 'GET':
+        form = AppUpdateForm(obj=app)
+        upload_form = AvatarUploadForm()
+        categories = db.session.query(model.category.Category).all()
+        form.category_id.choices = [(c.id, c.name) for c in categories]
+        if app.category_id is None:
+            app.category_id = categories[0].id
+        form.populate_obj(app)
 
-        if request.method == 'POST':
-            upload_form = AvatarUploadForm()
-            form = AppUpdateForm(request.form)
-            categories = cached_cat.get_all()
-            form.category_id.choices = [(c.id, c.name) for c in categories]
+    if request.method == 'POST':
+        upload_form = AvatarUploadForm()
+        form = AppUpdateForm(request.form)
+        categories = cached_cat.get_all()
+        form.category_id.choices = [(c.id, c.name) for c in categories]
 
-            if request.form.get('btn') != 'Upload':
-                if form.validate():
-                    return handle_valid_form(form)
-                flash(gettext('Please correct the errors'), 'error')
+        if request.form.get('btn') != 'Upload':
+            if form.validate():
+                return handle_valid_form(form)
+            flash(gettext('Please correct the errors'), 'error')
+        else:
+            if upload_form.validate_on_submit():
+                app = App.query.get(app.id)
+                file = request.files['avatar']
+                coordinates = (upload_form.x1.data, upload_form.y1.data,
+                               upload_form.x2.data, upload_form.y2.data)
+                prefix = time.time()
+                file.filename = "app_%s_thumbnail_%i.png" % (app.id, prefix)
+                container = "user_%s" % current_user.id
+                uploader.upload_file(file,
+                                     container=container,
+                                     coordinates=coordinates)
+                # Delete previous avatar from storage
+                if app.info.get('thumbnail'):
+                    uploader.delete_file(app.info['thumbnail'], container)
+                app.info['thumbnail'] = file.filename
+                app.info['container'] = container
+                db.session.commit()
+                cached_apps.delete_app(app.short_name)
+                flash(gettext('Your project thumbnail has been updated! It may \
+                                  take some minutes to refresh...'), 'success')
             else:
-                if upload_form.validate_on_submit():
-                    app = App.query.get(app.id)
-                    file = request.files['avatar']
-                    coordinates = (upload_form.x1.data, upload_form.y1.data,
-                                   upload_form.x2.data, upload_form.y2.data)
-                    prefix = time.time()
-                    file.filename = "app_%s_thumbnail_%i.png" % (app.id, prefix)
-                    container = "user_%s" % current_user.id
-                    uploader.upload_file(file,
-                                         container=container,
-                                         coordinates=coordinates)
-                    # Delete previous avatar from storage
-                    if app.info.get('thumbnail'):
-                        uploader.delete_file(app.info['thumbnail'], container)
-                    app.info['thumbnail'] = file.filename
-                    app.info['container'] = container
-                    db.session.commit()
-                    cached_apps.delete_app(app.short_name)
-                    flash(gettext('Your project thumbnail has been updated! It may \
-                                      take some minutes to refresh...'), 'success')
-                else:
-                    flash(gettext('You must provide a file to change the avatar'),
-                          'error')
-                return redirect(url_for('.update', short_name=short_name))
+                flash(gettext('You must provide a file to change the avatar'),
+                      'error')
+            return redirect(url_for('.update', short_name=short_name))
 
-        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-        return render_template('/applications/update.html',
-                               form=form,
-                               upload_form=upload_form,
-                               app=app,
-                               owner=owner,
-                               n_tasks=n_tasks,
-                               overall_progress=overall_progress,
-                               n_task_runs=n_task_runs,
-                               last_activity=last_activity,
-                               n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                               n_volunteers=cached_apps.n_volunteers(app.get('id')),
-                               title=title)
-    except HTTPException:
-        if app.hidden:  # pragma: no cover
-            raise abort(403)
-        else:  # pragma: no cover
-            raise
+    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    return render_template('/applications/update.html',
+                           form=form,
+                           upload_form=upload_form,
+                           app=app,
+                           owner=owner,
+                           n_tasks=n_tasks,
+                           overall_progress=overall_progress,
+                           n_task_runs=n_task_runs,
+                           last_activity=last_activity,
+                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                           n_volunteers=cached_apps.n_volunteers(app.get('id')),
+                           title=title)
 
 
 @blueprint.route('/<short_name>/')
@@ -563,14 +545,8 @@ def details(short_name):
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
 
-    try:
-        require.app.read(app)
-        template = '/applications/app.html'
-    except HTTPException:  # pragma: no cover
-        if app.hidden:
-            raise abort(403)
-        else:
-            raise
+    require.app.read(app)
+    template = '/applications/app.html'
 
     title = app_title(app, None)
 
@@ -597,26 +573,19 @@ def settings(short_name):
      overall_progress, last_activity) = app_by_shortname(short_name)
 
     title = app_title(app, "Settings")
-    try:
-        require.app.read(app)
-        require.app.update(app)
-        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-        print cached_apps.n_completed_tasks(app.get('id'))
-        return render_template('/applications/settings.html',
-                               app=app,
-                               owner=owner,
-                               n_tasks=n_tasks,
-                               overall_progress=overall_progress,
-                               n_task_runs=n_task_runs,
-                               last_activity=last_activity,
-                               n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                               n_volunteers=cached_apps.n_volunteers(app.get('id')),
-                               title=title)
-    except HTTPException:
-        if app.hidden:  # pragma: no cover
-            raise abort(403)
-        else:
-            raise
+    require.app.read(app)
+    require.app.update(app)
+    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    return render_template('/applications/settings.html',
+                           app=app,
+                           owner=owner,
+                           n_tasks=n_tasks,
+                           overall_progress=overall_progress,
+                           n_task_runs=n_task_runs,
+                           last_activity=last_activity,
+                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                           n_volunteers=cached_apps.n_volunteers(app.get('id')),
+                           title=title)
 
 
 def compute_importer_variant_pairs(forms):
@@ -654,14 +623,8 @@ def import_task(short_name):
                          overall_progress=overall_progress,
                          n_volunteers=n_volunteers,
                          n_completed_tasks=n_completed_tasks)
-    try:
-        require.app.read(app)
-        require.app.update(app)
-    except HTTPException:
-        if app.hidden:  # pragma: no cover
-            raise abort(403)
-        else:
-            raise
+    require.app.read(app)
+    require.app.update(app)
 
     data_handlers = dict([
         (i.template_id, (i.form_detector, i(request.form), i.form_id))
@@ -751,13 +714,7 @@ def task_presenter(short_name, task_id):
     (app, owner,
      n_tasks, n_task_runs, overall_progress, last_activity) = app_by_shortname(short_name)
     task = Task.query.filter_by(id=task_id).first_or_404()
-    try:
-        require.app.read(app)
-    except HTTPException:
-        if app.hidden:
-            raise abort(403)
-        else:  # pragma: no cover
-            raise
+    require.app.read(app)
 
     if current_user.is_anonymous():
         if not app.allow_anonymous_contributors:
@@ -833,13 +790,7 @@ def presenter(short_name):
     title = app_title(app, "Contribute")
     template_args = {"app": app, "title": title, "owner": owner,
                      "invite_new_volunteers": invite_new_volunteers()}
-    try:
-        require.app.read(app)
-    except HTTPException:
-        if app.hidden:
-            raise abort(403)
-        else:  # pragma: no cover
-            raise
+    require.app.read(app)
 
     if not app.allow_anonymous_contributors and current_user.is_anonymous():
         msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
@@ -866,13 +817,8 @@ def tutorial(short_name):
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
     title = app_title(app, "Tutorial")
-    try:
-        require.app.read(app)
-    except HTTPException:
-        if app.hidden:
-            return abort(403)
-        else: # pragma: no cover
-            raise
+    require.app.read(app)
+
     return render_template('/applications/tutorial.html', title=title,
                            app=app, owner=owner)
 
@@ -883,13 +829,8 @@ def export(short_name, task_id):
     # Check if the app exists
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
-    try:
-        require.app.read(app)
-    except HTTPException:
-        if app.hidden:
-            raise abort(403)
-        else: # pragma: no cover
-            raise
+    require.app.read(app)
+
 
     # Check if the task belongs to the app and exists
     task = db.session.query(model.task.Task).filter_by(app_id=app.id)\
@@ -909,24 +850,18 @@ def tasks(short_name):
      overall_progress, last_activity) = app_by_shortname(short_name)
     title = app_title(app, "Tasks")
 
-    try:
-        require.app.read(app)
-        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    require.app.read(app)
+    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
 
-        return render_template('/applications/tasks.html',
-                               title=title,
-                               app=app,
-                               owner=owner,
-                               n_tasks=n_tasks,
-                               overall_progress=overall_progress,
-                               last_activity=last_activity,
-                               n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                               n_volunteers=cached_apps.n_volunteers(app.get('id')))
-    except HTTPException:
-        if app.hidden:
-            raise abort(403)
-        else: # pragma: no cover
-            raise
+    return render_template('/applications/tasks.html',
+                           title=title,
+                           app=app,
+                           owner=owner,
+                           n_tasks=n_tasks,
+                           overall_progress=overall_progress,
+                           last_activity=last_activity,
+                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                           n_volunteers=cached_apps.n_volunteers(app.get('id')))
 
 
 @blueprint.route('/<short_name>/tasks/browse', defaults={'page': 1})
@@ -966,8 +901,6 @@ def tasks_browse(short_name, page):
                                n_completed_tasks=n_completed_tasks)
 
     require.app.read(app)
-    if app.hidden:
-        raise abort(403)
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     return respond()
 
@@ -978,38 +911,35 @@ def delete_tasks(short_name):
     """Delete ALL the tasks for a given project"""
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
-    try:
-        require.app.read(app)
-        require.app.update(app)
-        if request.method == 'GET':
-            title = app_title(app, "Delete")
-            n_volunteers = cached_apps.n_volunteers(app.id)
-            n_completed_tasks = cached_apps.n_completed_tasks(app.id)
-            app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-            return render_template('applications/tasks/delete.html',
-                                   app=app,
-                                   owner=owner,
-                                   n_tasks=n_tasks,
-                                   n_task_runs=n_task_runs,
-                                   n_volunteers=n_volunteers,
-                                   n_completed_tasks=n_completed_tasks,
-                                   overall_progress=overall_progress,
-                                   last_activity=last_activity,
-                                   title=title)
-        else:
-            tasks = db.session.query(model.task.Task).filter_by(app_id=app.id).all()
-            for t in tasks:
-                db.session.delete(t)
-            db.session.commit()
-            msg = gettext("All the tasks and associated task runs have been deleted")
-            flash(msg, 'success')
-            cached_apps.delete_last_activity(app.id)
-            cached_apps.delete_n_tasks(app.id)
-            cached_apps.delete_n_task_runs(app.id)
-            cached_apps.delete_overall_progress(app.id)
-            return redirect(url_for('.tasks', short_name=app.short_name))
-    except HTTPException:
-        return abort(403)
+    require.app.read(app)
+    require.app.update(app)
+    if request.method == 'GET':
+        title = app_title(app, "Delete")
+        n_volunteers = cached_apps.n_volunteers(app.id)
+        n_completed_tasks = cached_apps.n_completed_tasks(app.id)
+        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+        return render_template('applications/tasks/delete.html',
+                               app=app,
+                               owner=owner,
+                               n_tasks=n_tasks,
+                               n_task_runs=n_task_runs,
+                               n_volunteers=n_volunteers,
+                               n_completed_tasks=n_completed_tasks,
+                               overall_progress=overall_progress,
+                               last_activity=last_activity,
+                               title=title)
+    else:
+        tasks = db.session.query(model.task.Task).filter_by(app_id=app.id).all()
+        for t in tasks:
+            db.session.delete(t)
+        db.session.commit()
+        msg = gettext("All the tasks and associated task runs have been deleted")
+        flash(msg, 'success')
+        cached_apps.delete_last_activity(app.id)
+        cached_apps.delete_n_tasks(app.id)
+        cached_apps.delete_n_task_runs(app.id)
+        cached_apps.delete_overall_progress(app.id)
+        return redirect(url_for('.tasks', short_name=app.short_name))
 
 
 @blueprint.route('/<short_name>/tasks/export')
@@ -1022,13 +952,7 @@ def export_to(short_name):
     title = app_title(app, gettext("Export"))
     loading_text = gettext("Exporting data..., this may take a while")
 
-    try:
-        require.app.read(app)
-    except HTTPException:
-        if app.hidden:
-            raise abort(403)
-        else: # pragma: no cover
-            raise
+    require.app.read(app)
 
     def respond():
         return render_template('/applications/export.html',
@@ -1273,13 +1197,7 @@ def show_stats(short_name):
     n_completed_tasks = cached_apps.n_completed_tasks(app.id)
     title = app_title(app, "Statistics")
 
-    try:
-        require.app.read(app)
-    except HTTPException:
-        if app.hidden:
-            raise abort(403)
-        else: # pragma: no cover
-            raise
+    require.app.read(app)
 
     if not ((n_tasks > 0) and (n_task_runs > 0)):
         app = add_custom_contrib_button_to(app, get_user_id_or_ip())
@@ -1337,22 +1255,16 @@ def task_settings(short_name):
      overall_progress, last_activity) = app_by_shortname(short_name)
     n_volunteers = cached_apps.n_volunteers(app.id)
     n_completed_tasks = cached_apps.n_completed_tasks(app.id)
-    try:
-        require.app.read(app)
-        require.app.update(app)
-        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-        return render_template('applications/task_settings.html',
-                               app=app,
-                               owner=owner,
-                               n_tasks=n_tasks,
-                               overall_progress=overall_progress,
-                               n_volunteers=n_volunteers,
-                               n_completed_tasks=n_completed_tasks)
-    except HTTPException:
-        if app.hidden:
-            raise abort(403)
-        else:
-            raise
+    require.app.read(app)
+    require.app.update(app)
+    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    return render_template('applications/task_settings.html',
+                           app=app,
+                           owner=owner,
+                           n_tasks=n_tasks,
+                           overall_progress=overall_progress,
+                           n_volunteers=n_volunteers,
+                           n_completed_tasks=n_completed_tasks)
 
 
 @blueprint.route('/<short_name>/tasks/redundancy', methods=['GET', 'POST'])
@@ -1362,53 +1274,47 @@ def task_n_answers(short_name):
      overall_progress, last_activity) = app_by_shortname(short_name)
     title = app_title(app, gettext('Redundancy'))
     form = TaskRedundancyForm()
-    try:
-        require.app.read(app)
-        require.app.update(app)
-        if request.method == 'GET':
-            return render_template('/applications/task_n_answers.html',
-                                   title=title,
-                                   form=form,
-                                   app=app,
-                                   owner=owner)
-        elif request.method == 'POST' and form.validate():
-            sql = text('''
-                       UPDATE task SET n_answers=:n_answers,
-                       state='ongoing' WHERE app_id=:app_id''').execution_options(autocommit=True)
+    require.app.read(app)
+    require.app.update(app)
+    if request.method == 'GET':
+        return render_template('/applications/task_n_answers.html',
+                               title=title,
+                               form=form,
+                               app=app,
+                               owner=owner)
+    elif request.method == 'POST' and form.validate():
+        sql = text('''
+                   UPDATE task SET n_answers=:n_answers,
+                   state='ongoing' WHERE app_id=:app_id''').execution_options(autocommit=True)
 
-            db.engine.execute(sql, n_answers=form.n_answers.data, app_id=app.id)
+        db.engine.execute(sql, n_answers=form.n_answers.data, app_id=app.id)
 
-            # Update task.state according to their new n_answers value
-            sql = text('''
-                       WITH myquery AS (
-                       SELECT task.id, task.n_answers,
-                       COUNT(task_run.id) AS n_task_runs, task.state
-                       FROM task, task_run
-                       WHERE task_run.task_id=task.id AND task.app_id=:app_id
-                       GROUP BY task.id)
-                       UPDATE task SET state='completed'
-                       FROM myquery
-                       WHERE (myquery.n_task_runs >=:n_answers)
-                       and myquery.id=task.id
-                       ''').execution_options(autocommit=True)
+        # Update task.state according to their new n_answers value
+        sql = text('''
+                   WITH myquery AS (
+                   SELECT task.id, task.n_answers,
+                   COUNT(task_run.id) AS n_task_runs, task.state
+                   FROM task, task_run
+                   WHERE task_run.task_id=task.id AND task.app_id=:app_id
+                   GROUP BY task.id)
+                   UPDATE task SET state='completed'
+                   FROM myquery
+                   WHERE (myquery.n_task_runs >=:n_answers)
+                   and myquery.id=task.id
+                   ''').execution_options(autocommit=True)
 
-            db.engine.execute(sql, n_answers=form.n_answers.data, app_id=app.id)
+        db.engine.execute(sql, n_answers=form.n_answers.data, app_id=app.id)
 
-            msg = gettext('Redundancy of Tasks updated!')
-            flash(msg, 'success')
-            return redirect(url_for('.tasks', short_name=app.short_name))
-        else:
-            flash(gettext('Please correct the errors'), 'error')
-            return render_template('/applications/task_n_answers.html',
-                                   title=title,
-                                   form=form,
-                                   app=app,
-                                   owner=owner)
-    except HTTPException:
-        if app.hidden:
-            raise abort(403)
-        else: # pragma: no cover
-            raise
+        msg = gettext('Redundancy of Tasks updated!')
+        flash(msg, 'success')
+        return redirect(url_for('.tasks', short_name=app.short_name))
+    else:
+        flash(gettext('Please correct the errors'), 'error')
+        return render_template('/applications/task_n_answers.html',
+                               title=title,
+                               form=form,
+                               app=app,
+                               owner=owner)
 
 
 @blueprint.route('/<short_name>/tasks/scheduler', methods=['GET', 'POST'])
@@ -1425,14 +1331,8 @@ def task_scheduler(short_name):
                                form=form,
                                app=app,
                                owner=owner)
-    try:
-        require.app.read(app)
-        require.app.update(app)
-    except HTTPException:
-        if app.hidden:
-            raise abort(403)
-        else: # pragma: no cover
-            raise
+    require.app.read(app)
+    require.app.update(app)
 
     if request.method == 'GET':
         if app.info.get('sched'):
@@ -1471,14 +1371,8 @@ def task_priority(short_name):
                                form=form,
                                app=app,
                                owner=owner)
-    try:
-        require.app.read(app)
-        require.app.update(app)
-    except HTTPException:
-        if app.hidden:
-            raise abort(403)
-        else:
-            raise
+    require.app.read(app)
+    require.app.update(app)
 
     if request.method == 'GET':
         return respond()
@@ -1651,7 +1545,4 @@ def delete_blogpost(short_name, id):
     cached_apps.delete_app(short_name)
     flash('<i class="icon-ok"></i> ' + 'Blog post deleted!', 'success')
     return redirect(url_for('.show_blogposts', short_name=short_name))
-
-
-
 
