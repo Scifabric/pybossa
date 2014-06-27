@@ -24,6 +24,7 @@ from pybossa.model.user import User
 def mock_current_user(anonymous=True, admin=None, id=None):
     mock = Mock(spec=User)
     mock.is_anonymous.return_value = anonymous
+    mock.is_authenticated.return_value = not anonymous
     mock.admin = admin
     mock.id = id
     return mock

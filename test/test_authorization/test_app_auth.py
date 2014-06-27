@@ -55,14 +55,14 @@ class TestProjectAuthorization(Test):
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     @patch('pybossa.auth.app.current_user', new=mock_anonymous)
-    def test_anonymous_user_can_read_non_hidden(self):
+    def test_anonymous_user_can_read_all_projects(self):
         """Test anonymous users can read non hidden projects"""
         assert_not_raises(Exception, getattr(require, 'app').read)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     @patch('pybossa.auth.app.current_user', new=mock_authenticated)
-    def test_authenticated_user_can_read_non_hidden(self):
+    def test_authenticated_user_can_read_all_projects(self):
         """Test authenticated users can read non hidden projects"""
         assert_not_raises(Exception, getattr(require, 'app').read)
 
