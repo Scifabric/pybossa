@@ -27,7 +27,6 @@ from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
 from wtforms.widgets import HiddenInput
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import lazy_gettext, gettext
-from werkzeug.exceptions import HTTPException
 from sqlalchemy.sql import text
 
 import pybossa.model as model
