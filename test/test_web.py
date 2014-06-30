@@ -741,8 +741,8 @@ class TestWeb(web.Helper):
     def test_add_password_to_project(self):
         """Test WEB update sets a password for the project"""
         self.register()
-        CategoryFactory.reset_sequence()
-        app = AppFactory.create()
+        owner = db.session.query(User).first()
+        app = AppFactory.create(owner=owner)
 
         self.update_application(id=app.id, short_name=app.short_name,
                                 new_password='mysecret')
@@ -754,8 +754,8 @@ class TestWeb(web.Helper):
     def test_remove_password_from_project(self):
         """Test WEB update removes the password of the project"""
         self.register()
-        CategoryFactory.reset_sequence()
-        app = AppFactory.create(info={'passwd_hash': 'mysecret'})
+        owner = db.session.query(User).first()
+        app = AppFactory.create(info={'passwd_hash': 'mysecret'}, owner=owner)
 
         self.update_application(id=app.id, short_name=app.short_name,
                                 new_password='')
