@@ -23,7 +23,7 @@ from flask import render_template, make_response
 from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
 from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
-    SelectField, validators, TextAreaField
+    SelectField, validators, TextAreaField, PasswordField
 from wtforms.widgets import HiddenInput
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import lazy_gettext, gettext
@@ -35,7 +35,7 @@ import pybossa.stats as stats
 import pybossa.validator as pb_validator
 import pybossa.sched as sched
 
-from pybossa.core import db, uploader
+from pybossa.core import db, uploader, signer
 from pybossa.cache import ONE_DAY, ONE_HOUR
 from pybossa.model.app import App
 from pybossa.model.task import Task
@@ -47,6 +47,8 @@ from pybossa.cache import categories as cached_cat
 from pybossa.cache.helpers import add_custom_contrib_button_to
 from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
+from pybossa.cookies import CookieHandler
+from pybossa.password_manager import ProjectPasswdManager
 
 import re
 import json
@@ -56,6 +58,7 @@ import math
 import requests
 
 blueprint = Blueprint('app', __name__)
+
 
 class AvatarUploadForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
@@ -96,6 +99,7 @@ class AppUpdateForm(AppForm):
                  ('False', lazy_gettext('No'))])
     category_id = SelectField(lazy_gettext('Category'), coerce=int)
     hidden = BooleanField(lazy_gettext('Hide?'))
+    password = TextField(lazy_gettext('Password (leave blank for no password)'))
 
 
 class TaskPresenterForm(Form):
@@ -140,6 +144,12 @@ class BlogpostForm(Form):
     body = TextAreaField(lazy_gettext('Body'),
                            [validators.Required(message=lazy_gettext(
                                     "You must enter some text for the post."))])
+
+
+class PasswordForm(Form):
+    password = PasswordField(lazy_gettext('Password'),
+                        [validators.Required(message=lazy_gettext(
+                                    "You must enter a password"))])
 
 
 def app_title(app, page_name):
@@ -456,13 +466,8 @@ def update(short_name):
     def handle_valid_form(form):
         hidden = int(form.hidden.data)
 
-        new_info = {}
-        # Add the info items
         (app, owner, n_tasks, n_task_runs,
          overall_progress, last_activity) = app_by_shortname(short_name)
-
-        # Merge info object
-        info = dict(app.info.items() + new_info.items())
 
         new_application = model.app.App(
             id=form.id.data,
@@ -471,13 +476,12 @@ def update(short_name):
             description=form.description.data,
             long_description=form.long_description.data,
             hidden=hidden,
-            info=info,
+            info=app.info,
             owner_id=app.owner_id,
             allow_anonymous_contributors=form.allow_anonymous_contributors.data,
             category_id=form.category_id.data)
 
-        (app, owner, n_tasks,
-         n_task_runs, overall_progress, last_activity) = app_by_shortname(short_name)
+        new_application.set_password(form.password.data)
         db.session.merge(new_application)
         db.session.commit()
         cached_apps.delete_app(short_name)
@@ -494,7 +498,7 @@ def update(short_name):
 
         title = app_title(app, "Update")
         if request.method == 'GET':
-            form = AppUpdateForm(obj=app)
+            form = AppUpdateForm(obj=app, password=app.get_passwd())
             upload_form = AvatarUploadForm()
             categories = db.session.query(model.category.Category).all()
             form.category_id.choices = [(c.id, c.name) for c in categories]
@@ -746,6 +750,26 @@ def _import_task(app, handler, form, render_forms):
     return render_forms()
 
 
+@blueprint.route('/<short_name>/password', methods=['GET', 'POST'])
+def password_required(short_name):
+    (app, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = app_by_shortname(short_name)
+    form = PasswordForm(request.form)
+    if request.method == 'POST' and form.validate():
+        password = request.form.get('password')
+        cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
+        passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
+        if passwd_mngr.validates(password, app):
+            response = make_response(redirect(request.args.get('next')))
+            return passwd_mngr.update_response(response, app, get_user_id_or_ip())
+        flash('Sorry, incorrect password')
+    return render_template('applications/password.html',
+                            app=app,
+                            form=form,
+                            short_name=short_name,
+                            next=request.args.get('next'))
+
+
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
     (app, owner,
@@ -758,6 +782,11 @@ def task_presenter(short_name, task_id):
             raise abort(403)
         else:  # pragma: no cover
             raise
+    cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
+    passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
+    if passwd_mngr.password_needed(app, get_user_id_or_ip()):
+        return redirect(url_for('.password_required',
+                                 short_name=short_name, next=request.path))
 
     if current_user.is_anonymous():
         if not app.allow_anonymous_contributors:
@@ -840,6 +869,11 @@ def presenter(short_name):
             raise abort(403)
         else:  # pragma: no cover
             raise
+    cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
+    passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
+    if passwd_mngr.password_needed(app, get_user_id_or_ip()):
+        return redirect(url_for('.password_required',
+                                 short_name=short_name, next=request.path))
 
     if not app.allow_anonymous_contributors and current_user.is_anonymous():
         msg = "Oops! You have to sign in to participate in <strong>%s</strong> \

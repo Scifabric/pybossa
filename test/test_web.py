@@ -38,7 +38,7 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
 from pybossa.model.featured import Featured
-from factories import AppFactory, TaskFactory, TaskRunFactory
+from factories import AppFactory, CategoryFactory, TaskFactory, TaskRunFactory
 
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
@@ -302,7 +302,6 @@ class TestWeb(web.Helper):
     @with_context
     def test_05_update_user_profile(self):
         """Test WEB update user profile"""
-
 
         # Create an account and log in
         self.register()
@@ -736,6 +735,32 @@ class TestWeb(web.Helper):
             res = self.app.get('/app/newshortname/')
             err_msg = "Root user should be able to see his hidden app"
             assert app.name in res.data, err_msg
+
+
+    @with_context
+    def test_add_password_to_project(self):
+        """Test WEB update sets a password for the project"""
+        self.register()
+        CategoryFactory.reset_sequence()
+        app = AppFactory.create()
+
+        self.update_application(id=app.id, short_name=app.short_name,
+                                new_password='mysecret')
+
+        assert app.needs_password(), 'Password not set"'
+
+
+    @with_context
+    def test_remove_password_from_project(self):
+        """Test WEB update removes the password of the project"""
+        self.register()
+        CategoryFactory.reset_sequence()
+        app = AppFactory.create(info={'passwd_hash': 'mysecret'})
+        print app
+        self.update_application(id=app.id, short_name=app.short_name,
+                                new_password='')
+        print app
+        assert not app.needs_password(), 'Password not deleted'
 
 
     @with_context
@@ -1815,7 +1840,7 @@ class TestWeb(web.Helper):
         assert "http://opendatacommons.org/licenses/by/" in res.data, res.data
 
     @with_context
-    @patch('pybossa.view.account.signer.signer.loads')
+    @patch('pybossa.view.account.signer.loads')
     def test_44_password_reset_key_errors(self, Mock):
         """Test WEB password reset key errors are caught"""
         self.register()
@@ -1824,7 +1849,7 @@ class TestWeb(web.Helper):
         fakeuserdict = {'user': user.name, 'password': 'wronghash'}
         fakeuserdict_err = {'user': user.name, 'passwd': 'some'}
         fakeuserdict_form = {'user': user.name, 'passwd': 'p4ssw0rD'}
-        key = signer.signer.dumps(userdict, salt='password-reset')
+        key = signer.dumps(userdict, salt='password-reset')
         returns = [BadSignature('Fake Error'), BadSignature('Fake Error'), userdict,
                    fakeuserdict, userdict, userdict, fakeuserdict_err]
 

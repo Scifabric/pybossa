@@ -18,9 +18,11 @@
 
 from default import Test, db, with_context
 from nose.tools import assert_raises
+from mock import patch
 from pybossa.model.app import App
 from pybossa.model.user import User
 from sqlalchemy.exc import IntegrityError
+from factories import AppFactory
 
 
 class TestModelApp(Test):
@@ -80,3 +82,44 @@ class TestModelApp(Test):
         db.session.add(app)
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
+
+
+    def test_needs_password_no_password_key(self):
+        """Test needs_password returns false if the app has not a password"""
+        app = AppFactory.build(info={})
+
+        assert app.needs_password() is False
+
+
+    @patch('pybossa.model.app.signer')
+    def test_needs_password_empty_password_key(self, mock_signer):
+        """Test needs_password returns false if the app has an empty password"""
+        mock_signer.loads = lambda x: x
+        app = AppFactory.build(info={'passwd_hash': None})
+
+        assert app.needs_password() is False
+
+
+    @patch('pybossa.model.app.signer')
+    def test_needs_password_with_password_key_and_value(self, mock_signer):
+        """Test needs_password returns true if the app has a password"""
+        mock_signer.loads = lambda x: x
+        app = AppFactory.build(info={'passwd_hash': 'mypassword'})
+
+        assert app.needs_password() is True
+
+
+    @patch('pybossa.model.app.signer')
+    def test_check_password(self, mock_signer):
+        mock_signer.loads = lambda x: x
+        app = AppFactory.build(info={'passwd_hash': 'mypassword'})
+
+        assert app.check_password('mypassword')
+
+
+    @patch('pybossa.model.app.signer')
+    def test_check_password_bad_password(self, mock_signer):
+        mock_signer.loads = lambda x: x
+        app = AppFactory.build(info={'passwd_hash': 'mypassword'})
+
+        assert not app.check_password('notmypassword')

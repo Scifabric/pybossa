@@ -647,7 +647,7 @@ def reset_password():
         abort(403)
     userdict = {}
     try:
-        userdict = signer.signer.loads(key, max_age=3600, salt='password-reset')
+        userdict = signer.loads(key, max_age=3600, salt='password-reset')
     except BadData:
         abort(403)
     username = userdict.get('user')
@@ -709,7 +709,7 @@ def forgot_password():
                     user=user, account_name='Google')
             else:
                 userdict = {'user': user.name, 'password': user.passwd_hash}
-                key = signer.signer.dumps(userdict, salt='password-reset')
+                key = signer.dumps(userdict, salt='password-reset')
                 recovery_url = url_for('.reset_password',
                                        key=key, _external=True)
                 msg.body = render_template(
