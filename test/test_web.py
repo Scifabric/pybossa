@@ -756,10 +756,10 @@ class TestWeb(web.Helper):
         self.register()
         CategoryFactory.reset_sequence()
         app = AppFactory.create(info={'passwd_hash': 'mysecret'})
-        print app
+
         self.update_application(id=app.id, short_name=app.short_name,
                                 new_password='')
-        print app
+
         assert not app.needs_password(), 'Password not deleted'
 
 
