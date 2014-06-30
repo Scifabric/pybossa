@@ -305,6 +305,66 @@ def redirect_profile():
     else:
         return redirect(url_for('.profile', name=current_user.name), 302)
 
+
+def show_public_profile(user):
+    user, apps_contributed, _ = cached_users.get_user_summary(user.name)
+    apps_created, apps_draft = _get_user_apps(user['id'])
+    if user:
+        title = "%s &middot; User Profile" % user['fullname']
+        return render_template('/account/public_profile.html',
+                               title=title,
+                               user=user,
+                               apps=apps_contributed,
+                               apps_created=apps_created)
+
+
+def show_own_profile(user):
+    sql = text('''
+                   SELECT app.name, app.short_name, app.info,
+                   COUNT(*) as n_task_runs
+                   FROM task_run JOIN app ON
+                   (task_run.app_id=app.id) WHERE task_run.user_id=:user_id
+                   GROUP BY app.name, app.short_name, app.info
+                   ORDER BY n_task_runs DESC;''')
+
+    # results will have the following format
+    # (app.name, app.short_name, n_task_runs)
+    results = db.engine.execute(sql, user_id=current_user.id)
+
+    apps_contrib = []
+    for row in results:
+        app = dict(name=row.name, short_name=row.short_name,
+                   info=json.loads(row.info), n_task_runs=row.n_task_runs)
+        apps_contrib.append(app)
+
+    # Rank
+    # See: https://gist.github.com/tokumine/1583695
+    sql = text('''
+               WITH global_rank AS (
+                    WITH scores AS (
+                        SELECT user_id, COUNT(*) AS score FROM task_run
+                        WHERE user_id IS NOT NULL GROUP BY user_id)
+                    SELECT user_id, score, rank() OVER (ORDER BY score desc)
+                    FROM scores)
+               SELECT * from global_rank WHERE user_id=:user_id;
+               ''')
+
+    results = db.engine.execute(sql, user_id=current_user.id)
+    for row in results:
+        user.rank = row.rank
+        user.score = row.score
+
+    user.total = db.session.query(model.user.User).count()
+
+    apps_published, apps_draft = _get_user_apps(current_user.id)
+
+    return render_template('account/profile.html', title=gettext("Profile"),
+                          apps_contrib=apps_contrib,
+                          apps_published=apps_published,
+                          apps_draft=apps_draft,
+                          user=user)
+
+
 @blueprint.route('/<name>/', methods=['GET'])
 def profile(name):
     """
@@ -318,64 +378,11 @@ def profile(name):
     if user is None:
         return abort(404)
 
-    # Show public profile from another user
     if current_user.is_anonymous() or (user.id != current_user.id):
-        user, apps_contributed, _ = cached_users.get_user_summary(name)
-        apps_created, apps_draft = _get_user_apps(user['id'])
-        if user:
-            title = "%s &middot; User Profile" % user['fullname']
-            return render_template('/account/public_profile.html',
-                                   title=title,
-                                   user=user,
-                                   apps=apps_contributed,
-                                   apps_created=apps_created)
+        return show_public_profile(user)
 
-    # Show user profile page with admin, as it is the same user
     if user.id == current_user.id and current_user.is_authenticated():
-        sql = text('''
-                   SELECT app.name, app.short_name, app.info,
-                   COUNT(*) as n_task_runs
-                   FROM task_run JOIN app ON
-                   (task_run.app_id=app.id) WHERE task_run.user_id=:user_id
-                   GROUP BY app.name, app.short_name, app.info
-                   ORDER BY n_task_runs DESC;''')
-
-        # results will have the following format
-        # (app.name, app.short_name, n_task_runs)
-        results = db.engine.execute(sql, user_id=current_user.id)
-
-        apps_contrib = []
-        for row in results:
-            app = dict(name=row.name, short_name=row.short_name,
-                       info=json.loads(row.info), n_task_runs=row.n_task_runs)
-            apps_contrib.append(app)
-
-        # Rank
-        # See: https://gist.github.com/tokumine/1583695
-        sql = text('''
-                   WITH global_rank AS (
-                        WITH scores AS (
-                            SELECT user_id, COUNT(*) AS score FROM task_run
-                            WHERE user_id IS NOT NULL GROUP BY user_id)
-                        SELECT user_id, score, rank() OVER (ORDER BY score desc)
-                        FROM scores)
-                   SELECT * from global_rank WHERE user_id=:user_id;
-                   ''')
-
-        results = db.engine.execute(sql, user_id=current_user.id)
-        for row in results:
-            user.rank = row.rank
-            user.score = row.score
-
-        user.total = db.session.query(model.user.User).count()
-
-        apps_published, apps_draft = _get_user_apps(current_user.id)
-
-        return render_template('account/profile.html', title=gettext("Profile"),
-                              apps_contrib=apps_contrib,
-                              apps_published=apps_published,
-                              apps_draft=apps_draft,
-                              user=user)
+        return show_own_profile(user)
 
 
 @blueprint.route('/<name>/applications')
