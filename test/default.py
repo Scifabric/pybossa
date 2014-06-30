@@ -55,6 +55,7 @@ class Test(object):
         self.app = flask_app.test_client()
         with self.flask_app.app_context():
             rebuild_db()
+            reset_all_pk_sequences()
 
     def tearDown(self):
         with self.flask_app.app_context():
