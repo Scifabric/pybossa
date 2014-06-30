@@ -20,10 +20,9 @@ from sqlalchemy import Integer, Boolean, Unicode, Text, String, BigInteger
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy import event
-from werkzeug import generate_password_hash, check_password_hash
 from flask.ext.login import UserMixin
 
-from pybossa.core import db
+from pybossa.core import db, signer
 from pybossa.model import DomainObject, make_timestamp, JSONType, make_uuid, update_redis
 from pybossa.model.app import App
 from pybossa.model.task_run import TaskRun
@@ -67,15 +66,14 @@ class User(db.Model, DomainObject, UserMixin):
 
 
     def set_password(self, password):
-        self.passwd_hash = generate_password_hash(password)
+        self.passwd_hash = signer.generate_password_hash(password)
 
 
     def check_password(self, password):
         # OAuth users do not have a password
         if self.passwd_hash:
-            return check_password_hash(self.passwd_hash, password)
-        else:
-            return False
+            return signer.check_password_hash(self.passwd_hash, password)
+        return False
 
 
     @classmethod

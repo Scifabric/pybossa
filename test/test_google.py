@@ -46,5 +46,4 @@ class TestGoogle(Test):
         token = 'tA'
         user = manage_user(token, user_data, None)
         err_msg = "User should be the same"
-        print user.google_user_id
         assert user.google_user_id == '10', err_msg
