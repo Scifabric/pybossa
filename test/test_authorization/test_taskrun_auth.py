@@ -30,11 +30,6 @@ from factories import reset_all_pk_sequences
 
 class TestTaskrunAuthorization(Test):
 
-    def setUp(self):
-        super(TestTaskrunAuthorization, self).setUp()
-        reset_all_pk_sequences()
-
-
     mock_anonymous = mock_current_user()
     mock_authenticated = mock_current_user(anonymous=False, admin=False, id=2)
     mock_admin = mock_current_user(anonymous=False, admin=True, id=1)
@@ -317,7 +312,6 @@ class TestTaskrunAuthorization(Test):
         """Test admins can delete taskruns posted by authenticated users"""
 
         with self.flask_app.test_request_context('/'):
-            UserFactory.reset_sequence()
             user_taskrun = TaskRunFactory.create()
 
             assert self.mock_admin.id != user_taskrun.user.id, user_taskrun.user.id
