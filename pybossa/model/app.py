@@ -22,7 +22,7 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy import event
 
 
-from pybossa.core import db
+from pybossa.core import db, signer
 from pybossa.model import DomainObject, JSONType, make_timestamp, update_redis
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
@@ -62,6 +62,35 @@ class App(db.Model, DomainObject):
     featured = relationship(Featured, cascade='all, delete, delete-orphan', backref='app')
     category = relationship(Category)
     blogposts = relationship(Blogpost, cascade='all, delete-orphan', backref='app')
+
+
+
+    def needs_password(self):
+        return self.get_passwd_hash() is not None
+
+
+    def get_passwd_hash(self):
+        return self.info.get('passwd_hash')
+
+
+    def get_passwd(self):
+        if self.needs_password():
+            return signer.loads(self.get_passwd_hash())
+        return None
+
+
+    def set_password(self, password):
+        if len(password) > 1:
+            self.info['passwd_hash'] = signer.dumps(password)
+            return True
+        self.info['passwd_hash'] = None
+        return False
+
+
+    def check_password(self, password):
+        if self.needs_password():
+            return self.get_passwd() == password
+        return False
 
 
 @event.listens_for(App, 'before_update')

@@ -830,6 +830,18 @@ the **Settings** tab within your project. There, select the image file you
 want to use and push the **Upload** button. That's all!
 
 
+Protecting the project with a password
+======================================
+
+If, for any reason, you want to allow only certain people to contribute to your
+project, you can set a password. Thus, every time a user (either anonymous or
+authenticated) wants to contribute to the project, it will be asked to introduce
+the password. The user will then be able to contribute to the project for 30
+minutes (this is a value by default, can be changed in every PyBossa server).
+After this time, the user will be asked again to introduce the password if wants
+to continue contributing, and so on.
+
+
 Creating a blog for the project
 ===============================
 
@@ -955,7 +967,7 @@ the supported CKAN server (i.e. `the Data hub`_), check your profile and copy
 the API-KEY. Then, open your PyBossa account page, edit it and paste the key in
 the section **External Services**.
 
-.. image:: http://i.imgur.com/f3gGQji.png
+.. image:: http://i.imgur.com/nYw9rcj.png
 
 Then, you will be able to actually export the data to the CKAN server and host
 it there. Your project will show in the info page at the bottom a link to

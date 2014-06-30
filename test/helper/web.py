@@ -183,10 +183,11 @@ class Helper(Test):
                            new_name="Sample Project", new_short_name="sampleapp",
                            new_description="Description",
                            new_allow_anonymous_contributors="False",
-                           new_category_id="2",
+                           new_category_id="1",
                            new_long_description="Long desc",
                            new_sched="random",
-                           new_hidden=False):
+                           new_hidden=False,
+                           new_password=''):
         """Helper function to update a project"""
         if method == "POST":
             if new_hidden:
@@ -201,6 +202,7 @@ class Helper(Test):
                                          'long_description': new_long_description,
                                          'sched': new_sched,
                                          'hidden': new_hidden,
+                                         'password': new_password,
                                          'btn': 'Save'},
                                      follow_redirects=True)
             else:
@@ -212,6 +214,7 @@ class Helper(Test):
                                            'long_description': new_long_description,
                                            'sched': new_sched,
                                            'description': new_description,
+                                           'password': new_password,
                                            'btn': 'Save'
                                            },
                                      follow_redirects=True)

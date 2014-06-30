@@ -17,6 +17,9 @@ The most interesting changes are the following:
    script for older versions).
  * Add a simple blog for each app where the owner can share its progress with
    the users.
+ * Passwords in apps: the owner of the app can set a password so both anonymous
+   and authenticated users are required to know it if they want to contribute to
+   the app.
 
 For a full list of changes, see associated `Github milestone`_.
 
