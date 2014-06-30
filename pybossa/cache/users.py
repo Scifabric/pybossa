@@ -170,24 +170,28 @@ def get_user_summary(name):
                        n_answers=row.n_answers)
             apps_contributed.append(app)
 
-        # Get the CREATED APPS by the USER
-        sql = text('''
-                   SELECT app.id, app.name, app.short_name, app.info, app.created
-                   FROM app
-                   WHERE app.owner_id=:user_id
-                   ORDER BY app.created DESC;
-                   ''')
-        results = db.engine.execute(sql, user_id=user['id'])
-        apps_created = []
-        for row in results:
-            app = dict(id=row.id, name=row.name,
-                       short_name=row.short_name,
-                       info=dict(json.loads(row.info)))
-            apps_created.append(app)
-
-        return user, apps_contributed, apps_created
+        return user, apps_contributed
     else: # pragma: no cover
-        return None, None, None
+        return None, None
+
+#TOTEST
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
+def apps_created(user):
+    # Get the CREATED APPS by the USER
+    sql = text('''
+               SELECT app.id, app.name, app.short_name, app.info, app.created
+               FROM app
+               WHERE app.owner_id=:user_id
+               ORDER BY app.created DESC;
+               ''')
+    results = db.engine.execute(sql, user_id=user['id'])
+    apps_created = []
+    for row in results:
+        app = dict(id=row.id, name=row.name,
+                   short_name=row.short_name,
+                   info=dict(json.loads(row.info)))
+        apps_created.append(app)
+    return apps_created
 
 
 @cache(timeout=timeouts.get('USER_TOTAL_TIMEOUT'),
