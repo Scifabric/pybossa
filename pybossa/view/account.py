@@ -314,27 +314,22 @@ def profile(name):
 
     """
     user = db.session.query(model.user.User).filter_by(name=name).first()
-
     if user is None:
         return abort(404)
     if current_user.is_anonymous() or (user.id != current_user.id):
         return _show_public_profile(user)
-    if user.id == current_user.id and current_user.is_authenticated():
+    if current_user.is_authenticated() and user.id == current_user.id:
         return _show_own_profile(user)
-
-
-def _get_user_apps(user_id):
-    apps_published = cached_users.published_apps(user_id)
-    apps_draft = cached_users.draft_apps(user_id)
-    return apps_published, apps_draft
 
 
 def _show_public_profile(user):
     user_dict = cached_users.get_user_summary(user.name)
     apps_contributed = cached_users.apps_contributed(user.id)
     apps_created = cached_users.published_apps(user.id)
+    if current_user.is_authenticated() and current_user.admin:
+        apps_hidden = cached_users.hidden_apps(user.id)
+        apps_created.extend(apps_hidden)
     if user_dict:
-        user_dict['total'] = cached_users.get_total_users()
         title = "%s &middot; User Profile" % user_dict['fullname']
         return render_template('/account/public_profile.html',
                                title=title,
@@ -349,7 +344,8 @@ def _show_own_profile(user):
     user.score = rank_and_score['score']
     user.total = cached_users.get_total_users()
     apps_contrib = cached_users.apps_contributed(user.id)
-    apps_published, apps_draft = _get_user_apps(current_user.id)
+    apps_published, apps_draft = _get_user_apps(user.id)
+    apps_published.extend(cached_users.hidden_apps(user.id))
 
     return render_template('account/profile.html', title=gettext("Profile"),
                           apps_contrib=apps_contrib,
@@ -380,6 +376,12 @@ def applications(name):
                            title=gettext("Projects"),
                            apps_published=apps_published,
                            apps_draft=apps_draft)
+
+
+def _get_user_apps(user_id):
+    apps_published = cached_users.published_apps(user_id)
+    apps_draft = cached_users.draft_apps(user_id)
+    return apps_published, apps_draft
 
 
 
