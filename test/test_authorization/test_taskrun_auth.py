@@ -30,25 +30,9 @@ from factories import reset_all_pk_sequences
 
 class TestTaskrunAuthorization(Test):
 
-    def setUp(self):
-        super(TestTaskrunAuthorization, self).setUp()
-        reset_all_pk_sequences()
-
-
     mock_anonymous = mock_current_user()
     mock_authenticated = mock_current_user(anonymous=False, admin=False, id=2)
-    mock_admin = mock_current_user(anonymous=False, admin=True, id=15)
-
-
-    def configure_fixtures(self):
-        self.app = db.session.query(App).first()
-        self.root = db.session.query(User).first()
-        self.user1 = db.session.query(User).get(2)
-        self.user2 = db.session.query(User).get(3)
-        self.task = Task(app_id=self.app.id, state='0', n_answers=10)
-        self.task.app = self.app
-        db.session.add(self.task)
-        db.session.commit()
+    mock_admin = mock_current_user(anonymous=False, admin=True, id=1)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)

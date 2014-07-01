@@ -24,72 +24,36 @@ from pybossa.model.user import User
 from pybossa.model.featured import Featured
 from pybossa.cache import apps as cached_apps
 
-from factories import AppFactory, TaskFactory
+from factories import UserFactory, AppFactory, TaskFactory, \
+    FeaturedFactory, TaskRunFactory, AnonymousTaskRunFactory
 
 
 class TestAppsCache(Test):
 
-    @with_context
-    def setUp(self):
-        super(TestAppsCache, self).setUp()
-        self.user = self.create_users()[0]
-        db.session.add(self.user)
-        db.session.commit()
-
-
     def create_app_with_tasks(self, completed_tasks, ongoing_tasks):
-        app = App(name='my_app',
-                  short_name='my_app_shortname',
-                  description=u'description')
-        app.owner = self.user
-        db.session.add(app)
+        app = AppFactory.create()
         for i in range(completed_tasks):
-            task = Task(app_id = 1, state = 'completed', n_answers=3)
-            db.session.add(task)
+            task = TaskFactory.create(app=app, state='completed', n_answers=3)
         for i in range(ongoing_tasks):
-            task = Task(app_id = 1, state = 'ongoing', n_answers=3)
-            db.session.add(task)
+            task = TaskFactory.create(app=app, state='ongoing', n_answers=3)
         db.session.commit()
         return app
 
     def create_app_with_contributors(self, anonymous, registered, two_tasks=False, name='my_app'):
-        app = App(name=name,
-                  short_name='%s_shortname' % name,
-                  description=u'description')
-        app.owner = self.user
-        db.session.add(app)
-        task = Task(app=app)
-        db.session.add(task)
+        app = AppFactory.create(name=name)
+        task = TaskFactory.create(app=app)
         if two_tasks:
-            task2 = Task(app=app)
-            db.session.add(task2)
-        db.session.commit()
+            task_two = TaskFactory.create(app=app)
         for i in range(anonymous):
-            task_run = TaskRun(app_id = app.id,
-                               task_id = 1,
-                               user_ip = '127.0.0.%s' % i)
-            db.session.add(task_run)
+            user_ip = '127.0.0.%s' % i
+            AnonymousTaskRunFactory.create(task=task, user_ip=user_ip)
             if two_tasks:
-                task_run2 = TaskRun(app_id = app.id,
-                               task_id = 2,
-                               user_ip = '127.0.0.%s' % i)
-                db.session.add(task_run2)
+                AnonymousTaskRunFactory.create(task=task_two)
         for i in range(registered):
-            user = User(email_addr = "%s@a.com" % i,
-                        name = "user%s" % i,
-                        passwd_hash = "1234%s" % i,
-                        fullname = "user_fullname%s" % i)
-            db.session.add(user)
-            task_run = TaskRun(app_id = app.id,
-                               task_id = 1,
-                               user = user)
-            db.session.add(task_run)
+            user = UserFactory.create()
+            TaskRunFactory(task=task, user=user)
             if two_tasks:
-                task_run2 = TaskRun(app_id = app.id,
-                               task_id = 2,
-                               user = user)
-                db.session.add(task_run2)
-        db.session.commit()
+                TaskRunFactory(task=task_two, user=user)
         return app
 
 
@@ -97,12 +61,7 @@ class TestAppsCache(Test):
     def test_get_featured_front_page(self):
         """Test CACHE PROJECTS get_featured_front_page returns featured projects"""
 
-        app = self.create_app(None)
-        app.owner = self.user
-        db.session.add(app)
-        featured = Featured(app=app)
-        db.session.add(featured)
-        db.session.commit()
+        FeaturedFactory.create()
 
         featured = cached_apps.get_featured_front_page()
 
@@ -113,17 +72,9 @@ class TestAppsCache(Test):
     def test_get_featured_front_page_only_returns_featured(self):
         """Test CACHE PROJECTS get_featured_front_page returns only featured projects"""
 
-        featured_app = self.create_app(None)
-        non_featured_app = self.create_app(None)
-        non_featured_app.name = 'other_app'
-        non_featured_app.short_name = 'other_app'
-        featured_app.owner = self.user
-        non_featured_app.owner = self.user
-        db.session.add(featured_app)
-        db.session.add(non_featured_app)
-        featured = Featured(app=featured_app)
-        db.session.add(featured)
-        db.session.commit()
+        FeaturedFactory.create()
+        AppFactory.create()
+        AppFactory.create()
 
         featured = cached_apps.get_featured_front_page()
 
@@ -134,13 +85,8 @@ class TestAppsCache(Test):
     def test_get_featured_front_page_not_returns_hidden_apps(self):
         """Test CACHE PROJECTS get_featured_front_page does not return hidden projects"""
 
-        featured_app = self.create_app(None)
-        featured_app.owner = self.user
-        featured_app.hidden = 1
-        db.session.add(featured_app)
-        featured = Featured(app=featured_app)
-        db.session.add(featured)
-        db.session.commit()
+        app = AppFactory.create(hidden=1)
+        FeaturedFactory.create(app=app)
 
         featured = cached_apps.get_featured_front_page()
 
@@ -152,13 +98,9 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS get_featured_front_page returns the required info
         about each featured project"""
 
-        app = self.create_app(None)
-        app.owner = self.user
-        db.session.add(app)
-        featured = Featured(app=app)
-        db.session.add(featured)
-        db.session.commit()
         fields = ('id', 'name', 'short_name', 'info', 'n_volunteers', 'n_completed_tasks')
+
+        FeaturedFactory.create()
 
         featured = cached_apps.get_featured_front_page()[0]
 
@@ -315,7 +257,7 @@ class TestAppsCache(Test):
 
     @with_context
     def test_n_volunteers(self):
-        """Test CACHE PROJECTS n_volunteers returns the sum of the anonymous 
+        """Test CACHE PROJECTS n_volunteers returns the sum of the anonymous
         plus registered volunteers that contributed to a project"""
 
         app = self.create_app_with_contributors(anonymous=2, registered=3, two_tasks=True)

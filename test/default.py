@@ -26,7 +26,13 @@ from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
 import pybossa.model as model
 from functools import wraps
+from factories import reset_all_pk_sequences
 import random
+import os
+
+
+os.environ['PYBOSSA_SETTINGS'] = '../settings_test.py'
+os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
 
 flask_app = create_app()
 
@@ -49,11 +55,13 @@ class Test(object):
         self.app = flask_app.test_client()
         with self.flask_app.app_context():
             rebuild_db()
+            reset_all_pk_sequences()
 
     def tearDown(self):
         with self.flask_app.app_context():
             db.session.remove()
             self.redis_flushall()
+            reset_all_pk_sequences()
 
     fullname = u'T Tester'
     fullname2 = u'T Tester 2'
