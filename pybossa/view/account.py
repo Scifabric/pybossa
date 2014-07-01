@@ -371,6 +371,7 @@ def applications(name):
 
     user = db.session.query(model.user.User).get(current_user.id)
     apps_published, apps_draft = _get_user_apps(user.id)
+    apps_published.extend(cached_users.hidden_apps(user.id))
 
     return render_template('account/applications.html',
                            title=gettext("Projects"),
