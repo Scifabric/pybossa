@@ -302,38 +302,49 @@ def register():
 def redirect_profile():
     if current_user.is_anonymous(): # pragma: no cover
         return redirect(url_for('.signin'))
-    else:
-        return redirect(url_for('.profile', name=current_user.name), 302)
+    return redirect(url_for('.profile', name=current_user.name), 302)
 
 
-def show_public_profile(user):
-    user, apps_contributed = cached_users.get_user_summary(user.name)
-    apps_created, apps_draft = _get_user_apps(user['id'])
-    if user:
-        title = "%s &middot; User Profile" % user['fullname']
+@blueprint.route('/<name>/', methods=['GET'])
+def profile(name):
+    """
+    Get user profile.
+
+    Returns a Jinja2 template with the user information.
+
+    """
+    user = db.session.query(model.user.User).filter_by(name=name).first()
+
+    if user is None:
+        return abort(404)
+    if current_user.is_anonymous() or (user.id != current_user.id):
+        return _show_public_profile(user)
+    if user.id == current_user.id and current_user.is_authenticated():
+        return _show_own_profile(user)
+
+
+def _get_user_apps(user_id):
+    apps_published = cached_users.published_apps(user_id)
+    apps_draft = cached_users.draft_apps(user_id)
+    return apps_published, apps_draft
+
+
+def _show_public_profile(user):
+    user_dict = cached_users.get_user_summary(user.name)
+    apps_contributed = cached_users.apps_contributed(user.id)
+    apps_created = cached_users.published_apps(user.id)
+    if user_dict:
+        user_dict['total'] = cached_users.get_total_users()
+        title = "%s &middot; User Profile" % user_dict['fullname']
         return render_template('/account/public_profile.html',
                                title=title,
-                               user=user,
+                               user=user_dict,
                                apps=apps_contributed,
                                apps_created=apps_created)
 
 
-def show_own_profile(user):
-    sql = text('''
-                   SELECT app.name, app.short_name, app.info,
-                   COUNT(*) as n_task_runs
-                   FROM task_run JOIN app ON
-                   (task_run.app_id=app.id) WHERE task_run.user_id=:user_id
-                   GROUP BY app.name, app.short_name, app.info
-                   ORDER BY n_task_runs DESC;''')
-
-    results = db.engine.execute(sql, user_id=current_user.id)
-
-    apps_contrib = []
-    for row in results:
-        app = dict(name=row.name, short_name=row.short_name,
-                   info=json.loads(row.info), n_task_runs=row.n_task_runs)
-        apps_contrib.append(app)
+def _show_own_profile(user):
+    apps_contrib = cached_users.apps_contributed(user.id)
 
     # Rank
     # See: https://gist.github.com/tokumine/1583695
@@ -359,28 +370,8 @@ def show_own_profile(user):
     return render_template('account/profile.html', title=gettext("Profile"),
                           apps_contrib=apps_contrib,
                           apps_published=apps_published,
-                          apps_draft=apps_draft,
-                          user=user)
-
-
-@blueprint.route('/<name>/', methods=['GET'])
-def profile(name):
-    """
-    Get user profile.
-
-    Returns a Jinja2 template with the user information.
-
-    """
-    user = db.session.query(model.user.User).filter_by(name=name).first()
-
-    if user is None:
-        return abort(404)
-
-    if current_user.is_anonymous() or (user.id != current_user.id):
-        return show_public_profile(user)
-
-    if user.id == current_user.id and current_user.is_authenticated():
-        return show_own_profile(user)
+                          apps_draft=apps_draft)#,
+                          #user=user)
 
 
 @blueprint.route('/<name>/applications')
@@ -407,47 +398,6 @@ def applications(name):
                            apps_draft=apps_draft)
 
 
-def _get_user_apps(user_id):
-    apps_published = []
-    apps_draft = []
-    sql = text('''
-               SELECT app.id, app.name, app.short_name, app.description,
-               app.owner_id,
-               app.info
-               FROM app, task
-               WHERE app.id=task.app_id AND app.owner_id=:user_id AND
-               app.hidden=0 AND app.info LIKE('%task_presenter%')
-               GROUP BY app.id, app.name, app.short_name,
-               app.description,
-               app.info;''')
-
-    results = db.engine.execute(sql, user_id=user_id)
-    for row in results:
-        app = dict(id=row.id, name=row.name, short_name=row.short_name,
-                   owner_id=row.owner_id,
-                   description=row.description,
-                   info=json.loads(row.info))
-        apps_published.append(app)
-
-    sql = text('''
-               SELECT app.id, app.name, app.short_name, app.description,
-               owner_id,
-               app.info
-               FROM app
-               WHERE app.owner_id=:user_id
-               AND app.info NOT LIKE('%task_presenter%')
-               GROUP BY app.id, app.name, app.short_name,
-               app.description,
-               app.info;''')
-    results = db.engine.execute(sql, user_id=user_id)
-    for row in results:
-        app = dict(id=row.id, name=row.name, short_name=row.short_name,
-                   owner_id=row.owner_id,
-                   description=row.description,
-                   info=json.loads(row.info))
-        apps_draft.append(app)
-    return apps_published, apps_draft
-
 
 @blueprint.route('/<name>/update', methods=['GET', 'POST'])
 @login_required
@@ -466,7 +416,7 @@ def update_profile(name):
     show_passwd_form = True
     if user.twitter_user_id or user.google_user_id or user.facebook_user_id:
         show_passwd_form = False
-    usr, apps = cached_users.get_user_summary(name)
+    usr = cached_users.get_user_summary(name)
     # Extend the values
     current_user.rank = usr.get('rank')
     current_user.score = usr.get('score')
