@@ -307,7 +307,7 @@ def redirect_profile():
 
 
 def show_public_profile(user):
-    user, apps_contributed, _ = cached_users.get_user_summary(user.name)
+    user, apps_contributed = cached_users.get_user_summary(user.name)
     apps_created, apps_draft = _get_user_apps(user['id'])
     if user:
         title = "%s &middot; User Profile" % user['fullname']
@@ -327,8 +327,6 @@ def show_own_profile(user):
                    GROUP BY app.name, app.short_name, app.info
                    ORDER BY n_task_runs DESC;''')
 
-    # results will have the following format
-    # (app.name, app.short_name, n_task_runs)
     results = db.engine.execute(sql, user_id=current_user.id)
 
     apps_contrib = []
@@ -354,7 +352,7 @@ def show_own_profile(user):
         user.rank = row.rank
         user.score = row.score
 
-    user.total = db.session.query(model.user.User).count()
+    user.total = cached_users.get_total_users()
 
     apps_published, apps_draft = _get_user_apps(current_user.id)
 
@@ -468,7 +466,7 @@ def update_profile(name):
     show_passwd_form = True
     if user.twitter_user_id or user.google_user_id or user.facebook_user_id:
         show_passwd_form = False
-    usr, apps, apps_created = cached_users.get_user_summary(name)
+    usr, apps = cached_users.get_user_summary(name)
     # Extend the values
     current_user.rank = usr.get('rank')
     current_user.score = usr.get('score')
