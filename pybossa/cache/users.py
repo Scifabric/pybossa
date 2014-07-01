@@ -226,26 +226,26 @@ def draft_apps(user_id):
     return apps_draft
 
 
-# def hidden_apps(user_id):
-#     sql = text('''
-#                SELECT app.id, app.name, app.short_name, app.description,
-#                app.owner_id,
-#                app.info
-#                FROM app, task
-#                WHERE app.id=task.app_id AND app.owner_id=:user_id AND
-#                app.hidden=1 AND app.info LIKE('%task_presenter%')
-#                GROUP BY app.id, app.name, app.short_name,
-#                app.description,
-#                app.info;''')
-#     apps_published = []
-#     results = db.engine.execute(sql, user_id=user_id)
-#     for row in results:
-#         app = dict(id=row.id, name=row.name, short_name=row.short_name,
-#                    owner_id=row.owner_id,
-#                    description=row.description,
-#                    info=json.loads(row.info))
-#         apps_published.append(app)
-#     return apps_published
+def hidden_apps(user_id):
+    sql = text('''
+               SELECT app.id, app.name, app.short_name, app.description,
+               app.owner_id,
+               app.info
+               FROM app, task
+               WHERE app.id=task.app_id AND app.owner_id=:user_id AND
+               app.hidden=1 AND app.info LIKE('%task_presenter%')
+               GROUP BY app.id, app.name, app.short_name,
+               app.description,
+               app.info;''')
+    apps_published = []
+    results = db.engine.execute(sql, user_id=user_id)
+    for row in results:
+        app = dict(id=row.id, name=row.name, short_name=row.short_name,
+                   owner_id=row.owner_id,
+                   description=row.description,
+                   info=json.loads(row.info))
+        apps_published.append(app)
+    return apps_published
 
 
 #TOTEST
