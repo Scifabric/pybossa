@@ -135,9 +135,18 @@ def get_user_summary(name):
                     info=dict(json.loads(row.info)),
                     email_addr=row.email_addr, n_answers=row.n_answers,
                     registered_ago=pretty_date(row.created))
+    if user:
+        rank_score = rank_and_score(user['id'])
+        user['rank'] = rank_score['rank']
+        user['score'] = rank_score['score']
+        user['total'] = get_total_users()
+        return user
+    else: # pragma: no cover
+        return None
 
-    # Rank
-    # See: https://gist.github.com/tokumine/1583695
+
+def rank_and_score(user_id):
+# See: https://gist.github.com/tokumine/1583695
     sql = text('''
                WITH global_rank AS (
                     WITH scores AS (
@@ -147,15 +156,12 @@ def get_user_summary(name):
                     FROM scores)
                SELECT * from global_rank WHERE user_id=:user_id;
                ''')
-
-    if user:
-        results = db.engine.execute(sql, user_id=user['id'])
-        for row in results:
-            user['rank'] = row.rank
-            user['score'] = row.score
-        return user
-    else: # pragma: no cover
-        return None
+    results = db.engine.execute(sql, user_id=user_id)
+    rank_and_score = dict(rank=None, score=None)
+    for row in results:
+        rank_and_score['rank'] = row.rank
+        rank_and_score['score'] = row.score
+    return rank_and_score
 
 
 def apps_contributed(user_id):
