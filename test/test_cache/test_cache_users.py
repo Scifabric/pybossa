@@ -85,8 +85,29 @@ class TestUsersCache(Test):
 
 
 
-    def test_apps_contributed(self):
-        pass
+    def test_apps_contributed_no_contributions(self):
+        """Test CACHE USERS apps_contributed returns empty list if the user has
+        not contributed to any app"""
+        user = UserFactory.create()
+
+        apps_contributed = cached_users.apps_contributed(user.id)
+
+        assert apps_contributed == [], apps_contributed
+
+
+    def test_apps_contributed_contributions(self):
+        """Test CACHE USERS apps_contributed returnsa list of apps that has
+        contributed to"""
+        user = UserFactory.create()
+        app_contributed = AppFactory.create()
+        task = TaskFactory.create(app=app_contributed)
+        TaskRunFactory.create(task=task, user=user)
+        another_app = AppFactory.create()
+
+        apps_contributed = cached_users.apps_contributed(user.id)
+
+        assert len(apps_contributed) == 1
+        assert apps_contributed[0]['short_name'] == app_contributed.short_name, apps_contributed
 
 
     def test_published_apps(self):
