@@ -344,27 +344,11 @@ def _show_public_profile(user):
 
 
 def _show_own_profile(user):
-    apps_contrib = cached_users.apps_contributed(user.id)
-
-    # Rank
-    # See: https://gist.github.com/tokumine/1583695
-    sql = text('''
-               WITH global_rank AS (
-                    WITH scores AS (
-                        SELECT user_id, COUNT(*) AS score FROM task_run
-                        WHERE user_id IS NOT NULL GROUP BY user_id)
-                    SELECT user_id, score, rank() OVER (ORDER BY score desc)
-                    FROM scores)
-               SELECT * from global_rank WHERE user_id=:user_id;
-               ''')
-
-    results = db.engine.execute(sql, user_id=current_user.id)
-    for row in results:
-        user.rank = row.rank
-        user.score = row.score
-
+    rank_and_score = cached_users.rank_and_score(user.id)
+    user.rank = rank_and_score['rank']
+    user.score = rank_and_score['score']
     user.total = cached_users.get_total_users()
-
+    apps_contrib = cached_users.apps_contributed(user.id)
     apps_published, apps_draft = _get_user_apps(current_user.id)
 
     return render_template('account/profile.html', title=gettext("Profile"),
