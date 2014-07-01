@@ -24,7 +24,8 @@ from default import Test#, db, with_context
 # from pybossa.model.featured import Featured
 from pybossa.cache import users as cached_users
 
-from factories import AppFactory, TaskFactory, UserFactory
+from factories import AppFactory, TaskFactory, TaskRunFactory, UserFactory
+from factories import reset_all_pk_sequences
 
 
 class TestUsersCache(Test):
@@ -65,14 +66,26 @@ class TestUsersCache(Test):
 
 
     def test_rank_and_score(self):
-        pass
+        """Test CACHE USERS rank_and_score returns the correct rank and score"""
+        i = 0
+        app = AppFactory.create()
+        tasks = TaskFactory.create_batch(4, app=app)
+        users = UserFactory.create_batch(4)
+        for user in users:
+            i += 1
+            taskruns = TaskRunFactory.create_batch(i, user=user, task=tasks[i-1])
+
+        first_in_rank = cached_users.rank_and_score(users[3].id)
+        last_in_rank = cached_users.rank_and_score(users[0].id)
+        print first_in_rank
+        assert first_in_rank['rank'] == 1, first_in_rank['rank']
+        assert first_in_rank['score'] == 4, first_in_rank['score']
+        assert last_in_rank['rank'] == 4, last_in_rank['rank']
+        assert last_in_rank['score'] == 1, last_in_rank['score']
+
 
 
     def test_apps_contributed(self):
-        pass
-
-
-    def test_published_apps(self):
         pass
 
 
