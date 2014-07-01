@@ -381,7 +381,8 @@ Creating a project using the API involves also three steps:
 Creating the project
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can create a project via the API URL **/api/app** with a POST request.
+You can create a project via the API URL **/api/app** with a POST request (See
+:ref:`api`).
 
 You have to provide the following information about the project and convert
 it to a JSON object (the actual values are taken from the `Flickr Person demo
