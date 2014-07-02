@@ -145,6 +145,7 @@ def get_user_summary(name):
         return None
 
 
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
 def rank_and_score(user_id):
 # See: https://gist.github.com/tokumine/1583695
     sql = text('''
@@ -182,6 +183,11 @@ def apps_contributed(user_id):
     return apps_contributed
 
 
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
+def apps_contributed_cached(user_id):
+    return apps_contributed(user_id)
+
+
 def published_apps(user_id):
     sql = text('''
                SELECT app.id, app.name, app.short_name, app.description,
@@ -202,6 +208,11 @@ def published_apps(user_id):
                    info=json.loads(row.info))
         apps_published.append(app)
     return apps_published
+
+
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
+def published_apps_cached(user_id):
+    return published_apps(user_id)
 
 
 def draft_apps(user_id):
@@ -226,6 +237,11 @@ def draft_apps(user_id):
     return apps_draft
 
 
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
+def draft_apps_cached(user_id):
+    return draft_apps(user_id)
+
+
 def hidden_apps(user_id):
     sql = text('''
                SELECT app.id, app.name, app.short_name, app.description,
@@ -246,6 +262,11 @@ def hidden_apps(user_id):
                    info=json.loads(row.info))
         apps_published.append(app)
     return apps_published
+
+
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
+def hidden_apps_cached(user_id):
+    return hidden_apps(user_id)
 
 
 @cache(timeout=timeouts.get('USER_TOTAL_TIMEOUT'),
