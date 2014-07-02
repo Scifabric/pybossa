@@ -37,7 +37,6 @@ class TestUsersCache(Test):
     def test_get_user_summary_user_exists(self):
         """Test CACHE USERS get_user_summary returns a dict with the user data
         if the user exists"""
-
         UserFactory.create(name='zidane')
         UserFactory.create(name='figo')
 
@@ -48,7 +47,6 @@ class TestUsersCache(Test):
 
     def test_get_user_summary_returns_fields(self):
         """Test CACHE USERS get_user_summary all the fields in the dict"""
-
         UserFactory.create(name='user')
         fields = ('id', 'name', 'fullname', 'created', 'api_key',
                   'twitter_user_id', 'google_user_id', 'facebook_user_id',
