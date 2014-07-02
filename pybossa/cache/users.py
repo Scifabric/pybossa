@@ -248,26 +248,6 @@ def hidden_apps(user_id):
     return apps_published
 
 
-#TOTEST
-@memoize(timeout=timeouts.get('USER_TIMEOUT'))
-def apps_created(user_id):
-    # Get the CREATED APPS by the USER without any filter
-    sql = text('''
-               SELECT app.id, app.name, app.short_name, app.info, app.created
-               FROM app
-               WHERE app.owner_id=:user_id
-               ORDER BY app.created DESC;
-               ''')
-    results = db.engine.execute(sql, user_id=user_id)
-    apps_created = []
-    for row in results:
-        app = dict(id=row.id, name=row.name,
-                   short_name=row.short_name, created=row.apps_created,
-                   info=dict(json.loads(row.info)))
-        apps_created.append(app)
-    return apps_created
-
-
 @cache(timeout=timeouts.get('USER_TOTAL_TIMEOUT'),
        key_prefix="site_total_users")
 def get_total_users():
