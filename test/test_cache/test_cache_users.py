@@ -31,7 +31,6 @@ from factories import reset_all_pk_sequences
 class TestUsersCache(Test):
 
 
-
     def test_get_user_summary_nousers(self):
         """Test CACHE USERS get_user_summary returns None if no user exists with
         the name requested"""
@@ -62,7 +61,7 @@ class TestUsersCache(Test):
         user = cached_users.get_user_summary('user')
 
         for field in fields:
-            assert field in user.keys()
+            assert field in user.keys(), field
 
 
     def test_rank_and_score(self):
@@ -87,7 +86,7 @@ class TestUsersCache(Test):
 
     def test_apps_contributed_no_contributions(self):
         """Test CACHE USERS apps_contributed returns empty list if the user has
-        not contributed to any app"""
+        not contributed to any project"""
         user = UserFactory.create()
 
         apps_contributed = cached_users.apps_contributed(user.id)
@@ -96,7 +95,7 @@ class TestUsersCache(Test):
 
 
     def test_apps_contributed_contributions(self):
-        """Test CACHE USERS apps_contributed returnsa list of apps that has
+        """Test CACHE USERS apps_contributed returns a list of projects that has
         contributed to"""
         user = UserFactory.create()
         app_contributed = AppFactory.create()
@@ -110,8 +109,71 @@ class TestUsersCache(Test):
         assert apps_contributed[0]['short_name'] == app_contributed.short_name, apps_contributed
 
 
+    def test_apps_contributed_returns_fields(self):
+        """Test CACHE USERS apps_contributed returns the info of the projects with
+        the required fields"""
+        user = UserFactory.create()
+        app_contributed = AppFactory.create()
+        task = TaskFactory.create(app=app_contributed)
+        TaskRunFactory.create(task=task, user=user)
+        fields = ('name', 'short_name', 'info', 'n_task_runs')
+
+        apps_contributed = cached_users.apps_contributed(user.id)
+
+        for field in fields:
+            assert field in apps_contributed[0].keys(), field
+
+
+    def test_published_apps_no_projects(self):
+        """Test CACHE USERS published_apps returns empty list if the user has
+        not created any project"""
+        user = UserFactory.create()
+
+        apps_published = cached_users.published_apps(user.id)
+
+        assert apps_published == [], apps_published
+
+
     def test_published_apps(self):
-        pass
+        """Test CACHE USERS published_apps returns a list with the projects that
+        are published by the user"""
+        user = UserFactory.create()
+        published_project = AppFactory.create(owner=user)
+        TaskFactory.create(app=published_project)
+
+        apps_published = cached_users.published_apps(user.id)
+
+        assert len(apps_published) == 1, apps_published
+        assert apps_published[0]['short_name'] == published_project.short_name, apps_published
+
+
+    def test_published_apps_only_returns_published(self):
+        """Test CACHE USERS published_apps does not return hidden, draft
+        or another user's projects"""
+        user = UserFactory.create()
+        another_user_published_project = AppFactory.create()
+        TaskFactory.create(app=another_user_published_project)
+        draft_project = AppFactory.create()
+        hidden_project = AppFactory.create(owner=user, hidden=1)
+        TaskFactory.create(app=hidden_project)
+
+        apps_published = cached_users.published_apps(user.id)
+
+        assert len(apps_published) == 0, apps_published
+
+
+    def test_published_apps_returns_fields(self):
+        """Test CACHE USERS published_apps returns the info of the projects with
+        the required fields"""
+        user = UserFactory.create()
+        published_project = AppFactory.create(owner=user)
+        task = TaskFactory.create(app=published_project)
+        fields = ('id', 'name', 'short_name', 'owner_id', 'description', 'info')
+
+        apps_published = cached_users.published_apps(user.id)
+
+        for field in fields:
+            assert field in apps_published[0].keys(), field
 
 
     def test_draft_apps(self):
