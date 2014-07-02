@@ -324,8 +324,8 @@ def profile(name):
 
 def _show_public_profile(user):
     user_dict = cached_users.get_user_summary(user.name)
-    apps_contributed = cached_users.apps_contributed(user.id)
-    apps_created = cached_users.published_apps(user.id)
+    apps_contributed = cached_users.apps_contributed_cached(user.id)
+    apps_created = cached_users.published_apps_cached(user.id)
     if current_user.is_authenticated() and current_user.admin:
         apps_hidden = cached_users.hidden_apps(user.id)
         apps_created.extend(apps_hidden)
