@@ -228,8 +228,54 @@ class TestUsersCache(Test):
             assert field in draft_project[0].keys(), field
 
 
-    def test_hidden_apps(self):
-        pass
+    def test_hidden_apps_no_projects(self):
+        """Test CACHE USERS hidden_apps returns empty list if the user has
+        not created any hidden project"""
+        user = UserFactory.create()
+
+        hidden_projects = cached_users.hidden_apps(user.id)
+
+        assert hidden_projects == [], hidden_projects
+
+
+    def test_hidden_apps_returns_hidden(self):
+        """Test CACHE USERS hidden_apps returns a list with the user projects that
+        are no drafts but are hidden"""
+        user = UserFactory.create()
+        hidden_project = AppFactory.create(owner=user, hidden=1)
+        TaskFactory.create(app=hidden_project)
+
+        hidden_projects = cached_users.hidden_apps(user.id)
+
+        assert len(hidden_projects) == 1, hidden_projects
+        assert hidden_projects[0]['short_name'] == hidden_project.short_name, hidden_projects
+
+
+    def test_hidden_apps_only_returns_hidden(self):
+        """Test CACHE USERS hidden_apps does not return draft (even hidden)
+        or another user's hidden projects"""
+        user = UserFactory.create()
+        another_user_hidden_project = AppFactory.create(hidden=1)
+        TaskFactory.create(app=another_user_hidden_project)
+        hidden_draft_project = AppFactory.create(owner=user, hidden=1, info={})
+
+        hidden_projects = cached_users.hidden_apps(user.id)
+
+        assert len(hidden_projects) == 0, hidden_projects
+
+
+    def test_hidden_apps_returns_fields(self):
+        """Test CACHE USERS hidden_apps returns the info of the projects with
+        the required fields"""
+        user = UserFactory.create()
+        hidden_project = AppFactory.create(owner=user, hidden=1)
+        TaskFactory.create(app=hidden_project)
+        fields = ('id', 'name', 'short_name', 'owner_id', 'description', 'info')
+
+        hidden_projects = cached_users.hidden_apps(user.id)
+
+        for field in fields:
+            assert field in hidden_projects[0].keys(), field
 
 
 
