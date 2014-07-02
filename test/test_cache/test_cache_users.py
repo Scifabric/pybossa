@@ -16,12 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import Test#, db, with_context
-# from pybossa.model.app import App
-# from pybossa.model.task import Task
-# from pybossa.model.task_run import TaskRun
-# from pybossa.model.user import User
-# from pybossa.model.featured import Featured
+from default import Test
 from pybossa.cache import users as cached_users
 
 from factories import AppFactory, TaskFactory, TaskRunFactory, UserFactory
