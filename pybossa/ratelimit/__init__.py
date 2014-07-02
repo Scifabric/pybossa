@@ -68,7 +68,7 @@ def get_view_rate_limit():
     return getattr(g, '_view_rate_limit', None)
 
 
-def ratelimit(limit, per=300, send_x_headers=True,
+def ratelimit(limit, per, send_x_headers=True,
               scope_func=lambda: request.remote_addr,
               key_func=lambda: request.endpoint,
               path=lambda: request.path):
@@ -85,6 +85,7 @@ def ratelimit(limit, per=300, send_x_headers=True,
                 key = 'rate-limit/%s/%s/' % (key_func(), scope_func())
                 rlimit = RateLimit(key, limit, per, send_x_headers)
                 g._view_rate_limit = rlimit
+                print "Rate-limited => limit = %s" % limit
                 #if over_limit is not None and rlimit.over_limit:
                 if rlimit.over_limit:
                     raise TooManyRequests

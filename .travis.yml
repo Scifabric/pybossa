@@ -15,7 +15,7 @@ install:
 before_script:
   - psql -c "create user rtester with createdb login password 'rtester'" -U postgres
   - psql -c "create database pybossa_test owner rtester encoding 'utf-8' lc_collate 'en_US.utf8' lc_ctype 'en_US.utf8' template template0;" -U postgres
-script: nosetests -v --with-coverage --cover-erase --cover-package=pybossa --nologcapture
+script: nosetests test/
 notifications:
   email: false
   irc: "irc.freenode.net#okfn-dev"

@@ -37,6 +37,7 @@ def create_app():
         heroku = Heroku(app)
     configure_app(app)
     setup_cache_timeouts(app)
+    setup_ratelimits(app)
     setup_theme(app)
     setup_uploader(app)
     setup_error_email(app)
@@ -362,6 +363,12 @@ def setup_csrf_protection(app):
 def setup_debug_toolbar(app): # pragma: no cover
     if app.config['ENABLE_DEBUG_TOOLBAR']:
         debug_toolbar.init_app(app)
+
+
+def setup_ratelimits(app):
+    global ratelimits
+    ratelimits['LIMIT'] = app.config['LIMIT']
+    ratelimits['PER'] = app.config['PER']
 
 
 def setup_cache_timeouts(app):

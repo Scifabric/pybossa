@@ -39,7 +39,7 @@ class TestAPI(Test):
     @with_context
     def check_limit(self, url, action, obj, data=None):
         # Set the limit
-        limit = 299
+        limit = self.flask_app.config.get('LIMIT') - 1
         # Start check
         for i in range(limit, -1, -1):
             if action == 'get':
@@ -106,7 +106,7 @@ class TestAPI(Test):
     @with_context
     def test_02_app_delete(self):
         """Test API.app DELETE rate limit."""
-        for i in range(300):
+        for i in range(self.flask_app.config.get('LIMIT')):
             app = App(name=str(i), short_name=str(i),
                       description=str(i), owner_id=1)
             db.session.add(app)
@@ -118,7 +118,7 @@ class TestAPI(Test):
     @with_context
     def test_03_app_put(self):
         """Test API.app PUT rate limit."""
-        for i in range(300):
+        for i in range(self.flask_app.config.get('LIMIT')):
             app = App(name=str(i), short_name=str(i),
                       description=str(i), owner_id=1)
             db.session.add(app)

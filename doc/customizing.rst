@@ -317,6 +317,24 @@ If you want to disable the cache, you only have to export the following env vari
     PYBOSSA_REDIS_CACHE_DISABLED='1'
 
 
+Rate limit for the API
+======================
+
+By default PyBossa limits the usage of the API with the following values::
+
+    LIMIT = 300
+    PER = 15 * 60
+
+Those values mean that when a user sends a request to an API endpoint, a window
+of 15 minutes is open, and during those 15 minutes the number of allowed
+requests to the same endpoint is 300. By adding these values to your
+settings_local.py file, you can adapt it to your own needs.
+
+.. note::
+    Please, be sure about what you are doing by modifying these values. This is
+    the recommended configuration, so do not modify it unless you are sure.
+
+
 Configuring upload method
 =========================
 

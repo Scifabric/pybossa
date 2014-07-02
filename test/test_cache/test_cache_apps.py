@@ -19,8 +19,8 @@
 from default import Test, db, with_context
 from pybossa.cache import apps as cached_apps
 
-from factories import (AppFactory, FeaturedFactory, TaskFactory,
-    AnonymousTaskRunFactory, TaskRunFactory, UserFactory)
+from factories import UserFactory, AppFactory, TaskFactory, \
+    FeaturedFactory, TaskRunFactory, AnonymousTaskRunFactory
 
 
 class TestAppsCache(Test):
@@ -56,8 +56,7 @@ class TestAppsCache(Test):
     def test_get_featured_front_page(self):
         """Test CACHE PROJECTS get_featured_front_page returns featured projects"""
 
-        app = AppFactory.create()
-        FeaturedFactory.create(app=app)
+        FeaturedFactory.create()
 
         featured = cached_apps.get_featured_front_page()
 
@@ -94,9 +93,9 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS get_featured_front_page returns the required info
         about each featured project"""
 
-        app = AppFactory.create()
-        FeaturedFactory.create(app=app)
         fields = ('id', 'name', 'short_name', 'info', 'n_volunteers', 'n_completed_tasks')
+
+        FeaturedFactory.create()
 
         featured = cached_apps.get_featured_front_page()[0]
 
@@ -252,7 +251,7 @@ class TestAppsCache(Test):
 
     @with_context
     def test_n_volunteers(self):
-        """Test CACHE PROJECTS n_volunteers returns the sum of the anonymous 
+        """Test CACHE PROJECTS n_volunteers returns the sum of the anonymous
         plus registered volunteers that contributed to a project"""
 
         app = self.create_app_with_contributors(anonymous=2, registered=3, two_tasks=True)
