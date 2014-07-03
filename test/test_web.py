@@ -2752,14 +2752,15 @@ class TestWeb(web.Helper):
         user = db.session.query(User).get(1)
         err_msg = "New generated API key should be different from old one"
         assert api_key != user.api_key, err_msg
+        self.signout()
 
         self.register(fullname="new", name="new")
         res = self.app.post(url)
-        res.status_code == 403
+        assert res.status_code == 403, res.status_code
 
         url = "/account/fake/resetapikey"
         res = self.app.post(url)
-        assert res.status_code == 404
+        assert res.status_code == 404, res.status_code
 
 
     @with_context
