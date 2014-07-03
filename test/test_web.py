@@ -2743,7 +2743,8 @@ class TestWeb(web.Helper):
         assert "Please sign in to access this page" in res.data, err_msg
         res = self.app.post(url, follow_redirects=True)
         assert "Please sign in to access this page" in res.data, err_msg
-
+        self.register(fullname="newd", name="newd")
+        self.signout()
         # Authenticated user
         self.register()
         user = db.session.query(User).get(1)
