@@ -19,7 +19,7 @@
 from flask.ext.login import current_user
 
 
-def create(user=None): # pragma: no cover
+def create(user=None):
     if current_user.is_authenticated():
         if current_user.admin:
             return True
@@ -29,13 +29,13 @@ def create(user=None): # pragma: no cover
         return False
 
 
-def read(user=None): # pragma: no cover
+def read(user=None):
     return True
 
 
-def update(user): # pragma: no cover
-    return create(user)
+def update(user):
+    return create(user) or user.id == current_user.id
 
 
-def delete(user): # pragma: no cover
+def delete(user):
     return update(user)
