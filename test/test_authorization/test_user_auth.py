@@ -104,7 +104,7 @@ class TestUserAuthorization(Test):
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     @patch('pybossa.auth.user.current_user', new=mock_anonymous)
-    def test_anonymous_user_canot_update_given_user(self):
+    def test_anonymous_user_cannot_update_given_user(self):
         """Test anonymous users cannot update a given user"""
         user = UserFactory.create()
         assert_raises(Unauthorized, getattr(require, 'user').update, user)
@@ -140,3 +140,43 @@ class TestUserAuthorization(Test):
         assert himself.id == self.mock_admin.id
         assert other_user.id != self.mock_admin.id
         assert_not_raises(Exception, getattr(require, 'user').update, other_user)
+
+
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    @patch('pybossa.auth.user.current_user', new=mock_anonymous)
+    def test_anonymous_user_cannot_delete_given_user(self):
+        """Test anonymous users cannot delete a given user"""
+        user = UserFactory.create()
+        assert_raises(Unauthorized, getattr(require, 'user').delete, user)
+
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.user.current_user', new=mock_authenticated)
+    def test_authenticated_user_cannot_delete_another_user(self):
+        """Test authenticated users cannot delete another user than themselves"""
+        user = UserFactory.create()
+
+        assert user.id != self.mock_authenticated.id, user.id
+        assert_raises(Forbidden, getattr(require, 'user').delete, user)
+
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.user.current_user', new=mock_authenticated)
+    def test_authenticated_user_can_delete_themselves(self):
+        """Test authenticated users can delete themselves"""
+        user = UserFactory.create_batch(2)[1]
+
+        assert user.id == self.mock_authenticated.id, user.id
+        assert_not_raises(Exception, getattr(require, 'user').delete, user)
+
+
+    @patch('pybossa.auth.current_user', new=mock_admin)
+    @patch('pybossa.auth.user.current_user', new=mock_admin)
+    def test_admins_can_delete_any_user(self):
+        """Test admins users can delete any given user"""
+        himself = UserFactory.create()
+        other_user = UserFactory.create()
+
+        assert himself.id == self.mock_admin.id
+        assert other_user.id != self.mock_admin.id
+        assert_not_raises(Exception, getattr(require, 'user').delete, other_user)
