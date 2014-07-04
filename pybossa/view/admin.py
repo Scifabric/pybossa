@@ -138,7 +138,6 @@ def users(user_id=None):
         if request.method == 'POST' and form.user.data:
             query = '%' + form.user.data.lower() + '%'
             found = [user for user in user_repo.search_by_name(query) if user.id != current_user.id]
-            print found
             require.user.update(found)
             if not found:
                 flash("<strong>Ooops!</strong> We didn't find a user "
@@ -224,7 +223,7 @@ def add_admin(user_id=None):
             require.user.update(user)
             if user:
                 user.admin = True
-                db.session.commit()
+                user_repo.save(user)
                 return redirect(url_for(".users"))
             else:
                 msg = "User not found"
@@ -245,7 +244,7 @@ def del_admin(user_id=None):
             require.user.update(user)
             if user:
                 user.admin = False
-                db.session.commit()
+                user_repo.save(user)
                 return redirect(url_for('.users'))
             else:
                 msg = "User.id not found"

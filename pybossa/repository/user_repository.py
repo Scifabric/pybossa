@@ -50,3 +50,7 @@ class UserRepository(object):
     def search_by_name(self, keyword):
         return self.db.session.query(User).filter(or_(func.lower(User.name).like(keyword),
                                   func.lower(User.fullname).like(keyword))).all()
+
+    def save(self, user):
+        db.session.add(user)
+        db.session.commit()
