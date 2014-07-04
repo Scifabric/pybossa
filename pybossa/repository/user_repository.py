@@ -31,11 +31,14 @@ class UserRepository(object):
         self.db = db
 
 
-    def get_by_id(self, id):
+    def get(self, id):
         return self.db.session.query(User).get(id)
 
     def get_by_name(self, name):
-        return self.db.session.query(User).filter_by(name=username).first()
+        return self.db.session.query(User).filter_by(name=name).first()
+
+    def get_by(self, **attribute):
+        return self.db.session.query(User).filter_by(**attribute).first()
 
     def get_all(self):
         return self.db.session.query(User).all()

@@ -39,12 +39,15 @@ from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
 from pybossa.auth import require
 import pybossa.validator as pb_validator
-from sqlalchemy import or_, func
 import json
 from StringIO import StringIO
 
 
 blueprint = Blueprint('admin', __name__)
+
+
+from pybossa.repository.user_repository import UserRepository
+user_repo = UserRepository(db)
 
 
 def format_error(msg, status_code):
@@ -130,18 +133,12 @@ def users(user_id=None):
     """Manage users of PyBossa"""
     try:
         form = SearchForm(request.form)
-        users = db.session.query(model.user.User)\
-                  .filter(model.user.User.admin == True)\
-                  .filter(model.user.User.id != current_user.id)\
-                  .all()
+        users = [user for user in user_repo.filter_by(admin=True) if user.id != current_user.id]
 
         if request.method == 'POST' and form.user.data:
             query = '%' + form.user.data.lower() + '%'
-            found = db.session.query(model.user.User)\
-                      .filter(or_(func.lower(model.user.User.name).like(query),
-                                  func.lower(model.user.User.fullname).like(query)))\
-                      .filter(model.user.User.id != current_user.id)\
-                      .all()
+            found = [user for user in user_repo.search_by_name(query) if user.id != current_user.id]
+            print found
             require.user.update(found)
             if not found:
                 flash("<strong>Ooops!</strong> We didn't find a user "
@@ -152,7 +149,7 @@ def users(user_id=None):
 
         return render_template('/admin/users.html', found=[], users=users,
                                title=gettext("Manage Admin Users"), form=form)
-    except Exception as e:  # pragma: no cover
+    except Exception as e: # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
 
@@ -173,7 +170,7 @@ def export_users():
         return res
 
     def gen_json():
-        users = db.session.query(model.user.User).all()
+        users = user_repo.get_all()
         json_users = []
         for user in users:
             json_users.append(dictize_with_exportable_attributes(user))
@@ -195,7 +192,7 @@ def export_users():
 
     def gen_csv(out, writer, write_user):
         add_headers(writer)
-        for user in db.session.query(model.user.User).yield_per(1):
+        for user in user_repo.get_all():
             write_user(writer, user)
         yield out.getvalue()
 
@@ -223,8 +220,7 @@ def add_admin(user_id=None):
     """Add admin flag for user_id"""
     try:
         if user_id:
-            user = db.session.query(model.user.User)\
-                     .get(user_id)
+            user = user_repo.get(user_id)
             require.user.update(user)
             if user:
                 user.admin = True
@@ -245,8 +241,7 @@ def del_admin(user_id=None):
     """Del admin flag for user_id"""
     try:
         if user_id:
-            user = db.session.query(model.user.User)\
-                     .get(user_id)
+            user = user_repo.get(user_id)
             require.user.update(user)
             if user:
                 user.admin = False
