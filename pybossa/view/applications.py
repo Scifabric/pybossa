@@ -38,7 +38,6 @@ from pybossa.core import db, uploader, signer
 from pybossa.cache import ONE_DAY, ONE_HOUR
 from pybossa.model.app import App
 from pybossa.model.task import Task
-from pybossa.model.user import User
 from pybossa.util import Pagination, UnicodeWriter, admin_required, get_user_id_or_ip
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
@@ -57,6 +56,9 @@ import math
 import requests
 
 blueprint = Blueprint('app', __name__)
+
+from pybossa.repository.user_repository import UserRepository
+user_repo = UserRepository(db)
 
 
 class AvatarUploadForm(Form):
@@ -163,7 +165,7 @@ def app_by_shortname(short_name):
     app = cached_apps.get_app(short_name)
     if app.id:
         # Get owner
-        owner = User.query.get(app.owner_id)
+        owner = user_repo.get(app.owner_id)
         # Populate CACHE with the data of the app
         return (app,
                 owner,
@@ -1097,7 +1099,7 @@ def export_to(short_name):
                 raise e
             if package:
                 # Update the package
-                owner = User.query.get(app.owner_id)
+                owner = user_repo.get(app.owner_id)
                 package = ckan.package_update(app=app, user=owner, url=app_url,
                                               resources=package['resources'])
 
@@ -1115,7 +1117,7 @@ def export_to(short_name):
                 if not resource_found:
                     create_ckan_datastore(ckan, ty, package['id'])
             else:
-                owner = User.query.get(app.owner_id)
+                owner = user_repo.get(app.owner_id)
                 package = ckan.package_create(app=app, user=owner, url=app_url)
                 create_ckan_datastore(ckan, ty, package['id'])
                 #new_resource = ckan.resource_create(name=ty,
