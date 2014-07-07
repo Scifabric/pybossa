@@ -18,7 +18,6 @@
 
 from sqlalchemy import or_, func
 
-from pybossa.core import db
 from pybossa.model.user import User
 
 
@@ -54,5 +53,5 @@ class UserRepository(object):
         return self.db.session.query(User).count()
 
     def save(self, user):
-        db.session.add(user)
-        db.session.commit()
+        self.db.session.add(user)
+        self.db.session.commit()
