@@ -47,7 +47,10 @@ blueprint = Blueprint('admin', __name__)
 
 
 from pybossa.repository.user_repository import UserRepository
+from pybossa.repository.project_repository import ProjectRepository
 user_repo = UserRepository(db)
+project_repo = ProjectRepository(db)
+
 
 
 def format_error(msg, status_code):
@@ -84,36 +87,26 @@ def featured(app_id=None):
             return render_template('/admin/applications.html', apps=apps,
                                    categories=categories)
         else:
-            app = db.session.query(model.app.App).get(app_id)
+            app = project_repo.get(app_id)
             if app:
+                require.app.update(app)
                 if request.method == 'POST':
-                    cached_apps.reset()
-                    f = model.featured.Featured()
-                    f.app_id = app_id
-                    require.app.update(app)
-                    # Check if the app is already in this table
-                    tmp = db.session.query(model.featured.Featured)\
-                            .filter(model.featured.Featured.app_id == app_id)\
-                            .first()
-                    if (tmp is None):
-                        db.session.add(f)
-                        db.session.commit()
-                        return json.dumps(f.dictize())
-                    else:
+                    if app.is_featured():
                         msg = "App.id %s alreay in Featured table" % app_id
                         return format_error(msg, 415)
-                if request.method == 'DELETE':
                     cached_apps.reset()
-                    f = db.session.query(model.featured.Featured)\
-                          .filter(model.featured.Featured.app_id == app_id)\
-                          .first()
-                    if (f):
-                        db.session.delete(f)
-                        db.session.commit()
-                        return "", 204
-                    else:
+                    app.featured.append(model.featured.Featured())
+                    project_repo.save(app)
+                    return json.dumps(app.featured[0].dictize())
+
+                if request.method == 'DELETE':
+                    if not app.is_featured():
                         msg = 'App.id %s is not in Featured table' % app_id
                         return format_error(msg, 404)
+                    cached_apps.reset()
+                    app.featured.pop()
+                    project_repo.save(app)
+                    return "", 204
             else:
                 msg = 'App.id %s not found' % app_id
                 return format_error(msg, 404)
@@ -284,8 +277,7 @@ def categories():
                 category = model.category.Category(name=form.name.data,
                                           short_name=slug,
                                           description=form.description.data)
-                db.session.add(category)
-                db.session.commit()
+                project_repo.save_category(category)
                 cached_cat.reset()
                 msg = gettext("Category added")
                 flash(msg, 'success')
@@ -312,7 +304,7 @@ def categories():
 def del_category(id):
     """Deletes a category"""
     try:
-        category = db.session.query(model.category.Category).get(id)
+        category = project_repo.get_category(id)
         if category:
             if len(cached_cat.get_all()) > 1:
                 require.category.delete(category)
@@ -321,8 +313,7 @@ def del_category(id):
                                            title=gettext('Delete Category'),
                                            category=category)
                 if request.method == 'POST':
-                    db.session.delete(category)
-                    db.session.commit()
+                    project_repo.delete_category(category)
                     msg = gettext("Category deleted")
                     flash(msg, 'success')
                     cached_cat.reset()
@@ -348,7 +339,7 @@ def del_category(id):
 def update_category(id):
     """Updates a category"""
     try:
-        category = db.session.query(model.category.Category).get(id)
+        category = project_repo.get_category(id)
         if category:
             require.category.update(category)
             form = CategoryForm(obj=category)
@@ -365,9 +356,7 @@ def update_category(id):
                     new_category = model.category.Category(id=form.id.data,
                                                   name=form.name.data,
                                                   short_name=slug)
-                    # print new_category.id
-                    db.session.merge(new_category)
-                    db.session.commit()
+                    project_repo.update_category(new_category)
                     cached_cat.reset()
                     msg = gettext("Category updated")
                     flash(msg, 'success')
