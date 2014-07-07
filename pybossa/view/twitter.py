@@ -30,6 +30,9 @@ from pybossa.util import get_user_signup_method
 # are available
 blueprint = Blueprint('twitter', __name__)
 
+from pybossa.repository.user_repository import UserRepository
+user_repo = UserRepository(db)
+
 
 @blueprint.route('/', methods=['GET', 'POST'])
 def login():  # pragma: no cover
@@ -51,9 +54,7 @@ def manage_user(access_token, user_data, next_url):
     # Twitter API does not provide a way
     # to get the e-mail so we will ask for it
     # only the first time
-    user = db.session.query(User)\
-             .filter_by(twitter_user_id=user_data['user_id'])\
-             .first()
+    user = user_repo.get_by(twitter_user_id=user_data['user_id'])
 
     if user is not None:
         return user
@@ -61,9 +62,7 @@ def manage_user(access_token, user_data, next_url):
     twitter_token = dict(oauth_token=access_token['oauth_token'],
                          oauth_token_secret=access_token['oauth_token_secret'])
     info = dict(twitter_token=twitter_token)
-    user = db.session.query(User)\
-        .filter_by(name=user_data['screen_name'])\
-        .first()
+    user = user_repo.get_by_name(user_data['screen_name'])
 
     if user is not None:
         return None
@@ -73,8 +72,7 @@ def manage_user(access_token, user_data, next_url):
            email_addr=user_data['screen_name'],
            twitter_user_id=user_data['user_id'],
            info=info)
-    db.session.add(user)
-    db.session.commit()
+    user_repo.save(user)
     return user
 
 
@@ -108,9 +106,7 @@ def oauth_authorized(resp):  # pragma: no cover
     user = manage_user(access_token, user_data, next_url)
 
     if user is None:
-        user = db.session.query(User)\
-                 .filter_by(name=user_data['screen_name'])\
-                 .first()
+        user = user_repo.get_by_name(user_data['screen_name'])
         msg, method = get_user_signup_method(user)
         flash(msg, 'info')
         if method == 'local':
