@@ -317,6 +317,8 @@ def profile(name):
 
     """
     user = user_repo.get_by_name(name=name)
+    if user is None:
+        raise abort(404)
     if current_user.is_anonymous() or (user.id != current_user.id):
         return _show_public_profile(user)
     if current_user.is_authenticated() and user.id == current_user.id:
