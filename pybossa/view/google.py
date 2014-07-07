@@ -31,6 +31,10 @@ import requests
 # are available
 blueprint = Blueprint('google', __name__)
 
+from pybossa.repository.user_repository import UserRepository
+user_repo = UserRepository(db)
+
+
 @blueprint.route('/', methods=['GET', 'POST'])
 def login():  # pragma: no cover
     if request.args.get("next"):
@@ -54,22 +58,16 @@ def manage_user(access_token, user_data, next_url):
     """Manage the user after signin"""
     # We have to store the oauth_token in the session to get the USER fields
 
-    user = db.session.query(User)\
-             .filter_by(google_user_id=user_data['id'])\
-             .first()
+    user = user_repo.get_by(google_user_id=user_data['id'])
 
     # user never signed on
     if user is None:
         google_token = dict(oauth_token=access_token)
         info = dict(google_token=google_token)
-        user = db.session.query(User)\
-                 .filter_by(name=user_data['name'].encode('ascii', 'ignore')
-                                                  .lower().replace(" ", ""))\
-                 .first()
+        name = user_data['name'].encode('ascii', 'ignore').lower().replace(" ", "")
+        user = user_repo.get_by_name(name)
 
-        email = db.session.query(User)\
-                  .filter_by(email_addr=user_data['email'])\
-                  .first()
+        email = user_repo.get_by(email_addr=user_data['email'])
 
         if ((user is None) and (email is None)):
             user = User(fullname=user_data['name'],
@@ -78,8 +76,7 @@ def manage_user(access_token, user_data, next_url):
                    email_addr=user_data['email'],
                    google_user_id=user_data['id'],
                    info=info)
-            db.session.add(user)
-            db.session.commit()
+            user_repo.save(user)
             return user
         else:
             return None
@@ -87,8 +84,7 @@ def manage_user(access_token, user_data, next_url):
         # Update the name to fit with new paradigm to avoid UTF8 problems
         if type(user.name) == unicode or ' ' in user.name:
             user.name = user.name.encode('ascii', 'ignore').lower().replace(" ", "")
-            db.session.add(user)
-            db.session.commit()
+            user_repo.save(user)
         return user
 
 
@@ -122,14 +118,10 @@ def oauth_authorized(resp):  # pragma: no cover
     user = manage_user(access_token, user_data, next_url)
     if user is None:
         # Give a hint for the user
-        user = db.session.query(User)\
-                 .filter_by(email_addr=user_data['email'])\
-                 .first()
+        user = user_repo.get_by(email_addr=user_data['email'])
         if user is None:
-            user = db.session.query(User)\
-                     .filter_by(name=user_data['name'].encode('ascii', 'ignore')
-                                                      .lower().replace(' ', ''))\
-                     .first()
+            name = user_data['name'].encode('ascii', 'ignore').lower().replace(' ', '')
+            user = user_repo.get_by_name(name)
 
         msg, method = get_user_signup_method(user)
         flash(msg, 'info')
