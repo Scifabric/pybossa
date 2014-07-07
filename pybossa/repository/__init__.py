@@ -16,3 +16,17 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 # Cache global variables for timeouts
+
+""" This package exports the following repository objects as an abstraction
+layer between the ORM and the application:
+
+    * user_repo
+    * project_repo
+
+The responsibility of these repositories is only fetching one or many objects of
+a kind and/or saving them to the DB by calling the ORM apropriate methods.
+
+For more complex DB queries, refer to other packages or services within PyBossa."""
+
+from project_repository import ProjectRepository
+from user_repository import UserRepository
