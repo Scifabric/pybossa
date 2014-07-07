@@ -51,6 +51,9 @@ class UserRepository(object):
         return self.db.session.query(User).filter(or_(func.lower(User.name).like(keyword),
                                   func.lower(User.fullname).like(keyword))).all()
 
+    def total_users(self):
+        return self.db.session.query(User).count()
+
     def save(self, user):
         db.session.add(user)
         db.session.commit()

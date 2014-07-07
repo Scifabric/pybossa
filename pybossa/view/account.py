@@ -61,6 +61,9 @@ except ImportError:  # pragma: no cover
 
 blueprint = Blueprint('account', __name__)
 
+from pybossa.repository.user_repository import UserRepository
+user_repo = UserRepository(db)
+
 
 def get_update_feed():
     """Return update feed list."""
@@ -129,7 +132,7 @@ def signin():
     if request.method == 'POST' and form.validate():
         password = form.password.data
         email = form.email.data
-        user = model.user.User.query.filter_by(email_addr=email).first()
+        user = user_repo.get_by(email_addr=email)
         if user and user.check_password(password):
             login_user(user, remember=True)
             msg_1 = gettext("Welcome back") + " " + user.fullname
@@ -288,8 +291,7 @@ def register():
                              email_addr=form.email_addr.data)
         account.set_password(form.password.data)
         # account.locale = get_locale()
-        db.session.add(account)
-        db.session.commit()
+        user_repo.save(account)
         login_user(account, remember=True)
         flash(gettext('Thanks for signing-up'), 'success')
         return redirect(url_for('home.home'))
@@ -314,10 +316,7 @@ def profile(name):
     Returns a Jinja2 template with the user information.
 
     """
-    user = db.session.query(model.user.User).filter_by(name=name).first()
-    if user is None:
-        return abort(404)
-    if current_user.is_anonymous() or (user.id != current_user.id):
+    user = user_repo.get_by_name(name=name)
         return _show_public_profile(user)
     if current_user.is_authenticated() and user.id == current_user.id:
         return _show_own_profile(user)
@@ -353,6 +352,64 @@ def _show_own_profile(user):
                           apps_published=apps_published,
                           apps_draft=apps_draft)#,
                           #user=user)
+=======
+        user, apps_contributed, _ = cached_users.get_user_summary(name)
+        apps_created, apps_draft = _get_user_apps(user['id'])
+        if user:
+            title = "%s &middot; User Profile" % user['fullname']
+            return render_template('/account/public_profile.html',
+                                   title=title,
+                                   user=user,
+                                   apps=apps_contributed,
+                                   apps_created=apps_created)
+
+    # Show user profile page with admin, as it is the same user
+    if user.id == current_user.id and current_user.is_authenticated():
+        sql = text('''
+                   SELECT app.name, app.short_name, app.info,
+                   COUNT(*) as n_task_runs
+                   FROM task_run JOIN app ON
+                   (task_run.app_id=app.id) WHERE task_run.user_id=:user_id
+                   GROUP BY app.name, app.short_name, app.info
+                   ORDER BY n_task_runs DESC;''')
+
+        # results will have the following format
+        # (app.name, app.short_name, n_task_runs)
+        results = db.engine.execute(sql, user_id=current_user.id)
+
+        apps_contrib = []
+        for row in results:
+            app = dict(name=row.name, short_name=row.short_name,
+                       info=json.loads(row.info), n_task_runs=row.n_task_runs)
+            apps_contrib.append(app)
+
+        # Rank
+        # See: https://gist.github.com/tokumine/1583695
+        sql = text('''
+                   WITH global_rank AS (
+                        WITH scores AS (
+                            SELECT user_id, COUNT(*) AS score FROM task_run
+                            WHERE user_id IS NOT NULL GROUP BY user_id)
+                        SELECT user_id, score, rank() OVER (ORDER BY score desc)
+                        FROM scores)
+                   SELECT * from global_rank WHERE user_id=:user_id;
+                   ''')
+
+        results = db.engine.execute(sql, user_id=current_user.id)
+        for row in results:
+            user.rank = row.rank
+            user.score = row.score
+
+        user.total = user_repo.total_users()
+
+        apps_published, apps_draft = _get_user_apps(current_user.id)
+
+        return render_template('account/profile.html', title=gettext("Profile"),
+                              apps_contrib=apps_contrib,
+                              apps_published=apps_published,
+                              apps_draft=apps_draft,
+                              user=user)
+>>>>>>> Use repository to retrieve users
 
 
 @blueprint.route('/<name>/applications')
@@ -364,13 +421,13 @@ def applications(name):
     Returns a Jinja2 template with the list of projects of the user.
 
     """
-    user = User.query.filter_by(name=name).first()
+    user = user_repo.get_by_name(name=name)
     if not user:
         return abort(404)
     if current_user.name != name:
         return abort(403)
 
-    user = db.session.query(model.user.User).get(current_user.id)
+    user = user_repo.get(current_user.id)
     apps_published, apps_draft = _get_user_apps(user.id)
     apps_published.extend(cached_users.hidden_apps(user.id))
 
@@ -396,7 +453,7 @@ def update_profile(name):
     Returns Jinja2 template.
 
     """
-    user = User.query.filter_by(name=name).first()
+    user = user_repo.get_by_name(name=name)
     if not user:
         return abort(404)
     require.user.update(user)
@@ -495,7 +552,7 @@ def update_profile(name):
             update_form.ckan_api.data = user.ckan_api
             external_form = update_form
             if password_form.validate_on_submit():
-                user = db.session.query(model.user.User).get(current_user.id)
+                user = user_repo.get(current_user.id)
                 if user.check_password(password_form.current_password.data):
                     user.set_password(password_form.new_password.data)
                     db.session.add(user)
@@ -595,7 +652,7 @@ def reset_password():
     username = userdict.get('user')
     if not username or not userdict.get('password'):
         abort(403)
-    user = model.user.User.query.filter_by(name=username).first_or_404()
+    user = user_repo.get_by_name(name=username)
     if user.passwd_hash != userdict.get('password'):
         abort(403)
     form = ChangePasswordForm(request.form)
@@ -631,9 +688,7 @@ def forgot_password():
     """
     form = ForgotPasswordForm(request.form)
     if form.validate_on_submit():
-        user = model.user.User.query\
-                    .filter_by(email_addr=form.email_addr.data)\
-                    .first()
+        user = user_repo.get_by(email_addr=form.email_addr.data)
         if user and user.email_addr:
             msg = Message(subject='Account Recovery',
                           recipients=[user.email_addr])
@@ -682,14 +737,14 @@ def reset_api_key(name):
     Returns a Jinja2 template.
 
     """
-    user = User.query.filter_by(name=name).first()
+    user = user_repo.get_by_name(name=name)
     if not user:
         return abort(404)
     require.user.update(user)
     title = ("User: %s &middot; Settings"
              "- Reset API KEY") % current_user.fullname
     user.api_key = model.make_uuid()
-    db.session.commit()
+    user_repo.save(user)
     cached_users.delete_user_summary(user.name)
     msg = gettext('New API-KEY generated')
     flash(msg, 'success')
