@@ -18,9 +18,9 @@
 
 from sqlalchemy import or_, func
 
-from pybossa.core import db
 from pybossa.model.app import App
 from pybossa.model.featured import Featured
+from pybossa.model.category import Category
 
 
 
@@ -35,5 +35,21 @@ class ProjectRepository(object):
         return self.db.session.query(App).get(id)
 
     def save(self, project):
-        db.session.add(project)
-        db.session.commit()
+        self.db.session.add(project)
+        self.db.session.commit()
+
+    def get_cagetory(self, id):
+        return self.db.session.query(Category).get(id)
+
+    def save_category(self, category):
+        self.db.session.add(category)
+        self.db.session.commit()
+
+    def update_category(self, new_category):
+        self.db.merge(new_category)
+        self.db.session.commit()
+
+    def delete_category(self, category):
+        self.db.session.delete(category)
+        self.db.session.commit()
+
