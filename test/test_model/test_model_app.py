@@ -22,7 +22,7 @@ from mock import patch
 from pybossa.model.app import App
 from pybossa.model.user import User
 from sqlalchemy.exc import IntegrityError
-from factories import AppFactory
+from factories import AppFactory, FeaturedFactory
 
 
 class TestModelApp(Test):
@@ -123,3 +123,17 @@ class TestModelApp(Test):
         app = AppFactory.build(info={'passwd_hash': 'mypassword'})
 
         assert not app.check_password('notmypassword')
+
+    def test_is_featured_returns_true_if_featured(self):
+        """Test is featured returns true for a featured project"""
+        project = AppFactory.create()
+        FeaturedFactory.create(app=project)
+
+        assert project.is_featured() is True, "Project should be featured"
+
+
+    def test_is_featured_returns_false_if_not_featured(self):
+        """Test is featured returns false for a non-featured project"""
+        project = AppFactory.create()
+
+        assert project.is_featured() is False, "Project should not be featured"
