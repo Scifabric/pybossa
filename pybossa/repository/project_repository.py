@@ -38,7 +38,7 @@ class ProjectRepository(object):
         self.db.session.add(project)
         self.db.session.commit()
 
-    def get_cagetory(self, id):
+    def get_category(self, id):
         return self.db.session.query(Category).get(id)
 
     def save_category(self, category):
@@ -46,7 +46,7 @@ class ProjectRepository(object):
         self.db.session.commit()
 
     def update_category(self, new_category):
-        self.db.merge(new_category)
+        self.db.session.merge(new_category)
         self.db.session.commit()
 
     def delete_category(self, category):
