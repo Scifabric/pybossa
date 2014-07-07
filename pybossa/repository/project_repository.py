@@ -19,11 +19,12 @@
 from sqlalchemy import or_, func
 
 from pybossa.core import db
-from pybossa.model.user import User
+from pybossa.model.app import App
+from pybossa.model.featured import Featured
 
 
 
-class UserRepository(object):
+class ProjectRepository(object):
 
 
     def __init__(self, db):
@@ -31,28 +32,8 @@ class UserRepository(object):
 
 
     def get(self, id):
-        return self.db.session.query(User).get(id)
+        return self.db.session.query(App).get(id)
 
-    def get_by_name(self, name):
-        return self.db.session.query(User).filter_by(name=name).first()
-
-    def get_by(self, **attribute):
-        return self.db.session.query(User).filter_by(**attribute).first()
-
-    def get_all(self):
-        return self.db.session.query(User).all()
-
-    def filter_by(self, **filters):
-        users = self.db.session.query(User).filter_by(**filters).all()
-        return users
-
-    def search_by_name(self, keyword):
-        return self.db.session.query(User).filter(or_(func.lower(User.name).like(keyword),
-                                  func.lower(User.fullname).like(keyword))).all()
-
-    def total_users(self):
-        return self.db.session.query(User).count()
-
-    def save(self, user):
-        db.session.add(user)
+    def save(self, project):
+        db.session.add(project)
         db.session.commit()
