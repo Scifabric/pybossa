@@ -575,7 +575,7 @@ def details(short_name):
             raise abort(403)
         else:
             raise
-    redirect_to_password = check_if_password_is_required(app)
+    redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
 
@@ -783,7 +783,7 @@ def task_presenter(short_name, task_id):
             raise abort(403)
         else:  # pragma: no cover
             raise
-    redirect_to_password = check_if_password_is_required(app)
+    redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
 
@@ -868,7 +868,7 @@ def presenter(short_name):
             raise abort(403)
         else:  # pragma: no cover
             raise
-    redirect_to_password = check_if_password_is_required(app)
+    redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
 
@@ -904,7 +904,7 @@ def tutorial(short_name):
             return abort(403)
         else: # pragma: no cover
             raise
-    redirect_to_password = check_if_password_is_required(app)
+    redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
     return render_template('/applications/tutorial.html', title=title,
@@ -924,7 +924,7 @@ def export(short_name, task_id):
             raise abort(403)
         else: # pragma: no cover
             raise
-    redirect_to_password = check_if_password_is_required(app)
+    redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
 
@@ -948,7 +948,7 @@ def tasks(short_name):
 
     try:
         require.app.read(app)
-        redirect_to_password = check_if_password_is_required(app)
+        redirect_to_password = _check_if_redirect_to_password(app)
         if redirect_to_password:
             return redirect_to_password
         app = add_custom_contrib_button_to(app, get_user_id_or_ip())
@@ -1007,7 +1007,7 @@ def tasks_browse(short_name, page):
     require.app.read(app)
     if app.hidden:
         raise abort(403)
-    redirect_to_password = check_if_password_is_required(app)
+    redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
@@ -1071,7 +1071,7 @@ def export_to(short_name):
             raise abort(403)
         else: # pragma: no cover
             raise
-    redirect_to_password = check_if_password_is_required(app)
+    redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
 
@@ -1325,7 +1325,7 @@ def show_stats(short_name):
             raise abort(403)
         else: # pragma: no cover
             raise
-    redirect_to_password = check_if_password_is_required(app)
+    redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
 
@@ -1558,7 +1558,7 @@ def show_blogposts(short_name):
 
     blogposts = db.session.query(model.blogpost.Blogpost).filter_by(app_id=app.id).all()
     require.blogpost.read(app_id=app.id)
-    redirect_to_password = check_if_password_is_required(app)
+    redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
@@ -1580,7 +1580,7 @@ def show_blogpost(short_name, id):
     if blogpost is None:
         raise abort(404)
     require.blogpost.read(blogpost)
-    redirect_to_password = check_if_password_is_required(app)
+    redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
@@ -1708,7 +1708,7 @@ def delete_blogpost(short_name, id):
 
 
 
-def check_if_password_is_required(app):
+def _check_if_redirect_to_password(app):
     cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
     passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
     if passwd_mngr.password_needed(app, get_user_id_or_ip()):
