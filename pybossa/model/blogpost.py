@@ -30,11 +30,17 @@ class Blogpost(db.Model, DomainObject):
 
     __tablename__ = 'blogpost'
 
+    #: Blogpost ID
     id = Column(Integer, primary_key=True)
+    #: UTC timestamp when the blogpost is created
     created = Column(Text, default=make_timestamp)
+    #: Project.ID for the Blogpost
     app_id = Column(Integer, ForeignKey('app.id', ondelete='CASCADE'), nullable=False)
+    #: User.ID for the Blogpost
     user_id = Column(Integer, ForeignKey('user.id'))
+    #: Title of the Blogpost
     title = Column(Unicode(length=255), nullable=False)
+    #: Body of the Blogpost
     body = Column(UnicodeText, nullable=False)
 
 
