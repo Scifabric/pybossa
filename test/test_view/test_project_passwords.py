@@ -39,6 +39,48 @@ class TestProjectPassword(Test):
         reset_all_pk_sequences()
 
 
+    from pybossa.view.applications import redirect
+    @patch('pybossa.view.applications.redirect', wraps=redirect)
+    def test_password_view_func_post(self, redirect):
+        """Test when posting to /app/short_name/password and password is correct
+        the user is redirected to where they came from"""
+        app = AppFactory.create()
+        task = TaskFactory.create(app=app)
+        app.set_password('mysecret')
+        db.session.add(app)
+        db.session.commit()
+        user = UserFactory.create()
+        redirect_url = '/app/%s/task/%s' % (app.short_name, task.id)
+        url = '/app/%s/password?next=%s' % (app.short_name, redirect_url)
+
+        res = self.app.post(url, data={'password': 'mysecret'})
+        redirect.assert_called_with(redirect_url)
+
+
+    def test_password_view_func_post_wrong_passwd(self):
+        """Test when posting to /app/short_name/password and password is incorrect
+        an error message is flashed"""
+        app = AppFactory.create()
+        task = TaskFactory.create(app=app)
+        app.set_password('mysecret')
+        db.session.add(app)
+        db.session.commit()
+        user = UserFactory.create()
+        url = '/app/%s/password?next=/app/%s/task/%s' % (app.short_name, app.short_name, task.id)
+
+        res = self.app.post(url, data={'password': 'bad_passwd'})
+        assert 'Sorry, incorrect password' in res.data, "No error message shown"
+
+
+    def test_password_view_func_no_project(self):
+        """Test when receiving a request to a non-existing app, return 404"""
+        get_res = self.app.get('/app/noapp/password')
+        post_res = self.app.post('/app/noapp/password')
+
+        assert get_res.status_code == 404, get_res.status_code
+        assert post_res.status_code == 404, post_res.status_code
+
+
     def test_password_required_for_anonymous_contributors(self):
         """Test when an anonymous user wants to contribute to a password
         protected project is redirected to the password view"""
@@ -146,49 +188,9 @@ class TestProjectPassword(Test):
         assert 'Enter the password to contribute' not in res.data
 
 
-    from pybossa.view.applications import redirect
-    @patch('pybossa.view.applications.redirect', wraps=redirect)
-    def test_password_view_func_post(self, redirect):
-        """Test when posting to /app/short_name/password and password is correct
-        the user is redirected to where they came from"""
-        app = AppFactory.create()
-        task = TaskFactory.create(app=app)
-        app.set_password('mysecret')
-        db.session.add(app)
-        db.session.commit()
-        user = UserFactory.create()
-        redirect_url = '/app/%s/task/%s' % (app.short_name, task.id)
-        url = '/app/%s/password?next=%s' % (app.short_name, redirect_url)
-
-        res = self.app.post(url, data={'password': 'mysecret'})
-        redirect.assert_called_with(redirect_url)
-
-
-    def test_password_view_func_post_wrong_passwd(self):
-        """Test when posting to /app/short_name/password and password is incorrect
-        an error message is flashed"""
-        app = AppFactory.create()
-        task = TaskFactory.create(app=app)
-        app.set_password('mysecret')
-        db.session.add(app)
-        db.session.commit()
-        user = UserFactory.create()
-        url = '/app/%s/password?next=/app/%s/task/%s' % (app.short_name, app.short_name, task.id)
-
-        res = self.app.post(url, data={'password': 'bad_passwd'})
-        assert 'Sorry, incorrect password' in res.data, "No error message shown"
-
-
-    def test_password_view_func_no_project(self):
-        """Test when receiving a request to a non-existing app, return 404"""
-        get_res = self.app.get('/app/noapp/password')
-        post_res = self.app.post('/app/noapp/password')
-
-        assert get_res.status_code == 404, get_res.status_code
-        assert post_res.status_code == 404, post_res.status_code
-
-
-
+    endpoints_requiring_password = ('/', '/tutorial', '/1/results.json',
+                                    '/tasks/', '/tasks/browse', '/tasks/export',
+                                    '/stats', '/blog')
 
 
     def test_password_required_for_anonymous_users_to_see_project(self):
@@ -200,29 +202,11 @@ class TestProjectPassword(Test):
         db.session.add(app)
         db.session.commit()
 
-        res = self.app.get('/app/%s/' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data
+        for endpoint in self.endpoints_requiring_password:
+            res = self.app.get('/app/%s%s' % (app.short_name, endpoint),
+                               follow_redirects=True)
+            assert 'Enter the password to contribute' in res.data, endpoint
 
-        res = self.app.get('/app/%s/tutorial' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data
-
-        res = self.app.get('/app/%s/1/results.json' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data
-
-        res = self.app.get('/app/%s/tasks/' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data
-
-        res = self.app.get('/app/%s/tasks/browse' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data, res.status_code
-
-        res = self.app.get('/app/%s/tasks/export' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data
-
-        res = self.app.get('/app/%s/stats' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data
-
-        res = self.app.get('/app/%s/blog' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data
 
 
     def test_password_not_required_for_anonymous_users_to_see_project(self):
@@ -231,29 +215,10 @@ class TestProjectPassword(Test):
         app = AppFactory.create()
         TaskFactory.create(app=app)
 
-        res = self.app.get('/app/%s/' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/tutorial' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/1/results.json' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/tasks/' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/tasks/browse' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data, res.status_code
-
-        res = self.app.get('/app/%s/tasks/export' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/stats' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/blog' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
+        for endpoint in self.endpoints_requiring_password:
+            res = self.app.get('/app/%s%s' % (app.short_name, endpoint),
+                               follow_redirects=True)
+            assert 'Enter the password to contribute' not in res.data, endpoint
 
 
     @patch('pybossa.password_manager.current_user')
@@ -268,29 +233,10 @@ class TestProjectPassword(Test):
         user = UserFactory.create()
         configure_mock_current_user_from(user, mock_user)
 
-        res = self.app.get('/app/%s/' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data
-
-        res = self.app.get('/app/%s/tutorial' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data
-
-        res = self.app.get('/app/%s/1/results.json' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data
-
-        res = self.app.get('/app/%s/tasks/' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data
-
-        res = self.app.get('/app/%s/tasks/browse' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data, res.status_code
-
-        res = self.app.get('/app/%s/tasks/export' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data
-
-        res = self.app.get('/app/%s/stats' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data
-
-        res = self.app.get('/app/%s/blog' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' in res.data
+        for endpoint in self.endpoints_requiring_password:
+            res = self.app.get('/app/%s%s' % (app.short_name, endpoint),
+                               follow_redirects=True)
+            assert 'Enter the password to contribute' in res.data, endpoint
 
 
     @patch('pybossa.password_manager.current_user')
@@ -304,29 +250,10 @@ class TestProjectPassword(Test):
         user = UserFactory.create()
         configure_mock_current_user_from(user, mock_user)
 
-        res = self.app.get('/app/%s/' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/tutorial' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/1/results.json' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/tasks/' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/tasks/browse' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data, res.status_code
-
-        res = self.app.get('/app/%s/tasks/export' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/stats' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/blog' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
+        for endpoint in self.endpoints_requiring_password:
+            res = self.app.get('/app/%s%s' % (app.short_name, endpoint),
+                               follow_redirects=True)
+            assert 'Enter the password to contribute' not in res.data, endpoint
 
 
     @patch('pybossa.password_manager.current_user')
@@ -342,29 +269,10 @@ class TestProjectPassword(Test):
         db.session.add(app)
         db.session.commit()
 
-        res = self.app.get('/app/%s/' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/tutorial' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/1/results.json' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/tasks/' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/tasks/browse' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data, res.status_code
-
-        res = self.app.get('/app/%s/tasks/export' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/stats' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/blog' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
+        for endpoint in self.endpoints_requiring_password:
+            res = self.app.get('/app/%s%s' % (app.short_name, endpoint),
+                               follow_redirects=True)
+            assert 'Enter the password to contribute' not in res.data, endpoint
 
 
     @patch('pybossa.password_manager.current_user')
@@ -381,26 +289,7 @@ class TestProjectPassword(Test):
         db.session.add(app)
         db.session.commit()
 
-        res = self.app.get('/app/%s/' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/tutorial' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/1/results.json' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/tasks/' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/tasks/browse' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data, res.status_code
-
-        res = self.app.get('/app/%s/tasks/export' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/stats' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
-
-        res = self.app.get('/app/%s/blog' % app.short_name, follow_redirects=True)
-        assert 'Enter the password to contribute' not in res.data
+        for endpoint in self.endpoints_requiring_password:
+            res = self.app.get('/app/%s%s' % (app.short_name, endpoint),
+                               follow_redirects=True)
+            assert 'Enter the password to contribute' not in res.data, endpoint
