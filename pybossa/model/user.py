@@ -37,10 +37,14 @@ class User(db.Model, DomainObject, UserMixin):
     __tablename__ = 'user'
 
     id = Column(Integer, primary_key=True)
+    #: UTC timestamp of the user when it's created.
     created = Column(Text, default=make_timestamp)
     email_addr = Column(Unicode(length=254), unique=True, nullable=False)
+    #: Name of the user (this is used as the nickname).
     name = Column(Unicode(length=254), unique=True, nullable=False)
+    #: Fullname of the user.
     fullname = Column(Unicode(length=500), nullable=False)
+    #: Language used by the user in the PyBossa server.
     locale = Column(Unicode(length=254), default=u'en', nullable=False)
     api_key = Column(String(length=36), default=make_uuid, unique=True)
     passwd_hash = Column(Unicode(length=254), unique=True)

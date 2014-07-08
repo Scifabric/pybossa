@@ -13,6 +13,7 @@ understand how things fit together.
    :maxdepth: 2
 
    user/overview
+   user/pbs
    user/tutorial
    user/app_settings
    api
