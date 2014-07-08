@@ -18,11 +18,8 @@
 
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
-#from default import Test, db, with_context
-#from factories import AppFactory
-#from factories import reset_all_pk_sequences
+
 from mock import patch, MagicMock
-#from pybossa.model.app import App
 
 
 
@@ -81,5 +78,51 @@ class TestProjectPasswdManager(object):
         user_ip = '127.0.0.1'
 
         password_needed = self.psswd_mngr.password_needed(self.project, user_ip)
+
+        assert password_needed is False, password_needed
+
+
+    @patch('pybossa.password_manager.current_user')
+    def test_password_needed_auth_passwd_no_id(self, mock_user):
+        """Test password_needed should return True for an authenticated user and
+        a project with password, if the cookie does not contain the user id"""
+        mock_user.is_anonymous.return_value = False
+        mock_user.admin = False
+        mock_user.id = 2
+        self.cookie_handler.get_cookie_from.return_value = []
+        self.project.needs_password.return_value = True
+
+        password_needed = self.psswd_mngr.password_needed(self.project, mock_user.id)
+
+        self.cookie_handler.get_cookie_from.assert_called_with(self.project)
+        assert password_needed is True, password_needed
+
+
+    @patch('pybossa.password_manager.current_user')
+    def test_password_needed_auth_passwd_ip(self, mock_user):
+        """Test password_needed should return False for an authenticated user and
+        a project with password, if the cookie contains the user id"""
+        mock_user.is_anonymous.return_value = False
+        mock_user.admin = False
+        mock_user.id = 2
+        self.cookie_handler.get_cookie_from.return_value = [2]
+        self.project.needs_password.return_value = True
+
+        password_needed = self.psswd_mngr.password_needed(self.project, mock_user.id)
+
+        self.cookie_handler.get_cookie_from.assert_called_with(self.project)
+        assert password_needed is False, password_needed
+
+
+    @patch('pybossa.password_manager.current_user')
+    def test_password_needed_auth_no_passwd(self, mock_user):
+        """Test password_needed should return False for an authenticated user and
+        a project without password"""
+        mock_user.is_anonymous.return_value = False
+        mock_user.admin = False
+        mock_user.id = 2
+        self.project.needs_password.return_value = False
+
+        password_needed = self.psswd_mngr.password_needed(self.project, mock_user.id)
 
         assert password_needed is False, password_needed
