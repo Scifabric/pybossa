@@ -575,7 +575,11 @@ def details(short_name):
             raise abort(403)
         else:
             raise
-
+    cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
+    passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
+    if passwd_mngr.password_needed(app, get_user_id_or_ip()):
+        return redirect(url_for('.password_required',
+                                 short_name=short_name, next=request.path))
     title = app_title(app, None)
 
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
@@ -907,6 +911,11 @@ def tutorial(short_name):
             return abort(403)
         else: # pragma: no cover
             raise
+    cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
+    passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
+    if passwd_mngr.password_needed(app, get_user_id_or_ip()):
+        return redirect(url_for('.password_required',
+                                 short_name=short_name, next=request.path))
     return render_template('/applications/tutorial.html', title=title,
                            app=app, owner=owner)
 
@@ -924,6 +933,11 @@ def export(short_name, task_id):
             raise abort(403)
         else: # pragma: no cover
             raise
+    cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
+    passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
+    if passwd_mngr.password_needed(app, get_user_id_or_ip()):
+        return redirect(url_for('.password_required',
+                                 short_name=short_name, next=request.path))
 
     # Check if the task belongs to the app and exists
     task = db.session.query(model.task.Task).filter_by(app_id=app.id)\
@@ -945,8 +959,12 @@ def tasks(short_name):
 
     try:
         require.app.read(app)
+        cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
+        passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
+        if passwd_mngr.password_needed(app, get_user_id_or_ip()):
+            return redirect(url_for('.password_required',
+                                     short_name=short_name, next=request.path))
         app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-
         return render_template('/applications/tasks.html',
                                title=title,
                                app=app,
@@ -1002,6 +1020,11 @@ def tasks_browse(short_name, page):
     require.app.read(app)
     if app.hidden:
         raise abort(403)
+    cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
+    passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
+    if passwd_mngr.password_needed(app, get_user_id_or_ip()):
+        return redirect(url_for('.password_required',
+                                 short_name=short_name, next=request.path))
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     return respond()
 
@@ -1063,6 +1086,11 @@ def export_to(short_name):
             raise abort(403)
         else: # pragma: no cover
             raise
+    cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
+    passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
+    if passwd_mngr.password_needed(app, get_user_id_or_ip()):
+        return redirect(url_for('.password_required',
+                                 short_name=short_name, next=request.path))
 
     def respond():
         return render_template('/applications/export.html',
@@ -1314,6 +1342,11 @@ def show_stats(short_name):
             raise abort(403)
         else: # pragma: no cover
             raise
+    cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
+    passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
+    if passwd_mngr.password_needed(app, get_user_id_or_ip()):
+        return redirect(url_for('.password_required',
+                                 short_name=short_name, next=request.path))
 
     if not ((n_tasks > 0) and (n_task_runs > 0)):
         app = add_custom_contrib_button_to(app, get_user_id_or_ip())
@@ -1544,6 +1577,11 @@ def show_blogposts(short_name):
 
     blogposts = db.session.query(model.blogpost.Blogpost).filter_by(app_id=app.id).all()
     require.blogpost.read(app_id=app.id)
+    cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
+    passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
+    if passwd_mngr.password_needed(app, get_user_id_or_ip()):
+        return redirect(url_for('.password_required',
+                                 short_name=short_name, next=request.path))
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     return render_template('applications/blog.html', app=app,
                            owner=owner, blogposts=blogposts,
@@ -1563,6 +1601,11 @@ def show_blogpost(short_name, id):
     if blogpost is None:
         raise abort(404)
     require.blogpost.read(blogpost)
+    cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
+    passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
+    if passwd_mngr.password_needed(app, get_user_id_or_ip()):
+        return redirect(url_for('.password_required',
+                                 short_name=short_name, next=request.path))
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     return render_template('applications/blog_post.html',
                             app=app,
