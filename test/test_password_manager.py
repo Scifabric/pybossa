@@ -187,3 +187,25 @@ class TestProjectPasswdManager(object):
         password_needed = self.psswd_mngr.password_needed(self.project, mock_user.id)
 
         assert password_needed is False, password_needed
+
+
+    def test_validates(self):
+        """Test validates tells the project to check the password (not too much
+        logic in here)"""
+        password = '1234'
+
+        self.psswd_mngr.validates(password, self.project)
+
+        self.project.check_password.assert_called_with(password)
+
+
+    def test_update_response(self):
+        """Test update_response tells the cookie handler to update the response
+        with the project and user info"""
+        user = MagicMock()
+        response = MagicMock()
+
+        self.psswd_mngr.update_response(response, self.project, user)
+
+        self.cookie_handler.add_cookie_to.assert_called_with(response, self.project, user)
+
