@@ -145,7 +145,7 @@ class TestProjectPasswdManager(object):
 
 
     @patch('pybossa.password_manager.current_user')
-    def test_password_needed_owner_no_passwd(self, mock_user):
+    def test_password_needed_owner_passwd(self, mock_user):
         """Test password_needed returns False for project owner even it has a
         password"""
         mock_user.is_anonymous.return_value = False
@@ -175,8 +175,8 @@ class TestProjectPasswdManager(object):
 
 
     @patch('pybossa.password_manager.current_user')
-    def test_password_needed_owner_no_passwd(self, mock_user):
-        """Test password_needed returns False for project owner even project has
+    def test_password_needed_admin_passwd(self, mock_user):
+        """Test password_needed returns False for admins even project has
         a password"""
         mock_user.is_anonymous.return_value = False
         mock_user.admin = True
