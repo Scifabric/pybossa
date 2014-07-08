@@ -35,14 +35,22 @@ class Task(db.Model, DomainObject):
     __tablename__ = 'task'
 
 
+    #: Task.ID
     id = Column(Integer, primary_key=True)
+    #: UTC timestamp when the task was created.
     created = Column(Text, default=make_timestamp)
+    #: Project.ID that this task is associated with.
     app_id = Column(Integer, ForeignKey('app.id', ondelete='CASCADE'), nullable=False)
+    #: Task.state: ongoing or completed.
     state = Column(UnicodeText, default=u'ongoing')
     quorum = Column(Integer, default=0)
+    #: If the task is a calibration task
     calibration = Column(Integer, default=0)
+    #: Priority of the task from 0.0 to 1.0
     priority_0 = Column(Float, default=0)
+    #: Task.info field in JSON with the data for the task.
     info = Column(JSONType, default=dict)
+    #: Number of answers to collect for this task.
     n_answers = Column(Integer, default=30)
 
     task_runs = relationship(TaskRun, cascade='all, delete, delete-orphan', backref='task')
