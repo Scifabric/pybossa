@@ -32,7 +32,7 @@ from pybossa.util import get_user_signup_method
 # are available
 blueprint = Blueprint('facebook', __name__)
 
-from pybossa.repository.user_repository import UserRepository
+from pybossa.repository import UserRepository
 user_repo = UserRepository(db)
 
 

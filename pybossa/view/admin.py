@@ -46,8 +46,8 @@ from StringIO import StringIO
 blueprint = Blueprint('admin', __name__)
 
 
-from pybossa.repository.user_repository import UserRepository
-from pybossa.repository.project_repository import ProjectRepository
+from pybossa.repository import UserRepository
+from pybossa.repository import ProjectRepository
 user_repo = UserRepository(db)
 project_repo = ProjectRepository(db)
 

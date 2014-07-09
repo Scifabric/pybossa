@@ -52,7 +52,7 @@ from token import TokenAPI
 
 blueprint = Blueprint('api', __name__)
 
-from pybossa.repository.project_repository import ProjectRepository
+from pybossa.repository import ProjectRepository
 project_repo = ProjectRepository(db)
 
 cors_headers = ['Content-Type', 'Authorization']
