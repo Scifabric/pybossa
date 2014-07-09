@@ -52,6 +52,9 @@ from token import TokenAPI
 
 blueprint = Blueprint('api', __name__)
 
+from pybossa.repository.project_repository import ProjectRepository
+project_repo = ProjectRepository(db)
+
 cors_headers = ['Content-Type', 'Authorization']
 
 error = ErrorStatus()
@@ -102,7 +105,7 @@ def new_task(app_id):
     """Return a new task for a project."""
     # Check if the request has an arg:
     try:
-        app = db.session.query(model.app.App).get(app_id)
+        app = project_repo.get(app_id)
         if app is None:
             raise NotFound
         if request.args.get('offset'):
@@ -141,12 +144,9 @@ def user_progress(app_id=None, short_name=None):
     """
     if app_id or short_name:
         if short_name:
-            app = db.session.query(model.app.App)\
-                    .filter(model.app.App.short_name == short_name)\
-                    .first()
+            app = project_repo.get_by_shortname(short_name)
         if app_id:
-            app = db.session.query(model.app.App)\
-                    .get(app_id)
+            app = project_repo.get(app_id)
 
         if app:
             if current_user.is_anonymous():
