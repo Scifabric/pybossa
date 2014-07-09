@@ -57,12 +57,14 @@ import requests
 
 blueprint = Blueprint('app', __name__)
 
-from pybossa.repository.user_repository import UserRepository
-from pybossa.repository.project_repository import ProjectRepository
-from pybossa.repository.blog_repository import BlogRepository
+from pybossa.repository import UserRepository
+from pybossa.repository import ProjectRepository
+from pybossa.repository import BlogRepository
+from pybossa.repository import TaskRepository
 user_repo = UserRepository(db)
 project_repo = ProjectRepository(db)
 blog_repo = BlogRepository(db)
+task_repo = TaskRepository(db)
 
 
 class AvatarUploadForm(Form):
@@ -682,10 +684,9 @@ def _import_task(app, handler, form, render_forms):
             n_data += 1
             task = model.task.Task(app_id=app.id)
             [setattr(task, k, v) for k, v in task_data.iteritems()]
-            data = db.session.query(model.task.Task).filter_by(app_id=app.id).filter_by(info=task.info).first()
-            if data is None:
-                db.session.add(task)
-                db.session.commit()
+            found = task_repo.get_task_by(app_id=app.id, info=task.info)
+            if found is None:
+                task_repo.save(task)
                 n += 1
                 empty = False
         if empty and n_data == 0:
@@ -736,7 +737,9 @@ def password_required(short_name):
 def task_presenter(short_name, task_id):
     (app, owner,
      n_tasks, n_task_runs, overall_progress, last_activity) = app_by_shortname(short_name)
-    task = Task.query.filter_by(id=task_id).first_or_404()
+    task = task_repo.get_task(id=task_id)
+    if task is None:
+        raise abort(404)
     require.app.read(app)
     cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
     passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
@@ -779,18 +782,16 @@ def task_presenter(short_name, task_id):
     #return render_template('/applications/presenter.html', app = app)
     # Check if the user has submitted a task before
 
-    tr_search = db.session.query(model.task_run.TaskRun)\
-                  .filter(model.task_run.TaskRun.task_id == task_id)\
-                  .filter(model.task_run.TaskRun.app_id == app.id)
+    search_attrs = dict(task_id=task_id, app_id=app.id)
 
     if current_user.is_anonymous():
         remote_addr = request.remote_addr or "127.0.0.1"
-        tr = tr_search.filter(model.task_run.TaskRun.user_ip == remote_addr)
+        search_attrs['user_ip'] = remote_addr
     else:
-        tr = tr_search.filter(model.task_run.TaskRun.user_id == current_user.id)
+        search_attrs['user_id'] = current_user.id
 
-    tr_first = tr.first()
-    if tr_first is None:
+    taskrun = task_repo.get_task_run_by(**search_attrs)
+    if taskrun is None:
         return respond('/applications/presenter.html')
     else:
         return respond('/applications/task/done.html')
@@ -866,11 +867,9 @@ def export(short_name, task_id):
 
 
     # Check if the task belongs to the app and exists
-    task = db.session.query(model.task.Task).filter_by(app_id=app.id)\
-                                       .filter_by(id=task_id).first()
+    task = task_repo.get_task_by(app_id=app.id, id=task_id)
     if task:
-        taskruns = db.session.query(model.task_run.TaskRun).filter_by(task_id=task_id)\
-                             .filter_by(app_id=app.id).all()
+        taskruns = task_repo.filter_task_runs_by(task_id=task_id, app_id=app.id)
         results = [tr.dictize() for tr in taskruns]
         return Response(json.dumps(results), mimetype='application/json')
     else:
@@ -908,24 +907,19 @@ def tasks_browse(short_name, page):
 
     def respond():
         per_page = 10
-        count = db.session.query(model.task.Task)\
-            .filter_by(app_id=app.get('id'))\
-            .count()
-        app_tasks = db.session.query(model.task.Task)\
-            .filter_by(app_id=app.get('id'))\
-            .order_by(model.task.Task.id)\
-            .limit(per_page)\
-            .offset((page - 1) * per_page)\
-            .all()
+        count = task_repo.count_tasks_with(app_id=app.get('id'))
+        app_tasks = task_repo.filter_tasks_by(app_id=app.get('id'))
+        tasks = sorted(app_tasks, key=lambda task: task.id)
+        tasks = tasks[(page - 1) * per_page:page * per_page]
 
-        if not app_tasks and page != 1:
+        if not tasks and page != 1:
             abort(404)
 
         pagination = Pagination(page, per_page, count)
         return render_template('/applications/tasks_browse.html',
                                app=app,
                                owner=owner,
-                               tasks=app_tasks,
+                               tasks=tasks,
                                title=title,
                                pagination=pagination,
                                n_tasks=n_tasks,
@@ -962,10 +956,8 @@ def delete_tasks(short_name):
                                last_activity=last_activity,
                                title=title)
     else:
-        tasks = db.session.query(model.task.Task).filter_by(app_id=app.id).all()
-        for t in tasks:
-            db.session.delete(t)
-        db.session.commit()
+        tasks = task_repo.filter_tasks_by(app_id=app.id)
+        task_repo.delete_all(tasks)
         msg = gettext("All the tasks and associated task runs have been deleted")
         flash(msg, 'success')
         cached_apps.delete_last_activity(app.id)
@@ -1002,12 +994,10 @@ def export_to(short_name):
 
 
     def gen_json(table):
-        n = db.session.query(table)\
-            .filter_by(app_id=app.id).count()
+        n = getattr(task_repo, 'count_%ss_with' % table)(app_id=app.id)
         sep = ", "
         yield "["
-        for i, tr in enumerate(db.session.query(table)
-                                 .filter_by(app_id=app.id).yield_per(1), 1):
+        for i, tr in enumerate(getattr(task_repo, 'yield_filter_%ss_by' % table)(app_id=app.id), 1):
             item = json.dumps(tr.dictize())
             if (i == n):
                 sep = ""
@@ -1054,37 +1044,29 @@ def export_to(short_name):
         writer.writerow(format_csv_properly(t.dictize(), ty='taskrun'))
 
     def get_csv(out, writer, table, handle_row):
-        for tr in db.session.query(table)\
-                .filter_by(app_id=app.id)\
-                .yield_per(1):
+        for tr in getattr(task_repo, 'yield_filter_%ss_by' % table)(app_id=app.id):
             handle_row(writer, tr)
         yield out.getvalue()
 
     def respond_json(ty):
-        tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}
-        try:
-            table = tables[ty]
-        except KeyError:
+        if ty not in ['task', 'task_run']:
             return abort(404)
-
         tmp = 'attachment; filename=%s_%s.json' % (app.short_name, ty)
-        res = Response(gen_json(table), mimetype='application/json')
+        res = Response(gen_json(ty), mimetype='application/json')
         res.headers['Content-Disposition'] = tmp
         return res
 
     def create_ckan_datastore(ckan, table, package_id):
-        tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}
         new_resource = ckan.resource_create(name=table,
                                             package_id=package_id)
         ckan.datastore_create(name=table,
                               resource_id=new_resource['result']['id'])
         ckan.datastore_upsert(name=table,
-                              records=gen_json(tables[table]),
+                              records=gen_json(table),
                               resource_id=new_resource['result']['id'])
 
     def respond_ckan(ty):
         # First check if there is a package (dataset) in CKAN
-        tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}
         msg_1 = gettext("Data exported to ")
         msg = msg_1 + "%s ..." % current_app.config['CKAN_URL']
         ckan = Ckan(url=current_app.config['CKAN_URL'],
@@ -1108,7 +1090,7 @@ def export_to(short_name):
                         ckan.datastore_delete(name=ty, resource_id=r['id'])
                         ckan.datastore_create(name=ty, resource_id=r['id'])
                         ckan.datastore_upsert(name=ty,
-                                              records=gen_json(tables[ty]),
+                                              records=gen_json(ty),
                                               resource_id=r['id'])
                         resource_found = True
                         break
@@ -1123,7 +1105,7 @@ def export_to(short_name):
                 #ckan.datastore_create(name=ty,
                 #                      resource_id=new_resource['result']['id'])
                 #ckan.datastore_upsert(name=ty,
-                #                     records=gen_json(tables[ty]),
+                #                     records=gen_json(ty),
                 #                     resource_id=new_resource['result']['id'])
             flash(msg, 'success')
             return respond()
@@ -1164,9 +1146,7 @@ def export_to(short_name):
 
         out = StringIO()
         writer = UnicodeWriter(out)
-        t = db.session.query(table)\
-            .filter_by(app_id=app.id)\
-            .first()
+        t = getattr(task_repo, 'get_%s_by' % ty)(app_id=app.id)
         if t is not None:
             if test(t):
                 tmp = t.dictize().keys()
@@ -1185,7 +1165,7 @@ def export_to(short_name):
                 keys = task_keys + task_info_keys
                 writer.writerow(sorted(keys))
 
-            res = Response(get_csv(out, writer, table, handle_row),
+            res = Response(get_csv(out, writer, ty, handle_row),
                            mimetype='text/csv')
             tmp = 'attachment; filename=%s_%s.csv' % (app.short_name, ty)
             res.headers['Content-Disposition'] = tmp
@@ -1409,18 +1389,14 @@ def task_priority(short_name):
     if request.method == 'GET':
         return respond()
     if request.method == 'POST' and form.validate():
-        tasks = []
         for task_id in form.task_ids.data.split(","):
             if task_id != '':
-                t = db.session.query(model.task.Task).filter_by(app_id=app.id)\
-                              .filter_by(id=int(task_id)).first()
+                t = task_repo.get_task_by(app_id=app.id, id=int(task_id))
                 if t:
                     t.priority_0 = form.priority_0.data
-                    tasks.append(t)
+                    task_repo.save(t)
                 else:  # pragma: no cover
                     flash(gettext(("Ooops, Task.id=%s does not belong to the app" % task_id)), 'danger')
-        db.session.add_all(tasks)
-        db.session.commit()
         cached_apps.delete_app(app.short_name)
         flash(gettext("Task priority has been changed"), 'success')
         return respond()
