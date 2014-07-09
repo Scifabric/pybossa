@@ -37,6 +37,12 @@ class ProjectRepository(object):
     def get_by_shortname(self, short_name):
         return self.db.session.query(App).filter_by(short_name=short_name).first()
 
+    def get_by(self, **attribute):
+        return self.db.session.query(App).filter_by(**attribute).first()
+
+    def get_all(self):
+        return self.db.session.query(App).all()
+
     def save(self, project):
         self.db.session.add(project)
         self.db.session.commit()
@@ -48,6 +54,8 @@ class ProjectRepository(object):
     def delete(self, project):
         self.db.session.query(App).filter(App.id==project.id).delete()
         self.db.session.commit()
+
+
 
     def get_category(self, id=None):
         if id is None:
