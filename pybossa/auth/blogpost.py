@@ -17,8 +17,10 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask.ext.login import current_user
-import pybossa.model as model
 from pybossa.core import db
+
+from pybossa.repository.project_repository import ProjectRepository
+project_repo = ProjectRepository(db)
 
 
 def create(blogpost=None, app_id=None):
@@ -53,5 +55,5 @@ def delete(blogpost):
 
 def _get_app(blogpost, app_id):
     if blogpost is not None:
-        return db.session.query(model.app.App).get(blogpost.app_id)
-    return db.session.query(model.app.App).get(app_id)
+        return project_repo.get(blogpost.app_id)
+    return project_repo.get(app_id)
