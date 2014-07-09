@@ -58,7 +58,9 @@ import requests
 blueprint = Blueprint('app', __name__)
 
 from pybossa.repository.user_repository import UserRepository
+from pybossa.repository.project_repository import ProjectRepository
 user_repo = UserRepository(db)
+project_repo = ProjectRepository(db)
 
 
 class AvatarUploadForm(Form):
@@ -190,7 +192,7 @@ def redirect_old_featured(page):
 @blueprint.route('/published/<int:page>/', defaults={'page': 1})
 def redirect_old_published(page):  # pragma: no cover
     """DEPRECATED only to redirect old links"""
-    category = db.session.query(model.category.Category).first()
+    category = project_repo.get_category()
     return redirect(url_for('.app_cat_index', category=category.short_name, page=page), 301)
 
 
@@ -247,8 +249,7 @@ def app_index(page, lookup, category, fallback, use_count):
                                     short_name='draft',
                                     description='Draft projects')
     else:
-        active_cat = db.session.query(model.category.Category)\
-                       .filter_by(short_name=category).first()
+        active_cat = project_repo.get_category_by(short_name=category)
 
     # Check if we have to add the section Featured to local nav
     if cached_apps.n_featured() > 0:
@@ -322,8 +323,7 @@ def new():
                     info=info,
                     category_id=category_by_default.id)
 
-    db.session.add(app)
-    db.session.commit()
+    project_repo.save(app)
 
     msg_1 = gettext('Project created!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')
@@ -351,10 +351,9 @@ def task_presenter_editor(short_name):
     form = TaskPresenterForm(request.form)
     form.id.data = app.id
     if request.method == 'POST' and form.validate():
-        db_app = db.session.query(model.app.App).filter_by(id=app.id).first()
+        db_app = project_repo.get(app.id)
         db_app.info['task_presenter'] = form.editor.data
-        db.session.add(db_app)
-        db.session.commit()
+        project_repo.save(db_app)
         cached_apps.delete_app(app.short_name)
         msg_1 = gettext('Task presenter added!')
         flash('<i class="icon-ok"></i> ' + msg_1, 'success')
@@ -439,9 +438,7 @@ def delete(short_name):
     # Clean cache
     cached_apps.delete_app(app.short_name)
     cached_apps.clean(app.id)
-    app = App.query.get(app.id)
-    db.session.delete(app)
-    db.session.commit()
+    project_repo.delete(app)
     flash(gettext('Project deleted!'), 'success')
     return redirect(url_for('account.profile', name=current_user.name))
 
@@ -471,8 +468,7 @@ def update(short_name):
             category_id=form.category_id.data)
 
         new_application.set_password(form.password.data)
-        db.session.merge(new_application)
-        db.session.commit()
+        project_repo.update(new_application)
         cached_apps.delete_app(short_name)
         cached_apps.reset()
         cached_cat.reset()
@@ -488,7 +484,7 @@ def update(short_name):
     if request.method == 'GET':
         form = AppUpdateForm(obj=app)
         upload_form = AvatarUploadForm()
-        categories = db.session.query(model.category.Category).all()
+        categories = project_repo.get_all_categories()
         form.category_id.choices = [(c.id, c.name) for c in categories]
         if app.category_id is None:
             app.category_id = categories[0].id
@@ -506,7 +502,7 @@ def update(short_name):
             flash(gettext('Please correct the errors'), 'error')
         else:
             if upload_form.validate_on_submit():
-                app = App.query.get(app.id)
+                app = project_repo.get(app.id)
                 file = request.files['avatar']
                 coordinates = (upload_form.x1.data, upload_form.y1.data,
                                upload_form.x2.data, upload_form.y2.data)
@@ -521,7 +517,7 @@ def update(short_name):
                     uploader.delete_file(app.info['thumbnail'], container)
                 app.info['thumbnail'] = file.filename
                 app.info['container'] = container
-                db.session.commit()
+                project_repo.save(app)
                 cached_apps.delete_app(app.short_name)
                 flash(gettext('Your project thumbnail has been updated! It may \
                                   take some minutes to refresh...'), 'success')
@@ -1378,11 +1374,10 @@ def task_scheduler(short_name):
         return respond()
 
     if request.method == 'POST' and form.validate():
-        app = App.query.filter_by(short_name=app.short_name).first()
+        app = project_repo.get_by_shortname(short_name=app.short_name)
         if form.sched.data:
             app.info['sched'] = form.sched.data
-        db.session.add(app)
-        db.session.commit()
+        project_repo.save(app)
         cached_apps.delete_app(app.short_name)
         msg = gettext("Project Task Scheduler updated!")
         flash(msg, 'success')
