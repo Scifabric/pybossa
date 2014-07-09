@@ -17,16 +17,18 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask.ext.login import current_user
-from pybossa.model.task_run import TaskRun
 from flask import abort
+from pybossa.core import db
+
+from pybossa.repository import TaskRepository
+task_repo = TaskRepository(db)
 
 
 def create(taskrun=None):
-    authorized = (TaskRun.query.filter_by(app_id=taskrun.app_id)
-                    .filter_by(task_id=taskrun.task_id)
-                    .filter_by(user=taskrun.user)
-                    .filter_by(user_ip=taskrun.user_ip)
-                    .first()) is None
+    authorized = task_repo.get_task_run_by(app_id=taskrun.app_id,
+                                           task_id=taskrun.task_id,
+                                           user=taskrun.user,
+                                           user_ip=taskrun.user_ip) is None
     if not authorized:
         raise abort(403)
     return authorized
