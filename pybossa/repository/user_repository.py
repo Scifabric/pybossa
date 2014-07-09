@@ -35,15 +35,14 @@ class UserRepository(object):
     def get_by_name(self, name):
         return self.db.session.query(User).filter_by(name=name).first()
 
-    def get_by(self, **attribute):
-        return self.db.session.query(User).filter_by(**attribute).first()
+    def get_by(self, **attributes):
+        return self.db.session.query(User).filter_by(**attributes).first()
 
     def get_all(self):
         return self.db.session.query(User).all()
 
     def filter_by(self, **filters):
-        users = self.db.session.query(User).filter_by(**filters).all()
-        return users
+        return self.db.session.query(User).filter_by(**filters).all()
 
     def search_by_name(self, keyword):
         return self.db.session.query(User).filter(or_(func.lower(User.name).like(keyword),

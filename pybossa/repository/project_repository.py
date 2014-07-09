@@ -16,8 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from sqlalchemy import or_, func
-
 from pybossa.model.app import App
 from pybossa.model.featured import Featured
 from pybossa.model.category import Category
@@ -37,8 +35,8 @@ class ProjectRepository(object):
     def get_by_shortname(self, short_name):
         return self.db.session.query(App).filter_by(short_name=short_name).first()
 
-    def get_by(self, **attribute):
-        return self.db.session.query(App).filter_by(**attribute).first()
+    def get_by(self, **attributes):
+        return self.db.session.query(App).filter_by(**attributes).first()
 
     def get_all(self):
         return self.db.session.query(App).all()
@@ -62,8 +60,8 @@ class ProjectRepository(object):
             return self.db.session.query(Category).first()
         return self.db.session.query(Category).get(id)
 
-    def get_category_by(self, **attribute):
-        return self.db.session.query(Category).filter_by(**attribute).first()
+    def get_category_by(self, **attributes):
+        return self.db.session.query(Category).filter_by(**attributes).first()
 
     def get_all_categories(self):
         return self.db.session.query(Category).all()
