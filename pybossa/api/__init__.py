@@ -53,7 +53,9 @@ from token import TokenAPI
 blueprint = Blueprint('api', __name__)
 
 from pybossa.repository import ProjectRepository
+from pybossa.repository import TaskRepository
 project_repo = ProjectRepository(db)
+task_repo = TaskRepository(db)
 
 cors_headers = ['Content-Type', 'Authorization']
 
@@ -149,17 +151,14 @@ def user_progress(app_id=None, short_name=None):
             app = project_repo.get(app_id)
 
         if app:
+            query_attrs = dict(app_id=app.id)
             if current_user.is_anonymous():
-                tr = db.session.query(model.task_run.TaskRun)\
-                       .filter(model.task_run.TaskRun.app_id == app.id)\
-                       .filter(model.task_run.TaskRun.user_ip == request.remote_addr)
+                query_attrs['user_ip'] = request.remote_addr
             else:
-                tr = db.session.query(model.task_run.TaskRun)\
-                       .filter(model.task_run.TaskRun.app_id == app.id)\
-                       .filter(model.task_run.TaskRun.user_id == current_user.id)
-            tasks = db.session.query(model.task.Task)\
-                .filter(model.task.Task.app_id == app.id)
-            tmp = dict(done=tr.count(), total=tasks.count())
+                query_attrs['user_id'] = current_user.id
+            taskrun_count = task_repo.count_task_runs_with(**query_attrs)
+            task_count = task_repo.count_tasks_with(app_id=app.id)
+            tmp = dict(done=taskrun_count, total=task_count)
             return Response(json.dumps(tmp), mimetype="application/json")
         else:
             return abort(404)
