@@ -31,3 +31,4 @@ For more complex DB queries, refer to other packages or services within PyBossa.
 from project_repository import ProjectRepository
 from user_repository import UserRepository
 from blog_repository import BlogRepository
+from task_repository import TaskRepository
