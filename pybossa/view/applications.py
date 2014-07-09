@@ -59,8 +59,10 @@ blueprint = Blueprint('app', __name__)
 
 from pybossa.repository.user_repository import UserRepository
 from pybossa.repository.project_repository import ProjectRepository
+from pybossa.repository.blog_repository import BlogRepository
 user_repo = UserRepository(db)
 project_repo = ProjectRepository(db)
+blog_repo = BlogRepository(db)
 
 
 class AvatarUploadForm(Form):
@@ -1432,7 +1434,7 @@ def show_blogposts(short_name):
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
 
-    blogposts = db.session.query(model.blogpost.Blogpost).filter_by(app_id=app.id).all()
+    blogposts = blog_repo.filter_by(app_id=app.id)
     require.blogpost.read(app_id=app.id)
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     return render_template('applications/blog.html', app=app,
@@ -1448,8 +1450,7 @@ def show_blogposts(short_name):
 def show_blogpost(short_name, id):
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
-    blogpost = db.session.query(model.blogpost.Blogpost).filter_by(id=id,
-                                                        app_id=app.id).first()
+    blogpost = blog_repo.get_by(id=id, app_id=app.id)
     if blogpost is None:
         raise abort(404)
     require.blogpost.read(blogpost)
@@ -1502,8 +1503,7 @@ def new_blogpost(short_name):
                                 user_id=current_user.id,
                                 app_id=app.id)
     require.blogpost.create(blogpost)
-    db.session.add(blogpost)
-    db.session.commit()
+    blog_repo.save(blogpost)
     cached_apps.delete_app(short_name)
 
     msg_1 = gettext('Blog post created!')
@@ -1518,8 +1518,7 @@ def update_blogpost(short_name, id):
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
 
-    blogpost = db.session.query(model.blogpost.Blogpost).filter_by(id=id,
-                                                        app_id=app.id).first()
+    blogpost = blog_repo.get_by(id=id, app_id=app.id)
     if blogpost is None:
         raise abort(404)
 
@@ -1550,8 +1549,7 @@ def update_blogpost(short_name, id):
                                 body=form.body.data,
                                 user_id=current_user.id,
                                 app_id=app.id)
-    db.session.merge(blogpost)
-    db.session.commit()
+    blog_repo.update(blogpost)
     cached_apps.delete_app(short_name)
 
     msg_1 = gettext('Blog post updated!')
@@ -1564,14 +1562,12 @@ def update_blogpost(short_name, id):
 @login_required
 def delete_blogpost(short_name, id):
     app = app_by_shortname(short_name)[0]
-    blogpost = db.session.query(model.blogpost.Blogpost).filter_by(id=id,
-                                                        app_id=app.id).first()
+    blogpost = blog_repo.get_by(id=id, app_id=app.id)
     if blogpost is None:
         raise abort(404)
 
     require.blogpost.delete(blogpost)
-    db.session.delete(blogpost)
-    db.session.commit()
+    blog_repo.delete(blogpost)
     cached_apps.delete_app(short_name)
     flash('<i class="icon-ok"></i> ' + 'Blog post deleted!', 'success')
     return redirect(url_for('.show_blogposts', short_name=short_name))
