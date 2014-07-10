@@ -55,5 +55,6 @@ class BlogRepository(object):
             raise
 
     def delete(self, project):
-        self.db.session.query(Blogpost).filter(Blogpost.id==project.id).delete()
+        blog = self.db.session.query(Blogpost).filter(Blogpost.id==project.id).first()
+        self.db.sesion.delete(blog)
         self.db.session.commit()

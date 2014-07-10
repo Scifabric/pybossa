@@ -63,7 +63,8 @@ class ProjectRepository(object):
             raise
 
     def delete(self, project):
-        self.db.session.query(App).filter(App.id==project.id).delete()
+        app = self.db.session.query(App).filter(App.id==project.id).first()
+        self.db.session.delete(app)
         self.db.session.commit()
 
 

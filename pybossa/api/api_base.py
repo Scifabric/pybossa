@@ -213,12 +213,14 @@ class APIBase(MethodView):
         """
         try:
             self.valid_args()
-            inst = db.session.query(self.__class__).get(id)
+            repo = repos[self.__class__.__name__]['repo']
+            query_func = repos[self.__class__.__name__]['get']
+            inst = getattr(repo, query_func)(id)
             if inst is None:
                 raise NotFound
             getattr(require, self.__class__.__name__.lower()).delete(inst)
-            db.session.delete(inst)
-            db.session.commit()
+            delete_func = repos[self.__class__.__name__]['delete']
+            getattr(repo, delete_func)(inst)
             self._refresh_cache(inst)
             return '', 204
         except Exception as e:
