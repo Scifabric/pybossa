@@ -17,6 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from sqlalchemy import or_, func
+from sqlalchemy.exc import IntegrityError
 
 from pybossa.model.user import User
 
@@ -54,6 +55,14 @@ class UserRepository(object):
     def save(self, user):
         try:
             self.db.session.add(user)
+            self.db.session.commit()
+        except IntegrityError:
+            self.db.session.rollback()
+            raise
+
+    def update(self, new_user):
+        try:
+            self.db.session.merge(new_user)
             self.db.session.commit()
         except IntegrityError:
             self.db.session.rollback()

@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
+from sqlalchemy.exc import IntegrityError
+
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 
@@ -65,6 +67,14 @@ class TaskRepository(object):
     def save(self, element):
         try:
             self.db.session.add(element)
+            self.db.session.commit()
+        except IntegrityError:
+            self.db.session.rollback()
+            raise
+
+    def update(self, element):
+        try:
+            self.db.session.merge(element)
             self.db.session.commit()
         except IntegrityError:
             self.db.session.rollback()
