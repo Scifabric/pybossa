@@ -57,10 +57,10 @@ import requests
 
 blueprint = Blueprint('app', __name__)
 
-from pybossa.repository import UserRepository
-from pybossa.repository import ProjectRepository
-from pybossa.repository import BlogRepository
-from pybossa.repository import TaskRepository
+from pybossa.repositories import UserRepository
+from pybossa.repositories import ProjectRepository
+from pybossa.repositories import BlogRepository
+from pybossa.repositories import TaskRepository
 user_repo = UserRepository(db)
 project_repo = ProjectRepository(db)
 blog_repo = BlogRepository(db)

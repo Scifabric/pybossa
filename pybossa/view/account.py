@@ -61,7 +61,7 @@ except ImportError:  # pragma: no cover
 
 blueprint = Blueprint('account', __name__)
 
-from pybossa.repository import UserRepository
+from pybossa.repositories import UserRepository
 user_repo = UserRepository(db)
 
 

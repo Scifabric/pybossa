@@ -37,9 +37,9 @@ from pybossa.hateoas import Hateoas
 from pybossa.ratelimit import ratelimit
 from pybossa.error import ErrorStatus
 
-from pybossa.repository import UserRepository
-from pybossa.repository import ProjectRepository
-from pybossa.repository import TaskRepository
+from pybossa.repositories import UserRepository
+from pybossa.repositories import ProjectRepository
+from pybossa.repositories import TaskRepository
 user_repo = UserRepository(db)
 project_repo = ProjectRepository(db)
 task_repo = TaskRepository(db)

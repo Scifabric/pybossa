@@ -30,7 +30,7 @@ from pybossa.util import get_user_signup_method
 # are available
 blueprint = Blueprint('twitter', __name__)
 
-from pybossa.repository import UserRepository
+from pybossa.repositories import UserRepository
 user_repo = UserRepository(db)
 
 

@@ -31,7 +31,7 @@ import requests
 # are available
 blueprint = Blueprint('google', __name__)
 
-from pybossa.repository import UserRepository
+from pybossa.repositories import UserRepository
 user_repo = UserRepository(db)
 
 

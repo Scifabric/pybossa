@@ -19,7 +19,7 @@
 from flask.ext.login import current_user
 from pybossa.core import db
 
-from pybossa.repository import ProjectRepository
+from pybossa.repositories import ProjectRepository
 project_repo = ProjectRepository(db)
 
 

@@ -52,8 +52,8 @@ from token import TokenAPI
 
 blueprint = Blueprint('api', __name__)
 
-from pybossa.repository import ProjectRepository
-from pybossa.repository import TaskRepository
+from pybossa.repositories import ProjectRepository
+from pybossa.repositories import TaskRepository
 project_repo = ProjectRepository(db)
 task_repo = TaskRepository(db)
 
