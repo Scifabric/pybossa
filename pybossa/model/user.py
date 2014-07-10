@@ -76,11 +76,6 @@ class User(db.Model, DomainObject, UserMixin):
         return False
 
 
-    @classmethod
-    def by_name(cls, name):
-        '''Lookup user by (user)name.'''
-        return db.session.query(User).filter_by(name=name).first()
-
 
 @event.listens_for(User, 'before_insert')
 def make_admin(mapper, conn, target):
