@@ -45,8 +45,8 @@ class TaskRepository(object):
 
 
 
-    def get_taskrun(self, id):
-        return self.db.session.query(TaskTun).get(id)
+    def get_task_run(self, id):
+        return self.db.session.query(TaskRun).get(id)
 
     def get_task_run_by(self, **attributes):
         return self.db.session.query(TaskRun).filter_by(**attributes).first()
