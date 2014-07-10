@@ -16,14 +16,23 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.core import db
 from pybossa.model.task_run import TaskRun
-from . import BaseFactory, factory
+from . import BaseFactory, factory, task_repo
 
 
-class TaskRunFactory(BaseFactory):
+class TaskRunFactory(factory.Factory):
     class Meta:
         model = TaskRun
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        taskrun = model_class(*args, **kwargs)
+        task_repo.save(taskrun)
+        return taskrun
+
+    @classmethod
+    def _setup_next_sequence(cls):
+        return 1
 
     id = factory.Sequence(lambda n: n)
     task = factory.SubFactory('factories.TaskFactory')

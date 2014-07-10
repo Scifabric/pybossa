@@ -21,6 +21,15 @@ from pybossa.core import db
 import factory
 from factory.alchemy import SQLAlchemyModelFactory
 
+from pybossa.repositories import UserRepository
+from pybossa.repositories import ProjectRepository
+from pybossa.repositories import BlogRepository
+from pybossa.repositories import TaskRepository
+user_repo = UserRepository(db)
+project_repo = ProjectRepository(db)
+blog_repo = BlogRepository(db)
+task_repo = TaskRepository(db)
+
 
 def reset_all_pk_sequences():
     AppFactory.reset_sequence()

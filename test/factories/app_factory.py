@@ -16,14 +16,23 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.core import db
 from pybossa.model.app import App
-from . import BaseFactory, factory
+from . import BaseFactory, factory, project_repo
 
 
-class AppFactory(BaseFactory):
+class AppFactory(factory.Factory):
     class Meta:
         model = App
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        project = model_class(*args, **kwargs)
+        project_repo.save(project)
+        return project
+
+    @classmethod
+    def _setup_next_sequence(cls):
+        return 1
 
     id = factory.Sequence(lambda n: n)
     name = factory.Sequence(lambda n: u'My Project number %d' % n)

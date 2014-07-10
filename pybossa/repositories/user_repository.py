@@ -56,6 +56,7 @@ class UserRepository(object):
         try:
             self.db.session.add(user)
             self.db.session.commit()
+            print 'Salvado por la campana'
         except IntegrityError:
             self.db.session.rollback()
             raise
