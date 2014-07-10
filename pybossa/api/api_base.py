@@ -248,7 +248,6 @@ class APIBase(MethodView):
             repo = repos[self.__class__.__name__]['repo']
             query_func = repos[self.__class__.__name__]['get']
             existing = getattr(repo, query_func)(id)
-            existing = db.session.query(self.__class__).get(id)
             if existing is None:
                 raise NotFound
             getattr(require, self.__class__.__name__.lower()).update(existing)
