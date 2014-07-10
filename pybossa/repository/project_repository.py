@@ -42,12 +42,20 @@ class ProjectRepository(object):
         return self.db.session.query(App).all()
 
     def save(self, project):
-        self.db.session.add(project)
-        self.db.session.commit()
+        try:
+            self.db.session.add(project)
+            self.db.session.commit()
+        except IntegrityError:
+            self.db.session.rollback()
+            raise
 
     def update(self, project):
-        self.db.session.merge(project)
-        self.db.session.commit()
+        try:
+            self.db.session.merge(project)
+            self.db.session.commit()
+        except IntegrityError:
+            self.db.session.rollback()
+            raise
 
     def delete(self, project):
         self.db.session.query(App).filter(App.id==project.id).delete()
@@ -67,12 +75,20 @@ class ProjectRepository(object):
         return self.db.session.query(Category).all()
 
     def save_category(self, category):
-        self.db.session.add(category)
-        self.db.session.commit()
+        try:
+            self.db.session.add(category)
+            self.db.session.commit()
+        except IntegrityError:
+            self.db.session.rollback()
+            raise
 
     def update_category(self, new_category):
-        self.db.session.merge(new_category)
-        self.db.session.commit()
+        try:
+            self.db.session.merge(new_category)
+            self.db.session.commit()
+        except IntegrityError:
+            self.db.session.rollback()
+            raise
 
     def delete_category(self, category):
         self.db.session.query(Category).filter(Category.id==category.id).delete()

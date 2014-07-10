@@ -52,5 +52,9 @@ class UserRepository(object):
         return self.db.session.query(User).count()
 
     def save(self, user):
-        self.db.session.add(user)
-        self.db.session.commit()
+        try:
+            self.db.session.add(user)
+            self.db.session.commit()
+        except IntegrityError:
+            self.db.session.rollback()
+            raise

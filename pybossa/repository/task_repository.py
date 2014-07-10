@@ -63,8 +63,12 @@ class TaskRepository(object):
 
 
     def save(self, element):
-        self.db.session.add(element)
-        self.db.session.commit()
+        try:
+            self.db.session.add(element)
+            self.db.session.commit()
+        except IntegrityError:
+            self.db.session.rollback()
+            raise
 
     def delete(self, element):
         self.db.session.delete(element)

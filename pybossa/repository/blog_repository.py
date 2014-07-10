@@ -37,12 +37,20 @@ class BlogRepository(object):
         return self.db.session.query(Blogpost).filter_by(**filters).all()
 
     def save(self, blogpost):
-        self.db.session.add(blogpost)
-        self.db.session.commit()
+        try:
+            self.db.session.add(blogpost)
+            self.db.session.commit()
+        except IntegrityError:
+            self.db.session.rollback()
+            raise
 
     def update(self, blogpost):
-        self.db.session.merge(blogpost)
-        self.db.session.commit()
+        try:
+            self.db.session.merge(blogpost)
+            self.db.session.commit()
+        except IntegrityError:
+            self.db.session.rollback()
+            raise
 
     def delete(self, project):
         self.db.session.query(Blogpost).filter(Blogpost.id==project.id).delete()
