@@ -51,6 +51,7 @@ from pybossa.core import db, signer, mail, uploader, sentinel
 from pybossa.util import Pagination, get_user_id_or_ip, pretty_date
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
+from pybossa.auth import require
 
 try:
     import cPickle as pickle
@@ -456,8 +457,7 @@ def update_profile(name):
     user = User.query.filter_by(name=name).first()
     if not user:
         return abort(404)
-    if current_user.id != user.id:
-        return abort(403)
+    require.user.update(user)
     show_passwd_form = True
     if user.twitter_user_id or user.google_user_id or user.facebook_user_id:
         show_passwd_form = False
@@ -743,12 +743,9 @@ def reset_api_key(name):
     user = User.query.filter_by(name=name).first()
     if not user:
         return abort(404)
-    if current_user.name != user.name:
-        return abort(403)
-
+    require.user.update(user)
     title = ("User: %s &middot; Settings"
              "- Reset API KEY") % current_user.fullname
-    user = db.session.query(model.user.User).get(current_user.id)
     user.api_key = model.make_uuid()
     db.session.commit()
     cached_users.delete_user_summary(user.name)

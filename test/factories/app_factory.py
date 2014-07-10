@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.core import db
 from pybossa.model.app import App
 from . import BaseFactory, factory
 

@@ -18,7 +18,7 @@ The objects are:
 """
 __all__ = ['sentinel', 'db', 'signer', 'mail', 'login_manager', 'facebook',
            'twitter', 'google', 'misaka', 'babel', 'gravatar',
-           'uploader', 'csrf', 'timeouts', 'debug_toolbar']
+           'uploader', 'csrf', 'timeouts', 'debug_toolbar', 'ratelimits']
 # CACHE
 from pybossa.sentinel import Sentinel
 sentinel = Sentinel()
@@ -75,3 +75,6 @@ csrf = CsrfProtect()
 
 # Timeouts
 timeouts = dict()
+
+# Ratelimits
+ratelimits = dict()

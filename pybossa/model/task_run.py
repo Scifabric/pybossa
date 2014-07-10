@@ -31,16 +31,23 @@ class TaskRun(db.Model, DomainObject):
     '''
     __tablename__ = 'task_run'
 
+    #: ID of the TaskRun
     id = Column(Integer, primary_key=True)
+    #: UTC timestamp for when TaskRun is created.
     created = Column(Text, default=make_timestamp)
+    #: Project.id of the project associated with this TaskRun.
     app_id = Column(Integer, ForeignKey('app.id'), nullable=False)
+    #: Task.id of the task associated with this TaskRun.
     task_id = Column(Integer, ForeignKey('task.id', ondelete='CASCADE'),
                      nullable=False)
+    #: User.id of the user contributing the TaskRun (only if authenticated)
     user_id = Column(Integer, ForeignKey('user.id'))
+    #: User.ip of the user contributing the TaskRun (only if anonymous)
     user_ip = Column(Text)
     finish_time = Column(Text, default=make_timestamp)
     timeout = Column(Integer)
     calibration = Column(Integer)
+    #: Value of the answer.
     info = Column(JSONType, default=dict)
     '''General writable field that should be used by clients to record results\
     of a TaskRun. Usually a template for this will be provided by Task

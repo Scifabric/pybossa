@@ -27,6 +27,7 @@ import pybossa.vmcp
 from flask import Response, request, current_app
 from api_base import APIBase, cors_headers
 from werkzeug.exceptions import MethodNotAllowed
+from pybossa.core import ratelimits
 from pybossa.util import jsonpify, crossdomain
 from pybossa.ratelimit import ratelimit
 
@@ -41,7 +42,7 @@ class VmcpAPI(APIBase):
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
-    @ratelimit(limit=300, per=15 * 60)
+    @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def get(self, id):
         """Return signed VMCP for CernVM requests."""
         error = dict(action=request.method,
@@ -88,5 +89,6 @@ class VmcpAPI(APIBase):
             return Response(json.dumps(error), status=error['status_code'],
                             mimetype='application/json')
 
+    @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def post(self):
         raise MethodNotAllowed

@@ -551,10 +551,12 @@ def details(short_name):
     require.app.read(app)
     template = '/applications/app.html'
 
+    redirect_to_password = _check_if_redirect_to_password(app)
+    if redirect_to_password:
+        return redirect_to_password
+
     title = app_title(app, None)
-
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-
     template_args = {"app": app, "title": title,
                      "owner": owner,
                      "n_tasks": n_tasks,
@@ -737,12 +739,11 @@ def task_presenter(short_name, task_id):
     (app, owner,
      n_tasks, n_task_runs, overall_progress, last_activity) = app_by_shortname(short_name)
     task = Task.query.filter_by(id=task_id).first_or_404()
+
     require.app.read(app)
-    cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
-    passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
-    if passwd_mngr.password_needed(app, get_user_id_or_ip()):
-        return redirect(url_for('.password_required',
-                                 short_name=short_name, next=request.path))
+    redirect_to_password = _check_if_redirect_to_password(app)
+    if redirect_to_password:
+        return redirect_to_password
 
     if current_user.is_anonymous():
         if not app.allow_anonymous_contributors:
@@ -819,11 +820,9 @@ def presenter(short_name):
     template_args = {"app": app, "title": title, "owner": owner,
                      "invite_new_volunteers": invite_new_volunteers()}
     require.app.read(app)
-    cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
-    passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
-    if passwd_mngr.password_needed(app, get_user_id_or_ip()):
-        return redirect(url_for('.password_required',
-                                 short_name=short_name, next=request.path))
+    redirect_to_password = _check_if_redirect_to_password(app)
+    if redirect_to_password:
+        return redirect_to_password
 
     if not app.allow_anonymous_contributors and current_user.is_anonymous():
         msg = "Oops! You have to sign in to participate in <strong>%s</strong> \
@@ -850,8 +849,11 @@ def tutorial(short_name):
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
     title = app_title(app, "Tutorial")
-    require.app.read(app)
 
+    require.app.read(app)
+    redirect_to_password = _check_if_redirect_to_password(app)
+    if redirect_to_password:
+        return redirect_to_password
     return render_template('/applications/tutorial.html', title=title,
                            app=app, owner=owner)
 
@@ -862,8 +864,11 @@ def export(short_name, task_id):
     # Check if the app exists
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
-    require.app.read(app)
 
+    require.app.read(app)
+    redirect_to_password = _check_if_redirect_to_password(app)
+    if redirect_to_password:
+        return redirect_to_password
 
     # Check if the task belongs to the app and exists
     task = db.session.query(model.task.Task).filter_by(app_id=app.id)\
@@ -884,6 +889,9 @@ def tasks(short_name):
     title = app_title(app, "Tasks")
 
     require.app.read(app)
+    redirect_to_password = _check_if_redirect_to_password(app)
+    if redirect_to_password:
+        return redirect_to_password
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
 
     return render_template('/applications/tasks.html',
@@ -934,6 +942,9 @@ def tasks_browse(short_name, page):
                                n_completed_tasks=n_completed_tasks)
 
     require.app.read(app)
+    redirect_to_password = _check_if_redirect_to_password(app)
+    if redirect_to_password:
+        return redirect_to_password
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     return respond()
 
@@ -986,6 +997,9 @@ def export_to(short_name):
     loading_text = gettext("Exporting data..., this may take a while")
 
     require.app.read(app)
+    redirect_to_password = _check_if_redirect_to_password(app)
+    if redirect_to_password:
+        return redirect_to_password
 
     def respond():
         return render_template('/applications/export.html',
@@ -1231,6 +1245,9 @@ def show_stats(short_name):
     title = app_title(app, "Statistics")
 
     require.app.read(app)
+    redirect_to_password = _check_if_redirect_to_password(app)
+    if redirect_to_password:
+        return redirect_to_password
 
     if not ((n_tasks > 0) and (n_task_runs > 0)):
         app = add_custom_contrib_button_to(app, get_user_id_or_ip())
@@ -1437,6 +1454,9 @@ def show_blogposts(short_name):
 
     blogposts = db.session.query(model.blogpost.Blogpost).filter_by(app_id=app.id).all()
     require.blogpost.read(app_id=app.id)
+    redirect_to_password = _check_if_redirect_to_password(app)
+    if redirect_to_password:
+        return redirect_to_password
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     return render_template('applications/blog.html', app=app,
                            owner=owner, blogposts=blogposts,
@@ -1456,6 +1476,9 @@ def show_blogpost(short_name, id):
     if blogpost is None:
         raise abort(404)
     require.blogpost.read(blogpost)
+    redirect_to_password = _check_if_redirect_to_password(app)
+    if redirect_to_password:
+        return redirect_to_password
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     return render_template('applications/blog_post.html',
                             app=app,
@@ -1578,4 +1601,13 @@ def delete_blogpost(short_name, id):
     cached_apps.delete_app(short_name)
     flash('<i class="icon-ok"></i> ' + 'Blog post deleted!', 'success')
     return redirect(url_for('.show_blogposts', short_name=short_name))
+
+
+
+def _check_if_redirect_to_password(app):
+    cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
+    passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
+    if passwd_mngr.password_needed(app, get_user_id_or_ip()):
+        return redirect(url_for('.password_required',
+                                 short_name=app.short_name, next=request.path))
 

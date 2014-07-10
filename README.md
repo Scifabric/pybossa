@@ -30,7 +30,7 @@ See [installation instructions](http://docs.pybossa.com/en/latest/install.html).
 Just run the following command:
 
 ```
-  tox
+  nosetests test/
 ```
 
 # Useful Links

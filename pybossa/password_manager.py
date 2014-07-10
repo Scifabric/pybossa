@@ -20,6 +20,7 @@ from flask.ext.login import current_user
 
 
 class ProjectPasswdManager(object):
+
     def __init__(self, cookie_handler):
         self.cookie_handler = cookie_handler
 

@@ -148,7 +148,8 @@ The **CSV** template, allows you to upload your own CSV file:
 .. note::
 
    If you're trying to import from a Google Spreadsheet, ensure the file is
-   accessible to everyone with link or is public.
+   accessible to everyone via the Share option, choosing: "Public on the web - 
+   Anyone on the Internet can find and view"
 
 .. note::
 
@@ -183,7 +184,7 @@ available templates are the following:
 .. note::
 
     You can also upload your own CSV files to free web hosting services like
-    DropBox_ or `Ubuntu One`_. You will only need to copy the file to the
+    DropBox_. You will only need to copy the file to the
     **public** folder of the chosen service in your own computer
     (i.e. DropbBox Public folder) and then copy the public link created by the 
     service. Once you have the public link, all you need in order to import the 
@@ -200,7 +201,6 @@ available templates are the following:
 .. _`Geo-coding`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc&usp=sharing
 .. _`PDF transcription`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE&usp=sharing
 .. _`DropBox`: http://www.dropbox.com
-.. _`Ubuntu One`: http://one.ubuntu.com
 
 
 Importing the tasks from an EpiCollect Plus Public Project
@@ -381,7 +381,8 @@ Creating a project using the API involves also three steps:
 Creating the project
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can create a project via the API URL **/api/app** with a POST request.
+You can create a project via the API URL **/api/app** with a POST request (See
+:ref:`api`).
 
 You have to provide the following information about the project and convert
 it to a JSON object (the actual values are taken from the `Flickr Person demo
@@ -390,43 +391,31 @@ project <http://github.com/PyBossa/app-flickrperson>`_)::
   name = u'Flickr Person Finder'
   short_name = u'FlickrPerson'
   description = u'Do you see a human in this photo?'
-  info = { 'thumbnail': u'http://domain/thumbnail.png',
-           'task_presenter': u'<div> Skeleton for the tasks</div>' }
+  info = { 'task_presenter': u'<div> Skeleton for the tasks</div>' }
   data = dict(name = name, short_name = short_name, description = description, info = info, hidden = 0)
   data = json.dumps(data)
 
 
 Flickr Person Finder, which is a **demo template** that **you can re-use**
 to create your own project, simplifies this step by using a simple
-file named **app.json**:
+file named **project.json**:
 
 .. code-block:: javascript
 
     {
         "name": "Flickr Person Finder",
         "short_name": "flickrperson",
-        "thumbnail": "http://imageshack.us/a/img37/156/flickrpersonthumbnail.png",
         "description": "Image pattern recognition",
-        "question": "Do you see a human in this photo?"
     }
 
 
-As Flickr Person is trying to figure out if there is a person in
-the photo, the question is: *Do you see a human in this photo?*. The file
-provides a basic configuration for your project, where you can even specify
-the icon thumbnail for your project.
+The file provides a basic configuration for your project. 
 
-The **Thumbnail** is a field that you can use to include a nice icon for the
-project. Flickr Person Finder uses as a thumbnail a cropped version
-(100x100 pixels) of a `Flickr photo from Sean McGrath (license CC BY 2.0)
-<http://www.flickr.com/photos/mcgraths/3289448299/>`_. If you decide to not
-include a thumbnail, PyBossa will render for you a place holder
-icon of 100x100 pixels.
 
-Creating the tasks
-~~~~~~~~~~~~~~~~~~
+Adding tasks
+~~~~~~~~~~~~
 
-As in all the previous step, we are going to create a JSON
+As in all the previous steps, we are going to create a JSON
 object and POST it using the following API URL **/api/task** in order to add
 tasks to a project that you own. 
 
@@ -438,7 +427,9 @@ that should have the link to the photo that we want to identify:
 
 .. code-block:: python
 
-    info = dict (link = photo['link'], url = photo['url_m'])
+    info = dict (link=photo['link'], 
+                 url=photo['url_m'],
+                 question='Do you see a human face in this photo?')
     data = dict (app_id=app_id,
                  state=0,
                  info=info,
@@ -446,9 +437,14 @@ that should have the link to the photo that we want to identify:
                  priority_0=0)
     data = json.dumps(data)
 
+.. note::
+    'url_m' is a pattern to describe the URL to the m medium size of the photo
+    used by Flickr. It can be whatever you want, but as we are using Flickr we
+    use the same patterns for storing the data.
+
 The most important field for the task is the **info** one. This field will be
 used to store a JSON object with the required data for the task. As  `Flickr Person
-<http://app-flickrperson.rtfd.org>`_ is trying to figure out if there is a human or
+<https://github.com/PyBossa/app-flickrperson>`_ is trying to figure out if there is a human or
 not in a photo, the provided information is:
 
     1. the Flickr web page posting the photo, and
@@ -460,10 +456,7 @@ format that best fits your needs.
 
 These steps are usually coded in the :ref:`task-creator`. The Flickr Person
 Finder projects provides a template for the :ref:`task-creator` that can
-be re-used without any problems. Check the createTasks.py_ script for further
-details.
-
-.. _createTasks.py: https://github.com/PyBossa/app-flickrperson/blob/master/createTasks.py
+be re-used without any problems. 
 
 .. note::
 
@@ -520,3 +513,19 @@ creating a Project <tutorial>`, as you will understand
 how to create the task presenter, which is basically adding some HTML skeleton
 to load the task data, input fields to get the answer of the users, and some
 JavaScript to make it to work.
+
+Using PyBossa API from the command line
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+While you can use your own programming language to access the API we recommend
+you to use the `PyBossa pbs command line tool
+<https://github.com/PyBossa/pbs>`_ as it simpflies the usage of PyBossa for any
+given project.
+
+Creating a project is as simple as creating a project.json file and then run
+the following command:
+
+.. code-block:: bash
+   pbs --server server --api-key yourkey create_project 
+
+Please, read the section :ref:`pbs` for more details.
