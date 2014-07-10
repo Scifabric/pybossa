@@ -128,7 +128,7 @@ class TestWeb(web.Helper):
             # As anonymous
             url = '/app/%s/stats' % app.short_name
             res = self.app.get(url)
-            assert res.status_code == 403, res.status_code
+            assert res.status_code == 401, res.status_code
             # As another user, but not owner
             self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
             url = '/app/%s/stats' % app.short_name
@@ -1001,11 +1001,19 @@ class TestWeb(web.Helper):
                 assert tr['info']['answer'] == 1, tr
             self.signout()
 
-            # Check with hidden app: anonymous should not have access to it
+            # Check with hidden app: non-owner should not have access to it
+            self.register(fullname="Non Owner", name="nonowner")
             res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
                                follow_redirects=True)
             assert res.status_code == 403, res.data
             assert "Forbidden" in res.data, res.data
+
+            # Check with hidden app: anonymous should not have access to it
+            self.signout()
+            res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
+                               follow_redirects=True)
+            assert res.status_code == 401, res.data
+            assert "Unauthorized" in res.data, res.data
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
@@ -1140,8 +1148,8 @@ class TestWeb(web.Helper):
             db.session.commit()
             res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
                                follow_redirects=True)
-            assert 'Forbidden' in res.data, res.data
-            assert res.status_code == 403, "It should be forbidden"
+            assert 'Unauthorized' in res.data, res.data
+            assert res.status_code == 401, res.status_code
             # Try with only registered users
             app.allow_anonymous_contributors = False
             app.hidden = 0
@@ -1323,7 +1331,7 @@ class TestWeb(web.Helper):
             db.session.add(app1)
             db.session.commit()
             res = self.app.get('/app/test-app/tutorial', follow_redirects=True)
-            assert res.status_code == 403, res.status_code
+            assert res.status_code == 401, res.status_code
 
     @with_context
     def test_28_non_tutorial_signed_user(self):
@@ -1963,7 +1971,7 @@ class TestWeb(web.Helper):
         self.signout()
         # As anonymous
         res = self.app.get('/app/sampleapp/tasks/', follow_redirects=True)
-        assert res.status_code == 403, res.status_code
+        assert res.status_code == 401, res.status_code
 
         with self.flask_app.app_context():
             self.create()
@@ -2185,7 +2193,7 @@ class TestWeb(web.Helper):
         db.session.commit()
         res = self.app.get('app/%s/tasks/export' % (app.short_name),
                            follow_redirects=True)
-        assert res.status_code == 403, res.status_code
+        assert res.status_code == 401, res.status_code
 
         self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
         res = self.app.get('app/%s/tasks/export' % (app.short_name),
@@ -2865,7 +2873,7 @@ class TestWeb(web.Helper):
 
         # As Anonymous user
         res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 403, res.status_code
+        assert res.status_code == 401, res.status_code
 
         # As registered user
         self.register()
