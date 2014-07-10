@@ -41,6 +41,9 @@ class ProjectRepository(object):
     def get_all(self):
         return self.db.session.query(App).all()
 
+    def filter_by(self, **filters):
+        return self.db.session.query(App).filter_by(**filters).all()
+
     def save(self, project):
         try:
             self.db.session.add(project)
@@ -73,6 +76,9 @@ class ProjectRepository(object):
 
     def get_all_categories(self):
         return self.db.session.query(Category).all()
+
+    def filter_categories_by(self, **filters):
+        return self.db.session.query(Category).filter_by(**filters).all()
 
     def save_category(self, category):
         try:

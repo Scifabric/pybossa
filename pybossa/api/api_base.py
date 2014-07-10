@@ -38,6 +38,19 @@ from pybossa.hateoas import Hateoas
 from pybossa.ratelimit import ratelimit
 from pybossa.error import ErrorStatus
 
+from pybossa.repository import UserRepository
+from pybossa.repository import ProjectRepository
+from pybossa.repository import TaskRepository
+user_repo = UserRepository(db)
+project_repo = ProjectRepository(db)
+task_repo = TaskRepository(db)
+
+repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by', 'get': 'get_task'},
+        'TaskRun' : {'repo': task_repo, 'filter': 'filter_task_runs_by', 'get': 'get_task_run'},
+        'User': {'repo': user_repo, 'filter': 'filter_by', 'get': 'get'},
+        'App': {'repo': project_repo, 'filter': 'filter_by', 'get': 'get'},
+        'Category': {'repo': project_repo, 'filter': 'filter_categories_by', 'get': 'get_category'}}
+
 
 cors_headers = ['Content-Type', 'Authorization']
 
@@ -78,6 +91,7 @@ class APIBase(MethodView):
         try:
             getattr(require, self.__class__.__name__.lower()).read()
             query = self._db_query(self.__class__, id)
+            print query
             json_response = self._create_json_response(query, id)
             return Response(json_response, mimetype='application/json')
         except Exception as e:
@@ -108,30 +122,34 @@ class APIBase(MethodView):
         return obj
 
     def _db_query(self, cls, id):
-        """ Returns a list with the results of the query"""
-        query = db.session.query(self.__class__)
+        """Returns a list with the results of the query"""
+        repo_info = repos[self.__class__.__name__]
         if not id:
             limit, offset = self._set_limit_and_offset()
-            query = self._filter_query(query, limit, offset)
+            results = self._filter_query(repo_info, limit, offset)
         else:
-            query = [query.get(id)]
-        return query
+            repo = repo_info['repo']
+            query_func = repo_info['get']
+            results = [getattr(repo, query_func)(id)]
+        return results
 
-    def _filter_query(self, query, limit, offset):
+    def _filter_query(self, repo_info, limit, offset):
+        filters = {}
         for k in request.args.keys():
             if k not in ['limit', 'offset', 'api_key']:
                 # Raise an error if the k arg is not a column
                 getattr(self.__class__, k)
-                query = query.filter(
-                    getattr(self.__class__, k) == request.args[k])
-        query = self._custom_filter(query)
-        return self._format_query_result(query, limit, offset)
+                filters[k] = request.args[k]
+        repo = repo_info['repo']
+        query_func = repo_info['filter']
+        filters = self._custom_filter(filters)
+        results = getattr(repo, query_func)(**filters)
+        return self._format_query_result(results, limit, offset)
 
-    def _format_query_result(self, query, limit, offset):
-        query = query.order_by(self.__class__.id)
-        query = query.limit(limit)
-        query = query.offset(offset)
-        return query.all()
+    def _format_query_result(self, results, limit, offset):
+        results = sorted(results, key=lambda item: item.id)
+        results = results[offset:offset+limit]
+        return results
 
     def _set_limit_and_offset(self):
         try:
