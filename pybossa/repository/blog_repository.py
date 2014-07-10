@@ -56,5 +56,5 @@ class BlogRepository(object):
 
     def delete(self, project):
         blog = self.db.session.query(Blogpost).filter(Blogpost.id==project.id).first()
-        self.db.sesion.delete(blog)
+        self.db.session.delete(blog)
         self.db.session.commit()
