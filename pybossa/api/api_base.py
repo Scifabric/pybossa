@@ -45,11 +45,20 @@ user_repo = UserRepository(db)
 project_repo = ProjectRepository(db)
 task_repo = TaskRepository(db)
 
-repos = {'Task': {'repo': task_repo, 'filter': 'filter_tasks_by', 'get': 'get_task'},
-        'TaskRun' : {'repo': task_repo, 'filter': 'filter_task_runs_by', 'get': 'get_task_run'},
-        'User': {'repo': user_repo, 'filter': 'filter_by', 'get': 'get'},
-        'App': {'repo': project_repo, 'filter': 'filter_by', 'get': 'get'},
-        'Category': {'repo': project_repo, 'filter': 'filter_categories_by', 'get': 'get_category'}}
+repos = {'Task'   : {'repo': task_repo, 'filter': 'filter_tasks_by',
+                     'get': 'get_task', 'save': 'save', 'update': 'update',
+                     'delete': 'delete'},
+        'TaskRun' : {'repo': task_repo, 'filter': 'filter_task_runs_by',
+                     'get': 'get_task_run',  'save': 'save', 'update': 'update',
+                     'delete': 'delete'},
+        'User'    : {'repo': user_repo, 'filter': 'filter_by', 'get': 'get',
+                     'save': 'save', 'update': 'update'},
+        'App'     : {'repo': project_repo, 'filter': 'filter_by', 'get': 'get',
+                     'save': 'save', 'update': 'update', 'delete': 'delete'},
+        'Category': {'repo': project_repo, 'filter': 'filter_categories_by',
+                     'get': 'get_category', 'save': 'save_category',
+                     'update': 'update_category', 'delete': 'delete_category'}
+        }
 
 
 cors_headers = ['Content-Type', 'Authorization']
@@ -180,12 +189,10 @@ class APIBase(MethodView):
             inst = self.__class__(**data)
             self._update_object(inst)
             getattr(require, self.__class__.__name__.lower()).create(inst)
-            db.session.add(inst)
-            db.session.commit()
+            repo = repos[self.__class__.__name__]['repo']
+            repo_func = repos[self.__class__.__name__]['save']
+            getattr(repo, repo_func)(inst)
             return json.dumps(inst.dictize())
-        except IntegrityError:
-            db.session.rollback()
-            raise
         except Exception as e:
             return error.format_exception(
                 e,
