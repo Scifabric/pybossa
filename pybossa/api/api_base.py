@@ -30,7 +30,6 @@ import json
 from flask import request, abort, Response
 from flask.views import MethodView
 from werkzeug.exceptions import NotFound
-from sqlalchemy.exc import IntegrityError
 from pybossa.util import jsonpify, crossdomain
 from pybossa.core import db, ratelimits
 from pybossa.auth import require
@@ -100,7 +99,6 @@ class APIBase(MethodView):
         try:
             getattr(require, self.__class__.__name__.lower()).read()
             query = self._db_query(self.__class__, id)
-            print query
             json_response = self._create_json_response(query, id)
             return Response(json_response, mimetype='application/json')
         except Exception as e:
@@ -190,8 +188,8 @@ class APIBase(MethodView):
             self._update_object(inst)
             getattr(require, self.__class__.__name__.lower()).create(inst)
             repo = repos[self.__class__.__name__]['repo']
-            repo_func = repos[self.__class__.__name__]['save']
-            getattr(repo, repo_func)(inst)
+            save_func = repos[self.__class__.__name__]['save']
+            getattr(repo, save_func)(inst)
             return json.dumps(inst.dictize())
         except Exception as e:
             return error.format_exception(
@@ -245,6 +243,9 @@ class APIBase(MethodView):
         """
         try:
             self.valid_args()
+            repo = repos[self.__class__.__name__]['repo']
+            query_func = repos[self.__class__.__name__]['get']
+            existing = getattr(repo, query_func)(id)
             existing = db.session.query(self.__class__).get(id)
             if existing is None:
                 raise NotFound
@@ -255,14 +256,11 @@ class APIBase(MethodView):
             # Clean HATEOAS args
             data = self.hateoas.remove_links(data)
             inst = self.__class__(**data)
-            db.session.merge(inst)
-            db.session.commit()
+            update_func = repos[self.__class__.__name__]['update']
+            getattr(repo, update_func)(inst)
             self._refresh_cache(inst)
             return Response(json.dumps(inst.dictize()), 200,
                             mimetype='application/json')
-        except IntegrityError:
-            db.session.rollback()
-            raise
         except Exception as e:
             return error.format_exception(
                 e,
