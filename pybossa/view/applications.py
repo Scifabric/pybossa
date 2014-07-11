@@ -349,9 +349,8 @@ def task_presenter_editor(short_name):
     form = TaskPresenterForm(request.form)
     form.id.data = app.id
     if request.method == 'POST' and form.validate():
-        db_app = db.session.query(model.app.App).filter_by(id=app.id).first()
-        db_app.info['task_presenter'] = form.editor.data
-        db.session.add(db_app)
+        app = App.query.get(app.id)
+        app.info['task_presenter'] = form.editor.data
         db.session.commit()
         cached_apps.delete_app(app.short_name)
         msg_1 = gettext('Task presenter added!')
