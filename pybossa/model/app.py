@@ -23,7 +23,7 @@ from sqlalchemy import event
 
 
 from pybossa.core import db, signer
-from pybossa.model import DomainObject, JSONType, make_timestamp, update_redis
+from pybossa.model import DomainObject, JSONType, JSONEncodedDict, make_timestamp, update_redis
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.featured import Featured
@@ -63,7 +63,7 @@ class App(db.Model, DomainObject):
     #: Project Category
     category_id = Column(Integer, ForeignKey('category.id'))
     #: Project info field formatted as JSON
-    info = Column(JSONType, default=dict)
+    info = Column(JSONEncodedDict, default=dict)
 
 
     tasks = relationship(Task, cascade='all, delete, delete-orphan', backref='app')
