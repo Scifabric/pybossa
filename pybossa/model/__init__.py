@@ -22,7 +22,7 @@ import uuid
 
 from sqlalchemy import Text
 from sqlalchemy.orm import relationship, backref, class_mapper
-from sqlalchemy.types import MutableType, TypeDecorator
+from sqlalchemy.types import TypeDecorator
 from sqlalchemy import event
 from sqlalchemy.engine import reflection
 from sqlalchemy.schema import (
@@ -77,7 +77,7 @@ class DomainObject(object):
         return repr
 
 
-class JSONType(MutableType, TypeDecorator):
+class JSONType(TypeDecorator):
     '''Additional Database Type for handling JSON values.
     '''
     impl = Text
