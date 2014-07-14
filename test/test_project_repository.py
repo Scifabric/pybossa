@@ -20,9 +20,9 @@
 from default import Test, db, with_context
 from nose.tools import assert_raises
 from mock import patch
-from sqlalchemy.exc import IntegrityError
 from factories import AppFactory
 from pybossa.repositories import ProjectRepository
+from pybossa.exc import RepositoryError
 
 
 class TestProjectRepository(Test):
@@ -141,7 +141,31 @@ class TestProjectRepository(Test):
         assert project in retrieved_projects, retrieved_projects
 
 
+    def test_save(self):
+        """Test save persist the project"""
+
+        project = AppFactory.build()
+        assert self.project_repo.get(project.id) is None
+
+        self.project_repo.save(project)
+
+        assert self.project_repo.get(project.id) == project, "Project not persisted"""
 
 
+    def test_save_fails_if_integrity_error(self):
+        """Test save raises an RepositoryError if the instance to be saved lacks
+        a required value"""
 
+        project = AppFactory.build(name=None)
+
+        assert_raises(RepositoryError, self.project_repo.save, project)
+
+
+    def test_save_only_saves_projects(self):
+        """Test save raises a RepositoryError when an object which is not
+        a Project (App) instance"""
+
+        bad_object = dict()
+
+        assert_raises(RepositoryError, self.project_repo.save, bad_object)
 
