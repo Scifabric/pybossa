@@ -80,6 +80,10 @@ def configure_app(app):
     # Override DB in case of testing
     if app.config.get('SQLALCHEMY_DATABASE_TEST_URI'):
         app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_TEST_URI']
+    # Enable Slave bind in case is missing using Master node
+    if app.config.get('SQLALCHEMY_BINDS') is None:
+        print "Slave binds are misssing, adding Master as slave too."
+        app.config['SQLALCHEMY_BINDS'] = dict(slave=app.config.get('SQLALCHEMY_DATABASE_URI'))
 
 
 def setup_theme(app):
