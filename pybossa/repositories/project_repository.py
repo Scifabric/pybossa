@@ -19,7 +19,6 @@
 from sqlalchemy.exc import IntegrityError
 
 from pybossa.model.app import App
-from pybossa.model.featured import Featured
 from pybossa.model.category import Category
 
 
