@@ -20,6 +20,7 @@ from sqlalchemy.exc import IntegrityError
 
 from pybossa.model.app import App
 from pybossa.model.category import Category
+from pybossa.exc import RepositoryError
 
 
 
@@ -46,20 +47,22 @@ class ProjectRepository(object):
         return self.db.session.query(App).filter_by(**filters).all()
 
     def save(self, project):
+        if not isinstance(project, App):
+            raise RepositoryError('%s is not an App instance' % project)
         try:
             self.db.session.add(project)
             self.db.session.commit()
-        except IntegrityError:
+        except IntegrityError as e:
             self.db.session.rollback()
-            raise
+            raise RepositoryError(e)
 
     def update(self, project):
         try:
             self.db.session.merge(project)
             self.db.session.commit()
-        except IntegrityError:
+        except IntegrityError as e:
             self.db.session.rollback()
-            raise
+            raise RepositoryError(e)
 
     def delete(self, project):
         app = self.db.session.query(App).filter(App.id==project.id).first()
@@ -86,17 +89,17 @@ class ProjectRepository(object):
         try:
             self.db.session.add(category)
             self.db.session.commit()
-        except IntegrityError:
+        except IntegrityError as e:
             self.db.session.rollback()
-            raise
+            raise RepositoryError(e)
 
     def update_category(self, new_category):
         try:
             self.db.session.merge(new_category)
             self.db.session.commit()
-        except IntegrityError:
+        except IntegrityError as e:
             self.db.session.rollback()
-            raise
+            raise RepositoryError(e)
 
     def delete_category(self, category):
         self.db.session.query(Category).filter(Category.id==category.id).delete()
