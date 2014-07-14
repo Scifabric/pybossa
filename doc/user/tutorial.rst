@@ -835,14 +835,162 @@ Adding a tutorial is really simple: you only have to create a file named
 The tutorial could have whatever you like: videos, nice animations, etc.
 PyBossa will render for you the header and the footer, so you only have to
 focus on the content. You can actually copy the template.html file and use it
-as a draft of your tutorial or just include a video of yourself explaining why 
+as a draft of your tutorial or just include a video of yourself explaining why
 your project is important and how, as a volunteer, you can contribute.
 
 If your project has a tutorial, you can actually access it directly in this
 endpoint::
 
   http://server/app/tutorial
-  
+
+
+Providing some I18n support
+===========================
+
+Sometimes, you may want to give the users of your project a little help and
+present them the tutorial and tasks in their language. To allow this, you can
+access their locale via Javascript in a very easy way, as we've placed it in a
+hidden 'div' node so you can access it just like this:
+
+.. code-block:: javascript
+
+    var userLocale = document.getElementById('PYBOSSA_USER_LOCALE').textContent.trim();
+
+
+The way you use it after is up to you, but let's see an example of how to use it
+to make a tutorial that automatically shows in the language of the user.
+
+First of all, check the *tutorial.html file*. You will see it consists on some
+HTML plus some Javascript inside a <script> tag to handle the different steps of
+the tutorial. Just copy the HTML fragment:
+
+.. code-block:: html
+
+    <div class="row">
+        <div class="col-md-12">
+            <div id="modal" class="modal hide fade">
+                <div class="modal-header">
+                    <h3>Flickr Person Finder tutorial</h3>
+                </div>
+                <div id="0" class="modal-body" style="display:none">
+                    <p><strong>Hi!</strong> This is a <strong>demo project</strong> that shows how you can do pattern recognition on pictures or images using the PyBossa framework in Crowdcrafting.org.
+                   </p>
+                </div>
+                <div id="1" class="modal-body" style="display:none">
+                    <p>The application is really simple. It loads a photo from <a href="http://flickr.com">Flickr</a> and asks you this question: <strong>Do you see a human in this photo?</strong></p>
+                    <img src="http://farm7.staticflickr.com/6109/6286728068_2f3c6912b8_q.jpg" class="img-thumbnail"/>
+                    <p>You will have 3 possible answers:
+                    <ul>
+                        <li>Yes,</li>
+                        <li>No, and</li>
+                        <li>I don't know</li>
+                    </ul>
+                    </p>
+                    <p>
+                    </p>
+                    <p>All you have to do is to click in one of the three possible answers and you will be done. This demo project could be adapted for more complex pattern recognition problems.</p>
+                </div>
+                <div class="modal-footer">
+                    <a id="prevBtn" href="#" onclick="showStep('prev')" class="btn">Previous</a>
+                    <a id="nextBtn" href="#" onclick="showStep('next')" class="btn btn-success">Next</a>
+                    <a id="startContrib" href="../flickrperson/newtask" class="btn btn-primary" style="display:none"><i class="fa fa-thumbs-o-up"></i> Try the demo!</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+And paste is as many times as languages you're planning to support.
+
+Then, add to each of them an id in the most outer 'div' which corresponds to the
+abreviated name of the locale ('en' for English, 'es' for Spanish, etc.), and
+translate the inner text of it, but leave all the HTML the same in every
+version (tags, ids, classes, etc.) like:
+
+.. code-block:: html
+
+    <div id='es' class="row">
+       Your translated version of the HTML goes here, but only change the text,
+       NOT the HTML tags, IDs or classes.
+    </div>
+
+Finally, some Javascript like and change the previous, from:
+
+.. code-block:: javascript
+
+    var step = -1;
+    function showStep(action) {
+        $("#" + step).hide();
+        if (action == 'next') {
+            step = step + 1;
+        }
+        if (action == 'prev') {
+            step = step - 1;
+        }
+        if (step == 0) {
+            $("#prevBtn").hide();
+        }
+        else {
+            $("#prevBtn").show();
+        }
+
+        if (step == 1 ) {
+            $("#nextBtn").hide();
+            $("#startContrib").show();
+        }
+        $("#" + step).show();
+    }
+
+    showStep('next');
+    $("#modal").modal('show');
+
+To:
+
+.. code-block:: javascript
+
+    var languages = ['en', 'es']
+    $(document).ready(function(){
+        var userLocale = document.getElementById('PYBOSSA_USER_LOCALE').textContent.trim();
+        languages.forEach(function(lan){
+            if (lan !== userLocale) {
+                var node = document.getElementById(lan);
+                if (node.parentNode) {
+                    node.parentNode.removeChild(node);
+                }
+            }
+        });
+        var step = -1;
+        function showStep(action) {
+            $("#" + step).hide();
+            if (action == 'next') {
+                step = step + 1;
+            }
+            if (action == 'prev') {
+                step = step - 1;
+            }
+            if (step == 0) {
+                $("#prevBtn").hide();
+            }
+            else {
+                $("#prevBtn").show();
+            }
+
+            if (step == 1 ) {
+                $("#nextBtn").hide();
+                $("#startContrib").show();
+            }
+            $("#" + step).show();
+        }
+        showStep('next');
+        $("#modal").modal('show');
+    });
+
+Notice the languages array variable defined at the beggining?. It's important
+that you place there the ids you've given to the different translated versions
+of your HTML for the tutorial. The rest of the script only will compare the
+locale of the user that is seeing the tutorial and delete all the HTML that is
+not in his language, so that only the tutorial that fits his locale settings is
+shown.
+
 
 Providing more details about the project
 ========================================
@@ -864,7 +1012,7 @@ The long description will be shown in the project home page::
 
  http://crowdcrafting.org/app/flickrperson
 
-If you want to modify the description you have two options, edit it via the web 
+If you want to modify the description you have two options, edit it via the web
 interface, or modify locally the *long_description.md* file and run pbs to update it:
 
 .. code-block:: bash
