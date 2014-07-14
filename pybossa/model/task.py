@@ -22,7 +22,7 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy import event
 
 from pybossa.core import db
-from pybossa.model import DomainObject, JSONType, make_timestamp, update_redis
+from pybossa.model import DomainObject, JSONType, JSONEncodedDict, make_timestamp, update_redis
 from pybossa.model.task_run import TaskRun
 
 

@@ -23,7 +23,7 @@ from sqlalchemy import event
 from flask.ext.login import UserMixin
 
 from pybossa.core import db, signer
-from pybossa.model import DomainObject, make_timestamp, JSONType, make_uuid, update_redis
+from pybossa.model import DomainObject, make_timestamp, JSONEncodedDict, make_uuid, update_redis
 from pybossa.model.app import App
 from pybossa.model.task_run import TaskRun
 from pybossa.model.blogpost import Blogpost
@@ -56,7 +56,7 @@ class User(db.Model, DomainObject, UserMixin):
     facebook_user_id = Column(BigInteger, unique=True)
     google_user_id = Column(String, unique=True)
     ckan_api = Column(String, unique=True)
-    info = Column(JSONType, default=dict)
+    info = Column(JSONEncodedDict, default=dict)
 
     ## Relationships
     task_runs = relationship(TaskRun, backref='user')

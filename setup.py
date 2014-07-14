@@ -24,7 +24,7 @@ requirements = [
     "python-dateutil>=2.2, <3.0",
     "raven>=4.1.1, <5.0",
     "requests>=2.2.1, <3.0",
-    "SQLAlchemy>=0.7.8, <0.7.9",         # was pinned to SQLAlchemy==0.7.8
+    "SQLAlchemy>=0.9.6, <0.9.7",         # was pinned to SQLAlchemy==0.7.8
     "nose",
     "rednose",
     "redis>=2.9, <2.10",
