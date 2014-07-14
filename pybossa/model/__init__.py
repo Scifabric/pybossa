@@ -97,7 +97,7 @@ class JSONType(Mutable, TypeDecorator):
 
 
 class JSONEncodedDict(TypeDecorator):
-    "Represents an immutable structure as a json-encoded string."
+    "Represents a dict structure as a json-encoded string."
 
     impl = Text
 
