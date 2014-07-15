@@ -64,7 +64,6 @@ class ProjectRepository(object):
             self.db.session.merge(project)
             self.db.session.commit()
         except SQLAlchemyError as e:
-            print e
             self.db.session.rollback()
             raise RepositoryError(e)
 
