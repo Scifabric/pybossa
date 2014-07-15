@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import SQLAlchemyError
 
 from pybossa.model.blogpost import Blogpost
 
@@ -42,7 +42,7 @@ class BlogRepository(object):
         try:
             self.db.session.add(blogpost)
             self.db.session.commit()
-        except IntegrityError:
+        except SQLAlchemyError:
             self.db.session.rollback()
             raise
 
@@ -50,7 +50,7 @@ class BlogRepository(object):
         try:
             self.db.session.merge(blogpost)
             self.db.session.commit()
-        except IntegrityError:
+        except SQLAlchemyError:
             self.db.session.rollback()
             raise
 
