@@ -68,6 +68,8 @@ class ProjectRepository(object):
             raise RepositoryError(e)
 
     def delete(self, project):
+        if not isinstance(project, App):
+            raise RepositoryError('%s is not an App instance' % project)
         app = self.db.session.query(App).filter(App.id==project.id).first()
         self.db.session.delete(app)
         self.db.session.commit()
