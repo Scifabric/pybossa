@@ -103,6 +103,8 @@ class ProjectRepository(object):
         return self.db.session.query(Category).filter_by(**filters).all()
 
     def save_category(self, category):
+        if not isinstance(category, Category):
+            raise RepositoryError('%s is not a Category instance' % category)
         try:
             self.db.session.add(category)
             self.db.session.commit()
@@ -111,6 +113,8 @@ class ProjectRepository(object):
             raise RepositoryError(e)
 
     def update_category(self, new_category):
+        if not isinstance(new_category, Category):
+            raise RepositoryError('%s is not a Category instance' % new_category)
         try:
             self.db.session.merge(new_category)
             self.db.session.commit()
@@ -119,6 +123,8 @@ class ProjectRepository(object):
             raise RepositoryError(e)
 
     def delete_category(self, category):
+        if not isinstance(category, Category):
+            raise RepositoryError('%s is not a Category instance' % category)
         self.db.session.query(Category).filter(Category.id==category.id).delete()
         self.db.session.commit()
 
