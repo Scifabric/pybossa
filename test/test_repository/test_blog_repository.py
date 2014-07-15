@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 # Cache global variables for timeouts
 
-from default import Test, db, with_context
+from default import Test, db
 from nose.tools import assert_raises
 from factories import BlogpostFactory
 from pybossa.repositories import BlogRepository
