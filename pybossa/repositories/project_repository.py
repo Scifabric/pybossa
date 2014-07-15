@@ -20,6 +20,7 @@ from sqlalchemy.exc import IntegrityError
 
 from pybossa.model.app import App
 from pybossa.model.category import Category
+from pybossa.model.featured import Featured
 from pybossa.exc import RepositoryError
 
 
@@ -68,6 +69,18 @@ class ProjectRepository(object):
         app = self.db.session.query(App).filter(App.id==project.id).first()
         self.db.session.delete(app)
         self.db.session.commit()
+
+
+
+    def save_featured(self, featured):
+        if not isinstance(featured, Featured):
+            raise RepositoryError('%s is not a Featured instance' % featured)
+        try:
+            self.db.session.add(featured)
+            self.db.session.commit()
+        except IntegrityError as e:
+            self.db.session.rollback()
+            raise RepositoryError(e)
 
 
 
