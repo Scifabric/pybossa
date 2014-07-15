@@ -19,6 +19,7 @@
 from sqlalchemy.exc import IntegrityError
 
 from pybossa.model.blogpost import Blogpost
+from pybossa.exc import WrongObjectError, DBIntegrityError
 
 
 
@@ -39,22 +40,28 @@ class BlogRepository(object):
         return self.db.session.query(Blogpost).filter_by(**filters).all()
 
     def save(self, blogpost):
+        if not isinstance(blogpost, Blogpost):
+            raise WrongObjectError('%s is not a Blogpost instance' % blogpost)
         try:
             self.db.session.add(blogpost)
             self.db.session.commit()
-        except IntegrityError:
+        except IntegrityError as e:
             self.db.session.rollback()
-            raise
+            raise DBIntegrityError(e)
 
     def update(self, blogpost):
+        if not isinstance(blogpost, Blogpost):
+            raise WrongObjectError('%s is not a Blogpost instance' % blogpost)
         try:
             self.db.session.merge(blogpost)
             self.db.session.commit()
-        except IntegrityError:
+        except IntegrityError as e:
             self.db.session.rollback()
-            raise
+            raise DBIntegrityError(e)
 
-    def delete(self, project):
-        blog = self.db.session.query(Blogpost).filter(Blogpost.id==project.id).first()
+    def delete(self, blogpost):
+        if not isinstance(blogpost, Blogpost):
+            raise WrongObjectError('%s is not a Blogpost instance' % blogpost)
+        blog = self.db.session.query(Blogpost).filter(Blogpost.id==blogpost.id).first()
         self.db.session.delete(blog)
         self.db.session.commit()
