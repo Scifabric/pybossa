@@ -149,7 +149,7 @@ class TestProjectRepository(Test):
 
         self.project_repo.save(project)
 
-        assert self.project_repo.get(project.id) == project, "Project not persisted"""
+        assert self.project_repo.get(project.id) == project, "Project not persisted"
 
 
     def test_save_fails_if_integrity_error(self):
@@ -163,9 +163,46 @@ class TestProjectRepository(Test):
 
     def test_save_only_saves_projects(self):
         """Test save raises a RepositoryError when an object which is not
-        a Project (App) instance"""
+        a Project (App) instance is saved"""
 
         bad_object = dict()
 
         assert_raises(RepositoryError, self.project_repo.save, bad_object)
+
+
+    def test_update(self):
+        """Test update persists the changes made to the project"""
+
+        project = AppFactory.create(description='this is a project')
+        project.description = 'the description has changed'
+
+        self.project_repo.update(project)
+        updated_project = self.project_repo.get(project.id)
+
+        assert updated_project.description == 'the description has changed', updated_project
+
+
+    def update_fails_if_integrity_error(self):
+        """Test update raises a RepositoryError if the instance to be updated
+        lacks a required value"""
+
+        project = AppFactory.create()
+        project.name = None
+
+        assert_raises(RepositoryError, self.project_repo.update, project)
+
+
+    def test_update_only_updates_projects(self):
+        """Test update raises a RepositoryError when an object which is not
+        a Project (App) instance is updated"""
+
+        bad_object = dict()
+
+        assert_raises(RepositoryError, self.project_repo.update, bad_object)
+
+
+
+
+
+
 
