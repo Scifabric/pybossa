@@ -149,7 +149,7 @@ class TestProjectRepositoryForProjects(Test):
 
         self.project_repo.save(project)
 
-        assert self.project_repo.get(project.id) == project, "Project not persisted"
+        assert self.project_repo.get(project.id) == project, "Project not saved"
 
 
     def test_save_fails_if_integrity_error(self):
@@ -182,7 +182,7 @@ class TestProjectRepositoryForProjects(Test):
         assert updated_project.description == 'the description has changed', updated_project
 
 
-    def update_fails_if_integrity_error(self):
+    def test_update_fails_if_integrity_error(self):
         """Test update raises a RepositoryError if the instance to be updated
         lacks a required value"""
 
@@ -305,3 +305,83 @@ class TestProjectRepositoryForCategories(Test):
 
         assert len(retrieved_categories) == 3, retrieved_categories
         assert should_be_missing not in retrieved_categories, retrieved_categories
+
+
+    def test_save_category(self):
+        """Test save_category persist the category"""
+
+        category = CategoryFactory.build()
+        assert self.project_repo.get(category.id) is None
+
+        self.project_repo.save_category(category)
+
+        assert self.project_repo.get_category(category.id) == category, "Category not saved"
+
+
+    def test_save_category_fails_if_integrity_error(self):
+        """Test save_category raises an RepositoryError if the instance to be
+       saved lacks a required value"""
+
+        category = CategoryFactory.build(name=None)
+
+        assert_raises(RepositoryError, self.project_repo.save_category, category)
+
+
+    def test_save_category_only_saves_categories(self):
+        """Test save_category raises a RepositoryError when an object which is
+        not a Category instance is saved"""
+
+        bad_object = AppFactory.build()
+
+        assert_raises(RepositoryError, self.project_repo.save_category, bad_object)
+
+
+    def test_update_category(self):
+        """Test update_category persists the changes made to the category"""
+
+        category = CategoryFactory.create(description='this is a category')
+        category.description = 'the description has changed'
+
+        self.project_repo.update_category(category)
+        updated_category = self.project_repo.get_category(category.id)
+
+        assert updated_category.description == 'the description has changed', updated_category
+
+
+    def test_update_category_fails_if_integrity_error(self):
+        """Test update raises a RepositoryError if the instance to be updated
+        lacks a required value"""
+
+        category = CategoryFactory.create()
+        category.name = None
+
+        assert_raises(RepositoryError, self.project_repo.update_category, category)
+
+
+    def test_update_category_only_updates_categories(self):
+        """Test update_category raises a RepositoryError when an object which is
+        not a Project (App) instance is updated"""
+
+        bad_object = AppFactory.build()
+
+        assert_raises(RepositoryError, self.project_repo.update_category, bad_object)
+
+
+    def test_delete_category(self):
+        """Test delete_category removes the category instance"""
+
+        category = CategoryFactory.create()
+
+        self.project_repo.delete_category(category)
+        deleted = self.project_repo.get_category(category.id)
+
+        assert deleted is None, deleted
+
+
+    def test_delete_category_only_deletes_categories(self):
+        """Test delete_category raises a RepositoryError if is requested to
+        delete other than a category"""
+
+        bad_object = dict()
+
+        assert_raises(RepositoryError, self.project_repo.delete_category, bad_object)
