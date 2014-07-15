@@ -398,4 +398,8 @@ def get_session(db, bind):
     engine = db.get_engine(db.app, bind=bind)
     Session.configure(bind=engine)
     session = Session()
+    # HACK: this is to fix Flask-SQLAlchemy error
+    # see: http://stackoverflow.com/a/20203277/1960596
+    # note: it looks like in Flask-SQLAlchemy 2.0 this is going to be fixed
+    session._model_changes = {}
     return session

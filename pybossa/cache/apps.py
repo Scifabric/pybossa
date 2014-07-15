@@ -46,8 +46,8 @@ def get_app(short_name):
         session.close()
 
 
-#@cache(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'),
-#       key_prefix="front_page_featured_apps")
+@cache(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'),
+       key_prefix="front_page_featured_apps")
 def get_featured_front_page():
     """Return featured apps"""
     try:
@@ -64,7 +64,6 @@ def get_featured_front_page():
             featured.append(app)
         return featured
     except:
-        session._model_changes = {}
         session.rollback()
         raise
     finally:
