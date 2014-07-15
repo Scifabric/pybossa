@@ -201,8 +201,23 @@ class TestProjectRepository(Test):
         assert_raises(RepositoryError, self.project_repo.update, bad_object)
 
 
+    def test_delete(self):
+        """Test delete removes the project instance"""
+
+        project = AppFactory.create()
+
+        self.project_repo.delete(project)
+        deleted = self.project_repo.get(project.id)
+
+        assert deleted is None, deleted
 
 
+    def test_delete_only_deletes_projects(self):
+        """Test delete raises a RepositoryError if is requested to delete other
+        than a project"""
 
+        bad_object = dict()
+
+        assert_raises(RepositoryError, self.project_repo.delete, bad_object)
 
 
