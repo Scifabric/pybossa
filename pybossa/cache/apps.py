@@ -46,8 +46,8 @@ def get_app(short_name):
         session.close()
 
 
-@cache(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'),
-       key_prefix="front_page_featured_apps")
+#@cache(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'),
+#       key_prefix="front_page_featured_apps")
 def get_featured_front_page():
     """Return featured apps"""
     try:
@@ -64,6 +64,7 @@ def get_featured_front_page():
             featured.append(app)
         return featured
     except:
+        session._model_changes = {}
         session.rollback()
         raise
     finally:
@@ -80,7 +81,7 @@ def get_top(n=4):
                   WHERE app_id IS NOT NULL AND app.id=app_id AND app.hidden=0
                   GROUP BY app.id ORDER BY total DESC LIMIT :limit;''')
         session = get_session(db, bind='slave')
-        results = session.execute(sql, limit=n)
+        results = session.execute(sql, dict(limit=n))
         top_apps = []
         for row in results:
             app = dict(id=row.id, name=row.name, short_name=row.short_name,
@@ -103,7 +104,7 @@ def n_tasks(app_id):
         sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task
                       WHERE task.app_id=:app_id''')
         session = get_session(db, bind='slave')
-        results = session.execute(sql, app_id=app_id)
+        results = session.execute(sql, dict(app_id=app_id))
         n_tasks = 0
         for row in results:
             n_tasks = row.n_tasks
@@ -122,7 +123,7 @@ def n_completed_tasks(app_id):
                     WHERE task.app_id=:app_id AND task.state=\'completed\';''')
 
         session = get_session(db, bind='slave')
-        results = session.execute(sql, app_id=app_id)
+        results = session.execute(sql, dict(app_id=app_id))
         n_completed_tasks = 0
         for row in results:
             n_completed_tasks = row.n_completed_tasks
@@ -142,7 +143,7 @@ def n_registered_volunteers(app_id):
                task_run.user_ip IS NULL AND
                task_run.app_id=:app_id;''')
         session = get_session(db, bind='slave')
-        results = session.execute(sql, app_id=app_id)
+        results = session.execute(sql, dict(app_id=app_id))
         n_registered_volunteers = 0
         for row in results:
             n_registered_volunteers = row.n_registered_volunteers
@@ -162,8 +163,12 @@ def n_anonymous_volunteers(app_id):
                task_run.user_id IS NULL AND
                task_run.app_id=:app_id;''')
 
-        session = get_session(db, bind='slave')
-        results = session.execute(sql, app_id=app_id)
+        #session = get_session(db, bind='slave')
+        engine = db.get_engine(db.app, bind='slave')
+        from pybossa.core import Session
+        Session.configure(bind=engine)
+        session = Session()
+        results = session.execute(sql, dict(app_id=app_id))
         n_anonymous_volunteers = 0
         for row in results:
             n_anonymous_volunteers = row.n_anonymous_volunteers
@@ -187,7 +192,7 @@ def n_task_runs(app_id):
                       WHERE task_run.app_id=:app_id''')
 
         session = get_session(db, bind='slave')
-        results = session.execute(sql, app_id=app_id)
+        results = session.execute(sql, dict(app_id=app_id))
         n_task_runs = 0
         for row in results:
             n_task_runs = row.n_task_runs
@@ -209,7 +214,7 @@ def overall_progress(app_id):
                    FROM task LEFT OUTER JOIN task_run ON task.id=task_run.task_id
                    WHERE task.app_id=:app_id GROUP BY task.id''')
         session = get_session(db, bind='slave')
-        results = session.execute(sql, app_id=app_id)
+        results = session.execute(sql, dict(app_id=app_id))
         n_expected_task_runs = 0
         n_task_runs = 0
         for row in results:
@@ -235,7 +240,7 @@ def last_activity(app_id):
         sql = text('''SELECT finish_time FROM task_run WHERE app_id=:app_id
                    ORDER BY finish_time DESC LIMIT 1''')
         session = get_session(db, bind='slave')
-        results = session.execute(sql, app_id=app_id)
+        results = session.execute(sql, dict(app_id=app_id))
         for row in results:
             if row is not None:
                 return row[0]
@@ -284,7 +289,7 @@ def get_featured(category, page=1, per_page=5):
         offset = (page - 1) * per_page
 
         session = get_session(db, bind='slave')
-        results = session.execute(sql, limit=per_page, offset=offset)
+        results = session.execute(sql, dict(limit=per_page, offset=offset))
         apps = []
         for row in results:
             app = dict(id=row.id, name=row.name, short_name=row.short_name,
@@ -369,7 +374,7 @@ def get_draft(category, page=1, per_page=5):
 
         offset = (page - 1) * per_page
         session = get_session(db, bind='slave')
-        results = session.execute(sql, limit=per_page, offset=offset)
+        results = session.execute(sql, dict(limit=per_page, offset=offset))
         apps = []
         for row in results:
             app = dict(id=row.id, name=row.name, short_name=row.short_name,
@@ -407,7 +412,7 @@ def n_count(category):
                    ''')
 
         session = get_session(db, bind='slave')
-        results = session.execute(sql, category=category)
+        results = session.execute(sql, dict(category=category))
         count = 0
         for row in results:
             count = row[0]
@@ -444,7 +449,7 @@ def get(category, page=1, per_page=5):
 
         offset = (page - 1) * per_page
         session = get_session(db, bind='slave')
-        results = session.execute(sql, category=category, limit=per_page, offset=offset)
+        results = session.execute(sql, dict(category=category, limit=per_page, offset=offset))
         apps = []
         for row in results:
             app = dict(id=row.id,
