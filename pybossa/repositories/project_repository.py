@@ -32,6 +32,7 @@ class ProjectRepository(object):
         self.db = db
 
 
+    # Methods for App/Project objects
     def get(self, id):
         return self.db.session.query(App).get(id)
 
@@ -75,19 +76,7 @@ class ProjectRepository(object):
         self.db.session.commit()
 
 
-
-    def save_featured(self, featured):
-        if not isinstance(featured, Featured):
-            raise RepositoryError('%s is not a Featured instance' % featured)
-        try:
-            self.db.session.add(featured)
-            self.db.session.commit()
-        except SQLAlchemyError as e:
-            self.db.session.rollback()
-            raise RepositoryError(e)
-
-
-
+    # Methods for Category objects
     def get_category(self, id=None):
         if id is None:
             return self.db.session.query(Category).first()
@@ -128,3 +117,14 @@ class ProjectRepository(object):
         self.db.session.query(Category).filter(Category.id==category.id).delete()
         self.db.session.commit()
 
+
+    # Methods for Featured objects (only save, to be used in FB factories)
+    def save_featured(self, featured):
+        if not isinstance(featured, Featured):
+            raise RepositoryError('%s is not a Featured instance' % featured)
+        try:
+            self.db.session.add(featured)
+            self.db.session.commit()
+        except SQLAlchemyError as e:
+            self.db.session.rollback()
+            raise RepositoryError(e)
