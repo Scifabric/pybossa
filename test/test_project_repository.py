@@ -20,15 +20,15 @@
 from default import Test, db, with_context
 from nose.tools import assert_raises
 from mock import patch
-from factories import AppFactory
+from factories import AppFactory, CategoryFactory
 from pybossa.repositories import ProjectRepository
 from pybossa.exc import RepositoryError
 
 
-class TestProjectRepository(Test):
+class TestProjectRepositoryForProjects(Test):
 
     def setUp(self):
-        super(TestProjectRepository, self).setUp()
+        super(TestProjectRepositoryForProjects, self).setUp()
         self.project_repo = ProjectRepository(db)
 
 
@@ -221,3 +221,87 @@ class TestProjectRepository(Test):
         assert_raises(RepositoryError, self.project_repo.delete, bad_object)
 
 
+
+class TestProjectRepositoryForCategories(Test):
+
+    def setUp(self):
+        super(TestProjectRepositoryForCategories, self).setUp()
+        self.project_repo = ProjectRepository(db)
+
+
+    def test_get_category_return_none_if_no_category(self):
+        """Test get_category method returns None if there is no project with the
+        specified id"""
+
+        category = self.project_repo.get_category(200)
+
+        assert category is None, category
+
+
+    def test_get_category_returns_category(self):
+        """Test get_category method returns a category if exists"""
+
+        category = CategoryFactory.create()
+
+        retrieved_category = self.project_repo.get_category(category.id)
+
+        assert category == retrieved_category, retrieved_category
+
+
+    def test_get_category_by(self):
+        """Test get_category returns a category with the specified attribute"""
+
+        category = CategoryFactory.create(name='My Category', short_name='mycategory')
+
+        retrieved_category = self.project_repo.get_category_by(name=category.name)
+
+        assert category == retrieved_category, retrieved_category
+
+
+    def test_get_category_by_returns_none_if_no_category(self):
+        """Test get_category returns None if no category matches the query"""
+
+        CategoryFactory.create(name='My Project', short_name='mycategory')
+
+        category = self.project_repo.get_by(name='no_name')
+
+        assert category is None, category
+
+
+    def get_all_returns_list_of_all_categories(self):
+        """Test get_all_categories returns a list of all the existing categories"""
+
+        categories = CategoryFactory.create_batch(3)
+
+        retrieved_categories = self.project_repo.get_all_categories()
+
+        assert isinstance(retrieved_categories, list)
+        assert len(retrieved_categories) == len(categories), retrieved_categories
+        for category in retrieved_categories:
+            assert category in categories, category
+
+
+    def test_filter_categories_by_no_matches(self):
+        """Test filter_categories_by returns an empty list if no categories
+        match the query"""
+
+        CategoryFactory.create(name='My Project', short_name='mycategory')
+
+        retrieved_categories = self.project_repo.filter_categories_by(name='no_name')
+
+        assert isinstance(retrieved_categories, list)
+        assert len(retrieved_categories) == 0, retrieved_categories
+
+
+    def test_filter_categories_by_one_condition(self):
+        """Test filter_categories_by returns a list of categories that meet
+        the filtering condition"""
+
+        CategoryFactory.create_batch(3, description='generic category')
+        should_be_missing = CategoryFactory.create(description='other category')
+
+        retrieved_categories = (self.project_repo
+            .filter_categories_by(description='generic category'))
+
+        assert len(retrieved_categories) == 3, retrieved_categories
+        assert should_be_missing not in retrieved_categories, retrieved_categories
