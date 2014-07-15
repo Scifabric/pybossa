@@ -24,6 +24,7 @@ from pybossa.repositories import TaskRepository
 task_repo = TaskRepository(db)
 
 
+
 def create(taskrun=None):
     authorized = task_repo.get_task_run_by(app_id=taskrun.app_id,
                                            task_id=taskrun.task_id,

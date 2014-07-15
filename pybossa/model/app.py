@@ -23,7 +23,7 @@ from sqlalchemy import event
 
 
 from pybossa.core import db, signer
-from pybossa.model import DomainObject, JSONType, make_timestamp, update_redis
+from pybossa.model import DomainObject, JSONType, JSONEncodedDict, make_timestamp, update_redis
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.featured import Featured
@@ -37,22 +37,33 @@ class App(db.Model, DomainObject):
 
     __tablename__ = 'app'
 
+    #: ID of the project
     id = Column(Integer, primary_key=True)
+    #: UTC timestamp when the project is created
     created = Column(Text, default=make_timestamp)
+    #: Project name
     name = Column(Unicode(length=255), unique=True, nullable=False)
+    #: Project slug for the URL
     short_name = Column(Unicode(length=255), unique=True, nullable=False)
+    #: Project description
     description = Column(Unicode(length=255), nullable=False)
+    #: Project long description
     long_description = Column(UnicodeText)
+    #: If the project allows anonymous contributions
     allow_anonymous_contributors = Column(Boolean, default=True)
     long_tasks = Column(Integer, default=0)
+    #: If the project is hidden
     hidden = Column(Integer, default=0)
+    #: Project owner_id
     owner_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     time_estimate = Column(Integer, default=0)
     time_limit = Column(Integer, default=0)
     calibration_frac = Column(Float, default=0)
     bolt_course_id = Column(Integer, default=0)
+    #: Project Category
     category_id = Column(Integer, ForeignKey('category.id'))
-    info = Column(JSONType, default=dict)
+    #: Project info field formatted as JSON
+    info = Column(JSONEncodedDict, default=dict)
 
 
     tasks = relationship(Task, cascade='all, delete, delete-orphan', backref='app')
