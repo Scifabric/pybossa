@@ -230,8 +230,8 @@ class TestProjectRepositoryForCategories(Test):
 
 
     def test_get_category_return_none_if_no_category(self):
-        """Test get_category method returns None if there is no project with the
-        specified id"""
+        """Test get_category method returns None if there is no category with
+        the specified id"""
 
         category = self.project_repo.get_category(200)
 
