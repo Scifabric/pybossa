@@ -391,3 +391,11 @@ def setup_cache_timeouts(app):
     timeouts['USER_TIMEOUT'] = app.config['USER_TIMEOUT']
     timeouts['USER_TOP_TIMEOUT'] = app.config['USER_TOP_TIMEOUT']
     timeouts['USER_TOTAL_TIMEOUT'] = app.config['USER_TOTAL_TIMEOUT']
+
+
+def get_session(db, bind):
+    """Returns a session with for the given bind."""
+    engine = db.get_engine(db.app, bind=bind)
+    Session.configure(bind=engine)
+    session = Session()
+    return session
