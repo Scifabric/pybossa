@@ -46,7 +46,7 @@ class ErrorStatus(object):
                     "ValueError": 415,
                     "DataError": 415,
                     "AttributeError": 415,
-                    "IntegrityError": 415,
+                    "DBIntegrityError": 415,
                     "TooManyRequests": 429}
 
     def format_exception(self, e, target, action):
