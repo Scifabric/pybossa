@@ -27,7 +27,7 @@ class FeaturedFactory(factory.Factory):
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
         featured = model_class(*args, **kwargs)
-        project_repo.save(featured)
+        project_repo.save_featured(featured)
         return featured
 
     @classmethod
