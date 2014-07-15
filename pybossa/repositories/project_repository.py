@@ -16,12 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import IntegrityError
 
 from pybossa.model.app import App
 from pybossa.model.category import Category
 from pybossa.model.featured import Featured
-from pybossa.exc import RepositoryError
+from pybossa.exc import WrongObjectError, DBIntegrityError
 
 
 
@@ -50,27 +50,27 @@ class ProjectRepository(object):
 
     def save(self, project):
         if not isinstance(project, App):
-            raise RepositoryError('%s is not an App instance' % project)
+            raise WrongObjectError('%s is not an App instance' % project)
         try:
             self.db.session.add(project)
             self.db.session.commit()
-        except SQLAlchemyError as e:
+        except IntegrityError as e:
             self.db.session.rollback()
-            raise RepositoryError(e)
+            raise DBIntegrityError(e)
 
     def update(self, project):
         if not isinstance(project, App):
-            raise RepositoryError('%s is not an App instance' % project)
+            raise WrongObjectError('%s is not an App instance' % project)
         try:
             self.db.session.merge(project)
             self.db.session.commit()
-        except SQLAlchemyError as e:
+        except IntegrityError as e:
             self.db.session.rollback()
-            raise RepositoryError(e)
+            raise DBIntegrityError(e)
 
     def delete(self, project):
         if not isinstance(project, App):
-            raise RepositoryError('%s is not an App instance' % project)
+            raise WrongObjectError('%s is not an App instance' % project)
         app = self.db.session.query(App).filter(App.id==project.id).first()
         self.db.session.delete(app)
         self.db.session.commit()
@@ -93,27 +93,27 @@ class ProjectRepository(object):
 
     def save_category(self, category):
         if not isinstance(category, Category):
-            raise RepositoryError('%s is not a Category instance' % category)
+            raise WrongObjectError('%s is not a Category instance' % category)
         try:
             self.db.session.add(category)
             self.db.session.commit()
-        except SQLAlchemyError as e:
+        except IntegrityError as e:
             self.db.session.rollback()
-            raise RepositoryError(e)
+            raise DBIntegrityError(e)
 
     def update_category(self, new_category):
         if not isinstance(new_category, Category):
-            raise RepositoryError('%s is not a Category instance' % new_category)
+            raise WrongObjectError('%s is not a Category instance' % new_category)
         try:
             self.db.session.merge(new_category)
             self.db.session.commit()
-        except SQLAlchemyError as e:
+        except IntegrityError as e:
             self.db.session.rollback()
-            raise RepositoryError(e)
+            raise DBIntegrityError(e)
 
     def delete_category(self, category):
         if not isinstance(category, Category):
-            raise RepositoryError('%s is not a Category instance' % category)
+            raise WrongObjectError('%s is not a Category instance' % category)
         self.db.session.query(Category).filter(Category.id==category.id).delete()
         self.db.session.commit()
 
@@ -121,10 +121,10 @@ class ProjectRepository(object):
     # Methods for Featured objects (only save, to be used in FB factories)
     def save_featured(self, featured):
         if not isinstance(featured, Featured):
-            raise RepositoryError('%s is not a Featured instance' % featured)
+            raise WrongObjectError('%s is not a Featured instance' % featured)
         try:
             self.db.session.add(featured)
             self.db.session.commit()
-        except SQLAlchemyError as e:
+        except IntegrityError as e:
             self.db.session.rollback()
-            raise RepositoryError(e)
+            raise DBIntegrityError(e)
