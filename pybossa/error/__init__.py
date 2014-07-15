@@ -68,6 +68,6 @@ class ErrorStatus(object):
                      status_code=status,
                      target=target,
                      exception_cls=exception_cls,
-                     exception_msg=e.message)
+                     exception_msg=str(e.message))
         return Response(json.dumps(error), status=status,
                         mimetype='application/json')
