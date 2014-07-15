@@ -17,7 +17,16 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 
-class RepositoryError(Exception):
+class DBIntegrityError(Exception):
+    """Raised when an integrity exception in the DB layer occurs"""
     def __init__(self, message):
-        super(RepositoryError, self).__init__(message)
+        super(DBIntegrityError, self).__init__(message)
+        self.message = message
+
+
+class WrongObjectError(Exception):
+    """Raised when trying to save, update or delete objects that the repository
+    does not handle"""
+    def __init__(self, message):
+        super(WrongObjectError, self).__init__(message)
         self.message = message
