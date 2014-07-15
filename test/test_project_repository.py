@@ -17,9 +17,8 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 # Cache global variables for timeouts
 
-from default import Test, db, with_context
+from default import Test, db
 from nose.tools import assert_raises
-from mock import patch
 from factories import AppFactory, CategoryFactory
 from pybossa.repositories import ProjectRepository
 from pybossa.exc import WrongObjectError, DBIntegrityError
