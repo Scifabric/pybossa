@@ -135,9 +135,19 @@ def get_user_summary(name):
                     info=dict(json.loads(row.info)),
                     email_addr=row.email_addr, n_answers=row.n_answers,
                     registered_ago=pretty_date(row.created))
+    if user:
+        rank_score = rank_and_score(user['id'])
+        user['rank'] = rank_score['rank']
+        user['score'] = rank_score['score']
+        user['total'] = get_total_users()
+        return user
+    else: # pragma: no cover
+        return None
 
-    # Rank
-    # See: https://gist.github.com/tokumine/1583695
+
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
+def rank_and_score(user_id):
+# See: https://gist.github.com/tokumine/1583695
     sql = text('''
                WITH global_rank AS (
                     WITH scores AS (
@@ -147,47 +157,116 @@ def get_user_summary(name):
                     FROM scores)
                SELECT * from global_rank WHERE user_id=:user_id;
                ''')
+    results = db.engine.execute(sql, user_id=user_id)
+    rank_and_score = dict(rank=None, score=None)
+    for row in results:
+        rank_and_score['rank'] = row.rank
+        rank_and_score['score'] = row.score
+    return rank_and_score
 
-    if user:
-        results = db.engine.execute(sql, user_id=user['id'])
-        for row in results:
-            user['rank'] = row.rank
-            user['score'] = row.score
 
-        # Get the APPs where the USER has participated
-        sql = text('''
-                   SELECT app.id, app.name, app.short_name, app.info,
-                   COUNT(task_run.app_id) AS n_answers FROM app, task_run
-                   WHERE app.id=task_run.app_id AND
-                   task_run.user_id=:user_id GROUP BY app.id
-                   ORDER BY n_answers DESC;
-                   ''')
-        results = db.engine.execute(sql, user_id=user['id'])
-        apps_contributed = []
-        for row in results:
-            app = dict(id=row.id, name=row.name, info=dict(json.loads(row.info)),
-                       short_name=row.short_name,
-                       n_answers=row.n_answers)
-            apps_contributed.append(app)
+def apps_contributed(user_id):
+    sql = text('''
+               SELECT app.name, app.short_name, app.info,
+               COUNT(*) as n_task_runs
+               FROM task_run JOIN app ON
+               (task_run.app_id=app.id) WHERE task_run.user_id=:user_id
+               GROUP BY app.name, app.short_name, app.info
+               ORDER BY n_task_runs DESC;''')
 
-        # Get the CREATED APPS by the USER
-        sql = text('''
-                   SELECT app.id, app.name, app.short_name, app.info, app.created
-                   FROM app
-                   WHERE app.owner_id=:user_id
-                   ORDER BY app.created DESC;
-                   ''')
-        results = db.engine.execute(sql, user_id=user['id'])
-        apps_created = []
-        for row in results:
-            app = dict(id=row.id, name=row.name,
-                       short_name=row.short_name,
-                       info=dict(json.loads(row.info)))
-            apps_created.append(app)
+    results = db.engine.execute(sql, user_id=user_id)
+    apps_contributed = []
+    for row in results:
+        app = dict(name=row.name, short_name=row.short_name,
+                   info=json.loads(row.info), n_task_runs=row.n_task_runs)
+        apps_contributed.append(app)
+    return apps_contributed
 
-        return user, apps_contributed, apps_created
-    else: # pragma: no cover
-        return None, None, None
+
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
+def apps_contributed_cached(user_id):
+    return apps_contributed(user_id)
+
+
+def published_apps(user_id):
+    sql = text('''
+               SELECT app.id, app.name, app.short_name, app.description,
+               app.owner_id,
+               app.info
+               FROM app, task
+               WHERE app.id=task.app_id AND app.owner_id=:user_id AND
+               app.hidden=0 AND app.info LIKE('%task_presenter%')
+               GROUP BY app.id, app.name, app.short_name,
+               app.description,
+               app.info;''')
+    apps_published = []
+    results = db.engine.execute(sql, user_id=user_id)
+    for row in results:
+        app = dict(id=row.id, name=row.name, short_name=row.short_name,
+                   owner_id=row.owner_id,
+                   description=row.description,
+                   info=json.loads(row.info))
+        apps_published.append(app)
+    return apps_published
+
+
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
+def published_apps_cached(user_id):
+    return published_apps(user_id)
+
+
+def draft_apps(user_id):
+    sql = text('''
+               SELECT app.id, app.name, app.short_name, app.description,
+               owner_id,
+               app.info
+               FROM app
+               WHERE app.owner_id=:user_id
+               AND app.info NOT LIKE('%task_presenter%')
+               GROUP BY app.id, app.name, app.short_name,
+               app.description,
+               app.info;''')
+    apps_draft = []
+    results = db.engine.execute(sql, user_id=user_id)
+    for row in results:
+        app = dict(id=row.id, name=row.name, short_name=row.short_name,
+                   owner_id=row.owner_id,
+                   description=row.description,
+                   info=json.loads(row.info))
+        apps_draft.append(app)
+    return apps_draft
+
+
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
+def draft_apps_cached(user_id):
+    return draft_apps(user_id)
+
+
+def hidden_apps(user_id):
+    sql = text('''
+               SELECT app.id, app.name, app.short_name, app.description,
+               app.owner_id,
+               app.info
+               FROM app, task
+               WHERE app.id=task.app_id AND app.owner_id=:user_id AND
+               app.hidden=1 AND app.info LIKE('%task_presenter%')
+               GROUP BY app.id, app.name, app.short_name,
+               app.description,
+               app.info;''')
+    apps_published = []
+    results = db.engine.execute(sql, user_id=user_id)
+    for row in results:
+        app = dict(id=row.id, name=row.name, short_name=row.short_name,
+                   owner_id=row.owner_id,
+                   description=row.description,
+                   info=json.loads(row.info))
+        apps_published.append(app)
+    return apps_published
+
+
+@memoize(timeout=timeouts.get('USER_TIMEOUT'))
+def hidden_apps_cached(user_id):
+    return hidden_apps(user_id)
 
 
 @cache(timeout=timeouts.get('USER_TOTAL_TIMEOUT'),
