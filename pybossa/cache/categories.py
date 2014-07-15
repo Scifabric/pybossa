@@ -18,7 +18,7 @@
 
 from sqlalchemy.sql import text
 from pybossa.cache import cache, delete_cached
-from pybossa.core import db, timeouts
+from pybossa.core import db, timeouts, get_session
 import pybossa.model as model
 
 
@@ -26,24 +26,39 @@ import pybossa.model as model
        timeout=timeouts.get('CATEGORY_TIMEOUT'))
 def get_all():
     """Return all categories"""
-    return db.session.query(model.category.Category).all()
+    try:
+        session = get_session(db, bind='slave')
+        data = session.query(model.category.Category).all()
+        return data
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @cache(key_prefix="categories_used",
        timeout=timeouts.get('CATEGORY_TIMEOUT'))
 def get_used():
     """Return categories only used by apps"""
-    sql = text('''
-               SELECT category.* FROM category, app
-               WHERE app.category_id=category.id GROUP BY category.id
-               ''')
-    results = db.engine.execute(sql)
-    categories = []
-    for row in results:
-        category = dict(id=row.id, name=row.name, short_name=row.short_name,
-                        description=row.description)
-        categories.append(category)
-    return categories
+    try:
+        sql = text('''
+                   SELECT category.* FROM category, app
+                   WHERE app.category_id=category.id GROUP BY category.id
+                   ''')
+        session = get_session(db, bind='slave')
+        results = session.execute(sql)
+        categories = []
+        for row in results:
+            category = dict(id=row.id, name=row.name, short_name=row.short_name,
+                            description=row.description)
+            categories.append(category)
+        return categories
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 def reset():
