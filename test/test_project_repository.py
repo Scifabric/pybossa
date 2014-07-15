@@ -22,7 +22,7 @@ from nose.tools import assert_raises
 from mock import patch
 from factories import AppFactory, CategoryFactory
 from pybossa.repositories import ProjectRepository
-from pybossa.exc import RepositoryError
+from pybossa.exc import WrongObjectError, DBIntegrityError
 
 
 class TestProjectRepositoryForProjects(Test):
@@ -153,21 +153,21 @@ class TestProjectRepositoryForProjects(Test):
 
 
     def test_save_fails_if_integrity_error(self):
-        """Test save raises an RepositoryError if the instance to be saved lacks
+        """Test save raises a DBIntegrityError if the instance to be saved lacks
         a required value"""
 
         project = AppFactory.build(name=None)
 
-        assert_raises(RepositoryError, self.project_repo.save, project)
+        assert_raises(DBIntegrityError, self.project_repo.save, project)
 
 
     def test_save_only_saves_projects(self):
-        """Test save raises a RepositoryError when an object which is not
+        """Test save raises a WrongObjectError when an object which is not
         a Project (App) instance is saved"""
 
         bad_object = dict()
 
-        assert_raises(RepositoryError, self.project_repo.save, bad_object)
+        assert_raises(WrongObjectError, self.project_repo.save, bad_object)
 
 
     def test_update(self):
@@ -183,22 +183,22 @@ class TestProjectRepositoryForProjects(Test):
 
 
     def test_update_fails_if_integrity_error(self):
-        """Test update raises a RepositoryError if the instance to be updated
+        """Test update raises a DBIntegrityError if the instance to be updated
         lacks a required value"""
 
         project = AppFactory.create()
         project.name = None
 
-        assert_raises(RepositoryError, self.project_repo.update, project)
+        assert_raises(DBIntegrityError, self.project_repo.update, project)
 
 
     def test_update_only_updates_projects(self):
-        """Test update raises a RepositoryError when an object which is not
+        """Test update raises a WrongObjectError when an object which is not
         a Project (App) instance is updated"""
 
         bad_object = dict()
 
-        assert_raises(RepositoryError, self.project_repo.update, bad_object)
+        assert_raises(WrongObjectError, self.project_repo.update, bad_object)
 
 
     def test_delete(self):
@@ -213,12 +213,12 @@ class TestProjectRepositoryForProjects(Test):
 
 
     def test_delete_only_deletes_projects(self):
-        """Test delete raises a RepositoryError if is requested to delete other
+        """Test delete raises a WrongObjectError if is requested to delete other
         than a project"""
 
         bad_object = dict()
 
-        assert_raises(RepositoryError, self.project_repo.delete, bad_object)
+        assert_raises(WrongObjectError, self.project_repo.delete, bad_object)
 
 
 
@@ -251,7 +251,7 @@ class TestProjectRepositoryForCategories(Test):
     def test_get_category_by(self):
         """Test get_category returns a category with the specified attribute"""
 
-        category = CategoryFactory.create(name='My Category', short_name='mycategory')
+        category = CategoryFactory.create(name='My Cat', short_name='mycat')
 
         retrieved_category = self.project_repo.get_category_by(name=category.name)
 
@@ -319,21 +319,21 @@ class TestProjectRepositoryForCategories(Test):
 
 
     def test_save_category_fails_if_integrity_error(self):
-        """Test save_category raises an RepositoryError if the instance to be
+        """Test save_category raises a DBIntegrityError if the instance to be
        saved lacks a required value"""
 
         category = CategoryFactory.build(name=None)
 
-        assert_raises(RepositoryError, self.project_repo.save_category, category)
+        assert_raises(DBIntegrityError, self.project_repo.save_category, category)
 
 
     def test_save_category_only_saves_categories(self):
-        """Test save_category raises a RepositoryError when an object which is
+        """Test save_category raises a WrongObjectError when an object which is
         not a Category instance is saved"""
 
         bad_object = AppFactory.build()
 
-        assert_raises(RepositoryError, self.project_repo.save_category, bad_object)
+        assert_raises(WrongObjectError, self.project_repo.save_category, bad_object)
 
 
     def test_update_category(self):
@@ -349,22 +349,22 @@ class TestProjectRepositoryForCategories(Test):
 
 
     def test_update_category_fails_if_integrity_error(self):
-        """Test update raises a RepositoryError if the instance to be updated
+        """Test update raises a DBIntegrityError if the instance to be updated
         lacks a required value"""
 
         category = CategoryFactory.create()
         category.name = None
 
-        assert_raises(RepositoryError, self.project_repo.update_category, category)
+        assert_raises(DBIntegrityError, self.project_repo.update_category, category)
 
 
     def test_update_category_only_updates_categories(self):
-        """Test update_category raises a RepositoryError when an object which is
-        not a Project (App) instance is updated"""
+        """Test update_category raises a WrongObjectError when an object which is
+        not a Category instance is updated"""
 
         bad_object = AppFactory.build()
 
-        assert_raises(RepositoryError, self.project_repo.update_category, bad_object)
+        assert_raises(WrongObjectError, self.project_repo.update_category, bad_object)
 
 
     def test_delete_category(self):
@@ -379,9 +379,9 @@ class TestProjectRepositoryForCategories(Test):
 
 
     def test_delete_category_only_deletes_categories(self):
-        """Test delete_category raises a RepositoryError if is requested to
+        """Test delete_category raises a WrongObjectError if is requested to
         delete other than a category"""
 
         bad_object = dict()
 
-        assert_raises(RepositoryError, self.project_repo.delete_category, bad_object)
+        assert_raises(WrongObjectError, self.project_repo.delete_category, bad_object)

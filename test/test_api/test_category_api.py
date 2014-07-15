@@ -118,7 +118,7 @@ class TestCategoryAPI(TestAPI):
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
         assert err['action'] == 'POST', err
-        assert err['exception_cls'] == "IntegrityError", err
+        assert err['exception_cls'] == "DBIntegrityError", err
 
         # test create with non-allowed fields should fail
         data = dict(name='fail', short_name='fail', wrong=15)

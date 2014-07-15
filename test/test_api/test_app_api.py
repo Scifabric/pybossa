@@ -130,7 +130,7 @@ class TestAppAPI(TestAPI):
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
         assert err['action'] == 'POST', err
-        assert err['exception_cls'] == "IntegrityError", err
+        assert err['exception_cls'] == "DBIntegrityError", err
 
         # test create with non-allowed fields should fail
         data = dict(name='fail', short_name='fail', link='hateoas', wrong=15)
@@ -216,7 +216,7 @@ class TestAppAPI(TestAPI):
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
         assert err['action'] == 'PUT', err
-        assert err['exception_cls'] == 'IntegrityError', err
+        assert err['exception_cls'] == 'DBIntegrityError', err
 
         data['name'] = ''
         datajson = json.dumps(data)
@@ -226,7 +226,7 @@ class TestAppAPI(TestAPI):
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
         assert err['action'] == 'PUT', err
-        assert err['exception_cls'] == 'IntegrityError', err
+        assert err['exception_cls'] == 'DBIntegrityError', err
 
         data['name'] = 'something'
         data['short_name'] = ''
@@ -237,7 +237,7 @@ class TestAppAPI(TestAPI):
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
         assert err['action'] == 'PUT', err
-        assert err['exception_cls'] == 'IntegrityError', err
+        assert err['exception_cls'] == 'DBIntegrityError', err
 
 
         # With not JSON data
