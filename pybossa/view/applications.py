@@ -1010,7 +1010,7 @@ def export_to(short_name):
         n = getattr(task_repo, 'count_%ss_with' % table)(app_id=app.id)
         sep = ", "
         yield "["
-        for i, tr in enumerate(getattr(task_repo, 'yield_filter_%ss_by' % table)(app_id=app.id), 1):
+        for i, tr in enumerate(getattr(task_repo, 'filter_%ss_by' % table)(app_id=app.id, yielded=True), 1):
             item = json.dumps(tr.dictize())
             if (i == n):
                 sep = ""
@@ -1057,7 +1057,8 @@ def export_to(short_name):
         writer.writerow(format_csv_properly(t.dictize(), ty='taskrun'))
 
     def get_csv(out, writer, table, handle_row):
-        for tr in getattr(task_repo, 'yield_filter_%ss_by' % table)(app_id=app.id):
+        for tr in getattr(task_repo, 'filter_%ss_by' % table)(app_id=app.id,
+                                                              yielded=True):
             handle_row(writer, tr)
         yield out.getvalue()
 

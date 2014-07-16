@@ -289,6 +289,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
         assert count == 1, count
 
 
+
 class TestTaskRepositorySaveDeleteUpdate(Test):
 
     def setUp(self):
@@ -439,4 +440,3 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         bad_objects = [dict(), 'string']
 
         assert_raises(WrongObjectError, self.task_repo.delete_all, bad_objects)
-

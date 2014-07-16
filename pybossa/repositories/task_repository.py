@@ -31,6 +31,7 @@ class TaskRepository(object):
         self.db = db
 
 
+    # Methods for queries about Task objects
     def get_task(self, id):
         return self.db.session.query(Task).get(id)
 
@@ -43,14 +44,12 @@ class TaskRepository(object):
             return query.yield_per(1)
         return query.all()
 
-    def yield_filter_tasks_by(self, **filters):
-        return self.db.session.query(Task).filter_by(**filters).yield_per(1)
-
     def count_tasks_with(self, **filters):
         return self.db.session.query(Task).filter_by(**filters).count()
 
 
 
+    # Methods for queries about TaskRun objects
     def get_task_run(self, id):
         return self.db.session.query(TaskRun).get(id)
 
@@ -63,14 +62,12 @@ class TaskRepository(object):
             return query.yield_per(1)
         return query.all()
 
-    def yield_filter_task_runs_by(self, **filters):
-        return self.db.session.query(TaskRun).filter_by(**filters).yield_per(1)
-
     def count_task_runs_with(self, **filters):
         return self.db.session.query(TaskRun).filter_by(**filters).count()
 
 
 
+    # Methods for save, delete and update both Task and TaskRun objects
     def save(self, element):
         if not isinstance(element, Task) and not isinstance(element, TaskRun):
             raise WrongObjectError('%s cannot be saved by TaskRepository' % element)
