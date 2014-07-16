@@ -47,7 +47,7 @@ import pybossa.model as model
 from flask.ext.babel import lazy_gettext, gettext
 from sqlalchemy.sql import text
 from pybossa.model.user import User
-from pybossa.core import db, signer, mail, uploader, sentinel
+from pybossa.core import db, signer, mail, uploader, sentinel, get_session
 from pybossa.util import Pagination, get_user_id_or_ip, pretty_date
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
@@ -314,7 +314,8 @@ def profile(name):
     Returns a Jinja2 template with the user information.
 
     """
-    user = db.session.query(model.user.User).filter_by(name=name).first()
+    session = get_session(db, bind='slave')
+    user = session.query(model.user.User).filter_by(name=name).first()
     if user is None:
         return abort(404)
     if current_user.is_anonymous() or (user.id != current_user.id):
@@ -364,7 +365,8 @@ def applications(name):
     Returns a Jinja2 template with the list of projects of the user.
 
     """
-    user = User.query.filter_by(name=name).first()
+    session = get_session(db, bind='slave')
+    user = session.query(User).filter_by(name=name).first()
     if not user:
         return abort(404)
     if current_user.name != name:
