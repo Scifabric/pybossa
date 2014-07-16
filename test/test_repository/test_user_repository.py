@@ -209,3 +209,63 @@ class TestUserRepository(Test):
         count = self.user_repo.total_users()
 
         assert count == 1, count
+
+
+    def test_save(self):
+        """Test save persist the user"""
+
+        user = UserFactory.build()
+        assert self.user_repo.get(user.id) is None
+
+        self.user_repo.save(user)
+
+        assert self.user_repo.get(user.id) == user, "User not saved"
+
+
+    def test_save_fails_if_integrity_error(self):
+        """Test save raises a DBIntegrityError if the instance to be saved lacks
+        a required value"""
+
+        user = UserFactory.build(name=None)
+
+        assert_raises(DBIntegrityError, self.user_repo.save, user)
+
+
+    def test_save_only_saves_users(self):
+        """Test save raises a WrongObjectError when an object which is not
+        a User instance is saved"""
+
+        bad_object = dict()
+
+        assert_raises(WrongObjectError, self.user_repo.save, bad_object)
+
+
+    def test_update(self):
+        """Test update persists the changes made to the user"""
+
+        user = UserFactory.create(locale='en')
+        user.locale = 'it'
+
+        self.user_repo.update(user)
+        updated_user = self.user_repo.get(user.id)
+
+        assert updated_user.locale == 'it', updated_user
+
+
+    def test_update_fails_if_integrity_error(self):
+        """Test update raises a DBIntegrityError if the instance to be updated
+        lacks a required value"""
+
+        user = UserFactory.create()
+        user.name = None
+
+        assert_raises(DBIntegrityError, self.user_repo.update, user)
+
+
+    def test_update_only_updates_users(self):
+        """Test update raises a WrongObjectError when an object which is not
+        a User instance is updated"""
+
+        bad_object = dict()
+
+        assert_raises(WrongObjectError, self.user_repo.update, bad_object)
