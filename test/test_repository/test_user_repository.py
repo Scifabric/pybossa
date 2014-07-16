@@ -145,7 +145,7 @@ class TestUserRepository(Test):
 
         search = self.user_repo.search_by_name('')
 
-        assert isinstance(search, list)
+        assert isinstance(search, list), search.__class__
 
 
     def test_search_by_name(self):

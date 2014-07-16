@@ -161,7 +161,7 @@ class TestBlogRepository(Test):
 
     def test_update_only_updates_blogposts(self):
         """Test update raises a WrongObjectError when an object which is not
-        a Project (App) instance is updated"""
+        a Blogpost instance is updated"""
 
         bad_object = dict()
 
