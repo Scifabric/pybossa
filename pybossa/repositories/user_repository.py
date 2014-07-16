@@ -20,6 +20,7 @@ from sqlalchemy import or_, func
 from sqlalchemy.exc import IntegrityError
 
 from pybossa.model.user import User
+from pybossa.exc import WrongObjectError, DBIntegrityError
 
 
 
@@ -56,17 +57,21 @@ class UserRepository(object):
         return self.db.session.query(User).count()
 
     def save(self, user):
+        if not isinstance(user, User):
+            raise WrongObjectError('%s is not a User instance' % user)
         try:
             self.db.session.add(user)
             self.db.session.commit()
-        except IntegrityError:
+        except IntegrityError as e:
             self.db.session.rollback()
-            raise
+            raise DBIntegrityError(e)
 
     def update(self, new_user):
+        if not isinstance(new_user, User):
+            raise WrongObjectError('%s is not a User instance' % new_user)
         try:
             self.db.session.merge(new_user)
             self.db.session.commit()
-        except IntegrityError:
+        except IntegrityError as e:
             self.db.session.rollback()
-            raise
+            raise DBIntegrityError(e)
