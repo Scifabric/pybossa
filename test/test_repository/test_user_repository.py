@@ -139,3 +139,73 @@ class TestUserRepository(Test):
         assert len(retrieved_users) == 1, retrieved_users
         assert user in retrieved_users, retrieved_users
 
+
+    def test_search_by_name_returns_list(self):
+        """Test search_by_name returns a list with search results"""
+
+        search = self.user_repo.search_by_name('')
+
+        assert isinstance(search, list)
+
+
+    def test_search_by_name(self):
+        """Test search_by_name returns a list with the user if searching by
+        either its name or fullname"""
+
+        user = UserFactory.create(name='greenseer', fullname='Jojen Reed')
+
+        search_by_name = self.user_repo.search_by_name('greenseer')
+        search_by_fullname = self.user_repo.search_by_name('Jojen Reed')
+
+        assert user in search_by_name, search_by_name
+        assert user in search_by_fullname, search_by_fullname
+
+
+    def test_search_by_name_capital_lower_letters(self):
+        """Test search_by_name works the same with capital or lower letters"""
+
+        user_capitals = UserFactory.create(name='JOJEN')
+        user_lowers = UserFactory.create(name='meera')
+
+        search_lower = self.user_repo.search_by_name('jojen')
+        search_capital = self.user_repo.search_by_name('MEERA')
+
+        assert user_capitals in search_lower, search_lower
+        assert user_lowers in search_capital, search_capital
+
+
+    def test_search_by_name_substrings(self):
+        """Test search_by_name works when searching by a substring"""
+
+        user = UserFactory.create(name='Hodor')
+
+        search = self.user_repo.search_by_name('odo')
+
+        assert user in search, search
+
+
+    def test_search_by_name_empty_string(self):
+        """Test search_by_name returns an empty list when searching by '' """
+
+        user = UserFactory.create(name='Brandon')
+
+        search = self.user_repo.search_by_name('')
+
+        assert len(search) == 0, search
+
+
+    def test_total_users_no_users(self):
+        """Test total_users return 0 if there are no users"""
+
+        count = self.user_repo.total_users()
+
+        assert count == 0, count
+
+
+    def test_total_users_count(self):
+        """Test total_users return 1 if there is one user"""
+
+        UserFactory.create()
+        count = self.user_repo.total_users()
+
+        assert count == 1, count
