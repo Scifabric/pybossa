@@ -69,8 +69,7 @@ class TaskRepository(object):
 
     # Methods for save, delete and update both Task and TaskRun objects
     def save(self, element):
-        if not isinstance(element, Task) and not isinstance(element, TaskRun):
-            raise WrongObjectError('%s cannot be saved by TaskRepository' % element)
+        self._validate_can_be('saved', element)
         try:
             self.db.session.add(element)
             self.db.session.commit()
@@ -79,8 +78,7 @@ class TaskRepository(object):
             raise DBIntegrityError(e)
 
     def update(self, element):
-        if not isinstance(element, Task) and not isinstance(element, TaskRun):
-            raise WrongObjectError('%s cannot be updated by TaskRepository' % element)
+        self._validate_can_be('updated', element)
         try:
             self.db.session.merge(element)
             self.db.session.commit()
@@ -89,14 +87,19 @@ class TaskRepository(object):
             raise DBIntegrityError(e)
 
     def delete(self, element):
-        if not isinstance(element, Task) and not isinstance(element, TaskRun):
-            raise WrongObjectError('%s cannot be deleted by TaskRepository' % element)
+        self._validate_can_be('deleted', element)
         self.db.session.delete(element)
         self.db.session.commit()
 
     def delete_all(self, elements):
         for element in elements:
-            if not isinstance(element, Task) and not isinstance(element, TaskRun):
-                raise WrongObjectError('%s cannot be deleted by TaskRepository' % element)
+            self._validate_can_be('deleted', element)
             self.db.session.delete(element)
         self.db.session.commit()
+
+
+    def _validate_can_be(self, action, element):
+        if not isinstance(element, Task) and not isinstance(element, TaskRun):
+            name = element.__class__.__name__
+            msg = '%s cannot be %s by %s' % (name, action, self.__class__.__name__)
+            raise WrongObjectError(msg)

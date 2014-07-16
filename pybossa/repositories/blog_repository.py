@@ -40,8 +40,7 @@ class BlogRepository(object):
         return self.db.session.query(Blogpost).filter_by(**filters).all()
 
     def save(self, blogpost):
-        if not isinstance(blogpost, Blogpost):
-            raise WrongObjectError('%s is not a Blogpost instance' % blogpost)
+        self._validate_can_be('saved', blogpost)
         try:
             self.db.session.add(blogpost)
             self.db.session.commit()
@@ -50,8 +49,7 @@ class BlogRepository(object):
             raise DBIntegrityError(e)
 
     def update(self, blogpost):
-        if not isinstance(blogpost, Blogpost):
-            raise WrongObjectError('%s is not a Blogpost instance' % blogpost)
+        self._validate_can_be('updated', blogpost)
         try:
             self.db.session.merge(blogpost)
             self.db.session.commit()
@@ -60,8 +58,14 @@ class BlogRepository(object):
             raise DBIntegrityError(e)
 
     def delete(self, blogpost):
-        if not isinstance(blogpost, Blogpost):
-            raise WrongObjectError('%s is not a Blogpost instance' % blogpost)
+        self._validate_can_be('deleted', blogpost)
         blog = self.db.session.query(Blogpost).filter(Blogpost.id==blogpost.id).first()
         self.db.session.delete(blog)
         self.db.session.commit()
+
+
+    def _validate_can_be(self, action, blogpost):
+        if not isinstance(blogpost, Blogpost):
+            name = blogpost.__class__.__name__
+            msg = '%s cannot be %s by %s' % (name, action, self.__class__.__name__)
+            raise WrongObjectError(msg)

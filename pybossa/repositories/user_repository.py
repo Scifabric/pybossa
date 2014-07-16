@@ -57,8 +57,7 @@ class UserRepository(object):
         return self.db.session.query(User).count()
 
     def save(self, user):
-        if not isinstance(user, User):
-            raise WrongObjectError('%s is not a User instance' % user)
+        self._validate_can_be('saved', user)
         try:
             self.db.session.add(user)
             self.db.session.commit()
@@ -67,11 +66,17 @@ class UserRepository(object):
             raise DBIntegrityError(e)
 
     def update(self, new_user):
-        if not isinstance(new_user, User):
-            raise WrongObjectError('%s is not a User instance' % new_user)
+        self._validate_can_be('updated', new_user)
         try:
             self.db.session.merge(new_user)
             self.db.session.commit()
         except IntegrityError as e:
             self.db.session.rollback()
             raise DBIntegrityError(e)
+
+
+    def _validate_can_be(self, action, user):
+        if not isinstance(user, User):
+            name = user.__class__.__name__
+            msg = '%s cannot be %s by %s' % (name, action, self.__class__.__name__)
+            raise WrongObjectError(msg)

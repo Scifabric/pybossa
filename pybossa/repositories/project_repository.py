@@ -49,8 +49,7 @@ class ProjectRepository(object):
         return self.db.session.query(App).filter_by(**filters).all()
 
     def save(self, project):
-        if not isinstance(project, App):
-            raise WrongObjectError('%s is not an App instance' % project)
+        self._validate_can_be('saved', project)
         try:
             self.db.session.add(project)
             self.db.session.commit()
@@ -59,8 +58,7 @@ class ProjectRepository(object):
             raise DBIntegrityError(e)
 
     def update(self, project):
-        if not isinstance(project, App):
-            raise WrongObjectError('%s is not an App instance' % project)
+        self._validate_can_be('updated', project)
         try:
             self.db.session.merge(project)
             self.db.session.commit()
@@ -69,8 +67,7 @@ class ProjectRepository(object):
             raise DBIntegrityError(e)
 
     def delete(self, project):
-        if not isinstance(project, App):
-            raise WrongObjectError('%s is not an App instance' % project)
+        self._validate_can_be('deleted', project)
         app = self.db.session.query(App).filter(App.id==project.id).first()
         self.db.session.delete(app)
         self.db.session.commit()
@@ -92,8 +89,7 @@ class ProjectRepository(object):
         return self.db.session.query(Category).filter_by(**filters).all()
 
     def save_category(self, category):
-        if not isinstance(category, Category):
-            raise WrongObjectError('%s is not a Category instance' % category)
+        self._validate_can_be('saved as a Category', category, klass=Category)
         try:
             self.db.session.add(category)
             self.db.session.commit()
@@ -102,8 +98,7 @@ class ProjectRepository(object):
             raise DBIntegrityError(e)
 
     def update_category(self, new_category):
-        if not isinstance(new_category, Category):
-            raise WrongObjectError('%s is not a Category instance' % new_category)
+        self._validate_can_be('updated as a Category', new_category, klass=Category)
         try:
             self.db.session.merge(new_category)
             self.db.session.commit()
@@ -112,19 +107,24 @@ class ProjectRepository(object):
             raise DBIntegrityError(e)
 
     def delete_category(self, category):
-        if not isinstance(category, Category):
-            raise WrongObjectError('%s is not a Category instance' % category)
+        self._validate_can_be('deleted as a Category', category, klass=Category)
         self.db.session.query(Category).filter(Category.id==category.id).delete()
         self.db.session.commit()
 
 
     # Methods for Featured objects (only save, to be used in FB factories)
     def save_featured(self, featured):
-        if not isinstance(featured, Featured):
-            raise WrongObjectError('%s is not a Featured instance' % featured)
+        self._validate_can_be('saved as Featured', featured, klass=Featured)
         try:
             self.db.session.add(featured)
             self.db.session.commit()
         except IntegrityError as e:
             self.db.session.rollback()
             raise DBIntegrityError(e)
+
+
+    def _validate_can_be(self, action, element, klass=App):
+        if not isinstance(element, klass):
+            name = element.__class__.__name__
+            msg = '%s cannot be %s by %s' % (name, action, self.__class__.__name__)
+            raise WrongObjectError(msg)
