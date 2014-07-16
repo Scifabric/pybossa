@@ -17,11 +17,6 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from default import Test, db, with_context
-from pybossa.model.app import App
-from pybossa.model.task import Task
-from pybossa.model.task_run import TaskRun
-from pybossa.model.user import User
-from pybossa.model.featured import Featured
 from pybossa.cache import apps as cached_apps
 
 from factories import UserFactory, AppFactory, TaskFactory, \
@@ -30,30 +25,30 @@ from factories import UserFactory, AppFactory, TaskFactory, \
 
 class TestAppsCache(Test):
 
+
     def create_app_with_tasks(self, completed_tasks, ongoing_tasks):
         app = AppFactory.create()
-        for i in range(completed_tasks):
-            task = TaskFactory.create(app=app, state='completed', n_answers=3)
-        for i in range(ongoing_tasks):
-            task = TaskFactory.create(app=app, state='ongoing', n_answers=3)
-        db.session.commit()
+        TaskFactory.create_batch(completed_tasks, state='completed', app=app)
+        TaskFactory.create_batch(ongoing_tasks, state='ongoing', app=app)
         return app
 
-    def create_app_with_contributors(self, anonymous, registered, two_tasks=False, name='my_app'):
-        app = AppFactory.create(name=name)
-        task = TaskFactory.create(app=app)
+    def create_app_with_contributors(self, anonymous, registered,
+                                     two_tasks=False, name='my_app', hidden=0):
+        app = AppFactory.create(name=name, hidden=hidden)
+        task = TaskFactory(app=app)
         if two_tasks:
-            task_two = TaskFactory.create(app=app)
+            task2 = TaskFactory(app=app)
         for i in range(anonymous):
-            user_ip = '127.0.0.%s' % i
-            AnonymousTaskRunFactory.create(task=task, user_ip=user_ip)
+            task_run = AnonymousTaskRunFactory(task=task,
+                               user_ip='127.0.0.%s' % i)
             if two_tasks:
-                AnonymousTaskRunFactory.create(task=task_two)
+                task_run2 = AnonymousTaskRunFactory(task=task2,
+                               user_ip='127.0.0.%s' % i)
         for i in range(registered):
             user = UserFactory.create()
-            TaskRunFactory(task=task, user=user)
+            task_run = TaskRunFactory(task=task, user=user)
             if two_tasks:
-                TaskRunFactory(task=task_two, user=user)
+                task_run2 = TaskRunFactory(task=task2, user=user)
         return app
 
 
@@ -72,9 +67,9 @@ class TestAppsCache(Test):
     def test_get_featured_front_page_only_returns_featured(self):
         """Test CACHE PROJECTS get_featured_front_page returns only featured projects"""
 
-        FeaturedFactory.create()
-        AppFactory.create()
-        AppFactory.create()
+        featured_app = AppFactory.create()
+        non_featured_app = AppFactory.create()
+        FeaturedFactory.create(app=featured_app)
 
         featured = cached_apps.get_featured_front_page()
 
@@ -85,8 +80,8 @@ class TestAppsCache(Test):
     def test_get_featured_front_page_not_returns_hidden_apps(self):
         """Test CACHE PROJECTS get_featured_front_page does not return hidden projects"""
 
-        app = AppFactory.create(hidden=1)
-        FeaturedFactory.create(app=app)
+        featured_app = AppFactory.create(hidden=1)
+        FeaturedFactory.create(app=featured_app)
 
         featured = cached_apps.get_featured_front_page()
 
@@ -161,10 +156,7 @@ class TestAppsCache(Test):
         ranked_3_app = self.create_app_with_contributors(8, 0, name='three')
         ranked_2_app = self.create_app_with_contributors(9, 0, name='two')
         ranked_1_app = self.create_app_with_contributors(10, 0, name='one')
-        hidden_app = self.create_app_with_contributors(11, 0, name='hidden')
-        hidden_app.hidden = 1
-        db.session.add(hidden_app)
-        db.session.commit()
+        hidden_app = self.create_app_with_contributors(11, 0, name='hidden', hidden=1)
 
         top_apps = cached_apps.get_top()
 
@@ -226,6 +218,8 @@ class TestAppsCache(Test):
 
         app = self.create_app_with_contributors(anonymous=0, registered=2, two_tasks=True)
         registered_volunteers = cached_apps.n_registered_volunteers(app.id)
+        for tr in app.task_runs:
+            print tr.user
 
         err_msg = "Volunteers is %s, it should be 2" % registered_volunteers
         assert registered_volunteers == 2, err_msg
