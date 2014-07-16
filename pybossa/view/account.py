@@ -314,14 +314,20 @@ def profile(name):
     Returns a Jinja2 template with the user information.
 
     """
-    session = get_session(db, bind='slave')
-    user = session.query(model.user.User).filter_by(name=name).first()
-    if user is None:
-        return abort(404)
-    if current_user.is_anonymous() or (user.id != current_user.id):
-        return _show_public_profile(user)
-    if current_user.is_authenticated() and user.id == current_user.id:
-        return _show_own_profile(user)
+    try:
+        session = get_session(db, bind='slave')
+        user = session.query(model.user.User).filter_by(name=name).first()
+        if user is None:
+            return abort(404)
+        if current_user.is_anonymous() or (user.id != current_user.id):
+            return _show_public_profile(user)
+        if current_user.is_authenticated() and user.id == current_user.id:
+            return _show_own_profile(user)
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 def _show_public_profile(user):
@@ -365,21 +371,27 @@ def applications(name):
     Returns a Jinja2 template with the list of projects of the user.
 
     """
-    session = get_session(db, bind='slave')
-    user = session.query(User).filter_by(name=name).first()
-    if not user:
-        return abort(404)
-    if current_user.name != name:
-        return abort(403)
+    try:
+        session = get_session(db, bind='slave')
+        user = session.query(User).filter_by(name=name).first()
+        if not user:
+            return abort(404)
+        if current_user.name != name:
+            return abort(403)
 
-    user = db.session.query(model.user.User).get(current_user.id)
-    apps_published, apps_draft = _get_user_apps(user.id)
-    apps_published.extend(cached_users.hidden_apps(user.id))
+        user = db.session.query(model.user.User).get(current_user.id)
+        apps_published, apps_draft = _get_user_apps(user.id)
+        apps_published.extend(cached_users.hidden_apps(user.id))
 
-    return render_template('account/applications.html',
-                           title=gettext("Projects"),
-                           apps_published=apps_published,
-                           apps_draft=apps_draft)
+        return render_template('account/applications.html',
+                               title=gettext("Projects"),
+                               apps_published=apps_published,
+                               apps_draft=apps_draft)
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 def _get_user_apps(user_id):
