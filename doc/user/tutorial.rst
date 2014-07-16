@@ -857,12 +857,19 @@ hidden 'div' node so you can access it just like this:
     var userLocale = document.getElementById('PYBOSSA_USER_LOCALE').textContent.trim();
 
 
-The way you use it after is up to you, but let's see an example of how to use it
-to make a tutorial that automatically shows in the language of the user.
+The way you use it after this, it is up to you, but let's see an example of how 
+to you can use it to make a tutorial that automatically shows the strings in the language 
+of the user.
+
+.. note::
+    Anonymous users will be only shown with **en** language by default. This
+    feature only works for authenticated users that choose their own locale in
+    their account. You can however, load the translated strings using the
+    browser preferred language.
 
 First of all, check the *tutorial.html file*. You will see it consists on some
 HTML plus some Javascript inside a <script> tag to handle the different steps of
-the tutorial. Just copy the HTML fragment:
+the tutorial. Here you have a snippet of HTML tutorial file: 
 
 .. code-block:: html
 
@@ -899,7 +906,7 @@ the tutorial. Just copy the HTML fragment:
         </div>
     </div>
 
-And paste is as many times as languages you're planning to support.
+To add multilingual support, copy and paste it is as many times as languages you're planning to support.
 
 Then, add to each of them an id in the most outer 'div' which corresponds to the
 abreviated name of the locale ('en' for English, 'es' for Spanish, etc.), and
@@ -913,7 +920,8 @@ version (tags, ids, classes, etc.) like:
        NOT the HTML tags, IDs or classes.
     </div>
 
-Finally, some Javascript like and change the previous, from:
+Finally, in the Javascript section of the tutorial, you will need to add some
+extra code to enable multilingual tutorials. Thus, modify the javascript from:
 
 .. code-block:: javascript
 
@@ -986,10 +994,129 @@ To:
 
 Notice the languages array variable defined at the beggining?. It's important
 that you place there the ids you've given to the different translated versions
-of your HTML for the tutorial. The rest of the script only will compare the
+of your HTML for the tutorial. The rest of the script will only compare the
 locale of the user that is seeing the tutorial and delete all the HTML that is
 not in his language, so that only the tutorial that fits his locale settings is
 shown.
+
+Another method to support I18n
+------------------------------
+
+Another option for translating your project to different languages is using
+a JSON object like this:
+
+.. code-block:: javascript
+
+    messages = {"en": 
+                   {"welcome": "Hello World!,
+                    "bye": "Good bye!"
+                   },
+                "es:
+                   {"welcome": "Hola mundo!",
+                    "bye": "Hasta luego!"
+                   }
+               }
+
+This object can be placed in the *tutorial.html* or *template.html* file to
+load the proper strings translated to your users.
+
+The logic is very simple. With the following code you grab the language that
+should be loaded for the current user:
+
+.. code-block:: javascript
+
+    var userLocale = document.getElementById('PYBOSSA_USER_LOCALE').textContent.trim();
+
+
+Now, use userLocale to load the strings. For example, for *template.html* and
+the Flickrperson demo project, you will find the following code at the start of
+the script:
+
+.. code-block:: javascript
+
+    // Default language
+    var userLocale = "en";
+    // Translations
+    var messages = {"en": {
+                            "i18n_welldone": "Well done!",
+                            "i18n_welldone_text": "Your answer has been saved",
+                            "i18n_loading_next_task": "Loading next task...",
+                            "i18n_task_completed": "The task has been completed!",
+                            "i18n_thanks": "Thanks a lot!",
+                            "i18n_congratulations": "Congratulations",
+                            "i18n_congratulations_text": "You have participated in all available tasks!",
+                            "i18n_yes": "Yes",
+                            "i18n_no_photo": "No photo",
+                            "i18n_i_dont_know": "I don't know",
+                            "i18n_working_task": "You are working now on task:",
+                            "i18n_tasks_completed": "You have completed:",
+                            "i18n_tasks_from": "tasks from",
+                            "i18n_show_comments": "Show comments:",
+                            "i18n_hide_comments": "Hide comments:",
+                            "i18n_question": "Do you see a human face in this photo?",
+                          },
+                    "es": {
+                            "i18n_welldone": "Bien hecho!",
+                            "i18n_welldone_text": "Tu respuesta ha sido guardada",
+                            "i18n_loading_next_task": "Cargando la siguiente tarea...",
+                            "i18n_task_completed": "La tarea ha sido completadas!",
+                            "i18n_thanks": "Muchísimas gracias!",
+                            "i18n_congratulations": "Enhorabuena",
+                            "i18n_congratulations_text": "Has participado en todas las tareas disponibles!",
+                            "i18n_yes": "Sí",
+                            "i18n_no_photo": "No hay foto",
+                            "i18n_i_dont_know": "No lo sé",
+                            "i18n_working_task": "Estás trabajando en la tarea:",
+                            "i18n_tasks_completed": "Has completado:",
+                            "i18n_tasks_from": "tareas de",
+                            "i18n_show_comments": "Mostrar comentarios",
+                            "i18n_hide_comments": "Ocultar comentarios",
+                            "i18n_question": "¿Ves una cara humana en esta foto?",
+                          },
+                   };
+    // Update userLocale with server side information
+     $(document).ready(function(){
+         userLocale = document.getElementById('PYBOSSA_USER_LOCALE').textContent.trim();
+    
+    });
+    
+    function i18n_translate() {
+        var ids = Object.keys(messages[userLocale])
+        for (i=0; i<ids.length; i++) {
+            console.log("Translating: " + ids[i]);
+            document.getElementById(ids[i]).innerHTML = messages[userLocale][ids[i]];
+        }
+    }
+
+First, we define the default locale, "en" for English. Then, we create
+a messages dictionary with all the ids that we want to translate. Finally, we
+add the languages that we want to support.
+
+.. note::
+    
+    PyBossa will give you only the following 3 locale settings: "en", "es" and
+    "fr" as PyBossa is only translated to those languages. If you want to add
+    another language, please, help us to translate PyBossa (see
+    :ref:`translating`).
+
+
+As you can see, it's quite simple as you can share the messages object with
+your volunteers, so you can get many more translations for your project easily.
+
+Finally, we need to actually load those translated strings into the template.
+For doing this step, all we've to do is adding the following code to our
+*template.html* file at the function pybossa.presentTask:
+
+.. code-block:: javascript
+
+    pybossa.presentTask(function(task, deferred) {
+        if ( !$.isEmptyObject(task) ) {
+            loadUserProgress();
+            i18n_translate();
+            ...
+
+Done! When the task is loaded, the strings are translated and the project will
+be shown in the user language.
 
 
 Providing more details about the project

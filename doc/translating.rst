@@ -1,3 +1,6 @@
+
+.. _translating:
+
 ===================
 Translating PyBossa
 ===================
@@ -42,6 +45,7 @@ translation with this command:
 
 And now enable the new locale in the server local_settings.py file. Check for
 the LOCALES config variable and add your locale.
+
 
 Adding new strings to the translation
 =====================================
