@@ -153,3 +153,104 @@ class TestTaskRepositoryForTasks(Test):
                                                          n_answers=99)
 
         assert count == 1, count
+
+
+    def test_save(self):
+        """Test save persist the task"""
+
+        task = TaskFactory.build()
+        assert self.task_repo.get_task(task.id) is None
+
+        self.task_repo.save(task)
+
+        assert self.task_repo.get_task(task.id) == task, "Task not saved"
+
+
+    def test_save_fails_if_integrity_error(self):
+        """Test save raises a DBIntegrityError if the instance to be saved lacks
+        a required value"""
+
+        task = TaskFactory.build(app_id=None, app=None)
+
+        assert_raises(DBIntegrityError, self.task_repo.save, task)
+
+
+    def test_save_only_saves_tasks(self):
+        """Test save raises a WrongObjectError when an object which is not
+        a Task instance is saved"""
+
+        bad_object = dict()
+
+        assert_raises(WrongObjectError, self.task_repo.save, bad_object)
+
+
+    def test_update(self):
+        """Test update persists the changes made to the task"""
+
+        task = TaskFactory.create(state='ongoing')
+        task.state = 'done'
+
+        self.task_repo.update(task)
+        updated_task = self.task_repo.get_task(task.id)
+
+        assert updated_task.state == 'done', updated_task
+
+
+    def test_update_fails_if_integrity_error(self):
+        """Test update raises a DBIntegrityError if the instance to be updated
+        lacks a required value"""
+
+        task = TaskFactory.create()
+        task.app_id = None
+
+        assert_raises(DBIntegrityError, self.task_repo.update, task)
+
+
+    def test_update_only_updates_tasks(self):
+        """Test update raises a WrongObjectError when an object which is not
+        a Task instance is updated"""
+
+        bad_object = dict()
+
+        assert_raises(WrongObjectError, self.task_repo.update, bad_object)
+
+
+    def test_delete(self):
+        """Test delete removes the task instance"""
+
+        task = TaskFactory.create()
+
+        self.task_repo.delete(task)
+        deleted = self.task_repo.get_task(task.id)
+
+        assert deleted is None, deleted
+
+
+    def test_delete_only_deletes_tasks(self):
+        """Test delete raises a WrongObjectError if is requested to delete other
+        than a task"""
+
+        bad_object = dict()
+
+        assert_raises(WrongObjectError, self.task_repo.delete, bad_object)
+
+
+    def test_delete_all(self):
+        """Test delete_all deletes many tasks at once"""
+
+        tasks = TaskFactory.create_batch(2)
+
+        self.task_repo.delete_all(tasks)
+
+        for task in tasks:
+            assert self.task_repo.get_task(task.id) is None, task
+
+
+    def test_delete_all_raises_error_if_no_task(self):
+        """Test delete_all raises a WrongObjectError if is requested to delete
+        any other object than a task"""
+
+        bad_objects = [dict(), 'string']
+
+        assert_raises(WrongObjectError, self.task_repo.delete_all, bad_objects)
+
