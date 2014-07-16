@@ -129,7 +129,7 @@ def users(user_id=None):
         users = [user for user in user_repo.filter_by(admin=True) if user.id != current_user.id]
 
         if request.method == 'POST' and form.user.data:
-            query = '%' + form.user.data.lower() + '%'
+            query = form.user.data
             found = [user for user in user_repo.search_by_name(query) if user.id != current_user.id]
             require.user.update(found)
             if not found:

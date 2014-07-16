@@ -46,6 +46,9 @@ class UserRepository(object):
         return self.db.session.query(User).filter_by(**filters).all()
 
     def search_by_name(self, keyword):
+        if len(keyword) == 0:
+            return []
+        keyword = '%' + keyword.lower() + '%'
         return self.db.session.query(User).filter(or_(func.lower(User.name).like(keyword),
                                   func.lower(User.fullname).like(keyword))).all()
 
