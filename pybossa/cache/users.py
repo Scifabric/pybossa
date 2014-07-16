@@ -69,7 +69,7 @@ def get_leaderboard(n, user_id):
                            JOIN public."user" on (user_id=public."user".id)
                            WHERE user_id=:user_id ORDER BY rank;
                            ''')
-                user_rank = session.execute(sql, user_id=user_id)
+                user_rank = session.execute(sql, dict(user_id=user_id))
                 u = User.query.get(user_id)
                 # Load by default user data with no rank
                 user=dict(
