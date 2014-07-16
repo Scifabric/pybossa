@@ -408,10 +408,10 @@ def update_profile(name):
         show_passwd_form = False
     usr = cached_users.get_user_summary(name)
     # Extend the values
-    current_user.rank = usr.get('rank')
-    current_user.score = usr.get('score')
+    user.rank = usr.get('rank')
+    user.score = usr.get('score')
     # Title page
-    title_msg = "Update your profile: %s" % current_user.fullname
+    title_msg = "Update your profile: %s" % user.fullname
     # Creation of forms
     update_form = UpdateProfileForm(obj=user)
     update_form.set_locales(current_app.config['LOCALES'])
@@ -439,20 +439,20 @@ def update_profile(name):
                                avatar_form.x2.data, avatar_form.y2.data)
                 prefix = time.time()
                 file.filename = "%s_avatar.png" % prefix
-                container = "user_%s" % current_user.id
+                container = "user_%s" % user.id
                 uploader.upload_file(file,
                                      container=container,
                                      coordinates=coordinates)
                 # Delete previous avatar from storage
-                if current_user.info.get('avatar'):
-                    uploader.delete_file(current_user.info['avatar'], container)
-                current_user.info = {'avatar': file.filename,
+                if user.info.get('avatar'):
+                    uploader.delete_file(user.info['avatar'], container)
+                user.info = {'avatar': file.filename,
                                      'container': container}
-                user_repo.save(current_user)
-                cached_users.delete_user_summary(current_user.name)
+                user_repo.save(user)
+                cached_users.delete_user_summary(user.name)
                 flash(gettext('Your avatar has been updated! It may \
                               take some minutes to refresh...'), 'success')
-                return redirect(url_for('.update_profile', name=current_user.name))
+                return redirect(url_for('.update_profile', name=user.name))
             else:
                 flash("You have to provide an image file to update your avatar",
                       "error")
@@ -468,19 +468,19 @@ def update_profile(name):
             update_form = UpdateProfileForm()
             update_form.set_locales(current_app.config['LOCALES'])
             if update_form.validate():
-                current_user.id = update_form.id.data
-                current_user.fullname = update_form.fullname.data
-                current_user.name = update_form.name.data
-                current_user.email_addr = update_form.email_addr.data
-                current_user.privacy_mode = update_form.privacy_mode.data
-                current_user.locale = update_form.locale.data
-                user_repo.save(current_user)
-                cached_users.delete_user_summary(current_user.name)
+                user.id = update_form.id.data
+                user.fullname = update_form.fullname.data
+                user.name = update_form.name.data
+                user.email_addr = update_form.email_addr.data
+                user.privacy_mode = update_form.privacy_mode.data
+                user.locale = update_form.locale.data
+                user_repo.save(user)
+                cached_users.delete_user_summary(user.name)
                 flash(gettext('Your profile has been updated!'), 'success')
-                return redirect(url_for('.update_profile', name=current_user.name))
+                return redirect(url_for('.update_profile', name=user.name))
             else:
                 flash(gettext('Please correct the errors'), 'error')
-                title_msg = 'Update your profile: %s' % current_user.fullname
+                title_msg = 'Update your profile: %s' % user.fullname
                 return render_template('/account/update.html',
                                        form=update_form,
                                        upload_form=avatar_form,
@@ -498,7 +498,7 @@ def update_profile(name):
             update_form.ckan_api.data = user.ckan_api
             external_form = update_form
             if password_form.validate_on_submit():
-                user = user_repo.get(current_user.id)
+                user = user_repo.get(user.id)
                 if user.check_password(password_form.current_password.data):
                     user.set_password(password_form.new_password.data)
                     user_repo.save(user)
@@ -532,14 +532,14 @@ def update_profile(name):
             del external_form.fullname
             del external_form.name
             if external_form.validate():
-                current_user.ckan_api = external_form.ckan_api.data or None
-                user_repo.save(current_user)
-                cached_users.delete_user_summary(current_user.name)
+                user.ckan_api = external_form.ckan_api.data or None
+                user_repo.save(user)
+                cached_users.delete_user_summary(user.name)
                 flash(gettext('Your profile has been updated!'), 'success')
-                return redirect(url_for('.update_profile', name=current_user.name))
+                return redirect(url_for('.update_profile', name=user.name))
             else:
                 flash(gettext('Please correct the errors'), 'error')
-                title_msg = 'Update your profile: %s' % current_user.fullname
+                title_msg = 'Update your profile: %s' % user.fullname
                 return render_template('/account/update.html',
                                        form=update_form,
                                        upload_form=avatar_form,
