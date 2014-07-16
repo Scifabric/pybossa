@@ -20,6 +20,7 @@ from sqlalchemy.exc import IntegrityError
 
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
+from pybossa.exc import WrongObjectError, DBIntegrityError
 
 
 
@@ -36,8 +37,11 @@ class TaskRepository(object):
     def get_task_by(self, **attributes):
         return self.db.session.query(Task).filter_by(**attributes).first()
 
-    def filter_tasks_by(self, **filters):
-        return self.db.session.query(Task).filter_by(**filters).all()
+    def filter_tasks_by(self, yielded=False, **filters):
+        query = self.db.session.query(Task).filter_by(**filters)
+        if yielded:
+            return query.yield_per(1)
+        return query.all()
 
     def yield_filter_tasks_by(self, **filters):
         return self.db.session.query(Task).filter_by(**filters).yield_per(1)
@@ -53,8 +57,11 @@ class TaskRepository(object):
     def get_task_run_by(self, **attributes):
         return self.db.session.query(TaskRun).filter_by(**attributes).first()
 
-    def filter_task_runs_by(self, **filters):
-        return self.db.session.query(TaskRun).filter_by(**filters).all()
+    def filter_task_runs_by(self, yielded=False, **filters):
+        query = self.db.session.query(TaskRun).filter_by(**filters)
+        if yielded:
+            return query.yield_per(1)
+        return query.all()
 
     def yield_filter_task_runs_by(self, **filters):
         return self.db.session.query(TaskRun).filter_by(**filters).yield_per(1)
@@ -65,29 +72,34 @@ class TaskRepository(object):
 
 
     def save(self, element):
+        if not isinstance(element, Task) and not isinstance(element, TaskRun):
+            raise WrongObjectError('%s cannot be saved by TaskRepository' % element)
         try:
             self.db.session.add(element)
             self.db.session.commit()
-        except IntegrityError:
+        except IntegrityError as e:
             self.db.session.rollback()
-            raise
+            raise DBIntegrityError(e)
 
     def update(self, element):
+        if not isinstance(element, Task) and not isinstance(element, TaskRun):
+            raise WrongObjectError('%s cannot be updated by TaskRepository' % element)
         try:
             self.db.session.merge(element)
             self.db.session.commit()
-        except IntegrityError:
+        except IntegrityError as e:
             self.db.session.rollback()
-            raise
+            raise DBIntegrityError(e)
 
     def delete(self, element):
+        if not isinstance(element, Task) and not isinstance(element, TaskRun):
+            raise WrongObjectError('%s cannot be deleted by TaskRepository' % element)
         self.db.session.delete(element)
         self.db.session.commit()
 
     def delete_all(self, elements):
         for element in elements:
+            if not isinstance(element, Task) and not isinstance(element, TaskRun):
+                raise WrongObjectError('%s cannot be deleted by TaskRepository' % element)
             self.db.session.delete(element)
         self.db.session.commit()
-
-
-
