@@ -186,27 +186,34 @@ def get_incremental_task(app_id, user_id=None, user_ip=None, n_answers=30, offse
 
 def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
     """Gets all available tasks for a given project and user"""
-    rows = None
-    if user_id and not user_ip:
-        query = text('''
-                     SELECT id FROM task WHERE NOT EXISTS
-                     (SELECT task_id FROM task_run WHERE
-                     app_id=:app_id AND user_id=:user_id AND task_id=task.id)
-                     AND app_id=:app_id AND state !='completed'
-                     ORDER BY priority_0 DESC, id ASC LIMIT 10''')
-        rows = db.engine.execute(query, app_id=app_id, user_id=user_id)
-    else:
-        if not user_ip:
-            user_ip = '127.0.0.1'
-        query = text('''
-                     SELECT id FROM task WHERE NOT EXISTS
-                     (SELECT task_id FROM task_run WHERE
-                     app_id=:app_id AND user_ip=:user_ip AND task_id=task.id)
-                     AND app_id=:app_id AND state !='completed'
-                     ORDER BY priority_0 DESC, id ASC LIMIT 10''')
-        rows = db.engine.execute(query, app_id=app_id, user_ip=user_ip)
+    try:
+        session = get_session(db, bind='slave')
+        rows = None
+        if user_id and not user_ip:
+            query = text('''
+                         SELECT id FROM task WHERE NOT EXISTS
+                         (SELECT task_id FROM task_run WHERE
+                         app_id=:app_id AND user_id=:user_id AND task_id=task.id)
+                         AND app_id=:app_id AND state !='completed'
+                         ORDER BY priority_0 DESC, id ASC LIMIT 10''')
+            rows = session.execute(query, dict(app_id=app_id, user_id=user_id))
+        else:
+            if not user_ip:
+                user_ip = '127.0.0.1'
+            query = text('''
+                         SELECT id FROM task WHERE NOT EXISTS
+                         (SELECT task_id FROM task_run WHERE
+                         app_id=:app_id AND user_ip=:user_ip AND task_id=task.id)
+                         AND app_id=:app_id AND state !='completed'
+                         ORDER BY priority_0 DESC, id ASC LIMIT 10''')
+            rows = session.execute(query, dict(app_id=app_id, user_ip=user_ip))
 
-    tasks = []
-    for t in rows:
-        tasks.append(db.session.query(model.task.Task).get(t.id))
-    return tasks
+        tasks = []
+        for t in rows:
+            tasks.append(session.query(Task).get(t.id))
+        return tasks
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
