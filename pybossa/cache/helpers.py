@@ -50,7 +50,7 @@ def n_available_tasks(app_id, user_id=None, user_ip=None):
         for row in result:
             n_tasks = row.n_tasks
         return n_tasks
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -100,7 +100,7 @@ def _has_no_tasks(app_id):
         for row in result:
             n_tasks = row.n_tasks
         return n_tasks == 0
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
