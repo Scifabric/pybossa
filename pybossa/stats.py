@@ -48,13 +48,6 @@ def get_task_runs(app_id):
         session.close()
 
 
-#@memoize(timeout=ONE_DAY)
-#def get_tasks(app_id):
-#    """Return all the tasks for a given app_id"""
-#    tasks = db.session.query(Task).filter_by(app_id=app_id).all()
-#    return tasks
-
-
 @memoize(timeout=ONE_DAY)
 def get_avg_n_tasks(app_id):
     """Return the average number of answers expected per task,
