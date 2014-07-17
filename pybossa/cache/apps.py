@@ -39,7 +39,7 @@ def get_app(short_name):
         session = get_session(db, bind='slave')
         app = session.query(App).filter_by(short_name=short_name).first()
         return app
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -63,7 +63,7 @@ def get_featured_front_page():
                        n_completed_tasks=n_completed_tasks(row.id))
             featured.append(app)
         return featured
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -90,7 +90,7 @@ def get_top(n=4):
                        n_completed_tasks=n_completed_tasks(row.id))
             top_apps.append(app)
         return top_apps
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -108,7 +108,7 @@ def n_tasks(app_id):
         for row in results:
             n_tasks = row.n_tasks
         return n_tasks
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -127,7 +127,7 @@ def n_completed_tasks(app_id):
         for row in results:
             n_completed_tasks = row.n_completed_tasks
         return n_completed_tasks
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -147,7 +147,7 @@ def n_registered_volunteers(app_id):
         for row in results:
             n_registered_volunteers = row.n_registered_volunteers
         return n_registered_volunteers
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -168,7 +168,7 @@ def n_anonymous_volunteers(app_id):
         for row in results:
             n_anonymous_volunteers = row.n_anonymous_volunteers
         return n_anonymous_volunteers
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -192,7 +192,7 @@ def n_task_runs(app_id):
         for row in results:
             n_task_runs = row.n_task_runs
         return n_task_runs
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -222,7 +222,7 @@ def overall_progress(app_id):
         if n_expected_task_runs != 0:
             pct = float(n_task_runs) / float(n_expected_task_runs)
         return (pct * 100)
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -241,7 +241,7 @@ def last_activity(app_id):
                 return row[0]
             else:  # pragma: no cover
                 return None
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -260,7 +260,7 @@ def n_featured():
         for row in results:
             count = row[0]
         return count
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -297,7 +297,7 @@ def get_featured(category, page=1, per_page=5):
                        info=dict(json.loads(row.info)))
             apps.append(app)
         return apps, count
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -322,7 +322,7 @@ def n_published():
         for row in results:
             count = row[0]
         return count
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -345,7 +345,7 @@ def n_draft():
         for row in results:
             count = row[0]
         return count
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -382,7 +382,7 @@ def get_draft(category, page=1, per_page=5):
                        info=dict(json.loads(row.info)))
             apps.append(app)
         return apps, count
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -412,7 +412,7 @@ def n_count(category):
         for row in results:
             count = row[0]
         return count
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -459,7 +459,7 @@ def get(category, page=1, per_page=5):
                        info=dict(json.loads(row.info)))
             apps.append(app)
         return apps, count
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
