@@ -45,13 +45,20 @@ def n_auth_users():
 
 @cache(timeout=ONE_DAY, key_prefix="site_n_anon_users")
 def n_anon_users():
-    sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip))
-               AS n_anon FROM task_run;''')
+    try:
+        session = get_session(db, bind='slave')
+        sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip))
+                   AS n_anon FROM task_run;''')
 
-    results = db.engine.execute(sql)
-    for row in results:
-        n_anon = row.n_anon
-    return n_anon or 0
+        results = session.execute(sql)
+        for row in results:
+            n_anon = row.n_anon
+        return n_anon or 0
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @cache(timeout=ONE_DAY, key_prefix="site_n_tasks")
