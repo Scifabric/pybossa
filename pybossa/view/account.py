@@ -323,7 +323,7 @@ def profile(name):
             return _show_public_profile(user)
         if current_user.is_authenticated() and user.id == current_user.id:
             return _show_own_profile(user)
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -387,7 +387,7 @@ def applications(name):
                                title=gettext("Projects"),
                                apps_published=apps_published,
                                apps_draft=apps_draft)
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
