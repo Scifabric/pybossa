@@ -1002,250 +1002,250 @@ def delete_tasks(short_name):
 @blueprint.route('/<short_name>/tasks/export')
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
-    n_volunteers = cached_apps.n_volunteers(app.id)
-    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
-    title = app_title(app, gettext("Export"))
-    loading_text = gettext("Exporting data..., this may take a while")
+    try:
+        session = get_session(db, bind='slave')
+        (app, owner, n_tasks, n_task_runs,
+         overall_progress, last_activity) = app_by_shortname(short_name)
+        n_volunteers = cached_apps.n_volunteers(app.id)
+        n_completed_tasks = cached_apps.n_completed_tasks(app.id)
+        title = app_title(app, gettext("Export"))
+        loading_text = gettext("Exporting data..., this may take a while")
 
-    require.app.read(app)
-    redirect_to_password = _check_if_redirect_to_password(app)
-    if redirect_to_password:
-        return redirect_to_password
+        require.app.read(app)
+        redirect_to_password = _check_if_redirect_to_password(app)
+        if redirect_to_password:
+            return redirect_to_password
 
-    def respond():
-        return render_template('/applications/export.html',
-                               title=title,
-                               loading_text=loading_text,
-                               ckan_name=current_app.config.get('CKAN_NAME'),
-                               app=app,
-                               owner=owner,
-                               n_tasks=n_tasks,
-                               n_task_runs=n_task_runs,
-                               n_volunteers=n_volunteers,
-                               n_completed_tasks=n_completed_tasks,
-                               overall_progress=overall_progress)
+        def respond():
+            return render_template('/applications/export.html',
+                                   title=title,
+                                   loading_text=loading_text,
+                                   ckan_name=current_app.config.get('CKAN_NAME'),
+                                   app=app,
+                                   owner=owner,
+                                   n_tasks=n_tasks,
+                                   n_task_runs=n_task_runs,
+                                   n_volunteers=n_volunteers,
+                                   n_completed_tasks=n_completed_tasks,
+                                   overall_progress=overall_progress)
 
 
-    def gen_json(table):
-        n = db.session.query(table)\
-            .filter_by(app_id=app.id).count()
-        sep = ", "
-        yield "["
-        for i, tr in enumerate(db.session.query(table)
-                                 .filter_by(app_id=app.id).yield_per(1), 1):
-            item = json.dumps(tr.dictize())
-            if (i == n):
-                sep = ""
-            yield item + sep
-        yield "]"
+        def gen_json(table):
+            n = session.query(table)\
+                .filter_by(app_id=app.id).count()
+            sep = ", "
+            yield "["
+            for i, tr in enumerate(session.query(table)
+                                     .filter_by(app_id=app.id).yield_per(1), 1):
+                item = json.dumps(tr.dictize())
+                if (i == n):
+                    sep = ""
+                yield item + sep
+            yield "]"
 
-    def format_csv_properly(row, ty=None):
-        tmp = row.keys()
-        task_keys = []
-        for k in tmp:
-            k = "%s__%s" % (ty, k)
-            task_keys.append(k)
-        if (type(row['info']) == dict):
-            task_info_keys = []
-            tmp = row['info'].keys()
+        def format_csv_properly(row, ty=None):
+            tmp = row.keys()
+            task_keys = []
             for k in tmp:
-                k = "%sinfo__%s" % (ty, k)
-                task_info_keys.append(k)
-        else:
-            task_info_keys = []
-
-        keys = sorted(task_keys + task_info_keys)
-        values = []
-        _prefix = "%sinfo" % ty
-        for k in keys:
-            prefix, k = k.split("__")
-            if prefix == _prefix:
-                if row['info'].get(k) is not None:
-                    values.append(row['info'][k])
-                else:
-                    values.append(None)
-            else:
-                if row.get(k) is not None:
-                    values.append(row[k])
-                else:
-                    values.append(None)
-
-        return values
-
-    def handle_task(writer, t):
-        writer.writerow(format_csv_properly(t.dictize(), ty='task'))
-
-    def handle_task_run(writer, t):
-        writer.writerow(format_csv_properly(t.dictize(), ty='taskrun'))
-
-    def get_csv(out, writer, table, handle_row):
-        for tr in db.session.query(table)\
-                .filter_by(app_id=app.id)\
-                .yield_per(1):
-            handle_row(writer, tr)
-        yield out.getvalue()
-
-    def respond_json(ty):
-        tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}
-        try:
-            table = tables[ty]
-        except KeyError:
-            return abort(404)
-
-        tmp = 'attachment; filename=%s_%s.json' % (app.short_name, ty)
-        res = Response(gen_json(table), mimetype='application/json')
-        res.headers['Content-Disposition'] = tmp
-        return res
-
-    def create_ckan_datastore(ckan, table, package_id):
-        tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}
-        new_resource = ckan.resource_create(name=table,
-                                            package_id=package_id)
-        ckan.datastore_create(name=table,
-                              resource_id=new_resource['result']['id'])
-        ckan.datastore_upsert(name=table,
-                              records=gen_json(tables[table]),
-                              resource_id=new_resource['result']['id'])
-
-    def respond_ckan(ty):
-        # First check if there is a package (dataset) in CKAN
-        tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}
-        msg_1 = gettext("Data exported to ")
-        msg = msg_1 + "%s ..." % current_app.config['CKAN_URL']
-        ckan = Ckan(url=current_app.config['CKAN_URL'],
-                    api_key=current_user.ckan_api)
-        app_url = url_for('.details', short_name=app.short_name, _external=True)
-
-        try:
-            package, e = ckan.package_exists(name=app.short_name)
-            if e:
-                raise e
-            if package:
-                # Update the package
-                owner = User.query.get(app.owner_id)
-                package = ckan.package_update(app=app, user=owner, url=app_url,
-                                              resources=package['resources'])
-
-                ckan.package = package
-                resource_found = False
-                for r in package['resources']:
-                    if r['name'] == ty:
-                        ckan.datastore_delete(name=ty, resource_id=r['id'])
-                        ckan.datastore_create(name=ty, resource_id=r['id'])
-                        ckan.datastore_upsert(name=ty,
-                                              records=gen_json(tables[ty]),
-                                              resource_id=r['id'])
-                        resource_found = True
-                        break
-                if not resource_found:
-                    create_ckan_datastore(ckan, ty, package['id'])
-            else:
-                owner = User.query.get(app.owner_id)
-                package = ckan.package_create(app=app, user=owner, url=app_url)
-                create_ckan_datastore(ckan, ty, package['id'])
-                #new_resource = ckan.resource_create(name=ty,
-                #                                    package_id=package['id'])
-                #ckan.datastore_create(name=ty,
-                #                      resource_id=new_resource['result']['id'])
-                #ckan.datastore_upsert(name=ty,
-                #                     records=gen_json(tables[ty]),
-                #                     resource_id=new_resource['result']['id'])
-            flash(msg, 'success')
-            return respond()
-        except requests.exceptions.ConnectionError:
-                msg = "CKAN server seems to be down, try again layer or contact the CKAN admins"
-                current_app.logger.error(msg)
-                flash(msg, 'danger')
-        except Exception as inst:
-            if len(inst.args) == 3:
-                t, msg, status_code = inst.args
-                msg = ("Error: %s with status code: %s" % (t, status_code))
-            else: # pragma: no cover
-                msg = ("Error: %s" % inst.args[0])
-            current_app.logger.error(msg)
-            flash(msg, 'danger')
-        finally:
-            return respond()
-
-    def respond_csv(ty):
-        # Export Task(/Runs) to CSV
-        types = {
-            "task": (
-                model.task.Task, handle_task,
-                (lambda x: True),
-                gettext(
-                    "Oops, the project does not have tasks to \
-                    export, if you are the owner add some tasks")),
-            "task_run": (
-                model.task_run.TaskRun, handle_task_run,
-                (lambda x: True),
-                gettext(
-                    "Oops, there are no Task Runs yet to export, invite \
-                     some users to participate"))}
-        try:
-            table, handle_row, test, msg = types[ty]
-        except KeyError:
-            return abort(404)
-
-        out = StringIO()
-        writer = UnicodeWriter(out)
-        t = db.session.query(table)\
-            .filter_by(app_id=app.id)\
-            .first()
-        if t is not None:
-            if test(t):
-                tmp = t.dictize().keys()
-                task_keys = []
+                k = "%s__%s" % (ty, k)
+                task_keys.append(k)
+            if (type(row['info']) == dict):
+                task_info_keys = []
+                tmp = row['info'].keys()
                 for k in tmp:
-                    k = "%s__%s" % (ty, k)
-                    task_keys.append(k)
-                if (type(t.info) == dict):
-                    task_info_keys = []
-                    tmp = t.info.keys()
-                    for k in tmp:
-                        k = "%sinfo__%s" % (ty, k)
-                        task_info_keys.append(k)
-                else:
-                    task_info_keys = []
-                keys = task_keys + task_info_keys
-                writer.writerow(sorted(keys))
+                    k = "%sinfo__%s" % (ty, k)
+                    task_info_keys.append(k)
+            else:
+                task_info_keys = []
 
-            res = Response(get_csv(out, writer, table, handle_row),
-                           mimetype='text/csv')
-            tmp = 'attachment; filename=%s_%s.csv' % (app.short_name, ty)
+            keys = sorted(task_keys + task_info_keys)
+            values = []
+            _prefix = "%sinfo" % ty
+            for k in keys:
+                prefix, k = k.split("__")
+                if prefix == _prefix:
+                    if row['info'].get(k) is not None:
+                        values.append(row['info'][k])
+                    else:
+                        values.append(None)
+                else:
+                    if row.get(k) is not None:
+                        values.append(row[k])
+                    else:
+                        values.append(None)
+
+            return values
+
+        def handle_task(writer, t):
+            writer.writerow(format_csv_properly(t.dictize(), ty='task'))
+
+        def handle_task_run(writer, t):
+            writer.writerow(format_csv_properly(t.dictize(), ty='taskrun'))
+
+        def get_csv(out, writer, table, handle_row):
+            for tr in session.query(table)\
+                    .filter_by(app_id=app.id)\
+                    .yield_per(1):
+                handle_row(writer, tr)
+            yield out.getvalue()
+
+        def respond_json(ty):
+            tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}
+            try:
+                table = tables[ty]
+            except KeyError:
+                return abort(404)
+
+            tmp = 'attachment; filename=%s_%s.json' % (app.short_name, ty)
+            res = Response(gen_json(table), mimetype='application/json')
             res.headers['Content-Disposition'] = tmp
             return res
-        else:
-            flash(msg, 'info')
-            return respond()
 
-    export_formats = ["json", "csv"]
-    if current_user.is_authenticated():
-        if current_user.ckan_api:
-            export_formats.append('ckan')
+        def create_ckan_datastore(ckan, table, package_id):
+            tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}
+            new_resource = ckan.resource_create(name=table,
+                                                package_id=package_id)
+            ckan.datastore_create(name=table,
+                                  resource_id=new_resource['result']['id'])
+            ckan.datastore_upsert(name=table,
+                                  records=gen_json(tables[table]),
+                                  resource_id=new_resource['result']['id'])
 
-    ty = request.args.get('type')
-    fmt = request.args.get('format')
-    if not (fmt and ty):
-        if len(request.args) >= 1:
-            abort(404)
-        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-        return render_template('/applications/export.html',
-                               title=title,
-                               loading_text=loading_text,
-                               ckan_name=current_app.config.get('CKAN_NAME'),
-                               app=app,
-                               owner=owner,
-                               n_tasks=n_tasks,
-                               n_task_runs=n_task_runs,
-                               n_volunteers=n_volunteers,
-                               n_completed_tasks=n_completed_tasks,
-                               overall_progress=overall_progress)
-    if fmt not in export_formats:
-        abort(415)
-    return {"json": respond_json, "csv": respond_csv, 'ckan': respond_ckan}[fmt](ty)
+        def respond_ckan(ty):
+            # First check if there is a package (dataset) in CKAN
+            tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}
+            msg_1 = gettext("Data exported to ")
+            msg = msg_1 + "%s ..." % current_app.config['CKAN_URL']
+            ckan = Ckan(url=current_app.config['CKAN_URL'],
+                        api_key=current_user.ckan_api)
+            app_url = url_for('.details', short_name=app.short_name, _external=True)
+
+            try:
+                package, e = ckan.package_exists(name=app.short_name)
+                if e:
+                    raise e
+                if package:
+                    # Update the package
+                    owner = User.query.get(app.owner_id)
+                    package = ckan.package_update(app=app, user=owner, url=app_url,
+                                                  resources=package['resources'])
+
+                    ckan.package = package
+                    resource_found = False
+                    for r in package['resources']:
+                        if r['name'] == ty:
+                            ckan.datastore_delete(name=ty, resource_id=r['id'])
+                            ckan.datastore_create(name=ty, resource_id=r['id'])
+                            ckan.datastore_upsert(name=ty,
+                                                  records=gen_json(tables[ty]),
+                                                  resource_id=r['id'])
+                            resource_found = True
+                            break
+                    if not resource_found:
+                        create_ckan_datastore(ckan, ty, package['id'])
+                else:
+                    owner = User.query.get(app.owner_id)
+                    package = ckan.package_create(app=app, user=owner, url=app_url)
+                    create_ckan_datastore(ckan, ty, package['id'])
+                flash(msg, 'success')
+                return respond()
+            except requests.exceptions.ConnectionError:
+                    msg = "CKAN server seems to be down, try again layer or contact the CKAN admins"
+                    current_app.logger.error(msg)
+                    flash(msg, 'danger')
+            except Exception as inst:
+                if len(inst.args) == 3:
+                    t, msg, status_code = inst.args
+                    msg = ("Error: %s with status code: %s" % (t, status_code))
+                else: # pragma: no cover
+                    msg = ("Error: %s" % inst.args[0])
+                current_app.logger.error(msg)
+                flash(msg, 'danger')
+            finally:
+                return respond()
+
+        def respond_csv(ty):
+            # Export Task(/Runs) to CSV
+            types = {
+                "task": (
+                    model.task.Task, handle_task,
+                    (lambda x: True),
+                    gettext(
+                        "Oops, the project does not have tasks to \
+                        export, if you are the owner add some tasks")),
+                "task_run": (
+                    model.task_run.TaskRun, handle_task_run,
+                    (lambda x: True),
+                    gettext(
+                        "Oops, there are no Task Runs yet to export, invite \
+                         some users to participate"))}
+            try:
+                table, handle_row, test, msg = types[ty]
+            except KeyError:
+                return abort(404)
+
+            out = StringIO()
+            writer = UnicodeWriter(out)
+            t = session.query(table)\
+                .filter_by(app_id=app.id)\
+                .first()
+            if t is not None:
+                if test(t):
+                    tmp = t.dictize().keys()
+                    task_keys = []
+                    for k in tmp:
+                        k = "%s__%s" % (ty, k)
+                        task_keys.append(k)
+                    if (type(t.info) == dict):
+                        task_info_keys = []
+                        tmp = t.info.keys()
+                        for k in tmp:
+                            k = "%sinfo__%s" % (ty, k)
+                            task_info_keys.append(k)
+                    else:
+                        task_info_keys = []
+                    keys = task_keys + task_info_keys
+                    writer.writerow(sorted(keys))
+
+                res = Response(get_csv(out, writer, table, handle_row),
+                               mimetype='text/csv')
+                tmp = 'attachment; filename=%s_%s.csv' % (app.short_name, ty)
+                res.headers['Content-Disposition'] = tmp
+                return res
+            else:
+                flash(msg, 'info')
+                return respond()
+
+        export_formats = ["json", "csv"]
+        if current_user.is_authenticated():
+            if current_user.ckan_api:
+                export_formats.append('ckan')
+
+        ty = request.args.get('type')
+        fmt = request.args.get('format')
+        if not (fmt and ty):
+            if len(request.args) >= 1:
+                abort(404)
+            app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+            return render_template('/applications/export.html',
+                                   title=title,
+                                   loading_text=loading_text,
+                                   ckan_name=current_app.config.get('CKAN_NAME'),
+                                   app=app,
+                                   owner=owner,
+                                   n_tasks=n_tasks,
+                                   n_task_runs=n_task_runs,
+                                   n_volunteers=n_volunteers,
+                                   n_completed_tasks=n_completed_tasks,
+                                   overall_progress=overall_progress)
+        if fmt not in export_formats:
+            abort(415)
+        return {"json": respond_json, "csv": respond_csv, 'ckan': respond_ckan}[fmt](ty)
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @blueprint.route('/<short_name>/stats')
