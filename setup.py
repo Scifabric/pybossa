@@ -31,7 +31,7 @@ requirements = [
     "sphinx>=1.2.2, <2.0",
     "coverage",
     "mock",
-    "pyrax>=1.8, <1.9",
+    "pyrax>=1.8, <1.8.1",
     "pillow>=2.4, <2.5",
     "flask-debugtoolbar>=0.9.0, <1.0",
     "factory_boy>=2.4.1"
