@@ -1462,46 +1462,60 @@ def task_priority(short_name):
 
 @blueprint.route('/<short_name>/blog')
 def show_blogposts(short_name):
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
+    try:
+        session = get_session(db, bind='slave')
+        (app, owner, n_tasks, n_task_runs,
+         overall_progress, last_activity) = app_by_shortname(short_name)
 
-    blogposts = db.session.query(model.blogpost.Blogpost).filter_by(app_id=app.id).all()
-    require.blogpost.read(app_id=app.id)
-    redirect_to_password = _check_if_redirect_to_password(app)
-    if redirect_to_password:
-        return redirect_to_password
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return render_template('applications/blog.html', app=app,
-                           owner=owner, blogposts=blogposts,
-                           overall_progress=overall_progress,
-                           n_tasks=n_tasks,
-                           n_task_runs=n_task_runs,
-                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                           n_volunteers=cached_apps.n_volunteers(app.get('id')))
+        blogposts = session.query(model.blogpost.Blogpost).filter_by(app_id=app.id).all()
+        require.blogpost.read(app_id=app.id)
+        redirect_to_password = _check_if_redirect_to_password(app)
+        if redirect_to_password:
+            return redirect_to_password
+        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+        return render_template('applications/blog.html', app=app,
+                               owner=owner, blogposts=blogposts,
+                               overall_progress=overall_progress,
+                               n_tasks=n_tasks,
+                               n_task_runs=n_task_runs,
+                               n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                               n_volunteers=cached_apps.n_volunteers(app.get('id')))
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @blueprint.route('/<short_name>/<int:id>')
 def show_blogpost(short_name, id):
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
-    blogpost = db.session.query(model.blogpost.Blogpost).filter_by(id=id,
-                                                        app_id=app.id).first()
-    if blogpost is None:
-        raise abort(404)
-    require.blogpost.read(blogpost)
-    redirect_to_password = _check_if_redirect_to_password(app)
-    if redirect_to_password:
-        return redirect_to_password
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return render_template('applications/blog_post.html',
-                            app=app,
-                            owner=owner,
-                            blogpost=blogpost,
-                            overall_progress=overall_progress,
-                            n_tasks=n_tasks,
-                            n_task_runs=n_task_runs,
-                            n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                            n_volunteers=cached_apps.n_volunteers(app.get('id')))
+    try:
+        session = get_session(db, bind='slave')
+        (app, owner, n_tasks, n_task_runs,
+         overall_progress, last_activity) = app_by_shortname(short_name)
+        blogpost = session.query(model.blogpost.Blogpost).filter_by(id=id,
+                                                            app_id=app.id).first()
+        if blogpost is None:
+            raise abort(404)
+        require.blogpost.read(blogpost)
+        redirect_to_password = _check_if_redirect_to_password(app)
+        if redirect_to_password:
+            return redirect_to_password
+        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+        return render_template('applications/blog_post.html',
+                                app=app,
+                                owner=owner,
+                                blogpost=blogpost,
+                                overall_progress=overall_progress,
+                                n_tasks=n_tasks,
+                                n_task_runs=n_task_runs,
+                                n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                                n_volunteers=cached_apps.n_volunteers(app.get('id')))
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @blueprint.route('/<short_name>/new-blogpost', methods=['GET', 'POST'])
