@@ -63,11 +63,18 @@ def n_anon_users():
 
 @cache(timeout=ONE_DAY, key_prefix="site_n_tasks")
 def n_tasks_site():
-    sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task''')
-    results = db.engine.execute(sql)
-    for row in results:
-        n_tasks = row.n_tasks
-    return n_tasks or 0
+    try:
+        session = get_session(db, bind='slave')
+        sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task''')
+        results = db.engine.execute(sql)
+        for row in results:
+            n_tasks = row.n_tasks
+        return n_tasks or 0
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @cache(timeout=ONE_DAY, key_prefix="site_n_total_tasks")
