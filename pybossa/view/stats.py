@@ -66,7 +66,7 @@ def n_tasks_site():
     try:
         session = get_session(db, bind='slave')
         sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task''')
-        results = db.engine.execute(sql)
+        results = session.execute(sql)
         for row in results:
             n_tasks = row.n_tasks
         return n_tasks or 0
@@ -82,7 +82,7 @@ def n_total_tasks_site():
     try:
         session = get_session(db, bind='slave')
         sql = text('''SELECT SUM(n_answers) AS n_tasks FROM task''')
-        results = db.engine.execute(sql)
+        results = session.execute(sql)
         for row in results:
             total = row.n_tasks
         return total or 0
@@ -95,11 +95,18 @@ def n_total_tasks_site():
 
 @cache(timeout=ONE_DAY, key_prefix="site_n_task_runs")
 def n_task_runs_site():
-    sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run''')
-    results = db.engine.execute(sql)
-    for row in results:
-        n_task_runs = row.n_task_runs
-    return n_task_runs or 0
+    try:
+        session = get_session(db, bind='slave')
+        sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run''')
+        results = session.execute(sql)
+        for row in results:
+            n_task_runs = row.n_task_runs
+        return n_task_runs or 0
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @cache(timeout=ONE_DAY, key_prefix="site_top5_apps_24_hours")
