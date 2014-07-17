@@ -111,23 +111,30 @@ def n_task_runs_site():
 
 @cache(timeout=ONE_DAY, key_prefix="site_top5_apps_24_hours")
 def get_top5_apps_24_hours():
-    # Top 5 Most active apps in last 24 hours
-    sql = text('''SELECT app.id, app.name, app.short_name, app.info,
-               COUNT(task_run.app_id) AS n_answers FROM app, task_run
-               WHERE app.id=task_run.app_id
-               AND app.hidden=0
-               AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
-               AND DATE(task_run.finish_time) <= NOW()
-               GROUP BY app.id
-               ORDER BY n_answers DESC LIMIT 5;''')
+    try:
+        session = get_session(db, bind='slave')
+        # Top 5 Most active apps in last 24 hours
+        sql = text('''SELECT app.id, app.name, app.short_name, app.info,
+                   COUNT(task_run.app_id) AS n_answers FROM app, task_run
+                   WHERE app.id=task_run.app_id
+                   AND app.hidden=0
+                   AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
+                   AND DATE(task_run.finish_time) <= NOW()
+                   GROUP BY app.id
+                   ORDER BY n_answers DESC LIMIT 5;''')
 
-    results = db.engine.execute(sql, limit=5)
-    top5_apps_24_hours = []
-    for row in results:
-        tmp = dict(id=row.id, name=row.name, short_name=row.short_name,
-                   info=dict(json.loads(row.info)), n_answers=row.n_answers)
-        top5_apps_24_hours.append(tmp)
-    return top5_apps_24_hours
+        results = session.execute(sql, dict(limit=5))
+        top5_apps_24_hours = []
+        for row in results:
+            tmp = dict(id=row.id, name=row.name, short_name=row.short_name,
+                       info=dict(json.loads(row.info)), n_answers=row.n_answers)
+            top5_apps_24_hours.append(tmp)
+        return top5_apps_24_hours
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @cache(timeout=ONE_DAY, key_prefix="site_top5_users_24_hours")
