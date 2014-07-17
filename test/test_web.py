@@ -1164,7 +1164,6 @@ class TestWeb(web.Helper):
         """Test WEB get specific completed task_id
         for a project works as anonymous"""
 
-        #model.rebuild_db()
         with self.flask_app.app_context():
             self.create()
             app = db.session.query(App).first()
@@ -1213,7 +1212,6 @@ class TestWeb(web.Helper):
         """Test WEB get specific completed task_id
         for a project works as an user"""
 
-        #model.rebuild_db()
         with self.flask_app.app_context():
             self.create()
             self.register()
