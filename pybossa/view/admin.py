@@ -162,66 +162,72 @@ def users(user_id=None):
 @admin_required
 def export_users():
     """Export Users list in the given format, only for admins"""
-    try:
 
-        exportable_attributes = ('id', 'name', 'fullname', 'email_addr',
-                                 'created', 'locale', 'admin')
+    exportable_attributes = ('id', 'name', 'fullname', 'email_addr',
+                             'created', 'locale', 'admin')
 
-        session = get_session(db, bind='slave')
+    def respond_json():
+        tmp = 'attachment; filename=all_users.json'
+        res = Response(gen_json(), mimetype='application/json')
+        res.headers['Content-Disposition'] = tmp
+        return res
 
-        def respond_json():
-            tmp = 'attachment; filename=all_users.json'
-            res = Response(gen_json(), mimetype='application/json')
-            res.headers['Content-Disposition'] = tmp
-            return res
-
-        def gen_json():
+    def gen_json():
+        try:
+            session = get_session(db, bind='slave')
             users = session.query(model.user.User).all()
             json_users = []
             for user in users:
                 json_users.append(dictize_with_exportable_attributes(user))
             return json.dumps(json_users)
+        except:
+            session.rollback()
+            raise
+        finally:
+            session.close()
 
-        def dictize_with_exportable_attributes(user):
-            dict_user = {}
-            for attr in exportable_attributes:
-                dict_user[attr] = getattr(user, attr)
-            return dict_user
+    def dictize_with_exportable_attributes(user):
+        dict_user = {}
+        for attr in exportable_attributes:
+            dict_user[attr] = getattr(user, attr)
+        return dict_user
 
-        def respond_csv():
-            out = StringIO()
-            writer = UnicodeWriter(out)
-            tmp = 'attachment; filename=all_users.csv'
-            res = Response(gen_csv(out, writer, write_user), mimetype='text/csv')
-            res.headers['Content-Disposition'] = tmp
-            return res
+    def respond_csv():
+        out = StringIO()
+        writer = UnicodeWriter(out)
+        tmp = 'attachment; filename=all_users.csv'
+        res = Response(gen_csv(out, writer, write_user), mimetype='text/csv')
+        res.headers['Content-Disposition'] = tmp
+        return res
 
-        def gen_csv(out, writer, write_user):
+    def gen_csv(out, writer, write_user):
+        try:
+            session = get_session(db, bind='slave')
             add_headers(writer)
             for user in session.query(model.user.User).yield_per(1):
                 write_user(writer, user)
             yield out.getvalue()
+        except:
+            session.rollback()
+            raise
+        finally:
+            session.close()
 
-        def write_user(writer, user):
-            values = [getattr(user, attr) for attr in sorted(exportable_attributes)]
-            writer.writerow(values)
+    def write_user(writer, user):
+        values = [getattr(user, attr) for attr in sorted(exportable_attributes)]
+        writer.writerow(values)
 
-        def add_headers(writer):
-            writer.writerow(sorted(exportable_attributes))
+    def add_headers(writer):
+        writer.writerow(sorted(exportable_attributes))
 
-        export_formats = ["json", "csv"]
+    export_formats = ["json", "csv"]
 
-        fmt = request.args.get('format')
-        if not fmt:
-            return redirect(url_for('.index'))
-        if fmt not in export_formats:
-            abort(415)
-        return {"json": respond_json, "csv": respond_csv}[fmt]()
-    except:
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    fmt = request.args.get('format')
+    if not fmt:
+        return redirect(url_for('.index'))
+    if fmt not in export_formats:
+        abort(415)
+    return {"json": respond_json, "csv": respond_csv}[fmt]()
 
 
 @blueprint.route('/users/add/<int:user_id>')
