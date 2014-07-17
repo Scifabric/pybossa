@@ -914,45 +914,52 @@ def tasks(short_name):
 @blueprint.route('/<short_name>/tasks/browse', defaults={'page': 1})
 @blueprint.route('/<short_name>/tasks/browse/<int:page>')
 def tasks_browse(short_name, page):
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
-    title = app_title(app, "Tasks")
-    n_volunteers = cached_apps.n_volunteers(app.id)
-    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
+    try:
+        session = get_session(db, bind='slave')
+        (app, owner, n_tasks, n_task_runs,
+         overall_progress, last_activity) = app_by_shortname(short_name)
+        title = app_title(app, "Tasks")
+        n_volunteers = cached_apps.n_volunteers(app.id)
+        n_completed_tasks = cached_apps.n_completed_tasks(app.id)
 
-    def respond():
-        per_page = 10
-        count = db.session.query(model.task.Task)\
-            .filter_by(app_id=app.get('id'))\
-            .count()
-        app_tasks = db.session.query(model.task.Task)\
-            .filter_by(app_id=app.get('id'))\
-            .order_by(model.task.Task.id)\
-            .limit(per_page)\
-            .offset((page - 1) * per_page)\
-            .all()
+        def respond():
+            per_page = 10
+            count = session.query(model.task.Task)\
+                .filter_by(app_id=app.get('id'))\
+                .count()
+            app_tasks = session.query(model.task.Task)\
+                .filter_by(app_id=app.get('id'))\
+                .order_by(model.task.Task.id)\
+                .limit(per_page)\
+                .offset((page - 1) * per_page)\
+                .all()
 
-        if not app_tasks and page != 1:
-            abort(404)
+            if not app_tasks and page != 1:
+                abort(404)
 
-        pagination = Pagination(page, per_page, count)
-        return render_template('/applications/tasks_browse.html',
-                               app=app,
-                               owner=owner,
-                               tasks=app_tasks,
-                               title=title,
-                               pagination=pagination,
-                               n_tasks=n_tasks,
-                               overall_progress=overall_progress,
-                               n_volunteers=n_volunteers,
-                               n_completed_tasks=n_completed_tasks)
+            pagination = Pagination(page, per_page, count)
+            return render_template('/applications/tasks_browse.html',
+                                   app=app,
+                                   owner=owner,
+                                   tasks=app_tasks,
+                                   title=title,
+                                   pagination=pagination,
+                                   n_tasks=n_tasks,
+                                   overall_progress=overall_progress,
+                                   n_volunteers=n_volunteers,
+                                   n_completed_tasks=n_completed_tasks)
 
-    require.app.read(app)
-    redirect_to_password = _check_if_redirect_to_password(app)
-    if redirect_to_password:
-        return redirect_to_password
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return respond()
+        require.app.read(app)
+        redirect_to_password = _check_if_redirect_to_password(app)
+        if redirect_to_password:
+            return redirect_to_password
+        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+        return respond()
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @blueprint.route('/<short_name>/tasks/delete', methods=['GET', 'POST'])
