@@ -195,120 +195,128 @@ def stats_dates(app_id):
 
 @memoize(timeout=ONE_DAY)
 def stats_hours(app_id):
-    hours = {}
-    hours_anon = {}
-    hours_auth = {}
-    max_hours = 0
-    max_hours_anon = 0
-    max_hours_auth = 0
+    try:
+        hours = {}
+        hours_anon = {}
+        hours_auth = {}
+        max_hours = 0
+        max_hours_anon = 0
+        max_hours_auth = 0
 
-    # initialize hours keys
-    for i in range(0, 24):
-        hours[str(i).zfill(2)] = 0
-        hours_anon[str(i).zfill(2)] = 0
-        hours_auth[str(i).zfill(2)] = 0
+        session = get_session(db, bind='slave')
 
-    # Get hour stats for all users
-    sql = text('''
-               WITH myquery AS
-                (SELECT to_char(
-                    DATE_TRUNC('hour',
-                        TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
-                    ),
-                    'HH24') AS h, COUNT(id)
-                    FROM task_run WHERE app_id=:app_id GROUP BY h)
-               SELECT h, count from myquery;
-               ''').execution_options(stream=True)
+        # initialize hours keys
+        for i in range(0, 24):
+            hours[str(i).zfill(2)] = 0
+            hours_anon[str(i).zfill(2)] = 0
+            hours_auth[str(i).zfill(2)] = 0
 
-    results = db.engine.execute(sql, app_id=app_id)
+        # Get hour stats for all users
+        sql = text('''
+                   WITH myquery AS
+                    (SELECT to_char(
+                        DATE_TRUNC('hour',
+                            TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                        ),
+                        'HH24') AS h, COUNT(id)
+                        FROM task_run WHERE app_id=:app_id GROUP BY h)
+                   SELECT h, count from myquery;
+                   ''').execution_options(stream=True)
 
-    for row in results:
-        hours[row.h] = row.count
+        results = session.execute(sql, dict(app_id=app_id))
 
-    # Get maximum stats for all users
-    sql = text('''
-               WITH myquery AS
-                (SELECT to_char(
-                    DATE_TRUNC('hour',
-                        TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
-                    ),
-                    'HH24') AS h, COUNT(id)
-                    FROM task_run WHERE app_id=:app_id GROUP BY h)
-               SELECT max(count) from myquery;
-               ''').execution_options(stream=True)
+        for row in results:
+            hours[row.h] = row.count
 
-    results = db.engine.execute(sql, app_id=app_id)
-    for row in results:
-        max_hours = row.max
+        # Get maximum stats for all users
+        sql = text('''
+                   WITH myquery AS
+                    (SELECT to_char(
+                        DATE_TRUNC('hour',
+                            TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                        ),
+                        'HH24') AS h, COUNT(id)
+                        FROM task_run WHERE app_id=:app_id GROUP BY h)
+                   SELECT max(count) from myquery;
+                   ''').execution_options(stream=True)
 
-    # Get hour stats for Anonymous users
-    sql = text('''
-               WITH myquery AS
-                (SELECT to_char(
-                    DATE_TRUNC('hour',
-                        TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
-                    ),
-                    'HH24') AS h, COUNT(id)
-                    FROM task_run WHERE app_id=:app_id AND user_id IS NULL GROUP BY h)
-               SELECT h, count from myquery;
-               ''').execution_options(stream=True)
+        results = session.execute(sql, dict(app_id=app_id))
+        for row in results:
+            max_hours = row.max
 
-    results = db.engine.execute(sql, app_id=app_id)
+        # Get hour stats for Anonymous users
+        sql = text('''
+                   WITH myquery AS
+                    (SELECT to_char(
+                        DATE_TRUNC('hour',
+                            TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                        ),
+                        'HH24') AS h, COUNT(id)
+                        FROM task_run WHERE app_id=:app_id AND user_id IS NULL GROUP BY h)
+                   SELECT h, count from myquery;
+                   ''').execution_options(stream=True)
 
-    for row in results:
-        hours_anon[row.h] = row.count
+        results = session.execute(sql, dict(app_id=app_id))
 
-    # Get maximum stats for Anonymous users
-    sql = text('''
-               WITH myquery AS
-                (SELECT to_char(
-                    DATE_TRUNC('hour',
-                        TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
-                    ),
-                    'HH24') AS h, COUNT(id)
-                    FROM task_run WHERE app_id=:app_id AND user_id IS NULL GROUP BY h)
-               SELECT max(count) from myquery;
-               ''').execution_options(stream=True)
+        for row in results:
+            hours_anon[row.h] = row.count
 
-    results = db.engine.execute(sql, app_id=app_id)
-    for row in results:
-        max_hours_anon = row.max
+        # Get maximum stats for Anonymous users
+        sql = text('''
+                   WITH myquery AS
+                    (SELECT to_char(
+                        DATE_TRUNC('hour',
+                            TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                        ),
+                        'HH24') AS h, COUNT(id)
+                        FROM task_run WHERE app_id=:app_id AND user_id IS NULL GROUP BY h)
+                   SELECT max(count) from myquery;
+                   ''').execution_options(stream=True)
+
+        results = session.execute(sql, dict(app_id=app_id))
+        for row in results:
+            max_hours_anon = row.max
 
 
-    # Get hour stats for Auth users
-    sql = text('''
-               WITH myquery AS
-                (SELECT to_char(
-                    DATE_TRUNC('hour',
-                        TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
-                    ),
-                    'HH24') AS h, COUNT(id)
-                    FROM task_run WHERE app_id=:app_id AND user_ip IS NULL GROUP BY h)
-               SELECT h, count from myquery;
-               ''').execution_options(stream=True)
+        # Get hour stats for Auth users
+        sql = text('''
+                   WITH myquery AS
+                    (SELECT to_char(
+                        DATE_TRUNC('hour',
+                            TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                        ),
+                        'HH24') AS h, COUNT(id)
+                        FROM task_run WHERE app_id=:app_id AND user_ip IS NULL GROUP BY h)
+                   SELECT h, count from myquery;
+                   ''').execution_options(stream=True)
 
-    results = db.engine.execute(sql, app_id=app_id)
+        results = session.execute(sql, dict(app_id=app_id))
 
-    for row in results:
-        hours_auth[row.h] = row.count
+        for row in results:
+            hours_auth[row.h] = row.count
 
-    # Get hour stats for Anon users
-    sql = text('''
-               WITH myquery AS
-                (SELECT to_char(
-                    DATE_TRUNC('hour',
-                        TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
-                    ),
-                    'HH24') AS h, COUNT(id)
-                    FROM task_run WHERE app_id=:app_id AND user_ip IS NULL GROUP BY h)
-               SELECT max(count) from myquery;
-               ''').execution_options(stream=True)
+        # Get hour stats for Anon users
+        sql = text('''
+                   WITH myquery AS
+                    (SELECT to_char(
+                        DATE_TRUNC('hour',
+                            TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                        ),
+                        'HH24') AS h, COUNT(id)
+                        FROM task_run WHERE app_id=:app_id AND user_ip IS NULL GROUP BY h)
+                   SELECT max(count) from myquery;
+                   ''').execution_options(stream=True)
 
-    results = db.engine.execute(sql, app_id=app_id)
-    for row in results:
-        max_hours_auth = row.max
+        results = session.execute(sql, dict(app_id=app_id))
+        for row in results:
+            max_hours_auth = row.max
 
-    return hours, hours_anon, hours_auth, max_hours, max_hours_anon, max_hours_auth
+        return hours, hours_anon, hours_auth, max_hours, max_hours_anon, max_hours_auth
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @memoize(timeout=ONE_DAY)
