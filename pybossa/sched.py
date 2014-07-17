@@ -62,49 +62,55 @@ def get_breadth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, off
     (this is not a big issue as all it means is that you may end up with some
     tasks run more than is strictly needed!)
     """
-    # Uncomment the next three lines to profile the sched function
-    #import timeit
-    #T = timeit.Timer(lambda: get_candidate_tasks(app_id, user_id,
-    #                  user_ip, n_answers))
-    #print "First algorithm: %s" % T.timeit(number=1)
-
-    if user_id and not user_ip:
-        sql = text('''
-                   SELECT task.id, COUNT(task_run.task_id) AS taskcount FROM task
-                   LEFT JOIN task_run ON (task.id = task_run.task_id) WHERE NOT EXISTS
-                   (SELECT 1 FROM task_run WHERE app_id=:app_id AND
-                   user_id=:user_id AND task_id=task.id)
-                   AND task.app_id=:app_id AND task.state !='completed'
-                   group by task.id ORDER BY taskcount, id ASC LIMIT 10;
-                   ''')
-        tasks = db.engine.execute(sql, app_id=app_id, user_id=user_id)
-    else:
-        if not user_ip: # pragma: no cover
-            user_ip = '127.0.0.1'
-        sql = text('''
-                   SELECT task.id, COUNT(task_run.task_id) AS taskcount FROM task
-                   LEFT JOIN task_run ON (task.id = task_run.task_id) WHERE NOT EXISTS
-                   (SELECT 1 FROM task_run WHERE app_id=:app_id AND
-                   user_ip=:user_ip AND task_id=task.id)
-                   AND task.app_id=:app_id AND task.state !='completed'
-                   group by task.id ORDER BY taskcount, id ASC LIMIT 10;
-                   ''')
-
-        # results will be list of (taskid, count)
-        tasks = db.engine.execute(sql, app_id=app_id, user_ip=user_ip)
-    # ignore n_answers for the present - we will just keep going once we've
-    # done as many as we need
-    tasks = [x[0] for x in tasks]
-    if tasks:
-        if (offset == 0):
-            return db.session.query(model.task.Task).get(tasks[0])
+    try:
+        # Uncomment the next three lines to profile the sched function
+        #import timeit
+        #T = timeit.Timer(lambda: get_candidate_tasks(app_id, user_id,
+        #                  user_ip, n_answers))
+        #print "First algorithm: %s" % T.timeit(number=1)
+        session = get_session(db, bind='slave')
+        if user_id and not user_ip:
+            sql = text('''
+                       SELECT task.id, COUNT(task_run.task_id) AS taskcount FROM task
+                       LEFT JOIN task_run ON (task.id = task_run.task_id) WHERE NOT EXISTS
+                       (SELECT 1 FROM task_run WHERE app_id=:app_id AND
+                       user_id=:user_id AND task_id=task.id)
+                       AND task.app_id=:app_id AND task.state !='completed'
+                       group by task.id ORDER BY taskcount, id ASC LIMIT 10;
+                       ''')
+            tasks = session.execute(sql, dict(app_id=app_id, user_id=user_id))
         else:
-            if (offset < len(tasks)):
-                return db.session.query(model.task.Task).get(tasks[offset])
+            if not user_ip: # pragma: no cover
+                user_ip = '127.0.0.1'
+            sql = text('''
+                       SELECT task.id, COUNT(task_run.task_id) AS taskcount FROM task
+                       LEFT JOIN task_run ON (task.id = task_run.task_id) WHERE NOT EXISTS
+                       (SELECT 1 FROM task_run WHERE app_id=:app_id AND
+                       user_ip=:user_ip AND task_id=task.id)
+                       AND task.app_id=:app_id AND task.state !='completed'
+                       group by task.id ORDER BY taskcount, id ASC LIMIT 10;
+                       ''')
+
+            # results will be list of (taskid, count)
+            tasks = session.execute(sql, dict(app_id=app_id, user_ip=user_ip))
+        # ignore n_answers for the present - we will just keep going once we've
+        # done as many as we need
+        tasks = [x[0] for x in tasks]
+        if tasks:
+            if (offset == 0):
+                return session.query(Task).get(tasks[0])
             else:
-                return None
-    else: # pragma: no cover
-        return None
+                if (offset < len(tasks)):
+                    return session.query(Task).get(tasks[offset])
+                else:
+                    return None
+        else: # pragma: no cover
+            return None
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 def get_depth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
