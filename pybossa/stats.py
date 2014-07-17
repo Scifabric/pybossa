@@ -52,15 +52,22 @@ def get_task_runs(app_id):
 def get_avg_n_tasks(app_id):
     """Return the average number of answers expected per task,
     and the number of tasks"""
-    sql = text('''SELECT COUNT(task.id) as n_tasks,
-               AVG(task.n_answers) AS "avg" FROM task
-               WHERE task.app_id=:app_id;''')
+    try:
+        session = get_session(db, bind='slave')
+        sql = text('''SELECT COUNT(task.id) as n_tasks,
+                   AVG(task.n_answers) AS "avg" FROM task
+                   WHERE task.app_id=:app_id;''')
 
-    results = db.engine.execute(sql, app_id=app_id)
-    for row in results:
-        avg = float(row.avg)
-        total_n_tasks = row.n_tasks
-    return avg, total_n_tasks
+        results = session.execute(sql, dict(app_id=app_id))
+        for row in results:
+            avg = float(row.avg)
+            total_n_tasks = row.n_tasks
+        return avg, total_n_tasks
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @memoize(timeout=ONE_DAY)
