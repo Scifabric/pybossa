@@ -162,11 +162,7 @@ def n_anonymous_volunteers(app_id):
                task_run.user_id IS NULL AND
                task_run.app_id=:app_id;''')
 
-        #session = get_session(db, bind='slave')
-        engine = db.get_engine(db.app, bind='slave')
-        from pybossa.core import Session
-        Session.configure(bind=engine)
-        session = Session()
+        session = get_session(db, bind='slave')
         results = session.execute(sql, dict(app_id=app_id))
         n_anonymous_volunteers = 0
         for row in results:
