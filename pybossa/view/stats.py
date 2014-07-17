@@ -21,7 +21,7 @@ from flask import Blueprint, current_app
 from flask import render_template
 from sqlalchemy.sql import text
 
-from pybossa.core import db
+from pybossa.core import db, get_session
 from pybossa.cache import cache, ONE_DAY
 from pybossa.cache import apps as cached_apps
 
@@ -30,11 +30,18 @@ blueprint = Blueprint('stats', __name__)
 
 @cache(timeout=ONE_DAY, key_prefix="site_n_auth_users")
 def n_auth_users():
-    sql = text('''SELECT COUNT("user".id) AS n_auth FROM "user";''')
-    results = db.engine.execute(sql)
-    for row in results:
-        n_auth = row.n_auth
-    return n_auth or 0
+    try:
+        session = get_session(db, bind='slave')
+        sql = text('''SELECT COUNT("user".id) AS n_auth FROM "user";''')
+        results = session.execute(sql)
+        for row in results:
+            n_auth = row.n_auth
+        return n_auth or 0
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 @cache(timeout=ONE_DAY, key_prefix="site_n_anon_users")
 def n_anon_users():
