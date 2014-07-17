@@ -167,23 +167,30 @@ def get_top5_users_24_hours():
 
 @cache(timeout=ONE_DAY, key_prefix="site_locs")
 def get_locs(): # pragma: no cover
-    # All IP addresses from anonymous users to create a map
-    locs = []
-    if current_app.config['GEO']:
-        sql = '''SELECT DISTINCT(user_ip) from task_run WHERE user_ip IS NOT NULL;'''
-        results = db.engine.execute(sql)
+    try:
+        session = get_session(db, bind='slave')
+        # All IP addresses from anonymous users to create a map
+        locs = []
+        if current_app.config['GEO']:
+            sql = '''SELECT DISTINCT(user_ip) from task_run WHERE user_ip IS NOT NULL;'''
+            results = session.execute(sql)
 
-        geolite = current_app.root_path + '/../dat/GeoLiteCity.dat'
-        gic = pygeoip.GeoIP(geolite)
-        for row in results:
-            loc = gic.record_by_addr(row.user_ip)
-            if loc is None:
-                loc = {}
-            if (len(loc.keys()) == 0):
-                loc['latitude'] = 0
-                loc['longitude'] = 0
-            locs.append(dict(loc=loc))
-    return locs
+            geolite = current_app.root_path + '/../dat/GeoLiteCity.dat'
+            gic = pygeoip.GeoIP(geolite)
+            for row in results:
+                loc = gic.record_by_addr(row.user_ip)
+                if loc is None:
+                    loc = {}
+                if (len(loc.keys()) == 0):
+                    loc['latitude'] = 0
+                    loc['longitude'] = 0
+                locs.append(dict(loc=loc))
+        return locs
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @blueprint.route('/')
