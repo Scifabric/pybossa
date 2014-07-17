@@ -23,6 +23,7 @@ from sqlalchemy.sql import text
 import pybossa.model as model
 from pybossa.model.app import App
 from pybossa.model.task import Task
+from pybossa.model.task_run import TaskRun
 from pybossa.core import db, get_session
 import random
 
@@ -152,25 +153,35 @@ def get_random_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
 
 
 def get_incremental_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
-    """Get a new task for a given project with its last given answer.
-       It is an important strategy when dealing with large tasks, as
-       transcriptions"""
-    candidate_tasks = get_candidate_tasks(app_id, user_id, user_ip, n_answers, offset=0)
-    total_remaining = len(candidate_tasks)
-    if total_remaining == 0:
-        return None
-    rand = random.randrange(0, total_remaining)
-    task = candidate_tasks[rand]
-    #Find last answer for the task
-    q = db.session.query(model.task_run.TaskRun)\
-          .filter(model.task_run.TaskRun.task_id == task.id)\
-          .order_by(model.task_run.TaskRun.finish_time.desc())
-    last_task_run = q.first()
-    if last_task_run:
-        task.info['last_answer'] = last_task_run.info
-        #TODO: As discussed in GitHub #53
-        # it is necessary to create a lock in the task!
-    return task
+    """
+    Get a new task for a given project with its last given answer.
+    It is an important strategy when dealing with large tasks, as
+    transcriptions.
+    """
+    try:
+        session = get_session(db, bind='slave')
+        candidate_tasks = get_candidate_tasks(app_id, user_id, user_ip,
+                                              n_answers, offset=0)
+        total_remaining = len(candidate_tasks)
+        if total_remaining == 0:
+            return None
+        rand = random.randrange(0, total_remaining)
+        task = candidate_tasks[rand]
+        #Find last answer for the task
+        q = session.query(TaskRun)\
+              .filter(TaskRun.task_id == task.id)\
+              .order_by(TaskRun.finish_time.desc())
+        last_task_run = q.first()
+        if last_task_run:
+            task.info['last_answer'] = last_task_run.info
+            #TODO: As discussed in GitHub #53
+            # it is necessary to create a lock in the task!
+        return task
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
