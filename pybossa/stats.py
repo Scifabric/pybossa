@@ -41,7 +41,7 @@ def get_task_runs(app_id):
         for tr in session.query(TaskRun).filter_by(app_id=app_id).yield_per(100):
             task_runs.append(tr)
         return task_runs
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -63,7 +63,7 @@ def get_avg_n_tasks(app_id):
             avg = float(row.avg)
             total_n_tasks = row.n_tasks
         return avg, total_n_tasks
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -125,7 +125,7 @@ def stats_users(app_id):
             users['n_anon'] = row[0]
 
         return users, anon_users, auth_users
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -186,7 +186,7 @@ def stats_dates(app_id):
             dates_anon[row.d] = row.count
 
         return dates, dates_n_tasks, dates_anon, dates_auth
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -312,7 +312,7 @@ def stats_hours(app_id):
             max_hours_auth = row.max
 
         return hours, hours_anon, hours_auth, max_hours, max_hours_anon, max_hours_auth
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
