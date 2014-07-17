@@ -30,7 +30,7 @@ def get_all():
         session = get_session(db, bind='slave')
         data = session.query(model.category.Category).all()
         return data
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -54,7 +54,7 @@ def get_used():
                             description=row.description)
             categories.append(category)
         return categories
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
