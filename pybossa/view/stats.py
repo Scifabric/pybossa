@@ -37,7 +37,7 @@ def n_auth_users():
         for row in results:
             n_auth = row.n_auth
         return n_auth or 0
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -54,7 +54,7 @@ def n_anon_users():
         for row in results:
             n_anon = row.n_anon
         return n_anon or 0
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -70,7 +70,7 @@ def n_tasks_site():
         for row in results:
             n_tasks = row.n_tasks
         return n_tasks or 0
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -86,7 +86,7 @@ def n_total_tasks_site():
         for row in results:
             total = row.n_tasks
         return total or 0
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -102,7 +102,7 @@ def n_task_runs_site():
         for row in results:
             n_task_runs = row.n_task_runs
         return n_task_runs or 0
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -130,7 +130,7 @@ def get_top5_apps_24_hours():
                        info=dict(json.loads(row.info)), n_answers=row.n_answers)
             top5_apps_24_hours.append(tmp)
         return top5_apps_24_hours
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -158,7 +158,7 @@ def get_top5_users_24_hours():
                         n_answers=row.n_answers)
             top5_users_24_hours.append(user)
         return top5_users_24_hours
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -186,7 +186,7 @@ def get_locs(): # pragma: no cover
                     loc['longitude'] = 0
                 locs.append(dict(loc=loc))
         return locs
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
