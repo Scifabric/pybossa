@@ -18,7 +18,7 @@
 
 from flask import current_app
 from sqlalchemy.sql import text
-from pybossa.core import db
+from pybossa.core import db, get_session
 from pybossa.cache import cache, memoize, ONE_DAY
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
@@ -35,11 +35,17 @@ from datetime import timedelta
 @memoize(timeout=ONE_DAY)
 def get_task_runs(app_id):
     """Return all the Task Runs for a given app_id"""
-    #task_runs = db.session.query(TaskRun).filter_by(app_id=app_id).all()
-    task_runs = []
-    for tr in db.session.query(TaskRun).filter_by(app_id=app_id).yield_per(100):
-        task_runs.append(tr)
-    return task_runs
+    try:
+        session = get_session(db, bind='slave')
+        task_runs = []
+        for tr in session.query(TaskRun).filter_by(app_id=app_id).yield_per(100):
+            task_runs.append(tr)
+        return task_runs
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 #@memoize(timeout=ONE_DAY)
