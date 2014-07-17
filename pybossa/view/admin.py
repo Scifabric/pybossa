@@ -180,7 +180,7 @@ def export_users():
             for user in users:
                 json_users.append(dictize_with_exportable_attributes(user))
             return json.dumps(json_users)
-        except:
+        except: # pragma: no cover
             session.rollback()
             raise
         finally:
@@ -207,7 +207,7 @@ def export_users():
             for user in session.query(model.user.User).yield_per(1):
                 write_user(writer, user)
             yield out.getvalue()
-        except:
+        except: # pragma: no cover
             session.rollback()
             raise
         finally:

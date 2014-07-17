@@ -881,7 +881,7 @@ def export(short_name, task_id):
             return Response(json.dumps(results), mimetype='application/json')
         else:
             return abort(404)
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -955,7 +955,7 @@ def tasks_browse(short_name, page):
             return redirect_to_password
         app = add_custom_contrib_button_to(app, get_user_id_or_ip())
         return respond()
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -1042,7 +1042,7 @@ def export_to(short_name):
                     sep = ""
                 yield item + sep
             yield "]"
-        except:
+        except: # pragma: no cover
             session.rollback()
             raise
         finally:
@@ -1095,7 +1095,7 @@ def export_to(short_name):
                     .yield_per(1):
                 handle_row(writer, tr)
             yield out.getvalue()
-        except:
+        except: # pragma: no cover
             session.rollback()
             raise
         finally:
@@ -1229,7 +1229,7 @@ def export_to(short_name):
             else:
                 flash(msg, 'info')
                 return respond()
-        except:
+        except: # pragma: no cover
             session.rollback()
             raise
         finally:
@@ -1494,7 +1494,7 @@ def show_blogposts(short_name):
                                n_task_runs=n_task_runs,
                                n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
                                n_volunteers=cached_apps.n_volunteers(app.get('id')))
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -1525,7 +1525,7 @@ def show_blogpost(short_name, id):
                                 n_task_runs=n_task_runs,
                                 n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
                                 n_volunteers=cached_apps.n_volunteers(app.get('id')))
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
