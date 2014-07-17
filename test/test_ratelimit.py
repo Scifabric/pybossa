@@ -24,7 +24,7 @@ API endpoints like userprogress or vmcp.
 """
 import json
 
-from default import Test, db, with_context, flask_app, sentinel
+from default import flask_app, sentinel
 from Factories import AppFactory, UserFactory
 from mock import patch
 
@@ -38,7 +38,7 @@ class TestAPI(object):
 
     limit = flask_app.config.get('LIMIT')
 
-    @with_context
+
     def check_limit(self, url, action, obj, data=None):
         # Set the limit
         limit = self.limit - 1
