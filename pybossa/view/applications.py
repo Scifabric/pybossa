@@ -34,7 +34,7 @@ import pybossa.stats as stats
 import pybossa.validator as pb_validator
 import pybossa.sched as sched
 
-from pybossa.core import db, uploader, signer
+from pybossa.core import db, uploader, signer, get_session
 from pybossa.cache import ONE_DAY, ONE_HOUR
 from pybossa.model.app import App
 from pybossa.model.task import Task
@@ -161,7 +161,7 @@ def app_title(app, page_name):
 
 def app_by_shortname(short_name):
     app = cached_apps.get_app(short_name)
-    if app.id:
+    if app:
         # Get owner
         owner = User.query.get(app.owner_id)
         # Populate CACHE with the data of the app
@@ -860,25 +860,32 @@ def tutorial(short_name):
 @blueprint.route('/<short_name>/<int:task_id>/results.json')
 def export(short_name, task_id):
     """Return a file with all the TaskRuns for a give Task"""
-    # Check if the app exists
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
+    try:
+        session = get_session(db, bind='slave')
+        # Check if the app exists
+        (app, owner, n_tasks, n_task_runs,
+         overall_progress, last_activity) = app_by_shortname(short_name)
 
-    require.app.read(app)
-    redirect_to_password = _check_if_redirect_to_password(app)
-    if redirect_to_password:
-        return redirect_to_password
+        require.app.read(app)
+        redirect_to_password = _check_if_redirect_to_password(app)
+        if redirect_to_password:
+            return redirect_to_password
 
-    # Check if the task belongs to the app and exists
-    task = db.session.query(model.task.Task).filter_by(app_id=app.id)\
-                                       .filter_by(id=task_id).first()
-    if task:
-        taskruns = db.session.query(model.task_run.TaskRun).filter_by(task_id=task_id)\
-                             .filter_by(app_id=app.id).all()
-        results = [tr.dictize() for tr in taskruns]
-        return Response(json.dumps(results), mimetype='application/json')
-    else:
-        return abort(404)
+        # Check if the task belongs to the app and exists
+        task = session.query(model.task.Task).filter_by(app_id=app.id)\
+                                             .filter_by(id=task_id).first()
+        if task:
+            taskruns = session.query(model.task_run.TaskRun).filter_by(task_id=task_id)\
+                              .filter_by(app_id=app.id).all()
+            results = [tr.dictize() for tr in taskruns]
+            return Response(json.dumps(results), mimetype='application/json')
+        else:
+            return abort(404)
+    except: # pragma: no cover
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @blueprint.route('/<short_name>/tasks/')
@@ -907,45 +914,52 @@ def tasks(short_name):
 @blueprint.route('/<short_name>/tasks/browse', defaults={'page': 1})
 @blueprint.route('/<short_name>/tasks/browse/<int:page>')
 def tasks_browse(short_name, page):
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
-    title = app_title(app, "Tasks")
-    n_volunteers = cached_apps.n_volunteers(app.id)
-    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
+    try:
+        session = get_session(db, bind='slave')
+        (app, owner, n_tasks, n_task_runs,
+         overall_progress, last_activity) = app_by_shortname(short_name)
+        title = app_title(app, "Tasks")
+        n_volunteers = cached_apps.n_volunteers(app.id)
+        n_completed_tasks = cached_apps.n_completed_tasks(app.id)
 
-    def respond():
-        per_page = 10
-        count = db.session.query(model.task.Task)\
-            .filter_by(app_id=app.get('id'))\
-            .count()
-        app_tasks = db.session.query(model.task.Task)\
-            .filter_by(app_id=app.get('id'))\
-            .order_by(model.task.Task.id)\
-            .limit(per_page)\
-            .offset((page - 1) * per_page)\
-            .all()
+        def respond():
+            per_page = 10
+            count = session.query(model.task.Task)\
+                .filter_by(app_id=app.get('id'))\
+                .count()
+            app_tasks = session.query(model.task.Task)\
+                .filter_by(app_id=app.get('id'))\
+                .order_by(model.task.Task.id)\
+                .limit(per_page)\
+                .offset((page - 1) * per_page)\
+                .all()
 
-        if not app_tasks and page != 1:
-            abort(404)
+            if not app_tasks and page != 1:
+                abort(404)
 
-        pagination = Pagination(page, per_page, count)
-        return render_template('/applications/tasks_browse.html',
-                               app=app,
-                               owner=owner,
-                               tasks=app_tasks,
-                               title=title,
-                               pagination=pagination,
-                               n_tasks=n_tasks,
-                               overall_progress=overall_progress,
-                               n_volunteers=n_volunteers,
-                               n_completed_tasks=n_completed_tasks)
+            pagination = Pagination(page, per_page, count)
+            return render_template('/applications/tasks_browse.html',
+                                   app=app,
+                                   owner=owner,
+                                   tasks=app_tasks,
+                                   title=title,
+                                   pagination=pagination,
+                                   n_tasks=n_tasks,
+                                   overall_progress=overall_progress,
+                                   n_volunteers=n_volunteers,
+                                   n_completed_tasks=n_completed_tasks)
 
-    require.app.read(app)
-    redirect_to_password = _check_if_redirect_to_password(app)
-    if redirect_to_password:
-        return redirect_to_password
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return respond()
+        require.app.read(app)
+        redirect_to_password = _check_if_redirect_to_password(app)
+        if redirect_to_password:
+            return redirect_to_password
+        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+        return respond()
+    except: # pragma: no cover
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @blueprint.route('/<short_name>/tasks/delete', methods=['GET', 'POST'])
@@ -1015,17 +1029,24 @@ def export_to(short_name):
 
 
     def gen_json(table):
-        n = db.session.query(table)\
-            .filter_by(app_id=app.id).count()
-        sep = ", "
-        yield "["
-        for i, tr in enumerate(db.session.query(table)
-                                 .filter_by(app_id=app.id).yield_per(1), 1):
-            item = json.dumps(tr.dictize())
-            if (i == n):
-                sep = ""
-            yield item + sep
-        yield "]"
+        try:
+            session = get_session(db, bind='slave')
+            n = session.query(table)\
+                .filter_by(app_id=app.id).count()
+            sep = ", "
+            yield "["
+            for i, tr in enumerate(session.query(table)
+                                     .filter_by(app_id=app.id).yield_per(1), 1):
+                item = json.dumps(tr.dictize())
+                if (i == n):
+                    sep = ""
+                yield item + sep
+            yield "]"
+        except: # pragma: no cover
+            session.rollback()
+            raise
+        finally:
+            session.close()
 
     def format_csv_properly(row, ty=None):
         tmp = row.keys()
@@ -1067,11 +1088,18 @@ def export_to(short_name):
         writer.writerow(format_csv_properly(t.dictize(), ty='taskrun'))
 
     def get_csv(out, writer, table, handle_row):
-        for tr in db.session.query(table)\
-                .filter_by(app_id=app.id)\
-                .yield_per(1):
-            handle_row(writer, tr)
-        yield out.getvalue()
+        try:
+            session = get_session(db, bind='slave')
+            for tr in session.query(table)\
+                    .filter_by(app_id=app.id)\
+                    .yield_per(1):
+                handle_row(writer, tr)
+            yield out.getvalue()
+        except: # pragma: no cover
+            session.rollback()
+            raise
+        finally:
+            session.close()
 
     def respond_json(ty):
         tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}
@@ -1131,13 +1159,6 @@ def export_to(short_name):
                 owner = User.query.get(app.owner_id)
                 package = ckan.package_create(app=app, user=owner, url=app_url)
                 create_ckan_datastore(ckan, ty, package['id'])
-                #new_resource = ckan.resource_create(name=ty,
-                #                                    package_id=package['id'])
-                #ckan.datastore_create(name=ty,
-                #                      resource_id=new_resource['result']['id'])
-                #ckan.datastore_upsert(name=ty,
-                #                     records=gen_json(tables[ty]),
-                #                     resource_id=new_resource['result']['id'])
             flash(msg, 'success')
             return respond()
         except requests.exceptions.ConnectionError:
@@ -1156,56 +1177,63 @@ def export_to(short_name):
             return respond()
 
     def respond_csv(ty):
-        # Export Task(/Runs) to CSV
-        types = {
-            "task": (
-                model.task.Task, handle_task,
-                (lambda x: True),
-                gettext(
-                    "Oops, the project does not have tasks to \
-                    export, if you are the owner add some tasks")),
-            "task_run": (
-                model.task_run.TaskRun, handle_task_run,
-                (lambda x: True),
-                gettext(
-                    "Oops, there are no Task Runs yet to export, invite \
-                     some users to participate"))}
         try:
-            table, handle_row, test, msg = types[ty]
-        except KeyError:
-            return abort(404)
+            session = get_session(db, bind='slave')
+            # Export Task(/Runs) to CSV
+            types = {
+                "task": (
+                    model.task.Task, handle_task,
+                    (lambda x: True),
+                    gettext(
+                        "Oops, the project does not have tasks to \
+                        export, if you are the owner add some tasks")),
+                "task_run": (
+                    model.task_run.TaskRun, handle_task_run,
+                    (lambda x: True),
+                    gettext(
+                        "Oops, there are no Task Runs yet to export, invite \
+                         some users to participate"))}
+            try:
+                table, handle_row, test, msg = types[ty]
+            except KeyError:
+                return abort(404)
 
-        out = StringIO()
-        writer = UnicodeWriter(out)
-        t = db.session.query(table)\
-            .filter_by(app_id=app.id)\
-            .first()
-        if t is not None:
-            if test(t):
-                tmp = t.dictize().keys()
-                task_keys = []
-                for k in tmp:
-                    k = "%s__%s" % (ty, k)
-                    task_keys.append(k)
-                if (type(t.info) == dict):
-                    task_info_keys = []
-                    tmp = t.info.keys()
+            out = StringIO()
+            writer = UnicodeWriter(out)
+            t = session.query(table)\
+                .filter_by(app_id=app.id)\
+                .first()
+            if t is not None:
+                if test(t):
+                    tmp = t.dictize().keys()
+                    task_keys = []
                     for k in tmp:
-                        k = "%sinfo__%s" % (ty, k)
-                        task_info_keys.append(k)
-                else:
-                    task_info_keys = []
-                keys = task_keys + task_info_keys
-                writer.writerow(sorted(keys))
+                        k = "%s__%s" % (ty, k)
+                        task_keys.append(k)
+                    if (type(t.info) == dict):
+                        task_info_keys = []
+                        tmp = t.info.keys()
+                        for k in tmp:
+                            k = "%sinfo__%s" % (ty, k)
+                            task_info_keys.append(k)
+                    else:
+                        task_info_keys = []
+                    keys = task_keys + task_info_keys
+                    writer.writerow(sorted(keys))
 
-            res = Response(get_csv(out, writer, table, handle_row),
-                           mimetype='text/csv')
-            tmp = 'attachment; filename=%s_%s.csv' % (app.short_name, ty)
-            res.headers['Content-Disposition'] = tmp
-            return res
-        else:
-            flash(msg, 'info')
-            return respond()
+                res = Response(get_csv(out, writer, table, handle_row),
+                               mimetype='text/csv')
+                tmp = 'attachment; filename=%s_%s.csv' % (app.short_name, ty)
+                res.headers['Content-Disposition'] = tmp
+                return res
+            else:
+                flash(msg, 'info')
+                return respond()
+        except: # pragma: no cover
+            session.rollback()
+            raise
+        finally:
+            session.close()
 
     export_formats = ["json", "csv"]
     if current_user.is_authenticated():
@@ -1448,46 +1476,60 @@ def task_priority(short_name):
 
 @blueprint.route('/<short_name>/blog')
 def show_blogposts(short_name):
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
+    try:
+        session = get_session(db, bind='slave')
+        (app, owner, n_tasks, n_task_runs,
+         overall_progress, last_activity) = app_by_shortname(short_name)
 
-    blogposts = db.session.query(model.blogpost.Blogpost).filter_by(app_id=app.id).all()
-    require.blogpost.read(app_id=app.id)
-    redirect_to_password = _check_if_redirect_to_password(app)
-    if redirect_to_password:
-        return redirect_to_password
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return render_template('applications/blog.html', app=app,
-                           owner=owner, blogposts=blogposts,
-                           overall_progress=overall_progress,
-                           n_tasks=n_tasks,
-                           n_task_runs=n_task_runs,
-                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                           n_volunteers=cached_apps.n_volunteers(app.get('id')))
+        blogposts = session.query(model.blogpost.Blogpost).filter_by(app_id=app.id).all()
+        require.blogpost.read(app_id=app.id)
+        redirect_to_password = _check_if_redirect_to_password(app)
+        if redirect_to_password:
+            return redirect_to_password
+        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+        return render_template('applications/blog.html', app=app,
+                               owner=owner, blogposts=blogposts,
+                               overall_progress=overall_progress,
+                               n_tasks=n_tasks,
+                               n_task_runs=n_task_runs,
+                               n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                               n_volunteers=cached_apps.n_volunteers(app.get('id')))
+    except: # pragma: no cover
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @blueprint.route('/<short_name>/<int:id>')
 def show_blogpost(short_name, id):
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
-    blogpost = db.session.query(model.blogpost.Blogpost).filter_by(id=id,
-                                                        app_id=app.id).first()
-    if blogpost is None:
-        raise abort(404)
-    require.blogpost.read(blogpost)
-    redirect_to_password = _check_if_redirect_to_password(app)
-    if redirect_to_password:
-        return redirect_to_password
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return render_template('applications/blog_post.html',
-                            app=app,
-                            owner=owner,
-                            blogpost=blogpost,
-                            overall_progress=overall_progress,
-                            n_tasks=n_tasks,
-                            n_task_runs=n_task_runs,
-                            n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                            n_volunteers=cached_apps.n_volunteers(app.get('id')))
+    try:
+        session = get_session(db, bind='slave')
+        (app, owner, n_tasks, n_task_runs,
+         overall_progress, last_activity) = app_by_shortname(short_name)
+        blogpost = session.query(model.blogpost.Blogpost).filter_by(id=id,
+                                                            app_id=app.id).first()
+        if blogpost is None:
+            raise abort(404)
+        require.blogpost.read(blogpost)
+        redirect_to_password = _check_if_redirect_to_password(app)
+        if redirect_to_password:
+            return redirect_to_password
+        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+        return render_template('applications/blog_post.html',
+                                app=app,
+                                owner=owner,
+                                blogpost=blogpost,
+                                overall_progress=overall_progress,
+                                n_tasks=n_tasks,
+                                n_task_runs=n_task_runs,
+                                n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                                n_volunteers=cached_apps.n_volunteers(app.get('id')))
+    except: # pragma: no cover
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @blueprint.route('/<short_name>/new-blogpost', methods=['GET', 'POST'])

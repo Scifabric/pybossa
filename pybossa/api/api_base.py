@@ -32,7 +32,7 @@ from flask.views import MethodView
 from werkzeug.exceptions import NotFound
 from sqlalchemy.exc import IntegrityError
 from pybossa.util import jsonpify, crossdomain
-from pybossa.core import db, ratelimits
+from pybossa.core import db, ratelimits, get_session
 from pybossa.auth import require
 from pybossa.hateoas import Hateoas
 from pybossa.ratelimit import ratelimit
@@ -49,6 +49,8 @@ class APIBase(MethodView):
     """Class to create CRUD methods."""
 
     hateoas = Hateoas()
+
+    slave_session = get_session(db, bind='slave')
 
     def valid_args(self):
         """Check if the domain object args are valid."""
@@ -81,10 +83,13 @@ class APIBase(MethodView):
             json_response = self._create_json_response(query, id)
             return Response(json_response, mimetype='application/json')
         except Exception as e:
+            self.slave_session.rollback()
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
                 action='GET')
+        finally:
+            self.slave_session.close()
 
     def _create_json_response(self, query_result, id):
         if len (query_result) == 1 and query_result[0] is None:
@@ -109,7 +114,7 @@ class APIBase(MethodView):
 
     def _db_query(self, cls, id):
         """ Returns a list with the results of the query"""
-        query = db.session.query(self.__class__)
+        query = self.slave_session.query(self.__class__)
         if not id:
             limit, offset = self._set_limit_and_offset()
             query = self._filter_query(query, limit, offset)
@@ -169,6 +174,7 @@ class APIBase(MethodView):
             db.session.rollback()
             raise
         except Exception as e:
+            db.session.rollback()
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
@@ -199,6 +205,7 @@ class APIBase(MethodView):
             self._refresh_cache(inst)
             return '', 204
         except Exception as e:
+            db.session.rollback()
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
@@ -239,6 +246,7 @@ class APIBase(MethodView):
             db.session.rollback()
             raise
         except Exception as e:
+            db.session.rollback()
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),

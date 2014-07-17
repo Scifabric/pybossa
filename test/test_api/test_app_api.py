@@ -500,6 +500,8 @@ class TestAppAPI(TestAPI):
 
         # Now only allow authenticated users
         app.allow_anonymous_contributors = False
+        db.session.add(app)
+        db.session.commit()
 
         # As Anonymous user
         url = '/api/app/%s/newtask' % app.id
