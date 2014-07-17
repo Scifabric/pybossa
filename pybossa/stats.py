@@ -73,53 +73,63 @@ def get_avg_n_tasks(app_id):
 @memoize(timeout=ONE_DAY)
 def stats_users(app_id):
     """Return users's stats for a given app_id"""
-    users = {}
-    auth_users = []
-    anon_users = []
+    try:
+        session = get_session(db, bind='slave')
 
-    # Get Authenticated Users
-    sql = text('''SELECT task_run.user_id AS user_id,
-               COUNT(task_run.id) as n_tasks FROM task_run
-               WHERE task_run.user_id IS NOT NULL AND
-               task_run.user_ip IS NULL AND
-               task_run.app_id=:app_id
-               GROUP BY task_run.user_id ORDER BY n_tasks DESC
-               LIMIT 5;''')
-    results = db.engine.execute(sql, app_id=app_id)
+        users = {}
+        auth_users = []
+        anon_users = []
 
-    for row in results:
-        auth_users.append([row.user_id, row.n_tasks])
+        # Get Authenticated Users
+        sql = text('''SELECT task_run.user_id AS user_id,
+                   COUNT(task_run.id) as n_tasks FROM task_run
+                   WHERE task_run.user_id IS NOT NULL AND
+                   task_run.user_ip IS NULL AND
+                   task_run.app_id=:app_id
+                   GROUP BY task_run.user_id ORDER BY n_tasks DESC
+                   LIMIT 5;''')
+        results = session.execute(sql, dict(app_id=app_id))
 
-    sql = text('''SELECT count(distinct(task_run.user_id)) AS user_id FROM task_run
-               WHERE task_run.user_id IS NOT NULL AND
-               task_run.user_ip IS NULL AND
-               task_run.app_id=:app_id;''')
-    results = db.engine.execute(sql, app_id=app_id)
-    for row in results:
-        users['n_auth'] = row[0]
+        for row in results:
+            auth_users.append([row.user_id, row.n_tasks])
 
-    # Get all Anonymous Users
-    sql = text('''SELECT task_run.user_ip AS user_ip,
-               COUNT(task_run.id) as n_tasks FROM task_run
-               WHERE task_run.user_ip IS NOT NULL AND
-               task_run.user_id IS NULL AND
-               task_run.app_id=:app_id
-               GROUP BY task_run.user_ip ORDER BY n_tasks DESC;''').execution_options(stream=True)
-    results = db.engine.execute(sql, app_id=app_id)
+        sql = text('''SELECT count(distinct(task_run.user_id)) AS user_id FROM task_run
+                   WHERE task_run.user_id IS NOT NULL AND
+                   task_run.user_ip IS NULL AND
+                   task_run.app_id=:app_id;''')
 
-    for row in results:
-        anon_users.append([row.user_ip, row.n_tasks])
+        results = session.execute(sql, dict(app_id=app_id))
+        for row in results:
+            users['n_auth'] = row[0]
 
-    sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip)) AS user_ip FROM task_run
-               WHERE task_run.user_ip IS NOT NULL AND
-               task_run.user_id IS NULL AND
-               task_run.app_id=:app_id;''')
-    results = db.engine.execute(sql, app_id=app_id)
+        # Get all Anonymous Users
+        sql = text('''SELECT task_run.user_ip AS user_ip,
+                   COUNT(task_run.id) as n_tasks FROM task_run
+                   WHERE task_run.user_ip IS NOT NULL AND
+                   task_run.user_id IS NULL AND
+                   task_run.app_id=:app_id
+                   GROUP BY task_run.user_ip ORDER BY n_tasks DESC;''').execution_options(stream=True)
+        results = session.execute(sql, dict(app_id=app_id))
 
-    for row in results:
-        users['n_anon'] = row[0]
+        for row in results:
+            anon_users.append([row.user_ip, row.n_tasks])
 
-    return users, anon_users, auth_users
+        sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip)) AS user_ip FROM task_run
+                   WHERE task_run.user_ip IS NOT NULL AND
+                   task_run.user_id IS NULL AND
+                   task_run.app_id=:app_id;''')
+
+        results = session.execute(sql, dict(app_id=app_id))
+
+        for row in results:
+            users['n_anon'] = row[0]
+
+        return users, anon_users, auth_users
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @memoize(timeout=ONE_DAY)
