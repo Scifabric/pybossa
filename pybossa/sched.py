@@ -48,7 +48,7 @@ def new_task(app_id, user_id=None, user_ip=None, offset=0):
                 'incremental': get_incremental_task}
             sched = sched_map.get(app.info.get('sched'), sched_map['default'])
             return sched(app_id, user_id, user_ip, offset=offset)
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -107,7 +107,7 @@ def get_breadth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, off
                     return None
         else: # pragma: no cover
             return None
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -145,7 +145,7 @@ def get_random_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
             return choice(app.tasks)
         else:
             return None
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -177,7 +177,7 @@ def get_incremental_task(app_id, user_id=None, user_ip=None, n_answers=30, offse
             #TODO: As discussed in GitHub #53
             # it is necessary to create a lock in the task!
         return task
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -212,7 +212,7 @@ def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30, offset
         for t in rows:
             tasks.append(session.query(Task).get(t.id))
         return tasks
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
