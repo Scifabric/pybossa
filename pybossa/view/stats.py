@@ -79,11 +79,18 @@ def n_tasks_site():
 
 @cache(timeout=ONE_DAY, key_prefix="site_n_total_tasks")
 def n_total_tasks_site():
-    sql = text('''SELECT SUM(n_answers) AS n_tasks FROM task''')
-    results = db.engine.execute(sql)
-    for row in results:
-        total = row.n_tasks
-    return total or 0
+    try:
+        session = get_session(db, bind='slave')
+        sql = text('''SELECT SUM(n_answers) AS n_tasks FROM task''')
+        results = db.engine.execute(sql)
+        for row in results:
+            total = row.n_tasks
+        return total or 0
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @cache(timeout=ONE_DAY, key_prefix="site_n_task_runs")
