@@ -134,55 +134,63 @@ def stats_users(app_id):
 
 @memoize(timeout=ONE_DAY)
 def stats_dates(app_id):
-    dates = {}
-    dates_anon = {}
-    dates_auth = {}
-    dates_n_tasks = {}
+    try:
+        dates = {}
+        dates_anon = {}
+        dates_auth = {}
+        dates_n_tasks = {}
 
-    avg, total_n_tasks = get_avg_n_tasks(app_id)
+        session = get_session(db, bind='slave')
 
-    # Get all answers per date
-    sql = text('''
-                WITH myquery AS (
-                    SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') as d,
-                                   COUNT(id)
-                    FROM task_run WHERE app_id=:app_id GROUP BY d)
-               SELECT to_char(d, 'YYYY-MM-DD') as d, count from myquery;
-               ''').execution_options(stream=True)
+        avg, total_n_tasks = get_avg_n_tasks(app_id)
 
-    results = db.engine.execute(sql, app_id=app_id)
-    for row in results:
-        dates[row.d] = row.count
-        dates_n_tasks[row.d] = total_n_tasks * avg
+        # Get all answers per date
+        sql = text('''
+                    WITH myquery AS (
+                        SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') as d,
+                                       COUNT(id)
+                        FROM task_run WHERE app_id=:app_id GROUP BY d)
+                   SELECT to_char(d, 'YYYY-MM-DD') as d, count from myquery;
+                   ''').execution_options(stream=True)
+
+        results = session.execute(sql, dict(app_id=app_id))
+        for row in results:
+            dates[row.d] = row.count
+            dates_n_tasks[row.d] = total_n_tasks * avg
 
 
-    # Get all answers per date for auth
-    sql = text('''
-                WITH myquery AS (
-                    SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') as d,
-                                   COUNT(id)
-                    FROM task_run WHERE app_id=:app_id AND user_ip IS NULL GROUP BY d)
-               SELECT to_char(d, 'YYYY-MM-DD') as d, count from myquery;
-               ''').execution_options(stream=True)
+        # Get all answers per date for auth
+        sql = text('''
+                    WITH myquery AS (
+                        SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') as d,
+                                       COUNT(id)
+                        FROM task_run WHERE app_id=:app_id AND user_ip IS NULL GROUP BY d)
+                   SELECT to_char(d, 'YYYY-MM-DD') as d, count from myquery;
+                   ''').execution_options(stream=True)
 
-    results = db.engine.execute(sql, app_id=app_id)
-    for row in results:
-        dates_auth[row.d] = row.count
+        results = session.execute(sql, dict(app_id=app_id))
+        for row in results:
+            dates_auth[row.d] = row.count
 
-    # Get all answers per date for anon
-    sql = text('''
-                WITH myquery AS (
-                    SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') as d,
-                                   COUNT(id)
-                    FROM task_run WHERE app_id=:app_id AND user_id IS NULL GROUP BY d)
-               SELECT to_char(d, 'YYYY-MM-DD') as d, count  from myquery;
-               ''').execution_options(stream=True)
+        # Get all answers per date for anon
+        sql = text('''
+                    WITH myquery AS (
+                        SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') as d,
+                                       COUNT(id)
+                        FROM task_run WHERE app_id=:app_id AND user_id IS NULL GROUP BY d)
+                   SELECT to_char(d, 'YYYY-MM-DD') as d, count  from myquery;
+                   ''').execution_options(stream=True)
 
-    results = db.engine.execute(sql, app_id=app_id)
-    for row in results:
-        dates_anon[row.d] = row.count
+        results = session.execute(sql, dict(app_id=app_id))
+        for row in results:
+            dates_anon[row.d] = row.count
 
-    return dates, dates_n_tasks, dates_anon, dates_auth
+        return dates, dates_n_tasks, dates_anon, dates_auth
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @memoize(timeout=ONE_DAY)
