@@ -212,7 +212,7 @@ class TestSched(sched.Helper):
                           info={'answer': 'No'})
                 tr = json.dumps(tr)
                 self.app.post('/api/taskrun', data=tr)
-
+                self.redis_flushall()
                 res = self.app.get('api/app/1/newtask')
                 data = json.loads(res.data)
             self.signout()
@@ -257,6 +257,7 @@ class TestSched(sched.Helper):
             while data.get('info') is not None:
                 # Check that we received a Task
                 assert data.get('info'),  data
+                self.redis_flushall()
 
                 # Save the assigned task
                 assigned_tasks.append(data)
