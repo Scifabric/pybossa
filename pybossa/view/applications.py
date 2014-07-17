@@ -34,7 +34,7 @@ import pybossa.stats as stats
 import pybossa.validator as pb_validator
 import pybossa.sched as sched
 
-from pybossa.core import db, uploader, signer
+from pybossa.core import db, uploader, signer, get_session
 from pybossa.cache import ONE_DAY, ONE_HOUR
 from pybossa.model.app import App
 from pybossa.model.task import Task
@@ -860,25 +860,32 @@ def tutorial(short_name):
 @blueprint.route('/<short_name>/<int:task_id>/results.json')
 def export(short_name, task_id):
     """Return a file with all the TaskRuns for a give Task"""
-    # Check if the app exists
-    (app, owner, n_tasks, n_task_runs,
-     overall_progress, last_activity) = app_by_shortname(short_name)
+    try:
+        session = get_session(db, bind='slave')
+        # Check if the app exists
+        (app, owner, n_tasks, n_task_runs,
+         overall_progress, last_activity) = app_by_shortname(short_name)
 
-    require.app.read(app)
-    redirect_to_password = _check_if_redirect_to_password(app)
-    if redirect_to_password:
-        return redirect_to_password
+        require.app.read(app)
+        redirect_to_password = _check_if_redirect_to_password(app)
+        if redirect_to_password:
+            return redirect_to_password
 
-    # Check if the task belongs to the app and exists
-    task = db.session.query(model.task.Task).filter_by(app_id=app.id)\
-                                       .filter_by(id=task_id).first()
-    if task:
-        taskruns = db.session.query(model.task_run.TaskRun).filter_by(task_id=task_id)\
-                             .filter_by(app_id=app.id).all()
-        results = [tr.dictize() for tr in taskruns]
-        return Response(json.dumps(results), mimetype='application/json')
-    else:
-        return abort(404)
+        # Check if the task belongs to the app and exists
+        task = session.query(model.task.Task).filter_by(app_id=app.id)\
+                                             .filter_by(id=task_id).first()
+        if task:
+            taskruns = session.query(model.task_run.TaskRun).filter_by(task_id=task_id)\
+                              .filter_by(app_id=app.id).all()
+            results = [tr.dictize() for tr in taskruns]
+            return Response(json.dumps(results), mimetype='application/json')
+        else:
+            return abort(404)
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @blueprint.route('/<short_name>/tasks/')
