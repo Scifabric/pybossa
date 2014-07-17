@@ -136,12 +136,19 @@ def get_depth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, offse
 
 def get_random_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
     """Returns a random task for the user"""
-    app = db.session.query(model.app.App).get(app_id)
-    from random import choice
-    if len(app.tasks) > 0:
-        return choice(app.tasks)
-    else:
-        return None
+    try:
+        session = get_session(db, bind='slave')
+        app = session.query(App).get(app_id)
+        from random import choice
+        if len(app.tasks) > 0:
+            return choice(app.tasks)
+        else:
+            return None
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 def get_incremental_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
