@@ -92,7 +92,7 @@ def get_leaderboard(n, user_id):
                 top_users.append(user)
 
         return top_users
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -119,7 +119,7 @@ def get_top(n=10):
                         info=dict(json.loads(row.info)))
             top_users.append(user)
         return top_users
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -159,7 +159,7 @@ def get_user_summary(name):
             return user
         else: # pragma: no cover
             return None
-    except:
+    except: # pragma: no cover
         session.rollback()
     finally:
         session.close()
@@ -185,7 +185,7 @@ def rank_and_score(user_id):
             rank_and_score['rank'] = row.rank
             rank_and_score['score'] = row.score
         return rank_and_score
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -210,7 +210,7 @@ def apps_contributed(user_id):
                        info=json.loads(row.info), n_task_runs=row.n_task_runs)
             apps_contributed.append(app)
         return apps_contributed
-    except:
+    except: # pragma: no cover
         session.rollback()
     finally:
         session.close()
@@ -243,7 +243,7 @@ def published_apps(user_id):
                        info=json.loads(row.info))
             apps_published.append(app)
         return apps_published
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -277,7 +277,7 @@ def draft_apps(user_id):
                        info=json.loads(row.info))
             apps_draft.append(app)
         return apps_draft
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -311,7 +311,7 @@ def hidden_apps(user_id):
                        info=json.loads(row.info))
             apps_published.append(app)
         return apps_published
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
@@ -349,7 +349,7 @@ def get_users_page(page, per_page=24):
                         registered_ago=pretty_date(row.created))
             accounts.append(user)
         return accounts
-    except:
+    except: # pragma: no cover
         session.rollback()
         raise
     finally:
