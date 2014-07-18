@@ -24,8 +24,3 @@ class TestAPI(Test):
 
     endpoints = ['app', 'task', 'taskrun', 'user']
 
-    @with_context
-    def setUp(self):
-        super(TestAPI, self).setUp()
-        reset_all_pk_sequences()
-
