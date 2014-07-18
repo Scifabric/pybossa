@@ -32,6 +32,7 @@ class TestTokenAuthorization(Test):
     mock_authenticated = mock_current_user(anonymous=False, admin=False, id=2)
 
 
+
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     @patch('pybossa.auth.token.current_user', new=mock_anonymous)
     def test_anonymous_user_delete(self):
