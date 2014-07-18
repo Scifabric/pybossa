@@ -80,6 +80,10 @@ def configure_app(app):
     # Override DB in case of testing
     if app.config.get('SQLALCHEMY_DATABASE_TEST_URI'):
         app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_TEST_URI']
+    # Enable Slave bind in case is missing using Master node
+    if app.config.get('SQLALCHEMY_BINDS') is None:
+        print "Slave binds are misssing, adding Master as slave too."
+        app.config['SQLALCHEMY_BINDS'] = dict(slave=app.config.get('SQLALCHEMY_DATABASE_URI'))
 
 
 def setup_theme(app):
@@ -387,3 +391,15 @@ def setup_cache_timeouts(app):
     timeouts['USER_TIMEOUT'] = app.config['USER_TIMEOUT']
     timeouts['USER_TOP_TIMEOUT'] = app.config['USER_TOP_TIMEOUT']
     timeouts['USER_TOTAL_TIMEOUT'] = app.config['USER_TOTAL_TIMEOUT']
+
+
+def get_session(db, bind):
+    """Returns a session with for the given bind."""
+    engine = db.get_engine(db.app, bind=bind)
+    Session.configure(bind=engine)
+    session = Session()
+    # HACK: this is to fix Flask-SQLAlchemy error
+    # see: http://stackoverflow.com/a/20203277/1960596
+    # note: it looks like in Flask-SQLAlchemy 2.0 this is going to be fixed
+    session._model_changes = {}
+    return session

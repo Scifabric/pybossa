@@ -26,6 +26,12 @@ SECRET = 'foobar'
 SECRET_KEY = 'my-session-secret'
 
 SQLALCHEMY_DATABASE_URI = 'postgresql://pybossa:tester@localhost/pybossa'
+
+##Slave configuration for DB
+#SQLALCHEMY_BINDS = {
+#    'slave': 'postgresql://user:password@server/db'
+#}
+
 ITSDANGEROUSKEY = 'its-dangerous-key'
 
 ## project configuration

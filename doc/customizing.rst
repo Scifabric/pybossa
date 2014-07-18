@@ -76,6 +76,22 @@ so it fits your needs in the field `SQLALCHEMY_DATABASE_URI`_::
 .. _`SQLALCHEMY_DATABSE_URI`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L10
 .. _SQLAlchemy: http://www.sqlalchemy.org/
 
+Load balance SQL Queries
+========================
+
+If you have a master/slave PostgreSQL setup, you can instruct PyBossa to use
+the slave node for load balancing queries between the master and slave node.
+
+For enabling this mode, all you have to do is adding to the settings_local.py
+config file the following:
+
+.. code-block:: python
+
+    SQLALCHEMY_BINDS = {
+        'slave': 'postgresql://user:password@server/pybossadb'
+    }
+
+
 It's dangerous, so better sign this
 ===================================
 

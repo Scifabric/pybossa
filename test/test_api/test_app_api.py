@@ -488,6 +488,7 @@ class TestAppAPI(TestAPI):
 
         # Now only allow authenticated users
         app.allow_anonymous_contributors = False
+        project_repo.update(app)
 
         # As Anonymous user
         url = '/api/app/%s/newtask' % app.id

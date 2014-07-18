@@ -169,7 +169,7 @@ def app_title(app, page_name):
 
 def app_by_shortname(short_name):
     app = cached_apps.get_app(short_name)
-    if app.id:
+    if app:
         # Get owner
         owner = user_repo.get(app.owner_id)
         # Populate CACHE with the data of the app
