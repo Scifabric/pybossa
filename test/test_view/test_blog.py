@@ -29,7 +29,6 @@ from mock import patch
 
 class TestBlogpostView(web.Helper):
 
-    @with_context
     def test_blogposts_get_all(self):
         """Test blogpost GET all blogposts"""
         user = self.create_users()[1]
@@ -52,7 +51,6 @@ class TestBlogpostView(web.Helper):
         assert 'thisisatitle' in res.data
 
 
-    @with_context
     def test_blogposts_get_all_with_hidden_app(self):
         """Test blogpost GET does not show hidden projects"""
         self.register()
@@ -99,7 +97,6 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 404, res.status_code
 
 
-    @with_context
     def test_blogpost_get_one(self):
         """Test blogpost GET with id shows one blogpost"""
         user = self.create_users()[1]
@@ -122,7 +119,6 @@ class TestBlogpostView(web.Helper):
         assert 'thisisatitle' in res.data
 
 
-    @with_context
     def test_blogpost_get_one_with_hidden_app(self):
         """Test blogpost GET a given post id with hidden project does not show the post"""
         self.register()
@@ -161,7 +157,6 @@ class TestBlogpostView(web.Helper):
         assert 'thisisatitle' in res.data
 
 
-    @with_context
     def test_blogpost_get_one_errors(self):
         """Test blogposts GET non existing posts raises errors"""
         self.register()
@@ -194,7 +189,6 @@ class TestBlogpostView(web.Helper):
 
     from pybossa.view.applications import redirect
 
-    @with_context
     @patch('pybossa.view.applications.redirect', wraps=redirect)
     def test_blogpost_create_by_owner(self, mock_redirect):
         """Test blogposts, project owners can create"""
@@ -221,7 +215,6 @@ class TestBlogpostView(web.Helper):
         assert blogpost.user_id == user.id, blogpost.user_id
 
 
-    @with_context
     def test_blogpost_create_by_anonymous(self):
         """Test blogpost create, anonymous users are redirected to signin"""
         user = self.create_users()[1]
@@ -245,7 +238,6 @@ class TestBlogpostView(web.Helper):
         assert blogpost == None, blogpost
 
 
-    @with_context
     def test_blogpost_create_by_non_owner(self):
         """Test blogpost create by non owner of the project is forbidden"""
         user = self.create_users()[1]
@@ -278,7 +270,6 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 404, res.status_code
 
 
-    @with_context
     @patch('pybossa.view.applications.redirect', wraps=redirect)
     def test_blogpost_update_by_owner(self, mock_redirect):
         """Test blogposts, app owners can update"""
@@ -308,7 +299,6 @@ class TestBlogpostView(web.Helper):
 
 
 
-    @with_context
     def test_blogpost_update_by_anonymous(self):
         """Test blogpost update, anonymous users are redirected to signin"""
         user = self.create_users()[1]
@@ -335,7 +325,6 @@ class TestBlogpostView(web.Helper):
         assert blogpost.title == 'thisisatitle', blogpost.title
 
 
-    @with_context
     def test_blogpost_update_by_non_owner(self):
         """Test blogpost update by non owner of the app is forbidden"""
         user = self.create_users()[1]
@@ -359,7 +348,6 @@ class TestBlogpostView(web.Helper):
         assert blogpost.title == 'thisisatitle', blogpost.title
 
 
-    @with_context
     def test_blogpost_update_errors(self):
         """Test blogposts update for non existing apps raises errors"""
         self.register()
@@ -393,7 +381,6 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 404, res.status_code
 
 
-    @with_context
     @patch('pybossa.view.applications.redirect', wraps=redirect)
     def test_blogpost_delete_by_owner(self, mock_redirect):
         """Test blogposts, app owners can delete"""
@@ -416,7 +403,6 @@ class TestBlogpostView(web.Helper):
 
 
 
-    @with_context
     def test_blogpost_delete_by_anonymous(self):
         """Test blogpost delete, anonymous users are redirected to signin"""
         user = self.create_users()[1]
@@ -435,7 +421,6 @@ class TestBlogpostView(web.Helper):
         assert blogpost is not None
 
 
-    @with_context
     def test_blogpost_delete_by_non_owner(self):
         """Test blogpost delete by non owner of the app is forbidden"""
         user = self.create_users()[1]
@@ -454,7 +439,6 @@ class TestBlogpostView(web.Helper):
         assert blogpost is not None
 
 
-    @with_context
     def test_blogpost_delete_errors(self):
         """Test blogposts delete for non existing apps raises errors"""
         self.register()
@@ -483,6 +467,3 @@ class TestBlogpostView(web.Helper):
         url = "/app/%s/%s/delete" % (app2.short_name, blogpost.id)
         res = self.app.post(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
-
-
-
