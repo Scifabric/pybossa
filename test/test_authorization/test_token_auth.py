@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import Test
+from default import Test, assert_not_raises
 from pybossa.auth import require
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
@@ -33,88 +33,80 @@ class TestTokenAuthorization(Test):
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
-    @patch('pybossa.auth.taskrun.current_user', new=mock_anonymous)
+    @patch('pybossa.auth.token.current_user', new=mock_anonymous)
     def test_anonymous_user_delete(self):
         """Test anonymous user is not allowed to delete an oauth token"""
-        with self.flask_app.test_request_context('/'):
-            for token in self.auth_providers:
-                assert_raises(Unauthorized,
-                          getattr(require, 'token').delete,
-                          token)
+        for token in self.auth_providers:
+            assert_raises(Unauthorized,
+                      getattr(require, 'token').delete,
+                      token)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
-    @patch('pybossa.auth.taskrun.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.token.current_user', new=mock_authenticated)
     def test_authenticated_user_delete(self):
         """Test authenticated user is not allowed to delete an oauth token"""
-        with self.flask_app.test_request_context('/'):
-            for token in self.auth_providers:
-                assert_raises(Forbidden,
-                          getattr(require, 'token').delete,
-                          token)
+        for token in self.auth_providers:
+            assert_raises(Forbidden,
+                      getattr(require, 'token').delete,
+                      token)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
-    @patch('pybossa.auth.taskrun.current_user', new=mock_anonymous)
+    @patch('pybossa.auth.token.current_user', new=mock_anonymous)
     def test_anonymous_user_create(self):
         """Test anonymous user is not allowed to create an oauth token"""
-        with self.flask_app.test_request_context('/'):
-            for token in self.auth_providers:
-                assert_raises(Unauthorized,
-                          getattr(require, 'token').create,
-                          token)
+        for token in self.auth_providers:
+            assert_raises(Unauthorized,
+                      getattr(require, 'token').create,
+                      token)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
-    @patch('pybossa.auth.taskrun.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.token.current_user', new=mock_authenticated)
     def test_authenticated_user_create(self):
         """Test authenticated user is not allowed to create an oauth token"""
-        with self.flask_app.test_request_context('/'):
-            for token in self.auth_providers:
-                assert_raises(Forbidden,
-                          getattr(require, 'token').create,
-                          token)
+        for token in self.auth_providers:
+            assert_raises(Forbidden,
+                      getattr(require, 'token').create,
+                      token)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
-    @patch('pybossa.auth.taskrun.current_user', new=mock_anonymous)
+    @patch('pybossa.auth.token.current_user', new=mock_anonymous)
     def test_anonymous_user_update(self):
         """Test anonymous user is not allowed to update an oauth token"""
-        with self.flask_app.test_request_context('/'):
-            for token in self.auth_providers:
-                assert_raises(Unauthorized,
-                          getattr(require, 'token').update,
-                          token)
+        for token in self.auth_providers:
+            assert_raises(Unauthorized,
+                      getattr(require, 'token').update,
+                      token)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
-    @patch('pybossa.auth.taskrun.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.token.current_user', new=mock_authenticated)
     def test_authenticated_user_update(self):
         """Test authenticated user is not allowed to update an oauth token"""
-        with self.flask_app.test_request_context('/'):
-            for token in self.auth_providers:
-                assert_raises(Forbidden,
-                          getattr(require, 'token').update,
-                          token)
+        for token in self.auth_providers:
+            assert_raises(Forbidden,
+                      getattr(require, 'token').update,
+                      token)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
-    @patch('pybossa.auth.taskrun.current_user', new=mock_anonymous)
+    @patch('pybossa.auth.token.current_user', new=mock_anonymous)
     def test_anonymous_user_read(self):
         """Test anonymous user is not allowed to read an oauth token"""
-        with self.flask_app.test_request_context('/'):
-            for token in self.auth_providers:
-                assert_raises(Unauthorized,
-                          getattr(require, 'token').read,
-                          token)
+        for token in self.auth_providers:
+            assert_raises(Unauthorized,
+                      getattr(require, 'token').read,
+                      token)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
-    @patch('pybossa.auth.taskrun.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.token.current_user', new=mock_authenticated)
     def test_authenticated_user_read(self):
         """Test authenticated user is allowed to read his own oauth tokens"""
-        with self.flask_app.test_request_context('/'):
-            for token in self.auth_providers:
-                assert_raises(Forbidden,
-                          getattr(require, 'token').read,
-                          token)
+        for token in self.auth_providers:
+            assert_not_raises(Exception,
+                      getattr(require, 'token').read,
+                      token)
