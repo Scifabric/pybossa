@@ -19,10 +19,11 @@ import json
 from default import db, with_context
 from nose.tools import assert_equal
 from test_api import TestAPI
-from pybossa.model.category import Category
 
 from factories import UserFactory, CategoryFactory
 
+from pybossa.repositories import ProjectRepository
+project_repo = ProjectRepository(db)
 
 class TestCategoryAPI(TestAPI):
 
@@ -104,8 +105,7 @@ class TestCategoryAPI(TestAPI):
         err = json.loads(res.data)
         err_msg = 'Admin should be able to create a Category'
         assert res.status_code == 200, err_msg
-        cat = db.session.query(Category)\
-                .filter_by(short_name=category['short_name']).first()
+        cat = project_repo.get_category_by(short_name=category['short_name'])
         assert err['id'] == cat.id, err_msg
         assert err['name'] == category['name'], err_msg
         assert err['short_name'] == category['short_name'], err_msg
@@ -168,7 +168,7 @@ class TestCategoryAPI(TestAPI):
         res = self.app.put('/api/category/%s?api_key=%s' % (cat.id, admin.api_key),
                            data=datajson)
         assert_equal(res.status, '200 OK', res.data)
-        out2 = db.session.query(Category).get(cat.id)
+        out2 = project_repo.get_category(cat.id)
         assert_equal(out2.name, data['name'])
         out = json.loads(res.data)
         assert out.get('status') is None, error
