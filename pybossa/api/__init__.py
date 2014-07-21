@@ -102,16 +102,7 @@ def new_task(app_id):
     """Return a new task for a project."""
     # Check if the request has an arg:
     try:
-        app = db.session.query(model.app.App).get(app_id)
-        if app is None:
-            raise NotFound
-        if request.args.get('offset'):
-            offset = int(request.args.get('offset'))
-        else:
-            offset = 0
-        user_id = None if current_user.is_anonymous() else current_user.id
-        user_ip = request.remote_addr if current_user.is_anonymous() else None
-        task = sched.new_task(app_id, user_id, user_ip, offset)
+        task = _retrieve_new_task(app_id)
         # If there is a task for the user, return it
         if task:
             r = make_response(json.dumps(task.dictize()))
@@ -121,6 +112,19 @@ def new_task(app_id):
             return Response(json.dumps({}), mimetype="application/json")
     except Exception as e:
         return error.format_exception(e, target='app', action='GET')
+
+def _retrieve_new_task(app_id):
+    app = db.session.query(model.app.App).get(app_id)
+    if app is None:
+        raise NotFound
+    if request.args.get('offset'):
+        offset = int(request.args.get('offset'))
+    else:
+        offset = 0
+    user_id = None if current_user.is_anonymous() else current_user.id
+    user_ip = request.remote_addr if current_user.is_anonymous() else None
+    task = sched.new_task(app_id, user_id, user_ip, offset)
+    return task
 
 
 @jsonpify
@@ -141,13 +145,9 @@ def user_progress(app_id=None, short_name=None):
     """
     if app_id or short_name:
         if short_name:
-            app = db.session.query(model.app.App)\
-                    .filter(model.app.App.short_name == short_name)\
-                    .first()
-        if app_id:
-            app = db.session.query(model.app.App)\
-                    .get(app_id)
-
+            app = _retrieve_app(short_name=short_name)
+        elif app_id:
+            app = _retrieve_app(app_id=app_id)
         if app:
             if current_user.is_anonymous():
                 tr = db.session.query(model.task_run.TaskRun)\
@@ -165,3 +165,14 @@ def user_progress(app_id=None, short_name=None):
             return abort(404)
     else:  # pragma: no cover
         return abort(404)
+
+
+def _retrieve_app(app_id=None, short_name=None):
+    if app_id != None:
+        return db.session.query(model.app.App)\
+                    .get(app_id)
+    if short_name != None:
+        return db.session.query(model.app.App)\
+                    .filter(model.app.App.short_name == short_name)\
+                    .first()
+    return None

@@ -163,12 +163,7 @@ class APIBase(MethodView):
             self.valid_args()
             data = json.loads(request.data)
             # Clean HATEOAS args
-            data = self.hateoas.remove_links(data)
-            inst = self.__class__(**data)
-            self._update_object(inst)
-            getattr(require, self.__class__.__name__.lower()).create(inst)
-            db.session.add(inst)
-            db.session.commit()
+            inst = self._create_instance_from_request(data)
             return json.dumps(inst.dictize())
         except IntegrityError:
             db.session.rollback()
@@ -179,6 +174,15 @@ class APIBase(MethodView):
                 e,
                 target=self.__class__.__name__.lower(),
                 action='POST')
+
+    def _create_instance_from_request(self, data):
+        data = self.hateoas.remove_links(data)
+        inst = self.__class__(**data)
+        self._update_object(inst)
+        getattr(require, self.__class__.__name__.lower()).create(inst)
+        db.session.add(inst)
+        db.session.commit()
+        return inst
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
@@ -196,12 +200,7 @@ class APIBase(MethodView):
         """
         try:
             self.valid_args()
-            inst = db.session.query(self.__class__).get(id)
-            if inst is None:
-                raise NotFound
-            getattr(require, self.__class__.__name__.lower()).delete(inst)
-            db.session.delete(inst)
-            db.session.commit()
+            inst = self._delete_instance(id)
             self._refresh_cache(inst)
             return '', 204
         except Exception as e:
@@ -210,6 +209,15 @@ class APIBase(MethodView):
                 e,
                 target=self.__class__.__name__.lower(),
                 action='DELETE')
+
+    def _delete_instance(self, id):
+        inst = db.session.query(self.__class__).get(id)
+        if inst is None:
+            raise NotFound
+        getattr(require, self.__class__.__name__.lower()).delete(inst)
+        db.session.delete(inst)
+        db.session.commit()
+        return inst
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
@@ -227,18 +235,7 @@ class APIBase(MethodView):
         """
         try:
             self.valid_args()
-            existing = db.session.query(self.__class__).get(id)
-            if existing is None:
-                raise NotFound
-            getattr(require, self.__class__.__name__.lower()).update(existing)
-            data = json.loads(request.data)
-            # may be missing the id as we allow partial updates
-            data['id'] = id
-            # Clean HATEOAS args
-            data = self.hateoas.remove_links(data)
-            inst = self.__class__(**data)
-            db.session.merge(inst)
-            db.session.commit()
+            inst = self._update_instance(id)
             self._refresh_cache(inst)
             return Response(json.dumps(inst.dictize()), 200,
                             mimetype='application/json')
@@ -251,6 +248,21 @@ class APIBase(MethodView):
                 e,
                 target=self.__class__.__name__.lower(),
                 action='PUT')
+
+    def _update_instance(self, id):
+        existing = db.session.query(self.__class__).get(id)
+        if existing is None:
+            raise NotFound
+        getattr(require, self.__class__.__name__.lower()).update(existing)
+        data = json.loads(request.data)
+        # may be missing the id as we allow partial updates
+        data['id'] = id
+        # Clean HATEOAS args
+        data = self.hateoas.remove_links(data)
+        inst = self.__class__(**data)
+        db.session.merge(inst)
+        db.session.commit()
+        return inst
 
 
     def _update_object(self, data_dict):

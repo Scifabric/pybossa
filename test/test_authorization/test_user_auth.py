@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import Test, db, assert_not_raises
+from default import Test, assert_not_raises
 from pybossa.auth import require
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
@@ -28,7 +28,6 @@ from factories import reset_all_pk_sequences
 
 
 class TestUserAuthorization(Test):
-
 
     mock_anonymous = mock_current_user()
     mock_authenticated = mock_current_user(anonymous=False, admin=False, id=2)
