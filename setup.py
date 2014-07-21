@@ -12,7 +12,7 @@ requirements = [
     "Flask-Mail>=0.9.0, <1.0",
     "Flask-Misaka>=0.2.0, <1.0",
     "Flask-OAuth>=0.12, <0.13",         # was pinned to Flask-OAuth==0.12
-    "Flask-SQLAlchemy>=1.0, <2.0",
+    "Flask-SQLAlchemy-dev",
     "Flask-WTF>=0.9.5, <0.9.6",         # was pinned to Flask-WTF==0.9.5
     "Flask>=0.10.1, <0.10.2",           # was pinned to Flask==0.10.1
     "html2text>=2014.4.5, <2016.1.1",
@@ -43,7 +43,8 @@ setup(
     packages = find_packages(),
     install_requires = requirements,
     dependency_links = ['git+https://github.com/Hypernode/M2Crypto#egg=M2Crypto-0.22.dev',
-                        'git+https://github.com/andymccurdy/redis-py.git@976e72be529fdf741b75a71746f34c6530fc8ae9#egg=redis-dev'],
+                        'git+https://github.com/andymccurdy/redis-py.git@976e72be529fdf741b75a71746f34c6530fc8ae9#egg=redis-dev',
+                        'git+https://github.com/alejandrodob/flask-sqlalchemy.git@2e92c476c4dd6d74a62ece1fe989925f7c33daef#egg=Flask-SQLAlchemy-dev'],
     # metadata for upload to PyPI
     author = 'SF Isle of Man Limited',
     # TODO: change
