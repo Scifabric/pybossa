@@ -648,93 +648,91 @@ class TestWeb(web.Helper):
             assert "Name is already taken" in res.data, err_msg
             assert "Short Name is already taken" in res.data, err_msg
 
-    @with_context
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_12_update_application(self, Mock, mock):
         """Test WEB update project works"""
-        with self.flask_app.app_context():
-            html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                       {'content-type': 'application/json'})
-            Mock.return_value = html_request
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
 
-            self.register()
-            self.new_application()
+        self.register()
+        self.new_application()
 
-            # Get the Update Project web page
-            res = self.update_application(method="GET")
-            msg = "Project: Sample Project &middot; Update"
-            assert self.html_title(msg) in res.data, res
-            msg = 'input id="id" name="id" type="hidden" value="1"'
-            assert msg in res.data, res
-            assert "Save the changes" in res.data, res
+        # Get the Update Project web page
+        res = self.update_application(method="GET")
+        msg = "Project: Sample Project &middot; Update"
+        assert self.html_title(msg) in res.data, res
+        msg = 'input id="id" name="id" type="hidden" value="1"'
+        assert msg in res.data, res
+        assert "Save the changes" in res.data, res
 
-            # Check form validation
-            res = self.update_application(new_name="",
-                                          new_short_name="",
-                                          new_description="New description",
-                                          new_long_description='New long desc',
-                                          new_hidden=True)
-            assert "Please correct the errors" in res.data, res.data
+        # Check form validation
+        res = self.update_application(new_name="",
+                                      new_short_name="",
+                                      new_description="New description",
+                                      new_long_description='New long desc',
+                                      new_hidden=True)
+        assert "Please correct the errors" in res.data, res.data
 
-            # Update the project
-            res = self.update_application(new_name="New Sample Project",
-                                          new_short_name="newshortname",
-                                          new_description="New description",
-                                          new_long_description='New long desc',
-                                          new_hidden=True)
-            app = db.session.query(App).first()
-            assert "Project updated!" in res.data, res
-            err_msg = "Project name not updated %s" % app.name
-            assert app.name == "New Sample Project", err_msg
-            err_msg = "Project short name not updated %s" % app.short_name
-            assert app.short_name == "newshortname", err_msg
-            err_msg = "Project description not updated %s" % app.description
-            assert app.description == "New description", err_msg
-            err_msg = "Project long description not updated %s" % app.long_description
-            assert app.long_description == "New long desc", err_msg
-            err_msg = "Project hidden not updated %s" % app.hidden
-            assert app.hidden == 1, err_msg
-
-
-            # Check that the owner can access it even though is hidden
-
-            user = db.session.query(User).filter_by(name='johndoe').first()
-            user.admin = False
-            db.session.add(user)
-            db.session.commit()
-            res = self.app.get('/app/newshortname/')
-            err_msg = "Owner should be able to see his hidden app"
-            assert app.name in res.data, err_msg
-            self.signout()
-
-            res = self.register(fullname='Paco', name='paco')
-            url = '/app/newshortname/'
-            res = self.app.get(url, follow_redirects=True)
-            assert "Forbidden" in res.data, res.data
-            assert res.status_code == 403
-
-            tmp = db.session.query(App).first()
-            tmp.hidden = 0
-            db.session.add(tmp)
-            db.session.commit()
-
-            url = '/app/newshortname/update'
-            res = self.app.get(url, follow_redirects=True)
-            assert res.status_code == 403, res.status_code
-
-            tmp.hidden = 1
-            db.session.add(tmp)
-            db.session.commit()
+        # Update the project
+        res = self.update_application(new_name="New Sample Project",
+                                      new_short_name="newshortname",
+                                      new_description="New description",
+                                      new_long_description='New long desc',
+                                      new_hidden=True)
+        app = db.session.query(App).first()
+        assert "Project updated!" in res.data, res
+        err_msg = "Project name not updated %s" % app.name
+        assert app.name == "New Sample Project", err_msg
+        err_msg = "Project short name not updated %s" % app.short_name
+        assert app.short_name == "newshortname", err_msg
+        err_msg = "Project description not updated %s" % app.description
+        assert app.description == "New description", err_msg
+        err_msg = "Project long description not updated %s" % app.long_description
+        assert app.long_description == "New long desc", err_msg
+        err_msg = "Project hidden not updated %s" % app.hidden
+        assert app.hidden == 1, err_msg
 
 
-            user = db.session.query(User).filter_by(name='paco').first()
-            user.admin = True
-            db.session.add(user)
-            db.session.commit()
-            res = self.app.get('/app/newshortname/')
-            err_msg = "Root user should be able to see his hidden app"
-            assert app.name in res.data, err_msg
+        # Check that the owner can access it even though is hidden
+
+        user = db.session.query(User).filter_by(name='johndoe').first()
+        user.admin = False
+        db.session.add(user)
+        db.session.commit()
+        res = self.app.get('/app/newshortname/')
+        err_msg = "Owner should be able to see his hidden app"
+        assert app.name in res.data, err_msg
+        self.signout()
+
+        res = self.register(fullname='Paco', name='paco')
+        url = '/app/newshortname/'
+        res = self.app.get(url, follow_redirects=True)
+        assert "Forbidden" in res.data, res.data
+        assert res.status_code == 403
+
+        tmp = db.session.query(App).first()
+        tmp.hidden = 0
+        db.session.add(tmp)
+        db.session.commit()
+
+        url = '/app/newshortname/update'
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+
+        tmp.hidden = 1
+        db.session.add(tmp)
+        db.session.commit()
+
+
+        user = db.session.query(User).filter_by(name='paco').first()
+        user.admin = True
+        db.session.add(user)
+        db.session.commit()
+        res = self.app.get('/app/newshortname/')
+        err_msg = "Root user should be able to see his hidden app"
+        assert app.name in res.data, err_msg
 
 
     @with_context
@@ -884,136 +882,132 @@ class TestWeb(web.Helper):
             user = db.session.query(User).get(1)
             assert msg in res.data, res.data
 
-    @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_16_task_status_completed(self, mock):
         """Test WEB Task Status Completed works"""
-        with self.flask_app.app_context():
-            self.register()
-            self.new_application()
+        self.register()
+        self.new_application()
 
-            app = db.session.query(App).first()
-            # We use a string here to check that it works too
-            task = Task(app_id=app.id, info={'n_answers': '10'})
-            db.session.add(task)
+        app = db.session.query(App).first()
+        # We use a string here to check that it works too
+        task = Task(app_id=app.id, info={'n_answers': '10'})
+        db.session.add(task)
+        db.session.commit()
+
+        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
+                           follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        assert "Sample Project" in res.data, res.data
+        assert '0 of 10' in res.data, res.data
+        err_msg = "Download button should be disabled"
+        assert dom.find(id='nothingtodownload') is not None, err_msg
+
+        for i in range(5):
+            task_run = TaskRun(app_id=app.id, task_id=1,
+                                     info={'answer': 1})
+            db.session.add(task_run)
             db.session.commit()
+            self.app.get('api/app/%s/newtask' % app.id)
 
-            res = self.app.get('app/%s/tasks/browse' % (app.short_name),
-                               follow_redirects=True)
-            dom = BeautifulSoup(res.data)
-            assert "Sample Project" in res.data, res.data
-            assert '0 of 10' in res.data, res.data
-            err_msg = "Download button should be disabled"
-            assert dom.find(id='nothingtodownload') is not None, err_msg
+        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
+                           follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        assert "Sample Project" in res.data, res.data
+        assert '5 of 10' in res.data, res.data
+        err_msg = "Download Partial results button should be shown"
+        assert dom.find(id='partialdownload') is not None, err_msg
 
-            for i in range(5):
-                task_run = TaskRun(app_id=app.id, task_id=1,
-                                         info={'answer': 1})
-                db.session.add(task_run)
-                db.session.commit()
-                self.app.get('api/app/%s/newtask' % app.id)
-
-            res = self.app.get('app/%s/tasks/browse' % (app.short_name),
-                               follow_redirects=True)
-            dom = BeautifulSoup(res.data)
-            assert "Sample Project" in res.data, res.data
-            assert '5 of 10' in res.data, res.data
-            err_msg = "Download Partial results button should be shown"
-            assert dom.find(id='partialdownload') is not None, err_msg
-
-            for i in range(5):
-                task_run = TaskRun(app_id=app.id, task_id=1,
-                                         info={'answer': 1})
-                db.session.add(task_run)
-                db.session.commit()
-                self.app.get('api/app/%s/newtask' % app.id)
-
-            self.signout()
-
-            app = db.session.query(App).first()
-
-            res = self.app.get('app/%s/tasks/browse' % (app.short_name),
-                               follow_redirects=True)
-            assert "Sample Project" in res.data, res.data
-            msg = 'Task <span class="label label-success">#1</span>'
-            assert msg in res.data, res.data
-            assert '10 of 10' in res.data, res.data
-            dom = BeautifulSoup(res.data)
-            err_msg = "Download Full results button should be shown"
-            assert dom.find(id='fulldownload') is not None, err_msg
-
-            app.hidden = 1
-            db.session.add(app)
+        for i in range(5):
+            task_run = TaskRun(app_id=app.id, task_id=1,
+                                     info={'answer': 1})
+            db.session.add(task_run)
             db.session.commit()
-            res = self.app.get('app/%s/tasks/browse' % (app.short_name),
-                               follow_redirects=True)
-            assert res.status_code == 401, res.status_code
+            self.app.get('api/app/%s/newtask' % app.id)
 
-            self.create()
-            self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
-            res = self.app.get('app/%s/tasks/browse' % (app.short_name),
-                               follow_redirects=True)
-            assert res.status_code == 403, res.status_code
+        self.signout()
+
+        app = db.session.query(App).first()
+
+        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
+                           follow_redirects=True)
+        assert "Sample Project" in res.data, res.data
+        msg = 'Task <span class="label label-success">#1</span>'
+        assert msg in res.data, res.data
+        assert '10 of 10' in res.data, res.data
+        dom = BeautifulSoup(res.data)
+        err_msg = "Download Full results button should be shown"
+        assert dom.find(id='fulldownload') is not None, err_msg
+
+        app.hidden = 1
+        db.session.add(app)
+        db.session.commit()
+        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
+                           follow_redirects=True)
+        assert res.status_code == 401, res.status_code
+
+        self.create()
+        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
+        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
+                           follow_redirects=True)
+        assert res.status_code == 403, res.status_code
 
 
-    @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_17_export_task_runs(self, mock):
         """Test WEB TaskRun export works"""
-        with self.flask_app.app_context():
-            self.register()
-            self.new_application()
+        self.register()
+        self.new_application()
 
-            app = db.session.query(App).first()
-            task = Task(app_id=app.id, info={'n_answers': 10})
-            db.session.add(task)
+        app = db.session.query(App).first()
+        task = Task(app_id=app.id, info={'n_answers': 10})
+        db.session.add(task)
+        db.session.commit()
+
+        for i in range(10):
+            task_run = TaskRun(app_id=app.id, task_id=1,
+                                     info={'answer': 1})
+            db.session.add(task_run)
             db.session.commit()
 
-            for i in range(10):
-                task_run = TaskRun(app_id=app.id, task_id=1,
-                                         info={'answer': 1})
-                db.session.add(task_run)
-                db.session.commit()
 
+        app = db.session.query(App).first()
+        res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
+                           follow_redirects=True)
+        data = json.loads(res.data)
+        assert len(data) == 10, data
+        for tr in data:
+            assert tr['info']['answer'] == 1, tr
 
-            app = db.session.query(App).first()
-            res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
-                               follow_redirects=True)
-            data = json.loads(res.data)
-            assert len(data) == 10, data
-            for tr in data:
-                assert tr['info']['answer'] == 1, tr
+        # Check with correct app but wrong task id
+        res = self.app.get('app/%s/%s/results.json' % (app.short_name, 5000),
+                           follow_redirects=True)
+        assert res.status_code == 404, res.status_code
 
-            # Check with correct app but wrong task id
-            res = self.app.get('app/%s/%s/results.json' % (app.short_name, 5000),
-                               follow_redirects=True)
-            assert res.status_code == 404, res.status_code
+        # Check with hidden app: owner should have access to it
+        app.hidden = 1
+        db.session.add(app)
+        db.session.commit()
+        res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
+                           follow_redirects=True)
+        data = json.loads(res.data)
+        assert len(data) == 10, data
+        for tr in data:
+            assert tr['info']['answer'] == 1, tr
+        self.signout()
 
-            # Check with hidden app: owner should have access to it
-            app.hidden = 1
-            db.session.add(app)
-            db.session.commit()
-            res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
-                               follow_redirects=True)
-            data = json.loads(res.data)
-            assert len(data) == 10, data
-            for tr in data:
-                assert tr['info']['answer'] == 1, tr
-            self.signout()
+        # Check with hidden app: non-owner should not have access to it
+        self.register(fullname="Non Owner", name="nonowner")
+        res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
+                           follow_redirects=True)
+        assert res.status_code == 403, res.data
+        assert "Forbidden" in res.data, res.data
 
-            # Check with hidden app: non-owner should not have access to it
-            self.register(fullname="Non Owner", name="nonowner")
-            res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
-                               follow_redirects=True)
-            assert res.status_code == 403, res.data
-            assert "Forbidden" in res.data, res.data
-
-            # Check with hidden app: anonymous should not have access to it
-            self.signout()
-            res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
-                               follow_redirects=True)
-            assert res.status_code == 401, res.data
-            assert "Unauthorized" in res.data, res.data
+        # Check with hidden app: anonymous should not have access to it
+        self.signout()
+        res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
+                           follow_redirects=True)
+        assert res.status_code == 401, res.data
+        assert "Unauthorized" in res.data, res.data
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
@@ -1947,7 +1941,6 @@ class TestWeb(web.Helper):
         assert msg in res.data, res.data
 
 
-    @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_46_tasks_exists(self, mock):
         """Test WEB tasks page works."""
@@ -1999,7 +1992,7 @@ class TestWeb(web.Helper):
         err_msg = "Transcribing documents"
         assert "PDF transcription template" in res.data, err_msg
 
-    @with_context
+
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_48_task_presenter_editor_works(self, mock):
         """Test WEB task presenter editor works"""
@@ -2059,7 +2052,6 @@ class TestWeb(web.Helper):
         assert res.status_code == 403
 
 
-    @with_context
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_48_update_app_info(self, Mock, mock):

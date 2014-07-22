@@ -448,7 +448,6 @@ class TestAdmin(web.Helper):
                             follow_redirects=True)
         assert res.status_code == 403, res.status_code
 
-    @with_context
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.core.uploader.upload_file', return_value=True)
     def test_19_admin_update_app(self, Mock, Mock2):
