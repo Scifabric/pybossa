@@ -112,6 +112,18 @@ def setup_markdown(app):
 def setup_db(app):
     db.app = app
     db.init_app(app)
+    db.slave_session = _get_session(db, bind='slave') or db.session
+    teardown = app.teardown_appcontext
+    @teardown
+    def shutdown_session(response_or_exc):
+        if app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN']:
+            if response_or_exc is None:
+                db.slave_session.commit()
+        db.slave_session.remove()
+        return response_or_exc
+    print dir(db.session)
+    print dir(db.slave_session)
+    print db.session == db.slave_session
 
 
 def setup_gravatar(app):
@@ -393,7 +405,7 @@ def setup_cache_timeouts(app):
     timeouts['USER_TOTAL_TIMEOUT'] = app.config['USER_TOTAL_TIMEOUT']
 
 
-def get_session(db, bind):
+def _get_session(db, bind):
     """Returns a session with for the given bind."""
     engine = db.get_engine(db.app, bind=bind)
     options = dict(bind=engine)

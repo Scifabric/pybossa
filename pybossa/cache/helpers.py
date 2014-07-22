@@ -17,44 +17,38 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from sqlalchemy.sql import text
-from pybossa.core import db, timeouts, get_session
+from pybossa.core import db, timeouts
 from pybossa.cache import memoize
 from pybossa.cache.apps import overall_progress
 
 
+
+session = db.slave_session
 
 @memoize(timeout=60)
 def n_available_tasks(app_id, user_id=None, user_ip=None):
     """Returns the number of tasks for a given app a user can contribute to,
     based on the completion of the app tasks, and previous task_runs submitted
     by the user"""
-    try:
-        if user_id and not user_ip:
-            query = text('''SELECT COUNT(id) AS n_tasks FROM task WHERE NOT EXISTS
-                           (SELECT task_id FROM task_run WHERE
-                           app_id=:app_id AND user_id=:user_id AND task_id=task.id)
-                           AND app_id=:app_id AND state !='completed';''')
-            session = get_session(db, bind='slave')
-            result = session.execute(query, dict(app_id=app_id, user_id=user_id))
-        else:
-            if not user_ip:
-                user_ip = '127.0.0.1'
-            query = text('''SELECT COUNT(id) AS n_tasks FROM task WHERE NOT EXISTS
-                           (SELECT task_id FROM task_run WHERE
-                           app_id=:app_id AND user_ip=:user_ip AND task_id=task.id)
-                           AND app_id=:app_id AND state !='completed';''')
+    if user_id and not user_ip:
+        query = text('''SELECT COUNT(id) AS n_tasks FROM task WHERE NOT EXISTS
+                       (SELECT task_id FROM task_run WHERE
+                       app_id=:app_id AND user_id=:user_id AND task_id=task.id)
+                       AND app_id=:app_id AND state !='completed';''')
+        result = session.execute(query, dict(app_id=app_id, user_id=user_id))
+    else:
+        if not user_ip:
+            user_ip = '127.0.0.1'
+        query = text('''SELECT COUNT(id) AS n_tasks FROM task WHERE NOT EXISTS
+                       (SELECT task_id FROM task_run WHERE
+                       app_id=:app_id AND user_ip=:user_ip AND task_id=task.id)
+                       AND app_id=:app_id AND state !='completed';''')
 
-            session = get_session(db, bind='slave')
-            result = session.execute(query, dict(app_id=app_id, user_ip=user_ip))
-        n_tasks = 0
-        for row in result:
-            n_tasks = row.n_tasks
-        return n_tasks
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
+        result = session.execute(query, dict(app_id=app_id, user_ip=user_ip))
+    n_tasks = 0
+    for row in result:
+        n_tasks = row.n_tasks
+    return n_tasks
 
 
 def check_contributing_state(app, user_id=None, user_ip=None):
@@ -92,16 +86,9 @@ def _has_no_presenter(app):
             return True
 
 def _has_no_tasks(app_id):
-    try:
-        query = text('''SELECT COUNT(id) AS n_tasks FROM task
-                   WHERE app_id=:app_id;''')
-        session = get_session(db, bind='slave')
-        result = session.execute(query, dict(app_id=app_id))
-        for row in result:
-            n_tasks = row.n_tasks
-        return n_tasks == 0
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    query = text('''SELECT COUNT(id) AS n_tasks FROM task
+               WHERE app_id=:app_id;''')
+    result = session.execute(query, dict(app_id=app_id))
+    for row in result:
+        n_tasks = row.n_tasks
+    return n_tasks == 0
