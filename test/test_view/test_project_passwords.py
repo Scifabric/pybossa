@@ -18,7 +18,6 @@
 
 from default import Test, db, with_context
 from factories import AppFactory, TaskFactory, UserFactory
-from factories import reset_all_pk_sequences
 from mock import patch
 
 
@@ -33,10 +32,6 @@ def configure_mock_current_user_from(user, mock):
 
 
 class TestProjectPassword(Test):
-
-    def setUp(self):
-        super(TestProjectPassword, self).setUp()
-        reset_all_pk_sequences()
 
 
     from pybossa.view.applications import redirect
