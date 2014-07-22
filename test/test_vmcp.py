@@ -23,7 +23,7 @@ import M2Crypto
 import base64
 
 
-class TestAPI:
+class TestVMCP(object):
 
     def test_myquote(self):
         """Test myquote works."""
