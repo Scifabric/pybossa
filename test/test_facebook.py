@@ -15,12 +15,12 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-from default import Test, with_context
+from default import Test
 from pybossa.view.facebook import manage_user
 
 
 class TestFacebook(Test):
-    @with_context
+
     def test_manage_user_with_email(self):
         """Test FACEBOOK manage_user works."""
         # First with a new user
@@ -48,7 +48,7 @@ class TestFacebook(Test):
         err_msg = "It should return the same user"
         assert user.facebook_user_id == 10, err_msg
 
-    @with_context
+
     def test_manage_user_without_email(self):
         """Test FACEBOOK manage_user without e-mail works."""
         # First with a new user
