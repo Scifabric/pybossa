@@ -42,9 +42,13 @@ setup(
     version = '0.2.1',
     packages = find_packages(),
     install_requires = requirements,
-    dependency_links = ['git+https://github.com/Hypernode/M2Crypto#egg=M2Crypto-0.22.dev',
-                        'git+https://github.com/andymccurdy/redis-py.git@976e72be529fdf741b75a71746f34c6530fc8ae9#egg=redis-dev',
-                        'git+https://github.com/alejandrodob/flask-sqlalchemy.git@2e92c476c4dd6d74a62ece1fe989925f7c33daef#egg=Flask-SQLAlchemy-dev'],
+    dependency_links = ['git+https://github.com/alejandrodob/flask-sqlalchemy.git@2e92c476c4dd6d74a62ece1fe989925f7c33daef#egg=Flask-SQLAlchemy-dev'],
+    # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.
+    # Keep in mind that dependency_links are not used when installing with requirements.txt
+    # and need to be added redundant to requirements.txt in this case!
+    # Example:
+    # dependency_links = ['git+https://github.com/Hypernode/M2Crypto#egg=M2Crypto-0.22.dev'],
+
     # metadata for upload to PyPI
     author = 'SF Isle of Man Limited',
     # TODO: change

@@ -182,20 +182,23 @@ class APIBase(MethodView):
         try:
             self.valid_args()
             data = json.loads(request.data)
-            # Clean HATEOAS args
-            data = self.hateoas.remove_links(data)
-            inst = self.__class__(**data)
-            self._update_object(inst)
-            getattr(require, self.__class__.__name__.lower()).create(inst)
-            repo = repos[self.__class__.__name__]['repo']
-            save_func = repos[self.__class__.__name__]['save']
-            getattr(repo, save_func)(inst)
+            inst = self._create_instance_from_request(data)
             return json.dumps(inst.dictize())
         except Exception as e:
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
                 action='POST')
+
+    def _create_instance_from_request(self, data):
+        data = self.hateoas.remove_links(data)
+        inst = self.__class__(**data)
+        self._update_object(inst)
+        getattr(require, self.__class__.__name__.lower()).create(inst)
+        repo = repos[self.__class__.__name__]['repo']
+        save_func = repos[self.__class__.__name__]['save']
+        getattr(repo, save_func)(inst)
+        return inst
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
@@ -213,14 +216,7 @@ class APIBase(MethodView):
         """
         try:
             self.valid_args()
-            repo = repos[self.__class__.__name__]['repo']
-            query_func = repos[self.__class__.__name__]['get']
-            inst = getattr(repo, query_func)(id)
-            if inst is None:
-                raise NotFound
-            getattr(require, self.__class__.__name__.lower()).delete(inst)
-            delete_func = repos[self.__class__.__name__]['delete']
-            getattr(repo, delete_func)(inst)
+            inst = self._delete_instance(id)
             self._refresh_cache(inst)
             return '', 204
         except Exception as e:
@@ -228,6 +224,17 @@ class APIBase(MethodView):
                 e,
                 target=self.__class__.__name__.lower(),
                 action='DELETE')
+
+    def _delete_instance(self, id):
+        repo = repos[self.__class__.__name__]['repo']
+        query_func = repos[self.__class__.__name__]['get']
+        inst = getattr(repo, query_func)(id)
+        if inst is None:
+            raise NotFound
+        getattr(require, self.__class__.__name__.lower()).delete(inst)
+        delete_func = repos[self.__class__.__name__]['delete']
+        getattr(repo, delete_func)(inst)
+        return inst
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
@@ -245,20 +252,7 @@ class APIBase(MethodView):
         """
         try:
             self.valid_args()
-            repo = repos[self.__class__.__name__]['repo']
-            query_func = repos[self.__class__.__name__]['get']
-            existing = getattr(repo, query_func)(id)
-            if existing is None:
-                raise NotFound
-            getattr(require, self.__class__.__name__.lower()).update(existing)
-            data = json.loads(request.data)
-            # may be missing the id as we allow partial updates
-            data['id'] = id
-            # Clean HATEOAS args
-            data = self.hateoas.remove_links(data)
-            inst = self.__class__(**data)
-            update_func = repos[self.__class__.__name__]['update']
-            getattr(repo, update_func)(inst)
+            inst = self._update_instance(id)
             self._refresh_cache(inst)
             return Response(json.dumps(inst.dictize()), 200,
                             mimetype='application/json')
@@ -267,6 +261,22 @@ class APIBase(MethodView):
                 e,
                 target=self.__class__.__name__.lower(),
                 action='PUT')
+
+    def _update_instance(self, id):
+        repo = repos[self.__class__.__name__]['repo']
+        query_func = repos[self.__class__.__name__]['get']
+        existing = getattr(repo, query_func)(id)
+        if existing is None:
+            raise NotFound
+        getattr(require, self.__class__.__name__.lower()).update(existing)
+        data = json.loads(request.data)
+        # may be missing the id as we allow partial updates
+        data['id'] = id
+        data = self.hateoas.remove_links(data)
+        inst = self.__class__(**data)
+        update_func = repos[self.__class__.__name__]['update']
+        getattr(repo, update_func)(inst)
+        return inst
 
 
     def _update_object(self, data_dict):
