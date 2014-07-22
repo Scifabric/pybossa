@@ -121,9 +121,6 @@ def setup_db(app):
                 db.slave_session.commit()
         db.slave_session.remove()
         return response_or_exc
-    print dir(db.session)
-    print dir(db.slave_session)
-    print db.session == db.slave_session
 
 
 def setup_gravatar(app):
