@@ -20,6 +20,8 @@ from default import Test, db, with_context
 from factories import AppFactory, TaskFactory, UserFactory
 from mock import patch
 
+from pybossa.repositories import ProjectRepository
+project_repo = ProjectRepository(db)
 
 
 def configure_mock_current_user_from(user, mock):
@@ -42,9 +44,7 @@ class TestProjectPassword(Test):
         app = AppFactory.create()
         task = TaskFactory.create(app=app)
         app.set_password('mysecret')
-        db.session.add(app)
-        db.session.commit()
-        user = UserFactory.create()
+        project_repo.update(app)
         redirect_url = '/app/%s/task/%s' % (app.short_name, task.id)
         url = '/app/%s/password?next=%s' % (app.short_name, redirect_url)
 
@@ -58,9 +58,7 @@ class TestProjectPassword(Test):
         app = AppFactory.create()
         task = TaskFactory.create(app=app)
         app.set_password('mysecret')
-        db.session.add(app)
-        db.session.commit()
-        user = UserFactory.create()
+        project_repo.update(app)
         url = '/app/%s/password?next=/app/%s/task/%s' % (app.short_name, app.short_name, task.id)
 
         res = self.app.post(url, data={'password': 'bad_passwd'})
@@ -82,8 +80,7 @@ class TestProjectPassword(Test):
         app = AppFactory.create()
         TaskFactory.create(app=app)
         app.set_password('mysecret')
-        db.session.add(app)
-        db.session.commit()
+        project_repo.update(app)
 
         res = self.app.get('/app/%s/newtask' % app.short_name, follow_redirects=True)
         assert 'Enter the password to contribute' in res.data
@@ -112,8 +109,7 @@ class TestProjectPassword(Test):
         app = AppFactory.create()
         TaskFactory.create(app=app)
         app.set_password('mysecret')
-        db.session.add(app)
-        db.session.commit()
+        project_repo.update(app)
         user = UserFactory.create()
         configure_mock_current_user_from(user, mock_user)
 
@@ -130,8 +126,6 @@ class TestProjectPassword(Test):
         protected project is able to do it"""
         app = AppFactory.create()
         TaskFactory.create(app=app)
-        db.session.add(app)
-        db.session.commit()
         user = UserFactory.create()
         configure_mock_current_user_from(user, mock_user)
 
@@ -152,8 +146,7 @@ class TestProjectPassword(Test):
         app = AppFactory.create()
         TaskFactory.create(app=app)
         app.set_password('mysecret')
-        db.session.add(app)
-        db.session.commit()
+        project_repo.update(app)
 
         res = self.app.get('/app/%s/newtask' % app.short_name, follow_redirects=True)
         assert 'Enter the password to contribute' not in res.data
@@ -173,8 +166,7 @@ class TestProjectPassword(Test):
         assert app.owner.id == owner.id
         TaskFactory.create(app=app)
         app.set_password('mysecret')
-        db.session.add(app)
-        db.session.commit()
+        project_repo.update(app)
 
         res = self.app.get('/app/%s/newtask' % app.short_name, follow_redirects=True)
         assert 'Enter the password to contribute' not in res.data
@@ -194,8 +186,7 @@ class TestProjectPassword(Test):
         app = AppFactory.create()
         TaskFactory.create(app=app)
         app.set_password('mysecret')
-        db.session.add(app)
-        db.session.commit()
+        project_repo.update(app)
 
         for endpoint in self.endpoints_requiring_password:
             res = self.app.get('/app/%s%s' % (app.short_name, endpoint),
@@ -223,8 +214,7 @@ class TestProjectPassword(Test):
         app = AppFactory.create()
         TaskFactory.create(app=app)
         app.set_password('mysecret')
-        db.session.add(app)
-        db.session.commit()
+        project_repo.update(app)
         user = UserFactory.create()
         configure_mock_current_user_from(user, mock_user)
 
@@ -240,8 +230,6 @@ class TestProjectPassword(Test):
         protected project is able to do it"""
         app = AppFactory.create()
         TaskFactory.create(app=app)
-        db.session.add(app)
-        db.session.commit()
         user = UserFactory.create()
         configure_mock_current_user_from(user, mock_user)
 
@@ -261,8 +249,7 @@ class TestProjectPassword(Test):
         app = AppFactory.create()
         TaskFactory.create(app=app)
         app.set_password('mysecret')
-        db.session.add(app)
-        db.session.commit()
+        project_repo.update(app)
 
         for endpoint in self.endpoints_requiring_password:
             res = self.app.get('/app/%s%s' % (app.short_name, endpoint),
@@ -281,8 +268,7 @@ class TestProjectPassword(Test):
         assert app.owner.id == owner.id
         TaskFactory.create(app=app)
         app.set_password('mysecret')
-        db.session.add(app)
-        db.session.commit()
+        project_repo.update(app)
 
         for endpoint in self.endpoints_requiring_password:
             res = self.app.get('/app/%s%s' % (app.short_name, endpoint),
