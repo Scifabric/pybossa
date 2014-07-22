@@ -17,8 +17,10 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from helper import web
-from default import db, with_context
-from pybossa.model.user import User
+from default import db
+
+from pybossa.repositories import UserRepository
+user_repo = UserRepository(db)
 
 
 class TestI18n(web.Helper):
@@ -28,46 +30,40 @@ class TestI18n(web.Helper):
             self.create()
 
     # Tests
-    @with_context
     def test_00_i18n_anonymous(self):
         """Test i18n anonymous works"""
         # First default 'en' locale
-        with self.app as c:
-            err_msg = "The page should be in English"
-            res = c.get('/', headers=[('Accept-Language', 'en')])
-            assert "Community" in res.data, err_msg
+        err_msg = "The page should be in English"
+        res = self.app.get('/', headers=[('Accept-Language', 'en')])
+        assert "Community" in res.data, err_msg
         # Second with 'es' locale
-        with self.app as c:
-            err_msg = "The page should be in Spanish"
-            res = c.get('/', headers=[('Accept-Language', 'es')])
-            assert "Comunidad" in res.data, err_msg
+        err_msg = "The page should be in Spanish"
+        res = self.app.get('/', headers=[('Accept-Language', 'es')])
+        assert "Comunidad" in res.data, err_msg
 
-    @with_context
     def test_01_i18n_authenticated(self):
         """Test i18n as an authenticated user works"""
-        with self.app as c:
-            # First default 'en' locale
-            err_msg = "The page should be in English"
-            res = c.get('/', follow_redirects=True)
-            assert "Community" in res.data, err_msg
-            self.register()
-            self.signin()
-            # After signing in it should be in English
-            err_msg = "The page should be in English"
-            res = c.get('/', follow_redirects=True)
-            assert "Community" in res.data, err_msg
+        # First default 'en' locale
+        err_msg = "The page should be in English"
+        res = self.app.get('/', follow_redirects=True)
+        assert "Community" in res.data, err_msg
+        self.register()
+        self.signin()
+        # After signing in it should be in English
+        err_msg = "The page should be in English"
+        res = self.app.get('/', follow_redirects=True)
+        assert "Community" in res.data, err_msg
 
-            # Change it to Spanish
-            user = db.session.query(User).filter_by(name='johndoe').first()
-            user.locale = 'es'
-            db.session.add(user)
-            db.session.commit()
+        # Change it to Spanish
+        user = user_repo.get_by_name('johndoe')
+        user.locale = 'es'
+        user_repo.update(user)
 
-            res = c.get('/', follow_redirects=True)
-            err_msg = "The page should be in Spanish"
-            assert "Comunidad" in res.data, err_msg
-            # Sign out should revert it to English
-            self.signout()
-            err_msg = "The page should be in English"
-            res = c.get('/', follow_redirects=True)
-            assert "Community" in res.data, err_msg
+        res = self.app.get('/', follow_redirects=True)
+        err_msg = "The page should be in Spanish"
+        assert "Comunidad" in res.data, err_msg
+        # Sign out should revert it to English
+        self.signout()
+        err_msg = "The page should be in English"
+        res = self.app.get('/', follow_redirects=True)
+        assert "Community" in res.data, err_msg
