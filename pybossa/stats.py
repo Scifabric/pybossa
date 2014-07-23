@@ -421,65 +421,72 @@ def stats_format_hours(app_id, hours, hours_anon, hours_auth,
 @memoize(timeout=ONE_DAY)
 def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
     """Format User Stats into JSON"""
-    userStats = dict(label="User Statistics", values=[])
-    userAnonStats = dict(label="Anonymous Users", values=[], top5=[], locs=[])
-    userAuthStats = dict(label="Authenticated Users", values=[], top5=[])
+    try:
+        userStats = dict(label="User Statistics", values=[])
+        userAnonStats = dict(label="Anonymous Users", values=[], top5=[], locs=[])
+        userAuthStats = dict(label="Authenticated Users", values=[], top5=[])
 
-    userStats['values'].append(dict(label="Anonymous", value=[0, users['n_anon']]))
-    userStats['values'].append(dict(label="Authenticated", value=[0, users['n_auth']]))
+        userStats['values'].append(dict(label="Anonymous", value=[0, users['n_anon']]))
+        userStats['values'].append(dict(label="Authenticated", value=[0, users['n_auth']]))
 
-    for u in anon_users:
-        userAnonStats['values'].append(dict(label=u[0], value=[u[1]]))
+        for u in anon_users:
+            userAnonStats['values'].append(dict(label=u[0], value=[u[1]]))
 
-    for u in auth_users:
-        userAuthStats['values'].append(dict(label=u[0], value=[u[1]]))
+        for u in auth_users:
+            userAuthStats['values'].append(dict(label=u[0], value=[u[1]]))
 
-    # Get location for Anonymous users
-    top5_anon = []
-    top5_auth = []
-    loc_anon = []
-    # Check if the GeoLiteCity.dat exists
-    geolite = current_app.root_path + '/../dat/GeoLiteCity.dat'
-    if geo: # pragma: no cover
-        gic = pygeoip.GeoIP(geolite)
-    for u in anon_users:
+        # Get location for Anonymous users
+        top5_anon = []
+        top5_auth = []
+        loc_anon = []
+        # Check if the GeoLiteCity.dat exists
+        geolite = current_app.root_path + '/../dat/GeoLiteCity.dat'
         if geo: # pragma: no cover
-            loc = gic.record_by_addr(u[0])
-        else:
-            loc = {}
-        if loc is None: # pragma: no cover
-            loc = {}
-        if (len(loc.keys()) == 0):
-            loc['latitude'] = 0
-            loc['longitude'] = 0
-        top5_anon.append(dict(ip=u[0], loc=loc, tasks=u[1]))
+            gic = pygeoip.GeoIP(geolite)
+        for u in anon_users:
+            if geo: # pragma: no cover
+                loc = gic.record_by_addr(u[0])
+            else:
+                loc = {}
+            if loc is None: # pragma: no cover
+                loc = {}
+            if (len(loc.keys()) == 0):
+                loc['latitude'] = 0
+                loc['longitude'] = 0
+            top5_anon.append(dict(ip=u[0], loc=loc, tasks=u[1]))
 
-    for u in anon_users:
-        if geo: # pragma: no cover
-            loc = gic.record_by_addr(u[0])
-        else:
-            loc = {}
-        if loc is None: # pragma: no cover
-            loc = {}
-        if (len(loc.keys()) == 0):
-            loc['latitude'] = 0
-            loc['longitude'] = 0
-        loc_anon.append(dict(ip=u[0], loc=loc, tasks=u[1]))
+        for u in anon_users:
+            if geo: # pragma: no cover
+                loc = gic.record_by_addr(u[0])
+            else:
+                loc = {}
+            if loc is None: # pragma: no cover
+                loc = {}
+            if (len(loc.keys()) == 0):
+                loc['latitude'] = 0
+                loc['longitude'] = 0
+            loc_anon.append(dict(ip=u[0], loc=loc, tasks=u[1]))
 
-    for u in auth_users:
-        sql = text('''SELECT name, fullname from "user" where id=:id;''')
-        results = db.engine.execute(sql, id=u[0])
-        for row in results:
-            fullname = row.fullname
-            name = row.name
-        top5_auth.append(dict(name=name, fullname=fullname, tasks=u[1]))
+        for u in auth_users:
+            sql = text('''SELECT name, fullname from "user" where id=:id;''')
+            session = get_session(db, bind='slave')
+            results = session.execute(sql, id=u[0])
+            for row in results:
+                fullname = row.fullname
+                name = row.name
+            top5_auth.append(dict(name=name, fullname=fullname, tasks=u[1]))
 
-    userAnonStats['top5'] = top5_anon[0:5]
-    userAnonStats['locs'] = loc_anon
-    userAuthStats['top5'] = top5_auth
+        userAnonStats['top5'] = top5_anon[0:5]
+        userAnonStats['locs'] = loc_anon
+        userAuthStats['top5'] = top5_auth
 
-    return dict(users=userStats, anon=userAnonStats, auth=userAuthStats,
-                n_anon=users['n_anon'], n_auth=users['n_auth'])
+        return dict(users=userStats, anon=userAnonStats, auth=userAuthStats,
+                    n_anon=users['n_anon'], n_auth=users['n_auth'])
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @memoize(timeout=ONE_DAY)
