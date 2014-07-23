@@ -203,7 +203,7 @@ def apps_contributed(user_id):
                    ORDER BY n_task_runs DESC;''')
 
         session = get_session(db, bind='slave')
-        results = db.engine.execute(sql, dict(user_id=user_id))
+        results = session.execute(sql, dict(user_id=user_id))
         apps_contributed = []
         for row in results:
             app = dict(name=row.name, short_name=row.short_name,
