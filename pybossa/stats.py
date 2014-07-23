@@ -470,7 +470,7 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
         for u in auth_users:
             sql = text('''SELECT name, fullname from "user" where id=:id;''')
             session = get_session(db, bind='slave')
-            results = session.execute(sql, id=u[0])
+            results = session.execute(sql, dict(id=u[0]))
             for row in results:
                 fullname = row.fullname
                 name = row.name
