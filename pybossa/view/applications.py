@@ -914,15 +914,15 @@ def tasks(short_name):
 @blueprint.route('/<short_name>/tasks/browse', defaults={'page': 1})
 @blueprint.route('/<short_name>/tasks/browse/<int:page>')
 def tasks_browse(short_name, page):
-    try:
-        session = get_session(db, bind='slave')
-        (app, owner, n_tasks, n_task_runs,
-         overall_progress, last_activity) = app_by_shortname(short_name)
-        title = app_title(app, "Tasks")
-        n_volunteers = cached_apps.n_volunteers(app.id)
-        n_completed_tasks = cached_apps.n_completed_tasks(app.id)
+    (app, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = app_by_shortname(short_name)
+    title = app_title(app, "Tasks")
+    n_volunteers = cached_apps.n_volunteers(app.id)
+    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
 
-        def respond():
+    def respond():
+        try:
+            session = get_session(db, bind='slave')
             per_page = 10
             count = session.query(model.task.Task)\
                 .filter_by(app_id=app.get('id'))\
@@ -948,18 +948,18 @@ def tasks_browse(short_name, page):
                                    overall_progress=overall_progress,
                                    n_volunteers=n_volunteers,
                                    n_completed_tasks=n_completed_tasks)
+        except: # pragma: no cover
+            session.rollback()
+            raise
+        finally:
+            session.close()
 
-        require.app.read(app)
-        redirect_to_password = _check_if_redirect_to_password(app)
-        if redirect_to_password:
-            return redirect_to_password
-        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-        return respond()
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    require.app.read(app)
+    redirect_to_password = _check_if_redirect_to_password(app)
+    if redirect_to_password:
+        return redirect_to_password
+    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    return respond()
 
 
 @blueprint.route('/<short_name>/tasks/delete', methods=['GET', 'POST'])
