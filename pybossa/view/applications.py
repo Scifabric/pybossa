@@ -1364,7 +1364,7 @@ def task_n_answers(short_name):
                    UPDATE task SET n_answers=:n_answers,
                    state='ongoing' WHERE app_id=:app_id''').execution_options(autocommit=True)
 
-        db.engine.execute(sql, n_answers=form.n_answers.data, app_id=app.id)
+        db.session.execute(sql, dict(n_answers=form.n_answers.data, app_id=app.id))
 
         # Update task.state according to their new n_answers value
         sql = text('''
@@ -1380,7 +1380,7 @@ def task_n_answers(short_name):
                    and myquery.id=task.id
                    ''').execution_options(autocommit=True)
 
-        db.engine.execute(sql, n_answers=form.n_answers.data, app_id=app.id)
+        db.session.execute(sql, dict(n_answers=form.n_answers.data, app_id=app.id))
 
         msg = gettext('Redundancy of Tasks updated!')
         flash(msg, 'success')
