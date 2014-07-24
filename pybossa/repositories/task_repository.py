@@ -88,14 +88,17 @@ class TaskRepository(object):
 
     def delete(self, element):
         self._validate_can_be('deleted', element)
-        self.db.session.delete(element)
+        table = element.__class__
+        self.db.session.query(table).filter(table.id==element.id).delete()
         self.db.session.commit()
 
     def delete_all(self, elements):
         for element in elements:
             self._validate_can_be('deleted', element)
-            self.db.session.delete(element)
+            table = element.__class__
+            self.db.session.query(table).filter(table.id==element.id).delete()
         self.db.session.commit()
+
 
 
     def _validate_can_be(self, action, element):
