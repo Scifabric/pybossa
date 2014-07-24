@@ -96,7 +96,7 @@ def featured(app_id=None):
                         return format_error(msg, 415)
                     cached_apps.reset()
                     app.featured.append(model.featured.Featured())
-                    project_repo.save(app)
+                    project_repo.update(app)
                     return json.dumps(app.featured[0].dictize())
 
                 if request.method == 'DELETE':
@@ -105,7 +105,7 @@ def featured(app_id=None):
                         return format_error(msg, 404)
                     cached_apps.reset()
                     app.featured.pop()
-                    project_repo.save(app)
+                    project_repo.update(app)
                     return "", 204
             else:
                 msg = 'App.id %s not found' % app_id
@@ -216,7 +216,7 @@ def add_admin(user_id=None):
             require.user.update(user)
             if user:
                 user.admin = True
-                user_repo.save(user)
+                user_repo.update(user)
                 return redirect(url_for(".users"))
             else:
                 msg = "User not found"
@@ -237,7 +237,7 @@ def del_admin(user_id=None):
             require.user.update(user)
             if user:
                 user.admin = False
-                user_repo.save(user)
+                user_repo.update(user)
                 return redirect(url_for('.users'))
             else:
                 msg = "User.id not found"

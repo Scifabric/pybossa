@@ -1411,7 +1411,7 @@ def task_priority(short_name):
                 t = task_repo.get_task_by(app_id=app.id, id=int(task_id))
                 if t:
                     t.priority_0 = form.priority_0.data
-                    task_repo.save(t)
+                    task_repo.update(t)
                 else:  # pragma: no cover
                     flash(gettext(("Ooops, Task.id=%s does not belong to the app" % task_id)), 'danger')
         cached_apps.delete_app(app.short_name)

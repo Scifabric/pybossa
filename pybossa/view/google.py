@@ -84,7 +84,7 @@ def manage_user(access_token, user_data, next_url):
         # Update the name to fit with new paradigm to avoid UTF8 problems
         if type(user.name) == unicode or ' ' in user.name:
             user.name = user.name.encode('ascii', 'ignore').lower().replace(" ", "")
-            user_repo.save(user)
+            user_repo.update(user)
         return user
 
 

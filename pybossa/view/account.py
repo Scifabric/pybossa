@@ -448,7 +448,7 @@ def update_profile(name):
                     uploader.delete_file(user.info['avatar'], container)
                 user.info = {'avatar': file.filename,
                                      'container': container}
-                user_repo.save(user)
+                user_repo.update(user)
                 cached_users.delete_user_summary(user.name)
                 flash(gettext('Your avatar has been updated! It may \
                               take some minutes to refresh...'), 'success')
@@ -474,7 +474,7 @@ def update_profile(name):
                 user.email_addr = update_form.email_addr.data
                 user.privacy_mode = update_form.privacy_mode.data
                 user.locale = update_form.locale.data
-                user_repo.save(user)
+                user_repo.update(user)
                 cached_users.delete_user_summary(user.name)
                 flash(gettext('Your profile has been updated!'), 'success')
                 return redirect(url_for('.update_profile', name=user.name))
@@ -501,7 +501,7 @@ def update_profile(name):
                 user = user_repo.get(user.id)
                 if user.check_password(password_form.current_password.data):
                     user.set_password(password_form.new_password.data)
-                    user_repo.save(user)
+                    user_repo.update(user)
                     flash(gettext('Yay, you changed your password succesfully!'),
                           'success')
                     return redirect(url_for('.update_profile', name=name))
@@ -533,7 +533,7 @@ def update_profile(name):
             del external_form.name
             if external_form.validate():
                 user.ckan_api = external_form.ckan_api.data or None
-                user_repo.save(user)
+                user_repo.update(user)
                 cached_users.delete_user_summary(user.name)
                 flash(gettext('Your profile has been updated!'), 'success')
                 return redirect(url_for('.update_profile', name=user.name))
@@ -603,7 +603,7 @@ def reset_password():
     form = ChangePasswordForm(request.form)
     if form.validate_on_submit():
         user.set_password(form.new_password.data)
-        user_repo.save(user)
+        user_repo.update(user)
         login_user(user)
         flash(gettext('You reset your password successfully!'), 'success')
         return redirect(url_for('.signin'))
@@ -688,7 +688,7 @@ def reset_api_key(name):
     title = ("User: %s &middot; Settings"
              "- Reset API KEY") % current_user.fullname
     user.api_key = model.make_uuid()
-    user_repo.save(user)
+    user_repo.update(user)
     cached_users.delete_user_summary(user.name)
     msg = gettext('New API-KEY generated')
     flash(msg, 'success')
