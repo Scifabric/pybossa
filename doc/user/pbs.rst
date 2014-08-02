@@ -42,7 +42,7 @@ use, all you have to do is pass it as an argument:
 
 .. code-block:: bash
 
-    pbs --server http://server.com --apikey yourkey subcommand
+    pbs --server http://server.com --api-key yourkey subcommand
 
 If you work with two or more servers, then, remembering all the keys, and
 server urls could be problematic, as well as you will be leaving a trace in
