@@ -221,14 +221,6 @@ class UpdateProfileForm(Form):
         self.locale.choices = choices
 
 
-class AvatarUploadForm(Form):
-    avatar = FileField(lazy_gettext('Avatar'), validators=[FileRequired()])
-    x1 = IntegerField(label=None, widget=HiddenInput())
-    y1 = IntegerField(label=None, widget=HiddenInput())
-    x2 = IntegerField(label=None, widget=HiddenInput())
-    y2 = IntegerField(label=None, widget=HiddenInput())
-
-
 class ChangePasswordForm(Form):
 
     """Form for changing user's password."""
