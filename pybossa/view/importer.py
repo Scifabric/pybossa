@@ -70,9 +70,6 @@ class BulkTaskImportForm(Form):
     tasks = None
     get_data_url = None
 
-    def __init__(self, *args, **kwargs):
-        super(BulkTaskImportForm, self).__init__(*args, **kwargs)
-
     def import_csv_tasks(self, csvreader):
         headers = []
         fields = set(['state', 'quorum', 'calibration', 'priority_0',
