@@ -137,7 +137,6 @@ class LoginForm(Form):
                                      "You must provide a password"))])
 
 
-
 class RegisterForm(Form):
 
     """Register Form Class for creating an account in PyBossa."""
@@ -256,3 +255,19 @@ class ForgotPasswordForm(Form):
     email_addr = TextField(lazy_gettext('Email Address'),
                            [validators.Length(min=3, max=35, message=err_msg),
                             validators.Email()])
+
+
+### Forms for admin view
+
+class SearchForm(Form):
+    user = TextField(lazy_gettext('User'))
+
+
+class CategoryForm(Form):
+    id = IntegerField(label=None, widget=HiddenInput())
+    name = TextField(lazy_gettext('Name'),
+                     [validators.Required(),
+                      pb_validator.Unique(db.session, model.category.Category, model.category.Category.name,
+                                          message="Name is already taken.")])
+    description = TextField(lazy_gettext('Description'),
+                            [validators.Required()])

@@ -26,10 +26,7 @@ from flask import url_for
 from flask import current_app
 from flask import Response
 from flask.ext.login import login_required, current_user
-from flask_wtf import Form
-from wtforms import TextField, IntegerField, validators
-from wtforms.widgets import HiddenInput
-from flask.ext.babel import lazy_gettext, gettext
+from flask.ext.babel import gettext
 from werkzeug.exceptions import HTTPException
 
 import pybossa.model as model
@@ -42,6 +39,9 @@ import pybossa.validator as pb_validator
 from sqlalchemy import or_, func
 import json
 from StringIO import StringIO
+
+from pybossa.forms import *
+
 
 
 blueprint = Blueprint('admin', __name__)
@@ -117,10 +117,6 @@ def featured(app_id=None):
     except Exception as e: # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
-
-
-class SearchForm(Form):
-    user = TextField(lazy_gettext('User'))
 
 
 @blueprint.route('/users', methods=['GET', 'POST'])
@@ -275,16 +271,6 @@ def del_admin(user_id=None):
     except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
-
-
-class CategoryForm(Form):
-    id = IntegerField(label=None, widget=HiddenInput())
-    name = TextField(lazy_gettext('Name'),
-                     [validators.Required(),
-                      pb_validator.Unique(db.session, model.category.Category, model.category.Category.name,
-                                          message="Name is already taken.")])
-    description = TextField(lazy_gettext('Description'),
-                            [validators.Required()])
 
 
 @blueprint.route('/categories', methods=['GET', 'POST'])
