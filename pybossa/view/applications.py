@@ -17,21 +17,22 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
+import re
+import json
+import importer
+import operator
+import math
+import requests
 from StringIO import StringIO
+
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, make_response
-from flask_wtf import Form
-from flask_wtf.file import FileField, FileRequired
-from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
-    SelectField, validators, TextAreaField, PasswordField
-from wtforms.widgets import HiddenInput
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import lazy_gettext, gettext
 from sqlalchemy.sql import text
 
 import pybossa.model as model
 import pybossa.stats as stats
-import pybossa.validator as pb_validator
 import pybossa.sched as sched
 
 from pybossa.core import db, uploader, signer, get_session
@@ -49,106 +50,11 @@ from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
 
-import re
-import json
-import importer
-import operator
-import math
-import requests
+from pybossa.forms import *
+
 
 blueprint = Blueprint('app', __name__)
 
-
-class AvatarUploadForm(Form):
-    id = IntegerField(label=None, widget=HiddenInput())
-    avatar = FileField(lazy_gettext('Avatar'), validators=[FileRequired()])
-    x1 = IntegerField(label=None, widget=HiddenInput(), default=0)
-    y1 = IntegerField(label=None, widget=HiddenInput(), default=0)
-    x2 = IntegerField(label=None, widget=HiddenInput(), default=0)
-    y2 = IntegerField(label=None, widget=HiddenInput(), default=0)
-
-
-class AppForm(Form):
-    name = TextField(lazy_gettext('Name'),
-                     [validators.Required(),
-                      pb_validator.Unique(db.session, model.app.App, model.app.App.name,
-                                          message=lazy_gettext("Name is already taken."))])
-    short_name = TextField(lazy_gettext('Short Name'),
-                           [validators.Required(),
-                            pb_validator.NotAllowedChars(),
-                            pb_validator.Unique(
-                                db.session, model.app.App, model.app.App.short_name,
-                                message=lazy_gettext(
-                                    "Short Name is already taken."))])
-    long_description = TextAreaField(lazy_gettext('Long Description'),
-                                     [validators.Required()])
-
-
-class AppUpdateForm(AppForm):
-    id = IntegerField(label=None, widget=HiddenInput())
-    description = TextAreaField(lazy_gettext('Description'),
-                            [validators.Required(
-                                message=lazy_gettext(
-                                    "You must provide a description.")),
-                             validators.Length(max=255)])
-    long_description = TextAreaField(lazy_gettext('Long Description'))
-    allow_anonymous_contributors = SelectField(
-        lazy_gettext('Allow Anonymous Contributors'),
-        choices=[('True', lazy_gettext('Yes')),
-                 ('False', lazy_gettext('No'))])
-    category_id = SelectField(lazy_gettext('Category'), coerce=int)
-    hidden = BooleanField(lazy_gettext('Hide?'))
-    password = TextField(lazy_gettext('Password (leave blank for no password)'))
-
-
-class TaskPresenterForm(Form):
-    id = IntegerField(label=None, widget=HiddenInput())
-    editor = TextAreaField('')
-
-
-class TaskRedundancyForm(Form):
-    n_answers = IntegerField(lazy_gettext('Redundancy'),
-                             [validators.Required(),
-                              validators.NumberRange(
-                                  min=1, max=1000,
-                                  message=lazy_gettext('Number of answers should be a \
-                                                       value between 1 and 1,000'))])
-
-
-class TaskPriorityForm(Form):
-    task_ids = TextField(lazy_gettext('Task IDs'),
-                         [validators.Required(),
-                          pb_validator.CommaSeparatedIntegers()])
-
-    priority_0 = DecimalField(lazy_gettext('Priority'),
-                              [validators.NumberRange(
-                                  min=0, max=1,
-                                  message=lazy_gettext('Priority should be a \
-                                                       value between 0.0 and 1.0'))])
-
-
-class TaskSchedulerForm(Form):
-    sched = SelectField(lazy_gettext('Task Scheduler'),
-                        choices=[('default', lazy_gettext('Default')),
-                                 ('breadth_first', lazy_gettext('Breadth First')),
-                                 ('depth_first', lazy_gettext('Depth First')),
-                                 ('random', lazy_gettext('Random'))])
-
-
-class BlogpostForm(Form):
-    id = IntegerField(label=None, widget=HiddenInput())
-    title = TextField(lazy_gettext('Title'),
-                     [validators.Required(message=lazy_gettext(
-                                    "You must enter a title for the post."))])
-    body = TextAreaField(lazy_gettext('Body'),
-                           [validators.Required(message=lazy_gettext(
-                                    "You must enter some text for the post."))])
-
-
-class PasswordForm(Form):
-    password = PasswordField(lazy_gettext('Password'),
-                        [validators.Required(message=lazy_gettext(
-                                    "You must enter a password"))])
 
 
 def app_title(app, page_name):
