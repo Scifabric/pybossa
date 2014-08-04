@@ -22,10 +22,13 @@ from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
     SelectField, validators, TextAreaField, PasswordField
 from wtforms.widgets import HiddenInput
 from flask.ext.babel import lazy_gettext, gettext
+
 from pybossa.core import db
 import pybossa.validator as pb_validator
 from pybossa import model
 
+
+### Forms for applications view
 class AvatarUploadForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
     avatar = FileField(lazy_gettext('Avatar'), validators=[FileRequired()])
@@ -116,3 +119,148 @@ class PasswordForm(Form):
     password = PasswordField(lazy_gettext('Password'),
                         [validators.Required(message=lazy_gettext(
                                     "You must enter a password"))])
+
+
+### Forms for account view
+
+class LoginForm(Form):
+
+    """Login Form class for signin into PyBossa."""
+
+    email = TextField(lazy_gettext('E-mail'),
+                      [validators.Required(
+                          message=lazy_gettext("The e-mail is required"))])
+
+    password = PasswordField(lazy_gettext('Password'),
+                             [validators.Required(
+                                 message=lazy_gettext(
+                                     "You must provide a password"))])
+
+
+
+class RegisterForm(Form):
+
+    """Register Form Class for creating an account in PyBossa."""
+
+    err_msg = lazy_gettext("Full name must be between 3 and 35 "
+                           "characters long")
+    fullname = TextField(lazy_gettext('Full name'),
+                         [validators.Length(min=3, max=35, message=err_msg)])
+
+    err_msg = lazy_gettext("User name must be between 3 and 35 "
+                           "characters long")
+    err_msg_2 = lazy_gettext("The user name is already taken")
+    name = TextField(lazy_gettext('User name'),
+                         [validators.Length(min=3, max=35, message=err_msg),
+                          pb_validator.NotAllowedChars(),
+                          pb_validator.Unique(db.session, model.user.User,
+                                              model.user.User.name, err_msg_2)])
+
+    err_msg = lazy_gettext("Email must be between 3 and 35 characters long")
+    err_msg_2 = lazy_gettext("Email is already taken")
+    email_addr = TextField(lazy_gettext('Email Address'),
+                           [validators.Length(min=3, max=35, message=err_msg),
+                            validators.Email(),
+                            pb_validator.Unique(
+                                db.session, model.user.User,
+                                model.user.User.email_addr, err_msg_2)])
+
+    err_msg = lazy_gettext("Password cannot be empty")
+    err_msg_2 = lazy_gettext("Passwords must match")
+    password = PasswordField(lazy_gettext('New Password'),
+                             [validators.Required(err_msg),
+                              validators.EqualTo('confirm', err_msg_2)])
+
+    confirm = PasswordField(lazy_gettext('Repeat Password'))
+
+
+class UpdateProfileForm(Form):
+
+    """Form Class for updating PyBossa's user Profile."""
+
+    id = IntegerField(label=None, widget=HiddenInput())
+
+    err_msg = lazy_gettext("Full name must be between 3 and 35 "
+                           "characters long")
+    fullname = TextField(lazy_gettext('Full name'),
+                         [validators.Length(min=3, max=35, message=err_msg)])
+
+    err_msg = lazy_gettext("User name must be between 3 and 35 "
+                           "characters long")
+    err_msg_2 = lazy_gettext("The user name is already taken")
+    name = TextField(lazy_gettext('Username'),
+                     [validators.Length(min=3, max=35, message=err_msg),
+                      pb_validator.NotAllowedChars(),
+                      pb_validator.Unique(
+                          db.session, model.user.User, model.user.User.name, err_msg_2)])
+
+    err_msg = lazy_gettext("Email must be between 3 and 35 characters long")
+    err_msg_2 = lazy_gettext("Email is already taken")
+    email_addr = TextField(lazy_gettext('Email Address'),
+                           [validators.Length(min=3, max=35, message=err_msg),
+                            validators.Email(),
+                            pb_validator.Unique(
+                                db.session, model.user.User,
+                                model.user.User.email_addr, err_msg_2)])
+
+    locale = SelectField(lazy_gettext('Language'))
+    ckan_api = TextField(lazy_gettext('CKAN API Key'))
+    privacy_mode = BooleanField(lazy_gettext('Privacy Mode'))
+
+    def set_locales(self, locales):
+        """Fill the locale.choices."""
+        choices = []
+        for locale in locales:
+            if locale == 'en':
+                lang = gettext("English")
+            if locale == 'es':
+                lang = gettext("Spanish")
+            if locale == 'fr':
+                lang = gettext("French")
+            choices.append((locale, lang))
+        self.locale.choices = choices
+
+
+class AvatarUploadForm(Form):
+    avatar = FileField(lazy_gettext('Avatar'), validators=[FileRequired()])
+    x1 = IntegerField(label=None, widget=HiddenInput())
+    y1 = IntegerField(label=None, widget=HiddenInput())
+    x2 = IntegerField(label=None, widget=HiddenInput())
+    y2 = IntegerField(label=None, widget=HiddenInput())
+
+
+class ChangePasswordForm(Form):
+
+    """Form for changing user's password."""
+
+    current_password = PasswordField(lazy_gettext('Current password'))
+
+    err_msg = lazy_gettext("Password cannot be empty")
+    err_msg_2 = lazy_gettext("Passwords must match")
+    new_password = PasswordField(lazy_gettext('New password'),
+                                 [validators.Required(err_msg),
+                                  validators.EqualTo('confirm', err_msg_2)])
+    confirm = PasswordField(lazy_gettext('Repeat password'))
+
+
+class ResetPasswordForm(Form):
+
+    """Class for resetting user's password."""
+
+    err_msg = lazy_gettext("Password cannot be empty")
+    err_msg_2 = lazy_gettext("Passwords must match")
+    new_password = PasswordField(lazy_gettext('New Password'),
+                                 [validators.Required(err_msg),
+                                  validators.EqualTo('confirm', err_msg_2)])
+    confirm = PasswordField(lazy_gettext('Repeat Password'))
+
+
+
+class ForgotPasswordForm(Form):
+
+    """Form Class for forgotten password."""
+
+    err_msg = lazy_gettext("Email must be between 3 and 35 characters long")
+    email_addr = TextField(lazy_gettext('Email Address'),
+                           [validators.Length(min=3, max=35, message=err_msg),
+                            validators.Email()])
