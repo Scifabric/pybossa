@@ -164,6 +164,8 @@ class APIBase(MethodView):
             data = json.loads(request.data)
             # Clean HATEOAS args
             inst = self._create_instance_from_request(data)
+            db.session.add(inst)
+            db.session.commit()
             return json.dumps(inst.dictize())
         except IntegrityError:
             db.session.rollback()
@@ -180,8 +182,6 @@ class APIBase(MethodView):
         inst = self.__class__(**data)
         self._update_object(inst)
         getattr(require, self.__class__.__name__.lower()).create(inst)
-        db.session.add(inst)
-        db.session.commit()
         return inst
 
     @jsonpify

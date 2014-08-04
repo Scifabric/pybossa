@@ -25,7 +25,8 @@ from pybossa.model.user import User
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 
-from factories import AppFactory, TaskFactory, TaskRunFactory, UserFactory
+from factories import (AppFactory, TaskFactory, TaskRunFactory, UserFactory,
+                       CategoryFactory)
 
 
 class TestAppAPI(TestAPI):
@@ -83,6 +84,7 @@ class TestAppAPI(TestAPI):
     def test_app_post(self):
         """Test API project creation and auth"""
         users = UserFactory.create_batch(2)
+        CategoryFactory.create()
         name = u'XXXX Project'
         data = dict(
             name=name,
@@ -120,6 +122,8 @@ class TestAppAPI(TestAPI):
         assert out, out
         assert_equal(out.short_name, 'xxxx-project2'), out
         assert_equal(out.owner.name, 'user2')
+        ## Test that a default category is assigned to the project
+        assert out.category_id, "No category assigned to project"
         id_ = out.id
         db.session.remove()
 
