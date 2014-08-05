@@ -577,10 +577,11 @@ def import_task(short_name):
     if not (form and form.validate_on_submit()):  # pragma: no cover
         return render_forms()
 
-    return _import_task(app, handler, form, render_forms)
+    _import_task(app, handler, form)
+    return render_forms()
 
 
-def _import_task(app, handler, form, render_forms):
+def _import_task(app, handler, form):
     try:
         empty = True
         n = 0
@@ -616,7 +617,6 @@ def _import_task(app, handler, form, render_forms):
         current_app.logger.error(inst)
         msg = 'Oops! Looks like there was an error with processing that file!'
         flash(gettext(msg), 'error')
-    return render_forms()
 
 
 @blueprint.route('/<short_name>/password', methods=['GET', 'POST'])
