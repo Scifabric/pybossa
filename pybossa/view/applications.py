@@ -19,7 +19,7 @@
 import time
 import re
 import json
-import importer
+import pybossa.importers as importer
 import operator
 import math
 import requests
@@ -502,18 +502,19 @@ def compute_importer_variant_pairs(forms):
     """Return a list of pairs of importer variants. The pair-wise enumeration
     is due to UI design.
     """
-    variants = reduce(operator.__add__,
-                      [i.variants for i in forms.itervalues()],
-                      [])
-    if len(variants) % 2: # pragma: no cover
-        variants.append("empty")
-
+    # variants = reduce(operator.__add__,
+    #                   [i.variants for i in forms.itervalues()],
+    #                   [])
+    # if len(variants) % 2: # pragma: no cover
+    #     variants.append("empty")
+    variants = ('epicollect', 'csv', 'gdocs-map', 'gdocs-sound', 'gdocs-spreadsheet', 'gdocs-image', 'gdocs-pdf', 'gdocs-video')
     prefix = "applications/tasks/"
 
     importer_variants = map(lambda i: "%s%s.html" % (prefix, i), variants)
     return [
         (importer_variants[i * 2], importer_variants[i * 2 + 1])
         for i in xrange(0, int(math.ceil(len(variants) / 2.0)))]
+
 
 
 @blueprint.route('/<short_name>/tasks/import', methods=['GET', 'POST'])
@@ -536,47 +537,32 @@ def import_task(short_name):
     require.app.read(app)
     require.app.update(app)
 
-    data_handlers = dict([
-        (i.template_id, (i.form_detector, i(request.form), i.form_id))
-        for i in importer.importers])
-    forms = [
-        (i.form_id, i(request.form))
-        for i in importer.importers]
-    forms = dict(forms)
-    template_args.update(forms)
+    def render_forms():
+        tmpl = '/applications/importers/%s.html' % template
+        return render_template(tmpl, **template_args)
 
-    template_args["importer_variants"] = compute_importer_variant_pairs(forms)
-
+    forms = { 'csv': BulkTaskCSVImportForm,
+              'gdocs': BulkTaskGDImportForm,
+              'epicollect': BulkTaskEpiCollectPlusImportForm }
+    template_args["importer_variants"] = compute_importer_variant_pairs(importer.importers)
     template = request.args.get('template')
 
     if not (template or request.method == 'POST'):
         return render_template('/applications/import_options.html',
                                **template_args)
 
+    template = template or request.form['form_name']
+    form = forms[template](request.form)
+    template_args['form'] = form
     if template == 'gdocs':  # pragma: no cover
         mode = request.args.get('mode')
         if mode is not None:
-            template_args["gdform"].googledocs_url.data = importer.googledocs_urls[mode]
-
-    # in future, we shall pass an identifier of the form/template used,
-    # which we can receive here, and use for a dictionary lookup, rather than
-    # this search mechanism
-    form = None
-    handler = None
-    for k, v in data_handlers.iteritems():
-        field_id, handler, form_name = v
-        if field_id in request.form:
-            form = template_args[form_name]
-            template = k
-            break
-
-    def render_forms():
-        tmpl = '/applications/importers/%s.html' % template
-        return render_template(tmpl, **template_args)
+            template_args["form"].googledocs_url.data = importer.googledocs_urls[mode]
 
     if not (form and form.validate_on_submit()):  # pragma: no cover
         return render_forms()
 
+    handler = importer.importers[template]()
     _import_task(app, handler, form)
     return render_forms()
 
