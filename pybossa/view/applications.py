@@ -551,7 +551,7 @@ def import_task(short_name):
         return render_template('/applications/import_options.html',
                                **template_args)
 
-    template = template or request.form['form_name']
+    template = template if request.method == 'GET' else request.form['form_name']
     form = forms[template](request.form)
     template_args['form'] = form
     if template == 'gdocs':  # pragma: no cover
