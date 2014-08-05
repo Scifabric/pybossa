@@ -56,7 +56,6 @@ googledocs_urls = {
 
 class BulkTaskImport(object):
     importer_id = None
-    form_detector = None
     tasks = None
     get_data_url = None
 
@@ -107,7 +106,6 @@ class BulkTaskImport(object):
 @register_importer
 class BulkTaskCSVImport(BulkTaskImport):
     importer_id = "csv"
-    form_detector = "csv_url"
 
     def get_data_url(self, form):
         return form.csv_url.data
@@ -121,7 +119,6 @@ class BulkTaskCSVImport(BulkTaskImport):
 @register_importer
 class BulkTaskGDImport(BulkTaskImport):
     importer_id = "gdocs"
-    form_detector = "googledocs_url"
 
     def get_data_url(self, form):
         return ''.join([form.googledocs_url.data, '&output=csv'])
@@ -140,7 +137,6 @@ class BulkTaskGDImport(BulkTaskImport):
 @register_importer
 class BulkTaskEpiCollectPlusImport(BulkTaskImport):
     importer_id = "epicollect"
-    form_detector = "epicollect_project"
 
     def import_epicollect_tasks(self, data):
         for d in data:
