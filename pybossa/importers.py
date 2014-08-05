@@ -19,6 +19,7 @@
 from StringIO import StringIO
 import json
 import requests
+from flask.ext.babel import gettext
 from pybossa.util import unicode_csv_reader
 
 
