@@ -122,6 +122,7 @@ class PasswordForm(Form):
 
 
 class BulkTaskCSVImportForm(Form):
+    form_name =TextField(label=None, widget=HiddenInput(), default='csv')
     msg_required = lazy_gettext("You must provide a URL")
     msg_url = lazy_gettext("Oops! That's not a valid URL. "
                            "You must provide a valid URL")
@@ -131,6 +132,7 @@ class BulkTaskCSVImportForm(Form):
 
 
 class BulkTaskGDImportForm(Form):
+    form_name =TextField(label=None, widget=HiddenInput(), default='gdocs')
     msg_required = lazy_gettext("You must provide a URL")
     msg_url = lazy_gettext("Oops! That's not a valid URL. "
                            "You must provide a valid URL")
@@ -140,6 +142,7 @@ class BulkTaskGDImportForm(Form):
 
 
 class BulkTaskEpiCollectPlusImportForm(Form):
+    form_name =TextField(label=None, widget=HiddenInput(), default='epicollect')
     msg_required = lazy_gettext("You must provide an EpiCollect Plus "
                                 "project name")
     msg_form_required = lazy_gettext("You must provide a Form name "
