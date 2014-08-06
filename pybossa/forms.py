@@ -153,7 +153,7 @@ class _BulkTaskEpiCollectPlusImportForm(Form):
                                 [validators.Required(message=msg_required)])
 
 
-class BulkTaskImportForm(object):
+class GenericBulkTaskImportForm(object):
     """Callable class that will return, when called, the appropriate form
     instance"""
     _forms = { 'csv': _BulkTaskCSVImportForm,

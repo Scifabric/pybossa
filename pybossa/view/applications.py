@@ -547,7 +547,7 @@ def import_task(short_name):
 
     template = template if request.method == 'GET' else request.form['form_name']
     importer = importer_mngr.create_importer(template)
-    form = BulkTaskImportForm()(template, request.form)
+    form = GenericBulkTaskImportForm()(template, request.form)
     template_args['form'] = form
     if template == 'gdocs' and request.args.get('mode'):  # pragma: no cover
         mode = request.args.get('mode')
