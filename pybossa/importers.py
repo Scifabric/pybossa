@@ -57,9 +57,6 @@ class _BulkTaskImport(object):
     def tasks(self):
         pass
 
-    def _get_data_url(self):
-        pass
-
     def _import_csv_tasks(self, csvreader):
         headers = []
         fields = set(['state', 'quorum', 'calibration', 'priority_0',
