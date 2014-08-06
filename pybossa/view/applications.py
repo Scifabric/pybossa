@@ -502,12 +502,11 @@ def compute_importer_variant_pairs(forms):
     """Return a list of pairs of importer variants. The pair-wise enumeration
     is due to UI design.
     """
-    # variants = reduce(operator.__add__,
-    #                   [i.variants for i in forms.itervalues()],
-    #                   [])
-    # if len(variants) % 2: # pragma: no cover
-    #     variants.append("empty")
-    variants = ('epicollect', 'csv', 'gdocs-map', 'gdocs-sound', 'gdocs-spreadsheet', 'gdocs-image', 'gdocs-pdf', 'gdocs-video')
+    variants = reduce(operator.__add__,
+                      [i.variants() for i in forms.itervalues()],
+                      [])
+    if len(variants) % 2: # pragma: no cover
+        variants.append("empty")
     prefix = "applications/tasks/"
 
     importer_variants = map(lambda i: "%s%s.html" % (prefix, i), variants)
