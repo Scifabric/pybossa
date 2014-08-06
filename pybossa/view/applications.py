@@ -19,7 +19,7 @@
 import time
 import re
 import json
-import pybossa.importers as importer
+from pybossa.importers import BulkTaskImportManager, BulkImportException
 import operator
 import math
 import requests
@@ -498,13 +498,10 @@ def settings(short_name):
                            title=title)
 
 
-def compute_importer_variant_pairs(forms):
+def compute_importer_variant_pairs(variants):
     """Return a list of pairs of importer variants. The pair-wise enumeration
     is due to UI design.
     """
-    variants = reduce(operator.__add__,
-                      [i.variants() for i in forms.itervalues()],
-                      [])
     if len(variants) % 2: # pragma: no cover
         variants.append("empty")
     prefix = "applications/tasks/"
@@ -543,7 +540,8 @@ def import_task(short_name):
     forms = { 'csv': BulkTaskCSVImportForm,
               'gdocs': BulkTaskGDImportForm,
               'epicollect': BulkTaskEpiCollectPlusImportForm }
-    template_args["importer_variants"] = compute_importer_variant_pairs(importer.importers)
+    importer_mngr = BulkTaskImportManager()
+    template_args["importer_variants"] = compute_importer_variant_pairs(importer_mngr.variants())
     template = request.args.get('template')
 
     if not (template or request.method == 'POST'):
@@ -551,27 +549,26 @@ def import_task(short_name):
                                **template_args)
 
     template = template if request.method == 'GET' else request.form['form_name']
+    importer = importer_mngr.create_importer(template)
     form = forms[template](request.form)
     template_args['form'] = form
-    if template == 'gdocs':  # pragma: no cover
+    if template == 'gdocs' and request.args.get('mode'):  # pragma: no cover
         mode = request.args.get('mode')
-        if mode is not None:
-            template_args["form"].googledocs_url.data = importer.googledocs_urls[mode]
+        template_args["form"].googledocs_url.data = importer.googledocs_urls[mode]
 
     if not (form and form.validate_on_submit()):  # pragma: no cover
         return render_forms()
 
-    handler = importer.importers[template]()
-    _import_task(app, handler, form)
+    _import_task(app, importer, form)
     return render_forms()
 
 
-def _import_task(app, handler, form):
+def _import_task(app, importer, form):
     try:
         empty = True
         n = 0
         n_data = 0
-        for task_data in handler.tasks(form):
+        for task_data in importer.tasks(form):
             n_data += 1
             task = model.task.Task(app_id=app.id)
             [setattr(task, k, v) for k, v in task_data.iteritems()]
@@ -582,7 +579,7 @@ def _import_task(app, handler, form):
                 n += 1
                 empty = False
         if empty and n_data == 0:
-            raise importer.BulkImportException(
+            raise BulkImportException(
                 gettext('Oops! It looks like the file is empty.'))
         if empty and n_data > 0:
             flash(gettext('Oops! It looks like there are no new records to import.'), 'warning')
@@ -596,7 +593,7 @@ def _import_task(app, handler, form):
         cached_apps.delete_overall_progress(app.id)
         cached_apps.delete_last_activity(app.id)
         return redirect(url_for('.tasks', short_name=app.short_name))
-    except importer.BulkImportException, err_msg:
+    except BulkImportException, err_msg:
         flash(err_msg, 'error')
     except Exception as inst:  # pragma: no cover
         current_app.logger.error(inst)
