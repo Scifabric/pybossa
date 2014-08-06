@@ -29,14 +29,6 @@ from pybossa import model
 
 
 ### Forms for applications view
-class AvatarUploadForm(Form):
-    id = IntegerField(label=None, widget=HiddenInput())
-    avatar = FileField(lazy_gettext('Avatar'), validators=[FileRequired()])
-    x1 = IntegerField(label=None, widget=HiddenInput(), default=0)
-    y1 = IntegerField(label=None, widget=HiddenInput(), default=0)
-    x2 = IntegerField(label=None, widget=HiddenInput(), default=0)
-    y2 = IntegerField(label=None, widget=HiddenInput(), default=0)
-
 
 class AppForm(Form):
     name = TextField(lazy_gettext('Name'),
@@ -162,6 +154,7 @@ class GenericBulkTaskImportForm(object):
 
     def __call__(self, form_name, *form_args, **form_kwargs):
         return self._forms[form_name](*form_args, **form_kwargs)
+
 
 ### Forms for account view
 
@@ -313,3 +306,12 @@ class CategoryForm(Form):
                                           message="Name is already taken.")])
     description = TextField(lazy_gettext('Description'),
                             [validators.Required()])
+
+### Common forms
+class AvatarUploadForm(Form):
+    id = IntegerField(label=None, widget=HiddenInput())
+    avatar = FileField(lazy_gettext('Avatar'), validators=[FileRequired()])
+    x1 = IntegerField(label=None, widget=HiddenInput(), default=0)
+    y1 = IntegerField(label=None, widget=HiddenInput(), default=0)
+    x2 = IntegerField(label=None, widget=HiddenInput(), default=0)
+    y2 = IntegerField(label=None, widget=HiddenInput(), default=0)

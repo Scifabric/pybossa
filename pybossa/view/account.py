@@ -47,7 +47,7 @@ from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
 from pybossa.auth import require
 
-from pybossa.forms import *
+from pybossa.forms.account_view_forms import *
 
 try:
     import cPickle as pickle

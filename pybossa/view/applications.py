@@ -50,7 +50,7 @@ from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
 
-from pybossa.forms import *
+from pybossa.forms.applications_view_forms import *
 
 
 blueprint = Blueprint('app', __name__)

@@ -40,7 +40,7 @@ from sqlalchemy import or_, func
 import json
 from StringIO import StringIO
 
-from pybossa.forms import *
+from pybossa.forms.admin_view_forms import *
 
 
 
