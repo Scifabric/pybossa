@@ -537,9 +537,6 @@ def import_task(short_name):
         tmpl = '/applications/importers/%s.html' % template
         return render_template(tmpl, **template_args)
 
-    forms = { 'csv': BulkTaskCSVImportForm,
-              'gdocs': BulkTaskGDImportForm,
-              'epicollect': BulkTaskEpiCollectPlusImportForm }
     importer_mngr = BulkTaskImportManager()
     template_args["importer_variants"] = compute_importer_variant_pairs(importer_mngr.variants())
     template = request.args.get('template')
@@ -550,7 +547,7 @@ def import_task(short_name):
 
     template = template if request.method == 'GET' else request.form['form_name']
     importer = importer_mngr.create_importer(template)
-    form = forms[template](request.form)
+    form = BulkTaskImportForm()(template, request.form)
     template_args['form'] = form
     if template == 'gdocs' and request.args.get('mode'):  # pragma: no cover
         mode = request.args.get('mode')
