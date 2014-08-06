@@ -26,6 +26,7 @@ from flask.ext.login import current_user
 from api_base import APIBase
 from pybossa.model.app import App
 import pybossa.cache.apps as cached_apps
+from pybossa.cache.categories import get_all as get_categories
 
 
 class AppAPI(APIBase):
@@ -38,6 +39,12 @@ class AppAPI(APIBase):
     """
 
     __class__ = App
+
+    def _create_instance_from_request(self, data):
+        inst = super(AppAPI, self)._create_instance_from_request(data)
+        default_category = get_categories()[0]
+        inst.category_id = default_category.id
+        return inst
 
     def _refresh_cache(self, obj):
         cached_apps.delete_app(obj.short_name)

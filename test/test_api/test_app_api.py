@@ -21,7 +21,8 @@ from default import db, with_context
 from nose.tools import assert_equal, assert_raises
 from test_api import TestAPI
 
-from factories import AppFactory, TaskFactory, TaskRunFactory, UserFactory
+from factories import (AppFactory, TaskFactory, TaskRunFactory, UserFactory,
+                       CategoryFactory)
 
 from pybossa.repositories import ProjectRepository
 from pybossa.repositories import TaskRepository
@@ -83,6 +84,7 @@ class TestAppAPI(TestAPI):
     def test_app_post(self):
         """Test API project creation and auth"""
         users = UserFactory.create_batch(2)
+        CategoryFactory.create()
         name = u'XXXX Project'
         data = dict(
             name=name,
@@ -119,6 +121,8 @@ class TestAppAPI(TestAPI):
         assert out, out
         assert_equal(out.short_name, 'xxxx-project2'), out
         assert_equal(out.owner.name, 'user2')
+        ## Test that a default category is assigned to the project
+        assert out.category_id, "No category assigned to project"
         id_ = out.id
 
         # test re-create should fail

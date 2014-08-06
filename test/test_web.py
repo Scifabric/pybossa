@@ -1432,7 +1432,7 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.view.importer.requests.get')
+    @patch('pybossa.importers.requests.get')
     def test_33_bulk_csv_import_unauthorized(self, Mock, mock):
         """Test WEB bulk import unauthorized works"""
         unauthorized_request = FakeRequest('Unauthorized', 403,
@@ -1443,13 +1443,13 @@ class TestWeb(web.Helper):
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
-                                       'formtype': 'csv'},
+                                       'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
         msg = "Oops! It looks like you don't have permission to access that file"
         assert msg in res.data, res.data
 
     @with_context
-    @patch('pybossa.view.importer.requests.get')
+    @patch('pybossa.importers.requests.get')
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_34_bulk_csv_import_non_html(self, Mock, mock):
         """Test WEB bulk import non html works"""
@@ -1460,13 +1460,14 @@ class TestWeb(web.Helper):
         self.new_application()
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
-        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com'},
+        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
+                                       'form_name': 'csv'},
                             follow_redirects=True)
         assert "Oops! That file doesn't look like the right file." in res.data
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.view.importer.requests.get')
+    @patch('pybossa.importers.requests.get')
     def test_35_bulk_csv_import_non_html(self, Mock, mock):
         """Test WEB bulk import non html works"""
         empty_file = FakeRequest('CSV,with,no,content\n', 200,
@@ -1477,13 +1478,13 @@ class TestWeb(web.Helper):
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
-                                       'formtype': 'csv'},
+                                       'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
         assert "Oops! It looks like the file is empty." in res.data
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.view.importer.requests.get')
+    @patch('pybossa.importers.requests.get')
     def test_36_bulk_csv_import_dup_header(self, Mock, mock):
         """Test WEB bulk import duplicate header works"""
         empty_file = FakeRequest('Foo,Bar,Foo\n1,2,3', 200,
@@ -1494,14 +1495,14 @@ class TestWeb(web.Helper):
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
-                                       'formtype': 'csv'},
+                                       'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
         msg = "The file you uploaded has two headers with the same name"
         assert msg in res.data
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.view.importer.requests.get')
+    @patch('pybossa.importers.requests.get')
     def test_37_bulk_csv_import_no_column_names(self, Mock, mock):
         """Test WEB bulk import no column names works"""
         empty_file = FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
@@ -1512,7 +1513,7 @@ class TestWeb(web.Helper):
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
-                                       'formtype': 'csv'},
+                                       'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
         task = db.session.query(Task).first()
         assert {u'Bar': u'2', u'Foo': u'1', u'Baz': u'3'} == task.info
@@ -1520,7 +1521,7 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.view.importer.requests.get')
+    @patch('pybossa.importers.requests.get')
     def test_38_bulk_csv_import_with_column_name(self, Mock, mock):
         """Test WEB bulk import with column name works"""
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
@@ -1531,7 +1532,7 @@ class TestWeb(web.Helper):
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
-                                       'formtype': 'csv'},
+                                       'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
         task = db.session.query(Task).first()
         assert {u'Bar': u'2', u'Foo': u'1'} == task.info
@@ -1545,7 +1546,7 @@ class TestWeb(web.Helper):
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
-                                       'formtype': 'csv'},
+                                       'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
         app = db.session.query(App).first()
         assert len(app.tasks) == 2, "There should be only 2 tasks"
@@ -1557,7 +1558,7 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.view.importer.requests.get')
+    @patch('pybossa.importers.requests.get')
     def test_38_bulk_gdocs_import(self, Mock, mock):
         """Test WEB bulk GDocs import works."""
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
@@ -1568,7 +1569,7 @@ class TestWeb(web.Helper):
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
-                                       'formtype': 'gdocs'},
+                                       'formtype': 'gdocs', 'form_name': 'gdocs'},
                             follow_redirects=True)
         task = db.session.query(Task).first()
         assert {u'Bar': u'2', u'Foo': u'1'} == task.info
@@ -1582,7 +1583,7 @@ class TestWeb(web.Helper):
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
-                                       'formtype': 'gdocs'},
+                                       'formtype': 'gdocs', 'form_name': 'gdocs'},
                             follow_redirects=True)
         app = db.session.query(App).first()
         assert len(app.tasks) == 2, "There should be only 2 tasks"
@@ -1599,7 +1600,7 @@ class TestWeb(web.Helper):
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
-                                       'formtype': 'gdocs'},
+                                       'formtype': 'gdocs', 'form_name': 'gdocs'},
                             follow_redirects=True)
         app = db.session.query(App).first()
         assert len(app.tasks) == 2, "There should be only 2 tasks"
@@ -2918,7 +2919,7 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.view.importer.requests.get')
+    @patch('pybossa.importers.requests.get')
     def test_71_bulk_epicollect_import_unauthorized(self, Mock, mock):
         """Test WEB bulk import unauthorized works"""
         unauthorized_request = FakeRequest('Unauthorized', 403,
@@ -2930,7 +2931,7 @@ class TestWeb(web.Helper):
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'epicollect_project': 'fakeproject',
                                        'epicollect_form': 'fakeform',
-                                       'formtype': 'json'},
+                                       'formtype': 'json', 'form_name': 'epicollect'},
                             follow_redirects=True)
         msg = "Oops! It looks like you don't have permission to access the " \
               "EpiCollect Plus project"
@@ -2938,7 +2939,7 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.view.importer.requests.get')
+    @patch('pybossa.importers.requests.get')
     def test_72_bulk_epicollect_import_non_html(self, Mock, mock):
         """Test WEB bulk import non html works"""
         html_request = FakeRequest('Not an application/json', 200,
@@ -2950,14 +2951,14 @@ class TestWeb(web.Helper):
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'epicollect_project': 'fakeproject',
                                        'epicollect_form': 'fakeform',
-                                       'formtype': 'json'},
+                                       'formtype': 'json', 'form_name': 'epicollect'},
                             follow_redirects=True)
         msg = "Oops! That project and form do not look like the right one."
         assert msg in res.data
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.view.importer.requests.get')
+    @patch('pybossa.importers.requests.get')
     def test_73_bulk_epicollect_import_json(self, Mock, mock):
         """Test WEB bulk import json works"""
         data = [dict(DeviceID=23)]
@@ -2970,7 +2971,7 @@ class TestWeb(web.Helper):
         res = self.app.post(('/app/%s/tasks/import' % (app.short_name)),
                             data={'epicollect_project': 'fakeproject',
                                   'epicollect_form': 'fakeform',
-                                  'formtype': 'json'},
+                                  'formtype': 'json', 'form_name': 'epicollect'},
                             follow_redirects=True)
 
         app = db.session.query(App).first()
@@ -2987,7 +2988,7 @@ class TestWeb(web.Helper):
         res = self.app.post(('/app/%s/tasks/import' % (app.short_name)),
                             data={'epicollect_project': 'fakeproject',
                                   'epicollect_form': 'fakeform',
-                                  'formtype': 'json'},
+                                  'formtype': 'json', 'form_name': 'epicollect'},
                             follow_redirects=True)
         app = db.session.query(App).first()
         assert len(app.tasks) == 2, "There should be only 2 tasks"

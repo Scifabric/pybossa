@@ -183,6 +183,9 @@ class APIBase(MethodView):
             self.valid_args()
             data = json.loads(request.data)
             inst = self._create_instance_from_request(data)
+            repo = repos[self.__class__.__name__]['repo']
+            save_func = repos[self.__class__.__name__]['save']
+            getattr(repo, save_func)(inst)
             return json.dumps(inst.dictize())
         except Exception as e:
             return error.format_exception(
@@ -195,9 +198,6 @@ class APIBase(MethodView):
         inst = self.__class__(**data)
         self._update_object(inst)
         getattr(require, self.__class__.__name__.lower()).create(inst)
-        repo = repos[self.__class__.__name__]['repo']
-        save_func = repos[self.__class__.__name__]['save']
-        getattr(repo, save_func)(inst)
         return inst
 
     @jsonpify
