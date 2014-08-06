@@ -23,17 +23,28 @@ from flask.ext.babel import gettext
 from pybossa.util import unicode_csv_reader
 
 
-importers = {}
+_importers = {}
 
 
 def register_importer(cls):
-    importers[cls.importer_id] = cls
+    _importers[cls.importer_id] = cls
     return cls
-
 
 
 class BulkImportException(Exception):
     pass
+
+
+class BulkTaskImportManager(object):
+
+    def create_importer(self, importer_id):
+        return _importers[importer_id]()
+
+    def variants(self):
+        """Returns all the importers and variants defined within this module"""
+        variants = [cls.variants() for cls in _importers.values()]
+        variants = [item for sublist in variants for item in sublist]
+        return variants
 
 
 googledocs_urls = {
@@ -60,7 +71,7 @@ class BulkTaskImport(object):
 
     @classmethod
     def variants(self):
-        return [self.importer_id]
+        return [self.importer_id] if self.importer_id != None else []
 
     def tasks(self):
         pass
