@@ -58,12 +58,12 @@ googledocs_urls = {
 class BulkTaskImport(object):
     importer_id = None
 
-    def tasks(self):
-        pass
-
     @classmethod
     def variants(self):
         return [self.importer_id]
+
+    def tasks(self):
+        pass
 
     def _get_data_url(self):
         pass
@@ -125,15 +125,15 @@ class BulkTaskCSVImport(BulkTaskImport):
 class BulkTaskGDImport(BulkTaskImport):
     importer_id = "gdocs"
 
-    def tasks(self, form):
-        dataurl = self._get_data_url(form)
-        r = requests.get(dataurl)
-        return self._get_csv_data_from_request(r)
-
     @classmethod
     def variants(self):
         return [("-".join([self.importer_id, mode]))
                 for mode in googledocs_urls.keys()]
+
+    def tasks(self, form):
+        dataurl = self._get_data_url(form)
+        r = requests.get(dataurl)
+        return self._get_csv_data_from_request(r)
 
     def _get_data_url(self, form):
         return ''.join([form.googledocs_url.data, '&output=csv'])
