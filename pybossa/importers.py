@@ -61,6 +61,10 @@ class BulkTaskImport(object):
     def tasks(self):
         pass
 
+    @classmethod
+    def variants(self):
+        return [self.importer_id]
+
     def _get_data_url(self):
         pass
 
@@ -103,30 +107,23 @@ class BulkTaskImport(object):
         csvreader = unicode_csv_reader(csvcontent)
         return self._import_csv_tasks(csvreader)
 
-    @classmethod
-    def variants(self):
-        return [self.importer_id]
-
 
 @register_importer
 class BulkTaskCSVImport(BulkTaskImport):
     importer_id = "csv"
-
-    def _get_data_url(self, form):
-        return form.csv_url.data
 
     def tasks(self, form):
         dataurl = self._get_data_url(form)
         r = requests.get(dataurl)
         return self._get_csv_data_from_request(r)
 
+    def _get_data_url(self, form):
+        return form.csv_url.data
+
 
 @register_importer
 class BulkTaskGDImport(BulkTaskImport):
     importer_id = "gdocs"
-
-    def _get_data_url(self, form):
-        return ''.join([form.googledocs_url.data, '&output=csv'])
 
     def tasks(self, form):
         dataurl = self._get_data_url(form)
@@ -138,10 +135,18 @@ class BulkTaskGDImport(BulkTaskImport):
         return [("-".join([self.importer_id, mode]))
                 for mode in googledocs_urls.keys()]
 
+    def _get_data_url(self, form):
+        return ''.join([form.googledocs_url.data, '&output=csv'])
+
 
 @register_importer
 class BulkTaskEpiCollectPlusImport(BulkTaskImport):
     importer_id = "epicollect"
+
+    def tasks(self, form):
+        dataurl = self._get_data_url(form)
+        r = requests.get(dataurl)
+        return self._get_epicollect_data_from_request(r)
 
     def _import_epicollect_tasks(self, data):
         for d in data:
@@ -160,8 +165,3 @@ class BulkTaskEpiCollectPlusImport(BulkTaskImport):
             msg = "Oops! That project and form do not look like the right one."
             raise BulkImportException(gettext(msg), 'error')
         return self._import_epicollect_tasks(json.loads(r.text))
-
-    def tasks(self, form):
-        dataurl = self._get_data_url(form)
-        r = requests.get(dataurl)
-        return self._get_epicollect_data_from_request(r)
