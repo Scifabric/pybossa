@@ -99,7 +99,7 @@ class BulkTaskImport(object):
         csvreader = unicode_csv_reader(csvcontent)
         return self.import_csv_tasks(csvreader)
 
-    @property
+    @classmethod
     def variants(self):
         return [self.importer_id]
 
@@ -129,7 +129,7 @@ class BulkTaskGDImport(BulkTaskImport):
         r = requests.get(dataurl)
         return self.get_csv_data_from_request(r)
 
-    @property
+    @classmethod
     def variants(self):
         return [("-".join([self.importer_id, mode]))
                 for mode in googledocs_urls.keys()]
