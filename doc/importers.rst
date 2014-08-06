@@ -6,15 +6,16 @@ Importer interface
 
 Task importers are currently located in view/importer.py; each gets
 a class, which should inherit from BulkTaskImportForm and provide
-the following values:
+the following public interface:
 
-* variants
+* importer_id
 * tasks()
-* form_detector
-* form_id
-* template_id
+* variants
+
+importer_id is the name of the importer; any of the supported importers:
+'csv', 'gdocs' and 'epicollect'
 
 tasks() should generate a list of tasks
 
-variants, a property, should list all the variants of this importer;
+variants, a class method, should list all the variants of this importer;
 this mechanism is used for Google Docs
