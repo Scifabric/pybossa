@@ -57,8 +57,12 @@ googledocs_urls = {
 
 class BulkTaskImport(object):
     importer_id = None
-    tasks = None
-    _get_data_url = None
+
+    def tasks(self):
+        pass
+
+    def _get_data_url(self):
+        pass
 
     def _import_csv_tasks(self, csvreader):
         headers = []
