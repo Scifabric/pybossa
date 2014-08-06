@@ -58,9 +58,9 @@ googledocs_urls = {
 class BulkTaskImport(object):
     importer_id = None
     tasks = None
-    get_data_url = None
+    _get_data_url = None
 
-    def import_csv_tasks(self, csvreader):
+    def _import_csv_tasks(self, csvreader):
         headers = []
         fields = set(['state', 'quorum', 'calibration', 'priority_0',
                       'n_answers'])
@@ -85,7 +85,7 @@ class BulkTaskImport(object):
                         task_data["info"][headers[idx]] = cell
                 yield task_data
 
-    def get_csv_data_from_request(self, r):
+    def _get_csv_data_from_request(self, r):
         if r.status_code == 403:
             msg = "Oops! It looks like you don't have permission to access" \
                 " that file"
@@ -97,7 +97,7 @@ class BulkTaskImport(object):
 
         csvcontent = StringIO(r.text)
         csvreader = unicode_csv_reader(csvcontent)
-        return self.import_csv_tasks(csvreader)
+        return self._import_csv_tasks(csvreader)
 
     @classmethod
     def variants(self):
@@ -108,26 +108,26 @@ class BulkTaskImport(object):
 class BulkTaskCSVImport(BulkTaskImport):
     importer_id = "csv"
 
-    def get_data_url(self, form):
+    def _get_data_url(self, form):
         return form.csv_url.data
 
     def tasks(self, form):
-        dataurl = self.get_data_url(form)
+        dataurl = self._get_data_url(form)
         r = requests.get(dataurl)
-        return self.get_csv_data_from_request(r)
+        return self._get_csv_data_from_request(r)
 
 
 @register_importer
 class BulkTaskGDImport(BulkTaskImport):
     importer_id = "gdocs"
 
-    def get_data_url(self, form):
+    def _get_data_url(self, form):
         return ''.join([form.googledocs_url.data, '&output=csv'])
 
     def tasks(self, form):
-        dataurl = self.get_data_url(form)
+        dataurl = self._get_data_url(form)
         r = requests.get(dataurl)
-        return self.get_csv_data_from_request(r)
+        return self._get_csv_data_from_request(r)
 
     @classmethod
     def variants(self):
@@ -139,15 +139,15 @@ class BulkTaskGDImport(BulkTaskImport):
 class BulkTaskEpiCollectPlusImport(BulkTaskImport):
     importer_id = "epicollect"
 
-    def import_epicollect_tasks(self, data):
+    def _import_epicollect_tasks(self, data):
         for d in data:
             yield {"info": d}
 
-    def get_data_url(self, form):
+    def _get_data_url(self, form):
         return 'http://plus.epicollect.net/%s/%s.json' % \
             (form.epicollect_project.data, form.epicollect_form.data)
 
-    def get_epicollect_data_from_request(self, r):
+    def _get_epicollect_data_from_request(self, r):
         if r.status_code == 403:
             msg = "Oops! It looks like you don't have permission to access" \
                 " the EpiCollect Plus project"
@@ -155,9 +155,9 @@ class BulkTaskEpiCollectPlusImport(BulkTaskImport):
         if not 'application/json' in r.headers['content-type']:
             msg = "Oops! That project and form do not look like the right one."
             raise BulkImportException(gettext(msg), 'error')
-        return self.import_epicollect_tasks(json.loads(r.text))
+        return self._import_epicollect_tasks(json.loads(r.text))
 
     def tasks(self, form):
-        dataurl = self.get_data_url(form)
+        dataurl = self._get_data_url(form)
         r = requests.get(dataurl)
-        return self.get_epicollect_data_from_request(r)
+        return self._get_epicollect_data_from_request(r)
