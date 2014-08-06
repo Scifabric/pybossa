@@ -17,21 +17,22 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 import time
+import re
+import json
+from pybossa.importers import BulkTaskImportManager, BulkImportException
+import operator
+import math
+import requests
 from StringIO import StringIO
+
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
 from flask import render_template, make_response
-from flask_wtf import Form
-from flask_wtf.file import FileField, FileRequired
-from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
-    SelectField, validators, TextAreaField, PasswordField
-from wtforms.widgets import HiddenInput
 from flask.ext.login import login_required, current_user
-from flask.ext.babel import lazy_gettext, gettext
+from flask.ext.babel import gettext
 from sqlalchemy.sql import text
 
 import pybossa.model as model
 import pybossa.stats as stats
-import pybossa.validator as pb_validator
 import pybossa.sched as sched
 
 from pybossa.core import db, uploader, signer, get_session
@@ -49,106 +50,11 @@ from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
 
-import re
-import json
-import importer
-import operator
-import math
-import requests
+from pybossa.forms.applications_view_forms import *
+
 
 blueprint = Blueprint('app', __name__)
 
-
-class AvatarUploadForm(Form):
-    id = IntegerField(label=None, widget=HiddenInput())
-    avatar = FileField(lazy_gettext('Avatar'), validators=[FileRequired()])
-    x1 = IntegerField(label=None, widget=HiddenInput(), default=0)
-    y1 = IntegerField(label=None, widget=HiddenInput(), default=0)
-    x2 = IntegerField(label=None, widget=HiddenInput(), default=0)
-    y2 = IntegerField(label=None, widget=HiddenInput(), default=0)
-
-
-class AppForm(Form):
-    name = TextField(lazy_gettext('Name'),
-                     [validators.Required(),
-                      pb_validator.Unique(db.session, model.app.App, model.app.App.name,
-                                          message=lazy_gettext("Name is already taken."))])
-    short_name = TextField(lazy_gettext('Short Name'),
-                           [validators.Required(),
-                            pb_validator.NotAllowedChars(),
-                            pb_validator.Unique(
-                                db.session, model.app.App, model.app.App.short_name,
-                                message=lazy_gettext(
-                                    "Short Name is already taken."))])
-    long_description = TextAreaField(lazy_gettext('Long Description'),
-                                     [validators.Required()])
-
-
-class AppUpdateForm(AppForm):
-    id = IntegerField(label=None, widget=HiddenInput())
-    description = TextAreaField(lazy_gettext('Description'),
-                            [validators.Required(
-                                message=lazy_gettext(
-                                    "You must provide a description.")),
-                             validators.Length(max=255)])
-    long_description = TextAreaField(lazy_gettext('Long Description'))
-    allow_anonymous_contributors = SelectField(
-        lazy_gettext('Allow Anonymous Contributors'),
-        choices=[('True', lazy_gettext('Yes')),
-                 ('False', lazy_gettext('No'))])
-    category_id = SelectField(lazy_gettext('Category'), coerce=int)
-    hidden = BooleanField(lazy_gettext('Hide?'))
-    password = TextField(lazy_gettext('Password (leave blank for no password)'))
-
-
-class TaskPresenterForm(Form):
-    id = IntegerField(label=None, widget=HiddenInput())
-    editor = TextAreaField('')
-
-
-class TaskRedundancyForm(Form):
-    n_answers = IntegerField(lazy_gettext('Redundancy'),
-                             [validators.Required(),
-                              validators.NumberRange(
-                                  min=1, max=1000,
-                                  message=lazy_gettext('Number of answers should be a \
-                                                       value between 1 and 1,000'))])
-
-
-class TaskPriorityForm(Form):
-    task_ids = TextField(lazy_gettext('Task IDs'),
-                         [validators.Required(),
-                          pb_validator.CommaSeparatedIntegers()])
-
-    priority_0 = DecimalField(lazy_gettext('Priority'),
-                              [validators.NumberRange(
-                                  min=0, max=1,
-                                  message=lazy_gettext('Priority should be a \
-                                                       value between 0.0 and 1.0'))])
-
-
-class TaskSchedulerForm(Form):
-    sched = SelectField(lazy_gettext('Task Scheduler'),
-                        choices=[('default', lazy_gettext('Default')),
-                                 ('breadth_first', lazy_gettext('Breadth First')),
-                                 ('depth_first', lazy_gettext('Depth First')),
-                                 ('random', lazy_gettext('Random'))])
-
-
-class BlogpostForm(Form):
-    id = IntegerField(label=None, widget=HiddenInput())
-    title = TextField(lazy_gettext('Title'),
-                     [validators.Required(message=lazy_gettext(
-                                    "You must enter a title for the post."))])
-    body = TextAreaField(lazy_gettext('Body'),
-                           [validators.Required(message=lazy_gettext(
-                                    "You must enter some text for the post."))])
-
-
-class PasswordForm(Form):
-    password = PasswordField(lazy_gettext('Password'),
-                        [validators.Required(message=lazy_gettext(
-                                    "You must enter a password"))])
 
 
 def app_title(app, page_name):
@@ -592,22 +498,19 @@ def settings(short_name):
                            title=title)
 
 
-def compute_importer_variant_pairs(forms):
+def compute_importer_variant_pairs(variants):
     """Return a list of pairs of importer variants. The pair-wise enumeration
     is due to UI design.
     """
-    variants = reduce(operator.__add__,
-                      [i.variants for i in forms.itervalues()],
-                      [])
     if len(variants) % 2: # pragma: no cover
         variants.append("empty")
-
     prefix = "applications/tasks/"
 
     importer_variants = map(lambda i: "%s%s.html" % (prefix, i), variants)
     return [
         (importer_variants[i * 2], importer_variants[i * 2 + 1])
         for i in xrange(0, int(math.ceil(len(variants) / 2.0)))]
+
 
 
 @blueprint.route('/<short_name>/tasks/import', methods=['GET', 'POST'])
@@ -630,56 +533,39 @@ def import_task(short_name):
     require.app.read(app)
     require.app.update(app)
 
-    data_handlers = dict([
-        (i.template_id, (i.form_detector, i(request.form), i.form_id))
-        for i in importer.importers])
-    forms = [
-        (i.form_id, i(request.form))
-        for i in importer.importers]
-    forms = dict(forms)
-    template_args.update(forms)
+    def render_forms():
+        tmpl = '/applications/importers/%s.html' % template
+        return render_template(tmpl, **template_args)
 
-    template_args["importer_variants"] = compute_importer_variant_pairs(forms)
-
+    importer_mngr = BulkTaskImportManager()
+    template_args["importer_variants"] = compute_importer_variant_pairs(importer_mngr.variants())
     template = request.args.get('template')
 
     if not (template or request.method == 'POST'):
         return render_template('/applications/import_options.html',
                                **template_args)
 
-    if template == 'gdocs':  # pragma: no cover
+    template = template if request.method == 'GET' else request.form['form_name']
+    importer = importer_mngr.create_importer(template)
+    form = GenericBulkTaskImportForm()(template, request.form)
+    template_args['form'] = form
+    if template == 'gdocs' and request.args.get('mode'):  # pragma: no cover
         mode = request.args.get('mode')
-        if mode is not None:
-            template_args["gdform"].googledocs_url.data = importer.googledocs_urls[mode]
-
-    # in future, we shall pass an identifier of the form/template used,
-    # which we can receive here, and use for a dictionary lookup, rather than
-    # this search mechanism
-    form = None
-    handler = None
-    for k, v in data_handlers.iteritems():
-        field_id, handler, form_name = v
-        if field_id in request.form:
-            form = template_args[form_name]
-            template = k
-            break
-
-    def render_forms():
-        tmpl = '/applications/importers/%s.html' % template
-        return render_template(tmpl, **template_args)
+        template_args["form"].googledocs_url.data = importer.googledocs_urls[mode]
 
     if not (form and form.validate_on_submit()):  # pragma: no cover
         return render_forms()
 
-    return _import_task(app, handler, form, render_forms)
+    _import_task(app, importer, form)
+    return render_forms()
 
 
-def _import_task(app, handler, form, render_forms):
+def _import_task(app, importer, form):
     try:
         empty = True
         n = 0
         n_data = 0
-        for task_data in handler.tasks(form):
+        for task_data in importer.tasks(form):
             n_data += 1
             task = model.task.Task(app_id=app.id)
             [setattr(task, k, v) for k, v in task_data.iteritems()]
@@ -690,7 +576,7 @@ def _import_task(app, handler, form, render_forms):
                 n += 1
                 empty = False
         if empty and n_data == 0:
-            raise importer.BulkImportException(
+            raise BulkImportException(
                 gettext('Oops! It looks like the file is empty.'))
         if empty and n_data > 0:
             flash(gettext('Oops! It looks like there are no new records to import.'), 'warning')
@@ -704,13 +590,12 @@ def _import_task(app, handler, form, render_forms):
         cached_apps.delete_overall_progress(app.id)
         cached_apps.delete_last_activity(app.id)
         return redirect(url_for('.tasks', short_name=app.short_name))
-    except importer.BulkImportException, err_msg:
+    except BulkImportException, err_msg:
         flash(err_msg, 'error')
     except Exception as inst:  # pragma: no cover
         current_app.logger.error(inst)
         msg = 'Oops! Looks like there was an error with processing that file!'
         flash(gettext(msg), 'error')
-    return render_forms()
 
 
 @blueprint.route('/<short_name>/password', methods=['GET', 'POST'])
