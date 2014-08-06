@@ -121,7 +121,7 @@ class PasswordForm(Form):
                                     "You must enter a password"))])
 
 
-class BulkTaskCSVImportForm(Form):
+class _BulkTaskCSVImportForm(Form):
     form_name =TextField(label=None, widget=HiddenInput(), default='csv')
     msg_required = lazy_gettext("You must provide a URL")
     msg_url = lazy_gettext("Oops! That's not a valid URL. "
@@ -131,7 +131,7 @@ class BulkTaskCSVImportForm(Form):
                          validators.URL(message=msg_url)])
 
 
-class BulkTaskGDImportForm(Form):
+class _BulkTaskGDImportForm(Form):
     form_name =TextField(label=None, widget=HiddenInput(), default='gdocs')
     msg_required = lazy_gettext("You must provide a URL")
     msg_url = lazy_gettext("Oops! That's not a valid URL. "
@@ -141,7 +141,7 @@ class BulkTaskGDImportForm(Form):
                                    validators.URL(message=msg_url)])
 
 
-class BulkTaskEpiCollectPlusImportForm(Form):
+class _BulkTaskEpiCollectPlusImportForm(Form):
     form_name =TextField(label=None, widget=HiddenInput(), default='epicollect')
     msg_required = lazy_gettext("You must provide an EpiCollect Plus "
                                 "project name")
@@ -152,6 +152,16 @@ class BulkTaskEpiCollectPlusImportForm(Form):
     epicollect_form = TextField(lazy_gettext('Form name'),
                                 [validators.Required(message=msg_required)])
 
+
+class BulkTaskImportForm(object):
+    """Callable class that will return, when called, the appropriate form
+    instance"""
+    _forms = { 'csv': _BulkTaskCSVImportForm,
+              'gdocs': _BulkTaskGDImportForm,
+              'epicollect': _BulkTaskEpiCollectPlusImportForm }
+
+    def __call__(self, form_name, *form_args, **form_kwargs):
+        return self._forms[form_name](*form_args, **form_kwargs)
 
 ### Forms for account view
 
