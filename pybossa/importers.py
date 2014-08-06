@@ -47,25 +47,6 @@ class BulkTaskImportManager(object):
         return variants
 
 
-googledocs_urls = {
-    'spreadsheet': None,
-    'image': "https://docs.google.com/spreadsheet/ccc"
-             "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE"
-             "&usp=sharing",
-    'sound': "https://docs.google.com/spreadsheet/ccc"
-             "?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc"
-             "&usp=sharing",
-    'video': "https://docs.google.com/spreadsheet/ccc"
-             "?key=0AsNlt0WgPAHwdGZ2UGhxSTJjQl9YNVhfUVhGRUdoRWc"
-             "&usp=sharing",
-    'map': "https://docs.google.com/spreadsheet/ccc"
-           "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc"
-           "&usp=sharing",
-    'pdf': "https://docs.google.com/spreadsheet/ccc"
-           "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE"
-           "&usp=sharing"}
-
-
 class BulkTaskImport(object):
     importer_id = None
 
@@ -135,11 +116,28 @@ class BulkTaskCSVImport(BulkTaskImport):
 @register_importer
 class BulkTaskGDImport(BulkTaskImport):
     importer_id = "gdocs"
+    googledocs_urls = {
+        'spreadsheet': None,
+        'image': "https://docs.google.com/spreadsheet/ccc"
+                 "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE"
+                 "&usp=sharing",
+        'sound': "https://docs.google.com/spreadsheet/ccc"
+                 "?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc"
+                 "&usp=sharing",
+        'video': "https://docs.google.com/spreadsheet/ccc"
+                 "?key=0AsNlt0WgPAHwdGZ2UGhxSTJjQl9YNVhfUVhGRUdoRWc"
+                 "&usp=sharing",
+        'map': "https://docs.google.com/spreadsheet/ccc"
+               "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc"
+               "&usp=sharing",
+        'pdf': "https://docs.google.com/spreadsheet/ccc"
+               "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE"
+               "&usp=sharing"}
 
     @classmethod
     def variants(self):
         return [("-".join([self.importer_id, mode]))
-                for mode in googledocs_urls.keys()]
+                for mode in self.googledocs_urls.keys()]
 
     def tasks(self, form):
         dataurl = self._get_data_url(form)
