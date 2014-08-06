@@ -47,7 +47,7 @@ class BulkTaskImportManager(object):
         return variants
 
 
-class BulkTaskImport(object):
+class _BulkTaskImport(object):
     importer_id = None
 
     @classmethod
@@ -101,7 +101,7 @@ class BulkTaskImport(object):
 
 
 @register_importer
-class _BulkTaskCSVImport(BulkTaskImport):
+class _BulkTaskCSVImport(_BulkTaskImport):
     importer_id = "csv"
 
     def tasks(self, form):
@@ -114,7 +114,7 @@ class _BulkTaskCSVImport(BulkTaskImport):
 
 
 @register_importer
-class _BulkTaskGDImport(BulkTaskImport):
+class _BulkTaskGDImport(_BulkTaskImport):
     importer_id = "gdocs"
     googledocs_urls = {
         'spreadsheet': None,
@@ -149,7 +149,7 @@ class _BulkTaskGDImport(BulkTaskImport):
 
 
 @register_importer
-class _BulkTaskEpiCollectPlusImport(BulkTaskImport):
+class _BulkTaskEpiCollectPlusImport(_BulkTaskImport):
     importer_id = "epicollect"
 
     def tasks(self, form):
