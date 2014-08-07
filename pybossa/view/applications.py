@@ -1247,7 +1247,7 @@ def task_n_answers(short_name):
     elif request.method == 'POST' and form.validate():
         sql = text('''
                    UPDATE task SET n_answers=:n_answers,
-                   state='ongoing' WHERE app_id=:app_id''').execution_options(autocommit=True)
+                   state='ongoing' WHERE app_id=:app_id''')
 
         db.session.execute(sql, dict(n_answers=form.n_answers.data, app_id=app.id))
 
@@ -1263,9 +1263,11 @@ def task_n_answers(short_name):
                    FROM myquery
                    WHERE (myquery.n_task_runs >=:n_answers)
                    and myquery.id=task.id
-                   ''').execution_options(autocommit=True)
+                   ''')
 
         db.session.execute(sql, dict(n_answers=form.n_answers.data, app_id=app.id))
+
+        db.session.commit()
 
         msg = gettext('Redundancy of Tasks updated!')
         flash(msg, 'success')
