@@ -1196,30 +1196,14 @@ def task_n_answers(short_name):
                                app=app,
                                owner=owner)
     elif request.method == 'POST' and form.validate():
-        sql = text('''
-                   UPDATE task SET n_answers=:n_answers,
-                   state='ongoing' WHERE app_id=:app_id''')
-
-        db.session.execute(sql, dict(n_answers=form.n_answers.data, app_id=app.id))
-
-        # Update task.state according to their new n_answers value
-        sql = text('''
-                   WITH myquery AS (
-                   SELECT task.id, task.n_answers,
-                   COUNT(task_run.id) AS n_task_runs, task.state
-                   FROM task, task_run
-                   WHERE task_run.task_id=task.id AND task.app_id=:app_id
-                   GROUP BY task.id)
-                   UPDATE task SET state='completed'
-                   FROM myquery
-                   WHERE (myquery.n_task_runs >=:n_answers)
-                   and myquery.id=task.id
-                   ''')
-
-        db.session.execute(sql, dict(n_answers=form.n_answers.data, app_id=app.id))
-
-        db.session.commit()
-
+        tasks = task_repo.filter_tasks_by(app_id=app.id)
+        for task in tasks:
+            task.n_answers = form.n_answers.data
+            if task_repo.count_task_runs_with(task_id=task.id) >= form.n_answers.data:
+                task.state = 'completed'
+            else:
+                task.state = 'ongoing'
+            task_repo.update(task)
         msg = gettext('Redundancy of Tasks updated!')
         flash(msg, 'success')
         return redirect(url_for('.tasks', short_name=app.short_name))
