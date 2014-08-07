@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
+from sqlalchemy.sql import text
 from sqlalchemy.exc import IntegrityError
 
 from pybossa.model.task import Task
@@ -67,7 +68,7 @@ class TaskRepository(object):
 
 
 
-    # Methods for save, delete and update both Task and TaskRun objects
+    # Methods for saving, deleting and updating both Task and TaskRun objects
     def save(self, element):
         self._validate_can_be('saved', element)
         try:
@@ -99,6 +100,28 @@ class TaskRepository(object):
             self.db.session.query(table).filter(table.id==element.id).delete()
         self.db.session.commit()
 
+    def update_tasks_redundancy(self, project, n_answer):
+        """update the n_answer of every task from a project and their state.
+        Use raw SQL for performance"""
+        sql = text('''
+                   UPDATE task SET n_answers=:n_answers,
+                   state='ongoing' WHERE app_id=:app_id''')
+        self.db.session.execute(sql, dict(n_answers=n_answer, app_id=project.id))
+        # Update task.state according to their new n_answers value
+        sql = text('''
+                   WITH project_tasks AS (
+                   SELECT task.id, task.n_answers,
+                   COUNT(task_run.id) AS n_task_runs, task.state
+                   FROM task, task_run
+                   WHERE task_run.task_id=task.id AND task.app_id=:app_id
+                   GROUP BY task.id)
+                   UPDATE task SET state='completed'
+                   FROM project_tasks
+                   WHERE (project_tasks.n_task_runs >=:n_answers)
+                   and project_tasks.id=task.id
+                   ''')
+        self.db.session.execute(sql, dict(n_answers=n_answer, app_id=project.id))
+        self.db.session.commit()
 
 
     def _validate_can_be(self, action, element):

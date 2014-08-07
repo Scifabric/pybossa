@@ -19,7 +19,7 @@
 
 from default import Test, db
 from nose.tools import assert_raises
-from factories import TaskFactory, TaskRunFactory
+from factories import TaskFactory, TaskRunFactory, AppFactory
 from pybossa.repositories import TaskRepository
 from pybossa.exc import WrongObjectError, DBIntegrityError
 
@@ -440,3 +440,58 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         bad_objects = [dict(), 'string']
 
         assert_raises(WrongObjectError, self.task_repo.delete_all, bad_objects)
+
+
+    def test_update_tasks_redundancy_changes_all_project_tasks_redundancy(self):
+        """Test update_tasks_redundancy updates the n_answers value for every
+        task in the project"""
+
+        project = AppFactory.create()
+        TaskFactory.create_batch(2, app=project, n_answers=1)
+
+        self.task_repo.update_tasks_redundancy(project, 2)
+        tasks = self.task_repo.filter_tasks_by(app_id=project.id)
+
+        for task in tasks:
+            assert task.n_answers == 2, task.n_answers
+
+
+    def test_update_tasks_redundancy_updates_state_when_incrementing(self):
+        """Test update_tasks_redundancy changes 'completed' tasks to 'ongoing'
+        if n_answers is incremented enough"""
+
+        project = AppFactory.create()
+        tasks = TaskFactory.create_batch(2, app=project, n_answers=2)
+        TaskRunFactory.create_batch(2, task=tasks[0])
+        tasks[0].state = 'completed'
+        self.task_repo.update(tasks[0])
+
+        assert tasks[0].state == 'completed', tasks[0].state
+        assert tasks[1].state == 'ongoing', tasks[1].state
+
+        self.task_repo.update_tasks_redundancy(project, 3)
+        tasks = self.task_repo.filter_tasks_by(app_id=project.id)
+
+        for task in tasks:
+            assert task.state == 'ongoing', task.state
+
+
+    def test_update_tasks_redundancy_updates_state_when_decrementing(self):
+        """Test update_tasks_redundancy changes 'ongoing' tasks to 'completed'
+        if n_answers is decremented enough"""
+
+        project = AppFactory.create()
+        tasks = TaskFactory.create_batch(2, app=project, n_answers=2)
+        TaskRunFactory.create_batch(2, task=tasks[0])
+        TaskRunFactory.create(task=tasks[1])
+        tasks[0].state = 'completed'
+        self.task_repo.update(tasks[0])
+
+        assert tasks[0].state == 'completed', tasks[0].state
+        assert tasks[1].state == 'ongoing', tasks[1].state
+
+        self.task_repo.update_tasks_redundancy(project, 1)
+        tasks = self.task_repo.filter_tasks_by(app_id=project.id)
+
+        for task in tasks:
+            assert task.state == 'completed', task.state

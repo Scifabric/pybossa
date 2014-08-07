@@ -29,7 +29,6 @@ from flask import Blueprint, request, url_for, flash, redirect, abort, Response,
 from flask import render_template, make_response
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
-from sqlalchemy.sql import text
 
 import pybossa.model as model
 import pybossa.stats as stats
@@ -1196,14 +1195,7 @@ def task_n_answers(short_name):
                                app=app,
                                owner=owner)
     elif request.method == 'POST' and form.validate():
-        tasks = task_repo.filter_tasks_by(app_id=app.id)
-        for task in tasks:
-            task.n_answers = form.n_answers.data
-            if task_repo.count_task_runs_with(task_id=task.id) >= form.n_answers.data:
-                task.state = 'completed'
-            else:
-                task.state = 'ongoing'
-            task_repo.update(task)
+        task_repo.update_tasks_redundancy(app, form.n_answers.data)
         msg = gettext('Redundancy of Tasks updated!')
         flash(msg, 'success')
         return redirect(url_for('.tasks', short_name=app.short_name))
