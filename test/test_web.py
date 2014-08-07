@@ -3137,6 +3137,7 @@ class TestWeb(web.Helper):
             assert dom.find(id=form_id) is not None, err_msg
             res = self.task_settings_redundancy(short_name="sampleapp",
                                                 n_answers=n_answers)
+            db.session.close()
             dom = BeautifulSoup(res.data)
             err_msg = "Task Redundancy should be updated"
             assert dom.find(id='msg_success') is not None, err_msg
