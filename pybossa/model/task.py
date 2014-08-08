@@ -60,11 +60,10 @@ class Task(db.Model, DomainObject):
         """Returns the percentage of Tasks that are completed"""
         # DEPRECATED: self.info.n_answers will be removed
         # DEPRECATED: use self.n_answers instead
-        n_answers = None
-        if self.n_answers:
-            n_answers = self.n_answers
-        elif (self.info.get('n_answers')):
+        if (self.info.get('n_answers')):
             n_answers = int(self.info['n_answers'])
+        else:
+            n_answers = self.n_answers
         if n_answers != 0 and n_answers != None:
             return float(len(self.task_runs)) / n_answers
         else:  # pragma: no cover
