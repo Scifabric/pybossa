@@ -894,7 +894,7 @@ class TestWeb(web.Helper):
 
             app = db.session.query(App).first()
             # We use a string here to check that it works too
-            task = Task(app_id=app.id, info={'n_answers': '10'})
+            task = Task(app_id=app.id, n_answers = 10)
             db.session.add(task)
             db.session.commit()
 
@@ -965,13 +965,12 @@ class TestWeb(web.Helper):
             self.new_application()
 
             app = db.session.query(App).first()
-            task = Task(app_id=app.id, info={'n_answers': 10})
+            task = Task(app_id=app.id, n_answers = 10)
             db.session.add(task)
             db.session.commit()
 
             for i in range(10):
-                task_run = TaskRun(app_id=app.id, task_id=1,
-                                         info={'answer': 1})
+                task_run = TaskRun(app_id=app.id, task_id=1, info={'answer': 1})
                 db.session.add(task_run)
                 db.session.commit()
 
@@ -1024,7 +1023,7 @@ class TestWeb(web.Helper):
             self.new_application()
 
             app = db.session.query(App).first()
-            task = Task(app_id=app.id, info={'n_answers': 10})
+            task = Task(app_id=app.id, n_answers = 10)
             db.session.add(task)
             db.session.commit()
             self.signout()
@@ -1080,7 +1079,7 @@ class TestWeb(web.Helper):
             info = dict(task_presenter="some html")
             app.info = info
             db.session.commit()
-            task = Task(app_id=app.id, info={'n_answers': 10})
+            task = Task(app_id=app.id, n_answers = 10)
             db.session.add(task)
             db.session.commit()
             self.signout()
@@ -1410,7 +1409,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(App).first()
-        task = Task(app_id=app.id, info={'n_answers': '10'})
+        task = Task(app_id=app.id, n_answers = 10)
         db.session.add(task)
         db.session.commit()
         for i in range(10):
