@@ -58,10 +58,6 @@ class Task(db.Model, DomainObject):
 
     def pct_status(self):
         """Returns the percentage of Tasks that are completed"""
-        # DEPRECATED: self.info.n_answers will be removed
-        # DEPRECATED: use self.t.n_answers instead
-        if (self.info.get('n_answers')):
-            self.n_answers = int(self.info['n_answers'])
         if self.n_answers != 0 and self.n_answers != None:
             return float(len(self.task_runs)) / self.n_answers
         else:  # pragma: no cover
