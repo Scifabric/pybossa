@@ -69,9 +69,8 @@ def index():
 def featured(app_id=None):
     """List featured apps of PyBossa"""
     try:
-        categories = cached_cat.get_all()
-
         if request.method == 'GET':
+            categories = cached_cat.get_all()
             apps = {}
             for c in categories:
                 n_apps = cached_apps.n_count(category=c.short_name)
