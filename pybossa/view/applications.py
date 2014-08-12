@@ -123,7 +123,8 @@ def app_index(page, lookup, category, fallback, use_count):
 
     per_page = current_app.config['APPS_PER_PAGE']
 
-    apps, count = lookup(category, page, per_page)
+    apps = lookup(category, page, per_page)
+    count = len(apps)
 
     data = []
     for app in apps:

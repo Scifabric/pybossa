@@ -75,7 +75,7 @@ def featured(app_id=None):
             apps = {}
             for c in categories:
                 n_apps = cached_apps.n_count(category=c.short_name)
-                apps[c.short_name], n_apps = cached_apps.get(category=c.short_name,
+                apps[c.short_name] = cached_apps.get(category=c.short_name,
                                                              page=1,
                                                              per_page=n_apps)
             return render_template('/admin/applications.html', apps=apps,

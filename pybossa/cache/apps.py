@@ -272,8 +272,6 @@ def n_featured():
 def get_featured(category, page=1, per_page=5):
     """Return a list of featured apps with a pagination"""
     try:
-        count = n_featured()
-
         sql = text('''SELECT app.id, app.name, app.short_name, app.info, app.created,
                    app.description,
                    "user".fullname AS owner FROM app, featured, "user"
@@ -296,7 +294,7 @@ def get_featured(category, page=1, per_page=5):
                        featured=row.id,
                        info=dict(json.loads(row.info)))
             apps.append(app)
-        return apps, count
+        return apps
     except: # pragma: no cover
         session.rollback()
         raise
@@ -356,8 +354,6 @@ def n_draft():
 def get_draft(category, page=1, per_page=5):
     """Return list of draft projects"""
     try:
-        count = n_draft()
-
         sql = text('''SELECT app.id, app.name, app.short_name, app.created,
                    app.description, app.info, "user".fullname as owner
                    FROM "user", app LEFT JOIN task ON app.id=task.app_id
@@ -381,7 +377,7 @@ def get_draft(category, page=1, per_page=5):
                        overall_progress=overall_progress(row.id),
                        info=dict(json.loads(row.info)))
             apps.append(app)
-        return apps, count
+        return apps
     except: # pragma: no cover
         session.rollback()
         raise
@@ -424,8 +420,6 @@ def get(category, page=1, per_page=5):
     """Return a list of apps with at least one task and a task_presenter
        with a pagination for a given category"""
     try:
-        count = n_count(category)
-
         sql = text('''SELECT app.id, app.name, app.short_name, app.description,
                    app.info, app.created, app.category_id, "user".fullname AS owner,
                    featured.app_id as featured
@@ -458,7 +452,7 @@ def get(category, page=1, per_page=5):
                        overall_progress=overall_progress(row.id),
                        info=dict(json.loads(row.info)))
             apps.append(app)
-        return apps, count
+        return apps
     except: # pragma: no cover
         session.rollback()
         raise
