@@ -136,10 +136,14 @@ def delete_memoized(function, *args, **kwargs):
     """
     if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:  # pragma: no cover
         key = "%s:%s_args:" % (settings.REDIS_KEYPREFIX, function.__name__)
-        key_to_hash = get_key_to_hash(*args, **kwargs)
-        key = get_hash_key(key, key_to_hash)
-        sentinel.master.delete(key)
-        return True
+        if args or kwargs:
+            key_to_hash = get_key_to_hash(*args, **kwargs)
+            key = get_hash_key(key, key_to_hash)
+            return sentinel.master.delete(key)
+        keys_to_delete = sentinel.slave.keys(pattern=key + '*')
+        if not keys_to_delete:
+            return False
+        return sentinel.master.delete(*keys_to_delete)
 
 
 def delete_cached(key):
