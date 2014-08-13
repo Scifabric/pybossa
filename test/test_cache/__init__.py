@@ -195,7 +195,7 @@ class TestCacheMemoizeFunctions(object):
 
     def test_delete_cached_returns_true_when_delete_succeeds(self):
         """Test CACHE delete_cached deletes a stored key and returns True if
-        deletion is seccessful"""
+        deletion is successful"""
 
         @cache(key_prefix='my_cached_func')
         def my_func():
@@ -210,8 +210,7 @@ class TestCacheMemoizeFunctions(object):
 
 
     def test_delete_cached_returns_false_when_delete_fails(self):
-        """Test CACHE delete_cached deletes a stored key and returns True if
-        deletion is seccessful"""
+        """Test CACHE delete_cached returns False if deletion is not successful"""
 
         @cache(key_prefix='my_cached_func')
         def my_func():
@@ -221,3 +220,68 @@ class TestCacheMemoizeFunctions(object):
 
         delete_succedeed = delete_cached('my_cached_func')
         assert delete_succedeed is False, delete_succedeed
+
+
+    def test_delete_memoized_returns_true_when_delete_succeeds(self):
+        """Test CACHE delete_memoized deletes a stored key and returns True if
+        deletion is successful"""
+
+        @memoize()
+        def my_func(*args, **kwargs):
+            return [args, kwargs]
+        my_func('arg', kwarg='kwarg')
+        assert len(test_sentinel.master.keys()) == 1
+
+        delete_succedeed = delete_memoized(my_func, 'arg', kwarg='kwarg')
+        assert delete_succedeed is True, delete_succedeed
+        assert test_sentinel.master.keys() == [], 'Key was not deleted!'
+
+
+    def test_delete_memoized_returns_false_when_delete_fails(self):
+        """Test CACHE delete_memoized returns False if deletion is not successful"""
+
+        @memoize()
+        def my_func(*args, **kwargs):
+            return [args, kwargs]
+        my_func('arg', kwarg='kwarg')
+        assert len(test_sentinel.master.keys()) == 1
+
+        delete_succedeed = delete_memoized(my_func, 'badarg', kwarg='barkwarg')
+        assert delete_succedeed is False, delete_succedeed
+        assert len(test_sentinel.master.keys()) == 1, 'Key was unexpectedly deleted'
+
+
+    def test_delete_memoized_deletes_only_requested(self):
+        """Test CACHE delete_memoized deletes only the values it's asked and
+        leaves the rest untouched"""
+
+        @memoize()
+        def my_func(*args, **kwargs):
+            return [args, kwargs]
+        my_func('arg', kwarg='kwarg')
+        my_func('other', kwarg='other')
+        assert len(test_sentinel.master.keys()) == 2
+
+        delete_succedeed = delete_memoized(my_func, 'arg', kwarg='kwarg')
+        assert delete_succedeed is True, delete_succedeed
+        assert len(test_sentinel.master.keys()) == 1, 'Everything was deleted!'
+
+
+    def test_delete_memoized_deletes_all_function_calls(self):
+        """Test CACHE delete_memoized deletes all the function calls stored if
+        only function is specified and no arguments of the calls are provided"""
+
+        @memoize()
+        def my_func(*args, **kwargs):
+            return [args, kwargs]
+        @memoize()
+        def my_other_func(*args, **kwargs):
+            return [args, kwargs]
+        my_func('arg', kwarg='kwarg')
+        my_func('other', kwarg='other')
+        my_other_func('arg', kwarg='kwarg')
+        assert len(test_sentinel.master.keys()) == 3
+
+        delete_succedeed = delete_memoized(my_func)
+        assert delete_succedeed is True, delete_succedeed
+        assert len(test_sentinel.master.keys()) == 1
