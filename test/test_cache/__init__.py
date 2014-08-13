@@ -87,23 +87,24 @@ class TestCacheMemoizeFunctions(object):
         assert test_sentinel.master.keys() == [key], test_sentinel.master.keys()
 
 
-    def test_cache_gets_function_from_cache_second_after_first_call(self):
+    def test_cache_gets_function_from_cache_after_first_call(self):
         """Test CACHE cache retrieves the function value from cache after it has
         been called the first time, and does not call the function but once"""
 
         @cache(key_prefix='my_cached_func')
-        def my_func(call_count = 0):
-            call_count = call_count + 1
-            return call_count
+        def my_func(call_count=[]):
+            call_count.append(1)
+            return len(call_count)
         first_call = my_func()
         second_call = my_func()
 
         assert second_call == 1, second_call
-        assert second_call is first_call, second_call
+        assert second_call == first_call, second_call
 
 
-    def test_cache_returns_expected_value(self):
-        """Test CACHE cache decorator returns the expected function return value"""
+    def test_cached_function_returns_expected_value(self):
+        """Test CACHE cache decorator returns the expected function return value
+        in every call"""
 
         @cache(key_prefix='my_cached_func')
         def my_func():
@@ -121,9 +122,71 @@ class TestCacheMemoizeFunctions(object):
 
         @memoize()
         def my_func(*args, **kwargs):
-            return {'args': args, 'kwargs': kwargs}
-        my_func()
+            return [args, kwargs]
+        my_func('arg')
         key_pattern = "%s:%s_args:*" % (REDIS_KEYPREFIX, my_func.__name__)
 
         assert len(test_sentinel.master.keys(key_pattern)) == 1
 
+
+    def test_memoize_stores_function_call_only_first_time_called(self):
+        """Test CACHE memoize decorator stores the result of calling a function
+        in the cache only the first time it's called"""
+
+        @memoize()
+        def my_func(*args, **kwargs):
+            return [args, kwargs]
+        my_func('arg')
+        my_func('arg')
+        key_pattern = "%s:%s_args:*" % (REDIS_KEYPREFIX, my_func.__name__)
+
+        assert len(test_sentinel.master.keys(key_pattern)) == 1
+
+
+    def test_memoize_stores_function_calls_for_different_arguments(self):
+        """Test CACHE memoize decorator stores the result of calling a function
+        every time it's called with different argument values"""
+
+        @memoize()
+        def my_func(*args, **kwargs):
+            return [args, kwargs]
+        key_pattern = "%s:%s_args:*" % (REDIS_KEYPREFIX, my_func.__name__)
+        my_func('arg')
+        assert len(test_sentinel.master.keys(key_pattern)) == 1
+        my_func('another_arg')
+        assert len(test_sentinel.master.keys(key_pattern)) == 2
+
+
+    def test_memoize_gets_value_from_cache_after_first_call(self):
+        """Test CACHE memoize decorator gets the value from cache for the same
+        function arguments (but not for calls with different args)"""
+
+        @memoize()
+        def my_func(arg, call_count=[]):
+            call_count.append(1)
+            return len(call_count)
+
+        first_call = my_func(arg='arg')
+        second_call = my_func(arg='arg')
+        third_call_with_other_arg = my_func(arg='other_arg')
+
+        assert second_call == 1, second_call
+        assert second_call == first_call, second_call
+        assert third_call_with_other_arg == 2, third_call_with_other_arg
+
+
+    def test_memoized_function_returns_expected_values(self):
+        """Test CACHE memoized function returns the expected value every time"""
+
+        @memoize()
+        def my_func(*args, **kwargs):
+            return [args, kwargs]
+        first_call = my_func('arg', kwarg='kwarg')
+        second_call = my_func('arg', kwarg='kwarg')
+        first_call_other_arg = my_func('other', kwarg='other')
+        second_call_other_arg = my_func('other', kwarg='other')
+
+        assert first_call == [('arg',), {'kwarg': 'kwarg'}], first_call
+        assert second_call == [('arg',), {'kwarg': 'kwarg'}], first_call
+        assert first_call_other_arg == [('other',), {'kwarg': 'other'}], first_call
+        assert second_call_other_arg == [('other',), {'kwarg': 'other'}], first_call
