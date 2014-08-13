@@ -127,6 +127,18 @@ def memoize(timeout=300, debug=False):
     return decorator
 
 
+def delete_cached(key):
+    """
+    Delete a cached value from the cache.
+
+    Returns True if success
+
+    """
+    if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:  # pragma: no cover
+        key = "%s::%s" % (settings.REDIS_KEYPREFIX, key)
+        return sentinel.master.delete(key)
+
+
 def delete_memoized(function, *args, **kwargs):
     """
     Delete a memoized value from the cache.
@@ -144,15 +156,3 @@ def delete_memoized(function, *args, **kwargs):
         if not keys_to_delete:
             return False
         return sentinel.master.delete(*keys_to_delete)
-
-
-def delete_cached(key):
-    """
-    Delete a cached value from the cache.
-
-    Returns True if success
-
-    """
-    if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED') is None:  # pragma: no cover
-        key = "%s::%s" % (settings.REDIS_KEYPREFIX, key)
-        return sentinel.master.delete(key)
