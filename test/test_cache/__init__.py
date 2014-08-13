@@ -74,6 +74,7 @@ class TestCacheMemoizeFunctions(object):
 
     @classmethod
     def setup_class(cls):
+        # Enable the cache for tests within this class
         import os
         cls.cache = None
         if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED'):
@@ -82,6 +83,7 @@ class TestCacheMemoizeFunctions(object):
 
     @classmethod
     def teardown_class(cls):
+        # Restore the environment variables to its previous state
         if cls.cache:
             import os
             os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = cls.cache
