@@ -18,7 +18,8 @@
 
 import hashlib
 from mock import patch
-from pybossa.cache import get_key_to_hash, get_hash_key, cache, memoize
+from pybossa.cache import (get_key_to_hash, get_hash_key, cache, memoize,
+                           delete_cached, delete_memoized)
 from pybossa.sentinel import Sentinel
 from settings_test import REDIS_SENTINEL, REDIS_KEYPREFIX
 
@@ -190,3 +191,33 @@ class TestCacheMemoizeFunctions(object):
         assert second_call == [('arg',), {'kwarg': 'kwarg'}], first_call
         assert first_call_other_arg == [('other',), {'kwarg': 'other'}], first_call
         assert second_call_other_arg == [('other',), {'kwarg': 'other'}], first_call
+
+
+    def test_delete_cached_returns_true_when_delete_succeeds(self):
+        """Test CACHE delete_cached deletes a stored key and returns True if
+        deletion is seccessful"""
+
+        @cache(key_prefix='my_cached_func')
+        def my_func():
+            return 'my_func was called'
+        key = "%s::%s" % (REDIS_KEYPREFIX, 'my_cached_func')
+        my_func()
+        assert test_sentinel.master.keys() == [key]
+
+        delete_succedeed = delete_cached('my_cached_func')
+        assert delete_succedeed is True, delete_succedeed
+        assert test_sentinel.master.keys() == [], 'Key was not deleted!'
+
+
+    def test_delete_cached_returns_false_when_delete_fails(self):
+        """Test CACHE delete_cached deletes a stored key and returns True if
+        deletion is seccessful"""
+
+        @cache(key_prefix='my_cached_func')
+        def my_func():
+            return 'my_func was called'
+        key = "%s::%s" % (REDIS_KEYPREFIX, 'my_cached_func')
+        assert test_sentinel.master.keys() == []
+
+        delete_succedeed = delete_cached('my_cached_func')
+        assert delete_succedeed is False, delete_succedeed
