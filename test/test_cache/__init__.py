@@ -71,7 +71,7 @@ class TestCache(object):
 
 
     @patch('pybossa.cache.sentinel', new=test_sentinel)
-    def test_cache_stores_function_call_first_time_its_called(self):
+    def test_cache_stores_function_call_first_time_called(self):
         """Test CACHE cache decorator stores the result of calling a function
         in the cache the first time it's called"""
 
@@ -84,20 +84,17 @@ class TestCache(object):
 
 
     @patch('pybossa.cache.sentinel', new=test_sentinel)
-    def test_cache_gets_function_from_cache_second_after_first_call(self):
-        """Test CACHE cache retrieves the function value from cache after it has
-        been called the first time, and does not call the function but once"""
+    def test_cache_returns_expected_value(self):
+        """Test CACHE cache decorator returns the expected function return value"""
 
         @cache(key_prefix='my_cached_func')
-        def my_func(call_count = 0):
-            call_count = call_count + 1
-            return call_count
-
+        def my_func():
+            return 'my_func was called'
         first_call = my_func()
         second_call = my_func()
 
-        assert second_call == 1, second_call
-        assert second_call is first_call, second_call
+        assert first_call == 'my_func was called', first_call
+        assert second_call == 'my_func was called', second_call
 
 
     @patch('pybossa.cache.sentinel', new=test_sentinel)
@@ -109,7 +106,6 @@ class TestCache(object):
         def my_func(call_count = 0):
             call_count = call_count + 1
             return call_count
-
         first_call = my_func()
         second_call = my_func()
 
