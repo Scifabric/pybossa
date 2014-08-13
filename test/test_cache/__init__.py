@@ -72,6 +72,20 @@ test_sentinel = Sentinel(app=FakeApp())
 @patch('pybossa.cache.sentinel', new=test_sentinel)
 class TestCacheMemoizeFunctions(object):
 
+    @classmethod
+    def setup_class(cls):
+        import os
+        cls.cache = None
+        if os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED'):
+            cls.cache = os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED')
+            del os.environ['PYBOSSA_REDIS_CACHE_DISABLED']
+
+    @classmethod
+    def teardown_class(cls):
+        if cls.cache:
+            import os
+            os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = cls.cache
+
     def setUp(self):
         test_sentinel.master.flushall()
 
