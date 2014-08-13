@@ -96,7 +96,7 @@ def cache(key_prefix, timeout=300):
     return decorator
 
 
-def memoize(timeout=300, debug=False):
+def memoize(timeout=300):
     """
     Decorator for caching functions using its arguments as part of the key.
 
