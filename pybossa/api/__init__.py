@@ -56,13 +56,19 @@ cors_headers = ['Content-Type', 'Authorization']
 
 error = ErrorStatus()
 
+api_versions = ['v0', 'v1.0']
 
-@blueprint.route('/')
+
+@blueprint.route('/', defaults={'version': 'v0'})
+@blueprint.route('/<version>/')
 @crossdomain(origin='*', headers=cors_headers)
 @ratelimit(limit=ratelimits['LIMIT'], per=ratelimits['PER'])
-def index():  # pragma: no cover
+def index(version):  # pragma: no cover
     """Return dummy text for welcome page."""
-    return 'The PyBossa API'
+    if version in api_versions:
+        return 'The PyBossa API %s' % version
+    else:
+        return abort(404)
 
 
 def register_api(view, endpoint, url, pk='id', pk_type='int'):
@@ -75,14 +81,21 @@ def register_api(view, endpoint, url, pk='id', pk_type='int'):
     csrf.exempt(view_func)
     blueprint.add_url_rule(url,
                            view_func=view_func,
-                           defaults={pk: None},
+                           defaults={pk: None, 'version': 'v0'},
                            methods=['GET', 'OPTIONS'])
     blueprint.add_url_rule(url,
                            view_func=view_func,
+                           defaults={'version': 'v0'},
                            methods=['POST', 'OPTIONS'])
     blueprint.add_url_rule('%s/<%s:%s>' % (url, pk_type, pk),
                            view_func=view_func,
+                           defaults={'version': 'v0'},
                            methods=['GET', 'PUT', 'DELETE', 'OPTIONS'])
+
+    blueprint.add_url_rule('/<version>%s/<%s:%s>' % (url, pk_type, pk),
+                           view_func=view_func,
+                           methods=['GET', 'PUT', 'DELETE', 'OPTIONS'])
+
 
 register_api(AppAPI, 'api_app', '/app', pk='id', pk_type='int')
 register_api(CategoryAPI, 'api_category', '/category', pk='id', pk_type='int')
