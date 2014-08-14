@@ -276,11 +276,3 @@ class TestUsersCache(Test):
 
         for field in fields:
             assert field in hidden_projects[0].keys(), field
-
-
-
-
-
-
-
-

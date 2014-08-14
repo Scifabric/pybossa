@@ -125,7 +125,7 @@ class TestAdmin(web.Helper):
         self.update_application()
         # The project is in the system but not in the front page
         res = self.app.get('/', follow_redirects=True)
-        assert "Create a Project" in res.data,\
+        assert "Sample Project" not in res.data,\
             "The project should not be listed in the front page"\
             " as it is not featured"
         # Only projects that have been published can be featured

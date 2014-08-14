@@ -61,9 +61,9 @@ def warm_cache():
         for a in apps:
             warm_app(a['id'], a['short_name'])
         for page in pages:
-            apps, count = cached_apps.get_featured('featured',
-                                                   page,
-                                                   app.config['APPS_PER_PAGE'])
+            apps = cached_apps.get_featured('featured',
+                                            page,
+                                            app.config['APPS_PER_PAGE'])
             for a in apps:
                 warm_app(a['id'], a['short_name'])
 
@@ -71,9 +71,9 @@ def warm_cache():
         categories = cached_cat.get_used()
         for c in categories:
             for page in pages:
-                 apps, count = cached_apps.get(c['short_name'],
-                                               page,
-                                               app.config['APPS_PER_PAGE'])
+                 apps = cached_apps.get(c['short_name'],
+                                        page,
+                                        app.config['APPS_PER_PAGE'])
                  for a in apps:
                      warm_app(a['id'], a['short_name'])
         # Users

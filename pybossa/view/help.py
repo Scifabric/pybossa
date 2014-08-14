@@ -29,7 +29,7 @@ blueprint = Blueprint('help', __name__)
 def api():
     """Render help/api page"""
     categories = cached_cat.get_used()
-    apps, count = cached_apps.get(categories[0]['short_name'])
+    apps = cached_apps.get(categories[0]['short_name'])
     if len(apps) > 0:
         app_id = choice(apps)['id']
     else:  # pragma: no cover
