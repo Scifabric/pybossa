@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
+from mock import patch
+
 from default import Test, db, Fixtures, with_context
 from helper.user import User
 from pybossa.model.app import App
@@ -36,24 +38,17 @@ class Helper(Test):
         else:
             return "<title>PyBossa &middot; %s</title>" % title
 
-    def register(self, method="POST", fullname="John Doe", name="johndoe",
-                 password="p4ssw0rd", password2=None, email=None):
+    @patch('pybossa.view.account.signer')
+    def register(self, mock, fullname="John Doe", name="johndoe",
+                 password="p4ssw0rd", email=None):
         """Helper function to register and sign in a user"""
-        if password2 is None:
-            password2 = password
         if email is None:
             email = name + '@example.com'
-        if method == "POST":
-            return self.app.post('/account/register',
-                                 data={
-                                     'fullname': fullname,
-                                     'name': name,
-                                     'email_addr': email,
-                                     'password': password,
-                                     'confirm': password2},
-                                 follow_redirects=True)
-        else:
-            return self.app.get('/account/register', follow_redirects=True)
+        userdict = {'fullname': fullname, 'name': name,
+                    'email_addr': email, 'password': password}
+        mock.loads.return_value = userdict
+        return self.app.get('/account/register/confirmation?key=fake-key',
+                            follow_redirects=True)
 
     def signin(self, method="POST", email="johndoe@example.com", password="p4ssw0rd",
                next=None):
