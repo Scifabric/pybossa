@@ -173,20 +173,41 @@ def register():
     # TODO: re-enable csrf
     form = RegisterForm(request.form)
     if request.method == 'POST' and form.validate():
-        account = model.user.User(fullname=form.fullname.data,
-                             name=form.name.data,
-                             email_addr=form.email_addr.data)
-        account.set_password(form.password.data)
-        # account.locale = get_locale()
-        db.session.add(account)
-        db.session.commit()
-        login_user(account, remember=True)
-        flash(gettext('Thanks for signing-up'), 'success')
-        return redirect(url_for('home.home'))
+        account = dict(fullname=form.fullname.data, name=form.name.data,
+                       email_addr=form.email_addr.data, password=form.password.data)
+        key = signer.dumps(account, salt='account-validation')
+        confirm_url = url_for('.confirm_account', key=key, _external=True)
+        msg = Message(subject='Welcome to %s!' % current_app.config.get('BRAND'),
+                          recipients=[account['email_addr']])
+        msg.body = render_template('/account/email/validate_account.md',
+                                    user=account, confirm_url=confirm_url)
+        msg.html = markdown(msg.body)
+        mail.send(msg)
+        return render_template('account/account_validation.html')
     if request.method == 'POST' and not form.validate():
         flash(gettext('Please correct the errors'), 'error')
     return render_template('account/register.html',
                            title=gettext("Register"), form=form)
+
+
+@blueprint.route('/register/confirmation', methods=['GET'])
+def confirm_account():
+    key = request.args.get('key')
+    if key is None:
+        abort(403)
+    try:
+        userdict = signer.loads(key, max_age=3600, salt='account-validation')
+    except BadData:
+        abort(403)
+    account = model.user.User(fullname=userdict['fullname'],
+                              name=userdict['name'],
+                              email_addr=userdict['email_addr'])
+    account.set_password(userdict['password'])
+    db.session.add(account)
+    db.session.commit()
+    login_user(account, remember=True)
+    flash(gettext('Thanks for signing-up'), 'success')
+    return redirect(url_for('home.home'))
 
 
 @blueprint.route('/profile', methods=['GET'])
