@@ -110,7 +110,6 @@ class TestAdmin(web.Helper):
         """Test ADMIN featured projects works as a signed in user"""
         self.register()
         self.signout()
-        self.register()
         self.register(name="tester2", email="tester2@tester.com",
                       password="tester")
         res = self.app.get('/admin/featured', follow_redirects=True)
