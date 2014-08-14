@@ -24,22 +24,24 @@ API endpoints like userprogress or vmcp.
 """
 import json
 
-from default import Test, db, with_context
-from pybossa.model.app import App
+from default import flask_app, sentinel
+from factories import AppFactory, UserFactory
+from mock import patch
 
 
-class TestAPI(Test):
+class TestAPI(object):
+
+    app = flask_app.test_client()
+
     def setUp(self):
-        super(TestAPI, self).setUp()
-        with self.flask_app.app_context():
-            self.create()
-            self.redis_flushall()
+        sentinel.connection.master_for('mymaster').flushall()
+
+    limit = flask_app.config.get('LIMIT')
 
 
-    @with_context
     def check_limit(self, url, action, obj, data=None):
         # Set the limit
-        limit = 299
+        limit = self.limit - 1
         # Start check
         for i in range(limit, -1, -1):
             if action == 'get':
@@ -81,7 +83,6 @@ class TestAPI(Test):
                 err_msg = "The exception_cls should be TooManyRequests"
                 assert error['exception_cls'] == 'TooManyRequests', err_msg
 
-    @with_context
     def test_00_api_get(self):
         """Test API GET rate limit."""
         # GET as Anonymous
@@ -89,58 +90,51 @@ class TestAPI(Test):
         action = 'get'
         self.check_limit(url, action, 'app')
 
-    @with_context
-    def test_00_app_get(self):
+    @patch('pybossa.api.api_base.APIBase._db_query')
+    def test_00_app_get(self, mock):
         """Test API.app GET rate limit."""
+        mock.return_value = {}
         # GET as Anonymous
         url = '/api/app'
         action = 'get'
         self.check_limit(url, action, 'app')
 
-    @with_context
-    def test_01_app_post(self):
+    @patch('pybossa.api.api_base.APIBase._create_instance_from_request')
+    def test_01_app_post(self, mock):
         """Test API.app POST rate limit."""
-        url = '/api/app?api_key=' + self.api_key
+        mock.return_value = {}
+        url = '/api/app'
         self.check_limit(url, 'post', 'app')
 
-    @with_context
-    def test_02_app_delete(self):
+    @patch('pybossa.api.api_base.APIBase._delete_instance')
+    def test_02_app_delete(self, mock):
         """Test API.app DELETE rate limit."""
-        for i in range(300):
-            app = App(name=str(i), short_name=str(i),
-                      description=str(i), owner_id=1)
-            db.session.add(app)
-            db.session.commit()
-
-        url = '?api_key=%s' % (self.api_key)
+        mock.return_value = {}
+        url = ''
         self.check_limit(url, 'delete', 'app')
 
-    @with_context
-    def test_03_app_put(self):
+    @patch('pybossa.api.api_base.APIBase._update_instance')
+    def test_03_app_put(self, mock):
         """Test API.app PUT rate limit."""
-        for i in range(300):
-            app = App(name=str(i), short_name=str(i),
-                      description=str(i), owner_id=1)
-            db.session.add(app)
-        db.session.commit()
-
-        url = '?api_key=%s' % (self.api_key)
+        mock.return_value = {}
+        url = ''
         self.check_limit(url, 'put', 'app')
 
-    @with_context
-    def test_04_new_task(self):
+    @patch('pybossa.api._retrieve_new_task')
+    def test_04_new_task(self, mock):
         """Test API.new_task(app_id) GET rate limit."""
+        mock.return_value = {}
         url = '/api/app/1/newtask'
         self.check_limit(url, 'get', 'app')
 
-    @with_context
     def test_05_vmcp(self):
         """Test API.vmcp GET rate limit."""
         url = '/api/vmcp'
         self.check_limit(url, 'get', 'app')
 
-    @with_context
-    def test_05_user_progress(self):
+    @patch('pybossa.api._retrieve_app')
+    def test_05_user_progress(self, mock):
         """Test API.user_progress GET rate limit."""
+        mock.return_value = None
         url = '/api/app/1/userprogress'
         self.check_limit(url, 'get', 'app')

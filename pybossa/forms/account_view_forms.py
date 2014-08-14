@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2013 SF Isle of Man Limited
+# Copyright (C) 2014 SF Isle of Man Limited
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,4 +15,13 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-presenters = ["basic", "image", "sound", "video", "map", "pdf"]
+
+
+from forms import (
+    LoginForm,
+    RegisterForm,
+    UpdateProfileForm,
+    ChangePasswordForm,
+    ResetPasswordForm,
+    ForgotPasswordForm,
+    AvatarUploadForm)

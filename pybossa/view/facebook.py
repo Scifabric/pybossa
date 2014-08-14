@@ -90,7 +90,7 @@ def oauth_authorized(resp):  # pragma: no cover
                 flash("This is your first login, please add a valid e-mail")
             else:
                 flash("Please update your e-mail address in your profile page")
-            return redirect(url_for('account.update_profile'))
+            return redirect(url_for('account.update_profile', name=user.name))
         return redirect(next_url)
 
 

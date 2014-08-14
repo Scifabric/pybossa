@@ -68,7 +68,7 @@ def get_view_rate_limit():
     return getattr(g, '_view_rate_limit', None)
 
 
-def ratelimit(limit, per=300, send_x_headers=True,
+def ratelimit(limit, per, send_x_headers=True,
               scope_func=lambda: request.remote_addr,
               key_func=lambda: request.endpoint,
               path=lambda: request.path):

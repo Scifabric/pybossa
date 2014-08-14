@@ -16,13 +16,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.model import db
 from pybossa.model.user import User
 from . import BaseFactory, factory
 
 
 class UserFactory(BaseFactory):
-    FACTORY_FOR = User
+    class Meta:
+        model = User
 
     id = factory.Sequence(lambda n: n)
     name = factory.Sequence(lambda n: u'user%d' % n)

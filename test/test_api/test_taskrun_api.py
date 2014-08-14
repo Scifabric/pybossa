@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import json
-from base import with_context
+from default import with_context
 from nose.tools import assert_equal
 from test_api import TestAPI
 
@@ -368,6 +368,7 @@ class TestTaskrunAPI(TestAPI):
         r_taskrun = json.loads(tmp.data)
 
         assert tmp.status_code == 200, r_taskrun
+
         err_msg = "Task state should be different from completed"
         assert task.state == 'ongoing', err_msg
 

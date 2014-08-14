@@ -16,13 +16,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.model import db
 from pybossa.model.task import Task
 from . import BaseFactory, factory
 
 
 class TaskFactory(BaseFactory):
-    FACTORY_FOR = Task
+    class Meta:
+        model = Task
 
     id = factory.Sequence(lambda n: n)
     app = factory.SubFactory('factories.AppFactory')

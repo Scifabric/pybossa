@@ -28,8 +28,7 @@ from pybossa.extensions import *
 from pybossa.ratelimit import get_view_rate_limit
 
 from raven.contrib.flask import Sentry
-from pybossa.model import db
-from pybossa import model
+from pybossa.util import pretty_date
 
 
 def create_app():
@@ -38,6 +37,7 @@ def create_app():
         heroku = Heroku(app)
     configure_app(app)
     setup_cache_timeouts(app)
+    setup_ratelimits(app)
     setup_theme(app)
     setup_uploader(app)
     setup_error_email(app)
@@ -64,6 +64,7 @@ def create_app():
     setup_geocoding(app)
     setup_csrf_protection(app)
     setup_debug_toolbar(app)
+    setup_jinja2_filters(app)
     return app
 
 
@@ -79,6 +80,10 @@ def configure_app(app):
     # Override DB in case of testing
     if app.config.get('SQLALCHEMY_DATABASE_TEST_URI'):
         app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_TEST_URI']
+    # Enable Slave bind in case is missing using Master node
+    if app.config.get('SQLALCHEMY_BINDS') is None:
+        print "Slave binds are misssing, adding Master as slave too."
+        app.config['SQLALCHEMY_BINDS'] = dict(slave=app.config.get('SQLALCHEMY_DATABASE_URI'))
 
 
 def setup_theme(app):
@@ -140,6 +145,7 @@ def setup_logging(app):
         logger.addHandler(file_handler)
 
 def setup_login_manager(app):
+    from pybossa import model
     login_manager.login_view = 'account.signin'
     login_manager.login_message = u"Please sign in to access this page."
     @login_manager.user_loader
@@ -270,6 +276,7 @@ def setup_error_handlers(app):
 
 
 def setup_hooks(app):
+    from pybossa import model
     @app.after_request
     def inject_x_rate_headers(response):
         limit = get_view_rate_limit()
@@ -347,6 +354,11 @@ def setup_hooks(app):
             contact_twitter=contact_twitter,
             upload_method=app.config['UPLOAD_METHOD'])
 
+def setup_jinja2_filters(app):
+    @app.template_filter('pretty_date')
+    def pretty_date_filter(s):
+        return pretty_date(s)
+
 
 def setup_csrf_protection(app):
     csrf.init_app(app)
@@ -355,6 +367,12 @@ def setup_csrf_protection(app):
 def setup_debug_toolbar(app): # pragma: no cover
     if app.config['ENABLE_DEBUG_TOOLBAR']:
         debug_toolbar.init_app(app)
+
+
+def setup_ratelimits(app):
+    global ratelimits
+    ratelimits['LIMIT'] = app.config['LIMIT']
+    ratelimits['PER'] = app.config['PER']
 
 
 def setup_cache_timeouts(app):
@@ -373,3 +391,15 @@ def setup_cache_timeouts(app):
     timeouts['USER_TIMEOUT'] = app.config['USER_TIMEOUT']
     timeouts['USER_TOP_TIMEOUT'] = app.config['USER_TOP_TIMEOUT']
     timeouts['USER_TOTAL_TIMEOUT'] = app.config['USER_TOTAL_TIMEOUT']
+
+
+def get_session(db, bind):
+    """Returns a session with for the given bind."""
+    engine = db.get_engine(db.app, bind=bind)
+    Session.configure(bind=engine)
+    session = Session()
+    # HACK: this is to fix Flask-SQLAlchemy error
+    # see: http://stackoverflow.com/a/20203277/1960596
+    # note: it looks like in Flask-SQLAlchemy 2.0 this is going to be fixed
+    session._model_changes = {}
+    return session

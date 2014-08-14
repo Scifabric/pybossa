@@ -16,13 +16,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.model import db
 from pybossa.model.category import Category
 from . import BaseFactory, factory
 
 
 class CategoryFactory(BaseFactory):
-    FACTORY_FOR = Category
+    class Meta:
+        model = Category
 
     id = factory.Sequence(lambda n: n)
     name = factory.Sequence(lambda n: 'category_name_%d' % n)

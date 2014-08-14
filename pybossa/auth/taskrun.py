@@ -18,7 +18,7 @@
 
 from flask.ext.login import current_user
 from pybossa.model.task_run import TaskRun
-from werkzeug.exceptions import Forbidden
+from flask import abort
 
 
 def create(taskrun=None):
@@ -28,7 +28,7 @@ def create(taskrun=None):
                     .filter_by(user_ip=taskrun.user_ip)
                     .first()) is None
     if not authorized:
-        raise Forbidden
+        raise abort(403)
     return authorized
 
 
@@ -45,6 +45,5 @@ def delete(taskrun):
         return False
     if taskrun.user_id is None:
         return current_user.admin
-    else:
-        return current_user.admin or taskrun.user_id == current_user.id
+    return current_user.admin or taskrun.user_id == current_user.id
 

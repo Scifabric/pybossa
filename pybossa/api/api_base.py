@@ -32,7 +32,7 @@ from flask.views import MethodView
 from werkzeug.exceptions import NotFound
 from sqlalchemy.exc import IntegrityError
 from pybossa.util import jsonpify, crossdomain
-from pybossa.core import db
+from pybossa.core import db, ratelimits, get_session
 from pybossa.auth import require
 from pybossa.hateoas import Hateoas
 from pybossa.ratelimit import ratelimit
@@ -50,6 +50,8 @@ class APIBase(MethodView):
 
     hateoas = Hateoas()
 
+    slave_session = get_session(db, bind='slave')
+
     def valid_args(self):
         """Check if the domain object args are valid."""
         for k in request.args.keys():
@@ -63,7 +65,7 @@ class APIBase(MethodView):
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
-    @ratelimit(limit=300, per=15 * 60)
+    @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def get(self, id, version):
         """Get an object.
 
@@ -81,10 +83,13 @@ class APIBase(MethodView):
             json_response = self._create_json_response(query, id)
             return Response(json_response, mimetype='application/json')
         except Exception as e:
+            self.slave_session.rollback()
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
                 action='GET')
+        finally:
+            self.slave_session.close()
 
     def _create_json_response(self, query_result, id):
         if len (query_result) == 1 and query_result[0] is None:
@@ -109,7 +114,7 @@ class APIBase(MethodView):
 
     def _db_query(self, cls, id):
         """ Returns a list with the results of the query"""
-        query = db.session.query(self.__class__)
+        query = self.slave_session.query(self.__class__)
         if not id:
             limit, offset = self._set_limit_and_offset()
             query = self._filter_query(query, limit, offset)
@@ -146,7 +151,7 @@ class APIBase(MethodView):
 
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
-    @ratelimit(limit=300, per=15 * 60)
+    @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def post(self, version):
         """Post an item to the DB with the request.data JSON object.
 
@@ -158,10 +163,7 @@ class APIBase(MethodView):
             self.valid_args()
             data = json.loads(request.data)
             # Clean HATEOAS args
-            data = self.hateoas.remove_links(data)
-            inst = self.__class__(**data)
-            self._update_object(inst)
-            getattr(require, self.__class__.__name__.lower()).create(inst)
+            inst = self._create_instance_from_request(data)
             db.session.add(inst)
             db.session.commit()
             return json.dumps(inst.dictize())
@@ -169,14 +171,22 @@ class APIBase(MethodView):
             db.session.rollback()
             raise
         except Exception as e:
+            db.session.rollback()
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
                 action='POST')
 
+    def _create_instance_from_request(self, data):
+        data = self.hateoas.remove_links(data)
+        inst = self.__class__(**data)
+        self._update_object(inst)
+        getattr(require, self.__class__.__name__.lower()).create(inst)
+        return inst
+
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
-    @ratelimit(limit=300, per=15 * 60)
+    @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def delete(self, id, version):
         """Delete a single item from the DB.
 
@@ -190,23 +200,28 @@ class APIBase(MethodView):
         """
         try:
             self.valid_args()
-            inst = db.session.query(self.__class__).get(id)
-            if inst is None:
-                raise NotFound
-            getattr(require, self.__class__.__name__.lower()).delete(inst)
-            db.session.delete(inst)
-            db.session.commit()
+            inst = self._delete_instance(id)
             self._refresh_cache(inst)
             return '', 204
         except Exception as e:
+            db.session.rollback()
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
                 action='DELETE')
 
+    def _delete_instance(self, id):
+        inst = db.session.query(self.__class__).get(id)
+        if inst is None:
+            raise NotFound
+        getattr(require, self.__class__.__name__.lower()).delete(inst)
+        db.session.delete(inst)
+        db.session.commit()
+        return inst
+
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
-    @ratelimit(limit=300, per=15 * 60)
+    @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def put(self, id, version):
         """Update a single item in the DB.
 
@@ -220,18 +235,7 @@ class APIBase(MethodView):
         """
         try:
             self.valid_args()
-            existing = db.session.query(self.__class__).get(id)
-            if existing is None:
-                raise NotFound
-            getattr(require, self.__class__.__name__.lower()).update(existing)
-            data = json.loads(request.data)
-            # may be missing the id as we allow partial updates
-            data['id'] = id
-            # Clean HATEOAS args
-            data = self.hateoas.remove_links(data)
-            inst = self.__class__(**data)
-            db.session.merge(inst)
-            db.session.commit()
+            inst = self._update_instance(id)
             self._refresh_cache(inst)
             return Response(json.dumps(inst.dictize()), 200,
                             mimetype='application/json')
@@ -239,10 +243,26 @@ class APIBase(MethodView):
             db.session.rollback()
             raise
         except Exception as e:
+            db.session.rollback()
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
                 action='PUT')
+
+    def _update_instance(self, id):
+        existing = db.session.query(self.__class__).get(id)
+        if existing is None:
+            raise NotFound
+        getattr(require, self.__class__.__name__.lower()).update(existing)
+        data = json.loads(request.data)
+        # may be missing the id as we allow partial updates
+        data['id'] = id
+        # Clean HATEOAS args
+        data = self.hateoas.remove_links(data)
+        inst = self.__class__(**data)
+        db.session.merge(inst)
+        db.session.commit()
+        return inst
 
 
     def _update_object(self, data_dict):

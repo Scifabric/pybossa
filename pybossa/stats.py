@@ -18,7 +18,7 @@
 
 from flask import current_app
 from sqlalchemy.sql import text
-from pybossa.core import db
+from pybossa.core import db, get_session
 from pybossa.cache import cache, memoize, ONE_DAY
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
@@ -35,165 +35,288 @@ from datetime import timedelta
 @memoize(timeout=ONE_DAY)
 def get_task_runs(app_id):
     """Return all the Task Runs for a given app_id"""
-    task_runs = db.session.query(TaskRun).filter_by(app_id=app_id).all()
-    return task_runs
-
-
-#@memoize(timeout=ONE_DAY)
-#def get_tasks(app_id):
-#    """Return all the tasks for a given app_id"""
-#    tasks = db.session.query(Task).filter_by(app_id=app_id).all()
-#    return tasks
+    try:
+        session = get_session(db, bind='slave')
+        task_runs = []
+        for tr in session.query(TaskRun).filter_by(app_id=app_id).yield_per(100):
+            task_runs.append(tr)
+        return task_runs
+    except: # pragma: no cover
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @memoize(timeout=ONE_DAY)
 def get_avg_n_tasks(app_id):
     """Return the average number of answers expected per task,
     and the number of tasks"""
-    sql = text('''SELECT COUNT(task.id) as n_tasks,
-               AVG(task.n_answers) AS "avg" FROM task
-               WHERE task.app_id=:app_id;''')
+    try:
+        session = get_session(db, bind='slave')
+        sql = text('''SELECT COUNT(task.id) as n_tasks,
+                   AVG(task.n_answers) AS "avg" FROM task
+                   WHERE task.app_id=:app_id;''')
 
-    results = db.engine.execute(sql, app_id=app_id)
-    for row in results:
-        avg = float(row.avg)
-        total_n_tasks = row.n_tasks
-    return avg, total_n_tasks
+        results = session.execute(sql, dict(app_id=app_id))
+        for row in results:
+            avg = float(row.avg)
+            total_n_tasks = row.n_tasks
+        return avg, total_n_tasks
+    except: # pragma: no cover
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @memoize(timeout=ONE_DAY)
 def stats_users(app_id):
     """Return users's stats for a given app_id"""
-    users = {}
-    auth_users = []
-    anon_users = []
+    try:
+        session = get_session(db, bind='slave')
 
-    # Get Authenticated Users
-    sql = text('''SELECT task_run.user_id AS user_id,
-               COUNT(task_run.id) as n_tasks FROM task_run
-               WHERE task_run.user_id IS NOT NULL AND
-               task_run.user_ip IS NULL AND
-               task_run.app_id=:app_id
-               GROUP BY task_run.user_id ORDER BY n_tasks DESC
-               LIMIT 5;''')
-    results = db.engine.execute(sql, app_id=app_id)
+        users = {}
+        auth_users = []
+        anon_users = []
 
-    for row in results:
-        auth_users.append([row.user_id, row.n_tasks])
+        # Get Authenticated Users
+        sql = text('''SELECT task_run.user_id AS user_id,
+                   COUNT(task_run.id) as n_tasks FROM task_run
+                   WHERE task_run.user_id IS NOT NULL AND
+                   task_run.user_ip IS NULL AND
+                   task_run.app_id=:app_id
+                   GROUP BY task_run.user_id ORDER BY n_tasks DESC
+                   LIMIT 5;''')
+        results = session.execute(sql, dict(app_id=app_id))
 
-    sql = text('''SELECT count(distinct(task_run.user_id)) AS user_id FROM task_run
-               WHERE task_run.user_id IS NOT NULL AND
-               task_run.user_ip IS NULL AND
-               task_run.app_id=:app_id;''')
-    results = db.engine.execute(sql, app_id=app_id)
-    for row in results:
-        users['n_auth'] = row[0]
+        for row in results:
+            auth_users.append([row.user_id, row.n_tasks])
 
-    # Get all Anonymous Users
-    sql = text('''SELECT task_run.user_ip AS user_ip,
-               COUNT(task_run.id) as n_tasks FROM task_run
-               WHERE task_run.user_ip IS NOT NULL AND
-               task_run.user_id IS NULL AND
-               task_run.app_id=:app_id
-               GROUP BY task_run.user_ip ORDER BY n_tasks DESC;''')
-    results = db.engine.execute(sql, app_id=app_id)
+        sql = text('''SELECT count(distinct(task_run.user_id)) AS user_id FROM task_run
+                   WHERE task_run.user_id IS NOT NULL AND
+                   task_run.user_ip IS NULL AND
+                   task_run.app_id=:app_id;''')
 
-    for row in results:
-        anon_users.append([row.user_ip, row.n_tasks])
+        results = session.execute(sql, dict(app_id=app_id))
+        for row in results:
+            users['n_auth'] = row[0]
 
-    sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip)) AS user_ip FROM task_run
-               WHERE task_run.user_ip IS NOT NULL AND
-               task_run.user_id IS NULL AND
-               task_run.app_id=:app_id;''')
-    results = db.engine.execute(sql, app_id=app_id)
+        # Get all Anonymous Users
+        sql = text('''SELECT task_run.user_ip AS user_ip,
+                   COUNT(task_run.id) as n_tasks FROM task_run
+                   WHERE task_run.user_ip IS NOT NULL AND
+                   task_run.user_id IS NULL AND
+                   task_run.app_id=:app_id
+                   GROUP BY task_run.user_ip ORDER BY n_tasks DESC;''').execution_options(stream=True)
+        results = session.execute(sql, dict(app_id=app_id))
 
-    for row in results:
-        users['n_anon'] = row[0]
+        for row in results:
+            anon_users.append([row.user_ip, row.n_tasks])
 
-    return users, anon_users, auth_users
+        sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip)) AS user_ip FROM task_run
+                   WHERE task_run.user_ip IS NOT NULL AND
+                   task_run.user_id IS NULL AND
+                   task_run.app_id=:app_id;''')
+
+        results = session.execute(sql, dict(app_id=app_id))
+
+        for row in results:
+            users['n_anon'] = row[0]
+
+        return users, anon_users, auth_users
+    except: # pragma: no cover
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @memoize(timeout=ONE_DAY)
 def stats_dates(app_id):
-    dates = {}
-    dates_anon = {}
-    dates_auth = {}
-    dates_n_tasks = {}
+    try:
+        dates = {}
+        dates_anon = {}
+        dates_auth = {}
+        dates_n_tasks = {}
 
-    task_runs = get_task_runs(app_id)
+        session = get_session(db, bind='slave')
 
-    avg, total_n_tasks = get_avg_n_tasks(app_id)
+        avg, total_n_tasks = get_avg_n_tasks(app_id)
 
-    for tr in task_runs:
-        # Data for dates
-        date, hour = string.split(tr.finish_time, "T")
-        tr.finish_time = string.split(tr.finish_time, '.')[0]
-        hour = string.split(hour, ":")[0]
+        # Get all answers per date
+        sql = text('''
+                    WITH myquery AS (
+                        SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') as d,
+                                       COUNT(id)
+                        FROM task_run WHERE app_id=:app_id GROUP BY d)
+                   SELECT to_char(d, 'YYYY-MM-DD') as d, count from myquery;
+                   ''').execution_options(stream=True)
 
-        # Dates
-        if date in dates.keys():
-            dates[date] += 1
-        else:
-            dates[date] = 1
+        results = session.execute(sql, dict(app_id=app_id))
+        for row in results:
+            dates[row.d] = row.count
+            dates_n_tasks[row.d] = total_n_tasks * avg
 
-        if date in dates_n_tasks.keys():
-            dates_n_tasks[date] = total_n_tasks * avg
-        else:
-            dates_n_tasks[date] = total_n_tasks * avg
 
-        if tr.user_id is None:
-            if date in dates_anon.keys():
-                dates_anon[date] += 1
-            else:
-                dates_anon[date] = 1
-        else:
-            if date in dates_auth.keys():
-                dates_auth[date] += 1
-            else:
-                dates_auth[date] = 1
-    return dates, dates_n_tasks, dates_anon, dates_auth
+        # Get all answers per date for auth
+        sql = text('''
+                    WITH myquery AS (
+                        SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') as d,
+                                       COUNT(id)
+                        FROM task_run WHERE app_id=:app_id AND user_ip IS NULL GROUP BY d)
+                   SELECT to_char(d, 'YYYY-MM-DD') as d, count from myquery;
+                   ''').execution_options(stream=True)
+
+        results = session.execute(sql, dict(app_id=app_id))
+        for row in results:
+            dates_auth[row.d] = row.count
+
+        # Get all answers per date for anon
+        sql = text('''
+                    WITH myquery AS (
+                        SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') as d,
+                                       COUNT(id)
+                        FROM task_run WHERE app_id=:app_id AND user_id IS NULL GROUP BY d)
+                   SELECT to_char(d, 'YYYY-MM-DD') as d, count  from myquery;
+                   ''').execution_options(stream=True)
+
+        results = session.execute(sql, dict(app_id=app_id))
+        for row in results:
+            dates_anon[row.d] = row.count
+
+        return dates, dates_n_tasks, dates_anon, dates_auth
+    except: # pragma: no cover
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @memoize(timeout=ONE_DAY)
 def stats_hours(app_id):
-    hours = {}
-    hours_anon = {}
-    hours_auth = {}
-    max_hours = 0
-    max_hours_anon = 0
-    max_hours_auth = 0
+    try:
+        hours = {}
+        hours_anon = {}
+        hours_auth = {}
+        max_hours = 0
+        max_hours_anon = 0
+        max_hours_auth = 0
 
-    task_runs = get_task_runs(app_id)
+        session = get_session(db, bind='slave')
 
-    # initialize hours keys
-    for i in range(0, 24):
-        hours[str(i).zfill(2)] = 0
-        hours_anon[str(i).zfill(2)] = 0
-        hours_auth[str(i).zfill(2)] = 0
+        # initialize hours keys
+        for i in range(0, 24):
+            hours[str(i).zfill(2)] = 0
+            hours_anon[str(i).zfill(2)] = 0
+            hours_auth[str(i).zfill(2)] = 0
 
-    for tr in task_runs:
-        # Hours
-        date, hour = string.split(tr.finish_time, "T")
-        tr.finish_time = string.split(tr.finish_time, '.')[0]
-        hour = string.split(hour, ":")[0]
+        # Get hour stats for all users
+        sql = text('''
+                   WITH myquery AS
+                    (SELECT to_char(
+                        DATE_TRUNC('hour',
+                            TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                        ),
+                        'HH24') AS h, COUNT(id)
+                        FROM task_run WHERE app_id=:app_id GROUP BY h)
+                   SELECT h, count from myquery;
+                   ''').execution_options(stream=True)
 
-        if hour in hours.keys():
-            hours[hour] += 1
-            if (hours[hour] > max_hours):
-                max_hours = hours[hour]
+        results = session.execute(sql, dict(app_id=app_id))
 
-        if tr.user_id is None:
-            if hour in hours_anon.keys():
-                hours_anon[hour] += 1
-                if (hours_anon[hour] > max_hours_anon):
-                    max_hours_anon = hours_anon[hour]
+        for row in results:
+            hours[row.h] = row.count
 
-        else:
-            if hour in hours_auth.keys():
-                hours_auth[hour] += 1
-                if (hours_auth[hour] > max_hours_auth):
-                    max_hours_auth = hours_auth[hour]
-    return hours, hours_anon, hours_auth, max_hours, max_hours_anon, max_hours_auth
+        # Get maximum stats for all users
+        sql = text('''
+                   WITH myquery AS
+                    (SELECT to_char(
+                        DATE_TRUNC('hour',
+                            TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                        ),
+                        'HH24') AS h, COUNT(id)
+                        FROM task_run WHERE app_id=:app_id GROUP BY h)
+                   SELECT max(count) from myquery;
+                   ''').execution_options(stream=True)
+
+        results = session.execute(sql, dict(app_id=app_id))
+        for row in results:
+            max_hours = row.max
+
+        # Get hour stats for Anonymous users
+        sql = text('''
+                   WITH myquery AS
+                    (SELECT to_char(
+                        DATE_TRUNC('hour',
+                            TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                        ),
+                        'HH24') AS h, COUNT(id)
+                        FROM task_run WHERE app_id=:app_id AND user_id IS NULL GROUP BY h)
+                   SELECT h, count from myquery;
+                   ''').execution_options(stream=True)
+
+        results = session.execute(sql, dict(app_id=app_id))
+
+        for row in results:
+            hours_anon[row.h] = row.count
+
+        # Get maximum stats for Anonymous users
+        sql = text('''
+                   WITH myquery AS
+                    (SELECT to_char(
+                        DATE_TRUNC('hour',
+                            TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                        ),
+                        'HH24') AS h, COUNT(id)
+                        FROM task_run WHERE app_id=:app_id AND user_id IS NULL GROUP BY h)
+                   SELECT max(count) from myquery;
+                   ''').execution_options(stream=True)
+
+        results = session.execute(sql, dict(app_id=app_id))
+        for row in results:
+            max_hours_anon = row.max
+
+
+        # Get hour stats for Auth users
+        sql = text('''
+                   WITH myquery AS
+                    (SELECT to_char(
+                        DATE_TRUNC('hour',
+                            TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                        ),
+                        'HH24') AS h, COUNT(id)
+                        FROM task_run WHERE app_id=:app_id AND user_ip IS NULL GROUP BY h)
+                   SELECT h, count from myquery;
+                   ''').execution_options(stream=True)
+
+        results = session.execute(sql, dict(app_id=app_id))
+
+        for row in results:
+            hours_auth[row.h] = row.count
+
+        # Get hour stats for Anon users
+        sql = text('''
+                   WITH myquery AS
+                    (SELECT to_char(
+                        DATE_TRUNC('hour',
+                            TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
+                        ),
+                        'HH24') AS h, COUNT(id)
+                        FROM task_run WHERE app_id=:app_id AND user_ip IS NULL GROUP BY h)
+                   SELECT max(count) from myquery;
+                   ''').execution_options(stream=True)
+
+        results = session.execute(sql, dict(app_id=app_id))
+        for row in results:
+            max_hours_auth = row.max
+
+        return hours, hours_anon, hours_auth, max_hours, max_hours_anon, max_hours_auth
+    except: # pragma: no cover
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @memoize(timeout=ONE_DAY)
@@ -298,70 +421,77 @@ def stats_format_hours(app_id, hours, hours_anon, hours_auth,
 @memoize(timeout=ONE_DAY)
 def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
     """Format User Stats into JSON"""
-    userStats = dict(label="User Statistics", values=[])
-    userAnonStats = dict(label="Anonymous Users", values=[], top5=[], locs=[])
-    userAuthStats = dict(label="Authenticated Users", values=[], top5=[])
+    try:
+        userStats = dict(label="User Statistics", values=[])
+        userAnonStats = dict(label="Anonymous Users", values=[], top5=[], locs=[])
+        userAuthStats = dict(label="Authenticated Users", values=[], top5=[])
 
-    userStats['values'].append(dict(label="Anonymous", value=[0, users['n_anon']]))
-    userStats['values'].append(dict(label="Authenticated", value=[0, users['n_auth']]))
+        userStats['values'].append(dict(label="Anonymous", value=[0, users['n_anon']]))
+        userStats['values'].append(dict(label="Authenticated", value=[0, users['n_auth']]))
 
-    for u in anon_users:
-        userAnonStats['values'].append(dict(label=u[0], value=[u[1]]))
+        for u in anon_users:
+            userAnonStats['values'].append(dict(label=u[0], value=[u[1]]))
 
-    for u in auth_users:
-        userAuthStats['values'].append(dict(label=u[0], value=[u[1]]))
+        for u in auth_users:
+            userAuthStats['values'].append(dict(label=u[0], value=[u[1]]))
 
-    # Get location for Anonymous users
-    top5_anon = []
-    top5_auth = []
-    loc_anon = []
-    # Check if the GeoLiteCity.dat exists
-    geolite = current_app.root_path + '/../dat/GeoLiteCity.dat'
-    if geo: # pragma: no cover
-        gic = pygeoip.GeoIP(geolite)
-    for u in anon_users:
+        # Get location for Anonymous users
+        top5_anon = []
+        top5_auth = []
+        loc_anon = []
+        # Check if the GeoLiteCity.dat exists
+        geolite = current_app.root_path + '/../dat/GeoLiteCity.dat'
         if geo: # pragma: no cover
-            loc = gic.record_by_addr(u[0])
-        else:
-            loc = {}
-        if loc is None: # pragma: no cover
-            loc = {}
-        if (len(loc.keys()) == 0):
-            loc['latitude'] = 0
-            loc['longitude'] = 0
-        top5_anon.append(dict(ip=u[0], loc=loc, tasks=u[1]))
+            gic = pygeoip.GeoIP(geolite)
+        for u in anon_users:
+            if geo: # pragma: no cover
+                loc = gic.record_by_addr(u[0])
+            else:
+                loc = {}
+            if loc is None: # pragma: no cover
+                loc = {}
+            if (len(loc.keys()) == 0):
+                loc['latitude'] = 0
+                loc['longitude'] = 0
+            top5_anon.append(dict(ip=u[0], loc=loc, tasks=u[1]))
 
-    for u in anon_users:
-        if geo: # pragma: no cover
-            loc = gic.record_by_addr(u[0])
-        else:
-            loc = {}
-        if loc is None: # pragma: no cover
-            loc = {}
-        if (len(loc.keys()) == 0):
-            loc['latitude'] = 0
-            loc['longitude'] = 0
-        loc_anon.append(dict(ip=u[0], loc=loc, tasks=u[1]))
+        for u in anon_users:
+            if geo: # pragma: no cover
+                loc = gic.record_by_addr(u[0])
+            else:
+                loc = {}
+            if loc is None: # pragma: no cover
+                loc = {}
+            if (len(loc.keys()) == 0):
+                loc['latitude'] = 0
+                loc['longitude'] = 0
+            loc_anon.append(dict(ip=u[0], loc=loc, tasks=u[1]))
 
-    for u in auth_users:
-        sql = text('''SELECT name, fullname from "user" where id=:id;''')
-        results = db.engine.execute(sql, id=u[0])
-        for row in results:
-            fullname = row.fullname
-            name = row.name
-        top5_auth.append(dict(name=name, fullname=fullname, tasks=u[1]))
+        for u in auth_users:
+            sql = text('''SELECT name, fullname from "user" where id=:id;''')
+            session = get_session(db, bind='slave')
+            results = session.execute(sql, dict(id=u[0]))
+            for row in results:
+                fullname = row.fullname
+                name = row.name
+            top5_auth.append(dict(name=name, fullname=fullname, tasks=u[1]))
 
-    userAnonStats['top5'] = top5_anon[0:5]
-    userAnonStats['locs'] = loc_anon
-    userAuthStats['top5'] = top5_auth
+        userAnonStats['top5'] = top5_anon[0:5]
+        userAnonStats['locs'] = loc_anon
+        userAuthStats['top5'] = top5_auth
 
-    return dict(users=userStats, anon=userAnonStats, auth=userAuthStats,
-                n_anon=users['n_anon'], n_auth=users['n_auth'])
+        return dict(users=userStats, anon=userAnonStats, auth=userAuthStats,
+                    n_anon=users['n_anon'], n_auth=users['n_auth'])
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 @memoize(timeout=ONE_DAY)
 def get_stats(app_id, geo=False):
-    """Return the stats a given app"""
+    """Return the stats of a given app"""
     hours, hours_anon, hours_auth, max_hours, \
         max_hours_anon, max_hours_auth = stats_hours(app_id)
     users, anon_users, auth_users = stats_users(app_id)

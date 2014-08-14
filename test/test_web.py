@@ -38,7 +38,7 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
 from pybossa.model.featured import Featured
-from factories import AppFactory, TaskFactory, TaskRunFactory
+from factories import AppFactory, CategoryFactory, TaskFactory, TaskRunFactory
 
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
@@ -128,7 +128,7 @@ class TestWeb(web.Helper):
             # As anonymous
             url = '/app/%s/stats' % app.short_name
             res = self.app.get(url)
-            assert res.status_code == 403, res.status_code
+            assert res.status_code == 401, res.status_code
             # As another user, but not owner
             self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
             url = '/app/%s/stats' % app.short_name
@@ -302,7 +302,6 @@ class TestWeb(web.Helper):
     @with_context
     def test_05_update_user_profile(self):
         """Test WEB update user profile"""
-
 
         # Create an account and log in
         self.register()
@@ -579,6 +578,9 @@ class TestWeb(web.Helper):
             assert app.long_description == 'My Description', \
                 "Long desc should be the same: %s" % app.long_description
 
+            assert app.category is not None, \
+                "A project should have a category after being created"
+
     # After refactoring applications view, these 3 tests should be more isolated and moved to another place
     @with_context
     def test_description_is_generated_from_long_desc(self):
@@ -736,6 +738,32 @@ class TestWeb(web.Helper):
 
 
     @with_context
+    def test_add_password_to_project(self):
+        """Test WEB update sets a password for the project"""
+        self.register()
+        owner = db.session.query(User).first()
+        app = AppFactory.create(owner=owner)
+
+        self.update_application(id=app.id, short_name=app.short_name,
+                                new_password='mysecret')
+
+        assert app.needs_password(), 'Password not set"'
+
+
+    @with_context
+    def test_remove_password_from_project(self):
+        """Test WEB update removes the password of the project"""
+        self.register()
+        owner = db.session.query(User).first()
+        app = AppFactory.create(info={'passwd_hash': 'mysecret'}, owner=owner)
+
+        self.update_application(id=app.id, short_name=app.short_name,
+                                new_password='')
+
+        assert not app.needs_password(), 'Password not deleted'
+
+
+    @with_context
     def test_update_application_errors(self):
         """Test WEB update form validation issues the errors"""
         with self.flask_app.app_context():
@@ -866,7 +894,7 @@ class TestWeb(web.Helper):
 
             app = db.session.query(App).first()
             # We use a string here to check that it works too
-            task = Task(app_id=app.id, info={'n_answers': '10'})
+            task = Task(app_id=app.id, n_answers = 10)
             db.session.add(task)
             db.session.commit()
 
@@ -919,7 +947,7 @@ class TestWeb(web.Helper):
             db.session.commit()
             res = self.app.get('app/%s/tasks/browse' % (app.short_name),
                                follow_redirects=True)
-            assert res.status_code == 403, res.status_code
+            assert res.status_code == 401, res.status_code
 
             self.create()
             self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
@@ -937,13 +965,12 @@ class TestWeb(web.Helper):
             self.new_application()
 
             app = db.session.query(App).first()
-            task = Task(app_id=app.id, info={'n_answers': 10})
+            task = Task(app_id=app.id, n_answers = 10)
             db.session.add(task)
             db.session.commit()
 
             for i in range(10):
-                task_run = TaskRun(app_id=app.id, task_id=1,
-                                         info={'answer': 1})
+                task_run = TaskRun(app_id=app.id, task_id=1, info={'answer': 1})
                 db.session.add(task_run)
                 db.session.commit()
 
@@ -973,11 +1000,19 @@ class TestWeb(web.Helper):
                 assert tr['info']['answer'] == 1, tr
             self.signout()
 
-            # Check with hidden app: anonymous should not have access to it
+            # Check with hidden app: non-owner should not have access to it
+            self.register(fullname="Non Owner", name="nonowner")
             res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
                                follow_redirects=True)
             assert res.status_code == 403, res.data
             assert "Forbidden" in res.data, res.data
+
+            # Check with hidden app: anonymous should not have access to it
+            self.signout()
+            res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
+                               follow_redirects=True)
+            assert res.status_code == 401, res.data
+            assert "Unauthorized" in res.data, res.data
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
@@ -988,7 +1023,7 @@ class TestWeb(web.Helper):
             self.new_application()
 
             app = db.session.query(App).first()
-            task = Task(app_id=app.id, info={'n_answers': 10})
+            task = Task(app_id=app.id, n_answers = 10)
             db.session.add(task)
             db.session.commit()
             self.signout()
@@ -1044,7 +1079,7 @@ class TestWeb(web.Helper):
             info = dict(task_presenter="some html")
             app.info = info
             db.session.commit()
-            task = Task(app_id=app.id, info={'n_answers': 10})
+            task = Task(app_id=app.id, n_answers = 10)
             db.session.add(task)
             db.session.commit()
             self.signout()
@@ -1112,8 +1147,8 @@ class TestWeb(web.Helper):
             db.session.commit()
             res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
                                follow_redirects=True)
-            assert 'Forbidden' in res.data, res.data
-            assert res.status_code == 403, "It should be forbidden"
+            assert 'Unauthorized' in res.data, res.data
+            assert res.status_code == 401, res.status_code
             # Try with only registered users
             app.allow_anonymous_contributors = False
             app.hidden = 0
@@ -1295,7 +1330,7 @@ class TestWeb(web.Helper):
             db.session.add(app1)
             db.session.commit()
             res = self.app.get('/app/test-app/tutorial', follow_redirects=True)
-            assert res.status_code == 403, res.status_code
+            assert res.status_code == 401, res.status_code
 
     @with_context
     def test_28_non_tutorial_signed_user(self):
@@ -1374,7 +1409,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(App).first()
-        task = Task(app_id=app.id, info={'n_answers': '10'})
+        task = Task(app_id=app.id, n_answers = 10)
         db.session.add(task)
         db.session.commit()
         for i in range(10):
@@ -1404,7 +1439,7 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.view.importer.requests.get')
+    @patch('pybossa.importers.requests.get')
     def test_33_bulk_csv_import_unauthorized(self, Mock, mock):
         """Test WEB bulk import unauthorized works"""
         unauthorized_request = FakeRequest('Unauthorized', 403,
@@ -1415,13 +1450,13 @@ class TestWeb(web.Helper):
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
-                                       'formtype': 'csv'},
+                                       'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
         msg = "Oops! It looks like you don't have permission to access that file"
         assert msg in res.data, res.data
 
     @with_context
-    @patch('pybossa.view.importer.requests.get')
+    @patch('pybossa.importers.requests.get')
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_34_bulk_csv_import_non_html(self, Mock, mock):
         """Test WEB bulk import non html works"""
@@ -1432,13 +1467,14 @@ class TestWeb(web.Helper):
         self.new_application()
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
-        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com'},
+        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
+                                       'form_name': 'csv'},
                             follow_redirects=True)
         assert "Oops! That file doesn't look like the right file." in res.data
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.view.importer.requests.get')
+    @patch('pybossa.importers.requests.get')
     def test_35_bulk_csv_import_non_html(self, Mock, mock):
         """Test WEB bulk import non html works"""
         empty_file = FakeRequest('CSV,with,no,content\n', 200,
@@ -1449,13 +1485,13 @@ class TestWeb(web.Helper):
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
-                                       'formtype': 'csv'},
+                                       'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
         assert "Oops! It looks like the file is empty." in res.data
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.view.importer.requests.get')
+    @patch('pybossa.importers.requests.get')
     def test_36_bulk_csv_import_dup_header(self, Mock, mock):
         """Test WEB bulk import duplicate header works"""
         empty_file = FakeRequest('Foo,Bar,Foo\n1,2,3', 200,
@@ -1466,14 +1502,14 @@ class TestWeb(web.Helper):
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
-                                       'formtype': 'csv'},
+                                       'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
         msg = "The file you uploaded has two headers with the same name"
         assert msg in res.data
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.view.importer.requests.get')
+    @patch('pybossa.importers.requests.get')
     def test_37_bulk_csv_import_no_column_names(self, Mock, mock):
         """Test WEB bulk import no column names works"""
         empty_file = FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
@@ -1484,7 +1520,7 @@ class TestWeb(web.Helper):
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
-                                       'formtype': 'csv'},
+                                       'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
         task = db.session.query(Task).first()
         assert {u'Bar': u'2', u'Foo': u'1', u'Baz': u'3'} == task.info
@@ -1492,7 +1528,7 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.view.importer.requests.get')
+    @patch('pybossa.importers.requests.get')
     def test_38_bulk_csv_import_with_column_name(self, Mock, mock):
         """Test WEB bulk import with column name works"""
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
@@ -1503,7 +1539,7 @@ class TestWeb(web.Helper):
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
-                                       'formtype': 'csv'},
+                                       'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
         task = db.session.query(Task).first()
         assert {u'Bar': u'2', u'Foo': u'1'} == task.info
@@ -1517,7 +1553,7 @@ class TestWeb(web.Helper):
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
-                                       'formtype': 'csv'},
+                                       'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
         app = db.session.query(App).first()
         assert len(app.tasks) == 2, "There should be only 2 tasks"
@@ -1529,7 +1565,7 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.view.importer.requests.get')
+    @patch('pybossa.importers.requests.get')
     def test_38_bulk_gdocs_import(self, Mock, mock):
         """Test WEB bulk GDocs import works."""
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
@@ -1540,7 +1576,7 @@ class TestWeb(web.Helper):
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
-                                       'formtype': 'gdocs'},
+                                       'formtype': 'gdocs', 'form_name': 'gdocs'},
                             follow_redirects=True)
         task = db.session.query(Task).first()
         assert {u'Bar': u'2', u'Foo': u'1'} == task.info
@@ -1554,7 +1590,7 @@ class TestWeb(web.Helper):
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
-                                       'formtype': 'gdocs'},
+                                       'formtype': 'gdocs', 'form_name': 'gdocs'},
                             follow_redirects=True)
         app = db.session.query(App).first()
         assert len(app.tasks) == 2, "There should be only 2 tasks"
@@ -1571,7 +1607,7 @@ class TestWeb(web.Helper):
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
-                                       'formtype': 'gdocs'},
+                                       'formtype': 'gdocs', 'form_name': 'gdocs'},
                             follow_redirects=True)
         app = db.session.query(App).first()
         assert len(app.tasks) == 2, "There should be only 2 tasks"
@@ -1812,7 +1848,7 @@ class TestWeb(web.Helper):
         assert "http://opendatacommons.org/licenses/by/" in res.data, res.data
 
     @with_context
-    @patch('pybossa.view.account.signer.signer.loads')
+    @patch('pybossa.view.account.signer.loads')
     def test_44_password_reset_key_errors(self, Mock):
         """Test WEB password reset key errors are caught"""
         self.register()
@@ -1821,7 +1857,7 @@ class TestWeb(web.Helper):
         fakeuserdict = {'user': user.name, 'password': 'wronghash'}
         fakeuserdict_err = {'user': user.name, 'passwd': 'some'}
         fakeuserdict_form = {'user': user.name, 'passwd': 'p4ssw0rD'}
-        key = signer.signer.dumps(userdict, salt='password-reset')
+        key = signer.dumps(userdict, salt='password-reset')
         returns = [BadSignature('Fake Error'), BadSignature('Fake Error'), userdict,
                    fakeuserdict, userdict, userdict, fakeuserdict_err]
 
@@ -1935,7 +1971,7 @@ class TestWeb(web.Helper):
         self.signout()
         # As anonymous
         res = self.app.get('/app/sampleapp/tasks/', follow_redirects=True)
-        assert res.status_code == 403, res.status_code
+        assert res.status_code == 401, res.status_code
 
         with self.flask_app.app_context():
             self.create()
@@ -2157,7 +2193,7 @@ class TestWeb(web.Helper):
         db.session.commit()
         res = self.app.get('app/%s/tasks/export' % (app.short_name),
                            follow_redirects=True)
-        assert res.status_code == 403, res.status_code
+        assert res.status_code == 401, res.status_code
 
         self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
         res = self.app.get('app/%s/tasks/export' % (app.short_name),
@@ -2201,7 +2237,7 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_52_export_task_csv(self, mock):
         """Test WEB export Tasks to CSV works"""
-        Fixtures.create()
+        #Fixtures.create()
         # First test for a non-existant app
         uri = '/app/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
@@ -2216,32 +2252,63 @@ class TestWeb(web.Helper):
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real app
-        uri = '/app/%s/tasks/export' % Fixtures.app_short_name
+        app = AppFactory.create()
+        for i in range(0, 5):
+            task = TaskFactory.create(app=app, info={'question': i})
+        uri = '/app/%s/tasks/export' % app.short_name
         res = self.app.get(uri, follow_redirects=True)
-        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % app.name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in CSV format
-        uri = "/app/%s/tasks/export?type=task&format=csv" % Fixtures.app_short_name
+        uri = "/app/%s/tasks/export?type=task&format=csv" % app.short_name
         res = self.app.get(uri, follow_redirects=True)
         csv_content = StringIO.StringIO(res.data)
         csvreader = unicode_csv_reader(csv_content)
         app = db.session.query(App)\
-                .filter_by(short_name=Fixtures.app_short_name)\
+                .filter_by(short_name=app.short_name)\
                 .first()
         exported_tasks = []
         n = 0
         for row in csvreader:
+            print row
             if n != 0:
                 exported_tasks.append(row)
+            else:
+                keys = row
             n = n + 1
         err_msg = "The number of exported tasks is different from App Tasks"
         assert len(exported_tasks) == len(app.tasks), err_msg
+        for t in app.tasks:
+            err_msg = "All the task column names should be included"
+            for tk in t.dictize().keys():
+                expected_key = "task__%s" % tk
+                assert expected_key in keys, err_msg
+            err_msg = "All the task.info column names should be included"
+            for tk in t.info.keys():
+                expected_key = "taskinfo__%s" % tk
+                assert expected_key in keys, err_msg
+
+        for et in exported_tasks:
+            task_id = et[keys.index('task__id')]
+            task = db.session.query(Task).get(task_id)
+            task_dict = task.dictize()
+            for k in task_dict:
+                slug = 'task__%s' % k
+                err_msg = "%s != %s" % (task_dict[k], et[keys.index(slug)])
+                if k != 'info':
+                    assert unicode(task_dict[k]) == et[keys.index(slug)], err_msg
+                else:
+                    assert json.dumps(task_dict[k]) == et[keys.index(slug)], err_msg
+            for k in task_dict['info'].keys():
+                slug = 'taskinfo__%s' % k
+                err_msg = "%s != %s" % (task_dict['info'][k], et[keys.index(slug)])
+                assert unicode(task_dict['info'][k]) == et[keys.index(slug)], err_msg
+
 
         # With an empty app
-        self.register()
-        self.new_application()
+        app = AppFactory.create()
         # Now get the tasks in CSV format
-        uri = "/app/sampleapp/tasks/export?type=task&format=csv"
+        uri = "/app/%s/tasks/export?type=task&format=csv" % app.short_name
         res = self.app.get(uri, follow_redirects=True)
         msg = "project does not have tasks"
         assert msg in res.data, msg
@@ -2249,7 +2316,6 @@ class TestWeb(web.Helper):
     @with_context
     def test_53_export_task_runs_csv(self):
         """Test WEB export Task Runs to CSV works"""
-        Fixtures.create()
         # First test for a non-existant app
         uri = '/app/somethingnotexists/tasks/export'
         res = self.app.get(uri, follow_redirects=True)
@@ -2260,27 +2326,58 @@ class TestWeb(web.Helper):
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real app
-        uri = '/app/%s/tasks/export' % Fixtures.app_short_name
+        app = AppFactory.create()
+        task = TaskFactory.create(app=app)
+        for i in range(2):
+            task_run = TaskRunFactory.create(app=app, task=task, info={'answer': i})
+        uri = '/app/%s/tasks/export' % app.short_name
         res = self.app.get(uri, follow_redirects=True)
-        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % app.name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in CSV format
-        uri = "/app/%s/tasks/export?type=task_run&format=csv" % Fixtures.app_short_name
+        uri = "/app/%s/tasks/export?type=task_run&format=csv" % app.short_name
         res = self.app.get(uri, follow_redirects=True)
         csv_content = StringIO.StringIO(res.data)
         csvreader = unicode_csv_reader(csv_content)
         app = db.session.query(App)\
-                .filter_by(short_name=Fixtures.app_short_name)\
+                .filter_by(short_name=app.short_name)\
                 .first()
         exported_task_runs = []
         n = 0
         for row in csvreader:
             if n != 0:
                 exported_task_runs.append(row)
+            else:
+                keys = row
             n = n + 1
         err_msg = "The number of exported task runs is different \
-                   from App Tasks Runs"
+                   from App Tasks Runs: %s != %s" % (len(exported_task_runs), len(app.task_runs))
         assert len(exported_task_runs) == len(app.task_runs), err_msg
+
+        for t in app.tasks[0].task_runs:
+            for tk in t.dictize().keys():
+                expected_key = "task_run__%s" % tk
+                assert expected_key in keys, expected_key
+            for tk in t.info.keys():
+                expected_key = "task_runinfo__%s" % tk
+                assert expected_key in keys, expected_key
+
+        for et in exported_task_runs:
+            task_run_id = et[keys.index('task_run__id')]
+            task_run = db.session.query(TaskRun).get(task_run_id)
+            task_run_dict = task_run.dictize()
+            for k in task_run_dict:
+                slug = 'task_run__%s' % k
+                err_msg = "%s != %s" % (task_run_dict[k], et[keys.index(slug)])
+                if k != 'info':
+                    assert unicode(task_run_dict[k]) == et[keys.index(slug)], err_msg
+                else:
+                    assert json.dumps(task_run_dict[k]) == et[keys.index(slug)], err_msg
+            for k in task_run_dict['info'].keys():
+                slug = 'task_runinfo__%s' % k
+                err_msg = "%s != %s" % (task_run_dict['info'][k], et[keys.index(slug)])
+                assert unicode(task_run_dict['info'][k]) == et[keys.index(slug)], err_msg
+
 
     @with_context
     @patch('pybossa.view.applications.Ckan', autospec=True)
@@ -2646,7 +2743,6 @@ class TestWeb(web.Helper):
         assert "Please sign in to access this page" in res.data, err_msg
         res = self.app.post(url, follow_redirects=True)
         assert "Please sign in to access this page" in res.data, err_msg
-
         # Authenticated user
         self.register()
         user = db.session.query(User).get(1)
@@ -2663,14 +2759,15 @@ class TestWeb(web.Helper):
         user = db.session.query(User).get(1)
         err_msg = "New generated API key should be different from old one"
         assert api_key != user.api_key, err_msg
+        self.signout()
 
         self.register(fullname="new", name="new")
         res = self.app.post(url)
-        res.status_code == 403
+        assert res.status_code == 403, res.status_code
 
         url = "/account/fake/resetapikey"
         res = self.app.post(url)
-        assert res.status_code == 404
+        assert res.status_code == 404, res.status_code
 
 
     @with_context
@@ -2776,7 +2873,7 @@ class TestWeb(web.Helper):
 
         # As Anonymous user
         res = self.app.get(url, follow_redirects=True)
-        assert res.status_code == 403, res.status_code
+        assert res.status_code == 401, res.status_code
 
         # As registered user
         self.register()
@@ -2831,7 +2928,7 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.view.importer.requests.get')
+    @patch('pybossa.importers.requests.get')
     def test_71_bulk_epicollect_import_unauthorized(self, Mock, mock):
         """Test WEB bulk import unauthorized works"""
         unauthorized_request = FakeRequest('Unauthorized', 403,
@@ -2843,7 +2940,7 @@ class TestWeb(web.Helper):
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'epicollect_project': 'fakeproject',
                                        'epicollect_form': 'fakeform',
-                                       'formtype': 'json'},
+                                       'formtype': 'json', 'form_name': 'epicollect'},
                             follow_redirects=True)
         msg = "Oops! It looks like you don't have permission to access the " \
               "EpiCollect Plus project"
@@ -2851,7 +2948,7 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.view.importer.requests.get')
+    @patch('pybossa.importers.requests.get')
     def test_72_bulk_epicollect_import_non_html(self, Mock, mock):
         """Test WEB bulk import non html works"""
         html_request = FakeRequest('Not an application/json', 200,
@@ -2863,14 +2960,14 @@ class TestWeb(web.Helper):
         url = '/app/%s/tasks/import?template=csv' % (app.short_name)
         res = self.app.post(url, data={'epicollect_project': 'fakeproject',
                                        'epicollect_form': 'fakeform',
-                                       'formtype': 'json'},
+                                       'formtype': 'json', 'form_name': 'epicollect'},
                             follow_redirects=True)
         msg = "Oops! That project and form do not look like the right one."
         assert msg in res.data
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.view.importer.requests.get')
+    @patch('pybossa.importers.requests.get')
     def test_73_bulk_epicollect_import_json(self, Mock, mock):
         """Test WEB bulk import json works"""
         data = [dict(DeviceID=23)]
@@ -2883,7 +2980,7 @@ class TestWeb(web.Helper):
         res = self.app.post(('/app/%s/tasks/import' % (app.short_name)),
                             data={'epicollect_project': 'fakeproject',
                                   'epicollect_form': 'fakeform',
-                                  'formtype': 'json'},
+                                  'formtype': 'json', 'form_name': 'epicollect'},
                             follow_redirects=True)
 
         app = db.session.query(App).first()
@@ -2900,7 +2997,7 @@ class TestWeb(web.Helper):
         res = self.app.post(('/app/%s/tasks/import' % (app.short_name)),
                             data={'epicollect_project': 'fakeproject',
                                   'epicollect_form': 'fakeform',
-                                  'formtype': 'json'},
+                                  'formtype': 'json', 'form_name': 'epicollect'},
                             follow_redirects=True)
         app = db.session.query(App).first()
         assert len(app.tasks) == 2, "There should be only 2 tasks"
@@ -3028,6 +3125,7 @@ class TestWeb(web.Helper):
         self.register(fullname="owner", name="owner")
         self.new_application()
         self.new_task(1)
+
         url = "/app/sampleapp/tasks/redundancy"
         form_id = 'task_redundancy'
         self.signout()
@@ -3048,6 +3146,7 @@ class TestWeb(web.Helper):
             assert dom.find(id=form_id) is not None, err_msg
             res = self.task_settings_redundancy(short_name="sampleapp",
                                                 n_answers=n_answers)
+            db.session.close()
             dom = BeautifulSoup(res.data)
             err_msg = "Task Redundancy should be updated"
             assert dom.find(id='msg_success') is not None, err_msg
@@ -3065,7 +3164,6 @@ class TestWeb(web.Helper):
             dom = BeautifulSoup(res.data)
             err_msg = "Task Redundancy should be a value between 0 and 1000"
             assert dom.find(id='msg_error') is not None, err_msg
-
 
             self.signout()
 
@@ -3096,6 +3194,40 @@ class TestWeb(web.Helper):
         # Correct values
         err_msg = "There should be a %s section" % form_id
         assert dom.find(id=form_id) is not None, err_msg
+
+    @with_context
+    def test_task_redundancy_update_updates_task_state(self):
+        """Test WEB when updating the redundancy of the tasks in a project, the
+        state of the task is updated in consecuence"""
+        # Creat root user
+        self.register()
+        self.new_application()
+        self.new_task(1)
+
+        url = "/app/sampleapp/tasks/redundancy"
+
+        app = db.session.query(App).get(1)
+        for t in app.tasks:
+            tr = TaskRun(app_id=app.id, task_id=t.id)
+            db.session.add(tr)
+            db.session.commit()
+
+        err_msg = "Task state should be completed"
+        res = self.task_settings_redundancy(short_name="sampleapp",
+                                            n_answers=1)
+
+        for t in app.tasks:
+            assert t.state == 'completed', err_msg
+
+        res = self.task_settings_redundancy(short_name="sampleapp",
+                                            n_answers=2)
+        err_msg = "Task state should be ongoing"
+        db.session.add(app)
+        db.session.commit()
+
+        for t in app.tasks:
+            assert t.state == 'ongoing', t.state
+
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)

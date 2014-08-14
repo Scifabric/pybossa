@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# -* -coding: utf8 -*-
 # This file is part of PyBossa.
 #
 # Copyright (C) 2013 SF Isle of Man Limited
@@ -26,14 +26,11 @@ from flask import url_for
 from flask import current_app
 from flask import Response
 from flask.ext.login import login_required, current_user
-from flask_wtf import Form
-from wtforms import TextField, IntegerField, validators
-from wtforms.widgets import HiddenInput
-from flask.ext.babel import lazy_gettext, gettext
+from flask.ext.babel import gettext
 from werkzeug.exceptions import HTTPException
 
 import pybossa.model as model
-from pybossa.core import db
+from pybossa.core import db, get_session
 from pybossa.util import admin_required, UnicodeWriter
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
@@ -42,6 +39,9 @@ import pybossa.validator as pb_validator
 from sqlalchemy import or_, func
 import json
 from StringIO import StringIO
+
+from pybossa.forms.admin_view_forms import *
+
 
 
 blueprint = Blueprint('admin', __name__)
@@ -69,13 +69,12 @@ def index():
 def featured(app_id=None):
     """List featured apps of PyBossa"""
     try:
-        categories = cached_cat.get_all()
-
         if request.method == 'GET':
+            categories = cached_cat.get_all()
             apps = {}
             for c in categories:
                 n_apps = cached_apps.n_count(category=c.short_name)
-                apps[c.short_name], n_apps = cached_apps.get(category=c.short_name,
+                apps[c.short_name] = cached_apps.get(category=c.short_name,
                                                              page=1,
                                                              per_page=n_apps)
             return render_template('/admin/applications.html', apps=apps,
@@ -117,10 +116,6 @@ def featured(app_id=None):
     except Exception as e: # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
-
-
-class SearchForm(Form):
-    user = TextField(lazy_gettext('User'))
 
 
 @blueprint.route('/users', methods=['GET', 'POST'])
@@ -167,14 +162,24 @@ def export_users():
                              'created', 'locale', 'admin')
 
     def respond_json():
-        return Response(gen_json(), mimetype='application/json')
+        tmp = 'attachment; filename=all_users.json'
+        res = Response(gen_json(), mimetype='application/json')
+        res.headers['Content-Disposition'] = tmp
+        return res
 
     def gen_json():
-        users = db.session.query(model.user.User).all()
-        json_users = []
-        for user in users:
-            json_users.append(dictize_with_exportable_attributes(user))
-        return json.dumps(json_users)
+        try:
+            session = get_session(db, bind='slave')
+            users = session.query(model.user.User).all()
+            json_users = []
+            for user in users:
+                json_users.append(dictize_with_exportable_attributes(user))
+            return json.dumps(json_users)
+        except: # pragma: no cover
+            session.rollback()
+            raise
+        finally:
+            session.close()
 
     def dictize_with_exportable_attributes(user):
         dict_user = {}
@@ -185,13 +190,23 @@ def export_users():
     def respond_csv():
         out = StringIO()
         writer = UnicodeWriter(out)
-        return Response(gen_csv(out, writer, write_user), mimetype='text/csv')
+        tmp = 'attachment; filename=all_users.csv'
+        res = Response(gen_csv(out, writer, write_user), mimetype='text/csv')
+        res.headers['Content-Disposition'] = tmp
+        return res
 
     def gen_csv(out, writer, write_user):
-        add_headers(writer)
-        for user in db.session.query(model.user.User).yield_per(1):
-            write_user(writer, user)
-        yield out.getvalue()
+        try:
+            session = get_session(db, bind='slave')
+            add_headers(writer)
+            for user in session.query(model.user.User).yield_per(1):
+                write_user(writer, user)
+            yield out.getvalue()
+        except: # pragma: no cover
+            session.rollback()
+            raise
+        finally:
+            session.close()
 
     def write_user(writer, user):
         values = [getattr(user, attr) for attr in sorted(exportable_attributes)]
@@ -255,16 +270,6 @@ def del_admin(user_id=None):
     except Exception as e:  # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
-
-
-class CategoryForm(Form):
-    id = IntegerField(label=None, widget=HiddenInput())
-    name = TextField(lazy_gettext('Name'),
-                     [validators.Required(),
-                      pb_validator.Unique(db.session, model.category.Category, model.category.Category.name,
-                                          message="Name is already taken.")])
-    description = TextField(lazy_gettext('Description'),
-                            [validators.Required()])
 
 
 @blueprint.route('/categories', methods=['GET', 'POST'])

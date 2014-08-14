@@ -20,11 +20,10 @@ from sqlalchemy import Integer, Boolean, Unicode, Text, String, BigInteger
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy import event
-from werkzeug import generate_password_hash, check_password_hash
 from flask.ext.login import UserMixin
 
-from pybossa.core import db
-from pybossa.model import DomainObject, make_timestamp, JSONType, make_uuid
+from pybossa.core import db, signer
+from pybossa.model import DomainObject, make_timestamp, JSONEncodedDict, make_uuid, update_redis
 from pybossa.model.app import App
 from pybossa.model.task_run import TaskRun
 from pybossa.model.blogpost import Blogpost
@@ -38,10 +37,14 @@ class User(db.Model, DomainObject, UserMixin):
     __tablename__ = 'user'
 
     id = Column(Integer, primary_key=True)
+    #: UTC timestamp of the user when it's created.
     created = Column(Text, default=make_timestamp)
     email_addr = Column(Unicode(length=254), unique=True, nullable=False)
+    #: Name of the user (this is used as the nickname).
     name = Column(Unicode(length=254), unique=True, nullable=False)
+    #: Fullname of the user.
     fullname = Column(Unicode(length=500), nullable=False)
+    #: Language used by the user in the PyBossa server.
     locale = Column(Unicode(length=254), default=u'en', nullable=False)
     api_key = Column(String(length=36), default=make_uuid, unique=True)
     passwd_hash = Column(Unicode(length=254), unique=True)
@@ -53,7 +56,7 @@ class User(db.Model, DomainObject, UserMixin):
     facebook_user_id = Column(BigInteger, unique=True)
     google_user_id = Column(String, unique=True)
     ckan_api = Column(String, unique=True)
-    info = Column(JSONType, default=dict)
+    info = Column(JSONEncodedDict, default=dict)
 
     ## Relationships
     task_runs = relationship(TaskRun, backref='user')
@@ -67,15 +70,14 @@ class User(db.Model, DomainObject, UserMixin):
 
 
     def set_password(self, password):
-        self.passwd_hash = generate_password_hash(password)
+        self.passwd_hash = signer.generate_password_hash(password)
 
 
     def check_password(self, password):
         # OAuth users do not have a password
         if self.passwd_hash:
-            return check_password_hash(self.passwd_hash, password)
-        else:
-            return False
+            return signer.check_password_hash(self.passwd_hash, password)
+        return False
 
 
     @classmethod
@@ -89,3 +91,11 @@ def make_admin(mapper, conn, target):
     users = conn.scalar('select count(*) from "user"')
     if users == 0:
         target.admin = True
+
+
+@event.listens_for(User, 'after_insert')
+def add_event(mapper, conn, target):
+    """Update PyBossa feed with new user."""
+    obj = target.dictize()
+    obj['action_updated']='User'
+    update_redis(obj)

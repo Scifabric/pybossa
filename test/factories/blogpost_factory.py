@@ -16,13 +16,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.model import db
 from pybossa.model.blogpost import Blogpost
 from . import BaseFactory, factory
 
 
 class BlogpostFactory(BaseFactory):
-    FACTORY_FOR = Blogpost
+    class Meta:
+        model = Blogpost
 
     id = factory.Sequence(lambda n: n)
     title = u'Blogpost title'

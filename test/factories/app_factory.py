@@ -16,13 +16,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.model import db
 from pybossa.model.app import App
 from . import BaseFactory, factory
 
 
 class AppFactory(BaseFactory):
-    FACTORY_FOR = App
+    class Meta:
+        model = App
 
     id = factory.Sequence(lambda n: n)
     name = factory.Sequence(lambda n: u'My Project number %d' % n)
@@ -35,3 +35,4 @@ class AppFactory(BaseFactory):
     owner_id = factory.LazyAttribute(lambda app: app.owner.id)
     category = factory.SubFactory('factories.CategoryFactory')
     category_id = factory.LazyAttribute(lambda app: app.category.id)
+    info = {'task_presenter': '<div></div>'}

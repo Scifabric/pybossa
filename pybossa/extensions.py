@@ -16,12 +16,21 @@ The objects are:
     * csrf: for CSRF protection
 
 """
-__all__ = ['sentinel', 'signer', 'mail', 'login_manager', 'facebook',
+__all__ = ['sentinel', 'db', 'signer', 'mail', 'login_manager', 'facebook',
            'twitter', 'google', 'misaka', 'babel', 'gravatar',
-           'uploader', 'csrf', 'timeouts', 'debug_toolbar']
+           'uploader', 'csrf', 'timeouts', 'debug_toolbar', 'ratelimits',
+           'Session']
 # CACHE
 from pybossa.sentinel import Sentinel
 sentinel = Sentinel()
+
+# DB
+from flask.ext.sqlalchemy import SQLAlchemy
+db = SQLAlchemy()
+
+# Sessionmaker
+from sqlalchemy.orm import sessionmaker
+Session = sessionmaker()
 
 # Signer
 from pybossa.signer import Signer
@@ -71,3 +80,6 @@ csrf = CsrfProtect()
 
 # Timeouts
 timeouts = dict()
+
+# Ratelimits
+ratelimits = dict()

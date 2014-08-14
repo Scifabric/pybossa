@@ -29,8 +29,13 @@ class Category(db.Model, DomainObject):
 
     __tablename__ = 'category'
 
+    #: Category ID
     id = Column(Integer, primary_key=True)
+    #: Name of the Category
     name = Column(Text, nullable=False, unique=True)
+    #: Slug for the Category URL
     short_name = Column(Text, nullable=False, unique=True)
+    #: Description of the Category
     description = Column(Text, nullable=False)
+    #: UTC timestamp when the Category was created
     created = Column(Text, default=make_timestamp)

@@ -22,7 +22,8 @@ import uuid
 
 from sqlalchemy import Text
 from sqlalchemy.orm import relationship, backref, class_mapper
-from sqlalchemy.types import MutableType, TypeDecorator
+from sqlalchemy.ext.mutable import Mutable
+from sqlalchemy.types import TypeDecorator
 from sqlalchemy import event
 from sqlalchemy.engine import reflection
 from sqlalchemy.schema import (
@@ -34,9 +35,16 @@ from sqlalchemy.schema import (
     )
 
 import logging
-from flask.ext.sqlalchemy import SQLAlchemy
+from time import time
 
-db = SQLAlchemy()
+
+try:
+    import cPickle as pickle
+except ImportError:  # pragma: no cover
+    import pickle
+
+
+from pybossa.core import sentinel
 
 log = logging.getLogger(__name__)
 
@@ -70,8 +78,7 @@ class DomainObject(object):
         return repr
 
 
-
-class JSONType(MutableType, TypeDecorator):
+class JSONType(Mutable, TypeDecorator):
     '''Additional Database Type for handling JSON values.
     '''
     impl = Text
@@ -89,7 +96,59 @@ class JSONType(MutableType, TypeDecorator):
         return json.loads(json.dumps(value))
 
 
+class JSONEncodedDict(TypeDecorator):
+    "Represents a dict structure as a json-encoded string."
 
+    impl = Text
+
+    def process_bind_param(self, value, dialect):
+        if value is not None:
+            value = json.dumps(value)
+        return value
+
+    def process_result_value(self, value, dialect):
+        if value is not None:
+            value = json.loads(value)
+        return value
+
+    def copy_value(self, value):
+        return json.loads(json.dumps(value))
+
+
+class MutableDict(Mutable, dict):
+    @classmethod
+    def coerce(cls, key, value):
+        "Convert plain dictionaries to MutableDict."
+
+        if not isinstance(value, MutableDict):
+            if isinstance(value, dict):
+                return MutableDict(value)
+
+            # this call will raise ValueError
+            return Mutable.coerce(key, value)
+        else:
+            return value
+
+    def __setitem__(self, key, value):
+        "Detect dictionary set events and emit change events."
+
+        dict.__setitem__(self, key, value)
+        self.changed()
+
+    def __delitem__(self, key):
+        "Detect dictionary del events and emit change events."
+
+        dict.__delitem__(self, key)
+        self.changed()
+
+    def __getstate__(self):
+        d = self.__dict__.copy()
+        return dict(self)
+
+    def __setstate__(self, state):
+        self.update(state)
+
+MutableDict.associate_with(JSONEncodedDict)
 
 def make_timestamp():
     now = datetime.datetime.utcnow()
@@ -132,3 +191,10 @@ def rebuild_db():
 
     db.session.commit()
     db.create_all()
+
+def update_redis(obj):
+    """Add domain object to update feed in Redis."""
+    p = sentinel.master.pipeline()
+    tmp = pickle.dumps(obj)
+    p.zadd('pybossa_feed', time(), tmp)
+    p.execute()

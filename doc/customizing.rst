@@ -76,6 +76,22 @@ so it fits your needs in the field `SQLALCHEMY_DATABASE_URI`_::
 .. _`SQLALCHEMY_DATABSE_URI`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L10
 .. _SQLAlchemy: http://www.sqlalchemy.org/
 
+Load balance SQL Queries
+========================
+
+If you have a master/slave PostgreSQL setup, you can instruct PyBossa to use
+the slave node for load balancing queries between the master and slave node.
+
+For enabling this mode, all you have to do is adding to the settings_local.py
+config file the following:
+
+.. code-block:: python
+
+    SQLALCHEMY_BINDS = {
+        'slave': 'postgresql://user:password@server/pybossadb'
+    }
+
+
 It's dangerous, so better sign this
 ===================================
 
@@ -317,6 +333,24 @@ If you want to disable the cache, you only have to export the following env vari
     PYBOSSA_REDIS_CACHE_DISABLED='1'
 
 
+Rate limit for the API
+======================
+
+By default PyBossa limits the usage of the API with the following values::
+
+    LIMIT = 300
+    PER = 15 * 60
+
+Those values mean that when a user sends a request to an API endpoint, a window
+of 15 minutes is open, and during those 15 minutes the number of allowed
+requests to the same endpoint is 300. By adding these values to your
+settings_local.py file, you can adapt it to your own needs.
+
+.. note::
+    Please, be sure about what you are doing by modifying these values. This is
+    the recommended configuration, so do not modify it unless you are sure.
+
+
 Configuring upload method
 =========================
 
@@ -536,3 +570,33 @@ To:
 
 .. note::
     This feature is disabled by default.
+
+
+Adding your own templates
+=========================
+
+PyBossa supports different types of templates that you can offer for every
+project. By default, PyBossa comes with the following templates:
+
+ * **Basic**: the most basic template. It only has the basic structure to
+   develop your project. 
+ * **Image**: this template is for image pattern recognition.
+ * **Sound**: similar to the image template, but for sound clips hosted in
+   SoundCloud.
+ * **Video**: similar to the imaage template, but for video clips hostes in
+   Vimeo.
+ * **Map**: this template is for geocoding prorjects.
+ * **PDF**: this template is for transcribing documents.
+
+If you want to add your own template, or remove one, just create in the
+settings_local.py file a variable named **PRESENTERS** and add remove the ones
+you want::
+
+    PRESENTERS = ["basic", "image", "sound", "video", "map", "pdf", "yourtemplate"]
+
+**Yourtemplate** should be a template that you have to save in the theme
+folder: **/templates/applications/snippets/** with the same name. Check the
+other templates to use them as a base layer for your template.
+
+After adding the template, the server will start offering this new template to
+your users.

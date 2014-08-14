@@ -36,25 +36,39 @@ from flask import render_template, current_app
 from flask.ext.login import login_required, login_user, logout_user, \
     current_user
 from flask.ext.mail import Message
-from flask_wtf import Form
-from flask_wtf.file import FileField, FileRequired
-from wtforms import TextField, PasswordField, validators, \
-    IntegerField, SelectField, BooleanField
-from wtforms.widgets import HiddenInput
 
-import pybossa.validator as pb_validator
 import pybossa.model as model
-from flask.ext.babel import lazy_gettext, gettext
+from flask.ext.babel import gettext
 from sqlalchemy.sql import text
 from pybossa.model.user import User
-from pybossa.core import db, signer, mail, uploader
-from pybossa.util import Pagination, get_user_id_or_ip
+from pybossa.core import db, signer, mail, uploader, sentinel, get_session
+from pybossa.util import Pagination, get_user_id_or_ip, pretty_date
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
+from pybossa.auth import require
+
+from pybossa.forms.account_view_forms import *
+
+try:
+    import cPickle as pickle
+except ImportError:  # pragma: no cover
+    import pickle
 
 
 blueprint = Blueprint('account', __name__)
 
+
+def get_update_feed():
+    """Return update feed list."""
+    data = sentinel.slave.zrevrange('pybossa_feed', 0, 99, withscores=True)
+    update_feed = []
+    for u in data:
+        tmp = pickle.loads(u[0])
+        tmp['updated'] = u[1]
+        if tmp.get('info') and type(tmp.get('info')) == unicode:
+            tmp['info'] = json.loads(tmp['info'])
+        update_feed.append(tmp)
+    return update_feed
 
 @blueprint.route('/', defaults={'page': 1})
 @blueprint.route('/page/<int:page>')
@@ -65,6 +79,7 @@ def index(page):
     Returns a Jinja2 rendered template with the users.
 
     """
+    update_feed = get_update_feed()
     per_page = 24
     count = cached_users.get_total_users()
     accounts = cached_users.get_users_page(page, per_page)
@@ -80,21 +95,8 @@ def index(page):
     return render_template('account/index.html', accounts=accounts,
                            total=count,
                            top_users=top_users,
-                           title="Community", pagination=pagination)
-
-
-class LoginForm(Form):
-
-    """Login Form class for signin into PyBossa."""
-
-    email = TextField(lazy_gettext('E-mail'),
-                      [validators.Required(
-                          message=lazy_gettext("The e-mail is required"))])
-
-    password = PasswordField(lazy_gettext('Password'),
-                             [validators.Required(
-                                 message=lazy_gettext(
-                                     "You must provide a password"))])
+                           title="Community", pagination=pagination,
+                           update_feed=update_feed)
 
 
 @blueprint.route('/signin', methods=['GET', 'POST'])
@@ -160,98 +162,6 @@ def signout():
     return redirect(url_for('home.home'))
 
 
-class RegisterForm(Form):
-
-    """Register Form Class for creating an account in PyBossa."""
-
-    err_msg = lazy_gettext("Full name must be between 3 and 35 "
-                           "characters long")
-    fullname = TextField(lazy_gettext('Full name'),
-                         [validators.Length(min=3, max=35, message=err_msg)])
-
-    err_msg = lazy_gettext("User name must be between 3 and 35 "
-                           "characters long")
-    err_msg_2 = lazy_gettext("The user name is already taken")
-    name = TextField(lazy_gettext('User name'),
-                         [validators.Length(min=3, max=35, message=err_msg),
-                          pb_validator.NotAllowedChars(),
-                          pb_validator.Unique(db.session, model.user.User,
-                                              model.user.User.name, err_msg_2)])
-
-    err_msg = lazy_gettext("Email must be between 3 and 35 characters long")
-    err_msg_2 = lazy_gettext("Email is already taken")
-    email_addr = TextField(lazy_gettext('Email Address'),
-                           [validators.Length(min=3, max=35, message=err_msg),
-                            validators.Email(),
-                            pb_validator.Unique(
-                                db.session, model.user.User,
-                                model.user.User.email_addr, err_msg_2)])
-
-    err_msg = lazy_gettext("Password cannot be empty")
-    err_msg_2 = lazy_gettext("Passwords must match")
-    password = PasswordField(lazy_gettext('New Password'),
-                             [validators.Required(err_msg),
-                              validators.EqualTo('confirm', err_msg_2)])
-
-    confirm = PasswordField(lazy_gettext('Repeat Password'))
-
-
-class UpdateProfileForm(Form):
-
-    """Form Class for updating PyBossa's user Profile."""
-
-    id = IntegerField(label=None, widget=HiddenInput())
-
-    err_msg = lazy_gettext("Full name must be between 3 and 35 "
-                           "characters long")
-    fullname = TextField(lazy_gettext('Full name'),
-                         [validators.Length(min=3, max=35, message=err_msg)])
-
-    err_msg = lazy_gettext("User name must be between 3 and 35 "
-                           "characters long")
-    err_msg_2 = lazy_gettext("The user name is already taken")
-    name = TextField(lazy_gettext('Username'),
-                     [validators.Length(min=3, max=35, message=err_msg),
-                      pb_validator.NotAllowedChars(),
-                      pb_validator.Unique(
-                          db.session, model.user.User, model.user.User.name, err_msg_2)])
-
-    err_msg = lazy_gettext("Email must be between 3 and 35 characters long")
-    err_msg_2 = lazy_gettext("Email is already taken")
-    email_addr = TextField(lazy_gettext('Email Address'),
-                           [validators.Length(min=3, max=35, message=err_msg),
-                            validators.Email(),
-                            pb_validator.Unique(
-                                db.session, model.user.User,
-                                model.user.User.email_addr, err_msg_2)])
-
-    locale = SelectField(lazy_gettext('Language'))
-    ckan_api = TextField(lazy_gettext('CKAN API Key'))
-    privacy_mode = BooleanField(lazy_gettext('Privacy Mode'))
-
-    def set_locales(self, locales):
-        """Fill the locale.choices."""
-        choices = []
-        for locale in locales:
-            if locale == 'en':
-                lang = gettext("English")
-            if locale == 'es':
-                lang = gettext("Spanish")
-            if locale == 'fr':
-                lang = gettext("French")
-            choices.append((locale, lang))
-        self.locale.choices = choices
-
-
-class AvatarUploadForm(Form):
-    avatar = FileField(lazy_gettext('Avatar'), validators=[FileRequired()])
-    x1 = IntegerField(label=None, widget=HiddenInput())
-    y1 = IntegerField(label=None, widget=HiddenInput())
-    x2 = IntegerField(label=None, widget=HiddenInput())
-    y2 = IntegerField(label=None, widget=HiddenInput())
-
-
-
 @blueprint.route('/register', methods=['GET', 'POST'])
 def register():
     """
@@ -283,8 +193,8 @@ def register():
 def redirect_profile():
     if current_user.is_anonymous(): # pragma: no cover
         return redirect(url_for('.signin'))
-    else:
-        return redirect(url_for('.profile', name=current_user.name), 302)
+    return redirect(url_for('.profile', name=current_user.name), 302)
+
 
 @blueprint.route('/<name>/', methods=['GET'])
 def profile(name):
@@ -294,69 +204,52 @@ def profile(name):
     Returns a Jinja2 template with the user information.
 
     """
-    user = db.session.query(model.user.User).filter_by(name=name).first()
+    try:
+        session = get_session(db, bind='slave')
+        user = session.query(model.user.User).filter_by(name=name).first()
+        if user is None:
+            return abort(404)
+        if current_user.is_anonymous() or (user.id != current_user.id):
+            return _show_public_profile(user)
+        if current_user.is_authenticated() and user.id == current_user.id:
+            return _show_own_profile(user)
+    except: # pragma: no cover
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
-    if user is None:
-        return abort(404)
 
-    # Show public profile from another user
-    if current_user.is_anonymous() or (user.id != current_user.id):
-        user, apps_contributed, _ = cached_users.get_user_summary(name)
-        apps_created, apps_draft = _get_user_apps(user['id'])
-        if user:
-            title = "%s &middot; User Profile" % user['fullname']
-            return render_template('/account/public_profile.html',
-                                   title=title,
-                                   user=user,
-                                   apps=apps_contributed,
-                                   apps_created=apps_created)
+def _show_public_profile(user):
+    user_dict = cached_users.get_user_summary(user.name)
+    apps_contributed = cached_users.apps_contributed_cached(user.id)
+    apps_created = cached_users.published_apps_cached(user.id)
+    if current_user.is_authenticated() and current_user.admin:
+        apps_hidden = cached_users.hidden_apps(user.id)
+        apps_created.extend(apps_hidden)
+    if user_dict:
+        title = "%s &middot; User Profile" % user_dict['fullname']
+        return render_template('/account/public_profile.html',
+                               title=title,
+                               user=user_dict,
+                               apps=apps_contributed,
+                               apps_created=apps_created)
 
-    # Show user profile page with admin, as it is the same user
-    if user.id == current_user.id and current_user.is_authenticated():
-        sql = text('''
-                   SELECT app.name, app.short_name, app.info,
-                   COUNT(*) as n_task_runs
-                   FROM task_run JOIN app ON
-                   (task_run.app_id=app.id) WHERE task_run.user_id=:user_id
-                   GROUP BY app.name, app.short_name, app.info
-                   ORDER BY n_task_runs DESC;''')
 
-        # results will have the following format
-        # (app.name, app.short_name, n_task_runs)
-        results = db.engine.execute(sql, user_id=current_user.id)
+def _show_own_profile(user):
+    rank_and_score = cached_users.rank_and_score(user.id)
+    user.rank = rank_and_score['rank']
+    user.score = rank_and_score['score']
+    user.total = cached_users.get_total_users()
+    apps_contrib = cached_users.apps_contributed(user.id)
+    apps_published, apps_draft = _get_user_apps(user.id)
+    apps_published.extend(cached_users.hidden_apps(user.id))
 
-        apps_contrib = []
-        for row in results:
-            app = dict(name=row.name, short_name=row.short_name,
-                       info=json.loads(row.info), n_task_runs=row.n_task_runs)
-            apps_contrib.append(app)
-
-        # Rank
-        # See: https://gist.github.com/tokumine/1583695
-        sql = text('''
-                   WITH global_rank AS (
-                        WITH scores AS (
-                            SELECT user_id, COUNT(*) AS score FROM task_run
-                            WHERE user_id IS NOT NULL GROUP BY user_id)
-                        SELECT user_id, score, rank() OVER (ORDER BY score desc)
-                        FROM scores)
-                   SELECT * from global_rank WHERE user_id=:user_id;
-                   ''')
-
-        results = db.engine.execute(sql, user_id=current_user.id)
-        for row in results:
-            user.rank = row.rank
-            user.score = row.score
-
-        user.total = db.session.query(model.user.User).count()
-
-        apps_published, apps_draft = _get_user_apps(current_user.id)
-
-        return render_template('account/profile.html', title=gettext("Profile"),
-                              apps_contrib=apps_contrib,
-                              apps_published=apps_published,
-                              apps_draft=apps_draft,
-                              user=user)
+    return render_template('account/profile.html', title=gettext("Profile"),
+                          apps_contrib=apps_contrib,
+                          apps_published=apps_published,
+                          apps_draft=apps_draft)#,
+                          #user=user)
 
 
 @blueprint.route('/<name>/applications')
@@ -368,57 +261,34 @@ def applications(name):
     Returns a Jinja2 template with the list of projects of the user.
 
     """
-    user = User.query.filter_by(name=name).first()
-    if not user:
-        return abort(404)
-    if current_user.name != name:
-        return abort(403)
+    try:
+        session = get_session(db, bind='slave')
+        user = session.query(User).filter_by(name=name).first()
+        if not user:
+            return abort(404)
+        if current_user.name != name:
+            return abort(403)
 
-    user = db.session.query(model.user.User).get(current_user.id)
-    apps_published, apps_draft = _get_user_apps(user.id)
+        user = db.session.query(model.user.User).get(current_user.id)
+        apps_published, apps_draft = _get_user_apps(user.id)
+        apps_published.extend(cached_users.hidden_apps(user.id))
 
-    return render_template('account/applications.html',
-                           title=gettext("Projects"),
-                           apps_published=apps_published,
-                           apps_draft=apps_draft)
+        return render_template('account/applications.html',
+                               title=gettext("Projects"),
+                               apps_published=apps_published,
+                               apps_draft=apps_draft)
+    except: # pragma: no cover
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 def _get_user_apps(user_id):
-    apps_published = []
-    apps_draft = []
-    sql = text('''
-               SELECT app.id, app.name, app.short_name, app.description,
-               app.info
-               FROM app, task
-               WHERE app.id=task.app_id AND app.owner_id=:user_id AND
-               app.hidden=0 AND app.info LIKE('%task_presenter%')
-               GROUP BY app.id, app.name, app.short_name,
-               app.description,
-               app.info;''')
-
-    results = db.engine.execute(sql, user_id=user_id)
-    for row in results:
-        app = dict(id=row.id, name=row.name, short_name=row.short_name,
-                   description=row.description,
-                   info=json.loads(row.info))
-        apps_published.append(app)
-
-    sql = text('''
-               SELECT app.id, app.name, app.short_name, app.description,
-               app.info
-               FROM app
-               WHERE app.owner_id=:user_id
-               AND app.info NOT LIKE('%task_presenter%')
-               GROUP BY app.id, app.name, app.short_name,
-               app.description,
-               app.info;''')
-    results = db.engine.execute(sql, user_id=user_id)
-    for row in results:
-        app = dict(id=row.id, name=row.name, short_name=row.short_name,
-                   description=row.description,
-                   info=json.loads(row.info))
-        apps_draft.append(app)
+    apps_published = cached_users.published_apps(user_id)
+    apps_draft = cached_users.draft_apps(user_id)
     return apps_published, apps_draft
+
 
 
 @blueprint.route('/<name>/update', methods=['GET', 'POST'])
@@ -433,12 +303,11 @@ def update_profile(name):
     user = User.query.filter_by(name=name).first()
     if not user:
         return abort(404)
-    if current_user.id != user.id:
-        return abort(403)
+    require.user.update(user)
     show_passwd_form = True
     if user.twitter_user_id or user.google_user_id or user.facebook_user_id:
         show_passwd_form = False
-    usr, apps, apps_created = cached_users.get_user_summary(name)
+    usr = cached_users.get_user_summary(name)
     # Extend the values
     current_user.rank = usr.get('rank')
     current_user.score = usr.get('score')
@@ -585,32 +454,6 @@ def update_profile(name):
             return abort(415)
 
 
-class ChangePasswordForm(Form):
-
-    """Form for changing user's password."""
-
-    current_password = PasswordField(lazy_gettext('Current password'))
-
-    err_msg = lazy_gettext("Password cannot be empty")
-    err_msg_2 = lazy_gettext("Passwords must match")
-    new_password = PasswordField(lazy_gettext('New password'),
-                                 [validators.Required(err_msg),
-                                  validators.EqualTo('confirm', err_msg_2)])
-    confirm = PasswordField(lazy_gettext('Repeat password'))
-
-
-class ResetPasswordForm(Form):
-
-    """Class for resetting user's password."""
-
-    err_msg = lazy_gettext("Password cannot be empty")
-    err_msg_2 = lazy_gettext("Passwords must match")
-    new_password = PasswordField(lazy_gettext('New Password'),
-                                 [validators.Required(err_msg),
-                                  validators.EqualTo('confirm', err_msg_2)])
-    confirm = PasswordField(lazy_gettext('Repeat Password'))
-
-
 @blueprint.route('/reset-password', methods=['GET', 'POST'])
 def reset_password():
     """
@@ -624,7 +467,7 @@ def reset_password():
         abort(403)
     userdict = {}
     try:
-        userdict = signer.signer.loads(key, max_age=3600, salt='password-reset')
+        userdict = signer.loads(key, max_age=3600, salt='password-reset')
     except BadData:
         abort(403)
     username = userdict.get('user')
@@ -644,16 +487,6 @@ def reset_password():
     if request.method == 'POST' and not form.validate():
         flash(gettext('Please correct the errors'), 'error')
     return render_template('/account/password_reset.html', form=form)
-
-
-class ForgotPasswordForm(Form):
-
-    """Form Class for forgotten password."""
-
-    err_msg = lazy_gettext("Email must be between 3 and 35 characters long")
-    email_addr = TextField(lazy_gettext('Email Address'),
-                           [validators.Length(min=3, max=35, message=err_msg),
-                            validators.Email()])
 
 
 @blueprint.route('/forgot-password', methods=['GET', 'POST'])
@@ -686,7 +519,7 @@ def forgot_password():
                     user=user, account_name='Google')
             else:
                 userdict = {'user': user.name, 'password': user.passwd_hash}
-                key = signer.signer.dumps(userdict, salt='password-reset')
+                key = signer.dumps(userdict, salt='password-reset')
                 recovery_url = url_for('.reset_password',
                                        key=key, _external=True)
                 msg.body = render_template(
@@ -720,12 +553,9 @@ def reset_api_key(name):
     user = User.query.filter_by(name=name).first()
     if not user:
         return abort(404)
-    if current_user.name != user.name:
-        return abort(403)
-
+    require.user.update(user)
     title = ("User: %s &middot; Settings"
              "- Reset API KEY") % current_user.fullname
-    user = db.session.query(model.user.User).get(current_user.id)
     user.api_key = model.make_uuid()
     db.session.commit()
     cached_users.delete_user_summary(user.name)

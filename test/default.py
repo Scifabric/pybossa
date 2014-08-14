@@ -16,7 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.model import db, rebuild_db
+from pybossa.core import db
+#from pybossa.model import rebuild_db
 from pybossa.core import create_app, sentinel
 from pybossa.model.app import App
 from pybossa.model.category import Category
@@ -25,7 +26,13 @@ from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
 import pybossa.model as model
 from functools import wraps
+from factories import reset_all_pk_sequences
 import random
+import os
+
+
+os.environ['PYBOSSA_SETTINGS'] = '../settings_test.py'
+os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
 
 flask_app = create_app()
 
@@ -36,6 +43,11 @@ def with_context(f):
             return f(*args, **kwargs)
     return decorated_function
 
+def rebuild_db():
+    """Rebuild the DB."""
+    db.drop_all()
+    db.create_all()
+
 
 class Test(object):
     def setUp(self):
@@ -43,11 +55,13 @@ class Test(object):
         self.app = flask_app.test_client()
         with self.flask_app.app_context():
             rebuild_db()
+            reset_all_pk_sequences()
 
     def tearDown(self):
         with self.flask_app.app_context():
             db.session.remove()
             self.redis_flushall()
+            reset_all_pk_sequences()
 
     fullname = u'T Tester'
     fullname2 = u'T Tester 2'

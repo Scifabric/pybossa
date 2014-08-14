@@ -25,18 +25,12 @@ documentation**
 
 See [installation instructions](http://docs.pybossa.com/en/latest/install.html).
 
-**NOTE**: The latest version uses M2CRYPTO and the pypi version has a bug that
-does not allow you to sign properly RSA keys. Keep sure to use this other
-version (pinned in requirements.txt):
-`pip install -e git+https://github.com/Hypernode/M2Crypto#egg=M2Crypto`
-
-
 # Running Tests
 
 Just run the following command:
 
 ```
-  tox
+  nosetests test/
 ```
 
 # Useful Links

@@ -36,7 +36,7 @@ from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound
 from pybossa.util import jsonpify, crossdomain
 import pybossa.model as model
-from pybossa.core import db, csrf
+from pybossa.core import db, csrf, ratelimits
 from itsdangerous import URLSafeSerializer
 from pybossa.ratelimit import ratelimit
 import pybossa.sched as sched
@@ -62,7 +62,7 @@ api_versions = ['v0', 'v1.0']
 @blueprint.route('/', defaults={'version': 'v0'})
 @blueprint.route('/<version>/')
 @crossdomain(origin='*', headers=cors_headers)
-@ratelimit(limit=300, per=15 * 60)
+@ratelimit(limit=ratelimits['LIMIT'], per=ratelimits['PER'])
 def index(version):  # pragma: no cover
     """Return dummy text for welcome page."""
     if version in api_versions:
@@ -110,21 +110,12 @@ register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
 @jsonpify
 @blueprint.route('/app/<app_id>/newtask')
 @crossdomain(origin='*', headers=cors_headers)
-@ratelimit(limit=300, per=15 * 60)
+@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
 def new_task(app_id):
     """Return a new task for a project."""
     # Check if the request has an arg:
     try:
-        app = db.session.query(model.app.App).get(app_id)
-        if app is None:
-            raise NotFound
-        if request.args.get('offset'):
-            offset = int(request.args.get('offset'))
-        else:
-            offset = 0
-        user_id = None if current_user.is_anonymous() else current_user.id
-        user_ip = request.remote_addr if current_user.is_anonymous() else None
-        task = sched.new_task(app_id, user_id, user_ip, offset)
+        task = _retrieve_new_task(app_id)
         # If there is a task for the user, return it
         if task:
             r = make_response(json.dumps(task.dictize()))
@@ -135,12 +126,25 @@ def new_task(app_id):
     except Exception as e:
         return error.format_exception(e, target='app', action='GET')
 
+def _retrieve_new_task(app_id):
+    app = db.session.query(model.app.App).get(app_id)
+    if app is None:
+        raise NotFound
+    if request.args.get('offset'):
+        offset = int(request.args.get('offset'))
+    else:
+        offset = 0
+    user_id = None if current_user.is_anonymous() else current_user.id
+    user_ip = request.remote_addr if current_user.is_anonymous() else None
+    task = sched.new_task(app_id, user_id, user_ip, offset)
+    return task
+
 
 @jsonpify
 @blueprint.route('/app/<short_name>/userprogress')
 @blueprint.route('/app/<int:app_id>/userprogress')
 @crossdomain(origin='*', headers=cors_headers)
-@ratelimit(limit=300, per=15 * 60)
+@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
 def user_progress(app_id=None, short_name=None):
     """API endpoint for user progress.
 
@@ -154,13 +158,9 @@ def user_progress(app_id=None, short_name=None):
     """
     if app_id or short_name:
         if short_name:
-            app = db.session.query(model.app.App)\
-                    .filter(model.app.App.short_name == short_name)\
-                    .first()
-        if app_id:
-            app = db.session.query(model.app.App)\
-                    .get(app_id)
-
+            app = _retrieve_app(short_name=short_name)
+        elif app_id:
+            app = _retrieve_app(app_id=app_id)
         if app:
             if current_user.is_anonymous():
                 tr = db.session.query(model.task_run.TaskRun)\
@@ -178,3 +178,14 @@ def user_progress(app_id=None, short_name=None):
             return abort(404)
     else:  # pragma: no cover
         return abort(404)
+
+
+def _retrieve_app(app_id=None, short_name=None):
+    if app_id != None:
+        return db.session.query(model.app.App)\
+                    .get(app_id)
+    if short_name != None:
+        return db.session.query(model.app.App)\
+                    .filter(model.app.App.short_name == short_name)\
+                    .first()
+    return None
