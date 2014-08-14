@@ -152,59 +152,73 @@ class TestWeb(web.Helper):
     @with_context
     def test_03_register(self):
         """Test WEB register user works"""
-        with self.flask_app.app_context():
-            res = self.app.get('/account/signin')
-            assert 'Forgot Password' in res.data
+        res = self.app.get('/account/signin')
+        assert 'Forgot Password' in res.data
 
-            res = self.register(method="GET")
-            # The output should have a mime-type: text/html
-            assert res.mimetype == 'text/html', res
-            assert self.html_title("Register") in res.data, res
+        res = self.app.get('/account/register')
+        # The output should have a mime-type: text/html
+        assert res.mimetype == 'text/html', res
+        assert self.html_title("Register") in res.data, res
+        data = dict(fullname="John Doe", name="johndoe",
+                    password="p4ssw0rd", confirm="p4ssw0rd",
+                    email_addr="johndoe@example.com")
 
-            res = self.register()
-            assert self.html_title() in res.data, res
-            assert "Thanks for signing-up" in res.data, res.data
+        # Form validations... should be moved to a different place
+        # With valid form validation
+        res = self.app.post('/account/register', data=data)
+        assert self.html_title() in res.data, res
+        assert "Just one more step, please" in res.data, res.data
 
-            res = self.register()
-            assert self.html_title("Register") in res.data, res
-            assert "The user name is already taken" in res.data, res.data
+        self.register()
+        res = self.app.post('/account/register', data=data)
+        assert self.html_title("Register") in res.data, res
+        assert "The user name is already taken" in res.data, res.data
 
-            res = self.register(fullname='')
-            assert self.html_title("Register") in res.data, res
-            msg = "Full name must be between 3 and 35 characters long"
-            assert msg in res.data, res.data
+        data['fullname'] = ''
+        res = self.app.post('/account/register', data=data)
+        assert self.html_title("Register") in res.data, res
+        msg = "Full name must be between 3 and 35 characters long"
+        assert msg in res.data, res.data
 
-            res = self.register(name='')
-            assert self.html_title("Register") in res.data, res
-            msg = "User name must be between 3 and 35 characters long"
-            assert msg in res.data, res.data
+        data['name'] = ''
+        res = self.app.post('/account/register', data=data)
+        assert self.html_title("Register") in res.data, res
+        msg = "User name must be between 3 and 35 characters long"
+        assert msg in res.data, res.data
 
-            res = self.register(name='%a/$|')
-            assert self.html_title("Register") in res.data, res
-            msg = '$#&amp;\/| and space symbols are forbidden'
-            assert msg in res.data, res.data
+        data['name'] = '%a/$|'
+        res = self.app.post('/account/register', data=data)
+        assert self.html_title("Register") in res.data, res
+        msg = '$#&amp;\/| and space symbols are forbidden'
+        assert msg in res.data, res.data
 
-            res = self.register(email='')
-            assert self.html_title("Register") in res.data, res.data
-            assert self.html_title("Register") in res.data, res.data
-            msg = "Email must be between 3 and 35 characters long"
-            assert msg in res.data, res.data
+        data['email_addr'] = ''
+        res = self.app.post('/account/register', data=data)
+        assert self.html_title("Register") in res.data, res
+        assert self.html_title("Register") in res.data, res.data
+        msg = "Email must be between 3 and 35 characters long"
+        assert msg in res.data, res.data
 
-            res = self.register(email='invalidemailaddress')
-            assert self.html_title("Register") in res.data, res.data
-            assert "Invalid email address" in res.data, res.data
+        data['email_addr'] = 'invalidemailaddress'
+        res = self.app.post('/account/register', data=data)
+        assert self.html_title("Register") in res.data, res
+        assert "Invalid email address" in res.data, res.data
 
-            res = self.register()
-            assert self.html_title("Register") in res.data, res.data
-            assert "Email is already taken" in res.data, res.data
+        data['email_addr'] = 'johndoe@example.com'
+        res = self.app.post('/account/register', data=data)
+        assert self.html_title("Register") in res.data, res
+        assert "Email is already taken" in res.data, res.data
 
-            res = self.register(password='')
-            assert self.html_title("Register") in res.data, res.data
-            assert "Password cannot be empty" in res.data, res.data
+        data['password'] = ''
+        res = self.app.post('/account/register', data=data)
+        assert self.html_title("Register") in res.data, res
+        assert "Password cannot be empty" in res.data, res.data
 
-            res = self.register(password2='different')
-            assert self.html_title("Register") in res.data, res.data
-            assert "Passwords must match" in res.data, res.data
+        data['password'] = 'password'
+        data['confirm'] = 'different'
+        res = self.app.post('/account/register', data=data)
+        assert self.html_title("Register") in res.data, res
+        assert "Passwords must match" in res.data, res.data
 
     @with_context
     def test_04_signin_signout(self):
@@ -1802,8 +1816,8 @@ class TestWeb(web.Helper):
                             follow_redirects=True)
         assert "Yay, you changed your password succesfully!" in res.data, res.data
 
-        password = "mehpassword"
-        self.register(password=password)
+        password = "p4ssw0rd"
+        self.signin(password=password)
         res = self.app.post('/account/johndoe/update',
                             data={'current_password': "wrongpassword",
                                   'new_password': "p4ssw0rd",
@@ -1813,7 +1827,6 @@ class TestWeb(web.Helper):
         msg = "Your current password doesn't match the one in our records"
         assert msg in res.data
 
-        self.register(password=password)
         res = self.app.post('/account/johndoe/update',
                             data={'current_password': '',
                                   'new_password':'',
@@ -2124,9 +2137,8 @@ class TestWeb(web.Helper):
         self.signout()
 
         # Register another user
-        self.register(method="POST", fullname="Jane Doe", name="janedoe",
-                      password="janedoe", password2="janedoe",
-                      email="jane@jane.com")
+        self.register(fullname="Jane Doe", name="janedoe",
+                      password="janedoe", email="jane@jane.com")
         res = self.app.get("/", follow_redirects=True)
         error_msg = "There should not be a message for the root user"
         assert "Root Message" not in res.data, error_msg
@@ -2876,7 +2888,6 @@ class TestWeb(web.Helper):
         assert res.status_code == 401, res.status_code
 
         # As registered user
-        self.register()
         self.signin()
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 403, res.status_code
