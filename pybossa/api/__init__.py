@@ -150,18 +150,31 @@ def user_progress(app_id=None, short_name=None):
         elif app_id:
             app = _retrieve_app(app_id=app_id)
         if app:
-            if current_user.is_anonymous():
-                tr = db.session.query(model.task_run.TaskRun)\
-                       .filter(model.task_run.TaskRun.app_id == app.id)\
-                       .filter(model.task_run.TaskRun.user_ip == request.remote_addr)
-            else:
-                tr = db.session.query(model.task_run.TaskRun)\
-                       .filter(model.task_run.TaskRun.app_id == app.id)\
-                       .filter(model.task_run.TaskRun.user_id == current_user.id)
             try:
+                session = get_session(db, bind='slave')
+                # get done tasks from DB
+                if current_user.is_anonymous():
+                    sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
+                                  WHERE task_run.app_id=:app_id AND
+                                  task_run.user_ip=:user_ip;''')
+                    results = session.execute(sql, dict(app_id=app.id, user_ip=request.remote_addr))
+                    #tr = db.session.query(model.task_run.TaskRun)\
+                    #       .filter(model.task_run.TaskRun.app_id == app.id)\
+                    #       .filter(model.task_run.TaskRun.user_ip == request.remote_addr)
+                else:
+                    sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
+                                  WHERE task_run.app_id=:app_id AND
+                                  task_run.user_id=:user_id;''')
+                    results = session.execute(sql, dict(app_id=app.id, user_id=current_user.id))
+                    #tr = db.session.query(model.task_run.TaskRun)\
+                    #       .filter(model.task_run.TaskRun.app_id == app.id)\
+                    #       .filter(model.task_run.TaskRun.user_id == current_user.id)
+                n_task_runs = 0
+                for row in results:
+                    n_task_runs = row.n_task_runs
+                # get total tasks from DB
                 sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task
                               WHERE task.app_id=:app_id''')
-                session = get_session(db, bind='slave')
                 results = session.execute(sql, dict(app_id=app.id))
                 n_tasks = 0
                 for row in results:
@@ -171,7 +184,7 @@ def user_progress(app_id=None, short_name=None):
                 raise
             finally:
                 session.close()
-            tmp = dict(done=tr.count(), total=n_tasks)
+            tmp = dict(done=n_task_runs, total=n_tasks)
             return Response(json.dumps(tmp), mimetype="application/json")
         else:
             return abort(404)
