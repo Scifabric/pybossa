@@ -810,22 +810,18 @@ def tasks_browse(short_name, page):
         try:
             session = get_session(db, bind='slave')
             per_page = 10
+            offset = (page - 1) * per_page
             count = n_tasks
-            app_tasks = session.query(model.task.Task)\
-                .filter_by(app_id=app.get('id'))\
-                .order_by(model.task.Task.id)\
-                .limit(per_page)\
-                .offset((page - 1) * per_page)\
-                .all()
-
-            if not app_tasks and page != 1:
+            app_tasks = cached_apps.project_tasks(app.get('id'))
+            page_tasks = app_tasks[offset:offset+per_page]
+            if not page_tasks and page != 1:
                 abort(404)
 
             pagination = Pagination(page, per_page, count)
             return render_template('/applications/tasks_browse.html',
                                    app=app,
                                    owner=owner,
-                                   tasks=app_tasks,
+                                   tasks=page_tasks,
                                    title=title,
                                    pagination=pagination,
                                    n_tasks=n_tasks,
