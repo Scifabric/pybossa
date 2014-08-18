@@ -98,18 +98,19 @@ def get_top(n=4):
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
-def project_tasks(project_id):
+def browse_tasks(project_id):
     try:
-        sql = text('''SELECT * FROM task WHERE task.app_id=:app_id ORDER BY id;''')
+        sql = text('''
+                   SELECT task.id, count(task_run.id) as n_task_runs, task.n_answers
+                   FROM task LEFT OUTER JOIN task_run ON (task.id=task_run.task_id)
+                   WHERE task.app_id=:app_id GROUP BY task.id ORDER BY task.id''')
         session = get_session(db, bind='slave')
         results = session.execute(sql, dict(app_id=project_id))
         tasks = []
         for row in results:
-            task = dict(id=row.id, created=row.created, app_id=row.app_id,
-                        state=row.state, priority_0=row.priority_0,
-                        info=json.loads(row.info), n_answers=row.n_answers)
-            task['pct_status'] = _pct_status(row.id, row.n_answers)
-            task['task_runs'] = n_task_taskruns(row.id)
+            task = dict(id=row.id, n_task_runs=row.n_task_runs,
+                        n_answers=row.n_answers)
+            task['pct_status'] = _pct_status(row.n_task_runs, row.n_answers)
             tasks.append(task)
         return tasks
     except: #pragma: no cover
@@ -119,24 +120,14 @@ def project_tasks(project_id):
         session.close()
 
 
-def _pct_status(task_id, n_answers):
+def _pct_status(n_task_runs, n_answers):
     if n_answers != 0 and n_answers != None:
-        n_task_runs = n_task_taskruns(task_id)
-        return float(n_task_runs) / n_answers
+        # Check if it's bigger the n_task_runs that n_answers
+        if n_task_runs > n_answers:
+            return float(1)
+        else:
+            return float(n_task_runs) / n_answers
     return float(0)
-
-
-@memoize(timeout=timeouts.get('APP_TIMEOUT'))
-def n_task_taskruns(task_id):
-        sql = text('''SELECT COUNT(id)  AS n_task_runs FROM task_run
-                      WHERE task_id=:task_id;''')
-        session = get_session(db, bind='slave')
-        results = session.execute(sql, dict(task_id=task_id))
-        n_task_runs = 0
-        for row in results:
-            n_task_runs = row.n_task_runs
-        session.close()
-        return n_task_runs
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))

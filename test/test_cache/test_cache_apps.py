@@ -52,7 +52,6 @@ class TestAppsCache(Test):
         return app
 
 
-    @with_context
     def test_get_featured_front_page(self):
         """Test CACHE PROJECTS get_featured_front_page returns featured projects"""
 
@@ -63,7 +62,6 @@ class TestAppsCache(Test):
         assert len(featured) is 1, featured
 
 
-    @with_context
     def test_get_featured_front_page_only_returns_featured(self):
         """Test CACHE PROJECTS get_featured_front_page returns only featured projects"""
 
@@ -76,7 +74,6 @@ class TestAppsCache(Test):
         assert len(featured) is 1, featured
 
 
-    @with_context
     def test_get_featured_front_page_not_returns_hidden_apps(self):
         """Test CACHE PROJECTS get_featured_front_page does not return hidden projects"""
 
@@ -88,7 +85,6 @@ class TestAppsCache(Test):
         assert len(featured) is 0, featured
 
 
-    @with_context
     def test_get_featured_front_page_returns_required_fields(self):
         """Test CACHE PROJECTS get_featured_front_page returns the required info
         about each featured project"""
@@ -103,7 +99,6 @@ class TestAppsCache(Test):
             assert featured.has_key(field), "%s not in app info" % field
 
 
-    @with_context
     def test_get_top_returns_apps_with_most_taskruns(self):
         """Test CACHE PROJECTS get_top returns the projects with most taskruns in order"""
 
@@ -120,7 +115,6 @@ class TestAppsCache(Test):
         assert top_apps[3]['name'] == 'four', top_apps
 
 
-    @with_context
     def test_get_top_respects_limit(self):
         """Test CACHE PROJECTS get_top returns only the top n projects"""
 
@@ -134,7 +128,6 @@ class TestAppsCache(Test):
         assert len(top_apps) is 2, len(top_apps)
 
 
-    @with_context
     def test_get_top_returns_four_apps_by_default(self):
         """Test CACHE PROJECTS get_top returns the top 4 projects by default"""
 
@@ -149,7 +142,6 @@ class TestAppsCache(Test):
         assert len(top_apps) is 4, len(top_apps)
 
 
-    @with_context
     def test_get_top_doesnt_return_hidden_apps(self):
         """Test CACHE PROJECTS get_top does not return projects that are hidden"""
 
@@ -164,7 +156,6 @@ class TestAppsCache(Test):
         for app in top_apps:
             assert app['name'] != 'hidden', app['name']
 
-    @with_context
     def test_n_completed_tasks_no_completed_tasks(self):
         """Test CACHE PROJECTS n_completed_tasks returns 0 if no completed tasks"""
 
@@ -175,7 +166,6 @@ class TestAppsCache(Test):
         assert completed_tasks == 0, err_msg
 
 
-    @with_context
     def test_n_completed_tasks_with_completed_tasks(self):
         """Test CACHE PROJECTS n_completed_tasks returns number of completed tasks
         if there are any"""
@@ -187,7 +177,6 @@ class TestAppsCache(Test):
         assert completed_tasks == 5, err_msg
 
 
-    @with_context
     def test_n_completed_tasks_with_all_tasks_completed(self):
         """Test CACHE PROJECTS n_completed_tasks returns number of tasks if all
         tasks are completed"""
@@ -199,7 +188,6 @@ class TestAppsCache(Test):
         assert completed_tasks == 4, err_msg
 
 
-    @with_context
     def test_n_registered_volunteers(self):
         """Test CACHE PROJECTS n_registered_volunteers returns number of volunteers
         that contributed to a project when each only submited one task run"""
@@ -211,7 +199,6 @@ class TestAppsCache(Test):
         assert registered_volunteers == 3, err_msg
 
 
-    @with_context
     def test_n_registered_volunteers_with_more_than_one_taskrun(self):
         """Test CACHE PROJECTS n_registered_volunteers returns number of volunteers
         that contributed to a project when any submited more than one task run"""
@@ -225,7 +212,6 @@ class TestAppsCache(Test):
         assert registered_volunteers == 2, err_msg
 
 
-    @with_context
     def test_n_anonymous_volunteers(self):
         """Test CACHE PROJECTS n_anonymous_volunteers returns number of volunteers
         that contributed to a project when each only submited one task run"""
@@ -237,7 +223,6 @@ class TestAppsCache(Test):
         assert anonymous_volunteers == 3, err_msg
 
 
-    @with_context
     def test_n_anonymous_volunteers_with_more_than_one_taskrun(self):
         """Test CACHE PROJECTS n_anonymous_volunteers returns number of volunteers
         that contributed to a project when any submited more than one task run"""
@@ -249,7 +234,6 @@ class TestAppsCache(Test):
         assert anonymous_volunteers == 2, err_msg
 
 
-    @with_context
     def test_n_volunteers(self):
         """Test CACHE PROJECTS n_volunteers returns the sum of the anonymous
         plus registered volunteers that contributed to a project"""
@@ -284,86 +268,65 @@ class TestAppsCache(Test):
         assert number_of_drafts == 2, number_of_drafts
 
 
-    def test_project_tasks_returns_no_tasks(self):
-        """Test CACHE PROJECTS project_tasks returns an empty list if a project
+    def test_browse_tasks_returns_no_tasks(self):
+        """Test CACHE PROJECTS browse_tasks returns an empty list if a project
         has no tasks"""
 
         project = AppFactory.create()
 
-        project_tasks = cached_apps.project_tasks(project.id)
+        browse_tasks = cached_apps.browse_tasks(project.id)
 
-        assert project_tasks == [], project_tasks
+        assert browse_tasks == [], browse_tasks
 
 
-    def test_project_tasks_returns_all_tasks(self):
-        """Test CACHE PROJECTS project_tasks returns a list with all the tasks
+    def test_browse_tasks_returns_all_tasks(self):
+        """Test CACHE PROJECTS browse_tasks returns a list with all the tasks
         from a given project"""
 
         project = AppFactory.create()
         TaskFactory.create_batch(2, app=project)
 
-        project_tasks = cached_apps.project_tasks(project.id)
+        browse_tasks = cached_apps.browse_tasks(project.id)
 
-        assert len(project_tasks) == 2, project_tasks
+        assert len(browse_tasks) == 2, browse_tasks
 
 
-    def test_project_tasks_returns_tasks(self):
-        """Test CACHE PROJECTS project_tasks returns a list with objects
+    def test_browse_tasks_returns_tasks(self):
+        """Test CACHE PROJECTS browse_tasks returns a list with objects
         with the required task attributes"""
 
         project = AppFactory.create()
         task = TaskFactory.create( app=project, info={})
-        attributes = ('id', 'created', 'app_id', 'state',
-                      'priority_0', 'info', 'n_answers')
+        attributes = ('id', 'n_answers')
 
-        cached_task = cached_apps.project_tasks(project.id)[0]
+        cached_task = cached_apps.browse_tasks(project.id)[0]
 
         for attr in attributes:
             assert cached_task.get(attr) == getattr(task, attr), attr
 
 
-    def test_project_tasks_returns_pct_status(self):
-        """Test CACHE PROJECTS project_tasks returns also the completion
+    def test_browse_tasks_returns_pct_status(self):
+        """Test CACHE PROJECTS browse_tasks returns also the completion
         percentage of each task"""
 
         project = AppFactory.create()
         task = TaskFactory.create( app=project, info={}, n_answers=4)
 
-        cached_task = cached_apps.project_tasks(project.id)[0]
-
+        cached_task = cached_apps.browse_tasks(project.id)[0]
+        # 0 if no task runs
         assert cached_task.get('pct_status') == 0, cached_task.get('pct_status')
 
         TaskRunFactory.create(task=task)
-        cached_task = cached_apps.project_tasks(project.id)[0]
-
+        cached_task = cached_apps.browse_tasks(project.id)[0]
+        # Gets updated with new task runs
         assert cached_task.get('pct_status') == 0.25, cached_task.get('pct_status')
 
+        TaskRunFactory.create_batch(3, task=task)
+        cached_task = cached_apps.browse_tasks(project.id)[0]
+        # To a maximum of 1
+        assert cached_task.get('pct_status') == 1.0, cached_task.get('pct_status')
+
         TaskRunFactory.create(task=task)
-        cached_task = cached_apps.project_tasks(project.id)[0]
-
-        assert cached_task.get('pct_status') == 0.5, cached_task.get('pct_status')
-
-
-    def test_n_task_taskruns_returns_0_no_taskruns(self):
-        """Test CACHE PROJECTS n_task_taskruns returns 0 for a task with no
-        contributions"""
-
-        project = AppFactory.create()
-        task = TaskFactory.create(app=project)
-
-        n_taskruns = cached_apps.n_task_taskruns(task.id)
-
-        assert n_taskruns == 0, n_taskruns
-
-
-    def test_n_task_taskruns_returns_number_of_taskruns(self):
-        """Test CACHE PROJECTS n_task_taskruns returns 0 for a task with no
-        contributions"""
-
-        project = AppFactory.create()
-        task = TaskFactory.create(app=project)
-        TaskRunFactory.create_batch(2, task=task)
-
-        n_taskruns = cached_apps.n_task_taskruns(task.id)
-
-        assert n_taskruns == 2, n_taskruns
+        cached_task = cached_apps.browse_tasks(project.id)[0]
+        # And it does not go over 1 (that is 100%!!)
+        assert cached_task.get('pct_status') == 1.0, cached_task.get('pct_status')
