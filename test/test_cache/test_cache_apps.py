@@ -297,8 +297,7 @@ class TestAppsCache(Test):
 
         project = AppFactory.create()
         task = TaskFactory.create( app=project, info={})
-        attributes = ('id', 'created', 'app_id', 'state',
-                      'priority_0', 'info', 'n_answers')
+        attributes = ('id', 'n_answers')
 
         cached_task = cached_apps.project_tasks(project.id)[0]
 

@@ -100,14 +100,13 @@ def get_top(n=4):
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def project_tasks(project_id):
     try:
-        sql = text('''SELECT * FROM task WHERE task.app_id=:app_id ORDER BY id;''')
+        sql = text('''SELECT id, n_answers FROM task
+                      WHERE task.app_id=:app_id ORDER BY id;''')
         session = get_session(db, bind='slave')
         results = session.execute(sql, dict(app_id=project_id))
         tasks = []
         for row in results:
-            task = dict(id=row.id, created=row.created, app_id=row.app_id,
-                        state=row.state, priority_0=row.priority_0,
-                        info=json.loads(row.info), n_answers=row.n_answers)
+            task = dict(id=row.id, n_answers=row.n_answers)
             task['pct_status'] = _pct_status(row.id, row.n_answers)
             task['task_runs'] = n_task_taskruns(row.id)
             tasks.append(task)
