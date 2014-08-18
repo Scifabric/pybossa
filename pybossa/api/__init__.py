@@ -162,7 +162,7 @@ def user_progress(app_id=None, short_name=None):
                 sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task
                               WHERE task.app_id=:app_id''')
                 session = get_session(db, bind='slave')
-                results = session.execute(sql, dict(app_id=app_id))
+                results = session.execute(sql, dict(app_id=app.id))
                 n_tasks = 0
                 for row in results:
                     n_tasks = row.n_tasks
