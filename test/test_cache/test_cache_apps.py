@@ -313,16 +313,20 @@ class TestAppsCache(Test):
         task = TaskFactory.create( app=project, info={}, n_answers=4)
 
         cached_task = cached_apps.project_tasks(project.id)[0]
-
+        # 0 if no task runs
         assert cached_task.get('pct_status') == 0, cached_task.get('pct_status')
 
         TaskRunFactory.create(task=task)
         cached_task = cached_apps.project_tasks(project.id)[0]
-
+        # Gets updated with new task runs
         assert cached_task.get('pct_status') == 0.25, cached_task.get('pct_status')
+
+        TaskRunFactory.create_batch(3, task=task)
+        cached_task = cached_apps.project_tasks(project.id)[0]
+        # To a maximum of 1
+        assert cached_task.get('pct_status') == 1.0, cached_task.get('pct_status')
 
         TaskRunFactory.create(task=task)
         cached_task = cached_apps.project_tasks(project.id)[0]
-
-        assert cached_task.get('pct_status') == 0.5, cached_task.get('pct_status')
-
+        # And it does not go over 1 (that is 100%!!)
+        assert cached_task.get('pct_status') == 1.0, cached_task.get('pct_status')
