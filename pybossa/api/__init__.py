@@ -36,7 +36,7 @@ from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound
 from pybossa.util import jsonpify, crossdomain
 import pybossa.model as model
-from pybossa.core import db, csrf, ratelimits
+from pybossa.core import db, csrf, ratelimits, get_session
 from itsdangerous import URLSafeSerializer
 from pybossa.ratelimit import ratelimit
 import pybossa.sched as sched
@@ -49,6 +49,7 @@ from category import CategoryAPI
 from vmcp import VmcpAPI
 from user import UserAPI
 from token import TokenAPI
+from sqlalchemy.sql import text
 
 blueprint = Blueprint('api', __name__)
 
@@ -160,7 +161,7 @@ def user_progress(app_id=None, short_name=None):
             try:
                 sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task
                               WHERE task.app_id=:app_id''')
-                session = get_session(db)
+                session = get_session(db, bind='slave')
                 results = session.execute(sql, dict(app_id=app_id))
                 n_tasks = 0
                 for row in results:
