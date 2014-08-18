@@ -810,9 +810,7 @@ def tasks_browse(short_name, page):
         try:
             session = get_session(db, bind='slave')
             per_page = 10
-            count = session.query(model.task.Task)\
-                .filter_by(app_id=app.get('id'))\
-                .count()
+            count = n_tasks
             app_tasks = session.query(model.task.Task)\
                 .filter_by(app_id=app.get('id'))\
                 .order_by(model.task.Task.id)\
