@@ -109,6 +109,7 @@ def project_tasks(project_id):
                         state=row.state, priority_0=row.priority_0,
                         info=json.loads(row.info), n_answers=row.n_answers)
             task['pct_status'] = _pct_status(row.id, row.n_answers)
+            task['task_runs'] = n_task_taskruns(row.id)
             tasks.append(task)
         return tasks
     except: #pragma: no cover
@@ -120,6 +121,13 @@ def project_tasks(project_id):
 
 def _pct_status(task_id, n_answers):
     if n_answers != 0 and n_answers != None:
+        n_task_runs = n_task_taskruns(task_id)
+        return float(n_task_runs) / n_answers
+    return float(0)
+
+
+@memoize(timeout=timeouts.get('APP_TIMEOUT'))
+def n_task_taskruns(task_id):
         sql = text('''SELECT COUNT(id)  AS n_task_runs FROM task_run
                       WHERE task_id=:task_id;''')
         session = get_session(db, bind='slave')
@@ -128,8 +136,7 @@ def _pct_status(task_id, n_answers):
         for row in results:
             n_task_runs = row.n_task_runs
         session.close()
-        return float(n_task_runs) / n_answers
-    return float(0)
+        return n_task_runs
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
