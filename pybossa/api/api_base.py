@@ -140,7 +140,7 @@ class APIBase(MethodView):
 
     def _set_limit_and_offset(self):
         try:
-            limit = min(10000, int(request.args.get('limit')))
+            limit = min(100, int(request.args.get('limit')))
         except (ValueError, TypeError):
             limit = 20
         try:
