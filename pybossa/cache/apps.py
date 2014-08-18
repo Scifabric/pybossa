@@ -131,19 +131,6 @@ def _pct_status(n_task_runs, n_answers):
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
-def n_task_taskruns(task_id):
-        sql = text('''SELECT COUNT(id)  AS n_task_runs FROM task_run
-                      WHERE task_id=:task_id;''')
-        session = get_session(db, bind='slave')
-        results = session.execute(sql, dict(task_id=task_id))
-        n_task_runs = 0
-        for row in results:
-            n_task_runs = row.n_task_runs
-        session.close()
-        return n_task_runs
-
-
-@memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def n_tasks(app_id):
     try:
         sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task
