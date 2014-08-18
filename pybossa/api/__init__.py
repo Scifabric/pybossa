@@ -179,13 +179,13 @@ def user_progress(app_id=None, short_name=None):
                 n_tasks = 0
                 for row in results:
                     n_tasks = row.n_tasks
+                tmp = dict(done=n_task_runs, total=n_tasks)
+                return Response(json.dumps(tmp), mimetype="application/json")
             except: # pragma: no cover
                 session.rollback()
                 raise
             finally:
                 session.close()
-            tmp = dict(done=n_task_runs, total=n_tasks)
-            return Response(json.dumps(tmp), mimetype="application/json")
         else:
             return abort(404)
     else:  # pragma: no cover
