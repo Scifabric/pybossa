@@ -124,7 +124,7 @@ def _pct_status(n_task_runs, n_answers):
     if n_answers != 0 and n_answers != None:
         # Check if it's bigger the n_task_runs that n_answers
         if n_task_runs > n_answers:
-            return float(100)
+            return float(1)
         else:
             return float(n_task_runs) / n_answers
     return float(0)
