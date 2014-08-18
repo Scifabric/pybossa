@@ -128,7 +128,6 @@ def _pct_status(task_id, n_answers):
         for row in results:
             n_task_runs = row.n_task_runs
         session.close()
-        print n_task_runs
         return float(n_task_runs) / n_answers
     return float(0)
 
