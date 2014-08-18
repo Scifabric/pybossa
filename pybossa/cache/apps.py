@@ -97,7 +97,7 @@ def get_top(n=4):
         session.close()
 
 
-@memoize(timeout=timeouts.get('APP_TIMEOUT'))
+@memoize(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'))
 def browse_tasks(project_id):
     try:
         sql = text('''
