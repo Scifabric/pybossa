@@ -157,9 +157,20 @@ def user_progress(app_id=None, short_name=None):
                 tr = db.session.query(model.task_run.TaskRun)\
                        .filter(model.task_run.TaskRun.app_id == app.id)\
                        .filter(model.task_run.TaskRun.user_id == current_user.id)
-            tasks = db.session.query(model.task.Task)\
-                .filter(model.task.Task.app_id == app.id)
-            tmp = dict(done=tr.count(), total=tasks.count())
+            try:
+                sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task
+                              WHERE task.app_id=:app_id''')
+                session = get_session(db)
+                results = session.execute(sql, dict(app_id=app_id))
+                n_tasks = 0
+                for row in results:
+                    n_tasks = row.n_tasks
+            except: # pragma: no cover
+                session.rollback()
+                raise
+            finally:
+                session.close()
+            tmp = dict(done=tr.count(), total=n_tasks)
             return Response(json.dumps(tmp), mimetype="application/json")
         else:
             return abort(404)
