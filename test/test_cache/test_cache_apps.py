@@ -282,3 +282,88 @@ class TestAppsCache(Test):
         number_of_drafts = cached_apps.n_draft()
 
         assert number_of_drafts == 2, number_of_drafts
+
+
+    def test_project_tasks_returns_no_tasks(self):
+        """Test CACHE PROJECTS project_tasks returns an empty list if a project
+        has no tasks"""
+
+        project = AppFactory.create()
+
+        project_tasks = cached_apps.project_tasks(project.id)
+
+        assert project_tasks == [], project_tasks
+
+
+    def test_project_tasks_returns_all_tasks(self):
+        """Test CACHE PROJECTS project_tasks returns a list with all the tasks
+        from a given project"""
+
+        project = AppFactory.create()
+        TaskFactory.create_batch(2, app=project)
+
+        project_tasks = cached_apps.project_tasks(project.id)
+
+        assert len(project_tasks) == 2, project_tasks
+
+
+    def test_project_tasks_returns_tasks(self):
+        """Test CACHE PROJECTS project_tasks returns a list with objects
+        with the required task attributes"""
+
+        project = AppFactory.create()
+        task = TaskFactory.create( app=project, info={})
+        attributes = ('id', 'created', 'app_id', 'state',
+                      'priority_0', 'info', 'n_answers')
+
+        cached_task = cached_apps.project_tasks(project.id)[0]
+
+        for attr in attributes:
+            assert cached_task.get(attr) == getattr(task, attr), attr
+
+
+    def test_project_tasks_returns_pct_status(self):
+        """Test CACHE PROJECTS project_tasks returns also the completion
+        percentage of each task"""
+
+        project = AppFactory.create()
+        task = TaskFactory.create( app=project, info={}, n_answers=4)
+
+        cached_task = cached_apps.project_tasks(project.id)[0]
+
+        assert cached_task.get('pct_status') == 0, cached_task.get('pct_status')
+
+        TaskRunFactory.create(task=task)
+        cached_task = cached_apps.project_tasks(project.id)[0]
+
+        assert cached_task.get('pct_status') == 0.25, cached_task.get('pct_status')
+
+        TaskRunFactory.create(task=task)
+        cached_task = cached_apps.project_tasks(project.id)[0]
+
+        assert cached_task.get('pct_status') == 0.5, cached_task.get('pct_status')
+
+
+    def test_n_task_taskruns_returns_0_no_taskruns(self):
+        """Test CACHE PROJECTS n_task_taskruns returns 0 for a task with no
+        contributions"""
+
+        project = AppFactory.create()
+        task = TaskFactory.create(app=project)
+
+        n_taskruns = cached_apps.n_task_taskruns(task.id)
+
+        assert n_taskruns == 0, n_taskruns
+
+
+    def test_n_task_taskruns_returns_number_of_taskruns(self):
+        """Test CACHE PROJECTS n_task_taskruns returns 0 for a task with no
+        contributions"""
+
+        project = AppFactory.create()
+        task = TaskFactory.create(app=project)
+        TaskRunFactory.create_batch(2, task=task)
+
+        n_taskruns = cached_apps.n_task_taskruns(task.id)
+
+        assert n_taskruns == 2, n_taskruns
