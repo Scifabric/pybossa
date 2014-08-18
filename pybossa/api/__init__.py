@@ -155,28 +155,21 @@ def user_progress(app_id=None, short_name=None):
                 session = get_session(db, bind='slave')
                 # get done tasks from DB
                 if current_user.is_anonymous():
-                    #sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
-                    #              WHERE task_run.app_id=:app_id AND
-                    #              task_run.user_ip=:user_ip;''')
+                    sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
+                                  WHERE task_run.app_id=:app_id AND
+                                  task_run.user_ip=:user_ip;''')
                     user_ip = request.remote_addr
                     if (user_ip == None):
-                        user_ip = '127.0.0.1' # set address to local host for internal tests (no request.remote_addr)!
-                    #results = session.execute(sql, dict(app_id=app.id, user_ip=user_ip)) # request.remote_addr))
-                    tr = db.session.query(model.task_run.TaskRun)\
-                           .filter(model.task_run.TaskRun.app_id == app.id)\
-                           .filter(model.task_run.TaskRun.user_ip == user_ip)
+                        user_ip = '127.0.0.1' # set address to local host for internal tests (see AnonymousTaskRunFactory)!
+                    results = session.execute(sql, dict(app_id=app.id, user_ip=user_ip))
                 else:
-                    #sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
-                    #              WHERE task_run.app_id=:app_id AND
-                    #              task_run.user_id=:user_id;''')
-                    #results = session.execute(sql, dict(app_id=app.id, user_id=current_user.id))
-                    tr = db.session.query(model.task_run.TaskRun)\
-                           .filter(model.task_run.TaskRun.app_id == app.id)\
-                           .filter(model.task_run.TaskRun.user_id == current_user.id)
-                #n_task_runs = 0
-                #for row in results:
-                #    n_task_runs = row.n_task_runs
-
+                    sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
+                                  WHERE task_run.app_id=:app_id AND
+                                  task_run.user_id=:user_id;''')
+                    results = session.execute(sql, dict(app_id=app.id, user_id=current_user.id))
+                n_task_runs = 0
+                for row in results:
+                    n_task_runs = row.n_task_runs
                 # get total tasks from DB
                 sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task
                               WHERE task.app_id=:app_id''')
@@ -184,7 +177,7 @@ def user_progress(app_id=None, short_name=None):
                 n_tasks = 0
                 for row in results:
                     n_tasks = row.n_tasks
-                tmp = dict(done=tr.count(), total=n_tasks)
+                tmp = dict(done=n_task_runs, total=n_tasks)
                 return Response(json.dumps(tmp), mimetype="application/json")
             except: # pragma: no cover
                 session.rollback()
