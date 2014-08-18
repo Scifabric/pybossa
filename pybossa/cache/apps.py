@@ -98,7 +98,7 @@ def get_top(n=4):
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
-def project_tasks(project_id):
+def browse_tasks(project_id):
     try:
         sql = text('''
                    SELECT task.id, count(task_run.id) as n_task_runs, task.n_answers

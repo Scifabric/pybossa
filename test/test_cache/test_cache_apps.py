@@ -268,65 +268,65 @@ class TestAppsCache(Test):
         assert number_of_drafts == 2, number_of_drafts
 
 
-    def test_project_tasks_returns_no_tasks(self):
-        """Test CACHE PROJECTS project_tasks returns an empty list if a project
+    def test_browse_tasks_returns_no_tasks(self):
+        """Test CACHE PROJECTS browse_tasks returns an empty list if a project
         has no tasks"""
 
         project = AppFactory.create()
 
-        project_tasks = cached_apps.project_tasks(project.id)
+        browse_tasks = cached_apps.browse_tasks(project.id)
 
-        assert project_tasks == [], project_tasks
+        assert browse_tasks == [], browse_tasks
 
 
-    def test_project_tasks_returns_all_tasks(self):
-        """Test CACHE PROJECTS project_tasks returns a list with all the tasks
+    def test_browse_tasks_returns_all_tasks(self):
+        """Test CACHE PROJECTS browse_tasks returns a list with all the tasks
         from a given project"""
 
         project = AppFactory.create()
         TaskFactory.create_batch(2, app=project)
 
-        project_tasks = cached_apps.project_tasks(project.id)
+        browse_tasks = cached_apps.browse_tasks(project.id)
 
-        assert len(project_tasks) == 2, project_tasks
+        assert len(browse_tasks) == 2, browse_tasks
 
 
-    def test_project_tasks_returns_tasks(self):
-        """Test CACHE PROJECTS project_tasks returns a list with objects
+    def test_browse_tasks_returns_tasks(self):
+        """Test CACHE PROJECTS browse_tasks returns a list with objects
         with the required task attributes"""
 
         project = AppFactory.create()
         task = TaskFactory.create( app=project, info={})
         attributes = ('id', 'n_answers')
 
-        cached_task = cached_apps.project_tasks(project.id)[0]
+        cached_task = cached_apps.browse_tasks(project.id)[0]
 
         for attr in attributes:
             assert cached_task.get(attr) == getattr(task, attr), attr
 
 
-    def test_project_tasks_returns_pct_status(self):
-        """Test CACHE PROJECTS project_tasks returns also the completion
+    def test_browse_tasks_returns_pct_status(self):
+        """Test CACHE PROJECTS browse_tasks returns also the completion
         percentage of each task"""
 
         project = AppFactory.create()
         task = TaskFactory.create( app=project, info={}, n_answers=4)
 
-        cached_task = cached_apps.project_tasks(project.id)[0]
+        cached_task = cached_apps.browse_tasks(project.id)[0]
         # 0 if no task runs
         assert cached_task.get('pct_status') == 0, cached_task.get('pct_status')
 
         TaskRunFactory.create(task=task)
-        cached_task = cached_apps.project_tasks(project.id)[0]
+        cached_task = cached_apps.browse_tasks(project.id)[0]
         # Gets updated with new task runs
         assert cached_task.get('pct_status') == 0.25, cached_task.get('pct_status')
 
         TaskRunFactory.create_batch(3, task=task)
-        cached_task = cached_apps.project_tasks(project.id)[0]
+        cached_task = cached_apps.browse_tasks(project.id)[0]
         # To a maximum of 1
         assert cached_task.get('pct_status') == 1.0, cached_task.get('pct_status')
 
         TaskRunFactory.create(task=task)
-        cached_task = cached_apps.project_tasks(project.id)[0]
+        cached_task = cached_apps.browse_tasks(project.id)[0]
         # And it does not go over 1 (that is 100%!!)
         assert cached_task.get('pct_status') == 1.0, cached_task.get('pct_status')

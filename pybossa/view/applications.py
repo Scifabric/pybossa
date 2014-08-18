@@ -812,7 +812,7 @@ def tasks_browse(short_name, page):
             per_page = 10
             offset = (page - 1) * per_page
             count = n_tasks
-            app_tasks = cached_apps.project_tasks(app.get('id'))
+            app_tasks = cached_apps.browse_tasks(app.get('id'))
             page_tasks = app_tasks[offset:offset+per_page]
             if not page_tasks and page != 1:
                 abort(404)
