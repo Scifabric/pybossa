@@ -52,7 +52,6 @@ class TestAppsCache(Test):
         return app
 
 
-    @with_context
     def test_get_featured_front_page(self):
         """Test CACHE PROJECTS get_featured_front_page returns featured projects"""
 
@@ -63,7 +62,6 @@ class TestAppsCache(Test):
         assert len(featured) is 1, featured
 
 
-    @with_context
     def test_get_featured_front_page_only_returns_featured(self):
         """Test CACHE PROJECTS get_featured_front_page returns only featured projects"""
 
@@ -76,7 +74,6 @@ class TestAppsCache(Test):
         assert len(featured) is 1, featured
 
 
-    @with_context
     def test_get_featured_front_page_not_returns_hidden_apps(self):
         """Test CACHE PROJECTS get_featured_front_page does not return hidden projects"""
 
@@ -88,7 +85,6 @@ class TestAppsCache(Test):
         assert len(featured) is 0, featured
 
 
-    @with_context
     def test_get_featured_front_page_returns_required_fields(self):
         """Test CACHE PROJECTS get_featured_front_page returns the required info
         about each featured project"""
@@ -103,7 +99,6 @@ class TestAppsCache(Test):
             assert featured.has_key(field), "%s not in app info" % field
 
 
-    @with_context
     def test_get_top_returns_apps_with_most_taskruns(self):
         """Test CACHE PROJECTS get_top returns the projects with most taskruns in order"""
 
@@ -120,7 +115,6 @@ class TestAppsCache(Test):
         assert top_apps[3]['name'] == 'four', top_apps
 
 
-    @with_context
     def test_get_top_respects_limit(self):
         """Test CACHE PROJECTS get_top returns only the top n projects"""
 
@@ -134,7 +128,6 @@ class TestAppsCache(Test):
         assert len(top_apps) is 2, len(top_apps)
 
 
-    @with_context
     def test_get_top_returns_four_apps_by_default(self):
         """Test CACHE PROJECTS get_top returns the top 4 projects by default"""
 
@@ -149,7 +142,6 @@ class TestAppsCache(Test):
         assert len(top_apps) is 4, len(top_apps)
 
 
-    @with_context
     def test_get_top_doesnt_return_hidden_apps(self):
         """Test CACHE PROJECTS get_top does not return projects that are hidden"""
 
@@ -164,7 +156,6 @@ class TestAppsCache(Test):
         for app in top_apps:
             assert app['name'] != 'hidden', app['name']
 
-    @with_context
     def test_n_completed_tasks_no_completed_tasks(self):
         """Test CACHE PROJECTS n_completed_tasks returns 0 if no completed tasks"""
 
@@ -175,7 +166,6 @@ class TestAppsCache(Test):
         assert completed_tasks == 0, err_msg
 
 
-    @with_context
     def test_n_completed_tasks_with_completed_tasks(self):
         """Test CACHE PROJECTS n_completed_tasks returns number of completed tasks
         if there are any"""
@@ -187,7 +177,6 @@ class TestAppsCache(Test):
         assert completed_tasks == 5, err_msg
 
 
-    @with_context
     def test_n_completed_tasks_with_all_tasks_completed(self):
         """Test CACHE PROJECTS n_completed_tasks returns number of tasks if all
         tasks are completed"""
@@ -199,7 +188,6 @@ class TestAppsCache(Test):
         assert completed_tasks == 4, err_msg
 
 
-    @with_context
     def test_n_registered_volunteers(self):
         """Test CACHE PROJECTS n_registered_volunteers returns number of volunteers
         that contributed to a project when each only submited one task run"""
@@ -211,7 +199,6 @@ class TestAppsCache(Test):
         assert registered_volunteers == 3, err_msg
 
 
-    @with_context
     def test_n_registered_volunteers_with_more_than_one_taskrun(self):
         """Test CACHE PROJECTS n_registered_volunteers returns number of volunteers
         that contributed to a project when any submited more than one task run"""
@@ -225,7 +212,6 @@ class TestAppsCache(Test):
         assert registered_volunteers == 2, err_msg
 
 
-    @with_context
     def test_n_anonymous_volunteers(self):
         """Test CACHE PROJECTS n_anonymous_volunteers returns number of volunteers
         that contributed to a project when each only submited one task run"""
@@ -237,7 +223,6 @@ class TestAppsCache(Test):
         assert anonymous_volunteers == 3, err_msg
 
 
-    @with_context
     def test_n_anonymous_volunteers_with_more_than_one_taskrun(self):
         """Test CACHE PROJECTS n_anonymous_volunteers returns number of volunteers
         that contributed to a project when any submited more than one task run"""
@@ -249,7 +234,6 @@ class TestAppsCache(Test):
         assert anonymous_volunteers == 2, err_msg
 
 
-    @with_context
     def test_n_volunteers(self):
         """Test CACHE PROJECTS n_volunteers returns the sum of the anonymous
         plus registered volunteers that contributed to a project"""
