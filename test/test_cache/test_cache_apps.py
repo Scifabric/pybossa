@@ -342,3 +342,28 @@ class TestAppsCache(Test):
         cached_task = cached_apps.project_tasks(project.id)[0]
 
         assert cached_task.get('pct_status') == 0.5, cached_task.get('pct_status')
+
+
+    def test_n_task_taskruns_returns_0_no_taskruns(self):
+        """Test CACHE PROJECTS n_task_taskruns returns 0 for a task with no
+        contributions"""
+
+        project = AppFactory.create()
+        task = TaskFactory.create(app=project)
+
+        n_taskruns = cached_apps.n_task_taskruns(task.id)
+
+        assert n_taskruns == 0, n_taskruns
+
+
+    def test_n_task_taskruns_returns_number_of_taskruns(self):
+        """Test CACHE PROJECTS n_task_taskruns returns 0 for a task with no
+        contributions"""
+
+        project = AppFactory.create()
+        task = TaskFactory.create(app=project)
+        TaskRunFactory.create_batch(2, task=task)
+
+        n_taskruns = cached_apps.n_task_taskruns(task.id)
+
+        assert n_taskruns == 2, n_taskruns
