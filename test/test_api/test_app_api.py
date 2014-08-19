@@ -25,7 +25,7 @@ from pybossa.model.user import User
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 
-from factories import (AppFactory, TaskFactory, TaskRunFactory, UserFactory,
+from factories import (AppFactory, TaskFactory, TaskRunFactory, AnonymousTaskRunFactory, UserFactory,
                        CategoryFactory)
 
 
@@ -378,10 +378,10 @@ class TestAppAPI(TestAPI):
         app = AppFactory.create(owner=user)
         tasks = TaskFactory.create_batch(2, app=app)
         for task in tasks:
-            taskruns = TaskRunFactory.create_batch(2, task=task, user=user)
+            taskruns = AnonymousTaskRunFactory.create_batch(2, task=task)
         taskruns = db.session.query(TaskRun)\
                      .filter(TaskRun.app_id == app.id)\
-                     .filter(TaskRun.user_id == user.id)\
+                     .filter(TaskRun.user_ip == '127.0.0.1')\
                      .all()
 
         res = self.app.get('/api/app/1/userprogress', follow_redirects=True)
@@ -394,7 +394,7 @@ class TestAppAPI(TestAPI):
         assert len(taskruns) == data['done'], data
 
         # Add a new TaskRun and check again
-        taskrun = TaskRunFactory.create(task=tasks[0], info={'answer': u'hello'})
+        taskrun = AnonymousTaskRunFactory.create(task=tasks[0], info={'answer': u'hello'})
 
         res = self.app.get('/api/app/1/userprogress', follow_redirects=True)
         data = json.loads(res.data)
@@ -441,9 +441,10 @@ class TestAppAPI(TestAPI):
         assert len(taskruns) == data['done'], error_msg
 
         # Add a new TaskRun and check again
-        taskrun = TaskRunFactory.create(task=tasks[0], info={'answer': u'hello'})
+        taskrun = TaskRunFactory.create(task=tasks[0], info={'answer': u'hello'}, user=user)
 
-        res = self.app.get('/api/app/1/userprogress', follow_redirects=True)
+        url = '/api/app/1/userprogress?api_key=%s' % user.api_key
+        res = self.app.get(url, follow_redirects=True)
         data = json.loads(res.data)
         error_msg = "The reported total number of tasks is wrong"
         assert len(tasks) == data['total'], error_msg
