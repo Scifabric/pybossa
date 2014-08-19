@@ -16,8 +16,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
+from mock import patch
 
-from default import Test, db
+from pybossa.forms.forms import RegisterForm
+
+from default import Test, db, with_context
 from pybossa.model.user import User
 from pybossa.forms import validator
 from pybossa.view.account import LoginForm
@@ -58,3 +61,19 @@ class TestValidator(Test):
             f.email.data = '1 2 3'
             u = validator.CommaSeparatedIntegers()
             u.__call__(f, f.email)
+
+
+
+class TestRegisterForm(Test):
+
+    fields = ['fullname', 'name', 'email_addr', 'password', 'confirm']
+    fill_in_data = {'fullname': 'Tyrion Lannister', 'name': 'mylion',
+                    'email_addr': 'tyrion@casterly.rock',
+                    'password':'secret', 'confirm':'secret'}
+
+    @with_context
+    def test_register_form_contains_fields(self):
+        form = RegisterForm()
+        for field in self.fields:
+            assert form.__contains__(field), 'Field %s is not in form' %field
+
