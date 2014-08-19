@@ -79,7 +79,7 @@ class APIBase(MethodView):
         """
         try:
             getattr(require, self.__class__.__name__.lower()).read()
-            query = self._db_query(self.__class__, id)
+            query = self._db_query(id)
             json_response = self._create_json_response(query, id)
             return Response(json_response, mimetype='application/json')
         except Exception as e:
@@ -112,7 +112,7 @@ class APIBase(MethodView):
             obj['link'] = link
         return obj
 
-    def _db_query(self, cls, id):
+    def _db_query(self, id):
         """ Returns a list with the results of the query"""
         query = self.slave_session.query(self.__class__)
         if not id:
@@ -140,7 +140,7 @@ class APIBase(MethodView):
 
     def _set_limit_and_offset(self):
         try:
-            limit = min(10000, int(request.args.get('limit')))
+            limit = min(100, int(request.args.get('limit')))
         except (ValueError, TypeError):
             limit = 20
         try:

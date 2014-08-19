@@ -97,6 +97,39 @@ def get_top(n=4):
         session.close()
 
 
+@memoize(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'))
+def browse_tasks(project_id):
+    try:
+        sql = text('''
+                   SELECT task.id, count(task_run.id) as n_task_runs, task.n_answers
+                   FROM task LEFT OUTER JOIN task_run ON (task.id=task_run.task_id)
+                   WHERE task.app_id=:app_id GROUP BY task.id ORDER BY task.id''')
+        session = get_session(db, bind='slave')
+        results = session.execute(sql, dict(app_id=project_id))
+        tasks = []
+        for row in results:
+            task = dict(id=row.id, n_task_runs=row.n_task_runs,
+                        n_answers=row.n_answers)
+            task['pct_status'] = _pct_status(row.n_task_runs, row.n_answers)
+            tasks.append(task)
+        return tasks
+    except: #pragma: no cover
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def _pct_status(n_task_runs, n_answers):
+    if n_answers != 0 and n_answers != None:
+        # Check if it's bigger the n_task_runs that n_answers
+        if n_task_runs > n_answers:
+            return float(1)
+        else:
+            return float(n_task_runs) / n_answers
+    return float(0)
+
+
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def n_tasks(app_id):
     try:

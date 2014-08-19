@@ -1246,7 +1246,7 @@ of tasks that have been completed using this url::
 .. note::
     If your project has more than 20 tasks, then you will need to use the
     **offset** and **limit** parameters to get the next tasks, as by default
-    PyBossa only returns the first 20 items.
+    PyBossa API only returns the first 20 items.
 
 Once you have obtained the list of completed tasks, your script could start
 requesting the collected answers for the given tasks::
@@ -1255,10 +1255,11 @@ requesting the collected answers for the given tasks::
 
 .. note::
 
-    If your project is collecting more than 20 answers per task, by default
-    PyBossa will be collecting 30, you will need to add the following to the
-    query: &limit=n_answers so you can get all the submitted answers by the
-    volunteers for the given task.
+    If your project is collecting more than 20 answers per task, then you will
+    need to use the **offset** and **limit** parameters to get the next task
+    runs, as by default PyBossa API only returns the first 20 items. That way
+    you will be able to get all the submitted answers by the volunteers for the
+    given task.
 
 
 Exporting the task and task runs in JSON
