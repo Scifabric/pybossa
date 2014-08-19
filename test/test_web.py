@@ -902,6 +902,7 @@ class TestWeb(web.Helper):
                                follow_redirects=True)
             dom = BeautifulSoup(res.data)
             assert "Sample Project" in res.data, res.data
+            print res.data
             assert '0 of 10' in res.data, res.data
             err_msg = "Download button should be disabled"
             assert dom.find(id='nothingtodownload') is not None, err_msg

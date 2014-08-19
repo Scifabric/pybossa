@@ -39,6 +39,7 @@ import pybossa.model as model
 from pybossa.core import db, csrf, ratelimits, get_session
 from itsdangerous import URLSafeSerializer
 from pybossa.ratelimit import ratelimit
+from pybossa.cache.apps import n_tasks
 import pybossa.sched as sched
 from pybossa.error import ErrorStatus
 from global_stats import GlobalStatsAPI
@@ -50,7 +51,6 @@ from vmcp import VmcpAPI
 from user import UserAPI
 from token import TokenAPI
 from sqlalchemy.sql import text
-import sys
 
 blueprint = Blueprint('api', __name__)
 
@@ -171,13 +171,7 @@ def user_progress(app_id=None, short_name=None):
                 for row in results:
                     n_task_runs = row.n_task_runs
                 # get total tasks from DB
-                sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task
-                              WHERE task.app_id=:app_id''')
-                results = session.execute(sql, dict(app_id=app.id))
-                n_tasks = 0
-                for row in results:
-                    n_tasks = row.n_tasks
-                tmp = dict(done=n_task_runs, total=n_tasks)
+                tmp = dict(done=n_task_runs, total=n_tasks(app.id))
                 return Response(json.dumps(tmp), mimetype="application/json")
             except: # pragma: no cover
                 session.rollback()
