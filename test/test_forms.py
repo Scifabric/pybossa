@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2013 SF Isle of Man Limited
+# Copyright (C) 2014 SF Isle of Man Limited
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,9 +15,11 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+
+
 from default import Test, db
 from pybossa.model.user import User
-import pybossa.validator
+from pybossa.forms import validator
 from pybossa.view.account import LoginForm
 from wtforms import ValidationError
 from nose.tools import raises
@@ -35,7 +37,7 @@ class TestValidator(Test):
         with self.flask_app.test_request_context('/'):
             f = LoginForm()
             f.email.data = self.email_addr
-            u = pybossa.validator.Unique(db.session, User,
+            u = validator.Unique(db.session, User,
                                          User.email_addr)
             u.__call__(f, f.email)
 
@@ -45,7 +47,7 @@ class TestValidator(Test):
         with self.flask_app.test_request_context('/'):
             f = LoginForm()
             f.email.data = self.email_addr + "$"
-            u = pybossa.validator.NotAllowedChars()
+            u = validator.NotAllowedChars()
             u.__call__(f, f.email)
 
     @raises(ValidationError)
@@ -54,5 +56,5 @@ class TestValidator(Test):
         with self.flask_app.test_request_context('/'):
             f = LoginForm()
             f.email.data = '1 2 3'
-            u = pybossa.validator.CommaSeparatedIntegers()
+            u = validator.CommaSeparatedIntegers()
             u.__call__(f, f.email)
