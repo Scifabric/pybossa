@@ -26,12 +26,24 @@ def create(taskrun=None):
     authorized = False
     try:
         session = get_session(db, bind='slave')
-        sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
-                      WHERE task_run.app_id=:app_id AND
-                      task_run.task_id=:task_id AND
-                      task_run.user_id=:user_id AND
-                      task_run.user_ip=:user_ip;''')
-        results = session.execute(sql, dict(app_id=taskrun.app_id, task_id=taskrun.task_id, user_id=taskrun.user_id, user_ip=taskrun.user_ip))
+        if taskrun.user_ip:
+            sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
+                          WHERE task_run.app_id=:app_id AND
+                          task_run.task_id=:task_id AND
+                          task_run.user_ip=:user_ip;''')
+            results = session.execute(sql, dict(app_id=taskrun.app_id,
+                                                task_id=taskrun.task_id,
+                                                user_ip=taskrun.user_ip))
+        elif taskrun.user_id:
+            sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
+                          WHERE task_run.app_id=:app_id AND
+                          task_run.task_id=:task_id AND
+                          task_run.user_id=:user_id;''')
+            results = session.execute(sql, dict(app_id=taskrun.app_id,
+                                                task_id=taskrun.task_id,
+                                                user_id=taskrun.user_id))
+        else:
+            return False
         n_task_runs = 0
         for row in results:
             n_task_runs = row.n_task_runs
