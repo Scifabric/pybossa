@@ -163,62 +163,9 @@ class TestWeb(web.Helper):
                     password="p4ssw0rd", confirm="p4ssw0rd",
                     email_addr="johndoe@example.com")
 
-        # Form validations... should be moved to a different place
-        # With valid form validation
         res = self.app.post('/account/register', data=data)
         assert self.html_title() in res.data, res
         assert "Just one more step, please" in res.data, res.data
-
-        self.register()
-        res = self.app.post('/account/register', data=data)
-        assert self.html_title("Register") in res.data, res
-        assert "The user name is already taken" in res.data, res.data
-
-        data['fullname'] = ''
-        res = self.app.post('/account/register', data=data)
-        assert self.html_title("Register") in res.data, res
-        msg = "Full name must be between 3 and 35 characters long"
-        assert msg in res.data, res.data
-
-        data['name'] = ''
-        res = self.app.post('/account/register', data=data)
-        assert self.html_title("Register") in res.data, res
-        msg = "User name must be between 3 and 35 characters long"
-        assert msg in res.data, res.data
-
-        data['name'] = '%a/$|'
-        res = self.app.post('/account/register', data=data)
-        assert self.html_title("Register") in res.data, res
-        msg = '$#&amp;\/| and space symbols are forbidden'
-        assert msg in res.data, res.data
-
-        data['email_addr'] = ''
-        res = self.app.post('/account/register', data=data)
-        assert self.html_title("Register") in res.data, res
-        assert self.html_title("Register") in res.data, res.data
-        msg = "Email must be between 3 and 35 characters long"
-        assert msg in res.data, res.data
-
-        data['email_addr'] = 'invalidemailaddress'
-        res = self.app.post('/account/register', data=data)
-        assert self.html_title("Register") in res.data, res
-        assert "Invalid email address" in res.data, res.data
-
-        data['email_addr'] = 'johndoe@example.com'
-        res = self.app.post('/account/register', data=data)
-        assert self.html_title("Register") in res.data, res
-        assert "Email is already taken" in res.data, res.data
-
-        data['password'] = ''
-        res = self.app.post('/account/register', data=data)
-        assert self.html_title("Register") in res.data, res
-        assert "Password cannot be empty" in res.data, res.data
-
-        data['password'] = 'password'
-        data['confirm'] = 'different'
-        res = self.app.post('/account/register', data=data)
-        assert self.html_title("Register") in res.data, res
-        assert "Passwords must match" in res.data, res.data
 
     @with_context
     def test_04_signin_signout(self):
