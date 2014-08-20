@@ -149,6 +149,7 @@ class TestWeb(web.Helper):
             err_msg = "There should be a Community page"
             assert "Community" in res.data, err_msg
 
+
     @with_context
     def test_03_register(self):
         """Test WEB register user works"""
@@ -166,6 +167,44 @@ class TestWeb(web.Helper):
         res = self.app.post('/account/register', data=data)
         assert self.html_title() in res.data, res
         assert "Just one more step, please" in res.data, res.data
+
+
+    def test_register_confirmation_fails_without_key(self):
+        """Test WEB register confirmation returns 403 if no 'key' param is present"""
+        res = self.app.get('/account/register/confirmation')
+
+        assert res.status_code == 403, res.status
+
+
+    def test_register_confirmation_fails_with_invalid_key(self):
+        """Test WEB register confirmation returns 403 if an invalid key is given"""
+        res = self.app.get('/account/register/confirmation?key=invalid')
+
+        assert res.status_code == 403, res.status
+
+
+    @patch('pybossa.view.account.signer')
+    def test_register_confirmation_gets_account_data_from_key(self, fake_signer):
+        """Test WEB register confirmation gets the account data from the key"""
+        fake_signer.loads.return_value = dict(fullname='FN', name='name',
+                       email_addr='email', password='password')
+        res = self.app.get('/account/register/confirmation?key=valid-key')
+
+        assert fake_signer.loads.called_with('valid-key', max_age=3600, salt='account-validation')
+
+
+    @patch('pybossa.view.account.signer')
+    def test_register_confirmation_creates_new_account(self, fake_signer):
+        """Test WEB register confirmation creates the new account"""
+        fake_signer.loads.return_value = dict(fullname='FN', name='name',
+                       email_addr='email', password='password')
+        res = self.app.get('/account/register/confirmation?key=valid-key')
+
+        user = db.session.query(User).filter_by(name='name').first()
+
+        assert user is not None
+        assert user.check_password('password')
+
 
     @with_context
     def test_04_signin_signout(self):
