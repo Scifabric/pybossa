@@ -49,4 +49,4 @@ class TaskRunAPI(APIBase):
         if current_user.is_anonymous():
             taskrun.user_ip = request.remote_addr
         else:
-            taskrun.user = current_user
+            taskrun.user_id = current_user.id

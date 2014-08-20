@@ -638,19 +638,15 @@ def task_presenter(short_name, task_id):
             flash(gettext(msg), 'warning')
             return redirect(url_for('account.signin',
                                     next=url_for('.presenter',
-                                                 short_name=app.short_name)))
+                                    short_name=app.short_name)))
         else:
             msg_1 = gettext(
                 "Ooops! You are an anonymous user and will not "
                 "get any credit"
                 " for your contributions.")
-            next_url = url_for(
-                'app.task_presenter',
-                short_name=short_name,
-                task_id=task_id)
-            url = url_for(
-                'account.signin',
-                next=next_url)
+            next_url = url_for('app.task_presenter',
+                                short_name=short_name, task_id=task_id)
+            url = url_for('account.signin', next=next_url)
             flash(msg_1 + "<a href=\"" + url + "\">Sign in now!</a>", "warning")
 
     title = app_title(app, "Contribute")
@@ -662,24 +658,7 @@ def task_presenter(short_name, task_id):
     if not (task.app_id == app.id):
         return respond('/applications/task/wrong.html')
 
-    #return render_template('/applications/presenter.html', app = app)
-    # Check if the user has submitted a task before
-
-    tr_search = db.session.query(model.task_run.TaskRun)\
-                  .filter(model.task_run.TaskRun.task_id == task_id)\
-                  .filter(model.task_run.TaskRun.app_id == app.id)
-
-    if current_user.is_anonymous():
-        remote_addr = request.remote_addr or "127.0.0.1"
-        tr = tr_search.filter(model.task_run.TaskRun.user_ip == remote_addr)
-    else:
-        tr = tr_search.filter(model.task_run.TaskRun.user_id == current_user.id)
-
-    tr_first = tr.first()
-    if tr_first is None:
-        return respond('/applications/presenter.html')
-    else:
-        return respond('/applications/task/done.html')
+    return respond('/applications/presenter.html')
 
 
 @blueprint.route('/<short_name>/presenter')

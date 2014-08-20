@@ -422,6 +422,7 @@ def stats_format_hours(app_id, hours, hours_anon, hours_auth,
 def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
     """Format User Stats into JSON"""
     try:
+        session = get_session(db, bind='slave')
         userStats = dict(label="User Statistics", values=[])
         userAnonStats = dict(label="Anonymous Users", values=[], top5=[], locs=[])
         userAuthStats = dict(label="Authenticated Users", values=[], top5=[])
@@ -469,7 +470,6 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
 
         for u in auth_users:
             sql = text('''SELECT name, fullname from "user" where id=:id;''')
-            session = get_session(db, bind='slave')
             results = session.execute(sql, dict(id=u[0]))
             for row in results:
                 fullname = row.fullname
