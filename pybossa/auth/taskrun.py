@@ -35,7 +35,7 @@ def create(taskrun=None):
         n_task_runs = 0
         for row in results:
             n_task_runs = row.n_task_runs
-        authorized = (n_task_runs > 0)
+        authorized = (n_task_runs <= 0)
     except: # pragma: no cover
         session.rollback()
         raise
