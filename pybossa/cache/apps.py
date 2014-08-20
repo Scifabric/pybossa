@@ -97,6 +97,39 @@ def get_top(n=4):
         session.close()
 
 
+@memoize(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'))
+def browse_tasks(project_id):
+    try:
+        sql = text('''
+                   SELECT task.id, count(task_run.id) as n_task_runs, task.n_answers
+                   FROM task LEFT OUTER JOIN task_run ON (task.id=task_run.task_id)
+                   WHERE task.app_id=:app_id GROUP BY task.id ORDER BY task.id''')
+        session = get_session(db, bind='slave')
+        results = session.execute(sql, dict(app_id=project_id))
+        tasks = []
+        for row in results:
+            task = dict(id=row.id, n_task_runs=row.n_task_runs,
+                        n_answers=row.n_answers)
+            task['pct_status'] = _pct_status(row.n_task_runs, row.n_answers)
+            tasks.append(task)
+        return tasks
+    except: #pragma: no cover
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def _pct_status(n_task_runs, n_answers):
+    if n_answers != 0 and n_answers != None:
+        # Check if it's bigger the n_task_runs that n_answers
+        if n_task_runs > n_answers:
+            return float(1)
+        else:
+            return float(n_task_runs) / n_answers
+    return float(0)
+
+
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def n_tasks(app_id):
     try:
@@ -272,8 +305,6 @@ def n_featured():
 def get_featured(category, page=1, per_page=5):
     """Return a list of featured apps with a pagination"""
     try:
-        count = n_featured()
-
         sql = text('''SELECT app.id, app.name, app.short_name, app.info, app.created,
                    app.description,
                    "user".fullname AS owner FROM app, featured, "user"
@@ -296,7 +327,7 @@ def get_featured(category, page=1, per_page=5):
                        featured=row.id,
                        info=dict(json.loads(row.info)))
             apps.append(app)
-        return apps, count
+        return apps
     except: # pragma: no cover
         session.rollback()
         raise
@@ -356,8 +387,6 @@ def n_draft():
 def get_draft(category, page=1, per_page=5):
     """Return list of draft projects"""
     try:
-        count = n_draft()
-
         sql = text('''SELECT app.id, app.name, app.short_name, app.created,
                    app.description, app.info, "user".fullname as owner
                    FROM "user", app LEFT JOIN task ON app.id=task.app_id
@@ -381,7 +410,7 @@ def get_draft(category, page=1, per_page=5):
                        overall_progress=overall_progress(row.id),
                        info=dict(json.loads(row.info)))
             apps.append(app)
-        return apps, count
+        return apps
     except: # pragma: no cover
         session.rollback()
         raise
@@ -424,8 +453,6 @@ def get(category, page=1, per_page=5):
     """Return a list of apps with at least one task and a task_presenter
        with a pagination for a given category"""
     try:
-        count = n_count(category)
-
         sql = text('''SELECT app.id, app.name, app.short_name, app.description,
                    app.info, app.created, app.category_id, "user".fullname AS owner,
                    featured.app_id as featured
@@ -458,7 +485,7 @@ def get(category, page=1, per_page=5):
                        overall_progress=overall_progress(row.id),
                        info=dict(json.loads(row.info)))
             apps.append(app)
-        return apps, count
+        return apps
     except: # pragma: no cover
         session.rollback()
         raise

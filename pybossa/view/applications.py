@@ -123,7 +123,8 @@ def app_index(page, lookup, category, fallback, use_count):
 
     per_page = current_app.config['APPS_PER_PAGE']
 
-    apps, count = lookup(category, page, per_page)
+    apps = lookup(category, page, per_page)
+    count = len(apps)
 
     data = []
     for app in apps:
@@ -806,38 +807,25 @@ def tasks_browse(short_name, page):
     n_completed_tasks = cached_apps.n_completed_tasks(app.id)
 
     def respond():
-        try:
-            session = get_session(db, bind='slave')
-            per_page = 10
-            count = session.query(model.task.Task)\
-                .filter_by(app_id=app.get('id'))\
-                .count()
-            app_tasks = session.query(model.task.Task)\
-                .filter_by(app_id=app.get('id'))\
-                .order_by(model.task.Task.id)\
-                .limit(per_page)\
-                .offset((page - 1) * per_page)\
-                .all()
+        per_page = 10
+        offset = (page - 1) * per_page
+        count = n_tasks
+        app_tasks = cached_apps.browse_tasks(app.get('id'))
+        page_tasks = app_tasks[offset:offset+per_page]
+        if not page_tasks and page != 1:
+            abort(404)
 
-            if not app_tasks and page != 1:
-                abort(404)
-
-            pagination = Pagination(page, per_page, count)
-            return render_template('/applications/tasks_browse.html',
-                                   app=app,
-                                   owner=owner,
-                                   tasks=app_tasks,
-                                   title=title,
-                                   pagination=pagination,
-                                   n_tasks=n_tasks,
-                                   overall_progress=overall_progress,
-                                   n_volunteers=n_volunteers,
-                                   n_completed_tasks=n_completed_tasks)
-        except: # pragma: no cover
-            session.rollback()
-            raise
-        finally:
-            session.close()
+        pagination = Pagination(page, per_page, count)
+        return render_template('/applications/tasks_browse.html',
+                               app=app,
+                               owner=owner,
+                               tasks=page_tasks,
+                               title=title,
+                               pagination=pagination,
+                               n_tasks=n_tasks,
+                               overall_progress=overall_progress,
+                               n_volunteers=n_volunteers,
+                               n_completed_tasks=n_completed_tasks)
 
     require.app.read(app)
     redirect_to_password = _check_if_redirect_to_password(app)
