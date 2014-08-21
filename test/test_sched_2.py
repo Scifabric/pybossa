@@ -19,6 +19,7 @@
 from helper import sched
 from default import with_context
 import json
+from mock import patch
 
 
 class TestSched(sched.Helper):
@@ -28,9 +29,11 @@ class TestSched(sched.Helper):
 
     # Tests
     @with_context
-    def test_incremental_tasks(self):
-        """ Test incremental SCHED strategy - second TaskRun receives first gaven answer"""
+    @patch('pybossa.api.task_run.request')
+    def test_incremental_tasks(self, mock_request):
+        """ Test incremental SCHED strategy - second TaskRun receives first given answer"""
         self.create_2(sched='incremental')
+        mock_request.remote_addr = '127.0.0.0'
 
         # Del previous TaskRuns
         self.del_task_runs()

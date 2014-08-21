@@ -19,7 +19,7 @@ import json
 from default import with_context
 from nose.tools import assert_equal
 from test_api import TestAPI
-
+from mock import patch
 from factories import (AppFactory, TaskFactory, TaskRunFactory,
                         AnonymousTaskRunFactory, UserFactory)
 
@@ -78,7 +78,8 @@ class TestTaskrunAPI(TestAPI):
 
 
     @with_context
-    def test_taskrun_anonymous_post(self):
+    @patch('pybossa.api.task_run.request')
+    def test_taskrun_anonymous_post(self, mock_request):
         """Test API TaskRun creation and auth for anonymous users"""
         app = AppFactory.create()
         task = TaskFactory.create(app=app)
@@ -88,6 +89,7 @@ class TestTaskrunAPI(TestAPI):
             info='my task result')
 
         # With wrong app_id
+        mock_request.remote_addr = '127.0.0.0'
         data['app_id'] = 100000000000000000
         datajson = json.dumps(data)
         tmp = self.app.post('/api/taskrun', data=datajson)
@@ -171,6 +173,7 @@ class TestTaskrunAPI(TestAPI):
         data = dict(
             app_id=task.app_id,
             task_id=task.id,
+            user_id=app.owner.id,
             info='my task result')
         datajson = json.dumps(data)
         tmp = self.app.post(url, data=datajson)
@@ -352,7 +355,8 @@ class TestTaskrunAPI(TestAPI):
 
 
     @with_context
-    def test_taskrun_updates_task_state(self):
+    @patch('pybossa.api.task_run.request')
+    def test_taskrun_updates_task_state(self, mock_request):
         """Test API TaskRun POST updates task state"""
         app = AppFactory.create()
         task = TaskFactory.create(app=app, n_answers=2)
@@ -362,6 +366,7 @@ class TestTaskrunAPI(TestAPI):
         data = dict(
             app_id=task.app_id,
             task_id=task.id,
+            user_id=app.owner.id,
             info='my task result')
         datajson = json.dumps(data)
         tmp = self.app.post(url, data=datajson)
@@ -373,6 +378,7 @@ class TestTaskrunAPI(TestAPI):
         assert task.state == 'ongoing', err_msg
 
         # Post second taskrun
+        mock_request.remote_addr = '127.0.0.0'
         url = '/api/taskrun'
         data = dict(
             app_id=task.app_id,

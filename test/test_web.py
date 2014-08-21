@@ -1182,37 +1182,6 @@ class TestWeb(web.Helper):
             assert "sign in to participate" in res.data
 
     @with_context
-    def test_22_get_specific_completed_task_anonymous(self):
-        """Test WEB get specific completed task_id
-        for a project works as anonymous"""
-
-        #model.rebuild_db()
-        with self.flask_app.app_context():
-            self.create()
-            app = db.session.query(App).first()
-            task = db.session.query(Task)\
-                     .filter(App.id == app.id)\
-                     .first()
-
-            for i in range(10):
-                task_run = TaskRun(app_id=app.id, task_id=task.id,
-                                         user_ip="127.0.0.1", info={'answer': 1})
-                db.session.add(task_run)
-                db.session.commit()
-
-            ntask = Task(id=task.id, state='completed')
-
-            assert ntask not in db.session
-            db.session.merge(ntask)
-            db.session.commit()
-
-            res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
-                               follow_redirects=True)
-            msg = 'You have already participated in this task'
-            assert msg in res.data, res.data
-            assert 'Try with another one' in res.data, res.data
-
-    @with_context
     def test_23_get_specific_ongoing_task_user(self):
         """Test WEB get specific ongoing task_id for a project works as an user"""
 
@@ -1228,43 +1197,6 @@ class TestWeb(web.Helper):
             res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
                                follow_redirects=True)
             assert 'TaskPresenter' in res.data, res.data
-            self.signout()
-
-    @with_context
-    def test_24_get_specific_completed_task_user(self):
-        """Test WEB get specific completed task_id
-        for a project works as an user"""
-
-        #model.rebuild_db()
-        with self.flask_app.app_context():
-            self.create()
-            self.register()
-
-            user = db.session.query(User)\
-                     .filter(User.name == self.user.username)\
-                     .first()
-            app = db.session.query(App).first()
-            task = db.session.query(Task)\
-                     .filter(App.id == app.id)\
-                     .first()
-            for i in range(10):
-                task_run = TaskRun(app_id=app.id, task_id=task.id, user_id=user.id,
-                                         info={'answer': 1})
-                db.session.add(task_run)
-                db.session.commit()
-                #self.app.get('api/app/%s/newtask' % app.id)
-
-            ntask = Task(id=task.id, state='completed')
-            #self.signin()
-            assert ntask not in db.session
-            db.session.merge(ntask)
-            db.session.commit()
-
-            res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
-                               follow_redirects=True)
-            msg = 'You have already participated in this task'
-            assert msg in res.data, res.data
-            assert 'Try with another one' in res.data, res.data
             self.signout()
 
     @with_context
