@@ -149,62 +149,85 @@ class TestWeb(web.Helper):
             err_msg = "There should be a Community page"
             assert "Community" in res.data, err_msg
 
+
     @with_context
-    def test_03_register(self):
+    def test_register_get(self):
         """Test WEB register user works"""
-        with self.flask_app.app_context():
-            res = self.app.get('/account/signin')
-            assert 'Forgot Password' in res.data
+        res = self.app.get('/account/register')
+        # The output should have a mime-type: text/html
+        assert res.mimetype == 'text/html', res
+        assert self.html_title("Register") in res.data, res
 
-            res = self.register(method="GET")
-            # The output should have a mime-type: text/html
-            assert res.mimetype == 'text/html', res
-            assert self.html_title("Register") in res.data, res
 
-            res = self.register()
-            assert self.html_title() in res.data, res
-            assert "Thanks for signing-up" in res.data, res.data
+    @with_context
+    @patch('pybossa.view.account.mail')
+    @patch('pybossa.view.account.render_template')
+    @patch('pybossa.view.account.signer')
+    def test_register_post_creates_email_with_link(self, signer, render, mail):
+        """Test WEB register post creates and sends the confirmation email"""
+        data = dict(fullname="John Doe", name="johndoe",
+                    password="p4ssw0rd", confirm="p4ssw0rd",
+                    email_addr="johndoe@example.com")
+        signer.dumps.return_value = ''
+        render.return_value = ''
+        res = self.app.post('/account/register', data=data)
+        del data['confirm']
 
-            res = self.register()
-            assert self.html_title("Register") in res.data, res
-            assert "The user name is already taken" in res.data, res.data
+        signer.dumps.assert_called_with(data, salt='account-validation')
+        render.assert_has_call('/account/email/validate_account.md',
+                                user=data,
+                                confirm_url='http://localhost:5000/account/register/confirmation?key=')
+        assert mail.send.called, "Mail was not sent"
 
-            res = self.register(fullname='')
-            assert self.html_title("Register") in res.data, res
-            msg = "Full name must be between 3 and 35 characters long"
-            assert msg in res.data, res.data
 
-            res = self.register(name='')
-            assert self.html_title("Register") in res.data, res
-            msg = "User name must be between 3 and 35 characters long"
-            assert msg in res.data, res.data
+    @with_context
+    def test_register_post_valid_data(self):
+        """Test WEB register post with valid form data"""
+        data = dict(fullname="John Doe", name="johndoe",
+                    password="p4ssw0rd", confirm="p4ssw0rd",
+                    email_addr="johndoe@example.com")
 
-            res = self.register(name='%a/$|')
-            assert self.html_title("Register") in res.data, res
-            msg = '$#&amp;\/| and space symbols are forbidden'
-            assert msg in res.data, res.data
+        res = self.app.post('/account/register', data=data)
+        assert self.html_title() in res.data, res
+        assert "Just one more step, please" in res.data, res.data
 
-            res = self.register(email='')
-            assert self.html_title("Register") in res.data, res.data
-            assert self.html_title("Register") in res.data, res.data
-            msg = "Email must be between 3 and 35 characters long"
-            assert msg in res.data, res.data
 
-            res = self.register(email='invalidemailaddress')
-            assert self.html_title("Register") in res.data, res.data
-            assert "Invalid email address" in res.data, res.data
+    def test_register_confirmation_fails_without_key(self):
+        """Test WEB register confirmation returns 403 if no 'key' param is present"""
+        res = self.app.get('/account/register/confirmation')
 
-            res = self.register()
-            assert self.html_title("Register") in res.data, res.data
-            assert "Email is already taken" in res.data, res.data
+        assert res.status_code == 403, res.status
 
-            res = self.register(password='')
-            assert self.html_title("Register") in res.data, res.data
-            assert "Password cannot be empty" in res.data, res.data
 
-            res = self.register(password2='different')
-            assert self.html_title("Register") in res.data, res.data
-            assert "Passwords must match" in res.data, res.data
+    def test_register_confirmation_fails_with_invalid_key(self):
+        """Test WEB register confirmation returns 403 if an invalid key is given"""
+        res = self.app.get('/account/register/confirmation?key=invalid')
+
+        assert res.status_code == 403, res.status
+
+
+    @patch('pybossa.view.account.signer')
+    def test_register_confirmation_gets_account_data_from_key(self, fake_signer):
+        """Test WEB register confirmation gets the account data from the key"""
+        fake_signer.loads.return_value = dict(fullname='FN', name='name',
+                       email_addr='email', password='password')
+        res = self.app.get('/account/register/confirmation?key=valid-key')
+
+        fake_signer.loads.assert_called_with('valid-key', max_age=3600, salt='account-validation')
+
+
+    @patch('pybossa.view.account.signer')
+    def test_register_confirmation_creates_new_account(self, fake_signer):
+        """Test WEB register confirmation creates the new account"""
+        fake_signer.loads.return_value = dict(fullname='FN', name='name',
+                       email_addr='email', password='password')
+        res = self.app.get('/account/register/confirmation?key=valid-key')
+
+        user = db.session.query(User).filter_by(name='name').first()
+
+        assert user is not None
+        assert user.check_password('password')
+
 
     @with_context
     def test_04_signin_signout(self):
@@ -1152,36 +1175,6 @@ class TestWeb(web.Helper):
             assert "sign in to participate" in res.data
 
     @with_context
-    def test_22_get_specific_completed_task_anonymous(self):
-        """Test WEB get specific completed task_id
-        for a project works as anonymous"""
-
-        with self.flask_app.app_context():
-            self.create()
-            app = db.session.query(App).first()
-            task = db.session.query(Task)\
-                     .filter(App.id == app.id)\
-                     .first()
-
-            for i in range(10):
-                task_run = TaskRun(app_id=app.id, task_id=task.id,
-                                         user_ip="127.0.0.1", info={'answer': 1})
-                db.session.add(task_run)
-                db.session.commit()
-
-            ntask = Task(id=task.id, state='completed')
-
-            assert ntask not in db.session
-            db.session.merge(ntask)
-            db.session.commit()
-
-            res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
-                               follow_redirects=True)
-            msg = 'You have already participated in this task'
-            assert msg in res.data, res.data
-            assert 'Try with another one' in res.data, res.data
-
-    @with_context
     def test_23_get_specific_ongoing_task_user(self):
         """Test WEB get specific ongoing task_id for a project works as an user"""
 
@@ -1197,42 +1190,6 @@ class TestWeb(web.Helper):
             res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
                                follow_redirects=True)
             assert 'TaskPresenter' in res.data, res.data
-            self.signout()
-
-    @with_context
-    def test_24_get_specific_completed_task_user(self):
-        """Test WEB get specific completed task_id
-        for a project works as an user"""
-
-        with self.flask_app.app_context():
-            self.create()
-            self.register()
-
-            user = db.session.query(User)\
-                     .filter(User.name == self.user.username)\
-                     .first()
-            app = db.session.query(App).first()
-            task = db.session.query(Task)\
-                     .filter(App.id == app.id)\
-                     .first()
-            for i in range(10):
-                task_run = TaskRun(app_id=app.id, task_id=task.id, user_id=user.id,
-                                         info={'answer': 1})
-                db.session.add(task_run)
-                db.session.commit()
-                #self.app.get('api/app/%s/newtask' % app.id)
-
-            ntask = Task(id=task.id, state='completed')
-            #self.signin()
-            assert ntask not in db.session
-            db.session.merge(ntask)
-            db.session.commit()
-
-            res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
-                               follow_redirects=True)
-            msg = 'You have already participated in this task'
-            assert msg in res.data, res.data
-            assert 'Try with another one' in res.data, res.data
             self.signout()
 
     @with_context
@@ -1793,8 +1750,8 @@ class TestWeb(web.Helper):
                             follow_redirects=True)
         assert "Yay, you changed your password succesfully!" in res.data, res.data
 
-        password = "mehpassword"
-        self.register(password=password)
+        password = "p4ssw0rd"
+        self.signin(password=password)
         res = self.app.post('/account/johndoe/update',
                             data={'current_password': "wrongpassword",
                                   'new_password': "p4ssw0rd",
@@ -1804,7 +1761,6 @@ class TestWeb(web.Helper):
         msg = "Your current password doesn't match the one in our records"
         assert msg in res.data
 
-        self.register(password=password)
         res = self.app.post('/account/johndoe/update',
                             data={'current_password': '',
                                   'new_password':'',
@@ -2113,9 +2069,8 @@ class TestWeb(web.Helper):
         self.signout()
 
         # Register another user
-        self.register(method="POST", fullname="Jane Doe", name="janedoe",
-                      password="janedoe", password2="janedoe",
-                      email="jane@jane.com")
+        self.register(fullname="Jane Doe", name="janedoe",
+                      password="janedoe", email="jane@jane.com")
         res = self.app.get("/", follow_redirects=True)
         error_msg = "There should not be a message for the root user"
         assert "Root Message" not in res.data, error_msg
@@ -2865,7 +2820,6 @@ class TestWeb(web.Helper):
         assert res.status_code == 401, res.status_code
 
         # As registered user
-        self.register()
         self.signin()
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 403, res.status_code

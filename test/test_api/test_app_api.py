@@ -21,7 +21,7 @@ from default import db, with_context
 from nose.tools import assert_equal, assert_raises
 from test_api import TestAPI
 
-from factories import (AppFactory, TaskFactory, TaskRunFactory, UserFactory,
+from factories import (AppFactory, TaskFactory, TaskRunFactory, AnonymousTaskRunFactory, UserFactory,
                        CategoryFactory)
 
 from pybossa.repositories import ProjectRepository
@@ -377,7 +377,7 @@ class TestAppAPI(TestAPI):
         tasks = TaskFactory.create_batch(2, app=app)
         taskruns = []
         for task in tasks:
-            taskruns.extend(TaskRunFactory.create_batch(2, task=task, user=user))
+            taskruns.extend(AnonymousTaskRunFactory.create_batch(2, task=task))
 
         res = self.app.get('/api/app/1/userprogress', follow_redirects=True)
         data = json.loads(res.data)
@@ -389,7 +389,7 @@ class TestAppAPI(TestAPI):
         assert len(taskruns) == data['done'], data
 
         # Add a new TaskRun and check again
-        taskrun = TaskRunFactory.create(task=tasks[0], info={'answer': u'hello'})
+        taskrun = AnonymousTaskRunFactory.create(task=tasks[0], info={'answer': u'hello'})
 
         res = self.app.get('/api/app/1/userprogress', follow_redirects=True)
         data = json.loads(res.data)
@@ -433,9 +433,10 @@ class TestAppAPI(TestAPI):
         assert len(taskruns) == data['done'], error_msg
 
         # Add a new TaskRun and check again
-        taskrun = TaskRunFactory.create(task=tasks[0], info={'answer': u'hello'})
+        taskrun = TaskRunFactory.create(task=tasks[0], info={'answer': u'hello'}, user=user)
 
-        res = self.app.get('/api/app/1/userprogress', follow_redirects=True)
+        url = '/api/app/1/userprogress?api_key=%s' % user.api_key
+        res = self.app.get(url, follow_redirects=True)
         data = json.loads(res.data)
         error_msg = "The reported total number of tasks is wrong"
         assert len(tasks) == data['total'], error_msg

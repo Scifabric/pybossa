@@ -26,14 +26,13 @@ task_repo = TaskRepository(db)
 
 
 def create(taskrun=None):
-    authorized = task_repo.get_task_run_by(app_id=taskrun.app_id,
-                                           task_id=taskrun.task_id,
-                                           user=taskrun.user,
-                                           user_ip=taskrun.user_ip) is None
+    authorized = task_repo.count_task_runs_with(app_id=taskrun.app_id,
+                                                task_id=taskrun.task_id,
+                                                user_id=taskrun.user_id,
+                                                user_ip=taskrun.user_ip) <= 0
     if not authorized:
         raise abort(403)
     return authorized
-
 
 def read(taskrun=None):
     return True

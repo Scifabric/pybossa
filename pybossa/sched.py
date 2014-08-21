@@ -20,7 +20,6 @@
 #from flask import Blueprint, request, url_for, flash, redirect, abort
 #from flask import abort, request, make_response, current_app
 from sqlalchemy.sql import text
-import pybossa.model as model
 from pybossa.model.app import App
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun

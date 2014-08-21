@@ -35,7 +35,6 @@ from pybossa.util import admin_required, UnicodeWriter
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
 from pybossa.auth import require
-import pybossa.validator as pb_validator
 import json
 from StringIO import StringIO
 
@@ -75,13 +74,12 @@ def index():
 def featured(app_id=None):
     """List featured apps of PyBossa"""
     try:
-        categories = cached_cat.get_all()
-
         if request.method == 'GET':
+            categories = cached_cat.get_all()
             apps = {}
             for c in categories:
                 n_apps = cached_apps.n_count(category=c.short_name)
-                apps[c.short_name], n_apps = cached_apps.get(category=c.short_name,
+                apps[c.short_name] = cached_apps.get(category=c.short_name,
                                                              page=1,
                                                              per_page=n_apps)
             return render_template('/admin/applications.html', apps=apps,

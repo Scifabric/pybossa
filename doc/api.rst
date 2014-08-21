@@ -148,7 +148,8 @@ Finally, you can get a list of users by doing::
 .. note::
     By default PyBossa limits the list of items to 20. If you want to get more
     items, use the keyword **limit=N** with **N** being a number to get that
-    amount.
+    amount. There is a maximum of 100 to the **limit** keyword, so if you try to
+    get more items at once it won't work.
 
 .. note::
     You can use the keyword **offset=N** in any **GET** query to skip that many 
@@ -203,7 +204,8 @@ It is possible to limit the number of returned objects::
 
 .. note::
     By default all GET queries return a maximum of 20 objects unless the
-    **limit** keyword is used to get more: limit=50
+    **limit** keyword is used to get more: limit=50. However, a maximum amount
+    of 100 objects can be retrieved at once.
 
 .. note::
     If the search does not find anything, the server will return an empty JSON

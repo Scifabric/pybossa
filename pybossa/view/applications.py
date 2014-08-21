@@ -128,7 +128,8 @@ def app_index(page, lookup, category, fallback, use_count):
 
     per_page = current_app.config['APPS_PER_PAGE']
 
-    apps, count = lookup(category, page, per_page)
+    apps = lookup(category, page, per_page)
+    count = len(apps)
 
     data = []
     for app in apps:
@@ -637,19 +638,15 @@ def task_presenter(short_name, task_id):
             flash(gettext(msg), 'warning')
             return redirect(url_for('account.signin',
                                     next=url_for('.presenter',
-                                                 short_name=app.short_name)))
+                                    short_name=app.short_name)))
         else:
             msg_1 = gettext(
                 "Ooops! You are an anonymous user and will not "
                 "get any credit"
                 " for your contributions.")
-            next_url = url_for(
-                'app.task_presenter',
-                short_name=short_name,
-                task_id=task_id)
-            url = url_for(
-                'account.signin',
-                next=next_url)
+            next_url = url_for('app.task_presenter',
+                                short_name=short_name, task_id=task_id)
+            url = url_for('account.signin', next=next_url)
             flash(msg_1 + "<a href=\"" + url + "\">Sign in now!</a>", "warning")
 
     title = app_title(app, "Contribute")
@@ -660,23 +657,7 @@ def task_presenter(short_name, task_id):
 
     if not (task.app_id == app.id):
         return respond('/applications/task/wrong.html')
-
-    #return render_template('/applications/presenter.html', app = app)
-    # Check if the user has submitted a task before
-
-    search_attrs = dict(task_id=task_id, app_id=app.id)
-
-    if current_user.is_anonymous():
-        remote_addr = request.remote_addr or "127.0.0.1"
-        search_attrs['user_ip'] = remote_addr
-    else:
-        search_attrs['user_id'] = current_user.id
-
-    taskrun = task_repo.get_task_run_by(**search_attrs)
-    if taskrun is None:
-        return respond('/applications/presenter.html')
-    else:
-        return respond('/applications/task/done.html')
+    return respond('/applications/presenter.html')
 
 
 @blueprint.route('/<short_name>/presenter')
@@ -796,26 +777,24 @@ def tasks_browse(short_name, page):
 
     def respond():
         per_page = 10
-        count = task_repo.count_tasks_with(app_id=app.get('id'))
-        app_tasks = task_repo.filter_tasks_by(app_id=app.get('id'))
-        tasks = sorted(app_tasks, key=lambda task: task.id)
-        tasks = tasks[(page - 1) * per_page:page * per_page]
-
-        if not tasks and page != 1:
+        offset = (page - 1) * per_page
+        count = n_tasks
+        app_tasks = cached_apps.browse_tasks(app.get('id'))
+        page_tasks = app_tasks[offset:offset+per_page]
+        if not page_tasks and page != 1:
             abort(404)
 
         pagination = Pagination(page, per_page, count)
         return render_template('/applications/tasks_browse.html',
                                app=app,
                                owner=owner,
-                               tasks=tasks,
+                               tasks=page_tasks,
                                title=title,
                                pagination=pagination,
                                n_tasks=n_tasks,
                                overall_progress=overall_progress,
                                n_volunteers=n_volunteers,
                                n_completed_tasks=n_completed_tasks)
-
     require.app.read(app)
     redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:

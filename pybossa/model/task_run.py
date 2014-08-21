@@ -53,7 +53,7 @@ class TaskRun(db.Model, DomainObject):
     of a TaskRun. Usually a template for this will be provided by Task
     For example::
         result: {
-            whatever information shoudl be recorded -- up to task presenter
+            whatever information should be recorded -- up to task presenter
         }
     '''
 

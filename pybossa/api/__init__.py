@@ -39,6 +39,7 @@ import pybossa.model as model
 from pybossa.core import db, csrf, ratelimits
 from itsdangerous import URLSafeSerializer
 from pybossa.ratelimit import ratelimit
+from pybossa.cache.apps import n_tasks
 import pybossa.sched as sched
 from pybossa.error import ErrorStatus
 from global_stats import GlobalStatsAPI
@@ -49,6 +50,7 @@ from category import CategoryAPI
 from vmcp import VmcpAPI
 from user import UserAPI
 from token import TokenAPI
+from sqlalchemy.sql import text
 
 blueprint = Blueprint('api', __name__)
 
@@ -155,14 +157,14 @@ def user_progress(app_id=None, short_name=None):
             app = project_repo.get(app_id)
 
         if app:
+            # For now, keep this version, but wait until redis cache is used here for task_runs too
             query_attrs = dict(app_id=app.id)
             if current_user.is_anonymous():
-                query_attrs['user_ip'] = request.remote_addr
+                query_attrs['user_ip'] = request.remote_addr or '127.0.0.1'
             else:
                 query_attrs['user_id'] = current_user.id
             taskrun_count = task_repo.count_task_runs_with(**query_attrs)
-            task_count = task_repo.count_tasks_with(app_id=app.id)
-            tmp = dict(done=taskrun_count, total=task_count)
+            tmp = dict(done=taskrun_count, total=n_tasks(app.id))
             return Response(json.dumps(tmp), mimetype="application/json")
         else:
             return abort(404)

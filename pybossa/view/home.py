@@ -46,12 +46,12 @@ def home():
     d['categories'] = categories
     d['categories_apps'] = {}
     for c in categories:
-        tmp_apps, count = cached_apps.get(c['short_name'], page, per_page)
+        tmp_apps = cached_apps.get(c['short_name'], page, per_page)
         d['categories_apps'][str(c['short_name'])] = tmp_apps
 
     # Add featured
-    tmp_apps, count = cached_apps.get_featured('featured', page, per_page)
-    if count > 0:
+    tmp_apps = cached_apps.get_featured('featured', page, per_page)
+    if len(tmp_apps) > 0:
         featured = Category(name='Featured', short_name='featured')
         d['categories'].insert(0,featured)
         d['categories_apps']['featured'] = tmp_apps
