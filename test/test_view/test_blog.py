@@ -307,7 +307,6 @@ class TestBlogpostView(web.Helper):
         self.signout()
         self.register(name='notowner', email='user2@user.com')
         url = "/app/%s/%s/update" % (app.short_name, blogpost.id)
-        self.register()
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 403, res.status_code
