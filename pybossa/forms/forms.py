@@ -24,8 +24,10 @@ from wtforms.widgets import HiddenInput
 from flask.ext.babel import lazy_gettext, gettext
 
 from pybossa.core import db
-import pybossa.validator as pb_validator
-from pybossa import model
+from pybossa.model.app import App
+from pybossa.model.user import User
+from pybossa.model.category import Category
+import validator as pb_validator
 
 
 ### Forms for applications view
@@ -33,13 +35,13 @@ from pybossa import model
 class AppForm(Form):
     name = TextField(lazy_gettext('Name'),
                      [validators.Required(),
-                      pb_validator.Unique(db.session, model.app.App, model.app.App.name,
+                      pb_validator.Unique(db.session, App, App.name,
                                           message=lazy_gettext("Name is already taken."))])
     short_name = TextField(lazy_gettext('Short Name'),
                            [validators.Required(),
                             pb_validator.NotAllowedChars(),
                             pb_validator.Unique(
-                                db.session, model.app.App, model.app.App.short_name,
+                                db.session, App, App.short_name,
                                 message=lazy_gettext(
                                     "Short Name is already taken."))])
     long_description = TextAreaField(lazy_gettext('Long Description'),
@@ -187,8 +189,8 @@ class RegisterForm(Form):
     name = TextField(lazy_gettext('User name'),
                          [validators.Length(min=3, max=35, message=err_msg),
                           pb_validator.NotAllowedChars(),
-                          pb_validator.Unique(db.session, model.user.User,
-                                              model.user.User.name, err_msg_2)])
+                          pb_validator.Unique(db.session, User,
+                                              User.name, err_msg_2)])
 
     err_msg = lazy_gettext("Email must be between 3 and 35 characters long")
     err_msg_2 = lazy_gettext("Email is already taken")
@@ -196,8 +198,8 @@ class RegisterForm(Form):
                            [validators.Length(min=3, max=35, message=err_msg),
                             validators.Email(),
                             pb_validator.Unique(
-                                db.session, model.user.User,
-                                model.user.User.email_addr, err_msg_2)])
+                                db.session, User,
+                                User.email_addr, err_msg_2)])
 
     err_msg = lazy_gettext("Password cannot be empty")
     err_msg_2 = lazy_gettext("Passwords must match")
@@ -226,7 +228,7 @@ class UpdateProfileForm(Form):
                      [validators.Length(min=3, max=35, message=err_msg),
                       pb_validator.NotAllowedChars(),
                       pb_validator.Unique(
-                          db.session, model.user.User, model.user.User.name, err_msg_2)])
+                          db.session, User, User.name, err_msg_2)])
 
     err_msg = lazy_gettext("Email must be between 3 and 35 characters long")
     err_msg_2 = lazy_gettext("Email is already taken")
@@ -234,8 +236,8 @@ class UpdateProfileForm(Form):
                            [validators.Length(min=3, max=35, message=err_msg),
                             validators.Email(),
                             pb_validator.Unique(
-                                db.session, model.user.User,
-                                model.user.User.email_addr, err_msg_2)])
+                                db.session, User,
+                                User.email_addr, err_msg_2)])
 
     locale = SelectField(lazy_gettext('Language'))
     ckan_api = TextField(lazy_gettext('CKAN API Key'))
@@ -302,7 +304,7 @@ class CategoryForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
     name = TextField(lazy_gettext('Name'),
                      [validators.Required(),
-                      pb_validator.Unique(db.session, model.category.Category, model.category.Category.name,
+                      pb_validator.Unique(db.session, Category, Category.name,
                                           message="Name is already taken.")])
     description = TextField(lazy_gettext('Description'),
                             [validators.Required()])

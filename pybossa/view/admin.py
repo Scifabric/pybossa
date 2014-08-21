@@ -35,7 +35,6 @@ from pybossa.util import admin_required, UnicodeWriter
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
 from pybossa.auth import require
-import pybossa.validator as pb_validator
 from sqlalchemy import or_, func
 import json
 from StringIO import StringIO
