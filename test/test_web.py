@@ -151,15 +151,38 @@ class TestWeb(web.Helper):
 
 
     @with_context
-    def test_03_register(self):
+    def test_register_get(self):
         """Test WEB register user works"""
-        res = self.app.get('/account/signin')
-        assert 'Forgot Password' in res.data
-
         res = self.app.get('/account/register')
         # The output should have a mime-type: text/html
         assert res.mimetype == 'text/html', res
         assert self.html_title("Register") in res.data, res
+
+
+    @with_context
+    @patch('pybossa.view.account.mail')
+    @patch('pybossa.view.account.render_template')
+    @patch('pybossa.view.account.signer')
+    def test_register_post_creates_email_with_link(self, signer, render, mail):
+        """Test WEB register post creates and sends the confirmation email"""
+        data = dict(fullname="John Doe", name="johndoe",
+                    password="p4ssw0rd", confirm="p4ssw0rd",
+                    email_addr="johndoe@example.com")
+        signer.dumps.return_value = ''
+        render.return_value = ''
+        res = self.app.post('/account/register', data=data)
+        del data['confirm']
+
+        signer.dumps.assert_called_with(data, salt='account-validation')
+        render.assert_has_call('/account/email/validate_account.md',
+                                user=data,
+                                confirm_url='http://localhost:5000/account/register/confirmation?key=')
+        assert mail.send.called, "Mail was not sent"
+
+
+    @with_context
+    def test_register_post_valid_data(self):
+        """Test WEB register post with valid form data"""
         data = dict(fullname="John Doe", name="johndoe",
                     password="p4ssw0rd", confirm="p4ssw0rd",
                     email_addr="johndoe@example.com")
@@ -190,7 +213,7 @@ class TestWeb(web.Helper):
                        email_addr='email', password='password')
         res = self.app.get('/account/register/confirmation?key=valid-key')
 
-        assert fake_signer.loads.called_with('valid-key', max_age=3600, salt='account-validation')
+        fake_signer.loads.assert_called_with('valid-key', max_age=3600, salt='account-validation')
 
 
     @patch('pybossa.view.account.signer')

@@ -170,7 +170,6 @@ def register():
     Returns a Jinja2 template
 
     """
-    # TODO: re-enable csrf
     form = RegisterForm(request.form)
     if request.method == 'POST' and form.validate():
         account = dict(fullname=form.fullname.data, name=form.name.data,
