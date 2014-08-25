@@ -150,12 +150,11 @@ def stats_dates(app_id):
             SELECT SUM(submitted_answers-n_answers) as excess FROM (
                 SELECT task.id, task.n_answers, COUNT(task_run.id) as submitted_answers
                 FROM task_run, task
-                WHERE task_run.app_id=1377 AND task.id=task_run.task_id AND task.state='completed'
+                WHERE task_run.app_id=:app_id AND task.id=task_run.task_id AND task.state='completed'
                 GROUP BY task.id) AS myquery;
             ''')
         results = session.execute(sql, dict(app_id=app_id))
         for row in results:
-            print row.excess
             excess = row.excess or excess
 
         # Get all answers per date
