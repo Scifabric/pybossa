@@ -144,7 +144,6 @@ def stats_dates(app_id):
 
         avg, total_n_tasks = get_avg_n_tasks(app_id)
 
-        excess = 0
         # Remove answers over redundancy from estimations
         sql = text('''
             SELECT SUM(submitted_answers-n_answers) as excess FROM (
@@ -155,7 +154,7 @@ def stats_dates(app_id):
             ''')
         results = session.execute(sql, dict(app_id=app_id))
         for row in results:
-            excess = row.excess or excess
+            excess = row.excess or 0
 
         # Get all answers per date
         sql = text('''
@@ -168,7 +167,7 @@ def stats_dates(app_id):
 
         results = session.execute(sql, dict(app_id=app_id))
         for row in results:
-            dates[row.d] = row.count - excess
+            dates[row.d] = float(row.count - excess)
             dates_n_tasks[row.d] = total_n_tasks * avg
 
 
