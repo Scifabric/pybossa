@@ -150,11 +150,11 @@ def stats_dates(app_id):
                     SELECT answers.d, avg_day_answers, day_answers, task_id FROM (
                     SELECT d, AVG(day_answers) AS avg_day_answers FROM (
                         SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') AS d, task_id, COUNT(id) AS day_answers
-                        FROM task_run WHERE app_id=4 GROUP BY d, task_id) AS day_answers
+                        FROM task_run WHERE app_id=:app_id GROUP BY d, task_id) AS day_answers
                     GROUP BY d) AS average INNER JOIN (
                         SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') AS d, task_id, COUNT(id) AS day_answers
                         FROM task_run
-                        WHERE app_id=4
+                        WHERE app_id=:app_id
                         GROUP BY d, task_id) AS answers ON average.d=answers.d)
                     SELECT to_char(d, 'YYYY-MM-DD') as d, SUM(floor(least(avg_day_answers, day_answers))) AS day_count FROM myquery
                     GROUP BY d;
