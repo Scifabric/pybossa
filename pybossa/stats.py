@@ -331,9 +331,9 @@ def stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
                        dates_anon, dates_auth):
     """Format dates stats into a JSON format"""
     dayNewStats = dict(label="Anon + Auth",   values=[])
-    dayAvgAnswers = dict(label="Expected Answers",   values=[])
+    dayTotalTasks = dict(label="Total Tasks",   values=[])
     dayEstimates = dict(label="Estimation",   values=[])
-    dayTotalStats = dict(label="Total", disabled="True", values=[])
+    dayCompletedTasks = dict(label="Completed Tasks", disabled="True", values=[])
     dayNewAnonStats = dict(label="Anonymous", values=[])
     dayNewAuthStats = dict(label="Authenticated", values=[])
 
@@ -344,13 +344,13 @@ def stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
         dayNewStats['values'].append(
             [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), dates[d]])
 
-        dayAvgAnswers['values'].append(
+        dayTotalTasks['values'].append(
             [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000),
              dates_n_tasks[d]])
 
-        # Total answers per day
+        # Total tasks completed per day
         total = total + dates[d]
-        dayTotalStats['values'].append(
+        dayCompletedTasks['values'].append(
             [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), total])
 
         # Anonymous answers per day
@@ -376,12 +376,12 @@ def stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
             [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000),
              dates_estimate[d]])
 
-        dayAvgAnswers['values'].append(
+        dayTotalTasks['values'].append(
             [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000),
              dates_n_tasks.values()[0]])
 
     return dayNewStats, dayNewAnonStats, dayNewAuthStats, \
-        dayTotalStats, dayAvgAnswers, dayEstimates
+        dayCompletedTasks, dayTotalTasks, dayEstimates
 
 
 @memoize(timeout=ONE_DAY)
