@@ -32,43 +32,6 @@ import time
 from datetime import timedelta
 
 
-@memoize(timeout=ONE_DAY)
-def get_task_runs(app_id):
-    """Return all the Task Runs for a given app_id"""
-    try:
-        session = get_session(db, bind='slave')
-        task_runs = []
-        for tr in session.query(TaskRun).filter_by(app_id=app_id).yield_per(100):
-            task_runs.append(tr)
-        return task_runs
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
-
-
-@memoize(timeout=ONE_DAY)
-def get_avg_n_tasks(app_id):
-    """Return the average number of answers expected per task,
-    and the number of tasks"""
-    try:
-        session = get_session(db, bind='slave')
-        sql = text('''SELECT COUNT(task.id) as n_tasks,
-                   AVG(task.n_answers) AS "avg" FROM task
-                   WHERE task.app_id=:app_id;''')
-
-        results = session.execute(sql, dict(app_id=app_id))
-        for row in results:
-            avg = float(row.avg)
-            total_n_tasks = row.n_tasks
-        return avg, total_n_tasks
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
-
 
 @memoize(timeout=ONE_DAY)
 def stats_users(app_id):
