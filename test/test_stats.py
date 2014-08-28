@@ -33,17 +33,28 @@ class TestStats(Test):
             AnonymousTaskRunFactory.create(task=task)
 
 
+    def test_stats_dates_no_completed_tasks_on_different_days(self):
+        """Test STATS stats_dates with no completed tasks"""
+        today = unicode(datetime.date.today())
+        dates, n_tasks, dates_anon, dates_auth = stats.stats_dates(self.project.id)
+        assert dates == {}, dates
+        assert n_tasks == {}, n_tasks
+        assert dates_anon[today] == 4, dates_anon[today]
+        assert dates_auth[today] == 4, dates_auth[today]
+
     def test_n_tasks_returns_total_number_tasks(self):
         """Test STATS n_tasks returns the total amount of tasks of the project"""
         assert stats.n_tasks(self.project.id) == 4, stats.n_tasks(self.project.id)
 
-    def test_01_stats_dates(self):
-        """Test STATS dates method works for dates_anon and dates_auth"""
+    def test_stats_dates_completed_tasks(self):
+        """Test STATS stats_dates with tasks completed tasks"""
         today = unicode(datetime.date.today())
-        _, _, dates_anon, dates_auth = stats.stats_dates(self.project.id)
-        err_msg = "The SUM of answers from anon and auth users should be 8"
-        print (dates_anon, dates_auth)
-        assert (dates_anon[today] + dates_auth[today]) == 8, err_msg
+        TaskRunFactory.create(task=self.project.tasks[1])
+        dates, n_tasks, dates_anon, dates_auth = stats.stats_dates(self.project.id)
+        assert dates[today] == 1, dates
+        assert n_tasks[today] == 4, n_tasks
+        assert dates_anon[today] == 4, dates_anon[today]
+        assert dates_auth[today] == 5, dates_auth[today]
 
     def test_02_stats_hours(self):
         """Test STATS hours method works"""
