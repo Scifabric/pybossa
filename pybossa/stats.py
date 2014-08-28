@@ -34,6 +34,12 @@ from datetime import timedelta
 
 
 @memoize(timeout=ONE_DAY)
+def n_tasks(app_id):
+    from cache.apps import n_tasks
+    return n_tasks(app_id)
+
+
+@memoize(timeout=ONE_DAY)
 def stats_users(app_id):
     """Return users's stats for a given app_id"""
     try:
@@ -94,22 +100,6 @@ def stats_users(app_id):
     finally:
         session.close()
 
-### This function ALREADY EXISTS in cache/apps.py, use that one instead!!
-def n_tasks(app_id):
-    try:
-        sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task
-                      WHERE task.app_id=:app_id''')
-        session = get_session(db, bind='slave')
-        results = session.execute(sql, dict(app_id=app_id))
-        n_tasks = 0
-        for row in results:
-            n_tasks = row.n_tasks
-        return n_tasks
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
 
 @memoize(timeout=ONE_DAY)
 def stats_dates(app_id):
