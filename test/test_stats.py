@@ -34,25 +34,19 @@ class TestStats(Test):
     # the app will be completed when 100 tasks have been submitted
     # Only 10 task_runs are saved in the DB
 
-    def test_00_avg_n_tasks(self):
-        """Test STATS avg and n of tasks method works"""
-        with self.flask_app.test_request_context('/'):
-            avg, n_tasks = stats.get_avg_n_tasks(1)
-            err_msg = "The average number of answer per task is wrong"
-            assert avg == 10, err_msg
-            err_msg = "The n of tasks is wrong"
-            assert n_tasks == 10, err_msg
-
     def test_01_stats_dates(self):
         """Test STATS dates method works"""
         today = unicode(datetime.date.today())
         with self.flask_app.test_request_context('/'):
             dates, dates_n_tasks, dates_anon, dates_auth = stats.stats_dates(1)
             err_msg = "There should be 10 answers today"
+            print dates
             assert dates[today] == 10, err_msg
             err_msg = "There should be 100 answers per day"
+            print dates_n_tasks
             assert dates_n_tasks[today] == 100, err_msg
             err_msg = "The SUM of answers from anon and auth users should be 10"
+            print (dates_anon, dates_auth)
             assert (dates_anon[today] + dates_auth[today]) == 10, err_msg
 
     def test_02_stats_hours(self):
