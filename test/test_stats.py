@@ -32,10 +32,10 @@ class TestStats(Test):
             TaskRunFactory.create(task=task)
             AnonymousTaskRunFactory.create(task=task)
 
-    # Tests
-    # Fixtures will create 10 tasks and will need 10 answers per task, so
-    # the app will be completed when 100 tasks have been submitted
-    # Only 10 task_runs are saved in the DB
+
+    def test_n_tasks_returns_total_number_tasks(self):
+        """Test STATS n_tasks returns the total amount of tasks of the project"""
+        assert stats.n_tasks(self.project.id) == 4, stats.n_tasks(self.project.id)
 
     def test_01_stats_dates(self):
         """Test STATS dates method works for dates_anon and dates_auth"""
@@ -85,7 +85,6 @@ class TestStats(Test):
         TaskRunFactory.create(task=self.project.tasks[0])
         TaskRunFactory.create(task=self.project.tasks[1])
         dates_stats, hours_stats, user_stats = stats.get_stats(self.project.id)
-        print dates_stats
         for item in dates_stats:
             if item['label'] == 'Anon + Auth':
                 assert item['values'][0][0] == date_ms, item['values'][0][0]
@@ -116,6 +115,7 @@ class TestStats(Test):
         for item in hours_stats:
             if item['label'] == 'Anon + Auth':
                 max_hours = item['max']
+                print item
                 assert item['max'] == 10, item['max']
                 assert item['max'] == 10, "Max hours value should be 10"
                 for i in item['values']:
