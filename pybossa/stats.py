@@ -478,13 +478,13 @@ def get_stats(app_id, geo=False):
     dates, dates_n_tasks, dates_anon, dates_auth = stats_dates(app_id)
 
     total_n_tasks = n_tasks(app_id)
+    total_completed = sum(dates.values())
     dates_estimate = {}
 
     sorted_answers = sorted(dates.iteritems(), key=operator.itemgetter(0))
-    if len(sorted_answers) > 0:
+    if len(sorted_answers) > 0 and total_completed < total_n_tasks:
         last_day = datetime.datetime.strptime(sorted_answers[-1][0], "%Y-%m-%d")
         first_day = datetime.datetime.strptime(sorted_answers[0][0], "%Y-%m-%d")
-        total_completed = sum(dates.values())
         days_since_first_completed = (datetime.datetime.today() - first_day).days
         avg_completed_per_day = total_completed / (days_since_first_completed + 1)
         days_to_finish = (total_n_tasks - total_completed) / avg_completed_per_day
