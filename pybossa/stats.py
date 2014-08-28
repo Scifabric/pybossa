@@ -483,7 +483,6 @@ def get_stats(app_id, geo=False):
 
     sorted_answers = sorted(dates.iteritems(), key=operator.itemgetter(0))
     if len(sorted_answers) > 0 and total_completed < total_n_tasks:
-        last_day = datetime.datetime.strptime(sorted_answers[-1][0], "%Y-%m-%d")
         first_day = datetime.datetime.strptime(sorted_answers[0][0], "%Y-%m-%d")
         days_since_first_completed = (datetime.datetime.today() - first_day).days
         avg_completed_per_day = total_completed / (days_since_first_completed + 1)
