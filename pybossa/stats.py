@@ -489,15 +489,15 @@ def get_stats(app_id, geo=False):
 
 
 def _make_estimation(sorted_answers, total, completed):
-        first_day = datetime.datetime.strptime(sorted_answers[0][0], "%Y-%m-%d")
-        days_since_first_completed = (datetime.datetime.today() - first_day).days
-        avg_completed_per_day = completed / (days_since_first_completed + 1)
-        days_to_finish = (total - completed) / avg_completed_per_day
-        pace = completed
-        dates_estimate = {}
-        for i in range(0, int(days_to_finish) + 2):
-            tmp = datetime.datetime.today() + timedelta(days=(i))
-            tmp_str = tmp.date().strftime('%Y-%m-%d')
-            dates_estimate[tmp_str] = pace
-            pace = pace + avg_completed_per_day
-        return dates_estimate
+    first_day = datetime.datetime.strptime(sorted_answers[0][0], "%Y-%m-%d")
+    days_since_first_completed = (datetime.datetime.today() - first_day).days
+    avg_completed_per_day = completed / (days_since_first_completed + 1)
+    days_to_finish = (total - completed) / avg_completed_per_day
+    pace = completed
+    dates_estimate = {}
+    for i in range(0, int(days_to_finish) + 2):
+        tmp = datetime.datetime.today() + timedelta(days=(i))
+        tmp_str = tmp.date().strftime('%Y-%m-%d')
+        dates_estimate[tmp_str] = pace
+        pace = pace + avg_completed_per_day
+    return dates_estimate
