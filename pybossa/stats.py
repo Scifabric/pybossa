@@ -473,16 +473,9 @@ def get_stats(app_id, geo=False):
 
     sorted_answers = sorted(dates.iteritems(), key=operator.itemgetter(0))
     if len(sorted_answers) > 0 and total_completed < total_n_tasks:
-        first_day = datetime.datetime.strptime(sorted_answers[0][0], "%Y-%m-%d")
-        days_since_first_completed = (datetime.datetime.today() - first_day).days
-        avg_completed_per_day = total_completed / (days_since_first_completed + 1)
-        days_to_finish = (total_n_tasks - total_completed) / avg_completed_per_day
-        pace = total_completed
-        for i in range(0, int(days_to_finish) + 2):
-            tmp = datetime.datetime.today() + timedelta(days=(i))
-            tmp_str = tmp.date().strftime('%Y-%m-%d')
-            dates_estimate[tmp_str] = pace
-            pace = pace + avg_completed_per_day
+        dates_estimate = _make_estimation(sorted_answers,
+                                          total_n_tasks,
+                                          total_completed)
 
     dates_stats = stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
                                      dates_anon, dates_auth)
@@ -493,3 +486,18 @@ def get_stats(app_id, geo=False):
     users_stats = stats_format_users(app_id, users, anon_users, auth_users, geo)
 
     return dates_stats, hours_stats, users_stats
+
+
+def _make_estimation(sorted_answers, total, completed):
+        first_day = datetime.datetime.strptime(sorted_answers[0][0], "%Y-%m-%d")
+        days_since_first_completed = (datetime.datetime.today() - first_day).days
+        avg_completed_per_day = completed / (days_since_first_completed + 1)
+        days_to_finish = (total - completed) / avg_completed_per_day
+        pace = completed
+        dates_estimate = {}
+        for i in range(0, int(days_to_finish) + 2):
+            tmp = datetime.datetime.today() + timedelta(days=(i))
+            tmp_str = tmp.date().strftime('%Y-%m-%d')
+            dates_estimate[tmp_str] = pace
+            pace = pace + avg_completed_per_day
+        return dates_estimate
