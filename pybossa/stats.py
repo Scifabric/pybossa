@@ -131,6 +131,22 @@ def stats_users(app_id):
     finally:
         session.close()
 
+### This function ALREADY EXISTS in cache/apps.py, use that one instead!!
+def n_tasks(app_id):
+    try:
+        sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task
+                      WHERE task.app_id=:app_id''')
+        session = get_session(db, bind='slave')
+        results = session.execute(sql, dict(app_id=app_id))
+        n_tasks = 0
+        for row in results:
+            n_tasks = row.n_tasks
+        return n_tasks
+    except: # pragma: no cover
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 @memoize(timeout=ONE_DAY)
 def stats_dates(app_id):
@@ -142,7 +158,7 @@ def stats_dates(app_id):
 
         session = get_session(db, bind='slave')
 
-        avg, total_n_tasks = get_avg_n_tasks(app_id)
+        total_n_tasks = n_tasks(app_id)
 
         # Get all completed tasks
         sql = text('''
@@ -163,7 +179,7 @@ def stats_dates(app_id):
         results = session.execute(sql, dict(app_id=app_id))
         for row in results:
             dates[row.day] = row.completed_tasks
-            dates_n_tasks[row.day] = total_n_tasks * avg
+            dates_n_tasks[row.day] = total_n_tasks
 
 
         # Get all answers per date for auth
@@ -340,10 +356,6 @@ def stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
     total = 0
     for d in sorted(dates.keys()):
         # JavaScript expects miliseconds since EPOCH
-        # New answers per day
-        dayNewStats['values'].append(
-            [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), dates[d]])
-
         dayTotalTasks['values'].append(
             [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000),
              dates_n_tasks[d]])
@@ -353,23 +365,21 @@ def stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
         dayCompletedTasks['values'].append(
             [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), total])
 
-        # Anonymous answers per day
-        if d in (dates_anon.keys()):
-            dayNewAnonStats['values'].append(
-                [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000),
-                 dates_anon[d]])
-        else: # pragma: no cover
-            dayNewAnonStats['values'].append(
-                [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), 0])
+    anon_auth_dates = sorted(list(set(dates_anon.keys() + dates_auth.keys())))
+    for d in anon_auth_dates:
+        anon_ans = dates_anon[d] if d in dates_anon.keys() else 0
+        auth_ans = dates_auth[d] if d in dates_auth.keys() else 0
+        total_ans = anon_ans + auth_ans
 
+        # New answers per day
+        dayNewStats['values'].append(
+            [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), total_ans])
+        # Anonymous answers per day
+        dayNewAnonStats['values'].append(
+            [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), anon_ans])
         # Authenticated answers per day
-        if d in (dates_auth.keys()):
-            dayNewAuthStats['values'].append(
-                [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000),
-                 dates_auth[d]])
-        else: # pragma: no cover
-            dayNewAuthStats['values'].append(
-                [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), 0])
+        dayNewAuthStats['values'].append(
+            [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), auth_ans])
 
     for d in sorted(dates_estimate.keys()):
         dayEstimates['values'].append(
@@ -504,24 +514,23 @@ def get_stats(app_id, geo=False):
     users, anon_users, auth_users = stats_users(app_id)
     dates, dates_n_tasks, dates_anon, dates_auth = stats_dates(app_id)
 
-    avg, total_n_tasks = get_avg_n_tasks(app_id)
+    total_n_tasks = n_tasks(app_id)
+    dates_estimate = {}
 
     sorted_answers = sorted(dates.iteritems(), key=operator.itemgetter(0))
     if len(sorted_answers) > 0:
         last_day = datetime.datetime.strptime(sorted_answers[-1][0], "%Y-%m-%d")
-    total_answers = sum(dates.values())
-    if len(dates) > 0:
-        avg_answers_per_day = total_answers / len(dates)
-    required_days_to_finish = ((avg * total_n_tasks) - total_answers) / avg_answers_per_day
-
-    pace = total_answers
-
-    dates_estimate = {}
-    for i in range(0, int(required_days_to_finish) + 2):
-        tmp = last_day + timedelta(days=(i))
-        tmp_str = tmp.date().strftime('%Y-%m-%d')
-        dates_estimate[tmp_str] = pace
-        pace = pace + avg_answers_per_day
+        first_day = datetime.datetime.strptime(sorted_answers[0][0], "%Y-%m-%d")
+        total_completed = sum(dates.values())
+        days_since_first_completed = (datetime.datetime.today() - first_day).days
+        avg_completed_per_day = total_completed / (days_since_first_completed + 1)
+        days_to_finish = (total_n_tasks - total_completed) / avg_completed_per_day
+        pace = total_completed
+        for i in range(0, int(days_to_finish) + 2):
+            tmp = datetime.datetime.today() + timedelta(days=(i))
+            tmp_str = tmp.date().strftime('%Y-%m-%d')
+            dates_estimate[tmp_str] = pace
+            pace = pace + avg_completed_per_day
 
     dates_stats = stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
                                      dates_anon, dates_auth)
