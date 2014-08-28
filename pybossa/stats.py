@@ -149,7 +149,7 @@ def stats_dates(app_id):
                 WITH answers AS (
                     SELECT TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') AS day, task.id, task.n_answers AS n_answers, COUNT(task_run.id) AS day_answers
                     FROM task_run, task WHERE task_run.app_id=:app_id AND task.id=task_run.task_id GROUP BY day, task.id)
-                SELECT day_of_completion AS day, COUNT(task_id) AS completed_tasks FROM (
+                SELECT to_char(day_of_completion, 'YYYY-MM-DD') AS day, COUNT(task_id) AS completed_tasks FROM (
                     SELECT MIN(day) AS day_of_completion, task_id FROM (
                         SELECT ans1.day, ans1.id as task_id, floor(avg(ans1.n_answers)) AS n_answers, sum(ans2.day_answers) AS accum_answers
                         FROM answers AS ans1 INNER JOIN answers AS ans2
@@ -162,8 +162,8 @@ def stats_dates(app_id):
 
         results = session.execute(sql, dict(app_id=app_id))
         for row in results:
-            dates[row.d] = row.count
-            dates_n_tasks[row.d] = total_n_tasks * avg
+            dates[row.day] = row.completed_tasks
+            dates_n_tasks[row.day] = total_n_tasks * avg
 
 
         # Get all answers per date for auth
