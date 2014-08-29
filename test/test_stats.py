@@ -156,3 +156,25 @@ class TestStats(Test):
 
         err_msg = "user stats sum of auth and anon should be 7"
         assert user_stats['n_anon'] + user_stats['n_auth'] == 7, err_msg
+
+
+
+class TestStatsEstimation(object):
+
+    def test_estimate_no_data(self):
+        """Test _estimate returns an empty dict if there is no completed tasks data"""
+        sorted_dates = []
+        total = 7
+        completed = 0
+        estimation = stats._estimate(sorted_dates, total, completed)
+
+        assert estimation == {}, estimation
+
+    def test_estimate_all_tasks_completed(self):
+        """Test _estimate returns an empty dict if the project is completed"""
+        sorted_dates = [(u'2014-08-21', 3L), (u'2014-08-28', 3L)]
+        total = 6
+        completed = 6
+        estimation = stats._estimate(sorted_dates, total, completed)
+
+        assert estimation == {}, estimation
