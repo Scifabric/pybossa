@@ -107,7 +107,6 @@ def stats_dates(app_id):
         dates = {}
         dates_anon = {}
         dates_auth = {}
-        dates_n_tasks = {}
 
         session = get_session(db, bind='slave')
 
@@ -132,7 +131,6 @@ def stats_dates(app_id):
         results = session.execute(sql, dict(app_id=app_id))
         for row in results:
             dates[row.day] = row.completed_tasks
-            dates_n_tasks[row.day] = total_n_tasks
 
 
         # Get all answers per date for auth
@@ -161,7 +159,7 @@ def stats_dates(app_id):
         for row in results:
             dates_anon[row.d] = row.count
 
-        return dates, dates_n_tasks, dates_anon, dates_auth
+        return dates, dates_anon, dates_auth
     except: # pragma: no cover
         session.rollback()
         raise
@@ -296,7 +294,7 @@ def stats_hours(app_id):
 
 
 @memoize(timeout=ONE_DAY)
-def stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
+def stats_format_dates(app_id, dates, dates_estimate,
                        dates_anon, dates_auth):
     """Format dates stats into a JSON format"""
     dayNewStats = dict(label="Anon + Auth",   values=[])
@@ -471,7 +469,7 @@ def get_stats(app_id, geo=False):
     hours, hours_anon, hours_auth, max_hours, \
         max_hours_anon, max_hours_auth = stats_hours(app_id)
     users, anon_users, auth_users = stats_users(app_id)
-    dates, dates_n_tasks, dates_anon, dates_auth = stats_dates(app_id)
+    dates, dates_anon, dates_auth = stats_dates(app_id)
 
     total_n_tasks = n_tasks(app_id)
     total_completed = sum(dates.values())
@@ -481,7 +479,7 @@ def get_stats(app_id, geo=False):
     if len(sorted_dates) > 0 and total_completed < total_n_tasks:
         dates_estimate = _estimate(sorted_dates, total_n_tasks, total_completed)
 
-    dates_stats = stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
+    dates_stats = stats_format_dates(app_id, dates, dates_estimate,
                                      dates_anon, dates_auth)
 
     hours_stats = stats_format_hours(app_id, hours, hours_anon, hours_auth,

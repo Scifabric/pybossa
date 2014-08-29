@@ -36,9 +36,8 @@ class TestStats(Test):
     def test_stats_dates_no_completed_tasks_on_different_days(self):
         """Test STATS stats_dates with no completed tasks"""
         today = unicode(datetime.date.today())
-        dates, n_tasks, dates_anon, dates_auth = stats.stats_dates(self.project.id)
+        dates, dates_anon, dates_auth = stats.stats_dates(self.project.id)
         assert dates == {}, dates
-        assert n_tasks == {}, n_tasks
         assert dates_anon[today] == 4, dates_anon[today]
         assert dates_auth[today] == 4, dates_auth[today]
 
@@ -50,9 +49,8 @@ class TestStats(Test):
         """Test STATS stats_dates with tasks completed tasks"""
         today = unicode(datetime.date.today())
         TaskRunFactory.create(task=self.project.tasks[1])
-        dates, n_tasks, dates_anon, dates_auth = stats.stats_dates(self.project.id)
+        dates, dates_anon, dates_auth = stats.stats_dates(self.project.id)
         assert dates[today] == 1, dates
-        assert n_tasks[today] == 4, n_tasks
         assert dates_anon[today] == 4, dates_anon[today]
         assert dates_auth[today] == 5, dates_auth[today]
 
