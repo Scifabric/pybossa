@@ -318,8 +318,8 @@ def stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
         dayCompletedTasks['values'].append(
             [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), total])
 
-    anon_auth_dates = sorted(list(set(dates_anon.keys() + dates_auth.keys())))
-    for d in anon_auth_dates:
+    answer_dates = sorted(list(set(dates_anon.keys() + dates_auth.keys())))
+    for d in answer_dates:
         anon_ans = dates_anon[d] if d in dates_anon.keys() else 0
         auth_ans = dates_auth[d] if d in dates_auth.keys() else 0
         total_ans = anon_ans + auth_ans
@@ -471,11 +471,9 @@ def get_stats(app_id, geo=False):
     total_completed = sum(dates.values())
     dates_estimate = {}
 
-    sorted_answers = sorted(dates.iteritems(), key=operator.itemgetter(0))
-    if len(sorted_answers) > 0 and total_completed < total_n_tasks:
-        dates_estimate = _make_estimation(sorted_answers,
-                                          total_n_tasks,
-                                          total_completed)
+    sorted_dates = sorted(dates.iteritems(), key=operator.itemgetter(0))
+    if len(sorted_dates) > 0 and total_completed < total_n_tasks:
+        dates_estimate = _estimate(sorted_dates, total_n_tasks, total_completed)
 
     dates_stats = stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
                                      dates_anon, dates_auth)
@@ -488,8 +486,8 @@ def get_stats(app_id, geo=False):
     return dates_stats, hours_stats, users_stats
 
 
-def _make_estimation(sorted_answers, total, completed):
-    first_day = datetime.datetime.strptime(sorted_answers[0][0], "%Y-%m-%d")
+def _estimate(sorted_dates, total, completed):
+    first_day = datetime.datetime.strptime(sorted_dates[0][0], "%Y-%m-%d")
     days_since_first_completed = (datetime.datetime.today() - first_day).days
     avg_completed_per_day = completed / (days_since_first_completed + 1)
     days_to_finish = (total - completed) / avg_completed_per_day
