@@ -178,3 +178,47 @@ class TestStatsEstimation(object):
         estimation = stats._estimate(sorted_dates, total, completed)
 
         assert estimation == {}, estimation
+
+    def test_estimate_estimates_future_task_completion(self):
+        """Test _estimate returns one task each day for a project that has
+        completed one task per day in average"""
+        time.mktime(time.strptime('2014-08-22', "%Y-%m-%d"))
+        today = datetime.date.today()
+        today_str = today.strftime('%Y-%m-%d')
+        yesterday = (today + datetime.timedelta(-1)).strftime('%Y-%m-%d')
+        tomorrow = (today + datetime.timedelta(1)).strftime('%Y-%m-%d')
+        sorted_dates = [(yesterday, 1L), (today_str, 1L)]
+        total = 3
+        completed = 2
+        estimation = stats._estimate(sorted_dates, total, completed)
+
+        assert estimation[tomorrow] == 3, estimation
+
+
+    def test_estimate_contains_today(self):
+        """Test _estimate contains current day, with actual completed tasks"""
+        time.mktime(time.strptime('2014-08-22', "%Y-%m-%d"))
+        today = datetime.date.today()
+        today_str = today.strftime('%Y-%m-%d')
+        yesterday = (today + datetime.timedelta(-1)).strftime('%Y-%m-%d')
+        sorted_dates = [(yesterday, 1L), (today_str, 1L)]
+        total = 3
+        completed = 2
+        estimation = stats._estimate(sorted_dates, total, completed)
+
+        assert estimation[today_str] == 2, estimation
+
+    def test_estimate_contains_1_extra_days(self):
+        """Test _estimate contains 1 extra days to make sure it ends with
+        estimated tasks above total number of tasks"""
+        time.mktime(time.strptime('2014-08-22', "%Y-%m-%d"))
+        today = datetime.date.today()
+        today_str = today.strftime('%Y-%m-%d')
+        yesterday = (today + datetime.timedelta(-1)).strftime('%Y-%m-%d')
+        last_day = (today + datetime.timedelta(2)).strftime('%Y-%m-%d')
+        sorted_dates = [(yesterday, 1L), (today_str, 1L)]
+        total = 3
+        completed = 2
+        estimation = stats._estimate(sorted_dates, total, completed)
+
+        assert estimation[last_day] == 4, estimation
