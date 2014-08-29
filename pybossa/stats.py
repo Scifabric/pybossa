@@ -473,11 +473,9 @@ def get_stats(app_id, geo=False):
 
     total_n_tasks = n_tasks(app_id)
     total_completed = sum(dates.values())
-    dates_estimate = {}
 
     sorted_dates = sorted(dates.iteritems(), key=operator.itemgetter(0))
-    if len(sorted_dates) > 0 and total_completed < total_n_tasks:
-        dates_estimate = _estimate(sorted_dates, total_n_tasks, total_completed)
+    dates_estimate = _estimate(sorted_dates, total_n_tasks, total_completed)
 
     dates_stats = stats_format_dates(app_id, dates, dates_estimate,
                                      dates_anon, dates_auth)
@@ -491,15 +489,16 @@ def get_stats(app_id, geo=False):
 
 
 def _estimate(sorted_dates, total, completed):
-    first_day = datetime.datetime.strptime(sorted_dates[0][0], "%Y-%m-%d")
-    days_since_first_completed = (datetime.datetime.today() - first_day).days
-    avg_completed_per_day = completed / (days_since_first_completed + 1)
-    days_to_finish = (total - completed) / avg_completed_per_day
-    pace = completed
     dates_estimate = {}
-    for i in range(0, int(days_to_finish) + 2):
-        tmp = datetime.datetime.today() + timedelta(days=(i))
-        tmp_str = tmp.date().strftime('%Y-%m-%d')
-        dates_estimate[tmp_str] = pace
-        pace = pace + avg_completed_per_day
+    if len(sorted_dates) > 0 and completed < total:
+        first_day = datetime.datetime.strptime(sorted_dates[0][0], "%Y-%m-%d")
+        days_since_first_completed = (datetime.datetime.today() - first_day).days
+        avg_completed_per_day = completed / (days_since_first_completed + 1)
+        days_to_finish = (total - completed) / avg_completed_per_day
+        pace = completed
+        for i in range(0, int(days_to_finish) + 2):
+            tmp = datetime.datetime.today() + timedelta(days=(i))
+            tmp_str = tmp.date().strftime('%Y-%m-%d')
+            dates_estimate[tmp_str] = pace
+            pace = pace + avg_completed_per_day
     return dates_estimate
