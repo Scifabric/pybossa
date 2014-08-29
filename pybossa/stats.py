@@ -306,19 +306,26 @@ def stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
     dayNewAnonStats = dict(label="Anonymous", values=[])
     dayNewAuthStats = dict(label="Authenticated", values=[])
 
+    answer_dates = sorted(list(set(dates_anon.keys() + dates_auth.keys())))
     total = 0
+    # Add the date of the first answer to dates stats if not present already
+    if answer_dates[0] not in dates.keys():
+        d = answer_dates[0]
+        dayCompletedTasks['values'].append(
+            [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), 0])
+        dayTotalTasks['values'].append(
+            [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), n_tasks(app_id)])
+
     for d in sorted(dates.keys()):
         # JavaScript expects miliseconds since EPOCH
         dayTotalTasks['values'].append(
-            [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000),
-             dates_n_tasks[d]])
+            [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), n_tasks(app_id)])
 
         # Total tasks completed per day
         total = total + dates[d]
         dayCompletedTasks['values'].append(
             [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), total])
 
-    answer_dates = sorted(list(set(dates_anon.keys() + dates_auth.keys())))
     for d in answer_dates:
         anon_ans = dates_anon[d] if d in dates_anon.keys() else 0
         auth_ans = dates_auth[d] if d in dates_auth.keys() else 0
@@ -340,8 +347,7 @@ def stats_format_dates(app_id, dates, dates_n_tasks, dates_estimate,
              dates_estimate[d]])
 
         dayTotalTasks['values'].append(
-            [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000),
-             dates_n_tasks.values()[0]])
+            [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), n_tasks(app_id)])
 
     return dayNewStats, dayNewAnonStats, dayNewAuthStats, \
         dayCompletedTasks, dayTotalTasks, dayEstimates
