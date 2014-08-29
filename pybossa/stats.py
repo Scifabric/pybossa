@@ -492,10 +492,12 @@ def _estimate(sorted_dates, total, completed):
     dates_estimate = {}
     if len(sorted_dates) > 0 and completed < total:
         first_day = datetime.datetime.strptime(sorted_dates[0][0], "%Y-%m-%d")
+        last_day = datetime.datetime.strptime(sorted_dates[-1][0], "%Y-%m-%d")
         days_since_first_completed = (datetime.datetime.today() - first_day).days
         avg_completed_per_day = float(completed) / (days_since_first_completed + 1)
         days_to_finish = int ((total - completed) / avg_completed_per_day)
         pace = completed
+        dates_estimate[last_day.strftime('%Y-%m-%d')] = pace
         for i in range(0, int(days_to_finish) + 2):
             tmp = datetime.datetime.today() + timedelta(days=(i))
             tmp_str = tmp.date().strftime('%Y-%m-%d')

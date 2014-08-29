@@ -222,3 +222,18 @@ class TestStatsEstimation(object):
         estimation = stats._estimate(sorted_dates, total, completed)
 
         assert estimation[last_day] == 4, estimation
+
+    def test_estimate_contains_date_of_last_task_completion(self):
+        """Test _estimate contains the date of the last task completed with
+        actual number of completed tasks"""
+        time.mktime(time.strptime('2014-08-22', "%Y-%m-%d"))
+        today = datetime.date.today()
+        today_str = today.strftime('%Y-%m-%d')
+        yesterday = (today + datetime.timedelta(-1)).strftime('%Y-%m-%d')
+        two_days_before = (today + datetime.timedelta(2)).strftime('%Y-%m-%d')
+        sorted_dates = [(two_days_before, 1L), (yesterday, 1L)]
+        total = 3
+        completed = 2
+        estimation = stats._estimate(sorted_dates, total, completed)
+
+        assert estimation[yesterday] == 2, estimation
