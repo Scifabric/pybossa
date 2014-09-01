@@ -176,6 +176,8 @@ def register():
                        email_addr=form.email_addr.data, password=form.password.data)
         key = signer.dumps(account, salt='account-validation')
         confirm_url = url_for('.confirm_account', key=key, _external=True)
+        if current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED'):
+            return redirect(confirm_url)
         msg = Message(subject='Welcome to %s!' % current_app.config.get('BRAND'),
                           recipients=[account['email_addr']])
         msg.body = render_template('/account/email/validate_account.md',
