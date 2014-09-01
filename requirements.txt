@@ -1,3 +1,4 @@
 --index-url https://pypi.python.org/simple/
 
+-e git+https://github.com/therealmarv/flask-login.git@unicode-user-id-support#egg=Flask-Login
 -e .
