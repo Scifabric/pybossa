@@ -200,6 +200,22 @@ class TestWeb(web.Helper):
         assert "Just one more step, please" in res.data, res.data
 
 
+    from pybossa.view.applications import redirect
+    @with_context
+    @patch('pybossa.view.account.redirect', wraps=redirect)
+    @patch('pybossa.view.account.signer')
+    def test_register_post_valid_data_validation_disabled(self, signer, redirect):
+        """Test WEB register post with valid form data and account validation
+        disabled redirects to the confirmation URL with valid arguments"""
+        data = dict(fullname="John Doe", name="johndoe",
+                    password="p4ssw0rd", confirm="p4ssw0rd",
+                    email_addr="johndoe@example.com")
+        signer.dumps.return_value = 'key'
+        res = self.app.post('/account/register', data=data)
+        print dir(redirect)
+        redirect.assert_called_with('http://localhost/account/register/confirmation?key=key')
+
+
     def test_register_confirmation_fails_without_key(self):
         """Test WEB register confirmation returns 403 if no 'key' param is present"""
         res = self.app.get('/account/register/confirmation')
