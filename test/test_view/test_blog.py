@@ -33,7 +33,7 @@ class TestBlogpostView(web.Helper):
     def test_blogposts_get_all(self):
         """Test blogpost GET all blogposts"""
         user = self.create_users()[1]
-        app = self.create_app(info=None)
+        app = self.create_project(info=None)
         app.owner = user
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([user, app, blogpost])
@@ -60,7 +60,7 @@ class TestBlogpostView(web.Helper):
         self.signout()
         self.register(name='user', email='user@user.com')
         user = db.session.query(User).get(2)
-        app = self.create_app(info=None)
+        app = self.create_project(info=None)
         app.owner = user
         app.hidden = 1
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
@@ -103,7 +103,7 @@ class TestBlogpostView(web.Helper):
     def test_blogpost_get_one(self):
         """Test blogpost GET with id shows one blogpost"""
         user = self.create_users()[1]
-        app = self.create_app(info=None)
+        app = self.create_project(info=None)
         app.owner = user
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([user, app, blogpost])
@@ -130,7 +130,7 @@ class TestBlogpostView(web.Helper):
         self.signout()
         self.register(name='user', email='user@user.com')
         user = db.session.query(User).get(2)
-        app = self.create_app(info=None)
+        app = self.create_project(info=None)
         app.owner = user
         app.hidden = 1
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
@@ -169,7 +169,7 @@ class TestBlogpostView(web.Helper):
         app1 = App(name='app1',
                 short_name='app1',
                 description=u'description')
-        app2 = self.create_app(info=None)
+        app2 = self.create_project(info=None)
         app1.owner = user
         app2.owner = user
         blogpost = Blogpost(owner=user, app=app1, title='thisisatitle', body='body')
@@ -200,7 +200,7 @@ class TestBlogpostView(web.Helper):
         """Test blogposts, project owners can create"""
         self.register()
         user = db.session.query(User).get(1)
-        app = self.create_app(info=None)
+        app = self.create_project(info=None)
         app.owner = user
         db.session.add(app)
         db.session.commit()
@@ -225,7 +225,7 @@ class TestBlogpostView(web.Helper):
     def test_blogpost_create_by_anonymous(self):
         """Test blogpost create, anonymous users are redirected to signin"""
         user = self.create_users()[1]
-        app = self.create_app(info=None)
+        app = self.create_project(info=None)
         app.owner = user
         db.session.add_all([user, app])
         db.session.commit()
@@ -249,7 +249,7 @@ class TestBlogpostView(web.Helper):
     def test_blogpost_create_by_non_owner(self):
         """Test blogpost create by non owner of the project is forbidden"""
         user = self.create_users()[1]
-        app = self.create_app(info=None)
+        app = self.create_project(info=None)
         app.owner = user
         db.session.add_all([user, app])
         db.session.commit()
@@ -284,7 +284,7 @@ class TestBlogpostView(web.Helper):
         """Test blogposts, app owners can update"""
         self.register()
         user = db.session.query(User).get(1)
-        app = self.create_app(info=None)
+        app = self.create_project(info=None)
         app.owner = user
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([app, blogpost])
@@ -312,7 +312,7 @@ class TestBlogpostView(web.Helper):
     def test_blogpost_update_by_anonymous(self):
         """Test blogpost update, anonymous users are redirected to signin"""
         user = self.create_users()[1]
-        app = self.create_app(info=None)
+        app = self.create_project(info=None)
         app.owner = user
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([user, app, blogpost])
@@ -339,7 +339,7 @@ class TestBlogpostView(web.Helper):
     def test_blogpost_update_by_non_owner(self):
         """Test blogpost update by non owner of the app is forbidden"""
         user = self.create_users()[1]
-        app = self.create_app(info=None)
+        app = self.create_project(info=None)
         app.owner = user
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([user, app, blogpost])
@@ -367,7 +367,7 @@ class TestBlogpostView(web.Helper):
         app1 = App(name='app1',
                 short_name='app1',
                 description=u'description')
-        app2 = self.create_app(info=None)
+        app2 = self.create_project(info=None)
         app1.owner = user
         app2.owner = user
         blogpost = Blogpost(owner=user, app=app1, title='thisisatitle', body='body')
@@ -399,7 +399,7 @@ class TestBlogpostView(web.Helper):
         """Test blogposts, app owners can delete"""
         self.register()
         user = db.session.query(User).get(1)
-        app = self.create_app(info=None)
+        app = self.create_project(info=None)
         app.owner = user
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([app, blogpost])
@@ -420,7 +420,7 @@ class TestBlogpostView(web.Helper):
     def test_blogpost_delete_by_anonymous(self):
         """Test blogpost delete, anonymous users are redirected to signin"""
         user = self.create_users()[1]
-        app = self.create_app(info=None)
+        app = self.create_project(info=None)
         app.owner = user
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([user, app, blogpost])
@@ -439,7 +439,7 @@ class TestBlogpostView(web.Helper):
     def test_blogpost_delete_by_non_owner(self):
         """Test blogpost delete by non owner of the app is forbidden"""
         user = self.create_users()[1]
-        app = self.create_app(info=None)
+        app = self.create_project(info=None)
         app.owner = user
         blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
         db.session.add_all([user, app, blogpost])
@@ -462,7 +462,7 @@ class TestBlogpostView(web.Helper):
         app1 = App(name='app1',
                 short_name='app1',
                 description=u'description')
-        app2 = self.create_app(info=None)
+        app2 = self.create_project(info=None)
         app1.owner = user
         app2.owner = user
         blogpost = Blogpost(owner=user, app=app1, title='thisisatitle', body='body')
