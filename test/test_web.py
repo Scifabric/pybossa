@@ -164,7 +164,10 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.account.render_template')
     @patch('pybossa.view.account.signer')
     def test_register_post_creates_email_with_link(self, signer, render, mail):
-        """Test WEB register post creates and sends the confirmation email"""
+        """Test WEB register post creates and sends the confirmation email if
+        account validation is enabled"""
+        from flask import current_app
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
         data = dict(fullname="John Doe", name="johndoe",
                     password="p4ssw0rd", confirm="p4ssw0rd",
                     email_addr="johndoe@example.com")
@@ -172,6 +175,7 @@ class TestWeb(web.Helper):
         render.return_value = ''
         res = self.app.post('/account/register', data=data)
         del data['confirm']
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
 
         signer.dumps.assert_called_with(data, salt='account-validation')
         render.assert_has_call('/account/email/validate_account.md',
@@ -181,13 +185,17 @@ class TestWeb(web.Helper):
 
 
     @with_context
-    def test_register_post_valid_data(self):
-        """Test WEB register post with valid form data"""
+    def test_register_post_valid_data_validation_enabled(self):
+        """Test WEB register post with valid form data and account validation
+        enabled"""
+        from flask import current_app
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
         data = dict(fullname="John Doe", name="johndoe",
                     password="p4ssw0rd", confirm="p4ssw0rd",
                     email_addr="johndoe@example.com")
 
         res = self.app.post('/account/register', data=data)
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
         assert self.html_title() in res.data, res
         assert "Just one more step, please" in res.data, res.data
 
