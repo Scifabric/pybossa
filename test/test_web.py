@@ -178,9 +178,9 @@ class TestWeb(web.Helper):
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
 
         signer.dumps.assert_called_with(data, salt='account-validation')
-        render.assert_has_call('/account/email/validate_account.md',
+        render.assert_any_call('/account/email/validate_account.md',
                                 user=data,
-                                confirm_url='http://localhost:5000/account/register/confirmation?key=')
+                                confirm_url='http://localhost/account/register/confirmation?key=')
         assert mail.send.called, "Mail was not sent"
 
 
