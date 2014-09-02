@@ -177,7 +177,7 @@ def register():
         key = signer.dumps(account, salt='account-validation')
         confirm_url = url_for('.confirm_account', key=key, _external=True)
         msg = Message(subject='Welcome to %s!' % current_app.config.get('BRAND'),
-                          recipients=[account['email_addr']])
+                      recipients=[account['email_addr']])
         msg.body = render_template('/account/email/validate_account.md',
                                     user=account, confirm_url=confirm_url)
         msg.html = markdown(msg.body)

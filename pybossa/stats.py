@@ -146,18 +146,25 @@ def stats_dates(app_id):
 
         # Get all answers per date
         sql = text('''
-                    WITH myquery AS (
-                        SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') as d,
-                                       COUNT(id)
-                        FROM task_run WHERE app_id=:app_id GROUP BY d)
-                   SELECT to_char(d, 'YYYY-MM-DD') as d, count from myquery;
+            WITH answers AS (
+                SELECT TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') AS day, task.id, task.n_answers AS n_answers, COUNT(task_run.id) AS day_answers
+                FROM task_run, task WHERE task_run.app_id=:app_id AND task.id=task_run.task_id GROUP BY day, task.id)
+            SELECT to_char(day, 'YYYY-MM-DD') as d, sum(day_answers) as valid_count FROM (
+                SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') as d, task_id, COUNT(id) as day_answers
+                FROM task_run WHERE app_id=:app_id GROUP BY d, task_id) AS taskruns_day INNER JOIN (
+                SELECT ans1.day, ans1.id, floor(avg(ans1.n_answers)) AS n_answers, sum(ans2.day_answers) AS accum_answers
+                FROM answers AS ans1 INNER JOIN answers AS ans2
+                ON ans1.id=ans2.id WHERE ans1.day >= ans2.day
+                GROUP BY ans1.id, ans1.day) AS accum
+                ON (taskruns_day.d=accum.day AND taskruns_day.task_id=accum.id)
+            WHERE n_answers >= accum_answers
+            GROUP BY day;
                    ''').execution_options(stream=True)
 
         results = session.execute(sql, dict(app_id=app_id))
         for row in results:
-            dates[row.d] = row.count
+            dates[row.d] = float(row.valid_count)
             dates_n_tasks[row.d] = total_n_tasks * avg
-
 
         # Get all answers per date for auth
         sql = text('''
