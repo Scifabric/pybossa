@@ -147,15 +147,22 @@ def stats_dates(app_id):
         # Get all answers per date
         sql = text('''
                     WITH myquery AS (
-                        SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') as d,
-                                       COUNT(id)
-                        FROM task_run WHERE app_id=:app_id GROUP BY d)
-                   SELECT to_char(d, 'YYYY-MM-DD') as d, count from myquery;
+                    SELECT answers.d, avg_day_answers, day_answers, task_id FROM (
+                    SELECT d, AVG(day_answers) AS avg_day_answers FROM (
+                        SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') AS d, task_id, COUNT(id) AS day_answers
+                        FROM task_run WHERE app_id=:app_id GROUP BY d, task_id) AS day_answers
+                    GROUP BY d) AS average INNER JOIN (
+                        SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') AS d, task_id, COUNT(id) AS day_answers
+                        FROM task_run
+                        WHERE app_id=:app_id
+                        GROUP BY d, task_id) AS answers ON average.d=answers.d)
+                    SELECT to_char(d, 'YYYY-MM-DD') as d, SUM(floor(least(avg_day_answers, day_answers))) AS day_count FROM myquery
+                    GROUP BY d;
                    ''').execution_options(stream=True)
 
         results = session.execute(sql, dict(app_id=app_id))
         for row in results:
-            dates[row.d] = row.count
+            dates[row.d] = float(row.day_count)
             dates_n_tasks[row.d] = total_n_tasks * avg
 
 
