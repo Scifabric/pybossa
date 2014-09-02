@@ -306,13 +306,6 @@ def stats_format_dates(app_id, dates, dates_estimate,
 
     answer_dates = sorted(list(set(dates_anon.keys() + dates_auth.keys())))
     total = 0
-    # Add the date of the first answer to dates stats if not present already
-    if answer_dates[0] not in dates.keys():
-        d = answer_dates[0]
-        dayCompletedTasks['values'].append(
-            [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), 0])
-        dayTotalTasks['values'].append(
-            [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), n_tasks(app_id)])
 
     for d in sorted(dates.keys()):
         # JavaScript expects miliseconds since EPOCH
