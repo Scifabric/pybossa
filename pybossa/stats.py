@@ -301,12 +301,10 @@ def stats_hours(app_id):
 
 
 @memoize(timeout=ONE_DAY)
-def stats_format_dates(app_id, dates, dates_estimate,
-                       dates_anon, dates_auth):
+def stats_format_dates(app_id, dates, dates_anon, dates_auth):
     """Format dates stats into a JSON format"""
     dayNewStats = dict(label="Anon + Auth",   values=[])
     dayTotalTasks = dict(label="Total Tasks",   values=[])
-    dayEstimates = dict(label="Estimation",   values=[])
     dayCompletedTasks = dict(label="Completed Tasks", disabled="True", values=[])
     dayNewAnonStats = dict(label="Anonymous", values=[])
     dayNewAuthStats = dict(label="Authenticated", values=[])
@@ -339,16 +337,8 @@ def stats_format_dates(app_id, dates, dates_estimate,
         dayNewAuthStats['values'].append(
             [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), auth_ans])
 
-    for d in sorted(dates_estimate.keys()):
-        dayEstimates['values'].append(
-            [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000),
-             dates_estimate[d]])
-
-        dayTotalTasks['values'].append(
-            [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), n_tasks(app_id)])
-
     return dayNewStats, dayNewAnonStats, dayNewAuthStats, \
-        dayCompletedTasks, dayTotalTasks, dayEstimates
+        dayCompletedTasks, dayTotalTasks
 
 
 @memoize(timeout=ONE_DAY)
@@ -476,9 +466,8 @@ def get_stats(app_id, geo=False):
     # total_completed = completed_tasks(app_id)
 
     sorted_dates = sorted(dates.iteritems(), key=operator.itemgetter(0))
-    dates_estimate = _estimate(sorted_dates, total_n_tasks, total_completed)
 
-    dates_stats = stats_format_dates(app_id, dates, dates_estimate,
+    dates_stats = stats_format_dates(app_id, dates,
                                      dates_anon, dates_auth)
 
     hours_stats = stats_format_hours(app_id, hours, hours_anon, hours_auth,
@@ -487,27 +476,3 @@ def get_stats(app_id, geo=False):
     users_stats = stats_format_users(app_id, users, anon_users, auth_users, geo)
 
     return dates_stats, hours_stats, users_stats
-
-
-def _estimate(sorted_dates, total, completed):
-    dates_estimate = {}
-    if len(sorted_dates) > 0 and completed < total:
-        first_day = datetime.datetime.strptime(sorted_dates[0][0], "%Y-%m-%d")
-        last_day = datetime.datetime.strptime(sorted_dates[-1][0], "%Y-%m-%d")
-        days_since_first_completed = (datetime.datetime.today() - first_day).days
-        avg_completed_per_day = float(completed) / (days_since_first_completed + 1)
-        # Days to finish = number of total tasks
-        # days_to_finish = total
-        if avg_completed_per_day != 0:
-            days_to_finish = int ((total - completed) / avg_completed_per_day)
-        else:
-            days_to_finish = 3
-            avg_completed_per_day = int((total - completed)/ days_to_finish)
-        pace = completed
-        dates_estimate[last_day.strftime('%Y-%m-%d')] = pace
-        for i in range(0, int(days_to_finish) + 2):
-            tmp = datetime.datetime.today() + timedelta(days=(i))
-            tmp_str = tmp.date().strftime('%Y-%m-%d')
-            dates_estimate[tmp_str] = pace
-            pace = int(pace + avg_completed_per_day)
-    return dates_estimate
