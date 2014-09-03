@@ -511,25 +511,3 @@ def _estimate(sorted_dates, total, completed):
             dates_estimate[tmp_str] = pace
             pace = int(pace + avg_completed_per_day)
     return dates_estimate
-
-
-@memoize(timeout=ONE_DAY)
-def completed_tasks(app_id):
-    try:
-        session = get_session(db, bind='slave')
-
-        sql = text('''select count(id) as n_completed_tasks from task
-                   where state='completed' and app_id=:app_id''')
-        results = session.execute(sql, dict(app_id=app_id))
-        n_completed_tasks = 0
-        for row in results:
-            n_completed_tasks = row.n_completed_tasks
-
-        return n_completed_tasks
-    except:
-        session.rollback()
-        raise
-    finally:
-        session.close()
-
-
