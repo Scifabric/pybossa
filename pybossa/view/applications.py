@@ -109,7 +109,7 @@ def redirect_old_draft(page):
 @blueprint.route('/category/featured/page/<int:page>/')
 def index(page):
     """List apps in the system"""
-    if cached_apps.n_featured() > 0:
+    if cached_apps.n_count('featured') > 0:
         return app_index(page, cached_apps.get_featured, 'featured',
                          True, False)
     else:
@@ -124,7 +124,7 @@ def app_index(page, lookup, category, fallback, use_count):
     per_page = current_app.config['APPS_PER_PAGE']
 
     apps = lookup(category, page, per_page)
-    count = len(apps)
+    count = cached_apps.n_count(category)
 
     data = []
     for app in apps:
@@ -156,7 +156,7 @@ def app_index(page, lookup, category, fallback, use_count):
                        .filter_by(short_name=category).first()
 
     # Check if we have to add the section Featured to local nav
-    if cached_apps.n_featured() > 0:
+    if cached_apps.n_count('featured') > 0:
         categories.insert(0, featured_cat)
     template_args = {
         "apps": data,
