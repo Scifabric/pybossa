@@ -136,7 +136,7 @@ def stats_dates(app_id):
         if len(dates.keys()) == 0:
             import datetime
             base = datetime.datetime.today()
-            for x in range(0, 14):
+            for x in range(0, 15):
                 tmp_date = base - datetime.timedelta(days=x)
                 dates[tmp_date.strftime('%Y-%m-%d')] = 0
 
