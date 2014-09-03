@@ -114,12 +114,6 @@ class TestStats(Test):
                 for i in item['values']:
                     assert i[1] == 100, "Each date should have 100 answers"
                 assert item['values'][0][1] == 100, "There should be 10 answers"
-            if item['label'] == 'Estimation':
-                assert item['values'][0][0] == date_ms, item['values'][0][0]
-                v = 2
-                for i in item['values']:
-                    assert i[1] == v, "Each date should have 1 extra answers"
-                    v = v + 1
         assert auth + anon == 10, "date stats sum of auth and anon should be 10"
 
         max_hours = 0
@@ -158,84 +152,3 @@ class TestStats(Test):
 
         err_msg = "user stats sum of auth and anon should be 7"
         assert user_stats['n_anon'] + user_stats['n_auth'] == 7, err_msg
-
-
-
-class TestStatsEstimation(object):
-
-    def test_estimate_no_data(self):
-        """Test _estimate returns an empty dict if there is no completed tasks data"""
-        sorted_dates = []
-        total = 7
-        completed = 0
-        estimation = stats._estimate(sorted_dates, total, completed)
-
-        assert estimation == {}, estimation
-
-    def test_estimate_all_tasks_completed(self):
-        """Test _estimate returns an empty dict if the project is completed"""
-        sorted_dates = [(u'2014-08-21', 3L), (u'2014-08-28', 3L)]
-        total = 6
-        completed = 6
-        estimation = stats._estimate(sorted_dates, total, completed)
-
-        assert estimation == {}, estimation
-
-    def test_estimate_estimates_future_task_completion(self):
-        """Test _estimate returns one task each day for a project that has
-        completed one task per day in average"""
-        time.mktime(time.strptime('2014-08-22', "%Y-%m-%d"))
-        today = datetime.date.today()
-        today_str = today.strftime('%Y-%m-%d')
-        yesterday = (today + datetime.timedelta(-1)).strftime('%Y-%m-%d')
-        tomorrow = (today + datetime.timedelta(1)).strftime('%Y-%m-%d')
-        sorted_dates = [(yesterday, 1L), (today_str, 1L)]
-        total = 3
-        completed = 2
-        estimation = stats._estimate(sorted_dates, total, completed)
-
-        assert estimation[tomorrow] == 3, estimation
-
-
-    def test_estimate_contains_today(self):
-        """Test _estimate contains current day, with actual completed tasks"""
-        time.mktime(time.strptime('2014-08-22', "%Y-%m-%d"))
-        today = datetime.date.today()
-        today_str = today.strftime('%Y-%m-%d')
-        yesterday = (today + datetime.timedelta(-1)).strftime('%Y-%m-%d')
-        sorted_dates = [(yesterday, 1L), (today_str, 1L)]
-        total = 3
-        completed = 2
-        estimation = stats._estimate(sorted_dates, total, completed)
-
-        assert estimation[today_str] == 2, estimation
-
-    def test_estimate_contains_1_extra_days(self):
-        """Test _estimate contains 1 extra days to make sure it ends with
-        estimated tasks above total number of tasks"""
-        time.mktime(time.strptime('2014-08-22', "%Y-%m-%d"))
-        today = datetime.date.today()
-        today_str = today.strftime('%Y-%m-%d')
-        yesterday = (today + datetime.timedelta(-1)).strftime('%Y-%m-%d')
-        last_day = (today + datetime.timedelta(2)).strftime('%Y-%m-%d')
-        sorted_dates = [(yesterday, 1L), (today_str, 1L)]
-        total = 3
-        completed = 2
-        estimation = stats._estimate(sorted_dates, total, completed)
-
-        assert estimation[last_day] == 4, estimation
-
-    def test_estimate_contains_date_of_last_task_completion(self):
-        """Test _estimate contains the date of the last task completed with
-        actual number of completed tasks"""
-        time.mktime(time.strptime('2014-08-22', "%Y-%m-%d"))
-        today = datetime.date.today()
-        today_str = today.strftime('%Y-%m-%d')
-        yesterday = (today + datetime.timedelta(-1)).strftime('%Y-%m-%d')
-        two_days_before = (today + datetime.timedelta(2)).strftime('%Y-%m-%d')
-        sorted_dates = [(two_days_before, 1L), (yesterday, 1L)]
-        total = 3
-        completed = 2
-        estimation = stats._estimate(sorted_dates, total, completed)
-
-        assert estimation[yesterday] == 2, estimation
