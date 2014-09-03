@@ -423,6 +423,8 @@ def n_count(category):
     """Count the number of apps in a given category"""
     if category == 'featured':
         return n_featured()
+    if category == 'draft':
+        return n_draft()
     try:
         sql = text('''
                    WITH uniq AS (
