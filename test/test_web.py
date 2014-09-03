@@ -512,8 +512,7 @@ class TestWeb(web.Helper):
             cat = db.session.query(Category).get(1)
             url = '/app/category/featured/'
             res = self.app.get(url, follow_redirects=True)
-            tmp = '1 Featured Projects'
-            assert tmp in res.data, res.data
+            assert '1 Featured Projects' in res.data, res.data
 
     @with_context
     @patch('pybossa.ckan.requests.get')
@@ -1126,8 +1125,7 @@ class TestWeb(web.Helper):
             self.signout()
 
             res = self.app.get('app', follow_redirects=True)
-            assert "Projects" in res.data, res.data
-            assert Fixtures.cat_1 in res.data, res.data
+            assert "%s Projects" % Fixtures.cat_1 in res.data, res.data
             assert "draft" not in res.data, res.data
             assert "Sample Project" in res.data, res.data
 
@@ -1159,10 +1157,10 @@ class TestWeb(web.Helper):
             # As Admin
             self.signin()
             res = self.app.get('/app/category/draft', follow_redirects=True)
-            assert "Projects" in res.data, res.data
             assert "project-published" not in res.data, res.data
             assert "draft" in res.data, res.data
             assert "Sample Project" in res.data, res.data
+            assert '1 Draft Projects' in res.data, res.data
 
     @with_context
     def test_21_get_specific_ongoing_task_anonymous(self):
