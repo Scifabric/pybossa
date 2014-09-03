@@ -1091,6 +1091,24 @@ class TestWeb(web.Helper):
             assert tmp in res.data, res
 
     @with_context
+    def test_app_index_categories_pagination(self):
+        """Test WEB Project Index categories pagination works"""
+        from flask import current_app
+        n_apps = current_app.config.get('APPS_PER_PAGE')
+        current_app.config['APPS_PER_PAGE'] = 1
+        category = CategoryFactory.create(name='category', short_name='cat')
+        for project in AppFactory.create_batch(2, category=category):
+            TaskFactory.create(app=project)
+        page1 = self.app.get('/app/category/%s/' % category.short_name)
+        page2 = self.app.get('/app/category/%s/page/2/' % category.short_name)
+        current_app.config['APPS_PER_PAGE'] = n_apps
+
+        assert '<a href="/app/category/cat/page/2/">Next &raquo;</a>' in page1.data
+        assert page2.status_code == 200, page2.status_code
+        assert '<a href="/app/category/cat/">&laquo; Prev </a>' in page2.data
+
+
+    @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_20_app_index_published(self, mock):
         """Test WEB Project Index published works"""
