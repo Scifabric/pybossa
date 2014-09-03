@@ -472,7 +472,8 @@ def get_stats(app_id, geo=False):
     dates, dates_anon, dates_auth = stats_dates(app_id)
 
     total_n_tasks = n_tasks(app_id)
-    total_completed = completed_tasks(app_id)
+    total_completed = sum(dates.values())
+    # total_completed = completed_tasks(app_id)
 
     sorted_dates = sorted(dates.iteritems(), key=operator.itemgetter(0))
     dates_estimate = _estimate(sorted_dates, total_n_tasks, total_completed)
@@ -496,11 +497,12 @@ def _estimate(sorted_dates, total, completed):
         days_since_first_completed = (datetime.datetime.today() - first_day).days
         avg_completed_per_day = float(completed) / (days_since_first_completed + 1)
         # Days to finish = number of total tasks
-        days_to_finish = total
-        # By default 1 task completed per day
-        avg_completed_per_day = 1
+        # days_to_finish = total
         if avg_completed_per_day != 0:
             days_to_finish = int ((total - completed) / avg_completed_per_day)
+        else:
+            days_to_finish = 3
+            avg_completed_per_day = int((total - completed)/ days_to_finish)
         pace = completed
         dates_estimate[last_day.strftime('%Y-%m-%d')] = pace
         for i in range(0, int(days_to_finish) + 2):
