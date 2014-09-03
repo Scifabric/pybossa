@@ -116,8 +116,8 @@ class TestStats(Test):
                 assert item['values'][0][0] == date_ms, item['values'][0][0]
                 v = 2
                 for i in item['values']:
-                    assert i[1] == v, "Each date should have 2 extra answers"
-                    v = v + 2
+                    assert i[1] == v, "Each date should have 1 extra answers"
+                    v = v + 1
         assert auth + anon == 10, "date stats sum of auth and anon should be 10"
 
         max_hours = 0
