@@ -18,9 +18,9 @@
 
 from default import Test, db, with_context
 from pybossa.cache import apps as cached_apps
-
 from factories import UserFactory, AppFactory, TaskFactory, \
     FeaturedFactory, TaskRunFactory, AnonymousTaskRunFactory
+from mock import patch
 
 
 class TestAppsCache(Test):
@@ -346,3 +346,44 @@ class TestAppsCache(Test):
         number_of_featured = cached_apps._n_featured()
 
         assert number_of_featured == 1, number_of_featured
+
+
+    @patch('pybossa.cache.pickle')
+    @patch('pybossa.cache.apps._n_draft')
+    def test_n_count_calls_n_draft(self, _n_draft, pickle):
+        """Test CACHE PROJECTS n_count calls _n_draft when called with argument
+        'draft'"""
+        cached_apps.n_count('draft')
+
+        _n_draft.assert_called_with()
+
+
+    @patch('pybossa.cache.pickle')
+    @patch('pybossa.cache.apps._n_featured')
+    def test_n_count_calls_n_featuredt(self, _n_featured, pickle):
+        """Test CACHE PROJECTS n_count calls _n_featured when called with
+        argument 'featured'"""
+        cached_apps.n_count('featured')
+
+        _n_featured.assert_called_with()
+
+
+    def test_n_count_with_different_category(self):
+        """Test CACHE PROJECTS n_count returns 0 if there are no published
+        projects from requested category"""
+        project = self.create_app_with_tasks(1, 0)
+
+        n_projects = cached_apps.n_count('nocategory')
+
+        assert n_projects == 0, n_projects
+
+    def test_n_count_with_published_projects(self):
+        """Test CACHE PROJECTS n_count returns the number of published projects
+        of a given category"""
+        project = self.create_app_with_tasks(1, 0)
+        #create a non published project too
+        AppFactory.create()
+
+        n_projects = cached_apps.n_count(project.category.short_name)
+
+        assert n_projects == 1, n_projects
