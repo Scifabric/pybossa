@@ -37,7 +37,9 @@ class TestStats(Test):
         """Test STATS stats_dates with no completed tasks"""
         today = unicode(datetime.date.today())
         dates, dates_anon, dates_auth = stats.stats_dates(self.project.id)
-        assert dates == {}, dates
+        assert len(dates.keys()) == 15, "There should be 15 days."
+        for d in dates.keys():
+            assert dates[d] == 0, "There should be 0 completed tasks."
         assert dates_anon[today] == 4, dates_anon[today]
         assert dates_auth[today] == 4, dates_auth[today]
 
