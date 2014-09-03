@@ -284,10 +284,10 @@ def last_activity(app_id):
 # This function does not change too much, so cache it for a longer time
 @cache(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'),
        key_prefix="number_featured_apps")
-def n_featured():
+def _n_featured():
     """Return number of featured apps"""
     try:
-        sql = text('''select count(*) from featured;''')
+        sql = text('''SELECT COUNT(*) FROM featured;''')
         session = get_session(db, bind='slave')
         results = session.execute(sql)
         for row in results:
@@ -363,7 +363,7 @@ def n_published():
 # Cache it for longer times, as this is only shown to admin users
 @cache(timeout=timeouts.get('STATS_DRAFT_TIMEOUT'),
        key_prefix="number_draft_apps")
-def n_draft():
+def _n_draft():
     """Return number of draft projects"""
     try:
         sql = text('''SELECT COUNT(app.id) FROM app
@@ -422,9 +422,9 @@ def get_draft(category, page=1, per_page=5):
 def n_count(category):
     """Count the number of apps in a given category"""
     if category == 'featured':
-        return n_featured()
+        return _n_featured()
     if category == 'draft':
-        return n_draft()
+        return _n_draft()
     try:
         sql = text('''
                    WITH uniq AS (

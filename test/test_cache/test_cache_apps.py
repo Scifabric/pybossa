@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2013 SF Isle of Man Limited
+# Copyright (C) 2014 SF Isle of Man Limited
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -246,24 +246,24 @@ class TestAppsCache(Test):
 
 
     def test_n_draft_no_drafts(self):
-        """Test CACHE PROJECTS n_draft returns 0 if there are no draft projects"""
+        """Test CACHE PROJECTS _n_draft returns 0 if there are no draft projects"""
         # Here, we are suposing that a project is draft iff has no presenter AND has no tasks
 
         app = AppFactory.create(info={})
         TaskFactory.create_batch(2, app=app)
 
-        number_of_drafts = cached_apps.n_draft()
+        number_of_drafts = cached_apps._n_draft()
 
         assert number_of_drafts == 0, number_of_drafts
 
 
     def test_n_draft_with_drafts(self):
-        """Test CACHE PROJECTS n_draft returns 2 if there are 2 draft projects"""
+        """Test CACHE PROJECTS _n_draft returns 2 if there are 2 draft projects"""
         # Here, we are suposing that a project is draft iff has no presenter AND has no tasks
 
         AppFactory.create_batch(2, info={})
 
-        number_of_drafts = cached_apps.n_draft()
+        number_of_drafts = cached_apps._n_draft()
 
         assert number_of_drafts == 2, number_of_drafts
 
