@@ -421,6 +421,8 @@ def get_draft(category, page=1, per_page=5):
 @memoize(timeout=timeouts.get('N_APPS_PER_CATEGORY_TIMEOUT'))
 def n_count(category):
     """Count the number of apps in a given category"""
+    if category == 'featured':
+        return n_featured()
     try:
         sql = text('''
                    WITH uniq AS (
