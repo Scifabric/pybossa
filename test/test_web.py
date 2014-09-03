@@ -1145,20 +1145,20 @@ class TestWeb(web.Helper):
             self.signout()
 
             # As Anonymous
-            res = self.app.get('/app/draft', follow_redirects=True)
+            res = self.app.get('/app/category/draft', follow_redirects=True)
             dom = BeautifulSoup(res.data)
             err_msg = "Anonymous should not see draft apps"
             assert dom.find(id='signin') is not None, err_msg
 
             # As authenticated but not admin
             self.signin(email="jane@jane.com", password="p4ssw0rd")
-            res = self.app.get('/app/draft', follow_redirects=True)
+            res = self.app.get('/app/category/draft', follow_redirects=True)
             assert res.status_code == 403, "Non-admin should not see draft apps"
             self.signout()
 
             # As Admin
             self.signin()
-            res = self.app.get('/app/draft', follow_redirects=True)
+            res = self.app.get('/app/category/draft', follow_redirects=True)
             assert "Projects" in res.data, res.data
             assert "project-published" not in res.data, res.data
             assert "draft" in res.data, res.data
