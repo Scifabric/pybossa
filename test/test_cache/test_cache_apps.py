@@ -330,3 +330,19 @@ class TestAppsCache(Test):
         cached_task = cached_apps.browse_tasks(project.id)[0]
         # And it does not go over 1 (that is 100%!!)
         assert cached_task.get('pct_status') == 1.0, cached_task.get('pct_status')
+
+
+    def test_n_featured_returns_nothing(self):
+        """Test CACHE PROJECTS _n_featured 0 if there are no featured projects"""
+        number_of_featured = cached_apps._n_featured()
+
+        assert number_of_featured == 0, number_of_featured
+
+
+    def test_n_featured_returns_featured(self):
+        """Test CACHE PROJECTS _n_featured returns number of featured projects"""
+        FeaturedFactory.create()
+
+        number_of_featured = cached_apps._n_featured()
+
+        assert number_of_featured == 1, number_of_featured
