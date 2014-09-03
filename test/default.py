@@ -90,7 +90,7 @@ class Test(object):
             'sched': sched
             }
 
-        app = self.create_app(info)
+        app = self.create_project(info)
         app.owner = user
 
         db.session.add(root)
@@ -127,7 +127,7 @@ class Test(object):
             'sched': sched
             }
 
-        app = self.create_app(info)
+        app = self.create_project(info)
         app.owner = user
 
         db.session.add_all([root, user, user2, app])
@@ -178,7 +178,7 @@ class Test(object):
 
         return root, user, user2
 
-    def create_app(self,info):
+    def create_project(self,info):
         with self.flask_app.app_context():
             category = db.session.query(Category).first()
             if category is None:
@@ -254,7 +254,7 @@ class Fixtures:
             'sched': sched
             }
 
-        app = Fixtures.create_app(info)
+        app = Fixtures.create_project(info)
         app.owner = user
 
         db.session.add(root)
@@ -292,7 +292,7 @@ class Fixtures:
             'sched': sched
             }
 
-        app = Fixtures.create_app(info)
+        app = Fixtures.create_project(info)
         app.owner = user
 
         db.session.add_all([root, user, user2, app])
@@ -344,7 +344,7 @@ class Fixtures:
         return root, user, user2
 
     @classmethod
-    def create_app(cls,info):
+    def create_project(cls,info):
         category = db.session.query(Category).first()
         if category is None:
             cls.create_categories()
