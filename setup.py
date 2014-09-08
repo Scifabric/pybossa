@@ -15,7 +15,7 @@ requirements = [
     "Flask-SQLAlchemy>=1.0, <2.0",
     "Flask-WTF>=0.9.5, <0.9.6",         # was pinned to Flask-WTF==0.9.5
     "Flask>=0.10.1, <0.10.2",           # was pinned to Flask==0.10.1
-    "html2text>=2014.4.5, <2016.1.1",
+    "html2text>=2014.4.5, <2014.9.7",
     "itsdangerous>=0.24, <1.0",
     "M2Crypto>=0.22.3, <0.22.4",        # let's be more restrictive on M2Crypto version
     "markdown>=2.4, <3.0",
