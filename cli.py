@@ -295,7 +295,7 @@ def resize_avatars():
 
                     chksum = pyrax.utils.get_checksum(os.path.join(dirpath,
                                                                    filename))
-                    cf.upload_file(container,
+                    cf.upload_file(cont,
                                    os.path.join(dirpath, filename),
                                    obj_name=filename,
                                    etag=chksum)
