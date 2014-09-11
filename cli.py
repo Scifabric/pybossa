@@ -304,7 +304,7 @@ def resize_avatars():
                     obj.delete()
                     # Update new values
                     u.info['avatar'] = filename
-                    u.info['container'] = container
+                    u.info['container'] = cont
                     db.session.commit()
                     print "Done!"
                 else:
