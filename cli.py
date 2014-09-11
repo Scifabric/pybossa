@@ -258,10 +258,7 @@ def resize_avatars():
                               region=app.config['RACKSPACE_REGION'])
 
         cf = pyrax.cloudfiles
-        #users = User.query.all()
-        #users = [User.query.get(5305)]
-        #users = [User.query.get(5662)]
-        users = [User.query.get(3)]
+        users = User.query.all()
         print "Downloading avatars for %s users" % len(users)
         dirpath = tempfile.mkdtemp()
         for u in users:
@@ -299,7 +296,6 @@ def resize_avatars():
                                    os.path.join(dirpath, filename),
                                    obj_name=filename,
                                    etag=chksum)
-                    # delete old avatar
                     old_avatar = u.info['avatar']
                     # Update new values
                     u.info['avatar'] = filename
