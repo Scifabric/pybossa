@@ -300,17 +300,20 @@ def resize_avatars():
                                    obj_name=filename,
                                    etag=chksum)
                     # delete old avatar
-                    obj = cont.get_object(u.info['avatar'])
-                    obj.delete()
+                    old_avatar = u.info['avatar']
                     # Update new values
                     u.info['avatar'] = filename
                     u.info['container'] = cont
                     db.session.commit()
+                    # delete old avatar
+                    obj = cont.get_object(old_avatar)
+                    obj.delete()
                     print "Done!"
                 else:
                     print "No Avatar found."
+            except pyrax.exceptions.NoSuchObject:
+                print "Previous avatar not found, so not deleting it."
             except:
-                raise
                 print "No Avatar, this user will use the placehoder."
 
 
