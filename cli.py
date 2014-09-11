@@ -303,7 +303,7 @@ def resize_avatars():
                     old_avatar = u.info['avatar']
                     # Update new values
                     u.info['avatar'] = filename
-                    u.info['container'] = cont
+                    u.info['container'] = "user_%s" % u.id
                     db.session.commit()
                     # delete old avatar
                     obj = cont.get_object(old_avatar)
@@ -314,6 +314,7 @@ def resize_avatars():
             except pyrax.exceptions.NoSuchObject:
                 print "Previous avatar not found, so not deleting it."
             except:
+                raise
                 print "No Avatar, this user will use the placehoder."
 
 
