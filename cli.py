@@ -321,7 +321,9 @@ def resize_project_avatars():
         import requests
         from PIL import Image
         import time
-        from pybossa.cache import delete_memoized
+        import pybossa.cache.apps as cached_apps
+        # Disable cache to update the data in it :-)
+        os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
         pyrax.set_setting("identity_type", "rackspace")
         pyrax.set_credentials(username=app.config['RACKSPACE_USERNAME'],
                               api_key=app.config['RACKSPACE_API_KEY'],
@@ -371,7 +373,7 @@ def resize_project_avatars():
                     obj = cont.get_object(old_avatar)
                     obj.delete()
                     print "Done!"
-                    delete_memoized(get_app, a.short_name)
+                    cached_apps.get_app(a.short_name)
                 else:
                     print "No Avatar found."
             except pyrax.exceptions.NoSuchObject:
