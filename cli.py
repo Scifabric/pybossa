@@ -321,6 +321,7 @@ def resize_project_avatars():
         import requests
         from PIL import Image
         import time
+        from pybossa.cache import delete_memoized
         pyrax.set_setting("identity_type", "rackspace")
         pyrax.set_credentials(username=app.config['RACKSPACE_USERNAME'],
                               api_key=app.config['RACKSPACE_API_KEY'],
@@ -329,7 +330,7 @@ def resize_project_avatars():
         cf = pyrax.cloudfiles
 
         #apps = App.query.all()
-        apps = [App.query.get(2041)]
+        apps = [App.query.get(2042)]
         print "Downloading avatars for %s projects" % len(apps)
         for a in apps:
             try:
@@ -370,6 +371,7 @@ def resize_project_avatars():
                     obj = cont.get_object(old_avatar)
                     obj.delete()
                     print "Done!"
+                    delete_memoized(get_app, a.short_name)
                 else:
                     print "No Avatar found."
             except pyrax.exceptions.NoSuchObject:
