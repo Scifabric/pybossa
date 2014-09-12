@@ -329,10 +329,11 @@ def resize_project_avatars():
         cf = pyrax.cloudfiles
 
         #apps = App.query.all()
-        apps = [App.query.get(2038)]
+        apps = [App.query.get(2041)]
         print "Downloading avatars for %s projects" % len(apps)
         for a in apps:
             try:
+                dirpath = tempfile.mkdtemp()
                 cont = cf.get_container(a.info['container'])
                 avatar_url = "%s/%s" % (cont.cdn_uri, a.info['thumbnail'])
                 r = requests.get(avatar_url, stream=True)
