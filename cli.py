@@ -260,9 +260,9 @@ def resize_avatars():
         cf = pyrax.cloudfiles
         user_id_updated_avatars = []
         if os.path.isfile('user_id_updated_avatars.txt'):
-            f = open('user_id_updated_avatars.txt', 'r')
-            user_id_updated_avatars = f.readlines()
-            f.close()
+            t = open('user_id_updated_avatars.txt', 'r')
+            user_id_updated_avatars = t.readlines()
+            t.close()
         users = User.query.filter(~User.id.in_(user_id_updated_avatars)).all()
         print "Downloading avatars for %s users" % len(users)
         dirpath = tempfile.mkdtemp()
@@ -317,6 +317,7 @@ def resize_avatars():
                     else:
                         print "No Avatar found."
                 else:
+                    f.write("%s\n" % u.id)
                     print "No avatar found"
             except pyrax.exceptions.NoSuchObject:
                 print "Previous avatar not found, so not deleting it."
