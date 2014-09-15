@@ -115,7 +115,7 @@ class APIBase(MethodView):
     def _db_query(self, id):
         """ Returns a list with the results of the query"""
         query = self.slave_session.query(self.__class__)
-        if not id:
+        if id is None:
             limit, offset = self._set_limit_and_offset()
             query = self._filter_query(query, limit, offset)
         else:
