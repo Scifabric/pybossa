@@ -341,11 +341,19 @@ def resize_project_avatars():
         cf = pyrax.cloudfiles
 
         #apps = App.query.all()
-        apps = [App.query.get(2042)]
+        file_name = 'project_id_updated_thumbnails.txt'
+        project_id_updated_thumbnails = []
+        if os.path.isfile(file_name):
+            f = open(file_name, 'r')
+            project_id_updated_thumbnails = f.readlines()
+            f.close()
+        apps = App.query.filter(~App.id.in_(project_id_updated_thumbnails)).all()
+        #apps = [App.query.get(2042)]
         print "Downloading avatars for %s projects" % len(apps)
+        dirpath = tempfile.mkdtemp()
+        f = open(file_name, 'a')
         for a in apps:
             try:
-                dirpath = tempfile.mkdtemp()
                 cont = cf.get_container(a.info['container'])
                 avatar_url = "%s/%s" % (cont.cdn_uri, a.info['thumbnail'])
                 r = requests.get(avatar_url, stream=True)
@@ -378,6 +386,7 @@ def resize_project_avatars():
                     a.info['thumbnail'] = filename
                     #a.info['container'] = "user_%s" % u.id
                     db.session.commit()
+                    f.write("%s\n" % a.id)
                     # delete old avatar
                     obj = cont.get_object(old_avatar)
                     obj.delete()
@@ -390,7 +399,7 @@ def resize_project_avatars():
             except:
                 raise
                 print "No Avatar, this project will use the placehoder."
-
+        f.close()
         #    if a.info.get('thumbnail') and not a.info.get('container'):
         #        print "Working on project: %s ..." % a.short_name
         #        print "Saving avatar: %s ..." % a.info.get('thumbnail')
