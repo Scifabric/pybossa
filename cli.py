@@ -258,9 +258,15 @@ def resize_avatars():
                               region=app.config['RACKSPACE_REGION'])
 
         cf = pyrax.cloudfiles
-        users = User.query.all()
+        user_id_updated_avatars = []
+        if os.path.isfile('user_id_updated_avatars.txt'):
+            f = open('user_id_updated_avatars.txt', 'r')
+            user_id_updated_avatars = f.readlines()
+            f.close()
+        users = User.query.filter(~User.id.in_(user_id_updated_avatars)).all()
         print "Downloading avatars for %s users" % len(users)
         dirpath = tempfile.mkdtemp()
+        f = open('user_id_updated_avatars.txt', 'a')
         for u in users:
             try:
                 cont = cf.get_container(u.info['container'])
@@ -301,6 +307,8 @@ def resize_avatars():
                     u.info['avatar'] = filename
                     u.info['container'] = "user_%s" % u.id
                     db.session.commit()
+                    # Save the user.id to avoid downloading it again.
+                    f.write("%s\n" % u.id)
                     # delete old avatar
                     obj = cont.get_object(old_avatar)
                     obj.delete()
@@ -312,6 +320,7 @@ def resize_avatars():
             except:
                 raise
                 print "No Avatar, this user will use the placehoder."
+        f.close()
 
 def resize_project_avatars():
     """Resize project avatars to 512px."""
