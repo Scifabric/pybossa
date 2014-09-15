@@ -271,7 +271,11 @@ def resize_avatars():
             try:
                 if u.info.get('container'):
                     cont = cf.get_container(u.info['container'])
-                    avatar_url = "%s/%s" % (cont.cdn_uri, u.info['avatar'])
+                    if cont.cdn_uri:
+                    	avatar_url = "%s/%s" % (cont.cdn_uri, u.info['avatar'])
+                    else:
+                        cont.make_public()
+                        avatar_url = "%s/%s" % (cont.cdn_uri, u.info['avatar'])
                     r = requests.get(avatar_url, stream=True)
                     if r.status_code == 200:
                         print "Downloading avatar for %s ..." % u.name
@@ -309,6 +313,7 @@ def resize_avatars():
                         u.info['container'] = "user_%s" % u.id
                         db.session.commit()
                         # Save the user.id to avoid downloading it again.
+			f = open('user_id_updated_avatars.txt', 'a')
                         f.write("%s\n" % u.id)
                         # delete old avatar
                         obj = cont.get_object(old_avatar)
@@ -358,46 +363,50 @@ def resize_project_avatars():
         f = open(file_name, 'a')
         for a in apps:
             try:
-                cont = cf.get_container(a.info['container'])
-                avatar_url = "%s/%s" % (cont.cdn_uri, a.info['thumbnail'])
-                r = requests.get(avatar_url, stream=True)
-                if r.status_code == 200:
-                    print "Downloading avatar for %s ..." % a.short_name
-                    prefix = time.time()
-                    filename = "app_%s_thumbnail_%s.png" % (a.id, prefix)
-                    with open(os.path.join(dirpath, filename), 'wb') as f:
-                        for chunk in r.iter_content(1024):
-                            f.write(chunk)
-                    # Resize image
-                    im = Image.open(os.path.join(dirpath, filename))
-                    size = 512, 512
-                    tmp = im.resize(size, Image.ANTIALIAS)
-                    scale_down_img = tmp.convert('P', colors=255, palette=Image.ADAPTIVE)
-                    scale_down_img.save(os.path.join(dirpath, filename), format='png')
+                if a.info.get('container'):
+                   cont = cf.get_container(a.info['container'])
+                   avatar_url = "%s/%s" % (cont.cdn_uri, a.info['thumbnail'])
+                   r = requests.get(avatar_url, stream=True)
+                   if r.status_code == 200:
+                       print "Downloading avatar for %s ..." % a.short_name
+                       prefix = time.time()
+                       filename = "app_%s_thumbnail_%s.png" % (a.id, prefix)
+                       with open(os.path.join(dirpath, filename), 'wb') as f:
+                           for chunk in r.iter_content(1024):
+                               f.write(chunk)
+                       # Resize image
+                       im = Image.open(os.path.join(dirpath, filename))
+                       size = 512, 512
+                       tmp = im.resize(size, Image.ANTIALIAS)
+                       scale_down_img = tmp.convert('P', colors=255, palette=Image.ADAPTIVE)
+                       scale_down_img.save(os.path.join(dirpath, filename), format='png')
 
-                    print "New scaled down image created!"
-                    print "%s" % (os.path.join(dirpath, filename))
-                    print "---"
+                       print "New scaled down image created!"
+                       print "%s" % (os.path.join(dirpath, filename))
+                       print "---"
 
-                    chksum = pyrax.utils.get_checksum(os.path.join(dirpath,
-                                                                   filename))
-                    cf.upload_file(cont,
-                                   os.path.join(dirpath, filename),
-                                   obj_name=filename,
-                                   etag=chksum)
-                    old_avatar = a.info['thumbnail']
-                    # Update new values
-                    a.info['thumbnail'] = filename
-                    #a.info['container'] = "user_%s" % u.id
-                    db.session.commit()
-                    f.write("%s\n" % a.id)
-                    # delete old avatar
-                    obj = cont.get_object(old_avatar)
-                    obj.delete()
-                    print "Done!"
-                    cached_apps.get_app(a.short_name)
+                       chksum = pyrax.utils.get_checksum(os.path.join(dirpath,
+                                                                      filename))
+                       cf.upload_file(cont,
+                                      os.path.join(dirpath, filename),
+                                      obj_name=filename,
+                                      etag=chksum)
+                       old_avatar = a.info['thumbnail']
+                       # Update new values
+                       a.info['thumbnail'] = filename
+                       #a.info['container'] = "user_%s" % u.id
+                       db.session.commit()
+                       f = open(file_name, 'a')
+                       f.write("%s\n" % a.id)
+                       # delete old avatar
+                       obj = cont.get_object(old_avatar)
+                       obj.delete()
+                       print "Done!"
+                       cached_apps.get_app(a.short_name)
+                   else:
+                       print "No Avatar found."
                 else:
-                    print "No Avatar found."
+                   print "No avatar found."
             except pyrax.exceptions.NoSuchObject:
                 print "Previous avatar not found, so not deleting it."
             except:
