@@ -142,7 +142,14 @@ class _BulkTaskGDImport(_BulkTaskImport):
         return self._get_csv_data_from_request(r)
 
     def _get_data_url(self, form):
-        return ''.join([form.googledocs_url.data, '&output=csv'])
+        # For old data links of Google Spreadsheets
+        if 'ccc?key' in form.googledocs_url.data:
+            return ''.join([form.googledocs_url.data, '&output=csv'])
+        # New data format for Google Drive import is like this: 
+        # https://docs.google.com/spreadsheets/d/key/edit?usp=sharing
+        else:
+            return ''.join([form.googledocs_url.data.split('edit')[0], 
+                            'export?format=csv'])
 
 
 @register_importer
