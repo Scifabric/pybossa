@@ -152,7 +152,7 @@ def index():
     n_total_users = n_anon + n_auth
 
     n_published_apps = cached_apps.n_published()
-    n_draft_apps = cached_apps.n_draft()
+    n_draft_apps = cached_apps.n_count('draft')
     n_total_apps = n_published_apps + n_draft_apps
 
     n_tasks = n_tasks_site()

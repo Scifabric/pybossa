@@ -48,7 +48,7 @@ class GlobalStatsAPI(APIBase):
         """Return global stats."""
         n_pending_tasks = stats.n_total_tasks_site() - stats.n_task_runs_site()
         n_users = stats.n_auth_users() + stats.n_anon_users()
-        n_projects = cached_apps.n_published() + cached_apps.n_draft()
+        n_projects = cached_apps.n_published() + cached_apps.n_count('draft')
         data = dict(n_projects=n_projects,
                     n_users=n_users,
                     n_task_runs=stats.n_task_runs_site(),
@@ -62,11 +62,11 @@ class GlobalStatsAPI(APIBase):
             data['categories'].append(datum)
         # Add Featured
         datum = dict()
-        datum['featured'] = cached_apps.n_featured()
+        datum['featured'] = cached_apps.n_count('featured')
         data['categories'].append(datum)
         # Add Draft
         datum = dict()
-        datum['draft'] = cached_apps.n_draft()
+        datum['draft'] = cached_apps.n_count('draft')
         data['categories'].append(datum)
         return Response(json.dumps(data), 200, mimetype='application/json')
 

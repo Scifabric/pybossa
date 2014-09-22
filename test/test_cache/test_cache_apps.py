@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2013 SF Isle of Man Limited
+# Copyright (C) 2014 SF Isle of Man Limited
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -18,9 +18,9 @@
 
 from default import Test, db, with_context
 from pybossa.cache import apps as cached_apps
-
 from factories import UserFactory, AppFactory, TaskFactory, \
     FeaturedFactory, TaskRunFactory, AnonymousTaskRunFactory
+from mock import patch
 
 
 class TestAppsCache(Test):
@@ -246,24 +246,24 @@ class TestAppsCache(Test):
 
 
     def test_n_draft_no_drafts(self):
-        """Test CACHE PROJECTS n_draft returns 0 if there are no draft projects"""
+        """Test CACHE PROJECTS _n_draft returns 0 if there are no draft projects"""
         # Here, we are suposing that a project is draft iff has no presenter AND has no tasks
 
         app = AppFactory.create(info={})
         TaskFactory.create_batch(2, app=app)
 
-        number_of_drafts = cached_apps.n_draft()
+        number_of_drafts = cached_apps._n_draft()
 
         assert number_of_drafts == 0, number_of_drafts
 
 
     def test_n_draft_with_drafts(self):
-        """Test CACHE PROJECTS n_draft returns 2 if there are 2 draft projects"""
+        """Test CACHE PROJECTS _n_draft returns 2 if there are 2 draft projects"""
         # Here, we are suposing that a project is draft iff has no presenter AND has no tasks
 
         AppFactory.create_batch(2, info={})
 
-        number_of_drafts = cached_apps.n_draft()
+        number_of_drafts = cached_apps._n_draft()
 
         assert number_of_drafts == 2, number_of_drafts
 
@@ -330,3 +330,60 @@ class TestAppsCache(Test):
         cached_task = cached_apps.browse_tasks(project.id)[0]
         # And it does not go over 1 (that is 100%!!)
         assert cached_task.get('pct_status') == 1.0, cached_task.get('pct_status')
+
+
+    def test_n_featured_returns_nothing(self):
+        """Test CACHE PROJECTS _n_featured 0 if there are no featured projects"""
+        number_of_featured = cached_apps._n_featured()
+
+        assert number_of_featured == 0, number_of_featured
+
+
+    def test_n_featured_returns_featured(self):
+        """Test CACHE PROJECTS _n_featured returns number of featured projects"""
+        FeaturedFactory.create()
+
+        number_of_featured = cached_apps._n_featured()
+
+        assert number_of_featured == 1, number_of_featured
+
+
+    @patch('pybossa.cache.pickle')
+    @patch('pybossa.cache.apps._n_draft')
+    def test_n_count_calls_n_draft(self, _n_draft, pickle):
+        """Test CACHE PROJECTS n_count calls _n_draft when called with argument
+        'draft'"""
+        cached_apps.n_count('draft')
+
+        _n_draft.assert_called_with()
+
+
+    @patch('pybossa.cache.pickle')
+    @patch('pybossa.cache.apps._n_featured')
+    def test_n_count_calls_n_featuredt(self, _n_featured, pickle):
+        """Test CACHE PROJECTS n_count calls _n_featured when called with
+        argument 'featured'"""
+        cached_apps.n_count('featured')
+
+        _n_featured.assert_called_with()
+
+
+    def test_n_count_with_different_category(self):
+        """Test CACHE PROJECTS n_count returns 0 if there are no published
+        projects from requested category"""
+        project = self.create_app_with_tasks(1, 0)
+
+        n_projects = cached_apps.n_count('nocategory')
+
+        assert n_projects == 0, n_projects
+
+    def test_n_count_with_published_projects(self):
+        """Test CACHE PROJECTS n_count returns the number of published projects
+        of a given category"""
+        project = self.create_app_with_tasks(1, 0)
+        #create a non published project too
+        AppFactory.create()
+
+        n_projects = cached_apps.n_count(project.category.short_name)
+
+        assert n_projects == 1, n_projects

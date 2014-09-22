@@ -131,7 +131,7 @@ class APIBase(MethodView):
     def _db_query(self, id):
         """Returns a list with the results of the query"""
         repo_info = repos[self.__class__.__name__]
-        if not id:
+        if id is None:
             limit, offset = self._set_limit_and_offset()
             results = self._filter_query(repo_info, limit, offset)
         else:

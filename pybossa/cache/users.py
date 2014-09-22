@@ -169,20 +169,20 @@ def rank_and_score(user_id):
 
 def apps_contributed(user_id):
     sql = text('''
-               SELECT app.name, app.short_name, app.info,
-               COUNT(*) as n_task_runs
-               FROM task_run JOIN app ON
-               (task_run.app_id=app.id) WHERE task_run.user_id=:user_id
-               GROUP BY app.name, app.short_name, app.info
-               ORDER BY n_task_runs DESC;''')
-
+               WITH apps_contributed as 
+                    (SELECT DISTINCT(app_id) FROM task_run 
+                     WHERE user_id=:user_id)
+               SELECT app.name, app.short_name, app.info FROM app, apps_contributed 
+               WHERE app.id=apps_contributed.app_id ORDER BY app.name DESC;
+               ''')
     results = session.execute(sql, dict(user_id=user_id))
     apps_contributed = []
     for row in results:
         app = dict(name=row.name, short_name=row.short_name,
-                   info=json.loads(row.info), n_task_runs=row.n_task_runs)
+                   info=json.loads(row.info), n_task_runs=0)
         apps_contributed.append(app)
     return apps_contributed
+
 
 
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))

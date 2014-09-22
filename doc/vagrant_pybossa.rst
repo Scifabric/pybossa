@@ -54,6 +54,11 @@ PyBossa development environment is typing the following::
 The system will download a Virtual Machine, install all the required libraries
 for PyBossa and set up the system for you inside the Virtual Machine.
 
+.. note::
+    If you use Windows be sure to `turn off autocrlf in git config <https://help.github.com/articles/dealing-with-line-endings#platform-windows>`_.
+    If you are using Windows XP and have issues running 'vagrant up', please
+    check out this `link <http://techtalkies.blogspot.com.es/2014/08/installing-and-testing-out-your-own.html>`_.
+
 Vagrant is really great, because all the changes that you will make in your
 local copy of PyBossa will be automatically populated to the Virtual Machine.
 Hence, if you add a new feature to the system, you will be able to test it

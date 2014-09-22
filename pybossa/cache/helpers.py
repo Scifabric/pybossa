@@ -18,14 +18,17 @@
 
 from sqlalchemy.sql import text
 from pybossa.core import db, timeouts
-from pybossa.cache import memoize
+
+from pybossa.core import db, timeouts
+from pybossa.cache import memoize, ONE_HOUR
 from pybossa.cache.apps import overall_progress
 
 
 
 session = db.slave_session
 
-@memoize(timeout=60)
+
+@memoize(timeout=ONE_HOUR * 3)
 def n_available_tasks(app_id, user_id=None, user_ip=None):
     """Returns the number of tasks for a given app a user can contribute to,
     based on the completion of the app tasks, and previous task_runs submitted

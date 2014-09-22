@@ -218,6 +218,7 @@ class TestBlogpostView(web.Helper):
 
     def test_blogpost_create_by_non_owner(self):
         """Test blogpost create by non owner of the project is forbidden"""
+
         self.register()
         user = user_repo.get(1)
         app = AppFactory.create(owner=user)
@@ -277,7 +278,6 @@ class TestBlogpostView(web.Helper):
         """Test blogpost update, anonymous users are redirected to signin"""
         app = AppFactory.create()
         blogpost = BlogpostFactory.create(app=app, title='title', body='body')
-
         url = "/app/%s/%s/update" % (app.short_name, blogpost.id)
 
         res = self.app.get(url, follow_redirects=True)

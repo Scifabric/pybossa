@@ -45,7 +45,7 @@ class TestAppAPI(TestAPI):
         assert res.mimetype == 'application/json', res
 
         # Test a non-existant ID
-        res = self.app.get('/api/app/3434209')
+        res = self.app.get('/api/app/0')
         err = json.loads(res.data)
         assert res.status_code == 404, err
         assert err['status'] == 'failed', err

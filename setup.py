@@ -8,14 +8,14 @@ requirements = [
     "Flask-Cache>=0.12, <1.0",
     "Flask-Gravatar>=0.4.1, <1.0",
     "flask-heroku>=0.1.8, <1.0",
-    "Flask-Login>=0.2.3, <0.2.4",       # was pinned to Flask-Login==0.2.3
+    "Flask-Login",                  # was pinned to Flask-Login==0.2.3 in the past
     "Flask-Mail>=0.9.0, <1.0",
     "Flask-Misaka>=0.2.0, <1.0",
     "Flask-OAuth>=0.12, <0.13",         # was pinned to Flask-OAuth==0.12
     "Flask-SQLAlchemy",
     "Flask-WTF>=0.9.5, <0.9.6",         # was pinned to Flask-WTF==0.9.5
     "Flask>=0.10.1, <0.10.2",           # was pinned to Flask==0.10.1
-    "html2text>=2014.4.5, <2016.1.1",
+    "html2text>=2014.4.5, <2014.9.7",
     "itsdangerous>=0.24, <1.0",
     "M2Crypto>=0.22.3, <0.22.4",        # let's be more restrictive on M2Crypto version
     "markdown>=2.4, <3.0",
@@ -42,12 +42,13 @@ setup(
     version = '0.2.1',
     packages = find_packages(),
     install_requires = requirements,
-    dependency_links = ['git+https://github.com/alejandrodob/flask-sqlalchemy.git@pybossa-prod#egg=Flask-SQLAlchemy'],
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.
     # Keep in mind that dependency_links are not used when installing with requirements.txt
     # and need to be added redundant to requirements.txt in this case!
     # Example:
     # dependency_links = ['git+https://github.com/Hypernode/M2Crypto#egg=M2Crypto-0.22.dev'],
+    dependency_links = ['git+https://github.com/therealmarv/flask-login.git@unicode-user-id-support#egg=Flask-Login',
+                        'git+https://github.com/alejandrodob/flask-sqlalchemy.git@pybossa-prod#egg=Flask-SQLAlchemy'],
 
     # metadata for upload to PyPI
     author = 'SF Isle of Man Limited',

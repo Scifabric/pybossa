@@ -77,6 +77,7 @@ def warm_cache():
                  for a in apps:
                      warm_app(a['id'], a['short_name'])
         # Users
+        cached_users.get_leaderboard(app.config['LEADERBOARD'], 'anonymous')
         cached_users.get_top()
 
 

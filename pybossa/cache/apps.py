@@ -211,9 +211,9 @@ def last_activity(app_id):
 # This function does not change too much, so cache it for a longer time
 @cache(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'),
        key_prefix="number_featured_apps")
-def n_featured():
+def _n_featured():
     """Return number of featured apps"""
-    sql = text('''select count(*) from featured;''')
+    sql = text('''SELECT COUNT(*) FROM featured;''')
 
     results = session.execute(sql)
     for row in results:
@@ -270,7 +270,7 @@ def n_published():
 # Cache it for longer times, as this is only shown to admin users
 @cache(timeout=timeouts.get('STATS_DRAFT_TIMEOUT'),
        key_prefix="number_draft_apps")
-def n_draft():
+def _n_draft():
     """Return number of draft projects"""
     sql = text('''SELECT COUNT(app.id) FROM app
                LEFT JOIN task on app.id=task.app_id
@@ -314,6 +314,10 @@ def get_draft(category, page=1, per_page=5):
 @memoize(timeout=timeouts.get('N_APPS_PER_CATEGORY_TIMEOUT'))
 def n_count(category):
     """Count the number of apps in a given category"""
+    if category == 'featured':
+        return _n_featured()
+    if category == 'draft':
+        return _n_draft()
     sql = text('''
                WITH uniq AS (
                SELECT COUNT(app.id) FROM task, app
@@ -332,6 +336,7 @@ def n_count(category):
     for row in results:
         count = row[0]
     return count
+
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))

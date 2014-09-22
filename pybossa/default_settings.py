@@ -88,3 +88,6 @@ PASSWD_COOKIE_TIMEOUT = 60 * 30
 # Rate limits default values
 LIMIT = 300
 PER = 15 * 60
+
+# Disable new account confirmation (via email)
+ACCOUNT_CONFIRMATION_DISABLED = True

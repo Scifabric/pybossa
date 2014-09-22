@@ -600,3 +600,25 @@ other templates to use them as a base layer for your template.
 
 After adding the template, the server will start offering this new template to
 your users.
+
+Setting an expiration time for project passwords
+================================================
+
+PyBossa allows the owner of a project to set a password so that only people
+(both anonymous or authenticated) that know it can contribute. By entering this
+password, the user will have access to the project for a time specified by::
+
+    PASSWD_COOKIE_TIMEOUT = 60 * 30
+
+Which defaults to 30 minutes.
+
+Validation of new user accounts
+===============================
+
+Whenever a new user wants to sign up, PyBossa allows you to add some extra
+security to the process by making the users have to validate a real email account.
+
+However, if you don't need this feature, it can be disabled (as it is by default)
+with this configuration parameter::
+
+    ACCOUNT_CONFIRMATION_DISABLED = True

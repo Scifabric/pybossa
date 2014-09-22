@@ -164,7 +164,10 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.account.render_template')
     @patch('pybossa.view.account.signer')
     def test_register_post_creates_email_with_link(self, signer, render, mail):
-        """Test WEB register post creates and sends the confirmation email"""
+        """Test WEB register post creates and sends the confirmation email if
+        account validation is enabled"""
+        from flask import current_app
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
         data = dict(fullname="John Doe", name="johndoe",
                     password="p4ssw0rd", confirm="p4ssw0rd",
                     email_addr="johndoe@example.com")
@@ -172,24 +175,45 @@ class TestWeb(web.Helper):
         render.return_value = ''
         res = self.app.post('/account/register', data=data)
         del data['confirm']
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
 
         signer.dumps.assert_called_with(data, salt='account-validation')
-        render.assert_has_call('/account/email/validate_account.md',
+        render.assert_any_call('/account/email/validate_account.md',
                                 user=data,
-                                confirm_url='http://localhost:5000/account/register/confirmation?key=')
+                                confirm_url='http://localhost/account/register/confirmation?key=')
         assert mail.send.called, "Mail was not sent"
 
 
     @with_context
-    def test_register_post_valid_data(self):
-        """Test WEB register post with valid form data"""
+    def test_register_post_valid_data_validation_enabled(self):
+        """Test WEB register post with valid form data and account validation
+        enabled"""
+        from flask import current_app
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
         data = dict(fullname="John Doe", name="johndoe",
                     password="p4ssw0rd", confirm="p4ssw0rd",
                     email_addr="johndoe@example.com")
 
         res = self.app.post('/account/register', data=data)
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
         assert self.html_title() in res.data, res
         assert "Just one more step, please" in res.data, res.data
+
+
+    from pybossa.view.applications import redirect
+    @with_context
+    @patch('pybossa.view.account.redirect', wraps=redirect)
+    @patch('pybossa.view.account.signer')
+    def test_register_post_valid_data_validation_disabled(self, signer, redirect):
+        """Test WEB register post with valid form data and account validation
+        disabled redirects to the confirmation URL with valid arguments"""
+        data = dict(fullname="John Doe", name="johndoe",
+                    password="p4ssw0rd", confirm="p4ssw0rd",
+                    email_addr="johndoe@example.com")
+        signer.dumps.return_value = 'key'
+        res = self.app.post('/account/register', data=data)
+        print dir(redirect)
+        redirect.assert_called_with('http://localhost/account/register/confirmation?key=key')
 
 
     def test_register_confirmation_fails_without_key(self):
@@ -512,8 +536,7 @@ class TestWeb(web.Helper):
             cat = db.session.query(Category).get(1)
             url = '/app/category/featured/'
             res = self.app.get(url, follow_redirects=True)
-            tmp = '1 Featured Projects'
-            assert tmp in res.data, res.data
+            assert '1 Featured Projects' in res.data, res.data
 
     @with_context
     @patch('pybossa.ckan.requests.get')
@@ -1084,6 +1107,24 @@ class TestWeb(web.Helper):
             assert tmp in res.data, res
 
     @with_context
+    def test_app_index_categories_pagination(self):
+        """Test WEB Project Index categories pagination works"""
+        from flask import current_app
+        n_apps = current_app.config.get('APPS_PER_PAGE')
+        current_app.config['APPS_PER_PAGE'] = 1
+        category = CategoryFactory.create(name='category', short_name='cat')
+        for project in AppFactory.create_batch(2, category=category):
+            TaskFactory.create(app=project)
+        page1 = self.app.get('/app/category/%s/' % category.short_name)
+        page2 = self.app.get('/app/category/%s/page/2/' % category.short_name)
+        current_app.config['APPS_PER_PAGE'] = n_apps
+
+        assert '<a href="/app/category/cat/page/2/">Next &raquo;</a>' in page1.data
+        assert page2.status_code == 200, page2.status_code
+        assert '<a href="/app/category/cat/">&laquo; Prev </a>' in page2.data
+
+
+    @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_20_app_index_published(self, mock):
         """Test WEB Project Index published works"""
@@ -1101,8 +1142,7 @@ class TestWeb(web.Helper):
             self.signout()
 
             res = self.app.get('app', follow_redirects=True)
-            assert "Projects" in res.data, res.data
-            assert Fixtures.cat_1 in res.data, res.data
+            assert "%s Projects" % Fixtures.cat_1 in res.data, res.data
             assert "draft" not in res.data, res.data
             assert "Sample Project" in res.data, res.data
 
@@ -1120,24 +1160,24 @@ class TestWeb(web.Helper):
             self.signout()
 
             # As Anonymous
-            res = self.app.get('/app/draft', follow_redirects=True)
+            res = self.app.get('/app/category/draft', follow_redirects=True)
             dom = BeautifulSoup(res.data)
             err_msg = "Anonymous should not see draft apps"
             assert dom.find(id='signin') is not None, err_msg
 
             # As authenticated but not admin
             self.signin(email="jane@jane.com", password="p4ssw0rd")
-            res = self.app.get('/app/draft', follow_redirects=True)
+            res = self.app.get('/app/category/draft', follow_redirects=True)
             assert res.status_code == 403, "Non-admin should not see draft apps"
             self.signout()
 
             # As Admin
             self.signin()
-            res = self.app.get('/app/draft', follow_redirects=True)
-            assert "Projects" in res.data, res.data
+            res = self.app.get('/app/category/draft', follow_redirects=True)
             assert "project-published" not in res.data, res.data
             assert "draft" in res.data, res.data
             assert "Sample Project" in res.data, res.data
+            assert '1 Draft Projects' in res.data, res.data
 
     @with_context
     def test_21_get_specific_ongoing_task_anonymous(self):
@@ -1369,7 +1409,6 @@ class TestWeb(web.Helper):
 
         res = self.app.get('account/johndoe', follow_redirects=True)
         assert "Sample Project" in res.data, res.data
-        assert "You have contributed to <strong>10</strong> tasks" in res.data, res.data
         assert "Contribute!" in res.data, "There should be a Contribute button"
 
     @with_context
