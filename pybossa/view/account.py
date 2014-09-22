@@ -270,8 +270,8 @@ def _show_own_profile(user):
     return render_template('account/profile.html', title=gettext("Profile"),
                           apps_contrib=apps_contrib,
                           apps_published=apps_published,
-                          apps_draft=apps_draft)#,
-                          #user=user)
+                          apps_draft=apps_draft,
+                          user=cached_users.get_user_summary(user.name))
 
 
 @blueprint.route('/<name>/applications')
