@@ -45,6 +45,7 @@ from pybossa.core import db, signer, mail, uploader, sentinel, get_session
 from pybossa.util import Pagination, get_user_id_or_ip, pretty_date
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
+from pybossa.cache import apps as cached_apps
 from pybossa.auth import require
 
 from pybossa.forms.account_view_forms import *
@@ -245,7 +246,17 @@ def profile(name):
 def _show_public_profile(user):
     user_dict = cached_users.get_user_summary(user.name)
     apps_contributed = cached_users.apps_contributed_cached(user.id)
+    for app in apps_contributed:
+        app['n_tasks'] = cached_apps.n_tasks(app['id'])
+        app['overall_progress'] = cached_apps.overall_progress(app['id'])
+        app['n_completed_tasks'] = cached_apps.n_completed_tasks(app['id'])
+        app['n_volunteers'] = cached_apps.n_volunteers(app['id'])
     apps_created = cached_users.published_apps_cached(user.id)
+    for app in apps_created:
+        app['n_tasks'] = cached_apps.n_tasks(app['id'])
+        app['overall_progress'] = cached_apps.overall_progress(app['id'])
+        app['n_completed_tasks'] = cached_apps.n_completed_tasks(app['id'])
+        app['n_volunteers'] = cached_apps.n_volunteers(app['id'])
     if current_user.is_authenticated() and current_user.admin:
         apps_hidden = cached_users.hidden_apps(user.id)
         apps_created.extend(apps_hidden)
@@ -263,12 +274,22 @@ def _show_own_profile(user):
     user.rank = rank_and_score['rank']
     user.score = rank_and_score['score']
     user.total = cached_users.get_total_users()
-    apps_contrib = cached_users.apps_contributed(user.id)
+    apps_contributed = cached_users.apps_contributed(user.id)
+    for app in apps_contributed:
+        app['n_tasks'] = cached_apps.n_tasks(app['id'])
+        app['overall_progress'] = cached_apps.overall_progress(app['id'])
+        app['n_completed_tasks'] = cached_apps.n_completed_tasks(app['id'])
+        app['n_volunteers'] = cached_apps.n_volunteers(app['id'])
     apps_published, apps_draft = _get_user_apps(user.id)
     apps_published.extend(cached_users.hidden_apps(user.id))
+    for app in apps_published:
+        app['n_tasks'] = cached_apps.n_tasks(app['id'])
+        app['overall_progress'] = cached_apps.overall_progress(app['id'])
+        app['n_completed_tasks'] = cached_apps.n_completed_tasks(app['id'])
+        app['n_volunteers'] = cached_apps.n_volunteers(app['id'])
 
     return render_template('account/profile.html', title=gettext("Profile"),
-                          apps_contrib=apps_contrib,
+                          apps_contrib=apps_contributed,
                           apps_published=apps_published,
                           apps_draft=apps_draft,
                           user=cached_users.get_user_summary(user.name))
