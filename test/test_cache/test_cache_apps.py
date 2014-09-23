@@ -89,7 +89,7 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS get_featured returns the required info
         about each featured project"""
 
-        fields = ('id', 'name', 'short_name', 'info', 'n_volunteers', 'n_completed_tasks')
+        fields = ('id', 'name', 'short_name', 'info')
 
         FeaturedFactory.create()
 
