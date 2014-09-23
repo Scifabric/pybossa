@@ -52,48 +52,48 @@ class TestAppsCache(Test):
         return app
 
 
-    def test_get_featured_front_page(self):
-        """Test CACHE PROJECTS get_featured_front_page returns featured projects"""
+    def test_get_featured(self):
+        """Test CACHE PROJECTS get_featured returns featured projects"""
 
         FeaturedFactory.create()
 
-        featured = cached_apps.get_featured_front_page()
+        featured = cached_apps.get_featured()
 
         assert len(featured) is 1, featured
 
 
-    def test_get_featured_front_page_only_returns_featured(self):
-        """Test CACHE PROJECTS get_featured_front_page returns only featured projects"""
+    def test_get_featured_only_returns_featured(self):
+        """Test CACHE PROJECTS get_featured returns only featured projects"""
 
         featured_app = AppFactory.create()
         non_featured_app = AppFactory.create()
         FeaturedFactory.create(app=featured_app)
 
-        featured = cached_apps.get_featured_front_page()
+        featured = cached_apps.get_featured()
 
         assert len(featured) is 1, featured
 
 
-    def test_get_featured_front_page_not_returns_hidden_apps(self):
-        """Test CACHE PROJECTS get_featured_front_page does not return hidden projects"""
+    def test_get_featured_not_returns_hidden_apps(self):
+        """Test CACHE PROJECTS get_featured does not return hidden projects"""
 
         featured_app = AppFactory.create(hidden=1)
         FeaturedFactory.create(app=featured_app)
 
-        featured = cached_apps.get_featured_front_page()
+        featured = cached_apps.get_featured()
 
         assert len(featured) is 0, featured
 
 
-    def test_get_featured_front_page_returns_required_fields(self):
-        """Test CACHE PROJECTS get_featured_front_page returns the required info
+    def test_get_featured_returns_required_fields(self):
+        """Test CACHE PROJECTS get_featured returns the required info
         about each featured project"""
 
         fields = ('id', 'name', 'short_name', 'info', 'n_volunteers', 'n_completed_tasks')
 
         FeaturedFactory.create()
 
-        featured = cached_apps.get_featured_front_page()[0]
+        featured = cached_apps.get_featured()[0]
 
         for field in fields:
             assert featured.has_key(field), "%s not in app info" % field
