@@ -205,8 +205,6 @@ class TestAppsCache(Test):
 
         app = self.create_app_with_contributors(anonymous=0, registered=2, two_tasks=True)
         registered_volunteers = cached_apps.n_registered_volunteers(app.id)
-        for tr in app.task_runs:
-            print tr.user
 
         err_msg = "Volunteers is %s, it should be 2" % registered_volunteers
         assert registered_volunteers == 2, err_msg
