@@ -109,7 +109,7 @@ class TestUsersCache(Test):
         app_contributed = AppFactory.create()
         task = TaskFactory.create(app=app_contributed)
         TaskRunFactory.create(task=task, user=user)
-        fields = ('name', 'short_name', 'info', 'n_task_runs')
+        fields = ('id', 'name', 'short_name', 'owner_id', 'description', 'info')
 
         apps_contributed = cached_users.apps_contributed(user.id)
 

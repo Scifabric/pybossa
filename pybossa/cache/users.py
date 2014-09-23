@@ -198,15 +198,18 @@ def apps_contributed(user_id):
                    WITH apps_contributed as 
                         (SELECT DISTINCT(app_id) FROM task_run 
                          WHERE user_id=:user_id)
-                   SELECT app.name, app.short_name, app.info FROM app, apps_contributed 
+                   SELECT app.id, app.name, app.short_name, app.owner_id,
+                   app.description, app.info FROM app, apps_contributed
                    WHERE app.id=apps_contributed.app_id ORDER BY app.name DESC;
                    ''')
         session = get_session(db, bind='slave')
         results = session.execute(sql, dict(user_id=user_id))
         apps_contributed = []
         for row in results:
-            app = dict(name=row.name, short_name=row.short_name,
-                       info=json.loads(row.info), n_task_runs=0)
+            app = dict(id=row.id, name=row.name, short_name=row.short_name,
+                       owner_id=row.owner_id,
+                       description=row.description,
+                       info=json.loads(row.info))
             apps_contributed.append(app)
         return apps_contributed
     except: # pragma: no cover
