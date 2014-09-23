@@ -360,7 +360,7 @@ def _n_draft():
 
 
 @memoize(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'))
-def get_draft(category, page=1, per_page=5):
+def get_draft(category=None, page=1, per_page=5):
     """Return list of draft projects"""
     try:
         sql = text('''SELECT app.id, app.name, app.short_name, app.created,
