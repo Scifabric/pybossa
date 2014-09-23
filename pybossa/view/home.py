@@ -49,7 +49,6 @@ def home():
         for app in tmp_apps:
             app['n_tasks'] = cached_apps.n_tasks(app['id'])
             app['overall_progress'] = cached_apps.overall_progress(app['id'])
-            app['n_completed_tasks'] = cached_apps.n_completed_tasks(app['id'])
             app['n_volunteers'] = cached_apps.n_volunteers(app['id'])
         d['categories_apps'][c['short_name']] = tmp_apps
 
@@ -58,7 +57,6 @@ def home():
     for app in tmp_apps:
         app['n_tasks'] = cached_apps.n_tasks(app['id'])
         app['overall_progress'] = cached_apps.overall_progress(app['id'])
-        app['n_completed_tasks'] = cached_apps.n_completed_tasks(app['id'])
         app['n_volunteers'] = cached_apps.n_volunteers(app['id'])
     if len(tmp_apps) > 0:
         featured = model.category.Category(name='Featured', short_name='featured')

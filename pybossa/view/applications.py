@@ -132,7 +132,6 @@ def app_index(page, lookup, category, fallback, use_count):
                          overall_progress=cached_apps.overall_progress(app['id']),
                          last_activity=app['last_activity'],
                          last_activity_raw=app['last_activity_raw'],
-                         n_completed_tasks=cached_apps.n_completed_tasks(app['id']),
                          n_volunteers=cached_apps.n_volunteers(app['id'])))
 
 
