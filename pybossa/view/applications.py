@@ -128,12 +128,9 @@ def app_index(page, lookup, category, fallback, use_count):
 
     data = []
     for app in apps:
-        data.append(dict(app=app, n_tasks=cached_apps.n_tasks(app['id']),
-                         overall_progress=cached_apps.overall_progress(app['id']),
-                         last_activity=app['last_activity'],
-                         last_activity_raw=app['last_activity_raw'],
-                         n_volunteers=cached_apps.n_volunteers(app['id'])))
-
+        app['n_tasks'] = cached_apps.n_tasks(app['id'])
+        app['overall_progress'] = cached_apps.overall_progress(app['id'])
+        app['n_volunteers'] = cached_apps.n_volunteers(app['id'])
 
     if fallback and not apps:  # pragma: no cover
         return redirect(url_for('.index'))
@@ -158,7 +155,7 @@ def app_index(page, lookup, category, fallback, use_count):
     if cached_apps.n_count('featured') > 0:
         categories.insert(0, featured_cat)
     template_args = {
-        "apps": data,
+        "apps": apps,
         "title": gettext("Projects"),
         "pagination": pagination,
         "active_cat": active_cat,
