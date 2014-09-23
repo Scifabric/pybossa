@@ -300,7 +300,6 @@ def get_featured(category=None, page=1, per_page=5):
                        last_activity=pretty_date(last_activity(row.id)),
                        last_activity_raw=last_activity(row.id),
                        owner=row.owner,
-                       featured=row.id,
                        info=dict(json.loads(row.info)))
             apps.append(app)
         return apps
