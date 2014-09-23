@@ -54,7 +54,7 @@ def home():
         d['categories_apps'][c['short_name']] = tmp_apps
 
     # Add featured
-    tmp_apps = cached_apps.get_featured(page, per_page)
+    tmp_apps = cached_apps.get_featured('featured', page, per_page)
     for app in tmp_apps:
         app['n_tasks'] = cached_apps.n_tasks(app['id'])
         app['overall_progress'] = cached_apps.overall_progress(app['id'])

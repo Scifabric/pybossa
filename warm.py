@@ -60,7 +60,7 @@ def warm_cache():
         for a in apps:
             warm_app(a['id'], a['short_name'])
         for page in pages:
-            apps = cached_apps.get_featured(page,
+            apps = cached_apps.get_featured('featured', page,
                                             app.config['APPS_PER_PAGE'])
             for a in apps:
                 warm_app(a['id'], a['short_name'])
