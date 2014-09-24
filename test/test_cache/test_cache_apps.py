@@ -90,8 +90,68 @@ class TestAppsCache(Test):
         about each featured project"""
 
         fields = ('id', 'name', 'short_name', 'info', 'created', 'description',
-                  'overall_progress', 'last_activity', 'last_activity_raw',
-                  'owner', 'info')
+                  'last_activity', 'last_activity_raw', 'overall_progress',
+                   'n_tasks', 'n_volunteers', 'owner', 'info')
+
+        FeaturedFactory.create()
+
+        featured = cached_apps.get_featured()[0]
+
+        for field in fields:
+            assert featured.has_key(field), "%s not in app info" % field
+
+
+    def test_get_category(self):
+        """Test CACHE PROJECTS get returns projects from given category"""
+
+        project = self.create_app_with_tasks(1, 0)
+
+        projects = cached_apps.get(project.category.short_name)
+
+        assert len(projects) is 1, projects
+
+
+    def test_get_only_returns_category_projects(self):
+        """Test CACHE PROJECTS get returns only projects from required category"""
+
+        project = self.create_app_with_tasks(1, 0)
+        #create a non published project too
+        AppFactory.create()
+
+        projects = cached_apps.get(project.category.short_name)
+
+        assert len(projects) is 1, projects
+
+
+    def test_get_not_returns_hidden_apps(self):
+        """Test CACHE PROJECTS get does not return hidden projects"""
+
+        project = self.create_app_with_contributors(1, 0, hidden=1)
+
+        projects = cached_apps.get(project.category.short_name)
+
+        assert len(projects) is 0, projects
+
+
+    def test_get_not_returns_draft_apps(self):
+        """Test CACHE PROJECTS get does not return draft (non-published) projects"""
+
+        project = self.create_app_with_contributors(1, 0)
+        # Create a project wothout presenter
+        AppFactory.create(info={}, category=project.category)
+
+        projects = cached_apps.get(project.category.short_name)
+
+        assert len(projects) is 1, projects
+
+
+    def test_get_returns_required_fields(self):
+        """Test CACHE PROJECTS get returns the required info
+        about each project"""
+
+        fields = ('id', 'name', 'short_name', 'info', 'created', 'description',
+                  'last_activity', 'last_activity_raw', 'overall_progress',
+                   'n_tasks', 'n_volunteers', 'owner', 'info')
 
         FeaturedFactory.create()
 
