@@ -50,6 +50,7 @@ class TestTaskAuthorization(Test):
 
     def test_project_owner_can_create(self):
         """Test project owner can create tasks"""
+        admin = UserFactory.create()
         user = UserFactory.create()
         app = AppFactory.create(owner=user)
         task = TaskFactory.build(app=app)
