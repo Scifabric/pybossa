@@ -161,6 +161,55 @@ class TestAppsCache(Test):
             assert retrieved_project.has_key(field), "%s not in app info" % field
 
 
+    def test_get_draft(self):
+        """Test CACHE PROJECTS get_draft returns draft_projects"""
+        # Here, we are suposing that a project is draft iff has no presenter AND has no tasks
+
+        AppFactory.create(info={})
+
+        drafts = cached_apps.get_draft()
+
+        assert len(drafts) is 1, drafts
+
+
+    def test_get_draft_not_returns_hidden_apps(self):
+        """Test CACHE PROJECTS get_draft does not return hidden projects"""
+
+        AppFactory.create(info={}, hidden=1)
+
+        drafts = cached_apps.get_draft()
+
+        assert len(drafts) is 0, drafts
+
+
+    def test_get_draft_not_returns_published_apps(self):
+        """Test CACHE PROJECTS get_draft does not return projects with either tasks or a presenter (REVIEW DEFINITION OF A DRAFT PROJECT REQUIRED)"""
+
+        app_no_presenter = AppFactory.create(info={})
+        TaskFactory.create(app=app_no_presenter)
+        app_no_task = AppFactory.create()
+
+        drafts = cached_apps.get_draft()
+
+        assert len(drafts) is 0, drafts
+
+
+    def test_get_draft_returns_required_fields(self):
+        """Test CACHE PROJECTS get_draft returns the required info
+        about each project"""
+
+        fields = ('id', 'name', 'short_name', 'info', 'created', 'description',
+                  'last_activity', 'last_activity_raw', 'overall_progress',
+                   'n_tasks', 'n_volunteers', 'owner', 'info')
+
+        AppFactory.create(info={})
+
+        draft = cached_apps.get_draft()[0]
+
+        for field in fields:
+            assert draft.has_key(field), "%s not in app info" % field
+
+
     def test_get_top_returns_apps_with_most_taskruns(self):
         """Test CACHE PROJECTS get_top returns the projects with most taskruns in order"""
 
