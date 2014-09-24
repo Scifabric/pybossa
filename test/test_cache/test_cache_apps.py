@@ -153,12 +153,12 @@ class TestAppsCache(Test):
                   'last_activity', 'last_activity_raw', 'overall_progress',
                    'n_tasks', 'n_volunteers', 'owner', 'info')
 
-        FeaturedFactory.create()
+        project = self.create_app_with_tasks(1, 0)
 
-        featured = cached_apps.get_featured()[0]
+        retrieved_project = cached_apps.get(project.category.short_name)[0]
 
         for field in fields:
-            assert featured.has_key(field), "%s not in app info" % field
+            assert retrieved_project.has_key(field), "%s not in app info" % field
 
 
     def test_get_top_returns_apps_with_most_taskruns(self):
