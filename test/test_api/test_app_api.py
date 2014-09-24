@@ -53,6 +53,19 @@ class TestAppAPI(TestAPI):
         assert err['exception_cls'] == 'NotFound', err
         assert err['action'] == 'GET', err
 
+
+    def test_hidden_app(self):
+        """ Test API hidden project works. """
+        AppFactory.create(info={'total': -1}, hidden=1)
+        res = self.app.get('/api/app')
+        data = json.loads(res.data)
+
+        assert len(data) == 1, data
+        err_msg = "Project is hidden, so it should return 404"
+        assert res.status_code == 404, err_msg
+        assert 1 == 0, res
+
+
     @with_context
     def test_query_app(self):
         """Test API query for project endpoint works"""
