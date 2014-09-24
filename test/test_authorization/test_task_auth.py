@@ -42,12 +42,6 @@ class TestTaskAuthorization(Test):
         assert_raises(Unauthorized, getattr(require, 'task').create)
 
 
-    @patch('pybossa.auth.current_user', new=mock_authenticated)
-    @patch('pybossa.auth.task.current_user', new=mock_authenticated)
-    def test_authenticated_user_cannot_create(self):
-        """Test authenticated users can't create tasks"""
-        assert_raises(Exception, getattr(require, 'task').create)
-
     def test_project_owner_can_create(self):
         """Test project owner can create tasks"""
         admin = UserFactory.create()
@@ -55,8 +49,9 @@ class TestTaskAuthorization(Test):
         app = AppFactory.create(owner=user)
         task = TaskFactory.build(app=app)
         with patch('pybossa.auth.task.current_user', new=user):
-            assert_not_raises(Exception, getattr(require, 'task').create, task)
+            assert_not_raises(Forbidden, getattr(require, 'task').create, task)
 
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_not_project_owner_cannot_create(self):
         """Test authenticated user cannot create tasks"""
         user = UserFactory.create()
@@ -64,7 +59,7 @@ class TestTaskAuthorization(Test):
         app = AppFactory.create(owner=user)
         task = TaskFactory.build(app=app)
         with patch('pybossa.auth.task.current_user', new=user2):
-            assert_raises(Exception, getattr(require, 'task').create, task)
+            assert_raises(Forbidden, getattr(require, 'task').create, task)
 
     def test_admin_can_create(self):
         """Test admin user can create tasks"""
@@ -73,7 +68,7 @@ class TestTaskAuthorization(Test):
         app = AppFactory.create(owner=user2)
         task = TaskFactory.build(app=app)
         with patch('pybossa.auth.task.current_user', new=user):
-            assert_not_raises(Exception, getattr(require, 'task').create, task)
+            assert_not_raises(Forbidden, getattr(require, 'task').create, task)
 
 #
 #
