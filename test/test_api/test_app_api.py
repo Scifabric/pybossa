@@ -56,14 +56,26 @@ class TestAppAPI(TestAPI):
 
     def test_hidden_app(self):
         """ Test API hidden project works. """
-        AppFactory.create(info={'total': -1}, hidden=1)
+        AppFactory.create(hidden=1)
         res = self.app.get('/api/app')
         data = json.loads(res.data)
 
-        assert len(data) == 1, data
-        err_msg = "Project is hidden, so it should return 404"
-        assert res.status_code == 404, err_msg
-        assert 1 == 0, res
+        err_msg = "There should be zero projects listed."
+        assert len(data) == 0, err_msg
+        err_msg = "It should return 200 with an empty object"
+        assert res.status_code == 200, err_msg
+
+        # Now we add a second project that it is not hidden
+        AppFactory.create(info={'hello': 'world'})
+        res = self.app.get('/api/app')
+        data = json.loads(res.data)
+
+        err_msg = "There should be only one project listed."
+        assert len(data) == 1, err_msg
+        err_msg = "It should return 200 with one project"
+        assert res.status_code == 200, err_msg
+        project = data[0]
+        assert project['info']['hello'] == 'world', err_msg
 
 
     @with_context
