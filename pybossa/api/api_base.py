@@ -94,7 +94,14 @@ class APIBase(MethodView):
     def _create_json_response(self, query_result, id):
         if len (query_result) == 1 and query_result[0] is None:
             raise abort(404)
-        items = list(self._create_dict_from_model(item) for item in query_result)
+        items = []
+        for item in query_result:
+            try:
+                items.append(self._create_dict_from_model(item))
+                getattr(require, self.__class__.__name__.lower()).read(item)
+            except:
+                # Remove last added item, as it is 401 or 403
+                items.pop() 
         if id:
             getattr(require, self.__class__.__name__.lower()).read(query_result[0])
             items = items[0]
