@@ -29,7 +29,7 @@ This package adds GET, POST, PUT and DELETE methods for any class:
 import json
 from flask import request, abort, Response
 from flask.views import MethodView
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import NotFound, Unauthorized, Forbidden
 from sqlalchemy.exc import IntegrityError
 from pybossa.util import jsonpify, crossdomain
 from pybossa.core import db, ratelimits, get_session
@@ -94,7 +94,16 @@ class APIBase(MethodView):
     def _create_json_response(self, query_result, id):
         if len (query_result) == 1 and query_result[0] is None:
             raise abort(404)
-        items = list(self._create_dict_from_model(item) for item in query_result)
+        items = []
+        for item in query_result:
+            try:
+                items.append(self._create_dict_from_model(item))
+                getattr(require, self.__class__.__name__.lower()).read(item)
+            except (Forbidden, Unauthorized):
+                # Remove last added item, as it is 401 or 403
+                items.pop() 
+            except: # pragma: no cover
+                raise
         if id:
             getattr(require, self.__class__.__name__.lower()).read(query_result[0])
             items = items[0]
