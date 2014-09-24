@@ -56,6 +56,14 @@ class TestTaskAuthorization(Test):
         with patch('pybossa.auth.task.current_user', new=user):
             assert_not_raises(Exception, getattr(require, 'task').create, task)
 
+    def test_not_project_owner_cannot_create(self):
+        """Test authenticated user cannot create tasks"""
+        user = UserFactory.create()
+        user2 = UserFactory.create()
+        app = AppFactory.create(owner=user)
+        task = TaskFactory.build(app=app)
+        with patch('pybossa.auth.task.current_user', new=user2):
+            assert_raises(Exception, getattr(require, 'task').create, task)
 #
 #
 #    @patch('pybossa.auth.current_user', new=mock_anonymous)
