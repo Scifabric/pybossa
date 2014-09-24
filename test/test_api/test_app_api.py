@@ -53,6 +53,31 @@ class TestAppAPI(TestAPI):
         assert err['exception_cls'] == 'NotFound', err
         assert err['action'] == 'GET', err
 
+
+    def test_hidden_app(self):
+        """ Test API hidden project works. """
+        AppFactory.create(hidden=1)
+        res = self.app.get('/api/app')
+        data = json.loads(res.data)
+
+        err_msg = "There should be zero projects listed."
+        assert len(data) == 0, err_msg
+        err_msg = "It should return 200 with an empty object"
+        assert res.status_code == 200, err_msg
+
+        # Now we add a second project that it is not hidden
+        AppFactory.create(info={'hello': 'world'})
+        res = self.app.get('/api/app')
+        data = json.loads(res.data)
+
+        err_msg = "There should be only one project listed."
+        assert len(data) == 1, err_msg
+        err_msg = "It should return 200 with one project"
+        assert res.status_code == 200, err_msg
+        project = data[0]
+        assert project['info']['hello'] == 'world', err_msg
+
+
     @with_context
     def test_query_app(self):
         """Test API query for project endpoint works"""
