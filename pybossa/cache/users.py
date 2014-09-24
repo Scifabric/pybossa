@@ -20,6 +20,7 @@ from pybossa.core import db, timeouts, get_session
 from pybossa.cache import cache, memoize, delete_memoized
 from pybossa.util import pretty_date
 from pybossa.model.user import User
+from pybossa.cache.apps import overall_progress, n_tasks, n_volunteers
 import json
 
 
@@ -209,6 +210,9 @@ def apps_contributed(user_id):
             app = dict(id=row.id, name=row.name, short_name=row.short_name,
                        owner_id=row.owner_id,
                        description=row.description,
+                       overall_progress=overall_progress(row.id),
+                       n_tasks=n_tasks(row.id),
+                       n_volunteers=n_volunteers(row.id),
                        info=json.loads(row.info))
             apps_contributed.append(app)
         return apps_contributed
@@ -242,6 +246,9 @@ def published_apps(user_id):
             app = dict(id=row.id, name=row.name, short_name=row.short_name,
                        owner_id=row.owner_id,
                        description=row.description,
+                       overall_progress=overall_progress(row.id),
+                       n_tasks=n_tasks(row.id),
+                       n_volunteers=n_volunteers(row.id),
                        info=json.loads(row.info))
             apps_published.append(app)
         return apps_published
@@ -276,6 +283,9 @@ def draft_apps(user_id):
             app = dict(id=row.id, name=row.name, short_name=row.short_name,
                        owner_id=row.owner_id,
                        description=row.description,
+                       overall_progress=overall_progress(row.id),
+                       n_tasks=n_tasks(row.id),
+                       n_volunteers=n_volunteers(row.id),
                        info=json.loads(row.info))
             apps_draft.append(app)
         return apps_draft
@@ -310,6 +320,9 @@ def hidden_apps(user_id):
             app = dict(id=row.id, name=row.name, short_name=row.short_name,
                        owner_id=row.owner_id,
                        description=row.description,
+                       overall_progress=overall_progress(row.id),
+                       n_tasks=n_tasks(row.id),
+                       n_volunteers=n_volunteers(row.id),
                        info=json.loads(row.info))
             apps_published.append(app)
         return apps_published

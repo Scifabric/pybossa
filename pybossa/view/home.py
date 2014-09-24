@@ -46,18 +46,10 @@ def home():
     d['categories_apps'] = {}
     for c in categories:
         tmp_apps = cached_apps.get(c['short_name'], page, per_page)
-        for app in tmp_apps:
-            app['n_tasks'] = cached_apps.n_tasks(app['id'])
-            app['overall_progress'] = cached_apps.overall_progress(app['id'])
-            app['n_volunteers'] = cached_apps.n_volunteers(app['id'])
         d['categories_apps'][c['short_name']] = tmp_apps
 
     # Add featured
     tmp_apps = cached_apps.get_featured('featured', page, per_page)
-    for app in tmp_apps:
-        app['n_tasks'] = cached_apps.n_tasks(app['id'])
-        app['overall_progress'] = cached_apps.overall_progress(app['id'])
-        app['n_volunteers'] = cached_apps.n_volunteers(app['id'])
     if len(tmp_apps) > 0:
         featured = model.category.Category(name='Featured', short_name='featured')
         d['categories'].insert(0,featured)

@@ -296,10 +296,12 @@ def get_featured(category=None, page=1, per_page=5):
         for row in results:
             app = dict(id=row.id, name=row.name, short_name=row.short_name,
                        created=row.created, description=row.description,
-                       overall_progress=overall_progress(row.id),
                        last_activity=pretty_date(last_activity(row.id)),
                        last_activity_raw=last_activity(row.id),
                        owner=row.owner,
+                       overall_progress=overall_progress(row.id),
+                       n_tasks=n_tasks(row.id),
+                       n_volunteers=n_volunteers(row.id),
                        info=dict(json.loads(row.info)))
             apps.append(app)
         return apps
@@ -383,6 +385,8 @@ def get_draft(category=None, page=1, per_page=5):
                        last_activity=pretty_date(last_activity(row.id)),
                        last_activity_raw=last_activity(row.id),
                        overall_progress=overall_progress(row.id),
+                       n_tasks=n_tasks(row.id),
+                       n_volunteers=n_volunteers(row.id),
                        info=dict(json.loads(row.info)))
             apps.append(app)
         return apps
@@ -462,6 +466,8 @@ def get(category, page=1, per_page=5):
                        last_activity=pretty_date(last_activity(row.id)),
                        last_activity_raw=last_activity(row.id),
                        overall_progress=overall_progress(row.id),
+                       n_tasks=n_tasks(row.id),
+                       n_volunteers=n_volunteers(row.id),
                        info=dict(json.loads(row.info)))
             apps.append(app)
         return apps

@@ -127,10 +127,6 @@ def app_index(page, lookup, category, fallback, use_count):
     count = cached_apps.n_count(category)
 
     data = []
-    for app in apps:
-        app['n_tasks'] = cached_apps.n_tasks(app['id'])
-        app['overall_progress'] = cached_apps.overall_progress(app['id'])
-        app['n_volunteers'] = cached_apps.n_volunteers(app['id'])
 
     if fallback and not apps:  # pragma: no cover
         return redirect(url_for('.index'))
