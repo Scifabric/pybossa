@@ -21,6 +21,7 @@ from nose.tools import raises, assert_raises
 from sqlalchemy.exc import IntegrityError, DataError
 from pybossa.model.app import App
 from pybossa.model.user import User
+from pybossa.model.category import Category
 from pybossa.model.blogpost import Blogpost
 
 
@@ -33,11 +34,9 @@ class TestBlogpostModel(Test):
                         name="johndoe",
                         fullname="John Doe",
                         locale="en")
-            app = App(
-                name='Application',
-                short_name='app',
-                description='desc',
-                owner=user)
+            category = Category(name=u'cat', short_name=u'cat', description=u'cat')
+            app = App(name='Application', short_name='app', description='desc',
+                      owner=user, category=category)
             db.session.add(user)
             db.session.add(app)
             db.session.commit()
@@ -96,7 +95,7 @@ class TestBlogpostModel(Test):
 
     @with_context
     def test_blogpost_is_deleted_after_app_deletion(self):
-        """Test BLOGPOST no blogposts can exist after it's project has been removed"""
+        """Test BLOGPOST no blogposts can exist after its project has been removed"""
         self.configure_fixtures()
         blogpost = Blogpost(title='title', body="body", app=self.app)
         db.session.add(blogpost)
@@ -112,7 +111,7 @@ class TestBlogpostModel(Test):
 
     @with_context
     def test_blogpost_deletion_doesnt_delete_app(self):
-        """Test BLOGPOST when deleting a blogpost it's parent project is not affected"""
+        """Test BLOGPOST when deleting a blogpost its parent project is not affected"""
         self.configure_fixtures()
         blogpost = Blogpost(title='title', body="body", app=self.app)
         db.session.add(blogpost)
@@ -138,7 +137,7 @@ class TestBlogpostModel(Test):
 
     @with_context
     def test_blogpost_is_not_deleted_after_owner_deletion(self):
-        """Test BLOGPOST a blogpost remains when it's owner user is removed
+        """Test BLOGPOST a blogpost remains when its owner user is removed
         from the system"""
         self.configure_fixtures()
         owner = User(
