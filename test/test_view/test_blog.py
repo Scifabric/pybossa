@@ -22,8 +22,8 @@ from default import db, with_context
 from pybossa.model.blogpost import Blogpost
 from pybossa.model.user import User
 from pybossa.model.app import App
+from factories import AppFactory, UserFactory, BlogpostFactory
 from mock import patch
-
 
 
 
@@ -35,7 +35,7 @@ class TestBlogpostView(web.Helper):
         user = self.create_users()[1]
         app = self.create_project(info=None)
         app.owner = user
-        blogpost = Blogpost(owner=user, app=app, title='thisisatitle', body='body')
+        blogpost = BlogpostFactory.create(owner=user, app=app, title='title')
         db.session.add_all([user, app, blogpost])
         db.session.commit()
         url = "/app/%s/blog" % app.short_name
@@ -43,13 +43,13 @@ class TestBlogpostView(web.Helper):
         # As anonymous
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert 'thisisatitle' in res.data
+        assert 'title' in res.data
 
         # As authenticated
         self.register()
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert 'thisisatitle' in res.data
+        assert 'title' in res.data
 
 
     @with_context
@@ -166,15 +166,9 @@ class TestBlogpostView(web.Helper):
         """Test blogposts GET non existing posts raises errors"""
         self.register()
         user = db.session.query(User).get(1)
-        app1 = App(name='app1',
-                short_name='app1',
-                description=u'description')
-        app2 = self.create_project(info=None)
-        app1.owner = user
-        app2.owner = user
-        blogpost = Blogpost(owner=user, app=app1, title='thisisatitle', body='body')
-        db.session.add_all([app1, app2, blogpost])
-        db.session.commit()
+        app1 = AppFactory.create(owner=user)
+        app2 = AppFactory.create(owner=user)
+        blogpost = BlogpostFactory.create(owner=user, app=app1)
 
         # To a non-existing app
         url = "/app/non-existing-app/%s" % blogpost.id
@@ -364,15 +358,9 @@ class TestBlogpostView(web.Helper):
         """Test blogposts update for non existing apps raises errors"""
         self.register()
         user = db.session.query(User).get(1)
-        app1 = App(name='app1',
-                short_name='app1',
-                description=u'description')
-        app2 = self.create_project(info=None)
-        app1.owner = user
-        app2.owner = user
-        blogpost = Blogpost(owner=user, app=app1, title='thisisatitle', body='body')
-        db.session.add_all([app1, app2, blogpost])
-        db.session.commit()
+        app1 = AppFactory.create(owner=user)
+        app2 = AppFactory.create(owner=user)
+        blogpost = BlogpostFactory.create(owner=user, app=app1, body='body')
 
         # To a non-existing app
         url = "/app/non-existing-app/%s/update" % blogpost.id
@@ -459,15 +447,9 @@ class TestBlogpostView(web.Helper):
         """Test blogposts delete for non existing apps raises errors"""
         self.register()
         user = db.session.query(User).get(1)
-        app1 = App(name='app1',
-                short_name='app1',
-                description=u'description')
-        app2 = self.create_project(info=None)
-        app1.owner = user
-        app2.owner = user
-        blogpost = Blogpost(owner=user, app=app1, title='thisisatitle', body='body')
-        db.session.add_all([app1, app2, blogpost])
-        db.session.commit()
+        app1 = AppFactory.create(owner=user)
+        app2 = AppFactory.create(owner=user)
+        blogpost = BlogpostFactory.create(owner=user, app=app1)
 
         # To a non-existing app
         url = "/app/non-existing-app/%s/delete" % blogpost.id
