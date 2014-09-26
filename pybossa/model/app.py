@@ -61,7 +61,7 @@ class App(db.Model, DomainObject):
     calibration_frac = Column(Float, default=0)
     bolt_course_id = Column(Integer, default=0)
     #: Project Category
-    category_id = Column(Integer, ForeignKey('category.id'))
+    category_id = Column(Integer, ForeignKey('category.id'), nullable=False)
     #: Project info field formatted as JSON
     info = Column(JSONEncodedDict, default=dict)
 

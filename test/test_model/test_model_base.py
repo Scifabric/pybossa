@@ -21,6 +21,7 @@ from nose.tools import raises
 from pybossa.model.user import User
 from pybossa.model.app import App
 from pybossa.model.task import Task
+from pybossa.model.category import Category
 from pybossa.model.task_run import TaskRun
 
 
@@ -54,6 +55,8 @@ class TestModelBase(Test):
             short_name=u'my-new-app',
             description=u'description',
             info=info)
+        category = Category(name=u'cat', short_name=u'cat', description=u'cat')
+        app.category = category
         app.owner = user
         task_info = {
             'question': 'My random question',
