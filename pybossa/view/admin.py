@@ -81,34 +81,27 @@ def featured(app_id=None):
         else:
             app = db.session.query(model.app.App).get(app_id)
             if app:
+                require.app.update(app)
                 if request.method == 'POST':
                     cached_apps.reset()
-                    f = model.featured.Featured()
-                    f.app_id = app_id
-                    require.app.update(app)
-                    # Check if the app is already in this table
-                    tmp = db.session.query(model.featured.Featured)\
-                            .filter(model.featured.Featured.app_id == app_id)\
-                            .first()
-                    if (tmp is None):
-                        db.session.add(f)
+                    if not app.featured:
+                        app.featured = True
+                        db.session.add(app)
                         db.session.commit()
-                        return json.dumps(f.dictize())
+                        return json.dumps(app.dictize())
                     else:
-                        msg = "App.id %s alreay in Featured table" % app_id
+                        msg = "App.id %s already featured" % app_id
                         return format_error(msg, 415)
                 if request.method == 'DELETE':
                     cached_apps.reset()
-                    f = db.session.query(model.featured.Featured)\
-                          .filter(model.featured.Featured.app_id == app_id)\
-                          .first()
-                    if (f):
-                        db.session.delete(f)
+                    if app.featured:
+                        app.featured = False
+                        db.session.add(app)
                         db.session.commit()
-                        return "", 204
+                        return json.dumps(app.dictize())
                     else:
-                        msg = 'App.id %s is not in Featured table' % app_id
-                        return format_error(msg, 404)
+                        msg = 'App.id %s is not featured' % app_id
+                        return format_error(msg, 415)
             else:
                 msg = 'App.id %s not found' % app_id
                 return format_error(msg, 404)

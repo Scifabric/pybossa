@@ -18,7 +18,6 @@
 
 from sqlalchemy.sql import func, text
 from pybossa.core import db, timeouts, get_session
-from pybossa.model.featured import Featured
 from pybossa.model.app import App
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
@@ -263,7 +262,7 @@ def last_activity(app_id):
 def _n_featured():
     """Return number of featured apps"""
     try:
-        sql = text('''SELECT COUNT(*) FROM featured;''')
+        sql = text('''SELECT COUNT(*) FROM app WHERE featured=true;''')
         session = get_session(db, bind='slave')
         results = session.execute(sql)
         for row in results:
@@ -283,8 +282,8 @@ def get_featured(category=None, page=1, per_page=5):
     try:
         sql = text('''SELECT app.id, app.name, app.short_name, app.info, app.created,
                    app.description,
-                   "user".fullname AS owner FROM app, featured, "user"
-                   WHERE app.id=featured.app_id AND app.hidden=0
+                   "user".fullname AS owner FROM app, "user"
+                   WHERE app.featured=true AND app.hidden=0
                    AND "user".id=app.owner_id GROUP BY app.id, "user".id
                    OFFSET(:offset) LIMIT(:limit);
                    ''')
@@ -437,18 +436,16 @@ def get(category, page=1, per_page=5):
        with a pagination for a given category"""
     try:
         sql = text('''SELECT app.id, app.name, app.short_name, app.description,
-                   app.info, app.created, app.category_id, "user".fullname AS owner,
-                   featured.app_id as featured
+                   app.info, app.created, app.category_id, app.featured, "user".fullname AS owner
                    FROM "user", task, app
                    LEFT OUTER JOIN category ON app.category_id=category.id
-                   LEFT OUTER JOIN featured ON app.id=featured.app_id
                    WHERE
                    category.short_name=:category
                    AND app.hidden=0
                    AND "user".id=app.owner_id
                    AND app.info LIKE('%task_presenter%')
                    AND task.app_id=app.id
-                   GROUP BY app.id, "user".id, featured.app_id ORDER BY app.name
+                   GROUP BY app.id, "user".id ORDER BY app.name
                    OFFSET :offset
                    LIMIT :limit;''')
 

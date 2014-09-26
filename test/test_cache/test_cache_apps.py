@@ -19,7 +19,7 @@
 from default import Test, db, with_context
 from pybossa.cache import apps as cached_apps
 from factories import UserFactory, AppFactory, TaskFactory, \
-    FeaturedFactory, TaskRunFactory, AnonymousTaskRunFactory
+    TaskRunFactory, AnonymousTaskRunFactory
 from mock import patch
 
 
@@ -55,7 +55,7 @@ class TestAppsCache(Test):
     def test_get_featured(self):
         """Test CACHE PROJECTS get_featured returns featured projects"""
 
-        FeaturedFactory.create()
+        AppFactory.create(featured=True)
 
         featured = cached_apps.get_featured()
 
@@ -65,9 +65,8 @@ class TestAppsCache(Test):
     def test_get_featured_only_returns_featured(self):
         """Test CACHE PROJECTS get_featured returns only featured projects"""
 
-        featured_app = AppFactory.create()
+        featured_app = AppFactory.create(featured=True)
         non_featured_app = AppFactory.create()
-        FeaturedFactory.create(app=featured_app)
 
         featured = cached_apps.get_featured()
 
@@ -77,8 +76,7 @@ class TestAppsCache(Test):
     def test_get_featured_not_returns_hidden_apps(self):
         """Test CACHE PROJECTS get_featured does not return hidden projects"""
 
-        featured_app = AppFactory.create(hidden=1)
-        FeaturedFactory.create(app=featured_app)
+        featured_app = AppFactory.create(hidden=1, featured=True)
 
         featured = cached_apps.get_featured()
 
@@ -93,7 +91,7 @@ class TestAppsCache(Test):
                   'last_activity', 'last_activity_raw', 'overall_progress',
                    'n_tasks', 'n_volunteers', 'owner', 'info')
 
-        FeaturedFactory.create()
+        AppFactory.create(featured=True)
 
         featured = cached_apps.get_featured()[0]
 
@@ -450,7 +448,7 @@ class TestAppsCache(Test):
 
     def test_n_featured_returns_featured(self):
         """Test CACHE PROJECTS _n_featured returns number of featured projects"""
-        FeaturedFactory.create()
+        AppFactory.create(featured=True)
 
         number_of_featured = cached_apps._n_featured()
 
