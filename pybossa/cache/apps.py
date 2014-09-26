@@ -47,30 +47,6 @@ def get_app(short_name):
 
 
 @cache(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'),
-       key_prefix="front_page_featured_apps")
-def get_featured_front_page():
-    """Return featured apps"""
-    try:
-        sql = text('''SELECT app.id, app.name, app.short_name, app.info FROM
-                   app, featured where app.id=featured.app_id and app.hidden=0''')
-        session = get_session(db, bind='slave')
-        results = session.execute(sql)
-        featured = []
-        for row in results:
-            app = dict(id=row.id, name=row.name, short_name=row.short_name,
-                       info=dict(json.loads(row.info)),
-                       n_volunteers=n_volunteers(row.id),
-                       n_completed_tasks=n_completed_tasks(row.id))
-            featured.append(app)
-        return featured
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
-
-
-@cache(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'),
        key_prefix="front_page_top_apps")
 def get_top(n=4):
     """Return top n=4 apps"""
@@ -302,7 +278,7 @@ def _n_featured():
 
 # This function does not change too much, so cache it for a longer time
 @memoize(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'))
-def get_featured(category, page=1, per_page=5):
+def get_featured(category=None, page=1, per_page=5):
     """Return a list of featured apps with a pagination"""
     try:
         sql = text('''SELECT app.id, app.name, app.short_name, app.info, app.created,
@@ -320,11 +296,12 @@ def get_featured(category, page=1, per_page=5):
         for row in results:
             app = dict(id=row.id, name=row.name, short_name=row.short_name,
                        created=row.created, description=row.description,
-                       overall_progress=overall_progress(row.id),
                        last_activity=pretty_date(last_activity(row.id)),
                        last_activity_raw=last_activity(row.id),
                        owner=row.owner,
-                       featured=row.id,
+                       overall_progress=overall_progress(row.id),
+                       n_tasks=n_tasks(row.id),
+                       n_volunteers=n_volunteers(row.id),
                        info=dict(json.loads(row.info)))
             apps.append(app)
         return apps
@@ -384,7 +361,7 @@ def _n_draft():
 
 
 @memoize(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'))
-def get_draft(category, page=1, per_page=5):
+def get_draft(category=None, page=1, per_page=5):
     """Return list of draft projects"""
     try:
         sql = text('''SELECT app.id, app.name, app.short_name, app.created,
@@ -408,6 +385,8 @@ def get_draft(category, page=1, per_page=5):
                        last_activity=pretty_date(last_activity(row.id)),
                        last_activity_raw=last_activity(row.id),
                        overall_progress=overall_progress(row.id),
+                       n_tasks=n_tasks(row.id),
+                       n_volunteers=n_volunteers(row.id),
                        info=dict(json.loads(row.info)))
             apps.append(app)
         return apps
@@ -487,6 +466,8 @@ def get(category, page=1, per_page=5):
                        last_activity=pretty_date(last_activity(row.id)),
                        last_activity_raw=last_activity(row.id),
                        overall_progress=overall_progress(row.id),
+                       n_tasks=n_tasks(row.id),
+                       n_volunteers=n_volunteers(row.id),
                        info=dict(json.loads(row.info)))
             apps.append(app)
         return apps
