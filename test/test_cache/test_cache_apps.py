@@ -76,7 +76,7 @@ class TestAppsCache(Test):
     def test_get_featured_front_page_not_returns_hidden_apps(self):
         """Test CACHE PROJECTS get_featured_front_page does not return hidden projects"""
 
-        featured_app = AppFactory.create(hidden=1, fetaured=True)
+        featured_app = AppFactory.create(hidden=1, featured=True)
 
         featured = cached_apps.get_featured_front_page()
 
