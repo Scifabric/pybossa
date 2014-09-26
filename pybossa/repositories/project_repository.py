@@ -20,7 +20,6 @@ from sqlalchemy.exc import IntegrityError
 
 from pybossa.model.app import App
 from pybossa.model.category import Category
-from pybossa.model.featured import Featured
 from pybossa.exc import WrongObjectError, DBIntegrityError
 
 
@@ -110,17 +109,6 @@ class ProjectRepository(object):
         self._validate_can_be('deleted as a Category', category, klass=Category)
         self.db.session.query(Category).filter(Category.id==category.id).delete()
         self.db.session.commit()
-
-
-    # Methods for Featured objects (only save, to be used in FB factories)
-    def save_featured(self, featured):
-        self._validate_can_be('saved as Featured', featured, klass=Featured)
-        try:
-            self.db.session.add(featured)
-            self.db.session.commit()
-        except IntegrityError as e:
-            self.db.session.rollback()
-            raise DBIntegrityError(e)
 
 
     def _validate_can_be(self, action, element, klass=App):

@@ -104,10 +104,6 @@ class App(db.Model, DomainObject):
         return False
 
 
-    def is_featured(self):
-        return len(self.featured) > 0
-
-
 
 @event.listens_for(App, 'before_update')
 @event.listens_for(App, 'before_insert')
