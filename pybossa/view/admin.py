@@ -81,9 +81,9 @@ def featured(app_id=None):
         else:
             app = db.session.query(model.app.App).get(app_id)
             if app:
+                require.app.update(app)
                 if request.method == 'POST':
                     cached_apps.reset()
-                    require.app.update(app)
                     if not app.featured:
                         app.featured = True
                         db.session.add(app)
