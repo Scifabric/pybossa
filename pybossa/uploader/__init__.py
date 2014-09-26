@@ -31,7 +31,7 @@ class Uploader(object):
 
     """Generic uploader class."""
 
-    allowed_extensions = set(['js', 'css', 'png', 'jpg', 'jpeg', 'gif'])
+    allowed_extensions = set(['js', 'css', 'png', 'jpg', 'jpeg', 'gif', 'zip'])
 
     def __init__(self, app=None):
         """Init method to create a generic uploader."""
