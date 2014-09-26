@@ -66,15 +66,6 @@ def export_tasks():
 
         return gen_json(table, id)
 
-    def export_json(app):
-        print app.id
-        json_generator = respond_json("task", app.id)
-        for line in json_generator:     # TODO: Save file here as ZIP on CDN
-            print line
-        json_generator = respond_json("task_run", app.id)
-        for line in json_generator:     # TODO: Save file here as ZIP on CDN
-            print line
-
     def format_csv_properly(row, ty=None):
         tmp = row.keys()
         task_keys = []
