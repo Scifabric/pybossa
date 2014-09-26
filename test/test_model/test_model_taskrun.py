@@ -23,6 +23,7 @@ from pybossa.model.user import User
 from pybossa.model.app import App
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
+from pybossa.model.category import Category
 
 
 class TestModelTaskRun(Test):
@@ -39,11 +40,9 @@ class TestModelTaskRun(Test):
         db.session.commit()
 
         user = db.session.query(User).first()
-        app = App(
-            name='Application',
-            short_name='app',
-            description='desc',
-            owner_id=user.id)
+        category = Category(name=u'cat', short_name=u'cat', description=u'cat')
+        app = App(name='Application', short_name='app', description='desc',
+                  owner_id=user.id, category=category)
         db.session.add(app)
         db.session.commit()
 
