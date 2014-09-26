@@ -89,22 +89,22 @@ def featured(app_id=None):
             if app:
                 require.app.update(app)
                 if request.method == 'POST':
-                    if app.is_featured():
-                        msg = "App.id %s alreay in Featured table" % app_id
+                    if app.featured is True:
+                        msg = "App.id %s already featured" % app_id
                         return format_error(msg, 415)
                     cached_apps.reset()
-                    app.featured.append(model.featured.Featured())
+                    app.featured = True
                     project_repo.update(app)
-                    return json.dumps(app.featured[0].dictize())
+                    return json.dumps(app.dictize())
 
                 if request.method == 'DELETE':
-                    if not app.is_featured():
-                        msg = 'App.id %s is not in Featured table' % app_id
-                        return format_error(msg, 404)
+                    if app.featured is False:
+                        msg = 'App.id %s is not featured' % app_id
+                        return format_error(msg, 415)
                     cached_apps.reset()
-                    app.featured.pop()
+                    app.featured = False
                     project_repo.update(app)
-                    return "", 204
+                    return json.dumps(app.dictize())
             else:
                 msg = 'App.id %s not found' % app_id
                 return format_error(msg, 404)

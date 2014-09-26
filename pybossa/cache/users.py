@@ -20,6 +20,7 @@ from pybossa.core import db, timeouts
 from pybossa.cache import cache, memoize, delete_memoized
 from pybossa.util import pretty_date
 from pybossa.model.user import User
+from pybossa.cache.apps import overall_progress, n_tasks, n_volunteers
 import json
 
 
@@ -172,17 +173,22 @@ def apps_contributed(user_id):
                WITH apps_contributed as 
                     (SELECT DISTINCT(app_id) FROM task_run 
                      WHERE user_id=:user_id)
-               SELECT app.name, app.short_name, app.info FROM app, apps_contributed 
+               SELECT app.id, app.name, app.short_name, app.owner_id,
+               app.description, app.info FROM app, apps_contributed
                WHERE app.id=apps_contributed.app_id ORDER BY app.name DESC;
                ''')
     results = session.execute(sql, dict(user_id=user_id))
     apps_contributed = []
     for row in results:
-        app = dict(name=row.name, short_name=row.short_name,
-                   info=json.loads(row.info), n_task_runs=0)
+        app = dict(id=row.id, name=row.name, short_name=row.short_name,
+                   owner_id=row.owner_id,
+                   description=row.description,
+                   overall_progress=overall_progress(row.id),
+                   n_tasks=n_tasks(row.id),
+                   n_volunteers=n_volunteers(row.id),
+                   info=json.loads(row.info))
         apps_contributed.append(app)
     return apps_contributed
-
 
 
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))
@@ -207,6 +213,9 @@ def published_apps(user_id):
         app = dict(id=row.id, name=row.name, short_name=row.short_name,
                    owner_id=row.owner_id,
                    description=row.description,
+                   overall_progress=overall_progress(row.id),
+                   n_tasks=n_tasks(row.id),
+                   n_volunteers=n_volunteers(row.id),
                    info=json.loads(row.info))
         apps_published.append(app)
     return apps_published
@@ -234,6 +243,9 @@ def draft_apps(user_id):
         app = dict(id=row.id, name=row.name, short_name=row.short_name,
                    owner_id=row.owner_id,
                    description=row.description,
+                   overall_progress=overall_progress(row.id),
+                   n_tasks=n_tasks(row.id),
+                   n_volunteers=n_volunteers(row.id),
                    info=json.loads(row.info))
         apps_draft.append(app)
     return apps_draft
@@ -261,6 +273,9 @@ def hidden_apps(user_id):
         app = dict(id=row.id, name=row.name, short_name=row.short_name,
                    owner_id=row.owner_id,
                    description=row.description,
+                   overall_progress=overall_progress(row.id),
+                   n_tasks=n_tasks(row.id),
+                   n_volunteers=n_volunteers(row.id),
                    info=json.loads(row.info))
         apps_published.append(app)
     return apps_published

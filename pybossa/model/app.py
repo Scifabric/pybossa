@@ -26,7 +26,6 @@ from pybossa.core import db, signer
 from pybossa.model import DomainObject, JSONType, JSONEncodedDict, make_timestamp, update_redis
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
-from pybossa.model.featured import Featured
 from pybossa.model.category import Category
 from pybossa.model.blogpost import Blogpost
 
@@ -54,6 +53,8 @@ class App(db.Model, DomainObject):
     long_tasks = Column(Integer, default=0)
     #: If the project is hidden
     hidden = Column(Integer, default=0)
+    # If the project is featured
+    featured = Column(Boolean, nullable=False, default=False)
     #: Project owner_id
     owner_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     time_estimate = Column(Integer, default=0)
@@ -70,7 +71,6 @@ class App(db.Model, DomainObject):
     task_runs = relationship(TaskRun, backref='app',
                              cascade='all, delete-orphan',
                              order_by='TaskRun.finish_time.desc()')
-    featured = relationship(Featured, cascade='all, delete, delete-orphan', backref='app')
     category = relationship(Category)
     blogposts = relationship(Blogpost, cascade='all, delete-orphan', backref='app')
 

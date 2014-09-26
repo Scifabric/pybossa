@@ -41,6 +41,7 @@ class AppFactory(factory.Factory):
     allow_anonymous_contributors = True
     long_tasks = 0
     hidden = 0
+    featured = False
     owner = factory.SubFactory('factories.UserFactory')
     owner_id = factory.LazyAttribute(lambda app: app.owner.id)
     category = factory.SubFactory('factories.CategoryFactory')

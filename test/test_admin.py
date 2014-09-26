@@ -140,7 +140,7 @@ class TestAdmin(web.Helper):
         res = self.app.post('/admin/featured/1')
         f = json.loads(res.data)
         assert f['id'] == 1, f
-        assert f['app_id'] == 1, f
+        assert f['featured'] == True, f
         # Check that it is listed in the front page
         res = self.app.get('/', follow_redirects=True)
         assert "Sample Project" in res.data,\
@@ -149,13 +149,15 @@ class TestAdmin(web.Helper):
         # A retry should fail
         res = self.app.post('/admin/featured/1')
         err = json.loads(res.data)
-        err_msg = "App.id 1 alreay in Featured table"
+        err_msg = "App.id 1 already featured"
         assert err['error'] == err_msg, err_msg
         assert err['status_code'] == 415, "Status code should be 415"
 
         # Remove it again from the Featured list
         res = self.app.delete('/admin/featured/1')
-        assert res.status == "204 NO CONTENT", res.status
+        f = json.loads(res.data)
+        assert f['id'] == 1, f
+        assert f['featured'] == False, f
         # Check that it is not listed in the front page
         res = self.app.get('/', follow_redirects=True)
         assert "Sample Project" not in res.data,\
@@ -164,8 +166,8 @@ class TestAdmin(web.Helper):
         # If we try to delete again, it should return an error
         res = self.app.delete('/admin/featured/1')
         err = json.loads(res.data)
-        assert err['status_code'] == 404, "Project should not be found"
-        err_msg = 'App.id 1 is not in Featured table'
+        assert err['status_code'] == 415, "Project should not be found"
+        err_msg = 'App.id 1 is not featured'
         assert err['error'] == err_msg, err_msg
 
         # Try with an id that does not exist

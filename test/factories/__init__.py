@@ -35,7 +35,6 @@ def reset_all_pk_sequences():
     AppFactory.reset_sequence()
     BlogpostFactory.reset_sequence()
     CategoryFactory.reset_sequence()
-    FeaturedFactory.reset_sequence()
     TaskFactory.reset_sequence()
     TaskRunFactory.reset_sequence()
     UserFactory.reset_sequence()
@@ -61,7 +60,6 @@ class BaseFactory(SQLAlchemyModelFactory):
 from app_factory import AppFactory
 from blogpost_factory import BlogpostFactory
 from category_factory import CategoryFactory
-from featured_factory import FeaturedFactory
 from task_factory import TaskFactory
 from taskrun_factory import TaskRunFactory, AnonymousTaskRunFactory
 from user_factory import UserFactory
