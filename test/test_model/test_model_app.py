@@ -83,6 +83,13 @@ class TestModelApp(Test):
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
 
+        # App.featured should not be nullable
+        app.description = 'description'
+        app.featured = None
+        db.session.add(app)
+        assert_raises(IntegrityError, db.session.commit)
+        db.session.rollback()
+
 
     def test_needs_password_no_password_key(self):
         """Test needs_password returns false if the app has not a password"""
