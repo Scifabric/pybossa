@@ -1352,7 +1352,7 @@ msgstr "Cambiar la Prioridad"
 
 #: themes/default/templates/applications/task_settings.html:18
 msgid "Change how the tasks are delivered to volunteers"
-msgstr "Cambiar cómo se entregan las tareas a los voluntarios"
+msgstr "Cambiar la gestión de las tareas"
 
 #: themes/default/templates/applications/task_settings.html:19
 msgid "Scheduler"
