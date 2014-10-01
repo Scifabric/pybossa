@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-01 18:31+0200\n"
+"POT-Creation-Date: 2014-10-01 18:41+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -123,18 +123,22 @@ msgid "Task Scheduler"
 msgstr ""
 
 #: forms/forms.py:96
+#: themes/default/templates/applications/task_scheduler.html:17
 msgid "Default"
 msgstr ""
 
 #: forms/forms.py:97
+#: themes/default/templates/applications/task_scheduler.html:21
 msgid "Breadth First"
 msgstr ""
 
 #: forms/forms.py:98
+#: themes/default/templates/applications/task_scheduler.html:18
 msgid "Depth First"
 msgstr ""
 
 #: forms/forms.py:99
+#: themes/default/templates/applications/task_scheduler.html:24
 msgid "Random"
 msgstr ""
 
@@ -565,7 +569,7 @@ msgstr ""
 #: themes/default/templates/applications/task_n_answers.html:21
 #: themes/default/templates/applications/task_presenter_editor.html:36
 #: themes/default/templates/applications/task_priority.html:24
-#: themes/default/templates/applications/task_scheduler.html:28
+#: themes/default/templates/applications/task_scheduler.html:35
 #: themes/default/templates/applications/update_blogpost.html:24
 #: themes/default/templates/applications/importers/csv.html:24
 #: themes/default/templates/applications/importers/epicollect.html:25
@@ -994,7 +998,7 @@ msgstr ""
 #: themes/default/templates/applications/settings.html:26
 #: themes/default/templates/applications/task_n_answers.html:29
 #: themes/default/templates/applications/task_priority.html:32
-#: themes/default/templates/applications/task_scheduler.html:36
+#: themes/default/templates/applications/task_scheduler.html:43
 #: themes/default/templates/applications/task_settings.html:43
 #: themes/default/templates/applications/tasks.html:69
 #: themes/default/templates/applications/tasks_browse.html:65
@@ -1283,7 +1287,7 @@ msgid "The number of answers per tasks that you want for the project"
 msgstr ""
 
 #: themes/default/templates/applications/task_n_answers.html:20
-#: themes/default/templates/applications/task_scheduler.html:27
+#: themes/default/templates/applications/task_scheduler.html:34
 msgid "Set redundancy"
 msgstr ""
 
@@ -1323,6 +1327,38 @@ msgstr ""
 
 #: themes/default/templates/applications/task_priority.html:23
 msgid "Change Priority"
+msgstr ""
+
+#: themes/default/templates/applications/task_scheduler.html:15
+msgid "You can choose from the following schedulers"
+msgstr ""
+
+#: themes/default/templates/applications/task_scheduler.html:17
+msgid "or"
+msgstr ""
+
+#: themes/default/templates/applications/task_scheduler.html:18
+msgid ""
+"returns a task that\n"
+"                    has not been completed (the value of number of "
+"answers has\n"
+"                    not achieved) excluding the current user"
+msgstr ""
+
+#: themes/default/templates/applications/task_scheduler.html:21
+msgid ""
+"returns a\n"
+"                    task which has the least number of task runs "
+"(answers)\n"
+"                    excluding the current user"
+msgstr ""
+
+#: themes/default/templates/applications/task_scheduler.html:24
+msgid ""
+"returns a task\n"
+"                    randomly --a user could get the same task twice or "
+"more\n"
+"                    times"
 msgstr ""
 
 #: themes/default/templates/applications/task_settings.html:18
