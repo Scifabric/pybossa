@@ -244,6 +244,209 @@ def bootstrap_avatars():
                             print "Something failed, this project will use the placehoder."
 
 
+def resize_avatars():
+    """Resize avatars to 512px."""
+    if app.config['UPLOAD_METHOD'] == 'rackspace':
+        import pyrax
+        import tempfile
+        import requests
+        from PIL import Image
+        import time
+        pyrax.set_setting("identity_type", "rackspace")
+        pyrax.set_credentials(username=app.config['RACKSPACE_USERNAME'],
+                              api_key=app.config['RACKSPACE_API_KEY'],
+                              region=app.config['RACKSPACE_REGION'])
+
+        cf = pyrax.cloudfiles
+        user_id_updated_avatars = []
+        if os.path.isfile('user_id_updated_avatars.txt'):
+            t = open('user_id_updated_avatars.txt', 'r')
+            user_id_updated_avatars = t.readlines()
+            t.close()
+        users = User.query.filter(~User.id.in_(user_id_updated_avatars)).all()
+        print "Downloading avatars for %s users" % len(users)
+        dirpath = tempfile.mkdtemp()
+        f = open('user_id_updated_avatars.txt', 'a')
+        for u in users:
+            try:
+                if u.info.get('container'):
+                    cont = cf.get_container(u.info['container'])
+                    if cont.cdn_uri:
+                    	avatar_url = "%s/%s" % (cont.cdn_uri, u.info['avatar'])
+                    else:
+                        cont.make_public()
+                        avatar_url = "%s/%s" % (cont.cdn_uri, u.info['avatar'])
+                    r = requests.get(avatar_url, stream=True)
+                    if r.status_code == 200:
+                        print "Downloading avatar for %s ..." % u.name
+                        #container = "user_%s" % u.id
+                        #try:
+                        #    cf.get_container(container)
+                        #except pyrax.exceptions.NoSuchContainer:
+                        #    cf.create_container(container)
+                        #    cf.make_container_public(container)
+                        prefix = time.time()
+                        filename = "%s_avatar.png" % prefix
+                        with open(os.path.join(dirpath, filename), 'wb') as f:
+                            for chunk in r.iter_content(1024):
+                                f.write(chunk)
+                        # Resize image
+                        im = Image.open(os.path.join(dirpath, filename))
+                        size = 512, 512
+                        tmp = im.resize(size, Image.ANTIALIAS)
+                        scale_down_img = tmp.convert('P', colors=255, palette=Image.ADAPTIVE)
+                        scale_down_img.save(os.path.join(dirpath, filename), format='png')
+
+                        print "New scaled down image created!"
+                        print "%s" % (os.path.join(dirpath, filename))
+                        print "---"
+
+                        chksum = pyrax.utils.get_checksum(os.path.join(dirpath,
+                                                                       filename))
+                        cf.upload_file(cont,
+                                       os.path.join(dirpath, filename),
+                                       obj_name=filename,
+                                       etag=chksum)
+                        old_avatar = u.info['avatar']
+                        # Update new values
+                        u.info['avatar'] = filename
+                        u.info['container'] = "user_%s" % u.id
+                        db.session.commit()
+                        # Save the user.id to avoid downloading it again.
+			f = open('user_id_updated_avatars.txt', 'a')
+                        f.write("%s\n" % u.id)
+                        # delete old avatar
+                        obj = cont.get_object(old_avatar)
+                        obj.delete()
+                        print "Done!"
+                    else:
+                        print "No Avatar found."
+                else:
+                    f.write("%s\n" % u.id)
+                    print "No avatar found"
+            except pyrax.exceptions.NoSuchObject:
+                print "Previous avatar not found, so not deleting it."
+            except:
+                raise
+                print "No Avatar, this user will use the placehoder."
+        f.close()
+
+def resize_project_avatars():
+    """Resize project avatars to 512px."""
+    if app.config['UPLOAD_METHOD'] == 'rackspace':
+        import pyrax
+        import tempfile
+        import requests
+        from PIL import Image
+        import time
+        import pybossa.cache.apps as cached_apps
+        # Disable cache to update the data in it :-)
+        os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
+        pyrax.set_setting("identity_type", "rackspace")
+        pyrax.set_credentials(username=app.config['RACKSPACE_USERNAME'],
+                              api_key=app.config['RACKSPACE_API_KEY'],
+                              region=app.config['RACKSPACE_REGION'])
+
+        cf = pyrax.cloudfiles
+
+        #apps = App.query.all()
+        file_name = 'project_id_updated_thumbnails.txt'
+        project_id_updated_thumbnails = []
+        if os.path.isfile(file_name):
+            f = open(file_name, 'r')
+            project_id_updated_thumbnails = f.readlines()
+            f.close()
+        apps = App.query.filter(~App.id.in_(project_id_updated_thumbnails)).all()
+        #apps = [App.query.get(2042)]
+        print "Downloading avatars for %s projects" % len(apps)
+        dirpath = tempfile.mkdtemp()
+        f = open(file_name, 'a')
+        for a in apps:
+            try:
+                if a.info.get('container'):
+                   cont = cf.get_container(a.info['container'])
+                   avatar_url = "%s/%s" % (cont.cdn_uri, a.info['thumbnail'])
+                   r = requests.get(avatar_url, stream=True)
+                   if r.status_code == 200:
+                       print "Downloading avatar for %s ..." % a.short_name
+                       prefix = time.time()
+                       filename = "app_%s_thumbnail_%s.png" % (a.id, prefix)
+                       with open(os.path.join(dirpath, filename), 'wb') as f:
+                           for chunk in r.iter_content(1024):
+                               f.write(chunk)
+                       # Resize image
+                       im = Image.open(os.path.join(dirpath, filename))
+                       size = 512, 512
+                       tmp = im.resize(size, Image.ANTIALIAS)
+                       scale_down_img = tmp.convert('P', colors=255, palette=Image.ADAPTIVE)
+                       scale_down_img.save(os.path.join(dirpath, filename), format='png')
+
+                       print "New scaled down image created!"
+                       print "%s" % (os.path.join(dirpath, filename))
+                       print "---"
+
+                       chksum = pyrax.utils.get_checksum(os.path.join(dirpath,
+                                                                      filename))
+                       cf.upload_file(cont,
+                                      os.path.join(dirpath, filename),
+                                      obj_name=filename,
+                                      etag=chksum)
+                       old_avatar = a.info['thumbnail']
+                       # Update new values
+                       a.info['thumbnail'] = filename
+                       #a.info['container'] = "user_%s" % u.id
+                       db.session.commit()
+                       f = open(file_name, 'a')
+                       f.write("%s\n" % a.id)
+                       # delete old avatar
+                       obj = cont.get_object(old_avatar)
+                       obj.delete()
+                       print "Done!"
+                       cached_apps.get_app(a.short_name)
+                   else:
+                       print "No Avatar found."
+                else:
+                   print "No avatar found."
+            except pyrax.exceptions.NoSuchObject:
+                print "Previous avatar not found, so not deleting it."
+            except:
+                raise
+                print "No Avatar, this project will use the placehoder."
+        f.close()
+        #    if a.info.get('thumbnail') and not a.info.get('container'):
+        #        print "Working on project: %s ..." % a.short_name
+        #        print "Saving avatar: %s ..." % a.info.get('thumbnail')
+        #        url = urlparse(a.info.get('thumbnail'))
+        #        if url.scheme and url.netloc:
+        #            container = "user_%s" % a.owner_id
+        #            try:
+        #                cf.get_container(container)
+        #            except pyrax.exceptions.NoSuchContainer:
+        #                cf.create_container(container)
+        #                cf.make_container_public(container)
+
+        #            try:
+        #                r = requests.get(a.info.get('thumbnail'), stream=True)
+        #                if r.status_code == 200:
+        #                    prefix = time.time()
+        #                    filename = "app_%s_thumbnail_%i.png" % (a.id, prefix)
+        #                    with open(os.path.join(dirpath, filename), 'wb') as f:
+        #                        for chunk in r.iter_content(1024):
+        #                            f.write(chunk)
+        #                    chksum = pyrax.utils.get_checksum(os.path.join(dirpath,
+        #                                                                   filename))
+        #                    cf.upload_file(container,
+        #                                   os.path.join(dirpath, filename),
+        #                                   obj_name=filename,
+        #                                   etag=chksum)
+        #                    a.info['thumbnail'] = filename
+        #                    a.info['container'] = container
+        #                    db.session.commit()
+        #                    print "Done!"
+        #            except:
+        #                print "Something failed, this project will use the placehoder."
+
+
 
 
 ## ==================================================

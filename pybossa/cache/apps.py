@@ -18,7 +18,6 @@
 
 from sqlalchemy.sql import func, text
 from pybossa.core import db, timeouts, get_session
-from pybossa.model.featured import Featured
 from pybossa.model.app import App
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
@@ -39,30 +38,6 @@ def get_app(short_name):
         session = get_session(db, bind='slave')
         app = session.query(App).filter_by(short_name=short_name).first()
         return app
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
-
-
-@cache(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'),
-       key_prefix="front_page_featured_apps")
-def get_featured_front_page():
-    """Return featured apps"""
-    try:
-        sql = text('''SELECT app.id, app.name, app.short_name, app.info FROM
-                   app, featured where app.id=featured.app_id and app.hidden=0''')
-        session = get_session(db, bind='slave')
-        results = session.execute(sql)
-        featured = []
-        for row in results:
-            app = dict(id=row.id, name=row.name, short_name=row.short_name,
-                       info=dict(json.loads(row.info)),
-                       n_volunteers=n_volunteers(row.id),
-                       n_completed_tasks=n_completed_tasks(row.id))
-            featured.append(app)
-        return featured
     except: # pragma: no cover
         session.rollback()
         raise
@@ -287,7 +262,7 @@ def last_activity(app_id):
 def _n_featured():
     """Return number of featured apps"""
     try:
-        sql = text('''SELECT COUNT(*) FROM featured;''')
+        sql = text('''SELECT COUNT(*) FROM app WHERE featured=true;''')
         session = get_session(db, bind='slave')
         results = session.execute(sql)
         for row in results:
@@ -302,13 +277,13 @@ def _n_featured():
 
 # This function does not change too much, so cache it for a longer time
 @memoize(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'))
-def get_featured(category, page=1, per_page=5):
+def get_featured(category=None, page=1, per_page=5):
     """Return a list of featured apps with a pagination"""
     try:
         sql = text('''SELECT app.id, app.name, app.short_name, app.info, app.created,
                    app.description,
-                   "user".fullname AS owner FROM app, featured, "user"
-                   WHERE app.id=featured.app_id AND app.hidden=0
+                   "user".fullname AS owner FROM app, "user"
+                   WHERE app.featured=true AND app.hidden=0
                    AND "user".id=app.owner_id GROUP BY app.id, "user".id
                    OFFSET(:offset) LIMIT(:limit);
                    ''')
@@ -320,11 +295,12 @@ def get_featured(category, page=1, per_page=5):
         for row in results:
             app = dict(id=row.id, name=row.name, short_name=row.short_name,
                        created=row.created, description=row.description,
-                       overall_progress=overall_progress(row.id),
                        last_activity=pretty_date(last_activity(row.id)),
                        last_activity_raw=last_activity(row.id),
                        owner=row.owner,
-                       featured=row.id,
+                       overall_progress=overall_progress(row.id),
+                       n_tasks=n_tasks(row.id),
+                       n_volunteers=n_volunteers(row.id),
                        info=dict(json.loads(row.info)))
             apps.append(app)
         return apps
@@ -384,7 +360,7 @@ def _n_draft():
 
 
 @memoize(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'))
-def get_draft(category, page=1, per_page=5):
+def get_draft(category=None, page=1, per_page=5):
     """Return list of draft projects"""
     try:
         sql = text('''SELECT app.id, app.name, app.short_name, app.created,
@@ -408,6 +384,8 @@ def get_draft(category, page=1, per_page=5):
                        last_activity=pretty_date(last_activity(row.id)),
                        last_activity_raw=last_activity(row.id),
                        overall_progress=overall_progress(row.id),
+                       n_tasks=n_tasks(row.id),
+                       n_volunteers=n_volunteers(row.id),
                        info=dict(json.loads(row.info)))
             apps.append(app)
         return apps
@@ -458,18 +436,16 @@ def get(category, page=1, per_page=5):
        with a pagination for a given category"""
     try:
         sql = text('''SELECT app.id, app.name, app.short_name, app.description,
-                   app.info, app.created, app.category_id, "user".fullname AS owner,
-                   featured.app_id as featured
+                   app.info, app.created, app.category_id, app.featured, "user".fullname AS owner
                    FROM "user", task, app
                    LEFT OUTER JOIN category ON app.category_id=category.id
-                   LEFT OUTER JOIN featured ON app.id=featured.app_id
                    WHERE
                    category.short_name=:category
                    AND app.hidden=0
                    AND "user".id=app.owner_id
                    AND app.info LIKE('%task_presenter%')
                    AND task.app_id=app.id
-                   GROUP BY app.id, "user".id, featured.app_id ORDER BY app.name
+                   GROUP BY app.id, "user".id ORDER BY app.name
                    OFFSET :offset
                    LIMIT :limit;''')
 
@@ -487,6 +463,8 @@ def get(category, page=1, per_page=5):
                        last_activity=pretty_date(last_activity(row.id)),
                        last_activity_raw=last_activity(row.id),
                        overall_progress=overall_progress(row.id),
+                       n_tasks=n_tasks(row.id),
+                       n_volunteers=n_volunteers(row.id),
                        info=dict(json.loads(row.info)))
             apps.append(app)
         return apps

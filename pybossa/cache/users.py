@@ -20,6 +20,7 @@ from pybossa.core import db, timeouts, get_session
 from pybossa.cache import cache, memoize, delete_memoized
 from pybossa.util import pretty_date
 from pybossa.model.user import User
+from pybossa.cache.apps import overall_progress, n_tasks, n_volunteers
 import json
 
 
@@ -195,19 +196,24 @@ def rank_and_score(user_id):
 def apps_contributed(user_id):
     try:
         sql = text('''
-                   SELECT app.name, app.short_name, app.info,
-                   COUNT(*) as n_task_runs
-                   FROM task_run JOIN app ON
-                   (task_run.app_id=app.id) WHERE task_run.user_id=:user_id
-                   GROUP BY app.name, app.short_name, app.info
-                   ORDER BY n_task_runs DESC;''')
-
+                   WITH apps_contributed as 
+                        (SELECT DISTINCT(app_id) FROM task_run 
+                         WHERE user_id=:user_id)
+                   SELECT app.id, app.name, app.short_name, app.owner_id,
+                   app.description, app.info FROM app, apps_contributed
+                   WHERE app.id=apps_contributed.app_id ORDER BY app.name DESC;
+                   ''')
         session = get_session(db, bind='slave')
         results = session.execute(sql, dict(user_id=user_id))
         apps_contributed = []
         for row in results:
-            app = dict(name=row.name, short_name=row.short_name,
-                       info=json.loads(row.info), n_task_runs=row.n_task_runs)
+            app = dict(id=row.id, name=row.name, short_name=row.short_name,
+                       owner_id=row.owner_id,
+                       description=row.description,
+                       overall_progress=overall_progress(row.id),
+                       n_tasks=n_tasks(row.id),
+                       n_volunteers=n_volunteers(row.id),
+                       info=json.loads(row.info))
             apps_contributed.append(app)
         return apps_contributed
     except: # pragma: no cover
@@ -240,6 +246,9 @@ def published_apps(user_id):
             app = dict(id=row.id, name=row.name, short_name=row.short_name,
                        owner_id=row.owner_id,
                        description=row.description,
+                       overall_progress=overall_progress(row.id),
+                       n_tasks=n_tasks(row.id),
+                       n_volunteers=n_volunteers(row.id),
                        info=json.loads(row.info))
             apps_published.append(app)
         return apps_published
@@ -274,6 +283,9 @@ def draft_apps(user_id):
             app = dict(id=row.id, name=row.name, short_name=row.short_name,
                        owner_id=row.owner_id,
                        description=row.description,
+                       overall_progress=overall_progress(row.id),
+                       n_tasks=n_tasks(row.id),
+                       n_volunteers=n_volunteers(row.id),
                        info=json.loads(row.info))
             apps_draft.append(app)
         return apps_draft
@@ -308,6 +320,9 @@ def hidden_apps(user_id):
             app = dict(id=row.id, name=row.name, short_name=row.short_name,
                        owner_id=row.owner_id,
                        description=row.description,
+                       overall_progress=overall_progress(row.id),
+                       n_tasks=n_tasks(row.id),
+                       n_volunteers=n_volunteers(row.id),
                        info=json.loads(row.info))
             apps_published.append(app)
         return apps_published

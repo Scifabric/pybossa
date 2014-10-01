@@ -35,12 +35,12 @@ class TestModelApp(Test):
                   description='desc',
                   owner_id=None)
 
-        # App.owner_id shoult not be nullable
+        # App.owner_id should not be nullable
         db.session.add(app)
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
 
-        # App.name shoult not be nullable
+        # App.name should not be nullable
         user = User(email_addr="john.doe@example.com",
                     name="johndoe",
                     fullname="John Doe",
@@ -59,7 +59,7 @@ class TestModelApp(Test):
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
 
-        # App.short_name shoult not be nullable
+        # App.short_name should not be nullable
         app.name = "Project"
         app.short_name = None
         db.session.add(app)
@@ -71,7 +71,7 @@ class TestModelApp(Test):
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
 
-        # App.description shoult not be nullable
+        # App.description should not be nullable
         db.session.add(app)
         app.short_name = "project"
         app.description = None
@@ -79,6 +79,13 @@ class TestModelApp(Test):
         db.session.rollback()
 
         app.description = ''
+        db.session.add(app)
+        assert_raises(IntegrityError, db.session.commit)
+        db.session.rollback()
+
+        # App.featured should not be nullable
+        app.description = 'description'
+        app.featured = None
         db.session.add(app)
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()

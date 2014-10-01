@@ -37,7 +37,6 @@ from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
-from pybossa.model.featured import Featured
 from factories import AppFactory, CategoryFactory, TaskFactory, TaskRunFactory
 
 
@@ -516,9 +515,9 @@ class TestWeb(web.Helper):
         with self.flask_app.app_context():
             self.create()
 
-            f = Featured()
-            f.app_id = 1
-            db.session.add(f)
+            app = db.session.query(App).get(1)
+            app.featured = True
+            db.session.add(app)
             db.session.commit()
 
             res = self.app.get('/app', follow_redirects=True)
@@ -1416,7 +1415,6 @@ class TestWeb(web.Helper):
 
         res = self.app.get('account/johndoe', follow_redirects=True)
         assert "Sample Project" in res.data, res.data
-        assert "You have contributed to <strong>10</strong> tasks" in res.data, res.data
         assert "Contribute!" in res.data, "There should be a Contribute button"
 
     @with_context

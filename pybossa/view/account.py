@@ -45,6 +45,7 @@ from pybossa.core import db, signer, mail, uploader, sentinel, get_session
 from pybossa.util import Pagination, get_user_id_or_ip, pretty_date
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
+from pybossa.cache import apps as cached_apps
 from pybossa.auth import require
 
 from pybossa.forms.account_view_forms import *
@@ -263,15 +264,15 @@ def _show_own_profile(user):
     user.rank = rank_and_score['rank']
     user.score = rank_and_score['score']
     user.total = cached_users.get_total_users()
-    apps_contrib = cached_users.apps_contributed(user.id)
+    apps_contributed = cached_users.apps_contributed(user.id)
     apps_published, apps_draft = _get_user_apps(user.id)
     apps_published.extend(cached_users.hidden_apps(user.id))
 
     return render_template('account/profile.html', title=gettext("Profile"),
-                          apps_contrib=apps_contrib,
+                          apps_contrib=apps_contributed,
                           apps_published=apps_published,
-                          apps_draft=apps_draft)#,
-                          #user=user)
+                          apps_draft=apps_draft,
+                          user=cached_users.get_user_summary(user.name))
 
 
 @blueprint.route('/<name>/applications')

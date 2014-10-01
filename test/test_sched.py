@@ -25,6 +25,8 @@ from pybossa.model.task import Task
 from pybossa.model.app import App
 from pybossa.model.user import User
 from pybossa.model.task_run import TaskRun
+from pybossa.model.category import Category
+from factories import TaskFactory, AppFactory, TaskRunFactory, AnonymousTaskRunFactory, UserFactory
 import pybossa
 
 
@@ -37,46 +39,36 @@ class TestSched(sched.Helper):
     @with_context
     def test_anonymous_01_newtask(self):
         """ Test SCHED newtask returns a Task for the Anonymous User"""
-        # Del previous TaskRuns
-        self.create()
-        self.del_task_runs()
+        project = AppFactory.create()
+        TaskFactory.create(app=project, info='hola')
 
-        res = self.app.get('api/app/1/newtask')
+        res = self.app.get('api/app/%s/newtask' %project.id)
         print res.data
         data = json.loads(res.data)
-        assert data['info'], data
+        assert data['info'] == 'hola', data
 
     @with_context
     def test_anonymous_02_gets_different_tasks(self):
         """ Test SCHED newtask returns N different Tasks for the Anonymous User"""
-        # Del previous TaskRuns
-        self.del_task_runs()
-
         assigned_tasks = []
         # Get a Task until scheduler returns None
-        res = self.app.get('api/app/1/newtask')
+        project = AppFactory.create()
+        tasks = TaskFactory.create_batch(3, app=project)
+        res = self.app.get('api/app/%s/newtask' %project.id)
         data = json.loads(res.data)
         while data.get('info') is not None:
-            # Check that we have received a Task
-            assert data.get('info'),  data
-
             # Save the assigned task
             assigned_tasks.append(data)
 
+            task = db.session.query(Task).get(data['id'])
             # Submit an Answer for the assigned task
-            tr = TaskRun(app_id=data['app_id'], task_id=data['id'],
-                         user_ip="127.0.0.1",
-                         info={'answer': 'Yes'})
-            db.session.add(tr)
-            db.session.commit()
-            res = self.app.get('api/app/1/newtask')
+            tr = AnonymousTaskRunFactory.create(app=project, task=task)
+            res = self.app.get('api/app/%s/newtask' %project.id)
             data = json.loads(res.data)
 
         # Check if we received the same number of tasks that the available ones
-        tasks = db.session.query(Task).filter_by(app_id=1).all()
         assert len(assigned_tasks) == len(tasks), len(assigned_tasks)
         # Check if all the assigned Task.id are equal to the available ones
-        tasks = db.session.query(Task).filter_by(app_id=1).all()
         err_msg = "Assigned Task not found in DB Tasks"
         for at in assigned_tasks:
             assert self.is_task(at['id'], tasks), err_msg
@@ -88,9 +80,6 @@ class TestSched(sched.Helper):
     @with_context
     def test_anonymous_03_respects_limit_tasks(self):
         """ Test SCHED newtask respects the limit of 30 TaskRuns per Task"""
-        # Del previous TaskRuns
-        self.del_task_runs()
-
         assigned_tasks = []
         # Get Task until scheduler returns None
         for i in range(10):
@@ -382,27 +371,19 @@ class TestSched(sched.Helper):
         assert task1.get('priority_0') == 1, err_msg
 
     def _add_task_run(self, app, task, user=None):
-        tr = TaskRun(app=app, task=task, user=user)
-        db.session.add(tr)
-        db.session.commit()
+        tr = AnonymousTaskRunFactory.create(app=app, task=task)
 
     @with_context
     def test_no_more_tasks(self):
         """Test that a users gets always tasks"""
-        self.create()
-        app = App(short_name='egil', name='egil',
+        owner = UserFactory.create()
+        app = AppFactory.create(owner=owner, short_name='egil', name='egil',
                   description='egil')
-        owner = db.session.query(User).get(1)
-        app.owner_id = owner.id
-        db.session.add(app)
-        db.session.commit()
 
         app_id = app.id
 
         for i in range(20):
-            task = Task(app=app, info={'i': i}, n_answers=10)
-            db.session.add(task)
-            db.session.commit()
+            task = TaskFactory.create(app=app, info={'i': i}, n_answers=10)
 
         tasks = db.session.query(Task).filter_by(app_id=app.id).limit(11).all()
         for t in tasks[0:10]:
@@ -466,8 +447,9 @@ class TestGetBreadthFirst(Test):
         else:
             short_name = 'xyznouser'
 
+        category = db.session.query(Category).get(1)
         app = App(short_name=short_name, name=short_name,
-              description=short_name)
+              description=short_name, category=category)
         owner = db.session.query(User).get(1)
 
         app.owner = owner

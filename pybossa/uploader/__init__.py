@@ -32,6 +32,7 @@ class Uploader(object):
     """Generic uploader class."""
 
     allowed_extensions = set(['js', 'css', 'png', 'jpg', 'jpeg', 'gif', 'zip'])
+    size = 512, 512
 
     def __init__(self, app=None):
         """Init method to create a generic uploader."""
@@ -72,7 +73,10 @@ class Uploader(object):
             m = BytesIO()
             im = Image.open(file)
             target = im.crop(coordinates)
-            target.save(m, format=extension)
+            target = target.resize(self.size, Image.ANTIALIAS)
+            # Scale down the image to Indexed mode
+            scale_down_img = target.convert('P', colors=255, palette=Image.ADAPTIVE)
+            scale_down_img.save(m, format=extension)
             file.stream = m
             file.stream.seek(0)
             return True

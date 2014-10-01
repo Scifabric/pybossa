@@ -55,6 +55,7 @@ The system will download a Virtual Machine, install all the required libraries
 for PyBossa and set up the system for you inside the Virtual Machine.
 
 .. note::
+    If you use Windows be sure to `turn off autocrlf in git config <https://help.github.com/articles/dealing-with-line-endings#platform-windows>`_.
     If you are using Windows XP and have issues running 'vagrant up', please
     check out this `link <http://techtalkies.blogspot.com.es/2014/08/installing-and-testing-out-your-own.html>`_.
 

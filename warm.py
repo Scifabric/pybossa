@@ -56,13 +56,11 @@ def warm_cache():
                 apps_cached.append(id)
 
         # Cache top projects
-        cached_apps.get_featured_front_page()
         apps = cached_apps.get_top()
         for a in apps:
             warm_app(a['id'], a['short_name'])
         for page in pages:
-            apps = cached_apps.get_featured('featured',
-                                            page,
+            apps = cached_apps.get_featured('featured', page,
                                             app.config['APPS_PER_PAGE'])
             for a in apps:
                 warm_app(a['id'], a['short_name'])
@@ -77,6 +75,7 @@ def warm_cache():
                  for a in apps:
                      warm_app(a['id'], a['short_name'])
         # Users
+        cached_users.get_leaderboard(app.config['LEADERBOARD'], 'anonymous')
         cached_users.get_top()
 
 
