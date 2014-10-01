@@ -109,7 +109,8 @@ class TestUsersCache(Test):
         app_contributed = AppFactory.create()
         task = TaskFactory.create(app=app_contributed)
         TaskRunFactory.create(task=task, user=user)
-        fields = ('name', 'short_name', 'info', 'n_task_runs')
+        fields = ('id', 'name', 'short_name', 'owner_id', 'description',
+                 'overall_progress', 'n_tasks', 'n_volunteers', 'info')
 
         apps_contributed = cached_users.apps_contributed(user.id)
 
@@ -161,7 +162,8 @@ class TestUsersCache(Test):
         user = UserFactory.create()
         published_project = AppFactory.create(owner=user)
         task = TaskFactory.create(app=published_project)
-        fields = ('id', 'name', 'short_name', 'owner_id', 'description', 'info')
+        fields = ('id', 'name', 'short_name', 'owner_id', 'description',
+                 'overall_progress', 'n_tasks', 'n_volunteers', 'info')
 
         apps_published = cached_users.published_apps(user.id)
 
@@ -220,7 +222,8 @@ class TestUsersCache(Test):
         the required fields"""
         user = UserFactory.create()
         draft_project = AppFactory.create(owner=user, info={})
-        fields = ('id', 'name', 'short_name', 'owner_id', 'description', 'info')
+        fields = ('id', 'name', 'short_name', 'owner_id', 'description',
+                 'overall_progress', 'n_tasks', 'n_volunteers', 'info')
 
         draft_project = cached_users.draft_apps(user.id)
 
@@ -270,7 +273,8 @@ class TestUsersCache(Test):
         user = UserFactory.create()
         hidden_project = AppFactory.create(owner=user, hidden=1)
         TaskFactory.create(app=hidden_project)
-        fields = ('id', 'name', 'short_name', 'owner_id', 'description', 'info')
+        fields = ('id', 'name', 'short_name', 'owner_id', 'description',
+                 'overall_progress', 'n_tasks', 'n_volunteers', 'info')
 
         hidden_projects = cached_users.hidden_apps(user.id)
 

@@ -19,7 +19,7 @@
 from default import Test, db, with_context
 from pybossa.cache import apps as cached_apps
 from factories import UserFactory, AppFactory, TaskFactory, \
-    FeaturedFactory, TaskRunFactory, AnonymousTaskRunFactory
+    TaskRunFactory, AnonymousTaskRunFactory
 from mock import patch
 
 
@@ -52,51 +52,160 @@ class TestAppsCache(Test):
         return app
 
 
-    def test_get_featured_front_page(self):
-        """Test CACHE PROJECTS get_featured_front_page returns featured projects"""
+    def test_get_featured(self):
+        """Test CACHE PROJECTS get_featured returns featured projects"""
 
-        FeaturedFactory.create()
+        AppFactory.create(featured=True)
 
-        featured = cached_apps.get_featured_front_page()
+        featured = cached_apps.get_featured()
 
         assert len(featured) is 1, featured
 
 
-    def test_get_featured_front_page_only_returns_featured(self):
-        """Test CACHE PROJECTS get_featured_front_page returns only featured projects"""
+    def test_get_featured_only_returns_featured(self):
+        """Test CACHE PROJECTS get_featured returns only featured projects"""
 
-        featured_app = AppFactory.create()
+        featured_app = AppFactory.create(featured=True)
         non_featured_app = AppFactory.create()
-        FeaturedFactory.create(app=featured_app)
 
-        featured = cached_apps.get_featured_front_page()
+        featured = cached_apps.get_featured()
 
         assert len(featured) is 1, featured
 
 
-    def test_get_featured_front_page_not_returns_hidden_apps(self):
-        """Test CACHE PROJECTS get_featured_front_page does not return hidden projects"""
+    def test_get_featured_not_returns_hidden_apps(self):
+        """Test CACHE PROJECTS get_featured does not return hidden projects"""
 
-        featured_app = AppFactory.create(hidden=1)
-        FeaturedFactory.create(app=featured_app)
+        featured_app = AppFactory.create(hidden=1, featured=True)
 
-        featured = cached_apps.get_featured_front_page()
+        featured = cached_apps.get_featured()
 
         assert len(featured) is 0, featured
 
 
-    def test_get_featured_front_page_returns_required_fields(self):
-        """Test CACHE PROJECTS get_featured_front_page returns the required info
+    def test_get_featured_returns_required_fields(self):
+        """Test CACHE PROJECTS get_featured returns the required info
         about each featured project"""
 
-        fields = ('id', 'name', 'short_name', 'info', 'n_volunteers', 'n_completed_tasks')
+        fields = ('id', 'name', 'short_name', 'info', 'created', 'description',
+                  'last_activity', 'last_activity_raw', 'overall_progress',
+                   'n_tasks', 'n_volunteers', 'owner', 'info')
 
-        FeaturedFactory.create()
+        AppFactory.create(featured=True)
 
-        featured = cached_apps.get_featured_front_page()[0]
+        featured = cached_apps.get_featured()[0]
 
         for field in fields:
             assert featured.has_key(field), "%s not in app info" % field
+
+
+    def test_get_category(self):
+        """Test CACHE PROJECTS get returns projects from given category"""
+
+        project = self.create_app_with_tasks(1, 0)
+
+        projects = cached_apps.get(project.category.short_name)
+
+        assert len(projects) is 1, projects
+
+
+    def test_get_only_returns_category_projects(self):
+        """Test CACHE PROJECTS get returns only projects from required category"""
+
+        project = self.create_app_with_tasks(1, 0)
+        #create a non published project too
+        AppFactory.create()
+
+        projects = cached_apps.get(project.category.short_name)
+
+        assert len(projects) is 1, projects
+
+
+    def test_get_not_returns_hidden_apps(self):
+        """Test CACHE PROJECTS get does not return hidden projects"""
+
+        project = self.create_app_with_contributors(1, 0, hidden=1)
+
+        projects = cached_apps.get(project.category.short_name)
+
+        assert len(projects) is 0, projects
+
+
+    def test_get_not_returns_draft_apps(self):
+        """Test CACHE PROJECTS get does not return draft (non-published) projects"""
+
+        project = self.create_app_with_contributors(1, 0)
+        # Create a project wothout presenter
+        AppFactory.create(info={}, category=project.category)
+
+        projects = cached_apps.get(project.category.short_name)
+
+        assert len(projects) is 1, projects
+
+
+    def test_get_returns_required_fields(self):
+        """Test CACHE PROJECTS get returns the required info
+        about each project"""
+
+        fields = ('id', 'name', 'short_name', 'info', 'created', 'description',
+                  'last_activity', 'last_activity_raw', 'overall_progress',
+                   'n_tasks', 'n_volunteers', 'owner', 'info')
+
+        project = self.create_app_with_tasks(1, 0)
+
+        retrieved_project = cached_apps.get(project.category.short_name)[0]
+
+        for field in fields:
+            assert retrieved_project.has_key(field), "%s not in app info" % field
+
+
+    def test_get_draft(self):
+        """Test CACHE PROJECTS get_draft returns draft_projects"""
+        # Here, we are suposing that a project is draft iff has no presenter AND has no tasks
+
+        AppFactory.create(info={})
+
+        drafts = cached_apps.get_draft()
+
+        assert len(drafts) is 1, drafts
+
+
+    def test_get_draft_not_returns_hidden_apps(self):
+        """Test CACHE PROJECTS get_draft does not return hidden projects"""
+
+        AppFactory.create(info={}, hidden=1)
+
+        drafts = cached_apps.get_draft()
+
+        assert len(drafts) is 0, drafts
+
+
+    def test_get_draft_not_returns_published_apps(self):
+        """Test CACHE PROJECTS get_draft does not return projects with either tasks or a presenter (REVIEW DEFINITION OF A DRAFT PROJECT REQUIRED)"""
+
+        app_no_presenter = AppFactory.create(info={})
+        TaskFactory.create(app=app_no_presenter)
+        app_no_task = AppFactory.create()
+
+        drafts = cached_apps.get_draft()
+
+        assert len(drafts) is 0, drafts
+
+
+    def test_get_draft_returns_required_fields(self):
+        """Test CACHE PROJECTS get_draft returns the required info
+        about each project"""
+
+        fields = ('id', 'name', 'short_name', 'info', 'created', 'description',
+                  'last_activity', 'last_activity_raw', 'overall_progress',
+                   'n_tasks', 'n_volunteers', 'owner', 'info')
+
+        AppFactory.create(info={})
+
+        draft = cached_apps.get_draft()[0]
+
+        for field in fields:
+            assert draft.has_key(field), "%s not in app info" % field
 
 
     def test_get_top_returns_apps_with_most_taskruns(self):
@@ -205,8 +314,6 @@ class TestAppsCache(Test):
 
         app = self.create_app_with_contributors(anonymous=0, registered=2, two_tasks=True)
         registered_volunteers = cached_apps.n_registered_volunteers(app.id)
-        for tr in app.task_runs:
-            print tr.user
 
         err_msg = "Volunteers is %s, it should be 2" % registered_volunteers
         assert registered_volunteers == 2, err_msg
@@ -341,7 +448,7 @@ class TestAppsCache(Test):
 
     def test_n_featured_returns_featured(self):
         """Test CACHE PROJECTS _n_featured returns number of featured projects"""
-        FeaturedFactory.create()
+        AppFactory.create(featured=True)
 
         number_of_featured = cached_apps._n_featured()
 
