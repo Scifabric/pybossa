@@ -1213,7 +1213,7 @@ msgstr "Configuración de las Tareas"
 
 #: themes/default/templates/applications/settings.html:21
 msgid "Write a blog post"
-msgstr "Escribie un artículo"
+msgstr "Escribe un artículo"
 
 #: themes/default/templates/applications/stats.html:39
 msgid "Important"
