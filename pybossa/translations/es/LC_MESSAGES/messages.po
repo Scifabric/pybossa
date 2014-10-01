@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: daniel@shuttleworthfoundation.org\n"
-"POT-Creation-Date: 2014-10-01 18:27+0200\n"
+"POT-Creation-Date: 2014-10-01 18:31+0200\n"
 "PO-Revision-Date: 2013-03-26 18:24+0100\n"
 "Last-Translator: Daniel Lombraña González "
 "<daniel@shuttleworthfoundation.org>\n"
@@ -898,6 +898,7 @@ msgid "Tasks"
 msgstr "Tareas"
 
 #: themes/default/templates/applications/_helpers.html:39
+#: themes/default/templates/applications/stats.html:32
 #: themes/default/templates/home/_about.html:21
 msgid "Statistics"
 msgstr "Estadísticas"

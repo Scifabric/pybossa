@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-01 18:27+0200\n"
+"POT-Creation-Date: 2014-10-01 18:31+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -891,6 +891,7 @@ msgid "Tasks"
 msgstr ""
 
 #: themes/default/templates/applications/_helpers.html:39
+#: themes/default/templates/applications/stats.html:32
 #: themes/default/templates/home/_about.html:21
 msgid "Statistics"
 msgstr ""
