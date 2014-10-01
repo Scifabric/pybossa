@@ -331,7 +331,7 @@ msgstr "Comunidad"
 #: themes/default/templates/stats/global.html:89 view/account.py:300
 #: view/applications.py:155
 msgid "Projects"
-msgstr "Nombre del Proyecto"
+msgstr "Proyectos"
 
 #: themes/default/templates/_navbar.html:14
 #: themes/default/templates/applications/new_blogpost.html:21
@@ -805,7 +805,7 @@ msgstr ""
 #: themes/default/templates/admin/index.html:15
 #: themes/default/templates/applications/index.html:33
 msgid "Featured Projects"
-msgstr "Organizar las aplicaciones de portada"
+msgstr "Proyectos Destacados"
 
 #: themes/default/templates/admin/index.html:16
 msgid "Show projects on the front page"
@@ -921,12 +921,12 @@ msgstr "ID"
 #: themes/default/templates/applications/_helpers.html:58
 #: themes/default/templates/applications/_helpers.html:126
 msgid "Creation Date"
-msgstr "Creada"
+msgstr "Creado"
 
 #: themes/default/templates/applications/_helpers.html:59
 #: themes/default/templates/applications/_helpers.html:128
 msgid "Last Activity"
-msgstr "Actualizada"
+msgstr "Actualizado"
 
 #: themes/default/templates/applications/_helpers.html:60
 #: themes/default/templates/applications/_helpers.html:131
@@ -958,7 +958,7 @@ msgstr "En Portada!"
 #: themes/default/templates/applications/_helpers.html:133
 #: themes/default/templates/applications/_helpers.html:135
 msgid "Created by"
-msgstr "Creada por"
+msgstr "Creado por"
 
 #: themes/default/templates/applications/_helpers.html:133
 msgid "Me"
@@ -1384,7 +1384,7 @@ msgstr "Exportar tareas"
 #: themes/default/templates/applications/tasks.html:26
 #: themes/default/templates/applications/tasks.html:58
 msgid "Export tasks to JSON, CSV or a CKAN server"
-msgstr "Exportar las tareas a JSOn, CSV o un servidor CKAN"
+msgstr "Exportar en JSON, CSV o un servidor CKAN"
 
 #: themes/default/templates/applications/tasks.html:27
 #: themes/default/templates/applications/tasks.html:59 view/applications.py:853
