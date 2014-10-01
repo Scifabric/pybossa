@@ -1452,7 +1452,7 @@ msgstr "Editor"
 
 #: themes/default/templates/applications/tasks.html:38
 msgid "Configure the task scheduler, redundancy, etc."
-msgstr "Configure el administrador de tareas, redundancia, etc."
+msgstr "Configure el gestor de tareas, redundancia, etc."
 
 #: themes/default/templates/applications/tasks.html:44
 #: themes/default/templates/applications/tasks.html:47
