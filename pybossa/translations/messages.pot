@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-05-29 00:45+0200\n"
+"POT-Creation-Date: 2014-10-01 16:55+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,35 +17,316 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 1.3\n"
 
-#: core.py:303
+#: core.py:310
 msgid ""
 "Please update your e-mail address in your profile page, right now it is "
 "empty!"
 msgstr ""
 
-#: validator.py:33
+#: importers.py:70
+msgid "The file you uploaded has two headers with the same name."
+msgstr ""
+
+#: importers.py:92
+msgid "Oops! That file doesn't look like the right file."
+msgstr ""
+
+#: forms/forms.py:36 forms/forms.py:305
+#: themes/default/templates/stats/index.html:18
+msgid "Name"
+msgstr ""
+
+#: forms/forms.py:39
+msgid "Name is already taken."
+msgstr ""
+
+#: forms/forms.py:40
+msgid "Short Name"
+msgstr ""
+
+#: forms/forms.py:45
+msgid "Short Name is already taken."
+msgstr ""
+
+#: forms/forms.py:47 forms/forms.py:58
+msgid "Long Description"
+msgstr ""
+
+#: forms/forms.py:53 forms/forms.py:309
+#: themes/default/templates/applications/_helpers.html:57
+#: themes/default/templates/applications/_helpers.html:125
+msgid "Description"
+msgstr ""
+
+#: forms/forms.py:55
+msgid "You must provide a description."
+msgstr ""
+
+#: forms/forms.py:60
+msgid "Allow Anonymous Contributors"
+msgstr ""
+
+#: forms/forms.py:61 themes/default/templates/applications/_helpers.html:64
+msgid "Yes"
+msgstr ""
+
+#: forms/forms.py:62 themes/default/templates/applications/_helpers.html:66
+msgid "No"
+msgstr ""
+
+#: forms/forms.py:63
+msgid "Category"
+msgstr ""
+
+#: forms/forms.py:64
+msgid "Hide?"
+msgstr ""
+
+#: forms/forms.py:65
+msgid "Password (leave blank for no password)"
+msgstr ""
+
+#: forms/forms.py:74
+#: themes/default/templates/applications/task_settings.html:36
+#: view/applications.py:1196
+msgid "Redundancy"
+msgstr ""
+
+#: forms/forms.py:78
+msgid ""
+"Number of answers should be a"
+"                                                        value between 1 "
+"and 1,000"
+msgstr ""
+
+#: forms/forms.py:83
+msgid "Task IDs"
+msgstr ""
+
+#: forms/forms.py:87
+#: themes/default/templates/applications/task_settings.html:24
+msgid "Priority"
+msgstr ""
+
+#: forms/forms.py:90
+msgid ""
+"Priority should be a"
+"                                                        value between 0.0"
+" and 1.0"
+msgstr ""
+
+#: forms/forms.py:95
+#: themes/default/templates/applications/task_scheduler.html:14
+#: themes/default/templates/applications/task_settings.html:17
+#: view/applications.py:1248
+msgid "Task Scheduler"
+msgstr ""
+
+#: forms/forms.py:96
+msgid "Default"
+msgstr ""
+
+#: forms/forms.py:97
+msgid "Breadth First"
+msgstr ""
+
+#: forms/forms.py:98
+msgid "Depth First"
+msgstr ""
+
+#: forms/forms.py:99
+msgid "Random"
+msgstr ""
+
+#: forms/forms.py:104
+msgid "Title"
+msgstr ""
+
+#: forms/forms.py:105
+msgid "You must enter a title for the post."
+msgstr ""
+
+#: forms/forms.py:107
+msgid "Body"
+msgstr ""
+
+#: forms/forms.py:108
+msgid "You must enter some text for the post."
+msgstr ""
+
+#: forms/forms.py:113 forms/forms.py:171
+msgid "Password"
+msgstr ""
+
+#: forms/forms.py:114
+msgid "You must enter a password"
+msgstr ""
+
+#: forms/forms.py:120 forms/forms.py:130
+msgid "You must provide a URL"
+msgstr ""
+
+#: forms/forms.py:121 forms/forms.py:131
+msgid "Oops! That's not a valid URL. You must provide a valid URL"
+msgstr ""
+
+#: forms/forms.py:123 forms/forms.py:133
+msgid "URL"
+msgstr ""
+
+#: forms/forms.py:140
+msgid "You must provide an EpiCollect Plus project name"
+msgstr ""
+
+#: forms/forms.py:142
+msgid "You must provide a Form name for the project"
+msgstr ""
+
+#: forms/forms.py:144
+msgid "Project Name"
+msgstr ""
+
+#: forms/forms.py:146
+msgid "Form name"
+msgstr ""
+
+#: forms/forms.py:167 themes/default/templates/account/_helpers.html:41
+msgid "E-mail"
+msgstr ""
+
+#: forms/forms.py:169
+msgid "The e-mail is required"
+msgstr ""
+
+#: forms/forms.py:173
+msgid "You must provide a password"
+msgstr ""
+
+#: forms/forms.py:181 forms/forms.py:219
+msgid "Full name must be between 3 and 35 characters long"
+msgstr ""
+
+#: forms/forms.py:183 forms/forms.py:221
+msgid "Full name"
+msgstr ""
+
+#: forms/forms.py:186 forms/forms.py:224
+msgid "User name must be between 3 and 35 characters long"
+msgstr ""
+
+#: forms/forms.py:188 forms/forms.py:226
+msgid "The user name is already taken"
+msgstr ""
+
+#: forms/forms.py:189
+msgid "User name"
+msgstr ""
+
+#: forms/forms.py:195 forms/forms.py:233 forms/forms.py:291
+msgid "Email must be between 3 and 35 characters long"
+msgstr ""
+
+#: forms/forms.py:196 forms/forms.py:234
+msgid "Email is already taken"
+msgstr ""
+
+#: forms/forms.py:197 forms/forms.py:235 forms/forms.py:292
+msgid "Email Address"
+msgstr ""
+
+#: forms/forms.py:204 forms/forms.py:266 forms/forms.py:278
+msgid "Password cannot be empty"
+msgstr ""
+
+#: forms/forms.py:205 forms/forms.py:267 forms/forms.py:279
+msgid "Passwords must match"
+msgstr ""
+
+#: forms/forms.py:206 forms/forms.py:280
+msgid "New Password"
+msgstr ""
+
+#: forms/forms.py:210 forms/forms.py:283
+msgid "Repeat Password"
+msgstr ""
+
+#: forms/forms.py:227
+msgid "Username"
+msgstr ""
+
+#: forms/forms.py:242
+msgid "Language"
+msgstr ""
+
+#: forms/forms.py:243
+msgid "CKAN API Key"
+msgstr ""
+
+#: forms/forms.py:244
+msgid "Privacy Mode"
+msgstr ""
+
+#: forms/forms.py:251
+msgid "English"
+msgstr ""
+
+#: forms/forms.py:253
+msgid "Spanish"
+msgstr ""
+
+#: forms/forms.py:255
+msgid "French"
+msgstr ""
+
+#: forms/forms.py:264
+msgid "Current password"
+msgstr ""
+
+#: forms/forms.py:268
+msgid "New password"
+msgstr ""
+
+#: forms/forms.py:271
+msgid "Repeat password"
+msgstr ""
+
+#: forms/forms.py:300 themes/default/templates/account/settings.html:12
+#: themes/default/templates/applications/stats.html:297
+#: themes/default/templates/applications/stats.html:298
+#: themes/default/templates/applications/stats.html:299
+#: themes/default/templates/applications/stats.html:300
+#: themes/default/templates/applications/stats.html:301
+#: themes/default/templates/applications/stats.html:366
+msgid "User"
+msgstr ""
+
+#: forms/forms.py:315
+msgid "Avatar"
+msgstr ""
+
+#: forms/validator.py:33
 msgid "This item already exists"
 msgstr ""
 
-#: validator.py:54
+#: forms/validator.py:54
 #, python-format
 msgid "%sand space symbols are forbidden"
 msgstr ""
 
-#: validator.py:70
+#: forms/validator.py:70
 msgid "Only comma separated values are allowed, no spaces"
 msgstr ""
 
 #: themes/default/templates/_navbar.html:12
-#: themes/default/templates/account/index.html:13
+#: themes/default/templates/account/index.html:14
 msgid "Community"
 msgstr ""
 
 #: themes/default/templates/_navbar.html:13
 #: themes/default/templates/base.html:78
 #: themes/default/templates/account/applications.html:13
-#: themes/default/templates/stats/global.html:89 view/account.py:381
-#: view/applications.py:248
+#: themes/default/templates/stats/global.html:89 view/account.py:300
+#: view/applications.py:155
 msgid "Projects"
 msgstr ""
 
@@ -60,6 +341,10 @@ msgid "About"
 msgstr ""
 
 #: themes/default/templates/_navbar.html:22
+#: themes/default/templates/account/_helpers.html:3
+msgid "My Profile"
+msgstr ""
+
 #: themes/default/templates/_navbar.html:23
 #: themes/default/templates/account/_helpers.html:4
 msgid "My Projects"
@@ -149,10 +434,6 @@ msgstr ""
 msgid "Twitter"
 msgstr ""
 
-#: themes/default/templates/account/_helpers.html:3
-msgid "My Profile"
-msgstr ""
-
 #: themes/default/templates/account/_helpers.html:14
 msgid "I've done"
 msgstr ""
@@ -173,10 +454,6 @@ msgstr ""
 msgid "Nick"
 msgstr ""
 
-#: themes/default/templates/account/_helpers.html:41 view/account.py:90
-msgid "E-mail"
-msgstr ""
-
 #: themes/default/templates/account/_helpers.html:44
 #: themes/default/templates/account/_helpers.html:57
 #: themes/default/templates/stats/index.html:17
@@ -184,8 +461,7 @@ msgid "Rank"
 msgstr ""
 
 #: themes/default/templates/account/_helpers.html:49
-#: themes/default/templates/applications/tasks_browse.html:34
-#: themes/default/templates/applications/tasks_browse.html:36
+#: themes/default/templates/applications/tasks_browse.html:33
 msgid "of"
 msgstr ""
 
@@ -238,21 +514,21 @@ msgid "You have not created a project"
 msgstr ""
 
 #: themes/default/templates/account/applications.html:29
-#: themes/default/templates/home/index.html:37 view/applications.py:283
+#: themes/default/templates/home/index.html:37 view/applications.py:190
 msgid "Create a Project"
 msgstr ""
 
-#: themes/default/templates/account/index.html:13
+#: themes/default/templates/account/index.html:14
 msgid "registered users"
 msgstr ""
 
-#: themes/default/templates/account/index.html:13
+#: themes/default/templates/account/index.html:14
 #: themes/default/templates/stats/global.html:49
 msgid "Leaderboard"
 msgstr ""
 
 #: themes/default/templates/account/password.html:13
-#: themes/default/templates/account/update.html:60
+#: themes/default/templates/account/update.html:53
 msgid "Change your Password"
 msgstr ""
 
@@ -271,7 +547,7 @@ msgid "my new password again"
 msgstr ""
 
 #: themes/default/templates/account/password.html:22
-#: themes/default/templates/account/update.html:70
+#: themes/default/templates/account/update.html:63
 msgid "Save the Changes"
 msgstr ""
 
@@ -279,12 +555,13 @@ msgstr ""
 #: themes/default/templates/account/password_forgot.html:13
 #: themes/default/templates/account/register.html:25
 #: themes/default/templates/account/signin.html:46
-#: themes/default/templates/account/update.html:54
-#: themes/default/templates/account/update.html:71
-#: themes/default/templates/account/update.html:84
+#: themes/default/templates/account/update.html:47
+#: themes/default/templates/account/update.html:64
+#: themes/default/templates/account/update.html:77
 #: themes/default/templates/admin/update_category.html:23
 #: themes/default/templates/applications/new.html:27
 #: themes/default/templates/applications/new_blogpost.html:22
+#: themes/default/templates/applications/password.html:20
 #: themes/default/templates/applications/task_n_answers.html:21
 #: themes/default/templates/applications/task_presenter_editor.html:36
 #: themes/default/templates/applications/task_priority.html:24
@@ -317,14 +594,6 @@ msgid "Your Contributions"
 msgstr ""
 
 #: themes/default/templates/account/profile.html:26
-msgid "You have contributed to"
-msgstr ""
-
-#: themes/default/templates/account/profile.html:26
-msgid "tasks"
-msgstr ""
-
-#: themes/default/templates/account/profile.html:27
 msgid "Contribute!"
 msgstr ""
 
@@ -368,17 +637,17 @@ msgid "Create an account"
 msgstr ""
 
 #: themes/default/templates/account/register.html:18
-#: themes/default/templates/account/update.html:47
+#: themes/default/templates/account/update.html:40
 msgid "my full name"
 msgstr ""
 
 #: themes/default/templates/account/register.html:19
-#: themes/default/templates/account/update.html:48
+#: themes/default/templates/account/update.html:41
 msgid "myusername"
 msgstr ""
 
 #: themes/default/templates/account/register.html:20
-#: themes/default/templates/account/update.html:49
+#: themes/default/templates/account/update.html:42
 msgid "hello@mywebsite.org"
 msgstr ""
 
@@ -398,27 +667,17 @@ msgid ""
 msgstr ""
 
 #: themes/default/templates/account/reset-api-key.html:17
-#: themes/default/templates/account/update.html:91
+#: themes/default/templates/account/update.html:84
 msgid "Do you want to reset your personal API Key?"
 msgstr ""
 
 #: themes/default/templates/account/reset-api-key.html:21
-#: themes/default/templates/account/update.html:95
+#: themes/default/templates/account/update.html:88
 msgid "No, do not reset the API key!"
 msgstr ""
 
-#: themes/default/templates/account/settings.html:12
-#: themes/default/templates/applications/stats.html:297
-#: themes/default/templates/applications/stats.html:298
-#: themes/default/templates/applications/stats.html:299
-#: themes/default/templates/applications/stats.html:300
-#: themes/default/templates/applications/stats.html:301
-#: themes/default/templates/applications/stats.html:366 view/admin.py:123
-msgid "User"
-msgstr ""
-
 #: themes/default/templates/account/settings.html:14
-#: themes/default/templates/account/update.html:16
+#: themes/default/templates/account/update.html:17
 msgid "Update your profile"
 msgstr ""
 
@@ -471,13 +730,13 @@ msgstr ""
 msgid "Forgot Password"
 msgstr ""
 
-#: themes/default/templates/account/update.html:38
+#: themes/default/templates/account/update.html:31
 #: themes/default/templates/applications/update.html:28
 msgid "Upload"
 msgstr ""
 
-#: themes/default/templates/account/update.html:53
-#: themes/default/templates/account/update.html:83
+#: themes/default/templates/account/update.html:46
+#: themes/default/templates/account/update.html:76
 msgid "Save the changes"
 msgstr ""
 
@@ -521,7 +780,7 @@ msgstr ""
 
 #: themes/default/templates/admin/categories.html:41
 #: themes/default/templates/admin/categories.html:43
-#: themes/default/templates/admin/del_category.html:17 view/admin.py:321
+#: themes/default/templates/admin/del_category.html:17 view/admin.py:318
 msgid "Delete Category"
 msgstr ""
 
@@ -551,7 +810,7 @@ msgstr ""
 msgid "Manage"
 msgstr ""
 
-#: themes/default/templates/admin/index.html:22 view/admin.py:300
+#: themes/default/templates/admin/index.html:22 view/admin.py:297
 msgid "Categories"
 msgstr ""
 
@@ -584,13 +843,13 @@ msgstr ""
 msgid "CSV"
 msgstr ""
 
-#: themes/default/templates/admin/update_category.html:22 view/admin.py:358
-#: view/admin.py:379
+#: themes/default/templates/admin/update_category.html:22 view/admin.py:355
+#: view/admin.py:376
 msgid "Update Category"
 msgstr ""
 
-#: themes/default/templates/admin/users.html:14 view/admin.py:150
-#: view/admin.py:154
+#: themes/default/templates/admin/users.html:14 view/admin.py:137
+#: view/admin.py:141
 msgid "Manage Admin Users"
 msgstr ""
 
@@ -607,7 +866,7 @@ msgid "Current Users with Admin privileges"
 msgstr ""
 
 #: themes/default/templates/applications/_helpers.html:36
-#: themes/default/templates/applications/_helpers.html:221
+#: themes/default/templates/applications/_helpers.html:216
 #: themes/default/templates/home/index.html:18
 msgid "Info"
 msgstr ""
@@ -619,14 +878,14 @@ msgstr ""
 
 #: themes/default/templates/applications/_helpers.html:38
 #: themes/default/templates/applications/_helpers.html:61
-#: themes/default/templates/applications/_helpers.html:202
+#: themes/default/templates/applications/_helpers.html:197
 #: themes/default/templates/applications/export.html:18
 #: themes/default/templates/applications/export.html:23
 #: themes/default/templates/applications/export.html:38
 #: themes/default/templates/applications/stats.html:277
 #: themes/default/templates/applications/stats.html:367
 #: themes/default/templates/applications/tasks.html:13
-#: themes/default/templates/applications/tasks_browse.html:66
+#: themes/default/templates/applications/tasks_browse.html:62
 #: themes/default/templates/home/index.html:84
 msgid "Tasks"
 msgstr ""
@@ -637,8 +896,8 @@ msgid "Statistics"
 msgstr ""
 
 #: themes/default/templates/applications/_helpers.html:41
-#: themes/default/templates/applications/_helpers.html:87
-#: themes/default/templates/applications/_helpers.html:104
+#: themes/default/templates/applications/_helpers.html:83
+#: themes/default/templates/applications/_helpers.html:96
 #: themes/default/templates/applications/settings.html:14
 #: themes/default/templates/applications/tasks.html:37
 msgid "Settings"
@@ -652,30 +911,24 @@ msgstr ""
 msgid "ID"
 msgstr ""
 
-#: themes/default/templates/applications/_helpers.html:57
-#: themes/default/templates/applications/_helpers.html:133 view/admin.py:266
-#: view/applications.py:88
-msgid "Description"
-msgstr ""
-
 #: themes/default/templates/applications/_helpers.html:58
-#: themes/default/templates/applications/_helpers.html:134
+#: themes/default/templates/applications/_helpers.html:126
 msgid "Creation Date"
 msgstr ""
 
 #: themes/default/templates/applications/_helpers.html:59
-#: themes/default/templates/applications/_helpers.html:136
+#: themes/default/templates/applications/_helpers.html:128
 msgid "Last Activity"
 msgstr ""
 
 #: themes/default/templates/applications/_helpers.html:60
-#: themes/default/templates/applications/_helpers.html:139
-#: themes/default/templates/applications/_helpers.html:198
+#: themes/default/templates/applications/_helpers.html:131
+#: themes/default/templates/applications/_helpers.html:193
 msgid "Overall progress"
 msgstr ""
 
 #: themes/default/templates/applications/_helpers.html:60
-#: themes/default/templates/applications/_helpers.html:198
+#: themes/default/templates/applications/_helpers.html:193
 #: themes/default/templates/applications/tasks_browse.html:19
 msgid "completed"
 msgstr ""
@@ -685,40 +938,30 @@ msgstr ""
 msgid "Hidden"
 msgstr ""
 
-#: themes/default/templates/applications/_helpers.html:64
-#: view/applications.py:96
-msgid "Yes"
-msgstr ""
-
-#: themes/default/templates/applications/_helpers.html:66
-#: view/applications.py:97
-msgid "No"
-msgstr ""
-
-#: themes/default/templates/applications/_helpers.html:107
-#: themes/default/templates/applications/_helpers.html:117
+#: themes/default/templates/applications/_helpers.html:99
+#: themes/default/templates/applications/_helpers.html:109
 msgid "Remove from Featured!"
 msgstr ""
 
-#: themes/default/templates/applications/_helpers.html:110
-#: themes/default/templates/applications/_helpers.html:114
+#: themes/default/templates/applications/_helpers.html:102
+#: themes/default/templates/applications/_helpers.html:106
 msgid "Add to Featured!"
 msgstr ""
 
-#: themes/default/templates/applications/_helpers.html:141
-#: themes/default/templates/applications/_helpers.html:143
+#: themes/default/templates/applications/_helpers.html:133
+#: themes/default/templates/applications/_helpers.html:135
 msgid "Created by"
 msgstr ""
 
-#: themes/default/templates/applications/_helpers.html:141
+#: themes/default/templates/applications/_helpers.html:133
 msgid "Me"
 msgstr ""
 
-#: themes/default/templates/applications/_helpers.html:146
+#: themes/default/templates/applications/_helpers.html:138
 msgid "Try it!"
 msgstr ""
 
-#: themes/default/templates/applications/_helpers.html:200
+#: themes/default/templates/applications/_helpers.html:195
 msgid "Start Contributing Now!"
 msgstr ""
 
@@ -753,7 +996,7 @@ msgstr ""
 #: themes/default/templates/applications/task_scheduler.html:36
 #: themes/default/templates/applications/task_settings.html:43
 #: themes/default/templates/applications/tasks.html:67
-#: themes/default/templates/applications/tasks_browse.html:69
+#: themes/default/templates/applications/tasks_browse.html:65
 msgid "Sorry! This project does not exist."
 msgstr ""
 
@@ -769,21 +1012,21 @@ msgstr ""
 msgid "Written: "
 msgstr ""
 
-#: themes/default/templates/applications/blog_post.html:33
+#: themes/default/templates/applications/blog_post.html:31
 #: themes/default/templates/applications/task_settings.html:31
 msgid "Delete"
 msgstr ""
 
-#: themes/default/templates/applications/blog_post.html:34
+#: themes/default/templates/applications/blog_post.html:32
 msgid "Edit"
 msgstr ""
 
-#: themes/default/templates/applications/blog_post.html:38
-#: themes/default/templates/applications/blog_post.html:43
+#: themes/default/templates/applications/blog_post.html:36
+#: themes/default/templates/applications/blog_post.html:41
 msgid "Back"
 msgstr ""
 
-#: themes/default/templates/applications/blog_post.html:42
+#: themes/default/templates/applications/blog_post.html:40
 msgid "Sorry! This blogpost does not exist."
 msgstr ""
 
@@ -815,8 +1058,8 @@ msgstr ""
 
 #: themes/default/templates/applications/export.html:14
 msgid ""
-"Tasks and Task Runs \\(the submitted answers by the users\\) in CSV or "
-"JSON formats."
+"Tasks and Task Runs (the submitted answers by the users) in CSV or JSON "
+"formats."
 msgstr ""
 
 #: themes/default/templates/applications/export.html:19
@@ -907,6 +1150,18 @@ msgstr ""
 msgid "Write your post here. You can use Markdown!"
 msgstr ""
 
+#: themes/default/templates/applications/password.html:14
+msgid "Enter the password to contribute to this project:"
+msgstr ""
+
+#: themes/default/templates/applications/password.html:18
+msgid "Project password"
+msgstr ""
+
+#: themes/default/templates/applications/password.html:21
+msgid "Submit"
+msgstr ""
+
 #: themes/default/templates/applications/presenter.html:22
 msgid ""
 "Sorry, you've contributed to all the tasks for this project, but this "
@@ -943,7 +1198,7 @@ msgid "Distribution of Answers per Hour"
 msgstr ""
 
 #: themes/default/templates/applications/stats.html:77
-msgid "Total Answers per day"
+msgid "Completed Tasks in the last 15 days"
 msgstr ""
 
 #: themes/default/templates/applications/stats.html:77
@@ -1053,18 +1308,12 @@ msgstr ""
 
 #: themes/default/templates/applications/task_priority.html:14
 #: themes/default/templates/applications/task_settings.html:22
-#: view/applications.py:1333
+#: view/applications.py:1288
 msgid "Task Priority"
 msgstr ""
 
 #: themes/default/templates/applications/task_priority.html:23
 msgid "Change Priority"
-msgstr ""
-
-#: themes/default/templates/applications/task_scheduler.html:14
-#: themes/default/templates/applications/task_settings.html:17
-#: view/applications.py:129 view/applications.py:1287
-msgid "Task Scheduler"
 msgstr ""
 
 #: themes/default/templates/applications/task_settings.html:18
@@ -1079,11 +1328,6 @@ msgstr ""
 msgid "Change the priority of the tasks"
 msgstr ""
 
-#: themes/default/templates/applications/task_settings.html:24
-#: view/applications.py:121
-msgid "Priority"
-msgstr ""
-
 #: themes/default/templates/applications/task_settings.html:29
 msgid "Delete Tasks"
 msgstr ""
@@ -1094,11 +1338,6 @@ msgstr ""
 
 #: themes/default/templates/applications/task_settings.html:35
 msgid "Change the redundancy level for the tasks"
-msgstr ""
-
-#: themes/default/templates/applications/task_settings.html:36
-#: view/applications.py:108 view/applications.py:1249
-msgid "Redundancy"
 msgstr ""
 
 #: themes/default/templates/applications/tasks.html:21
@@ -1123,7 +1362,7 @@ msgid "Export tasks to JSON, CSV or a CKAN server"
 msgstr ""
 
 #: themes/default/templates/applications/tasks.html:27
-#: themes/default/templates/applications/tasks.html:59 view/applications.py:972
+#: themes/default/templates/applications/tasks.html:59 view/applications.py:853
 msgid "Export"
 msgstr ""
 
@@ -1195,15 +1434,15 @@ msgstr ""
 msgid "The progress bar will the percentage that has been completed for the task"
 msgstr ""
 
-#: themes/default/templates/applications/tasks_browse.html:52
+#: themes/default/templates/applications/tasks_browse.html:48
 msgid "Download Task Results"
 msgstr ""
 
-#: themes/default/templates/applications/tasks_browse.html:56
+#: themes/default/templates/applications/tasks_browse.html:52
 msgid "Download Partial results"
 msgstr ""
 
-#: themes/default/templates/applications/tasks_browse.html:59
+#: themes/default/templates/applications/tasks_browse.html:55
 msgid "Nothing to download yet"
 msgstr ""
 
@@ -1215,11 +1454,11 @@ msgstr ""
 msgid "Give some details about the project"
 msgstr ""
 
-#: themes/default/templates/applications/update.html:42
+#: themes/default/templates/applications/update.html:40
 msgid "Explain the project (use Markdown!)"
 msgstr ""
 
-#: themes/default/templates/applications/update.html:43
+#: themes/default/templates/applications/update.html:44
 msgid "Do you want to hide your project?"
 msgstr ""
 
@@ -1489,462 +1728,239 @@ msgstr ""
 msgid "Anonymous Volunteers"
 msgstr ""
 
-#: themes/default/templates/stats/index.html:18 view/admin.py:262
-#: view/applications.py:71
-msgid "Name"
+#: themes/default/templates/stats/index.html:13
+msgid "Community Leaderboard"
 msgstr ""
 
 #: themes/default/templates/stats/index.html:19
 msgid "Score"
 msgstr ""
 
-#: view/account.py:92
-msgid "The e-mail is required"
-msgstr ""
-
-#: view/account.py:94
-msgid "Password"
-msgstr ""
-
-#: view/account.py:96
-msgid "You must provide a password"
-msgstr ""
-
-#: view/account.py:115
+#: view/account.py:118
 msgid "Welcome back"
 msgstr ""
 
-#: view/account.py:121
+#: view/account.py:124
 msgid "Ooops, Incorrect email/password"
 msgstr ""
 
-#: view/account.py:126
+#: view/account.py:129
 msgid ""
 "Ooops, we didn't find you in the system,                           did "
 "you sign in?"
 msgstr ""
 
-#: view/account.py:131 view/account.py:277 view/account.py:514
-#: view/account.py:553 view/account.py:574 view/account.py:645
-#: view/admin.py:293 view/admin.py:376 view/applications.py:301
-#: view/applications.py:354 view/applications.py:497 view/applications.py:1269
-#: view/applications.py:1324 view/applications.py:1370
-#: view/applications.py:1416 view/applications.py:1457
+#: view/account.py:134 view/account.py:190 view/account.py:406
+#: view/account.py:445 view/account.py:466 view/account.py:511
+#: view/admin.py:290 view/admin.py:373 view/applications.py:208
+#: view/applications.py:261 view/applications.py:402 view/applications.py:1235
+#: view/applications.py:1279 view/applications.py:1319
+#: view/applications.py:1410 view/applications.py:1457
 msgid "Please correct the errors"
 msgstr ""
 
-#: view/account.py:159
+#: view/account.py:162
 msgid "You are now signed out"
 msgstr ""
 
-#: view/account.py:167 view/account.py:205
-msgid "Full name must be between 3 and 35 characters long"
-msgstr ""
-
-#: view/account.py:169 view/account.py:207
-msgid "Full name"
-msgstr ""
-
-#: view/account.py:172 view/account.py:210
-msgid "User name must be between 3 and 35 characters long"
-msgstr ""
-
-#: view/account.py:174 view/account.py:212
-msgid "The user name is already taken"
-msgstr ""
-
-#: view/account.py:175
-msgid "User name"
-msgstr ""
-
-#: view/account.py:181 view/account.py:219 view/account.py:653
-msgid "Email must be between 3 and 35 characters long"
-msgstr ""
-
-#: view/account.py:182 view/account.py:220
-msgid "Email is already taken"
-msgstr ""
-
-#: view/account.py:183 view/account.py:221 view/account.py:654
-msgid "Email Address"
-msgstr ""
-
-#: view/account.py:190 view/account.py:594 view/account.py:606
-msgid "Password cannot be empty"
-msgstr ""
-
-#: view/account.py:191 view/account.py:595 view/account.py:607
-msgid "Passwords must match"
-msgstr ""
-
-#: view/account.py:192 view/account.py:608
-msgid "New Password"
-msgstr ""
-
-#: view/account.py:196 view/account.py:611
-msgid "Repeat Password"
-msgstr ""
-
-#: view/account.py:213
-msgid "Username"
-msgstr ""
-
-#: view/account.py:228
-msgid "Language"
-msgstr ""
-
-#: view/account.py:229
-msgid "CKAN API Key"
-msgstr ""
-
-#: view/account.py:230
-msgid "Privacy Mode"
-msgstr ""
-
-#: view/account.py:237
-msgid "English"
-msgstr ""
-
-#: view/account.py:239
-msgid "Spanish"
-msgstr ""
-
-#: view/account.py:241
-msgid "French"
-msgstr ""
-
-#: view/account.py:247 view/applications.py:63
-msgid "Avatar"
-msgstr ""
-
-#: view/account.py:274
-msgid "Thanks for signing-up"
-msgstr ""
-
-#: view/account.py:279
+#: view/account.py:192
 msgid "Register"
 msgstr ""
 
-#: view/account.py:355
+#: view/account.py:211
+msgid "Thanks for signing-up"
+msgstr ""
+
+#: view/account.py:271
 msgid "Profile"
 msgstr ""
 
-#: view/account.py:485
+#: view/account.py:377
 msgid ""
 "Your avatar has been updated! It may                               take "
 "some minutes to refresh..."
 msgstr ""
 
-#: view/account.py:511 view/account.py:571
+#: view/account.py:403 view/account.py:463
 msgid "Your profile has been updated!"
 msgstr ""
 
-#: view/account.py:538
+#: view/account.py:430
 msgid "Yay, you changed your password succesfully!"
 msgstr ""
 
-#: view/account.py:542
+#: view/account.py:434
 msgid "Your current password doesn't match the one in our records"
 msgstr ""
 
-#: view/account.py:592
-msgid "Current password"
-msgstr ""
-
-#: view/account.py:596
-msgid "New password"
-msgstr ""
-
-#: view/account.py:599
-msgid "Repeat password"
-msgstr ""
-
-#: view/account.py:642
+#: view/account.py:508
 msgid "You reset your password successfully!"
 msgstr ""
 
-#: view/account.py:697
+#: view/account.py:553
 msgid "We've send you email with account recovery instructions!"
 msgstr ""
 
-#: view/account.py:701
+#: view/account.py:557
 msgid ""
 "We don't have this email in our records. You may have signed up with a "
 "different email or used Twitter, Facebook, or Google to sign-in"
 msgstr ""
 
-#: view/account.py:706
+#: view/account.py:562
 msgid "Something went wrong, please correct the errors on the form"
 msgstr ""
 
-#: view/account.py:732
+#: view/account.py:585
 msgid "New API-KEY generated"
 msgstr ""
 
-#: view/admin.py:290
+#: view/admin.py:287
 msgid "Category added"
 msgstr ""
 
-#: view/admin.py:326
+#: view/admin.py:323
 msgid "Category deleted"
 msgstr ""
 
-#: view/admin.py:331
+#: view/admin.py:328
 msgid ""
 "Sorry, it is not possible to delete the only"
 "                                    available category. You can modify "
 "it, click the                                    edit button"
 msgstr ""
 
-#: view/admin.py:372
+#: view/admin.py:369
 msgid "Category updated"
 msgstr ""
 
-#: view/applications.py:74
-msgid "Name is already taken."
-msgstr ""
-
-#: view/applications.py:75
-msgid "Short Name"
-msgstr ""
-
-#: view/applications.py:80
-msgid "Short Name is already taken."
-msgstr ""
-
-#: view/applications.py:82 view/applications.py:93
-msgid "Long Description"
-msgstr ""
-
-#: view/applications.py:90
-msgid "You must provide a description."
-msgstr ""
-
-#: view/applications.py:95
-msgid "Allow Anonymous Contributors"
-msgstr ""
-
-#: view/applications.py:98
-msgid "Category"
-msgstr ""
-
-#: view/applications.py:99
-msgid "Hide?"
-msgstr ""
-
-#: view/applications.py:112
-msgid ""
-"Number of answers should be a"
-"                                                        value between 1 "
-"and 1,000"
-msgstr ""
-
-#: view/applications.py:117
-msgid "Task IDs"
-msgstr ""
-
-#: view/applications.py:124
-msgid ""
-"Priority should be a"
-"                                                        value between 0.0"
-" and 1.0"
-msgstr ""
-
-#: view/applications.py:130
-msgid "Default"
-msgstr ""
-
-#: view/applications.py:131
-msgid "Breadth First"
-msgstr ""
-
-#: view/applications.py:132
-msgid "Depth First"
-msgstr ""
-
-#: view/applications.py:133
-msgid "Random"
-msgstr ""
-
-#: view/applications.py:138
-msgid "Title"
-msgstr ""
-
-#: view/applications.py:139
-msgid "You must enter a title for the post."
-msgstr ""
-
-#: view/applications.py:141
-msgid "Body"
-msgstr ""
-
-#: view/applications.py:142
-msgid "You must enter some text for the post."
-msgstr ""
-
-#: view/applications.py:316
+#: view/applications.py:225
 msgid "Project created!"
 msgstr ""
 
-#: view/applications.py:319
+#: view/applications.py:228
 msgid "You can check the "
 msgstr ""
 
-#: view/applications.py:321
+#: view/applications.py:230
 msgid "Guide and Documentation"
 msgstr ""
 
-#: view/applications.py:323
+#: view/applications.py:232
 msgid "for adding tasks, a thumbnail, using PyBossa.JS, etc."
 msgstr ""
 
-#: view/applications.py:348
+#: view/applications.py:255
 msgid "Task presenter added!"
 msgstr ""
 
-#: view/applications.py:361
+#: view/applications.py:268
 msgid "<strong>Note</strong> You will need to upload the tasks using the"
 msgstr ""
 
-#: view/applications.py:363
+#: view/applications.py:270
 msgid "CSV importer"
 msgstr ""
 
-#: view/applications.py:364
+#: view/applications.py:271
 msgid ""
 " or download the project bundle and run the "
 "<strong>createTasks.py</strong> script in your computer"
 msgstr ""
 
-#: view/applications.py:424
+#: view/applications.py:341
 msgid "Project deleted!"
 msgstr ""
 
-#: view/applications.py:470
+#: view/applications.py:376
 msgid "Project updated!"
 msgstr ""
 
-#: view/applications.py:517
+#: view/applications.py:422
 msgid ""
 "Your project thumbnail has been updated! It may"
-"                                       take some minutes to refresh..."
+"                                   take some minutes to refresh..."
 msgstr ""
 
-#: view/applications.py:520
+#: view/applications.py:425
 msgid "You must provide a file to change the avatar"
 msgstr ""
 
-#: view/applications.py:618
+#: view/applications.py:517
 msgid "Importing tasks, this may take a while, wait..."
 msgstr ""
 
-#: view/applications.py:691
+#: view/applications.py:573
 msgid "Oops! It looks like the file is empty."
 msgstr ""
 
-#: view/applications.py:693
+#: view/applications.py:575
 msgid "Oops! It looks like there are no new records to import."
 msgstr ""
 
-#: view/applications.py:695
+#: view/applications.py:577
 msgid "Tasks imported successfully!"
 msgstr ""
 
-#: view/applications.py:697
+#: view/applications.py:579
 msgid "Task imported successfully!"
 msgstr ""
 
-#: view/applications.py:736
+#: view/applications.py:635
 msgid ""
 "Ooops! You are an anonymous user and will not get any credit for your "
 "contributions."
 msgstr ""
 
-#: view/applications.py:956
+#: view/applications.py:837
 msgid "All the tasks and associated task runs have been deleted"
 msgstr ""
 
-#: view/applications.py:973
+#: view/applications.py:854
 msgid "Exporting data..., this may take a while"
 msgstr ""
 
-#: view/applications.py:1053
+#: view/applications.py:973
 msgid "Data exported to "
 msgstr ""
 
-#: view/applications.py:1116
+#: view/applications.py:1031
 msgid ""
-"Oops, the project does not have tasks to                     export, if "
-"you are the owner add some tasks"
+"Oops, the project does not have tasks to                         export, "
+"if you are the owner add some tasks"
 msgstr ""
 
-#: view/applications.py:1122
+#: view/applications.py:1037
 msgid ""
-"Oops, there are no Task Runs yet to export, invite                      "
-"some users to participate"
+"Oops, there are no Task Runs yet to export, invite"
+"                          some users to participate"
 msgstr ""
 
-#: view/applications.py:1265
+#: view/applications.py:1231
 msgid "Redundancy of Tasks updated!"
 msgstr ""
 
-#: view/applications.py:1320
+#: view/applications.py:1275
 msgid "Project Task Scheduler updated!"
 msgstr ""
 
-#: view/applications.py:1367
+#: view/applications.py:1316
 msgid "Task priority has been changed"
 msgstr ""
 
-#: view/applications.py:1403
+#: view/applications.py:1388
 msgid "Write a new post"
 msgstr ""
 
-#: view/applications.py:1428
+#: view/applications.py:1422
 msgid "Blog post created!"
 msgstr ""
 
-#: view/applications.py:1446
+#: view/applications.py:1441
 msgid "Edit a post"
 msgstr ""
 
 #: view/applications.py:1470
 msgid "Blog post updated!"
-msgstr ""
-
-#: view/importer.py:86
-msgid "The file you uploaded has two headers with the same name."
-msgstr ""
-
-#: view/importer.py:108
-msgid "Oops! That file doesn't look like the right file."
-msgstr ""
-
-#: view/importer.py:122 view/importer.py:143
-msgid "You must provide a URL"
-msgstr ""
-
-#: view/importer.py:123 view/importer.py:144
-msgid "Oops! That's not a valid URL. You must provide a valid URL"
-msgstr ""
-
-#: view/importer.py:125 view/importer.py:146
-msgid "URL"
-msgstr ""
-
-#: view/importer.py:169
-msgid "You must provide an EpiCollect Plus project name"
-msgstr ""
-
-#: view/importer.py:171
-msgid "You must provide a Form name for the project"
-msgstr ""
-
-#: view/importer.py:173
-msgid "Project Name"
-msgstr ""
-
-#: view/importer.py:175
-msgid "Form name"
 msgstr ""
 
