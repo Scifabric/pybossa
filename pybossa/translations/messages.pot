@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-01 16:55+0200\n"
+"POT-Creation-Date: 2014-10-01 18:27+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -995,7 +995,7 @@ msgstr ""
 #: themes/default/templates/applications/task_priority.html:32
 #: themes/default/templates/applications/task_scheduler.html:36
 #: themes/default/templates/applications/task_settings.html:43
-#: themes/default/templates/applications/tasks.html:67
+#: themes/default/templates/applications/tasks.html:69
 #: themes/default/templates/applications/tasks_browse.html:65
 msgid "Sorry! This project does not exist."
 msgstr ""
@@ -1062,10 +1062,18 @@ msgid ""
 "formats."
 msgstr ""
 
+#: themes/default/templates/applications/export.html:17
+msgid "Export in CSV format"
+msgstr ""
+
 #: themes/default/templates/applications/export.html:19
 #: themes/default/templates/applications/export.html:24
 #: themes/default/templates/applications/export.html:39
 msgid "Task Runs"
+msgstr ""
+
+#: themes/default/templates/applications/export.html:22
+msgid "Export in JSON format"
 msgstr ""
 
 #: themes/default/templates/applications/import_options.html:13
@@ -1352,17 +1360,17 @@ msgid "Import"
 msgstr ""
 
 #: themes/default/templates/applications/tasks.html:25
-#: themes/default/templates/applications/tasks.html:57
+#: themes/default/templates/applications/tasks.html:59
 msgid "Export Tasks"
 msgstr ""
 
 #: themes/default/templates/applications/tasks.html:26
-#: themes/default/templates/applications/tasks.html:58
+#: themes/default/templates/applications/tasks.html:60
 msgid "Export tasks to JSON, CSV or a CKAN server"
 msgstr ""
 
 #: themes/default/templates/applications/tasks.html:27
-#: themes/default/templates/applications/tasks.html:59 view/applications.py:853
+#: themes/default/templates/applications/tasks.html:61 view/applications.py:853
 msgid "Export"
 msgstr ""
 
@@ -1379,13 +1387,19 @@ msgid "Configure the task scheduler, redundancy, etc."
 msgstr ""
 
 #: themes/default/templates/applications/tasks.html:44
-#: themes/default/templates/applications/tasks.html:52
+#: themes/default/templates/applications/tasks.html:47
+#: themes/default/templates/applications/tasks.html:53
+#: themes/default/templates/applications/tasks.html:56
 msgid "Browse"
 msgstr ""
 
 #: themes/default/templates/applications/tasks.html:45
-#: themes/default/templates/applications/tasks.html:53
+#: themes/default/templates/applications/tasks.html:54
 msgid "Check the status of the tasks"
+msgstr ""
+
+#: themes/default/templates/applications/tasks_browse.html:13
+msgid "Browse tasks"
 msgstr ""
 
 #: themes/default/templates/applications/tasks_browse.html:15

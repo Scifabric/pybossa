@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: daniel@shuttleworthfoundation.org\n"
-"POT-Creation-Date: 2014-10-01 16:55+0200\n"
+"POT-Creation-Date: 2014-10-01 18:27+0200\n"
 "PO-Revision-Date: 2013-03-26 18:24+0100\n"
 "Last-Translator: Daniel Lombraña González "
 "<daniel@shuttleworthfoundation.org>\n"
@@ -1002,7 +1002,7 @@ msgstr "Crear una aplicación"
 #: themes/default/templates/applications/task_priority.html:32
 #: themes/default/templates/applications/task_scheduler.html:36
 #: themes/default/templates/applications/task_settings.html:43
-#: themes/default/templates/applications/tasks.html:67
+#: themes/default/templates/applications/tasks.html:69
 #: themes/default/templates/applications/tasks_browse.html:65
 msgid "Sorry! This project does not exist."
 msgstr "Perdón! Esta aplicación no existe"
@@ -1072,11 +1072,19 @@ msgid ""
 "formats."
 msgstr "Tareas y Repuestas (enviadas por los usuarios) en el formato CSV o JSON"
 
+#: themes/default/templates/applications/export.html:17
+msgid "Export in CSV format"
+msgstr "Exportar en formato CSV"
+
 #: themes/default/templates/applications/export.html:19
 #: themes/default/templates/applications/export.html:24
 #: themes/default/templates/applications/export.html:39
 msgid "Task Runs"
 msgstr "Respuestas"
+
+#: themes/default/templates/applications/export.html:22
+msgid "Export in JSON format"
+msgstr "Exportar en formato JSON"
 
 #: themes/default/templates/applications/import_options.html:13
 #: themes/default/templates/applications/tasks.html:20
@@ -1377,17 +1385,17 @@ msgid "Import"
 msgstr "Importar"
 
 #: themes/default/templates/applications/tasks.html:25
-#: themes/default/templates/applications/tasks.html:57
+#: themes/default/templates/applications/tasks.html:59
 msgid "Export Tasks"
 msgstr "Exportar tareas"
 
 #: themes/default/templates/applications/tasks.html:26
-#: themes/default/templates/applications/tasks.html:58
+#: themes/default/templates/applications/tasks.html:60
 msgid "Export tasks to JSON, CSV or a CKAN server"
 msgstr "Exportar en JSON, CSV o un servidor CKAN"
 
 #: themes/default/templates/applications/tasks.html:27
-#: themes/default/templates/applications/tasks.html:59 view/applications.py:853
+#: themes/default/templates/applications/tasks.html:61 view/applications.py:853
 msgid "Export"
 msgstr "Exportar"
 
@@ -1404,14 +1412,20 @@ msgid "Configure the task scheduler, redundancy, etc."
 msgstr "Configure el administrador de tareas, redundancia, etc."
 
 #: themes/default/templates/applications/tasks.html:44
-#: themes/default/templates/applications/tasks.html:52
+#: themes/default/templates/applications/tasks.html:47
+#: themes/default/templates/applications/tasks.html:53
+#: themes/default/templates/applications/tasks.html:56
 msgid "Browse"
 msgstr "Navegar"
 
 #: themes/default/templates/applications/tasks.html:45
-#: themes/default/templates/applications/tasks.html:53
+#: themes/default/templates/applications/tasks.html:54
 msgid "Check the status of the tasks"
 msgstr "Comprueba el estado de las tareas"
+
+#: themes/default/templates/applications/tasks_browse.html:13
+msgid "Browse tasks"
+msgstr "Explorar tareas"
 
 #: themes/default/templates/applications/tasks_browse.html:15
 msgid "This page shows all the available tasks for this project"
