@@ -1389,7 +1389,7 @@ msgstr "Exportar en JSON, CSV o un servidor CKAN"
 #: themes/default/templates/applications/tasks.html:27
 #: themes/default/templates/applications/tasks.html:59 view/applications.py:853
 msgid "Export"
-msgstr "Importar"
+msgstr "Exportar"
 
 #: themes/default/templates/applications/tasks.html:32
 msgid "Task Presenter"
