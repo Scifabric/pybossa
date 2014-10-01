@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-01 18:41+0200\n"
+"POT-Creation-Date: 2014-10-01 18:47+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -905,6 +905,7 @@ msgstr ""
 #: themes/default/templates/applications/_helpers.html:96
 #: themes/default/templates/applications/settings.html:14
 #: themes/default/templates/applications/tasks.html:37
+#: themes/default/templates/applications/tasks.html:41
 msgid "Settings"
 msgstr ""
 
@@ -1000,7 +1001,7 @@ msgstr ""
 #: themes/default/templates/applications/task_priority.html:32
 #: themes/default/templates/applications/task_scheduler.html:43
 #: themes/default/templates/applications/task_settings.html:43
-#: themes/default/templates/applications/tasks.html:69
+#: themes/default/templates/applications/tasks.html:71
 #: themes/default/templates/applications/tasks_browse.html:65
 msgid "Sorry! This project does not exist."
 msgstr ""
@@ -1397,17 +1398,17 @@ msgid "Import"
 msgstr ""
 
 #: themes/default/templates/applications/tasks.html:25
-#: themes/default/templates/applications/tasks.html:59
+#: themes/default/templates/applications/tasks.html:61
 msgid "Export Tasks"
 msgstr ""
 
 #: themes/default/templates/applications/tasks.html:26
-#: themes/default/templates/applications/tasks.html:60
+#: themes/default/templates/applications/tasks.html:62
 msgid "Export tasks to JSON, CSV or a CKAN server"
 msgstr ""
 
 #: themes/default/templates/applications/tasks.html:27
-#: themes/default/templates/applications/tasks.html:61 view/applications.py:853
+#: themes/default/templates/applications/tasks.html:63 view/applications.py:853
 msgid "Export"
 msgstr ""
 
@@ -1423,15 +1424,15 @@ msgstr ""
 msgid "Configure the task scheduler, redundancy, etc."
 msgstr ""
 
-#: themes/default/templates/applications/tasks.html:44
-#: themes/default/templates/applications/tasks.html:47
-#: themes/default/templates/applications/tasks.html:53
-#: themes/default/templates/applications/tasks.html:56
+#: themes/default/templates/applications/tasks.html:46
+#: themes/default/templates/applications/tasks.html:49
+#: themes/default/templates/applications/tasks.html:55
+#: themes/default/templates/applications/tasks.html:58
 msgid "Browse"
 msgstr ""
 
-#: themes/default/templates/applications/tasks.html:45
-#: themes/default/templates/applications/tasks.html:54
+#: themes/default/templates/applications/tasks.html:47
+#: themes/default/templates/applications/tasks.html:56
 msgid "Check the status of the tasks"
 msgstr ""
 

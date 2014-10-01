@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: daniel@shuttleworthfoundation.org\n"
-"POT-Creation-Date: 2014-10-01 18:41+0200\n"
+"POT-Creation-Date: 2014-10-01 18:47+0200\n"
 "PO-Revision-Date: 2013-03-26 18:24+0100\n"
 "Last-Translator: Daniel Lombraña González "
 "<daniel@shuttleworthfoundation.org>\n"
@@ -912,6 +912,7 @@ msgstr "Estadísticas"
 #: themes/default/templates/applications/_helpers.html:96
 #: themes/default/templates/applications/settings.html:14
 #: themes/default/templates/applications/tasks.html:37
+#: themes/default/templates/applications/tasks.html:41
 msgid "Settings"
 msgstr "Configuración"
 
@@ -1007,7 +1008,7 @@ msgstr "Crear una aplicación"
 #: themes/default/templates/applications/task_priority.html:32
 #: themes/default/templates/applications/task_scheduler.html:43
 #: themes/default/templates/applications/task_settings.html:43
-#: themes/default/templates/applications/tasks.html:69
+#: themes/default/templates/applications/tasks.html:71
 #: themes/default/templates/applications/tasks_browse.html:65
 msgid "Sorry! This project does not exist."
 msgstr "Perdón! Esta aplicación no existe"
@@ -1369,8 +1370,8 @@ msgid ""
 "answers has\n"
 "                    not achieved) excluding the current user"
 msgstr ""
-"devuelve una tarea que no ha sido completada (no se ha alcanzado el número de"
-" respuestas para la tarea) excluyendo al propio usuario"
+"devuelve una tarea que no ha sido completada (no se ha alcanzado el "
+"número de respuestas para la tarea) excluyendo al propio usuario"
 
 #: themes/default/templates/applications/task_scheduler.html:21
 msgid ""
@@ -1379,8 +1380,8 @@ msgid ""
 "(answers)\n"
 "                    excluding the current user"
 msgstr ""
-"devuelve una tarea que tiene el menor número de respuestas, excluyendo"
-" al propio usuario"
+"devuelve una tarea que tiene el menor número de respuestas, excluyendo al"
+" propio usuario"
 
 #: themes/default/templates/applications/task_scheduler.html:24
 msgid ""
@@ -1389,8 +1390,8 @@ msgid ""
 "more\n"
 "                    times"
 msgstr ""
-"devuelve un tarea aleatoriamente --un usuario puede hacer la misma tarea"
-" varias veces"
+"devuelve un tarea aleatoriamente --un usuario puede hacer la misma tarea "
+"varias veces"
 
 #: themes/default/templates/applications/task_settings.html:18
 msgid "Change how the tasks are delivered to volunteers"
@@ -1428,17 +1429,17 @@ msgid "Import"
 msgstr "Importar"
 
 #: themes/default/templates/applications/tasks.html:25
-#: themes/default/templates/applications/tasks.html:59
+#: themes/default/templates/applications/tasks.html:61
 msgid "Export Tasks"
 msgstr "Exportar tareas"
 
 #: themes/default/templates/applications/tasks.html:26
-#: themes/default/templates/applications/tasks.html:60
+#: themes/default/templates/applications/tasks.html:62
 msgid "Export tasks to JSON, CSV or a CKAN server"
 msgstr "Exportar en JSON, CSV o un servidor CKAN"
 
 #: themes/default/templates/applications/tasks.html:27
-#: themes/default/templates/applications/tasks.html:61 view/applications.py:853
+#: themes/default/templates/applications/tasks.html:63 view/applications.py:853
 msgid "Export"
 msgstr "Exportar"
 
@@ -1454,15 +1455,15 @@ msgstr "Editor"
 msgid "Configure the task scheduler, redundancy, etc."
 msgstr "Configure el gestor de tareas, redundancia, etc."
 
-#: themes/default/templates/applications/tasks.html:44
-#: themes/default/templates/applications/tasks.html:47
-#: themes/default/templates/applications/tasks.html:53
-#: themes/default/templates/applications/tasks.html:56
+#: themes/default/templates/applications/tasks.html:46
+#: themes/default/templates/applications/tasks.html:49
+#: themes/default/templates/applications/tasks.html:55
+#: themes/default/templates/applications/tasks.html:58
 msgid "Browse"
 msgstr "Navegar"
 
-#: themes/default/templates/applications/tasks.html:45
-#: themes/default/templates/applications/tasks.html:54
+#: themes/default/templates/applications/tasks.html:47
+#: themes/default/templates/applications/tasks.html:56
 msgid "Check the status of the tasks"
 msgstr "Comprueba el estado de las tareas"
 
