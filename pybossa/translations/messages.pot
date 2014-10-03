@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-01 18:47+0200\n"
+"POT-Creation-Date: 2014-10-03 18:45+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -568,8 +568,9 @@ msgstr ""
 #: themes/default/templates/applications/password.html:20
 #: themes/default/templates/applications/task_n_answers.html:21
 #: themes/default/templates/applications/task_presenter_editor.html:36
-#: themes/default/templates/applications/task_priority.html:24
+#: themes/default/templates/applications/task_priority.html:31
 #: themes/default/templates/applications/task_scheduler.html:35
+#: themes/default/templates/applications/update.html:47
 #: themes/default/templates/applications/update_blogpost.html:24
 #: themes/default/templates/applications/importers/csv.html:24
 #: themes/default/templates/applications/importers/epicollect.html:25
@@ -998,7 +999,7 @@ msgstr ""
 #: themes/default/templates/applications/delete.html:29
 #: themes/default/templates/applications/settings.html:26
 #: themes/default/templates/applications/task_n_answers.html:29
-#: themes/default/templates/applications/task_priority.html:32
+#: themes/default/templates/applications/task_priority.html:39
 #: themes/default/templates/applications/task_scheduler.html:43
 #: themes/default/templates/applications/task_settings.html:43
 #: themes/default/templates/applications/tasks.html:71
@@ -1196,6 +1197,7 @@ msgid "Write a blog post"
 msgstr ""
 
 #: themes/default/templates/applications/stats.html:39
+#: themes/default/templates/applications/task_priority.html:21
 msgid "Important"
 msgstr ""
 
@@ -1326,7 +1328,45 @@ msgstr ""
 msgid "Task Priority"
 msgstr ""
 
-#: themes/default/templates/applications/task_priority.html:23
+#: themes/default/templates/applications/task_priority.html:15
+msgid "You can change the"
+msgstr ""
+
+#: themes/default/templates/applications/task_priority.html:16
+msgid "priority"
+msgstr ""
+
+#: themes/default/templates/applications/task_priority.html:16
+msgid ""
+"of one or more tasks,\n"
+"                providing a list of task IDs separated by commas. The "
+"lowest\n"
+"                priority is"
+msgstr ""
+
+#: themes/default/templates/applications/task_priority.html:19
+msgid "and the highest priority is"
+msgstr ""
+
+#: themes/default/templates/applications/task_priority.html:21
+msgid ""
+"The priority value is only\n"
+"                respected by the"
+msgstr ""
+
+#: themes/default/templates/applications/task_priority.html:22
+msgid "default scheduler"
+msgstr ""
+
+#: themes/default/templates/applications/task_priority.html:27
+msgid "Comma separated Task.IDs i.e.: 3, 532, 100"
+msgstr ""
+
+#: themes/default/templates/applications/task_priority.html:28
+msgid "Priority value between 0.0 and 1.0"
+msgstr ""
+
+#: themes/default/templates/applications/task_priority.html:30
 msgid "Change Priority"
 msgstr ""
 
@@ -1502,6 +1542,10 @@ msgstr ""
 msgid "Start contributing"
 msgstr ""
 
+#: themes/default/templates/applications/update.html:14
+msgid "Update the project"
+msgstr ""
+
 #: themes/default/templates/applications/update.html:39
 msgid "Give some details about the project"
 msgstr ""
@@ -1512,6 +1556,10 @@ msgstr ""
 
 #: themes/default/templates/applications/update.html:44
 msgid "Do you want to hide your project?"
+msgstr ""
+
+#: themes/default/templates/applications/update.html:46
+msgid "Save te changes"
 msgstr ""
 
 #: themes/default/templates/applications/update_blogpost.html:14
