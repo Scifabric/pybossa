@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: daniel@shuttleworthfoundation.org\n"
-"POT-Creation-Date: 2014-10-03 19:19+0200\n"
+"POT-Creation-Date: 2014-10-03 19:46+0200\n"
 "PO-Revision-Date: 2013-03-26 18:24+0100\n"
 "Last-Translator: Daniel Lombraña González "
 "<daniel@shuttleworthfoundation.org>\n"
@@ -577,7 +577,7 @@ msgstr "Guardar los Cambios"
 #: themes/default/templates/applications/update.html:47
 #: themes/default/templates/applications/update_blogpost.html:24
 #: themes/default/templates/applications/importers/csv.html:24
-#: themes/default/templates/applications/importers/epicollect.html:25
+#: themes/default/templates/applications/importers/epicollect.html:26
 #: themes/default/templates/applications/importers/gdocs.html:24
 msgid "Cancel"
 msgstr "Cancelar"
@@ -1469,7 +1469,7 @@ msgstr "Importar las tareas de las plantillas, GDrive, o CSV"
 
 #: themes/default/templates/applications/tasks.html:22
 #: themes/default/templates/applications/importers/csv.html:23
-#: themes/default/templates/applications/importers/epicollect.html:24
+#: themes/default/templates/applications/importers/epicollect.html:25
 #: themes/default/templates/applications/importers/gdocs.html:23
 msgid "Import"
 msgstr "Importar"
@@ -1617,16 +1617,14 @@ msgstr "datos"
 
 #: themes/default/templates/applications/importers/csv.html:16
 msgid "From a CSV file"
-msgstr "Desde un fichero CSV"
+msgstr "De un fichero CSV"
 
 #: themes/default/templates/applications/importers/csv.html:20
 msgid ""
 "Please provide a URL (i.e. DropBox, Box, Ubuntu One, etc. public link) to"
 " a CSV file with data for"
-msgstr ""
-"Por favor proporciona un enlace (por ejemplo un enlace público de "
-"DropBox,\"\n"
-"\" Box, Ubuntu One, etc.) de un fichero CSV con datos para"
+msgstr "Por favor proporciona la URL (por ejemplo de DropBox) para"
+"el fichero CSV con los datos para"
 
 #: themes/default/templates/applications/importers/csv.html:20
 #: themes/default/templates/applications/importers/epicollect.html:20
@@ -1640,6 +1638,10 @@ msgstr "Para más información, por favor consulta"
 msgid "the documentation"
 msgstr "la documentación"
 
+#: themes/default/templates/applications/importers/csv.html:21
+msgid "The URL of the CSV file"
+msgstr "La URL del fichero CSV"
+
 #: themes/default/templates/applications/importers/epicollect.html:16
 msgid "From an EpiCollect Plus project"
 msgstr "Desde un proyecto EpiCollect Plus"
@@ -1649,6 +1651,14 @@ msgid "Please provide an EpiCollect Plus project name to import its data for"
 msgstr ""
 "Por favor proporciona el nombre de un proyecto EpiCollect Plus para "
 "importar sus datos para"
+
+#: themes/default/templates/applications/importers/epicollect.html:22
+msgid "The name of the public EpiCollect Plus project"
+msgstr "El nombre del proyecto público EpiCollect Plus"
+
+#: themes/default/templates/applications/importers/epicollect.html:23
+msgid "The name of the project's form"
+msgstr "El nombre del formulario del proyecto"
 
 #: themes/default/templates/applications/importers/gdocs.html:16
 msgid "From a Google Docs Spreadsheet"
@@ -1682,8 +1692,7 @@ msgstr "Proporciona un enlace público al CSV"
 msgid ""
 "Use the CSV URL\n"
 "      template"
-msgstr ""
-"Usa un enlace a fichero CSV"
+msgstr "Usa un enlace a fichero CSV"
 
 #: themes/default/templates/applications/tasks/delete.html:14
 msgid ""
@@ -2411,4 +2420,7 @@ msgstr "Artículo actualizado"
 
 #~ msgid "Guardar los cambios"
 #~ msgstr ""
+
+#~ msgid "From a CSV file"
+#~ msgstr "Desde un fichero CSV"
 

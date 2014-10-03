@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-03 19:19+0200\n"
+"POT-Creation-Date: 2014-10-03 19:46+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -574,7 +574,7 @@ msgstr ""
 #: themes/default/templates/applications/update.html:47
 #: themes/default/templates/applications/update_blogpost.html:24
 #: themes/default/templates/applications/importers/csv.html:24
-#: themes/default/templates/applications/importers/epicollect.html:25
+#: themes/default/templates/applications/importers/epicollect.html:26
 #: themes/default/templates/applications/importers/gdocs.html:24
 msgid "Cancel"
 msgstr ""
@@ -1434,7 +1434,7 @@ msgstr ""
 
 #: themes/default/templates/applications/tasks.html:22
 #: themes/default/templates/applications/importers/csv.html:23
-#: themes/default/templates/applications/importers/epicollect.html:24
+#: themes/default/templates/applications/importers/epicollect.html:25
 #: themes/default/templates/applications/importers/gdocs.html:23
 msgid "Import"
 msgstr ""
@@ -1594,12 +1594,24 @@ msgstr ""
 msgid "the documentation"
 msgstr ""
 
+#: themes/default/templates/applications/importers/csv.html:21
+msgid "The URL of the CSV file"
+msgstr ""
+
 #: themes/default/templates/applications/importers/epicollect.html:16
 msgid "From an EpiCollect Plus project"
 msgstr ""
 
 #: themes/default/templates/applications/importers/epicollect.html:20
 msgid "Please provide an EpiCollect Plus project name to import its data for"
+msgstr ""
+
+#: themes/default/templates/applications/importers/epicollect.html:22
+msgid "The name of the public EpiCollect Plus project"
+msgstr ""
+
+#: themes/default/templates/applications/importers/epicollect.html:23
+msgid "The name of the project's form"
 msgstr ""
 
 #: themes/default/templates/applications/importers/gdocs.html:16
