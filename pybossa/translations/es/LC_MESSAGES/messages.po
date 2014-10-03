@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: daniel@shuttleworthfoundation.org\n"
-"POT-Creation-Date: 2014-10-03 18:45+0200\n"
+"POT-Creation-Date: 2014-10-03 19:07+0200\n"
 "PO-Revision-Date: 2013-03-26 18:24+0100\n"
 "Last-Translator: Daniel Lombraña González "
 "<daniel@shuttleworthfoundation.org>\n"
@@ -70,6 +70,7 @@ msgid "Allow Anonymous Contributors"
 msgstr "Permitir Voluntarios Anónimos"
 
 #: forms/forms.py:61 themes/default/templates/applications/_helpers.html:64
+#: themes/default/templates/applications/tasks/delete.html:24
 msgid "Yes"
 msgstr "Sí"
 
@@ -796,6 +797,7 @@ msgstr "Borrar Categoría"
 
 #: themes/default/templates/admin/del_category.html:15
 #: themes/default/templates/applications/delete.html:14
+#: themes/default/templates/applications/tasks/delete.html:14
 msgid "Danger Zone!"
 msgstr "Zona de Peligro!"
 
@@ -1367,10 +1369,11 @@ msgid ""
 "                providing a list of task IDs separated by commas. The "
 "lowest\n"
 "                priority is"
-msgstr "de una o más tareas, \n"
+msgstr ""
+"de una o más tareas, \n"
 "                proporcionando una lista de identificadores separados por"
-" comas."
-" La prioridad\n más baja es"
+" comas. La prioridad\n"
+" más baja es"
 
 #: themes/default/templates/applications/task_priority.html:19
 msgid "and the highest priority is"
@@ -1380,8 +1383,7 @@ msgstr "y la más alta es"
 msgid ""
 "The priority value is only\n"
 "                respected by the"
-msgstr ""
-"La prioridad solo funciona con el"
+msgstr "La prioridad solo funciona con el"
 
 #: themes/default/templates/applications/task_priority.html:22
 msgid "default scheduler"
@@ -1657,6 +1659,31 @@ msgid "Please provide a URL to a Google Drive Spreadsheet with data for"
 msgstr ""
 "Por favor, proporciona un enlace de una hoja de cálculo de Google Drive "
 "para"
+
+#: themes/default/templates/applications/tasks/delete.html:14
+msgid ""
+"If you delete all the\n"
+"            tasks and task runs they will be gone\n"
+"            forever!"
+msgstr "Si borras la aplicación y sus tareas, se borrarán para siempre!"
+
+#: themes/default/templates/applications/tasks/delete.html:16
+msgid "You cannot undo this action!"
+msgstr "No se puede deshacer esta acción"
+
+#: themes/default/templates/applications/tasks/delete.html:20
+msgid ""
+"Are you sure you want to delete ALL the project tasks and associated task"
+" runs?"
+msgstr ""
+"¿Estás seguro que quieres eliminar este proyecto y todas las tareas y\"\n"
+"\" respuestas asociadas con él?"
+
+#: themes/default/templates/applications/tasks/delete.html:26
+msgid ""
+"No, do not delete\n"
+"              anything!"
+msgstr "No, no quiero borrar nada"
 
 #: themes/default/templates/home/_about.html:5
 msgid ""
