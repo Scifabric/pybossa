@@ -1,0 +1,46 @@
+---
+- hosts: all
+  sudo: yes
+  vars:
+    pybossa_path: "/vagrant"
+    virtualenv_path: "/home/vagrant/pybossa-env"
+  tasks:
+    - name: Updates apt cache
+      apt: update_cache=yes
+
+    - name: Install git
+      apt: name=git-core state=latest
+
+    - name: Install Python
+      apt: name={{item}} state=latest
+      with_items:
+        - python
+        - python-dev
+        - python-virtualenv
+        - python-setuptools
+        - python-pip
+
+    - name: Install PostgreSQL
+      apt: name={{item}} state=latest
+      with_items:
+        - postgresql
+        - postgresql-server-dev-all
+        - libpq-dev
+
+    - name: Start PostgreSQL service
+      service: name=postgresql state=started
+
+    - name: Install Redis
+      apt: name=redis-server state=latest
+
+    - name: Install PyBossa build requirements
+      apt: name={{item}} state=latest
+      with_items:
+        - build-essential
+        - libjpeg-dev
+        - libssl-dev
+        - swig
+
+    - name: Install PyBossa packages (virtualenv)
+      sudo_user: vagrant
+      pip: chdir={{pybossa_path}} requirements={{pybossa_path}}/requirements.txt virtualenv={{virtualenv_path}} virtualenv_site_packages=yes
