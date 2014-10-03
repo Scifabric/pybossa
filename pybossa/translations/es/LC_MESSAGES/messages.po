@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: daniel@shuttleworthfoundation.org\n"
-"POT-Creation-Date: 2014-10-03 19:07+0200\n"
+"POT-Creation-Date: 2014-10-03 19:10+0200\n"
 "PO-Revision-Date: 2013-03-26 18:24+0100\n"
 "Last-Translator: Daniel Lombraña González "
 "<daniel@shuttleworthfoundation.org>\n"
@@ -1660,6 +1660,20 @@ msgstr ""
 "Por favor, proporciona un enlace de una hoja de cálculo de Google Drive "
 "para"
 
+#: themes/default/templates/applications/snippets/options.html:4
+#: themes/default/templates/applications/tasks/options.html:3
+msgid "Use one of the following available"
+msgstr "Utiliza una de las siguientes"
+
+#: themes/default/templates/applications/snippets/options.html:5
+#: themes/default/templates/applications/tasks/options.html:4
+msgid "templates"
+msgstr "plantillas"
+
+#: themes/default/templates/applications/snippets/options.html:5
+msgid "for your project"
+msgstr "para tu proyeto"
+
 #: themes/default/templates/applications/tasks/delete.html:14
 msgid ""
 "If you delete all the\n"
@@ -1684,6 +1698,10 @@ msgid ""
 "No, do not delete\n"
 "              anything!"
 msgstr "No, no quiero borrar nada"
+
+#: themes/default/templates/applications/tasks/options.html:4
+msgid "to import tasks"
+msgstr "para importar tareas"
 
 #: themes/default/templates/home/_about.html:5
 msgid ""

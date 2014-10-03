@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-03 19:07+0200\n"
+"POT-Creation-Date: 2014-10-03 19:10+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1610,6 +1610,20 @@ msgstr ""
 msgid "Please provide a URL to a Google Drive Spreadsheet with data for"
 msgstr ""
 
+#: themes/default/templates/applications/snippets/options.html:4
+#: themes/default/templates/applications/tasks/options.html:3
+msgid "Use one of the following available"
+msgstr ""
+
+#: themes/default/templates/applications/snippets/options.html:5
+#: themes/default/templates/applications/tasks/options.html:4
+msgid "templates"
+msgstr ""
+
+#: themes/default/templates/applications/snippets/options.html:5
+msgid "for your project"
+msgstr ""
+
 #: themes/default/templates/applications/tasks/delete.html:14
 msgid ""
 "If you delete all the\n"
@@ -1631,6 +1645,10 @@ msgstr ""
 msgid ""
 "No, do not delete\n"
 "              anything!"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/options.html:4
+msgid "to import tasks"
 msgstr ""
 
 #: themes/default/templates/home/_about.html:5
