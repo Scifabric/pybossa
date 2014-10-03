@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2014-10-03 19:10+0200\n"
+"POT-Creation-Date: 2014-10-03 19:19+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1624,6 +1624,16 @@ msgstr ""
 msgid "for your project"
 msgstr ""
 
+#: themes/default/templates/applications/tasks/csv.html:3
+msgid "Provide a public link to your own CSV file"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/csv.html:5
+msgid ""
+"Use the CSV URL\n"
+"      template"
+msgstr ""
+
 #: themes/default/templates/applications/tasks/delete.html:14
 msgid ""
 "If you delete all the\n"
@@ -1645,6 +1655,104 @@ msgstr ""
 msgid ""
 "No, do not delete\n"
 "              anything!"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/epicollect.html:2
+msgid "EpiCollect Plus Project"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/epicollect.html:3
+msgid "Use an EpiCollect Plus project"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/epicollect.html:5
+msgid ""
+"Use an EpiCollect\n"
+"      Plus project"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/gdocs-image.html:2
+msgid "Image Pattern Recognition"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/gdocs-image.html:3
+msgid "Re-use the Flickr Person Finder task template"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/gdocs-image.html:5
+msgid ""
+"Use the\n"
+"      Image Task template"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/gdocs-map.html:2
+msgid "Geo-coding"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/gdocs-map.html:3
+msgid "Re-use the Urban Park Task template"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/gdocs-map.html:5
+msgid ""
+"Use the\n"
+"      Mapping template"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/gdocs-pdf.html:2
+msgid "Transcribing documents"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/gdocs-pdf.html:3
+msgid "Re-use the PDF transcription template"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/gdocs-pdf.html:5
+msgid ""
+"Use the\n"
+"      Transcription template"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/gdocs-sound.html:2
+msgid "Sound Pattern Recognition"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/gdocs-sound.html:3
+msgid "Re-use the SoundCloud task template"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/gdocs-sound.html:5
+msgid ""
+"Use the\n"
+"      Sound Task template"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/gdocs-spreadsheet.html:2
+msgid "Google Drive Spreadsheet"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/gdocs-spreadsheet.html:3
+msgid "Import a Google Drive Spreadsheet"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/gdocs-spreadsheet.html:5
+msgid ""
+"Use the Google Drive\n"
+"      template"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/gdocs-video.html:2
+msgid "Video Pattern Recognition"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/gdocs-video.html:3
+msgid "Re-use the Vimeo task template"
+msgstr ""
+
+#: themes/default/templates/applications/tasks/gdocs-video.html:5
+msgid ""
+"Use the\n"
+"      Video Task template"
 msgstr ""
 
 #: themes/default/templates/applications/tasks/options.html:4

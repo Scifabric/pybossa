@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PROJECT VERSION\n"
 "Report-Msgid-Bugs-To: daniel@shuttleworthfoundation.org\n"
-"POT-Creation-Date: 2014-10-03 19:10+0200\n"
+"POT-Creation-Date: 2014-10-03 19:19+0200\n"
 "PO-Revision-Date: 2013-03-26 18:24+0100\n"
 "Last-Translator: Daniel Lombraña González "
 "<daniel@shuttleworthfoundation.org>\n"
@@ -1652,7 +1652,7 @@ msgstr ""
 
 #: themes/default/templates/applications/importers/gdocs.html:16
 msgid "From a Google Docs Spreadsheet"
-msgstr "Desde una hoja de cálcula de Google Docs"
+msgstr "Desde una hoja de cálculo de Google"
 
 #: themes/default/templates/applications/importers/gdocs.html:20
 msgid "Please provide a URL to a Google Drive Spreadsheet with data for"
@@ -1673,6 +1673,17 @@ msgstr "plantillas"
 #: themes/default/templates/applications/snippets/options.html:5
 msgid "for your project"
 msgstr "para tu proyeto"
+
+#: themes/default/templates/applications/tasks/csv.html:3
+msgid "Provide a public link to your own CSV file"
+msgstr "Proporciona un enlace público al CSV"
+
+#: themes/default/templates/applications/tasks/csv.html:5
+msgid ""
+"Use the CSV URL\n"
+"      template"
+msgstr ""
+"Usa un enlace a fichero CSV"
 
 #: themes/default/templates/applications/tasks/delete.html:14
 msgid ""
@@ -1698,6 +1709,104 @@ msgid ""
 "No, do not delete\n"
 "              anything!"
 msgstr "No, no quiero borrar nada"
+
+#: themes/default/templates/applications/tasks/epicollect.html:2
+msgid "EpiCollect Plus Project"
+msgstr "Proyecto EpiCollect Plus"
+
+#: themes/default/templates/applications/tasks/epicollect.html:3
+msgid "Use an EpiCollect Plus project"
+msgstr "Utilizar un proyecto EpiCollect Plus"
+
+#: themes/default/templates/applications/tasks/epicollect.html:5
+msgid ""
+"Use an EpiCollect\n"
+"      Plus project"
+msgstr "Usar un proyecto EpiCollect Plus"
+
+#: themes/default/templates/applications/tasks/gdocs-image.html:2
+msgid "Image Pattern Recognition"
+msgstr "Imágenes"
+
+#: themes/default/templates/applications/tasks/gdocs-image.html:3
+msgid "Re-use the Flickr Person Finder task template"
+msgstr "Reutiliza la plantilla Flickr Person"
+
+#: themes/default/templates/applications/tasks/gdocs-image.html:5
+msgid ""
+"Use the\n"
+"      Image Task template"
+msgstr "Utiliza la plantilla de Imágenes"
+
+#: themes/default/templates/applications/tasks/gdocs-map.html:2
+msgid "Geo-coding"
+msgstr "Geo-codificar"
+
+#: themes/default/templates/applications/tasks/gdocs-map.html:3
+msgid "Re-use the Urban Park Task template"
+msgstr "Reutiliza la plantilla de los parques"
+
+#: themes/default/templates/applications/tasks/gdocs-map.html:5
+msgid ""
+"Use the\n"
+"      Mapping template"
+msgstr "Usa la plantilla de los mapas"
+
+#: themes/default/templates/applications/tasks/gdocs-pdf.html:2
+msgid "Transcribing documents"
+msgstr "Transcripción de documentos"
+
+#: themes/default/templates/applications/tasks/gdocs-pdf.html:3
+msgid "Re-use the PDF transcription template"
+msgstr "Reutiliza la plantilla de transcripción"
+
+#: themes/default/templates/applications/tasks/gdocs-pdf.html:5
+msgid ""
+"Use the\n"
+"      Transcription template"
+msgstr "Utiliza la plantilla de transcripción"
+
+#: themes/default/templates/applications/tasks/gdocs-sound.html:2
+msgid "Sound Pattern Recognition"
+msgstr "Sonido"
+
+#: themes/default/templates/applications/tasks/gdocs-sound.html:3
+msgid "Re-use the SoundCloud task template"
+msgstr "Reutiliza la plantilla de SoundCloud"
+
+#: themes/default/templates/applications/tasks/gdocs-sound.html:5
+msgid ""
+"Use the\n"
+"      Sound Task template"
+msgstr "Utilizar la plantilla de Sonido"
+
+#: themes/default/templates/applications/tasks/gdocs-spreadsheet.html:2
+msgid "Google Drive Spreadsheet"
+msgstr "Hoja de Cálculo en Google Drive"
+
+#: themes/default/templates/applications/tasks/gdocs-spreadsheet.html:3
+msgid "Import a Google Drive Spreadsheet"
+msgstr "Importar desde Google Drive"
+
+#: themes/default/templates/applications/tasks/gdocs-spreadsheet.html:5
+msgid ""
+"Use the Google Drive\n"
+"      template"
+msgstr "Utilizar hoja de cálculo de Google Drive"
+
+#: themes/default/templates/applications/tasks/gdocs-video.html:2
+msgid "Video Pattern Recognition"
+msgstr "Vídeos"
+
+#: themes/default/templates/applications/tasks/gdocs-video.html:3
+msgid "Re-use the Vimeo task template"
+msgstr "Reutilizar la plantilla de Vimeo"
+
+#: themes/default/templates/applications/tasks/gdocs-video.html:5
+msgid ""
+"Use the\n"
+"      Video Task template"
+msgstr "Utilizar la plantilla de vídeo"
 
 #: themes/default/templates/applications/tasks/options.html:4
 msgid "to import tasks"
