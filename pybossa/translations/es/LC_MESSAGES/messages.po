@@ -32,7 +32,7 @@ msgstr "El fichero que has subido tiene dos cabeceras con el mismo nombre."
 
 #: importers.py:92
 msgid "Oops! That file doesn't look like the right file."
-msgstr "Uy! Ese fichero no parece que sea el correcto."
+msgstr "¡Uy! Ese fichero no parece que sea el correcto."
 
 #: forms/forms.py:36 forms/forms.py:305
 #: themes/default/templates/stats/index.html:18
@@ -41,7 +41,7 @@ msgstr "Nombre"
 
 #: forms/forms.py:39
 msgid "Name is already taken."
-msgstr "El Nombre Corto ya está registrado"
+msgstr "El Nombre ya está registrado"
 
 #: forms/forms.py:40
 msgid "Short Name"
@@ -152,7 +152,7 @@ msgstr "Título"
 
 #: forms/forms.py:105
 msgid "You must enter a title for the post."
-msgstr "Debes proporcionar el nombre del Formulario del Proyecto"
+msgstr "Debes proporcionar un título para el post."
 
 #: forms/forms.py:107
 msgid "Body"
@@ -160,7 +160,7 @@ msgstr "Cuerpo"
 
 #: forms/forms.py:108
 msgid "You must enter some text for the post."
-msgstr "Debes proporcionar el nombre del Formulario del Proyecto"
+msgstr "Debes proporcionar contenido para el post."
 
 #: forms/forms.py:113 forms/forms.py:171
 msgid "Password"
@@ -168,7 +168,7 @@ msgstr "Contraseña"
 
 #: forms/forms.py:114
 msgid "You must enter a password"
-msgstr "Debe proporcionar una contraseña"
+msgstr "Debes proporcionar una contraseña"
 
 #: forms/forms.py:120 forms/forms.py:130
 msgid "You must provide a URL"
@@ -176,7 +176,7 @@ msgstr "Debes proporcionar un enlace"
 
 #: forms/forms.py:121 forms/forms.py:131
 msgid "Oops! That's not a valid URL. You must provide a valid URL"
-msgstr "Uy! Ese enlace no es válido. Debes proporcionar uno correcto"
+msgstr "¡Uy! Ese enlace no es válido. Debes proporcionar uno correcto"
 
 #: forms/forms.py:123 forms/forms.py:133
 msgid "URL"
@@ -268,7 +268,7 @@ msgstr "Idioma por Defecto"
 
 #: forms/forms.py:243
 msgid "CKAN API Key"
-msgstr ""
+msgstr "Clave API de CKAN"
 
 #: forms/forms.py:244
 msgid "Privacy Mode"
@@ -296,7 +296,7 @@ msgstr "Mi nueva contraseña"
 
 #: forms/forms.py:271
 msgid "Repeat password"
-msgstr "Repita la contraseña"
+msgstr "Repite la contraseña"
 
 #: forms/forms.py:300 themes/default/templates/account/settings.html:12
 #: themes/default/templates/applications/stats.html:297
@@ -310,7 +310,7 @@ msgstr "Usuario"
 
 #: forms/forms.py:315
 msgid "Avatar"
-msgstr "datos"
+msgstr "Avatar"
 
 #: forms/validator.py:33
 msgid "This item already exists"
@@ -346,7 +346,7 @@ msgstr "Crea"
 #: themes/default/templates/_navbar.html:15
 #: themes/default/templates/home/_about.html:3
 msgid "About"
-msgstr "Acerca"
+msgstr "Acerca de"
 
 #: themes/default/templates/_navbar.html:22
 #: themes/default/templates/account/_helpers.html:3
@@ -375,7 +375,7 @@ msgstr "Administrar el sitio"
 
 #: themes/default/templates/_navbar.html:30
 msgid "Sign Out"
-msgstr "Salir"
+msgstr "Cerrar Sesión"
 
 #: themes/default/templates/_navbar.html:38
 #: themes/default/templates/account/signin.html:45
@@ -452,7 +452,7 @@ msgstr "tareas para el proyecto @PyBossa:"
 
 #: themes/default/templates/account/_helpers.html:14
 msgid "Do you want to help?"
-msgstr "Quieres ayudar?"
+msgstr "¿Quieres ayudar?"
 
 #: themes/default/templates/account/_helpers.html:15
 msgid "Tweet"
@@ -475,7 +475,7 @@ msgstr "de"
 
 #: themes/default/templates/account/_helpers.html:49
 msgid "with a Score of"
-msgstr "con un marcador de"
+msgstr "con una puntuación de"
 
 #: themes/default/templates/account/_helpers.html:49
 msgid "contributed tasks"
@@ -519,12 +519,12 @@ msgstr "Borrador"
 
 #: themes/default/templates/account/applications.html:28
 msgid "You have not created a project"
-msgstr "No has creado una aplicación"
+msgstr "No has creado unaproyecto"
 
 #: themes/default/templates/account/applications.html:29
 #: themes/default/templates/home/index.html:37 view/applications.py:190
 msgid "Create a Project"
-msgstr "Crea una Aplicación"
+msgstr "Crea una Proyecto"
 
 #: themes/default/templates/account/index.html:14
 msgid "registered users"
@@ -584,7 +584,7 @@ msgstr "Cancelar"
 
 #: themes/default/templates/account/password_forgot.html:6
 msgid "Reset your Password"
-msgstr "Reiniciar tu contraseña"
+msgstr "Restablecer tu contraseña"
 
 #: themes/default/templates/account/password_forgot.html:10
 msgid "my e-mail"
@@ -592,7 +592,7 @@ msgstr "mi correo electrónico"
 
 #: themes/default/templates/account/password_forgot.html:12
 msgid "Reset my Password"
-msgstr "Reiniciar my contraseña"
+msgstr "Restablecer mi contraseña"
 
 #: themes/default/templates/account/profile.html:15
 msgid "Your Profile"
@@ -604,7 +604,7 @@ msgstr "Tus Contribuciones"
 
 #: themes/default/templates/account/profile.html:26
 msgid "Contribute!"
-msgstr "Contribuye!"
+msgstr "¡Contribuye!"
 
 #: themes/default/templates/account/register.html:6
 #: themes/default/templates/account/reset-api-key.html:14
@@ -658,7 +658,7 @@ msgstr "mi nombre de usuario"
 #: themes/default/templates/account/register.html:20
 #: themes/default/templates/account/update.html:42
 msgid "hello@mywebsite.org"
-msgstr ""
+msgstr "hola@miweb.org"
 
 #: themes/default/templates/account/register.html:21
 #: themes/default/templates/account/register.html:22
@@ -680,7 +680,7 @@ msgstr ""
 #: themes/default/templates/account/reset-api-key.html:17
 #: themes/default/templates/account/update.html:84
 msgid "Do you want to reset your personal API Key?"
-msgstr "Quieres reiniciar tu clave personal de la API?"
+msgstr "¿Quieres reiniciar tu clave personal de la API?"
 
 #: themes/default/templates/account/reset-api-key.html:21
 #: themes/default/templates/account/update.html:88
@@ -735,7 +735,7 @@ msgstr "Inicia sesión con tu cuenta de PyBossa"
 
 #: themes/default/templates/account/signin.html:52
 msgid " Create a new account!"
-msgstr " Únete ya!"
+msgstr " ¡Únete ya!"
 
 #: themes/default/templates/account/signin.html:53
 msgid "Forgot Password"
@@ -757,11 +757,11 @@ msgstr "Quitar del grupo de administradores"
 
 #: themes/default/templates/admin/_helpers.html:16
 msgid "Add to admin group"
-msgstr "Añadir al grup de administradores"
+msgstr "Añadir al grupo de administradores"
 
 #: themes/default/templates/admin/applications.html:13
 msgid "Manage featured projects"
-msgstr "Organizar las aplicaciones de portada"
+msgstr "Organizar los proyectos destacados"
 
 #: themes/default/templates/admin/categories.html:13
 msgid "Manage Categories"
@@ -770,12 +770,12 @@ msgstr "Administrar Categorías"
 #: themes/default/templates/admin/categories.html:20
 #: themes/default/templates/admin/update_category.html:19
 msgid "Category name"
-msgstr "nombre de usuario"
+msgstr "Nombre de la categoría"
 
 #: themes/default/templates/admin/categories.html:21
 #: themes/default/templates/admin/update_category.html:20
 msgid "Category description"
-msgstr "Descripción Larga"
+msgstr "Descrición de la categoría"
 
 #: themes/default/templates/admin/categories.html:23
 msgid "Add Category"
@@ -783,7 +783,7 @@ msgstr "Añadir Categoría"
 
 #: themes/default/templates/admin/categories.html:30
 msgid "List of Available Categories"
-msgstr "Todas las aplicaciones disponibles"
+msgstr "Todas las categorías disponibles"
 
 #: themes/default/templates/admin/categories.html:39
 msgid "Edit Category Name"
@@ -799,7 +799,7 @@ msgstr "Borrar Categoría"
 #: themes/default/templates/applications/delete.html:14
 #: themes/default/templates/applications/tasks/delete.html:14
 msgid "Danger Zone!"
-msgstr "Zona de Peligro!"
+msgstr "¡Zona de Peligro!"
 
 #: themes/default/templates/admin/del_category.html:15
 msgid ""
@@ -830,7 +830,7 @@ msgstr "Categorías"
 
 #: themes/default/templates/admin/index.html:23
 msgid "Manage project categories"
-msgstr "Organizar las aplicaciones de portada"
+msgstr "Organizar los proyectos de portada"
 
 #: themes/default/templates/admin/index.html:31
 msgid "Administrators"
@@ -957,12 +957,12 @@ msgstr "Oculta"
 #: themes/default/templates/applications/_helpers.html:99
 #: themes/default/templates/applications/_helpers.html:109
 msgid "Remove from Featured!"
-msgstr "Eliminado de Featured"
+msgstr "¡Eliminar de Destacados!"
 
 #: themes/default/templates/applications/_helpers.html:102
 #: themes/default/templates/applications/_helpers.html:106
 msgid "Add to Featured!"
-msgstr "En Portada!"
+msgstr "¡En Destacados!"
 
 #: themes/default/templates/applications/_helpers.html:133
 #: themes/default/templates/applications/_helpers.html:135
@@ -975,16 +975,16 @@ msgstr "Yo"
 
 #: themes/default/templates/applications/_helpers.html:138
 msgid "Try it!"
-msgstr "Participa!"
+msgstr "¡Participa!"
 
 #: themes/default/templates/applications/_helpers.html:195
 msgid "Start Contributing Now!"
-msgstr "Participa!"
+msgstr "¡Participa!"
 
 #: themes/default/templates/applications/actions.html:9
 #: themes/default/templates/applications/settings.html:18
 msgid "Edit the project details"
-msgstr "Edita los detalles de la aplicación"
+msgstr "Edita los detalles del proyecto"
 
 #: themes/default/templates/applications/actions.html:10
 #: themes/default/templates/applications/tasks.html:33
@@ -1001,7 +1001,7 @@ msgstr "Importa tareas"
 #: themes/default/templates/applications/actions.html:12
 #: themes/default/templates/applications/settings.html:20
 msgid "Delete the project"
-msgstr "Crear una aplicación"
+msgstr "Crear un proyecto"
 
 #: themes/default/templates/applications/app.html:31
 #: themes/default/templates/applications/blog.html:33
@@ -1014,7 +1014,7 @@ msgstr "Crear una aplicación"
 #: themes/default/templates/applications/tasks.html:71
 #: themes/default/templates/applications/tasks_browse.html:65
 msgid "Sorry! This project does not exist."
-msgstr "Perdón! Esta aplicación no existe"
+msgstr "¡Perdón! Esta aplicación no existe"
 
 #: themes/default/templates/applications/blog.html:27
 msgid "Sorry! No posts so far."
@@ -1044,11 +1044,11 @@ msgstr "Atrás"
 
 #: themes/default/templates/applications/blog_post.html:40
 msgid "Sorry! This blogpost does not exist."
-msgstr "Perdón! Esta aplicación no existe"
+msgstr "¡Perdón! Esta aplicación no existe"
 
 #: themes/default/templates/applications/delete.html:14
 msgid "If you delete the project and its tasks, it will be gone forever!"
-msgstr "Si borras la aplicación y sus tareas, se borrarán para siempre!"
+msgstr "¡Si borras la aplicación y sus tareas, se borrarán para siempre!"
 
 #: themes/default/templates/applications/delete.html:20
 msgid ""
@@ -1061,7 +1061,7 @@ msgstr ""
 
 #: themes/default/templates/applications/delete.html:23
 msgid "No, do not delete it!"
-msgstr "No, no la borres!"
+msgstr "¡No, no la borres!"
 
 #: themes/default/templates/applications/export.html:13
 msgid "Export All Tasks and Task Runs"
@@ -1098,20 +1098,20 @@ msgstr "Exportar en formato JSON"
 #: themes/default/templates/applications/import_options.html:13
 #: themes/default/templates/applications/tasks.html:20
 msgid "Import Tasks"
-msgstr "Importa tareas"
+msgstr "Importa Tareas"
 
 #: themes/default/templates/applications/index.html:35
 msgid "A special selection of the most interesting projects"
-msgstr "Una selección especial de las aplicaciones más interesantes"
+msgstr "Una selección especial de los proyectos más interesantes"
 
 #: themes/default/templates/applications/index.html:38
 #: themes/default/templates/stats/global.html:93
 msgid "Draft Projects"
-msgstr "Crear una aplicación"
+msgstr "Crear un Proyecto"
 
 #: themes/default/templates/applications/index.html:39
 msgid "Work in progress projects"
-msgstr "Aplicaciones en desarrollo"
+msgstr "Proyectos en desarrollo"
 
 #: themes/default/templates/applications/index.html:58
 msgid "Sorry, there are no published projects for this category yet"
@@ -1123,17 +1123,17 @@ msgstr "Nombre del Proyecto"
 
 #: themes/default/templates/applications/new.html:13
 msgid "Create a new project"
-msgstr "Crear una aplicación"
+msgstr "Crear un proyecto"
 
 #: themes/default/templates/applications/new.html:17
 #: themes/default/templates/applications/update.html:37
 msgid "The name of the project"
-msgstr "El nombre de la aplicación"
+msgstr "El nombre del proyecto"
 
 #: themes/default/templates/applications/new.html:18
 #: themes/default/templates/applications/update.html:38
 msgid "Short name or slug for the project"
-msgstr "El nombre corto o slug de la aplicación"
+msgstr "El nombre corto o slug del proyecto"
 
 #: themes/default/templates/applications/new.html:18
 #: themes/default/templates/applications/update.html:38
@@ -1174,7 +1174,7 @@ msgstr ""
 
 #: themes/default/templates/applications/new.html:26
 msgid "Create the project"
-msgstr "Crear una aplicación"
+msgstr "Crear un proyecto"
 
 #: themes/default/templates/applications/new_blogpost.html:14
 msgid "Write a new blog post for ad"
@@ -1196,7 +1196,7 @@ msgstr "Introduce la contraseña para contribuir a este proyecto:"
 
 #: themes/default/templates/applications/password.html:18
 msgid "Project password"
-msgstr "mi contraseña actual"
+msgstr "Contraseña del proyecto"
 
 #: themes/default/templates/applications/password.html:21
 msgid "Submit"
@@ -1208,11 +1208,11 @@ msgid ""
 "project still needs more volunteers, so please spread the word!"
 msgstr ""
 "Vaya, ya has contribuiod a todas las tareas de este proyecto, pero "
-"todavíapuedes ayudar invitando a otros voluntarios a que participen."
+"todavía puedes ayudar invitando a otros voluntarios a que participen."
 
 #: themes/default/templates/applications/settings.html:16
 msgid "Project Settings"
-msgstr "Configuración de la Aplicación"
+msgstr "Configuración del Proyecto"
 
 #: themes/default/templates/applications/settings.html:19
 #: themes/default/templates/applications/task_settings.html:13
@@ -1482,7 +1482,7 @@ msgstr "Exportar tareas"
 #: themes/default/templates/applications/tasks.html:26
 #: themes/default/templates/applications/tasks.html:62
 msgid "Export tasks to JSON, CSV or a CKAN server"
-msgstr "Exportar en JSON, CSV o un servidor CKAN"
+msgstr "Exportar tareas en JSON, CSV o a un servidor CKAN"
 
 #: themes/default/templates/applications/tasks.html:27
 #: themes/default/templates/applications/tasks.html:63 view/applications.py:853
@@ -1519,7 +1519,7 @@ msgstr "Explorar tareas"
 
 #: themes/default/templates/applications/tasks_browse.html:15
 msgid "This page shows all the available tasks for this project"
-msgstr "Esta página muestra todas las tareas disponibles para esta aplicación"
+msgstr "Esta página muestra todas las tareas disponibles para este proyecto"
 
 #: themes/default/templates/applications/tasks_browse.html:16
 msgid "For each task, you can find the following information"
@@ -1533,7 +1533,7 @@ msgstr "Tarea"
 
 #: themes/default/templates/applications/tasks_browse.html:18
 msgid "This number identifies the task for the project and it is unique"
-msgstr "Este número identifica la tarea de la aplicación y es único"
+msgstr "Este número identifica la tarea del proyecto y es único"
 
 #: themes/default/templates/applications/tasks_browse.html:19
 msgid ""
@@ -1593,7 +1593,7 @@ msgstr "Actualizar el proyecto"
 
 #: themes/default/templates/applications/update.html:39
 msgid "Give some details about the project"
-msgstr "Da algunos detalles sobre la aplicación"
+msgstr "Da algunos detalles sobre el proyecto"
 
 #: themes/default/templates/applications/update.html:40
 msgid "Explain the project (use Markdown!)"
@@ -1601,7 +1601,7 @@ msgstr "Explica el proyecto (usa Markdown)"
 
 #: themes/default/templates/applications/update.html:44
 msgid "Do you want to hide your project?"
-msgstr "¿Quieres ocultar la aplicación?"
+msgstr "¿Quieres ocultar el proyecto?"
 
 #: themes/default/templates/applications/update.html:46
 msgid "Save te changes"
@@ -1613,7 +1613,7 @@ msgstr "Edita el artículo"
 
 #: themes/default/templates/applications/update_blogpost.html:23
 msgid "Update"
-msgstr "datos"
+msgstr "Actualizar"
 
 #: themes/default/templates/applications/importers/csv.html:16
 msgid "From a CSV file"
@@ -1699,7 +1699,7 @@ msgid ""
 "If you delete all the\n"
 "            tasks and task runs they will be gone\n"
 "            forever!"
-msgstr "Si borras la aplicación y sus tareas, se borrarán para siempre!"
+msgstr "¡Si borras la aplicación y sus tareas, se borrarán para siempre!"
 
 #: themes/default/templates/applications/tasks/delete.html:16
 msgid "You cannot undo this action!"
@@ -1838,7 +1838,7 @@ msgstr ""
 "transcripción de documentos, geolocalización, etc. PyBossaes una "
 "herramienta que pretende ayudar a investigadores, hackers cívicos y "
 "desarrolladoresa crear proyectos en los que cualquier persona del mundo "
-"pueda contribuir si tiene unaconexión a Internet e interés en elr "
+"pueda contribuir si tiene una conexión a Internet e interés en el "
 "proyecto."
 
 #: themes/default/templates/home/_about.html:8
@@ -1903,14 +1903,14 @@ msgstr "y seguir el"
 
 #: themes/default/templates/home/_about.html:18
 msgid "step-by-step tutorial to create your own projects"
-msgstr "tutorial paso a paso para crear tus propias aplicaciones"
+msgstr "tutorial paso a paso para crear tus propios proyectos"
 
 #: themes/default/templates/home/_about.html:23
 msgid ""
 " PyBossa provides individual statistics for every project in the system, "
 "as well as a"
 msgstr ""
-"PyBossa proporciona estadísticas individuales para cada aplicación \"\n"
+"PyBossa proporciona estadísticas individuales para cada proyecto \"\n"
 "\" así como también para"
 
 #: themes/default/templates/home/_about.html:23
@@ -1978,7 +1978,7 @@ msgstr " Únete y Participa"
 
 #: themes/default/templates/home/index.html:42
 msgid "Most Active Projects"
-msgstr "Aplicaciónes más Activas"
+msgstr "Proyectos más Activos"
 
 #: themes/default/templates/home/index.html:54
 msgid "Start"
@@ -1986,7 +1986,7 @@ msgstr "Comenzar"
 
 #: themes/default/templates/home/index.html:62
 msgid "Your project"
-msgstr "Crear una aplicación"
+msgstr "Tu proyecto"
 
 #: themes/default/templates/home/index.html:63
 msgid "could be here!"
@@ -1994,7 +1994,7 @@ msgstr "podría estar aquí!"
 
 #: themes/default/templates/home/index.html:64
 msgid "Create a project"
-msgstr "Crear una aplicación"
+msgstr "Crear un proyecto"
 
 #: themes/default/templates/home/index.html:73
 msgid "Most Active Volunteers"
@@ -2043,7 +2043,7 @@ msgstr "No hay usuarios activos en las últimas 24 horas"
 
 #: themes/default/templates/stats/global.html:92
 msgid "Published Projects"
-msgstr "Aplicaciones Publicadas"
+msgstr "Proyectos Publicados"
 
 #: themes/default/templates/stats/global.html:97
 msgid "Top 5 projects in the last 24 hours"
@@ -2110,7 +2110,7 @@ msgstr "Registrarse"
 
 #: view/account.py:211
 msgid "Thanks for signing-up"
-msgstr "Gracias por registrarse"
+msgstr "Gracias por registrarte"
 
 #: view/account.py:271
 msgid "Profile"
@@ -2124,11 +2124,11 @@ msgstr "Tu avatar ha sido actualizado. Puede tardar unos minutos en refrescarse"
 
 #: view/account.py:403 view/account.py:463
 msgid "Your profile has been updated!"
-msgstr "Su perfil ha sido actualizado"
+msgstr "Tu perfil ha sido actualizado"
 
 #: view/account.py:430
 msgid "Yay, you changed your password succesfully!"
-msgstr "Genial, has cambiado tu contraseña!"
+msgstr "¡Genial, has cambiado tu contraseña!"
 
 #: view/account.py:434
 msgid "Your current password doesn't match the one in our records"
@@ -2136,12 +2136,12 @@ msgstr "La contraseña actual no coincide con la que tenemos en nuestro sistema"
 
 #: view/account.py:508
 msgid "You reset your password successfully!"
-msgstr "Has reiniciado la contraseña satisfactoriamente!"
+msgstr "¡Has reiniciado la contraseña satisfactoriamente!"
 
 #: view/account.py:553
 msgid "We've send you email with account recovery instructions!"
 msgstr ""
-"Te hemos enviado un correo electrónico con instrucciones para recuperar "
+"¡Te hemos enviado un correo electrónico con instrucciones para recuperar "
 "la cuenta!"
 
 #: view/account.py:557
@@ -2167,7 +2167,7 @@ msgstr "Categoría añadida"
 
 #: view/admin.py:323
 msgid "Category deleted"
-msgstr "Aplicación eliminada!"
+msgstr "Proyecto eliminado"
 
 #: view/admin.py:328
 msgid ""
@@ -2180,11 +2180,11 @@ msgstr ""
 
 #: view/admin.py:369
 msgid "Category updated"
-msgstr "Aplicación actualizada!"
+msgstr "Proyecto actualizado"
 
 #: view/applications.py:225
 msgid "Project created!"
-msgstr "Aplicación creada!"
+msgstr "Proyecto creado!"
 
 #: view/applications.py:228
 msgid "You can check the "
@@ -2220,11 +2220,11 @@ msgstr ""
 
 #: view/applications.py:341
 msgid "Project deleted!"
-msgstr "Aplicación eliminada!"
+msgstr "¡Proyecto eliminado!"
 
 #: view/applications.py:376
 msgid "Project updated!"
-msgstr "Aplicación actualizada!"
+msgstr "¡Proyecto actualizado!"
 
 #: view/applications.py:422
 msgid ""
@@ -2244,26 +2244,26 @@ msgstr "Importando tareas, esto puede llevar un rato, espera..."
 
 #: view/applications.py:573
 msgid "Oops! It looks like the file is empty."
-msgstr "Uy! Parece que el fichero está vacío."
+msgstr "¡Uy! Parece que el fichero está vacío."
 
 #: view/applications.py:575
 msgid "Oops! It looks like there are no new records to import."
-msgstr "Uy! Parece que el fichero está vacío."
+msgstr "¡Uy! Parece que el fichero está vacío."
 
 #: view/applications.py:577
 msgid "Tasks imported successfully!"
-msgstr "Tareas importadas satisfactoriamente!"
+msgstr "¡Tareas importadas satisfactoriamente!"
 
 #: view/applications.py:579
 msgid "Task imported successfully!"
-msgstr "Tareas importadas satisfactoriamente!"
+msgstr "Tarea importada satisfactoriamente!"
 
 #: view/applications.py:635
 msgid ""
 "Ooops! You are an anonymous user and will not get any credit for your "
 "contributions."
 msgstr ""
-"Uy! Eres un usuario anónimo y no vas a obtener ningún reconocimiento por "
+"¡Uy! Eres un usuario anónimo y no vas a obtener ningún reconocimiento por "
 "tus contribuciones."
 
 #: view/applications.py:837
@@ -2283,8 +2283,8 @@ msgid ""
 "Oops, the project does not have tasks to                         export, "
 "if you are the owner add some tasks"
 msgstr ""
-"Uy, la aplicación no tiene tareas que exportar, si eres el dueño de la "
-"aplicación añade alguna"
+"Uy, la aplicación no tiene tareas que exportar, si eres el dueño del "
+"proyecto añade alguna"
 
 #: view/applications.py:1037
 msgid ""
@@ -2300,7 +2300,7 @@ msgstr "Redundancia de las tareas actualizada"
 
 #: view/applications.py:1275
 msgid "Project Task Scheduler updated!"
-msgstr "Aplicación actualizada!"
+msgstr "¡Gestor de tareas actualizado!"
 
 #: view/applications.py:1316
 msgid "Task priority has been changed"
@@ -2308,11 +2308,11 @@ msgstr "Su perfil ha sido actualizado"
 
 #: view/applications.py:1388
 msgid "Write a new post"
-msgstr " Únete ya!"
+msgstr "Escribe un nuevo artículo"
 
 #: view/applications.py:1422
 msgid "Blog post created!"
-msgstr "Artículo creado"
+msgstr "¡Artículo creado!"
 
 #: view/applications.py:1441
 msgid "Edit a post"
@@ -2320,7 +2320,7 @@ msgstr "Editar artículo"
 
 #: view/applications.py:1470
 msgid "Blog post updated!"
-msgstr "Artículo actualizado"
+msgstr "¡Artículo actualizado!"
 
 #~ msgid "Featured"
 #~ msgstr "Portada"
