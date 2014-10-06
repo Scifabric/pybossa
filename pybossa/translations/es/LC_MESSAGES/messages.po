@@ -1990,7 +1990,7 @@ msgstr "Tu proyecto"
 
 #: themes/default/templates/home/index.html:63
 msgid "could be here!"
-msgstr "podría estar aquí!"
+msgstr "¡podría estar aquí!"
 
 #: themes/default/templates/home/index.html:64
 msgid "Create a project"
