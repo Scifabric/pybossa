@@ -1,5 +1,4 @@
 --index-url https://pypi.python.org/simple/
 
--e git+https://github.com/alejandrodob/flask-sqlalchemy.git@pybossa-prod#egg=Flask-SQLAlchemy
--e git+https://github.com/therealmarv/flask-login.git@unicode-user-id-support#egg=Flask-Login
+-e git+https://github.com/maxcountryman/flask-login.git@13af160b3fd14dfb5f35f9cdc3863771efe194eb#egg=Flask-Login
 -e .
