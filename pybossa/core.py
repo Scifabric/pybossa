@@ -110,11 +110,16 @@ def setup_markdown(app):
 
 
 def setup_db(app):
+    def get_session(db, bind):
+        """Returns a session with for the given bind."""
+        engine = db.get_engine(db.app, bind=bind)
+        options = dict(bind=engine)
+        ses = db.create_scoped_session(options=options)
+        return ses
     db.app = app
     db.init_app(app)
-    db.slave_session = _get_session(db, bind='slave') or db.session
-    teardown = app.teardown_appcontext
-    @teardown
+    db.slave_session = get_session(db, bind='slave') or db.session
+    @app.teardown_appcontext
     def shutdown_session(response_or_exc):
         if app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN']:
             if response_or_exc is None:
@@ -400,11 +405,3 @@ def setup_cache_timeouts(app):
     timeouts['USER_TIMEOUT'] = app.config['USER_TIMEOUT']
     timeouts['USER_TOP_TIMEOUT'] = app.config['USER_TOP_TIMEOUT']
     timeouts['USER_TOTAL_TIMEOUT'] = app.config['USER_TOTAL_TIMEOUT']
-
-
-def _get_session(db, bind):
-    """Returns a session with for the given bind."""
-    engine = db.get_engine(db.app, bind=bind)
-    options = dict(bind=engine)
-    ses = db.create_scoped_session(options=options)
-    return ses
