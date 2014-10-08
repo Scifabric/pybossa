@@ -30,10 +30,6 @@ class CategoryFactory(BaseFactory):
         project_repo.save_category(category)
         return category
 
-    @classmethod
-    def _setup_next_sequence(cls):
-        return 1
-
     id = factory.Sequence(lambda n: n)
     name = factory.Sequence(lambda n: 'category_name_%d' % n)
     short_name = factory.Sequence(lambda n: 'category_short_name_%d' % n)

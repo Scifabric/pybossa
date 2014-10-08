@@ -30,10 +30,6 @@ class UserFactory(BaseFactory):
         user_repo.save(user)
         return user
 
-    @classmethod
-    def _setup_next_sequence(cls):
-        return 1
-
     id = factory.Sequence(lambda n: n)
     name = factory.Sequence(lambda n: u'user%d' % n)
     fullname = factory.Sequence(lambda n: u'User %d' % n)

@@ -44,6 +44,10 @@ class BaseFactory(SQLAlchemyModelFactory):
     class Meta:
         sqlalchemy_session = db.session
 
+    @classmethod
+    def _setup_next_sequence(cls):
+        return 1
+
 
 # Import the factories
 from app_factory import AppFactory

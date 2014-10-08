@@ -30,10 +30,6 @@ class TaskFactory(BaseFactory):
         task_repo.save(task)
         return task
 
-    @classmethod
-    def _setup_next_sequence(cls):
-        return 1
-
     id = factory.Sequence(lambda n: n)
     app = factory.SubFactory('factories.AppFactory')
     app_id = factory.LazyAttribute(lambda task: task.app.id)

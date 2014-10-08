@@ -30,10 +30,6 @@ class BlogpostFactory(BaseFactory):
         blog_repo.save(blogpost)
         return blogpost
 
-    @classmethod
-    def _setup_next_sequence(cls):
-        return 1
-
     id = factory.Sequence(lambda n: n)
     title = u'Blogpost title'
     body = u'Blogpost body text'
