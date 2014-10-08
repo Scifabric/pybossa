@@ -44,17 +44,6 @@ class BaseFactory(SQLAlchemyModelFactory):
     class Meta:
         sqlalchemy_session = db.session
 
-    @classmethod
-    def _create(cls, target_class, *args, **kwargs):
-        """The default beahaviour is to simply add the object to the SQLAlchemy
-        session. Here, we also flush it as autoflush is disabled in the
-        flask-SQLAlchemy extension"""
-        session = cls._meta.sqlalchemy_session
-        obj = target_class(*args, **kwargs)
-        session.add(obj)
-        session.commit()
-        return obj
-
 
 # Import the factories
 from app_factory import AppFactory
