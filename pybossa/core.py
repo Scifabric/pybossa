@@ -110,22 +110,24 @@ def setup_markdown(app):
 
 
 def setup_db(app):
-    def get_session(db, bind):
-        """Returns a session with for the given bind."""
+    def create_slave_session(db, bind):
+        if app.config.get('SQLALCHEMY_BINDS')['slave'] == app.config.get('SQLALCHEMY_DATABASE_URI'):
+            return db.session
         engine = db.get_engine(db.app, bind=bind)
-        options = dict(bind=engine)
-        ses = db.create_scoped_session(options=options)
-        return ses
+        options = dict(bind=engine,scopefunc=_app_ctx_stack.__ident_func__)
+        slave_session = db.create_scoped_session(options=options)
+        return slave_session
     db.app = app
     db.init_app(app)
-    db.slave_session = get_session(db, bind='slave') or db.session
-    @app.teardown_appcontext
-    def shutdown_session(response_or_exc):
-        if app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN']:
-            if response_or_exc is None:
-                db.slave_session.commit()
-        db.slave_session.remove()
-        return response_or_exc
+    db.slave_session = create_slave_session(db, bind='slave')
+    if db.slave_session is not db.session: #flask-sqlalchemy does it already for default session db.session
+        @app.teardown_appcontext
+        def shutdown_session(response_or_exc):
+            if app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN']:
+                if response_or_exc is None:
+                    db.slave_session.commit()
+            db.slave_session.remove()
+            return response_or_exc
 
 
 def setup_gravatar(app):
