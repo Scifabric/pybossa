@@ -121,7 +121,7 @@ def setup_db(app):
     db.app = app
     db.init_app(app)
     db.slave_session = get_session(db, bind='slave')
-    if db.slave_session is not db.session:
+    if db.slave_session is not db.session: #flask-sqlalchemy does it already for default session db.session
         @app.teardown_appcontext
         def shutdown_session(response_or_exc):
             if app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN']:
