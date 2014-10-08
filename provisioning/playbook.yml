@@ -42,7 +42,7 @@
         - libssl-dev
         - swig
 
-    - name: "install PyBossa packages, can take some time..."
+    - name: "install PyBossa virtualenv packages, can take some time..."
       sudo_user: vagrant
       pip: chdir={{pybossa_path}} requirements={{pybossa_path}}/requirements.txt virtualenv={{virtualenv_path}} virtualenv_site_packages=yes
 
@@ -75,6 +75,7 @@
                      lc_ctype='en_US.UTF-8'
                      template='template0'
 
+    # TODO: Populate DB only when not existing.
     - name: populate PyBossa DB
       sudo_user: vagrant
       command: "{{ virtualenv_path }}/bin/python cli.py db_create"
