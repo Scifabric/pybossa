@@ -34,6 +34,9 @@
     - name: install Redis
       apt: name=redis-server state=latest
 
+    - name: start Redis service
+      service: name=redis-server state=started
+
     - name: install PyBossa build requirements
       apt: name={{item}} state=latest
       with_items:
@@ -81,3 +84,12 @@
       command: "{{ virtualenv_path }}/bin/python cli.py db_create"
       args:
         chdir: "{{ pybossa_path }}"
+
+    - name: Update bashrc for virtualenv usage by default on login
+      lineinfile:
+        dest=/home/vagrant/.bashrc
+        line=". {{ virtualenv_path }}/bin/activate"
+        owner=vagrant
+        state=present
+        insertafter=EOF
+        create=yes
