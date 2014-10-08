@@ -47,7 +47,7 @@ setup(
     # and need to be added redundant to requirements.txt in this case!
     # Example:
     # dependency_links = ['git+https://github.com/Hypernode/M2Crypto#egg=M2Crypto-0.22.dev'],
-    dependency_links = ['git+https://github.com/therealmarv/flask-login.git@unicode-user-id-support#egg=Flask-Login'],
+    dependency_links = ['git+https://github.com/maxcountryman/flask-login.git@13af160b3fd14dfb5f35f9cdc3863771efe194eb#egg=Flask-Login'],
 
     # metadata for upload to PyPI
     author = 'SF Isle of Man Limited',
