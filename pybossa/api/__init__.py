@@ -36,7 +36,7 @@ from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound
 from pybossa.util import jsonpify, crossdomain
 import pybossa.model as model
-from pybossa.core import db, csrf, ratelimits, get_session
+from pybossa.core import db, csrf, ratelimits
 from itsdangerous import URLSafeSerializer
 from pybossa.ratelimit import ratelimit
 from pybossa.cache.apps import n_tasks
@@ -151,33 +151,26 @@ def user_progress(app_id=None, short_name=None):
         elif app_id:
             app = _retrieve_app(app_id=app_id)
         if app:
-            try:
-                session = get_session(db, bind='slave')
-                # get done tasks from DB
-                if current_user.is_anonymous():
-                    sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
-                                  WHERE task_run.app_id=:app_id AND
-                                  task_run.user_ip=:user_ip;''')
-                    user_ip = request.remote_addr
-                    if (user_ip == None):
-                        user_ip = '127.0.0.1' # set address to local host for internal tests (see AnonymousTaskRunFactory)!
-                    results = session.execute(sql, dict(app_id=app.id, user_ip=user_ip))
-                else:
-                    sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
-                                  WHERE task_run.app_id=:app_id AND
-                                  task_run.user_id=:user_id;''')
-                    results = session.execute(sql, dict(app_id=app.id, user_id=current_user.id))
-                n_task_runs = 0
-                for row in results:
-                    n_task_runs = row.n_task_runs
-                # get total tasks from DB
-                tmp = dict(done=n_task_runs, total=n_tasks(app.id))
-                return Response(json.dumps(tmp), mimetype="application/json")
-            except: # pragma: no cover
-                session.rollback()
-                raise
-            finally:
-                session.close()
+            # get done tasks from DB
+            if current_user.is_anonymous():
+                sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
+                              WHERE task_run.app_id=:app_id AND
+                              task_run.user_ip=:user_ip;''')
+                user_ip = request.remote_addr
+                if (user_ip == None):
+                    user_ip = '127.0.0.1' # set address to local host for internal tests (see AnonymousTaskRunFactory)!
+                results = db.slave_session.execute(sql, dict(app_id=app.id, user_ip=user_ip))
+            else:
+                sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
+                              WHERE task_run.app_id=:app_id AND
+                              task_run.user_id=:user_id;''')
+                results = db.slave_session.execute(sql, dict(app_id=app.id, user_id=current_user.id))
+            n_task_runs = 0
+            for row in results:
+                n_task_runs = row.n_task_runs
+            # get total tasks from DB
+            tmp = dict(done=n_task_runs, total=n_tasks(app.id))
+            return Response(json.dumps(tmp), mimetype="application/json")
         else:
             return abort(404)
     else:  # pragma: no cover
@@ -186,10 +179,10 @@ def user_progress(app_id=None, short_name=None):
 
 def _retrieve_app(app_id=None, short_name=None):
     if app_id != None:
-        return db.session.query(model.app.App)\
+        return db.slave_session.query(model.app.App)\
                     .get(app_id)
     if short_name != None:
-        return db.session.query(model.app.App)\
+        return db.slave_session.query(model.app.App)\
                     .filter(model.app.App.short_name == short_name)\
                     .first()
     return None

@@ -30,7 +30,7 @@ from flask.ext.babel import gettext
 from werkzeug.exceptions import HTTPException
 
 import pybossa.model as model
-from pybossa.core import db, get_session
+from pybossa.core import db
 from pybossa.util import admin_required, UnicodeWriter
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
@@ -160,18 +160,11 @@ def export_users():
         return res
 
     def gen_json():
-        try:
-            session = get_session(db, bind='slave')
-            users = session.query(model.user.User).all()
-            json_users = []
-            for user in users:
-                json_users.append(dictize_with_exportable_attributes(user))
-            return json.dumps(json_users)
-        except: # pragma: no cover
-            session.rollback()
-            raise
-        finally:
-            session.close()
+        users = db.slave_session.query(model.user.User).all()
+        json_users = []
+        for user in users:
+            json_users.append(dictize_with_exportable_attributes(user))
+        return json.dumps(json_users)
 
     def dictize_with_exportable_attributes(user):
         dict_user = {}
@@ -188,17 +181,10 @@ def export_users():
         return res
 
     def gen_csv(out, writer, write_user):
-        try:
-            session = get_session(db, bind='slave')
-            add_headers(writer)
-            for user in session.query(model.user.User).yield_per(1):
-                write_user(writer, user)
-            yield out.getvalue()
-        except: # pragma: no cover
-            session.rollback()
-            raise
-        finally:
-            session.close()
+        add_headers(writer)
+        for user in db.slave_session.query(model.user.User).yield_per(1):
+            write_user(writer, user)
+        yield out.getvalue()
 
     def write_user(writer, user):
         values = [getattr(user, attr) for attr in sorted(exportable_attributes)]
