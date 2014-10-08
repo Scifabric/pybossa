@@ -20,7 +20,7 @@ from pybossa.model.user import User
 from . import BaseFactory, factory, user_repo
 
 
-class UserFactory(factory.Factory):
+class UserFactory(BaseFactory):
     class Meta:
         model = User
 

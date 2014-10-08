@@ -20,7 +20,7 @@ from pybossa.model.task import Task
 from . import BaseFactory, factory, task_repo
 
 
-class TaskFactory(factory.Factory):
+class TaskFactory(BaseFactory):
     class Meta:
         model = Task
 

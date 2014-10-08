@@ -20,7 +20,7 @@ from pybossa.model.blogpost import Blogpost
 from . import BaseFactory, factory, blog_repo
 
 
-class BlogpostFactory(factory.Factory):
+class BlogpostFactory(BaseFactory):
     class Meta:
         model = Blogpost
 

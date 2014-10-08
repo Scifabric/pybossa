@@ -20,7 +20,7 @@ from pybossa.model.category import Category
 from . import BaseFactory, factory, project_repo
 
 
-class CategoryFactory(factory.Factory):
+class CategoryFactory(BaseFactory):
     class Meta:
         model = Category
 

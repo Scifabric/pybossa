@@ -20,7 +20,7 @@ from pybossa.model.app import App
 from . import BaseFactory, factory, project_repo
 
 
-class AppFactory(factory.Factory):
+class AppFactory(BaseFactory):
     class Meta:
         model = App
 
