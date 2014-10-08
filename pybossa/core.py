@@ -110,7 +110,7 @@ def setup_markdown(app):
 
 
 def setup_db(app):
-    def get_session(db, bind):
+    def create_slave_session(db, bind):
         if app.config.get('SQLALCHEMY_BINDS')['slave'] == app.config.get('SQLALCHEMY_DATABASE_URI'):
             return db.session
         engine = db.get_engine(db.app, bind=bind)
@@ -119,7 +119,7 @@ def setup_db(app):
         return slave_session
     db.app = app
     db.init_app(app)
-    db.slave_session = get_session(db, bind='slave')
+    db.slave_session = create_slave_session(db, bind='slave')
     if db.slave_session is not db.session: #flask-sqlalchemy does it already for default session db.session
         @app.teardown_appcontext
         def shutdown_session(response_or_exc):
