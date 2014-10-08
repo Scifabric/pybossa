@@ -5,13 +5,13 @@
     pybossa_path: "/vagrant"
     virtualenv_path: "/home/vagrant/pybossa-env"
   tasks:
-    - name: Updates apt cache
+    - name: update apt cache
       apt: update_cache=yes
 
-    - name: Install git
+    - name: install git
       apt: name=git-core state=latest
 
-    - name: Install Python
+    - name: install Python
       apt: name={{item}} state=latest
       with_items:
         - python
@@ -20,20 +20,21 @@
         - python-setuptools
         - python-pip
 
-    - name: Install PostgreSQL
+    - name: install PostgreSQL
       apt: name={{item}} state=latest
       with_items:
         - postgresql
         - postgresql-server-dev-all
         - libpq-dev
+        - python-psycopg2
 
-    - name: Start PostgreSQL service
+    - name: start PostgreSQL service
       service: name=postgresql state=started
 
-    - name: Install Redis
+    - name: install Redis
       apt: name=redis-server state=latest
 
-    - name: Install PyBossa build requirements
+    - name: install PyBossa build requirements
       apt: name={{item}} state=latest
       with_items:
         - build-essential
@@ -41,6 +42,41 @@
         - libssl-dev
         - swig
 
-    - name: Install PyBossa packages (virtualenv)
+    - name: "install PyBossa packages, can take some time..."
       sudo_user: vagrant
       pip: chdir={{pybossa_path}} requirements={{pybossa_path}}/requirements.txt virtualenv={{virtualenv_path}} virtualenv_site_packages=yes
+
+    - name: check alembic.ini existing
+      stat: path=/vagrant/alembic.ini
+      register: check_alembic
+
+    - name: copy alembic template when not existing
+      command: cp -p /vagrant/alembic.ini.template /vagrant/alembic.ini
+      when: not check_alembic.stat.exists
+
+    - name: check settings_local.py existing
+      stat: path=/vagrant/settings_local.py
+      register: check_settings
+
+    - name: copy settings_local template when not existing
+      command: cp -p /vagrant/settings_local.py.tmpl /vagrant/settings_local.py
+      when: not check_settings.stat.exists
+
+    - name: create DB user pybossa
+      sudo_user: postgres
+      postgresql_user: name=pybossa password=tester role_attr_flags=CREATEDB,NOSUPERUSER
+
+    - name: create PyBossa DB
+      sudo_user: postgres
+      postgresql_db: name=pybossa
+                     owner=pybossa
+                     encoding='UTF-8'
+                     lc_collate='en_US.UTF-8'
+                     lc_ctype='en_US.UTF-8'
+                     template='template0'
+
+    - name: populate PyBossa DB
+      sudo_user: vagrant
+      command: "{{ virtualenv_path }}/bin/python cli.py db_create"
+      args:
+        chdir: "{{ pybossa_path }}"

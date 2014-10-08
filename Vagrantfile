@@ -13,6 +13,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     ansible.limit = 'pybossa_vagrant'
     ansible.playbook = "provisioning/playbook.yml"
     ansible.inventory_path = "provisioning/ansible_hosts"
-    ansible.verbose = "vvvv"
+    #ansible.verbose = "vvvv"
   end
 end
