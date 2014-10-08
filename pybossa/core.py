@@ -114,8 +114,7 @@ def setup_db(app):
         if app.config.get('SQLALCHEMY_BINDS')['slave'] == app.config.get('SQLALCHEMY_DATABASE_URI'):
             return db.session
         engine = db.get_engine(db.app, bind=bind)
-        options = dict(bind=engine)
-        options.setdefault('scopefunc', _app_ctx_stack.__ident_func__)
+        options = dict(bind=engine,scopefunc=_app_ctx_stack.__ident_func__)
         slave_session = db.create_scoped_session(options=options)
         return slave_session
     db.app = app
