@@ -5,6 +5,8 @@ env:
 - PYBOSSA_SETTINGS='../settings_test.py' PYBOSSA_REDIS_CACHE_DISABLED='1'
 services:
 - redis-server
+addons:
+  postgresql: "9.3"
 before_install:
 - sudo apt-get update && sudo apt-get install swig
 - redis-server --version
