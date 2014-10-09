@@ -37,6 +37,15 @@
     - name: start Redis service
       service: name=redis-server state=started
 
+    - name: install Redis Sentinel
+      copy: src=../contrib/redis/redis-sentinel dest=/etc/init.d/redis-sentinel owner=root group=root mode=755
+
+    - name: copy Sentinel config
+      copy: src=../contrib/redis/sentinel.conf dest=/etc/redis/sentinel.conf owner=redis group=redis mode=644
+
+    - name: start Sentinel and enable it at boot
+      service: name=redis-sentinel state=started enabled=yes
+
     - name: install PyBossa build requirements
       apt: name={{item}} state=latest
       with_items:
@@ -54,7 +63,7 @@
       register: check_alembic
 
     - name: copy alembic template when not existing
-      command: cp -p /vagrant/alembic.ini.template /vagrant/alembic.ini
+      copy: src=../alembic.ini.template dest=/vagrant/alembic.ini owner=vagrant group=vagrant
       when: not check_alembic.stat.exists
 
     - name: check settings_local.py existing
@@ -62,7 +71,7 @@
       register: check_settings
 
     - name: copy settings_local template when not existing
-      command: cp -p /vagrant/settings_local.py.tmpl /vagrant/settings_local.py
+      copy: src=../settings_local.py.tmpl dest=/vagrant/settings_local.py owner=vagrant group=vagrant
       when: not check_settings.stat.exists
 
     - name: create DB user pybossa
