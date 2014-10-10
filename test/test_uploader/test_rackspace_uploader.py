@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """This module tests the Uploader class."""
 
-from default import Test
+from default import Test, with_context
 from pybossa.uploader.rackspace import RackspaceUploader
 from mock import patch, PropertyMock, call, MagicMock
 from werkzeug.datastructures import FileStorage
@@ -154,8 +154,10 @@ class TestRackspaceUploader(Test):
             res = u.upload_file(file, container='user_3')
             assert res is False, err_msg
 
+    @with_context
     @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
            return_value=True)
+    #@patch('flask.url_for', return_value='/static/img/placeholder.user.png')
     def test_rackspace_uploader_lookup_url(self, mock1):
         """Test RACKSPACE UPLOADER lookup returns a valid link."""
         uri = 'http://rackspace.com'
@@ -170,14 +172,14 @@ class TestRackspaceUploader(Test):
             res = u._lookup_url('rackspace', {'filename': filename,
                                               'container': 'user_3'})
             expected_url = "%s/%s" % (uri, filename)
-            print res
             err_msg = "We should get the following URL: %s" % expected_url
             assert res == expected_url, err_msg
 
+    @with_context
     @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
            return_value=True)
-    def test_rackspace_uploader_lookup_url_none(self, mock1):
-        """Test RACKSPACE UPLOADER lookup returns None for non enabled CDN."""
+    def test_rackspace_uploader_lookup_url_enable_cdn(self, mock1):
+        """Test RACKSPACE UPLOADER lookup enables CDN for non enabled CDN."""
         filename = 'test.jpg'
         with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
             cdn_enabled_mock = PropertyMock(return_value=False)
@@ -188,8 +190,32 @@ class TestRackspaceUploader(Test):
             u.init_app(self.flask_app)
             res = u._lookup_url('rackspace', {'filename': filename,
                                               'container': 'user_3'})
-            err_msg = "We should get the None"
-            assert res is None, err_msg
+            #failover_url = 'http://server/static/img/placeholder.user.png'
+            url = 'http://rackspace.com/test.jpg'
+            err_msg = "We should get the %s but we got %s " % (url, res)
+            assert res == url, err_msg
+            calls = [call.make_public()]
+            fake_container.assert_has_calls(calls, any_order=True)
+
+    @with_context
+    @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
+           return_value=True)
+    def test_rackspace_uploader_lookup_url_returns_failover_url(self, mock1):
+        """Test RACKSPACE UPLOADER lookup enables CDN for non enabled CDN."""
+        filename = 'test.jpg'
+        with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
+            cdn_enabled_mock = PropertyMock(return_value=False)
+            type(fake_container).cdn_enabled = cdn_enabled_mock
+            mycf.get_container.return_value = fake_container
+            fake_container.make_public.side_effect = NoSuchObject
+            u = RackspaceUploader()
+            u.init_app(self.flask_app)
+            res = u._lookup_url('rackspace', {'filename': filename,
+                                              'container': 'user_3'})
+            failover_url = 'http://test/static/img/placeholder.user.png'
+            err_msg = "We should get the %s but we got %s " % (failover_url, res)
+            assert res == failover_url, err_msg
+
 
     @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
            return_value=True)
