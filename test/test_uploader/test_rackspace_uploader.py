@@ -157,8 +157,8 @@ class TestRackspaceUploader(Test):
     @with_context
     @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
            return_value=True)
-    #@patch('flask.url_for', return_value='/static/img/placeholder.user.png')
-    def test_rackspace_uploader_lookup_url(self, mock1):
+    @patch('pybossa.uploader.rackspace.url_for', return_value='/static/img/placeholder.user.png')
+    def test_rackspace_uploader_lookup_url(self, mock1, mock2):
         """Test RACKSPACE UPLOADER lookup returns a valid link."""
         uri = 'http://rackspace.com'
         filename = 'test.jpg'
@@ -178,7 +178,8 @@ class TestRackspaceUploader(Test):
     @with_context
     @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
            return_value=True)
-    def test_rackspace_uploader_lookup_url_enable_cdn(self, mock1):
+    @patch('pybossa.uploader.rackspace.url_for', return_value='/static/img/placeholder.user.png')
+    def test_rackspace_uploader_lookup_url_enable_cdn(self, mock1, mock2):
         """Test RACKSPACE UPLOADER lookup enables CDN for non enabled CDN."""
         filename = 'test.jpg'
         with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
@@ -200,7 +201,8 @@ class TestRackspaceUploader(Test):
     @with_context
     @patch('pybossa.uploader.rackspace.pyrax.set_credentials',
            return_value=True)
-    def test_rackspace_uploader_lookup_url_returns_failover_url(self, mock1):
+    @patch('pybossa.uploader.rackspace.url_for', return_value='/static/img/placeholder.user.png')
+    def test_rackspace_uploader_lookup_url_returns_failover_url(self, mock1, mock2):
         """Test RACKSPACE UPLOADER lookup enables CDN for non enabled CDN."""
         filename = 'test.jpg'
         with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
@@ -212,7 +214,7 @@ class TestRackspaceUploader(Test):
             u.init_app(self.flask_app)
             res = u._lookup_url('rackspace', {'filename': filename,
                                               'container': 'user_3'})
-            failover_url = 'http://test/static/img/placeholder.user.png'
+            failover_url = '/static/img/placeholder.user.png'
             err_msg = "We should get the %s but we got %s " % (failover_url, res)
             assert res == failover_url, err_msg
 
