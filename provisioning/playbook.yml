@@ -94,7 +94,7 @@
       args:
         chdir: "{{ pybossa_path }}"
 
-    - name: Update bashrc for virtualenv usage by default on login
+    - name: virtualenv usage by default on bash login
       lineinfile:
         dest=/home/vagrant/.bashrc
         line=". {{ virtualenv_path }}/bin/activate"
@@ -102,3 +102,12 @@
         state=present
         insertafter=EOF
         create=yes
+
+    - name: go to /vagrant directory on bash login
+      lineinfile:
+        dest=/home/vagrant/.bashrc
+        line="cd {{ pybossa_path }}"
+        owner=vagrant
+        state=present
+        insertafter=EOF
+
