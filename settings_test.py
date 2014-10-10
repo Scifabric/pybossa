@@ -1,5 +1,6 @@
 SECRET = 'foobar'
 SECRET_KEY = 'my-session-secret'
+SERVER_NAME = 'test'
 SQLALCHEMY_DATABASE_TEST_URI = 'postgresql://rtester:rtester@localhost/pybossa_test'
 GOOGLE_CLIENT_ID = 'id'
 GOOGLE_CLIENT_SECRET = 'secret'
