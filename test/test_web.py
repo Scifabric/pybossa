@@ -66,7 +66,7 @@ class TestWeb(web.Helper):
         assert "Search" in res.data, err_msg
 
     @with_context
-    @patch('pybossa.stats.pygeoip', autospec=True)
+    @patch('pybossa.cache.project_stats.pygeoip', autospec=True)
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_02_stats(self, mock1, mock2):
         """Test WEB leaderboard or stats page works"""
@@ -2762,7 +2762,7 @@ class TestWeb(web.Helper):
 
 
     @with_context
-    @patch('pybossa.view.stats.get_locs', return_value=[{'latitude':0, 'longitude':0}])
+    @patch('pybossa.cache.site_stats.get_locs', return_value=[{'latitude':0, 'longitude':0}])
     def test_58_global_stats(self, mock1):
         """Test WEB global stats of the site works"""
         Fixtures.create()

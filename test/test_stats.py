@@ -21,7 +21,7 @@ import time
 from factories import AppFactory, TaskFactory, TaskRunFactory, AnonymousTaskRunFactory
 from default import Test, with_context
 from pybossa.model.task_run import TaskRun
-import pybossa.stats as stats
+import pybossa.cache.project_stats as stats
 
 
 class TestStats(Test):
