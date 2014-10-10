@@ -224,7 +224,7 @@ class TestRackspaceUploader(Test):
     @patch('pybossa.uploader.rackspace.url_for', return_value='/static/img/placeholder.project.png')
     def test_rackspace_uploader_lookup_url_returns_failover_url_project(self, mock1, mock2):
         """Test RACKSPACE UPLOADER lookup returns failover_url for project avatar."""
-        filename = 'test.jpg'
+        filename = 'app_32.jpg'
         with patch('pybossa.uploader.rackspace.pyrax.cloudfiles') as mycf:
             cdn_enabled_mock = PropertyMock(return_value=False)
             type(fake_container).cdn_enabled = cdn_enabled_mock
@@ -233,7 +233,7 @@ class TestRackspaceUploader(Test):
             u = RackspaceUploader()
             u.init_app(self.flask_app)
             res = u._lookup_url('rackspace', {'filename': filename,
-                                              'container': 'app_34'})
+                                              'container': 'user_3'})
             failover_url = '/static/img/placeholder.project.png'
             err_msg = "We should get the %s but we got %s " % (failover_url, res)
             assert res == failover_url, err_msg
