@@ -93,7 +93,7 @@ class RackspaceUploader(Uploader):
                                        filename='img/placehodler.project.png')
             else:
                 failover_url = url_for('static',
-                                       filename='img/placeholder.app.png')
+                                       filename='img/placeholder.user.png')
             cont = self.get_container(values['container'])
             if cont.cdn_enabled:
                 return "%s/%s" % (cont.cdn_uri, values['filename'])
@@ -103,7 +103,7 @@ class RackspaceUploader(Uploader):
                 current_app.logger.warning(msg)
                 cont.make_public()
                 return "%s/%s" % (cont.cdn_uri, values['filename'])
-        except:  # pragma: no cover
+        except:
             current_app.logger.error(traceback.print_exc())
             return failover_url
 
