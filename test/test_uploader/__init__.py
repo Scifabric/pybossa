@@ -22,6 +22,7 @@ from pyrax.fakes import FakeContainer
 
 
 fake_container = MagicMock()
+fake_container.make_public.return_value = True
 cdn_uri_mock = PropertyMock(return_value='http://rackspace.com')
 type(fake_container).cdn_uri = cdn_uri_mock
 cdn_enabled_mock = PropertyMock(return_value=True)

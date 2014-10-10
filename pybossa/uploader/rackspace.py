@@ -24,6 +24,8 @@ This module exports:
 
 """
 import pyrax
+import traceback
+from flask import current_app, url_for
 from pybossa.uploader import Uploader
 from werkzeug import secure_filename
 
@@ -85,13 +87,25 @@ class RackspaceUploader(Uploader):
     def _lookup_url(self, endpoint, values):
         """Return Rackspace URL for object."""
         try:
+            # Create failover urls for avatars
+            if 'app_' in values['filename']:
+                failover_url = url_for('static',
+                                       filename='img/placehodler.project.png')
+            else:
+                failover_url = url_for('static',
+                                       filename='img/placeholder.user.png')
             cont = self.get_container(values['container'])
             if cont.cdn_enabled:
                 return "%s/%s" % (cont.cdn_uri, values['filename'])
             else:
-                return None
-        except: # pragma: no cover
-            return None
+                msg = ("Rackspace Container %s was not public"
+                       % values['container'])
+                current_app.logger.warning(msg)
+                cont.make_public()
+                return "%s/%s" % (cont.cdn_uri, values['filename'])
+        except:
+            current_app.logger.error(traceback.print_exc())
+            return failover_url
 
     def delete_file(self, name, container):
         """Delete file from container."""
