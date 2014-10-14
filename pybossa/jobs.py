@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
+import os
+
 def get_all_jobs():
     return [warm_up_stats]
 
@@ -25,6 +27,10 @@ def warm_up_stats():
         n_tasks_site, n_total_tasks_site, n_task_runs_site,
         get_top5_apps_24_hours, get_top5_users_24_hours, get_locs)
 
+    env_cache_disabled = os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED')
+    if not env_cache_disabled:
+        os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
+
     n_auth_users()
     n_anon_users()
     n_tasks_site()
@@ -33,5 +39,10 @@ def warm_up_stats():
     get_top5_apps_24_hours()
     get_top5_users_24_hours()
     get_locs()
+
+    if env_cache_disabled is None:
+        del os.environ['PYBOSSA_REDIS_CACHE_DISABLED']
+    else:
+        os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = env_cache_disabled
 
     return True
