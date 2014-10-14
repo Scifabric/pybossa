@@ -413,9 +413,13 @@ def setup_scheduled_jobs(app):
     from datetime import datetime
     from rq_scheduler import Scheduler
     scheduler = Scheduler('scheduled_jobs', connection=redis_conn)
+    scheduled_jobs_names = [job.func_name for job in scheduler.get_jobs()]
     for function in get_all_jobs():
         job = scheduler.schedule(
             scheduled_time=datetime.now(),
             func=function,
             interval=10*60,
             repeat=None)
+        if job.func_name in scheduled_jobs_names:
+            print 'This job is already scheduled'
+            scheduler.cancel(job)
