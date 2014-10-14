@@ -410,16 +410,20 @@ def get_session(db, bind):
 def setup_scheduled_jobs(app):
     redis_conn = sentinel.master
     from jobs import get_all_jobs
-    from datetime import datetime
     from rq_scheduler import Scheduler
+    all_jobs = get_all_jobs()
     scheduler = Scheduler('scheduled_jobs', connection=redis_conn)
+    for function in all_jobs:
+        _schedule_job(function, 10*60, scheduler)
+
+def _schedule_job(function, interval, scheduler):
+    from datetime import datetime
     scheduled_jobs_names = [job.func_name for job in scheduler.get_jobs()]
-    for function in get_all_jobs():
-        job = scheduler.schedule(
-            scheduled_time=datetime.now(),
-            func=function,
-            interval=10*60,
-            repeat=None)
-        if job.func_name in scheduled_jobs_names:
-            print 'This job is already scheduled'
-            scheduler.cancel(job)
+    job = scheduler.schedule(
+        scheduled_time=datetime.now(),
+        func=function,
+        interval=interval,
+        repeat=None)
+    if job.func_name in scheduled_jobs_names:
+        print 'This job is already scheduled'
+        scheduler.cancel(job)
