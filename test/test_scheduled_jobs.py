@@ -30,6 +30,7 @@ class TestSetupScheduledJobs(object):
         self.connection = Redis()
         self.connection.flushall()
 
+
     def test_adds_scheduled_job_with_interval(self):
         scheduler = Scheduler('test_queue', connection=self.connection)
         def a_function():
@@ -57,6 +58,7 @@ class TestSetupScheduledJobs(object):
         assert len(sched_jobs) == 2, sched_jobs
         assert 'test_scheduled_jobs.a_function' in job_func_names
         assert 'test_scheduled_jobs.another_function' in job_func_names
+
 
     def test_does_not_add_job_if_already_added(self):
         scheduler = Scheduler('test_queue', connection=self.connection)

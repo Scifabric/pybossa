@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from sqlalchemy.sql import func, text
-from pybossa.core import db, timeouts, get_session
+from pybossa.core import db, timeouts
 from pybossa.model.app import App
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
@@ -34,65 +34,44 @@ from datetime import timedelta
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def get_app(short_name):
-    try:
-        session = get_session(db, bind='slave')
-        app = session.query(App).filter_by(short_name=short_name).first()
-        return app
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    app = db.slave_session.query(App).filter_by(short_name=short_name).first()
+    return app
 
 
 @cache(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'),
        key_prefix="front_page_top_apps")
 def get_top(n=4):
     """Return top n=4 apps"""
-    try:
-        sql = text('''SELECT app.id, app.name, app.short_name, app.description, app.info,
-                  COUNT(app_id) AS total FROM task_run, app
-                  WHERE app_id IS NOT NULL AND app.id=app_id AND app.hidden=0
-                  GROUP BY app.id ORDER BY total DESC LIMIT :limit;''')
-        session = get_session(db, bind='slave')
-        results = session.execute(sql, dict(limit=n))
-        top_apps = []
-        for row in results:
-            app = dict(id=row.id, name=row.name, short_name=row.short_name,
-                       description=row.description,
-                       info=json.loads(row.info),
-                       n_volunteers=n_volunteers(row.id),
-                       n_completed_tasks=n_completed_tasks(row.id))
-            top_apps.append(app)
-        return top_apps
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    sql = text('''SELECT app.id, app.name, app.short_name, app.description, app.info,
+              COUNT(app_id) AS total FROM task_run, app
+              WHERE app_id IS NOT NULL AND app.id=app_id AND app.hidden=0
+              GROUP BY app.id ORDER BY total DESC LIMIT :limit;''')
+    results = db.slave_session.execute(sql, dict(limit=n))
+    top_apps = []
+    for row in results:
+        app = dict(id=row.id, name=row.name, short_name=row.short_name,
+                   description=row.description,
+                   info=json.loads(row.info),
+                   n_volunteers=n_volunteers(row.id),
+                   n_completed_tasks=n_completed_tasks(row.id))
+        top_apps.append(app)
+    return top_apps
 
 
 @memoize(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'))
 def browse_tasks(project_id):
-    try:
-        sql = text('''
-                   SELECT task.id, count(task_run.id) as n_task_runs, task.n_answers
-                   FROM task LEFT OUTER JOIN task_run ON (task.id=task_run.task_id)
-                   WHERE task.app_id=:app_id GROUP BY task.id ORDER BY task.id''')
-        session = get_session(db, bind='slave')
-        results = session.execute(sql, dict(app_id=project_id))
-        tasks = []
-        for row in results:
-            task = dict(id=row.id, n_task_runs=row.n_task_runs,
-                        n_answers=row.n_answers)
-            task['pct_status'] = _pct_status(row.n_task_runs, row.n_answers)
-            tasks.append(task)
-        return tasks
-    except: #pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    sql = text('''
+               SELECT task.id, count(task_run.id) as n_task_runs, task.n_answers
+               FROM task LEFT OUTER JOIN task_run ON (task.id=task_run.task_id)
+               WHERE task.app_id=:app_id GROUP BY task.id ORDER BY task.id''')
+    results = db.slave_session.execute(sql, dict(app_id=project_id))
+    tasks = []
+    for row in results:
+        task = dict(id=row.id, n_task_runs=row.n_task_runs,
+                    n_answers=row.n_answers)
+        task['pct_status'] = _pct_status(row.n_task_runs, row.n_answers)
+        tasks.append(task)
+    return tasks
 
 
 def _pct_status(n_task_runs, n_answers):
@@ -107,80 +86,52 @@ def _pct_status(n_task_runs, n_answers):
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def n_tasks(app_id):
-    try:
-        sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task
-                      WHERE task.app_id=:app_id''')
-        session = get_session(db, bind='slave')
-        results = session.execute(sql, dict(app_id=app_id))
-        n_tasks = 0
-        for row in results:
-            n_tasks = row.n_tasks
-        return n_tasks
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task
+                  WHERE task.app_id=:app_id''')
+    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    n_tasks = 0
+    for row in results:
+        n_tasks = row.n_tasks
+    return n_tasks
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def n_completed_tasks(app_id):
-    try:
-        sql = text('''SELECT COUNT(task.id) AS n_completed_tasks FROM task
-                    WHERE task.app_id=:app_id AND task.state=\'completed\';''')
+    sql = text('''SELECT COUNT(task.id) AS n_completed_tasks FROM task
+                WHERE task.app_id=:app_id AND task.state=\'completed\';''')
 
-        session = get_session(db, bind='slave')
-        results = session.execute(sql, dict(app_id=app_id))
-        n_completed_tasks = 0
-        for row in results:
-            n_completed_tasks = row.n_completed_tasks
-        return n_completed_tasks
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    n_completed_tasks = 0
+    for row in results:
+        n_completed_tasks = row.n_completed_tasks
+    return n_completed_tasks
 
 
 @memoize(timeout=timeouts.get('REGISTERED_USERS_TIMEOUT'))
 def n_registered_volunteers(app_id):
-    try:
-        sql = text('''SELECT COUNT(DISTINCT(task_run.user_id)) AS n_registered_volunteers FROM task_run
-               WHERE task_run.user_id IS NOT NULL AND
-               task_run.user_ip IS NULL AND
-               task_run.app_id=:app_id;''')
-        session = get_session(db, bind='slave')
-        results = session.execute(sql, dict(app_id=app_id))
-        n_registered_volunteers = 0
-        for row in results:
-            n_registered_volunteers = row.n_registered_volunteers
-        return n_registered_volunteers
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    sql = text('''SELECT COUNT(DISTINCT(task_run.user_id)) AS n_registered_volunteers FROM task_run
+           WHERE task_run.user_id IS NOT NULL AND
+           task_run.user_ip IS NULL AND
+           task_run.app_id=:app_id;''')
+    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    n_registered_volunteers = 0
+    for row in results:
+        n_registered_volunteers = row.n_registered_volunteers
+    return n_registered_volunteers
 
 
 @memoize(timeout=timeouts.get('ANON_USERS_TIMEOUT'))
 def n_anonymous_volunteers(app_id):
-    try:
-        sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip)) AS n_anonymous_volunteers FROM task_run
-               WHERE task_run.user_ip IS NOT NULL AND
-               task_run.user_id IS NULL AND
-               task_run.app_id=:app_id;''')
+    sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip)) AS n_anonymous_volunteers FROM task_run
+           WHERE task_run.user_ip IS NOT NULL AND
+           task_run.user_id IS NULL AND
+           task_run.app_id=:app_id;''')
 
-        session = get_session(db, bind='slave')
-        results = session.execute(sql, dict(app_id=app_id))
-        n_anonymous_volunteers = 0
-        for row in results:
-            n_anonymous_volunteers = row.n_anonymous_volunteers
-        return n_anonymous_volunteers
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    n_anonymous_volunteers = 0
+    for row in results:
+        n_anonymous_volunteers = row.n_anonymous_volunteers
+    return n_anonymous_volunteers
 
 
 @memoize()
@@ -190,70 +141,49 @@ def n_volunteers(app_id):
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def n_task_runs(app_id):
-    try:
-        sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
-                      WHERE task_run.app_id=:app_id''')
+    sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
+                  WHERE task_run.app_id=:app_id''')
 
-        session = get_session(db, bind='slave')
-        results = session.execute(sql, dict(app_id=app_id))
-        n_task_runs = 0
-        for row in results:
-            n_task_runs = row.n_task_runs
-        return n_task_runs
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    n_task_runs = 0
+    for row in results:
+        n_task_runs = row.n_task_runs
+    return n_task_runs
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def overall_progress(app_id):
     """Returns the percentage of submitted Tasks Runs done when a task is
     completed"""
-    try:
-        sql = text('''SELECT task.id, n_answers,
-                   COUNT(task_run.task_id) AS n_task_runs
-                   FROM task LEFT OUTER JOIN task_run ON task.id=task_run.task_id
-                   WHERE task.app_id=:app_id GROUP BY task.id''')
-        session = get_session(db, bind='slave')
-        results = session.execute(sql, dict(app_id=app_id))
-        n_expected_task_runs = 0
-        n_task_runs = 0
-        for row in results:
-            tmp = row[2]
-            if row[2] > row[1]:
-                tmp = row[1]
-            n_expected_task_runs += row[1]
-            n_task_runs += tmp
-        pct = float(0)
-        if n_expected_task_runs != 0:
-            pct = float(n_task_runs) / float(n_expected_task_runs)
-        return (pct * 100)
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    sql = text('''SELECT task.id, n_answers,
+               COUNT(task_run.task_id) AS n_task_runs
+               FROM task LEFT OUTER JOIN task_run ON task.id=task_run.task_id
+               WHERE task.app_id=:app_id GROUP BY task.id''')
+    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    n_expected_task_runs = 0
+    n_task_runs = 0
+    for row in results:
+        tmp = row[2]
+        if row[2] > row[1]:
+            tmp = row[1]
+        n_expected_task_runs += row[1]
+        n_task_runs += tmp
+    pct = float(0)
+    if n_expected_task_runs != 0:
+        pct = float(n_task_runs) / float(n_expected_task_runs)
+    return (pct * 100)
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def last_activity(app_id):
-    try:
-        sql = text('''SELECT finish_time FROM task_run WHERE app_id=:app_id
-                   ORDER BY finish_time DESC LIMIT 1''')
-        session = get_session(db, bind='slave')
-        results = session.execute(sql, dict(app_id=app_id))
-        for row in results:
-            if row is not None:
-                return row[0]
-            else:  # pragma: no cover
-                return None
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    sql = text('''SELECT finish_time FROM task_run WHERE app_id=:app_id
+               ORDER BY finish_time DESC LIMIT 1''')
+    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    for row in results:
+        if row is not None:
+            return row[0]
+        else:  # pragma: no cover
+            return None
 
 
 # This function does not change too much, so cache it for a longer time
@@ -261,79 +191,58 @@ def last_activity(app_id):
        key_prefix="number_featured_apps")
 def _n_featured():
     """Return number of featured apps"""
-    try:
-        sql = text('''SELECT COUNT(*) FROM app WHERE featured=true;''')
-        session = get_session(db, bind='slave')
-        results = session.execute(sql)
-        for row in results:
-            count = row[0]
-        return count
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    sql = text('''SELECT COUNT(*) FROM app WHERE featured=true;''')
+    results = db.slave_session.execute(sql)
+    for row in results:
+        count = row[0]
+    return count
 
 
 # This function does not change too much, so cache it for a longer time
 @memoize(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'))
 def get_featured(category=None, page=1, per_page=5):
     """Return a list of featured apps with a pagination"""
-    try:
-        sql = text('''SELECT app.id, app.name, app.short_name, app.info, app.created,
-                   app.description,
-                   "user".fullname AS owner FROM app, "user"
-                   WHERE app.featured=true AND app.hidden=0
-                   AND "user".id=app.owner_id GROUP BY app.id, "user".id
-                   OFFSET(:offset) LIMIT(:limit);
-                   ''')
-        offset = (page - 1) * per_page
+    sql = text('''SELECT app.id, app.name, app.short_name, app.info, app.created,
+               app.description,
+               "user".fullname AS owner FROM app, "user"
+               WHERE app.featured=true AND app.hidden=0
+               AND "user".id=app.owner_id GROUP BY app.id, "user".id
+               OFFSET(:offset) LIMIT(:limit);
+               ''')
 
-        session = get_session(db, bind='slave')
-        results = session.execute(sql, dict(limit=per_page, offset=offset))
-        apps = []
-        for row in results:
-            app = dict(id=row.id, name=row.name, short_name=row.short_name,
-                       created=row.created, description=row.description,
-                       last_activity=pretty_date(last_activity(row.id)),
-                       last_activity_raw=last_activity(row.id),
-                       owner=row.owner,
-                       overall_progress=overall_progress(row.id),
-                       n_tasks=n_tasks(row.id),
-                       n_volunteers=n_volunteers(row.id),
-                       info=dict(json.loads(row.info)))
-            apps.append(app)
-        return apps
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    offset = (page - 1) * per_page
+    results = db.slave_session.execute(sql, dict(limit=per_page, offset=offset))
+    apps = []
+    for row in results:
+        app = dict(id=row.id, name=row.name, short_name=row.short_name,
+                   created=row.created, description=row.description,
+                   last_activity=pretty_date(last_activity(row.id)),
+                   last_activity_raw=last_activity(row.id),
+                   owner=row.owner,
+                   overall_progress=overall_progress(row.id),
+                   n_tasks=n_tasks(row.id),
+                   n_volunteers=n_volunteers(row.id),
+                   info=dict(json.loads(row.info)))
+        apps.append(app)
+    return apps
 
 
 @cache(key_prefix="number_published_apps",
        timeout=timeouts.get('STATS_APP_TIMEOUT'))
 def n_published():
     """Return number of published apps"""
-    try:
-        sql = text('''
-                   WITH published_apps as
-                   (SELECT app.id FROM app, task WHERE
-                   app.id=task.app_id AND app.hidden=0 AND app.info
-                   LIKE('%task_presenter%') GROUP BY app.id)
-                   SELECT COUNT(id) FROM published_apps;
-                   ''')
+    sql = text('''
+               WITH published_apps as
+               (SELECT app.id FROM app, task WHERE
+               app.id=task.app_id AND app.hidden=0 AND app.info
+               LIKE('%task_presenter%') GROUP BY app.id)
+               SELECT COUNT(id) FROM published_apps;
+               ''')
 
-        session = get_session(db, bind='slave')
-        results = session.execute(sql)
-        for row in results:
-            count = row[0]
-        return count
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    results = db.slave_session.execute(sql)
+    for row in results:
+        count = row[0]
+    return count
 
 
 # Cache it for longer times, as this is only shown to admin users
@@ -341,59 +250,45 @@ def n_published():
        key_prefix="number_draft_apps")
 def _n_draft():
     """Return number of draft projects"""
-    try:
-        sql = text('''SELECT COUNT(app.id) FROM app
-                   LEFT JOIN task on app.id=task.app_id
-                   WHERE task.app_id IS NULL AND app.info NOT LIKE('%task_presenter%')
-                   AND app.hidden=0;''')
+    sql = text('''SELECT COUNT(app.id) FROM app
+               LEFT JOIN task on app.id=task.app_id
+               WHERE task.app_id IS NULL AND app.info NOT LIKE('%task_presenter%')
+               AND app.hidden=0;''')
 
-        session = get_session(db, bind='slave')
-        results = session.execute(sql)
-        for row in results:
-            count = row[0]
-        return count
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    results = db.slave_session.execute(sql)
+    for row in results:
+        count = row[0]
+    return count
 
 
 @memoize(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'))
 def get_draft(category=None, page=1, per_page=5):
     """Return list of draft projects"""
-    try:
-        sql = text('''SELECT app.id, app.name, app.short_name, app.created,
-                   app.description, app.info, "user".fullname as owner
-                   FROM "user", app LEFT JOIN task ON app.id=task.app_id
-                   WHERE task.app_id IS NULL AND app.info NOT LIKE('%task_presenter%')
-                   AND app.hidden=0
-                   AND app.owner_id="user".id
-                   OFFSET :offset
-                   LIMIT :limit;''')
+    sql = text('''SELECT app.id, app.name, app.short_name, app.created,
+               app.description, app.info, "user".fullname as owner
+               FROM "user", app LEFT JOIN task ON app.id=task.app_id
+               WHERE task.app_id IS NULL AND app.info NOT LIKE('%task_presenter%')
+               AND app.hidden=0
+               AND app.owner_id="user".id
+               OFFSET :offset
+               LIMIT :limit;''')
 
-        offset = (page - 1) * per_page
-        session = get_session(db, bind='slave')
-        results = session.execute(sql, dict(limit=per_page, offset=offset))
-        apps = []
-        for row in results:
-            app = dict(id=row.id, name=row.name, short_name=row.short_name,
-                       created=row.created,
-                       description=row.description,
-                       owner=row.owner,
-                       last_activity=pretty_date(last_activity(row.id)),
-                       last_activity_raw=last_activity(row.id),
-                       overall_progress=overall_progress(row.id),
-                       n_tasks=n_tasks(row.id),
-                       n_volunteers=n_volunteers(row.id),
-                       info=dict(json.loads(row.info)))
-            apps.append(app)
-        return apps
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    offset = (page - 1) * per_page
+    results = db.slave_session.execute(sql, dict(limit=per_page, offset=offset))
+    apps = []
+    for row in results:
+        app = dict(id=row.id, name=row.name, short_name=row.short_name,
+                   created=row.created,
+                   description=row.description,
+                   owner=row.owner,
+                   last_activity=pretty_date(last_activity(row.id)),
+                   last_activity_raw=last_activity(row.id),
+                   overall_progress=overall_progress(row.id),
+                   n_tasks=n_tasks(row.id),
+                   n_volunteers=n_volunteers(row.id),
+                   info=dict(json.loads(row.info)))
+        apps.append(app)
+    return apps
 
 
 @memoize(timeout=timeouts.get('N_APPS_PER_CATEGORY_TIMEOUT'))
@@ -403,76 +298,62 @@ def n_count(category):
         return _n_featured()
     if category == 'draft':
         return _n_draft()
-    try:
-        sql = text('''
-                   WITH uniq AS (
-                   SELECT COUNT(app.id) FROM task, app
-                   LEFT OUTER JOIN category ON app.category_id=category.id
-                   WHERE
-                   category.short_name=:category
-                   AND app.hidden=0
-                   AND app.info LIKE('%task_presenter%')
-                   AND task.app_id=app.id
-                   GROUP BY app.id)
-                   SELECT COUNT(*) FROM uniq
-                   ''')
+    sql = text('''
+               WITH uniq AS (
+               SELECT COUNT(app.id) FROM task, app
+               LEFT OUTER JOIN category ON app.category_id=category.id
+               WHERE
+               category.short_name=:category
+               AND app.hidden=0
+               AND app.info LIKE('%task_presenter%')
+               AND task.app_id=app.id
+               GROUP BY app.id)
+               SELECT COUNT(*) FROM uniq
+               ''')
 
-        session = get_session(db, bind='slave')
-        results = session.execute(sql, dict(category=category))
-        count = 0
-        for row in results:
-            count = row[0]
-        return count
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    results = db.slave_session.execute(sql, dict(category=category))
+    count = 0
+    for row in results:
+        count = row[0]
+    return count
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def get(category, page=1, per_page=5):
     """Return a list of apps with at least one task and a task_presenter
        with a pagination for a given category"""
-    try:
-        sql = text('''SELECT app.id, app.name, app.short_name, app.description,
-                   app.info, app.created, app.category_id, app.featured, "user".fullname AS owner
-                   FROM "user", task, app
-                   LEFT OUTER JOIN category ON app.category_id=category.id
-                   WHERE
-                   category.short_name=:category
-                   AND app.hidden=0
-                   AND "user".id=app.owner_id
-                   AND app.info LIKE('%task_presenter%')
-                   AND task.app_id=app.id
-                   GROUP BY app.id, "user".id ORDER BY app.name
-                   OFFSET :offset
-                   LIMIT :limit;''')
+    sql = text('''SELECT app.id, app.name, app.short_name, app.description,
+               app.info, app.created, app.category_id, app.featured, "user".fullname AS owner
+               FROM "user", task, app
+               LEFT OUTER JOIN category ON app.category_id=category.id
+               WHERE
+               category.short_name=:category
+               AND app.hidden=0
+               AND "user".id=app.owner_id
+               AND app.info LIKE('%task_presenter%')
+               AND task.app_id=app.id
+               GROUP BY app.id, "user".id ORDER BY app.name
+               OFFSET :offset
+               LIMIT :limit;''')
 
-        offset = (page - 1) * per_page
-        session = get_session(db, bind='slave')
-        results = session.execute(sql, dict(category=category, limit=per_page, offset=offset))
-        apps = []
-        for row in results:
-            app = dict(id=row.id,
-                       name=row.name, short_name=row.short_name,
-                       created=row.created,
-                       description=row.description,
-                       owner=row.owner,
-                       featured=row.featured,
-                       last_activity=pretty_date(last_activity(row.id)),
-                       last_activity_raw=last_activity(row.id),
-                       overall_progress=overall_progress(row.id),
-                       n_tasks=n_tasks(row.id),
-                       n_volunteers=n_volunteers(row.id),
-                       info=dict(json.loads(row.info)))
-            apps.append(app)
-        return apps
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
+    offset = (page - 1) * per_page
+    results = db.slave_session.execute(sql, dict(category=category, limit=per_page, offset=offset))
+    apps = []
+    for row in results:
+        app = dict(id=row.id,
+                   name=row.name, short_name=row.short_name,
+                   created=row.created,
+                   description=row.description,
+                   owner=row.owner,
+                   featured=row.featured,
+                   last_activity=pretty_date(last_activity(row.id)),
+                   last_activity_raw=last_activity(row.id),
+                   overall_progress=overall_progress(row.id),
+                   n_tasks=n_tasks(row.id),
+                   n_volunteers=n_volunteers(row.id),
+                   info=dict(json.loads(row.info)))
+        apps.append(app)
+    return apps
 
 
 def reset():
