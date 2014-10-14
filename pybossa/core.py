@@ -31,7 +31,7 @@ from raven.contrib.flask import Sentry
 from pybossa.util import pretty_date
 
 
-def create_app():
+def create_app(run_as_server=True):
     app = Flask(__name__)
     if 'DATABASE_URL' in os.environ:  # pragma: no cover
         heroku = Heroku(app)
@@ -56,6 +56,8 @@ def create_app():
     signer.init_app(app)
     if app.config.get('SENTRY_DSN'): # pragma: no cover
         sentr = Sentry(app)
+    if run_as_server:
+        setup_scheduled_jobs(app)
     setup_blueprints(app)
     setup_hooks(app)
     setup_error_handlers(app)
@@ -403,3 +405,17 @@ def get_session(db, bind):
     # note: it looks like in Flask-SQLAlchemy 2.0 this is going to be fixed
     session._model_changes = {}
     return session
+
+
+def setup_scheduled_jobs(app):
+    redis_conn = sentinel.master
+    from jobs import get_all_jobs
+    from datetime import datetime
+    from rq_scheduler import Scheduler
+    scheduler = Scheduler('scheduled_jobs', connection=redis_conn)
+    for function in get_all_jobs():
+        job = scheduler.schedule(
+            scheduled_time=datetime.now(),
+            func=function,
+            interval=10*60,
+            repeat=None)

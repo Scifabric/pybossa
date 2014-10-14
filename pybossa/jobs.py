@@ -16,19 +16,22 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-#!/usr/bin/env python
-import sys
-from rq import Queue, Connection, Worker
+def get_all_jobs():
+    return [warm_up_stats]
 
-from pybossa.core import create_app, sentinel
+def warm_up_stats():
+    print "Running on the background warm_up_stats"
+    from pybossa.cache.site_stats import (n_auth_users, n_anon_users,
+        n_tasks_site, n_total_tasks_site, n_task_runs_site,
+        get_top5_apps_24_hours, get_top5_users_24_hours, get_locs)
 
-app = create_app(run_as_server=False)
+    n_auth_users()
+    n_anon_users()
+    n_tasks_site()
+    n_total_tasks_site()
+    n_task_runs_site()
+    get_top5_apps_24_hours()
+    get_top5_users_24_hours()
+    get_locs()
 
-# Provide queue names to listen to as arguments to this script,
-# similar to rqworker
-with app.app_context():
-    with Connection(sentinel.master):
-        qs = map(Queue, sys.argv[1:]) or [Queue()]
-
-        w = Worker(qs)
-        w.work()
+    return True
