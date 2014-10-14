@@ -2,8 +2,8 @@
 # vi: set ft=ruby :
 
 # PyBossas Vagrantfile
-# This Vagrantfile requires an additional plugin to work!
-# Please install before running Vagrant:
+# This Vagrantfile requires an additional plugin to work for running Ansible inside the VM.
+# Execute on your host once:
 #
 # vagrant plugin install vagrant-ansible-local
 #
