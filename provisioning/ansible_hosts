@@ -1,0 +1,5 @@
+[pybossa-vagrant-dev]
+127.0.0.1
+
+[pybossa-vagrant-production]
+127.0.0.1

@@ -1,5 +1,5 @@
 ---
-- hosts: 127.0.0.1
+- hosts: all
   sudo: yes
   vars:
     pybossa_path: "/vagrant"

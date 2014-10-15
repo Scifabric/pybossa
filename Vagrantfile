@@ -30,6 +30,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # do the final Ansible *local* provisioning
   config.vm.provision "ansibleLocal" do |ansible|
     ansible.guest_folder = "/vagrant-ansible"
+    ansible.raw_arguments = "--inventory=/vagrant-ansible/ansible_hosts"
+    ansible.limit = "pybossa-vagrant-dev"
     ansible.playbook = "provisioning/playbook.yml"
   end
 end
