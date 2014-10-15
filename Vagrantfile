@@ -28,5 +28,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # be sure that there  is Ansible for local provisioning
   config.vm.provision "shell", inline: $ansible_install_script
   # do the final Ansible *local* provisioning
-  config.vm.provision :ansibleLocal, :playbook => "provisioning/playbook.yml"
+  config.vm.provision "ansibleLocal" do |ansible|
+    ansible.guest_folder = "/vagrant-ansible"
+    ansible.playbook = "provisioning/playbook.yml"
+  end
 end
