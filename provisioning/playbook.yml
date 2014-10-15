@@ -1,9 +1,6 @@
 ---
 - hosts: all
   sudo: yes
-  vars:
-    pybossa_path: "/vagrant"
-    virtualenv_path: "/home/vagrant/pybossa-env"
   tasks:
     - name: update apt cache
       apt: update_cache=yes
@@ -38,10 +35,10 @@
       service: name=redis-server state=started
 
     - name: install Redis Sentinel
-      copy: src=/vagrant/contrib/redis/redis-sentinel dest=/etc/init.d/redis-sentinel owner=root group=root mode=755
+      copy: src={{pybossa_path}}/contrib/redis/redis-sentinel dest=/etc/init.d/redis-sentinel owner=root group=root mode=755
 
     - name: copy Sentinel config
-      copy: src=/vagrant/contrib/redis/sentinel.conf dest=/etc/redis/sentinel.conf owner=redis group=redis mode=644
+      copy: src={{pybossa_path}}/contrib/redis/sentinel.conf dest=/etc/redis/sentinel.conf owner=redis group=redis mode=644
 
     - name: start Sentinel and enable it at boot
       service: name=redis-sentinel state=started enabled=yes
@@ -55,23 +52,23 @@
         - swig
 
     - name: "install PyBossa virtualenv packages, can take some time..."
-      sudo_user: vagrant
+      sudo_user: {{pybossa_user}}
       pip: chdir={{pybossa_path}} requirements={{pybossa_path}}/requirements.txt virtualenv={{virtualenv_path}} virtualenv_site_packages=yes
 
     - name: check alembic.ini existing
-      stat: path=/vagrant/alembic.ini
+      stat: path={{pybossa_path}}/alembic.ini
       register: check_alembic
 
     - name: copy alembic template when not existing
-      command: cp -p /vagrant/alembic.ini.template /vagrant/alembic.ini
+      command: cp -p {{pybossa_path}}/alembic.ini.template {{pybossa_path}}/alembic.ini
       when: not check_alembic.stat.exists
 
     - name: check settings_local.py existing
-      stat: path=/vagrant/settings_local.py
+      stat: path={{pybossa_path}}/settings_local.py
       register: check_settings
 
     - name: copy settings_local template when not existing
-      command: cp -p /vagrant/settings_local.py.tmpl /vagrant/settings_local.py
+      command: cp -p {{pybossa_path}}/settings_local.py.tmpl {{pybossa_path}}/settings_local.py
       when: not check_settings.stat.exists
 
     # http://stackoverflow.com/a/16783253
@@ -97,16 +94,17 @@
 
     # Populate DB (create tables) only when not existing.
     - name: populate PyBossa DB
-      sudo_user: vagrant
-      command: "{{ virtualenv_path }}/bin/python cli.py db_create"
+      sudo_user: {{pybossa_user}}
+      command: "{{virtualenv_path}}/bin/python cli.py db_create"
       args:
-        chdir: "{{ pybossa_path }}"
+        chdir: "{{pybossa_path}}"
       when: pybossa_db_exists.rc != 0
 
     - name: virtualenv usage by default on bash login
+      sudo_user: {{pybossa_user}}
       lineinfile:
-        dest=/home/vagrant/.bashrc
-        line=". {{ virtualenv_path }}/bin/activate"
+        dest={{vagrant_home}}/.bashrc
+        line=". {{virtualenv_path}}/bin/activate"
         owner=vagrant
         state=present
         insertafter=EOF
@@ -114,8 +112,8 @@
 
     - name: go to /vagrant directory on bash login
       lineinfile:
-        dest=/home/vagrant/.bashrc
-        line="cd {{ pybossa_path }}"
+        dest={{vagrant_home}}/.bashrc
+        line="cd {{pybossa_path}}"
         owner=vagrant
         state=present
         insertafter=EOF
