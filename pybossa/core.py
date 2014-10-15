@@ -107,6 +107,7 @@ def setup_uploader(app):
         app.url_build_error_handlers.append(uploader.external_url_handler)
         uploader.init_app(app)
 
+
 def setup_markdown(app):
     misaka.init_app(app)
 
@@ -131,11 +132,13 @@ def setup_db(app):
             db.slave_session.remove()
             return response_or_exc
 
+
 def setup_gravatar(app):
     gravatar.init_app(app)
 
-from logging.handlers import SMTPHandler
+
 def setup_error_email(app):
+    from logging.handlers import SMTPHandler
     ADMINS = app.config.get('ADMINS', '')
     if not app.debug and ADMINS: # pragma: no cover
         mail_handler = SMTPHandler('127.0.0.1',
@@ -144,9 +147,10 @@ def setup_error_email(app):
         mail_handler.setLevel(logging.ERROR)
         app.logger.addHandler(mail_handler)
 
-from logging.handlers import RotatingFileHandler
-from logging import Formatter
+
 def setup_logging(app):
+    from logging.handlers import RotatingFileHandler
+    from logging import Formatter
     log_file_path = app.config.get('LOG_FILE')
     log_level = app.config.get('LOG_LEVEL', logging.WARN)
     if log_file_path: # pragma: no cover
@@ -160,6 +164,7 @@ def setup_logging(app):
         logger = logging.getLogger('pybossa')
         logger.setLevel(log_level)
         logger.addHandler(file_handler)
+
 
 def setup_login_manager(app):
     from pybossa import model
@@ -185,6 +190,7 @@ def setup_babel(app):
             lang = 'en'
         return lang
     return babel
+
 
 def setup_blueprints(app):
     """Configure blueprints."""
@@ -276,16 +282,13 @@ def setup_error_handlers(app):
     def page_not_found(e):
         return render_template('404.html'), 404
 
-
     @app.errorhandler(500)
     def server_error(e):  # pragma: no cover
         return render_template('500.html'), 500
 
-
     @app.errorhandler(403)
     def forbidden(e):
         return render_template('403.html'), 403
-
 
     @app.errorhandler(401)
     def unauthorized(e):
@@ -424,14 +427,13 @@ def setup_scheduled_jobs(app): #pragma: no cover
 def _schedule_job(function, interval, scheduler):
     """Schedules a job and returns a log message about success of the operation"""
     from datetime import datetime
-    scheduled_job_names = [job.func_name for job in scheduler.get_jobs()]
+    scheduled_jobs = [job.func_name for job in scheduler.get_jobs()]
     job = scheduler.schedule(
         scheduled_time=datetime.now(),
         func=function,
         interval=interval,
         repeat=None)
-    log_msg = 'Scheduled %s to run every %s seconds' % (function.__name__, interval)
-    if job.func_name in scheduled_job_names:
-        log_msg = 'Job %s is already scheduled' % function.__name__
+    if job.func_name in scheduled_jobs:
         scheduler.cancel(job)
-    return log_msg
+        return 'Job %s is already scheduled' % function.__name__
+    return 'Scheduled %s to run every %s seconds' % (function.__name__, interval)
