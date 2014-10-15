@@ -124,7 +124,7 @@ def setup_db(app):
     db.slave_session = create_slave_session(db, bind='slave')
     if db.slave_session is not db.session: #flask-sqlalchemy does it already for default session db.session
         @app.teardown_appcontext
-        def shutdown_session(response_or_exc):
+        def shutdown_session(response_or_exc): # pragma: no cover
             if app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN']:
                 if response_or_exc is None:
                     db.slave_session.commit()
@@ -410,7 +410,7 @@ def setup_cache_timeouts(app):
     timeouts['USER_TOTAL_TIMEOUT'] = app.config['USER_TOTAL_TIMEOUT']
 
 
-def setup_scheduled_jobs(app):
+def setup_scheduled_jobs(app): #pragma: no cover
     redis_conn = sentinel.master
     from jobs import get_all_jobs
     from rq_scheduler import Scheduler
@@ -419,6 +419,7 @@ def setup_scheduled_jobs(app):
     interval = 10 * 60
     for function in all_jobs:
         app.logger.info(_schedule_job(function, interval, scheduler))
+
 
 def _schedule_job(function, interval, scheduler):
     """Schedules a job and returns a log message about success of the operation"""
