@@ -19,7 +19,7 @@
 import os
 
 def get_all_jobs():
-    return [warm_cache]
+    return [warm_up_stats]
 
 def warm_up_stats():
     print "Running on the background warm_up_stats"
