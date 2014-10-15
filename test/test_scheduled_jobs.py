@@ -70,3 +70,15 @@ class TestSetupScheduledJobs(object):
         sched_jobs = scheduler.get_jobs()
 
         assert len(sched_jobs) == 1, sched_jobs
+
+
+    def test_returns_log_messages(self):
+        scheduler = Scheduler('test_queue', connection=self.connection)
+        def a_function():
+            return
+
+        success_message = _schedule_job(a_function, 1, scheduler)
+        failure_message = _schedule_job(a_function, 1, scheduler)
+
+        assert success_message == 'Scheduled a_function to run every 1 seconds'
+        assert failure_message == 'Job a_function is already scheduled'

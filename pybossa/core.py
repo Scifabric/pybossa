@@ -416,17 +416,21 @@ def setup_scheduled_jobs(app):
     from rq_scheduler import Scheduler
     all_jobs = get_all_jobs()
     scheduler = Scheduler('scheduled_jobs', connection=redis_conn)
+    interval = 10 * 60
     for function in all_jobs:
-        _schedule_job(function, 10*60, scheduler)
+        app.logger.info(_schedule_job(function, interval, scheduler))
 
 def _schedule_job(function, interval, scheduler):
+    """Schedules a job and returns a log message about success of the operation"""
     from datetime import datetime
-    scheduled_jobs_names = [job.func_name for job in scheduler.get_jobs()]
+    scheduled_job_names = [job.func_name for job in scheduler.get_jobs()]
     job = scheduler.schedule(
         scheduled_time=datetime.now(),
         func=function,
         interval=interval,
         repeat=None)
-    if job.func_name in scheduled_jobs_names:
-        print 'This job is already scheduled'
+    log_msg = 'Scheduled %s to run every %s seconds' % (function.__name__, interval)
+    if job.func_name in scheduled_job_names:
+        log_msg = 'Job %s is already scheduled' % function.__name__
         scheduler.cancel(job)
+    return log_msg
