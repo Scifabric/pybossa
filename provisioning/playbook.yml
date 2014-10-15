@@ -74,6 +74,14 @@
       command: cp -p /vagrant/settings_local.py.tmpl /vagrant/settings_local.py
       when: not check_settings.stat.exists
 
+    # http://stackoverflow.com/a/16783253
+    # psql -lqt | cut -d \| -f 1 | grep -w <db_name>
+    - name: check if pybossa DB already existing
+      sudo_user: postgres
+      shell: "psql -lqt | cut -d \\| -f 1 | grep -w pybossa"
+      register: pybossa_db_exists
+      ignore_errors: True
+
     - name: create DB user pybossa
       sudo_user: postgres
       postgresql_user: name=pybossa password=tester role_attr_flags=CREATEDB,NOSUPERUSER
@@ -87,12 +95,13 @@
                      lc_ctype='en_US.UTF-8'
                      template='template0'
 
-    # TODO: Populate DB only when not existing.
+    # Populate DB (create tables) only when not existing.
     - name: populate PyBossa DB
       sudo_user: vagrant
       command: "{{ virtualenv_path }}/bin/python cli.py db_create"
       args:
         chdir: "{{ pybossa_path }}"
+      when: pybossa_db_exists.rc != 0
 
     - name: virtualenv usage by default on bash login
       lineinfile:
