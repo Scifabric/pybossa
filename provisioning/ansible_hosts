@@ -1,0 +1,9 @@
+[vagrant_dev]
+127.0.0.1
+
+[vagrant_production]
+127.0.0.1
+
+[vagrant:children]
+vagrant_dev
+vagrant_production
