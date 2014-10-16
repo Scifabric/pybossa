@@ -382,18 +382,19 @@ installed or upgraded. And Alembic is upgrading the database structure.
 Migrating Your Old DB Records
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Previously, HTML was supported as the default option for the long_description
-field in apps. In new versions of PyBossa, Markdown has been adopted as the
-default option. However, you can use HTML instead of Markdown by modifying the
-default PyBossa theme or using your own forked from the default one.
+In versions prior to v0.2.3, HTML was supported as the default option for the
+'long_description' field in apps. In new versions of PyBossa, Markdown has been
+adopted as the default option. However, you can use HTML instead of Markdown
+by modifying the default PyBossa theme or using your own forked from the default
+one.
 
 If you were have been using PyBossa for a while you may have apps in your
-database whose long_description is in HTML format. Hence, if you are using the default
-theme for PyBossa you will no longer see them rendered as HTML and may have some
-issues.
+database whose 'long_description' is in HTML format. Hence, if you are using the
+default theme for PyBossa you will no longer see them rendered as HTML and may
+have some issues.
 
-In order to fix this issue, you can run a simple script to convert all the DB app's
-long_description field from HTML to Markdown, just by running the following
+In order to avoid this, you can run a simple script to convert all the DB app's
+'long_description' field from HTML to Markdown, just by running the following
 commands::
 
   pip install -r requirements.txt

@@ -16,7 +16,7 @@ be only used when you are running the server for development purposes. You
 should not enable this option, unless you need to do some debugging in the
 PyBossa server
 
-.. _DEBUG: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L1
+.. _DEBUG: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L19
 
 .. note::
     For further details about the DEBUG mode in the PyBossa server, please,
@@ -44,8 +44,8 @@ in specific addresses of your server, as well as at a given port. Usually, you
 will only need to uncomment the HOST_ variable in order to listen in all the
 net interfaces.
 
-.. _HOST: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L4
-.. _PORT: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L5
+.. _HOST: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L22
+.. _PORT: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L23
 
 Securing the server
 ===================
@@ -60,9 +60,8 @@ keys for your server and keep them private**. Please, check the `Flask
 Sessions`_ documentation for instructions about how to create good secret keys.
 
 .. _`Flask Sessions`: http://flask.pocoo.org/docs/quickstart/#sessions
-
-.. _SECRET: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L7
-.. _SECRET_KEY : https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L8
+.. _SECRET: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L25
+.. _SECRET_KEY : https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L26
 
 Database username and password
 ==============================
@@ -73,7 +72,7 @@ so it fits your needs in the field `SQLALCHEMY_DATABASE_URI`_::
     
     'postgresql://username:userpassword@localhost/databasename'
     
-.. _`SQLALCHEMY_DATABSE_URI`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L10
+.. _`SQLALCHEMY_DATABSE_URI`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L28
 .. _SQLAlchemy: http://www.sqlalchemy.org/
 
 Load balance SQL Queries
@@ -105,7 +104,7 @@ Thus, **it is very important you create a secure and private key for the it's
 dangerous module in your configuration file**, just modify the
 ITSDANGEROUSKEY_.
 
-.. _ITSDANGEROUSKEY: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L12
+.. _ITSDANGEROUSKEY: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L35
 .. _`It's dangerous`: http://pythonhosted.org/itsdangerous/
 
 Modifying the Brand name
@@ -115,7 +114,7 @@ You can configure your project with a different name, instead of the default
 one: PyBossa. You only need to change the string BRAND_ to the name of your
 organization or project.
 
-.. _BRAND: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L15
+.. _BRAND: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L38
 
 Adding a Logo
 =============
@@ -125,7 +124,7 @@ have to copy your logo into the folder: **pybossa/pybossa/static/img**. If the
 logo name is, **my_brand.png** the LOGO_ variable should be updated with the
 name of the file.
 
-.. _LOGO: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L17
+.. _LOGO: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L40
 
 Creating your own theme
 =======================
@@ -182,8 +181,8 @@ provided URL that we use by default. You can also modify the license used for
 the data, just change the DATAUSE_ link to the open license that you want to
 use.
 
-.. _TERMSOFUSE: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L20
-.. _DATEUSE: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L21
+.. _TERMSOFUSE: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L43
+.. _DATEUSE: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L44
 
 
 Enabling Twitter, Facebook and Google authentication
@@ -201,8 +200,8 @@ variables: `TWITTER_CONSUMER_KEY`_ and `TWITTER_CONSUMER_SECRET`_ and uncomment
 them.
 
 .. _Twitter: https://dev.twitter.com/
-.. _`TWITTER_CONSUMER_KEY`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L25
-.. _`TWITTER_CONSUMER_SECRET`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L26
+.. _`TWITTER_CONSUMER_KEY`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L52
+.. _`TWITTER_CONSUMER_SECRET`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L53
 
 Facebook
 ~~~~~~~~
@@ -212,8 +211,8 @@ Facebook_ and copy and paste the **app ID/API Key and secret** into the next
 variables: `FACEBOOK_APP_ID`_ and `FACEBOOK_APP_SECRET`_ and uncomment them.  
 
 .. _Facebook: https://developers.facebook.com/apps
-.. _`FACEBOOK_APP_ID`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L27
-.. _`FACEBOOK_APP_SECRET`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L28
+.. _`FACEBOOK_APP_ID`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L54
+.. _`FACEBOOK_APP_SECRET`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L55
 
 
 Google
@@ -225,8 +224,8 @@ variables: `GOOGLE_CLIENT_ID`_ and `GOOGLE_CLIENT_SECRET`_ and uncomment
 them.
 
 .. _Google: https://code.google.com/apis/console/
-.. _`GOOGLE_CLIENT_ID`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L29
-.. _`GOOGLE_CLIENT_SECRET`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#30
+.. _`GOOGLE_CLIENT_ID`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L56
+.. _`GOOGLE_CLIENT_SECRET`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L57
 
 
 Receiving e-mails with errors
@@ -235,7 +234,7 @@ Receiving e-mails with errors
 If you want to receive an e-mail when an error occurs in the PyBossa server,
 uncomment the ADMINS_ config variable and add a list of e-mails.
 
-.. _ADMINS: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L34
+.. _ADMINS: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L64
 
 Enabling Logging
 ================
@@ -244,8 +243,8 @@ PyBossa can log errors to a file_ or to a Sentry_ server. If none of the above
 configurations are used, you will get the errors in the log file of the web server that you
 are using (i.e. in Apache2 the errors will be in */var/log/apache2/err.log*).
 
-.. _file: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L40
-.. _Sentry: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L38
+.. _file: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L75
+.. _Sentry: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L73
 
 Mail Setup
 ==========
@@ -254,7 +253,7 @@ PyBossa needs a mail server in order to validate new accounts, send e-mails
 with for recovering passwords, so it is very important you configure a server.
 Please, check the section `Mail setup`_ in the config file for configuring it.
 
-.. _`Mail setup`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L45
+.. _`Mail setup`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L80
 
 Global Announcements for the users
 ==================================
@@ -314,6 +313,7 @@ modify the following variables in your settings file::
     STATS_APP_TIMEOUT = 12 * 60 * 60
     STATS_DRAFT_TIMEOUT = 24 * 60 * 60
     N_APPS_PER_CATEGORY_TIMEOUT = 60 * 60
+    BROWSE_TASKS_TIMEOUT = 3 * 60 * 60
     # Category cache
     CATEGORY_TIMEOUT = 24 * 60 * 60
     # User cache
