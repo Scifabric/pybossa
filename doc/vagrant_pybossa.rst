@@ -80,7 +80,7 @@ the PyBossa development server::
 
 Now all you have to do is open the following URL in your web browser::
 
-  http://localhost:5000
+  http://127.0.0.1:5000
 
 And you are done! Happy Hacking!
 
