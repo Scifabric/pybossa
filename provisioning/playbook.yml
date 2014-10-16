@@ -1,4 +1,5 @@
 ---
+# Installation steps for every Ubuntu 14.04
 - hosts: all
   sudo: yes
   tasks:
@@ -48,7 +49,7 @@
     - name: start Redis service
       service: name=redis-server state=started
 
-
+# Do this installation steps only in Vagrant. TODO: Production steps
 - hosts: vagrant
   sudo: yes
   tasks:
@@ -110,7 +111,7 @@
         chdir: "{{pybossa_path}}"
       when: pybossa_db_exists.rc != 0
 
-
+# change .bashrc only in Vagrant development version
 - hosts: vagrant_dev
   sudo: yes
   tasks:
