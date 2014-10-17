@@ -23,36 +23,34 @@ from mock import patch, MagicMock
 from redis import Redis
 
 
+def a_function():
+    return
+def another_function():
+    return
+
+
 class TestSetupScheduledJobs(object):
     """Tests for setup function '_schedule_jobs'"""
 
     def setUp(self):
         self.connection = Redis()
         self.connection.flushall()
+        self.scheduler = Scheduler('test_queue', connection=self.connection)
 
 
     def test_adds_scheduled_job_with_interval(self):
-        scheduler = Scheduler('test_queue', connection=self.connection)
-        def a_function():
-            return
         interval = 7
-        _schedule_job(a_function, interval, scheduler)
-        sched_jobs = scheduler.get_jobs()
+        _schedule_job(a_function, interval, self.scheduler)
+        sched_jobs = self.scheduler.get_jobs()
 
         assert len(sched_jobs) == 1, sched_jobs
         assert sched_jobs[0].meta['interval'] == interval, sched_jobs[0].meta
 
 
     def test_adds_several_jobs_(self):
-        scheduler = Scheduler('test_queue', connection=self.connection)
-        def a_function():
-            return
-        def another_function():
-            return
-
-        _schedule_job(a_function, 1, scheduler)
-        _schedule_job(another_function, 1, scheduler)
-        sched_jobs = scheduler.get_jobs()
+        _schedule_job(a_function, 1, self.scheduler)
+        _schedule_job(another_function, 1, self.scheduler)
+        sched_jobs = self.scheduler.get_jobs()
         job_func_names = [job.func_name for job in sched_jobs]
 
         assert len(sched_jobs) == 2, sched_jobs
@@ -61,36 +59,24 @@ class TestSetupScheduledJobs(object):
 
 
     def test_does_not_add_job_if_already_added(self):
-        scheduler = Scheduler('test_queue', connection=self.connection)
-        def a_function():
-            return
-
-        _schedule_job(a_function, 1, scheduler)
-        _schedule_job(a_function, 1, scheduler)
-        sched_jobs = scheduler.get_jobs()
+        _schedule_job(a_function, 1, self.scheduler)
+        _schedule_job(a_function, 1, self.scheduler)
+        sched_jobs = self.scheduler.get_jobs()
 
         assert len(sched_jobs) == 1, sched_jobs
 
 
     def test_returns_log_messages(self):
-        scheduler = Scheduler('test_queue', connection=self.connection)
-        def a_function():
-            return
-
-        success_message = _schedule_job(a_function, 1, scheduler)
-        failure_message = _schedule_job(a_function, 1, scheduler)
+        success_message = _schedule_job(a_function, 1, self.scheduler)
+        failure_message = _schedule_job(a_function, 1, self.scheduler)
 
         assert success_message == 'Scheduled a_function to run every 1 seconds'
         assert failure_message == 'Job a_function is already scheduled'
 
 
     def test_failed_attempt_to_schedule_does_not_polute_redis(self):
-        scheduler = Scheduler('test_queue', connection=self.connection)
-        def a_function():
-            return
-
-        _schedule_job(a_function, 1, scheduler)
-        _schedule_job(a_function, 1, scheduler)
+        _schedule_job(a_function, 1, self.scheduler)
+        _schedule_job(a_function, 1, self.scheduler)
         stored_values = self.connection.keys('rq:job*')
 
         assert len(stored_values) == 1, len(stored_values)
