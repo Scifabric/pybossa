@@ -35,10 +35,20 @@ the following open source software:
 
 #. VirtualBox_ (min version 4.2.10)
 #. Vagrant_ (min version 1.2.1)
+#. Vagrant Plugin (vagrant-ansible-local)
 
 .. note::
     Vagrant_ and VirtualBox_ works in Windows, GNU/Linux and Mac OS X, so you can try and run
     PyBossa without problems!
+
+First install a Vagrant plugin which helps installing PyBossa in Vagrant::
+
+    $ vagrant plugin install vagrant-ansible-local
+
+.. note::
+    This plugin only needs to be installed once. It will not install Ansible or
+    any other software on your host PC. It is only a Vagrant plugin which can talk
+    to Ansible inside a Vagrant VM.
 
 Then, you can clone the PyBossa git repository (be sure to install git in your
 machine!)::
@@ -54,11 +64,6 @@ PyBossa development environment is typing the following::
 The system will download a Virtual Machine, install all the required libraries
 for PyBossa and set up the system for you inside the Virtual Machine.
 
-.. note::
-    If you use Windows be sure to `turn off autocrlf in git config <https://help.github.com/articles/dealing-with-line-endings#platform-windows>`_.
-    If you are using Windows XP and have issues running 'vagrant up', please
-    check out this `link <http://techtalkies.blogspot.com.es/2014/08/installing-and-testing-out-your-own.html>`_.
-
 Vagrant is really great, because all the changes that you will make in your
 local copy of PyBossa will be automatically populated to the Virtual Machine.
 Hence, if you add a new feature to the system, you will be able to test it
@@ -71,12 +76,11 @@ Now that all the libraries and dependencies have been installed, you can lunch
 the PyBossa development server::
 
   $ vagrant ssh
-  $ cd /vagrant
-  $ source vagrant_start.sh
+  $ python run.py
 
 Now all you have to do is open the following URL in your web browser::
 
-  http://localhost:5000
+  http://127.0.0.1:5000
 
 And you are done! Happy Hacking!
 
