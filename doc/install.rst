@@ -295,12 +295,8 @@ Similarly, to get the tasks done by the worker, run:
 
     python app_context_rqworker.py scheduled_jobs
 
-.. note::
-   **Important**: Make sure that you run the scheduler **before** starting the
-   PyBossa server. Otherwise, the tasks won't be properly scheduled.
-
 It is also recommended the use of supervisor_ for running these processes in an
-easier way, without worrying of the boot order and with a single command.
+easier way and with a single command.
 
 .. _RQ: http://python-rq.org/
 .. _RQScheduler: https://github.com/ui/rq-scheduler
