@@ -434,6 +434,6 @@ def _schedule_job(function, interval, scheduler):
         interval=interval,
         repeat=None)
     if job.func_name in scheduled_jobs:
-        scheduler.cancel(job)
+        job.cancel()
         return 'Job %s is already scheduled' % function.__name__
     return 'Scheduled %s to run every %s seconds' % (function.__name__, interval)

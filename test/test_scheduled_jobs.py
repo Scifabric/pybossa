@@ -24,7 +24,7 @@ from redis import Redis
 
 
 class TestSetupScheduledJobs(object):
-    """Unit tests for setup function '_schedule_jobs'"""
+    """Tests for setup function '_schedule_jobs'"""
 
     def setUp(self):
         self.connection = Redis()
@@ -82,3 +82,15 @@ class TestSetupScheduledJobs(object):
 
         assert success_message == 'Scheduled a_function to run every 1 seconds'
         assert failure_message == 'Job a_function is already scheduled'
+
+
+    def test_failed_attempt_to_schedule_does_not_polute_redis(self):
+        scheduler = Scheduler('test_queue', connection=self.connection)
+        def a_function():
+            return
+
+        _schedule_job(a_function, 1, scheduler)
+        _schedule_job(a_function, 1, scheduler)
+        stored_values = self.connection.keys('rq:job*')
+
+        assert len(stored_values) == 1, len(stored_values)
