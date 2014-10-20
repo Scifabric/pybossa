@@ -2207,8 +2207,9 @@ class TestWeb(web.Helper):
 
     def test_export_taskrun_json_support_non_latin1_project_names(self):
         app = AppFactory.create(name='Измени Киев!', short_name='Измени Киев!')
-        res = self.app.get('app/%s/tasks/export?type=taskrun&format=json' % app.short_name,
+        res = self.app.get('app/%s/tasks/export?type=task_run&format=json' % app.short_name,
                            follow_redirects=True)
+        print res
         assert 'Измени Киев!' in res.headers.get('Content-Disposition'), res
 
     def test_export_task_csv_support_non_latin1_project_names(self):
@@ -2222,8 +2223,9 @@ class TestWeb(web.Helper):
         app = AppFactory.create(name='Измени Киев!', short_name='Измени Киев!')
         task = TaskFactory.create(app=app)
         TaskRunFactory.create(task=task)
-        res = self.app.get('/app/%s/tasks/export?type=taskrun&format=csv' % app.short_name,
+        res = self.app.get('/app/%s/tasks/export?type=task_run&format=csv' % app.short_name,
                            follow_redirects=True)
+        print res
         assert 'Измени Киев!' in res.headers.get('Content-Disposition'), res
 
     @with_context
@@ -2235,7 +2237,7 @@ class TestWeb(web.Helper):
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
         # Now get the tasks in JSON format
-        uri = "/app/somethingnotexists/tasks/export?type=taskrun&format=json"
+        uri = "/app/somethingnotexists/tasks/export?type=task&format=json"
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
 
