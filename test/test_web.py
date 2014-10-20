@@ -2178,6 +2178,9 @@ class TestWeb(web.Helper):
                 .first()
         err_msg = "The number of exported tasks is different from App Tasks"
         assert len(exported_tasks) == len(app.tasks), err_msg
+        # Tasks are exported as an attached file
+        content_disposition = 'attachment; filename=test-app_task.json'
+        assert res.headers.get('Content-Disposition') == content_disposition, res.headers
 
         app.hidden = 1
         db.session.add(app)
@@ -2196,6 +2199,35 @@ class TestWeb(web.Helper):
                            follow_redirects=True)
         assert res.status_code == 200, res.status_code
 
+    def test_export_task_json_support_non_latin1_project_names(self):
+        app = AppFactory.create(name='Измени Киев!', short_name='Измени Киев!')
+        res = self.app.get('app/%s/tasks/export?type=task&format=json' % app.short_name,
+                           follow_redirects=True)
+        assert 'Измени Киев!' in res.headers.get('Content-Disposition'), res
+
+    def test_export_taskrun_json_support_non_latin1_project_names(self):
+        app = AppFactory.create(name='Измени Киев!', short_name='Измени Киев!')
+        res = self.app.get('app/%s/tasks/export?type=task_run&format=json' % app.short_name,
+                           follow_redirects=True)
+        print res
+        assert 'Измени Киев!' in res.headers.get('Content-Disposition'), res
+
+    def test_export_task_csv_support_non_latin1_project_names(self):
+        app = AppFactory.create(name='Измени Киев!', short_name='Измени Киев!')
+        TaskFactory.create(app=app)
+        res = self.app.get('/app/%s/tasks/export?type=task&format=csv' % app.short_name,
+                           follow_redirects=True)
+        assert 'Измени Киев!' in res.headers.get('Content-Disposition'), res
+
+    def test_export_taskrun_csv_support_non_latin1_project_names(self):
+        app = AppFactory.create(name='Измени Киев!', short_name='Измени Киев!')
+        task = TaskFactory.create(app=app)
+        TaskRunFactory.create(task=task)
+        res = self.app.get('/app/%s/tasks/export?type=task_run&format=csv' % app.short_name,
+                           follow_redirects=True)
+        print res
+        assert 'Измени Киев!' in res.headers.get('Content-Disposition'), res
+
     @with_context
     def test_51_export_taskruns_json(self):
         """Test WEB export Task Runs to JSON works"""
@@ -2205,7 +2237,7 @@ class TestWeb(web.Helper):
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
         # Now get the tasks in JSON format
-        uri = "/app/somethingnotexists/tasks/export?type=taskrun&format=json"
+        uri = "/app/somethingnotexists/tasks/export?type=task&format=json"
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
 
@@ -2223,6 +2255,9 @@ class TestWeb(web.Helper):
                 .first()
         err_msg = "The number of exported task runs is different from App Tasks"
         assert len(exported_task_runs) == len(app.task_runs), err_msg
+        # Task runs are exported as an attached file
+        content_disposition = 'attachment; filename=test-app_task_run.json'
+        assert res.headers.get('Content-Disposition') == content_disposition, res.headers
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
@@ -2294,7 +2329,9 @@ class TestWeb(web.Helper):
                 slug = 'taskinfo__%s' % k
                 err_msg = "%s != %s" % (task_dict['info'][k], et[keys.index(slug)])
                 assert unicode(task_dict['info'][k]) == et[keys.index(slug)], err_msg
-
+        # Tasks are exported as an attached file
+        content_disposition = 'attachment; filename=app1_task.csv'
+        assert res.headers.get('Content-Disposition') == content_disposition, res.headers
 
         # With an empty app
         app = AppFactory.create()
@@ -2368,7 +2405,9 @@ class TestWeb(web.Helper):
                 slug = 'task_runinfo__%s' % k
                 err_msg = "%s != %s" % (task_run_dict['info'][k], et[keys.index(slug)])
                 assert unicode(task_run_dict['info'][k]) == et[keys.index(slug)], err_msg
-
+        # Task runs are exported as an attached file
+        content_disposition = 'attachment; filename=app1_task_run.csv'
+        assert res.headers.get('Content-Disposition') == content_disposition, res.headers
 
     @with_context
     @patch('pybossa.view.applications.Ckan', autospec=True)
