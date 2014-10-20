@@ -931,7 +931,8 @@ def export_to(short_name):
         except KeyError:
             return abort(404)
 
-        tmp = 'attachment; filename=%s_%s.json' % (app.short_name, ty)
+        name = app.short_name.encode('utf-8', 'ignore').decode('latin-1')
+        tmp = 'attachment; filename=%s_%s.json' % (name, ty)
         res = Response(gen_json(table), mimetype='application/json')
         res.headers['Content-Disposition'] = tmp
         return res
@@ -1044,7 +1045,8 @@ def export_to(short_name):
 
             res = Response(get_csv(out, writer, table, handle_row),
                            mimetype='text/csv')
-            tmp = 'attachment; filename=%s_%s.csv' % (app.short_name, ty)
+            name = app.short_name.encode('utf-8', 'ignore').decode('latin-1')
+            tmp = 'attachment; filename=%s_%s.csv' % (name, ty)
             res.headers['Content-Disposition'] = tmp
             return res
         else:
