@@ -2199,6 +2199,33 @@ class TestWeb(web.Helper):
                            follow_redirects=True)
         assert res.status_code == 200, res.status_code
 
+    def test_export_task_json_support_non_latin1_project_names(self):
+        app = AppFactory.create(name='Измени Киев!', short_name='Измени Киев!')
+        res = self.app.get('app/%s/tasks/export?type=task&format=json' % app.short_name,
+                           follow_redirects=True)
+        assert 'Измени Киев!' in res.headers.get('Content-Disposition'), res
+
+    def test_export_taskrun_json_support_non_latin1_project_names(self):
+        app = AppFactory.create(name='Измени Киев!', short_name='Измени Киев!')
+        res = self.app.get('app/%s/tasks/export?type=taskrun&format=json' % app.short_name,
+                           follow_redirects=True)
+        assert 'Измени Киев!' in res.headers.get('Content-Disposition'), res
+
+    def test_export_task_csv_support_non_latin1_project_names(self):
+        app = AppFactory.create(name='Измени Киев!', short_name='Измени Киев!')
+        TaskFactory.create(app=app)
+        res = self.app.get('/app/%s/tasks/export?type=task&format=csv' % app.short_name,
+                           follow_redirects=True)
+        assert 'Измени Киев!' in res.headers.get('Content-Disposition'), res
+
+    def test_export_taskrun_csv_support_non_latin1_project_names(self):
+        app = AppFactory.create(name='Измени Киев!', short_name='Измени Киев!')
+        task = TaskFactory.create(app=app)
+        TaskRunFactory.create(task=task)
+        res = self.app.get('/app/%s/tasks/export?type=taskrun&format=csv' % app.short_name,
+                           follow_redirects=True)
+        assert 'Измени Киев!' in res.headers.get('Content-Disposition'), res
+
     @with_context
     def test_51_export_taskruns_json(self):
         """Test WEB export Task Runs to JSON works"""
