@@ -2178,6 +2178,9 @@ class TestWeb(web.Helper):
                 .first()
         err_msg = "The number of exported tasks is different from App Tasks"
         assert len(exported_tasks) == len(app.tasks), err_msg
+        # Tasks are exported as an attached file
+        content_disposition = 'attachment; filename=test-app_task.json'
+        assert res.headers.get('Content-Disposition') == content_disposition, res.headers
 
         app.hidden = 1
         db.session.add(app)
@@ -2223,6 +2226,9 @@ class TestWeb(web.Helper):
                 .first()
         err_msg = "The number of exported task runs is different from App Tasks"
         assert len(exported_task_runs) == len(app.task_runs), err_msg
+        # Task runs are exported as an attached file
+        content_disposition = 'attachment; filename=test-app_task_run.json'
+        assert res.headers.get('Content-Disposition') == content_disposition, res.headers
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
@@ -2294,7 +2300,9 @@ class TestWeb(web.Helper):
                 slug = 'taskinfo__%s' % k
                 err_msg = "%s != %s" % (task_dict['info'][k], et[keys.index(slug)])
                 assert unicode(task_dict['info'][k]) == et[keys.index(slug)], err_msg
-
+        # Tasks are exported as an attached file
+        content_disposition = 'attachment; filename=app1_task.csv'
+        assert res.headers.get('Content-Disposition') == content_disposition, res.headers
 
         # With an empty app
         app = AppFactory.create()
@@ -2368,7 +2376,9 @@ class TestWeb(web.Helper):
                 slug = 'task_runinfo__%s' % k
                 err_msg = "%s != %s" % (task_run_dict['info'][k], et[keys.index(slug)])
                 assert unicode(task_run_dict['info'][k]) == et[keys.index(slug)], err_msg
-
+        # Task runs are exported as an attached file
+        content_disposition = 'attachment; filename=app1_task_run.csv'
+        assert res.headers.get('Content-Disposition') == content_disposition, res.headers
 
     @with_context
     @patch('pybossa.view.applications.Ckan', autospec=True)
