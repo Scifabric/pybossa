@@ -41,7 +41,7 @@ import pybossa.model as model
 from flask.ext.babel import gettext
 from sqlalchemy.sql import text
 from pybossa.model.user import User
-from pybossa.core import db, signer, mail, uploader, sentinel
+from pybossa.core import db, signer, uploader, sentinel
 from pybossa.util import Pagination, get_user_id_or_ip, pretty_date
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
@@ -184,7 +184,11 @@ def register():
         msg.body = render_template('/account/email/validate_account.md',
                                     user=account, confirm_url=confirm_url)
         msg.html = markdown(msg.body)
-        mail.send(msg)
+        from rq import Queue
+        from pybossa.core import sentinel
+        from pybossa.jobs import send_mail
+        q = Queue('mail', connection=sentinel.master)
+        send_mail_job = q.enqueue(send_mail, msg)
         return render_template('account/account_validation.html')
     if request.method == 'POST' and not form.validate():
         flash(gettext('Please correct the errors'), 'error')
@@ -535,7 +539,11 @@ def forgot_password():
                     '/account/email/forgot_password.md',
                     user=user, recovery_url=recovery_url)
             msg.html = markdown(msg.body)
-            mail.send(msg)
+            from rq import Queue
+            from pybossa.core import sentinel
+            from pybossa.jobs import send_mail
+            q = Queue('mail', connection=sentinel.master)
+            send_mail_job = q.enqueue(send_mail, msg)
             flash(gettext("We've send you email with account "
                           "recovery instructions!"),
                   'success')
