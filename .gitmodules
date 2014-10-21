@@ -1,24 +1,6 @@
 [submodule "doc/_themes/sphinx-theme-okfn"]
 	path = doc/_themes/sphinx-theme-okfn
 	url = git://github.com/okfn/sphinx-theme-okfn.git
-[submodule "cookbooks/git"]
-	path = cookbooks/git
-	url = git://github.com/opscode-cookbooks/git.git
-[submodule "cookbooks/apt"]
-	path = cookbooks/apt
-	url = git://github.com/opscode-cookbooks/apt.git
-[submodule "cookbooks/python"]
-	path = cookbooks/python
-	url = git://github.com/opscode-cookbooks/python.git
-[submodule "cookbooks/postgresql"]
-	path = cookbooks/postgresql
-	url = git://github.com/opscode-cookbooks/postgresql.git
-[submodule "cookbooks/redis"]
-	path = cookbooks/redis
-	url = git://github.com/teleyinex/chef-cookbook-redis.git
-[submodule "cookbooks/build-essential"]
-	path = cookbooks/build-essential
-	url = git://github.com/opscode-cookbooks/build-essential.git
 [submodule "pybossa/themes/default"]
 	path = pybossa/themes/default
 	url = git://github.com/PyBossa/pybossa-default-theme

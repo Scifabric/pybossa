@@ -18,7 +18,7 @@
 
 import os
 import logging
-from flask import Flask, url_for, session, request, render_template, flash
+from flask import Flask, url_for, session, request, render_template, flash, _app_ctx_stack
 from flask.ext.login import current_user
 from flask.ext.heroku import Heroku
 from flask.ext.babel import lazy_gettext
@@ -110,9 +110,24 @@ def setup_markdown(app):
 
 
 def setup_db(app):
+    def create_slave_session(db, bind):
+        if app.config.get('SQLALCHEMY_BINDS')['slave'] == app.config.get('SQLALCHEMY_DATABASE_URI'):
+            return db.session
+        engine = db.get_engine(db.app, bind=bind)
+        options = dict(bind=engine,scopefunc=_app_ctx_stack.__ident_func__)
+        slave_session = db.create_scoped_session(options=options)
+        return slave_session
     db.app = app
     db.init_app(app)
-
+    db.slave_session = create_slave_session(db, bind='slave')
+    if db.slave_session is not db.session: #flask-sqlalchemy does it already for default session db.session
+        @app.teardown_appcontext
+        def shutdown_session(response_or_exc):
+            if app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN']:
+                if response_or_exc is None:
+                    db.slave_session.commit()
+            db.slave_session.remove()
+            return response_or_exc
 
 def setup_gravatar(app):
     gravatar.init_app(app)
@@ -391,15 +406,3 @@ def setup_cache_timeouts(app):
     timeouts['USER_TIMEOUT'] = app.config['USER_TIMEOUT']
     timeouts['USER_TOP_TIMEOUT'] = app.config['USER_TOP_TIMEOUT']
     timeouts['USER_TOTAL_TIMEOUT'] = app.config['USER_TOTAL_TIMEOUT']
-
-
-def get_session(db, bind):
-    """Returns a session with for the given bind."""
-    engine = db.get_engine(db.app, bind=bind)
-    Session.configure(bind=engine)
-    session = Session()
-    # HACK: this is to fix Flask-SQLAlchemy error
-    # see: http://stackoverflow.com/a/20203277/1960596
-    # note: it looks like in Flask-SQLAlchemy 2.0 this is going to be fixed
-    session._model_changes = {}
-    return session

@@ -1,25 +1,27 @@
 language: python
 python:
-  - "2.7"
-env: 
-  - PYBOSSA_SETTINGS='../settings_test.py' PYBOSSA_REDIS_CACHE_DISABLED='1'
+- '2.7'
+env:
+- PYBOSSA_SETTINGS='../settings_test.py' PYBOSSA_REDIS_CACHE_DISABLED='1'
 services:
-  - redis-server
+- redis-server
+addons:
+  postgresql: "9.3"
 before_install:
-  - sudo apt-get update && sudo apt-get install swig
-  - redis-server --version
-  - redis-server contrib/redis/sentinel.conf --sentinel
-  - pip install coveralls --use-mirrors
+- sudo apt-get update && sudo apt-get install swig
+- redis-server --version
+- redis-server contrib/redis/sentinel.conf --sentinel
+- pip install coveralls --use-mirrors
 install:
-  - pip install -r requirements.txt
+- pip install -r requirements.txt
 before_script:
-  - psql -c "create user rtester with createdb login password 'rtester'" -U postgres
-  - psql -c "create database pybossa_test owner rtester encoding 'utf-8' lc_collate 'en_US.utf8' lc_ctype 'en_US.utf8' template template0;" -U postgres
+- psql -c "create user rtester with createdb login password 'rtester'" -U postgres
+- psql -c "create database pybossa_test owner rtester encoding 'utf-8' lc_collate
+  'en_US.utf8' lc_ctype 'en_US.utf8' template template0;" -U postgres
 script: nosetests test/
 notifications:
-  email: false
-  irc: "irc.freenode.net#okfn-dev"
-after_success:
-  - coveralls
-notifications:
   hipchat: 11e2176ebb4b7372ee0d1fbc8abf4d@Github
+  slack:
+    secure: lgJj/SealCb3hZsMvclA9VQGwx9TJrtK6ccOZiiHZpJa5in0UkRwE6ymrZ5wqwUagAVwOLYVKHdmrtPMPsaOqavnzq9ItJFqSRo8T5ZgKK+m+X9l88ROn7+QfJyPUkpblhSXMm6+s7duBjdM/no80lA4GEoNWD5G5uQwjJWQSWk=
+after_success:
+- coveralls

@@ -51,4 +51,4 @@ class AppAPI(APIBase):
 
     def _update_object(self, obj):
         if not current_user.is_anonymous():
-            obj.owner = current_user
+            obj.owner_id = current_user.id

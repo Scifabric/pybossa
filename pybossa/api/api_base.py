@@ -32,7 +32,7 @@ from flask.views import MethodView
 from werkzeug.exceptions import NotFound, Unauthorized, Forbidden
 from sqlalchemy.exc import IntegrityError
 from pybossa.util import jsonpify, crossdomain
-from pybossa.core import db, ratelimits, get_session
+from pybossa.core import db, ratelimits
 from pybossa.auth import require
 from pybossa.hateoas import Hateoas
 from pybossa.ratelimit import ratelimit
@@ -50,7 +50,7 @@ class APIBase(MethodView):
 
     hateoas = Hateoas()
 
-    slave_session = get_session(db, bind='slave')
+    slave_session = db.slave_session
 
     def valid_args(self):
         """Check if the domain object args are valid."""
@@ -83,13 +83,10 @@ class APIBase(MethodView):
             json_response = self._create_json_response(query, id)
             return Response(json_response, mimetype='application/json')
         except Exception as e:
-            self.slave_session.rollback()
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
                 action='GET')
-        finally:
-            self.slave_session.close()
 
     def _create_json_response(self, query_result, id):
         if len (query_result) == 1 and query_result[0] is None:
