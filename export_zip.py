@@ -23,7 +23,8 @@ import optparse
 import inspect
 import json
 from StringIO import StringIO
-from pybossa.core import db, get_session
+import zipfile
+from pybossa.core import db, uploader, get_session
 from pybossa.core import create_app
 from pybossa.model.app import App
 from pybossa.model.task import Task
@@ -172,35 +173,68 @@ def export_tasks():
         finally:
             session.close()
 
+    def make_onefile_memzip(memfile, filename):
+        memzip = StringIO()
+        try:
+            import zlib
+            mode= zipfile.ZIP_DEFLATED
+        except:
+            mode= zipfile.ZIP_STORED
+        zipf = zipfile.ZipFile(memzip, 'w', mode)
+        memfile.seek(0)
+        zipf.writestr(filename, memfile.getvalue())
+        zipf.close()
+        memzip.seek(0)
+        return memzip
+
     def export_json(app):
         print app.id
+        name = app.short_name.encode('utf-8', 'ignore').decode('latin-1') # used for latin filename later
         json_task_generator = respond_json("task", app.id)
         if json_task_generator is not None:
-            for line in json_task_generator:         # TODO: Save file here as ZIP on CDN
-                print line
+            memfile = StringIO()
+            for line in json_task_generator:
+                memfile.write(str(line))
+            memzip = make_onefile_memzip(memfile, '%s_task.json' % name)
+            # TODO: use pybossa uploader! Only for debugging:
+            open('/tmp/%d_%s_task_json.zip' % (app.id, name), 'wb').write(memzip.getvalue())
         json_task_run_generator = respond_json("task_run", app.id)
         if json_task_run_generator is not None:
-            for line in json_task_run_generator:     # TODO: Save file here as ZIP on CDN
-                print line
+            memfile = StringIO()
+            for line in json_task_run_generator:
+                memfile.write(str(line))
+            memzip = make_onefile_memzip(memfile, '%s_task_run.json' % name)
+            # TODO: use pybossa uploader! Only for debugging:
+            open('/tmp/%d_%s_task_run_json.zip' % (app.id, name), 'wb').write(memzip.getvalue())
+
 
     def export_csv(app):
         print app.id
+        name = app.short_name.encode('utf-8', 'ignore').decode('latin-1') # used for latin filename later
         csv_task_generator = respond_csv("task", app.id)
         if csv_task_generator is not None:
-            for line in csv_task_generator:         # TODO: Save file here as ZIP on CDN
-                print line
+            memfile = StringIO()
+            for line in csv_task_generator:
+                memfile.write(str(line))
+            memzip = make_onefile_memzip(memfile, '%s_task.csv' % name)
+            # TODO: use pybossa uploader! Only for debugging:
+            open('/tmp/%d_%s_task_csv.zip' % (app.id, name), 'wb').write(memzip.getvalue())
         csv_task_run_generator = respond_csv("task_run", app.id)
         if csv_task_run_generator is not None:
-            for line in csv_task_run_generator:     # TODO: Save file here as ZIP on CDN
-                print line
+            memfile = StringIO()
+            for line in csv_task_run_generator:
+                memfile.write(str(line))
+            memzip = make_onefile_memzip(memfile, '%s_task_run.csv' % name)
+            # TODO: use pybossa uploader! Only for debugging:
+            open('/tmp/%d_%s_task_run_csv.zip' % (app.id, name), 'wb').write(memzip.getvalue())
 
     # go through all apps and generate json and csv
 
     apps = db.session.query(App).all()
 
     # Test only with first
-    # export_json(app_x[0])
-    # export_csv(app_x[0])
+    # export_json(apps[0])
+    # export_csv(apps[0])
 
     for app_x in apps:
         export_json(app_x)
