@@ -24,7 +24,7 @@ import inspect
 import json
 from StringIO import StringIO
 import zipfile
-from pybossa.core import db, uploader, get_session
+from pybossa.core import db, uploader
 from pybossa.core import create_app
 from pybossa.model.app import App
 from pybossa.model.task import Task
@@ -39,24 +39,17 @@ def export_tasks():
     '''Export tasks to zip'''
 
     def gen_json(table, id):
-        try:
-            session = get_session(db, bind='slave')
-            n = session.query(table)\
-                .filter_by(app_id=id).count()
-            sep = ", "
-            yield "["
-            for i, tr in enumerate(session.query(table)
-                                     .filter_by(app_id=id).yield_per(1), 1):
-                item = json.dumps(tr.dictize())
-                if (i == n):
-                    sep = ""
-                yield item + sep
-            yield "]"
-        except: # pragma: no cover
-            session.rollback()
-            raise
-        finally:
-            session.close()
+        n = db.slave_session.query(table)\
+            .filter_by(app_id=id).count()
+        sep = ", "
+        yield "["
+        for i, tr in enumerate(db.slave_session.query(table)
+                                 .filter_by(app_id=id).yield_per(1), 1):
+            item = json.dumps(tr.dictize())
+            if (i == n):
+                sep = ""
+            yield item + sep
+        yield "]"
 
     def respond_json(ty, id):
         tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}
@@ -107,22 +100,14 @@ def export_tasks():
         writer.writerow(format_csv_properly(t.dictize(), ty='taskrun'))
 
     def get_csv(out, writer, table, handle_row, id):
-        try:
-            session = get_session(db, bind='slave')
-            for tr in session.query(table)\
-                    .filter_by(app_id=id)\
-                    .yield_per(1):
-                handle_row(writer, tr)
+        for tr in db.slave_session.query(table)\
+                .filter_by(app_id=id)\
+                .yield_per(1):
+            handle_row(writer, tr)
             yield out.getvalue()
-        except: # pragma: no cover
-            session.rollback()
-            raise
-        finally:
-            session.close()
 
     def respond_csv(ty, id):
         try:
-            session = get_session(db, bind='slave')
             # Export Task(/Runs) to CSV
             types = {
                 "task": (
@@ -144,7 +129,7 @@ def export_tasks():
 
             out = StringIO()
             writer = UnicodeWriter(out)
-            t = session.query(table)\
+            t = db.slave_session.query(table)\
                 .filter_by(app_id=id)\
                 .first()
             if t is not None:
@@ -170,8 +155,6 @@ def export_tasks():
                 pass # TODO
         except: # pragma: no cover
             raise
-        finally:
-            session.close()
 
     def make_onefile_memzip(memfile, filename):
         memzip = StringIO()
@@ -230,7 +213,7 @@ def export_tasks():
 
     # go through all apps and generate json and csv
 
-    apps = db.session.query(App).all()
+    apps = db.slave_session.query(App).all()
 
     # Test only with first
     # export_json(apps[0])
