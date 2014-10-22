@@ -423,10 +423,7 @@ def setup_scheduled_jobs(app): #pragma: no cover
     redis_conn = sentinel.master
     from jobs import get_all_jobs
     from rq_scheduler import Scheduler
-    from rq import Queue
     all_jobs = get_all_jobs()
-    q = Queue('scheduled_jobs', connection=redis_conn)
-    q.enqueue(get_all_jobs)
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=redis_conn)
     interval = 10 * 60
     for function in all_jobs:
