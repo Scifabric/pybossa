@@ -218,6 +218,12 @@ def setup_blueprints(app):
     for bp in blueprints:
         app.register_blueprint(bp['handler'], url_prefix=bp['url_prefix'])
 
+    # The RQDashboard is actually registering a blueprint to the app, so this is
+    # a propper place for it to be initialized
+    from rq_dashboard import RQDashboard
+    auth = lambda: current_user.is_authenticated() and current_user.admin
+    RQDashboard(app, url_prefix='/admin/rq', auth_handler=auth)
+
 
 def setup_social_networks(app):
     try:  # pragma: no cover
