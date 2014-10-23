@@ -22,6 +22,7 @@ from sqlalchemy import event
 
 from pybossa.core import db
 from pybossa.model import DomainObject, make_timestamp, update_redis
+from pybossa.model import update_app_timestamp
 
 
 
@@ -60,3 +61,10 @@ def add_event(mapper, conn, target):
         obj['short_name'] = r.short_name
         obj['info'] = r.info
     update_redis(obj)
+
+
+@event.listens_for(Blogpost, 'after_insert')
+@event.listens_for(Blogpost, 'after_update')
+def update_app(mapper, conn, target):
+    """Update app updated timestamp."""
+    update_app_timestamp(mapper, conn, target)
