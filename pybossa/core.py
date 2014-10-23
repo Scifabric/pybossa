@@ -429,7 +429,7 @@ def _schedule_job(function, interval, scheduler):
     from datetime import datetime
     scheduled_jobs = [job.func_name for job in scheduler.get_jobs()]
     job = scheduler.schedule(
-        scheduled_time=datetime.now(),
+        scheduled_time=datetime.utcnow(),
         func=function,
         interval=interval,
         repeat=None)
