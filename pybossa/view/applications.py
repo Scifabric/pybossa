@@ -32,7 +32,6 @@ from flask.ext.babel import gettext
 from sqlalchemy.sql import text
 
 import pybossa.model as model
-import pybossa.stats as stats
 import pybossa.sched as sched
 
 from pybossa.core import db, uploader, signer
@@ -44,6 +43,7 @@ from pybossa.util import Pagination, UnicodeWriter, admin_required, get_user_id_
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
+from pybossa.cache import project_stats as stats
 from pybossa.cache.helpers import add_custom_contrib_button_to
 from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
