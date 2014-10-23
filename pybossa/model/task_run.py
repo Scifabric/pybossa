@@ -21,7 +21,8 @@ from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy import event
 
 from pybossa.core import db
-from pybossa.model import DomainObject, JSONType, make_timestamp, update_redis
+from pybossa.model import DomainObject, JSONType, make_timestamp, update_redis, \
+    update_app_timestamp
 
 
 
@@ -102,3 +103,10 @@ def update_task_state(mapper, conn, target):
                      where id=%s") % target.task_id
         conn.execute(sql_query)
         update_redis(app_obj)
+
+
+@event.listens_for(TaskRun, 'after_insert')
+@event.listens_for(TaskRun, 'after_update')
+def update_app(mapper, conn, target):
+    """Update app updated timestamp."""
+    update_app_timestamp(mapper, conn, target)
