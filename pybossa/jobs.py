@@ -20,7 +20,7 @@ import os
 
 from pybossa.core import mail
 
-def get_all_jobs():
+def get_scheduled_jobs():
     return [warm_up_stats]
 
 def warm_up_stats():
