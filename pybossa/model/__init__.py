@@ -198,3 +198,11 @@ def update_redis(obj):
     tmp = pickle.dumps(obj)
     p.zadd('pybossa_feed', time(), tmp)
     p.execute()
+
+
+def update_app_timestamp(mapper, conn, target):
+    """Update method to be used by the relationship objects."""
+    sql_query = ("update app set updated='%s' where id=%s" %
+                 (make_timestamp(), target.app_id))
+    conn.execute(sql_query)
+
