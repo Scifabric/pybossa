@@ -19,7 +19,8 @@
 import os
 
 def get_all_jobs():
-    return [warm_up_stats]
+    #return [warm_up_stats, mail_old_project_owners]
+    return [mail_old_project_owners]
 
 def warm_up_stats():
     print "Running on the background warm_up_stats"
@@ -106,4 +107,30 @@ def warm_cache():
     else:
         os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = env_cache_disabled
 
+    return True
+
+
+def mail_old_project_owners():
+    """E-mail the project owners not updated in the last 3 months."""
+    from pybossa.model.app import App
+    from pybossa.core import db, mail
+    from sqlalchemy.sql import text
+    from flask.ext.mail import Message
+
+    sql = text('''SELECT id FROM app WHERE TO_DATE(updated,
+                'YYYY-MM-DD\THH24:MI:SS.US') <= NOW() - '3 month':: INTERVAL''')
+    results = db.slave_session.execute(sql)
+    apps = []
+    for row in results:
+        a = App.query.get(row.id)
+        apps.append(a)
+
+    with mail.connect() as conn:
+        for a in apps:
+            message = 'Hello World'
+            subject = 'Your Crowdcrafting project: %s has been inactive' % a.name
+            msg = Message(recipients=[a.owner.email_addr],
+                          body=message,
+                          subject=subject)
+            conn.send(msg)
     return True
