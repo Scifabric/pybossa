@@ -41,7 +41,7 @@ class App(db.Model, DomainObject):
     #: UTC timestamp when the project is created
     created = Column(Text, default=make_timestamp)
     #: UTC timestamp when the project is updated (or any of its relationships)
-    updated = Column(Text, default=make_timestamp)
+    updated = Column(Text, default=make_timestamp, onupdate=make_timestamp)
     #: Project name
     name = Column(Unicode(length=255), unique=True, nullable=False)
     #: Project slug for the URL
