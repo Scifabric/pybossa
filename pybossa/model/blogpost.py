@@ -21,8 +21,8 @@ from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy import event
 
 from pybossa.core import db
-from pybossa.model import DomainObject, make_timestamp, update_redis
-from pybossa.model import update_app_timestamp
+from pybossa.model import DomainObject, make_timestamp, update_redis, \
+    update_app_timestamp
 
 
 
