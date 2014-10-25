@@ -35,7 +35,7 @@ from datetime import timedelta
 
 @memoize(timeout=ONE_DAY)
 def n_tasks(app_id):
-    from cache.apps import n_tasks
+    from .apps import n_tasks
     return n_tasks(app_id)
 
 

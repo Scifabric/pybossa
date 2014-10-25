@@ -257,7 +257,7 @@ def _show_own_profile(user):
     user.rank = rank_and_score['rank']
     user.score = rank_and_score['score']
     user.total = cached_users.get_total_users()
-    apps_contributed = cached_users.apps_contributed(user.id)
+    apps_contributed = cached_users.apps_contributed_cached(user.id)
     apps_published, apps_draft = _get_user_apps(user.id)
     apps_published.extend(cached_users.hidden_apps(user.id))
 

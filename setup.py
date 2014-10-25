@@ -35,7 +35,9 @@ requirements = [
     "pyrax>=1.8, <1.8.1",
     "pillow>=2.4, <2.5",
     "flask-debugtoolbar>=0.9.0, <1.0",
-    "factory_boy>=2.4.1, <2.5"
+    "factory_boy>=2.4.1, <2.5",
+    "rq>=0.4.6, <0.5",
+    "rq-scheduler>=0.5.0, <0.6.0"
 ]
 
 setup(
