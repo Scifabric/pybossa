@@ -70,69 +70,69 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_02_stats(self, mock1, mock2):
         """Test WEB leaderboard or stats page works"""
-        with self.flask_app.app_context():
-            res = self.register()
-            res = self.signin()
-            res = self.new_application(short_name="igil")
-            returns = [Mock()]
-            returns[0].GeoIP.return_value = 'gic'
-            returns[0].GeoIP.record_by_addr.return_value = {}
-            mock1.side_effects = returns
+        res = self.register()
+        res = self.signin()
+        res = self.new_application(short_name="igil")
+        returns = [Mock()]
+        returns[0].GeoIP.return_value = 'gic'
+        returns[0].GeoIP.record_by_addr.return_value = {}
+        mock1.side_effects = returns
 
-            app = db.session.query(App).first()
-            # Without stats
-            url = '/app/%s/stats' % app.short_name
-            res = self.app.get(url)
-            assert "Sorry" in res.data, res.data
+        app = db.session.query(App).first()
+        user = db.session.query(User).first()
+        # Without stats
+        url = '/app/%s/stats' % app.short_name
+        res = self.app.get(url)
+        assert "Sorry" in res.data, res.data
 
-            # We use a string here to check that it works too
-            task = Task(app_id=app.id, n_answers=10)
-            db.session.add(task)
+        # We use a string here to check that it works too
+        task = Task(app_id=app.id, n_answers=10)
+        db.session.add(task)
+        db.session.commit()
+
+        for i in range(10):
+            task_run = TaskRun(app_id=app.id, task_id=1,
+                                     user_id=user.id,
+                                     info={'answer': 1})
+            db.session.add(task_run)
             db.session.commit()
+            self.app.get('api/app/%s/newtask' % app.id)
 
-            for i in range(10):
-                task_run = TaskRun(app_id=app.id, task_id=1,
-                                         user_id=1,
-                                         info={'answer': 1})
-                db.session.add(task_run)
-                db.session.commit()
-                self.app.get('api/app/%s/newtask' % app.id)
+        # With stats
+        url = '/app/%s/stats' % app.short_name
+        res = self.app.get(url)
+        assert res.status_code == 200, res.status_code
+        assert "Distribution" in res.data, res.data
 
-            # With stats
+        with patch.dict(self.flask_app.config, {'GEO': True}):
             url = '/app/%s/stats' % app.short_name
             res = self.app.get(url)
-            assert res.status_code == 200, res.status_code
-            assert "Distribution" in res.data, res.data
+            assert "GeoLite" in res.data, res.data
 
-            with patch.dict(self.flask_app.config, {'GEO': True}):
-                url = '/app/%s/stats' % app.short_name
-                res = self.app.get(url)
-                assert "GeoLite" in res.data, res.data
+        res = self.app.get('/leaderboard', follow_redirects=True)
+        assert self.html_title("Community Leaderboard") in res.data, res
+        assert user.name in res.data, res.data
 
-            res = self.app.get('/leaderboard', follow_redirects=True)
-            assert self.html_title("Community Leaderboard") in res.data, res
-            assert self.user.fullname in res.data, res.data
+        # With hidden project
+        app.hidden = 1
+        db.session.add(app)
+        db.session.commit()
+        url = '/app/%s/stats' % app.short_name
+        res = self.app.get(url)
+        assert res.status_code == 200, res.status_code
+        assert "Distribution" in res.data, res.data
+        self.signout()
 
-            # With hidden project
-            app.hidden = 1
-            db.session.add(app)
-            db.session.commit()
-            url = '/app/%s/stats' % app.short_name
-            res = self.app.get(url)
-            assert res.status_code == 200, res.status_code
-            assert "Distribution" in res.data, res.data
-            self.signout()
-
-            self.create()
-            # As anonymous
-            url = '/app/%s/stats' % app.short_name
-            res = self.app.get(url)
-            assert res.status_code == 401, res.status_code
-            # As another user, but not owner
-            self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
-            url = '/app/%s/stats' % app.short_name
-            res = self.app.get(url)
-            assert res.status_code == 403, res.status_code
+        self.create()
+        # As anonymous
+        url = '/app/%s/stats' % app.short_name
+        res = self.app.get(url)
+        assert res.status_code == 401, res.status_code
+        # As another user, but not owner
+        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
+        url = '/app/%s/stats' % app.short_name
+        res = self.app.get(url)
+        assert res.status_code == 403, res.status_code
 
     @with_context
     def test_03_account_index(self):
@@ -291,13 +291,13 @@ class TestWeb(web.Helper):
 
         res = self.signin()
         assert self.html_title() in res.data, res
-        assert "Welcome back %s" % self.user.fullname in res.data, res
+        assert "Welcome back %s" % "John Doe" in res.data, res
 
         # Check profile page with several information chunks
         res = self.profile()
         assert self.html_title("Profile") in res.data, res
-        assert self.user.fullname in res.data, res
-        assert self.user.email_addr in res.data, res
+        assert "John Doe" in res.data, res
+        assert "johndoe@example.com" in res.data, res
 
         # Log out
         res = self.signout()
@@ -307,8 +307,8 @@ class TestWeb(web.Helper):
         # Request profile as an anonymous user
         # Check profile page with several information chunks
         res = self.profile()
-        assert self.user.fullname in res.data, res
-        assert self.user.email_addr not in res.data, res
+        assert "John Doe" in res.data, res
+        assert "johndoe@example.com" not in res.data, res
 
         # Try to access protected areas like update
         res = self.app.get('/account/johndoe/update', follow_redirects=True)
@@ -319,30 +319,29 @@ class TestWeb(web.Helper):
 
         res = self.signin(next='%2Faccount%2Fprofile')
         assert self.html_title("Profile") in res.data, res
-        assert "Welcome back %s" % self.user.fullname in res.data, res
+        assert "Welcome back %s" % "John Doe" in res.data, res
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_profile_applications(self, mock):
         """Test WEB user profile project page works."""
-        with self.flask_app.app_context():
-            self.create()
-            self.signin(email=Fixtures.email_addr, password=Fixtures.password)
-            self.new_application()
-            url = '/account/%s/applications' % Fixtures.name
-            res = self.app.get(url)
-            assert "Projects" in res.data, res.data
-            assert "Published" in res.data, res.data
-            assert "Draft" in res.data, res.data
-            assert Fixtures.app_name in res.data, res.data
+        self.create()
+        self.signin(email=Fixtures.email_addr, password=Fixtures.password)
+        self.new_application()
+        url = '/account/%s/applications' % Fixtures.name
+        res = self.app.get(url)
+        assert "Projects" in res.data, res.data
+        assert "Published" in res.data, res.data
+        assert "Draft" in res.data, res.data
+        assert Fixtures.app_name in res.data, res.data
 
-            url = '/account/fakename/applications'
-            res = self.app.get(url)
-            assert res.status_code == 404, res.status_code
+        url = '/account/fakename/applications'
+        res = self.app.get(url)
+        assert res.status_code == 404, res.status_code
 
-            url = '/account/%s/applications' % Fixtures.name2
-            res = self.app.get(url)
-            assert res.status_code == 403, res.status_code
+        url = '/account/%s/applications' % Fixtures.name2
+        res = self.app.get(url)
+        assert res.status_code == 403, res.status_code
 
 
     @with_context
@@ -357,11 +356,11 @@ class TestWeb(web.Helper):
 
         # Update profile with new data
         res = self.update_profile(method="GET")
-        msg = "Update your profile: %s" % self.user.fullname
+        msg = "Update your profile: %s" % "John Doe"
         assert self.html_title(msg) in res.data, res.data
         msg = 'input id="id" name="id" type="hidden" value="1"'
         assert msg in res.data, res
-        assert self.user.fullname in res.data, res
+        assert "John Doe" in res.data, res
         assert "Save the changes" in res.data, res
         msg = '<a href="/account/johndoe/update" class="btn">Cancel</a>'
         assert  msg in res.data, res.data
@@ -1421,9 +1420,9 @@ class TestWeb(web.Helper):
     def test_32_oauth_password(self):
         """Test WEB user sign in without password works"""
         user = User(email_addr="johndoe@johndoe.com",
-                          name=self.user.username,
+                          name="John Doe",
                           passwd_hash=None,
-                          fullname=self.user.fullname,
+                          fullname="johndoe",
                           api_key="api-key")
         db.session.add(user)
         db.session.commit()
@@ -1896,7 +1895,7 @@ class TestWeb(web.Helper):
     def test_45_password_reset_link(self):
         """Test WEB password reset email form"""
         res = self.app.post('/account/forgot-password',
-                            data={'email_addr': self.user.email_addr},
+                            data={'email_addr': "johndoe@example.com"},
                             follow_redirects=True)
         assert ("We don't have this email in our records. You may have"
                 " signed up with a different email or used Twitter, "
@@ -1916,7 +1915,7 @@ class TestWeb(web.Helper):
         db.session.commit()
         with mail.record_messages() as outbox:
             self.app.post('/account/forgot-password',
-                          data={'email_addr': self.user.email_addr},
+                          data={'email_addr': "johndoe@example.com"},
                           follow_redirects=True)
             self.app.post('/account/forgot-password',
                           data={'email_addr': 'janedoe@example.com'},
