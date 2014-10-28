@@ -181,9 +181,9 @@ class TestSched(sched.Helper):
         assigned_tasks = []
         # We need one extra loop to allow the scheduler to mark a task as completed
         for i in range(11):
-            self.register(fullname=self.user.username + str(i),
-                          name=self.user.username + str(i),
-                          password=self.user.username + str(i))
+            self.register(fullname="John Doe" + str(i),
+                          name="johndoe" + str(i),
+                          password="1234" + str(i))
             self.signin()
             # Get Task until scheduler returns None
             res = self.app.get('api/app/1/newtask')
@@ -233,9 +233,9 @@ class TestSched(sched.Helper):
             signin = False
             if random.random >= 0.5:
                 signin = True
-                self.register(fullname=self.user.username + str(i),
-                              name=self.user.username + str(i),
-                              password=self.user.username + str(i))
+                self.register(fullname="John Doe" + str(i),
+                              name="johndoe" + str(i),
+                              password="1234" + str(i))
 
             if signin:
                 self.signin()

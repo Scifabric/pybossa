@@ -17,7 +17,7 @@ Administrators can manage three different areas of the server:
  2. Categories, and
  3. Administrators
 
-.. image:: http://i.imgur.com/rhGXkO4.png
+.. image:: http://i.imgur.com/CIVyRak.png
     :width:100%
 
 .. note::
@@ -30,7 +30,11 @@ Administrators can manage three different areas of the server:
     to obtain a list of all registered users in the PyBossa system, in either
     json or csv formats.
 
+.. note::
+    In addition, admins can access an extension called `RQ dashboard`_ from where to
+    monitor all the background jobs and even cancel them or retry failed ones.
 
+.. _`RQ dashboard`: https://github.com/nvie/rq-dashboard
 .. _featured-apps:
 
 Featured Projects
@@ -87,6 +91,3 @@ admin group.
 As with the :ref:`categories` section, a green button will allow you to add the user
 to the admin group, while a red button will be shown to remove the user from
 the admin group.
-
-
-

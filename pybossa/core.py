@@ -218,6 +218,12 @@ def setup_blueprints(app):
     for bp in blueprints:
         app.register_blueprint(bp['handler'], url_prefix=bp['url_prefix'])
 
+    # The RQDashboard is actually registering a blueprint to the app, so this is
+    # a propper place for it to be initialized
+    from rq_dashboard import RQDashboard
+    auth = lambda: current_user.is_authenticated() and current_user.admin
+    RQDashboard(app, url_prefix='/admin/rq', auth_handler=auth)
+
 
 def setup_social_networks(app):
     try:  # pragma: no cover
@@ -418,7 +424,8 @@ def setup_scheduled_jobs(app): #pragma: no cover
     from jobs import get_scheduled_jobs
     from rq_scheduler import Scheduler
     all_jobs = get_scheduled_jobs()
-    scheduler = Scheduler('scheduled_jobs', connection=redis_conn)
+    scheduler = Scheduler(queue_name='scheduled_jobs', connection=redis_conn)
+
     interval = 10 * 60
     for function in all_jobs:
         app.logger.info(_schedule_job(function, interval, scheduler))
@@ -429,7 +436,7 @@ def _schedule_job(function, interval, scheduler):
     from datetime import datetime
     scheduled_jobs = [job.func_name for job in scheduler.get_jobs()]
     job = scheduler.schedule(
-        scheduled_time=datetime.now(),
+        scheduled_time=datetime.utcnow(),
         func=function,
         interval=interval,
         repeat=None)
