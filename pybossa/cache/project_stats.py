@@ -32,6 +32,7 @@ import time
 from datetime import timedelta
 
 
+session = db.slave_session
 
 @memoize(timeout=ONE_DAY)
 def n_tasks(app_id):
@@ -54,7 +55,7 @@ def stats_users(app_id):
                task_run.app_id=:app_id
                GROUP BY task_run.user_id ORDER BY n_tasks DESC
                LIMIT 5;''')
-    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(app_id=app_id))
 
     for row in results:
         auth_users.append([row.user_id, row.n_tasks])
@@ -64,7 +65,7 @@ def stats_users(app_id):
                task_run.user_ip IS NULL AND
                task_run.app_id=:app_id;''')
 
-    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(app_id=app_id))
     for row in results:
         users['n_auth'] = row[0]
 
@@ -75,7 +76,7 @@ def stats_users(app_id):
                task_run.user_id IS NULL AND
                task_run.app_id=:app_id
                GROUP BY task_run.user_ip ORDER BY n_tasks DESC;''').execution_options(stream=True)
-    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(app_id=app_id))
 
     for row in results:
         anon_users.append([row.user_ip, row.n_tasks])
@@ -85,7 +86,7 @@ def stats_users(app_id):
                task_run.user_id IS NULL AND
                task_run.app_id=:app_id;''')
 
-    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(app_id=app_id))
 
     for row in results:
         users['n_anon'] = row[0]
@@ -117,7 +118,7 @@ def stats_dates(app_id):
             GROUP BY day;
                ''').execution_options(stream=True)
 
-    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(app_id=app_id))
     for row in results:
         dates[row.day] = row.completed_tasks
 
@@ -138,7 +139,7 @@ def stats_dates(app_id):
                SELECT to_char(d, 'YYYY-MM-DD') as d, count from myquery;
                ''').execution_options(stream=True)
 
-    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(app_id=app_id))
     for row in results:
         dates_auth[row.d] = row.count
 
@@ -151,7 +152,7 @@ def stats_dates(app_id):
                SELECT to_char(d, 'YYYY-MM-DD') as d, count  from myquery;
                ''').execution_options(stream=True)
 
-    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(app_id=app_id))
     for row in results:
         dates_anon[row.d] = row.count
 
@@ -185,7 +186,7 @@ def stats_hours(app_id):
                SELECT h, count from myquery;
                ''').execution_options(stream=True)
 
-    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(app_id=app_id))
 
     for row in results:
         hours[row.h] = row.count
@@ -202,7 +203,7 @@ def stats_hours(app_id):
                SELECT max(count) from myquery;
                ''').execution_options(stream=True)
 
-    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(app_id=app_id))
     for row in results:
         max_hours = row.max
 
@@ -218,7 +219,7 @@ def stats_hours(app_id):
                SELECT h, count from myquery;
                ''').execution_options(stream=True)
 
-    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(app_id=app_id))
 
     for row in results:
         hours_anon[row.h] = row.count
@@ -235,7 +236,7 @@ def stats_hours(app_id):
                SELECT max(count) from myquery;
                ''').execution_options(stream=True)
 
-    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(app_id=app_id))
     for row in results:
         max_hours_anon = row.max
 
@@ -252,7 +253,7 @@ def stats_hours(app_id):
                SELECT h, count from myquery;
                ''').execution_options(stream=True)
 
-    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(app_id=app_id))
 
     for row in results:
         hours_auth[row.h] = row.count
@@ -269,7 +270,7 @@ def stats_hours(app_id):
                SELECT max(count) from myquery;
                ''').execution_options(stream=True)
 
-    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(app_id=app_id))
     for row in results:
         max_hours_auth = row.max
 
@@ -408,7 +409,7 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
 
     for u in auth_users:
         sql = text('''SELECT name, fullname from "user" where id=:id;''')
-        results = db.slave_session.execute(sql, dict(id=u[0]))
+        results = session.execute(sql, dict(id=u[0]))
         for row in results:
             fullname = row.fullname
             name = row.name
