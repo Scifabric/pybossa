@@ -25,8 +25,9 @@ def export_tasks():
     '''Export tasks to zip'''
 
     import json
-    from StringIO import StringIO
+    import tempfile
     import zipfile
+    from StringIO import StringIO
     from pybossa.core import db, uploader
     from pybossa.core import create_app
     from pybossa.model.app import App
@@ -154,7 +155,7 @@ def export_tasks():
         except: # pragma: no cover
             raise
 
-    def make_onefile_memzip(memfile, filename):
+    def make_onefile_memzip(inputfile, filename):
         memzip = StringIO()
         try:
             import zlib
@@ -162,8 +163,7 @@ def export_tasks():
         except:
             mode= zipfile.ZIP_STORED
         zipf = zipfile.ZipFile(memzip, 'w', mode)
-        memfile.seek(0)
-        zipf.writestr(filename, memfile.getvalue())
+        zipf.write(inputfile, filename)
         zipf.close()
         memzip.seek(0)
         return memzip
@@ -173,20 +173,28 @@ def export_tasks():
         name = app.short_name.encode('utf-8', 'ignore').decode('latin-1') # used for latin filename later
         json_task_generator = respond_json("task", app.id)
         if json_task_generator is not None:
-            memfile = StringIO()
-            for line in json_task_generator:
-                memfile.write(str(line))
-            memzip = make_onefile_memzip(memfile, '%s_task.json' % name)
-            # TODO: use pybossa uploader! Only for debugging:
-            open('/tmp/%d_%s_task_json.zip' % (app.id, name), 'wb').write(memzip.getvalue())
+            datafile = tempfile.NamedTemporaryFile()
+            try:
+                for line in json_task_generator:
+                    datafile.write(str(line))
+                datafile.flush()
+                memzip = make_onefile_memzip(datafile.name, '%s_task.json' % name)
+                # TODO: use pybossa uploader! Only for debugging:
+                open('/tmp/%d_%s_task_json.zip' % (app.id, name), 'wb').write(memzip.getvalue())
+            finally:
+                datafile.close()
         json_task_run_generator = respond_json("task_run", app.id)
         if json_task_run_generator is not None:
-            memfile = StringIO()
-            for line in json_task_run_generator:
-                memfile.write(str(line))
-            memzip = make_onefile_memzip(memfile, '%s_task_run.json' % name)
-            # TODO: use pybossa uploader! Only for debugging:
-            open('/tmp/%d_%s_task_run_json.zip' % (app.id, name), 'wb').write(memzip.getvalue())
+            datafile = tempfile.NamedTemporaryFile()
+            try:
+                for line in json_task_run_generator:
+                    datafile.write(str(line))
+                datafile.flush()
+                memzip = make_onefile_memzip(datafile.name, '%s_task_run.json' % name)
+                # TODO: use pybossa uploader! Only for debugging:
+                open('/tmp/%d_%s_task_run_json.zip' % (app.id, name), 'wb').write(memzip.getvalue())
+            finally:
+                datafile.close()
 
 
     def export_csv(app):
@@ -194,20 +202,28 @@ def export_tasks():
         name = app.short_name.encode('utf-8', 'ignore').decode('latin-1') # used for latin filename later
         csv_task_generator = respond_csv("task", app.id)
         if csv_task_generator is not None:
-            memfile = StringIO()
-            for line in csv_task_generator:
-                memfile.write(str(line))
-            memzip = make_onefile_memzip(memfile, '%s_task.csv' % name)
-            # TODO: use pybossa uploader! Only for debugging:
-            open('/tmp/%d_%s_task_csv.zip' % (app.id, name), 'wb').write(memzip.getvalue())
+            datafile = tempfile.NamedTemporaryFile()
+            try:
+                for line in csv_task_generator:
+                    datafile.write(str(line))
+                datafile.flush()
+                memzip = make_onefile_memzip(datafile.name, '%s_task.csv' % name)
+                # TODO: use pybossa uploader! Only for debugging:
+                open('/tmp/%d_%s_task_csv.zip' % (app.id, name), 'wb').write(memzip.getvalue())
+            finally:
+                datafile.close()
         csv_task_run_generator = respond_csv("task_run", app.id)
         if csv_task_run_generator is not None:
-            memfile = StringIO()
-            for line in csv_task_run_generator:
-                memfile.write(str(line))
-            memzip = make_onefile_memzip(memfile, '%s_task_run.csv' % name)
-            # TODO: use pybossa uploader! Only for debugging:
-            open('/tmp/%d_%s_task_run_csv.zip' % (app.id, name), 'wb').write(memzip.getvalue())
+            datafile = tempfile.NamedTemporaryFile()
+            try:
+                for line in csv_task_run_generator:
+                    datafile.write(str(line))
+                datafile.flush()
+                memzip = make_onefile_memzip(datafile.name, '%s_task_run.csv' % name)
+                # TODO: use pybossa uploader! Only for debugging:
+                open('/tmp/%d_%s_task_run_csv.zip' % (app.id, name), 'wb').write(memzip.getvalue())
+            finally:
+                datafile.close()
 
     print "Running on the background export tasks ZIPs"
 
