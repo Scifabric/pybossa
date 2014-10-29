@@ -24,7 +24,6 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.cache import FIVE_MINUTES, memoize
 
-import string
 import pygeoip
 import operator
 import datetime

@@ -19,7 +19,6 @@
 from pybossa.core import db
 
 import factory
-from factory.alchemy import SQLAlchemyModelFactory
 
 from pybossa.repositories import UserRepository
 from pybossa.repositories import ProjectRepository
@@ -40,10 +39,7 @@ def reset_all_pk_sequences():
     UserFactory.reset_sequence()
 
 
-class BaseFactory(SQLAlchemyModelFactory):
-    class Meta:
-        sqlalchemy_session = db.session
-
+class BaseFactory(factory.Factory):
     @classmethod
     def _setup_next_sequence(cls):
         return 1
