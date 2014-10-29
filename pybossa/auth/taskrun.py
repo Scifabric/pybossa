@@ -34,7 +34,6 @@ def create(taskrun=None):
         raise abort(403)
     return authorized
 
-
 def read(taskrun=None):
     return True
 
