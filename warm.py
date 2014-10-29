@@ -39,7 +39,7 @@ def warm_cache():
         import pybossa.cache.apps as cached_apps
         import pybossa.cache.categories as cached_cat
         import pybossa.cache.users as cached_users
-        import pybossa.stats as stats
+        import pybossa.cache.project_stats  as stats
 
         def warm_app(id, short_name, featured=False):
             if id not in apps_cached:

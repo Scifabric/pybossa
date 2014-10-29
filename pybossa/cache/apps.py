@@ -162,6 +162,7 @@ def overall_progress(app_id):
                COUNT(task_run.task_id) AS n_task_runs
                FROM task LEFT OUTER JOIN task_run ON task.id=task_run.task_id
                WHERE task.app_id=:app_id GROUP BY task.id''')
+
     results = session.execute(sql, dict(app_id=app_id))
     n_expected_task_runs = 0
     n_task_runs = 0
@@ -214,8 +215,8 @@ def get_featured(category=None, page=1, per_page=5):
                AND "user".id=app.owner_id GROUP BY app.id, "user".id
                OFFSET(:offset) LIMIT(:limit);
                ''')
-    offset = (page - 1) * per_page
 
+    offset = (page - 1) * per_page
     results = session.execute(sql, dict(limit=per_page, offset=offset))
     apps = []
     for row in results:
@@ -321,7 +322,6 @@ def n_count(category):
     for row in results:
         count = row[0]
     return count
-
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))

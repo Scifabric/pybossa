@@ -8,11 +8,11 @@ requirements = [
     "Flask-Cache>=0.12, <1.0",
     "Flask-Gravatar>=0.4.1, <1.0",
     "flask-heroku>=0.1.8, <1.0",
-    "Flask-Login",                  # was pinned to Flask-Login==0.2.3 in the past
+    "Flask-Login",                      # was pinned to Flask-Login==0.2.3 in the past. GitHub version 3.0+ is used now.
     "Flask-Mail>=0.9.0, <1.0",
     "Flask-Misaka>=0.2.0, <1.0",
     "Flask-OAuth>=0.12, <0.13",         # was pinned to Flask-OAuth==0.12
-    "Flask-SQLAlchemy",
+    "Flask-SQLAlchemy>=2.0, <2.1",
     "Flask-WTF>=0.9.5, <0.9.6",         # was pinned to Flask-WTF==0.9.5
     "Flask>=0.10.1, <0.10.2",           # was pinned to Flask==0.10.1
     "html2text>=2014.4.5, <2014.9.7",
@@ -24,7 +24,8 @@ requirements = [
     "python-dateutil>=2.2, <3.0",
     "raven>=4.1.1, <5.0",
     "requests>=2.2.1, <3.0",
-    "SQLAlchemy>=0.9.6, <0.9.7",         # was pinned to SQLAlchemy==0.7.8
+    "SQLAlchemy>=0.9.6, <0.9.7",
+    "six>=1.8.0, <1.9.0",
     "nose",
     "rednose",
     "redis>=2.9, <2.10",
@@ -34,7 +35,10 @@ requirements = [
     "pyrax>=1.8, <1.8.1",
     "pillow>=2.4, <2.5",
     "flask-debugtoolbar>=0.9.0, <1.0",
-    "factory_boy>=2.4.1"
+    "factory_boy>=2.4.1, <2.5",
+    "rq>=0.4.6, <0.5",
+    "rq-scheduler",
+    "rq-dashboard>=0.3.4, <0.4"
 ]
 
 setup(
@@ -47,7 +51,8 @@ setup(
     # and need to be added redundant to requirements.txt in this case!
     # Example:
     # dependency_links = ['git+https://github.com/Hypernode/M2Crypto#egg=M2Crypto-0.22.dev'],
-    dependency_links = ['git+https://github.com/maxcountryman/flask-login.git@13af160b3fd14dfb5f35f9cdc3863771efe194eb#egg=Flask-Login'],
+    dependency_links = ['git+https://github.com/maxcountryman/flask-login.git@13af160b3fd14dfb5f35f9cdc3863771efe194eb#egg=Flask-Login',
+                        'git+https://github.com/PyBossa/rq-scheduler.git@2406f77fa08d465dd5b18801736538686dd24590#egg=rq-scheduler'],
 
     # metadata for upload to PyPI
     author = 'SF Isle of Man Limited',

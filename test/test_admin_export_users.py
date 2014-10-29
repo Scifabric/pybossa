@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2013 SF Isle of Man Limited
+# Copyright (C) 2014 SF Isle of Man Limited
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -95,7 +95,3 @@ class TestExportUsers(web.Helper):
             number_of_users += 1
 
         assert number_of_users == 3, number_of_users
-
-
-
-

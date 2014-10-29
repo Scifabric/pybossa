@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2013 SF Isle of Man Limited
+# Copyright (C) 2014 SF Isle of Man Limited
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -16,10 +16,19 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-class User(object):
-    """Class to help testing PyBossa"""
-    def __init__(self, **kwargs):
-        self.fullname = "John Doe"
-        self.username = self.fullname.replace(" ", "").lower()
-        self.password = "p4ssw0rd"
-        self.email_addr = self.username + "@example.com"
+#!/usr/bin/env python
+import sys
+from rq import Queue, Connection, Worker
+
+from pybossa.core import create_app, sentinel
+
+app = create_app(run_as_server=False)
+
+# Provide queue names to listen to as arguments to this script,
+# similar to rqworker
+with app.app_context():
+    with Connection(sentinel.master):
+        qs = map(Queue, sys.argv[1:]) or [Queue()]
+
+        w = Worker(qs)
+        w.work()

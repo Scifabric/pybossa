@@ -34,6 +34,7 @@ def create(taskrun=None):
         raise abort(403)
     return authorized
 
+
 def read(taskrun=None):
     return True
 
@@ -48,4 +49,3 @@ def delete(taskrun):
     if taskrun.user_id is None:
         return current_user.admin
     return current_user.admin or taskrun.user_id == current_user.id
-

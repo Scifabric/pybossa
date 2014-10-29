@@ -18,7 +18,7 @@
 
 import os
 import logging
-from flask import Flask, url_for, session, request, render_template, flash
+from flask import Flask, url_for, session, request, render_template, flash, _app_ctx_stack
 from flask.ext.login import current_user
 from flask.ext.heroku import Heroku
 from flask.ext.babel import lazy_gettext
@@ -31,7 +31,7 @@ from raven.contrib.flask import Sentry
 from pybossa.util import pretty_date
 
 
-def create_app():
+def create_app(run_as_server=True):
     app = Flask(__name__)
     if 'DATABASE_URL' in os.environ:  # pragma: no cover
         heroku = Heroku(app)
@@ -56,6 +56,8 @@ def create_app():
     signer.init_app(app)
     if app.config.get('SENTRY_DSN'): # pragma: no cover
         sentr = Sentry(app)
+    if run_as_server:
+        setup_scheduled_jobs(app)
     setup_blueprints(app)
     setup_hooks(app)
     setup_error_handlers(app)
@@ -105,6 +107,7 @@ def setup_uploader(app):
         app.url_build_error_handlers.append(uploader.external_url_handler)
         uploader.init_app(app)
 
+
 def setup_markdown(app):
     misaka.init_app(app)
 
@@ -122,7 +125,7 @@ def setup_db(app):
     db.slave_session = create_slave_session(db, bind='slave')
     if db.slave_session is not db.session: #flask-sqlalchemy does it already for default session db.session
         @app.teardown_appcontext
-        def shutdown_session(response_or_exc):
+        def shutdown_session(response_or_exc): # pragma: no cover
             if app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN']:
                 if response_or_exc is None:
                     db.slave_session.commit()
@@ -133,8 +136,9 @@ def setup_db(app):
 def setup_gravatar(app):
     gravatar.init_app(app)
 
-from logging.handlers import SMTPHandler
+
 def setup_error_email(app):
+    from logging.handlers import SMTPHandler
     ADMINS = app.config.get('ADMINS', '')
     if not app.debug and ADMINS: # pragma: no cover
         mail_handler = SMTPHandler('127.0.0.1',
@@ -143,9 +147,10 @@ def setup_error_email(app):
         mail_handler.setLevel(logging.ERROR)
         app.logger.addHandler(mail_handler)
 
-from logging.handlers import RotatingFileHandler
-from logging import Formatter
+
 def setup_logging(app):
+    from logging.handlers import RotatingFileHandler
+    from logging import Formatter
     log_file_path = app.config.get('LOG_FILE')
     log_level = app.config.get('LOG_LEVEL', logging.WARN)
     if log_file_path: # pragma: no cover
@@ -159,6 +164,7 @@ def setup_logging(app):
         logger = logging.getLogger('pybossa')
         logger.setLevel(log_level)
         logger.addHandler(file_handler)
+
 
 def setup_login_manager(app):
     from pybossa import model
@@ -185,6 +191,7 @@ def setup_babel(app):
         return lang
     return babel
 
+
 def setup_blueprints(app):
     """Configure blueprints."""
     from pybossa.api import blueprint as api
@@ -210,6 +217,12 @@ def setup_blueprints(app):
 
     for bp in blueprints:
         app.register_blueprint(bp['handler'], url_prefix=bp['url_prefix'])
+
+    # The RQDashboard is actually registering a blueprint to the app, so this is
+    # a propper place for it to be initialized
+    from rq_dashboard import RQDashboard
+    auth = lambda: current_user.is_authenticated() and current_user.admin
+    RQDashboard(app, url_prefix='/admin/rq', auth_handler=auth)
 
 
 def setup_social_networks(app):
@@ -275,16 +288,13 @@ def setup_error_handlers(app):
     def page_not_found(e):
         return render_template('404.html'), 404
 
-
     @app.errorhandler(500)
     def server_error(e):  # pragma: no cover
         return render_template('500.html'), 500
 
-
     @app.errorhandler(403)
     def forbidden(e):
         return render_template('403.html'), 403
-
 
     @app.errorhandler(401)
     def unauthorized(e):
@@ -407,3 +417,29 @@ def setup_cache_timeouts(app):
     timeouts['USER_TIMEOUT'] = app.config['USER_TIMEOUT']
     timeouts['USER_TOP_TIMEOUT'] = app.config['USER_TOP_TIMEOUT']
     timeouts['USER_TOTAL_TIMEOUT'] = app.config['USER_TOTAL_TIMEOUT']
+
+
+def setup_scheduled_jobs(app): #pragma: no cover
+    redis_conn = sentinel.master
+    from jobs import get_all_jobs
+    from rq_scheduler import Scheduler
+    all_jobs = get_all_jobs()
+    scheduler = Scheduler(queue_name='scheduled_jobs', connection=redis_conn)
+    interval = 10 * 60
+    for function in all_jobs:
+        app.logger.info(_schedule_job(function, interval, scheduler))
+
+
+def _schedule_job(function, interval, scheduler):
+    """Schedules a job and returns a log message about success of the operation"""
+    from datetime import datetime
+    scheduled_jobs = [job.func_name for job in scheduler.get_jobs()]
+    job = scheduler.schedule(
+        scheduled_time=datetime.utcnow(),
+        func=function,
+        interval=interval,
+        repeat=None)
+    if job.func_name in scheduled_jobs:
+        job.cancel()
+        return 'Job %s is already scheduled' % function.__name__
+    return 'Scheduled %s to run every %s seconds' % (function.__name__, interval)

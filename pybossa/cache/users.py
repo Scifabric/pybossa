@@ -117,7 +117,6 @@ def get_top(n=10):
 
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))
 def get_user_summary(name):
-    # Get USER
     sql = text('''
                SELECT "user".id, "user".name, "user".fullname, "user".created,
                "user".api_key, "user".twitter_user_id, "user".facebook_user_id,
@@ -170,8 +169,8 @@ def rank_and_score(user_id):
 
 def apps_contributed(user_id):
     sql = text('''
-               WITH apps_contributed as 
-                    (SELECT DISTINCT(app_id) FROM task_run 
+               WITH apps_contributed as
+                    (SELECT DISTINCT(app_id) FROM task_run
                      WHERE user_id=:user_id)
                SELECT app.id, app.name, app.short_name, app.owner_id,
                app.description, app.info FROM app, apps_contributed

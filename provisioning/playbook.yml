@@ -1,0 +1,135 @@
+---
+# Installation steps for every Ubuntu 14.04
+- hosts: all
+  sudo: yes
+  tasks:
+    - name: Check Ubuntu 14.04 running
+      assert:
+        that:
+          - ansible_distribution == 'Ubuntu'
+          - ansible_distribution_release == 'trusty'
+
+    - name: update apt cache
+      apt: update_cache=yes
+
+    - name: install git
+      apt: name=git-core state=latest
+
+    - name: install Python
+      apt: name={{item}} state=latest
+      with_items:
+        - python
+        - python-dev
+        - python-virtualenv
+        - python-setuptools
+        - python-pip
+
+    - name: install PyBossa build requirements
+      apt: name={{item}} state=latest
+      with_items:
+        - build-essential
+        - libjpeg-dev
+        - libssl-dev
+        - swig
+
+    - name: install PostgreSQL
+      apt: name={{item}} state=latest
+      with_items:
+        - postgresql
+        - postgresql-server-dev-all
+        - libpq-dev
+        - python-psycopg2
+
+    - name: start PostgreSQL service
+      service: name=postgresql state=started
+
+    - name: install Redis
+      apt: name=redis-server state=latest
+
+    - name: start Redis service
+      service: name=redis-server state=started
+
+# Do this installation steps only in Vagrant. TODO: Production steps
+- hosts: vagrant
+  sudo: yes
+  tasks:
+    - name: install Redis Sentinel
+      copy: src={{pybossa_path}}/contrib/redis/redis-sentinel dest=/etc/init.d/redis-sentinel owner=root group=root mode=755
+
+    - name: copy Sentinel config
+      copy: src={{pybossa_path}}/contrib/redis/sentinel.conf dest=/etc/redis/sentinel.conf owner=redis group=redis mode=644
+
+    - name: start Sentinel and enable it at boot
+      service: name=redis-sentinel state=started enabled=yes
+
+    - name: "install PyBossa virtualenv packages, can take some time..."
+      sudo_user: "{{pybossa_user}}"
+      pip: chdir={{pybossa_path}} requirements={{pybossa_path}}/requirements.txt virtualenv={{virtualenv_path}} virtualenv_site_packages=yes
+
+    - name: check alembic.ini existing
+      stat: path={{pybossa_path}}/alembic.ini
+      register: check_alembic
+
+    - name: copy alembic template when not existing
+      command: cp -p {{pybossa_path}}/alembic.ini.template {{pybossa_path}}/alembic.ini
+      when: not check_alembic.stat.exists
+
+    - name: check settings_local.py existing
+      stat: path={{pybossa_path}}/settings_local.py
+      register: check_settings
+
+    - name: copy settings_local template when not existing
+      command: cp -p {{pybossa_path}}/settings_local.py.tmpl {{pybossa_path}}/settings_local.py
+      when: not check_settings.stat.exists
+
+    # http://stackoverflow.com/a/16783253
+    # psql -lqt | cut -d \| -f 1 | grep -w <db_name>
+    - name: check if pybossa DB already existing, ignore errors here...
+      sudo_user: postgres
+      shell: "psql -lqt | cut -d \\| -f 1 | grep -w pybossa"
+      register: pybossa_db_exists
+      ignore_errors: True
+
+    - name: create DB user pybossa
+      sudo_user: postgres
+      postgresql_user: name=pybossa password=tester role_attr_flags=CREATEDB,NOSUPERUSER
+
+    - name: create PyBossa DB
+      sudo_user: postgres
+      postgresql_db: name=pybossa
+                     owner=pybossa
+                     encoding='UTF-8'
+                     lc_collate='en_US.UTF-8'
+                     lc_ctype='en_US.UTF-8'
+                     template='template0'
+
+    # Populate DB (create tables) only when not existing.
+    - name: populate PyBossa DB
+      sudo_user: "{{pybossa_user}}"
+      command: "{{virtualenv_path}}/bin/python cli.py db_create"
+      args:
+        chdir: "{{pybossa_path}}"
+      when: pybossa_db_exists.rc != 0
+
+# change .bashrc only in Vagrant development version
+- hosts: vagrant_dev
+  sudo: yes
+  tasks:
+    - name: virtualenv usage by default on bash login
+      sudo_user: "{{pybossa_user}}"
+      lineinfile:
+        dest={{vagrant_home}}/.bashrc
+        line=". {{virtualenv_path}}/bin/activate"
+        owner=vagrant
+        state=present
+        insertafter=EOF
+        create=yes
+
+    - name: go to /vagrant directory on bash login
+      lineinfile:
+        dest={{vagrant_home}}/.bashrc
+        line="cd {{pybossa_path}}"
+        owner=vagrant
+        state=present
+        insertafter=EOF
+

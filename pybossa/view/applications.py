@@ -31,7 +31,6 @@ from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
 
 import pybossa.model as model
-import pybossa.stats as stats
 import pybossa.sched as sched
 
 from pybossa.core import db, uploader, signer
@@ -42,6 +41,7 @@ from pybossa.util import Pagination, UnicodeWriter, admin_required, get_user_id_
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
+from pybossa.cache import project_stats as stats
 from pybossa.cache.helpers import add_custom_contrib_button_to
 from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
@@ -918,7 +918,8 @@ def export_to(short_name):
     def respond_json(ty):
         if ty not in ['task', 'task_run']:
             return abort(404)
-        tmp = 'attachment; filename=%s_%s.json' % (app.short_name, ty)
+        name = app.short_name.encode('utf-8', 'ignore').decode('latin-1')
+        tmp = 'attachment; filename=%s_%s.json' % (name, ty)
         res = Response(gen_json(ty), mimetype='application/json')
         res.headers['Content-Disposition'] = tmp
         return res
@@ -1034,7 +1035,8 @@ def export_to(short_name):
 
             res = Response(get_csv(out, writer, ty, handle_row),
                            mimetype='text/csv')
-            tmp = 'attachment; filename=%s_%s.csv' % (app.short_name, ty)
+            name = app.short_name.encode('utf-8', 'ignore').decode('latin-1')
+            tmp = 'attachment; filename=%s_%s.csv' % (name, ty)
             res.headers['Content-Disposition'] = tmp
             return res
         else:

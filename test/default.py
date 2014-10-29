@@ -33,7 +33,7 @@ import os
 os.environ['PYBOSSA_SETTINGS'] = '../settings_test.py'
 os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
 
-flask_app = create_app()
+flask_app = create_app(run_as_server=False)
 
 def with_context(f):
     @wraps(f)

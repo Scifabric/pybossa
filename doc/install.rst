@@ -240,6 +240,8 @@ be enough to run the sentinel node. Thus, for running it::
 Speeding up the site
 ====================
 
+Enabling the cache
+------------------
 PyBossa comes with a Cache system that it is enabled by default. PyBossa uses
 a Redis_ server to cache some objects like projects, statistics, etc. The
 system uses the Sentinel_ feature of Redis_, so you can have several
@@ -272,8 +274,37 @@ Then start the server, and nothing will be cached.
    If this is the case, you will need to install it by hand, but it is really
    easy and well documented in the official Redis_ site.
 
+Running asynchronous tasks in the background
+--------------------------------------------
+PyBossa uses the Python libraries RQ_ and RQScheduler_ to allow slow or
+computational-heavy tasks like the refreshment of the cache, to be run in the
+background in an asynchronous way.
+
+.. note::
+   If you think you won't need this feature, just skip the rest of the section.
+
+To do so, you will need two additional Python processes to run in the background:
+the **worker** and the **scheduler**. The scheduler will create this tasks in a
+periodic basis so that the worker then executes them when needed.
+
+To run the scheduler, just run the following command in a console::
+
+    rqscheduler --host IP-of-your-redis-master-node
+
+Similarly, to get the tasks done by the worker, run::
+
+    python app_context_rqworker.py scheduled_jobs
+
+It is also recommended the use of supervisor_ for running these processes in an
+easier way and with a single command.
+
+.. _RQ: http://python-rq.org/
+.. _RQScheduler: https://github.com/ui/rq-scheduler
+.. _supervisor: http://supervisord.org/
+
+
 Configuring the DataBase
-~~~~~~~~~~~~~~~~~~~~~~~~
+========================
 
 You need first to add a user to your PostgreSQL_ DB::
 
@@ -347,18 +378,19 @@ installed or upgraded. And Alembic is upgrading the database structure.
 Migrating Your Old DB Records
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Previously, HTML was supported as the default option for the long_description
-field in apps. In new versions of PyBossa, Markdown has been adopted as the
-default option. However, you can use HTML instead of Markdown by modifying the
-default PyBossa theme or using your own forked from the default one.
+In versions prior to v0.2.3, HTML was supported as the default option for the
+'long_description' field in apps. In new versions of PyBossa, Markdown has been
+adopted as the default option. However, you can use HTML instead of Markdown
+by modifying the default PyBossa theme or using your own forked from the default
+one.
 
 If you were have been using PyBossa for a while you may have apps in your
-database whose long_description is in HTML format. Hence, if you are using the default
-theme for PyBossa you will no longer see them rendered as HTML and may have some
-issues.
+database whose 'long_description' is in HTML format. Hence, if you are using the
+default theme for PyBossa you will no longer see them rendered as HTML and may
+have some issues.
 
-In order to fix this issue, you can run a simple script to convert all the DB app's
-long_description field from HTML to Markdown, just by running the following
+In order to avoid this, you can run a simple script to convert all the DB app's
+'long_description' field from HTML to Markdown, just by running the following
 commands::
 
   pip install -r requirements.txt
