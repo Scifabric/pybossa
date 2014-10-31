@@ -36,6 +36,7 @@ def export_tasks():
     from flask.ext.babel import gettext
     from pybossa.util import UnicodeWriter
     import pybossa.model as model
+    from werkzeug.datastructures import FileStorage
 
     def gen_json(table, id):
         n = db.slave_session.query(table)\
@@ -179,8 +180,8 @@ def export_tasks():
                     datafile.write(str(line))
                 datafile.flush()
                 memzip = make_onefile_memzip(datafile.name, '%s_task.json' % name)
-                # TODO: use pybossa uploader! Only for debugging:
-                open('/tmp/%d_%s_task_json.zip' % (app.id, name), 'wb').write(memzip.getvalue())
+                file = FileStorage(filename='%d_%s_task_json.zip' % (app.id, name), stream=memzip)
+                uploader.upload_file(file, container='export') # TODO: right container folder?!
             finally:
                 datafile.close()
         json_task_run_generator = respond_json("task_run", app.id)
@@ -191,8 +192,8 @@ def export_tasks():
                     datafile.write(str(line))
                 datafile.flush()
                 memzip = make_onefile_memzip(datafile.name, '%s_task_run.json' % name)
-                # TODO: use pybossa uploader! Only for debugging:
-                open('/tmp/%d_%s_task_run_json.zip' % (app.id, name), 'wb').write(memzip.getvalue())
+                file = FileStorage(filename='%d_%s_task_run_json.zip' % (app.id, name), stream=memzip)
+                uploader.upload_file(file, container='export') # TODO: right container folder?!
             finally:
                 datafile.close()
 
@@ -208,22 +209,23 @@ def export_tasks():
                     datafile.write(str(line))
                 datafile.flush()
                 memzip = make_onefile_memzip(datafile.name, '%s_task.csv' % name)
-                # TODO: use pybossa uploader! Only for debugging:
-                open('/tmp/%d_%s_task_csv.zip' % (app.id, name), 'wb').write(memzip.getvalue())
+                file = FileStorage(filename='%d_%s_task_csv.zip' % (app.id, name), stream=memzip)
+                uploader.upload_file(file, container='export') # TODO: right container folder?!
             finally:
                 datafile.close()
-        csv_task_run_generator = respond_csv("task_run", app.id)
-        if csv_task_run_generator is not None:
-            datafile = tempfile.NamedTemporaryFile()
-            try:
-                for line in csv_task_run_generator:
-                    datafile.write(str(line))
-                datafile.flush()
-                memzip = make_onefile_memzip(datafile.name, '%s_task_run.csv' % name)
-                # TODO: use pybossa uploader! Only for debugging:
-                open('/tmp/%d_%s_task_run_csv.zip' % (app.id, name), 'wb').write(memzip.getvalue())
-            finally:
-                datafile.close()
+        # TODO: creates 50GB CSVs!
+        # csv_task_run_generator = respond_csv("task_run", app.id)
+        # if csv_task_run_generator is not None:
+        #     datafile = tempfile.NamedTemporaryFile()
+        #     try:
+        #         for line in csv_task_run_generator:
+        #             datafile.write(str(line))
+        #         datafile.flush()
+        #         memzip = make_onefile_memzip(datafile.name, '%s_task_run.csv' % name)
+        #         file = FileStorage(filename='%d_%s_task_run_csv.zip' % (app.id, name), stream=memzip)
+        #         uploader.upload_file(file, container='export') # TODO: right container folder?!
+        #     finally:
+        #         datafile.close()
 
     print "Running on the background export tasks ZIPs"
 

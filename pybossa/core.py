@@ -432,7 +432,8 @@ def _schedule_job(function, interval, scheduler):
         scheduled_time=datetime.utcnow(),
         func=function,
         interval=interval,
-        repeat=None)
+        repeat=None,
+        timeout=500)
     if job.func_name in scheduled_jobs:
         job.cancel()
         return 'Job %s is already scheduled' % function.__name__
