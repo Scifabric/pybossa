@@ -24,7 +24,6 @@ from pybossa.view.account import LoginForm
 from factories import UserFactory
 from wtforms import ValidationError
 from nose.tools import raises
-from mock import patch
 
 
 class TestValidator(Test):
@@ -39,8 +38,7 @@ class TestValidator(Test):
         with self.flask_app.test_request_context('/'):
             f = LoginForm()
             f.email.data = self.email_addr
-            u = validator.Unique(db.session, User,
-                                         User.email_addr)
+            u = validator.Unique(db.session, User, User.email_addr)
             u.__call__(f, f.email)
 
     @raises(ValidationError)
