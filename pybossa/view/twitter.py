@@ -18,19 +18,17 @@
 from flask import Blueprint, request, url_for, flash, redirect
 from flask.ext.login import login_user, current_user
 
-from pybossa.core import twitter
+from pybossa.core import twitter, user_repo
 from pybossa.model.user import User
 from pybossa.util import get_user_signup_method
 # Required to access the config parameters outside a
 # context as we are using Flask 0.8
 # See http://goo.gl/tbhgF for more info
 
-# This blueprint will be activated in web.py
+# This blueprint will be activated in core.py
 # if the TWITTER CONSUMER KEY and SECRET
 # are available
 blueprint = Blueprint('twitter', __name__)
-
-from pybossa.core import user_repo
 
 
 @blueprint.route('/', methods=['GET', 'POST'])

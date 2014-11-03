@@ -19,7 +19,7 @@
 from flask import Blueprint, request, url_for, flash, redirect, session
 from flask.ext.login import login_user, current_user
 
-from pybossa.core import facebook
+from pybossa.core import facebook, user_repo
 from pybossa.model.user import User
 #from pybossa.util import Facebook, get_user_signup_method
 from pybossa.util import get_user_signup_method
@@ -28,11 +28,9 @@ from pybossa.util import get_user_signup_method
 # See http://goo.gl/tbhgF for more info
 #from pybossa.core import app
 
-# This blueprint will be activated in web.py if the FACEBOOK APP ID and SECRET
+# This blueprint will be activated in core.py if the FACEBOOK APP ID and SECRET
 # are available
 blueprint = Blueprint('facebook', __name__)
-
-from pybossa.core import user_repo
 
 
 @blueprint.route('/', methods=['GET', 'POST'])
