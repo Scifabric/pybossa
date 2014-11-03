@@ -51,13 +51,11 @@ from vmcp import VmcpAPI
 from user import UserAPI
 from token import TokenAPI
 from sqlalchemy.sql import text
+from pybossa.core import project_repo, task_repo
 
 blueprint = Blueprint('api', __name__)
 
-from pybossa.repositories import ProjectRepository
-from pybossa.repositories import TaskRepository
-project_repo = ProjectRepository(db)
-task_repo = TaskRepository(db)
+
 
 cors_headers = ['Content-Type', 'Authorization']
 

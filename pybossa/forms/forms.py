@@ -23,12 +23,9 @@ from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
 from wtforms.widgets import HiddenInput
 from flask.ext.babel import lazy_gettext, gettext
 
-from pybossa.core import db
-from pybossa.repositories import UserRepository, ProjectRepository
+from pybossa.core import project_repo, user_repo
 import validator as pb_validator
 
-user_repo = UserRepository(db)
-project_repo = ProjectRepository(db)
 
 ### Forms for applications view
 

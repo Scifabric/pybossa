@@ -32,7 +32,7 @@ class TaskRepository(object):
         self.db = db
 
 
-    # Methods for queries about Task objects
+    # Methods for queries on Task objects
     def get_task(self, id):
         return self.db.session.query(Task).get(id)
 
@@ -50,7 +50,7 @@ class TaskRepository(object):
 
 
 
-    # Methods for queries about TaskRun objects
+    # Methods for queries on TaskRun objects
     def get_task_run(self, id):
         return self.db.session.query(TaskRun).get(id)
 

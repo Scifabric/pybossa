@@ -19,7 +19,7 @@
 from flask import Blueprint, request, url_for, flash, redirect, session
 from flask.ext.login import login_user, current_user
 
-from pybossa.core import db, facebook
+from pybossa.core import facebook
 from pybossa.model.user import User
 #from pybossa.util import Facebook, get_user_signup_method
 from pybossa.util import get_user_signup_method
@@ -32,8 +32,7 @@ from pybossa.util import get_user_signup_method
 # are available
 blueprint = Blueprint('facebook', __name__)
 
-from pybossa.repositories import UserRepository
-user_repo = UserRepository(db)
+from pybossa.core import user_repo
 
 
 @blueprint.route('/', methods=['GET', 'POST'])

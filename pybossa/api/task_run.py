@@ -29,9 +29,7 @@ from werkzeug.exceptions import Forbidden
 
 from api_base import APIBase
 
-from pybossa.core import db
-from pybossa.repositories import TaskRepository
-task_repo = TaskRepository(db)
+from pybossa.core import task_repo
 
 
 class TaskRunAPI(APIBase):

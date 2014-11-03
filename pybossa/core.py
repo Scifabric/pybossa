@@ -51,6 +51,7 @@ def create_app(run_as_server=True):
     #gravatar = Gravatar(app, size=100, rating='g', default='mm',
                         #force_default=False, force_lower=False)
     setup_db(app)
+    setup_repositories()
     mail.init_app(app)
     sentinel.init_app(app)
     signer.init_app(app)
@@ -131,6 +132,21 @@ def setup_db(app):
                     db.slave_session.commit()
             db.slave_session.remove()
             return response_or_exc
+
+
+def setup_repositories():
+    from pybossa.repositories import UserRepository
+    from pybossa.repositories import ProjectRepository
+    from pybossa.repositories import BlogRepository
+    from pybossa.repositories import TaskRepository
+    global user_repo
+    global project_repo
+    global blog_repo
+    global task_repo
+    user_repo = UserRepository(db)
+    project_repo = ProjectRepository(db)
+    blog_repo = BlogRepository(db)
+    task_repo = TaskRepository(db)
 
 
 def setup_gravatar(app):

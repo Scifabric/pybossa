@@ -41,7 +41,7 @@ import pybossa.model as model
 from flask.ext.babel import gettext
 from sqlalchemy.sql import text
 from pybossa.model.user import User
-from pybossa.core import db, signer, mail, uploader, sentinel
+from pybossa.core import signer, mail, uploader, sentinel
 from pybossa.util import Pagination, get_user_id_or_ip, pretty_date
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
@@ -58,8 +58,7 @@ except ImportError:  # pragma: no cover
 
 blueprint = Blueprint('account', __name__)
 
-from pybossa.repositories import UserRepository
-user_repo = UserRepository(db)
+from pybossa.core import user_repo
 
 
 def get_update_feed():

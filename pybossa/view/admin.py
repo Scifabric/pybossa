@@ -30,26 +30,18 @@ from flask.ext.babel import gettext
 from werkzeug.exceptions import HTTPException
 
 import pybossa.model as model
-from pybossa.core import db
 from pybossa.util import admin_required, UnicodeWriter
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
 from pybossa.auth import require
+from pybossa.core import project_repo, user_repo
 import json
 from StringIO import StringIO
 
 from pybossa.forms.admin_view_forms import *
 
 
-
 blueprint = Blueprint('admin', __name__)
-
-
-from pybossa.repositories import UserRepository
-from pybossa.repositories import ProjectRepository
-user_repo = UserRepository(db)
-project_repo = ProjectRepository(db)
-
 
 
 def format_error(msg, status_code):

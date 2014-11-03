@@ -18,11 +18,7 @@
 
 from flask.ext.login import current_user
 from flask import abort
-from pybossa.core import db
-
-from pybossa.repositories import TaskRepository
-task_repo = TaskRepository(db)
-
+from pybossa.core import task_repo
 
 
 def create(taskrun=None):

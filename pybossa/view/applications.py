@@ -33,7 +33,7 @@ from flask.ext.babel import gettext
 import pybossa.model as model
 import pybossa.sched as sched
 
-from pybossa.core import db, uploader, signer
+from pybossa.core import uploader, signer
 from pybossa.cache import ONE_DAY, ONE_HOUR
 from pybossa.model.app import App
 from pybossa.model.task import Task
@@ -49,14 +49,8 @@ from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
 from pybossa.forms.applications_view_forms import *
 
-from pybossa.repositories import UserRepository
-from pybossa.repositories import ProjectRepository
-from pybossa.repositories import BlogRepository
-from pybossa.repositories import TaskRepository
-user_repo = UserRepository(db)
-project_repo = ProjectRepository(db)
-blog_repo = BlogRepository(db)
-task_repo = TaskRepository(db)
+from pybossa.core import project_repo, user_repo, task_repo, blog_repo
+
 
 blueprint = Blueprint('app', __name__)
 

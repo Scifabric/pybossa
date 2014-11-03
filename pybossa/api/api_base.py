@@ -31,18 +31,13 @@ from flask import request, abort, Response
 from flask.views import MethodView
 from werkzeug.exceptions import NotFound, Unauthorized, Forbidden
 from pybossa.util import jsonpify, crossdomain
-from pybossa.core import db, ratelimits
+from pybossa.core import ratelimits
 from pybossa.auth import require
 from pybossa.hateoas import Hateoas
 from pybossa.ratelimit import ratelimit
 from pybossa.error import ErrorStatus
 
-from pybossa.repositories import UserRepository
-from pybossa.repositories import ProjectRepository
-from pybossa.repositories import TaskRepository
-user_repo = UserRepository(db)
-project_repo = ProjectRepository(db)
-task_repo = TaskRepository(db)
+from pybossa.core import project_repo, user_repo, task_repo
 
 repos = {'Task'   : {'repo': task_repo, 'filter': 'filter_tasks_by',
                      'get': 'get_task', 'save': 'save', 'update': 'update',

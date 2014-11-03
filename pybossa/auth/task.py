@@ -17,10 +17,8 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask.ext.login import current_user
-from pybossa.core import db
 
-from pybossa.repositories import ProjectRepository
-project_repo = ProjectRepository(db)
+from pybossa.core import project_repo
 
 
 def create(task=None):
