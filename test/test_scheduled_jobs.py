@@ -17,10 +17,13 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from pybossa.core import _schedule_job
+from pybossa.jobs import warn_old_project_owners, get_non_updated_apps
 
+from default import Test, with_context
 from rq_scheduler import Scheduler
 from mock import patch, MagicMock
 from redis import Redis
+from factories import AppFactory
 
 
 def a_function():
@@ -29,10 +32,11 @@ def another_function():
     return
 
 
-class TestSetupScheduledJobs(object):
+class TestSetupScheduledJobs(Test):
     """Tests for setup function '_schedule_jobs'"""
 
     def setUp(self):
+        super(TestSetupScheduledJobs, self).setUp()
         self.connection = Redis()
         self.connection.flushall()
         self.scheduler = Scheduler('test_queue', connection=self.connection)
@@ -80,3 +84,20 @@ class TestSetupScheduledJobs(object):
         stored_values = self.connection.keys('rq:job*')
 
         assert len(stored_values) == 1, len(stored_values)
+
+    @with_context
+    def test_get_non_updated_apps_returns_none(self):
+        """Test JOB get non updated returns none."""
+        apps = get_non_updated_apps()
+        err_msg = "There should not be any outdated project."
+        assert len(apps) == 0, err_msg
+
+
+    @with_context
+    def test_get_non_updated_apps_returns_one_project(self):
+        """Test JOB get non updated returns one project."""
+        app = AppFactory.create(updated='2010-10-22T11:02:00.000000')
+        apps = get_non_updated_apps()
+        err_msg = "There should not be one outdated project."
+        assert len(apps) == 1, err_msg
+        assert apps[0].name == app.name, err_msg
