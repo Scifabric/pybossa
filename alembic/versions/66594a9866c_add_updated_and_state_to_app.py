@@ -20,6 +20,7 @@ def make_timestamp():
 
 def upgrade():
     op.add_column('app', sa.Column('updated', sa.Text, default=make_timestamp))
+    op.add_column('app', sa.Column('contacted', sa.Boolean, default=False))
     op.add_column('app', sa.Column('completed', sa.Boolean, default=False))
     # Update all projects to the day the migration is run
     query = "UPDATE app SET updated='%s'" % make_timestamp()
@@ -39,4 +40,5 @@ def upgrade():
 
 def downgrade():
     op.drop_column('app', 'updated')
+    op.drop_column('app', 'contacted')
     op.drop_column('app', 'completed')
