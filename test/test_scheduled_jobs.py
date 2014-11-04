@@ -17,6 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from pybossa.core import _schedule_job
+from pybossa.model.app import App
 from pybossa.jobs import warn_old_project_owners, get_non_updated_apps
 
 from default import Test, with_context
@@ -24,6 +25,7 @@ from rq_scheduler import Scheduler
 from mock import patch, MagicMock
 from redis import Redis
 from factories import AppFactory
+from mock import patch, call
 
 
 def a_function():
@@ -101,3 +103,31 @@ class TestSetupScheduledJobs(Test):
         err_msg = "There should not be one outdated project."
         assert len(apps) == 1, err_msg
         assert apps[0].name == app.name, err_msg
+
+
+    @with_context
+    @patch('pybossa.core.mail')
+    def test_warn_project_owner(self, mail):
+        """Test JOB email is sent to warn project owner."""
+        # Mock for the send method
+        send_mock = MagicMock()
+        send_mock.send.return_value = True
+        # Mock for the connection method
+        connection = MagicMock()
+        connection.__enter__.return_value = send_mock
+        # Join them
+        mail.connect.return_value = connection
+
+        date = '2010-10-22T11:02:00.000000'
+        app = AppFactory.create(updated=date)
+        app_id = app.id
+        warn_old_project_owners()
+        err_msg = "mail.connect() should be called"
+        assert mail.connect.called, err_msg
+        err_msg = "conn.send() should be called"
+        assert send_mock.send.called, err_msg
+        app = App.query.get(app_id)
+        err_msg = "app.contacted field should be True"
+        assert app.contacted, err_msg
+        err_msg = "The update date should be different"
+        assert app.updated != date, err_msg
