@@ -21,8 +21,7 @@ import os
 
 def get_all_jobs():
     """Return all background jobs."""
-    # return [warm_up_stats, mail_old_project_owners]
-    return [warn_old_project_owners]
+    return [warm_up_stats, warn_old_project_owners]
 
 
 def warm_up_stats():
