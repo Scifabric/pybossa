@@ -36,9 +36,7 @@ class TestRQDashboard(web.Helper):
         self.register(fullname="jane", name="jane", email="jane@jane.com")
         res = self.app.get('/admin/rq', follow_redirects=True)
 
-        # It should be a 403. However, RQ-dashboard only supports 401 for now.
-        # This should be fixed in the future...
-        assert res.status_code == 401, res
+        assert res.status_code == 403, res
 
     @with_context
     def test_admin_user_can_access_dashboard(self):
