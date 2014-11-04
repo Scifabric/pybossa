@@ -287,11 +287,11 @@ To do so, you will need two additional Python processes to run in the background
 the **worker** and the **scheduler**. The scheduler will create this tasks in a
 periodic basis so that the worker then executes them when needed.
 
-To run the scheduler, just run the following command in a console:
+To run the scheduler, just run the following command in a console::
 
     rqscheduler --host IP-of-your-redis-master-node
 
-Similarly, to get the tasks done by the worker, run:
+Similarly, to get the tasks done by the worker, run::
 
     python app_context_rqworker.py scheduled_jobs
 

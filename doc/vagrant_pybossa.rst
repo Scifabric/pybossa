@@ -53,7 +53,7 @@ First install a Vagrant plugin which helps installing PyBossa in Vagrant::
 Then, you can clone the PyBossa git repository (be sure to install git in your
 machine!)::
 
-    $ git clone --recursive git://github.com/PyBossa/pybossa.git
+    $ git clone --recursive https://github.com/PyBossa/pybossa.git
 
 Once the source code has been downloaded, all you have to do to start your
 PyBossa development environment is typing the following::
