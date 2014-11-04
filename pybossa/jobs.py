@@ -20,7 +20,7 @@ import os
 
 def get_all_jobs():
     #return [warm_up_stats, mail_old_project_owners]
-    return [mail_old_project_owners]
+    return [warn_old_project_owners]
 
 def warm_up_stats():
     print "Running on the background warm_up_stats"
@@ -110,11 +110,12 @@ def warm_cache():
     return True
 
 
-def mail_old_project_owners():
+def warn_old_project_owners():
     """E-mail the project owners not updated in the last 3 months."""
     from pybossa.model.app import App
     from pybossa.core import db, mail
     from sqlalchemy.sql import text
+    from flask import current_app
     from flask.ext.mail import Message
 
     sql = text('''SELECT id FROM app WHERE TO_DATE(updated,
@@ -127,10 +128,71 @@ def mail_old_project_owners():
 
     with mail.connect() as conn:
         for a in apps:
-            message = 'Hello World'
-            subject = 'Your Crowdcrafting project: %s has been inactive' % a.name
+            message = ("Dear %s,\
+                       \
+                       Your project %s has been inactive for the last 3 months.\
+                       And we would like to inform you that if you need help \
+                       with it, just contact us answering to this email.\
+                       \
+                       Otherwise, we will archive the project, removing it \
+                       from the server. You have one month to upload any new \
+                       tasks, add a new blog post, or engage new volunteers.\
+                       \
+                       If at the end the project is deleted, we will send you \
+                       a ZIP file where you can download your project.\
+                       \
+                       All the best,\
+                       \
+                       The team.") % (a.owner.fullname, a.name)
+            subject = 'Your %s project: %s has been inactive' % (current_app.config.get('BRAND'),
+                                                                 a.name)
             msg = Message(recipients=[a.owner.email_addr],
                           body=message,
                           subject=subject)
             conn.send(msg)
+            a.contacted = True
+            db.session.add(a)
+            db.session.commit()
     return True
+
+
+#def delete_old_project_owners():
+#    """E-mail the project owners not updated in the last 3 months."""
+#    from pybossa.model.app import App
+#    from pybossa.core import db, mail
+#    from sqlalchemy.sql import text
+#    from flask.ext.mail import Message
+#
+#    sql = text('''SELECT id FROM app WHERE contacted=True AND TO_DATE(updated,
+#                'YYYY-MM-DD\THH24:MI:SS.US') <= NOW() - '0 day':: INTERVAL''')
+#    results = db.slave_session.execute(sql)
+#    apps = []
+#    for row in results:
+#        a = App.query.get(row.id)
+#        apps.append(a)
+#
+#    with mail.connect() as conn:
+#        for a in apps:
+#            message = ("Dear %s,\
+#                       \
+#                       Your project %s has been inactive for the last 4 months.\
+#                       \
+#                       One month ago we sent you an email warning you that your \
+#                       project was going to be archived. Adjoining you can find \
+#                       the ZIP file of your project.\
+#                       \
+#                       All the best,\
+#                       \
+#                       The team.") % (a.owner.fullname, a.name)
+#            subject = 'Your %s project: %s has been archived' % (current_app.config.get('BRAND'),
+#                                                                 a.name)
+#
+#            subject = 'Your Crowdcrafting project: %s has been archived' % a.name
+#            msg = Message(recipients=[a.owner.email_addr],
+#                          body=message,
+#                          subject=subject)
+#            conn.send(msg)
+#            a.contacted = True
+#            db.session.add(a)
+#            db.session.commit()
+#    return True

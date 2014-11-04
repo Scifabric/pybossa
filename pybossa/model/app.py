@@ -59,6 +59,8 @@ class App(db.Model, DomainObject):
     featured = Column(Boolean, nullable=False, default=False)
     # If the project is completed
     completed = Column(Boolean, nullable=False, default=False)
+    # If the project is completed
+    contacted = Column(Boolean, nullable=False, default=False)
     #: Project owner_id
     owner_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     time_estimate = Column(Integer, default=0)
