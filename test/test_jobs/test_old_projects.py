@@ -1,0 +1,97 @@
+# -*- coding: utf8 -*-
+# This file is part of PyBossa.
+#
+# Copyright (C) 2014 SF Isle of Man Limited
+#
+# PyBossa is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# PyBossa is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+
+from pybossa.model.app import App
+from pybossa.jobs import warn_old_project_owners, get_non_updated_apps
+from default import Test, with_context
+from factories import AppFactory
+from redis import Redis
+from rq_scheduler import Scheduler
+from mock import patch, MagicMock
+
+
+class TestOldProjects(Test):
+
+    def setUp(self):
+        super(TestOldProjects, self).setUp()
+        self.connection = Redis()
+        self.connection.flushall()
+        self.scheduler = Scheduler('test_queue', connection=self.connection)
+
+    @with_context
+    def test_get_non_updated_apps_returns_none(self):
+        """Test JOB get non updated returns none."""
+        apps = get_non_updated_apps()
+        err_msg = "There should not be any outdated project."
+        assert len(apps) == 0, err_msg
+
+
+    @with_context
+    def test_get_non_updated_apps_returns_one_project(self):
+        """Test JOB get non updated returns one project."""
+        app = AppFactory.create(updated='2010-10-22T11:02:00.000000')
+        apps = get_non_updated_apps()
+        err_msg = "There should not be one outdated project."
+        assert len(apps) == 1, err_msg
+        assert apps[0].name == app.name, err_msg
+
+
+    @with_context
+    @patch('pybossa.core.mail')
+    def test_warn_project_owner(self, mail):
+        """Test JOB email is sent to warn project owner."""
+        # Mock for the send method
+        send_mock = MagicMock()
+        send_mock.send.return_value = True
+        # Mock for the connection method
+        connection = MagicMock()
+        connection.__enter__.return_value = send_mock
+        # Join them
+        mail.connect.return_value = connection
+
+        date = '2010-10-22T11:02:00.000000'
+        app = AppFactory.create(updated=date)
+        app_id = app.id
+        warn_old_project_owners()
+        err_msg = "mail.connect() should be called"
+        assert mail.connect.called, err_msg
+        err_msg = "conn.send() should be called"
+        assert send_mock.send.called, err_msg
+        app = App.query.get(app_id)
+        err_msg = "app.contacted field should be True"
+        assert app.contacted, err_msg
+        err_msg = "The update date should be different"
+        assert app.updated != date, err_msg
+
+    @with_context
+    def test_warn_project_owner_two(self):
+        """Test JOB email is sent to warn project owner."""
+        from pybossa.core import mail
+        with mail.record_messages() as outbox:
+            date = '2010-10-22T11:02:00.000000'
+            app = AppFactory.create(updated=date)
+            app_id = app.id
+            warn_old_project_owners()
+            assert len(outbox) == 1, outbox
+            subject = 'Your PyBossa project: %s has been inactive' % app.name
+            assert outbox[0].subject == subject
+            app = App.query.get(app_id)
+            err_msg = "app.contacted field should be True"
+            assert app.contacted, err_msg
+            err_msg = "The update date should be different"
+            assert app.updated != date, err_msg
