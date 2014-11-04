@@ -188,7 +188,7 @@ def setup_login_manager(app):
     login_manager.login_message = u"Please sign in to access this page."
     @login_manager.user_loader
     def load_user(username):
-        return db.session.query(model.user.User).filter_by(name=username).first()
+        return user_repo.get_by_name(username)
 
 
 def setup_babel(app):
@@ -337,7 +337,7 @@ def setup_hooks(app):
         if 'Authorization' in request.headers:
             apikey = request.headers.get('Authorization')
         if apikey:
-            user = db.session.query(model.user.User).filter_by(api_key=apikey).first()
+            user = user_repo.get_by(api_key=apikey)
             ## HACK:
             # login_user sets a session cookie which we really don't want.
             # login_user(user)
