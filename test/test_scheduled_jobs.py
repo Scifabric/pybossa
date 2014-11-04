@@ -131,3 +131,21 @@ class TestSetupScheduledJobs(Test):
         assert app.contacted, err_msg
         err_msg = "The update date should be different"
         assert app.updated != date, err_msg
+
+    @with_context
+    def test_warn_project_owner_two(self):
+        """Test JOB email is sent to warn project owner."""
+        from pybossa.core import mail
+        with mail.record_messages() as outbox:
+            date = '2010-10-22T11:02:00.000000'
+            app = AppFactory.create(updated=date)
+            app_id = app.id
+            warn_old_project_owners()
+            assert len(outbox) == 1, outbox
+            subject = 'Your PyBossa project: %s has been inactive' % app.name
+            assert outbox[0].subject == subject
+            app = App.query.get(app_id)
+            err_msg = "app.contacted field should be True"
+            assert app.contacted, err_msg
+            err_msg = "The update date should be different"
+            assert app.updated != date, err_msg
