@@ -117,14 +117,11 @@ def warm_cache():
     return True
 
 
-def warn_old_project_owners():
-    """E-mail the project owners not updated in the last 3 months."""
-    from pybossa.model.app import App
-    from pybossa.core import db, mail
+def get_non_updated_apps():
+    """Return a list of non updated apps."""
     from sqlalchemy.sql import text
-    from flask import current_app
-    from flask.ext.mail import Message
-
+    from pybossa.model.app import App
+    from pybossa.core import db
     sql = text('''SELECT id FROM app WHERE TO_DATE(updated,
                 'YYYY-MM-DD\THH24:MI:SS.US') <= NOW() - '3 month':: INTERVAL''')
     results = db.slave_session.execute(sql)
@@ -132,6 +129,16 @@ def warn_old_project_owners():
     for row in results:
         a = App.query.get(row.id)
         apps.append(a)
+    return apps
+
+
+def warn_old_project_owners():
+    """E-mail the project owners not updated in the last 3 months."""
+    from pybossa.core import mail, db
+    from flask import current_app
+    from flask.ext.mail import Message
+
+    apps = get_non_updated_apps()
 
     with mail.connect() as conn:
         for a in apps:
