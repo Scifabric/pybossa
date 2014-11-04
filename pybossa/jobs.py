@@ -15,18 +15,24 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-
+"""Jobs module for running background tasks in PyBossa server."""
 import os
 
+
 def get_all_jobs():
-    #return [warm_up_stats, mail_old_project_owners]
+    """Return all background jobs."""
+    # return [warm_up_stats, mail_old_project_owners]
     return [warn_old_project_owners]
 
+
 def warm_up_stats():
+    """Background job for warming stats."""
     print "Running on the background warm_up_stats"
     from pybossa.cache.site_stats import (n_auth_users, n_anon_users,
-        n_tasks_site, n_total_tasks_site, n_task_runs_site,
-        get_top5_apps_24_hours, get_top5_users_24_hours, get_locs)
+                                          n_tasks_site, n_total_tasks_site,
+                                          n_task_runs_site,
+                                          get_top5_apps_24_hours,
+                                          get_top5_users_24_hours, get_locs)
 
     env_cache_disabled = os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED')
     if not env_cache_disabled:
@@ -50,7 +56,7 @@ def warm_up_stats():
 
 
 def warm_cache():
-    '''Warm cache'''
+    """Background job to warm cache."""
     from pybossa.core import create_app
     app = create_app(run_as_server=False)
     # Disable cache, so we can refresh the data in Redis
@@ -63,7 +69,7 @@ def warm_cache():
     import pybossa.cache.apps as cached_apps
     import pybossa.cache.categories as cached_cat
     import pybossa.cache.users as cached_users
-    import pybossa.cache.project_stats  as stats
+    import pybossa.cache.project_stats as stats
 
     def warm_app(id, short_name, featured=False):
         if id not in apps_cached:
@@ -75,7 +81,8 @@ def warm_cache():
             cached_apps.n_completed_tasks(id)
             cached_apps.n_volunteers(id)
             if n_task_runs >= 1000 or featured:
-                print "Getting stats for %s as it has %s task runs" % (short_name, n_task_runs)
+                print ("Getting stats for %s as it has %s task runs" %
+                       (short_name, n_task_runs))
                 stats.get_stats(id, app.config.get('GEO'))
             apps_cached.append(id)
 
@@ -93,11 +100,11 @@ def warm_cache():
     categories = cached_cat.get_used()
     for c in categories:
         for page in pages:
-             apps = cached_apps.get(c['short_name'],
-                                    page,
-                                    app.config['APPS_PER_PAGE'])
-             for a in apps:
-                 warm_app(a['id'], a['short_name'])
+            apps = cached_apps.get(c['short_name'],
+                                   page,
+                                   app.config['APPS_PER_PAGE'])
+            for a in apps:
+                warm_app(a['id'], a['short_name'])
     # Users
     cached_users.get_leaderboard(app.config['LEADERBOARD'], 'anonymous')
     cached_users.get_top()
@@ -144,8 +151,8 @@ def warn_old_project_owners():
                        All the best,\
                        \
                        The team.") % (a.owner.fullname, a.name)
-            subject = 'Your %s project: %s has been inactive' % (current_app.config.get('BRAND'),
-                                                                 a.name)
+            subject = ('Your %s project: %s has been inactive'
+                       % (current_app.config.get('BRAND'), a.name))
             msg = Message(recipients=[a.owner.email_addr],
                           body=message,
                           subject=subject)
@@ -154,45 +161,3 @@ def warn_old_project_owners():
             db.session.add(a)
             db.session.commit()
     return True
-
-
-#def delete_old_project_owners():
-#    """E-mail the project owners not updated in the last 3 months."""
-#    from pybossa.model.app import App
-#    from pybossa.core import db, mail
-#    from sqlalchemy.sql import text
-#    from flask.ext.mail import Message
-#
-#    sql = text('''SELECT id FROM app WHERE contacted=True AND TO_DATE(updated,
-#                'YYYY-MM-DD\THH24:MI:SS.US') <= NOW() - '0 day':: INTERVAL''')
-#    results = db.slave_session.execute(sql)
-#    apps = []
-#    for row in results:
-#        a = App.query.get(row.id)
-#        apps.append(a)
-#
-#    with mail.connect() as conn:
-#        for a in apps:
-#            message = ("Dear %s,\
-#                       \
-#                       Your project %s has been inactive for the last 4 months.\
-#                       \
-#                       One month ago we sent you an email warning you that your \
-#                       project was going to be archived. Adjoining you can find \
-#                       the ZIP file of your project.\
-#                       \
-#                       All the best,\
-#                       \
-#                       The team.") % (a.owner.fullname, a.name)
-#            subject = 'Your %s project: %s has been archived' % (current_app.config.get('BRAND'),
-#                                                                 a.name)
-#
-#            subject = 'Your Crowdcrafting project: %s has been archived' % a.name
-#            msg = Message(recipients=[a.owner.email_addr],
-#                          body=message,
-#                          subject=subject)
-#            conn.send(msg)
-#            a.contacted = True
-#            db.session.add(a)
-#            db.session.commit()
-#    return True
