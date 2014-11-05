@@ -18,7 +18,9 @@
 
 import os
 
-def get_all_jobs():
+from pybossa.core import mail
+
+def get_scheduled_jobs():
     return [warm_up_stats]
 
 def warm_up_stats():
@@ -46,6 +48,10 @@ def warm_up_stats():
         os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = env_cache_disabled
 
     return True
+
+
+def send_mail(message):
+    mail.send(message)
 
 
 def warm_cache():
