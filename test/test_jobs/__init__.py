@@ -26,6 +26,9 @@ def a_function():
 def another_function():
     return
 
+a_job = dict(name=a_function, args=[], kwargs={}, interval=1)
+another_job = dict(name=another_function, args=[], kwargs={}, interval=1)
+
 
 class TestSetupScheduledJobs(object):
     """Tests for setup function '_schedule_jobs'"""
@@ -37,17 +40,17 @@ class TestSetupScheduledJobs(object):
 
 
     def test_adds_scheduled_job_with_interval(self):
-        interval = 7
-        _schedule_job(a_function, interval, self.scheduler)
+        a_job['interval'] = 7
+        _schedule_job(a_job, self.scheduler)
         sched_jobs = self.scheduler.get_jobs()
 
         assert len(sched_jobs) == 1, sched_jobs
-        assert sched_jobs[0].meta['interval'] == interval, sched_jobs[0].meta
+        assert sched_jobs[0].meta['interval'] == 7 , sched_jobs[0].meta
 
 
     def test_adds_several_jobs_(self):
-        _schedule_job(a_function, 1, self.scheduler)
-        _schedule_job(another_function, 1, self.scheduler)
+        _schedule_job(a_job, self.scheduler)
+        _schedule_job(another_job, self.scheduler)
         sched_jobs = self.scheduler.get_jobs()
         job_func_names = [job.func_name for job in sched_jobs]
 
@@ -57,24 +60,24 @@ class TestSetupScheduledJobs(object):
 
 
     def test_does_not_add_job_if_already_added(self):
-        _schedule_job(a_function, 1, self.scheduler)
-        _schedule_job(a_function, 1, self.scheduler)
+        _schedule_job(a_job, self.scheduler)
+        _schedule_job(a_job, self.scheduler)
         sched_jobs = self.scheduler.get_jobs()
 
         assert len(sched_jobs) == 1, sched_jobs
 
 
     def test_returns_log_messages(self):
-        success_message = _schedule_job(a_function, 1, self.scheduler)
-        failure_message = _schedule_job(a_function, 1, self.scheduler)
+        success_message = _schedule_job(a_job, self.scheduler)
+        failure_message = _schedule_job(a_job, self.scheduler)
 
-        assert success_message == 'Scheduled a_function to run every 1 seconds'
-        assert failure_message == 'Job a_function is already scheduled'
+        assert success_message == 'Scheduled a_function([], {}) to run every 1 seconds'
+        assert failure_message == 'WARNING: Job a_function([], {}) is already scheduled'
 
 
     def test_failed_attempt_to_schedule_does_not_polute_redis(self):
-        _schedule_job(a_function, 1, self.scheduler)
-        _schedule_job(a_function, 1, self.scheduler)
+        _schedule_job(a_job, self.scheduler)
+        _schedule_job(a_job, self.scheduler)
         stored_values = self.connection.keys('rq:job*')
 
         assert len(stored_values) == 1, len(stored_values)
