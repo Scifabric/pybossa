@@ -223,10 +223,6 @@ def setup_blueprints(app):
     from rq_dashboard import RQDashboard
     RQDashboard(app, url_prefix='/admin/rq', auth_handler=current_user,
                 redis_conn=sentinel.master)
-    # Exclude view functions in rq dashboard from csrf protection
-    crsf_exempt = csrf.exempt
-    for view_function in [app.view_functions[view] for view in app.view_functions.keys() if 'rq_dashboard' in view]:
-        view_function = crsf_exempt(view_function)
 
 
 def setup_social_networks(app):
