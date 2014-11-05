@@ -2,4 +2,5 @@
 
 -e git+https://github.com/maxcountryman/flask-login.git@13af160b3fd14dfb5f35f9cdc3863771efe194eb#egg=Flask-Login
 -e git+https://github.com/PyBossa/rq-scheduler.git@2406f77fa08d465dd5b18801736538686dd24590#egg=rq-scheduler
+-e git+https://github.com/PyBossa/rq-dashboard.git#egg=rq-dashboard
 -e .
