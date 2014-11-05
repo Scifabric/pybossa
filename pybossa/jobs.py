@@ -37,6 +37,15 @@ def get_scheduled_jobs(): # pragma: no cover
     return jobs + tmp
 
 
+def create_dict_job(data, interval=(24 * HOUR)):
+    jobs = []
+    for d in data:
+        jobs.append(dict(name=get_app_stats,
+                         args=[d[0], d[1]], kwargs={},
+                         interval=(10 * MINUTE)))
+    return jobs
+
+
 def get_project_jobs():
     """Return a list of jobs based on user type."""
     from sqlalchemy.sql import text
@@ -44,12 +53,13 @@ def get_project_jobs():
     sql = text('''SELECT app.id, app.short_name FROM app, "user"
                WHERE app.owner_id="user".id AND "user".pro=True;''')
     results = db.slave_session.execute(sql)
-    jobs = []
-    for row in results:
-        jobs.append(dict(name=get_app_stats,
-                         args=[row[0], row[1]], kwargs={},
-                         interval=(10 * MINUTE)))
-    return jobs
+    return create_dict_job(results, interval=(10 * MINUTE))
+    #jobs = []
+    #for row in results:
+    #    jobs.append(dict(name=get_app_stats,
+    #                     args=[row[0], row[1]], kwargs={},
+    #                     interval=(10 * MINUTE)))
+    #return jobs
 
 
 def get_app_stats(id, short_name): # pragma: no cover
