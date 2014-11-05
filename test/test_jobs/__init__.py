@@ -46,6 +46,7 @@ class TestSetupScheduledJobs(object):
 
         assert len(sched_jobs) == 1, sched_jobs
         assert sched_jobs[0].meta['interval'] == 7 , sched_jobs[0].meta
+        a_job['interval'] = 1
 
 
     def test_adds_several_jobs_(self):
