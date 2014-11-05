@@ -100,19 +100,24 @@ class TestOldProjects(Test):
     def test_warn_project_owner_limits(self):
         """Test JOB email gets at most 25 projects."""
         from pybossa.core import mail
+        # Create 50 projects with old updated dates
+        date = '2010-10-22T11:02:00.000000'
+        apps = []
+        for i in range(0, 50):
+            apps.append(AppFactory.create(updated=date))
+        # The first day that we run the job only 25 emails should be sent
         with mail.record_messages() as outbox:
-            date = '2010-10-22T11:02:00.000000'
-            apps = []
-            for i in range(0, 50):
-                apps.append(AppFactory.create(updated=date))
             warn_old_project_owners()
             err_msg = "There should be only 25 emails."
             assert len(outbox) == 25, err_msg
+        # The second day that we run the job only 25 emails should be sent
         with mail.record_messages() as outbox:
             warn_old_project_owners()
             err_msg = ("There should be only 25 emails, but there are %s."
                        % len(outbox))
             assert len(outbox) == 25, err_msg
+        # The third day that we run the job only 0 emails should be sent
+        # as the previous projects have been already contacted.
         with mail.record_messages() as outbox:
             warn_old_project_owners()
             err_msg = "There should be only 0 emails."
