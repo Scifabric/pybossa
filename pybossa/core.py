@@ -426,21 +426,31 @@ def setup_scheduled_jobs(app): #pragma: no cover
     all_jobs = get_scheduled_jobs()
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=redis_conn)
 
-    interval = 10 * 60
     for function in all_jobs:
-        app.logger.info(_schedule_job(function, interval, scheduler))
+        app.logger.info(_schedule_job(function, scheduler))
 
 
-def _schedule_job(function, interval, scheduler):
+def _schedule_job(function, scheduler):
     """Schedules a job and returns a log message about success of the operation"""
     from datetime import datetime
-    scheduled_jobs = [job.func_name for job in scheduler.get_jobs()]
+    scheduled_jobs = scheduler.get_jobs()
     job = scheduler.schedule(
         scheduled_time=datetime.utcnow(),
-        func=function,
-        interval=interval,
+        func=function['name'],
+        args=function['args'],
+        kwargs=function['kwargs'],
+        interval=function['interval'],
         repeat=None)
-    if job.func_name in scheduled_jobs:
-        job.cancel()
-        return 'Job %s is already scheduled' % function.__name__
-    return 'Scheduled %s to run every %s seconds' % (function.__name__, interval)
+    for sj in scheduled_jobs:
+        if (function['name'].__name__ in sj.func_name and
+            sj._args == function['args'] and
+            sj._kwargs == function['kwargs']):
+            job.cancel()
+            msg = ('WARNING: Job %s(%s, %s) is already scheduled'
+                   % (function['name'].__name__, function['args'],
+                      function['kwargs']))
+            return msg
+    msg = ('Scheduled %s(%s, %s) to run every %s seconds'
+           % (function['name'].__name__, function['args'], function['kwargs'],
+              function['interval']))
+    return msg
