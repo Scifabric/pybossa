@@ -28,10 +28,12 @@ def get_scheduled_jobs(): # pragma: no cover
     # Default ones
     # A job is a dict with the following format: dict(name, args, kwargs,
     # interval)
-    jobs = [dict(name=warm_up_stats, args=[], kwargs={}, interval=HOUR),
+    jobs = [dict(name=warm_up_stats, args=[], kwargs={},
+                 interval=HOUR, timeout=(10 * MINUTE)),
             dict(name=warn_old_project_owners, args=[], kwargs={},
-                 interval=(24 * HOUR)),
-            dict(name=warm_cache, args=[], kwargs={}, interval=(10 * MINUTE))]
+                 interval=(24 * HOUR), timeout=(10 * MINUTE)),
+            dict(name=warm_cache, args=[], kwargs={},
+                 interval=(10 * MINUTE), timeout=(10 * MINUTE))]
     # Based on type of user
     tmp = get_project_jobs()
     return jobs + tmp
