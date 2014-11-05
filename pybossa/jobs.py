@@ -39,12 +39,14 @@ def get_scheduled_jobs(): # pragma: no cover
     return jobs + tmp
 
 
-def create_dict_jobs(data, function, interval=(24 * HOUR)):
+def create_dict_jobs(data, function,
+                     interval=(24 * HOUR), timeout=(10 * MINUTE)):
     jobs = []
     for d in data:
         jobs.append(dict(name=function,
                          args=[d[0], d[1]], kwargs={},
-                         interval=(10 * MINUTE)))
+                         interval=(10 * MINUTE),
+                         timeout=timeout))
     return jobs
 
 
@@ -57,7 +59,8 @@ def get_project_jobs():
     results = db.slave_session.execute(sql)
     return create_dict_jobs(results,
                             get_app_stats,
-                            interval=(10 * MINUTE))
+                            interval=(10 * MINUTE),
+                            timeout=(10 * MINUTE))
 
 
 def get_app_stats(id, short_name): # pragma: no cover
