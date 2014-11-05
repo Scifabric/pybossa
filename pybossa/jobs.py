@@ -122,7 +122,8 @@ def get_non_updated_apps():
     from pybossa.model.app import App
     from pybossa.core import db
     sql = text('''SELECT id FROM app WHERE TO_DATE(updated,
-                'YYYY-MM-DD\THH24:MI:SS.US') <= NOW() - '3 month':: INTERVAL''')
+                'YYYY-MM-DD\THH24:MI:SS.US') <= NOW() - '3 month':: INTERVAL
+               AND contacted != True LIMIT 25''')
     results = db.slave_session.execute(sql)
     apps = []
     for row in results:
