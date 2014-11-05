@@ -21,7 +21,28 @@ import os
 from pybossa.core import mail
 
 def get_scheduled_jobs():
-    return [warm_up_stats, warn_old_project_owners]
+    """Return a list of scheduled jobs."""
+    # Default ones
+    # A job is a dict with the following format: dict(name, args, kwargs)
+    jobs = [dict(name=warm_up_stats, args=None, kwargs={}),
+            dict(name=warn_old_project_owners, args=None, kwargs={})]
+    # Based on type of user
+    tmp = get_project_jobs()
+    return jobs + tmp
+
+
+def get_project_jobs():
+    """Return a list of jobs based on user type."""
+    from sqlalchemy.sql import text
+    from pybossa.core import db
+    sql = text('''SELECT app.id, app.short_name FROM app, "user"
+               WHERE app.owner_id="user".id AND "user".pro=True;''')
+    results = db.slave_session.execute(sql)
+    jobs = []
+    for row in results:
+        jobs.append(dict(name=get_app_stats,
+                         args=[row[0], row[1]], kwargs={}))
+    return jobs
 
 
 def get_app_stats(id, short_name):
