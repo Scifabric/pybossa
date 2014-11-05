@@ -221,7 +221,8 @@ def setup_blueprints(app):
     # The RQDashboard is actually registering a blueprint to the app, so this is
     # a propper place for it to be initialized
     from rq_dashboard import RQDashboard
-    RQDashboard(app, url_prefix='/admin/rq', auth_handler=current_user)
+    RQDashboard(app, url_prefix='/admin/rq', auth_handler=current_user,
+                redis_conn=sentinel.master)
     # Exclude view functions in rq dashboard from csrf protection
     crsf_exempt = csrf.exempt
     for view_function in [app.view_functions[view] for view in app.view_functions.keys() if 'rq_dashboard' in view]:
