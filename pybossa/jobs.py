@@ -20,12 +20,18 @@ import os
 
 from pybossa.core import mail
 
+MINUTE = 60
+HOUR = 60 * 60
+
 def get_scheduled_jobs():
     """Return a list of scheduled jobs."""
     # Default ones
-    # A job is a dict with the following format: dict(name, args, kwargs)
-    jobs = [dict(name=warm_up_stats, args=None, kwargs={}),
-            dict(name=warn_old_project_owners, args=None, kwargs={})]
+    # A job is a dict with the following format: dict(name, args, kwargs,
+    # interval)
+    jobs = [dict(name=warm_up_stats, args=[], kwargs={}, interval=HOUR),
+            dict(name=warn_old_project_owners, args=[], kwargs={},
+                 interval=(24 * HOUR)),
+            dict(name=warm_cache, args=[], kwargs={}, interval=(10 * MINUTE))]
     # Based on type of user
     tmp = get_project_jobs()
     return jobs + tmp
@@ -41,7 +47,8 @@ def get_project_jobs():
     jobs = []
     for row in results:
         jobs.append(dict(name=get_app_stats,
-                         args=[row[0], row[1]], kwargs={}))
+                         args=[row[0], row[1]], kwargs={},
+                         interval=(10 * MINUTE)))
     return jobs
 
 
