@@ -440,7 +440,8 @@ def _schedule_job(function, scheduler):
         args=function['args'],
         kwargs=function['kwargs'],
         interval=function['interval'],
-        repeat=None)
+        repeat=None,
+        timeout=function['timeout'])
     for sj in scheduled_jobs:
         if (function['name'].__name__ in sj.func_name and
             sj._args == function['args'] and

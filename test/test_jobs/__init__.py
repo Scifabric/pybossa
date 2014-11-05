@@ -26,8 +26,10 @@ def a_function():
 def another_function():
     return
 
-a_job = dict(name=a_function, args=[], kwargs={}, interval=1)
-another_job = dict(name=another_function, args=[], kwargs={}, interval=1)
+a_job = dict(name=a_function, args=[], kwargs={},
+             interval=1, timeout=180)
+another_job = dict(name=another_function, args=[], kwargs={},
+                   interval=1, timeout=180)
 
 
 class TestSetupScheduledJobs(object):
