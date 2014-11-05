@@ -433,6 +433,7 @@ def setup_scheduled_jobs(app): #pragma: no cover
 def _schedule_job(function, scheduler):
     """Schedules a job and returns a log message about success of the operation"""
     from datetime import datetime
+    scheduled_jobs = scheduler.get_jobs()
     job = scheduler.schedule(
         scheduled_time=datetime.utcnow(),
         func=function['name'],
@@ -440,7 +441,7 @@ def _schedule_job(function, scheduler):
         kwargs=function['kwargs'],
         interval=function['interval'],
         repeat=None)
-    for sj in scheduler.get_jobs():
+    for sj in scheduled_jobs:
         if (function['name'].__name__ in sj.func_name and
             sj._args == function['args'] and
             sj._kwargs == function['kwargs']):
