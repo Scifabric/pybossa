@@ -16,8 +16,7 @@ install:
 - pip install -r requirements.txt
 before_script:
 - psql -c "create user rtester with createdb login password 'rtester'" -U postgres
-- psql -c "create database pybossa_test owner rtester encoding 'utf-8' lc_collate
-  'en_US.utf8' lc_ctype 'en_US.utf8' template template0;" -U postgres
+- psql -c "create database pybossa_test owner rtester encoding 'UTF-8' lc_collate 'en_US.UTF-8' lc_ctype 'en_US.UTF-8' template template0;" -U postgres
 script: nosetests test/
 notifications:
   hipchat: 11e2176ebb4b7372ee0d1fbc8abf4d@Github

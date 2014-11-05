@@ -25,7 +25,7 @@ from mock import patch, Mock
 from flask import Response
 from itsdangerous import BadSignature
 from collections import namedtuple
-from pybossa.core import signer, mail
+from pybossa.core import signer
 from pybossa.util import unicode_csv_reader
 from pybossa.util import get_user_signup_method
 from pybossa.ckan import Ckan
@@ -37,6 +37,7 @@ from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
+from pybossa.jobs import send_mail
 from factories import AppFactory, CategoryFactory, TaskFactory, TaskRunFactory
 
 
@@ -158,10 +159,10 @@ class TestWeb(web.Helper):
 
 
     @with_context
-    @patch('pybossa.view.account.mail')
+    @patch('pybossa.view.account.mail_queue', autospec=True)
     @patch('pybossa.view.account.render_template')
     @patch('pybossa.view.account.signer')
-    def test_register_post_creates_email_with_link(self, signer, render, mail):
+    def test_register_post_creates_email_with_link(self, signer, render, queue):
         """Test WEB register post creates and sends the confirmation email if
         account validation is enabled"""
         from flask import current_app
@@ -179,7 +180,9 @@ class TestWeb(web.Helper):
         render.assert_any_call('/account/email/validate_account.md',
                                 user=data,
                                 confirm_url='http://localhost/account/register/confirmation?key=')
-        assert mail.send.called, "Mail was not sent"
+        from pybossa.view.account import Message
+        assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
+        assert type(queue.enqueue.call_args[0][1]) == Message, "mail not sent"
 
 
     @with_context
@@ -1854,7 +1857,9 @@ class TestWeb(web.Helper):
         assert 403 == res.status_code
 
     @with_context
-    def test_45_password_reset_link(self):
+    @patch('pybossa.view.account.mail_queue', autospec=True)
+    @patch('pybossa.view.account.signer')
+    def test_45_password_reset_link(self, signer, queue):
         """Test WEB password reset email form"""
         res = self.app.post('/account/forgot-password',
                             data={'email_addr': "johndoe@example.com"},
@@ -1867,6 +1872,7 @@ class TestWeb(web.Helper):
         self.register(name='janedoe')
         self.register(name='google')
         self.register(name='facebook')
+        user = User.query.get(1)
         jane = User.query.get(2)
         jane.twitter_user_id = 10
         google = User.query.get(3)
@@ -1875,24 +1881,39 @@ class TestWeb(web.Helper):
         facebook.facebook_user_id = 104
         db.session.add_all([jane, google, facebook])
         db.session.commit()
-        with mail.record_messages() as outbox:
-            self.app.post('/account/forgot-password',
-                          data={'email_addr': "johndoe@example.com"},
-                          follow_redirects=True)
-            self.app.post('/account/forgot-password',
-                          data={'email_addr': 'janedoe@example.com'},
-                          follow_redirects=True)
-            self.app.post('/account/forgot-password',
-                          data={'email_addr': 'google@example.com'},
-                          follow_redirects=True)
-            self.app.post('/account/forgot-password',
-                          data={'email_addr': 'facebook@example.com'},
-                          follow_redirects=True)
 
-            assert 'Click here to recover your account' in outbox[0].body
-            assert 'your Twitter account to ' in outbox[1].body
-            assert 'your Google account to ' in outbox[2].body
-            assert 'your Facebook account to ' in outbox[3].body
+        data = {'password': user.passwd_hash, 'user': user.name}
+        self.app.post('/account/forgot-password',
+                      data={'email_addr': user.email_addr},
+                      follow_redirects=True)
+        signer.dumps.assert_called_with(data, salt='password-reset')
+        enqueue_call = queue.enqueue.call_args_list[0]
+        assert send_mail == enqueue_call[0][0], "send_mail not called"
+        assert 'Click here to recover your account' in enqueue_call[0][1].body
+
+        data = {'password': jane.passwd_hash, 'user': jane.name}
+        self.app.post('/account/forgot-password',
+                      data={'email_addr': 'janedoe@example.com'},
+                      follow_redirects=True)
+        enqueue_call = queue.enqueue.call_args_list[1]
+        assert send_mail == enqueue_call[0][0], "send_mail not called"
+        assert 'your Twitter account to ' in enqueue_call[0][1].body
+
+        data = {'password': google.passwd_hash, 'user': google.name}
+        self.app.post('/account/forgot-password',
+                      data={'email_addr': 'google@example.com'},
+                      follow_redirects=True)
+        enqueue_call = queue.enqueue.call_args_list[2]
+        assert send_mail == enqueue_call[0][0], "send_mail not called"
+        assert 'your Google account to ' in enqueue_call[0][1].body
+
+        data = {'password': facebook.passwd_hash, 'user': facebook.name}
+        self.app.post('/account/forgot-password',
+                      data={'email_addr': 'facebook@example.com'},
+                      follow_redirects=True)
+        enqueue_call = queue.enqueue.call_args_list[3]
+        assert send_mail == enqueue_call[0][0], "send_mail not called"
+        assert 'your Facebook account to ' in enqueue_call[0][1].body
 
         # Test with not valid form
         res = self.app.post('/account/forgot-password',

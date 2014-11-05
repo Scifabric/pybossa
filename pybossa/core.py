@@ -237,8 +237,8 @@ def setup_blueprints(app):
     # The RQDashboard is actually registering a blueprint to the app, so this is
     # a propper place for it to be initialized
     from rq_dashboard import RQDashboard
-    auth = lambda: current_user.is_authenticated() and current_user.admin
-    RQDashboard(app, url_prefix='/admin/rq', auth_handler=auth)
+    RQDashboard(app, url_prefix='/admin/rq', auth_handler=current_user,
+                redis_conn=sentinel.master)
 
 
 def setup_social_networks(app):
@@ -437,10 +437,11 @@ def setup_cache_timeouts(app):
 
 def setup_scheduled_jobs(app): #pragma: no cover
     redis_conn = sentinel.master
-    from jobs import get_all_jobs
+    from jobs import get_scheduled_jobs
     from rq_scheduler import Scheduler
-    all_jobs = get_all_jobs()
+    all_jobs = get_scheduled_jobs()
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=redis_conn)
+
     interval = 10 * 60
     for function in all_jobs:
         app.logger.info(_schedule_job(function, interval, scheduler))
