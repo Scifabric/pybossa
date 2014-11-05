@@ -23,7 +23,7 @@ from pybossa.core import mail
 MINUTE = 60
 HOUR = 60 * 60
 
-def get_scheduled_jobs():
+def get_scheduled_jobs(): # pragma: no cover
     """Return a list of scheduled jobs."""
     # Default ones
     # A job is a dict with the following format: dict(name, args, kwargs,
