@@ -52,7 +52,7 @@ def get_project_jobs():
     return jobs
 
 
-def get_app_stats(id, short_name):
+def get_app_stats(id, short_name): # pragma: no cover
     """Get stats for app."""
     import pybossa.cache.apps as cached_apps
     import pybossa.cache.project_stats as stats
