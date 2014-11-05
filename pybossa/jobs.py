@@ -23,6 +23,25 @@ from pybossa.core import mail
 def get_scheduled_jobs():
     return [warm_up_stats, warn_old_project_owners]
 
+
+def get_app_stats(id, short_name):
+    """Get stats for app."""
+    import pybossa.cache.apps as cached_apps
+    import pybossa.cache.project_stats as stats
+    from flask import current_app
+    env_cache_disabled = os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED')
+    if not env_cache_disabled:
+        os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
+    cached_apps.get_app(short_name)
+    cached_apps.n_tasks(id)
+    cached_apps.n_task_runs(id)
+    cached_apps.overall_progress(id)
+    cached_apps.last_activity(id)
+    cached_apps.n_completed_tasks(id)
+    cached_apps.n_volunteers(id)
+    stats.get_stats(id, current_app.config.get('GEO'))
+
+
 def warm_up_stats():
     """Background job for warming stats."""
     print "Running on the background warm_up_stats"
