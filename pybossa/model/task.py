@@ -22,7 +22,8 @@ from sqlalchemy.orm import relationship, backref
 from sqlalchemy import event
 
 from pybossa.core import db
-from pybossa.model import DomainObject, JSONType, JSONEncodedDict, make_timestamp, update_redis
+from pybossa.model import DomainObject, JSONType, JSONEncodedDict, \
+    make_timestamp, update_redis, update_app_timestamp
 from pybossa.model.task_run import TaskRun
 
 
@@ -79,3 +80,10 @@ def add_event(mapper, conn, target):
         obj['short_name'] = r.short_name
         obj['info'] = r.info
     update_redis(obj)
+
+
+@event.listens_for(Task, 'after_insert')
+@event.listens_for(Task, 'after_update')
+def update_app(mapper, conn, target):
+    """Update app updated timestamp."""
+    update_app_timestamp(mapper, conn, target)

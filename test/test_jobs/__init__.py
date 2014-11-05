@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2014 SF Isle of Man Limited
+# Copyright (C) 2013 SF Isle of Man Limited
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -17,9 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from pybossa.core import _schedule_job
-
 from rq_scheduler import Scheduler
-from mock import patch, MagicMock
 from redis import Redis
 
 
@@ -54,8 +52,8 @@ class TestSetupScheduledJobs(object):
         job_func_names = [job.func_name for job in sched_jobs]
 
         assert len(sched_jobs) == 2, sched_jobs
-        assert 'test_scheduled_jobs.a_function' in job_func_names
-        assert 'test_scheduled_jobs.another_function' in job_func_names
+        assert 'test_jobs.a_function' in job_func_names, job_func_names
+        assert 'test_jobs.another_function' in job_func_names
 
 
     def test_does_not_add_job_if_already_added(self):
