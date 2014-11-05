@@ -51,3 +51,12 @@ class TestProjectsStats(Test):
         assert [app.id, app.short_name] == job['args'], err_msg
         err_msg = "There should have the same kwargs, but it's: %s" % job['kwargs']
         assert {} == job['kwargs'], err_msg
+
+    @with_context
+    def test_get_project_jobs_for_non_pro_users(self):
+        """Test JOB get project jobs works for non pro users."""
+        AppFactory.create()
+        jobs = get_project_jobs()
+
+        err_msg = "There should be only 0 jobs"
+        assert len(jobs) == 0, err_msg
