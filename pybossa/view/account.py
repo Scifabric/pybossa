@@ -36,17 +36,19 @@ from flask import render_template, current_app
 from flask.ext.login import login_required, login_user, logout_user, \
     current_user
 from flask.ext.mail import Message
+from rq import Queue
 
 import pybossa.model as model
 from flask.ext.babel import gettext
 from sqlalchemy.sql import text
 from pybossa.model.user import User
-from pybossa.core import db, signer, mail, uploader, sentinel
+from pybossa.core import db, signer, uploader, sentinel
 from pybossa.util import Pagination, get_user_id_or_ip, pretty_date
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
 from pybossa.cache import apps as cached_apps
 from pybossa.auth import require
+from pybossa.jobs import send_mail
 
 from pybossa.forms.account_view_forms import *
 
@@ -57,6 +59,8 @@ except ImportError:  # pragma: no cover
 
 
 blueprint = Blueprint('account', __name__)
+
+mail_queue = Queue('mail', connection=sentinel.master)
 
 
 def get_update_feed():
@@ -184,7 +188,7 @@ def register():
         msg.body = render_template('/account/email/validate_account.md',
                                     user=account, confirm_url=confirm_url)
         msg.html = markdown(msg.body)
-        mail.send(msg)
+        send_mail_job = mail_queue.enqueue(send_mail, msg)
         return render_template('account/account_validation.html')
     if request.method == 'POST' and not form.validate():
         flash(gettext('Please correct the errors'), 'error')
@@ -535,7 +539,7 @@ def forgot_password():
                     '/account/email/forgot_password.md',
                     user=user, recovery_url=recovery_url)
             msg.html = markdown(msg.body)
-            mail.send(msg)
+            send_mail_job = mail_queue.enqueue(send_mail, msg)
             flash(gettext("We've send you email with account "
                           "recovery instructions!"),
                   'success')

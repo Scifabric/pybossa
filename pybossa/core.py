@@ -421,10 +421,11 @@ def setup_cache_timeouts(app):
 
 def setup_scheduled_jobs(app): #pragma: no cover
     redis_conn = sentinel.master
-    from jobs import get_all_jobs
+    from jobs import get_scheduled_jobs
     from rq_scheduler import Scheduler
-    all_jobs = get_all_jobs()
+    all_jobs = get_scheduled_jobs()
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=redis_conn)
+
     interval = 10 * 60
     for function in all_jobs:
         app.logger.info(_schedule_job(function, interval, scheduler))

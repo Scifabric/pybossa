@@ -18,11 +18,10 @@
 """Jobs module for running background tasks in PyBossa server."""
 import os
 
+from pybossa.core import mail
 
-def get_all_jobs():
-    """Return all background jobs."""
-    return [warm_up_stats, warn_old_project_owners]
-
+def get_scheduled_jobs():
+	return [warm_up_stats, warn_old_project_owners]
 
 def warm_up_stats():
     """Background job for warming stats."""
@@ -52,6 +51,10 @@ def warm_up_stats():
         os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = env_cache_disabled
 
     return True
+
+
+def send_mail(message):
+    mail.send(message)
 
 
 def warm_cache():
