@@ -106,11 +106,11 @@ def warm_up_stats(): # pragma: no cover
     return True
 
 
-def send_mail(message):
+def send_mail(message): # pragma: no cover
     mail.send(message)
 
 
-def warm_cache():
+def warm_cache(): # pragma: no cover
     """Background job to warm cache."""
     from pybossa.core import create_app
     app = create_app(run_as_server=False)
