@@ -76,7 +76,7 @@ def get_app_stats(id, short_name): # pragma: no cover
     stats.get_stats(id, current_app.config.get('GEO'))
 
 
-def warm_up_stats():
+def warm_up_stats(): # pragma: no cover
     """Background job for warming stats."""
     print "Running on the background warm_up_stats"
     from pybossa.cache.site_stats import (n_auth_users, n_anon_users,
