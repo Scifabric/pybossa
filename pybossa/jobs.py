@@ -54,12 +54,6 @@ def get_project_jobs():
                WHERE app.owner_id="user".id AND "user".pro=True;''')
     results = db.slave_session.execute(sql)
     return create_dict_job(results, interval=(10 * MINUTE))
-    #jobs = []
-    #for row in results:
-    #    jobs.append(dict(name=get_app_stats,
-    #                     args=[row[0], row[1]], kwargs={},
-    #                     interval=(10 * MINUTE)))
-    #return jobs
 
 
 def get_app_stats(id, short_name): # pragma: no cover
