@@ -112,7 +112,7 @@ def warm_up_stats(): # pragma: no cover
     return True
 
 
-def send_mail(message_dict): # pragma: no cover
+def send_mail(message_dict):
     message = Message(**message_dict)
     mail.send(message)
 
