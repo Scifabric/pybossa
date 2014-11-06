@@ -35,7 +35,6 @@ from flask import Blueprint, request, url_for, flash, redirect, abort
 from flask import render_template, current_app
 from flask.ext.login import login_required, login_user, logout_user, \
     current_user
-from flask.ext.mail import Message
 from rq import Queue
 
 import pybossa.model as model
