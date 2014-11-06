@@ -20,10 +20,68 @@ import os
 
 from pybossa.core import mail
 
-def get_scheduled_jobs():
-    return [warm_up_stats, warn_old_project_owners]
+MINUTE = 60
+HOUR = 60 * 60
 
-def warm_up_stats():
+def get_scheduled_jobs(): # pragma: no cover
+    """Return a list of scheduled jobs."""
+    # Default ones
+    # A job is a dict with the following format: dict(name, args, kwargs,
+    # interval)
+    jobs = [dict(name=warm_up_stats, args=[], kwargs={},
+                 interval=HOUR, timeout=(10 * MINUTE)),
+            dict(name=warn_old_project_owners, args=[], kwargs={},
+                 interval=(24 * HOUR), timeout=(10 * MINUTE)),
+            dict(name=warm_cache, args=[], kwargs={},
+                 interval=(10 * MINUTE), timeout=(10 * MINUTE))]
+    # Based on type of user
+    tmp = get_project_jobs()
+    return jobs + tmp
+
+
+def create_dict_jobs(data, function,
+                     interval=(24 * HOUR), timeout=(10 * MINUTE)):
+    jobs = []
+    for d in data:
+        jobs.append(dict(name=function,
+                         args=[d[0], d[1]], kwargs={},
+                         interval=(10 * MINUTE),
+                         timeout=timeout))
+    return jobs
+
+
+def get_project_jobs():
+    """Return a list of jobs based on user type."""
+    from sqlalchemy.sql import text
+    from pybossa.core import db
+    sql = text('''SELECT app.id, app.short_name FROM app, "user"
+               WHERE app.owner_id="user".id AND "user".pro=True;''')
+    results = db.slave_session.execute(sql)
+    return create_dict_jobs(results,
+                            get_app_stats,
+                            interval=(10 * MINUTE),
+                            timeout=(10 * MINUTE))
+
+
+def get_app_stats(id, short_name): # pragma: no cover
+    """Get stats for app."""
+    import pybossa.cache.apps as cached_apps
+    import pybossa.cache.project_stats as stats
+    from flask import current_app
+    env_cache_disabled = os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED')
+    if not env_cache_disabled:
+        os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
+    cached_apps.get_app(short_name)
+    cached_apps.n_tasks(id)
+    cached_apps.n_task_runs(id)
+    cached_apps.overall_progress(id)
+    cached_apps.last_activity(id)
+    cached_apps.n_completed_tasks(id)
+    cached_apps.n_volunteers(id)
+    stats.get_stats(id, current_app.config.get('GEO'))
+
+
+def warm_up_stats(): # pragma: no cover
     """Background job for warming stats."""
     print "Running on the background warm_up_stats"
     from pybossa.cache.site_stats import (n_auth_users, n_anon_users,
@@ -53,13 +111,12 @@ def warm_up_stats():
     return True
 
 
-def send_mail(message_dict):
+def send_mail(message_dict): #p pragma: no cover
     from flask.ext.mail import Message
     message = Message(**message_dict)
-    mail.send(message)
 
 
-def warm_cache():
+def warm_cache(): # pragma: no cover
     """Background job to warm cache."""
     from pybossa.core import create_app
     app = create_app(run_as_server=False)
