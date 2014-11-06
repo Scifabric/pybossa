@@ -21,7 +21,7 @@ from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy.orm import relationship, backref
 from sqlalchemy import event
 
-from pybossa.core import db, queues
+from pybossa.core import db
 from pybossa.model import DomainObject, JSONType, JSONEncodedDict, \
     make_timestamp, update_redis, update_app_timestamp
 from pybossa.model.task_run import TaskRun
