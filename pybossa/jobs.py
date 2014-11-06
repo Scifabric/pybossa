@@ -111,7 +111,7 @@ def warm_up_stats(): # pragma: no cover
     return True
 
 
-def send_mail(message_dict): #p pragma: no cover
+def send_mail(message_dict): # pragma: no cover
     from flask.ext.mail import Message
     message = Message(**message_dict)
 
