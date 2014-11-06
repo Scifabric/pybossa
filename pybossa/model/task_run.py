@@ -105,7 +105,10 @@ def update_task_state(mapper, conn, target):
                      where id=%s") % target.task_id
         conn.execute(sql_query)
         update_redis(app_obj)
-    queues['webhook'].enqueue(webhook, app_obj['webhook'])
+    payload = dict(event="task_completed",
+                   app_id=target.app_id,
+                   task_id=target.task_id)
+    queues['webhook'].enqueue(webhook, app_obj['webhook'], payload)
 
 
 
