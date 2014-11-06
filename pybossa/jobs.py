@@ -156,21 +156,17 @@ def export_tasks():
         except: # pragma: no cover
             raise
 
-    def make_onefile_memzip(inputfile, filename):
-        memzip = StringIO()
+    def zip_factory(filename):
         try:
             import zlib
-            mode= zipfile.ZIP_DEFLATED
+            zip_compression= zipfile.ZIP_DEFLATED
         except:
-            mode= zipfile.ZIP_STORED
-        zipf = zipfile.ZipFile(memzip, 'w', mode)
-        zipf.write(inputfile, filename)
-        zipf.close()
-        memzip.seek(0)
-        return memzip
+            zip_compression= zipfile.ZIP_STORED
+        zip = zipfile.ZipFile(file=filename, mode='w', compression=zip_compression, allowZip64=True)
+        return zip
 
     def export_json(app):
-        print app.id
+        print "%d (json)" % app.id
         name = app.short_name.encode('utf-8', 'ignore').decode('latin-1') # used for latin filename later
         json_task_generator = respond_json("task", app.id)
         if json_task_generator is not None:
@@ -179,9 +175,15 @@ def export_tasks():
                 for line in json_task_generator:
                     datafile.write(str(line))
                 datafile.flush()
-                memzip = make_onefile_memzip(datafile.name, '%s_task.json' % name)
-                file = FileStorage(filename='%d_%s_task_json.zip' % (app.id, name), stream=memzip)
-                uploader.upload_file(file, container='export') # TODO: right container folder?!
+                zipped_datafile = tempfile.NamedTemporaryFile()
+                try:
+                    zip = zip_factory(zipped_datafile.name)
+                    zip.write(datafile.name, '%s_task.json' % name)
+                    zip.close()
+                    file = FileStorage(filename='%d_%s_task_json.zip' % (app.id, name), stream=zipped_datafile)
+                    uploader.upload_file(file, container='export') # TODO: right container folder?!
+                finally:
+                    zipped_datafile.close()
             finally:
                 datafile.close()
         json_task_run_generator = respond_json("task_run", app.id)
@@ -191,15 +193,21 @@ def export_tasks():
                 for line in json_task_run_generator:
                     datafile.write(str(line))
                 datafile.flush()
-                memzip = make_onefile_memzip(datafile.name, '%s_task_run.json' % name)
-                file = FileStorage(filename='%d_%s_task_run_json.zip' % (app.id, name), stream=memzip)
-                uploader.upload_file(file, container='export') # TODO: right container folder?!
+                zipped_datafile = tempfile.NamedTemporaryFile()
+                try:
+                    zip = zip_factory(zipped_datafile.name)
+                    zip.write(datafile.name, '%s_task_run.json' % name)
+                    zip.close()
+                    file = FileStorage(filename='%d_%s_task_run_json.zip' % (app.id, name), stream=zipped_datafile)
+                    uploader.upload_file(file, container='export') # TODO: right container folder?!
+                finally:
+                    zipped_datafile.close()
             finally:
                 datafile.close()
 
 
     def export_csv(app):
-        print app.id
+        print "%d (csv)" % app.id
         name = app.short_name.encode('utf-8', 'ignore').decode('latin-1') # used for latin filename later
         csv_task_generator = respond_csv("task", app.id)
         if csv_task_generator is not None:
@@ -208,24 +216,35 @@ def export_tasks():
                 for line in csv_task_generator:
                     datafile.write(str(line))
                 datafile.flush()
-                memzip = make_onefile_memzip(datafile.name, '%s_task.csv' % name)
-                file = FileStorage(filename='%d_%s_task_csv.zip' % (app.id, name), stream=memzip)
-                uploader.upload_file(file, container='export') # TODO: right container folder?!
+                zipped_datafile = tempfile.NamedTemporaryFile()
+                try:
+                    zip = zip_factory(zipped_datafile.name)
+                    zip.write(datafile.name, '%s_task.csv' % name)
+                    zip.close()
+                    file = FileStorage(filename='%d_%s_task_csv.zip' % (app.id, name), stream=zipped_datafile)
+                    uploader.upload_file(file, container='export') # TODO: right container folder?!
+                finally:
+                    zipped_datafile.close()
             finally:
                 datafile.close()
-        # TODO: creates 50GB CSVs!
-        # csv_task_run_generator = respond_csv("task_run", app.id)
-        # if csv_task_run_generator is not None:
-        #     datafile = tempfile.NamedTemporaryFile()
-        #     try:
-        #         for line in csv_task_run_generator:
-        #             datafile.write(str(line))
-        #         datafile.flush()
-        #         memzip = make_onefile_memzip(datafile.name, '%s_task_run.csv' % name)
-        #         file = FileStorage(filename='%d_%s_task_run_csv.zip' % (app.id, name), stream=memzip)
-        #         uploader.upload_file(file, container='export') # TODO: right container folder?!
-        #     finally:
-        #         datafile.close()
+        csv_task_run_generator = respond_csv("task_run", app.id)
+        if csv_task_run_generator is not None:
+            datafile = tempfile.NamedTemporaryFile()
+            try:
+                for line in csv_task_run_generator:
+                    datafile.write(str(line))
+                datafile.flush()
+                zipped_datafile = tempfile.NamedTemporaryFile()
+                try:
+                    zip = zip_factory(zipped_datafile.name)
+                    zip.write(datafile.name, '%s_task_run.csv' % name)
+                    zip.close()
+                    file = FileStorage(filename='%d_%s_task_run_csv.zip' % (app.id, name), stream=zipped_datafile)
+                    uploader.upload_file(file, container='export') # TODO: right container folder?!
+                finally:
+                    zipped_datafile.close()
+            finally:
+                datafile.close()
 
     print "Running on the background export tasks ZIPs"
 
