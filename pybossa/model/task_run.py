@@ -20,9 +20,9 @@ from sqlalchemy import Integer, Text
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy import event
 
-from pybossa.core import db
+from pybossa.core import db, queues
 from pybossa.model import DomainObject, JSONType, make_timestamp, update_redis, \
-    update_app_timestamp
+    update_app_timestamp, webhook
 
 
 
@@ -63,13 +63,14 @@ class TaskRun(db.Model, DomainObject):
 def update_task_state(mapper, conn, target):
     """Update the task.state when n_answers condition is met."""
     # Get app details
-    sql_query = ('select name, short_name, info from app \
+    sql_query = ('select name, short_name, webhook info from app \
                  where id=%s') % target.app_id
     results = conn.execute(sql_query)
     app_obj = dict(id=target.app_id,
                    name=None,
                    short_name=None,
                    info=None,
+                   webhook=target.webhook,
                    action_updated='TaskCompleted')
     for r in results:
         app_obj['name'] = r.name
@@ -103,6 +104,9 @@ def update_task_state(mapper, conn, target):
                      where id=%s") % target.task_id
         conn.execute(sql_query)
         update_redis(app_obj)
+    #queues['webhook'].enqueue(webhook, app_obj['webhook'])
+    #print "HOLA"
+
 
 
 @event.listens_for(TaskRun, 'after_insert')

@@ -400,6 +400,10 @@ def setup_ratelimits(app):
     ratelimits['LIMIT'] = app.config['LIMIT']
     ratelimits['PER'] = app.config['PER']
 
+def setup_queues(app):
+    global queues
+    queues['webhook'] = Queue('webhook', connection=sentinel.master)
+
 
 def setup_cache_timeouts(app):
     global timeouts

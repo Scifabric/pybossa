@@ -206,3 +206,7 @@ def update_app_timestamp(mapper, conn, target):
                  (make_timestamp(), target.app_id))
     conn.execute(sql_query)
 
+
+def webhook(url):
+    """Post to a webhook."""
+    print url
