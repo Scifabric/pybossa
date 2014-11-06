@@ -21,7 +21,7 @@ import os
 from pybossa.core import mail
 
 def get_scheduled_jobs():
-	return [warm_up_stats, warn_old_project_owners]
+    return [warm_up_stats, warn_old_project_owners]
 
 def warm_up_stats():
     """Background job for warming stats."""
@@ -54,6 +54,8 @@ def warm_up_stats():
 
 
 def send_mail(message):
+    # message is a Message instance, import it so pickle can do the job right
+    from flask.ext.mail import Message
     mail.send(message)
 
 
