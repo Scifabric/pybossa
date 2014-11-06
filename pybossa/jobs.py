@@ -104,7 +104,7 @@ def export_tasks():
                 .filter_by(app_id=id)\
                 .yield_per(1):
             handle_row(writer, tr)
-            yield out.getvalue()
+        yield out.getvalue()
 
     def respond_csv(ty, id):
         try:
