@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
+from datetime import datetime
 from sqlalchemy import Integer, Text
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy import event
@@ -105,10 +106,14 @@ def update_task_state(mapper, conn, target):
                      where id=%s") % target.task_id
         conn.execute(sql_query)
         update_redis(app_obj)
-    payload = dict(event="task_completed",
-                   app_id=target.app_id,
-                   task_id=target.task_id)
-    queues['webhook'].enqueue(webhook, app_obj['webhook'], payload)
+        # PUSH changes via the webhook
+        if app_obj['webhook']:
+            payload = dict(event="task_completed",
+                           app_short_name=app_obj['short_name'],
+                           app_id=target.app_id,
+                           task_id=target.task_id,
+                           fired_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+            queues['webhook'].enqueue(webhook, app_obj['webhook'], payload)
 
 
 
