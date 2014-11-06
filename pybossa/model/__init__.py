@@ -207,6 +207,9 @@ def update_app_timestamp(mapper, conn, target):
     conn.execute(sql_query)
 
 
-def webhook(url):
+def webhook(url, payload=None):
     """Post to a webhook."""
-    print url
+    import requests
+    import json
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    requests.post(url, data=json.dumps(payload), headers=headers)
