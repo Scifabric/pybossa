@@ -15,7 +15,7 @@ from alembic import command
 from html2text import html2text
 from sqlalchemy.sql import text
 
-app = create_app()
+app = create_app(run_as_server=False)
 
 def setup_alembic_config():
     if "DATABASE_URL" not in os.environ:
