@@ -19,6 +19,7 @@
 import os
 
 from pybossa.core import mail
+from flask.ext.mail import Message
 
 MINUTE = 60
 HOUR = 60 * 60
@@ -112,8 +113,8 @@ def warm_up_stats(): # pragma: no cover
 
 
 def send_mail(message_dict): # pragma: no cover
-    from flask.ext.mail import Message
     message = Message(**message_dict)
+    mail.send(message)
 
 
 def warm_cache(): # pragma: no cover
