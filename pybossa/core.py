@@ -29,6 +29,7 @@ from pybossa.ratelimit import get_view_rate_limit
 
 from raven.contrib.flask import Sentry
 from pybossa.util import pretty_date
+from rq import Queue
 
 
 def create_app(run_as_server=True):
@@ -67,6 +68,7 @@ def create_app(run_as_server=True):
     setup_csrf_protection(app)
     setup_debug_toolbar(app)
     setup_jinja2_filters(app)
+    setup_queues(app)
     return app
 
 
