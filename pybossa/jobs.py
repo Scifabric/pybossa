@@ -53,7 +53,9 @@ def warm_up_stats():
     return True
 
 
-def send_mail(message):
+def send_mail(message_dict):
+    from flask.ext.mail import Message
+    message = Message(**message_dict)
     mail.send(message)
 
 

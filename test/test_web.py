@@ -180,9 +180,12 @@ class TestWeb(web.Helper):
         render.assert_any_call('/account/email/validate_account.md',
                                 user=data,
                                 confirm_url='http://localhost/account/register/confirmation?key=')
-        from pybossa.view.account import Message
         assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
-        assert type(queue.enqueue.call_args[0][1]) == Message, "mail not sent"
+        mail_data = queue.enqueue.call_args[0][1]
+        assert 'subject' in mail_data.keys()
+        assert 'recipients' in mail_data.keys()
+        assert 'body' in mail_data.keys()
+        assert 'html' in mail_data.keys()
 
 
     @with_context
