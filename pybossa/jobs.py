@@ -54,8 +54,6 @@ def warm_up_stats():
 
 
 def send_mail(message):
-    # message is a Message instance, import it so pickle can do the job right
-    from flask.ext.mail import Message
     mail.send(message)
 
 
