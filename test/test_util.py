@@ -27,32 +27,34 @@ import tempfile
 import os
 
 
-class TestPybossaUtil(Test):
+class TestPybossaUtil(object):
     def setUp(self):
         super(TestPybossaUtil, self).setUp()
         with self.flask_app.app_context():
             self.create()
 
-    def test_jsonpify(self):
-        """Test jsonpify decorator works."""
-        res = self.app.get('/api/app/1?callback=mycallback')
-        err_msg = "mycallback should be included in the response"
-        assert "mycallback" in res.data, err_msg
-        err_msg = "Status code should be 200"
-        assert res.status_code == 200, err_msg
+# TODO: test these 2 decorators in a more unitary way. The following tests have
+# been moved to test_api_common.py
+    # def test_jsonpify(self):
+    #     """Test jsonpify decorator works."""
+    #     res = self.app.get('/api/app/1?callback=mycallback')
+    #     err_msg = "mycallback should be included in the response"
+    #     assert "mycallback" in res.data, err_msg
+    #     err_msg = "Status code should be 200"
+    #     assert res.status_code == 200, err_msg
 
-    def test_cors(self):
-        """Test CORS decorator works."""
-        res = self.app.get('/api/app/1')
-        err_msg = "CORS should be enabled"
-        print res.headers
-        assert res.headers['Access-Control-Allow-Origin'] == '*', err_msg
-        methods = ['PUT', 'HEAD', 'DELETE', 'OPTIONS', 'GET']
-        for m in methods:
-            assert m in res.headers['Access-Control-Allow-Methods'], err_msg
-        assert res.headers['Access-Control-Max-Age'] == '21600', err_msg
-        headers = 'CONTENT-TYPE, AUTHORIZATION'
-        assert res.headers['Access-Control-Allow-Headers'] == headers, err_msg
+    # def test_cors(self):
+    #     """Test CORS decorator works."""
+    #     res = self.app.get('/api/app/1')
+    #     err_msg = "CORS should be enabled"
+    #     print res.headers
+    #     assert res.headers['Access-Control-Allow-Origin'] == '*', err_msg
+    #     methods = ['PUT', 'HEAD', 'DELETE', 'OPTIONS', 'GET']
+    #     for m in methods:
+    #         assert m in res.headers['Access-Control-Allow-Methods'], err_msg
+    #     assert res.headers['Access-Control-Max-Age'] == '21600', err_msg
+    #     headers = 'CONTENT-TYPE, AUTHORIZATION'
+    #     assert res.headers['Access-Control-Allow-Headers'] == headers, err_msg
 
     def test_pretty_date(self):
         """Test pretty_date works."""
