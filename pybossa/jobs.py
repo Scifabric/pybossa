@@ -39,15 +39,10 @@ def get_scheduled_jobs(): # pragma: no cover
     return jobs + tmp
 
 
-# TODO: move this function to cached_users and test it
 def get_project_jobs():
     """Return a list of jobs based on user type."""
-    from sqlalchemy.sql import text
-    from pybossa.core import db
-    sql = text('''SELECT app.id, app.short_name FROM app, "user"
-               WHERE app.owner_id="user".id AND "user".pro=True;''')
-    results = db.slave_session.execute(sql)
-    return create_dict_jobs(results,
+    from pybossa.cache import apps as cached_apps
+    return create_dict_jobs(cached_apps.get_from_pro_user(),
                             get_app_stats,
                             interval=(10 * MINUTE),
                             timeout=(10 * MINUTE))
@@ -58,7 +53,7 @@ def create_dict_jobs(data, function,
     jobs = []
     for d in data:
         jobs.append(dict(name=function,
-                         args=[d[0], d[1]], kwargs={},
+                         args=[d['id'], d['short_name']], kwargs={},
                          interval=interval,
                          timeout=timeout))
     return jobs
