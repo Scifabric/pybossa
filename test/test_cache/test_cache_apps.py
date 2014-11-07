@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import Test, db, with_context
+from default import Test, with_context
 from pybossa.cache import apps as cached_apps
 from factories import UserFactory, AppFactory, TaskFactory, \
     TaskRunFactory, AnonymousTaskRunFactory
@@ -484,6 +484,7 @@ class TestAppsCache(Test):
 
         assert n_projects == 0, n_projects
 
+
     def test_n_count_with_published_projects(self):
         """Test CACHE PROJECTS n_count returns the number of published projects
         of a given category"""
@@ -494,3 +495,39 @@ class TestAppsCache(Test):
         n_projects = cached_apps.n_count(project.category.short_name)
 
         assert n_projects == 1, n_projects
+
+
+    def test_get_from_pro_user_projects_no_projects(self):
+        """Test CACHE PROJECTS get_from_pro_user returns empty list if no projects
+        with 'pro' owners"""
+        pro_user = UserFactory.create(pro=True)
+        AppFactory.create()
+
+        pro_owned_projects = cached_apps.get_from_pro_user()
+
+        assert pro_owned_projects == [], pro_owned_projects
+
+
+    def test_get_from_pro_user_projects(self):
+        """Test CACHE PROJECTS get_from_pro_user returns list of projects with
+        'pro' owners only"""
+        pro_user = UserFactory.create(pro=True)
+        AppFactory.create()
+        pro_project = AppFactory.create(owner=pro_user)
+
+        pro_owned_projects = cached_apps.get_from_pro_user()
+
+        assert len(pro_owned_projects) is 1, len(pro_owned_projects)
+        assert pro_owned_projects[0]['short_name'] == pro_project.short_name
+
+
+    def test__get_from_pro_users_returns_required_fields(self):
+        """Test CACHE PROJECTS get_from_pro_user returns required fields"""
+        pro_user = UserFactory.create(pro=True)
+        AppFactory.create(owner=pro_user)
+        fields = ('id', 'short_name')
+
+        pro_owned_projects = cached_apps.get_from_pro_user()
+
+        for field in fields:
+            assert field in pro_owned_projects[0].keys(), field
