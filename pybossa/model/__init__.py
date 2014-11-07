@@ -19,6 +19,7 @@
 import datetime
 import json
 import uuid
+import requests
 
 from sqlalchemy import Text
 from sqlalchemy.orm import relationship, backref, class_mapper
@@ -209,7 +210,5 @@ def update_app_timestamp(mapper, conn, target):
 
 def webhook(url, payload=None):
     """Post to a webhook."""
-    import requests
-    import json
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
     requests.post(url, data=json.dumps(payload), headers=headers)
