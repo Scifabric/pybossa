@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import pybossa.util as util
-from default import Test, db
+from default import Test
 from mock import patch
 from datetime import datetime, timedelta
 import dateutil.parser
@@ -27,9 +27,9 @@ import tempfile
 import os
 
 
-class TestWebModule(Test):
+class TestPybossaUtil(Test):
     def setUp(self):
-        super(TestWebModule, self).setUp()
+        super(TestPybossaUtil, self).setUp()
         with self.flask_app.app_context():
             self.create()
 
