@@ -25,7 +25,7 @@ from mock import patch, Mock
 from flask import Response
 from itsdangerous import BadSignature
 from collections import namedtuple
-from pybossa.core import signer, mail
+from pybossa.core import signer
 from pybossa.util import unicode_csv_reader
 from pybossa.util import get_user_signup_method
 from pybossa.ckan import Ckan
@@ -37,6 +37,7 @@ from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
+from pybossa.jobs import send_mail
 from factories import AppFactory, CategoryFactory, TaskFactory, TaskRunFactory
 
 
@@ -70,83 +71,82 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_02_stats(self, mock1, mock2):
         """Test WEB leaderboard or stats page works"""
-        with self.flask_app.app_context():
-            res = self.register()
-            res = self.signin()
-            res = self.new_application(short_name="igil")
-            returns = [Mock()]
-            returns[0].GeoIP.return_value = 'gic'
-            returns[0].GeoIP.record_by_addr.return_value = {}
-            mock1.side_effects = returns
+        res = self.register()
+        res = self.signin()
+        res = self.new_application(short_name="igil")
+        returns = [Mock()]
+        returns[0].GeoIP.return_value = 'gic'
+        returns[0].GeoIP.record_by_addr.return_value = {}
+        mock1.side_effects = returns
 
-            app = db.session.query(App).first()
-            # Without stats
-            url = '/app/%s/stats' % app.short_name
-            res = self.app.get(url)
-            assert "Sorry" in res.data, res.data
+        app = db.session.query(App).first()
+        user = db.session.query(User).first()
+        # Without stats
+        url = '/app/%s/stats' % app.short_name
+        res = self.app.get(url)
+        assert "Sorry" in res.data, res.data
 
-            # We use a string here to check that it works too
-            task = Task(app_id=app.id, n_answers=10)
-            db.session.add(task)
+        # We use a string here to check that it works too
+        task = Task(app_id=app.id, n_answers=10)
+        db.session.add(task)
+        db.session.commit()
+
+        for i in range(10):
+            task_run = TaskRun(app_id=app.id, task_id=1,
+                                     user_id=user.id,
+                                     info={'answer': 1})
+            db.session.add(task_run)
             db.session.commit()
+            self.app.get('api/app/%s/newtask' % app.id)
 
-            for i in range(10):
-                task_run = TaskRun(app_id=app.id, task_id=1,
-                                         user_id=1,
-                                         info={'answer': 1})
-                db.session.add(task_run)
-                db.session.commit()
-                self.app.get('api/app/%s/newtask' % app.id)
+        # With stats
+        url = '/app/%s/stats' % app.short_name
+        res = self.app.get(url)
+        assert res.status_code == 200, res.status_code
+        assert "Distribution" in res.data, res.data
 
-            # With stats
+        with patch.dict(self.flask_app.config, {'GEO': True}):
             url = '/app/%s/stats' % app.short_name
             res = self.app.get(url)
-            assert res.status_code == 200, res.status_code
-            assert "Distribution" in res.data, res.data
+            assert "GeoLite" in res.data, res.data
 
-            with patch.dict(self.flask_app.config, {'GEO': True}):
-                url = '/app/%s/stats' % app.short_name
-                res = self.app.get(url)
-                assert "GeoLite" in res.data, res.data
+        res = self.app.get('/leaderboard', follow_redirects=True)
+        assert self.html_title("Community Leaderboard") in res.data, res
+        assert user.name in res.data, res.data
 
-            res = self.app.get('/leaderboard', follow_redirects=True)
-            assert self.html_title("Community Leaderboard") in res.data, res
-            assert self.user.fullname in res.data, res.data
+        # With hidden project
+        app.hidden = 1
+        db.session.add(app)
+        db.session.commit()
+        url = '/app/%s/stats' % app.short_name
+        res = self.app.get(url)
+        assert res.status_code == 200, res.status_code
+        assert "Distribution" in res.data, res.data
+        self.signout()
 
-            # With hidden project
-            app.hidden = 1
-            db.session.add(app)
-            db.session.commit()
-            url = '/app/%s/stats' % app.short_name
-            res = self.app.get(url)
-            assert res.status_code == 200, res.status_code
-            assert "Distribution" in res.data, res.data
-            self.signout()
-
-            self.create()
-            # As anonymous
-            url = '/app/%s/stats' % app.short_name
-            res = self.app.get(url)
-            assert res.status_code == 401, res.status_code
-            # As another user, but not owner
-            self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
-            url = '/app/%s/stats' % app.short_name
-            res = self.app.get(url)
-            assert res.status_code == 403, res.status_code
+        self.create()
+        # As anonymous
+        url = '/app/%s/stats' % app.short_name
+        res = self.app.get(url)
+        assert res.status_code == 401, res.status_code
+        # As another user, but not owner
+        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
+        url = '/app/%s/stats' % app.short_name
+        res = self.app.get(url)
+        assert res.status_code == 403, res.status_code
 
     @with_context
     def test_03_account_index(self):
         """Test WEB account index works."""
         # Without users
-        with self.flask_app.app_context():
-            res = self.app.get('/account/page/15', follow_redirects=True)
-            assert res.status_code == 404, res.status_code
+        res = self.app.get('/account/page/15', follow_redirects=True)
+        assert res.status_code == 404, res.status_code
 
-            self.create()
-            res = self.app.get('/account', follow_redirects=True)
-            assert res.status_code == 200, res.status_code
-            err_msg = "There should be a Community page"
-            assert "Community" in res.data, err_msg
+        self.create()
+        res = self.app.get('/account', follow_redirects=True)
+        assert res.status_code == 200, res.status_code
+        err_msg = "There should be a Community page"
+        assert "Community" in res.data, err_msg
 
 
     @with_context
@@ -159,10 +159,10 @@ class TestWeb(web.Helper):
 
 
     @with_context
-    @patch('pybossa.view.account.mail')
+    @patch('pybossa.view.account.mail_queue', autospec=True)
     @patch('pybossa.view.account.render_template')
     @patch('pybossa.view.account.signer')
-    def test_register_post_creates_email_with_link(self, signer, render, mail):
+    def test_register_post_creates_email_with_link(self, signer, render, queue):
         """Test WEB register post creates and sends the confirmation email if
         account validation is enabled"""
         from flask import current_app
@@ -180,7 +180,12 @@ class TestWeb(web.Helper):
         render.assert_any_call('/account/email/validate_account.md',
                                 user=data,
                                 confirm_url='http://localhost/account/register/confirmation?key=')
-        assert mail.send.called, "Mail was not sent"
+        assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
+        mail_data = queue.enqueue.call_args[0][1]
+        assert 'subject' in mail_data.keys()
+        assert 'recipients' in mail_data.keys()
+        assert 'body' in mail_data.keys()
+        assert 'html' in mail_data.keys()
 
 
     @with_context
@@ -291,13 +296,13 @@ class TestWeb(web.Helper):
 
         res = self.signin()
         assert self.html_title() in res.data, res
-        assert "Welcome back %s" % self.user.fullname in res.data, res
+        assert "Welcome back %s" % "John Doe" in res.data, res
 
         # Check profile page with several information chunks
         res = self.profile()
         assert self.html_title("Profile") in res.data, res
-        assert self.user.fullname in res.data, res
-        assert self.user.email_addr in res.data, res
+        assert "John Doe" in res.data, res
+        assert "johndoe@example.com" in res.data, res
 
         # Log out
         res = self.signout()
@@ -307,8 +312,8 @@ class TestWeb(web.Helper):
         # Request profile as an anonymous user
         # Check profile page with several information chunks
         res = self.profile()
-        assert self.user.fullname in res.data, res
-        assert self.user.email_addr not in res.data, res
+        assert "John Doe" in res.data, res
+        assert "johndoe@example.com" not in res.data, res
 
         # Try to access protected areas like update
         res = self.app.get('/account/johndoe/update', follow_redirects=True)
@@ -319,30 +324,29 @@ class TestWeb(web.Helper):
 
         res = self.signin(next='%2Faccount%2Fprofile')
         assert self.html_title("Profile") in res.data, res
-        assert "Welcome back %s" % self.user.fullname in res.data, res
+        assert "Welcome back %s" % "John Doe" in res.data, res
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_profile_applications(self, mock):
         """Test WEB user profile project page works."""
-        with self.flask_app.app_context():
-            self.create()
-            self.signin(email=Fixtures.email_addr, password=Fixtures.password)
-            self.new_application()
-            url = '/account/%s/applications' % Fixtures.name
-            res = self.app.get(url)
-            assert "Projects" in res.data, res.data
-            assert "Published" in res.data, res.data
-            assert "Draft" in res.data, res.data
-            assert Fixtures.app_name in res.data, res.data
+        self.create()
+        self.signin(email=Fixtures.email_addr, password=Fixtures.password)
+        self.new_application()
+        url = '/account/%s/applications' % Fixtures.name
+        res = self.app.get(url)
+        assert "Projects" in res.data, res.data
+        assert "Published" in res.data, res.data
+        assert "Draft" in res.data, res.data
+        assert Fixtures.app_name in res.data, res.data
 
-            url = '/account/fakename/applications'
-            res = self.app.get(url)
-            assert res.status_code == 404, res.status_code
+        url = '/account/fakename/applications'
+        res = self.app.get(url)
+        assert res.status_code == 404, res.status_code
 
-            url = '/account/%s/applications' % Fixtures.name2
-            res = self.app.get(url)
-            assert res.status_code == 403, res.status_code
+        url = '/account/%s/applications' % Fixtures.name2
+        res = self.app.get(url)
+        assert res.status_code == 403, res.status_code
 
 
     @with_context
@@ -357,11 +361,11 @@ class TestWeb(web.Helper):
 
         # Update profile with new data
         res = self.update_profile(method="GET")
-        msg = "Update your profile: %s" % self.user.fullname
+        msg = "Update your profile: %s" % "John Doe"
         assert self.html_title(msg) in res.data, res.data
         msg = 'input id="id" name="id" type="hidden" value="1"'
         assert msg in res.data, res
-        assert self.user.fullname in res.data, res
+        assert "John Doe" in res.data, res
         assert "Save the changes" in res.data, res
         msg = '<a href="/account/johndoe/update" class="btn">Cancel</a>'
         assert  msg in res.data, res.data
@@ -491,51 +495,48 @@ class TestWeb(web.Helper):
     def test_06_applications_without_apps(self):
         """Test WEB projects index without projects works"""
         # Check first without apps
-        with self.flask_app.app_context():
-            self.create_categories()
-            res = self.app.get('/app', follow_redirects=True)
-            assert "Projects" in res.data, res.data
-            assert Fixtures.cat_1 in res.data, res.data
+        self.create_categories()
+        res = self.app.get('/app', follow_redirects=True)
+        assert "Projects" in res.data, res.data
+        assert Fixtures.cat_1 in res.data, res.data
 
     @with_context
     def test_06_applications_2(self):
         """Test WEB projects index with projects"""
-        with self.flask_app.app_context():
-            self.create()
+        self.create()
 
-            res = self.app.get('/app', follow_redirects=True)
-            assert self.html_title("Projects") in res.data, res.data
-            assert "Projects" in res.data, res.data
-            assert Fixtures.app_short_name in res.data, res.data
+        res = self.app.get('/app', follow_redirects=True)
+        assert self.html_title("Projects") in res.data, res.data
+        assert "Projects" in res.data, res.data
+        assert Fixtures.app_short_name in res.data, res.data
 
 
     @with_context
     def test_06_featured_apps(self):
         """Test WEB projects index shows featured projects in all the pages works"""
-        with self.flask_app.app_context():
-            self.create()
+        self.create()
 
-            app = db.session.query(App).get(1)
-            app.featured = True
-            db.session.add(app)
-            db.session.commit()
+        app = db.session.query(App).get(1)
+        app.featured = True
+        db.session.add(app)
+        db.session.commit()
 
-            res = self.app.get('/app', follow_redirects=True)
-            assert self.html_title("Projects") in res.data, res.data
-            assert "Projects" in res.data, res.data
-            assert '/app/test-app' in res.data, res.data
-            assert '<h2><a href="/app/test-app/">My New Project</a></h2>' in res.data, res.data
+        res = self.app.get('/app', follow_redirects=True)
+        assert self.html_title("Projects") in res.data, res.data
+        assert "Projects" in res.data, res.data
+        assert '/app/test-app' in res.data, res.data
+        assert '<h2><a href="/app/test-app/">My New Project</a></h2>' in res.data, res.data
 
-            # Update one task to have more answers than expected
-            task = db.session.query(Task).get(1)
-            task.n_answers=1
-            db.session.add(task)
-            db.session.commit()
-            task = db.session.query(Task).get(1)
-            cat = db.session.query(Category).get(1)
-            url = '/app/category/featured/'
-            res = self.app.get(url, follow_redirects=True)
-            assert '1 Featured Projects' in res.data, res.data
+        # Update one task to have more answers than expected
+        task = db.session.query(Task).get(1)
+        task.n_answers=1
+        db.session.add(task)
+        db.session.commit()
+        task = db.session.query(Task).get(1)
+        cat = db.session.query(Category).get(1)
+        url = '/app/category/featured/'
+        res = self.app.get(url, follow_redirects=True)
+        assert '1 Featured Projects' in res.data, res.data
 
     @with_context
     @patch('pybossa.ckan.requests.get')
@@ -543,88 +544,85 @@ class TestWeb(web.Helper):
     def test_10_get_application(self, Mock, mock2):
         """Test WEB project URL/<short_name> works"""
         # Sign in and create a project
-        with self.flask_app.app_context():
-            html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                       {'content-type': 'application/json'})
-            Mock.return_value = html_request
-            self.register()
-            res = self.new_application()
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
+        self.register()
+        res = self.new_application()
 
-            res = self.app.get('/app/sampleapp', follow_redirects=True)
-            msg = "Project: Sample Project"
-            assert self.html_title(msg) in res.data, res
-            err_msg = "There should be a contribute button"
-            assert "Start Contributing Now" in res.data, err_msg
+        res = self.app.get('/app/sampleapp', follow_redirects=True)
+        msg = "Project: Sample Project"
+        assert self.html_title(msg) in res.data, res
+        err_msg = "There should be a contribute button"
+        assert "Start Contributing Now" in res.data, err_msg
 
-            res = self.app.get('/app/sampleapp/settings', follow_redirects=True)
-            assert res.status == '200 OK', res.status
-            self.signout()
+        res = self.app.get('/app/sampleapp/settings', follow_redirects=True)
+        assert res.status == '200 OK', res.status
+        self.signout()
 
-            # Now as an anonymous user
-            res = self.app.get('/app/sampleapp', follow_redirects=True)
-            assert self.html_title("Project: Sample Project") in res.data, res
-            assert "Start Contributing Now" in res.data, err_msg
-            res = self.app.get('/app/sampleapp/settings', follow_redirects=True)
-            assert res.status == '200 OK', res.status
-            err_msg = "Anonymous user should be redirected to sign in page"
-            assert "Please sign in to access this page" in res.data, err_msg
+        # Now as an anonymous user
+        res = self.app.get('/app/sampleapp', follow_redirects=True)
+        assert self.html_title("Project: Sample Project") in res.data, res
+        assert "Start Contributing Now" in res.data, err_msg
+        res = self.app.get('/app/sampleapp/settings', follow_redirects=True)
+        assert res.status == '200 OK', res.status
+        err_msg = "Anonymous user should be redirected to sign in page"
+        assert "Please sign in to access this page" in res.data, err_msg
 
-            # Now with a different user
-            self.register(fullname="Perico Palotes", name="perico")
-            res = self.app.get('/app/sampleapp', follow_redirects=True)
-            assert self.html_title("Project: Sample Project") in res.data, res
-            assert "Start Contributing Now" in res.data, err_msg
-            res = self.app.get('/app/sampleapp/settings')
-            assert res.status == '403 FORBIDDEN', res.status
+        # Now with a different user
+        self.register(fullname="Perico Palotes", name="perico")
+        res = self.app.get('/app/sampleapp', follow_redirects=True)
+        assert self.html_title("Project: Sample Project") in res.data, res
+        assert "Start Contributing Now" in res.data, err_msg
+        res = self.app.get('/app/sampleapp/settings')
+        assert res.status == '403 FORBIDDEN', res.status
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_10b_application_long_description_allows_markdown(self, mock):
         """Test WEB long description markdown is supported"""
-        with self.flask_app.app_context():
-            markdown_description = u'Markdown\n======='
-            self.register()
-            self.new_application(long_description=markdown_description)
+        markdown_description = u'Markdown\n======='
+        self.register()
+        self.new_application(long_description=markdown_description)
 
-            res = self.app.get('/app/sampleapp', follow_redirects=True)
-            data = res.data
-            assert '<h1>Markdown</h1>' in data, 'Markdown text not being rendered!'
+        res = self.app.get('/app/sampleapp', follow_redirects=True)
+        data = res.data
+        assert '<h1>Markdown</h1>' in data, 'Markdown text not being rendered!'
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_11_create_application(self, mock):
         """Test WEB create a project works"""
         # Create a project as an anonymous user
-        with self.flask_app.app_context():
-            res = self.new_application(method="GET")
-            assert self.html_title("Sign in") in res.data, res
-            assert "Please sign in to access this page" in res.data, res
+        res = self.new_application(method="GET")
+        assert self.html_title("Sign in") in res.data, res
+        assert "Please sign in to access this page" in res.data, res
 
-            res = self.new_application()
-            assert self.html_title("Sign in") in res.data, res.data
-            assert "Please sign in to access this page." in res.data, res.data
+        res = self.new_application()
+        assert self.html_title("Sign in") in res.data, res.data
+        assert "Please sign in to access this page." in res.data, res.data
 
-            # Sign in and create a project
-            res = self.register()
+        # Sign in and create a project
+        res = self.register()
 
-            res = self.new_application(method="GET")
-            assert self.html_title("Create a Project") in res.data, res
-            assert "Create the project" in res.data, res
+        res = self.new_application(method="GET")
+        assert self.html_title("Create a Project") in res.data, res
+        assert "Create the project" in res.data, res
 
-            res = self.new_application(long_description='My Description')
-            assert "<strong>Sample Project</strong>: Update the project" in res.data
-            assert "Project created!" in res.data, res
+        res = self.new_application(long_description='My Description')
+        assert "<strong>Sample Project</strong>: Update the project" in res.data
+        assert "Project created!" in res.data, res
 
-            app = db.session.query(App).first()
-            assert app.name == 'Sample Project', 'Different names %s' % app.name
-            assert app.short_name == 'sampleapp', \
-                'Different names %s' % app.short_name
+        app = db.session.query(App).first()
+        assert app.name == 'Sample Project', 'Different names %s' % app.name
+        assert app.short_name == 'sampleapp', \
+            'Different names %s' % app.short_name
 
-            assert app.long_description == 'My Description', \
-                "Long desc should be the same: %s" % app.long_description
+        assert app.long_description == 'My Description', \
+            "Long desc should be the same: %s" % app.long_description
 
-            assert app.category is not None, \
-                "A project should have a category after being created"
+        assert app.category is not None, \
+            "A project should have a category after being created"
 
     # After refactoring applications view, these 3 tests should be more isolated and moved to another place
     @with_context
@@ -663,123 +661,121 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_11_a_create_application_errors(self, mock):
         """Test WEB create a project issues the errors"""
-        with self.flask_app.app_context():
-            self.register()
-            # Required fields checks
-            # Issue the error for the app.name
-            res = self.new_application(name="")
-            err_msg = "A project must have a name"
-            assert "This field is required" in res.data, err_msg
+        self.register()
+        # Required fields checks
+        # Issue the error for the app.name
+        res = self.new_application(name="")
+        err_msg = "A project must have a name"
+        assert "This field is required" in res.data, err_msg
 
-            # Issue the error for the app.short_name
-            res = self.new_application(short_name="")
-            err_msg = "A project must have a short_name"
-            assert "This field is required" in res.data, err_msg
+        # Issue the error for the app.short_name
+        res = self.new_application(short_name="")
+        err_msg = "A project must have a short_name"
+        assert "This field is required" in res.data, err_msg
 
-            # Issue the error for the app.description
-            res = self.new_application(long_description="")
-            err_msg = "A project must have a description"
-            assert "This field is required" in res.data, err_msg
+        # Issue the error for the app.description
+        res = self.new_application(long_description="")
+        err_msg = "A project must have a description"
+        assert "This field is required" in res.data, err_msg
 
-            # Issue the error for the app.short_name
-            res = self.new_application(short_name='$#/|')
-            err_msg = "A project must have a short_name without |/$# chars"
-            assert '$#&amp;\/| and space symbols are forbidden' in res.data, err_msg
+        # Issue the error for the app.short_name
+        res = self.new_application(short_name='$#/|')
+        err_msg = "A project must have a short_name without |/$# chars"
+        assert '$#&amp;\/| and space symbols are forbidden' in res.data, err_msg
 
-            # Now Unique checks
-            self.new_application()
-            res = self.new_application()
-            err_msg = "There should be a Unique field"
-            assert "Name is already taken" in res.data, err_msg
-            assert "Short Name is already taken" in res.data, err_msg
+        # Now Unique checks
+        self.new_application()
+        res = self.new_application()
+        err_msg = "There should be a Unique field"
+        assert "Name is already taken" in res.data, err_msg
+        assert "Short Name is already taken" in res.data, err_msg
 
     @with_context
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_12_update_application(self, Mock, mock):
         """Test WEB update project works"""
-        with self.flask_app.app_context():
-            html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                       {'content-type': 'application/json'})
-            Mock.return_value = html_request
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
 
-            self.register()
-            self.new_application()
+        self.register()
+        self.new_application()
 
-            # Get the Update Project web page
-            res = self.update_application(method="GET")
-            msg = "Project: Sample Project &middot; Update"
-            assert self.html_title(msg) in res.data, res
-            msg = 'input id="id" name="id" type="hidden" value="1"'
-            assert msg in res.data, res
-            assert "Save the changes" in res.data, res
+        # Get the Update Project web page
+        res = self.update_application(method="GET")
+        msg = "Project: Sample Project &middot; Update"
+        assert self.html_title(msg) in res.data, res
+        msg = 'input id="id" name="id" type="hidden" value="1"'
+        assert msg in res.data, res
+        assert "Save the changes" in res.data, res
 
-            # Check form validation
-            res = self.update_application(new_name="",
-                                          new_short_name="",
-                                          new_description="New description",
-                                          new_long_description='New long desc',
-                                          new_hidden=True)
-            assert "Please correct the errors" in res.data, res.data
+        # Check form validation
+        res = self.update_application(new_name="",
+                                      new_short_name="",
+                                      new_description="New description",
+                                      new_long_description='New long desc',
+                                      new_hidden=True)
+        assert "Please correct the errors" in res.data, res.data
 
-            # Update the project
-            res = self.update_application(new_name="New Sample Project",
-                                          new_short_name="newshortname",
-                                          new_description="New description",
-                                          new_long_description='New long desc',
-                                          new_hidden=True)
-            app = db.session.query(App).first()
-            assert "Project updated!" in res.data, res
-            err_msg = "Project name not updated %s" % app.name
-            assert app.name == "New Sample Project", err_msg
-            err_msg = "Project short name not updated %s" % app.short_name
-            assert app.short_name == "newshortname", err_msg
-            err_msg = "Project description not updated %s" % app.description
-            assert app.description == "New description", err_msg
-            err_msg = "Project long description not updated %s" % app.long_description
-            assert app.long_description == "New long desc", err_msg
-            err_msg = "Project hidden not updated %s" % app.hidden
-            assert app.hidden == 1, err_msg
-
-
-            # Check that the owner can access it even though is hidden
-
-            user = db.session.query(User).filter_by(name='johndoe').first()
-            user.admin = False
-            db.session.add(user)
-            db.session.commit()
-            res = self.app.get('/app/newshortname/')
-            err_msg = "Owner should be able to see his hidden app"
-            assert app.name in res.data, err_msg
-            self.signout()
-
-            res = self.register(fullname='Paco', name='paco')
-            url = '/app/newshortname/'
-            res = self.app.get(url, follow_redirects=True)
-            assert "Forbidden" in res.data, res.data
-            assert res.status_code == 403
-
-            tmp = db.session.query(App).first()
-            tmp.hidden = 0
-            db.session.add(tmp)
-            db.session.commit()
-
-            url = '/app/newshortname/update'
-            res = self.app.get(url, follow_redirects=True)
-            assert res.status_code == 403, res.status_code
-
-            tmp.hidden = 1
-            db.session.add(tmp)
-            db.session.commit()
+        # Update the project
+        res = self.update_application(new_name="New Sample Project",
+                                      new_short_name="newshortname",
+                                      new_description="New description",
+                                      new_long_description='New long desc',
+                                      new_hidden=True)
+        app = db.session.query(App).first()
+        assert "Project updated!" in res.data, res
+        err_msg = "Project name not updated %s" % app.name
+        assert app.name == "New Sample Project", err_msg
+        err_msg = "Project short name not updated %s" % app.short_name
+        assert app.short_name == "newshortname", err_msg
+        err_msg = "Project description not updated %s" % app.description
+        assert app.description == "New description", err_msg
+        err_msg = "Project long description not updated %s" % app.long_description
+        assert app.long_description == "New long desc", err_msg
+        err_msg = "Project hidden not updated %s" % app.hidden
+        assert app.hidden == 1, err_msg
 
 
-            user = db.session.query(User).filter_by(name='paco').first()
-            user.admin = True
-            db.session.add(user)
-            db.session.commit()
-            res = self.app.get('/app/newshortname/')
-            err_msg = "Root user should be able to see his hidden app"
-            assert app.name in res.data, err_msg
+        # Check that the owner can access it even though is hidden
+
+        user = db.session.query(User).filter_by(name='johndoe').first()
+        user.admin = False
+        db.session.add(user)
+        db.session.commit()
+        res = self.app.get('/app/newshortname/')
+        err_msg = "Owner should be able to see his hidden app"
+        assert app.name in res.data, err_msg
+        self.signout()
+
+        res = self.register(fullname='Paco', name='paco')
+        url = '/app/newshortname/'
+        res = self.app.get(url, follow_redirects=True)
+        assert "Forbidden" in res.data, res.data
+        assert res.status_code == 403
+
+        tmp = db.session.query(App).first()
+        tmp.hidden = 0
+        db.session.add(tmp)
+        db.session.commit()
+
+        url = '/app/newshortname/update'
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 403, res.status_code
+
+        tmp.hidden = 1
+        db.session.add(tmp)
+        db.session.commit()
+
+
+        user = db.session.query(User).filter_by(name='paco').first()
+        user.admin = True
+        db.session.add(user)
+        db.session.commit()
+        res = self.app.get('/app/newshortname/')
+        err_msg = "Root user should be able to see his hidden app"
+        assert app.name in res.data, err_msg
 
 
     @with_context
@@ -811,25 +807,23 @@ class TestWeb(web.Helper):
     @with_context
     def test_update_application_errors(self):
         """Test WEB update form validation issues the errors"""
-        with self.flask_app.app_context():
+        self.register()
+        self.new_application()
 
-            self.register()
-            self.new_application()
+        res = self.update_application(new_name="")
+        assert "This field is required" in res.data
 
-            res = self.update_application(new_name="")
-            assert "This field is required" in res.data
+        res = self.update_application(new_short_name="")
+        assert "This field is required" in res.data
 
-            res = self.update_application(new_short_name="")
-            assert "This field is required" in res.data
+        res = self.update_application(new_description="")
+        assert "You must provide a description." in res.data
 
-            res = self.update_application(new_description="")
-            assert "You must provide a description." in res.data
+        res = self.update_application(new_description="a"*256)
+        assert "Field cannot be longer than 255 characters." in res.data
 
-            res = self.update_application(new_description="a"*256)
-            assert "Field cannot be longer than 255 characters." in res.data
-
-            res = self.update_application(new_long_description="")
-            assert "This field is required" not in res.data
+        res = self.update_application(new_long_description="")
+        assert "This field is required" not in res.data
 
 
     @with_context
@@ -837,72 +831,69 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_13_hidden_applications(self, Mock, mock):
         """Test WEB hidden project works"""
-        with self.flask_app.app_context():
-            html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                       {'content-type': 'application/json'})
-            Mock.return_value = html_request
-            self.register()
-            self.new_application()
-            self.update_application(new_hidden=True)
-            self.signout()
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
+        self.register()
+        self.new_application()
+        self.update_application(new_hidden=True)
+        self.signout()
 
-            res = self.app.get('/app/', follow_redirects=True)
-            assert "Sample Project" not in res.data, res
+        res = self.app.get('/app/', follow_redirects=True)
+        assert "Sample Project" not in res.data, res
 
-            res = self.app.get('/app/sampleapp', follow_redirects=True)
-            err_msg = "Hidden apps should return a 403"
-            res.status_code == 403, err_msg
+        res = self.app.get('/app/sampleapp', follow_redirects=True)
+        err_msg = "Hidden apps should return a 403"
+        res.status_code == 403, err_msg
 
     @with_context
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_13a_hidden_applications_owner(self, Mock, mock):
         """Test WEB hidden projects are shown to their owners"""
-        with self.flask_app.app_context():
-            html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                       {'content-type': 'application/json'})
-            Mock.return_value = html_request
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
 
-            self.register()
-            self.new_application()
-            self.update_application(new_hidden=True)
+        self.register()
+        self.new_application()
+        self.update_application(new_hidden=True)
 
-            res = self.app.get('/app/', follow_redirects=True)
-            assert "Sample Project" not in res.data, ("Projects should be hidden"
-                                                  "in the index")
+        res = self.app.get('/app/', follow_redirects=True)
+        assert "Sample Project" not in res.data, ("Projects should be hidden"
+                                              "in the index")
 
-            res = self.app.get('/app/sampleapp', follow_redirects=True)
-            assert "Sample Project" in res.data, ("Project should be shown to"
-                                              "the owner")
+        res = self.app.get('/app/sampleapp', follow_redirects=True)
+        assert "Sample Project" in res.data, ("Project should be shown to"
+                                          "the owner")
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_14_delete_application(self, mock):
         """Test WEB delete project works"""
-        with self.flask_app.app_context():
-            self.create()
-            self.register()
-            self.new_application()
-            res = self.delete_application(method="GET")
-            msg = "Project: Sample Project &middot; Delete"
-            assert self.html_title(msg) in res.data, res
-            assert "No, do not delete it" in res.data, res
+        self.create()
+        self.register()
+        self.new_application()
+        res = self.delete_application(method="GET")
+        msg = "Project: Sample Project &middot; Delete"
+        assert self.html_title(msg) in res.data, res
+        assert "No, do not delete it" in res.data, res
 
-            app = db.session.query(App).filter_by(short_name='sampleapp').first()
-            app.hidden = 1
-            db.session.add(app)
-            db.session.commit()
-            res = self.delete_application(method="GET")
-            msg = "Project: Sample Project &middot; Delete"
-            assert self.html_title(msg) in res.data, res
-            assert "No, do not delete it" in res.data, res
+        app = db.session.query(App).filter_by(short_name='sampleapp').first()
+        app.hidden = 1
+        db.session.add(app)
+        db.session.commit()
+        res = self.delete_application(method="GET")
+        msg = "Project: Sample Project &middot; Delete"
+        assert self.html_title(msg) in res.data, res
+        assert "No, do not delete it" in res.data, res
 
-            res = self.delete_application()
-            assert "Project deleted!" in res.data, res
+        res = self.delete_application()
+        assert "Project deleted!" in res.data, res
 
-            self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
-            res = self.delete_application(short_name=Fixtures.app_short_name)
-            assert res.status_code == 403, res.status_code
+        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
+        res = self.delete_application(short_name=Fixtures.app_short_name)
+        assert res.status_code == 403, res.status_code
 
 
     @with_context
@@ -912,205 +903,200 @@ class TestWeb(web.Helper):
         #  returning a valid resp. The only difference is a user object
         #  without a password
         #  Register a user and sign out
-        with self.flask_app.app_context():
-            user = User(name="tester", passwd_hash="tester",
-                              fullname="tester",
-                              email_addr="tester")
-            user.set_password('tester')
-            db.session.add(user)
-            db.session.commit()
-            db.session.query(User).all()
+        user = User(name="tester", passwd_hash="tester",
+                          fullname="tester",
+                          email_addr="tester")
+        user.set_password('tester')
+        db.session.add(user)
+        db.session.commit()
+        db.session.query(User).all()
 
-            # Sign in again and check the warning message
-            self.signin(email="tester", password="tester")
-            res = self.app.get('/', follow_redirects=True)
-            msg = "Please update your e-mail address in your profile page, " \
-                  "right now it is empty!"
-            user = db.session.query(User).get(1)
-            assert msg in res.data, res.data
+        # Sign in again and check the warning message
+        self.signin(email="tester", password="tester")
+        res = self.app.get('/', follow_redirects=True)
+        msg = "Please update your e-mail address in your profile page, " \
+              "right now it is empty!"
+        user = db.session.query(User).get(1)
+        assert msg in res.data, res.data
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_16_task_status_completed(self, mock):
         """Test WEB Task Status Completed works"""
-        with self.flask_app.app_context():
-            self.register()
-            self.new_application()
+        self.register()
+        self.new_application()
 
-            app = db.session.query(App).first()
-            # We use a string here to check that it works too
-            task = Task(app_id=app.id, n_answers = 10)
-            db.session.add(task)
+        app = db.session.query(App).first()
+        # We use a string here to check that it works too
+        task = Task(app_id=app.id, n_answers = 10)
+        db.session.add(task)
+        db.session.commit()
+
+        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
+                           follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        assert "Sample Project" in res.data, res.data
+        assert '0 of 10' in res.data, res.data
+        err_msg = "Download button should be disabled"
+        assert dom.find(id='nothingtodownload') is not None, err_msg
+
+        for i in range(5):
+            task_run = TaskRun(app_id=app.id, task_id=1,
+                                     info={'answer': 1})
+            db.session.add(task_run)
             db.session.commit()
+            self.app.get('api/app/%s/newtask' % app.id)
 
-            res = self.app.get('app/%s/tasks/browse' % (app.short_name),
-                               follow_redirects=True)
-            dom = BeautifulSoup(res.data)
-            assert "Sample Project" in res.data, res.data
-            assert '0 of 10' in res.data, res.data
-            err_msg = "Download button should be disabled"
-            assert dom.find(id='nothingtodownload') is not None, err_msg
+        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
+                           follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        assert "Sample Project" in res.data, res.data
+        assert '5 of 10' in res.data, res.data
+        err_msg = "Download Partial results button should be shown"
+        assert dom.find(id='partialdownload') is not None, err_msg
 
-            for i in range(5):
-                task_run = TaskRun(app_id=app.id, task_id=1,
-                                         info={'answer': 1})
-                db.session.add(task_run)
-                db.session.commit()
-                self.app.get('api/app/%s/newtask' % app.id)
-
-            res = self.app.get('app/%s/tasks/browse' % (app.short_name),
-                               follow_redirects=True)
-            dom = BeautifulSoup(res.data)
-            assert "Sample Project" in res.data, res.data
-            assert '5 of 10' in res.data, res.data
-            err_msg = "Download Partial results button should be shown"
-            assert dom.find(id='partialdownload') is not None, err_msg
-
-            for i in range(5):
-                task_run = TaskRun(app_id=app.id, task_id=1,
-                                         info={'answer': 1})
-                db.session.add(task_run)
-                db.session.commit()
-                self.app.get('api/app/%s/newtask' % app.id)
-
-            self.signout()
-
-            app = db.session.query(App).first()
-
-            res = self.app.get('app/%s/tasks/browse' % (app.short_name),
-                               follow_redirects=True)
-            assert "Sample Project" in res.data, res.data
-            msg = 'Task <span class="label label-success">#1</span>'
-            assert msg in res.data, res.data
-            assert '10 of 10' in res.data, res.data
-            dom = BeautifulSoup(res.data)
-            err_msg = "Download Full results button should be shown"
-            assert dom.find(id='fulldownload') is not None, err_msg
-
-            app.hidden = 1
-            db.session.add(app)
+        for i in range(5):
+            task_run = TaskRun(app_id=app.id, task_id=1,
+                                     info={'answer': 1})
+            db.session.add(task_run)
             db.session.commit()
-            res = self.app.get('app/%s/tasks/browse' % (app.short_name),
-                               follow_redirects=True)
-            assert res.status_code == 401, res.status_code
+            self.app.get('api/app/%s/newtask' % app.id)
 
-            self.create()
-            self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
-            res = self.app.get('app/%s/tasks/browse' % (app.short_name),
-                               follow_redirects=True)
-            assert res.status_code == 403, res.status_code
+        self.signout()
+
+        app = db.session.query(App).first()
+
+        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
+                           follow_redirects=True)
+        assert "Sample Project" in res.data, res.data
+        msg = 'Task <span class="label label-success">#1</span>'
+        assert msg in res.data, res.data
+        assert '10 of 10' in res.data, res.data
+        dom = BeautifulSoup(res.data)
+        err_msg = "Download Full results button should be shown"
+        assert dom.find(id='fulldownload') is not None, err_msg
+
+        app.hidden = 1
+        db.session.add(app)
+        db.session.commit()
+        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
+                           follow_redirects=True)
+        assert res.status_code == 401, res.status_code
+
+        self.create()
+        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
+        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
+                           follow_redirects=True)
+        assert res.status_code == 403, res.status_code
 
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_17_export_task_runs(self, mock):
         """Test WEB TaskRun export works"""
-        with self.flask_app.app_context():
-            self.register()
-            self.new_application()
+        self.register()
+        self.new_application()
 
-            app = db.session.query(App).first()
-            task = Task(app_id=app.id, n_answers = 10)
-            db.session.add(task)
+        app = db.session.query(App).first()
+        task = Task(app_id=app.id, n_answers = 10)
+        db.session.add(task)
+        db.session.commit()
+
+        for i in range(10):
+            task_run = TaskRun(app_id=app.id, task_id=1, info={'answer': 1})
+            db.session.add(task_run)
             db.session.commit()
 
-            for i in range(10):
-                task_run = TaskRun(app_id=app.id, task_id=1, info={'answer': 1})
-                db.session.add(task_run)
-                db.session.commit()
 
+        app = db.session.query(App).first()
+        res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
+                           follow_redirects=True)
+        data = json.loads(res.data)
+        assert len(data) == 10, data
+        for tr in data:
+            assert tr['info']['answer'] == 1, tr
 
-            app = db.session.query(App).first()
-            res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
-                               follow_redirects=True)
-            data = json.loads(res.data)
-            assert len(data) == 10, data
-            for tr in data:
-                assert tr['info']['answer'] == 1, tr
+        # Check with correct app but wrong task id
+        res = self.app.get('app/%s/%s/results.json' % (app.short_name, 5000),
+                           follow_redirects=True)
+        assert res.status_code == 404, res.status_code
 
-            # Check with correct app but wrong task id
-            res = self.app.get('app/%s/%s/results.json' % (app.short_name, 5000),
-                               follow_redirects=True)
-            assert res.status_code == 404, res.status_code
+        # Check with hidden app: owner should have access to it
+        app.hidden = 1
+        db.session.add(app)
+        db.session.commit()
+        res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
+                           follow_redirects=True)
+        data = json.loads(res.data)
+        assert len(data) == 10, data
+        for tr in data:
+            assert tr['info']['answer'] == 1, tr
+        self.signout()
 
-            # Check with hidden app: owner should have access to it
-            app.hidden = 1
-            db.session.add(app)
-            db.session.commit()
-            res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
-                               follow_redirects=True)
-            data = json.loads(res.data)
-            assert len(data) == 10, data
-            for tr in data:
-                assert tr['info']['answer'] == 1, tr
-            self.signout()
+        # Check with hidden app: non-owner should not have access to it
+        self.register(fullname="Non Owner", name="nonowner")
+        res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
+                           follow_redirects=True)
+        assert res.status_code == 403, res.data
+        assert "Forbidden" in res.data, res.data
 
-            # Check with hidden app: non-owner should not have access to it
-            self.register(fullname="Non Owner", name="nonowner")
-            res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
-                               follow_redirects=True)
-            assert res.status_code == 403, res.data
-            assert "Forbidden" in res.data, res.data
-
-            # Check with hidden app: anonymous should not have access to it
-            self.signout()
-            res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
-                               follow_redirects=True)
-            assert res.status_code == 401, res.data
-            assert "Unauthorized" in res.data, res.data
+        # Check with hidden app: anonymous should not have access to it
+        self.signout()
+        res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
+                           follow_redirects=True)
+        assert res.status_code == 401, res.data
+        assert "Unauthorized" in res.data, res.data
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_18_task_status_wip(self, mock):
         """Test WEB Task Status on going works"""
-        with self.flask_app.app_context():
-            self.register()
-            self.new_application()
+        self.register()
+        self.new_application()
 
-            app = db.session.query(App).first()
-            task = Task(app_id=app.id, n_answers = 10)
-            db.session.add(task)
-            db.session.commit()
-            self.signout()
+        app = db.session.query(App).first()
+        task = Task(app_id=app.id, n_answers = 10)
+        db.session.add(task)
+        db.session.commit()
+        self.signout()
 
-            app = db.session.query(App).first()
+        app = db.session.query(App).first()
 
-            res = self.app.get('app/%s/tasks/browse' % (app.short_name),
-                               follow_redirects=True)
-            assert "Sample Project" in res.data, res.data
-            msg = 'Task <span class="label label-info">#1</span>'
-            assert msg in res.data, res.data
-            assert '0 of 10' in res.data, res.data
+        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
+                           follow_redirects=True)
+        assert "Sample Project" in res.data, res.data
+        msg = 'Task <span class="label label-info">#1</span>'
+        assert msg in res.data, res.data
+        assert '0 of 10' in res.data, res.data
 
-            # For a non existing page
-            res = self.app.get('app/%s/tasks/browse/5000' % (app.short_name),
-                               follow_redirects=True)
-            assert res.status_code == 404, res.status_code
+        # For a non existing page
+        res = self.app.get('app/%s/tasks/browse/5000' % (app.short_name),
+                           follow_redirects=True)
+        assert res.status_code == 404, res.status_code
 
 
     @with_context
     def test_19_app_index_categories(self):
         """Test WEB Project Index categories works"""
-        with self.flask_app.app_context():
-            self.register()
-            self.create()
-            self.signout()
+        self.register()
+        self.create()
+        self.signout()
 
-            res = self.app.get('app', follow_redirects=True)
-            assert "Projects" in res.data, res.data
-            assert Fixtures.cat_1 in res.data, res.data
+        res = self.app.get('app', follow_redirects=True)
+        assert "Projects" in res.data, res.data
+        assert Fixtures.cat_1 in res.data, res.data
 
-            task = db.session.query(Task).get(1)
-            # Update one task to have more answers than expected
-            task.n_answers=1
-            db.session.add(task)
-            db.session.commit()
-            task = db.session.query(Task).get(1)
-            cat = db.session.query(Category).get(1)
-            url = '/app/category/%s/' % Fixtures.cat_1
-            res = self.app.get(url, follow_redirects=True)
-            tmp = '1 %s Projects' % Fixtures.cat_1
-            assert tmp in res.data, res
+        task = db.session.query(Task).get(1)
+        # Update one task to have more answers than expected
+        task.n_answers=1
+        db.session.add(task)
+        db.session.commit()
+        task = db.session.query(Task).get(1)
+        cat = db.session.query(Category).get(1)
+        url = '/app/category/%s/' % Fixtures.cat_1
+        res = self.app.get(url, follow_redirects=True)
+        tmp = '1 %s Projects' % Fixtures.cat_1
+        assert tmp in res.data, res
 
     @with_context
     def test_app_index_categories_pagination(self):
@@ -1134,227 +1120,214 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_20_app_index_published(self, mock):
         """Test WEB Project Index published works"""
-        with self.flask_app.app_context():
-            self.register()
-            self.new_application()
-            self.update_application(new_category_id="1")
-            app = db.session.query(App).first()
-            info = dict(task_presenter="some html")
-            app.info = info
-            db.session.commit()
-            task = Task(app_id=app.id, n_answers = 10)
-            db.session.add(task)
-            db.session.commit()
-            self.signout()
+        self.register()
+        self.new_application()
+        self.update_application(new_category_id="1")
+        app = db.session.query(App).first()
+        info = dict(task_presenter="some html")
+        app.info = info
+        db.session.commit()
+        task = Task(app_id=app.id, n_answers = 10)
+        db.session.add(task)
+        db.session.commit()
+        self.signout()
 
-            res = self.app.get('app', follow_redirects=True)
-            assert "%s Projects" % Fixtures.cat_1 in res.data, res.data
-            assert "draft" not in res.data, res.data
-            assert "Sample Project" in res.data, res.data
+        res = self.app.get('app', follow_redirects=True)
+        assert "%s Projects" % Fixtures.cat_1 in res.data, res.data
+        assert "draft" not in res.data, res.data
+        assert "Sample Project" in res.data, res.data
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_20_app_index_draft(self, mock):
         """Test WEB Project Index draft works"""
         # Create root
-        with self.flask_app.app_context():
-            self.register()
-            self.new_application()
-            self.signout()
-            # Create a user
-            self.register(fullname="jane", name="jane", email="jane@jane.com")
-            self.signout()
+        self.register()
+        self.new_application()
+        self.signout()
+        # Create a user
+        self.register(fullname="jane", name="jane", email="jane@jane.com")
+        self.signout()
 
-            # As Anonymous
-            res = self.app.get('/app/category/draft', follow_redirects=True)
-            dom = BeautifulSoup(res.data)
-            err_msg = "Anonymous should not see draft apps"
-            assert dom.find(id='signin') is not None, err_msg
+        # As Anonymous
+        res = self.app.get('/app/category/draft', follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "Anonymous should not see draft apps"
+        assert dom.find(id='signin') is not None, err_msg
 
-            # As authenticated but not admin
-            self.signin(email="jane@jane.com", password="p4ssw0rd")
-            res = self.app.get('/app/category/draft', follow_redirects=True)
-            assert res.status_code == 403, "Non-admin should not see draft apps"
-            self.signout()
+        # As authenticated but not admin
+        self.signin(email="jane@jane.com", password="p4ssw0rd")
+        res = self.app.get('/app/category/draft', follow_redirects=True)
+        assert res.status_code == 403, "Non-admin should not see draft apps"
+        self.signout()
 
-            # As Admin
-            self.signin()
-            res = self.app.get('/app/category/draft', follow_redirects=True)
-            assert "project-published" not in res.data, res.data
-            assert "draft" in res.data, res.data
-            assert "Sample Project" in res.data, res.data
-            assert '1 Draft Projects' in res.data, res.data
+        # As Admin
+        self.signin()
+        res = self.app.get('/app/category/draft', follow_redirects=True)
+        assert "project-published" not in res.data, res.data
+        assert "draft" in res.data, res.data
+        assert "Sample Project" in res.data, res.data
+        assert '1 Draft Projects' in res.data, res.data
 
     @with_context
     def test_21_get_specific_ongoing_task_anonymous(self):
         """Test WEB get specific ongoing task_id for
         a project works as anonymous"""
+        self.create()
+        self.delete_task_runs()
+        app = db.session.query(App).first()
+        task = db.session.query(Task)\
+                 .filter(App.id == app.id)\
+                 .first()
+        res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
+                           follow_redirects=True)
+        assert 'TaskPresenter' in res.data, res.data
+        msg = "?next=%2Fapp%2F" + app.short_name + "%2Ftask%2F" + str(task.id)
+        assert msg in res.data, res.data
 
-        with self.flask_app.app_context():
-            self.create()
-            self.delete_task_runs()
-            app = db.session.query(App).first()
-            task = db.session.query(Task)\
-                     .filter(App.id == app.id)\
-                     .first()
-            res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
-                               follow_redirects=True)
-            assert 'TaskPresenter' in res.data, res.data
-            msg = "?next=%2Fapp%2F" + app.short_name + "%2Ftask%2F" + str(task.id)
-            assert msg in res.data, res.data
-
-            # Try with a hidden app
-            app.hidden = 1
-            db.session.add(app)
-            db.session.commit()
-            res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
-                               follow_redirects=True)
-            assert 'Unauthorized' in res.data, res.data
-            assert res.status_code == 401, res.status_code
-            # Try with only registered users
-            app.allow_anonymous_contributors = False
-            app.hidden = 0
-            db.session.add(app)
-            db.session.commit()
-            res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
-                               follow_redirects=True)
-            assert "sign in to participate" in res.data
+        # Try with a hidden app
+        app.hidden = 1
+        db.session.add(app)
+        db.session.commit()
+        res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
+                           follow_redirects=True)
+        assert 'Unauthorized' in res.data, res.data
+        assert res.status_code == 401, res.status_code
+        # Try with only registered users
+        app.allow_anonymous_contributors = False
+        app.hidden = 0
+        db.session.add(app)
+        db.session.commit()
+        res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
+                           follow_redirects=True)
+        assert "sign in to participate" in res.data
 
     @with_context
     def test_23_get_specific_ongoing_task_user(self):
         """Test WEB get specific ongoing task_id for a project works as an user"""
-
-        with self.flask_app.app_context():
-            self.create()
-            self.delete_task_runs()
-            self.register()
-            self.signin()
-            app = db.session.query(App).first()
-            task = db.session.query(Task)\
-                     .filter(App.id == app.id)\
-                     .first()
-            res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
-                               follow_redirects=True)
-            assert 'TaskPresenter' in res.data, res.data
-            self.signout()
+        self.create()
+        self.delete_task_runs()
+        self.register()
+        self.signin()
+        app = db.session.query(App).first()
+        task = db.session.query(Task)\
+                 .filter(App.id == app.id)\
+                 .first()
+        res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
+                           follow_redirects=True)
+        assert 'TaskPresenter' in res.data, res.data
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_25_get_wrong_task_app(self, mock):
         """Test WEB get wrong task.id for a project works"""
+        self.create()
+        app1 = db.session.query(App).get(1)
+        app1_short_name = app1.short_name
 
-        with self.flask_app.app_context():
-            self.create()
-            app1 = db.session.query(App).get(1)
-            app1_short_name = app1.short_name
+        db.session.query(Task)\
+                  .filter(Task.app_id == 1)\
+                  .first()
 
-            db.session.query(Task)\
-                      .filter(Task.app_id == 1)\
-                      .first()
+        self.register()
+        self.new_application()
+        app2 = db.session.query(App).get(2)
+        self.new_task(app2.id)
+        task2 = db.session.query(Task)\
+                  .filter(Task.app_id == 2)\
+                  .first()
+        task2_id = task2.id
+        self.signout()
 
-            self.register()
-            self.new_application()
-            app2 = db.session.query(App).get(2)
-            self.new_task(app2.id)
-            task2 = db.session.query(Task)\
-                      .filter(Task.app_id == 2)\
-                      .first()
-            task2_id = task2.id
-            self.signout()
-
-            res = self.app.get('/app/%s/task/%s' % (app1_short_name, task2_id))
-            assert "Error" in res.data, res.data
-            msg = "This task does not belong to %s" % app1_short_name
-            assert msg in res.data, res.data
+        res = self.app.get('/app/%s/task/%s' % (app1_short_name, task2_id))
+        assert "Error" in res.data, res.data
+        msg = "This task does not belong to %s" % app1_short_name
+        assert msg in res.data, res.data
 
     @with_context
     def test_26_tutorial_signed_user(self):
         """Test WEB tutorials work as signed in user"""
-        with self.flask_app.app_context():
-            self.create()
-            app1 = db.session.query(App).get(1)
-            app1.info = dict(tutorial="some help")
-            db.session.commit()
-            self.register()
-            # First time accessing the app should redirect me to the tutorial
-            res = self.app.get('/app/test-app/newtask', follow_redirects=True)
-            err_msg = "There should be some tutorial for the project"
-            assert "some help" in res.data, err_msg
-            # Second time should give me a task, and not the tutorial
-            res = self.app.get('/app/test-app/newtask', follow_redirects=True)
-            assert "some help" not in res.data
+        self.create()
+        app1 = db.session.query(App).get(1)
+        app1.info = dict(tutorial="some help")
+        db.session.commit()
+        self.register()
+        # First time accessing the app should redirect me to the tutorial
+        res = self.app.get('/app/test-app/newtask', follow_redirects=True)
+        err_msg = "There should be some tutorial for the project"
+        assert "some help" in res.data, err_msg
+        # Second time should give me a task, and not the tutorial
+        res = self.app.get('/app/test-app/newtask', follow_redirects=True)
+        assert "some help" not in res.data
 
-            # Check if the tutorial can be accessed directly
-            res = self.app.get('/app/test-app/tutorial', follow_redirects=True)
-            err_msg = "There should be some tutorial for the project"
-            assert "some help" in res.data, err_msg
+        # Check if the tutorial can be accessed directly
+        res = self.app.get('/app/test-app/tutorial', follow_redirects=True)
+        err_msg = "There should be some tutorial for the project"
+        assert "some help" in res.data, err_msg
 
-            # Hidden app
-            app1.hidden = 1
-            db.session.add(app1)
-            db.session.commit()
-            url = '/app/%s/tutorial' % app1.short_name
-            res = self.app.get(url, follow_redirects=True)
-            assert res.status_code == 403, res.status_code
+        # Hidden app
+        app1.hidden = 1
+        db.session.add(app1)
+        db.session.commit()
+        url = '/app/%s/tutorial' % app1.short_name
+        res = self.app.get(url, follow_redirects=True)
+        assert res.status_code == 403, res.status_code
 
 
     @with_context
     def test_27_tutorial_anonymous_user(self):
         """Test WEB tutorials work as an anonymous user"""
-        with self.flask_app.app_context():
-            self.create()
-            app1 = db.session.query(App).get(1)
-            app1.info = dict(tutorial="some help")
-            db.session.commit()
-            # First time accessing the app should redirect me to the tutorial
-            res = self.app.get('/app/test-app/newtask', follow_redirects=True)
-            err_msg = "There should be some tutorial for the project"
-            assert "some help" in res.data, err_msg
-            # Second time should give me a task, and not the tutorial
-            res = self.app.get('/app/test-app/newtask', follow_redirects=True)
-            assert "some help" not in res.data
+        self.create()
+        app1 = db.session.query(App).get(1)
+        app1.info = dict(tutorial="some help")
+        db.session.commit()
+        # First time accessing the app should redirect me to the tutorial
+        res = self.app.get('/app/test-app/newtask', follow_redirects=True)
+        err_msg = "There should be some tutorial for the project"
+        assert "some help" in res.data, err_msg
+        # Second time should give me a task, and not the tutorial
+        res = self.app.get('/app/test-app/newtask', follow_redirects=True)
+        assert "some help" not in res.data
 
-            # Check if the tutorial can be accessed directly
-            res = self.app.get('/app/test-app/tutorial', follow_redirects=True)
-            err_msg = "There should be some tutorial for the project"
-            assert "some help" in res.data, err_msg
+        # Check if the tutorial can be accessed directly
+        res = self.app.get('/app/test-app/tutorial', follow_redirects=True)
+        err_msg = "There should be some tutorial for the project"
+        assert "some help" in res.data, err_msg
 
-            # Hidden app
-            app1.hidden = 1
-            db.session.add(app1)
-            db.session.commit()
-            res = self.app.get('/app/test-app/tutorial', follow_redirects=True)
-            assert res.status_code == 401, res.status_code
+        # Hidden app
+        app1.hidden = 1
+        db.session.add(app1)
+        db.session.commit()
+        res = self.app.get('/app/test-app/tutorial', follow_redirects=True)
+        assert res.status_code == 401, res.status_code
 
     @with_context
     def test_28_non_tutorial_signed_user(self):
         """Test WEB project without tutorial work as signed in user"""
-        with self.flask_app.app_context():
-            self.create()
-            db.session.commit()
-            self.register()
-            # First time accessing the app should redirect me to the tutorial
-            res = self.app.get('/app/test-app/newtask', follow_redirects=True)
-            err_msg = "There should not be a tutorial for the project"
-            assert "some help" not in res.data, err_msg
-            # Second time should give me a task, and not the tutorial
-            res = self.app.get('/app/test-app/newtask', follow_redirects=True)
-            assert "some help" not in res.data
+        self.create()
+        db.session.commit()
+        self.register()
+        # First time accessing the app should redirect me to the tutorial
+        res = self.app.get('/app/test-app/newtask', follow_redirects=True)
+        err_msg = "There should not be a tutorial for the project"
+        assert "some help" not in res.data, err_msg
+        # Second time should give me a task, and not the tutorial
+        res = self.app.get('/app/test-app/newtask', follow_redirects=True)
+        assert "some help" not in res.data
 
     @with_context
     def test_29_tutorial_anonymous_user(self):
         """Test WEB project without tutorials work as an anonymous user"""
-        with self.flask_app.app_context():
-            self.create()
-            db.session.commit()
-            self.register()
-            # First time accessing the app should redirect me to the tutorial
-            res = self.app.get('/app/test-app/newtask', follow_redirects=True)
-            err_msg = "There should not be a tutorial for the project"
-            assert "some help" not in res.data, err_msg
-            # Second time should give me a task, and not the tutorial
-            res = self.app.get('/app/test-app/newtask', follow_redirects=True)
-            assert "some help" not in res.data
+        self.create()
+        db.session.commit()
+        self.register()
+        # First time accessing the app should redirect me to the tutorial
+        res = self.app.get('/app/test-app/newtask', follow_redirects=True)
+        err_msg = "There should not be a tutorial for the project"
+        assert "some help" not in res.data, err_msg
+        # Second time should give me a task, and not the tutorial
+        res = self.app.get('/app/test-app/newtask', follow_redirects=True)
+        assert "some help" not in res.data
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
@@ -1371,11 +1344,10 @@ class TestWeb(web.Helper):
         assert msg in res.data, err_msg
 
         self.signout()
-        with self.flask_app.app_context():
-            self.create()
-            self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
-            res = self.app.get('/app/sampleapp/settings', follow_redirects=True)
-            assert res.status_code == 403, res.status_code
+        self.create()
+        self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
+        res = self.app.get('/app/sampleapp/settings', follow_redirects=True)
+        assert res.status_code == 403, res.status_code
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
@@ -1421,9 +1393,9 @@ class TestWeb(web.Helper):
     def test_32_oauth_password(self):
         """Test WEB user sign in without password works"""
         user = User(email_addr="johndoe@johndoe.com",
-                          name=self.user.username,
+                          name="John Doe",
                           passwd_hash=None,
-                          fullname=self.user.fullname,
+                          fullname="johndoe",
                           api_key="api-key")
         db.session.add(user)
         db.session.commit()
@@ -1893,10 +1865,12 @@ class TestWeb(web.Helper):
         assert 403 == res.status_code
 
     @with_context
-    def test_45_password_reset_link(self):
+    @patch('pybossa.view.account.mail_queue', autospec=True)
+    @patch('pybossa.view.account.signer')
+    def test_45_password_reset_link(self, signer, queue):
         """Test WEB password reset email form"""
         res = self.app.post('/account/forgot-password',
-                            data={'email_addr': self.user.email_addr},
+                            data={'email_addr': "johndoe@example.com"},
                             follow_redirects=True)
         assert ("We don't have this email in our records. You may have"
                 " signed up with a different email or used Twitter, "
@@ -1906,6 +1880,7 @@ class TestWeb(web.Helper):
         self.register(name='janedoe')
         self.register(name='google')
         self.register(name='facebook')
+        user = User.query.get(1)
         jane = User.query.get(2)
         jane.twitter_user_id = 10
         google = User.query.get(3)
@@ -1914,24 +1889,39 @@ class TestWeb(web.Helper):
         facebook.facebook_user_id = 104
         db.session.add_all([jane, google, facebook])
         db.session.commit()
-        with mail.record_messages() as outbox:
-            self.app.post('/account/forgot-password',
-                          data={'email_addr': self.user.email_addr},
-                          follow_redirects=True)
-            self.app.post('/account/forgot-password',
-                          data={'email_addr': 'janedoe@example.com'},
-                          follow_redirects=True)
-            self.app.post('/account/forgot-password',
-                          data={'email_addr': 'google@example.com'},
-                          follow_redirects=True)
-            self.app.post('/account/forgot-password',
-                          data={'email_addr': 'facebook@example.com'},
-                          follow_redirects=True)
 
-            assert 'Click here to recover your account' in outbox[0].body
-            assert 'your Twitter account to ' in outbox[1].body
-            assert 'your Google account to ' in outbox[2].body
-            assert 'your Facebook account to ' in outbox[3].body
+        data = {'password': user.passwd_hash, 'user': user.name}
+        self.app.post('/account/forgot-password',
+                      data={'email_addr': user.email_addr},
+                      follow_redirects=True)
+        signer.dumps.assert_called_with(data, salt='password-reset')
+        enqueue_call = queue.enqueue.call_args_list[0]
+        assert send_mail == enqueue_call[0][0], "send_mail not called"
+        assert 'Click here to recover your account' in enqueue_call[0][1]['body']
+
+        data = {'password': jane.passwd_hash, 'user': jane.name}
+        self.app.post('/account/forgot-password',
+                      data={'email_addr': 'janedoe@example.com'},
+                      follow_redirects=True)
+        enqueue_call = queue.enqueue.call_args_list[1]
+        assert send_mail == enqueue_call[0][0], "send_mail not called"
+        assert 'your Twitter account to ' in enqueue_call[0][1]['body']
+
+        data = {'password': google.passwd_hash, 'user': google.name}
+        self.app.post('/account/forgot-password',
+                      data={'email_addr': 'google@example.com'},
+                      follow_redirects=True)
+        enqueue_call = queue.enqueue.call_args_list[2]
+        assert send_mail == enqueue_call[0][0], "send_mail not called"
+        assert 'your Google account to ' in enqueue_call[0][1]['body']
+
+        data = {'password': facebook.passwd_hash, 'user': facebook.name}
+        self.app.post('/account/forgot-password',
+                      data={'email_addr': 'facebook@example.com'},
+                      follow_redirects=True)
+        enqueue_call = queue.enqueue.call_args_list[3]
+        assert send_mail == enqueue_call[0][0], "send_mail not called"
+        assert 'your Facebook account to ' in enqueue_call[0][1]['body']
 
         # Test with not valid form
         res = self.app.post('/account/forgot-password',
@@ -1965,8 +1955,7 @@ class TestWeb(web.Helper):
         res = self.app.get('/app/sampleapp/tasks/', follow_redirects=True)
         assert res.status_code == 401, res.status_code
 
-        with self.flask_app.app_context():
-            self.create()
+        self.create()
 
         # As another user, but not owner
         self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
@@ -2045,8 +2034,7 @@ class TestWeb(web.Helper):
         assert "Some HTML code" in res.data, res.data
 
         self.signout()
-        with self.flask_app.app_context():
-            self.create()
+        self.create()
         self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
         res = self.app.get('/app/sampleapp/tasks/taskpresentereditor?template=basic',
                            follow_redirects=True)

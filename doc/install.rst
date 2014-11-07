@@ -277,26 +277,34 @@ Then start the server, and nothing will be cached.
 Running asynchronous tasks in the background
 --------------------------------------------
 PyBossa uses the Python libraries RQ_ and RQScheduler_ to allow slow or
-computational-heavy tasks like the refreshment of the cache, to be run in the
-background in an asynchronous way.
+computationally-heavy tasks to be run in the background in an asynchronous way.
 
-.. note::
-   If you think you won't need this feature, just skip the rest of the section.
+Some of the tasks are run in a periodic, scheduled, basis, like the refreshment
+of the cache and notifications sent to users, while others, like the sending of
+mails are created in real time, responding to events that may happen inside the
+PyBossa server, like sending an email with a recovery password.
 
-To do so, you will need two additional Python processes to run in the background:
-the **worker** and the **scheduler**. The scheduler will create this tasks in a
-periodic basis so that the worker then executes them when needed.
+To allow all this, you will need two additional Python processes to run in the
+background: the **worker** and the **scheduler**. The scheduler will create the
+periodic tasks while other tasks will be created dinamycally. The worker will
+execute every of them.
 
-To run the scheduler, just run the following command in a console:
+To run the scheduler, just run the following command in a console::
 
     rqscheduler --host IP-of-your-redis-master-node
 
-Similarly, to get the tasks done by the worker, run:
+Similarly, to get the tasks done by the worker, run::
 
-    python app_context_rqworker.py scheduled_jobs
+    python app_context_rqworker.py scheduled_jobs mail
 
 It is also recommended the use of supervisor_ for running these processes in an
 easier way and with a single command.
+
+.. note::
+    While the execution of the scheduler is optional (you will not have the
+    improvements in performance given by them, but you may also not need them),
+    the execution of the worker is mandatory for the normal functioning of the
+    PyBossa server, so make sure you run the command for it.
 
 .. _RQ: http://python-rq.org/
 .. _RQScheduler: https://github.com/ui/rq-scheduler

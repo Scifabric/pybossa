@@ -37,7 +37,8 @@ requirements = [
     "flask-debugtoolbar>=0.9.0, <1.0",
     "factory_boy>=2.4.1, <2.5",
     "rq>=0.4.6, <0.5",
-    "rq-scheduler>=0.5.0, <0.6.0"
+    "rq-scheduler",
+    "rq-dashboard"
 ]
 
 setup(
@@ -50,7 +51,9 @@ setup(
     # and need to be added redundant to requirements.txt in this case!
     # Example:
     # dependency_links = ['git+https://github.com/Hypernode/M2Crypto#egg=M2Crypto-0.22.dev'],
-    dependency_links = ['git+https://github.com/maxcountryman/flask-login.git@13af160b3fd14dfb5f35f9cdc3863771efe194eb#egg=Flask-Login'],
+    dependency_links = ['git+https://github.com/maxcountryman/flask-login.git@13af160b3fd14dfb5f35f9cdc3863771efe194eb#egg=Flask-Login',
+                        'git+https://github.com/PyBossa/rq-scheduler.git@2406f77fa08d465dd5b18801736538686dd24590#egg=rq-scheduler',
+                        'git+https://github.com/PyBossa/rq-dashboard.git#egg=rq-dashboard'],
 
     # metadata for upload to PyPI
     author = 'SF Isle of Man Limited',
