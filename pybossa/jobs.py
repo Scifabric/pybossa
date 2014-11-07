@@ -39,17 +39,7 @@ def get_scheduled_jobs(): # pragma: no cover
     return jobs + tmp
 
 
-def create_dict_jobs(data, function,
-                     interval=(24 * HOUR), timeout=(10 * MINUTE)):
-    jobs = []
-    for d in data:
-        jobs.append(dict(name=function,
-                         args=[d[0], d[1]], kwargs={},
-                         interval=interval,
-                         timeout=timeout))
-    return jobs
-
-
+# TODO: move this function to cached_users and test it
 def get_project_jobs():
     """Return a list of jobs based on user type."""
     from sqlalchemy.sql import text
@@ -61,6 +51,17 @@ def get_project_jobs():
                             get_app_stats,
                             interval=(10 * MINUTE),
                             timeout=(10 * MINUTE))
+
+
+def create_dict_jobs(data, function,
+                     interval=(24 * HOUR), timeout=(10 * MINUTE)):
+    jobs = []
+    for d in data:
+        jobs.append(dict(name=function,
+                         args=[d[0], d[1]], kwargs={},
+                         interval=interval,
+                         timeout=timeout))
+    return jobs
 
 
 @with_cache_disabled
@@ -99,11 +100,6 @@ def warm_up_stats(): # pragma: no cover
     get_locs()
 
     return True
-
-
-def send_mail(message_dict):
-    message = Message(**message_dict)
-    mail.send(message)
 
 
 @with_cache_disabled
@@ -160,6 +156,7 @@ def warm_cache(): # pragma: no cover
     return True
 
 
+# TODO: move this function to cached_apps and test it
 def get_non_updated_apps():
     """Return a list of non updated apps."""
     from sqlalchemy.sql import text
@@ -212,3 +209,8 @@ def warn_old_project_owners():
             db.session.add(a)
             db.session.commit()
     return True
+
+
+def send_mail(message_dict):
+    message = Message(**message_dict)
+    mail.send(message)
