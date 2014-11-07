@@ -341,6 +341,8 @@ def get_user_id_or_ip():
 
 
 def with_cache_disabled(f):
+    """Decorator that disables the cache for the execution of a function,
+    enabling it back when the function call is done."""
     import os
     @wraps(f)
     def wrapper(*args, **kwargs):
