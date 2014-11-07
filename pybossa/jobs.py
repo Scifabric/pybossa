@@ -16,29 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """Jobs module for running background tasks in PyBossa server."""
-from functools import wraps
-
-from pybossa.core import mail
 from flask.ext.mail import Message
+from pybossa.core import mail
+from pybossa.util import with_cache_disabled
 
 MINUTE = 60
 HOUR = 60 * 60
-
-def with_cache_disabled(f):
-    import os
-    @wraps(f)
-    def wrapper(*args, **kwargs):
-        env_cache_disabled = os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED')
-        if not env_cache_disabled:
-            os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
-        return_value = f(*args, **kwargs)
-        if env_cache_disabled is None:
-            del os.environ['PYBOSSA_REDIS_CACHE_DISABLED']
-        else:
-            os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = env_cache_disabled
-        return return_value
-    return wrapper
-
 
 def get_scheduled_jobs(): # pragma: no cover
     """Return a list of scheduled jobs."""
