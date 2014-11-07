@@ -45,7 +45,7 @@ def create_dict_jobs(data, function,
     for d in data:
         jobs.append(dict(name=function,
                          args=[d[0], d[1]], kwargs={},
-                         interval=(10 * MINUTE),
+                         interval=interval,
                          timeout=timeout))
     return jobs
 
