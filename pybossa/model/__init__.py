@@ -211,4 +211,7 @@ def update_app_timestamp(mapper, conn, target):
 def webhook(url, payload=None):
     """Post to a webhook."""
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-    requests.post(url, data=json.dumps(payload), headers=headers)
+    if url:
+        return requests.post(url, data=json.dumps(payload), headers=headers)
+    else:
+        return False
