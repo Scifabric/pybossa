@@ -16,7 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.model.app import App
 from pybossa.jobs import warn_old_project_owners, get_non_updated_apps
 from default import Test, with_context
 from factories import AppFactory
@@ -72,7 +71,6 @@ class TestOldProjects(Test):
         assert mail.connect.called, err_msg
         err_msg = "conn.send() should be called"
         assert send_mock.send.called, err_msg
-        app = App.query.get(app_id)
         err_msg = "app.contacted field should be True"
         assert app.contacted, err_msg
         err_msg = "The update date should be different"
@@ -90,7 +88,6 @@ class TestOldProjects(Test):
             assert len(outbox) == 1, outbox
             subject = 'Your PyBossa project: %s has been inactive' % app.name
             assert outbox[0].subject == subject
-            app = App.query.get(app_id)
             err_msg = "app.contacted field should be True"
             assert app.contacted, err_msg
             err_msg = "The update date should be different"
