@@ -1028,27 +1028,10 @@ def export_to(short_name):
             .filter_by(app_id=app.id)\
             .first()
         if t is not None:
-            if test(t):
-                tmp = t.dictize().keys()
-                task_keys = []
-                for k in tmp:
-                    k = "%s__%s" % (ty, k)
-                    task_keys.append(k)
-                if (type(t.info) == dict):
-                    task_info_keys = []
-                    tmp = t.info.keys()
-                    for k in tmp:
-                        k = "%sinfo__%s" % (ty, k)
-                        task_info_keys.append(k)
-                else:
-                    task_info_keys = []
-                keys = task_keys + task_info_keys
-                writer.writerow(sorted(keys))
-
-            res = Response(get_csv(out, writer, table, handle_row),
-                           mimetype='text/csv')
             name = app.short_name.encode('utf-8', 'ignore').decode('latin-1')
-            tmp = 'attachment; filename=%s_%s.csv' % (name, ty)
+            filename='%d_%s_%s_csv.zip' % (id, name, ty)
+            tmp = 'attachment; filename=%s' % filename
+            res = Response(send_from_directory(os.path.join(uploader.upload_folder, 'export'), filename), mimetype='application/octet-stream')
             res.headers['Content-Disposition'] = tmp
             return res
         else:
