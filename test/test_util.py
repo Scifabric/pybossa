@@ -16,10 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import pybossa.util as util
-from default import Test
 from mock import patch
 from datetime import datetime, timedelta
-import dateutil.parser
 import calendar
 import time
 import csv
@@ -28,10 +26,7 @@ import os
 
 
 class TestPybossaUtil(object):
-    def setUp(self):
-        super(TestPybossaUtil, self).setUp()
-        with self.flask_app.app_context():
-            self.create()
+
 
 # TODO: test these 2 decorators in a more unitary way. The following tests have
 # been moved to test_api_common.py
