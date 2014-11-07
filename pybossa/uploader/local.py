@@ -39,6 +39,19 @@ class LocalUploader(Uploader):
         super(self.__class__, self).init_app(app)
         if app.config.get('UPLOAD_FOLDER'):
             self.upload_folder = app.config['UPLOAD_FOLDER']
+        # If we have a relative path convert it to absolute path
+        if not os.path.isabs(self.upload_folder):
+            abs_path_app_context = os.path.join(app.root_path, self.upload_folder)
+            abs_upload_path_pybossa = os.path.join(os.path.dirname(app.root_path), self.upload_folder)  # ../uploads
+            # If we have an existing relative path to the app context use this.
+            # In PyBossa there is normally no pybossa/uploads folder.
+            if os.path.isdir(abs_path_app_context):
+                self.upload_folder = abs_path_app_context
+            # otherwise use the PyBossa ../uploads path (standard)
+            elif os.path.isdir(abs_upload_path_pybossa):
+                self.upload_folder = abs_upload_path_pybossa
+            else:
+                raise IOError('Local Upload folder is missing: "%s"' % self.upload_folder)
 
     def _upload_file(self, file, container):
         """Upload a file into a container/folder."""
