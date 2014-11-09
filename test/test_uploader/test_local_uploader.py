@@ -33,7 +33,7 @@ class TestLocalUploader(Test):
     def test_local_uploader_standard_directory_existing(self):
         """Test if local uploads directory existing"""
         uploads_path = os.path.join(os.path.dirname(self.flask_app.root_path), 'uploads')   # ../uploads
-        err_msg = "Uploads folder is not existing"
+        err_msg = "./uploads folder is not existing"
         assert os.path.isdir(uploads_path) is True, err_msg
 
     @with_context
