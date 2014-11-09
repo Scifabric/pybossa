@@ -30,6 +30,13 @@ class TestLocalUploader(Test):
     """Test PyBossa Uploader module."""
 
     @with_context
+    def test_local_uploader_standard_directory_existing(self):
+        """Test if local uploads directory existing"""
+        uploads_path = os.path.join(os.path.dirname(self.flask_app.root_path), 'uploads')
+        err_msg = "Uploads folder is not existing"
+        assert os.path.isdir(uploads_path) is True, err_msg
+
+    @with_context
     def test_local_uploader_init(self):
         """Test LOCAL UPLOADER init works."""
         u = LocalUploader()
