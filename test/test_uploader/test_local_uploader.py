@@ -47,7 +47,7 @@ class TestLocalUploader(Test):
     def test_wrong_local_uploader_relative_directory_init(self):
         """Test LOCAL UPLOADER init with wrong relative path."""
         new_upload_folder = 'iamnotexisting'
-        err_msg = "Upload folder uploads should be existing"
+        err_msg = "Uploadfolder ./iamnotexisting should not exist"
         assert os.path.isdir(new_upload_folder) is False, err_msg
         new_config_uf = {'UPLOAD_FOLDER': new_upload_folder}
         with patch.dict(self.flask_app.config, new_config_uf):
