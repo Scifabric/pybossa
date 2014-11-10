@@ -124,6 +124,16 @@
                      lc_ctype='en_US.UTF-8'
                      template='template0'
 
+    - name: install Supervisor
+      apt: name=supervisor
+
+    - name: start Supervisor service
+      service: name=supervisor state=started
+
+  handlers:
+    - name: restart Supervisor
+      service: name=supervisor state=restarted
+
 # change .bashrc only in Vagrant development version
 - hosts: vagrant_dev
   sudo: yes
