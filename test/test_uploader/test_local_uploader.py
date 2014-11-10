@@ -60,7 +60,7 @@ class TestLocalUploader(Test):
         uploads_path = os.path.join(os.path.dirname(self.flask_app.root_path), 'uploads')   # ../uploads
         err_msg = "./uploads folder is not existing"
         assert os.path.isdir(uploads_path) is True, err_msg
-        context_uploads_path = os.path.join(self.flask_app.root_path, 'uploads')              # pybossa/uploads
+        context_uploads_path = os.path.join(self.flask_app.root_path, 'uploads')            # pybossa/uploads
         err_msg = "pybossa/uploads should not exist"
         assert os.path.isdir(context_uploads_path) is False, err_msg
         wrong_upload_folder = 'iamnotexisting'
