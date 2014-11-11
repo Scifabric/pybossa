@@ -925,7 +925,7 @@ def export_to(short_name):
             handle_row(writer, tr)
         yield out.getvalue()
 
-    def respond_json(ty, id):
+    def respond_json(ty, owner_id):
         tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}
         try:
             table = tables[ty]
@@ -933,9 +933,10 @@ def export_to(short_name):
             return abort(404)
 
         name = app.short_name.encode('utf-8', 'ignore').decode('latin-1')
-        filename='%d_%s_%s_json.zip' % (id, name, ty)
+        container = "user_%d" % owner_id
+        filename='%s_%s_json.zip' % (name, ty)
         tmp = 'attachment; filename=%s' % filename
-        res = Response(send_from_directory(os.path.join(uploader.upload_folder, 'export'), filename), mimetype='application/octet-stream')
+        res = Response(send_from_directory(os.path.join(uploader.upload_folder, container), filename), mimetype='application/octet-stream')
         res.headers['Content-Disposition'] = tmp
         return res
 
@@ -949,7 +950,7 @@ def export_to(short_name):
                               records=gen_json(tables[table]),
                               resource_id=new_resource['result']['id'])
 
-    def respond_ckan(ty, id):
+    def respond_ckan(ty, owner_id):
         # First check if there is a package (dataset) in CKAN
         tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}
         msg_1 = gettext("Data exported to ")
@@ -1002,7 +1003,7 @@ def export_to(short_name):
         finally:
             return respond()
 
-    def respond_csv(ty, id):
+    def respond_csv(ty, owner_id):
         # Export Task(/Runs) to CSV
         types = {
             "task": (
@@ -1029,9 +1030,10 @@ def export_to(short_name):
             .first()
         if t is not None:
             name = app.short_name.encode('utf-8', 'ignore').decode('latin-1')
-            filename='%d_%s_%s_csv.zip' % (id, name, ty)
+            container = "user_%d" % owner_id
+            filename='%s_%s_csv.zip' % (name, ty)
             tmp = 'attachment; filename=%s' % filename
-            res = Response(send_from_directory(os.path.join(uploader.upload_folder, 'export'), filename), mimetype='application/octet-stream')
+            res = Response(send_from_directory(os.path.join(uploader.upload_folder, container), filename), mimetype='application/octet-stream')
             res.headers['Content-Disposition'] = tmp
             return res
         else:
@@ -1062,7 +1064,7 @@ def export_to(short_name):
                                overall_progress=overall_progress)
     if fmt not in export_formats:
         abort(415)
-    return {"json": respond_json, "csv": respond_csv, 'ckan': respond_ckan}[fmt](ty, app.id)
+    return {"json": respond_json, "csv": respond_csv, 'ckan': respond_ckan}[fmt](ty, app.owner_id)
 
 
 @blueprint.route('/<short_name>/stats')

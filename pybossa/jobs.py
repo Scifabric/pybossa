@@ -180,8 +180,9 @@ def export_tasks():
                     zip = zip_factory(zipped_datafile.name)
                     zip.write(datafile.name, '%s_task.json' % name)
                     zip.close()
-                    file = FileStorage(filename='%d_%s_task_json.zip' % (app.id, name), stream=zipped_datafile)
-                    uploader.upload_file(file, container='export') # TODO: right container folder?!
+                    container = "user_%d" % app.owner_id
+                    file = FileStorage(filename='%s_task_json.zip' % name, stream=zipped_datafile)
+                    uploader.upload_file(file, container=container)
                 finally:
                     zipped_datafile.close()
             finally:
@@ -198,8 +199,9 @@ def export_tasks():
                     zip = zip_factory(zipped_datafile.name)
                     zip.write(datafile.name, '%s_task_run.json' % name)
                     zip.close()
-                    file = FileStorage(filename='%d_%s_task_run_json.zip' % (app.id, name), stream=zipped_datafile)
-                    uploader.upload_file(file, container='export') # TODO: right container folder?!
+                    container = "user_%d" % app.owner_id
+                    file = FileStorage(filename='%s_task_run_json.zip' % name, stream=zipped_datafile)
+                    uploader.upload_file(file, container=container)
                 finally:
                     zipped_datafile.close()
             finally:
@@ -221,8 +223,9 @@ def export_tasks():
                     zip = zip_factory(zipped_datafile.name)
                     zip.write(datafile.name, '%s_task.csv' % name)
                     zip.close()
-                    file = FileStorage(filename='%d_%s_task_csv.zip' % (app.id, name), stream=zipped_datafile)
-                    uploader.upload_file(file, container='export') # TODO: right container folder?!
+                    container = "user_%d" % app.owner_id
+                    file = FileStorage(filename='%s_task_csv.zip' % name, stream=zipped_datafile)
+                    uploader.upload_file(file, container=container)
                 finally:
                     zipped_datafile.close()
             finally:
@@ -239,8 +242,9 @@ def export_tasks():
                     zip = zip_factory(zipped_datafile.name)
                     zip.write(datafile.name, '%s_task_run.csv' % name)
                     zip.close()
-                    file = FileStorage(filename='%d_%s_task_run_csv.zip' % (app.id, name), stream=zipped_datafile)
-                    uploader.upload_file(file, container='export') # TODO: right container folder?!
+                    container = "user_%d" % app.owner_id
+                    file = FileStorage(filename='%s_task_run_csv.zip' % name, stream=zipped_datafile)
+                    uploader.upload_file(file, container=container)
                 finally:
                     zipped_datafile.close()
             finally:
