@@ -50,6 +50,8 @@ class App(db.Model, DomainObject):
     description = Column(Unicode(length=255), nullable=False)
     #: Project long description
     long_description = Column(UnicodeText)
+    #: Project webhook
+    webhook = Column(Text)
     #: If the project allows anonymous contributions
     allow_anonymous_contributors = Column(Boolean, default=True)
     long_tasks = Column(Integer, default=0)

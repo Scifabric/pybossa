@@ -180,6 +180,7 @@ class Helper(Test):
                            new_long_description="Long desc",
                            new_sched="random",
                            new_hidden=False,
+                           new_webhook='http://server.com',
                            new_password=''):
         """Helper function to update a project"""
         if method == "POST":
@@ -195,6 +196,7 @@ class Helper(Test):
                                          'long_description': new_long_description,
                                          'sched': new_sched,
                                          'hidden': new_hidden,
+                                         'webhook': new_webhook,
                                          'password': new_password,
                                          'btn': 'Save'},
                                      follow_redirects=True)
@@ -208,6 +210,7 @@ class Helper(Test):
                                            'sched': new_sched,
                                            'description': new_description,
                                            'password': new_password,
+                                           'webhook': new_webhook,
                                            'btn': 'Save'
                                            },
                                      follow_redirects=True)

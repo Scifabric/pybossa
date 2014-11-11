@@ -38,6 +38,7 @@ class AppFactory(BaseFactory):
     long_tasks = 0
     hidden = 0
     featured = False
+    webhook = None
     owner = factory.SubFactory('factories.UserFactory')
     owner_id = factory.LazyAttribute(lambda app: app.owner.id)
     category = factory.SubFactory('factories.CategoryFactory')

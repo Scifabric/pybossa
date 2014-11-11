@@ -36,5 +36,6 @@ class UserFactory(BaseFactory):
     email_addr = factory.LazyAttribute(lambda usr: u'%s@test.com' % usr.name)
     locale = u'en'
     admin = False
+    pro = False
     privacy_mode = True
     api_key =  factory.Sequence(lambda n: u'api-key%d' % n)

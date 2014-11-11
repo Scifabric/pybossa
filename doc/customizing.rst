@@ -250,7 +250,7 @@ Mail Setup
 ==========
 
 PyBossa needs a mail server in order to validate new accounts, send e-mails
-with for recovering passwords, so it is very important you configure a server.
+for recovering passwords, etc. , so it is very important you configure a server.
 Please, check the section `Mail setup`_ in the config file for configuring it.
 
 .. _`Mail setup`: https://github.com/PyBossa/pybossa/blob/master/settings_local.py.tmpl#L80

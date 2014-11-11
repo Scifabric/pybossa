@@ -180,9 +180,12 @@ class TestWeb(web.Helper):
         render.assert_any_call('/account/email/validate_account.md',
                                 user=data,
                                 confirm_url='http://localhost/account/register/confirmation?key=')
-        from pybossa.view.account import Message
         assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
-        assert type(queue.enqueue.call_args[0][1]) == Message, "mail not sent"
+        mail_data = queue.enqueue.call_args[0][1]
+        assert 'subject' in mail_data.keys()
+        assert 'recipients' in mail_data.keys()
+        assert 'body' in mail_data.keys()
+        assert 'html' in mail_data.keys()
 
 
     @with_context
@@ -771,6 +774,23 @@ class TestWeb(web.Helper):
         res = self.app.get('/app/newshortname/')
         err_msg = "Root user should be able to see his hidden app"
         assert app.name in res.data, err_msg
+
+
+    @with_context
+    def test_webhook_to_project(self):
+        """Test WEB update sets a webhook for the project"""
+        self.register()
+        owner = db.session.query(User).first()
+        app = AppFactory.create(owner=owner)
+
+        new_webhook = 'http://mynewserver.com/'
+
+        self.update_application(id=app.id, short_name=app.short_name,
+                                new_webhook=new_webhook)
+
+        err_msg = "There should be an updated webhook url."
+        assert app.webhook == new_webhook, err_msg
+
 
 
     @with_context
@@ -1889,7 +1909,7 @@ class TestWeb(web.Helper):
         signer.dumps.assert_called_with(data, salt='password-reset')
         enqueue_call = queue.enqueue.call_args_list[0]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
-        assert 'Click here to recover your account' in enqueue_call[0][1].body
+        assert 'Click here to recover your account' in enqueue_call[0][1]['body']
 
         data = {'password': jane.passwd_hash, 'user': jane.name}
         self.app.post('/account/forgot-password',
@@ -1897,7 +1917,7 @@ class TestWeb(web.Helper):
                       follow_redirects=True)
         enqueue_call = queue.enqueue.call_args_list[1]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
-        assert 'your Twitter account to ' in enqueue_call[0][1].body
+        assert 'your Twitter account to ' in enqueue_call[0][1]['body']
 
         data = {'password': google.passwd_hash, 'user': google.name}
         self.app.post('/account/forgot-password',
@@ -1905,7 +1925,7 @@ class TestWeb(web.Helper):
                       follow_redirects=True)
         enqueue_call = queue.enqueue.call_args_list[2]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
-        assert 'your Google account to ' in enqueue_call[0][1].body
+        assert 'your Google account to ' in enqueue_call[0][1]['body']
 
         data = {'password': facebook.passwd_hash, 'user': facebook.name}
         self.app.post('/account/forgot-password',
@@ -1913,7 +1933,7 @@ class TestWeb(web.Helper):
                       follow_redirects=True)
         enqueue_call = queue.enqueue.call_args_list[3]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
-        assert 'your Facebook account to ' in enqueue_call[0][1].body
+        assert 'your Facebook account to ' in enqueue_call[0][1]['body']
 
         # Test with not valid form
         res = self.app.post('/account/forgot-password',

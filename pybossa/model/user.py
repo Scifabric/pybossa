@@ -49,6 +49,7 @@ class User(db.Model, DomainObject, UserMixin):
     api_key = Column(String(length=36), default=make_uuid, unique=True)
     passwd_hash = Column(Unicode(length=254), unique=True)
     admin = Column(Boolean, default=False)
+    pro = Column(Boolean, default=False)
     privacy_mode = Column(Boolean, default=True, nullable=False)
     category = Column(Integer)
     flags = Column(Integer)
