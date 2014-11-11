@@ -356,6 +356,19 @@ def get(category, page=1, per_page=5):
     return apps
 
 
+# TODO: find a convenient cache timeout and cache, if needed
+def get_from_pro_user():
+    """Return the list of projects belonging to 'pro' users"""
+    sql = text('''SELECT app.id, app.short_name FROM app, "user"
+               WHERE app.owner_id="user".id AND "user".pro=True;''')
+    results = db.slave_session.execute(sql)
+    projects = []
+    for row in results:
+        project = dict(id=row.id, short_name=row.short_name)
+        projects.append(project)
+    return projects
+
+
 def reset():
     """Clean the cache"""
     delete_cached("index_front_page")

@@ -16,10 +16,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """Jobs module for running background tasks in PyBossa server."""
-import os
-
-from pybossa.core import mail
 from flask.ext.mail import Message
+from pybossa.core import mail
+from pybossa.util import with_cache_disabled
 
 def export_tasks():
     '''Export tasks to zip'''
@@ -286,38 +285,33 @@ def get_scheduled_jobs(): # pragma: no cover
     return jobs + tmp
 
 
-def create_dict_jobs(data, function,
-                     interval=(24 * HOUR), timeout=(10 * MINUTE)):
-    jobs = []
-    for d in data:
-        jobs.append(dict(name=function,
-                         args=[d[0], d[1]], kwargs={},
-                         interval=(10 * MINUTE),
-                         timeout=timeout))
-    return jobs
-
-
 def get_project_jobs():
     """Return a list of jobs based on user type."""
-    from sqlalchemy.sql import text
-    from pybossa.core import db
-    sql = text('''SELECT app.id, app.short_name FROM app, "user"
-               WHERE app.owner_id="user".id AND "user".pro=True;''')
-    results = db.slave_session.execute(sql)
-    return create_dict_jobs(results,
+    from pybossa.cache import apps as cached_apps
+    return create_dict_jobs(cached_apps.get_from_pro_user(),
                             get_app_stats,
                             interval=(10 * MINUTE),
                             timeout=(10 * MINUTE))
 
 
+def create_dict_jobs(data, function,
+                     interval=(24 * HOUR), timeout=(10 * MINUTE)):
+    jobs = []
+    for d in data:
+        jobs.append(dict(name=function,
+                         args=[d['id'], d['short_name']], kwargs={},
+                         interval=interval,
+                         timeout=timeout))
+    return jobs
+
+
+@with_cache_disabled
 def get_app_stats(id, short_name): # pragma: no cover
     """Get stats for app."""
     import pybossa.cache.apps as cached_apps
     import pybossa.cache.project_stats as stats
     from flask import current_app
-    env_cache_disabled = os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED')
-    if not env_cache_disabled:
-        os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
+
     cached_apps.get_app(short_name)
     cached_apps.n_tasks(id)
     cached_apps.n_task_runs(id)
@@ -328,6 +322,7 @@ def get_app_stats(id, short_name): # pragma: no cover
     stats.get_stats(id, current_app.config.get('GEO'))
 
 
+@with_cache_disabled
 def warm_up_stats(): # pragma: no cover
     """Background job for warming stats."""
     print "Running on the background warm_up_stats"
@@ -336,11 +331,6 @@ def warm_up_stats(): # pragma: no cover
                                           n_task_runs_site,
                                           get_top5_apps_24_hours,
                                           get_top5_users_24_hours, get_locs)
-
-    env_cache_disabled = os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED')
-    if not env_cache_disabled:
-        os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
-
     n_auth_users()
     n_anon_users()
     n_tasks_site()
@@ -350,27 +340,14 @@ def warm_up_stats(): # pragma: no cover
     get_top5_users_24_hours()
     get_locs()
 
-    if env_cache_disabled is None:
-        del os.environ['PYBOSSA_REDIS_CACHE_DISABLED']
-    else:
-        os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = env_cache_disabled
-
     return True
 
 
-def send_mail(message_dict):
-    message = Message(**message_dict)
-    mail.send(message)
-
-
+@with_cache_disabled
 def warm_cache(): # pragma: no cover
     """Background job to warm cache."""
     from pybossa.core import create_app
     app = create_app(run_as_server=False)
-    # Disable cache, so we can refresh the data in Redis
-    env_cache_disabled = os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED')
-    if not env_cache_disabled:
-        os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
     # Cache 3 pages
     apps_cached = []
     pages = range(1, 4)
@@ -416,11 +393,6 @@ def warm_cache(): # pragma: no cover
     # Users
     cached_users.get_leaderboard(app.config['LEADERBOARD'], 'anonymous')
     cached_users.get_top()
-
-    if env_cache_disabled is None:
-        del os.environ['PYBOSSA_REDIS_CACHE_DISABLED']
-    else:
-        os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = env_cache_disabled
 
     return True
 
@@ -477,3 +449,8 @@ def warn_old_project_owners():
             db.session.add(a)
             db.session.commit()
     return True
+
+
+def send_mail(message_dict):
+    message = Message(**message_dict)
+    mail.send(message)

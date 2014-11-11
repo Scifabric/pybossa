@@ -779,6 +779,23 @@ class TestWeb(web.Helper):
 
 
     @with_context
+    def test_webhook_to_project(self):
+        """Test WEB update sets a webhook for the project"""
+        self.register()
+        owner = db.session.query(User).first()
+        app = AppFactory.create(owner=owner)
+
+        new_webhook = 'http://mynewserver.com/'
+
+        self.update_application(id=app.id, short_name=app.short_name,
+                                new_webhook=new_webhook)
+
+        err_msg = "There should be an updated webhook url."
+        assert app.webhook == new_webhook, err_msg
+
+
+
+    @with_context
     def test_add_password_to_project(self):
         """Test WEB update sets a password for the project"""
         self.register()

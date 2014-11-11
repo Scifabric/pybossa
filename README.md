@@ -1,4 +1,6 @@
-[![Travis CI](https://travis-ci.org/PyBossa/pybossa.png?branch=master)](https://travis-ci.org/#!/PyBossa/pybossa)  [![Coverage Status](https://coveralls.io/repos/PyBossa/pybossa/badge.png)](https://coveralls.io/r/PyBossa/pybossa?branch=master)
+[![Build
+Status](https://travis-ci.org/PyBossa/pybossa.svg?branch=master)](https://travis-ci.org/PyBossa/pybossa) [![Coverage
+Status](https://img.shields.io/coveralls/PyBossa/pybossa.svg)](https://coveralls.io/r/PyBossa/pybossa?branch=master) [![Documentation](https://readthedocs.org/projects/pybossa/badge/?version=latest)](http://docs.pybossa.com)
 
 PyBossa is an open source platform for crowd-sourcing online (volunteer)
 assistance to perform tasks that require human cognition, knowledge or

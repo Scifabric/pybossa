@@ -16,14 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.model.app import App
 from pybossa.jobs import get_project_jobs, create_dict_jobs, get_app_stats
 from default import Test, with_context
 from factories import AppFactory
 from factories import UserFactory
 from redis import Redis
 from rq_scheduler import Scheduler
-from mock import patch, MagicMock
 
 
 class TestProjectsStats(Test):

@@ -362,6 +362,7 @@ def update(short_name):
             description=form.description.data,
             long_description=form.long_description.data,
             hidden=hidden,
+            webhook=form.webhook.data,
             info=app.info,
             owner_id=app.owner_id,
             allow_anonymous_contributors=form.allow_anonymous_contributors.data,
