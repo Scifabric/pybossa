@@ -29,6 +29,7 @@ from pybossa.ratelimit import get_view_rate_limit
 
 from raven.contrib.flask import Sentry
 from pybossa.util import pretty_date
+from rq import Queue
 
 
 def create_app(run_as_server=True):
@@ -67,6 +68,7 @@ def create_app(run_as_server=True):
     setup_csrf_protection(app)
     setup_debug_toolbar(app)
     setup_jinja2_filters(app)
+    setup_queues(app)
     return app
 
 
@@ -399,6 +401,10 @@ def setup_ratelimits(app):
     global ratelimits
     ratelimits['LIMIT'] = app.config['LIMIT']
     ratelimits['PER'] = app.config['PER']
+
+def setup_queues(app):
+    global queues
+    queues['webhook'] = Queue('webhook', connection=sentinel.master)
 
 
 def setup_cache_timeouts(app):
