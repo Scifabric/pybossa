@@ -130,8 +130,13 @@
     - name: start Supervisor service
       service: name=supervisor state=started
 
+    - name: copy Supervisor config
+      template: src=templates/rq-worker.conf.j2 dest=/etc/supervisor/conf.d/rq-worker.conf owner=root group=root
+      notify:
+       - restart supervisor
+
   handlers:
-    - name: restart Supervisor
+    - name: restart supervisor
       service: name=supervisor state=restarted
 
 # change .bashrc only in Vagrant development version
