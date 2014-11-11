@@ -23,11 +23,37 @@ from default import Test, with_context
 from pybossa.uploader.local import LocalUploader
 from mock import patch
 from werkzeug.datastructures import FileStorage
-
+from nose.tools import assert_raises
 
 class TestLocalUploader(Test):
 
     """Test PyBossa Uploader module."""
+
+    @with_context
+    def test_local_uploader_relative_directory_init(self):
+        """Test LOCAL UPLOADER init works with relative path."""
+        new_upload_folder = 'uploads'
+        new_config_uf = {'UPLOAD_FOLDER': new_upload_folder}
+        with patch.dict(self.flask_app.config, new_config_uf):
+            new_uploader = LocalUploader()
+            new_uploader.init_app(self.flask_app)
+            err_msg = "Upload folder should be absolute not relative"
+            assert os.path.isabs(new_uploader.upload_folder) is True, err_msg
+            err_msg = "Upload folder uploads should be existing"
+            assert os.path.isdir(new_uploader.upload_folder) is True, err_msg
+
+    @with_context
+    def test_wrong_local_uploader_relative_directory_init(self):
+        """Test LOCAL UPLOADER init with wrong relative path."""
+        new_upload_folder = 'iamnotexisting'
+        err_msg = "Uploadfolder ./iamnotexisting should not exist"
+        assert os.path.isdir(new_upload_folder) is False, err_msg
+        new_config_uf = {'UPLOAD_FOLDER': new_upload_folder}
+        with patch.dict(self.flask_app.config, new_config_uf):
+            new_uploader = LocalUploader()
+            assert_raises(IOError, new_uploader.init_app, self.flask_app)   # Should raise IOError
+            err_msg = "wrong upload folder ./iamnotexisting should not exist"
+            assert os.path.isdir(new_upload_folder) is False, err_msg
 
     @with_context
     def test_local_uploader_standard_directory_existing(self):
@@ -35,6 +61,9 @@ class TestLocalUploader(Test):
         uploads_path = os.path.join(os.path.dirname(self.flask_app.root_path), 'uploads')   # ../uploads
         err_msg = "./uploads folder is not existing"
         assert os.path.isdir(uploads_path) is True, err_msg
+        context_uploads_path = os.path.join(self.flask_app.root_path, 'uploads')            # pybossa/uploads
+        err_msg = "pybossa/uploads should not exist"
+        assert os.path.isdir(context_uploads_path) is False, err_msg
 
     @with_context
     def test_local_uploader_init(self):
@@ -53,6 +82,8 @@ class TestLocalUploader(Test):
                                                 new_extensions)
                 err_msg = "The new uploader should support two extra extensions"
                 assert expected_extensions == new_uploader.allowed_extensions, err_msg
+                err_msg = "Upload folder /tmp should be existing"
+                assert os.path.isdir(new_uploader.upload_folder) is True, err_msg
                 err_msg = "Upload folder by default is /tmp/"
                 assert new_uploader.upload_folder == '/tmp/', err_msg
 
