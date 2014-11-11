@@ -45,7 +45,7 @@ class TestOldProjects(Test):
         """Test JOB get non updated returns one project."""
         app = AppFactory.create(updated='2010-10-22T11:02:00.000000')
         apps = get_non_updated_apps()
-        err_msg = "There should not be one outdated project."
+        err_msg = "There should be one outdated project."
         assert len(apps) == 1, err_msg
         assert apps[0].name == app.name, err_msg
 

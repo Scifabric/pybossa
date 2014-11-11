@@ -521,7 +521,7 @@ class TestAppsCache(Test):
         assert pro_owned_projects[0]['short_name'] == pro_project.short_name
 
 
-    def test__get_from_pro_users_returns_required_fields(self):
+    def test_get_from_pro_users_returns_required_fields(self):
         """Test CACHE PROJECTS get_from_pro_user returns required fields"""
         pro_user = UserFactory.create(pro=True)
         AppFactory.create(owner=pro_user)

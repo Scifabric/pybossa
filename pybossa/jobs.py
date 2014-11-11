@@ -151,7 +151,6 @@ def warm_cache(): # pragma: no cover
     return True
 
 
-# TODO: move this function to cached_apps and test it
 def get_non_updated_apps():
     """Return a list of non updated apps."""
     from sqlalchemy.sql import text
