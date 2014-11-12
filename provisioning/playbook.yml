@@ -161,3 +161,18 @@
         state=present
         insertafter=EOF
 
+# installation for simulate Vagrant production setups
+- hosts: vagrant_production
+  sudo: yes
+  tasks:
+    - name: start Supervisor service
+      service: name=supervisor state=started
+
+    - name: copy Supervisor config
+      template: src=templates/rq-scheduler.conf.j2 dest=/etc/supervisor/conf.d/rq-scheduler.conf owner=root group=root
+      notify:
+       - restart supervisor
+
+  handlers:
+    - name: restart supervisor
+      service: name=supervisor state=restarted
