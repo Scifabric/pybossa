@@ -41,6 +41,7 @@ def create_app(run_as_server=True):
     setup_ratelimits(app)
     setup_theme(app)
     setup_uploader(app)
+    setup_exporter(app)
     setup_error_email(app)
     setup_logging(app)
     setup_login_manager(app)
@@ -109,6 +110,10 @@ def setup_uploader(app):
         app.url_build_error_handlers.append(uploader.external_url_handler)
         uploader.init_app(app)
 
+def setup_exporter(app):
+    global exporter
+    from pybossa.exporter import Exporter
+    exporter = Exporter(app)
 
 def setup_markdown(app):
     misaka.init_app(app)
