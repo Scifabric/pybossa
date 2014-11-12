@@ -165,6 +165,12 @@
 - hosts: vagrant_production
   sudo: yes
   tasks:
+    - name: install nginx
+      apt: name=nginx state=latest
+
+    - name: start the nginx service
+      service: name=nginx state=started
+
     - name: start Supervisor service
       service: name=supervisor state=started
 
