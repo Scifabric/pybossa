@@ -41,7 +41,7 @@ class Exporter(object):
         """Init method to create a generic uploader."""
         self.app = app
 
-    def gen_json(self, table, id):
+    def _gen_json(self, table, id):
         n = db.slave_session.query(table)\
             .filter_by(app_id=id).count()
         sep = ", "
@@ -54,16 +54,16 @@ class Exporter(object):
             yield item + sep
         yield "]"
 
-    def respond_json(self, ty, id):
+    def _respond_json(self, ty, id):
         tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}
         try:
             table = tables[ty]
         except KeyError:
             print("key error")  # TODO
 
-        return self.gen_json(table, id)
+        return self._gen_json(table, id)
 
-    def format_csv_properly(self, row, ty=None):
+    def _format_csv_properly(self, row, ty=None):
         tmp = row.keys()
         task_keys = []
         for k in tmp:
@@ -96,13 +96,13 @@ class Exporter(object):
 
         return values
 
-    def handle_task(self, writer, t):
-        writer.writerow(self.format_csv_properly(t.dictize(), ty='task'))
+    def _handle_task(self, writer, t):
+        writer.writerow(self._format_csv_properly(t.dictize(), ty='task'))
 
-    def handle_task_run(self, writer, t):
-        writer.writerow(self.format_csv_properly(t.dictize(), ty='taskrun'))
+    def _handle_task_run(self, writer, t):
+        writer.writerow(self._format_csv_properly(t.dictize(), ty='taskrun'))
 
-    def get_csv(self, out, writer, table, handle_row, id):
+    def _get_csv(self, out, writer, table, handle_row, id):
         for tr in db.slave_session.query(table)\
                 .filter_by(app_id=id)\
                 .yield_per(1):
@@ -114,13 +114,13 @@ class Exporter(object):
             # Export Task(/Runs) to CSV
             types = {
                 "task": (
-                    model.task.Task, self.handle_task,
+                    model.task.Task, self._handle_task,
                     (lambda x: True),
                     gettext(
                         "Oops, the project does not have tasks to \
                         export, if you are the owner add some tasks")),
                 "task_run": (
-                    model.task_run.TaskRun, self.handle_task_run,
+                    model.task_run.TaskRun, self._handle_task_run,
                     (lambda x: True),
                     gettext(
                         "Oops, there are no Task Runs yet to export, invite \
@@ -153,13 +153,13 @@ class Exporter(object):
                     keys = task_keys + task_info_keys
                     writer.writerow(sorted(keys))
 
-                return self.get_csv(out, writer, table, handle_row, id)
+                return self._get_csv(out, writer, table, handle_row, id)
             else:
                 pass # TODO
         except: # pragma: no cover
             raise
 
-    def zip_factory(self, filename):
+    def _zip_factory(self, filename):
         try:
             import zlib
             zip_compression= zipfile.ZIP_DEFLATED
@@ -171,7 +171,7 @@ class Exporter(object):
     def export_json(self, app):
         print "%d (json)" % app.id
         name = app.short_name.encode('utf-8', 'ignore').decode('latin-1') # used for latin filename later
-        json_task_generator = self.respond_json("task", app.id)
+        json_task_generator = self._respond_json("task", app.id)
         if json_task_generator is not None:
             datafile = tempfile.NamedTemporaryFile()
             try:
@@ -180,7 +180,7 @@ class Exporter(object):
                 datafile.flush()
                 zipped_datafile = tempfile.NamedTemporaryFile()
                 try:
-                    zip = self.zip_factory(zipped_datafile.name)
+                    zip = self._zip_factory(zipped_datafile.name)
                     zip.write(datafile.name, '%s_task.json' % name)
                     zip.close()
                     container = "user_%d" % app.owner_id
@@ -190,7 +190,7 @@ class Exporter(object):
                     zipped_datafile.close()
             finally:
                 datafile.close()
-        json_task_run_generator = self.respond_json("task_run", app.id)
+        json_task_run_generator = self._respond_json("task_run", app.id)
         if json_task_run_generator is not None:
             datafile = tempfile.NamedTemporaryFile()
             try:
@@ -199,7 +199,7 @@ class Exporter(object):
                 datafile.flush()
                 zipped_datafile = tempfile.NamedTemporaryFile()
                 try:
-                    zip = self.zip_factory(zipped_datafile.name)
+                    zip = self._zip_factory(zipped_datafile.name)
                     zip.write(datafile.name, '%s_task_run.json' % name)
                     zip.close()
                     container = "user_%d" % app.owner_id
@@ -222,7 +222,7 @@ class Exporter(object):
                 datafile.flush()
                 zipped_datafile = tempfile.NamedTemporaryFile()
                 try:
-                    zip = self.zip_factory(zipped_datafile.name)
+                    zip = self._zip_factory(zipped_datafile.name)
                     zip.write(datafile.name, '%s_task.csv' % name)
                     zip.close()
                     container = "user_%d" % app.owner_id
@@ -241,7 +241,7 @@ class Exporter(object):
                 datafile.flush()
                 zipped_datafile = tempfile.NamedTemporaryFile()
                 try:
-                    zip = self.zip_factory(zipped_datafile.name)
+                    zip = self._zip_factory(zipped_datafile.name)
                     zip.write(datafile.name, '%s_task_run.csv' % name)
                     zip.close()
                     container = "user_%d" % app.owner_id
