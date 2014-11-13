@@ -22,7 +22,6 @@ CSV Exporter module for exporting tasks and tasks results out of PyBossa
 
 from pybossa.exporter import Exporter
 import tempfile
-# import zipfile
 from StringIO import StringIO
 from pybossa.core import db, uploader
 from pybossa.model.task import Task

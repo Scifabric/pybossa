@@ -23,8 +23,6 @@ JSON Exporter module for exporting tasks and tasks results out of PyBossa
 from pybossa.exporter import Exporter
 import json
 import tempfile
-# import zipfile
-# from StringIO import StringIO
 from pybossa.core import db, uploader
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun

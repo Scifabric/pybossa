@@ -21,7 +21,6 @@ Exporter module for exporting tasks and tasks results out of PyBossa
 """
 
 import zipfile
-# from pybossa.core import create_app
 
 
 class Exporter(object):
