@@ -27,11 +27,13 @@ class Exporter(object):
 
     """Generic exporter class."""
 
-    def __init__(self):
-        """Init method to create a generic uploader."""
-        pass    # nothing special needed yet
+    def _app_name_encoded(self, app):
+        """app short name for later file system usage"""
+        name = app.short_name.encode('utf-8', 'ignore').decode('latin-1') # used for latin filename later
+        return name
 
     def _zip_factory(self, filename):
+        """create a ZipFile Object with compression and allow big ZIP files (allowZip64)"""
         try:
             import zlib
             zip_compression= zipfile.ZIP_DEFLATED

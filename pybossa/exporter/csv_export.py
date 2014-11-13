@@ -131,7 +131,7 @@ class CsvExporter(Exporter):
 
     def pregenerate_zip(self, app):
         print "%d (csv)" % app.id
-        name = app.short_name.encode('utf-8', 'ignore').decode('latin-1') # used for latin filename later
+        name = self._app_name_encoded(app)
         csv_task_generator = self._respond_csv("task", app.id)
         if csv_task_generator is not None:
             datafile = tempfile.NamedTemporaryFile()
