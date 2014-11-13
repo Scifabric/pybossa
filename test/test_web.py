@@ -799,6 +799,45 @@ class TestWeb(web.Helper):
         assert app.webhook == new_webhook, err_msg
 
 
+    @with_context
+    @patch('pybossa.forms.validator.requests.get')
+    def test_webhook_to_project_fails(self, mock):
+        """Test WEB update does not set a webhook for the project"""
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 404,
+                                   {'content-type': 'application/json'})
+        mock.return_value = html_request
+
+        self.register()
+        owner = db.session.query(User).first()
+        app = AppFactory.create(owner=owner)
+
+        new_webhook = 'http://mynewserver.com/'
+
+        self.update_application(id=app.id, short_name=app.short_name,
+                                new_webhook=new_webhook)
+
+        err_msg = "There should not be an updated webhook url."
+        assert app.webhook != new_webhook, err_msg
+
+    @with_context
+    @patch('pybossa.forms.validator.requests.get')
+    def test_webhook_to_project_conn_err(self, mock):
+        """Test WEB update does not set a webhook for the project"""
+        from requests.exceptions import ConnectionError
+        mock.side_effect = ConnectionError
+
+        self.register()
+        owner = db.session.query(User).first()
+        app = AppFactory.create(owner=owner)
+
+        new_webhook = 'http://mynewserver.com/'
+
+        self.update_application(id=app.id, short_name=app.short_name,
+                                new_webhook=new_webhook)
+
+        err_msg = "There should not be an updated webhook url."
+        assert app.webhook != new_webhook, err_msg
+
 
     @with_context
     def test_add_password_to_project(self):
