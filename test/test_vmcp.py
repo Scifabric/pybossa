@@ -101,8 +101,6 @@ class TestAPI:
             assert out['signature'] != '', err_msg
 
             err_msg = "The signature should be the same"
-            assert strBuffer == out['strBuffer']
-            assert digest == out['digest']
             signature = base64.b64decode(out['signature'])
             assert rsa.verify(digest, signature, 'sha512') == 1, err_msg
 

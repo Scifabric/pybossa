@@ -70,8 +70,6 @@ def sign(data, salt, pkey):
 
     # Append signature
     data['signature'] = base64.b64encode(rsa.sign(digest, "sha512"))
-    data['digest'] = digest
-    data['strBuffer'] = strBuffer
 
     # Return new data dictionary
     return data
