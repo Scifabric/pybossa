@@ -144,12 +144,18 @@ class CsvExporter(Exporter):
                     zip.write(datafile.name, '%s_%s.csv' % (name, ty))
                     zip.close()
                     container = "user_%d" % app.owner_id
-                    file = FileStorage(filename='%s_%s_csv.zip' % (name, ty), stream=zipped_datafile)
+                    file = FileStorage(filename=self.download_name(app, ty), stream=zipped_datafile)
                     uploader.upload_file(file, container=container)
                 finally:
                     zipped_datafile.close()
             finally:
                 datafile.close()
+
+    def download_name(self, app, ty):
+        super(CsvExporter, self).download_name(app, ty)
+        name = self._app_name_encoded(app)
+        filename='%s_%s_csv.zip' % (name, ty)
+        return filename
 
     def pregenerate_zip_files(self, app):
         print "%d (csv)" % app.id
