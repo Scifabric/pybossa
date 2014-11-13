@@ -51,43 +51,35 @@ class VmcpAPI(APIBase):
                      target='vmcp',
                      exception_cls='vmcp',
                      exception_msg=None)
-        try:
-            if current_app.config.get('VMCP_KEY'):
-                pkey = (current_app.root_path + '/../keys/' +
-                        current_app.config.get('VMCP_KEY'))
-                if not os.path.exists(pkey):
-                    raise IOError
-            else:
-                raise KeyError
-            if request.args.get('cvm_salt'):
-                salt = request.args.get('cvm_salt')
-            else:
-                raise AttributeError
-            data = request.args.copy()
-            signed_data = pybossa.vmcp.sign(data, salt, pkey)
-            return Response(json.dumps(signed_data),
-                            200,
-                            mimetype='application/json')
-
-        except KeyError:
+        if current_app.config.get('VMCP_KEY'):
+            pkey = (current_app.root_path + '/../keys/' +
+                    current_app.config.get('VMCP_KEY'))
+            if not os.path.exists(pkey):
+                error['status_code'] = 501
+                error['exception_msg'] = ("The server is not configured properly \
+                                          (private key is missing), contact the \
+                                          admins")
+                return Response(json.dumps(error), status=error['status_code'],
+                                mimetype='application/json')
+        else:
             error['status_code'] = 501
             error['exception_msg'] = ("The server is not configured properly, \
                                       contact the admins")
             return Response(json.dumps(error), status=error['status_code'],
                             mimetype='application/json')
-        except IOError:
-            error['status_code'] = 501
-            error['exception_msg'] = ("The server is not configured properly \
-                                      (private key is missing), contact the \
-                                      admins")
-            return Response(json.dumps(error), status=error['status_code'],
-                            mimetype='application/json')
-
-        except AttributeError:
+        if request.args.get('cvm_salt'):
+            salt = request.args.get('cvm_salt')
+        else:
             error['status_code'] = 415
             error['exception_msg'] = "cvm_salt parameter is missing"
             return Response(json.dumps(error), status=error['status_code'],
                             mimetype='application/json')
+        data = request.args.copy()
+        signed_data = pybossa.vmcp.sign(data, salt, pkey)
+        return Response(json.dumps(signed_data),
+                        200,
+                        mimetype='application/json')
+
 
     @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
     def post(self):
