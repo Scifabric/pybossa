@@ -779,8 +779,13 @@ class TestWeb(web.Helper):
 
 
     @with_context
-    def test_webhook_to_project(self):
+    @patch('pybossa.forms.validator.requests.get')
+    def test_webhook_to_project(self, mock):
         """Test WEB update sets a webhook for the project"""
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
+                                   {'content-type': 'application/json'})
+        mock.return_value = html_request
+
         self.register()
         owner = db.session.query(User).first()
         app = AppFactory.create(owner=owner)
