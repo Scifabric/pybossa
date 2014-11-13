@@ -21,6 +21,7 @@ from mock import patch
 import hashlib
 import M2Crypto
 import base64
+from default import assert_not_raises
 
 
 class TestAPI:
@@ -104,3 +105,7 @@ class TestAPI:
             assert digest == out['digest']
             signature = base64.b64decode(out['signature'])
             assert rsa.verify(digest, signature, 'sha512') == 1, err_msg
+
+            # The output must be convertible into json object
+            import json
+            assert_not_raises(Exception, json.dumps, out)
