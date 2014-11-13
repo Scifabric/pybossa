@@ -64,7 +64,7 @@ class AppUpdateForm(AppForm):
     hidden = BooleanField(lazy_gettext('Hide?'))
     password = TextField(lazy_gettext('Password (leave blank for no password)'))
     webhook = TextField(lazy_gettext('Webhook'),
-                        [validators.URL(message=lazy_gettext('Invalid URL'))])
+                        [pb_validator.Webhook()])
 
 
 class TaskPresenterForm(Form):
