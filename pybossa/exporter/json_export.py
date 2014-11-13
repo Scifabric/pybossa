@@ -53,10 +53,9 @@ class JsonExporter(Exporter):
 
         return self._gen_json(table, id)
 
-    def pregenerate_zip(self, app):
-        print "%d (json)" % app.id
+    def _make_zip(self, app, ty):
         name = self._app_name_encoded(app)
-        json_task_generator = self._respond_json("task", app.id)
+        json_task_generator = self._respond_json(ty, app.id)
         if json_task_generator is not None:
             datafile = tempfile.NamedTemporaryFile()
             try:
@@ -66,31 +65,17 @@ class JsonExporter(Exporter):
                 zipped_datafile = tempfile.NamedTemporaryFile()
                 try:
                     zip = self._zip_factory(zipped_datafile.name)
-                    zip.write(datafile.name, '%s_task.json' % name)
+                    zip.write(datafile.name, '%s_%s.json' % (name, ty))
                     zip.close()
                     container = "user_%d" % app.owner_id
-                    file = FileStorage(filename='%s_task_json.zip' % name, stream=zipped_datafile)
+                    file = FileStorage(filename='%s_%s_json.zip' % (name, ty), stream=zipped_datafile)
                     uploader.upload_file(file, container=container)
                 finally:
                     zipped_datafile.close()
             finally:
                 datafile.close()
-        json_task_run_generator = self._respond_json("task_run", app.id)
-        if json_task_run_generator is not None:
-            datafile = tempfile.NamedTemporaryFile()
-            try:
-                for line in json_task_run_generator:
-                    datafile.write(str(line))
-                datafile.flush()
-                zipped_datafile = tempfile.NamedTemporaryFile()
-                try:
-                    zip = self._zip_factory(zipped_datafile.name)
-                    zip.write(datafile.name, '%s_task_run.json' % name)
-                    zip.close()
-                    container = "user_%d" % app.owner_id
-                    file = FileStorage(filename='%s_task_run_json.zip' % name, stream=zipped_datafile)
-                    uploader.upload_file(file, container=container)
-                finally:
-                    zipped_datafile.close()
-            finally:
-                datafile.close()
+
+    def pregenerate_zip_files(self, app):
+        print "%d (json)" % app.id
+        self._make_zip(app, "task")
+        self._make_zip(app, "task_run")

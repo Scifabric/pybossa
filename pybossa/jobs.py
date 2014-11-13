@@ -43,8 +43,8 @@ def export_tasks():
     # export_csv(apps[0])
 
     for app_x in apps:
-        json_exporter.pregenerate_zip(app_x)
-        csv_exporter.pregenerate_zip(app_x)
+        json_exporter.pregenerate_zip_files(app_x)
+        csv_exporter.pregenerate_zip_files(app_x)
 
 
 MINUTE = 60
