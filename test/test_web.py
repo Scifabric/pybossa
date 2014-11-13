@@ -693,11 +693,13 @@ class TestWeb(web.Helper):
     @with_context
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    def test_12_update_application(self, Mock, mock):
+    @patch('pybossa.forms.validator.requests.get')
+    def test_12_update_application(self, Mock, mock, mock_webhook):
         """Test WEB update project works"""
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
                                    {'content-type': 'application/json'})
         Mock.return_value = html_request
+        mock_webhook.return_value = html_request
 
         self.register()
         self.new_application()
@@ -725,7 +727,7 @@ class TestWeb(web.Helper):
                                       new_long_description='New long desc',
                                       new_hidden=True)
         app = db.session.query(App).first()
-        assert "Project updated!" in res.data, res
+        assert "Project updated!" in res.data, res.data
         err_msg = "Project name not updated %s" % app.name
         assert app.name == "New Sample Project", err_msg
         err_msg = "Project short name not updated %s" % app.short_name
@@ -832,16 +834,20 @@ class TestWeb(web.Helper):
 
         new_webhook = 'http://mynewserver.com/'
 
-        self.update_application(id=app.id, short_name=app.short_name,
-                                new_webhook=new_webhook)
+        res = self.update_application(id=app.id, short_name=app.short_name,
+                                      new_webhook=new_webhook)
 
         err_msg = "There should not be an updated webhook url."
         assert app.webhook != new_webhook, err_msg
 
 
     @with_context
-    def test_add_password_to_project(self):
+    @patch('pybossa.forms.validator.requests.get')
+    def test_add_password_to_project(self, mock_webhook):
         """Test WEB update sets a password for the project"""
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
+                                   {'content-type': 'application/json'})
+        mock_webhook.return_value = html_request
         self.register()
         owner = db.session.query(User).first()
         app = AppFactory.create(owner=owner)
@@ -853,8 +859,12 @@ class TestWeb(web.Helper):
 
 
     @with_context
-    def test_remove_password_from_project(self):
+    @patch('pybossa.forms.validator.requests.get')
+    def test_remove_password_from_project(self, mock_webhook):
         """Test WEB update removes the password of the project"""
+        html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
+                                   {'content-type': 'application/json'})
+        mock_webhook.return_value = html_request
         self.register()
         owner = db.session.query(User).first()
         app = AppFactory.create(info={'passwd_hash': 'mysecret'}, owner=owner)
@@ -2105,12 +2115,14 @@ class TestWeb(web.Helper):
     @with_context
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    def test_48_update_app_info(self, Mock, mock):
+    @patch('pybossa.forms.validator.requests.get')
+    def test_48_update_app_info(self, Mock, mock, mock_webhook):
         """Test WEB project update/edit works keeping previous info values"""
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
                                    {'content-type': 'application/json'})
         Mock.return_value = html_request
 
+        mock_webhook.return_value = html_request
         self.register()
         self.new_application()
         app = db.session.query(App).first()
