@@ -25,14 +25,16 @@ def export_tasks():
 
     from pybossa.core import create_app, db
     from pybossa.model.app import App
-    from pybossa.exporter import Exporter
+    from pybossa.exporter.csv_export import CsvExporter
+    from pybossa.exporter.json_export import JsonExporter
 
     print "Running on the background export tasks ZIPs"
 
     # go through all apps and generate json and csv
     app = create_app(run_as_server=False)
 
-    exporter = Exporter(app)
+    csv_exporter = CsvExporter(app)
+    json_exporter = JsonExporter(app)
 
     apps = db.slave_session.query(App).all()
 
@@ -41,8 +43,8 @@ def export_tasks():
     # export_csv(apps[0])
 
     for app_x in apps:
-        exporter.export_json(app_x)
-        exporter.export_csv(app_x)
+        json_exporter.export_json(app_x)
+        csv_exporter.export_csv(app_x)
 
 
 MINUTE = 60

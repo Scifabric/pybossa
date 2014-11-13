@@ -111,9 +111,12 @@ def setup_uploader(app):
         uploader.init_app(app)
 
 def setup_exporter(app):
-    global exporter
-    from pybossa.exporter import Exporter
-    exporter = Exporter(app)
+    global csv_exporter
+    global json_exporter
+    from pybossa.exporter.csv_export import CsvExporter
+    from pybossa.exporter.json_export import JsonExporter
+    csv_exporter = CsvExporter(app)
+    json_exporter = JsonExporter(app)
 
 def setup_markdown(app):
     misaka.init_app(app)
