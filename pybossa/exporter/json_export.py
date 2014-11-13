@@ -53,7 +53,7 @@ class JsonExporter(Exporter):
 
         return self._gen_json(table, id)
 
-    def export_json(self, app):
+    def pregenerate_zip(self, app):
         print "%d (json)" % app.id
         name = app.short_name.encode('utf-8', 'ignore').decode('latin-1') # used for latin filename later
         json_task_generator = self._respond_json("task", app.id)

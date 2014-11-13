@@ -70,6 +70,10 @@ gravatar = Gravatar(size=100, rating='g', default='mm',
 # Uploader
 uploader = None
 
+# Exporters
+json_exporter = None
+csv_exporter = None
+
 # CSRF protection
 from flask_wtf.csrf import CsrfProtect
 csrf = CsrfProtect()

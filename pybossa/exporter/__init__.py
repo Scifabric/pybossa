@@ -27,9 +27,12 @@ class Exporter(object):
 
     """Generic exporter class."""
 
-    def __init__(self, app):
+    def __init__(self):
         """Init method to create a generic uploader."""
-        self.app = app
+        pass    # nothing special needed yet
+
+    def justatest(self):
+        print "Hallo Test123!!!!!!!"
 
     def _zip_factory(self, filename):
         try:
@@ -48,8 +51,14 @@ class Exporter(object):
         """Get a ZIP file directly from uploaded directory or generate one on the fly and upload it if not existing."""
         pass
 
+    def get_zip_filename(self, app, ty):
+        pass
+
+    def response_zip(self, app, ty):
+        pass
+
     def pregenerate_zips(self, app):
-        """Cache and generate all types of ZIP files"""
+        """Cache and generate all types (tasks and task_run) of ZIP files"""
         pass
 
 

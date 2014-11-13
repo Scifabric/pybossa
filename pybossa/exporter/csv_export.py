@@ -129,7 +129,7 @@ class CsvExporter(Exporter):
         except: # pragma: no cover
             raise
 
-    def export_csv(self, app):
+    def pregenerate_zip(self, app):
         print "%d (csv)" % app.id
         name = app.short_name.encode('utf-8', 'ignore').decode('latin-1') # used for latin filename later
         csv_task_generator = self._respond_csv("task", app.id)

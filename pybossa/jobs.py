@@ -33,8 +33,8 @@ def export_tasks():
     # go through all apps and generate json and csv
     app = create_app(run_as_server=False)
 
-    csv_exporter = CsvExporter(app)
-    json_exporter = JsonExporter(app)
+    csv_exporter = CsvExporter()
+    json_exporter = JsonExporter()
 
     apps = db.slave_session.query(App).all()
 
@@ -43,8 +43,8 @@ def export_tasks():
     # export_csv(apps[0])
 
     for app_x in apps:
-        json_exporter.export_json(app_x)
-        csv_exporter.export_csv(app_x)
+        json_exporter.pregenerate_zip(app_x)
+        csv_exporter.pregenerate_zip(app_x)
 
 
 MINUTE = 60
