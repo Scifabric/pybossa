@@ -21,6 +21,7 @@ from mock import patch
 import hashlib
 import M2Crypto
 import base64
+from default import assert_not_raises
 
 
 class TestVMCP(object):
@@ -54,27 +55,6 @@ class TestVMCP(object):
         err_msg = "Boolean False has to be converted to 0"
         assert "false=0" in out, err_msg
 
-    def _sign(self, data, salt):
-        """Help function to prepare the data for signing."""
-        strBuffer = ""
-        # print data.keys()
-        for k in sorted(data.iterkeys()):
-
-            # Handle the BOOL special case
-            v = data[k]
-            if type(v) == bool:
-                if v:
-                    v = 1
-                else:
-                    v = 0
-                data[k] = v
-
-            # Update buffer
-            strBuffer += "%s=%s\n" % (str(k).lower(), vmcp.myquote(str(v)))
-
-        # Append salt
-        strBuffer += salt
-        return strBuffer
 
     def test_sign(self):
         """Test sign works."""
@@ -87,7 +67,7 @@ class TestVMCP(object):
                 "userData": "[amiconfig]\nplugins=cernvm\n[cernvm]\nusers=user:users;password",
                 "vcpus": 1,
                 "version": "1.5"}
-        strBuffer = self._sign(data, salt)
+        strBuffer = vmcp.calculate_buffer(data, salt)
         digest = hashlib.new('sha512', strBuffer).digest()
 
         with patch('M2Crypto.RSA.load_key', return_value=rsa):
@@ -100,7 +80,9 @@ class TestVMCP(object):
             assert out['signature'] != '', err_msg
 
             err_msg = "The signature should be the same"
-            assert strBuffer == out['strBuffer']
-            assert digest == out['digest']
             signature = base64.b64decode(out['signature'])
             assert rsa.verify(digest, signature, 'sha512') == 1, err_msg
+
+            # The output must be convertible into json object
+            import json
+            assert_not_raises(Exception, json.dumps, out)

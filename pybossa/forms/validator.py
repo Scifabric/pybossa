@@ -19,6 +19,7 @@
 from flask.ext.babel import lazy_gettext
 from wtforms.validators import ValidationError
 import re
+import requests
 
 
 class Unique(object):
@@ -74,3 +75,23 @@ class CommaSeparatedIntegers(object):
         pattern = re.compile('^[\d,]+$')
         if pattern.match(field.data) is None:
             raise ValidationError(self.message)
+
+
+class Webhook(object):
+    """Validator for webhook URLs"""
+
+    def __init__(self, message=None):
+        if not message:
+            self.message = lazy_gettext(u'Invalid URL')
+
+        else:  # pragma: no cover
+            self.message = message
+
+    def __call__(self, form, field):
+        try:
+            if field.data:
+                r = requests.get(field.data)
+                if r.status_code != 200:
+                    raise ValidationError(self.message)
+        except requests.exceptions.ConnectionError:
+            raise ValidationError(lazy_gettext(u"Connection error"))
