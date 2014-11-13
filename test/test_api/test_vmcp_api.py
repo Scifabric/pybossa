@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import json
 from default import flask_app, with_context
-from mock import patch
+from mock import patch, Mock
 from test_api import TestAPI
 
 
@@ -70,8 +70,10 @@ class TestVmcpAPI(TestAPI):
     def test_vmcp_02(self):
         """Test VMCP signing works."""
         signature = dict(signature='XX')
+        rsa = Mock()
+        rsa.sign.return_value = 'signed'
         with patch('os.path.exists', return_value=True):
-            with patch('pybossa.vmcp.sign', return_value=signature):
+            with patch('M2Crypto.RSA.load_key', return_value=rsa):
                 res = self.app.get('api/vmcp?cvm_salt=testsalt',
                                    follow_redirects=True)
                 out = json.loads(res.data)
