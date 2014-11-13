@@ -31,9 +31,6 @@ class Exporter(object):
         """Init method to create a generic uploader."""
         pass    # nothing special needed yet
 
-    def justatest(self):
-        print "Hallo Test123!!!!!!!"
-
     def _zip_factory(self, filename):
         try:
             import zlib
