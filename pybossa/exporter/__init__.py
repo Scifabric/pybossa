@@ -40,3 +40,17 @@ class Exporter(object):
         zip = zipfile.ZipFile(file=filename, mode='w', compression=zip_compression, allowZip64=True)
         return zip
 
+    def _upload_zip(self, app, ty):
+        """Generate a ZIP of a certain type and upload it"""
+        pass
+
+    def get_zip(self, app, ty):
+        """Get a ZIP file directly from uploaded directory or generate one on the fly and upload it if not existing."""
+        pass
+
+    def pregenerate_zips(self, app):
+        """Cache and generate all types of ZIP files"""
+        pass
+
+
+

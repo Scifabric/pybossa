@@ -79,7 +79,7 @@ class CsvExporter(Exporter):
             handle_row(writer, tr)
         yield out.getvalue()
 
-    def respond_csv(self, ty, id):
+    def _respond_csv(self, ty, id):
         try:
             # Export Task(/Runs) to CSV
             types = {
@@ -132,7 +132,7 @@ class CsvExporter(Exporter):
     def export_csv(self, app):
         print "%d (csv)" % app.id
         name = app.short_name.encode('utf-8', 'ignore').decode('latin-1') # used for latin filename later
-        csv_task_generator = self.respond_csv("task", app.id)
+        csv_task_generator = self._respond_csv("task", app.id)
         if csv_task_generator is not None:
             datafile = tempfile.NamedTemporaryFile()
             try:
@@ -151,7 +151,7 @@ class CsvExporter(Exporter):
                     zipped_datafile.close()
             finally:
                 datafile.close()
-        csv_task_run_generator = self.respond_csv("task_run", app.id)
+        csv_task_run_generator = self._respond_csv("task_run", app.id)
         if csv_task_run_generator is not None:
             datafile = tempfile.NamedTemporaryFile()
             try:
