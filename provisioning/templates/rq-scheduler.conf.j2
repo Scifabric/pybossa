@@ -1,0 +1,12 @@
+[program:rq-scheduler]
+command={{virtualenv_path}}/bin/rqscheduler --host {{redis_host}} --port {{redis_port}} --interval {{schedule_interval}}
+directory={{pybossa_path}}
+autostart=true
+autorestart=true
+priority=998
+user={{pybossa_user}}
+log_stdout=true
+log_stderr=true
+logfile=/var/log/rq-scheduler.log
+logfile_maxbytes=10MB
+logfile_backups=2
