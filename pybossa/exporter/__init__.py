@@ -46,14 +46,14 @@ class Exporter(object):
         """Generate a ZIP of a certain type and upload it"""
         pass
 
-    def get_zip(self, app, ty):
-        """Get a ZIP file directly from uploaded directory or generate one on the fly and upload it if not existing."""
-        pass
-
     def download_name(self, app, ty):
         """Get the filename (without) path of the file which should be downloaded.
            This function does not check if this filename actually exists!"""
         # TODO: Check if ty is valid
+        pass
+
+    def get_zip(self, app, ty):
+        """Get a ZIP file directly from uploaded directory or generate one on the fly and upload it if not existing."""
         pass
 
     def response_zip(self, app, ty):

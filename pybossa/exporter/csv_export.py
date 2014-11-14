@@ -30,6 +30,7 @@ from flask.ext.babel import gettext
 from pybossa.util import UnicodeWriter
 import pybossa.model as model
 from werkzeug.datastructures import FileStorage
+from flask import Response, send_from_directory
 
 class CsvExporter(Exporter):
 
@@ -156,6 +157,12 @@ class CsvExporter(Exporter):
         name = self._app_name_encoded(app)
         filename='%s_%s_csv.zip' % (name, ty)
         return filename
+
+    def get_zip(self, app, ty):
+        pass
+
+    def response_zip(self, app, ty):
+        pass
 
     def pregenerate_zip_files(self, app):
         print "%d (csv)" % app.id

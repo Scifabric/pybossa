@@ -935,7 +935,7 @@ def export_to(short_name):
 
         name = app.short_name.encode('utf-8', 'ignore').decode('latin-1')
         container = "user_%d" % app.owner_id
-        filename='%s_%s_json.zip' % (name, ty)
+        filename = json_exporter.download_name(app, ty)
         tmp = 'attachment; filename=%s' % filename
         res = Response(send_from_directory(os.path.join(uploader.upload_folder, container), filename), mimetype='application/octet-stream')
         res.headers['Content-Disposition'] = tmp
@@ -1032,7 +1032,7 @@ def export_to(short_name):
         if t is not None:
             name = app.short_name.encode('utf-8', 'ignore').decode('latin-1')
             container = "user_%d" % app.owner_id
-            filename='%s_%s_csv.zip' % (name, ty)
+            filename=csv_exporter.download_name(app, ty)
             tmp = 'attachment; filename=%s' % filename
             res = Response(send_from_directory(os.path.join(uploader.upload_folder, container), filename), mimetype='application/octet-stream')
             res.headers['Content-Disposition'] = tmp

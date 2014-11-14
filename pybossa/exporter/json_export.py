@@ -28,6 +28,7 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 import pybossa.model as model
 from werkzeug.datastructures import FileStorage
+from flask import Response, send_from_directory
 
 class JsonExporter(Exporter):
 
@@ -80,6 +81,12 @@ class JsonExporter(Exporter):
         name = self._app_name_encoded(app)
         filename='%s_%s_json.zip' % (name, ty)
         return filename
+
+    def get_zip(self, app, ty):
+        pass
+
+    def response_zip(self, app, ty):
+        pass
 
     def pregenerate_zip_files(self, app):
         print "%d (json)" % app.id
