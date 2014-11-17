@@ -20,8 +20,9 @@ from flask.ext.mail import Message
 from pybossa.core import mail
 from pybossa.util import with_cache_disabled
 
+
 def export_tasks():
-    '''Export tasks to zip'''
+    """Export tasks to zip"""
 
     from pybossa.core import create_app, db
     from pybossa.model.app import App
@@ -29,9 +30,6 @@ def export_tasks():
     from pybossa.exporter.json_export import JsonExporter
 
     print "Running on the background export tasks ZIPs"
-
-    # go through all apps and generate json and csv
-    app = create_app(run_as_server=False)
 
     csv_exporter = CsvExporter()
     json_exporter = JsonExporter()
