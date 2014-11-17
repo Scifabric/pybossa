@@ -1024,8 +1024,7 @@ def export_to(short_name):
         except KeyError:
             return abort(404)
 
-        out = StringIO()
-        writer = UnicodeWriter(out)
+        # TODO: change check for existence below
         t = db.slave_session.query(table)\
             .filter_by(app_id=app.id)\
             .first()
