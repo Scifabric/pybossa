@@ -54,7 +54,7 @@ class _BulkTaskImport(object):
     def variants(self):
         return [self.importer_id] if self.importer_id != None else []
 
-    def tasks(self):
+    def tasks(self, form):
         pass
 
     def _import_csv_tasks(self, csvreader):
