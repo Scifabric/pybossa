@@ -535,7 +535,7 @@ def import_task(short_name):
     template_args["importer_variants"] = compute_importer_variant_pairs(importer_mngr.variants())
     template = request.args.get('template')
 
-    if not (template or request.method == 'POST'):
+    if template is None and request.method == 'GET':
         return render_template('/applications/import_options.html',
                                **template_args)
 
