@@ -22,7 +22,7 @@ import StringIO
 from default import db, Fixtures, with_context
 from helper import web
 from mock import patch, Mock
-from flask import Response
+from flask import Response, redirect
 from itsdangerous import BadSignature
 from collections import namedtuple
 from pybossa.core import signer
@@ -204,7 +204,6 @@ class TestWeb(web.Helper):
         assert "Just one more step, please" in res.data, res.data
 
 
-    from pybossa.view.applications import redirect
     @with_context
     @patch('pybossa.view.account.redirect', wraps=redirect)
     @patch('pybossa.view.account.signer')
@@ -2750,6 +2749,26 @@ class TestWeb(web.Helper):
         self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
         res = self.app.get('/app/sampleapp/tasks/import', follow_redirects=True)
         assert res.status_code == 403, res.status_code
+
+    @patch('pybossa.view.applications.redirect', wraps=redirect)
+    @patch('pybossa.importers.requests.get')
+    def test_import_tasks_redirects_on_success(self, request, redirect):
+        csv_file = FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
+                                 {'content-type': 'text/plain'})
+        request.return_value = csv_file
+        self.register()
+        self.new_application()
+        app = db.session.query(App).first()
+        url = '/app/%s/tasks/import?template=csv' % app.short_name
+        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
+                                       'formtype': 'csv', 'form_name': 'csv'},
+                            follow_redirects=True)
+
+        assert "1 Task imported successfully!" in res.data
+        redirect.assert_called_with('/app/%s/tasks/' % app.short_name)
+        assert "Import Tasks" in res.data
+        assert "Export Tasks" in res.data
+        assert "Export Tasks" in res.data
 
     @with_context
     def test_55_facebook_account_warning(self):
