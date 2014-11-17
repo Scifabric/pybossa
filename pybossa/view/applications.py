@@ -550,46 +550,46 @@ def import_task(short_name):
     if not (form and form.validate_on_submit()):  # pragma: no cover
         return render_forms()
 
-    _import_task(app, importer, form)
-    return render_forms()
-
-
-def _import_task(app, importer, form):
     try:
-        empty = True
-        n = 0
-        n_data = 0
-        for task_data in importer.tasks(form):
-            n_data += 1
-            task = model.task.Task(app_id=app.id)
-            [setattr(task, k, v) for k, v in task_data.iteritems()]
-            data = db.session.query(model.task.Task).filter_by(app_id=app.id).filter_by(info=task.info).first()
-            if data is None:
-                db.session.add(task)
-                db.session.commit()
-                n += 1
-                empty = False
-        if empty and n_data == 0:
-            raise BulkImportException(
-                gettext('Oops! It looks like the file is empty.'))
-        if empty and n_data > 0:
-            flash(gettext('Oops! It looks like there are no new records to import.'), 'warning')
-
-        msg = str(n) + " " + gettext('Tasks imported successfully!')
-        if n == 1:
-            msg = str(n) + " " + gettext('Task imported successfully!')
-        flash(msg, 'success')
-        cached_apps.delete_n_tasks(app.id)
-        cached_apps.delete_n_task_runs(app.id)
-        cached_apps.delete_overall_progress(app.id)
-        cached_apps.delete_last_activity(app.id)
-        return redirect(url_for('.tasks', short_name=app.short_name))
+        return _import_task(app, importer, form)
     except BulkImportException, err_msg:
         flash(err_msg, 'error')
     except Exception as inst:  # pragma: no cover
         current_app.logger.error(inst)
         msg = 'Oops! Looks like there was an error with processing that file!'
         flash(gettext(msg), 'error')
+    return render_forms()
+
+
+def _import_task(app, importer, form):
+    empty = True
+    n = 0
+    n_data = 0
+    for task_data in importer.tasks(form):
+        n_data += 1
+        task = model.task.Task(app_id=app.id)
+        [setattr(task, k, v) for k, v in task_data.iteritems()]
+        data = db.session.query(model.task.Task).filter_by(app_id=app.id).filter_by(info=task.info).first()
+        if data is None:
+            db.session.add(task)
+            db.session.commit()
+            n += 1
+            empty = False
+    if empty and n_data == 0:
+        raise BulkImportException(
+            gettext('Oops! It looks like the file is empty.'))
+    if empty and n_data > 0:
+        flash(gettext('Oops! It looks like there are no new records to import.'), 'warning')
+
+    msg = str(n) + " " + gettext('Tasks imported successfully!')
+    if n == 1:
+        msg = str(n) + " " + gettext('Task imported successfully!')
+    flash(msg, 'success')
+    cached_apps.delete_n_tasks(app.id)
+    cached_apps.delete_n_task_runs(app.id)
+    cached_apps.delete_overall_progress(app.id)
+    cached_apps.delete_last_activity(app.id)
+    return redirect(url_for('.tasks', short_name=app.short_name))
 
 
 @blueprint.route('/<short_name>/password', methods=['GET', 'POST'])
