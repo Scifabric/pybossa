@@ -1474,11 +1474,11 @@ class TestWeb(web.Helper):
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     @patch('pybossa.importers.requests.get')
-    def test_33_bulk_csv_import_unauthorized(self, Mock, mock):
-        """Test WEB bulk import unauthorized works"""
-        unauthorized_request = FakeRequest('Unauthorized', 403,
+    def test_33_bulk_csv_import_forbidden(self, Mock, mock):
+        """Test WEB bulk import Forbidden works"""
+        forbidden_request = FakeRequest('Forbidden', 403,
                                            {'content-type': 'text/csv'})
-        Mock.return_value = unauthorized_request
+        Mock.return_value = forbidden_request
         self.register()
         self.new_application()
         app = db.session.query(App).first()
@@ -3037,9 +3037,9 @@ class TestWeb(web.Helper):
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     @patch('pybossa.importers.requests.get')
-    def test_71_bulk_epicollect_import_unauthorized(self, Mock, mock):
-        """Test WEB bulk import unauthorized works"""
-        unauthorized_request = FakeRequest('Unauthorized', 403,
+    def test_71_bulk_epicollect_import_forbidden(self, Mock, mock):
+        """Test WEB bulk import forbidden works"""
+        unauthorized_request = FakeRequest('Forbidden', 403,
                                            {'content-type': 'application/json'})
         Mock.return_value = unauthorized_request
         self.register()
