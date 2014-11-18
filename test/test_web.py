@@ -623,7 +623,6 @@ class TestWeb(web.Helper):
         assert app.category is not None, \
             "A project should have a category after being created"
 
-    # After refactoring applications view, these 3 tests should be more isolated and moved to another place
     @with_context
     def test_description_is_generated_from_long_desc(self):
         """Test WEB when creating a project, the description field is
