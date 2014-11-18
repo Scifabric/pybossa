@@ -55,6 +55,7 @@ class _BulkTaskImport(object):
         return [self.importer_id] if self.importer_id != None else []
 
     def tasks(self, form):
+        """Returns a generator with all the tasks imported"""
         pass
 
     def _import_csv_tasks(self, csvreader):

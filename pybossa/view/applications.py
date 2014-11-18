@@ -30,11 +30,12 @@ from flask import render_template, make_response
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
 from sqlalchemy.sql import text
+from rq import Queue
 
 import pybossa.model as model
 import pybossa.sched as sched
 
-from pybossa.core import db, uploader, signer
+from pybossa.core import db, uploader, signer, sentinel
 from pybossa.cache import ONE_DAY, ONE_HOUR
 from pybossa.model.app import App
 from pybossa.model.task import Task
@@ -49,13 +50,15 @@ from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
+from pybossa.jobs import import_tasks as background_import
 
 from pybossa.forms.applications_view_forms import *
 
 
 blueprint = Blueprint('app', __name__)
 
-
+importer_queue = Queue('importer', connection=sentinel.master)
+MAX_NUM__SYNCHR_TASKS_IMPORT = 200
 
 def app_title(app, page_name):
     if not app:  # pragma: no cover
@@ -565,30 +568,37 @@ def _import_task(app, importer, form):
     empty = True
     n = 0
     n_data = 0
-    for task_data in importer.tasks(form):
-        n_data += 1
-        task = model.task.Task(app_id=app.id)
-        [setattr(task, k, v) for k, v in task_data.iteritems()]
-        data = db.session.query(model.task.Task).filter_by(app_id=app.id).filter_by(info=task.info).first()
-        if data is None:
-            db.session.add(task)
-            db.session.commit()
-            n += 1
-            empty = False
-    if empty and n_data == 0:
-        raise BulkImportException(
-            gettext('Oops! It looks like the file is empty.'))
-    if empty and n_data > 0:
-        flash(gettext('Oops! It looks like there are no new records to import.'), 'warning')
+    # REFACTOR with worker bypass?
+    tasks_data = [data for data in importer.tasks(form)]
+    if len(tasks_data) <= MAX_NUM__SYNCHR_TASKS_IMPORT:
+        for task_data in importer.tasks(form):
+            n_data += 1
+            task = model.task.Task(app_id=app.id)
+            [setattr(task, k, v) for k, v in task_data.iteritems()]
+            data = db.session.query(model.task.Task).filter_by(app_id=app.id).filter_by(info=task.info).first()
+            if data is None:
+                db.session.add(task)
+                db.session.commit()
+                n += 1
+                empty = False
+        if empty and n_data == 0:
+            raise BulkImportException(
+                gettext('Oops! It looks like the file is empty.'))
+        if empty and n_data > 0:
+            flash(gettext('Oops! It looks like there are no new records to import.'), 'warning')
 
-    msg = str(n) + " " + gettext('Tasks imported successfully!')
-    if n == 1:
-        msg = str(n) + " " + gettext('Task imported successfully!')
-    flash(msg, 'success')
-    cached_apps.delete_n_tasks(app.id)
-    cached_apps.delete_n_task_runs(app.id)
-    cached_apps.delete_overall_progress(app.id)
-    cached_apps.delete_last_activity(app.id)
+        msg = str(n) + " " + gettext('Tasks imported successfully!')
+        if n == 1:
+            msg = str(n) + " " + gettext('Task imported successfully!')
+        flash(msg, 'success')
+        cached_apps.delete_n_tasks(app.id)
+        cached_apps.delete_n_task_runs(app.id)
+        cached_apps.delete_overall_progress(app.id)
+        cached_apps.delete_last_activity(app.id)
+    else:
+        importer_queue.enqueue(background_import, tasks_data)
+        flash(gettext("You're trying to import a large amount of tasks, so please be patient.\
+            You will receibe an email with when the process completes."))
     return redirect(url_for('.tasks', short_name=app.short_name))
 
 

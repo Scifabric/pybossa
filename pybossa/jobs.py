@@ -208,3 +208,7 @@ def warn_old_project_owners():
 def send_mail(message_dict):
     message = Message(**message_dict)
     mail.send(message)
+
+
+def import_tasks(tasks_info):
+    pass

@@ -37,7 +37,7 @@ from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
-from pybossa.jobs import send_mail
+from pybossa.jobs import send_mail, import_tasks
 from factories import AppFactory, CategoryFactory, TaskFactory, TaskRunFactory
 
 
@@ -2268,7 +2268,6 @@ class TestWeb(web.Helper):
         app = AppFactory.create(name='Измени Киев!', short_name='Измени Киев!')
         res = self.app.get('app/%s/tasks/export?type=task_run&format=json' % app.short_name,
                            follow_redirects=True)
-        print res
         assert 'Измени Киев!' in res.headers.get('Content-Disposition'), res
 
     def test_export_task_csv_support_non_latin1_project_names(self):
@@ -2284,7 +2283,6 @@ class TestWeb(web.Helper):
         TaskRunFactory.create(task=task)
         res = self.app.get('/app/%s/tasks/export?type=task_run&format=csv' % app.short_name,
                            follow_redirects=True)
-        print res
         assert 'Измени Киев!' in res.headers.get('Content-Disposition'), res
 
     @with_context
@@ -2752,6 +2750,7 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.applications.redirect', wraps=redirect)
     @patch('pybossa.importers.requests.get')
     def test_import_tasks_redirects_on_success(self, request, redirect):
+        """Test WEB when importing tasks succeeds, user is redirected to tasks main page"""
         csv_file = FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
         request.return_value = csv_file
@@ -2767,7 +2766,47 @@ class TestWeb(web.Helper):
         redirect.assert_called_with('/app/%s/tasks/' % app.short_name)
         assert "Import Tasks" in res.data
         assert "Export Tasks" in res.data
-        assert "Export Tasks" in res.data
+        assert "Task Presenter" in res.data
+
+    @patch('pybossa.view.applications.BulkTaskImportManager.create_importer')
+    def test_import_few_tasks_is_done_synchronously(self, create_importer):
+        """Test WEB importing a small amount of tasks is done synchronously"""
+        importer = create_importer.return_value
+        tasks_info = [{'info': {'Foo': i}} for i in range(1)]
+        importer.tasks.return_value = tasks_info
+        self.register()
+        self.new_application()
+        app = db.session.query(App).first()
+        url = '/app/%s/tasks/import?template=csv' % app.short_name
+        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
+                                       'formtype': 'csv', 'form_name': 'csv'},
+                            follow_redirects=True)
+        task = db.session.query(Task).first()
+
+        assert task is not None, "Task was not imported"
+        assert "1 Task imported successfully!" in res.data
+
+    @patch('pybossa.view.applications.importer_queue', autospec=True)
+    @patch('pybossa.view.applications.BulkTaskImportManager.create_importer')
+    def test_import_tasks_as_background_job(self, create_importer, queue):
+        """Test WEB importing a big amount of tasks is done in the background"""
+        importer = create_importer.return_value
+        tasks_info = [{'info': {'Foo': i}} for i in range(201)]
+        importer.tasks.return_value = tasks_info
+        self.register()
+        self.new_application()
+        app = db.session.query(App).first()
+        url = '/app/%s/tasks/import?template=csv' % app.short_name
+        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
+                                       'formtype': 'csv', 'form_name': 'csv'},
+                            follow_redirects=True)
+        tasks = db.session.query(Task).all()
+
+        assert tasks == [], "Tasks should not be immediately added"
+        queue.enqueue.assert_called_once_with(import_tasks, tasks_info)
+        msg = "You're trying to import a large amount of tasks, so please be patient.\
+            You will receibe an email with when the process completes."
+        assert msg in res.data
 
     @with_context
     def test_55_facebook_account_warning(self):
