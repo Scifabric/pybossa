@@ -124,6 +124,21 @@
                      lc_ctype='en_US.UTF-8'
                      template='template0'
 
+    - name: install Supervisor
+      apt: name=supervisor
+
+    - name: start Supervisor service
+      service: name=supervisor state=started
+
+    - name: copy Supervisor config
+      template: src=templates/rq-worker.conf.j2 dest=/etc/supervisor/conf.d/rq-worker.conf owner=root group=root
+      notify:
+       - restart supervisor
+
+  handlers:
+    - name: restart supervisor
+      service: name=supervisor state=restarted
+
 # change .bashrc only in Vagrant development version
 - hosts: vagrant_dev
   sudo: yes
@@ -145,4 +160,3 @@
         owner=vagrant
         state=present
         insertafter=EOF
-
