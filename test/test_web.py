@@ -2790,8 +2790,10 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.applications.BulkTaskImportManager.create_importer')
     def test_import_tasks_as_background_job(self, create_importer, queue):
         """Test WEB importing a big amount of tasks is done in the background"""
+        from pybossa.view.applications import MAX_NUM__SYNCHR_TASKS_IMPORT
+        number_tasks = MAX_NUM__SYNCHR_TASKS_IMPORT + 1
         importer = create_importer.return_value
-        tasks_info = [{'info': {'Foo': i}} for i in range(201)]
+        tasks_info = [{'info': {'Foo': i}} for i in range(number_tasks)]
         importer.tasks.return_value = tasks_info
         self.register()
         self.new_application()
