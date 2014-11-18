@@ -21,6 +21,7 @@ JSON Exporter module for exporting tasks and tasks results out of PyBossa
 """
 
 from pybossa.exporter import Exporter
+import os
 import json
 import tempfile
 from pybossa.core import db, uploader
@@ -28,7 +29,7 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 import pybossa.model as model
 from werkzeug.datastructures import FileStorage
-from flask import Response, send_from_directory
+from flask import Response, url_for, safe_join
 
 class JsonExporter(Exporter):
 
@@ -82,11 +83,30 @@ class JsonExporter(Exporter):
         filename='%s_%s_json.zip' % (name, ty)
         return filename
 
+    def zip_existing(self, app, ty):
+        super(JsonExporter, self).zip_existing(app, ty)
+        filepath = self._download_path(app)
+        filename=self.download_name(app, ty)
+        # TODO: This only works on local files !!!
+        return os.path.isfile(safe_join(filepath, filename))
+        # TODO: Check rackspace file existence
+
     def get_zip(self, app, ty):
-        pass
+        super(JsonExporter, self).get_zip(app, ty)
+        filepath = self._download_path(app)
+        filename=self.download_name(app, ty)
+        print "Hallo?!"
+        if not self.zip_existing(app, ty):
+            print "OMG this JSON is not existing!!!"
+            self._make_zip(app, ty)     # TODO: make this with RQ?
+        print "filepath %s   filename %s" % (filepath, filename)
+        return send_from_directory(filepath, filename)
 
     def response_zip(self, app, ty):
-        pass
+        container = "user_%d" % app.owner_id
+        filepath = safe_join(uploader.upload_folder, container)
+        url = url_for(self.download_name(app, ty), filename=safe_join(container, self.download_name(app, ty)))
+        return Response(url , mimetype='application/octet-stream')
 
     def pregenerate_zip_files(self, app):
         print "%d (json)" % app.id

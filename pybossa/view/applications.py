@@ -933,11 +933,10 @@ def export_to(short_name):
         except KeyError:
             return abort(404)
 
-        name = app.short_name.encode('utf-8', 'ignore').decode('latin-1')
-        container = "user_%d" % app.owner_id
+        # container = "user_%d" % app.owner_id
         filename = json_exporter.download_name(app, ty)
         tmp = 'attachment; filename=%s' % filename
-        res = Response(send_from_directory(os.path.join(uploader.upload_folder, container), filename), mimetype='application/octet-stream')
+        res = json_exporter.response_zip(app, ty)
         res.headers['Content-Disposition'] = tmp
         return res
 
@@ -1029,11 +1028,8 @@ def export_to(short_name):
             .filter_by(app_id=app.id)\
             .first()
         if t is not None:
-            name = app.short_name.encode('utf-8', 'ignore').decode('latin-1')
-            container = "user_%d" % app.owner_id
-            filename=csv_exporter.download_name(app, ty)
-            tmp = 'attachment; filename=%s' % filename
-            res = Response(send_from_directory(os.path.join(uploader.upload_folder, container), filename), mimetype='application/octet-stream')
+            res = csv_exporter.response_zip(app, ty)
+            tmp = 'attachment; filename=%s' % csv_exporter.download_name(app, ty)
             res.headers['Content-Disposition'] = tmp
             return res
         else:

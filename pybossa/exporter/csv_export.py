@@ -21,6 +21,7 @@ CSV Exporter module for exporting tasks and tasks results out of PyBossa
 """
 
 from pybossa.exporter import Exporter
+import os
 import tempfile
 from StringIO import StringIO
 from pybossa.core import db, uploader
@@ -30,7 +31,7 @@ from flask.ext.babel import gettext
 from pybossa.util import UnicodeWriter
 import pybossa.model as model
 from werkzeug.datastructures import FileStorage
-from flask import Response, send_from_directory
+from flask import Response, send_from_directory, safe_join
 
 class CsvExporter(Exporter):
 
@@ -158,11 +159,31 @@ class CsvExporter(Exporter):
         filename='%s_%s_csv.zip' % (name, ty)
         return filename
 
+    def zip_existing(self, app, ty):
+        super(CsvExporter, self).zip_existing(app, ty)
+        filepath = self._download_path(app)
+        filename=self.download_name(app, ty)
+        # TODO: This only works on local files !!!
+        return os.path.isfile(safe_join(filepath, filename))
+        # TODO: Check rackspace file existence
+
     def get_zip(self, app, ty):
-        pass
+        super(CsvExporter, self).get_zip(app, ty)
+        filepath = self._download_path(app)
+        filename=self.download_name(app, ty)
+        if not self.zip_existing(app, ty):
+            print "OMG this CSV is not existing!!!"
+            self._make_zip(app, ty)     # TODO: make this with RQ?
+        return send_from_directory(filepath, filename)
 
     def response_zip(self, app, ty):
-        pass
+        # return Response(self.get_zip(app, ty), mimetype='application/octet-stream')
+        container = "user_%d" % app.owner_id
+        filename = self.download_name(app, ty)
+        tmp = 'attachment; filename=%s' % filename
+        res = Response(send_from_directory(os.path.join(uploader.upload_folder, container), filename), mimetype='application/octet-stream')
+        res.headers['Content-Disposition'] = tmp
+        return res
 
     def pregenerate_zip_files(self, app):
         print "%d (csv)" % app.id
