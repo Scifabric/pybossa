@@ -211,6 +211,25 @@ class TestProjectRepositoryForProjects(Test):
         assert deleted is None, deleted
 
 
+    def test_delete_also_removes_dependant_resources(self):
+        """Test delete removes project tasks and taskruns too"""
+        from factories import TaskFactory, TaskRunFactory, BlogpostFactory
+        from pybossa.repositories import TaskRepository, BlogRepository
+
+        project = AppFactory.create()
+        task = TaskFactory.create(app=project)
+        taskrun = TaskRunFactory.create(task=task)
+        blogpost = BlogpostFactory.create(app=project)
+
+        self.project_repo.delete(project)
+        deleted_task = TaskRepository(db).get_task(task.id)
+        deleted_taskrun = TaskRepository(db).get_task_run(taskrun.id)
+        deleted_blogpost = BlogRepository(db).get(blogpost.id)
+
+        assert deleted_task is None, deleted_task
+        assert deleted_taskrun is None, deleted_taskrun
+
+
     def test_delete_only_deletes_projects(self):
         """Test delete raises a WrongObjectError if is requested to delete other
         than a project"""
