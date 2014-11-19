@@ -16,16 +16,17 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.forms.forms import RegisterForm
-from default import Test, db, with_context
-from pybossa.model.user import User
-from pybossa.forms import validator
-from pybossa.view.account import LoginForm
-from factories import UserFactory
 from wtforms import ValidationError
 from nose.tools import raises
-from mock import patch
 
+from pybossa.forms.forms import RegisterForm
+from default import Test, db, with_context
+from pybossa.forms import validator
+from pybossa.view.account import LoginForm
+from pybossa.repositories import UserRepository
+from factories import UserFactory
+
+user_repo = UserRepository(db)
 
 class TestValidator(Test):
     def setUp(self):
@@ -39,8 +40,7 @@ class TestValidator(Test):
         with self.flask_app.test_request_context('/'):
             f = LoginForm()
             f.email.data = self.email_addr
-            u = validator.Unique(db.session, User,
-                                         User.email_addr)
+            u = validator.Unique(user_repo.get_by, 'email_addr')
             u.__call__(f, f.email)
 
     @raises(ValidationError)

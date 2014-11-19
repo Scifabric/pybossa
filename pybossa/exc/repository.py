@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2013 SF Isle of Man Limited
+# Copyright (C) 2014 SF Isle of Man Limited
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -16,11 +16,17 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import Test, with_context
-from factories import reset_all_pk_sequences
+
+class DBIntegrityError(Exception):
+    """Raised when an integrity exception in the DB layer occurs"""
+    def __init__(self, message):
+        super(DBIntegrityError, self).__init__(message)
+        self.message = message
 
 
-class TestAPI(Test):
-
-    endpoints = ['app', 'task', 'taskrun', 'user']
-
+class WrongObjectError(Exception):
+    """Raised when trying to save, update or delete objects that the repository
+    does not handle"""
+    def __init__(self, message):
+        super(WrongObjectError, self).__init__(message)
+        self.message = message

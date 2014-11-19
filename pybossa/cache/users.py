@@ -24,6 +24,8 @@ from pybossa.cache.apps import overall_progress, n_tasks, n_volunteers
 import json
 
 
+session = db.slave_session
+
 @memoize(timeout=timeouts.get('USER_TIMEOUT'))
 def get_leaderboard(n, user_id):
     """Return the top n users with their rank."""
@@ -39,7 +41,7 @@ def get_leaderboard(n, user_id):
                LIMIT :limit;
                ''')
 
-    results = db.slave_session.execute(sql, dict(limit=n))
+    results = session.execute(sql, dict(limit=n))
 
     top_users = []
     user_in_top = False
@@ -68,7 +70,7 @@ def get_leaderboard(n, user_id):
                        JOIN public."user" on (user_id=public."user".id)
                        WHERE user_id=:user_id ORDER BY rank;
                        ''')
-            user_rank = db.slave_session.execute(sql, dict(user_id=user_id))
+            user_rank = session.execute(sql, dict(user_id=user_id))
             u = User.query.get(user_id)
             # Load by default user data with no rank
             user=dict(
@@ -101,7 +103,7 @@ def get_top(n=10):
                "user".created, "user".info, COUNT(task_run.id) AS task_runs FROM task_run, "user"
                WHERE "user".id=task_run.user_id GROUP BY "user".id
                ORDER BY task_runs DESC LIMIT :limit''')
-    results = db.slave_session.execute(sql, dict(limit=n))
+    results = session.execute(sql, dict(limit=n))
     top_users = []
     for row in results:
         user = dict(id=row.id, name=row.name, fullname=row.fullname,
@@ -124,7 +126,7 @@ def get_user_summary(name):
                WHERE "user".name=:name
                GROUP BY "user".id;
                ''')
-    results = db.slave_session.execute(sql, dict(name=name))
+    results = session.execute(sql, dict(name=name))
     user = dict()
     for row in results:
         user = dict(id=row.id, name=row.name, fullname=row.fullname,
@@ -157,7 +159,7 @@ def rank_and_score(user_id):
                     FROM scores)
                SELECT * from global_rank WHERE user_id=:user_id;
                ''')
-    results = db.slave_session.execute(sql, dict(user_id=user_id))
+    results = session.execute(sql, dict(user_id=user_id))
     rank_and_score = dict(rank=None, score=None)
     for row in results:
         rank_and_score['rank'] = row.rank
@@ -174,7 +176,7 @@ def apps_contributed(user_id):
                app.description, app.info FROM app, apps_contributed
                WHERE app.id=apps_contributed.app_id ORDER BY app.name DESC;
                ''')
-    results = db.slave_session.execute(sql, dict(user_id=user_id))
+    results = session.execute(sql, dict(user_id=user_id))
     apps_contributed = []
     for row in results:
         app = dict(id=row.id, name=row.name, short_name=row.short_name,
@@ -205,7 +207,7 @@ def published_apps(user_id):
                app.description,
                app.info;''')
     apps_published = []
-    results = db.slave_session.execute(sql, dict(user_id=user_id))
+    results = session.execute(sql, dict(user_id=user_id))
     for row in results:
         app = dict(id=row.id, name=row.name, short_name=row.short_name,
                    owner_id=row.owner_id,
@@ -235,7 +237,7 @@ def draft_apps(user_id):
                app.description,
                app.info;''')
     apps_draft = []
-    results = db.slave_session.execute(sql, dict(user_id=user_id))
+    results = session.execute(sql, dict(user_id=user_id))
     for row in results:
         app = dict(id=row.id, name=row.name, short_name=row.short_name,
                    owner_id=row.owner_id,
@@ -265,7 +267,7 @@ def hidden_apps(user_id):
                app.description,
                app.info;''')
     apps_published = []
-    results = db.slave_session.execute(sql, dict(user_id=user_id))
+    results = session.execute(sql, dict(user_id=user_id))
     for row in results:
         app = dict(id=row.id, name=row.name, short_name=row.short_name,
                    owner_id=row.owner_id,
@@ -298,7 +300,7 @@ def get_users_page(page, per_page=24):
                FROM task_run, "user"
                WHERE "user".id=task_run.user_id GROUP BY "user".id
                ORDER BY "user".created DESC LIMIT :limit OFFSET :offset''')
-    results = db.slave_session.execute(sql, dict(limit=per_page, offset=offset))
+    results = session.execute(sql, dict(limit=per_page, offset=offset))
     accounts = []
     for row in results:
         user = dict(id=row.id, name=row.name, fullname=row.fullname,

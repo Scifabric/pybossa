@@ -18,12 +18,11 @@
 
 import json
 
-from default import db, with_context
-from helper import web as web_helper
+from default import Test
 from pybossa.hateoas import Hateoas
 
 
-class TestHateoas(web_helper.Helper):
+class TestHateoas(Test):
 
     hateoas = Hateoas()
 
@@ -33,7 +32,6 @@ class TestHateoas(web_helper.Helper):
             self.create()
 
     # Tests
-    @with_context
     def test_00_link_object(self):
         """Test HATEOAS object link is created"""
         # For app
@@ -123,7 +121,6 @@ class TestHateoas(web_helper.Helper):
         # assert output.get('links') == None, err_msg
 
 
-    @with_context
     def test_01_link_object(self):
         """Test HATEOAS object link is created"""
         # For app

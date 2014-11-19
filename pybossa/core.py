@@ -52,6 +52,7 @@ def create_app(run_as_server=True):
     #gravatar = Gravatar(app, size=100, rating='g', default='mm',
                         #force_default=False, force_lower=False)
     setup_db(app)
+    setup_repositories()
     mail.init_app(app)
     sentinel.init_app(app)
     signer.init_app(app)
@@ -135,6 +136,21 @@ def setup_db(app):
             return response_or_exc
 
 
+def setup_repositories():
+    from pybossa.repositories import UserRepository
+    from pybossa.repositories import ProjectRepository
+    from pybossa.repositories import BlogRepository
+    from pybossa.repositories import TaskRepository
+    global user_repo
+    global project_repo
+    global blog_repo
+    global task_repo
+    user_repo = UserRepository(db)
+    project_repo = ProjectRepository(db)
+    blog_repo = BlogRepository(db)
+    task_repo = TaskRepository(db)
+
+
 def setup_gravatar(app):
     gravatar.init_app(app)
 
@@ -174,7 +190,7 @@ def setup_login_manager(app):
     login_manager.login_message = u"Please sign in to access this page."
     @login_manager.user_loader
     def load_user(username):
-        return db.session.query(model.user.User).filter_by(name=username).first()
+        return user_repo.get_by_name(username)
 
 
 def setup_babel(app):
@@ -323,7 +339,7 @@ def setup_hooks(app):
         if 'Authorization' in request.headers:
             apikey = request.headers.get('Authorization')
         if apikey:
-            user = db.session.query(model.user.User).filter_by(api_key=apikey).first()
+            user = user_repo.get_by(api_key=apikey)
             ## HACK:
             # login_user sets a session cookie which we really don't want.
             # login_user(user)

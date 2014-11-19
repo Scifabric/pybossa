@@ -21,7 +21,6 @@ from pybossa.view.account import get_update_feed
 from factories import AppFactory, TaskFactory, TaskRunFactory, UserFactory, BlogpostFactory
 
 class TestActivityFeed(Test):
-    @with_context
 
     def test_user_creation(self):
         """Test ACTIVITY FEED works for User creation."""

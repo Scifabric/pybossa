@@ -17,7 +17,6 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from pybossa.core import db
-#from pybossa.model import rebuild_db
 from pybossa.core import create_app, sentinel
 from pybossa.model.app import App
 from pybossa.model.category import Category

@@ -78,6 +78,9 @@ the PyBossa development server::
   $ vagrant ssh
   $ python run.py
 
+.. note::
+    Virtualenv (located in /home/vagrant/pybossa-env) is always activated on login.
+
 Now all you have to do is open the following URL in your web browser::
 
   http://127.0.0.1:5000

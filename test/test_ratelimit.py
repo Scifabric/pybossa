@@ -132,9 +132,9 @@ class TestAPI(object):
         url = '/api/vmcp'
         self.check_limit(url, 'get', 'app')
 
-    @patch('pybossa.api._retrieve_app')
+    @patch('pybossa.api.project_repo')
     def test_05_user_progress(self, mock):
         """Test API.user_progress GET rate limit."""
-        mock.return_value = None
+
         url = '/api/app/1/userprogress'
         self.check_limit(url, 'get', 'app')
