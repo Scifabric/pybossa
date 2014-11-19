@@ -210,5 +210,42 @@ def send_mail(message_dict):
     mail.send(message)
 
 
-def import_tasks(tasks_info):
-    pass
+def import_tasks(tasks_info, app_id):
+    from pybossa.core import db
+    from pybossa.model.task import Task
+    from pybossa.model.app import App
+    from pybossa.cache import apps as cached_apps
+    from flask import current_app
+
+    empty = True
+    n = 0
+    n_data = 0
+    for task_data in tasks_info:
+        n_data += 1
+        task = Task(app_id=app_id)
+        [setattr(task, k, v) for k, v in task_data.iteritems()]
+        data = db.session.query(Task).filter_by(app_id=app_id).filter_by(info=task.info).first()
+        if data is None:
+            db.session.add(task)
+            db.session.commit()
+            n += 1
+            empty = False
+    if empty and n_data == 0:
+        msg = 'Oops! It looks like the file is empty.'
+    if empty and n_data > 0:
+        msg = 'Oops! It looks like there are no new records to import.'
+
+    msg = str(n) + " " + 'Tasks imported successfully!'
+    if n == 1:
+        msg = str(n) + " " + 'Task imported successfully!'
+    cached_apps.delete_n_tasks(app_id)
+    cached_apps.delete_n_task_runs(app_id)
+    cached_apps.delete_overall_progress(app_id)
+    cached_apps.delete_last_activity(app_id)
+    app = db.session.query(App).get(app_id)
+    subject = 'Tasks Import to your project %s' % app.name
+    body = 'Hello,\n\nThe tasks you recently imported to your project at %s have been successfully created.\n\nAll the best,\nThe team.' % current_app.config.get('BRAND')
+    mail_dict = dict(recipients=[app.owner.email_addr],
+                     subject=subject, body=body)
+    send_mail(mail_dict)
+    return msg
