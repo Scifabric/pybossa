@@ -1,8 +1,0 @@
----
-pybossa_user: "vagrant"
-pybossa_path: "/vagrant"
-vagrant_home: "/home/vagrant"
-virtualenv_path: "/home/vagrant/pybossa-env"
-redis_host: "127.0.0.1"
-redis_port: "6379"
-schedule_interval: "60"

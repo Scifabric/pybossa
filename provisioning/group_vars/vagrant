@@ -1,5 +1,0 @@
----
-pybossa_user: "vagrant"
-pybossa_path: "/vagrant"
-vagrant_home: "/home/vagrant"
-virtualenv_path: "/home/vagrant/pybossa-env"

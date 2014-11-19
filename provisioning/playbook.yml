@@ -2,6 +2,11 @@
 # Installation steps for every Ubuntu 14.04
 - hosts: all
   sudo: yes
+  vars:
+    pybossa_user: "vagrant"
+    pybossa_path: "/vagrant"
+    vagrant_home: "/home/vagrant"
+    virtualenv_path: "/home/vagrant/pybossa-env"
   tasks:
     - name: Check Ubuntu 14.04 running
       assert:
@@ -49,10 +54,6 @@
     - name: start Redis service
       service: name=redis-server state=started
 
-# Do this installation steps only in Vagrant. TODO: Production steps
-- hosts: vagrant
-  sudo: yes
-  tasks:
     - name: install Redis Sentinel
       copy: src={{pybossa_path}}/contrib/redis/redis-sentinel dest=/etc/init.d/redis-sentinel owner=root group=root mode=755
 
@@ -135,14 +136,7 @@
       notify:
        - restart supervisor
 
-  handlers:
-    - name: restart supervisor
-      service: name=supervisor state=restarted
-
-# change .bashrc only in Vagrant development version
-- hosts: vagrant_dev
-  sudo: yes
-  tasks:
+    # activate virtualenv always in .bashrc
     - name: virtualenv usage by default on bash login
       sudo_user: "{{pybossa_user}}"
       lineinfile:
@@ -160,3 +154,8 @@
         owner=vagrant
         state=present
         insertafter=EOF
+
+  handlers:
+    - name: restart supervisor
+      service: name=supervisor state=restarted
+
