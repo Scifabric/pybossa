@@ -20,14 +20,14 @@ from mock import patch
 from default import db, with_context
 from nose.tools import assert_equal, assert_raises
 from test_api import TestAPI
-from pybossa.model.app import App
-from pybossa.model.user import User
-from pybossa.model.task import Task
-from pybossa.model.task_run import TaskRun
 
 from factories import (AppFactory, TaskFactory, TaskRunFactory, AnonymousTaskRunFactory, UserFactory,
                        CategoryFactory)
 
+from pybossa.repositories import ProjectRepository
+from pybossa.repositories import TaskRepository
+project_repo = ProjectRepository(db)
+task_repo = TaskRepository(db)
 
 class TestAppAPI(TestAPI):
 
@@ -125,12 +125,11 @@ class TestAppAPI(TestAPI):
         # now a real user
         res = self.app.post('/api/app?api_key=' + users[1].api_key,
                             data=data)
-        out = db.session.query(App).filter_by(name=name).one()
+        out = project_repo.get_by(name=name)
         assert out, out
         assert_equal(out.short_name, 'xxxx-project'), out
         assert_equal(out.owner.name, 'user2')
         id_ = out.id
-        db.session.remove()
 
         # now a real user with headers auth
         headers = [('Authorization', users[1].api_key)]
@@ -143,14 +142,13 @@ class TestAppAPI(TestAPI):
         new_app = json.dumps(new_app)
         res = self.app.post('/api/app', headers=headers,
                             data=new_app)
-        out = db.session.query(App).filter_by(name=name + '2').one()
+        out = project_repo.get_by(name=name + '2')
         assert out, out
         assert_equal(out.short_name, 'xxxx-project2'), out
         assert_equal(out.owner.name, 'user2')
         ## Test that a default category is assigned to the project
         assert out.category_id, "No category assigned to project"
         id_ = out.id
-        db.session.remove()
 
         # test re-create should fail
         res = self.app.post('/api/app?api_key=' + users[1].api_key,
@@ -159,7 +157,7 @@ class TestAppAPI(TestAPI):
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
         assert err['action'] == 'POST', err
-        assert err['exception_cls'] == "IntegrityError", err
+        assert err['exception_cls'] == "DBIntegrityError", err
 
         # test create with non-allowed fields should fail
         data = dict(name='fail', short_name='fail', link='hateoas', wrong=15)
@@ -209,7 +207,7 @@ class TestAppAPI(TestAPI):
                            data=datajson)
 
         assert_equal(res.status, '200 OK', res.data)
-        out2 = db.session.query(App).get(id_)
+        out2 = project_repo.get(id_)
         assert_equal(out2.name, data['name'])
         out = json.loads(res.data)
         assert out.get('status') is None, error
@@ -245,7 +243,7 @@ class TestAppAPI(TestAPI):
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
         assert err['action'] == 'PUT', err
-        assert err['exception_cls'] == 'IntegrityError', err
+        assert err['exception_cls'] == 'DBIntegrityError', err
 
         data['name'] = ''
         datajson = json.dumps(data)
@@ -255,7 +253,7 @@ class TestAppAPI(TestAPI):
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
         assert err['action'] == 'PUT', err
-        assert err['exception_cls'] == 'IntegrityError', err
+        assert err['exception_cls'] == 'DBIntegrityError', err
 
         data['name'] = 'something'
         data['short_name'] = ''
@@ -266,7 +264,7 @@ class TestAppAPI(TestAPI):
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
         assert err['action'] == 'PUT', err
-        assert err['exception_cls'] == 'IntegrityError', err
+        assert err['exception_cls'] == 'DBIntegrityError', err
 
 
         # With not JSON data
@@ -349,7 +347,7 @@ class TestAppAPI(TestAPI):
         res = self.app.put(url, data=datajson)
 
         assert_equal(res.status, '200 OK', res.data)
-        out2 = db.session.query(App).get(app.id)
+        out2 = project_repo.get(app.id)
         assert_equal(out2.name, data['name'])
 
         # PUT with not JSON data
@@ -402,12 +400,9 @@ class TestAppAPI(TestAPI):
         user = UserFactory.create()
         app = AppFactory.create(owner=user)
         tasks = TaskFactory.create_batch(2, app=app)
+        taskruns = []
         for task in tasks:
-            taskruns = AnonymousTaskRunFactory.create_batch(2, task=task)
-        taskruns = db.session.query(TaskRun)\
-                     .filter(TaskRun.app_id == app.id)\
-                     .filter(TaskRun.user_ip == '127.0.0.1')\
-                     .all()
+            taskruns.extend(AnonymousTaskRunFactory.create_batch(2, task=task))
 
         res = self.app.get('/api/app/1/userprogress', follow_redirects=True)
         data = json.loads(res.data)
@@ -435,12 +430,9 @@ class TestAppAPI(TestAPI):
         user = UserFactory.create()
         app = AppFactory.create(owner=user)
         tasks = TaskFactory.create_batch(2, app=app)
+        taskruns = []
         for task in tasks:
-            taskruns = TaskRunFactory.create_batch(2, task=task, user=user)
-        taskruns = db.session.query(TaskRun)\
-                     .filter(TaskRun.app_id == app.id)\
-                     .filter(TaskRun.user_id == user.id)\
-                     .all()
+            taskruns.extend(TaskRunFactory.create_batch(2, task=task, user=user))
 
         url = '/api/app/1/userprogress?api_key=%s' % user.api_key
         res = self.app.get(url, follow_redirects=True)
@@ -487,14 +479,10 @@ class TestAppAPI(TestAPI):
         url = '/api/app/%s?api_key=%s' % (1, app.owner.api_key)
         self.app.delete(url)
 
-        tasks = db.session.query(Task)\
-                  .filter_by(app_id=1)\
-                  .all()
+        tasks = task_repo.filter_tasks_by(app_id=app.id)
         assert len(tasks) == 0, "There should not be any task"
 
-        task_runs = db.session.query(TaskRun)\
-                      .filter_by(app_id=1)\
-                      .all()
+        task_runs = task_repo.filter_task_runs_by(app_id=app.id)
         assert len(task_runs) == 0, "There should not be any task run"
 
 
@@ -530,8 +518,7 @@ class TestAppAPI(TestAPI):
 
         # Now only allow authenticated users
         app.allow_anonymous_contributors = False
-        db.session.add(app)
-        db.session.commit()
+        project_repo.update(app)
 
         # As Anonymous user
         url = '/api/app/%s/newtask' % app.id

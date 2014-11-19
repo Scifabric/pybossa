@@ -17,12 +17,18 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from pybossa.model.user import User
-from . import BaseFactory, factory
+from . import BaseFactory, factory, user_repo
 
 
 class UserFactory(BaseFactory):
     class Meta:
         model = User
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        user = model_class(*args, **kwargs)
+        user_repo.save(user)
+        return user
 
     id = factory.Sequence(lambda n: n)
     name = factory.Sequence(lambda n: u'user%d' % n)

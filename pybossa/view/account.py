@@ -41,13 +41,14 @@ import pybossa.model as model
 from flask.ext.babel import gettext
 from sqlalchemy.sql import text
 from pybossa.model.user import User
-from pybossa.core import db, signer, uploader, sentinel
+from pybossa.core import signer, mail, uploader, sentinel
 from pybossa.util import Pagination, get_user_id_or_ip, pretty_date
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
 from pybossa.cache import apps as cached_apps
 from pybossa.auth import require
 from pybossa.jobs import send_mail
+from pybossa.core import user_repo
 
 from pybossa.forms.account_view_forms import *
 
@@ -59,7 +60,9 @@ except ImportError:  # pragma: no cover
 
 blueprint = Blueprint('account', __name__)
 
+
 mail_queue = Queue('mail', connection=sentinel.master)
+
 
 
 def get_update_feed():
@@ -115,7 +118,7 @@ def signin():
     if request.method == 'POST' and form.validate():
         password = form.password.data
         email = form.email.data
-        user = model.user.User.query.filter_by(email_addr=email).first()
+        user = user_repo.get_by(email_addr=email)
         if user and user.check_password(password):
             login_user(user, remember=True)
             msg_1 = gettext("Welcome back") + " " + user.fullname
@@ -208,8 +211,7 @@ def confirm_account():
                               name=userdict['name'],
                               email_addr=userdict['email_addr'])
     account.set_password(userdict['password'])
-    db.session.add(account)
-    db.session.commit()
+    user_repo.save(account)
     login_user(account, remember=True)
     flash(gettext('Thanks for signing-up'), 'success')
     return redirect(url_for('home.home'))
@@ -230,9 +232,9 @@ def profile(name):
     Returns a Jinja2 template with the user information.
 
     """
-    user = db.slave_session.query(model.user.User).filter_by(name=name).first()
+    user = user_repo.get_by_name(name=name)
     if user is None:
-        return abort(404)
+        raise abort(404)
     if current_user.is_anonymous() or (user.id != current_user.id):
         return _show_public_profile(user)
     if current_user.is_authenticated() and user.id == current_user.id:
@@ -271,6 +273,7 @@ def _show_own_profile(user):
                           user=cached_users.get_user_summary(user.name))
 
 
+
 @blueprint.route('/<name>/applications')
 @login_required
 def applications(name):
@@ -280,13 +283,13 @@ def applications(name):
     Returns a Jinja2 template with the list of projects of the user.
 
     """
-    user = db.slave_session.query(User).filter_by(name=name).first()
+    user = user_repo.get_by_name(name)
     if not user:
         return abort(404)
     if current_user.name != name:
         return abort(403)
 
-    user = db.slave_session.query(model.user.User).get(current_user.id)
+    user = user_repo.get(current_user.id)
     apps_published, apps_draft = _get_user_apps(user.id)
     apps_published.extend(cached_users.hidden_apps(user.id))
 
@@ -312,7 +315,7 @@ def update_profile(name):
     Returns Jinja2 template.
 
     """
-    user = User.query.filter_by(name=name).first()
+    user = user_repo.get_by_name(name)
     if not user:
         return abort(404)
     require.user.update(user)
@@ -321,10 +324,10 @@ def update_profile(name):
         show_passwd_form = False
     usr = cached_users.get_user_summary(name)
     # Extend the values
-    current_user.rank = usr.get('rank')
-    current_user.score = usr.get('score')
+    user.rank = usr.get('rank')
+    user.score = usr.get('score')
     # Title page
-    title_msg = "Update your profile: %s" % current_user.fullname
+    title_msg = "Update your profile: %s" % user.fullname
     # Creation of forms
     update_form = UpdateProfileForm(obj=user)
     update_form.set_locales(current_app.config['LOCALES'])
@@ -352,20 +355,20 @@ def update_profile(name):
                                avatar_form.x2.data, avatar_form.y2.data)
                 prefix = time.time()
                 file.filename = "%s_avatar.png" % prefix
-                container = "user_%s" % current_user.id
+                container = "user_%s" % user.id
                 uploader.upload_file(file,
                                      container=container,
                                      coordinates=coordinates)
                 # Delete previous avatar from storage
-                if current_user.info.get('avatar'):
-                    uploader.delete_file(current_user.info['avatar'], container)
-                current_user.info = {'avatar': file.filename,
+                if user.info.get('avatar'):
+                    uploader.delete_file(user.info['avatar'], container)
+                user.info = {'avatar': file.filename,
                                      'container': container}
-                db.session.commit()
-                cached_users.delete_user_summary(current_user.name)
+                user_repo.update(user)
+                cached_users.delete_user_summary(user.name)
                 flash(gettext('Your avatar has been updated! It may \
                               take some minutes to refresh...'), 'success')
-                return redirect(url_for('.update_profile', name=current_user.name))
+                return redirect(url_for('.update_profile', name=user.name))
             else:
                 flash("You have to provide an image file to update your avatar",
                       "error")
@@ -381,19 +384,19 @@ def update_profile(name):
             update_form = UpdateProfileForm()
             update_form.set_locales(current_app.config['LOCALES'])
             if update_form.validate():
-                current_user.id = update_form.id.data
-                current_user.fullname = update_form.fullname.data
-                current_user.name = update_form.name.data
-                current_user.email_addr = update_form.email_addr.data
-                current_user.privacy_mode = update_form.privacy_mode.data
-                current_user.locale = update_form.locale.data
-                db.session.commit()
-                cached_users.delete_user_summary(current_user.name)
+                user.id = update_form.id.data
+                user.fullname = update_form.fullname.data
+                user.name = update_form.name.data
+                user.email_addr = update_form.email_addr.data
+                user.privacy_mode = update_form.privacy_mode.data
+                user.locale = update_form.locale.data
+                user_repo.update(user)
+                cached_users.delete_user_summary(user.name)
                 flash(gettext('Your profile has been updated!'), 'success')
-                return redirect(url_for('.update_profile', name=current_user.name))
+                return redirect(url_for('.update_profile', name=user.name))
             else:
                 flash(gettext('Please correct the errors'), 'error')
-                title_msg = 'Update your profile: %s' % current_user.fullname
+                title_msg = 'Update your profile: %s' % user.fullname
                 return render_template('/account/update.html',
                                        form=update_form,
                                        upload_form=avatar_form,
@@ -411,11 +414,10 @@ def update_profile(name):
             update_form.ckan_api.data = user.ckan_api
             external_form = update_form
             if password_form.validate_on_submit():
-                user = db.session.query(model.user.User).get(current_user.id)
+                user = user_repo.get(user.id)
                 if user.check_password(password_form.current_password.data):
                     user.set_password(password_form.new_password.data)
-                    db.session.add(user)
-                    db.session.commit()
+                    user_repo.update(user)
                     flash(gettext('Yay, you changed your password succesfully!'),
                           'success')
                     return redirect(url_for('.update_profile', name=name))
@@ -446,14 +448,14 @@ def update_profile(name):
             del external_form.fullname
             del external_form.name
             if external_form.validate():
-                current_user.ckan_api = external_form.ckan_api.data or None
-                db.session.commit()
-                cached_users.delete_user_summary(current_user.name)
+                user.ckan_api = external_form.ckan_api.data or None
+                user_repo.update(user)
+                cached_users.delete_user_summary(user.name)
                 flash(gettext('Your profile has been updated!'), 'success')
-                return redirect(url_for('.update_profile', name=current_user.name))
+                return redirect(url_for('.update_profile', name=user.name))
             else:
                 flash(gettext('Please correct the errors'), 'error')
-                title_msg = 'Update your profile: %s' % current_user.fullname
+                title_msg = 'Update your profile: %s' % user.fullname
                 return render_template('/account/update.html',
                                        form=update_form,
                                        upload_form=avatar_form,
@@ -485,14 +487,13 @@ def reset_password():
     username = userdict.get('user')
     if not username or not userdict.get('password'):
         abort(403)
-    user = model.user.User.query.filter_by(name=username).first_or_404()
+    user = user_repo.get_by_name(username)
     if user.passwd_hash != userdict.get('password'):
         abort(403)
     form = ChangePasswordForm(request.form)
     if form.validate_on_submit():
         user.set_password(form.new_password.data)
-        db.session.add(user)
-        db.session.commit()
+        user_repo.update(user)
         login_user(user)
         flash(gettext('You reset your password successfully!'), 'success')
         return redirect(url_for('.signin'))
@@ -511,9 +512,7 @@ def forgot_password():
     """
     form = ForgotPasswordForm(request.form)
     if form.validate_on_submit():
-        user = model.user.User.query\
-                    .filter_by(email_addr=form.email_addr.data)\
-                    .first()
+        user = user_repo.get_by(email_addr=form.email_addr.data)
         if user and user.email_addr:
             msg = dict(subject='Account Recovery',
                        recipients=[user.email_addr])
@@ -562,14 +561,14 @@ def reset_api_key(name):
     Returns a Jinja2 template.
 
     """
-    user = User.query.filter_by(name=name).first()
+    user = user_repo.get_by_name(name)
     if not user:
         return abort(404)
     require.user.update(user)
     title = ("User: %s &middot; Settings"
              "- Reset API KEY") % current_user.fullname
     user.api_key = model.make_uuid()
-    db.session.commit()
+    user_repo.update(user)
     cached_users.delete_user_summary(user.name)
     msg = gettext('New API-KEY generated')
     flash(msg, 'success')

@@ -32,9 +32,11 @@ import time
 from datetime import timedelta
 
 
+session = db.slave_session
+
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def get_app(short_name):
-    app = db.slave_session.query(App).filter_by(short_name=short_name).first()
+    app = session.query(App).filter_by(short_name=short_name).first()
     return app
 
 
@@ -46,7 +48,7 @@ def get_top(n=4):
               COUNT(app_id) AS total FROM task_run, app
               WHERE app_id IS NOT NULL AND app.id=app_id AND app.hidden=0
               GROUP BY app.id ORDER BY total DESC LIMIT :limit;''')
-    results = db.slave_session.execute(sql, dict(limit=n))
+    results = session.execute(sql, dict(limit=n))
     top_apps = []
     for row in results:
         app = dict(id=row.id, name=row.name, short_name=row.short_name,
@@ -64,7 +66,7 @@ def browse_tasks(project_id):
                SELECT task.id, count(task_run.id) as n_task_runs, task.n_answers
                FROM task LEFT OUTER JOIN task_run ON (task.id=task_run.task_id)
                WHERE task.app_id=:app_id GROUP BY task.id ORDER BY task.id''')
-    results = db.slave_session.execute(sql, dict(app_id=project_id))
+    results = session.execute(sql, dict(app_id=project_id))
     tasks = []
     for row in results:
         task = dict(id=row.id, n_task_runs=row.n_task_runs,
@@ -88,7 +90,7 @@ def _pct_status(n_task_runs, n_answers):
 def n_tasks(app_id):
     sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task
                   WHERE task.app_id=:app_id''')
-    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(app_id=app_id))
     n_tasks = 0
     for row in results:
         n_tasks = row.n_tasks
@@ -100,7 +102,7 @@ def n_completed_tasks(app_id):
     sql = text('''SELECT COUNT(task.id) AS n_completed_tasks FROM task
                 WHERE task.app_id=:app_id AND task.state=\'completed\';''')
 
-    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(app_id=app_id))
     n_completed_tasks = 0
     for row in results:
         n_completed_tasks = row.n_completed_tasks
@@ -113,7 +115,8 @@ def n_registered_volunteers(app_id):
            WHERE task_run.user_id IS NOT NULL AND
            task_run.user_ip IS NULL AND
            task_run.app_id=:app_id;''')
-    results = db.slave_session.execute(sql, dict(app_id=app_id))
+
+    results = session.execute(sql, dict(app_id=app_id))
     n_registered_volunteers = 0
     for row in results:
         n_registered_volunteers = row.n_registered_volunteers
@@ -127,7 +130,7 @@ def n_anonymous_volunteers(app_id):
            task_run.user_id IS NULL AND
            task_run.app_id=:app_id;''')
 
-    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(app_id=app_id))
     n_anonymous_volunteers = 0
     for row in results:
         n_anonymous_volunteers = row.n_anonymous_volunteers
@@ -144,7 +147,7 @@ def n_task_runs(app_id):
     sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
                   WHERE task_run.app_id=:app_id''')
 
-    results = db.slave_session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(app_id=app_id))
     n_task_runs = 0
     for row in results:
         n_task_runs = row.n_task_runs
@@ -159,7 +162,8 @@ def overall_progress(app_id):
                COUNT(task_run.task_id) AS n_task_runs
                FROM task LEFT OUTER JOIN task_run ON task.id=task_run.task_id
                WHERE task.app_id=:app_id GROUP BY task.id''')
-    results = db.slave_session.execute(sql, dict(app_id=app_id))
+
+    results = session.execute(sql, dict(app_id=app_id))
     n_expected_task_runs = 0
     n_task_runs = 0
     for row in results:
@@ -178,7 +182,8 @@ def overall_progress(app_id):
 def last_activity(app_id):
     sql = text('''SELECT finish_time FROM task_run WHERE app_id=:app_id
                ORDER BY finish_time DESC LIMIT 1''')
-    results = db.slave_session.execute(sql, dict(app_id=app_id))
+
+    results = session.execute(sql, dict(app_id=app_id))
     for row in results:
         if row is not None:
             return row[0]
@@ -192,7 +197,8 @@ def last_activity(app_id):
 def _n_featured():
     """Return number of featured apps"""
     sql = text('''SELECT COUNT(*) FROM app WHERE featured=true;''')
-    results = db.slave_session.execute(sql)
+
+    results = session.execute(sql)
     for row in results:
         count = row[0]
     return count
@@ -211,7 +217,7 @@ def get_featured(category=None, page=1, per_page=5):
                ''')
 
     offset = (page - 1) * per_page
-    results = db.slave_session.execute(sql, dict(limit=per_page, offset=offset))
+    results = session.execute(sql, dict(limit=per_page, offset=offset))
     apps = []
     for row in results:
         app = dict(id=row.id, name=row.name, short_name=row.short_name,
@@ -239,7 +245,7 @@ def n_published():
                SELECT COUNT(id) FROM published_apps;
                ''')
 
-    results = db.slave_session.execute(sql)
+    results = session.execute(sql)
     for row in results:
         count = row[0]
     return count
@@ -255,7 +261,7 @@ def _n_draft():
                WHERE task.app_id IS NULL AND app.info NOT LIKE('%task_presenter%')
                AND app.hidden=0;''')
 
-    results = db.slave_session.execute(sql)
+    results = session.execute(sql)
     for row in results:
         count = row[0]
     return count
@@ -274,7 +280,7 @@ def get_draft(category=None, page=1, per_page=5):
                LIMIT :limit;''')
 
     offset = (page - 1) * per_page
-    results = db.slave_session.execute(sql, dict(limit=per_page, offset=offset))
+    results = session.execute(sql, dict(limit=per_page, offset=offset))
     apps = []
     for row in results:
         app = dict(id=row.id, name=row.name, short_name=row.short_name,
@@ -311,7 +317,7 @@ def n_count(category):
                SELECT COUNT(*) FROM uniq
                ''')
 
-    results = db.slave_session.execute(sql, dict(category=category))
+    results = session.execute(sql, dict(category=category))
     count = 0
     for row in results:
         count = row[0]
@@ -337,7 +343,7 @@ def get(category, page=1, per_page=5):
                LIMIT :limit;''')
 
     offset = (page - 1) * per_page
-    results = db.slave_session.execute(sql, dict(category=category, limit=per_page, offset=offset))
+    results = session.execute(sql, dict(category=category, limit=per_page, offset=offset))
     apps = []
     for row in results:
         app = dict(id=row.id,

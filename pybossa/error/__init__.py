@@ -46,7 +46,7 @@ class ErrorStatus(object):
                     "ValueError": 415,
                     "DataError": 415,
                     "AttributeError": 415,
-                    "IntegrityError": 415,
+                    "DBIntegrityError": 415,
                     "TooManyRequests": 429}
 
     def format_exception(self, e, target, action):
@@ -68,6 +68,6 @@ class ErrorStatus(object):
                      status_code=status,
                      target=target,
                      exception_cls=exception_cls,
-                     exception_msg=e.message)
+                     exception_msg=str(e.message))
         return Response(json.dumps(error), status=status,
                         mimetype='application/json')

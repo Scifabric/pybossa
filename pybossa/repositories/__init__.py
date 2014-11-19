@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2013 SF Isle of Man Limited
+# Copyright (C) 2014 SF Isle of Man Limited
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -15,12 +15,20 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+# Cache global variables for timeouts
 
-from default import Test, with_context
-from factories import reset_all_pk_sequences
+""" This package exports the following repository objects as an abstraction
+layer between the ORM and the application:
 
+    * user_repo
+    * project_repo
 
-class TestAPI(Test):
+The responsibility of these repositories is only fetching one or many objects of
+a kind and/or saving them to the DB by calling the ORM apropriate methods.
 
-    endpoints = ['app', 'task', 'taskrun', 'user']
+For more complex DB queries, refer to other packages or services within PyBossa."""
 
+from project_repository import ProjectRepository
+from user_repository import UserRepository
+from blog_repository import BlogRepository
+from task_repository import TaskRepository

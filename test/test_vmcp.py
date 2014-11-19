@@ -24,7 +24,7 @@ import base64
 from default import assert_not_raises
 
 
-class TestAPI:
+class TestVMCP(object):
 
     def test_myquote(self):
         """Test myquote works."""

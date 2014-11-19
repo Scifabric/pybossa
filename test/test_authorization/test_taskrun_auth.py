@@ -62,12 +62,20 @@ class TestTaskrunAuthorization(Test):
                     getattr(require, 'taskrun').create,
                     taskrun2)
 
-        # But the user can still create taskruns for different tasks
-        task2 = TaskFactory.create(app=task.app)
-        taskrun3 = AnonymousTaskRunFactory.build(task=task2)
+
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    @patch('pybossa.auth.taskrun.current_user', new=mock_anonymous)
+    def test_anonymous_user_create_taskrun(self):
+        """Test anonymous user can create a taskrun for a task even though
+        he has posted taskruns for different tasks in the same project"""
+
+        tasks = TaskFactory.create_batch(2)
+        taskrun1 = AnonymousTaskRunFactory.create(task=tasks[0])
+        taskrun2 = AnonymousTaskRunFactory.build(task_id=tasks[1].id)
+
         assert_not_raises(Exception,
                       getattr(require, 'taskrun').create,
-                      taskrun3)
+                      taskrun2)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -97,14 +105,22 @@ class TestTaskrunAuthorization(Test):
         assert self.mock_authenticated.id == taskrun1.user.id
         assert_raises(Forbidden, getattr(require, 'taskrun').create, taskrun2)
 
-        # But the user can still create taskruns for different tasks
-        task2 = TaskFactory.create(app=task.app)
-        taskrun3 = TaskRunFactory.build(task=task2, user=taskrun1.user)
 
-        assert self.mock_authenticated.id == taskrun3.user.id
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.taskrun.current_user', new=mock_authenticated)
+    def test_authenticated_user_create_taskrun(self):
+        """Test authenticated user can create a taskrun for a task even though
+        he has posted taskruns for different tasks in the same project"""
+
+        user = UserFactory.create_batch(2)[1]
+        tasks = TaskFactory.create_batch(2)
+        taskrun1 = TaskRunFactory.create(task=tasks[0], user=user)
+        taskrun2 = TaskRunFactory.build(task_id=tasks[1].id, user=user)
+
+        assert self.mock_authenticated.id == taskrun2.user.id
         assert_not_raises(Exception,
                       getattr(require, 'taskrun').create,
-                      taskrun3)
+                      taskrun2)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)

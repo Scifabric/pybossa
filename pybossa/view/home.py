@@ -18,7 +18,7 @@
 
 from flask import current_app, request
 from flask.ext.login import current_user
-import pybossa.model as model
+from pybossa.model.category import Category
 from pybossa.util import Pagination, get_user_id_or_ip
 from flask import Blueprint
 from flask import render_template
@@ -51,7 +51,7 @@ def home():
     # Add featured
     tmp_apps = cached_apps.get_featured('featured', page, per_page)
     if len(tmp_apps) > 0:
-        featured = model.category.Category(name='Featured', short_name='featured')
+        featured = Category(name='Featured', short_name='featured')
         d['categories'].insert(0,featured)
         d['categories_apps']['featured'] = tmp_apps
 

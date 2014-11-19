@@ -51,8 +51,11 @@ from vmcp import VmcpAPI
 from user import UserAPI
 from token import TokenAPI
 from sqlalchemy.sql import text
+from pybossa.core import project_repo, task_repo
 
 blueprint = Blueprint('api', __name__)
+
+
 
 cors_headers = ['Content-Type', 'Authorization']
 
@@ -61,7 +64,7 @@ error = ErrorStatus()
 
 @blueprint.route('/')
 @crossdomain(origin='*', headers=cors_headers)
-@ratelimit(limit=ratelimits['LIMIT'], per=ratelimits['PER'])
+@ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
 def index():  # pragma: no cover
     """Return dummy text for welcome page."""
     return 'The PyBossa API'
@@ -116,7 +119,7 @@ def new_task(app_id):
         return error.format_exception(e, target='app', action='GET')
 
 def _retrieve_new_task(app_id):
-    app = db.session.query(model.app.App).get(app_id)
+    app = project_repo.get(app_id)
     if app is None:
         raise NotFound
     if request.args.get('offset'):
@@ -147,42 +150,21 @@ def user_progress(app_id=None, short_name=None):
     """
     if app_id or short_name:
         if short_name:
-            app = _retrieve_app(short_name=short_name)
+            app = project_repo.get_by_shortname(short_name)
         elif app_id:
-            app = _retrieve_app(app_id=app_id)
+            app = project_repo.get(app_id)
+
         if app:
-            # get done tasks from DB
+            # For now, keep this version, but wait until redis cache is used here for task_runs too
+            query_attrs = dict(app_id=app.id)
             if current_user.is_anonymous():
-                sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
-                              WHERE task_run.app_id=:app_id AND
-                              task_run.user_ip=:user_ip;''')
-                user_ip = request.remote_addr
-                if (user_ip == None):
-                    user_ip = '127.0.0.1' # set address to local host for internal tests (see AnonymousTaskRunFactory)!
-                results = db.slave_session.execute(sql, dict(app_id=app.id, user_ip=user_ip))
+                query_attrs['user_ip'] = request.remote_addr or '127.0.0.1'
             else:
-                sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
-                              WHERE task_run.app_id=:app_id AND
-                              task_run.user_id=:user_id;''')
-                results = db.slave_session.execute(sql, dict(app_id=app.id, user_id=current_user.id))
-            n_task_runs = 0
-            for row in results:
-                n_task_runs = row.n_task_runs
-            # get total tasks from DB
-            tmp = dict(done=n_task_runs, total=n_tasks(app.id))
+                query_attrs['user_id'] = current_user.id
+            taskrun_count = task_repo.count_task_runs_with(**query_attrs)
+            tmp = dict(done=taskrun_count, total=n_tasks(app.id))
             return Response(json.dumps(tmp), mimetype="application/json")
         else:
             return abort(404)
     else:  # pragma: no cover
         return abort(404)
-
-
-def _retrieve_app(app_id=None, short_name=None):
-    if app_id != None:
-        return db.slave_session.query(model.app.App)\
-                    .get(app_id)
-    if short_name != None:
-        return db.slave_session.query(model.app.App)\
-                    .filter(model.app.App.short_name == short_name)\
-                    .first()
-    return None

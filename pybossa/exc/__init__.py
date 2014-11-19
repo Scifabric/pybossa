@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2013 SF Isle of Man Limited
+# Copyright (C) 2014 SF Isle of Man Limited
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -16,11 +16,4 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import Test, with_context
-from factories import reset_all_pk_sequences
-
-
-class TestAPI(Test):
-
-    endpoints = ['app', 'task', 'taskrun', 'user']
-
+from repository import WrongObjectError, DBIntegrityError

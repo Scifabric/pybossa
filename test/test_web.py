@@ -690,7 +690,6 @@ class TestWeb(web.Helper):
         assert "Name is already taken" in res.data, err_msg
         assert "Short Name is already taken" in res.data, err_msg
 
-    @with_context
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     @patch('pybossa.forms.validator.requests.get')
@@ -990,7 +989,6 @@ class TestWeb(web.Helper):
         user = db.session.query(User).get(1)
         assert msg in res.data, res.data
 
-    @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_16_task_status_completed(self, mock):
         """Test WEB Task Status Completed works"""
@@ -1061,7 +1059,6 @@ class TestWeb(web.Helper):
         assert res.status_code == 403, res.status_code
 
 
-    @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_17_export_task_runs(self, mock):
         """Test WEB TaskRun export works"""
@@ -1077,7 +1074,6 @@ class TestWeb(web.Helper):
             task_run = TaskRun(app_id=app.id, task_id=1, info={'answer': 1})
             db.session.add(task_run)
             db.session.commit()
-
 
         app = db.session.query(App).first()
         res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
@@ -2002,7 +1998,6 @@ class TestWeb(web.Helper):
         assert msg in res.data, res.data
 
 
-    @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_46_tasks_exists(self, mock):
         """Test WEB tasks page works."""
@@ -2053,7 +2048,7 @@ class TestWeb(web.Helper):
         err_msg = "Transcribing documents"
         assert "PDF transcription template" in res.data, err_msg
 
-    @with_context
+
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     def test_48_task_presenter_editor_works(self, mock):
         """Test WEB task presenter editor works"""
@@ -2112,7 +2107,6 @@ class TestWeb(web.Helper):
         assert res.status_code == 403
 
 
-    @with_context
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     @patch('pybossa.forms.validator.requests.get')
