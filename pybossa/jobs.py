@@ -211,7 +211,7 @@ def send_mail(message_dict):
 
 
 def import_tasks(tasks_info, app_id):
-    from pybossa.core import db
+    from pybossa.core import task_repo, project_repo
     from pybossa.model.task import Task
     from pybossa.model.app import App
     from pybossa.cache import apps as cached_apps
@@ -224,10 +224,9 @@ def import_tasks(tasks_info, app_id):
         n_data += 1
         task = Task(app_id=app_id)
         [setattr(task, k, v) for k, v in task_data.iteritems()]
-        data = db.session.query(Task).filter_by(app_id=app_id).filter_by(info=task.info).first()
-        if data is None:
-            db.session.add(task)
-            db.session.commit()
+        found = task_repo.get_task_by(app_id=app_id, info=task.info)
+        if found is None:
+            task_repo.save(task)
             n += 1
             empty = False
     if empty and n_data == 0:
@@ -242,7 +241,7 @@ def import_tasks(tasks_info, app_id):
     cached_apps.delete_n_task_runs(app_id)
     cached_apps.delete_overall_progress(app_id)
     cached_apps.delete_last_activity(app_id)
-    app = db.session.query(App).get(app_id)
+    app = project_repo.get(app_id)
     subject = 'Tasks Import to your project %s' % app.name
     body = 'Hello,\n\nThe tasks you recently imported to your project at %s have been successfully created.\n\nAll the best,\nThe team.' % current_app.config.get('BRAND')
     mail_dict = dict(recipients=[app.owner.email_addr],
