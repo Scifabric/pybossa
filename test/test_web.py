@@ -2805,7 +2805,7 @@ class TestWeb(web.Helper):
         tasks = db.session.query(Task).all()
 
         assert tasks == [], "Tasks should not be immediately added"
-        queue.enqueue.assert_called_once_with(import_tasks, tasks_info)
+        queue.enqueue.assert_called_once_with(import_tasks, tasks_info, app.id)
         msg = "You're trying to import a large amount of tasks, so please be patient.\
             You will receibe an email with when the process completes."
         assert msg in res.data

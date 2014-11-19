@@ -596,7 +596,7 @@ def _import_task(app, importer, form):
         cached_apps.delete_overall_progress(app.id)
         cached_apps.delete_last_activity(app.id)
     else:
-        importer_queue.enqueue(background_import, tasks_data)
+        importer_queue.enqueue(background_import, tasks_data, app.id)
         flash(gettext("You're trying to import a large amount of tasks, so please be patient.\
             You will receibe an email with when the process completes."))
     return redirect(url_for('.tasks', short_name=app.short_name))
