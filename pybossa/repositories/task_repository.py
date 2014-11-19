@@ -90,14 +90,16 @@ class TaskRepository(object):
     def delete(self, element):
         self._validate_can_be('deleted', element)
         table = element.__class__
-        self.db.session.query(table).filter(table.id==element.id).delete()
+        inst = self.db.session.query(table).filter(table.id==element.id).first()
+        self.db.session.delete(inst)
         self.db.session.commit()
 
     def delete_all(self, elements):
         for element in elements:
             self._validate_can_be('deleted', element)
             table = element.__class__
-            self.db.session.query(table).filter(table.id==element.id).delete()
+            inst = self.db.session.query(table).filter(table.id==element.id).first()
+            self.db.session.delete(inst)
         self.db.session.commit()
 
     def update_tasks_redundancy(self, project, n_answer):
