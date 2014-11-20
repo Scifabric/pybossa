@@ -44,8 +44,10 @@ class ProjectRepository(object):
     def get_all(self):
         return self.db.session.query(App).all()
 
-    def filter_by(self, **filters):
-        return self.db.session.query(App).filter_by(**filters).all()
+    def filter_by(self, limit=None, offset=0, **filters):
+        query = self.db.session.query(App).filter_by(**filters)
+        query = query.order_by(App.id).limit(limit).offset(offset)
+        return query.all()
 
     def save(self, project):
         self._validate_can_be('saved', project)
@@ -84,8 +86,10 @@ class ProjectRepository(object):
     def get_all_categories(self):
         return self.db.session.query(Category).all()
 
-    def filter_categories_by(self, **filters):
-        return self.db.session.query(Category).filter_by(**filters).all()
+    def filter_categories_by(self, limit=None, offset=0, **filters):
+        query = self.db.session.query(Category).filter_by(**filters)
+        query = query.order_by(Category.id).limit(limit).offset(offset)
+        return query.all()
 
     def save_category(self, category):
         self._validate_can_be('saved as a Category', category, klass=Category)

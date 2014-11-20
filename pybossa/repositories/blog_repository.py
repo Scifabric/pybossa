@@ -36,8 +36,10 @@ class BlogRepository(object):
     def get_by(self, **attributes):
         return self.db.session.query(Blogpost).filter_by(**attributes).first()
 
-    def filter_by(self, **filters):
-        return self.db.session.query(Blogpost).filter_by(**filters).all()
+    def filter_by(self, limit=None, offset=0, **filters):
+        query = self.db.session.query(Blogpost).filter_by(**filters)
+        query = query.order_by(Blogpost.id).limit(limit).offset(offset)
+        return query.all()
 
     def save(self, blogpost):
         self._validate_can_be('saved', blogpost)
