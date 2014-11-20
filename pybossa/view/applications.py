@@ -933,12 +933,8 @@ def export_to(short_name):
         except KeyError:
             return abort(404)
 
-        # container = "user_%d" % app.owner_id
-        filename = json_exporter.download_name(app, ty)
-        tmp = 'attachment; filename=%s' % filename
-        res = json_exporter.response_zip(app, ty)
-        res.headers['Content-Disposition'] = tmp
-        return res
+        response = json_exporter.response_zip(app, ty)
+        return response
 
     def create_ckan_datastore(ckan, table, package_id):
         tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}

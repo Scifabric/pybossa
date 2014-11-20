@@ -29,7 +29,7 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 import pybossa.model as model
 from werkzeug.datastructures import FileStorage
-from flask import Response, url_for, safe_join
+from flask import Response, url_for, safe_join, send_file
 
 class JsonExporter(Exporter):
 
@@ -95,18 +95,13 @@ class JsonExporter(Exporter):
         super(JsonExporter, self).get_zip(app, ty)
         filepath = self._download_path(app)
         filename=self.download_name(app, ty)
-        print "Hallo?!"
         if not self.zip_existing(app, ty):
             print "OMG this JSON is not existing!!!"
             self._make_zip(app, ty)     # TODO: make this with RQ?
-        print "filepath %s   filename %s" % (filepath, filename)
-        return send_from_directory(filepath, filename)
+        return send_file()
 
     def response_zip(self, app, ty):
-        container = "user_%d" % app.owner_id
-        filepath = safe_join(uploader.upload_folder, container)
-        url = url_for(self.download_name(app, ty), filename=safe_join(container, self.download_name(app, ty)))
-        return Response(url , mimetype='application/octet-stream')
+        return self.get_zip(app, ty)
 
     def pregenerate_zip_files(self, app):
         print "%d (json)" % app.id
