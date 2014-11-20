@@ -95,6 +95,21 @@ class TestBlogRepository(Test):
         assert should_be_missing not in retrieved_blogposts, retrieved_blogposts
 
 
+    def test_filter_tasks_limit_offset(self):
+        """Test that filter_by supports limit and offset options"""
+
+        BlogpostFactory.create_batch(4)
+        all_blogposts = self.blog_repo.filter_by()
+
+        first_two = self.blog_repo.filter_by(limit=2)
+        last_two = self.blog_repo.filter_by(limit=2, offset=2)
+
+        assert len(first_two) == 2, first_two
+        assert len(last_two) == 2, last_two
+        assert first_two == all_blogposts[:2]
+        assert last_two == all_blogposts[2:]
+
+
     def test_filter_by_multiple_conditions(self):
         """Test filter_by supports multiple-condition queries"""
 

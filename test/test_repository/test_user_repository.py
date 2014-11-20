@@ -140,6 +140,21 @@ class TestUserRepository(Test):
         assert user in retrieved_users, retrieved_users
 
 
+    def test_filter_tasks_limit_offset(self):
+        """Test that filter_by supports limit and offset options"""
+
+        UserFactory.create_batch(4)
+        all_users = self.user_repo.filter_by()
+
+        first_two = self.user_repo.filter_by(limit=2)
+        last_two = self.user_repo.filter_by(limit=2, offset=2)
+
+        assert len(first_two) == 2, first_two
+        assert len(last_two) == 2, last_two
+        assert first_two == all_users[:2]
+        assert last_two == all_users[2:]
+
+
     def test_search_by_name_returns_list(self):
         """Test search_by_name returns a list with search results"""
 

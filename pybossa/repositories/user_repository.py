@@ -43,8 +43,10 @@ class UserRepository(object):
     def get_all(self):
         return self.db.session.query(User).all()
 
-    def filter_by(self, **filters):
-        return self.db.session.query(User).filter_by(**filters).all()
+    def filter_by(self, limit=None, offset=0, **filters):
+        query = self.db.session.query(User).filter_by(**filters)
+        query = query.order_by(User.id).limit(limit).offset(offset)
+        return query.all()
 
     def search_by_name(self, keyword):
         if len(keyword) == 0:

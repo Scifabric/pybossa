@@ -140,6 +140,21 @@ class TestProjectRepositoryForProjects(Test):
         assert project in retrieved_projects, retrieved_projects
 
 
+    def test_filter_tasks_limit_offset(self):
+        """Test that filter_by supports limit and offset options"""
+
+        AppFactory.create_batch(4)
+        all_projects = self.project_repo.filter_by()
+
+        first_two = self.project_repo.filter_by(limit=2)
+        last_two = self.project_repo.filter_by(limit=2, offset=2)
+
+        assert len(first_two) == 2, first_two
+        assert len(last_two) == 2, last_two
+        assert first_two == all_projects[:2]
+        assert last_two == all_projects[2:]
+
+
     def test_save(self):
         """Test save persist the project"""
 
@@ -323,6 +338,21 @@ class TestProjectRepositoryForCategories(Test):
 
         assert len(retrieved_categories) == 3, retrieved_categories
         assert should_be_missing not in retrieved_categories, retrieved_categories
+
+
+    def test_filter_tasks_limit_offset(self):
+        """Test that filter_categories_by supports limit and offset options"""
+
+        CategoryFactory.create_batch(4)
+        all_categories = self.project_repo.filter_categories_by()
+
+        first_two = self.project_repo.filter_categories_by(limit=2)
+        last_two = self.project_repo.filter_categories_by(limit=2, offset=2)
+
+        assert len(first_two) == 2, first_two
+        assert len(last_two) == 2, last_two
+        assert first_two == all_categories[:2]
+        assert last_two == all_categories[2:]
 
 
     def test_save_category(self):
