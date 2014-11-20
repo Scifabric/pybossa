@@ -39,8 +39,8 @@ class TaskRepository(object):
     def get_task_by(self, **attributes):
         return self.db.session.query(Task).filter_by(**attributes).first()
 
-    def filter_tasks_by(self, yielded=False, **filters):
-        query = self.db.session.query(Task).filter_by(**filters)
+    def filter_tasks_by(self, limit=None, offset=0, yielded=False, **filters):
+        query = self.db.session.query(Task).filter_by(**filters).limit(limit).offset(offset)
         if yielded:
             return query.yield_per(1)
         return query.all()
@@ -57,8 +57,8 @@ class TaskRepository(object):
     def get_task_run_by(self, **attributes):
         return self.db.session.query(TaskRun).filter_by(**attributes).first()
 
-    def filter_task_runs_by(self, yielded=False, **filters):
-        query = self.db.session.query(TaskRun).filter_by(**filters)
+    def filter_task_runs_by(self, limit=None, offset=0, yielded=False, **filters):
+        query = self.db.session.query(TaskRun).filter_by(**filters).limit(limit).offset(offset)
         if yielded:
             return query.yield_per(1)
         return query.all()
