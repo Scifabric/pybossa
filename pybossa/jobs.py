@@ -228,21 +228,18 @@ def import_tasks(tasks_info, app_id):
             task_repo.save(task)
             n += 1
             empty = False
-    if empty and n_data == 0:
-        msg = 'Oops! It looks like the file is empty.'
-    if empty and n_data > 0:
-        msg = 'Oops! It looks like there are no new records to import.'
-
-    msg = str(n) + " " + 'Tasks imported successfully!'
+    app = project_repo.get(app_id)
+    msg = str(n) + " " + 'new tasks were imported successfully to your project %s!' % app.name
     if n == 1:
-        msg = str(n) + " " + 'Task imported successfully!'
+        msg = str(n) + " " + 'new task was imported successfully to your project %s!' % app.name
+    if empty and n_data > 0:
+        msg = 'It looks like there were no new records to import to your project %s!' % app.name
     cached_apps.delete_n_tasks(app_id)
     cached_apps.delete_n_task_runs(app_id)
     cached_apps.delete_overall_progress(app_id)
     cached_apps.delete_last_activity(app_id)
-    app = project_repo.get(app_id)
     subject = 'Tasks Import to your project %s' % app.name
-    body = 'Hello,\n\nThe tasks you recently imported to your project at %s have been successfully created.\n\nAll the best,\nThe team.' % current_app.config.get('BRAND')
+    body = 'Hello,\n\n' + msg + '\n\nAll the best,\nThe %s team.' % current_app.config.get('BRAND')
     mail_dict = dict(recipients=[app.owner.email_addr],
                      subject=subject, body=body)
     send_mail(mail_dict)

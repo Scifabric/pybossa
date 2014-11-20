@@ -50,11 +50,27 @@ class TestImportTasksJob(Test):
 
     @with_context
     @patch('pybossa.jobs.send_mail')
-    def test_sends_email_to_user_with_result(self, send_mail):
+    def test_sends_email_to_user_with_result_on_success(self, send_mail):
         app = AppFactory.create()
         tasks_info = [{'info': {'Bar': '2', 'Foo': '1', 'Baz': '3'}}]
         subject = 'Tasks Import to your project %s' % app.name
-        body = 'Hello,\n\nThe tasks you recently imported to your project at PyBossa have been successfully created.\n\nAll the best,\nThe team.'
+        body = 'Hello,\n\n1 new task was imported successfully to your project %s!\n\nAll the best,\nThe PyBossa team.' % app.name
+        email_data = dict(recipients=[app.owner.email_addr],
+                          subject=subject, body=body)
+
+        import_tasks(tasks_info, app.id)
+
+        send_mail.assert_called_once_with(email_data)
+
+
+    @with_context
+    @patch('pybossa.jobs.send_mail')
+    def test_sends_email_to_user_with_result_no_new_tasks(self, send_mail):
+        tasks_info = [{'info': {'Bar': '2', 'Foo': '1', 'Baz': '3'}}]
+        app = AppFactory.create()
+        task = TaskFactory.create(app=app, info=tasks_info[0]['info'])
+        subject = 'Tasks Import to your project %s' % app.name
+        body = 'Hello,\n\nIt looks like there were no new records to import to your project %s!\n\nAll the best,\nThe PyBossa team.' % app.name
         email_data = dict(recipients=[app.owner.email_addr],
                           subject=subject, body=body)
 
