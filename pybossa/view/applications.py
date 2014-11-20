@@ -57,7 +57,7 @@ from pybossa.core import project_repo, user_repo, task_repo, blog_repo
 blueprint = Blueprint('app', __name__)
 
 importer_queue = Queue('importer', connection=sentinel.master)
-MAX_NUM__SYNCHR_TASKS_IMPORT = 200
+MAX_NUM_SYNCHR_TASKS_IMPORT = 200
 
 def app_title(app, page_name):
     if not app:  # pragma: no cover
@@ -562,9 +562,8 @@ def _import_task(app, importer, form):
     empty = True
     n = 0
     n_data = 0
-    # REFACTOR with worker bypass?
     tasks_data = [data for data in importer.tasks(form)]
-    if len(tasks_data) <= MAX_NUM__SYNCHR_TASKS_IMPORT:
+    if len(tasks_data) <= MAX_NUM_SYNCHR_TASKS_IMPORT:
         for task_data in importer.tasks(form):
             n_data += 1
             task = model.task.Task(app_id=app.id)
