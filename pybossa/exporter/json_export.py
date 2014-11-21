@@ -25,11 +25,12 @@ import os
 import json
 import tempfile
 from pybossa.core import db, uploader
+from pybossa.uploader import local, rackspace
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 import pybossa.model as model
 from werkzeug.datastructures import FileStorage
-from flask import Response, url_for, safe_join, send_file
+from flask import url_for, safe_join, send_file, redirect
 
 class JsonExporter(Exporter):
 
@@ -83,24 +84,21 @@ class JsonExporter(Exporter):
         filename='%s_%s_json.zip' % (name, ty)
         return filename
 
-    def zip_existing(self, app, ty):
-        super(JsonExporter, self).zip_existing(app, ty)
-        filepath = self._download_path(app)
-        filename=self.download_name(app, ty)
-        # TODO: This only works on local files !!!
-        return os.path.isfile(safe_join(filepath, filename))
-        # TODO: Check rackspace file existence
-
     def get_zip(self, app, ty):
         super(JsonExporter, self).get_zip(app, ty)
         filepath = self._download_path(app)
         filename=self.download_name(app, ty)
         if not self.zip_existing(app, ty):
-            print "OMG this JSON is not existing!!!"
-            self._make_zip(app, ty)     # TODO: make this with RQ?
-        return send_file()
+            print "Warning: Generating CSV on the fly now!"
+            self._make_zip(app, ty)
+        if isinstance(uploader, local.LocalUploader):
+            return send_file(filename_or_fp=safe_join(filepath, filename), as_attachment=True)
+        else:
+            return redirect(url_for('rackspace', filename=filename, container=self._container(app)))
+
 
     def response_zip(self, app, ty):
+        super(JsonExporter, self).response_zip(app, ty)
         return self.get_zip(app, ty)
 
     def pregenerate_zip_files(self, app):

@@ -20,9 +20,11 @@
 Exporter module for exporting tasks and tasks results out of PyBossa
 """
 
+import os
 import zipfile
 from flask import safe_join
 from pybossa.core import uploader
+from pybossa.uploader import local
 
 
 class Exporter(object):
@@ -48,8 +50,11 @@ class Exporter(object):
         """Generate a ZIP of a certain type and upload it"""
         pass
 
+    def _container(self, app):
+        return "user_%d" % app.owner_id
+
     def _download_path(self, app):
-        container = "user_%d" % app.owner_id
+        container = self._container(app)
         filepath = safe_join(uploader.upload_folder, container)
         return filepath
 
@@ -61,7 +66,14 @@ class Exporter(object):
 
     def zip_existing(self, app, ty):
         """Check if exported ZIP is existing"""
-        pass
+        # TODO: Check ty
+        filepath = self._download_path(app)
+        filename=self.download_name(app, ty)
+        if isinstance(uploader, local.LocalUploader):
+            return os.path.isfile(safe_join(filepath, filename))
+        else:
+            return True
+            # TODO: Check rackspace file existence
 
     def get_zip(self, app, ty):
         """Get a ZIP file directly from uploaded directory or generate one on the fly and upload it if not existing."""

@@ -1025,8 +1025,6 @@ def export_to(short_name):
             .first()
         if t is not None:
             res = csv_exporter.response_zip(app, ty)
-            tmp = 'attachment; filename=%s' % csv_exporter.download_name(app, ty)
-            res.headers['Content-Disposition'] = tmp
             return res
         else:
             flash(msg, 'info')
