@@ -104,7 +104,7 @@ class CsvExporter(Exporter):
 
             out = StringIO()
             writer = UnicodeWriter(out)
-            t = getattr(task_repo, 'get_%s_by' % ty)(app_id=app.id)
+            t = getattr(task_repo, 'get_%s_by' % ty)(app_id=id)
             if t is not None:
                 if test(t):
                     tmp = t.dictize().keys()
