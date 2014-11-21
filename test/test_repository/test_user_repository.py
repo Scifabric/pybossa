@@ -140,7 +140,7 @@ class TestUserRepository(Test):
         assert user in retrieved_users, retrieved_users
 
 
-    def test_filter_tasks_limit_offset(self):
+    def test_filter_by_limit_offset(self):
         """Test that filter_by supports limit and offset options"""
 
         UserFactory.create_batch(4)
