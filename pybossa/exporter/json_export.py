@@ -82,7 +82,7 @@ class JsonExporter(Exporter):
         filepath = self._download_path(app)
         filename=self.download_name(app, ty)
         if not self.zip_existing(app, ty):
-            print "Warning: Generating CSV on the fly now!"
+            print "Warning: Generating JSON on the fly now!"
             self._make_zip(app, ty)
         if isinstance(uploader, local.LocalUploader):
             return send_file(filename_or_fp=safe_join(filepath, filename), as_attachment=True)
