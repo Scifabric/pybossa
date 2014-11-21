@@ -95,7 +95,7 @@ class TestBlogRepository(Test):
         assert should_be_missing not in retrieved_blogposts, retrieved_blogposts
 
 
-    def test_filter_tasks_limit_offset(self):
+    def test_filter_by_limit_offset(self):
         """Test that filter_by supports limit and offset options"""
 
         BlogpostFactory.create_batch(4)

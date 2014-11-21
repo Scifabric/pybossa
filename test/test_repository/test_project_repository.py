@@ -140,7 +140,7 @@ class TestProjectRepositoryForProjects(Test):
         assert project in retrieved_projects, retrieved_projects
 
 
-    def test_filter_tasks_limit_offset(self):
+    def test_filter_by_limit_offset(self):
         """Test that filter_by supports limit and offset options"""
 
         AppFactory.create_batch(4)
@@ -340,7 +340,7 @@ class TestProjectRepositoryForCategories(Test):
         assert should_be_missing not in retrieved_categories, retrieved_categories
 
 
-    def test_filter_tasks_limit_offset(self):
+    def test_filter_categories_by_limit_offset(self):
         """Test that filter_categories_by supports limit and offset options"""
 
         CategoryFactory.create_batch(4)
