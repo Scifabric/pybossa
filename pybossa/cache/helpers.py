@@ -23,6 +23,9 @@ from pybossa.cache.apps import overall_progress
 
 
 
+session = db.slave_session
+
+
 @memoize(timeout=ONE_HOUR * 3)
 def n_available_tasks(app_id, user_id=None, user_ip=None):
     """Returns the number of tasks for a given app a user can contribute to,
@@ -33,7 +36,7 @@ def n_available_tasks(app_id, user_id=None, user_ip=None):
                        (SELECT task_id FROM task_run WHERE
                        app_id=:app_id AND user_id=:user_id AND task_id=task.id)
                        AND app_id=:app_id AND state !='completed';''')
-        result = db.slave_session.execute(query, dict(app_id=app_id, user_id=user_id))
+        result = session.execute(query, dict(app_id=app_id, user_id=user_id))
     else:
         if not user_ip:
             user_ip = '127.0.0.1'
@@ -42,7 +45,7 @@ def n_available_tasks(app_id, user_id=None, user_ip=None):
                        app_id=:app_id AND user_ip=:user_ip AND task_id=task.id)
                        AND app_id=:app_id AND state !='completed';''')
 
-        result = db.slave_session.execute(query, dict(app_id=app_id, user_ip=user_ip))
+        result = session.execute(query, dict(app_id=app_id, user_ip=user_ip))
     n_tasks = 0
     for row in result:
         n_tasks = row.n_tasks
@@ -86,7 +89,7 @@ def _has_no_presenter(app):
 def _has_no_tasks(app_id):
     query = text('''SELECT COUNT(id) AS n_tasks FROM task
                WHERE app_id=:app_id;''')
-    result = db.slave_session.execute(query, dict(app_id=app_id))
+    result = session.execute(query, dict(app_id=app_id))
     for row in result:
         n_tasks = row.n_tasks
     return n_tasks == 0

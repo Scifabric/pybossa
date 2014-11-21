@@ -24,7 +24,7 @@ from pybossa.exporter import Exporter
 import os
 import json
 import tempfile
-from pybossa.core import db, uploader
+from pybossa.core import uploader, task_repo
 from pybossa.uploader import local, rackspace
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
@@ -35,26 +35,19 @@ from flask import url_for, safe_join, send_file, redirect
 class JsonExporter(Exporter):
 
     def _gen_json(self, table, id):
-        n = db.slave_session.query(table)\
-            .filter_by(app_id=id).count()
+        n = getattr(task_repo, 'count_%ss_with' % table)(app_id=id)
         sep = ", "
         yield "["
-        for i, tr in enumerate(db.slave_session.query(table)
-                                 .filter_by(app_id=id).yield_per(1), 1):
+        for i, tr in enumerate(getattr(task_repo, 'filter_%ss_by' % table)(app_id=id, yielded=True), 1):
             item = json.dumps(tr.dictize())
             if (i == n):
                 sep = ""
             yield item + sep
         yield "]"
 
-    def _respond_json(self, ty, id):
-        tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}
-        try:
-            table = tables[ty]
-        except KeyError:
-            print("key error")  # TODO
-
-        return self._gen_json(table, id)
+    def _respond_json(self, ty, id):    # TODO: Refactor _respond_json out?
+        # TODO: check ty here
+        return self._gen_json(ty, id)
 
     def _make_zip(self, app, ty):
         name = self._app_name_encoded(app)

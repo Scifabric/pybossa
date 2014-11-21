@@ -19,45 +19,51 @@
 
 from helper import web
 from default import db, with_context
-from pybossa.model.blogpost import Blogpost
-from pybossa.model.user import User
-from factories import AppFactory, UserFactory, BlogpostFactory
+from factories import AppFactory, BlogpostFactory
 from mock import patch
+
+from pybossa.repositories import BlogRepository
+from pybossa.repositories import UserRepository
+blog_repo = BlogRepository(db)
+user_repo = UserRepository(db)
 
 
 
 class TestBlogpostView(web.Helper):
 
-    @with_context
     def test_blogposts_get_all(self):
         """Test blogpost GET all blogposts"""
         user = self.create_users()[1]
         app = AppFactory.create(owner=user)
-        blogpost = BlogpostFactory.create(owner=user, app=app, title='title')
+        blogpost_1 = BlogpostFactory.create(owner=user, app=app, title='titleone')
+        blogpost_2 = BlogpostFactory.create(owner=user, app=app, title='titletwo')
+
         url = "/app/%s/blog" % app.short_name
 
         # As anonymous
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert 'title' in res.data
+        assert 'titleone' in res.data
+        assert 'titletwo' in res.data
 
         # As authenticated
         self.register()
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        assert 'title' in res.data
+        assert 'titleone' in res.data
+        assert 'titletwo' in res.data
 
 
-    @with_context
     def test_blogposts_get_all_with_hidden_app(self):
         """Test blogpost GET does not show hidden projects"""
         self.register()
-        admin = db.session.query(User).get(1)
+        admin = user_repo.get(1)
         self.signout()
         self.register(name='user', email='user@user.com')
-        user = db.session.query(User).get(2)
+        user = user_repo.get(2)
         app = AppFactory.create(owner=user, hidden=1)
-        blogpost = BlogpostFactory.create(owner=user, app=app, title='title')
+        blogpost = BlogpostFactory.create(app=app, title='title')
+
         url = "/app/%s/blog" % app.short_name
 
         # As app owner
@@ -91,12 +97,11 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 404, res.status_code
 
 
-    @with_context
     def test_blogpost_get_one(self):
         """Test blogpost GET with id shows one blogpost"""
         user = self.create_users()[1]
         app = AppFactory.create(owner=user)
-        blogpost = BlogpostFactory.create(owner=user, app=app, title='title')
+        blogpost = BlogpostFactory.create(app=app, title='title')
         url = "/app/%s/%s" % (app.short_name, blogpost.id)
 
         # As anonymous
@@ -111,16 +116,15 @@ class TestBlogpostView(web.Helper):
         assert 'title' in res.data
 
 
-    @with_context
     def test_blogpost_get_one_with_hidden_app(self):
         """Test blogpost GET a given post id with hidden project does not show the post"""
         self.register()
-        admin = db.session.query(User).get(1)
+        admin = user_repo.get(1)
         self.signout()
         self.register(name='user', email='user@user.com')
-        user = db.session.query(User).get(2)
+        user = user_repo.get(2)
         app = AppFactory.create(owner=user, hidden=1)
-        blogpost = BlogpostFactory.create(owner=user, app=app, title='title')
+        blogpost = BlogpostFactory.create(app=app, title='title')
         url = "/app/%s/%s" % (app.short_name, blogpost.id)
 
         # As app owner
@@ -146,14 +150,12 @@ class TestBlogpostView(web.Helper):
         assert 'title' in res.data
 
 
-    @with_context
     def test_blogpost_get_one_errors(self):
         """Test blogposts GET non existing posts raises errors"""
         self.register()
-        user = db.session.query(User).get(1)
-        app1 = AppFactory.create(owner=user)
-        app2 = AppFactory.create(owner=user)
-        blogpost = BlogpostFactory.create(owner=user, app=app1)
+        user = user_repo.get(1)
+        app1, app2 = AppFactory.create_batch(2, owner=user)
+        blogpost = BlogpostFactory.create(app=app1)
 
         # To a non-existing app
         url = "/app/non-existing-app/%s" % blogpost.id
@@ -173,12 +175,11 @@ class TestBlogpostView(web.Helper):
 
     from pybossa.view.applications import redirect
 
-    @with_context
     @patch('pybossa.view.applications.redirect', wraps=redirect)
     def test_blogpost_create_by_owner(self, mock_redirect):
         """Test blogposts, project owners can create"""
         self.register()
-        user = db.session.query(User).get(1)
+        user = user_repo.get(1)
         app = AppFactory.create(owner=user)
         url = "/app/%s/new-blogpost" % app.short_name
 
@@ -191,17 +192,15 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 200, res.status_code
         mock_redirect.assert_called_with('/app/%s/blog' % app.short_name)
 
-        blogpost = db.session.query(Blogpost).first()
+        blogpost = blog_repo.get_by(title='blogpost title')
         assert blogpost.title == 'blogpost title', blogpost.title
         assert blogpost.app_id == app.id, blogpost.app.id
         assert blogpost.user_id == user.id, blogpost.user_id
 
 
-    @with_context
     def test_blogpost_create_by_anonymous(self):
         """Test blogpost create, anonymous users are redirected to signin"""
-        user = self.create_users()[1]
-        app = AppFactory.create(owner=user)
+        app = AppFactory.create()
         url = "/app/%s/new-blogpost" % app.short_name
 
         res = self.app.get(url, follow_redirects=True)
@@ -214,17 +213,18 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 200, res.status_code
         assert "Please sign in to access this page" in res.data
 
-        blogpost = db.session.query(Blogpost).first()
+        blogpost = blog_repo.get_by(title='blogpost title')
         assert blogpost == None, blogpost
 
 
-    @with_context
     def test_blogpost_create_by_non_owner(self):
         """Test blogpost create by non owner of the project is forbidden"""
-        user = self.create_users()[1]
+        self.register()
+        user = user_repo.get(1)
         app = AppFactory.create(owner=user)
         url = "/app/%s/new-blogpost" % app.short_name
-        self.register()
+        self.signout()
+        self.register(name='notowner', email='user2@user.com')
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 403, res.status_code
@@ -248,14 +248,13 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 404, res.status_code
 
 
-    @with_context
     @patch('pybossa.view.applications.redirect', wraps=redirect)
     def test_blogpost_update_by_owner(self, mock_redirect):
-        """Test blogposts, app owners can update"""
+        """Test blogposts, project owners can update"""
         self.register()
-        user = db.session.query(User).get(1)
+        user = user_repo.get(1)
         app = AppFactory.create(owner=user)
-        blogpost = BlogpostFactory(owner=user, app=app)
+        blogpost = BlogpostFactory.create(app=app)
         url = "/app/%s/%s/update" % (app.short_name, blogpost.id)
 
         res = self.app.get(url, follow_redirects=True)
@@ -269,18 +268,16 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 200, res.status_code
         mock_redirect.assert_called_with('/app/%s/blog' % app.short_name)
 
-        blogpost = db.session.query(Blogpost).first()
+        blogpost = blog_repo.get_by(title='blogpost title')
         assert blogpost.title == 'blogpost title', blogpost.title
         assert blogpost.body == 'new body', blogpost.body
 
 
 
-    @with_context
     def test_blogpost_update_by_anonymous(self):
         """Test blogpost update, anonymous users are redirected to signin"""
-        user = self.create_users()[1]
-        app = AppFactory.create(owner=user)
-        blogpost = BlogpostFactory(owner=user, app=app, title='title')
+        app = AppFactory.create()
+        blogpost = BlogpostFactory.create(app=app, title='title')
         url = "/app/%s/%s/update" % (app.short_name, blogpost.id)
 
         res = self.app.get(url, follow_redirects=True)
@@ -295,18 +292,21 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 200, res.status_code
         assert "Please sign in to access this page" in res.data
 
-        blogpost = db.session.query(Blogpost).first()
+        blogpost = blog_repo.get_by()
         assert blogpost.title == 'title', blogpost.title
 
 
     @with_context
     def test_blogpost_update_by_non_owner(self):
-        """Test blogpost update by non owner of the app is forbidden"""
-        user = self.create_users()[1]
-        app = AppFactory.create(owner=user)
-        blogpost = BlogpostFactory(owner=user, app=app, title='title')
-        url = "/app/%s/%s/update" % (app.short_name, blogpost.id)
+        """Test blogpost update by non owner of the project is forbidden"""
         self.register()
+        user = user_repo.get(1)
+        app = AppFactory.create(owner=user)
+        blogpost = BlogpostFactory.create(app=app, title='title', body='body')
+        url = "/app/%s/new-blogpost" % app.short_name
+        self.signout()
+        self.register(name='notowner', email='user2@user.com')
+        url = "/app/%s/%s/update" % (app.short_name, blogpost.id)
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 403, res.status_code
@@ -316,18 +316,17 @@ class TestBlogpostView(web.Helper):
                             follow_redirects=True)
         assert res.status_code == 403, res.status_code
 
-        blogpost = db.session.query(Blogpost).first()
+        blogpost = blog_repo.get_by()
         assert blogpost.title == 'title', blogpost.title
 
 
-    @with_context
     def test_blogpost_update_errors(self):
-        """Test blogposts update for non existing apps raises errors"""
+        """Test blogposts update for non existing projects raises errors"""
         self.register()
-        user = db.session.query(User).get(1)
+        user = user_repo.get(1)
         app1 = AppFactory.create(owner=user)
         app2 = AppFactory.create(owner=user)
-        blogpost = BlogpostFactory.create(owner=user, app=app1, body='body')
+        blogpost = BlogpostFactory.create(app=app1, body='body')
 
         # To a non-existing app
         url = "/app/non-existing-app/%s/update" % blogpost.id
@@ -348,14 +347,13 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 404, res.status_code
 
 
-    @with_context
     @patch('pybossa.view.applications.redirect', wraps=redirect)
     def test_blogpost_delete_by_owner(self, mock_redirect):
-        """Test blogposts, app owners can delete"""
+        """Test blogposts, project owner can delete"""
         self.register()
-        user = db.session.query(User).get(1)
+        user = user_repo.get(1)
         app = AppFactory.create(owner=user)
-        blogpost = BlogpostFactory(owner=user, app=app)
+        blogpost = BlogpostFactory.create(app=app)
         url = "/app/%s/%s/delete" % (app.short_name, blogpost.id)
         redirect_url = '/app/%s/blog' % app.short_name
 
@@ -363,51 +361,51 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 200, res.status_code
         mock_redirect.assert_called_with(redirect_url)
 
-        blogpost = db.session.query(Blogpost).first()
+        blogpost = blog_repo.get_by(title='title')
         assert blogpost is None, blogpost
 
 
 
-    @with_context
     def test_blogpost_delete_by_anonymous(self):
         """Test blogpost delete, anonymous users are redirected to signin"""
-        user = self.create_users()[1]
-        app = AppFactory.create(owner=user)
-        blogpost = BlogpostFactory(owner=user, app=app)
+        app = AppFactory.create()
+        blogpost = BlogpostFactory.create(app=app)
         url = "/app/%s/%s/delete" % (app.short_name, blogpost.id)
 
         res = self.app.post(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
         assert "Please sign in to access this page" in res.data
 
-        blogpost = db.session.query(Blogpost).first()
+        blogpost = blog_repo.get_by()
         assert blogpost is not None
 
 
     @with_context
     def test_blogpost_delete_by_non_owner(self):
-        """Test blogpost delete by non owner of the app is forbidden"""
-        user = self.create_users()[1]
-        app = AppFactory.create(owner=user)
-        blogpost = BlogpostFactory(owner=user, app=app)
-        url = "/app/%s/%s/delete" % (app.short_name, blogpost.id)
+        """Test blogpost delete by non owner of the project is forbidden"""
         self.register()
+        user = user_repo.get(1)
+        app = AppFactory.create(owner=user)
+        blogpost = BlogpostFactory.create(app=app)
+        url = "/app/%s/new-blogpost" % app.short_name
+        self.signout()
+        url = "/app/%s/%s/delete" % (app.short_name, blogpost.id)
+        self.register(name='notowner', email='user2@user.com')
 
         res = self.app.post(url, follow_redirects=True)
         assert res.status_code == 403, res.status_code
 
-        blogpost = db.session.query(Blogpost).first()
+        blogpost = blog_repo.get_by()
         assert blogpost is not None
 
 
-    @with_context
     def test_blogpost_delete_errors(self):
-        """Test blogposts delete for non existing apps raises errors"""
+        """Test blogposts delete for non existing projects raises errors"""
         self.register()
-        user = db.session.query(User).get(1)
+        user = user_repo.get(1)
         app1 = AppFactory.create(owner=user)
         app2 = AppFactory.create(owner=user)
-        blogpost = BlogpostFactory.create(owner=user, app=app1)
+        blogpost = BlogpostFactory.create(app=app1)
 
         # To a non-existing app
         url = "/app/non-existing-app/%s/delete" % blogpost.id
@@ -423,6 +421,3 @@ class TestBlogpostView(web.Helper):
         url = "/app/%s/%s/delete" % (app2.short_name, blogpost.id)
         res = self.app.post(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
-
-
-

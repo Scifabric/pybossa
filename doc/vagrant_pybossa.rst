@@ -78,11 +78,23 @@ the PyBossa development server::
   $ vagrant ssh
   $ python run.py
 
+.. note::
+    Virtualenv (located in /home/vagrant/pybossa-env) is always activated on login.
+
 Now all you have to do is open the following URL in your web browser::
 
   http://127.0.0.1:5000
 
 And you are done! Happy Hacking!
+
+.. note::
+
+    PyBossa needs a RQ worker process. It is running by default permanently in
+    the background in the VM and is controlled by supervisor.
+    Optional is also the RQ scheduler process for speeding up tasks like
+    ZIP creation. This process is off by default now.
+    If you are developing on RQ worker you want to restart or disable it with
+    supervisorctl.
 
 .. _`Vagrant`: http://www.vagrantup.com/
 .. _`VirtualBox`: https://www.virtualbox.org/

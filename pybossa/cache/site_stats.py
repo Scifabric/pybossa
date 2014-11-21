@@ -24,11 +24,12 @@ from flask import current_app
 from pybossa.core import db
 from pybossa.cache import cache, ONE_DAY
 
+session = db.slave_session
 
 @cache(timeout=ONE_DAY, key_prefix="site_n_auth_users")
 def n_auth_users():
     sql = text('''SELECT COUNT("user".id) AS n_auth FROM "user";''')
-    results = db.slave_session.execute(sql)
+    results = session.execute(sql)
     for row in results:
         n_auth = row.n_auth
     return n_auth or 0
@@ -39,7 +40,7 @@ def n_anon_users():
     sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip))
                AS n_anon FROM task_run;''')
 
-    results = db.slave_session.execute(sql)
+    results = session.execute(sql)
     for row in results:
         n_anon = row.n_anon
     return n_anon or 0
@@ -48,7 +49,7 @@ def n_anon_users():
 @cache(timeout=ONE_DAY, key_prefix="site_n_tasks")
 def n_tasks_site():
     sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task''')
-    results = db.slave_session.execute(sql)
+    results = session.execute(sql)
     for row in results:
         n_tasks = row.n_tasks
     return n_tasks or 0
@@ -57,7 +58,7 @@ def n_tasks_site():
 @cache(timeout=ONE_DAY, key_prefix="site_n_total_tasks")
 def n_total_tasks_site():
     sql = text('''SELECT SUM(n_answers) AS n_tasks FROM task''')
-    results = db.slave_session.execute(sql)
+    results = session.execute(sql)
     for row in results:
         total = row.n_tasks
     return total or 0
@@ -66,7 +67,7 @@ def n_total_tasks_site():
 @cache(timeout=ONE_DAY, key_prefix="site_n_task_runs")
 def n_task_runs_site():
     sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run''')
-    results = db.slave_session.execute(sql)
+    results = session.execute(sql)
     for row in results:
         n_task_runs = row.n_task_runs
     return n_task_runs or 0
@@ -84,7 +85,7 @@ def get_top5_apps_24_hours():
                GROUP BY app.id
                ORDER BY n_answers DESC LIMIT 5;''')
 
-    results = db.slave_session.execute(sql, dict(limit=5))
+    results = session.execute(sql, dict(limit=5))
     top5_apps_24_hours = []
     for row in results:
         tmp = dict(id=row.id, name=row.name, short_name=row.short_name,
@@ -104,7 +105,7 @@ def get_top5_users_24_hours():
                GROUP BY "user".id
                ORDER BY n_answers DESC LIMIT 5;''')
 
-    results = db.slave_session.execute(sql, dict(limit=5))
+    results = session.execute(sql, dict(limit=5))
     top5_users_24_hours = []
     for row in results:
         user = dict(id=row.id, fullname=row.fullname,
@@ -120,7 +121,7 @@ def get_locs(): # pragma: no cover
     locs = []
     if current_app.config['GEO']:
         sql = '''SELECT DISTINCT(user_ip) from task_run WHERE user_ip IS NOT NULL;'''
-        results = db.slave_session.execute(sql)
+        results = session.execute(sql)
 
         geolite = current_app.root_path + '/../dat/GeoLiteCity.dat'
         gic = pygeoip.GeoIP(geolite)

@@ -14,9 +14,6 @@ VAGRANTFILE_API_VERSION = "2"
 $ansible_install_script = <<SCRIPT
 if ! which ansible >/dev/null; then
   apt-get update -y
-  apt-get install -y software-properties-common
-  apt-add-repository -y ppa:ansible/ansible
-  apt-get update -y
   apt-get install -y ansible
 fi
 SCRIPT
@@ -31,7 +28,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provision "ansibleLocal" do |ansible|
     ansible.guest_folder = "/vagrant-ansible"
     ansible.raw_arguments = "--inventory=/vagrant-ansible/ansible_hosts"
-    ansible.limit = "vagrant_dev"
+    ansible.limit = "all"
     ansible.playbook = "provisioning/playbook.yml"
   end
 end

@@ -24,10 +24,12 @@ This package adds GET, POST, PUT and DELETE methods for:
 """
 from flask import request
 from flask.ext.login import current_user
-from api_base import APIBase
-from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from werkzeug.exceptions import Forbidden
+
+from api_base import APIBase
+
+from pybossa.core import task_repo
 
 
 class TaskRunAPI(APIBase):
@@ -39,7 +41,7 @@ class TaskRunAPI(APIBase):
     def _update_object(self, taskrun):
         """Update task_run object with user id or ip."""
         # validate the task and app for that taskrun are ok
-        task = Task.query.get(taskrun.task_id)
+        task = task_repo.get_task(taskrun.task_id)
         if task is None:  # pragma: no cover
             raise Forbidden('Invalid task_id')
         if (task.app_id != taskrun.app_id):

@@ -24,7 +24,7 @@ from pybossa.exporter import Exporter
 import os
 import tempfile
 from StringIO import StringIO
-from pybossa.core import db, uploader
+from pybossa.core import uploader, task_repo
 from pybossa.uploader import local, rackspace
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
@@ -76,9 +76,8 @@ class CsvExporter(Exporter):
         writer.writerow(self._format_csv_properly(t.dictize(), ty='taskrun'))
 
     def _get_csv(self, out, writer, table, handle_row, id):
-        for tr in db.slave_session.query(table)\
-                .filter_by(app_id=id)\
-                .yield_per(1):
+        for tr in getattr(task_repo, 'filter_%ss_by' % table)(app_id=id,
+                                                              yielded=True):
             handle_row(writer, tr)
         yield out.getvalue()
 
@@ -101,13 +100,11 @@ class CsvExporter(Exporter):
             try:
                 table, handle_row, test, msg = types[ty]
             except KeyError:
-                print "KeyError" # TODO
+                return abort(404) # TODO!
 
             out = StringIO()
             writer = UnicodeWriter(out)
-            t = db.slave_session.query(table)\
-                .filter_by(app_id=id)\
-                .first()
+            t = getattr(task_repo, 'get_%s_by' % ty)(app_id=app.id)
             if t is not None:
                 if test(t):
                     tmp = t.dictize().keys()
@@ -126,7 +123,7 @@ class CsvExporter(Exporter):
                     keys = task_keys + task_info_keys
                     writer.writerow(sorted(keys))
 
-                return self._get_csv(out, writer, table, handle_row, id)
+                return self._get_csv(out, writer, ty, handle_row, id)
             else:
                 pass # TODO
         except: # pragma: no cover

@@ -19,7 +19,15 @@
 from pybossa.core import db
 
 import factory
-from factory.alchemy import SQLAlchemyModelFactory
+
+from pybossa.repositories import UserRepository
+from pybossa.repositories import ProjectRepository
+from pybossa.repositories import BlogRepository
+from pybossa.repositories import TaskRepository
+user_repo = UserRepository(db)
+project_repo = ProjectRepository(db)
+blog_repo = BlogRepository(db)
+task_repo = TaskRepository(db)
 
 
 def reset_all_pk_sequences():
@@ -31,17 +39,10 @@ def reset_all_pk_sequences():
     UserFactory.reset_sequence()
 
 
-class BaseFactory(SQLAlchemyModelFactory):
-    class Meta:
-        sqlalchemy_session = db.session
-
+class BaseFactory(factory.Factory):
     @classmethod
-    def _create(cls, target_class, *args, **kwargs):
-        session = cls._meta.sqlalchemy_session
-        obj = target_class(*args, **kwargs)
-        session.add(obj)
-        session.commit()
-        return obj
+    def _setup_next_sequence(cls):
+        return 1
 
 
 # Import the factories

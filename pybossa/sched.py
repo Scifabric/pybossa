@@ -27,10 +27,13 @@ from pybossa.core import db
 import random
 
 
+
+session = db.slave_session
+
 def new_task(app_id, user_id=None, user_ip=None, offset=0):
     '''Get a new task by calling the appropriate scheduler function.
     '''
-    app = db.slave_session.query(App).get(app_id)
+    app = session.query(App).get(app_id)
     if not app.allow_anonymous_contributors and user_id is None:
         info = dict(
             error="This project does not allow anonymous contributors")
@@ -69,7 +72,7 @@ def get_breadth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, off
                    AND task.app_id=:app_id AND task.state !='completed'
                    group by task.id ORDER BY taskcount, id ASC LIMIT 10;
                    ''')
-        tasks = db.slave_session.execute(sql, dict(app_id=app_id, user_id=user_id))
+        tasks = session.execute(sql, dict(app_id=app_id, user_id=user_id))
     else:
         if not user_ip: # pragma: no cover
             user_ip = '127.0.0.1'
@@ -83,16 +86,16 @@ def get_breadth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, off
                    ''')
 
         # results will be list of (taskid, count)
-        tasks = db.slave_session.execute(sql, dict(app_id=app_id, user_ip=user_ip))
+        tasks = session.execute(sql, dict(app_id=app_id, user_ip=user_ip))
     # ignore n_answers for the present - we will just keep going once we've
     # done as many as we need
     tasks = [x[0] for x in tasks]
     if tasks:
         if (offset == 0):
-            return db.slave_session.query(Task).get(tasks[0])
+            return session.query(Task).get(tasks[0])
         else:
             if (offset < len(tasks)):
-                return db.slave_session.query(Task).get(tasks[offset])
+                return session.query(Task).get(tasks[offset])
             else:
                 return None
     else: # pragma: no cover
@@ -122,7 +125,7 @@ def get_depth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, offse
 
 def get_random_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
     """Returns a random task for the user"""
-    app = db.slave_session.query(App).get(app_id)
+    app = session.query(App).get(app_id)
     from random import choice
     if len(app.tasks) > 0:
         return choice(app.tasks)
@@ -144,7 +147,7 @@ def get_incremental_task(app_id, user_id=None, user_ip=None, n_answers=30, offse
     rand = random.randrange(0, total_remaining)
     task = candidate_tasks[rand]
     #Find last answer for the task
-    q = db.slave_session.query(TaskRun)\
+    q = session.query(TaskRun)\
           .filter(TaskRun.task_id == task.id)\
           .order_by(TaskRun.finish_time.desc())
     last_task_run = q.first()
@@ -165,7 +168,7 @@ def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30, offset
                      app_id=:app_id AND user_id=:user_id AND task_id=task.id)
                      AND app_id=:app_id AND state !='completed'
                      ORDER BY priority_0 DESC, id ASC LIMIT 10''')
-        rows = db.slave_session.execute(query, dict(app_id=app_id, user_id=user_id))
+        rows = session.execute(query, dict(app_id=app_id, user_id=user_id))
     else:
         if not user_ip:
             user_ip = '127.0.0.1'
@@ -175,9 +178,9 @@ def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30, offset
                      app_id=:app_id AND user_ip=:user_ip AND task_id=task.id)
                      AND app_id=:app_id AND state !='completed'
                      ORDER BY priority_0 DESC, id ASC LIMIT 10''')
-        rows = db.slave_session.execute(query, dict(app_id=app_id, user_ip=user_ip))
+        rows = session.execute(query, dict(app_id=app_id, user_ip=user_ip))
 
     tasks = []
     for t in rows:
-        tasks.append(db.slave_session.query(Task).get(t.id))
+        tasks.append(session.query(Task).get(t.id))
     return tasks

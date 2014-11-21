@@ -447,14 +447,15 @@ class TestAdmin(web.Helper):
                             follow_redirects=True)
         assert res.status_code == 403, res.status_code
 
-    @with_context
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.core.uploader.upload_file', return_value=True)
-    def test_19_admin_update_app(self, Mock, Mock2):
+    @patch('pybossa.forms.validator.requests.get')
+    def test_19_admin_update_app(self, Mock, Mock2, mock_webhook):
         """Test ADMIN can update a project that belongs to another user"""
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
                                    {'content-type': 'application/json'})
         Mock.return_value = html_request
+        mock_webhook.return_value = html_request
         self.register()
         self.signout()
         self.register(fullname="Juan Jose", name="juan",

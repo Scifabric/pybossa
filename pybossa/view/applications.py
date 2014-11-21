@@ -30,16 +30,14 @@ from flask import Blueprint, request, url_for, flash, redirect, abort, Response,
 from flask import render_template, make_response, send_from_directory
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
-from sqlalchemy.sql import text
 
 import pybossa.model as model
 import pybossa.sched as sched
 
-from pybossa.core import db, uploader, signer, json_exporter, csv_exporter
+from pybossa.core import uploader, signer, json_exporter, csv_exporter
 from pybossa.cache import ONE_DAY, ONE_HOUR
 from pybossa.model.app import App
 from pybossa.model.task import Task
-from pybossa.model.user import User
 from pybossa.util import Pagination, UnicodeWriter, admin_required, get_user_id_or_ip
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
@@ -50,8 +48,9 @@ from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
-
 from pybossa.forms.applications_view_forms import *
+
+from pybossa.core import project_repo, user_repo, task_repo, blog_repo
 
 
 blueprint = Blueprint('app', __name__)
@@ -70,7 +69,7 @@ def app_by_shortname(short_name):
     app = cached_apps.get_app(short_name)
     if app:
         # Get owner
-        owner = User.query.get(app.owner_id)
+        owner = user_repo.get(app.owner_id)
         # Populate CACHE with the data of the app
         return (app,
                 owner,
@@ -95,7 +94,7 @@ def redirect_old_featured(page):
 @blueprint.route('/published/<int:page>/', defaults={'page': 1})
 def redirect_old_published(page):  # pragma: no cover
     """DEPRECATED only to redirect old links"""
-    category = db.session.query(model.category.Category).first()
+    category = project_repo.get_category()
     return redirect(url_for('.app_cat_index', category=category.short_name, page=page), 301)
 
 
@@ -145,8 +144,7 @@ def app_index(page, lookup, category, fallback, use_count):
                                     short_name='draft',
                                     description='Draft projects')
     else:
-        active_cat = db.session.query(model.category.Category)\
-                       .filter_by(short_name=category).first()
+        active_cat = project_repo.get_category_by(short_name=category)
 
     # Check if we have to add the section Featured to local nav
     if cached_apps.n_count('featured') > 0:
@@ -220,8 +218,7 @@ def new():
                     info=info,
                     category_id=category_by_default.id)
 
-    db.session.add(app)
-    db.session.commit()
+    project_repo.save(app)
 
     msg_1 = gettext('Project created!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')
@@ -249,9 +246,9 @@ def task_presenter_editor(short_name):
     form = TaskPresenterForm(request.form)
     form.id.data = app.id
     if request.method == 'POST' and form.validate():
-        app = App.query.get(app.id)
-        app.info['task_presenter'] = form.editor.data
-        db.session.commit()
+        db_app = project_repo.get(app.id)
+        db_app.info['task_presenter'] = form.editor.data
+        project_repo.save(db_app)
         cached_apps.delete_app(app.short_name)
         msg_1 = gettext('Task presenter added!')
         flash('<i class="icon-ok"></i> ' + msg_1, 'success')
@@ -336,9 +333,7 @@ def delete(short_name):
     # Clean cache
     cached_apps.delete_app(app.short_name)
     cached_apps.clean(app.id)
-    app = App.query.get(app.id)
-    db.session.delete(app)
-    db.session.commit()
+    project_repo.delete(app)
     flash(gettext('Project deleted!'), 'success')
     return redirect(url_for('account.profile', name=current_user.name))
 
@@ -369,8 +364,7 @@ def update(short_name):
             category_id=form.category_id.data)
 
         new_application.set_password(form.password.data)
-        db.session.merge(new_application)
-        db.session.commit()
+        project_repo.update(new_application)
         cached_apps.delete_app(short_name)
         cached_apps.reset()
         cached_cat.reset()
@@ -386,7 +380,7 @@ def update(short_name):
     if request.method == 'GET':
         form = AppUpdateForm(obj=app)
         upload_form = AvatarUploadForm()
-        categories = db.session.query(model.category.Category).all()
+        categories = project_repo.get_all_categories()
         form.category_id.choices = [(c.id, c.name) for c in categories]
         if app.category_id is None:
             app.category_id = categories[0].id
@@ -404,7 +398,7 @@ def update(short_name):
             flash(gettext('Please correct the errors'), 'error')
         else:
             if upload_form.validate_on_submit():
-                app = App.query.get(app.id)
+                app = project_repo.get(app.id)
                 file = request.files['avatar']
                 coordinates = (upload_form.x1.data, upload_form.y1.data,
                                upload_form.x2.data, upload_form.y2.data)
@@ -419,7 +413,7 @@ def update(short_name):
                     uploader.delete_file(app.info['thumbnail'], container)
                 app.info['thumbnail'] = file.filename
                 app.info['container'] = container
-                db.session.commit()
+                project_repo.save(app)
                 cached_apps.delete_app(app.short_name)
                 flash(gettext('Your project thumbnail has been updated! It may \
                                   take some minutes to refresh...'), 'success')
@@ -564,10 +558,9 @@ def _import_task(app, importer, form):
             n_data += 1
             task = model.task.Task(app_id=app.id)
             [setattr(task, k, v) for k, v in task_data.iteritems()]
-            data = db.session.query(model.task.Task).filter_by(app_id=app.id).filter_by(info=task.info).first()
-            if data is None:
-                db.session.add(task)
-                db.session.commit()
+            found = task_repo.get_task_by(app_id=app.id, info=task.info)
+            if found is None:
+                task_repo.save(task)
                 n += 1
                 empty = False
         if empty and n_data == 0:
@@ -617,8 +610,9 @@ def password_required(short_name):
 def task_presenter(short_name, task_id):
     (app, owner,
      n_tasks, n_task_runs, overall_progress, last_activity) = app_by_shortname(short_name)
-    task = Task.query.filter_by(id=task_id).first_or_404()
-
+    task = task_repo.get_task(id=task_id)
+    if task is None:
+        raise abort(404)
     require.app.read(app)
     redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
@@ -651,7 +645,6 @@ def task_presenter(short_name, task_id):
 
     if not (task.app_id == app.id):
         return respond('/applications/task/wrong.html')
-
     return respond('/applications/presenter.html')
 
 
@@ -729,11 +722,9 @@ def export(short_name, task_id):
         return redirect_to_password
 
     # Check if the task belongs to the app and exists
-    task = db.slave_session.query(model.task.Task).filter_by(app_id=app.id)\
-                                         .filter_by(id=task_id).first()
+    task = task_repo.get_task_by(app_id=app.id, id=task_id)
     if task:
-        taskruns = db.slave_session.query(model.task_run.TaskRun).filter_by(task_id=task_id)\
-                          .filter_by(app_id=app.id).all()
+        taskruns = task_repo.filter_task_runs_by(task_id=task_id, app_id=app.id)
         results = [tr.dictize() for tr in taskruns]
         return Response(json.dumps(results), mimetype='application/json')
     else:
@@ -792,7 +783,6 @@ def tasks_browse(short_name, page):
                                overall_progress=overall_progress,
                                n_volunteers=n_volunteers,
                                n_completed_tasks=n_completed_tasks)
-
     require.app.read(app)
     redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
@@ -825,10 +815,8 @@ def delete_tasks(short_name):
                                last_activity=last_activity,
                                title=title)
     else:
-        tasks = db.session.query(model.task.Task).filter_by(app_id=app.id).all()
-        for t in tasks:
-            db.session.delete(t)
-        db.session.commit()
+        tasks = task_repo.filter_tasks_by(app_id=app.id)
+        task_repo.delete_all(tasks)
         msg = gettext("All the tasks and associated task runs have been deleted")
         flash(msg, 'success')
         cached_apps.delete_last_activity(app.id)
@@ -868,17 +856,15 @@ def export_to(short_name):
 
 
     def gen_json(table):
-            n = db.slave_session.query(table)\
-                .filter_by(app_id=app.id).count()
-            sep = ", "
-            yield "["
-            for i, tr in enumerate(db.slave_session.query(table)
-                                     .filter_by(app_id=app.id).yield_per(1), 1):
-                item = json.dumps(tr.dictize())
-                if (i == n):
-                    sep = ""
-                yield item + sep
-            yield "]"
+        n = getattr(task_repo, 'count_%ss_with' % table)(app_id=app.id)
+        sep = ", "
+        yield "["
+        for i, tr in enumerate(getattr(task_repo, 'filter_%ss_by' % table)(app_id=app.id, yielded=True), 1):
+            item = json.dumps(tr.dictize())
+            if (i == n):
+                sep = ""
+            yield item + sep
+        yield "]"
 
     def format_csv_properly(row, ty=None):
         tmp = row.keys()
@@ -920,35 +906,28 @@ def export_to(short_name):
         writer.writerow(format_csv_properly(t.dictize(), ty='taskrun'))
 
     def get_csv(out, writer, table, handle_row):
-        for tr in db.slave_session.query(table)\
-                .filter_by(app_id=app.id)\
-                .yield_per(1):
+        for tr in getattr(task_repo, 'filter_%ss_by' % table)(app_id=app.id,
+                                                              yielded=True):
             handle_row(writer, tr)
         yield out.getvalue()
 
     def respond_json(ty):
-        tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}
-        try:
-            table = tables[ty]
-        except KeyError:
+        if ty not in ['task', 'task_run']:
             return abort(404)
-
-        response = json_exporter.response_zip(app, ty)
-        return response
+        res = json_exporter.response_zip(app, ty)
+        return res
 
     def create_ckan_datastore(ckan, table, package_id):
-        tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}
         new_resource = ckan.resource_create(name=table,
                                             package_id=package_id)
         ckan.datastore_create(name=table,
                               resource_id=new_resource['result']['id'])
         ckan.datastore_upsert(name=table,
-                              records=gen_json(tables[table]),
+                              records=gen_json(table),
                               resource_id=new_resource['result']['id'])
 
     def respond_ckan(ty):
         # First check if there is a package (dataset) in CKAN
-        tables = {"task": model.task.Task, "task_run": model.task_run.TaskRun}
         msg_1 = gettext("Data exported to ")
         msg = msg_1 + "%s ..." % current_app.config['CKAN_URL']
         ckan = Ckan(url=current_app.config['CKAN_URL'],
@@ -961,7 +940,7 @@ def export_to(short_name):
                 raise e
             if package:
                 # Update the package
-                owner = User.query.get(app.owner_id)
+                owner = user_repo.get(app.owner_id)
                 package = ckan.package_update(app=app, user=owner, url=app_url,
                                               resources=package['resources'])
 
@@ -972,16 +951,23 @@ def export_to(short_name):
                         ckan.datastore_delete(name=ty, resource_id=r['id'])
                         ckan.datastore_create(name=ty, resource_id=r['id'])
                         ckan.datastore_upsert(name=ty,
-                                              records=gen_json(tables[ty]),
+                                              records=gen_json(ty),
                                               resource_id=r['id'])
                         resource_found = True
                         break
                 if not resource_found:
                     create_ckan_datastore(ckan, ty, package['id'])
             else:
-                owner = User.query.get(app.owner_id)
+                owner = user_repo.get(app.owner_id)
                 package = ckan.package_create(app=app, user=owner, url=app_url)
                 create_ckan_datastore(ckan, ty, package['id'])
+                #new_resource = ckan.resource_create(name=ty,
+                #                                    package_id=package['id'])
+                #ckan.datastore_create(name=ty,
+                #                      resource_id=new_resource['result']['id'])
+                #ckan.datastore_upsert(name=ty,
+                #                     records=gen_json(ty),
+                #                     resource_id=new_resource['result']['id'])
             flash(msg, 'success')
             return respond()
         except requests.exceptions.ConnectionError:
@@ -1020,9 +1006,7 @@ def export_to(short_name):
             return abort(404)
 
         # TODO: change check for existence below
-        t = db.slave_session.query(table)\
-            .filter_by(app_id=app.id)\
-            .first()
+        t = getattr(task_repo, 'get_%s_by' % ty)(app_id=app.id)
         if t is not None:
             res = csv_exporter.response_zip(app, ty)
             return res
@@ -1155,30 +1139,7 @@ def task_n_answers(short_name):
                                app=app,
                                owner=owner)
     elif request.method == 'POST' and form.validate():
-        sql = text('''
-                   UPDATE task SET n_answers=:n_answers,
-                   state='ongoing' WHERE app_id=:app_id''')
-
-        db.session.execute(sql, dict(n_answers=form.n_answers.data, app_id=app.id))
-
-        # Update task.state according to their new n_answers value
-        sql = text('''
-                   WITH myquery AS (
-                   SELECT task.id, task.n_answers,
-                   COUNT(task_run.id) AS n_task_runs, task.state
-                   FROM task, task_run
-                   WHERE task_run.task_id=task.id AND task.app_id=:app_id
-                   GROUP BY task.id)
-                   UPDATE task SET state='completed'
-                   FROM myquery
-                   WHERE (myquery.n_task_runs >=:n_answers)
-                   and myquery.id=task.id
-                   ''')
-
-        db.session.execute(sql, dict(n_answers=form.n_answers.data, app_id=app.id))
-
-        db.session.commit()
-
+        task_repo.update_tasks_redundancy(app, form.n_answers.data)
         msg = gettext('Redundancy of Tasks updated!')
         flash(msg, 'success')
         return redirect(url_for('.tasks', short_name=app.short_name))
@@ -1217,11 +1178,10 @@ def task_scheduler(short_name):
         return respond()
 
     if request.method == 'POST' and form.validate():
-        app = App.query.filter_by(short_name=app.short_name).first()
+        app = project_repo.get_by_shortname(short_name=app.short_name)
         if form.sched.data:
             app.info['sched'] = form.sched.data
-        db.session.add(app)
-        db.session.commit()
+        project_repo.save(app)
         cached_apps.delete_app(app.short_name)
         msg = gettext("Project Task Scheduler updated!")
         flash(msg, 'success')
@@ -1251,18 +1211,14 @@ def task_priority(short_name):
     if request.method == 'GET':
         return respond()
     if request.method == 'POST' and form.validate():
-        tasks = []
         for task_id in form.task_ids.data.split(","):
             if task_id != '':
-                t = db.session.query(model.task.Task).filter_by(app_id=app.id)\
-                              .filter_by(id=int(task_id)).first()
+                t = task_repo.get_task_by(app_id=app.id, id=int(task_id))
                 if t:
                     t.priority_0 = form.priority_0.data
-                    tasks.append(t)
+                    task_repo.update(t)
                 else:  # pragma: no cover
                     flash(gettext(("Ooops, Task.id=%s does not belong to the app" % task_id)), 'danger')
-        db.session.add_all(tasks)
-        db.session.commit()
         cached_apps.delete_app(app.short_name)
         flash(gettext("Task priority has been changed"), 'success')
         return respond()
@@ -1276,7 +1232,7 @@ def show_blogposts(short_name):
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
 
-    blogposts = db.slave_session.query(model.blogpost.Blogpost).filter_by(app_id=app.id).all()
+    blogposts = blog_repo.filter_by(app_id=app.id)
     require.blogpost.read(app_id=app.id)
     redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
@@ -1295,8 +1251,7 @@ def show_blogposts(short_name):
 def show_blogpost(short_name, id):
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
-    blogpost = db.slave_session.query(model.blogpost.Blogpost).filter_by(id=id,
-                                                        app_id=app.id).first()
+    blogpost = blog_repo.get_by(id=id, app_id=app.id)
     if blogpost is None:
         raise abort(404)
     require.blogpost.read(blogpost)
@@ -1352,8 +1307,7 @@ def new_blogpost(short_name):
                                 user_id=current_user.id,
                                 app_id=app.id)
     require.blogpost.create(blogpost)
-    db.session.add(blogpost)
-    db.session.commit()
+    blog_repo.save(blogpost)
     cached_apps.delete_app(short_name)
 
     msg_1 = gettext('Blog post created!')
@@ -1368,8 +1322,7 @@ def update_blogpost(short_name, id):
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
 
-    blogpost = db.session.query(model.blogpost.Blogpost).filter_by(id=id,
-                                                        app_id=app.id).first()
+    blogpost = blog_repo.get_by(id=id, app_id=app.id)
     if blogpost is None:
         raise abort(404)
 
@@ -1400,8 +1353,7 @@ def update_blogpost(short_name, id):
                                 body=form.body.data,
                                 user_id=current_user.id,
                                 app_id=app.id)
-    db.session.merge(blogpost)
-    db.session.commit()
+    blog_repo.update(blogpost)
     cached_apps.delete_app(short_name)
 
     msg_1 = gettext('Blog post updated!')
@@ -1414,18 +1366,15 @@ def update_blogpost(short_name, id):
 @login_required
 def delete_blogpost(short_name, id):
     app = app_by_shortname(short_name)[0]
-    blogpost = db.session.query(model.blogpost.Blogpost).filter_by(id=id,
-                                                        app_id=app.id).first()
+    blogpost = blog_repo.get_by(id=id, app_id=app.id)
     if blogpost is None:
         raise abort(404)
 
     require.blogpost.delete(blogpost)
-    db.session.delete(blogpost)
-    db.session.commit()
+    blog_repo.delete(blogpost)
     cached_apps.delete_app(short_name)
     flash('<i class="icon-ok"></i> ' + 'Blog post deleted!', 'success')
     return redirect(url_for('.show_blogposts', short_name=short_name))
-
 
 
 def _check_if_redirect_to_password(app):

@@ -19,11 +19,11 @@ import json
 from default import db, with_context
 from nose.tools import assert_equal
 from test_api import TestAPI
-from pybossa.model.task import Task
-from pybossa.model.task_run import TaskRun
 
 from factories import AppFactory, TaskFactory, TaskRunFactory, UserFactory
 
+from pybossa.repositories import TaskRepository
+task_repo = TaskRepository(db)
 
 
 class TestTaskAPI(TestAPI):
@@ -107,9 +107,7 @@ class TestTaskAPI(TestAPI):
                             data=json.dumps(data))
         assert res.data, res
         datajson = json.loads(res.data)
-        out = db.session.query(Task)\
-                .filter_by(id=datajson['id'])\
-                .one()
+        out = task_repo.get_task(datajson['id'])
         assert out, out
         assert_equal(out.info, 'my task data'), out
         assert_equal(out.app_id, app.id)
@@ -119,9 +117,7 @@ class TestTaskAPI(TestAPI):
                             data=json.dumps(root_data))
         assert res.data, res
         datajson = json.loads(res.data)
-        out = db.session.query(Task)\
-                .filter_by(id=datajson['id'])\
-                .one()
+        out = task_repo.get_task(datajson['id'])
         assert out, out
         assert_equal(out.info, 'my root task data'), out
         assert_equal(out.app_id, app.id)
@@ -263,9 +259,7 @@ class TestTaskAPI(TestAPI):
         res = self.app.delete(url)
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
-        tasks = db.session.query(Task)\
-                  .filter_by(app_id=app.id)\
-                  .all()
+        tasks = task_repo.filter_tasks_by(app_id=app.id)
         assert task not in tasks, tasks
         assert root_task not in tasks, tasks
 
@@ -279,7 +273,5 @@ class TestTaskAPI(TestAPI):
         res = self.app.delete(url)
 
         assert_equal(res.status, '204 NO CONTENT', res.data)
-        task_runs = db.session.query(TaskRun)\
-                      .filter_by(task_id=task.id)\
-                      .all()
+        task_runs = task_repo.filter_task_runs_by(task_id=task.id)
         assert len(task_runs) == 0, "There should not be any task run for task"

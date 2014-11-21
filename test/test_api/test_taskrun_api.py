@@ -182,9 +182,6 @@ class TestTaskrunAPI(TestAPI):
 
         # If the user tries again it should be forbidden
         tmp = self.app.post(url, data=datajson)
-        err_msg = ("Authorized users should be only allowed to post \
-                    one task_run per task")
-        task_runs = self.app.get('/api/taskrun')
         assert tmp.status_code == 403, tmp.data
 
 
