@@ -30,6 +30,7 @@ from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 import pybossa.model as model
 from werkzeug.datastructures import FileStorage
+from werkzeug.utils import secure_filename
 from flask import url_for, safe_join, send_file, redirect
 
 class JsonExporter(Exporter):
@@ -50,7 +51,7 @@ class JsonExporter(Exporter):
         return self._gen_json(ty, id)
 
     def _make_zip(self, app, ty):
-        name = self._app_name_encoded(app)
+        name = self._app_name_latin_encoded(app)
         json_task_generator = self._respond_json(ty, app.id)
         if json_task_generator is not None:
             datafile = tempfile.NamedTemporaryFile()
@@ -61,7 +62,7 @@ class JsonExporter(Exporter):
                 zipped_datafile = tempfile.NamedTemporaryFile()
                 try:
                     zip = self._zip_factory(zipped_datafile.name)
-                    zip.write(datafile.name, '%s_%s.json' % (name, ty))
+                    zip.write(datafile.name, secure_filename('%s_%s.json' % (name, ty)))
                     zip.close()
                     container = "user_%d" % app.owner_id
                     file = FileStorage(filename=self.download_name(app, ty), stream=zipped_datafile)
@@ -72,10 +73,7 @@ class JsonExporter(Exporter):
                 datafile.close()
 
     def download_name(self, app, ty):
-        super(JsonExporter, self).download_name(app, ty)
-        name = self._app_name_encoded(app)
-        filename='%s_%s_json.zip' % (name, ty)
-        return filename
+        return super(JsonExporter, self).download_name(app, ty, 'json')
 
     def get_zip(self, app, ty):
         super(JsonExporter, self).get_zip(app, ty)
@@ -85,7 +83,11 @@ class JsonExporter(Exporter):
             print "Warning: Generating JSON on the fly now!"
             self._make_zip(app, ty)
         if isinstance(uploader, local.LocalUploader):
-            return send_file(filename_or_fp=safe_join(filepath, filename), as_attachment=True)
+            res = send_file(filename_or_fp=safe_join(filepath, filename), mimetype='application/octet-stream', as_attachment=True, attachment_filename=filename)
+            # fail safe mode for more encoded filenames.
+            # It seems Flask and Werkzeug do not support RFC 5987 http://greenbytes.de/tech/tc2231/#encoding-2231-char
+            # res.headers['Content-Disposition'] = 'attachment; filename*=%s' % filename
+            return res
         else:
             return redirect(url_for('rackspace', filename=filename, container=self._container(app)))
 

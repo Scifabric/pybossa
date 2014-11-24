@@ -25,15 +25,18 @@ import zipfile
 from flask import safe_join
 from pybossa.core import uploader
 from pybossa.uploader import local
+from unidecode import unidecode
+from werkzeug.utils import secure_filename
 
 
 class Exporter(object):
 
     """Generic exporter class."""
 
-    def _app_name_encoded(self, app):
-        """app short name for later file system usage"""
-        name = app.short_name.encode('utf-8', 'ignore').decode('latin-1') # used for latin filename later
+    def _app_name_latin_encoded(self, app):
+        """app short name for later HTML header usage"""
+        # name = app.short_name.encode('utf-8', 'ignore').decode('latin-1')
+        name = unidecode(app.short_name)
         return name
 
     def _zip_factory(self, filename):
@@ -58,11 +61,14 @@ class Exporter(object):
         filepath = safe_join(uploader.upload_folder, container)
         return filepath
 
-    def download_name(self, app, ty):
+    def download_name(self, app, ty, format):
         """Get the filename (without) path of the file which should be downloaded.
            This function does not check if this filename actually exists!"""
         # TODO: Check if ty is valid
-        pass
+        name = self._app_name_latin_encoded(app)
+        filename = '%s_%s_%s.zip' % (name, ty, format)  # Example: feynman_tasks_json.zip
+        filename = secure_filename(filename)
+        return filename
 
     def zip_existing(self, app, ty):
         """Check if exported ZIP is existing"""

@@ -32,6 +32,7 @@ from flask.ext.babel import gettext
 from pybossa.util import UnicodeWriter
 import pybossa.model as model
 from werkzeug.datastructures import FileStorage
+from werkzeug.utils import secure_filename
 from flask import url_for, safe_join, send_file, redirect
 
 class CsvExporter(Exporter):
@@ -130,7 +131,7 @@ class CsvExporter(Exporter):
             raise
 
     def _make_zip(self, app, ty):
-        name = self._app_name_encoded(app)
+        name = self._app_name_latin_encoded(app)
         csv_task_generator = self._respond_csv(ty, app.id)
         if csv_task_generator is not None:
             datafile = tempfile.NamedTemporaryFile()
@@ -141,7 +142,7 @@ class CsvExporter(Exporter):
                 zipped_datafile = tempfile.NamedTemporaryFile()
                 try:
                     zip = self._zip_factory(zipped_datafile.name)
-                    zip.write(datafile.name, '%s_%s.csv' % (name, ty))
+                    zip.write(datafile.name, secure_filename('%s_%s.csv' % (name, ty)))
                     zip.close()
                     container = "user_%d" % app.owner_id
                     file = FileStorage(filename=self.download_name(app, ty), stream=zipped_datafile)
@@ -152,20 +153,22 @@ class CsvExporter(Exporter):
                 datafile.close()
 
     def download_name(self, app, ty):
-        super(CsvExporter, self).download_name(app, ty)
-        name = self._app_name_encoded(app)
-        filename='%s_%s_csv.zip' % (name, ty)
-        return filename
+        return super(CsvExporter, self).download_name(app, ty, 'csv')
 
     def get_zip(self, app, ty):
         super(CsvExporter, self).get_zip(app, ty)
         filepath = self._download_path(app)
         filename=self.download_name(app, ty)
+        print filename
         if not self.zip_existing(app, ty):
             print "Warning: Generating CSV on the fly now!"
             self._make_zip(app, ty)
         if isinstance(uploader, local.LocalUploader):
-            return send_file(filename_or_fp=safe_join(filepath, filename), as_attachment=True)
+            res = send_file(filename_or_fp=safe_join(filepath, filename), mimetype='application/octet-stream', as_attachment=True, attachment_filename=filename)
+            # fail safe mode for more encoded filenames.
+            # It seems Flask and Werkzeug do not support RFC 5987 http://greenbytes.de/tech/tc2231/#encoding-2231-char
+            # res.headers['Content-Disposition'] = 'attachment; filename*=%s' % filename
+            return res
         else:
             return redirect(url_for('rackspace', filename=filename, container=self._container(app)))
 

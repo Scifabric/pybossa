@@ -39,7 +39,8 @@ from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
 from pybossa.jobs import send_mail
 from factories import AppFactory, CategoryFactory, TaskFactory, TaskRunFactory
-
+from unidecode import unidecode
+from werkzeug.utils import secure_filename
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
@@ -2255,33 +2256,35 @@ class TestWeb(web.Helper):
         assert res.status_code == 200, res.status_code
 
     def test_export_task_json_support_non_latin1_project_names(self):
-        app = AppFactory.create(name='Измени Киев!', short_name='Измени Киев!')
+        app = AppFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
         res = self.app.get('app/%s/tasks/export?type=task&format=json' % app.short_name,
                            follow_redirects=True)
-        assert 'Измени Киев!' in res.headers.get('Content-Disposition'), res
+        filename = secure_filename(unidecode(u'Измени Киев!'))
+        assert filename in res.headers.get('Content-Disposition'), res.headers
 
     def test_export_taskrun_json_support_non_latin1_project_names(self):
-        app = AppFactory.create(name='Измени Киев!', short_name='Измени Киев!')
+        app = AppFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
         res = self.app.get('app/%s/tasks/export?type=task_run&format=json' % app.short_name,
                            follow_redirects=True)
-        print res
-        assert 'Измени Киев!' in res.headers.get('Content-Disposition'), res
+        filename = secure_filename(unidecode(u'Измени Киев!'))
+        assert filename in res.headers.get('Content-Disposition'), res.headers
 
     def test_export_task_csv_support_non_latin1_project_names(self):
-        app = AppFactory.create(name='Измени Киев!', short_name='Измени Киев!')
+        app = AppFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
         TaskFactory.create(app=app)
         res = self.app.get('/app/%s/tasks/export?type=task&format=csv' % app.short_name,
                            follow_redirects=True)
-        assert 'Измени Киев!' in res.headers.get('Content-Disposition'), res
+        filename = secure_filename(unidecode(u'Измени Киев!'))
+        assert filename in res.headers.get('Content-Disposition'), res.headers
 
     def test_export_taskrun_csv_support_non_latin1_project_names(self):
-        app = AppFactory.create(name='Измени Киев!', short_name='Измени Киев!')
+        app = AppFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
         task = TaskFactory.create(app=app)
         TaskRunFactory.create(task=task)
         res = self.app.get('/app/%s/tasks/export?type=task_run&format=csv' % app.short_name,
                            follow_redirects=True)
-        print res
-        assert 'Измени Киев!' in res.headers.get('Content-Disposition'), res
+        filename = secure_filename(unidecode(u'Измени Киев!'))
+        assert filename in res.headers.get('Content-Disposition'), res.headers
 
     @with_context
     def test_51_export_taskruns_json(self):
