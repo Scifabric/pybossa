@@ -19,7 +19,6 @@
 import time
 import re
 import json
-from pybossa.importers import BulkTaskImportManager, BulkImportException, TaskCreator
 import operator
 import math
 import requests
@@ -33,6 +32,7 @@ from rq import Queue
 
 import pybossa.model as model
 import pybossa.sched as sched
+import pybossa.importers as importers
 
 from pybossa.core import uploader, signer, sentinel
 from pybossa.cache import ONE_DAY, ONE_HOUR
@@ -528,8 +528,8 @@ def import_task(short_name):
         tmpl = '/applications/importers/%s.html' % template
         return render_template(tmpl, **template_args)
 
-    importer_mngr = BulkTaskImportManager()
-    template_args["importer_variants"] = compute_importer_variant_pairs(importer_mngr.variants())
+    variants = importers.variants()
+    template_args["importer_variants"] = compute_importer_variant_pairs(variants)
     template = request.args.get('template')
 
     if template is None and request.method == 'GET':
@@ -537,7 +537,7 @@ def import_task(short_name):
                                **template_args)
 
     template = template if request.method == 'GET' else request.form['form_name']
-    importer = importer_mngr.create_importer(template)
+    importer = importers.create_importer_for(template)
     form = GenericBulkTaskImportForm()(template, request.form)
     template_args['form'] = form
     if template == 'gdocs' and request.args.get('mode'):  # pragma: no cover
@@ -549,7 +549,7 @@ def import_task(short_name):
 
     try:
         return _import_tasks(app, importer, form)
-    except BulkImportException, err_msg:
+    except importers.BulkImportException, err_msg:
         flash(err_msg, 'error')
     except Exception as inst:  # pragma: no cover
         current_app.logger.error(inst)
@@ -561,7 +561,7 @@ def import_task(short_name):
 def _import_tasks(app, importer, form):
     tasks_data = [data for data in importer.tasks(form)]
     if len(tasks_data) <= MAX_NUM_SYNCHR_TASKS_IMPORT:
-        msg = TaskCreator(task_repo).create_tasks(tasks_data, app.id)
+        msg = importers.create_tasks(task_repo, tasks_data, app.id)
         flash(msg)
     else:
         importer_queue.enqueue(background_import, tasks_data, app.id)

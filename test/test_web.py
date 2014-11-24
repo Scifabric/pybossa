@@ -2762,7 +2762,7 @@ class TestWeb(web.Helper):
         assert "Export Tasks" in res.data
         assert "Task Presenter" in res.data
 
-    @patch('pybossa.view.applications.BulkTaskImportManager.create_importer')
+    @patch('pybossa.view.applications.importers.create_importer_for')
     def test_import_few_tasks_is_done_synchronously(self, create_importer):
         """Test WEB importing a small amount of tasks is done synchronously"""
         importer = create_importer.return_value
@@ -2781,7 +2781,7 @@ class TestWeb(web.Helper):
         assert "1 new task was imported successfully" in res.data
 
     @patch('pybossa.view.applications.importer_queue', autospec=True)
-    @patch('pybossa.view.applications.BulkTaskImportManager.create_importer')
+    @patch('pybossa.view.applications.importers.create_importer_for')
     def test_import_tasks_as_background_job(self, create_importer, queue):
         """Test WEB importing a big amount of tasks is done in the background"""
         from pybossa.view.applications import MAX_NUM_SYNCHR_TASKS_IMPORT
