@@ -573,9 +573,6 @@ def _import_task(app, importer, form):
                 task_repo.save(task)
                 n += 1
                 empty = False
-        if empty and n_data == 0:
-            raise BulkImportException(
-                gettext('Oops! It looks like the file is empty.'))
         if empty and n_data > 0:
             flash(gettext('Oops! It looks like there are no new records to import.'), 'warning')
 
