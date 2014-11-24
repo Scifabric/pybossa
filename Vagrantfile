@@ -18,6 +18,16 @@ if ! which ansible >/dev/null; then
 fi
 SCRIPT
 
+# Check if vagrant-ansible-local plugin is installed
+if !Vagrant.has_plugin?('vagrant-ansible-local')
+    puts "The vagrant-ansible-local plugin is missing!"
+    puts "Install the plugin with this command and rerun Vagrant:"
+    puts
+    puts "    vagrant plugin install vagrant-ansible-local"
+    puts
+    exit 1
+end
+
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "trusty32"
   config.vm.box_url = "https://cloud-images.ubuntu.com/vagrant/trusty/current/trusty-server-cloudimg-i386-vagrant-disk1.box"
