@@ -218,9 +218,7 @@ def import_tasks(tasks_info, app_id):
 
     empty = True
     n = 0
-    n_data = 0
     for task_data in tasks_info:
-        n_data += 1
         task = Task(app_id=app_id)
         [setattr(task, k, v) for k, v in task_data.iteritems()]
         found = task_repo.get_task_by(app_id=app_id, info=task.info)
@@ -232,7 +230,7 @@ def import_tasks(tasks_info, app_id):
     msg = str(n) + " " + 'new tasks were imported successfully to your project %s!' % app.name
     if n == 1:
         msg = str(n) + " " + 'new task was imported successfully to your project %s!' % app.name
-    if empty and n_data > 0:
+    if empty:
         msg = 'It looks like there were no new records to import to your project %s!' % app.name
     cached_apps.delete_n_tasks(app_id)
     cached_apps.delete_n_task_runs(app_id)

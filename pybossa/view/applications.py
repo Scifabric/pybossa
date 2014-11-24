@@ -561,11 +561,9 @@ def import_task(short_name):
 def _import_task(app, importer, form):
     empty = True
     n = 0
-    n_data = 0
     tasks_data = [data for data in importer.tasks(form)]
     if len(tasks_data) <= MAX_NUM_SYNCHR_TASKS_IMPORT:
         for task_data in importer.tasks(form):
-            n_data += 1
             task = model.task.Task(app_id=app.id)
             [setattr(task, k, v) for k, v in task_data.iteritems()]
             found = task_repo.get_task_by(app_id=app.id, info=task.info)
@@ -573,7 +571,7 @@ def _import_task(app, importer, form):
                 task_repo.save(task)
                 n += 1
                 empty = False
-        if empty and n_data > 0:
+        if empty:
             flash(gettext('Oops! It looks like there are no new records to import.'), 'warning')
 
         msg = str(n) + " " + gettext('Tasks imported successfully!')
