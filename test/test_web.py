@@ -1554,7 +1554,7 @@ class TestWeb(web.Helper):
                             follow_redirects=True)
         task = db.session.query(Task).first()
         assert {u'Bar': u'2', u'Foo': u'1', u'Baz': u'3'} == task.info
-        assert "1 Task imported successfully!" in res.data
+        assert "1 new task was imported successfully" in res.data
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
@@ -1574,7 +1574,7 @@ class TestWeb(web.Helper):
         task = db.session.query(Task).first()
         assert {u'Bar': u'2', u'Foo': u'1'} == task.info
         assert task.priority_0 == 3
-        assert "1 Task imported successfully!" in res.data
+        assert "1 new task was imported successfully" in res.data
 
         # Check that only new items are imported
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
@@ -1611,7 +1611,7 @@ class TestWeb(web.Helper):
         task = db.session.query(Task).first()
         assert {u'Bar': u'2', u'Foo': u'1'} == task.info
         assert task.priority_0 == 3
-        assert "1 Task imported successfully!" in res.data
+        assert "1 new task was imported successfully" in res.data
 
         # Check that only new items are imported
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
@@ -2756,7 +2756,7 @@ class TestWeb(web.Helper):
                                        'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
 
-        assert "1 Task imported successfully!" in res.data
+        assert "1 new task was imported successfully" in res.data
         redirect.assert_called_with('/app/%s/tasks/' % app.short_name)
         assert "Import Tasks" in res.data
         assert "Export Tasks" in res.data
@@ -2778,7 +2778,7 @@ class TestWeb(web.Helper):
         task = db.session.query(Task).first()
 
         assert task is not None, "Task was not imported"
-        assert "1 Task imported successfully!" in res.data
+        assert "1 new task was imported successfully" in res.data
 
     @patch('pybossa.view.applications.importer_queue', autospec=True)
     @patch('pybossa.view.applications.BulkTaskImportManager.create_importer')
@@ -2801,7 +2801,7 @@ class TestWeb(web.Helper):
         assert tasks == [], "Tasks should not be immediately added"
         queue.enqueue.assert_called_once_with(import_tasks, tasks_info, app.id)
         msg = "You're trying to import a large amount of tasks, so please be patient.\
-            You will receibe an email with when the process completes."
+            You will receibe an email when the process tasks are ready."
         assert msg in res.data
 
     @with_context
@@ -3128,7 +3128,7 @@ class TestWeb(web.Helper):
 
         app = db.session.query(App).first()
         err_msg = "Tasks should be imported"
-        assert "1 Task imported successfully!" in res.data, err_msg
+        assert "1 new task was imported successfully" in res.data, err_msg
         tasks = db.session.query(Task).filter_by(app_id=app.id).all()
         err_msg = "The imported task from EpiCollect is wrong"
         assert tasks[0].info['DeviceID'] == 23, err_msg

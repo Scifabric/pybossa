@@ -21,6 +21,8 @@ import json
 import requests
 from flask.ext.babel import gettext
 from pybossa.util import unicode_csv_reader
+from pybossa.model.task import Task
+from pybossa.cache import apps as cached_apps
 
 
 _importers = {}
@@ -183,3 +185,32 @@ class _BulkTaskEpiCollectPlusImport(_BulkTaskImport):
             msg = "Oops! That project and form do not look like the right one."
             raise BulkImportException(gettext(msg), 'error')
         return self._import_epicollect_tasks(json.loads(r.text))
+
+
+class TaskCreator(object):
+
+    def __init__(self, task_repo):
+        self.task_repo = task_repo
+
+    def create_tasks(self, tasks_data, project_id):
+        empty = True
+        n = 0
+        for task_data in tasks_data:
+            task = Task(app_id=project_id)
+            [setattr(task, k, v) for k, v in task_data.iteritems()]
+            found = self.task_repo.get_task_by(app_id=project_id, info=task.info)
+            if found is None:
+                self.task_repo.save(task)
+                n += 1
+                empty = False
+        if empty:
+            msg = gettext('It looks like there were no new records to import')
+            return msg
+        msg = str(n) + " " + gettext('new tasks were imported successfully')
+        if n == 1:
+            msg = str(n) + " " + gettext('new task was imported successfully')
+        cached_apps.delete_n_tasks(project_id)
+        cached_apps.delete_n_task_runs(project_id)
+        cached_apps.delete_overall_progress(project_id)
+        cached_apps.delete_last_activity(project_id)
+        return msg

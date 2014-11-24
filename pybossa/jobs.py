@@ -211,31 +211,12 @@ def send_mail(message_dict):
 
 def import_tasks(tasks_info, app_id):
     from pybossa.core import task_repo, project_repo
-    from pybossa.model.task import Task
-    from pybossa.model.app import App
-    from pybossa.cache import apps as cached_apps
     from flask import current_app
+    from pybossa.importers import TaskCreator
 
-    empty = True
-    n = 0
-    for task_data in tasks_info:
-        task = Task(app_id=app_id)
-        [setattr(task, k, v) for k, v in task_data.iteritems()]
-        found = task_repo.get_task_by(app_id=app_id, info=task.info)
-        if found is None:
-            task_repo.save(task)
-            n += 1
-            empty = False
     app = project_repo.get(app_id)
-    msg = str(n) + " " + 'new tasks were imported successfully to your project %s!' % app.name
-    if n == 1:
-        msg = str(n) + " " + 'new task was imported successfully to your project %s!' % app.name
-    if empty:
-        msg = 'It looks like there were no new records to import to your project %s!' % app.name
-    cached_apps.delete_n_tasks(app_id)
-    cached_apps.delete_n_task_runs(app_id)
-    cached_apps.delete_overall_progress(app_id)
-    cached_apps.delete_last_activity(app_id)
+    msg = TaskCreator(task_repo).create_tasks(tasks_info, app_id)
+    msg = msg + ' to your project %s!' % app.name
     subject = 'Tasks Import to your project %s' % app.name
     body = 'Hello,\n\n' + msg + '\n\nAll the best,\nThe %s team.' % current_app.config.get('BRAND')
     mail_dict = dict(recipients=[app.owner.email_addr],

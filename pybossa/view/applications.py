@@ -19,7 +19,7 @@
 import time
 import re
 import json
-from pybossa.importers import BulkTaskImportManager, BulkImportException
+from pybossa.importers import BulkTaskImportManager, BulkImportException, TaskCreator
 import operator
 import math
 import requests
@@ -548,7 +548,7 @@ def import_task(short_name):
         return render_forms()
 
     try:
-        return _import_task(app, importer, form)
+        return _import_tasks(app, importer, form)
     except BulkImportException, err_msg:
         flash(err_msg, 'error')
     except Exception as inst:  # pragma: no cover
@@ -558,34 +558,15 @@ def import_task(short_name):
     return render_forms()
 
 
-def _import_task(app, importer, form):
-    empty = True
-    n = 0
+def _import_tasks(app, importer, form):
     tasks_data = [data for data in importer.tasks(form)]
     if len(tasks_data) <= MAX_NUM_SYNCHR_TASKS_IMPORT:
-        for task_data in importer.tasks(form):
-            task = model.task.Task(app_id=app.id)
-            [setattr(task, k, v) for k, v in task_data.iteritems()]
-            found = task_repo.get_task_by(app_id=app.id, info=task.info)
-            if found is None:
-                task_repo.save(task)
-                n += 1
-                empty = False
-        if empty:
-            flash(gettext('Oops! It looks like there are no new records to import.'), 'warning')
-
-        msg = str(n) + " " + gettext('Tasks imported successfully!')
-        if n == 1:
-            msg = str(n) + " " + gettext('Task imported successfully!')
-        flash(msg, 'success')
-        cached_apps.delete_n_tasks(app.id)
-        cached_apps.delete_n_task_runs(app.id)
-        cached_apps.delete_overall_progress(app.id)
-        cached_apps.delete_last_activity(app.id)
+        msg = TaskCreator(task_repo).create_tasks(tasks_data, app.id)
+        flash(msg)
     else:
         importer_queue.enqueue(background_import, tasks_data, app.id)
         flash(gettext("You're trying to import a large amount of tasks, so please be patient.\
-            You will receibe an email with when the process completes."))
+            You will receibe an email when the process tasks are ready."))
     return redirect(url_for('.tasks', short_name=app.short_name))
 
 
