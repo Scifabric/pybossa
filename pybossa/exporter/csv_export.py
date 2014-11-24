@@ -25,7 +25,6 @@ import os
 import tempfile
 from StringIO import StringIO
 from pybossa.core import uploader, task_repo
-from pybossa.uploader import local, rackspace
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from flask.ext.babel import gettext
@@ -33,7 +32,7 @@ from pybossa.util import UnicodeWriter
 import pybossa.model as model
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
-from flask import url_for, safe_join, send_file, redirect
+from flask import abort
 
 class CsvExporter(Exporter):
 
@@ -154,27 +153,6 @@ class CsvExporter(Exporter):
 
     def download_name(self, app, ty):
         return super(CsvExporter, self).download_name(app, ty, 'csv')
-
-    def get_zip(self, app, ty):
-        super(CsvExporter, self).get_zip(app, ty)
-        filepath = self._download_path(app)
-        filename=self.download_name(app, ty)
-        print filename
-        if not self.zip_existing(app, ty):
-            print "Warning: Generating CSV on the fly now!"
-            self._make_zip(app, ty)
-        if isinstance(uploader, local.LocalUploader):
-            res = send_file(filename_or_fp=safe_join(filepath, filename), mimetype='application/octet-stream', as_attachment=True, attachment_filename=filename)
-            # fail safe mode for more encoded filenames.
-            # It seems Flask and Werkzeug do not support RFC 5987 http://greenbytes.de/tech/tc2231/#encoding-2231-char
-            # res.headers['Content-Disposition'] = 'attachment; filename*=%s' % filename
-            return res
-        else:
-            return redirect(url_for('rackspace', filename=filename, container=self._container(app)))
-
-    def response_zip(self, app, ty):
-        super(CsvExporter, self).response_zip(app, ty)
-        return self.get_zip(app, ty)
 
     def pregenerate_zip_files(self, app):
         print "%d (csv)" % app.id

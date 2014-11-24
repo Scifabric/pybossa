@@ -75,27 +75,6 @@ class JsonExporter(Exporter):
     def download_name(self, app, ty):
         return super(JsonExporter, self).download_name(app, ty, 'json')
 
-    def get_zip(self, app, ty):
-        super(JsonExporter, self).get_zip(app, ty)
-        filepath = self._download_path(app)
-        filename=self.download_name(app, ty)
-        if not self.zip_existing(app, ty):
-            print "Warning: Generating JSON on the fly now!"
-            self._make_zip(app, ty)
-        if isinstance(uploader, local.LocalUploader):
-            res = send_file(filename_or_fp=safe_join(filepath, filename), mimetype='application/octet-stream', as_attachment=True, attachment_filename=filename)
-            # fail safe mode for more encoded filenames.
-            # It seems Flask and Werkzeug do not support RFC 5987 http://greenbytes.de/tech/tc2231/#encoding-2231-char
-            # res.headers['Content-Disposition'] = 'attachment; filename*=%s' % filename
-            return res
-        else:
-            return redirect(url_for('rackspace', filename=filename, container=self._container(app)))
-
-
-    def response_zip(self, app, ty):
-        super(JsonExporter, self).response_zip(app, ty)
-        return self.get_zip(app, ty)
-
     def pregenerate_zip_files(self, app):
         print "%d (json)" % app.id
         self._make_zip(app, "task")
