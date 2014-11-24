@@ -140,6 +140,21 @@ class TestProjectRepositoryForProjects(Test):
         assert project in retrieved_projects, retrieved_projects
 
 
+    def test_filter_by_limit_offset(self):
+        """Test that filter_by supports limit and offset options"""
+
+        AppFactory.create_batch(4)
+        all_projects = self.project_repo.filter_by()
+
+        first_two = self.project_repo.filter_by(limit=2)
+        last_two = self.project_repo.filter_by(limit=2, offset=2)
+
+        assert len(first_two) == 2, first_two
+        assert len(last_two) == 2, last_two
+        assert first_two == all_projects[:2]
+        assert last_two == all_projects[2:]
+
+
     def test_save(self):
         """Test save persist the project"""
 
@@ -209,6 +224,25 @@ class TestProjectRepositoryForProjects(Test):
         deleted = self.project_repo.get(project.id)
 
         assert deleted is None, deleted
+
+
+    def test_delete_also_removes_dependant_resources(self):
+        """Test delete removes project tasks and taskruns too"""
+        from factories import TaskFactory, TaskRunFactory, BlogpostFactory
+        from pybossa.repositories import TaskRepository, BlogRepository
+
+        project = AppFactory.create()
+        task = TaskFactory.create(app=project)
+        taskrun = TaskRunFactory.create(task=task)
+        blogpost = BlogpostFactory.create(app=project)
+
+        self.project_repo.delete(project)
+        deleted_task = TaskRepository(db).get_task(task.id)
+        deleted_taskrun = TaskRepository(db).get_task_run(taskrun.id)
+        deleted_blogpost = BlogRepository(db).get(blogpost.id)
+
+        assert deleted_task is None, deleted_task
+        assert deleted_taskrun is None, deleted_taskrun
 
 
     def test_delete_only_deletes_projects(self):
@@ -304,6 +338,21 @@ class TestProjectRepositoryForCategories(Test):
 
         assert len(retrieved_categories) == 3, retrieved_categories
         assert should_be_missing not in retrieved_categories, retrieved_categories
+
+
+    def test_filter_categories_by_limit_offset(self):
+        """Test that filter_categories_by supports limit and offset options"""
+
+        CategoryFactory.create_batch(4)
+        all_categories = self.project_repo.filter_categories_by()
+
+        first_two = self.project_repo.filter_categories_by(limit=2)
+        last_two = self.project_repo.filter_categories_by(limit=2, offset=2)
+
+        assert len(first_two) == 2, first_two
+        assert len(last_two) == 2, last_two
+        assert first_two == all_categories[:2]
+        assert last_two == all_categories[2:]
 
 
     def test_save_category(self):

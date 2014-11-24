@@ -39,8 +39,9 @@ class TaskRepository(object):
     def get_task_by(self, **attributes):
         return self.db.session.query(Task).filter_by(**attributes).first()
 
-    def filter_tasks_by(self, yielded=False, **filters):
+    def filter_tasks_by(self, limit=None, offset=0, yielded=False, **filters):
         query = self.db.session.query(Task).filter_by(**filters)
+        query = query.order_by(Task.id).limit(limit).offset(offset)
         if yielded:
             return query.yield_per(1)
         return query.all()
@@ -57,8 +58,9 @@ class TaskRepository(object):
     def get_task_run_by(self, **attributes):
         return self.db.session.query(TaskRun).filter_by(**attributes).first()
 
-    def filter_task_runs_by(self, yielded=False, **filters):
+    def filter_task_runs_by(self, limit=None, offset=0, yielded=False, **filters):
         query = self.db.session.query(TaskRun).filter_by(**filters)
+        query = query.order_by(TaskRun.id).limit(limit).offset(offset)
         if yielded:
             return query.yield_per(1)
         return query.all()
@@ -90,14 +92,16 @@ class TaskRepository(object):
     def delete(self, element):
         self._validate_can_be('deleted', element)
         table = element.__class__
-        self.db.session.query(table).filter(table.id==element.id).delete()
+        inst = self.db.session.query(table).filter(table.id==element.id).first()
+        self.db.session.delete(inst)
         self.db.session.commit()
 
     def delete_all(self, elements):
         for element in elements:
             self._validate_can_be('deleted', element)
             table = element.__class__
-            self.db.session.query(table).filter(table.id==element.id).delete()
+            inst = self.db.session.query(table).filter(table.id==element.id).first()
+            self.db.session.delete(inst)
         self.db.session.commit()
 
     def update_tasks_redundancy(self, project, n_answer):

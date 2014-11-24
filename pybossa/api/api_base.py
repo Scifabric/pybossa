@@ -154,12 +154,7 @@ class APIBase(MethodView):
         repo = repo_info['repo']
         query_func = repo_info['filter']
         filters = self._custom_filter(filters)
-        results = getattr(repo, query_func)(**filters)
-        return self._format_query_result(results, limit, offset)
-
-    def _format_query_result(self, results, limit, offset):
-        results = sorted(results, key=lambda item: item.id)
-        results = results[offset:offset+limit]
+        results = getattr(repo, query_func)(limit=limit, offset=offset, **filters)
         return results
 
     def _set_limit_and_offset(self):

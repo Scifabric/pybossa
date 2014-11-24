@@ -109,7 +109,7 @@ class TestTaskRepositoryForTaskQueries(Test):
 
     def test_filter_tasks_support_yield_option(self):
         """Test that filter_tasks_by with the yielded=True option returns the
-        results in a generator fashion"""
+        results as a generator"""
 
         tasks = TaskFactory.create_batch(2, state='done')
 
@@ -119,6 +119,21 @@ class TestTaskRepositoryForTaskQueries(Test):
         assert isinstance(yielded_tasks.__iter__(), types.GeneratorType)
         for task in yielded_tasks:
             assert task in tasks
+
+
+    def test_filter_tasks_limit_offset(self):
+        """Test that filter_tasks_by supports limit and offset options"""
+
+        TaskFactory.create_batch(4)
+        all_tasks = self.task_repo.filter_tasks_by()
+
+        first_two = self.task_repo.filter_tasks_by(limit=2)
+        last_two = self.task_repo.filter_tasks_by(limit=2, offset=2)
+
+        assert len(first_two) == 2, first_two
+        assert len(last_two) == 2, last_two
+        assert first_two == all_tasks[:2]
+        assert last_two == all_tasks[2:]
 
 
     def test_count_tasks_with_no_matches(self):
@@ -242,7 +257,7 @@ class TestTaskRepositoryForTaskrunQueries(Test):
 
     def test_filter_task_runs_support_yield_option(self):
         """Test that filter_task_runs_by with the yielded=True option returns
-        the results in a generator fashion"""
+        the results as a generator"""
 
         task_runs = TaskRunFactory.create_batch(2, info='info')
 
@@ -253,6 +268,21 @@ class TestTaskRepositoryForTaskrunQueries(Test):
         assert isinstance(yielded_task_runs.__iter__(), types.GeneratorType)
         for taskrun in yielded_task_runs:
             assert taskrun in task_runs
+
+
+    def test_filter_tasks_limit_offset(self):
+        """Test that filter_tasks_by supports limit and offset options"""
+
+        TaskRunFactory.create_batch(4)
+        all_task_runs = self.task_repo.filter_task_runs_by()
+
+        first_two = self.task_repo.filter_task_runs_by(limit=2)
+        last_two = self.task_repo.filter_task_runs_by(limit=2, offset=2)
+
+        assert len(first_two) == 2, first_two
+        assert len(last_two) == 2, last_two
+        assert first_two == all_task_runs[:2]
+        assert last_two == all_task_runs[2:]
 
 
     def test_count_task_runs_with_no_matches(self):
@@ -391,6 +421,18 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert deleted is None, deleted
 
 
+    def test_delete_task_deletes_dependent_taskruns(self):
+        """Test delete removes the dependent TaskRun instances"""
+
+        task = TaskFactory.create()
+        taskrun = TaskRunFactory.create(task=task)
+
+        self.task_repo.delete(task)
+        deleted = self.task_repo.get_task_run(taskrun.id)
+
+        assert deleted is None, deleted
+
+
     def test_delete_taskrun(self):
         """Test delete removes the TaskRun instance"""
 
@@ -420,6 +462,18 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
 
         for task in tasks:
             assert self.task_repo.get_task(task.id) is None, task
+
+
+    def test_delete_all_deletes_dependent(self):
+        """Test delete_all deletes dependent taskruns too"""
+
+        task = TaskFactory.create()
+        taskrun = TaskRunFactory.create(task=task)
+
+        self.task_repo.delete_all([task])
+        deleted = self.task_repo.get_task_run(taskrun.id)
+
+        assert deleted is None, deleted
 
 
     def test_delete_all_deletes_many_taskruns(self):
