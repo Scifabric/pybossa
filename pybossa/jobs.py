@@ -212,10 +212,10 @@ def send_mail(message_dict):
 def import_tasks(tasks_info, app_id):
     from pybossa.core import task_repo, project_repo
     from flask import current_app
-    from pybossa.importers import TaskCreator
+    import pybossa.importers as importers
 
     app = project_repo.get(app_id)
-    msg = TaskCreator(task_repo).create_tasks(tasks_info, app_id)
+    msg = importers.create_tasks(task_repo, tasks_info, app_id)
     msg = msg + ' to your project %s!' % app.name
     subject = 'Tasks Import to your project %s' % app.name
     body = 'Hello,\n\n' + msg + '\n\nAll the best,\nThe %s team.' % current_app.config.get('BRAND')
