@@ -12,6 +12,5 @@ class Sentinel(object):
         self.connection = sentinel.Sentinel(app.config['REDIS_SENTINEL'],
                                                   socket_timeout=0.1)
         redis_db = app.config['REDIS_DB'] or 0
-        print "Redis db is ", redis_db
         self.master = self.connection.master_for('mymaster', db=redis_db)
         self.slave = self.connection.slave_for('mymaster', db=redis_db)
