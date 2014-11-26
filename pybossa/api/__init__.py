@@ -121,13 +121,18 @@ def _retrieve_new_task(app_id):
     app = project_repo.get(app_id)
     if app is None:
         raise NotFound
+    if not app.allow_anonymous_contributors and current_user.is_anonymous():
+        info = dict(
+            error="This project does not allow anonymous contributors")
+        error = model.task.Task(info=info)
+        return error
     if request.args.get('offset'):
         offset = int(request.args.get('offset'))
     else:
         offset = 0
     user_id = None if current_user.is_anonymous() else current_user.id
     user_ip = request.remote_addr if current_user.is_anonymous() else None
-    task = sched.new_task(app_id, user_id, user_ip, offset)
+    task = sched.new_task(app_id, app.info.get('sched'), user_id, user_ip, offset)
     return task
 
 
