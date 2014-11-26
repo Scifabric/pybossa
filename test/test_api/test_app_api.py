@@ -524,12 +524,13 @@ class TestAppAPI(TestAPI):
         url = '/api/app/%s/newtask' % app.id
         res = self.app.get(url, follow_redirects=True)
         task = json.loads(res.data)
-        err_msg = "The task.app_id is different from the app.id"
-        assert task['app_id'] == app.id, err_msg
-        err_msg = "There should not be an error message"
-        assert task['info'].get('error') is None, err_msg
-        err_msg = "There should be a question"
-        assert task['info'].get('question') == 'answer', err_msg
+        err_msg = "The task.app_id should be null"
+        assert task['app_id'] is None, err_msg
+        err_msg = "There should be an error message"
+        err = "This project does not allow anonymous contributors"
+        assert task['info'].get('error') == err, err_msg
+        err_msg = "There should not be a question"
+        assert task['info'].get('question') is None, err_msg
 
         # As registered user
         url = '/api/app/%s/newtask?api_key=%s' % (app.id, user.api_key)
