@@ -17,8 +17,10 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
-import StringIO
-
+import os
+import shutil
+import zipfile
+from StringIO import StringIO
 from default import db, Fixtures, with_context
 from helper import web
 from mock import patch, Mock
@@ -42,6 +44,7 @@ from factories import AppFactory, CategoryFactory, TaskFactory, TaskRunFactory
 from unidecode import unidecode
 from werkzeug.utils import secure_filename
 
+
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
 
@@ -52,6 +55,13 @@ class TestWeb(web.Helper):
         "error": {
             "message": "Not found",
             "__type": "Not Found Error"}}
+
+    def clear_temp_container(self, user_id):
+        """Helper function which deletes all files in temp folder of a given owner_id"""
+        temp_folder = os.path.join('/tmp', 'user_%d' % user_id)
+        print temp_folder
+        if os.path.isdir(temp_folder):
+            shutil.rmtree(temp_folder)
 
     @with_context
     def test_01_index(self):
@@ -2226,16 +2236,25 @@ class TestWeb(web.Helper):
         assert res.status == '415 UNSUPPORTED MEDIA TYPE', res.status
 
         # Now get the tasks in JSON format
+        self.clear_temp_container(1)   # App ID 1 is assumed here. See app.id below.
         uri = "/app/%s/tasks/export?type=task&format=json" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
-        exported_tasks = json.loads(res.data)
+        zip = zipfile.ZipFile(StringIO(res.data))
+        # Check only one file in zipfile
+        err_msg = "filename count in ZIP is not 1"
+        assert len(zip.namelist()) == 1, err_msg
+        # Check ZIP filename
+        extracted_filename = zip.namelist()[0]
+        assert extracted_filename == 'test-app_task.json', zip.namelist()[0]
+
+        exported_tasks = json.loads(zip.read(extracted_filename))
         app = db.session.query(App)\
                 .filter_by(short_name=Fixtures.app_short_name)\
                 .first()
         err_msg = "The number of exported tasks is different from App Tasks"
         assert len(exported_tasks) == len(app.tasks), err_msg
         # Tasks are exported as an attached file
-        content_disposition = 'attachment; filename=test-app_task.json'
+        content_disposition = 'attachment; filename=%d_test-app_task_json.zip' % app.id
         assert res.headers.get('Content-Disposition') == content_disposition, res.headers
 
         app.hidden = 1
@@ -2257,6 +2276,7 @@ class TestWeb(web.Helper):
 
     def test_export_task_json_support_non_latin1_project_names(self):
         app = AppFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
+        self.clear_temp_container(app.owner_id)
         res = self.app.get('app/%s/tasks/export?type=task&format=json' % app.short_name,
                            follow_redirects=True)
         filename = secure_filename(unidecode(u'Измени Киев!'))
@@ -2300,6 +2320,7 @@ class TestWeb(web.Helper):
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real app
+        self.clear_temp_container(1)   # App ID 1 is assumed here. See app.id below.
         uri = '/app/%s/tasks/export' % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
@@ -2307,19 +2328,26 @@ class TestWeb(web.Helper):
         # Now get the tasks in JSON format
         uri = "/app/%s/tasks/export?type=task_run&format=json" % Fixtures.app_short_name
         res = self.app.get(uri, follow_redirects=True)
-        exported_task_runs = json.loads(res.data)
+        zip = zipfile.ZipFile(StringIO(res.data))
+        # Check only one file in zipfile
+        err_msg = "filename count in ZIP is not 1"
+        assert len(zip.namelist()) == 1, err_msg
+        # Check ZIP filename
+        extracted_filename = zip.namelist()[0]
+        assert extracted_filename == 'test-app_task_run.json', zip.namelist()[0]
+
+        exported_task_runs = json.loads(zip.read(extracted_filename))
         app = db.session.query(App)\
                 .filter_by(short_name=Fixtures.app_short_name)\
                 .first()
         err_msg = "The number of exported task runs is different from App Tasks"
         assert len(exported_task_runs) == len(app.task_runs), err_msg
         # Task runs are exported as an attached file
-        content_disposition = 'attachment; filename=test-app_task_run.json'
+        content_disposition = 'attachment; filename=%d_test-app_task_run_json.zip' % app.id
         assert res.headers.get('Content-Disposition') == content_disposition, res.headers
 
     @with_context
-    @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    def test_52_export_task_csv(self, mock):
+    def test_52_export_task_csv(self):
         """Test WEB export Tasks to CSV works"""
         #Fixtures.create()
         # First test for a non-existant app
@@ -2337,16 +2365,27 @@ class TestWeb(web.Helper):
 
         # Now with a real app
         app = AppFactory.create()
+        self.clear_temp_container(app.owner_id)
         for i in range(0, 5):
             task = TaskFactory.create(app=app, info={'question': i})
         uri = '/app/%s/tasks/export' % app.short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % app.name
         assert heading in res.data, "Export page should be available\n %s" % res.data
+        print "Hallo"
         # Now get the tasks in CSV format
         uri = "/app/%s/tasks/export?type=task&format=csv" % app.short_name
         res = self.app.get(uri, follow_redirects=True)
-        csv_content = StringIO.StringIO(res.data)
+        print "Ende"
+        zip = zipfile.ZipFile(StringIO(res.data))
+        # Check only one file in zipfile
+        err_msg = "filename count in ZIP is not 1"
+        assert len(zip.namelist()) == 1, err_msg
+        # Check ZIP filename
+        extracted_filename = zip.namelist()[0]
+        assert extracted_filename == 'app1_task.csv', zip.namelist()[0]
+
+        csv_content = StringIO(zip.read(extracted_filename))
         csvreader = unicode_csv_reader(csv_content)
         app = db.session.query(App)\
                 .filter_by(short_name=app.short_name)\
@@ -2388,7 +2427,7 @@ class TestWeb(web.Helper):
                 err_msg = "%s != %s" % (task_dict['info'][k], et[keys.index(slug)])
                 assert unicode(task_dict['info'][k]) == et[keys.index(slug)], err_msg
         # Tasks are exported as an attached file
-        content_disposition = 'attachment; filename=app1_task.csv'
+        content_disposition = 'attachment; filename=%d_app1_task_csv.zip' % app.id
         assert res.headers.get('Content-Disposition') == content_disposition, res.headers
 
         # With an empty app
@@ -2413,6 +2452,7 @@ class TestWeb(web.Helper):
 
         # Now with a real app
         app = AppFactory.create()
+        self.clear_temp_container(app.owner_id)
         task = TaskFactory.create(app=app)
         for i in range(2):
             task_run = TaskRunFactory.create(app=app, task=task, info={'answer': i})
@@ -2423,7 +2463,15 @@ class TestWeb(web.Helper):
         # Now get the tasks in CSV format
         uri = "/app/%s/tasks/export?type=task_run&format=csv" % app.short_name
         res = self.app.get(uri, follow_redirects=True)
-        csv_content = StringIO.StringIO(res.data)
+        zip = zipfile.ZipFile(StringIO(res.data))
+        # Check only one file in zipfile
+        err_msg = "filename count in ZIP is not 1"
+        assert len(zip.namelist()) == 1, err_msg
+        # Check ZIP filename
+        extracted_filename = zip.namelist()[0]
+        assert extracted_filename == 'app1_task_run.csv', zip.namelist()[0]
+
+        csv_content = StringIO(zip.read(extracted_filename))
         csvreader = unicode_csv_reader(csv_content)
         app = db.session.query(App)\
                 .filter_by(short_name=app.short_name)\
@@ -2464,7 +2512,7 @@ class TestWeb(web.Helper):
                 err_msg = "%s != %s" % (task_run_dict['info'][k], et[keys.index(slug)])
                 assert unicode(task_run_dict['info'][k]) == et[keys.index(slug)], err_msg
         # Task runs are exported as an attached file
-        content_disposition = 'attachment; filename=app1_task_run.csv'
+        content_disposition = 'attachment; filename=%d_app1_task_run_csv.zip' % app.id
         assert res.headers.get('Content-Disposition') == content_disposition, res.headers
 
     @with_context
