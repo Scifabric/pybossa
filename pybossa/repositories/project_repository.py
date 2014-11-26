@@ -15,8 +15,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-
+from flask.ext.login import current_user
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.attributes import get_history
 
 from pybossa.model.app import App
 from pybossa.model.category import Category
@@ -61,7 +62,21 @@ class ProjectRepository(object):
     def update(self, project):
         self._validate_can_be('updated', project)
         try:
-            self.db.session.merge(project)
+            fields = ['name', 'short_name', 'description',
+                      'long_description', 'webhook',
+                      'allow_anonymous_contributors', 'hidden',
+                      'featured', 'info']
+            for field in fields:
+                history = get_history(project, field)
+                if history.deleted:
+                    msg = ("User %s updated %s from: %s to: %s" %
+                           (current_user.name,
+                            field,
+                            history.deleted[0],
+                            history.added[0]))
+                    print msg
+
+            self.db.session.add(project)
             self.db.session.commit()
         except IntegrityError as e:
             self.db.session.rollback()
