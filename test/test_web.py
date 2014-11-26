@@ -2372,11 +2372,9 @@ class TestWeb(web.Helper):
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % app.name
         assert heading in res.data, "Export page should be available\n %s" % res.data
-        print "Hallo"
         # Now get the tasks in CSV format
         uri = "/app/%s/tasks/export?type=task&format=csv" % app.short_name
         res = self.app.get(uri, follow_redirects=True)
-        print "Ende"
         zip = zipfile.ZipFile(StringIO(res.data))
         # Check only one file in zipfile
         err_msg = "filename count in ZIP is not 1"
