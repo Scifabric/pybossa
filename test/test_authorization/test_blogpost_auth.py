@@ -75,7 +75,7 @@ class TestBlogpostAuthorization(Test):
         app = AppFactory.create()
         blogpost = BlogpostFactory.build(app=app, owner=admin)
 
-        assert self.mock_admin.id != app.owner.id
+        assert self.mock_admin.id != app.owner_id
         assert_raises(Forbidden, getattr(require, 'blogpost').create, blogpost)
 
 
@@ -101,7 +101,7 @@ class TestBlogpostAuthorization(Test):
         app = AppFactory.create(owner=owner)
         blogpost = BlogpostFactory.build(app=app, owner=owner)
 
-        assert self.mock_authenticated.id == app.owner.id
+        assert self.mock_authenticated.id == app.owner_id
         assert_not_raises(Exception, getattr(require, 'blogpost').create, blogpost)
 
 
@@ -129,7 +129,7 @@ class TestBlogpostAuthorization(Test):
         blogpost = BlogpostFactory.build(app_id=app.id,
                                           owner=another_user)
 
-        assert self.mock_authenticated.id == app.owner.id
+        assert self.mock_authenticated.id == app.owner_id
         assert_raises(Forbidden, getattr(require, 'blogpost').create, blogpost)
 
 
