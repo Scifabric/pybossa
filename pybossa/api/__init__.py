@@ -109,12 +109,11 @@ def new_task(app_id):
     try:
         task = _retrieve_new_task(app_id)
         # If there is a task for the user, return it
-        if task:
-            r = make_response(json.dumps(task.dictize()))
-            r.mimetype = "application/json"
-            return r
-        else:
-            return Response(json.dumps({}), mimetype="application/json")
+        if task is not None:
+            response = make_response(json.dumps(task.dictize()))
+            response.mimetype = "application/json"
+            return response
+        return Response(json.dumps({}), mimetype="application/json")
     except Exception as e:
         return error.format_exception(e, target='app', action='GET')
 
