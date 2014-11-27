@@ -35,7 +35,13 @@ class Auditlog(db.Model, DomainObject):
     app_id = Column(Integer, ForeignKey('app.id'))
     #: Short name of the project
     app_short_name = Column(Text, nullable=False)
+    #: User.id that took the action
+    user_id = Column(Integer, ForeignKey('user.id'))
+    #: Nickname of the user
+    user_name = Column(Text)
     #: UTC timestamp when the Category was created
     created = Column(Text, default=make_timestamp)
+    #: Action taken
+    action = Column(Text)
     #: Log message
     log = Column(Text, nullable=False)

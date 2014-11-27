@@ -19,7 +19,10 @@ def upgrade():
                     sa.Column('id', sa.Integer, primary_key=True),
                     sa.Column('app_id', sa.Integer, sa.ForeignKey('app.id')),
                     sa.Column('app_short_name', sa.Text, nullable=False),
+                    sa.Column('user_id', sa.Integer, sa.ForeignKey('user.id')),
+                    sa.Column('user_name', sa.Text),
                     sa.Column('created', sa.Text, nullable=False),
+                    sa.Column('action', sa.Text, nullable=False),
                     sa.Column('log', sa.Text, nullable=False))
 
 
