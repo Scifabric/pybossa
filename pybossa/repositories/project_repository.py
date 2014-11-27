@@ -18,11 +18,12 @@
 from flask.ext.login import current_user
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.attributes import get_history
+from sqlalchemy import inspect
 
 from pybossa.model.app import App
+from pybossa.model.auditlog import Auditlog
 from pybossa.model.category import Category
 from pybossa.exc import WrongObjectError, DBIntegrityError
-
 
 
 class ProjectRepository(object):
@@ -60,9 +61,10 @@ class ProjectRepository(object):
             raise DBIntegrityError(e)
 
     def update(self, project):
-        self._validate_can_be('updated', project)
+        action = 'updated'
+        self._validate_can_be(action, project)
         try:
-            self.add_log_entry(project)
+            self.add_log_entry(project, action)
             self.db.session.add(project)
             self.db.session.commit()
         except IntegrityError as e:
@@ -75,21 +77,26 @@ class ProjectRepository(object):
         self.db.session.delete(app)
         self.db.session.commit()
 
-    def add_log_entry(self, project):
+    def add_log_entry(self, project, action):
         try:
-            fields = ['name', 'short_name', 'description',
-                      'long_description', 'webhook',
-                      'allow_anonymous_contributors', 'hidden',
-                      'featured', 'info']
-            for field in fields:
-                history = get_history(project, field)
-                if history.deleted:
-                    msg = ("User %s updated %s from: %s to: %s" %
-                           (current_user.name,
-                            field,
-                            history.deleted[0],
-                            history.added[0]))
-                    print msg
+            for attr in project.dictize().keys():
+                if getattr(inspect(project).attrs, attr).history.has_changes():
+                    history = getattr(inspect(project).attrs, attr).history
+                    if len(history.deleted) > 0 and len(history.added) > 0:
+                        msg = ("User %s updated %s attribute from: %s to: %s" %
+                               (current_user.name,
+                                attr,
+                                history.deleted[0],
+                                history.added[0]))
+                        log = Auditlog(
+                            app_id=project.id,
+                            app_short_name=project.short_name,
+                            user_id=current_user.id,
+                            user_name=current_user.name,
+                            action=action,
+                            log=msg)
+                        self.db.session.add(log)
+            self.db.session.commit()
         except IntegrityError as e:
             self.db.session.rollback()
             raise DBIntegrityError(e)
