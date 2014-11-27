@@ -42,7 +42,7 @@ from flask.ext.babel import gettext
 from sqlalchemy.sql import text
 from pybossa.model.user import User
 from pybossa.core import signer, mail, uploader, sentinel
-from pybossa.util import Pagination, get_user_id_or_ip, pretty_date
+from pybossa.util import Pagination, pretty_date
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
 from pybossa.cache import apps as cached_apps
