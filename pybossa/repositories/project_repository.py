@@ -62,6 +62,21 @@ class ProjectRepository(object):
     def update(self, project):
         self._validate_can_be('updated', project)
         try:
+            self.add_log_entry(project)
+            self.db.session.add(project)
+            self.db.session.commit()
+        except IntegrityError as e:
+            self.db.session.rollback()
+            raise DBIntegrityError(e)
+
+    def delete(self, project):
+        self._validate_can_be('deleted', project)
+        app = self.db.session.query(App).filter(App.id==project.id).first()
+        self.db.session.delete(app)
+        self.db.session.commit()
+
+    def add_log_entry(self, project):
+        try:
             fields = ['name', 'short_name', 'description',
                       'long_description', 'webhook',
                       'allow_anonymous_contributors', 'hidden',
@@ -75,19 +90,9 @@ class ProjectRepository(object):
                             history.deleted[0],
                             history.added[0]))
                     print msg
-
-            self.db.session.add(project)
-            self.db.session.commit()
         except IntegrityError as e:
             self.db.session.rollback()
             raise DBIntegrityError(e)
-
-    def delete(self, project):
-        self._validate_can_be('deleted', project)
-        app = self.db.session.query(App).filter(App.id==project.id).first()
-        self.db.session.delete(app)
-        self.db.session.commit()
-
 
     # Methods for Category objects
     def get_category(self, id=None):
