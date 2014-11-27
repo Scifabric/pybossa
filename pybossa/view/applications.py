@@ -367,11 +367,11 @@ def update(short_name):
             new_application.short_name=form.short_name.data
             new_application.description=form.description.data
             new_application.long_description=form.long_description.data
-            new_application.hidden=hidden
+            new_application.hidden=int(form.hidden.data)
             new_application.webhook=form.webhook.data
             new_application.info=app.info
             new_application.owner_id=app.owner_id
-            new_application.allow_anonymous_contributors=form.allow_anonymous_contributors.data
+            new_application.allow_anonymous_contributors=bool(form.allow_anonymous_contributors.data)
             new_application.category_id=form.category_id.data
 
         new_application.set_password(form.password.data)
