@@ -79,6 +79,8 @@ class TestCheckTasksRequestedByUser(object):
 
     @patch('pybossa.api.task_run.get_user_id_or_ip')
     def test_check_task_requested_by_user_authenticated_key_exists(self, user):
+        """_check_task_requested_by_user should return True for an authorized
+        user that requested a task"""
         user.return_value = {'user_id': 33, 'user_ip': None}
         taskrun = TaskRun(task_id=22)
         key = 'pybossa:task_requested:user:33:task:22'
@@ -91,6 +93,8 @@ class TestCheckTasksRequestedByUser(object):
 
     @patch('pybossa.api.task_run.get_user_id_or_ip')
     def test_check_task_requested_by_user_anonymous_key_exists(self, user):
+        """_check_task_requested_by_user should return True for an anonymous
+        user that requested a task"""
         user.return_value = {'user_id': None, 'user_ip': '127.0.0.1'}
         taskrun = TaskRun(task_id=22)
         key = 'pybossa:task_requested:user:127.0.0.1:task:22'
@@ -103,6 +107,8 @@ class TestCheckTasksRequestedByUser(object):
 
     @patch('pybossa.api.task_run.get_user_id_or_ip')
     def test_check_task_requested_by_user_wrong_key(self, user):
+        """_check_task_requested_by_user should return False for a user that did
+        not request a task"""
         user.return_value = {'user_id': 33, 'user_ip': None}
         taskrun = TaskRun(task_id=22)
         key = 'pybossa:task_requested:user:88:task:44'
@@ -115,6 +121,8 @@ class TestCheckTasksRequestedByUser(object):
 
     @patch('pybossa.api.task_run.get_user_id_or_ip')
     def test_check_task_requested_by_user_authenticated_deletes_key(self, user):
+        """_check_task_requested_by_user deletes the key after checking that 
+        an authenticated user requested the task"""
         user.return_value = {'user_id': 33, 'user_ip': None}
         taskrun = TaskRun(task_id=22)
         key = 'pybossa:task_requested:user:33:task:22'
@@ -128,6 +136,9 @@ class TestCheckTasksRequestedByUser(object):
 
     @patch('pybossa.api.task_run.get_user_id_or_ip')
     def test_check_task_requested_by_user_anonymous_preserves_key(self, user):
+        """_check_task_requested_by_user does not delete the key after checking
+        that an anonymous user requested the task (in case many simultaneous
+        anonymous users are sharing the same IP"""
         user.return_value = {'user_id': None, 'user_ip': '127.0.0.1'}
         taskrun = TaskRun(task_id=22)
         key = 'pybossa:task_requested:user:127.0.0.1:task:22'
