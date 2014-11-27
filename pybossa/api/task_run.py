@@ -59,4 +59,4 @@ def _check_task_requested_by_user(taskrun):
     usr = get_user_id_or_ip()['user_id'] or get_user_id_or_ip()['user_ip']
     key = 'pybossa:task_requested:user:%s:task:%s' % (usr, taskrun.task_id)
     if not sentinel.slave.get(key):
-        raise Forbidden('You need to request a task first!')
+        raise Forbidden('You must request a task first!')
