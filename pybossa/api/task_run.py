@@ -46,7 +46,7 @@ class TaskRunAPI(APIBase):
             raise Forbidden('Invalid task_id')
         if (task.app_id != taskrun.app_id):
             raise Forbidden('Invalid app_id')
-        _check_valid_task_run(taskrun)
+        _check_task_requested_by_user(taskrun)
 
         # Add the user info so it cannot post again the same taskrun
         if current_user.is_anonymous():
@@ -55,7 +55,7 @@ class TaskRunAPI(APIBase):
             taskrun.user_id = current_user.id
 
 
-def _check_valid_task_run(taskrun):
+def _check_task_requested_by_user(taskrun):
     usr = get_user_id_or_ip()['user_id'] or get_user_id_or_ip()['user_ip']
     key = 'pybossa:task_requested:user:%s:task:%s' % (usr, taskrun.task_id)
     if not sentinel.slave.get(key):

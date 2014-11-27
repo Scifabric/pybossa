@@ -36,7 +36,7 @@ from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound
 from pybossa.util import jsonpify, crossdomain, get_user_id_or_ip
 import pybossa.model as model
-from pybossa.core import db, csrf, ratelimits
+from pybossa.core import db, csrf, ratelimits, sentinel
 from itsdangerous import URLSafeSerializer
 from pybossa.ratelimit import ratelimit
 from pybossa.cache.apps import n_tasks
@@ -108,11 +108,7 @@ def new_task(app_id):
         task = _retrieve_new_task(app_id)
         # If there is a task for the user, return it
         if task is not None:
-            from pybossa.core import sentinel
-            usr = get_user_id_or_ip()['user_id'] or get_user_id_or_ip()['user_ip']
-            key = 'pybossa:task_requested:user:%s:task:%s' % (usr, task.id)
-            timeout = 60 * 60
-            sentinel.master.setex(key, timeout, True)
+            _mark_task_as_requested_by_user(task)
             response = make_response(json.dumps(task.dictize()))
             response.mimetype = "application/json"
             return response
@@ -137,6 +133,12 @@ def _retrieve_new_task(app_id):
     user_ip = request.remote_addr if current_user.is_anonymous() else None
     task = sched.new_task(app_id, app.info.get('sched'), user_id, user_ip, offset)
     return task
+
+def _mark_task_as_requested_by_user(task):
+    usr = get_user_id_or_ip()['user_id'] or get_user_id_or_ip()['user_ip']
+    key = 'pybossa:task_requested:user:%s:task:%s' % (usr, task.id)
+    timeout = 60 * 60
+    sentinel.master.setex(key, timeout, True)
 
 
 @jsonpify

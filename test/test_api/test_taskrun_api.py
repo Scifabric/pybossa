@@ -381,7 +381,7 @@ class TestTaskrunAPI(TestAPI):
 
     @with_context
     @patch('pybossa.api.task_run.request')
-    @patch('pybossa.api.task_run._check_valid_task_run')
+    @patch('pybossa.api.task_run._check_task_requested_by_user')
     def test_taskrun_updates_task_state(self, fake_validation, mock_request):
         """Test API TaskRun POST updates task state"""
         app = AppFactory.create()
