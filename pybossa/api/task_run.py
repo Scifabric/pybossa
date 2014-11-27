@@ -46,7 +46,8 @@ class TaskRunAPI(APIBase):
             raise Forbidden('Invalid task_id')
         if (task.app_id != taskrun.app_id):
             raise Forbidden('Invalid app_id')
-        _check_task_requested_by_user(taskrun)
+        if _check_task_requested_by_user(taskrun, sentinel.master) is False:
+            raise Forbidden('You must request a task first!')
 
         # Add the user info so it cannot post again the same taskrun
         if current_user.is_anonymous():
@@ -55,8 +56,11 @@ class TaskRunAPI(APIBase):
             taskrun.user_id = current_user.id
 
 
-def _check_task_requested_by_user(taskrun):
-    usr = get_user_id_or_ip()['user_id'] or get_user_id_or_ip()['user_ip']
+def _check_task_requested_by_user(taskrun, redis_conn):
+    user_id_ip = get_user_id_or_ip()
+    usr = user_id_ip['user_id'] or user_id_ip['user_ip']
     key = 'pybossa:task_requested:user:%s:task:%s' % (usr, taskrun.task_id)
-    if not sentinel.slave.get(key):
-        raise Forbidden('You must request a task first!')
+    task_requested = bool(redis_conn.get(key))
+    if user_id_ip['user_id'] is not None:
+        redis_conn.delete(key)
+    return task_requested

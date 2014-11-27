@@ -108,7 +108,7 @@ def new_task(app_id):
         task = _retrieve_new_task(app_id)
         # If there is a task for the user, return it
         if task is not None:
-            _mark_task_as_requested_by_user(task)
+            _mark_task_as_requested_by_user(task, sentinel.master)
             response = make_response(json.dumps(task.dictize()))
             response.mimetype = "application/json"
             return response
@@ -134,11 +134,11 @@ def _retrieve_new_task(app_id):
     task = sched.new_task(app_id, app.info.get('sched'), user_id, user_ip, offset)
     return task
 
-def _mark_task_as_requested_by_user(task):
+def _mark_task_as_requested_by_user(task, redis_conn):
     usr = get_user_id_or_ip()['user_id'] or get_user_id_or_ip()['user_ip']
     key = 'pybossa:task_requested:user:%s:task:%s' % (usr, task.id)
     timeout = 60 * 60
-    sentinel.master.setex(key, timeout, True)
+    redis_conn.setex(key, timeout, True)
 
 
 @jsonpify
