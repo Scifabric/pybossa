@@ -121,6 +121,20 @@ class TestTaskrunAPI(TestAPI):
             task_id=task.id,
             info='my task result')
         datajson = json.dumps(data)
+
+        # Fails if the user has not requested a task first
+        tmp = self.app.post('/api/taskrun', data=datajson)
+        r_taskrun = json.loads(tmp.data)
+        err = json.loads(tmp.data)
+        assert tmp.status_code == 403, tmp.status_code
+        assert err['status'] == 'failed', err
+        assert err['status_code'] == 403, err
+        assert err['exception_msg'] == 'You need to request a task first!', err
+        assert err['exception_cls'] == 'Forbidden', err
+        assert err['target'] == 'taskrun', err
+
+        # Succeeds after requesting a task
+        self.app.get('/api/app/%s/newtask' % app.id)
         tmp = self.app.post('/api/taskrun', data=datajson)
         r_taskrun = json.loads(tmp.data)
         assert tmp.status_code == 200, r_taskrun
@@ -176,6 +190,20 @@ class TestTaskrunAPI(TestAPI):
             user_id=app.owner.id,
             info='my task result')
         datajson = json.dumps(data)
+
+        # Fails if the user has not requested a task first
+        tmp = self.app.post('/api/taskrun', data=datajson)
+        r_taskrun = json.loads(tmp.data)
+        err = json.loads(tmp.data)
+        assert tmp.status_code == 403, tmp.status_code
+        assert err['status'] == 'failed', err
+        assert err['status_code'] == 403, err
+        assert err['exception_msg'] == 'You need to request a task first!', err
+        assert err['exception_cls'] == 'Forbidden', err
+        assert err['target'] == 'taskrun', err
+
+        # Succeeds after requesting a task
+        self.app.get('/api/app/%s/newtask?api_key=%s' % (app.id, app.owner.api_key))
         tmp = self.app.post(url, data=datajson)
         r_taskrun = json.loads(tmp.data)
         assert tmp.status_code == 200, r_taskrun
@@ -353,7 +381,8 @@ class TestTaskrunAPI(TestAPI):
 
     @with_context
     @patch('pybossa.api.task_run.request')
-    def test_taskrun_updates_task_state(self, mock_request):
+    @patch('pybossa.api.task_run._check_valid_task_run')
+    def test_taskrun_updates_task_state(self, fake_validation, mock_request):
         """Test API TaskRun POST updates task state"""
         app = AppFactory.create()
         task = TaskFactory.create(app=app, n_answers=2)

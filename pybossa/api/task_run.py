@@ -28,8 +28,8 @@ from pybossa.model.task_run import TaskRun
 from werkzeug.exceptions import Forbidden
 
 from api_base import APIBase
-
-from pybossa.core import task_repo
+from pybossa.util import get_user_id_or_ip
+from pybossa.core import task_repo, sentinel
 
 
 class TaskRunAPI(APIBase):
@@ -46,9 +46,17 @@ class TaskRunAPI(APIBase):
             raise Forbidden('Invalid task_id')
         if (task.app_id != taskrun.app_id):
             raise Forbidden('Invalid app_id')
+        _check_valid_task_run(taskrun)
 
         # Add the user info so it cannot post again the same taskrun
         if current_user.is_anonymous():
             taskrun.user_ip = request.remote_addr
         else:
             taskrun.user_id = current_user.id
+
+
+def _check_valid_task_run(taskrun):
+    usr = get_user_id_or_ip()['user_id'] or get_user_id_or_ip()['user_ip']
+    key = 'pybossa:task_requested:user:%s:task:%s' % (usr, taskrun.task_id)
+    if not sentinel.slave.get(key):
+        raise Forbidden('You need to request a task first!')

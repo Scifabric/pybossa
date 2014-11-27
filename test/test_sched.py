@@ -19,6 +19,8 @@
 import json
 import random
 
+from mock import patch
+
 from helper import sched
 from default import Test, db, with_context
 from pybossa.model.task import Task
@@ -220,7 +222,8 @@ class TestSched(sched.Helper):
             assert t.state == "completed", t.state
 
     @with_context
-    def test_tasks_for_user_ip_id(self):
+    @patch('pybossa.api.task_run._check_valid_task_run')
+    def test_tasks_for_user_ip_id(self, fake_validation):
         """ Test SCHED newtask to see if sends the same ammount of Task to
             user_id and user_ip
         """
@@ -245,7 +248,7 @@ class TestSched(sched.Helper):
 
             while data.get('info') is not None:
                 # Check that we received a Task
-                assert data.get('info'),  data
+                assert data.get('info'), data
                 self.redis_flushall()
 
                 # Save the assigned task
