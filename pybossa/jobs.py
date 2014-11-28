@@ -24,21 +24,12 @@ from pybossa.util import with_cache_disabled
 def export_tasks():
     """Export tasks to zip"""
 
-    from pybossa.core import create_app, db
+    from pybossa.core import db, json_exporter, csv_exporter
     from pybossa.model.app import App
-    from pybossa.exporter.csv_export import CsvExporter
-    from pybossa.exporter.json_export import JsonExporter
 
     print "Running on the background export tasks ZIPs"
 
-    csv_exporter = CsvExporter()
-    json_exporter = JsonExporter()
-
     apps = db.slave_session.query(App).all()
-
-    # Test only with first
-    # export_json(apps[0])
-    # export_csv(apps[0])
 
     for app_x in apps:
         json_exporter.pregenerate_zip_files(app_x)
