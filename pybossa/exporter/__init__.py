@@ -94,7 +94,7 @@ class Exporter(object):
             # res.headers['Content-Disposition'] = 'attachment; filename*=%s' % filename
             return res
         else:
-            return redirect(url_for('rackspace', filename=filename, container=self._container(app)))
+            return redirect(url_for('rackspace', filename=filename, container=self._container(app), _external=True))
 
     def response_zip(self, app, ty):
         return self.get_zip(app, ty)
