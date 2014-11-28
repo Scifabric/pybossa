@@ -19,7 +19,7 @@
 from pybossa.jobs import warn_old_project_owners, get_non_updated_apps
 from default import Test, with_context
 from factories import AppFactory
-from redis import Redis
+from redis import StrictRedis
 from rq_scheduler import Scheduler
 from mock import patch, MagicMock
 
@@ -28,7 +28,7 @@ class TestOldProjects(Test):
 
     def setUp(self):
         super(TestOldProjects, self).setUp()
-        self.connection = Redis()
+        self.connection = StrictRedis()
         self.connection.flushall()
         self.scheduler = Scheduler('test_queue', connection=self.connection)
 
