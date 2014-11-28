@@ -57,7 +57,11 @@ class Exporter(object):
 
     def _download_path(self, app):
         container = self._container(app)
-        filepath = safe_join(uploader.upload_folder, container)
+        if isinstance(uploader, local.LocalUploader):
+            filepath = safe_join(uploader.upload_folder, container)
+        else:
+            print("The method Exporter _download_path should not be used for Rackspace etc.!")  # TODO: Log this stuff
+            filepath = container
         return filepath
 
     def download_name(self, app, ty, format):
@@ -72,9 +76,9 @@ class Exporter(object):
     def zip_existing(self, app, ty):
         """Check if exported ZIP is existing"""
         # TODO: Check ty
-        filepath = self._download_path(app)
         filename=self.download_name(app, ty)
         if isinstance(uploader, local.LocalUploader):
+            filepath = self._download_path(app)
             return os.path.isfile(safe_join(filepath, filename))
         else:
             return True
@@ -82,12 +86,12 @@ class Exporter(object):
 
     def get_zip(self, app, ty):
         """Get a ZIP file directly from uploaded directory or generate one on the fly and upload it if not existing."""
-        filepath = self._download_path(app)
         filename=self.download_name(app, ty)
         if not self.zip_existing(app, ty):
             print "Warning: Generating %s on the fly now!" % filename
             self._make_zip(app, ty)
         if isinstance(uploader, local.LocalUploader):
+            filepath = self._download_path(app)
             res = send_file(filename_or_fp=safe_join(filepath, filename), mimetype='application/octet-stream', as_attachment=True, attachment_filename=filename)
             # fail safe mode for more encoded filenames.
             # It seems Flask and Werkzeug do not support RFC 5987 http://greenbytes.de/tech/tc2231/#encoding-2231-char
