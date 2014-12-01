@@ -64,7 +64,7 @@ class ProjectRepository(object):
         action = 'updated'
         self._validate_can_be(action, project)
         try:
-            self.add_log_entry(project, action, caller)
+            #self.add_log_entry(project, action, caller)
             self.db.session.add(project)
             self.db.session.commit()
         except IntegrityError as e:
@@ -79,6 +79,12 @@ class ProjectRepository(object):
 
     def add_log_entry(self, project, action, caller):
         try:
+            if current_user.is_authenticated():
+                user_id = current_user.id
+                user_name = current_user.name
+            else:
+                user_id = request.remote_addr
+                user_name = 'anonymous'
             for attr in project.dictize().keys():
                 if getattr(inspect(project).attrs, attr).history.has_changes():
                     history = getattr(inspect(project).attrs, attr).history
@@ -86,8 +92,8 @@ class ProjectRepository(object):
                         log = Auditlog(
                             app_id=project.id,
                             app_short_name=project.short_name,
-                            user_id=current_user.id,
-                            user_name=current_user.name,
+                            user_id=user_id,
+                            user_name=user_name,
                             action=action,
                             caller=caller,
                             attribute=attr,
@@ -125,7 +131,7 @@ class ProjectRepository(object):
             self.db.session.rollback()
             raise DBIntegrityError(e)
 
-    def update_category(self, new_category):
+    def update_category(self, new_category, caller="web"):
         self._validate_can_be('updated as a Category', new_category, klass=Category)
         try:
             self.db.session.merge(new_category)

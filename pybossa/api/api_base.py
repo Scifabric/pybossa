@@ -48,7 +48,8 @@ repos = {'Task'   : {'repo': task_repo, 'filter': 'filter_tasks_by',
         'User'    : {'repo': user_repo, 'filter': 'filter_by', 'get': 'get',
                      'save': 'save', 'update': 'update'},
         'App'     : {'repo': project_repo, 'filter': 'filter_by', 'get': 'get',
-                     'save': 'save', 'update': 'update', 'delete': 'delete'},
+                     'save': 'save', 'update': 'update', 'delete': 'delete',
+                     'log': 'add_log_entry'},
         'Category': {'repo': project_repo, 'filter': 'filter_categories_by',
                      'get': 'get_category', 'save': 'save_category',
                      'update': 'update_category', 'delete': 'delete_category'}
@@ -272,12 +273,17 @@ class APIBase(MethodView):
         # may be missing the id as we allow partial updates
         data['id'] = id
         data = self.hateoas.remove_links(data)
-        # inst = self.__class__(**data)
+        inst = self.__class__(**data)
         for key in data:
             setattr(existing, key, data[key])
         update_func = repos[self.__class__.__name__]['update']
-        # getattr(repo, update_func)(inst)
-        getattr(repo, update_func)(existing, caller='api')
+        log_func = repos[self.__class__.__name__].get('log')
+        #getattr(repo, update_func)(inst)
+        if self.__class__.__name__ == 'App':
+            #print log_func
+            getattr(repo, log_func)(existing, 'update', 'api')
+        #getattr(repo, log_func)(existing)
+        getattr(repo, update_func)(existing)
         #return inst
         return existing
 
