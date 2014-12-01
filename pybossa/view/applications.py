@@ -1179,6 +1179,7 @@ def task_n_answers(short_name):
         task_repo.update_tasks_redundancy(app, form.n_answers.data)
         msg = ("User %s updated task redundancy to: %s" %
                (current_user.name, form.n_answers.data))
+        # Log it
         log = Auditlog(
             app_id=app.id,
             app_short_name=app.short_name,
