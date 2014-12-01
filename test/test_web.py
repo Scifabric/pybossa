@@ -2801,7 +2801,7 @@ class TestWeb(web.Helper):
         assert tasks == [], "Tasks should not be immediately added"
         queue.enqueue.assert_called_once_with(import_tasks, tasks_info, app.id)
         msg = "You're trying to import a large amount of tasks, so please be patient.\
-            You will receibe an email when the process tasks are ready."
+            You will receibe an email when the tasks are ready."
         assert msg in res.data
 
     @with_context
