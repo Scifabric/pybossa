@@ -37,6 +37,7 @@ from pybossa.core import uploader, signer
 from pybossa.cache import ONE_DAY, ONE_HOUR
 from pybossa.model.app import App
 from pybossa.model.task import Task
+from pybossa.model.auditlog import Auditlog
 from pybossa.util import Pagination, UnicodeWriter, admin_required, get_user_id_or_ip
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
@@ -49,7 +50,8 @@ from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
 from pybossa.forms.applications_view_forms import *
 
-from pybossa.core import project_repo, user_repo, task_repo, blog_repo
+from pybossa.core import project_repo, user_repo, task_repo, blog_repo, \
+    auditlog_repo
 
 
 blueprint = Blueprint('app', __name__)
@@ -247,10 +249,21 @@ def task_presenter_editor(short_name):
     if request.method == 'POST' and form.validate():
         db_app = project_repo.get(app.id)
         db_app.info['task_presenter'] = form.editor.data
-        project_repo.save(db_app)
+        project_repo.update(db_app)
         cached_apps.delete_app(app.short_name)
         msg_1 = gettext('Task presenter added!')
         flash('<i class="icon-ok"></i> ' + msg_1, 'success')
+        # Log it
+        msg = ("User %s updated task presenter" % current_user.name)
+        log = Auditlog(
+            app_id=db_app.id,
+            app_short_name=db_app.short_name,
+            user_id=current_user.id,
+            user_name=current_user.name,
+            action='update',
+            caller='web',
+            log=msg)
+        auditlog_repo.save(log)
         return redirect(url_for('.tasks', short_name=app.short_name))
 
     # It does not have a validation
@@ -349,18 +362,6 @@ def update(short_name):
         (app, owner, n_tasks, n_task_runs,
          overall_progress, last_activity) = app_by_shortname(short_name)
 
-        #new_application = model.app.App(
-        #    id=form.id.data,
-        #    name=form.name.data,
-        #    short_name=form.short_name.data,
-        #    description=form.description.data,
-        #    long_description=form.long_description.data,
-        #    hidden=hidden,
-        #    webhook=form.webhook.data,
-        #    info=app.info,
-        #    owner_id=app.owner_id,
-        #    allow_anonymous_contributors=form.allow_anonymous_contributors.data,
-        #    category_id=form.category_id.data)
         new_application = project_repo.get_by_shortname(short_name)
         if form.id.data == new_application.id:
             new_application.name=form.name.data
