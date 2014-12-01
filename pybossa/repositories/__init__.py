@@ -32,3 +32,4 @@ from project_repository import ProjectRepository
 from user_repository import UserRepository
 from blog_repository import BlogRepository
 from task_repository import TaskRepository
+from auditlog_repository import AuditlogRepository

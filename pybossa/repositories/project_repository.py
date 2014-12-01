@@ -60,11 +60,11 @@ class ProjectRepository(object):
             self.db.session.rollback()
             raise DBIntegrityError(e)
 
-    def update(self, project):
+    def update(self, project, caller='web'):
         action = 'updated'
         self._validate_can_be(action, project)
         try:
-            self.add_log_entry(project, action)
+            self.add_log_entry(project, action, caller)
             self.db.session.add(project)
             self.db.session.commit()
         except IntegrityError as e:
@@ -77,7 +77,7 @@ class ProjectRepository(object):
         self.db.session.delete(app)
         self.db.session.commit()
 
-    def add_log_entry(self, project, action):
+    def add_log_entry(self, project, action, caller):
         try:
             for attr in project.dictize().keys():
                 if getattr(inspect(project).attrs, attr).history.has_changes():
@@ -94,6 +94,7 @@ class ProjectRepository(object):
                             user_id=current_user.id,
                             user_name=current_user.name,
                             action=action,
+                            caller=caller,
                             log=msg)
                         self.db.session.add(log)
             self.db.session.commit()
