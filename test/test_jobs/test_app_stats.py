@@ -21,7 +21,6 @@ from default import Test, with_context
 from factories import AppFactory
 from factories import UserFactory
 from redis import Redis
-from rq_scheduler import Scheduler
 
 
 class TestProjectsStats(Test):
@@ -30,7 +29,6 @@ class TestProjectsStats(Test):
         super(TestProjectsStats, self).setUp()
         self.connection = Redis()
         self.connection.flushall()
-        self.scheduler = Scheduler('test_queue', connection=self.connection)
 
 
     @with_context
