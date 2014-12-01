@@ -23,6 +23,34 @@ from pybossa.util import with_cache_disabled
 MINUTE = 60
 HOUR = 60 * 60
 
+
+def schedule_job(function, scheduler):
+    """Schedules a job and returns a log message about success of the operation"""
+    from datetime import datetime
+    scheduled_jobs = scheduler.get_jobs()
+    job = scheduler.schedule(
+        scheduled_time=datetime.utcnow(),
+        func=function['name'],
+        args=function['args'],
+        kwargs=function['kwargs'],
+        interval=function['interval'],
+        repeat=None,
+        timeout=function['timeout'])
+    for sj in scheduled_jobs:
+        if (function['name'].__name__ in sj.func_name and
+            sj._args == function['args'] and
+            sj._kwargs == function['kwargs']):
+            job.cancel()
+            msg = ('WARNING: Job %s(%s, %s) is already scheduled'
+                   % (function['name'].__name__, function['args'],
+                      function['kwargs']))
+            return msg
+    msg = ('Scheduled %s(%s, %s) to run every %s seconds'
+           % (function['name'].__name__, function['args'], function['kwargs'],
+              function['interval']))
+    return msg
+
+
 def get_scheduled_jobs(): # pragma: no cover
     """Return a list of scheduled jobs."""
     # Default ones
@@ -223,3 +251,8 @@ def import_tasks(tasks_info, app_id):
                      subject=subject, body=body)
     send_mail(mail_dict)
     return msg
+
+
+def auto_import_tasks():
+    import pybossa.importers as importers
+    print 'testing'
