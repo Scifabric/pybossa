@@ -99,17 +99,27 @@ class TestAuditlogRepositoryForProjects(Test):
         assert len(retrieved_logs) == 0, retrieved_logs
 
 
-    #def test_filter_by_one_condition(self):
-    #    """Test filter_by returns a list of projects that meet the filtering
-    #    condition"""
+    def test_filter_by_one_condition(self):
+        """Test filter_by returns a list of logs that meet the filtering
+        condition"""
 
-    #    AppFactory.create_batch(3, allow_anonymous_contributors=False)
-    #    should_be_missing = AppFactory.create(allow_anonymous_contributors=True)
+        app = AppFactory.create()
+        AuditlogFactory.create_batch(size=3, app_id=app.id,
+                               app_short_name=app.short_name,
+                               user_id=app.owner.id,
+                               user_name=app.owner.name)
 
-    #    retrieved_projects = self.project_repo.filter_by(allow_anonymous_contributors=False)
+        app2 = AppFactory.create()
+        should_be_missing = AuditlogFactory.create_batch(size=3, app_id=app2.id,
+                                                   app_short_name=app2.short_name,
+                                                   user_id=app2.owner.id,
+                                                   user_name=app2.owner.name)
 
-    #    assert len(retrieved_projects) == 3, retrieved_projects
-    #    assert should_be_missing not in retrieved_projects, retrieved_projects
+
+        retrieved_logs = self.auditlog_repo.filter_by(user_id=app.owner.id)
+
+        assert len(retrieved_logs) == 3, retrieved_logs
+        assert should_be_missing not in retrieved_logs, retrieved_logs
 
 
     #def test_filter_by_multiple_conditions(self):
