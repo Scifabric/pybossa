@@ -160,13 +160,13 @@ class TestAuditlogRepositoryForProjects(Test):
         assert self.auditlog_repo.get(log.id) == log, "Log not saved"
 
 
-    #def test_save_fails_if_integrity_error(self):
-    #    """Test save raises a DBIntegrityError if the instance to be saved lacks
-    #    a required value"""
+    def test_save_fails_if_integrity_error(self):
+        """Test save raises a DBIntegrityError if the instance to be saved lacks
+        a required value"""
 
-    #    project = AppFactory.build(name=None)
+        log = AuditlogFactory.build()
 
-    #    assert_raises(DBIntegrityError, self.project_repo.save, project)
+        assert_raises(DBIntegrityError, self.auditlog_repo.save, log)
 
 
     #def test_save_only_saves_projects(self):
