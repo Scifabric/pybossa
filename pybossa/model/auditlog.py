@@ -43,5 +43,7 @@ class Auditlog(db.Model, DomainObject):
     created = Column(Text, default=make_timestamp)
     #: Action taken
     action = Column(Text)
+    #: Caller: which process initiated the action: API or WEB
+    caller = Column(Text)
     #: Log message
     log = Column(Text, nullable=False)

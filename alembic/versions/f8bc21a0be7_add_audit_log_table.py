@@ -23,6 +23,7 @@ def upgrade():
                     sa.Column('user_name', sa.Text),
                     sa.Column('created', sa.Text, nullable=False),
                     sa.Column('action', sa.Text, nullable=False),
+                    sa.Column('caller', sa.Text, nullable=False),
                     sa.Column('log', sa.Text, nullable=False))
 
 
