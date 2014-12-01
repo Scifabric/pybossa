@@ -20,10 +20,13 @@ def upgrade():
                     sa.Column('app_id', sa.Integer, sa.ForeignKey('app.id')),
                     sa.Column('app_short_name', sa.Text, nullable=False),
                     sa.Column('user_id', sa.Integer, sa.ForeignKey('user.id')),
-                    sa.Column('user_name', sa.Text),
+                    sa.Column('user_name', sa.Text, nullable=False),
                     sa.Column('created', sa.Text, nullable=False),
                     sa.Column('action', sa.Text, nullable=False),
                     sa.Column('caller', sa.Text, nullable=False),
+                    sa.Column('attribute', sa.Text, nullable=False),
+                    sa.Column('old_value', sa.Text),
+                    sa.Column('new_value', sa.Text),
                     sa.Column('log', sa.Text, nullable=False))
 
 

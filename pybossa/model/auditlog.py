@@ -45,5 +45,11 @@ class Auditlog(db.Model, DomainObject):
     action = Column(Text)
     #: Caller: which process initiated the action: API or WEB
     caller = Column(Text)
+    #: Attribute: which attribute has been updated
+    attribute = Column(Text)
+    #: Old_value
+    old_value = Column(Text)
+    #: Old_value
+    new_value = Column(Text)
     #: Log message
     log = Column(Text, nullable=False)
