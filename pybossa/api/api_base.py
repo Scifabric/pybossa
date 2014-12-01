@@ -112,7 +112,7 @@ class APIBase(MethodView):
                 getattr(require, self.__class__.__name__.lower()).read(item)
             except (Forbidden, Unauthorized):
                 # Remove last added item, as it is 401 or 403
-                items.pop() 
+                items.pop()
             except: # pragma: no cover
                 raise
         if id:
@@ -272,10 +272,14 @@ class APIBase(MethodView):
         # may be missing the id as we allow partial updates
         data['id'] = id
         data = self.hateoas.remove_links(data)
-        inst = self.__class__(**data)
+        # inst = self.__class__(**data)
+        for key in data:
+            setattr(existing, key, data[key])
         update_func = repos[self.__class__.__name__]['update']
-        getattr(repo, update_func)(inst)
-        return inst
+        # getattr(repo, update_func)(inst)
+        getattr(repo, update_func)(existing, caller='api')
+        #return inst
+        return existing
 
 
     def _update_object(self, data_dict):
