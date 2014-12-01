@@ -20,7 +20,7 @@
 from default import Test, db
 from nose.tools import assert_raises
 from factories import AppFactory
-from factories import AuditlogFactory
+from factories import AuditlogFactory, UserFactory
 from pybossa.repositories import AuditlogRepository
 from pybossa.exc import WrongObjectError, DBIntegrityError
 
@@ -122,18 +122,26 @@ class TestAuditlogRepositoryForProjects(Test):
         assert should_be_missing not in retrieved_logs, retrieved_logs
 
 
-    #def test_filter_by_multiple_conditions(self):
-    #    """Test filter_by supports multiple-condition queries"""
+    def test_filter_by_multiple_conditions(self):
+        """Test filter_by supports multiple-condition queries"""
 
-    #    AppFactory.create_batch(2, allow_anonymous_contributors=False, hidden=0)
-    #    project = AppFactory.create(allow_anonymous_contributors=False, hidden=1)
+        app = AppFactory.create()
+        user = UserFactory.create()
+        AuditlogFactory.create_batch(size=3, app_id=app.id,
+                               app_short_name=app.short_name,
+                               user_id=app.owner.id,
+                               user_name=app.owner.name)
 
-    #    retrieved_projects = self.project_repo.filter_by(
-    #                                        allow_anonymous_contributors=False,
-    #                                        hidden=1)
+        log = AuditlogFactory.create(app_id=app.id,
+                                     app_short_name=app.short_name,
+                                     user_id=user.id,
+                                     user_name=user.name)
 
-    #    assert len(retrieved_projects) == 1, retrieved_projects
-    #    assert project in retrieved_projects, retrieved_projects
+        retrieved_logs = self.auditlog_repo.filter_by(app_id=app.id,
+                                                      user_id=user.id)
+
+        assert len(retrieved_logs) == 1, retrieved_logs
+        assert log in retrieved_logs, retrieved_logs
 
 
     #def test_filter_by_limit_offset(self):
