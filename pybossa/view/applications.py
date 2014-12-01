@@ -1216,12 +1216,30 @@ def task_scheduler(short_name):
 
     if request.method == 'POST' and form.validate():
         app = project_repo.get_by_shortname(short_name=app.short_name)
+        if app.info.get('sched'):
+            old_sched = app.info['sched']
+        else:
+            old_sched = 'default'
         if form.sched.data:
             app.info['sched'] = form.sched.data
         project_repo.save(app)
         cached_apps.delete_app(app.short_name)
+        # Log it
+        if old_sched != app.info['sched']:
+            msg = ("User %s updated task scheduler from: %s to: %s" %
+                   (current_user.name, old_sched, app.info['sched']))
+            log = Auditlog(
+                app_id=app.id,
+                app_short_name=app.short_name,
+                user_id=current_user.id,
+                user_name=current_user.name,
+                action='update',
+                caller='web',
+                log=msg)
+            auditlog_repo.save(log)
         msg = gettext("Project Task Scheduler updated!")
         flash(msg, 'success')
+
         return redirect(url_for('.tasks', short_name=app.short_name))
     else: # pragma: no cover
         flash(gettext('Please correct the errors'), 'error')
