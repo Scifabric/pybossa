@@ -60,11 +60,10 @@ class ProjectRepository(object):
             self.db.session.rollback()
             raise DBIntegrityError(e)
 
-    def update(self, project, caller='web'):
+    def update(self, project):
         action = 'updated'
         self._validate_can_be(action, project)
         try:
-            #self.add_log_entry(project, action, caller)
             self.db.session.add(project)
             self.db.session.commit()
         except IntegrityError as e:
