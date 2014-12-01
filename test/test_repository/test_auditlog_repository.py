@@ -144,30 +144,20 @@ class TestAuditlogRepositoryForProjects(Test):
         assert log in retrieved_logs, retrieved_logs
 
 
-    #def test_filter_by_limit_offset(self):
-    #    """Test that filter_by supports limit and offset options"""
+    def test_save(self):
+        """Test save persist the log"""
 
-    #    AppFactory.create_batch(4)
-    #    all_projects = self.project_repo.filter_by()
+        app = AppFactory.create()
+        log = AuditlogFactory.build(app_id=app.id,
+                                    app_short_name=app.short_name,
+                                    user_id=app.owner.id,
+                                    user_name=app.owner.name)
 
-    #    first_two = self.project_repo.filter_by(limit=2)
-    #    last_two = self.project_repo.filter_by(limit=2, offset=2)
+        assert self.auditlog_repo.get(log.id) is None
 
-    #    assert len(first_two) == 2, first_two
-    #    assert len(last_two) == 2, last_two
-    #    assert first_two == all_projects[:2]
-    #    assert last_two == all_projects[2:]
+        self.auditlog_repo.save(log)
 
-
-    #def test_save(self):
-    #    """Test save persist the project"""
-
-    #    project = AppFactory.build()
-    #    assert self.project_repo.get(project.id) is None
-
-    #    self.project_repo.save(project)
-
-    #    assert self.project_repo.get(project.id) == project, "Project not saved"
+        assert self.auditlog_repo.get(log.id) == log, "Log not saved"
 
 
     #def test_save_fails_if_integrity_error(self):
