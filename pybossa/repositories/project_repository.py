@@ -83,11 +83,6 @@ class ProjectRepository(object):
                 if getattr(inspect(project).attrs, attr).history.has_changes():
                     history = getattr(inspect(project).attrs, attr).history
                     if len(history.deleted) > 0 and len(history.added) > 0:
-                        msg = ("User %s updated %s attribute from: %s to: %s" %
-                               (current_user.name,
-                                attr,
-                                history.deleted[0],
-                                history.added[0]))
                         log = Auditlog(
                             app_id=project.id,
                             app_short_name=project.short_name,
@@ -95,7 +90,9 @@ class ProjectRepository(object):
                             user_name=current_user.name,
                             action=action,
                             caller=caller,
-                            log=msg)
+                            attribute=attr,
+                            old_value=history.deleted[0],
+                            new_value=history.added[0])
                         self.db.session.add(log)
             self.db.session.commit()
         except IntegrityError as e:

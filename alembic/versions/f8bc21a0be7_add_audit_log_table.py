@@ -26,8 +26,7 @@ def upgrade():
                     sa.Column('caller', sa.Text, nullable=False),
                     sa.Column('attribute', sa.Text, nullable=False),
                     sa.Column('old_value', sa.Text),
-                    sa.Column('new_value', sa.Text),
-                    sa.Column('log', sa.Text, nullable=False))
+                    sa.Column('new_value', sa.Text))
 
 
 def downgrade():
