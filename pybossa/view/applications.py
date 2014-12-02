@@ -1300,6 +1300,13 @@ def task_priority(short_name):
                                                     t.id,
                                                     old_priority,
                                                     t.priority_0))
+                        old_value = json.dumps({'task_id': t.id,
+                                                'task_priority_0': old_priority})
+
+                        new_value = json.dumps({'task_id': t.id,
+                                                'task_priority_0': t.priority_0})
+
+
                         log = Auditlog(
                             app_id=app.id,
                             app_short_name=app.short_name,
@@ -1307,7 +1314,9 @@ def task_priority(short_name):
                             user_name=current_user.name,
                             action='update',
                             caller='web',
-                            log=msg)
+                            old_value=old_value,
+                            new_value=new_value,
+                            attribute='task.priority_0')
                         auditlog_repo.save(log)
                 else:  # pragma: no cover
                     flash(gettext(("Ooops, Task.id=%s does not belong to the app" % task_id)), 'danger')
