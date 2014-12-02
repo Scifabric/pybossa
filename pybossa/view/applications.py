@@ -1253,7 +1253,9 @@ def task_scheduler(short_name):
                 user_name=current_user.name,
                 action='update',
                 caller='web',
-                log=msg)
+                attribute='sched',
+                old_value=old_sched,
+                new_value=app.info['sched'])
             auditlog_repo.save(log)
         msg = gettext("Project Task Scheduler updated!")
         flash(msg, 'success')
