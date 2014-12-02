@@ -18,6 +18,7 @@
 import json
 from default import db, Test, with_context
 from factories import AppFactory, AuditlogFactory, UserFactory
+from helper import web
 
 from pybossa.repositories import ProjectRepository
 from pybossa.repositories import AuditlogRepository
@@ -25,7 +26,7 @@ from pybossa.repositories import AuditlogRepository
 project_repo = ProjectRepository(db)
 auditlog_repo = AuditlogRepository(db)
 
-class TestAuditlog(Test):
+class TestAuditlogAPI(Test):
 
     @with_context
     def test_app_update_attributes(self):
@@ -163,3 +164,66 @@ class TestAuditlog(Test):
             assert log.attribute in attributes, log.attribute
             msg = "%s != %s" % (data['info'][log.attribute], log.new_value)
             assert data['info'][log.attribute] == json.loads(log.new_value), msg
+
+
+class TestAuditlogWEB(web.Helper):
+
+    data = {}
+
+    def setUp(self):
+        super(TestAuditlogWEB, self).setUp()
+        self.data = {'id': 1,
+                     'name': 'Sample Project',
+                     'short_name': 'sampleapp',
+                     'description': 'Long Description',
+                     'allow_anonymous_contributors': 'True',
+                     'category_id': 1,
+                     'long_description': 'Long Description\n================',
+                     'hidden': 'false',
+                     'btn': 'Save'}
+
+    @with_context
+    def test_app_update_name(self):
+        self.register()
+        self.new_application()
+        short_name = 'sampleapp'
+
+        url = "/app/%s/update" % short_name
+
+        self.data['name'] = 'New'
+
+        self.app.post(url, data=self.data, follow_redirects=True)
+
+        logs = auditlog_repo.filter_by(app_short_name=short_name)
+        assert len(logs) == 1, logs
+        for log in logs:
+            assert log.attribute == 'name', log.attribute
+            assert log.old_value == 'Sample Project', log.old_value
+            assert log.new_value == self.data['name'], log.new_value
+            assert log.caller == 'web', log.caller
+            assert log.action == 'update', log.action
+            assert log.user_name == 'johndoe', log.user_name
+            assert log.user_id == 1, log.user_id
+
+    @with_context
+    def test_app_update_short_name(self):
+        self.register()
+        self.new_application()
+        short_name = 'newshort_name'
+
+        url = "/app/sampleapp/update"
+
+        self.data['short_name'] = 'newshort_name'
+
+        res = self.app.post(url, data=self.data, follow_redirects=True)
+
+        logs = auditlog_repo.filter_by(app_short_name=short_name)
+        assert len(logs) == 1, logs
+        for log in logs:
+            assert log.attribute == 'short_name', log.attribute
+            assert log.old_value == 'sampleapp', log.old_value
+            assert log.new_value == self.data['short_name'], log.new_value
+            assert log.caller == 'web', log.caller
+            assert log.action == 'update', log.action
+            assert log.user_name == 'johndoe', log.user_name
+            assert log.user_id == 1, log.user_id
