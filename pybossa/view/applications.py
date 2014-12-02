@@ -244,6 +244,8 @@ def task_presenter_editor(short_name):
     require.app.read(app)
     require.app.update(app)
 
+    old_value = app.info.get('task_presenter')
+
     form = TaskPresenterForm(request.form)
     form.id.data = app.id
     if request.method == 'POST' and form.validate():
@@ -262,7 +264,9 @@ def task_presenter_editor(short_name):
             user_name=current_user.name,
             action='update',
             caller='web',
-            log=msg)
+            attribute='task_presenter',
+            old_value=old_value,
+            new_value=form.editor.data)
         auditlog_repo.save(log)
         return redirect(url_for('.tasks', short_name=app.short_name))
 
