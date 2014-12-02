@@ -1192,7 +1192,9 @@ def task_n_answers(short_name):
             user_name=current_user.name,
             action='update',
             caller='web',
-            log=msg)
+            attribute='task.n_answers',
+            old_value=30,
+            new_value=form.n_answers.data)
         auditlog_repo.save(log)
 
         msg = gettext('Redundancy of Tasks updated!')
