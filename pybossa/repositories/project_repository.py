@@ -80,12 +80,7 @@ class ProjectRepository(object):
 
     def add_log_entry(self, project, action, caller):
         try:
-            if current_user.is_authenticated():
-                user_id = current_user.id
-                user_name = current_user.name
-            else:
-                user_id = request.remote_addr
-                user_name = 'anonymous'
+            user_id, user_name = self._get_user_for_log()
             for attr in project.dictize().keys():
                 log_attr = attr
                 if getattr(inspect(project).attrs, attr).history.has_changes():
@@ -187,3 +182,12 @@ class ProjectRepository(object):
             name = element.__class__.__name__
             msg = '%s cannot be %s by %s' % (name, action, self.__class__.__name__)
             raise WrongObjectError(msg)
+
+    def _get_user_for_log(self):
+        if current_user.is_authenticated():
+            user_id = current_user.id
+            user_name = current_user.name
+        else:
+            user_id = request.remote_addr
+            user_name = 'anonymous'
+        return user_id, user_name
