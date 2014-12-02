@@ -531,3 +531,32 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_name == 'johndoe', log.user_name
             assert log.user_id == 1, log.user_id
             id = id +1
+
+    @with_context
+    def test_app_task_redundancy(self):
+        self.register()
+        self.new_application()
+        self.new_task(1)
+        short_name = 'sampleapp'
+
+        url = "/app/%s/tasks/redundancy" % short_name
+
+        attribute = 'task.n_answers'
+
+        new_string = '10'
+
+        old_value = '30'
+
+        self.app.post(url, data={'n_answers': '10'}, follow_redirects=True)
+
+        logs = auditlog_repo.filter_by(app_short_name=short_name)
+        assert len(logs) == 1, logs
+        for log in logs:
+            assert log.attribute == attribute, log.attribute
+            assert log.old_value == old_value, log.old_value
+            assert log.new_value == new_string, log.new_value
+            assert log.caller == 'web', log.caller
+            assert log.action == 'update', log.action
+            assert log.user_name == 'johndoe', log.user_name
+            assert log.user_id == 1, log.user_id
+
