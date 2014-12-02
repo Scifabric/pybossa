@@ -50,7 +50,7 @@ from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
 from pybossa.jobs import import_tasks as background_import
-from pybossa.jobs import schedule_job
+from pybossa.jobs import schedule_job, auto_import_tasks
 from pybossa.forms.applications_view_forms import *
 
 from pybossa.core import project_repo, user_repo, task_repo, blog_repo
@@ -579,11 +579,9 @@ def setup_autoimporter(short_name):
      overall_progress, last_activity) = app_by_shortname(short_name)
     n_volunteers = cached_apps.n_volunteers(app.id)
     n_completed_tasks = cached_apps.n_completed_tasks(app.id)
-    title = app_title(app, "Import Tasks")
-    loading_text = gettext("Importing tasks, this may take a while, wait...")
+
     dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    template_args = dict(title=title, loading_text=loading_text,
-                         app=dict_app,
+    template_args = dict(app=dict_app,
                          owner=owner,
                          n_tasks=n_tasks,
                          overall_progress=overall_progress,
@@ -591,7 +589,13 @@ def setup_autoimporter(short_name):
                          n_completed_tasks=n_completed_tasks)
     require.app.read(app)
     require.app.update(app)
-
+    scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.slave)
+    jobs = [job for job in scheduler.get_jobs() if job.func==auto_import_tasks and job._args[0]==app.id]
+    print jobs
+    if len(jobs) > 0:
+        importer_type = 'csv' if 'csv_url' in jobs[0]._args[1] else ('googledocs' if 'googledocs_url' in jobs[0]._args[1] else 'epicollect')
+        importer = dict(type=importer_type, data=jobs[0]._args[1])
+        return render_template('/applications/importers/current_autoimporter.html', importer=importer, **template_args)
     def render_forms():
         tmpl = '/applications/importers/%s_auto.html' % template
         return render_template(tmpl, **template_args)
@@ -615,7 +619,6 @@ def setup_autoimporter(short_name):
 
 
 def _setup_autoimport_job(app, importer, form):
-    from pybossa.jobs import auto_import_tasks
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.master)
     import_job = dict(name=auto_import_tasks, args=[app.id, form.get_import_data()], kwargs={},
                       interval=(10), timeout=(10))
@@ -623,6 +626,33 @@ def _setup_autoimport_job(app, importer, form):
     print job
     flash(gettext("Your tasks will be imported daily."))
     return redirect(url_for('.tasks', short_name=app.short_name))
+
+
+@blueprint.route('/<short_name>/tasks/autoimporter/delete', methods=['POST'])
+@login_required
+def delete_autoimporter(short_name):
+    (app, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = app_by_shortname(short_name)
+    n_volunteers = cached_apps.n_volunteers(app.id)
+    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
+
+    dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    template_args = dict(app=dict_app,
+                         owner=owner,
+                         n_tasks=n_tasks,
+                         overall_progress=overall_progress,
+                         n_volunteers=n_volunteers,
+                         n_completed_tasks=n_completed_tasks)
+    require.app.read(app)
+    require.app.update(app)
+    scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.slave)
+    jobs = [job for job in scheduler.get_jobs() if job.func==auto_import_tasks and job._args[0]==app.id]
+    print jobs
+    if len(jobs) == 0:
+        raise abort(404)
+    job = jobs[0]
+    job.cancel()
+    return redirect(url_for('.setup_autoimporter', short_name=app.short_name))
 
 
 @blueprint.route('/<short_name>/password', methods=['GET', 'POST'])
@@ -637,7 +667,7 @@ def password_required(short_name):
         if passwd_mngr.validates(password, app):
             response = make_response(redirect(request.args.get('next')))
             return passwd_mngr.update_response(response, app, get_user_id_or_ip())
-        flash('Sorry, incorrect password')
+        flash(gettext('Sorry, incorrect password'))
     return render_template('applications/password.html',
                             app=app,
                             form=form,
