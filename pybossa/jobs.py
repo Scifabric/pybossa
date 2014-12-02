@@ -253,6 +253,6 @@ def import_tasks(tasks_info, app_id):
     return msg
 
 
-def auto_import_tasks():
+def auto_import_tasks(app_id, url):
     import pybossa.importers as importers
-    print 'testing'
+    print app_id, url

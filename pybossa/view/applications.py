@@ -29,6 +29,7 @@ from flask import render_template, make_response
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
 from rq import Queue
+from rq_scheduler import Scheduler
 
 import pybossa.model as model
 import pybossa.sched as sched
@@ -49,6 +50,7 @@ from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
 from pybossa.jobs import import_tasks as background_import
+from pybossa.jobs import schedule_job
 from pybossa.forms.applications_view_forms import *
 
 from pybossa.core import project_repo, user_repo, task_repo, blog_repo
@@ -570,6 +572,59 @@ def _import_tasks(app, importer, form):
     return redirect(url_for('.tasks', short_name=app.short_name))
 
 
+@blueprint.route('/<short_name>/tasks/autoimporter', methods=['GET', 'POST'])
+@login_required
+def setup_autoimporter(short_name):
+    (app, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = app_by_shortname(short_name)
+    n_volunteers = cached_apps.n_volunteers(app.id)
+    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
+    title = app_title(app, "Import Tasks")
+    loading_text = gettext("Importing tasks, this may take a while, wait...")
+    dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    template_args = dict(title=title, loading_text=loading_text,
+                         app=dict_app,
+                         owner=owner,
+                         n_tasks=n_tasks,
+                         overall_progress=overall_progress,
+                         n_volunteers=n_volunteers,
+                         n_completed_tasks=n_completed_tasks)
+    require.app.read(app)
+    require.app.update(app)
+
+    def render_forms():
+        tmpl = '/applications/importers/%s_auto.html' % template
+        return render_template(tmpl, **template_args)
+
+    template_args["importer_variants"] = [('applications/tasks/csv_auto.html', 'applications/tasks/gdocs-spreadsheet_auto.html'),
+                                          ('applications/tasks/epicollect_auto.html', 'applications/tasks/empty.html')]
+    template = request.args.get('template')
+
+    if template is None and request.method == 'GET':
+        return render_template('applications/task_auto_import.html',
+                               **template_args)
+
+    template = template if request.method == 'GET' else request.form['form_name']
+    importer = importers.create_importer_for(template)
+    form = GenericBulkTaskImportForm()(template, request.form)
+    template_args['form'] = form
+
+    if not (form and form.validate_on_submit()):  # pragma: no cover
+        return render_forms()
+    return _setup_autoimport_job(app, importer, form)
+
+
+def _setup_autoimport_job(app, importer, form):
+    from pybossa.jobs import auto_import_tasks
+    scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.master)
+    import_job = dict(name=auto_import_tasks, args=[app.id, form.get_import_data()], kwargs={},
+                      interval=(10), timeout=(10))
+    job = schedule_job(import_job, scheduler)
+    print job
+    flash(gettext("Your tasks will be imported daily."))
+    return redirect(url_for('.tasks', short_name=app.short_name))
+
+
 @blueprint.route('/<short_name>/password', methods=['GET', 'POST'])
 def password_required(short_name):
     (app, owner, n_tasks, n_task_runs,
@@ -592,8 +647,8 @@ def password_required(short_name):
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
-    (app, owner,
-     n_tasks, n_task_runs, overall_progress, last_activity) = app_by_shortname(short_name)
+    (app, owner,n_tasks, n_task_runs,
+     overall_progress, last_activity) = app_by_shortname(short_name)
     task = task_repo.get_task(id=task_id)
     if task is None:
         raise abort(404)
