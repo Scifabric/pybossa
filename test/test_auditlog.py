@@ -17,14 +17,19 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import json
 from default import db, Test, with_context
+from collections import namedtuple
 from factories import AppFactory, AuditlogFactory, UserFactory
 from helper import web
 
 from pybossa.repositories import ProjectRepository
 from pybossa.repositories import AuditlogRepository
+from mock import patch
 
 project_repo = ProjectRepository(db)
 auditlog_repo = AuditlogRepository(db)
+
+
+FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
 class TestAuditlogAPI(Test):
 
@@ -371,6 +376,40 @@ class TestAuditlogWEB(web.Helper):
             assert log.attribute == 'passwd_hash', log.attribute
             assert log.old_value == old_value, log.old_value
             assert log.new_value != None, log.new_value
+            assert log.caller == 'web', log.caller
+            assert log.action == 'update', log.action
+            assert log.user_name == 'johndoe', log.user_name
+            assert log.user_id == 1, log.user_id
+
+    @with_context
+    @patch('pybossa.forms.validator.requests.get')
+    def test_app_webhook(self, mock):
+        html_request = FakeRequest(json.dumps(self.data), 200,
+                                   {'content-type': 'application/json'})
+        mock.return_value = html_request
+
+        self.register()
+        self.new_application()
+        short_name = 'sampleapp'
+
+        url = "/app/%s/update" % short_name
+
+        attribute = 'webhook'
+
+        new_string = 'http://google.com'
+
+        old_value = ''
+
+        self.data[attribute] = new_string
+
+        self.app.post(url, data=self.data, follow_redirects=True)
+
+        logs = auditlog_repo.filter_by(app_short_name=short_name)
+        assert len(logs) == 1, logs
+        for log in logs:
+            assert log.attribute == attribute, log.attribute
+            assert log.old_value == old_value, log.old_value
+            assert log.new_value == self.data[attribute], log.new_value
             assert log.caller == 'web', log.caller
             assert log.action == 'update', log.action
             assert log.user_name == 'johndoe', log.user_name
