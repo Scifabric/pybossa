@@ -44,6 +44,12 @@ class BaseFactory(factory.Factory):
     def _setup_next_sequence(cls):
         return 1
 
+    @classmethod
+    def _build(cls, model_class, *args, **kwargs):
+        project = model_class(*args, **kwargs)
+        db.session.remove()
+        return project
+
 
 # Import the factories
 from app_factory import AppFactory

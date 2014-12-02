@@ -18,7 +18,7 @@
 
 from pybossa.jobs import schedule_job
 from rq_scheduler import Scheduler
-from redis import Redis
+from redis import StrictRedis
 
 
 def a_function():
@@ -36,7 +36,7 @@ class TestSetupScheduledJobs(object):
     """Tests for setup function 'schedule_job'"""
 
     def setUp(self):
-        self.connection = Redis()
+        self.connection = StrictRedis()
         self.connection.flushall()
         self.scheduler = Scheduler('test_queue', connection=self.connection)
 

@@ -28,6 +28,7 @@ sentinel = Sentinel()
 # DB
 from flask.ext.sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
+db.slave_session = None
 
 # Repositories
 user_repo = None

@@ -721,10 +721,10 @@ def task_presenter(short_name, task_id):
 @blueprint.route('/<short_name>/newtask')
 def presenter(short_name):
 
-    def invite_new_volunteers():
+    def invite_new_volunteers(app):
         user_id = None if current_user.is_anonymous() else current_user.id
         user_ip = request.remote_addr if current_user.is_anonymous() else None
-        task = sched.new_task(app.id, user_id, user_ip, 0)
+        task = sched.new_task(app.id, app.info.get('sched'), user_id, user_ip, 0)
         return task is None and overall_progress < 100.0
 
     def respond(tmpl):
@@ -738,7 +738,7 @@ def presenter(short_name):
      overall_progress, last_activity) = app_by_shortname(short_name)
     title = app_title(app, "Contribute")
     template_args = {"app": app, "title": title, "owner": owner,
-                     "invite_new_volunteers": invite_new_volunteers()}
+                     "invite_new_volunteers": invite_new_volunteers(app)}
     require.app.read(app)
     redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
