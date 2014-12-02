@@ -376,6 +376,7 @@ def update(short_name):
             new_application.category_id=form.category_id.data
 
         new_application.set_password(form.password.data)
+        project_repo.add_log_entry(new_application, 'update', 'web')
         project_repo.update(new_application)
         cached_apps.delete_app(short_name)
         cached_apps.reset()
