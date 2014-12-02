@@ -348,7 +348,7 @@ class TestAuditlogWEB(web.Helper):
 
 
     @with_context
-    def test_app_long_description(self):
+    def test_app_password(self):
         self.register()
         self.new_application()
         short_name = 'sampleapp'
@@ -375,4 +375,3 @@ class TestAuditlogWEB(web.Helper):
             assert log.action == 'update', log.action
             assert log.user_name == 'johndoe', log.user_name
             assert log.user_id == 1, log.user_id
-
