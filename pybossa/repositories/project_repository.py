@@ -15,6 +15,8 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+import json
+from flask import request
 from flask.ext.login import current_user
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.attributes import get_history
@@ -88,6 +90,12 @@ class ProjectRepository(object):
                 if getattr(inspect(project).attrs, attr).history.has_changes():
                     history = getattr(inspect(project).attrs, attr).history
                     if len(history.deleted) > 0 and len(history.added) > 0:
+                        #history = getattr(inspect(project).attrs, attr).history
+                        old_value = history.deleted[0]
+                        new_value = history.added[0]
+                        if attr == 'info':
+                            old_value = json.dumps(old_value)
+                            new_value = json.dumps(new_value)
                         log = Auditlog(
                             app_id=project.id,
                             app_short_name=project.short_name,
@@ -96,9 +104,9 @@ class ProjectRepository(object):
                             action=action,
                             caller=caller,
                             attribute=attr,
-                            old_value=history.deleted[0],
-                            new_value=history.added[0])
-                        self.db.session.add(log)
+                            old_value=old_value,
+                            new_value=new_value)
+                    self.db.session.add(log)
             self.db.session.commit()
         except IntegrityError as e:
             self.db.session.rollback()
