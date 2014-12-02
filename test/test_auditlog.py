@@ -346,3 +346,33 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_name == 'johndoe', log.user_name
             assert log.user_id == 1, log.user_id
 
+
+    @with_context
+    def test_app_long_description(self):
+        self.register()
+        self.new_application()
+        short_name = 'sampleapp'
+
+        url = "/app/%s/update" % short_name
+
+        attribute = 'password'
+
+        new_string = 'new password'
+
+        old_value = 'null'
+
+        self.data[attribute] = new_string
+
+        self.app.post(url, data=self.data, follow_redirects=True)
+
+        logs = auditlog_repo.filter_by(app_short_name=short_name)
+        assert len(logs) == 1, logs
+        for log in logs:
+            assert log.attribute == 'passwd_hash', log.attribute
+            assert log.old_value == old_value, log.old_value
+            assert log.new_value != None, log.new_value
+            assert log.caller == 'web', log.caller
+            assert log.action == 'update', log.action
+            assert log.user_name == 'johndoe', log.user_name
+            assert log.user_id == 1, log.user_id
+
