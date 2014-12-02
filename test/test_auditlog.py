@@ -287,3 +287,32 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_name == 'johndoe', log.user_name
             assert log.user_id == 1, log.user_id
 
+    @with_context
+    def test_app_hidden(self):
+        self.register()
+        self.new_application()
+        short_name = 'sampleapp'
+
+        url = "/app/%s/update" % short_name
+
+        attribute = 'hidden'
+
+        new_string = True
+
+        old_value = self.data[attribute]
+
+        self.data[attribute] = new_string
+
+        self.app.post(url, data=self.data, follow_redirects=True)
+
+        logs = auditlog_repo.filter_by(app_short_name=short_name)
+        assert len(logs) == 1, logs
+        for log in logs:
+            assert log.attribute == attribute, log.attribute
+            assert log.old_value == old_value, log.old_value
+            assert bool(log.new_value) == self.data[attribute], log.new_value
+            assert log.caller == 'web', log.caller
+            assert log.action == 'update', log.action
+            assert log.user_name == 'johndoe', log.user_name
+            assert log.user_id == 1, log.user_id
+
