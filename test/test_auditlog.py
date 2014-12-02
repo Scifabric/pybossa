@@ -116,9 +116,9 @@ class TestAuditlog(Test):
             assert log.user_name == owner_name, log.user_name
             assert log.app_short_name == app.short_name, log.app_short_name
             assert log.caller == 'api', log.caller
-            assert log.attribute in attributes, log.attribute
-            msg = "%s != %s" % (data[log.attribute], log.new_value)
-            assert data[log.attribute]['task_presenter'] == json.loads(log.new_value)['task_presenter'], msg
+            assert log.attribute == 'task_presenter', log.attribute
+            msg = "%s != %s" % (data['info']['task_presenter'], log.new_value)
+            assert data['info']['task_presenter'] == json.loads(log.new_value), msg
 
     def test_app_update_scheduler(self):
         """Test Auditlog API project update info scheduler works."""
@@ -138,9 +138,9 @@ class TestAuditlog(Test):
             assert log.user_name == owner_name, log.user_name
             assert log.app_short_name == app.short_name, log.app_short_name
             assert log.caller == 'api', log.caller
-            assert log.attribute in attributes, log.attribute
-            msg = "%s != %s" % (data[log.attribute], log.new_value)
-            assert data[log.attribute]['sched'] == json.loads(log.new_value)['sched'], msg
+            assert log.attribute == 'sched', log.attribute
+            msg = "%s != %s" % (data['info']['sched'], log.new_value)
+            assert data['info']['sched'] == json.loads(log.new_value), msg
 
     def test_app_update_two_info_objects(self):
         """Test Auditlog API project update two info objects works."""
@@ -149,18 +149,17 @@ class TestAuditlog(Test):
         owner_id = app.owner.id
         owner_name = app.owner.name
         data = {'info': {'sched': 'random', 'task_presenter': 'new'}}
-        attributes = data.keys()
+        attributes = data['info'].keys()
         url = '/api/app/%s?api_key=%s' % (app.id, app.owner.api_key)
         self.app.put(url, data=json.dumps(data))
         logs = auditlog_repo.filter_by(app_id=app.id)
 
-        assert len(logs) == 1, logs
+        assert len(logs) == 2, logs
         for log in logs:
             assert log.user_id == owner_id, log.user_id
             assert log.user_name == owner_name, log.user_name
             assert log.app_short_name == app.short_name, log.app_short_name
             assert log.caller == 'api', log.caller
             assert log.attribute in attributes, log.attribute
-            msg = "%s != %s" % (data[log.attribute], log.new_value)
-            assert data[log.attribute]['sched'] == json.loads(log.new_value)['sched'], msg
-            assert data[log.attribute]['task_presenter'] == json.loads(log.new_value)['task_presenter'], msg
+            msg = "%s != %s" % (data['info'][log.attribute], log.new_value)
+            assert data['info'][log.attribute] == json.loads(log.new_value), msg
