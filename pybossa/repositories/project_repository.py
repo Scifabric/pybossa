@@ -90,35 +90,9 @@ class ProjectRepository(object):
                         old_value = history.deleted[0]
                         new_value = history.added[0]
                         if attr == 'info':
-                            s_o = set(old_value.keys())
-                            s_n = set(new_value.keys())
-
-                            # For new keys
-                            for new_key in (s_n - s_o):
-                                log = Auditlog(
-                                    app_id=project.id,
-                                    app_short_name=project.short_name,
-                                    user_id=user_id,
-                                    user_name=user_name,
-                                    action=action,
-                                    caller=caller,
-                                    attribute=new_key,
-                                    old_value=json.dumps(old_value.get(new_key)),
-                                    new_value=json.dumps(new_value.get(new_key)))
-                                self.db.session.add(log)
-                            # For updated keys
-                            for same_key in (s_n & s_o):
-                                log = Auditlog(
-                                    app_id=project.id,
-                                    app_short_name=project.short_name,
-                                    user_id=user_id,
-                                    user_name=user_name,
-                                    action=action,
-                                    caller=caller,
-                                    attribute=same_key,
-                                    old_value=json.dumps(old_value.get(same_key)),
-                                    new_value=json.dumps(new_value.get(same_key)))
-                                self.db.session.add(log)
+                            self._manage_info_keys(project, user_id, user_name,
+                                                   old_value, new_value, action,
+                                                   caller)
                         else:
                             log = Auditlog(
                                 app_id=project.id,
@@ -191,3 +165,36 @@ class ProjectRepository(object):
             user_id = request.remote_addr
             user_name = 'anonymous'
         return user_id, user_name
+
+    def _manage_info_keys(self, project, user_id, user_name,
+                          old_value, new_value, action, caller):
+        s_o = set(old_value.keys())
+        s_n = set(new_value.keys())
+
+        # For new keys
+        for new_key in (s_n - s_o):
+            log = Auditlog(
+                app_id=project.id,
+                app_short_name=project.short_name,
+                user_id=user_id,
+                user_name=user_name,
+                action=action,
+                caller=caller,
+                attribute=new_key,
+                old_value=json.dumps(old_value.get(new_key)),
+                new_value=json.dumps(new_value.get(new_key)))
+            self.db.session.add(log)
+        # For updated keys
+        for same_key in (s_n & s_o):
+            log = Auditlog(
+                app_id=project.id,
+                app_short_name=project.short_name,
+                user_id=user_id,
+                user_name=user_name,
+                action=action,
+                caller=caller,
+                attribute=same_key,
+                old_value=json.dumps(old_value.get(same_key)),
+                new_value=json.dumps(new_value.get(same_key)))
+            self.db.session.add(log)
+
