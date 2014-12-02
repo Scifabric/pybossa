@@ -85,6 +85,14 @@ class ProjectRepository(object):
                 log_attr = attr
                 if getattr(inspect(project).attrs, attr).history.has_changes():
                     history = getattr(inspect(project).attrs, attr).history
+                    if (len(history.deleted) == 0 and \
+                        len(history.added) > 0 and \
+                        attr == 'info'):
+                        old_value = {}
+                        new_value = history.added[0]
+                        self._manage_info_keys(project, user_id, user_name,
+                                               old_value, new_value, action,
+                                               caller)
                     if len(history.deleted) > 0 and len(history.added) > 0:
                         #history = getattr(inspect(project).attrs, attr).history
                         old_value = history.deleted[0]
@@ -94,17 +102,22 @@ class ProjectRepository(object):
                                                    old_value, new_value, action,
                                                    caller)
                         else:
-                            log = Auditlog(
-                                app_id=project.id,
-                                app_short_name=project.short_name,
-                                user_id=user_id,
-                                user_name=user_name,
-                                action=action,
-                                caller=caller,
-                                attribute=log_attr,
-                                old_value=old_value,
-                                new_value=new_value)
-                            self.db.session.add(log)
+                            if old_value is None or '':
+                                old_value = ''
+                            if new_value is None or '':
+                                new_value = ''
+                            if (str(old_value) != str(new_value)):
+                                log = Auditlog(
+                                    app_id=project.id,
+                                    app_short_name=project.short_name,
+                                    user_id=user_id,
+                                    user_name=user_name,
+                                    action=action,
+                                    caller=caller,
+                                    attribute=log_attr,
+                                    old_value=old_value,
+                                    new_value=new_value)
+                                self.db.session.add(log)
             self.db.session.commit()
         except IntegrityError as e:
             self.db.session.rollback()
@@ -173,17 +186,23 @@ class ProjectRepository(object):
 
         # For new keys
         for new_key in (s_n - s_o):
-            log = Auditlog(
-                app_id=project.id,
-                app_short_name=project.short_name,
-                user_id=user_id,
-                user_name=user_name,
-                action=action,
-                caller=caller,
-                attribute=new_key,
-                old_value=json.dumps(old_value.get(new_key)),
-                new_value=json.dumps(new_value.get(new_key)))
-            self.db.session.add(log)
+            # handle special case passwd_hash
+            if (old_value.get(new_key) is None and
+                new_value.get(new_key) is None and
+                new_key == 'passwd_hash'):
+                pass
+            else:
+                log = Auditlog(
+                    app_id=project.id,
+                    app_short_name=project.short_name,
+                    user_id=user_id,
+                    user_name=user_name,
+                    action=action,
+                    caller=caller,
+                    attribute=new_key,
+                    old_value=json.dumps(old_value.get(new_key)),
+                    new_value=json.dumps(new_value.get(new_key)))
+                self.db.session.add(log)
         # For updated keys
         for same_key in (s_n & s_o):
             log = Auditlog(
