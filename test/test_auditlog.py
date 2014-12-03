@@ -22,11 +22,13 @@ from factories import AppFactory, AuditlogFactory, UserFactory
 from helper import web
 
 from pybossa.repositories import ProjectRepository
+from pybossa.repositories import UserRepository
 from pybossa.repositories import AuditlogRepository
 from mock import patch
 
 project_repo = ProjectRepository(db)
 auditlog_repo = AuditlogRepository(db)
+user_repo = UserRepository(db)
 
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
@@ -560,3 +562,75 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_name == 'johndoe', log.user_name
             assert log.user_id == 1, log.user_id
 
+    @with_context
+    def test_app_auditlog_access_anon(self):
+        # Admin
+        self.register()
+        self.new_application()
+        self.new_task(1)
+        short_name = 'sampleapp'
+        self.signout()
+
+        url = "/app/%s/auditlog" % short_name
+
+        res = self.app.get(url, follow_redirects=True)
+        assert "Sign in" in res.data, res.data
+
+
+    @with_context
+    def test_app_auditlog_access_owner(self):
+        # Admin
+        self.register()
+        self.signout()
+        # User
+        self.register(name="Iser")
+        self.new_application()
+        self.new_task(1)
+        short_name = 'sampleapp'
+
+        url = "/app/%s/auditlog" % short_name
+
+        res = self.app.get(url, follow_redirects=True)
+        assert  res.status_code == 403, res.status_code
+
+
+    @with_context
+    def test_app_auditlog_access_pro(self):
+        # Admin
+        self.register()
+        self.signout()
+        # User
+        self.register(name="Iser")
+        self.new_application()
+        self.new_task(1)
+        short_name = 'sampleapp'
+
+        user = user_repo.filter_by(name="Iser")[0]
+        user.pro = True
+        user_repo.save(user)
+
+        url = "/app/%s/auditlog" % short_name
+
+        res = self.app.get(url, follow_redirects=True)
+        assert  res.status_code == 200, res.status_code
+
+
+
+    @with_context
+    def test_app_auditlog_access_admin(self):
+        # Admin
+        self.register()
+        self.signout()
+        # User
+        self.register(name="admin", password="admin")
+        self.new_application()
+        self.new_task(1)
+        self.signout()
+        # Access as admin
+        self.signin()
+        short_name = 'sampleapp'
+
+        url = "/app/%s/auditlog" % short_name
+
+        res = self.app.get(url, follow_redirects=True)
+        assert  res.status_code == 200, res.status_code

@@ -1487,3 +1487,24 @@ def _check_if_redirect_to_password(app):
         return redirect(url_for('.password_required',
                                  short_name=app.short_name, next=request.path))
 
+
+@blueprint.route('/<short_name>/auditlog')
+@login_required
+def auditlog(short_name):
+    (app, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = app_by_shortname(short_name)
+
+    logs = auditlog_repo.filter_by(app_id=app.id)
+    require.auditlog.read(app_id=app.id)
+    redirect_to_password = _check_if_redirect_to_password(app)
+    if redirect_to_password:
+        return redirect_to_password
+    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    return render_template('applications/auditlog.html', app=app,
+                           owner=owner, logs=logs,
+                           overall_progress=overall_progress,
+                           n_tasks=n_tasks,
+                           n_task_runs=n_task_runs,
+                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                           n_volunteers=cached_apps.n_volunteers(app.get('id')))
+
