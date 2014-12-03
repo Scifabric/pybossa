@@ -25,6 +25,7 @@ from test_authorization import mock_current_user
 from factories import AppFactory, BlogpostFactory, UserFactory
 from factories import reset_all_pk_sequences
 from pybossa.core import project_repo, auditlog_repo
+from pybossa.model.auditlog import Auditlog
 
 
 
@@ -32,6 +33,7 @@ class TestAuditlogAuthorization(Test):
 
     mock_anonymous = mock_current_user()
     mock_authenticated = mock_current_user(anonymous=False, admin=False, id=2)
+    mock_pro = mock_current_user(anonymous=False, admin=False, id=2, pro=True)
     mock_admin = mock_current_user(anonymous=False, admin=True, id=1)
 
 
@@ -100,3 +102,42 @@ class TestAuditlogAuthorization(Test):
 
         for log in logs:
             assert_not_raises(Exception, getattr(require, 'auditlog').read, log)
+
+
+    @patch('pybossa.auth.current_user', new=mock_anonymous)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_anonymous)
+    def test_anonymous_user_cannot_create_auditlog(self):
+        """Test anonymous users cannot create auditlogs"""
+
+        log = Auditlog()
+
+        assert_raises(Unauthorized, getattr(require, 'auditlog').create, log)
+
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
+    def test_authenticated_user_cannot_create_auditlog(self):
+        """Test authenticated users cannot create auditlogs"""
+
+        log = Auditlog()
+
+        assert_raises(Forbidden, getattr(require, 'auditlog').create, log)
+
+
+    @patch('pybossa.auth.current_user', new=mock_pro)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_pro)
+    def test_pro_user_cannot_create_auditlog(self):
+        """Test pro users cannot create auditlogs"""
+
+        log = Auditlog()
+
+        assert_raises(Forbidden, getattr(require, 'auditlog').create, log)
+
+    @patch('pybossa.auth.current_user', new=mock_admin)
+    @patch('pybossa.auth.blogpost.current_user', new=mock_admin)
+    def test_admin_user_cannot_create_auditlog(self):
+        """Test authenticated users cannot create auditlogs"""
+
+        log = Auditlog()
+
+        assert_raises(Forbidden, getattr(require, 'auditlog').create, log)
