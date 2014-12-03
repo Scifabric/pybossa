@@ -52,7 +52,7 @@ def get_scheduled_jobs(): # pragma: no cover
             dict(name=warm_cache, args=[], kwargs={},
                  interval=(10 * MINUTE), timeout=(10 * MINUTE)),
             dict(name=export_tasks, args=[], kwargs={},
-                 interval=(24 * HOUR), timeout=(20 * MINUTE))]
+                 interval=(24 * HOUR), timeout=(30 * MINUTE))]      # TODO: CSV generation needs to be more performant
     # Based on type of user
     tmp = get_project_jobs()
     return jobs + tmp
