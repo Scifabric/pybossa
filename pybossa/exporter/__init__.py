@@ -23,7 +23,7 @@ Exporter module for exporting tasks and tasks results out of PyBossa
 import os
 import zipfile
 from pybossa.core import uploader
-from pybossa.uploader import local, rackspace
+from pybossa.uploader import local
 from unidecode import unidecode
 from flask import url_for, safe_join, send_file, redirect
 from werkzeug.utils import secure_filename

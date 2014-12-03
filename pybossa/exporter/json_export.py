@@ -21,17 +21,11 @@ JSON Exporter module for exporting tasks and tasks results out of PyBossa
 """
 
 from pybossa.exporter import Exporter
-import os
 import json
 import tempfile
 from pybossa.core import uploader, task_repo
-from pybossa.uploader import local, rackspace
-from pybossa.model.task import Task
-from pybossa.model.task_run import TaskRun
-import pybossa.model as model
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
-from flask import url_for, safe_join, send_file, redirect
 
 class JsonExporter(Exporter):
 
