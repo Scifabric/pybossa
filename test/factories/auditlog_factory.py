@@ -35,4 +35,6 @@ class AuditlogFactory(BaseFactory):
     id = factory.Sequence(lambda n: n)
     action = 'update'
     caller = 'web'
-    log = "msg"
+    attribute = 'attribute'
+    old_value ='old'
+    new_value = 'new'
