@@ -106,38 +106,46 @@ class TestAuditlogAuthorization(Test):
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     @patch('pybossa.auth.blogpost.current_user', new=mock_anonymous)
-    def test_anonymous_user_cannot_create_auditlog(self):
-        """Test anonymous users cannot create auditlogs"""
+    def test_anonymous_user_cannot_crud_auditlog(self):
+        """Test anonymous users cannot crud auditlogs"""
 
         log = Auditlog()
 
         assert_raises(Unauthorized, getattr(require, 'auditlog').create, log)
+        assert_raises(Unauthorized, getattr(require, 'auditlog').update, log)
+        assert_raises(Unauthorized, getattr(require, 'auditlog').delete, log)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
-    def test_authenticated_user_cannot_create_auditlog(self):
-        """Test authenticated users cannot create auditlogs"""
+    def test_authenticated_user_cannot_crud_auditlog(self):
+        """Test authenticated users cannot crud auditlogs"""
 
         log = Auditlog()
 
         assert_raises(Forbidden, getattr(require, 'auditlog').create, log)
+        assert_raises(Forbidden, getattr(require, 'auditlog').update, log)
+        assert_raises(Forbidden, getattr(require, 'auditlog').delete, log)
 
 
     @patch('pybossa.auth.current_user', new=mock_pro)
     @patch('pybossa.auth.blogpost.current_user', new=mock_pro)
-    def test_pro_user_cannot_create_auditlog(self):
-        """Test pro users cannot create auditlogs"""
+    def test_pro_user_cannot_crud_auditlog(self):
+        """Test pro users cannot crud auditlogs"""
 
         log = Auditlog()
 
         assert_raises(Forbidden, getattr(require, 'auditlog').create, log)
+        assert_raises(Forbidden, getattr(require, 'auditlog').update, log)
+        assert_raises(Forbidden, getattr(require, 'auditlog').delete, log)
 
     @patch('pybossa.auth.current_user', new=mock_admin)
     @patch('pybossa.auth.blogpost.current_user', new=mock_admin)
-    def test_admin_user_cannot_create_auditlog(self):
-        """Test authenticated users cannot create auditlogs"""
+    def test_admin_user_cannot_crud_auditlog(self):
+        """Test authenticated users cannot crud auditlogs"""
 
         log = Auditlog()
 
         assert_raises(Forbidden, getattr(require, 'auditlog').create, log)
+        assert_raises(Forbidden, getattr(require, 'auditlog').update, log)
+        assert_raises(Forbidden, getattr(require, 'auditlog').delete, log)
