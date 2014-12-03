@@ -230,6 +230,19 @@ def new():
           '</a></strong> ' +
           gettext('for adding tasks, a thumbnail, using PyBossa.JS, etc.'),
           'info')
+    # Log it
+    log = Auditlog(
+        app_id=app.id,
+        app_short_name=app.short_name,
+        user_id=current_user.id,
+        user_name=current_user.name,
+        action='create',
+        caller='web',
+        attribute='project',
+        old_value='None',
+        new_value='New project')
+    auditlog_repo.save(log)
+
     return redirect(url_for('.update', short_name=app.short_name))
 
 
