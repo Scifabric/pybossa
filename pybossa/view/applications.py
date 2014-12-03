@@ -362,8 +362,22 @@ def delete(short_name):
     # Clean cache
     cached_apps.delete_app(app.short_name)
     cached_apps.clean(app.id)
+    app_id = app.id
+    app_short_name = app.short_name
     project_repo.delete(app)
     flash(gettext('Project deleted!'), 'success')
+    # Log it
+    log = Auditlog(
+        app_id=app_id,
+        app_short_name=app_short_name,
+        user_id=current_user.id,
+        user_name=current_user.name,
+        action='delete',
+        caller='web',
+        attribute='project',
+        old_value='Saved',
+        new_value='Deleted')
+    auditlog_repo.save(log)
     return redirect(url_for('account.profile', name=current_user.name))
 
 
