@@ -21,27 +21,27 @@ from flask.ext.login import current_user
 from pybossa.core import project_repo
 
 
-def create(auditlog=None, app_id=None):
+def create(_auditlog):
     return False
 
 
-def read(auditlog=None, app_id=None):
-    app = _get_app(auditlog, app_id)
-    if current_user.is_anonymous() or (auditlog is None and app_id is None):
+def read(_auditlog=None, _app_id=None):
+    app = _get_app(_auditlog, _app_id)
+    if current_user.is_anonymous() or (_auditlog is None and _app_id is None):
         return False
     return current_user.admin or (current_user.id == app.owner_id
                                   and current_user.pro)
 
 
-def update(auditlog):
+def update(_auditlog):
     return False
 
 
-def delete(auditlog):
+def delete(_auditlog):
     return False
 
 
-def _get_app(auditlog, app_id):
-    if auditlog is not None:
-        return project_repo.get(auditlog.app_id)
-    return project_repo.get(app_id)
+def _get_app(_auditlog, _app_id):
+    if _auditlog is not None:
+        return project_repo.get(_auditlog.app_id)
+    return project_repo.get(_app_id)

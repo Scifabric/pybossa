@@ -1499,7 +1499,7 @@ def auditlog(short_name):
      overall_progress, last_activity) = app_by_shortname(short_name)
 
     logs = auditlog_repo.filter_by(app_id=app.id)
-    require.auditlog.read(app_id=app.id)
+    require.auditlog.read(_app_id=app.id)
     redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
