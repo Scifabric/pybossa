@@ -80,44 +80,69 @@ class ProjectRepository(object):
 
     def add_log_entry(self, project, action, caller):
         try:
-            user_id, user_name = self._get_user_for_log()
-            for attr in project.dictize().keys():
-                log_attr = attr
-                if getattr(inspect(project).attrs, attr).history.has_changes():
-                    history = getattr(inspect(project).attrs, attr).history
-                    if (len(history.deleted) == 0 and \
-                        len(history.added) > 0 and \
-                        attr == 'info'):
-                        old_value = {}
-                        new_value = history.added[0]
-                        self._manage_info_keys(project, user_id, user_name,
-                                               old_value, new_value, action,
-                                               caller)
-                    if len(history.deleted) > 0 and len(history.added) > 0:
-                        #history = getattr(inspect(project).attrs, attr).history
-                        old_value = history.deleted[0]
-                        new_value = history.added[0]
-                        if attr == 'info':
+            if action == 'create':
+                log = Auditlog(
+                    app_id=project.id,
+                    app_short_name=project.short_name,
+                    user_id=current_user.id,
+                    user_name=current_user.name,
+                    action=action,
+                    caller=caller,
+                    attribute='project',
+                    old_value='Nothing',
+                    new_value='New project')
+                self.db.session.add(log)
+            elif action == 'delete':
+                log = Auditlog(
+                    app_id=project.id,
+                    app_short_name=project.short_name,
+                    user_id=current_user.id,
+                    user_name=current_user.name,
+                    action=action,
+                    caller=caller,
+                    attribute='project',
+                    old_value='Saved',
+                    new_value='Deleted')
+                self.db.session.add(log)
+            else:
+                user_id, user_name = self._get_user_for_log()
+                for attr in project.dictize().keys():
+                    log_attr = attr
+                    if getattr(inspect(project).attrs, attr).history.has_changes():
+                        history = getattr(inspect(project).attrs, attr).history
+                        if (len(history.deleted) == 0 and \
+                            len(history.added) > 0 and \
+                            attr == 'info'):
+                            old_value = {}
+                            new_value = history.added[0]
                             self._manage_info_keys(project, user_id, user_name,
                                                    old_value, new_value, action,
                                                    caller)
-                        else:
-                            if old_value is None or '':
-                                old_value = ''
-                            if new_value is None or '':
-                                new_value = ''
-                            if (str(old_value) != str(new_value)):
-                                log = Auditlog(
-                                    app_id=project.id,
-                                    app_short_name=project.short_name,
-                                    user_id=user_id,
-                                    user_name=user_name,
-                                    action=action,
-                                    caller=caller,
-                                    attribute=log_attr,
-                                    old_value=old_value,
-                                    new_value=new_value)
-                                self.db.session.add(log)
+                        if len(history.deleted) > 0 and len(history.added) > 0:
+                            #history = getattr(inspect(project).attrs, attr).history
+                            old_value = history.deleted[0]
+                            new_value = history.added[0]
+                            if attr == 'info':
+                                self._manage_info_keys(project, user_id, user_name,
+                                                       old_value, new_value, action,
+                                                       caller)
+                            else:
+                                if old_value is None or '':
+                                    old_value = ''
+                                if new_value is None or '':
+                                    new_value = ''
+                                if (str(old_value) != str(new_value)):
+                                    log = Auditlog(
+                                        app_id=project.id,
+                                        app_short_name=project.short_name,
+                                        user_id=user_id,
+                                        user_name=user_name,
+                                        action=action,
+                                        caller=caller,
+                                        attribute=log_attr,
+                                        old_value=old_value,
+                                        new_value=new_value)
+                                    self.db.session.add(log)
             self.db.session.commit()
         except IntegrityError as e:
             self.db.session.rollback()
