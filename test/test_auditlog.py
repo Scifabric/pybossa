@@ -63,6 +63,29 @@ class TestAuditlogAPI(Test):
             assert log.old_value == 'Nothing', log.old_value
             assert log.new_value == 'New project', log.new_value
 
+    @with_context
+    def test_app_delete(self):
+        """Test Auditlog API project create works."""
+        user = UserFactory.create()
+        app = AppFactory.create(owner=user)
+        app_short_name = app.short_name
+
+        url = '/api/app/%s?api_key=%s' % (app.id, user.api_key)
+        res = self.app.delete(url)
+        print res.data
+        logs = auditlog_repo.filter_by(app_short_name=app_short_name)
+
+        assert len(logs) == 1, logs
+        for log in logs:
+            assert log.user_id == user.id, log.user_id
+            assert log.user_name == user.name, log.user_name
+            assert log.app_short_name == app_short_name, log.app_short_name
+            assert log.caller == 'api', log.caller
+            assert log.action == 'delete', log.action
+            assert log.attribute == 'project', log.attribute
+            assert log.old_value == 'Saved', log.old_value
+            assert log.new_value == 'Deleted', log.new_value
+
 
     @with_context
     def test_app_update_attributes(self):
