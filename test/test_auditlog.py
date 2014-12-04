@@ -264,6 +264,24 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_name == 'johndoe', log.user_name
             assert log.user_id == 1, log.user_id
 
+    @with_context
+    def test_app_create(self):
+        self.register()
+        self.new_application()
+        self.delete_application()
+        short_name = 'sampleapp'
+
+        logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
+        assert len(logs) == 1, logs
+        for log in logs:
+            assert log.attribute == 'project', log.attribute
+            assert log.old_value == 'Saved', log.old_value
+            assert log.new_value == 'Deleted', log.new_value
+            assert log.caller == 'web', log.caller
+            assert log.action == 'delete', log.action
+            assert log.user_name == 'johndoe', log.user_name
+            assert log.user_id == 1, log.user_id
+
 
     @with_context
     def test_app_update_name(self):
