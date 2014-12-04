@@ -71,8 +71,7 @@ class TestAuditlogAPI(Test):
         app_short_name = app.short_name
 
         url = '/api/app/%s?api_key=%s' % (app.id, user.api_key)
-        res = self.app.delete(url)
-        print res.data
+        self.app.delete(url)
         logs = auditlog_repo.filter_by(app_short_name=app_short_name)
 
         assert len(logs) == 1, logs
