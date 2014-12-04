@@ -186,6 +186,10 @@ class APIBase(MethodView):
             repo = repos[self.__class__.__name__]['repo']
             save_func = repos[self.__class__.__name__]['save']
             getattr(repo, save_func)(inst)
+            # Log
+            if self.__class__.__name__ == 'App':
+                log_func = repos[self.__class__.__name__].get('log')
+                getattr(repo, log_func)(inst, 'create', 'api')
             return json.dumps(inst.dictize())
         except Exception as e:
             return error.format_exception(
@@ -232,6 +236,10 @@ class APIBase(MethodView):
         if inst is None:
             raise NotFound
         getattr(require, self.__class__.__name__.lower()).delete(inst)
+        # Log
+        if self.__class__.__name__ == 'App':
+            log_func = repos[self.__class__.__name__].get('log')
+            getattr(repo, log_func)(inst, 'delete', 'api')
         delete_func = repos[self.__class__.__name__]['delete']
         getattr(repo, delete_func)(inst)
         return inst
