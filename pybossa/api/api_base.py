@@ -286,12 +286,9 @@ class APIBase(MethodView):
             setattr(existing, key, data[key])
         update_func = repos[self.__class__.__name__]['update']
         log_func = repos[self.__class__.__name__].get('log')
-        #getattr(repo, update_func)(inst)
         if self.__class__.__name__ == 'App':
-            #print log_func
             getattr(repo, log_func)(existing, 'update', 'api')
         getattr(repo, update_func)(existing)
-        #return inst
         return existing
 
 
