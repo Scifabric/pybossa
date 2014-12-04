@@ -231,17 +231,7 @@ def new():
           gettext('for adding tasks, a thumbnail, using PyBossa.JS, etc.'),
           'info')
     # Log it
-    log = Auditlog(
-        app_id=app.id,
-        app_short_name=app.short_name,
-        user_id=current_user.id,
-        user_name=current_user.name,
-        action='create',
-        caller='web',
-        attribute='project',
-        old_value='None',
-        new_value='New project')
-    auditlog_repo.save(log)
+    project_repo.add_log_entry(app, 'create', 'web')
 
     return redirect(url_for('.update', short_name=app.short_name))
 
@@ -362,22 +352,9 @@ def delete(short_name):
     # Clean cache
     cached_apps.delete_app(app.short_name)
     cached_apps.clean(app.id)
-    app_id = app.id
-    app_short_name = app.short_name
+    project_repo.add_log_entry(app, 'delete', 'web')
     project_repo.delete(app)
     flash(gettext('Project deleted!'), 'success')
-    # Log it
-    log = Auditlog(
-        app_id=app_id,
-        app_short_name=app_short_name,
-        user_id=current_user.id,
-        user_name=current_user.name,
-        action='delete',
-        caller='web',
-        attribute='project',
-        old_value='Saved',
-        new_value='Deleted')
-    auditlog_repo.save(log)
     return redirect(url_for('account.profile', name=current_user.name))
 
 
