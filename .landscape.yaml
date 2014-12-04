@@ -4,6 +4,7 @@ ignore-paths:
     - test
     - alembic
     - app_context_rqworker.py
+    - warm.py
 
 pylint:
     disable:
