@@ -7,4 +7,5 @@ ignore-paths:
 
 pylint:
     disable:
+        - E0611
         - W0613
