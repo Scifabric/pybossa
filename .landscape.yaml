@@ -1,0 +1,9 @@
+ignore-paths:
+    - doc
+    - cli.py
+    - test
+    - alembic
+
+pylint:
+    disable:
+        - W0613
