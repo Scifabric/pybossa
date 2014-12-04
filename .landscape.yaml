@@ -3,6 +3,7 @@ ignore-paths:
     - cli.py
     - test
     - alembic
+    - app_context_rqworker.py
 
 pylint:
     disable:
