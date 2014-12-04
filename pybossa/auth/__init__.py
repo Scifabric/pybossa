@@ -29,6 +29,15 @@ import token
 import blogpost
 import auditlog
 
+assert app
+assert task
+assert taskrun
+assert category
+assert user
+assert token
+assert blogpost
+assert auditlog
+
 class Requirement(object):
     """ Checks a function call and raises an exception if the
     function returns a non-True value. """
