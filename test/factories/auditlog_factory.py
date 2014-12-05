@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2013 SF Isle of Man Limited
+# Copyright (C) 2014 SF Isle of Man Limited
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -16,16 +16,25 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import db
-from mock import Mock
-from pybossa.model.user import User
+from pybossa.model.auditlog import Auditlog
+from . import BaseFactory, factory, auditlog_repo
 
 
-def mock_current_user(anonymous=True, admin=None, id=None, pro=False):
-    mock = Mock(spec=User)
-    mock.is_anonymous.return_value = anonymous
-    mock.is_authenticated.return_value = not anonymous
-    mock.admin = admin
-    mock.pro = pro
-    mock.id = id
-    return mock
+app = factory.SubFactory('factories.AppFactory')
+
+class AuditlogFactory(BaseFactory):
+    class Meta:
+        model = Auditlog
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        log = model_class(*args, **kwargs)
+        auditlog_repo.save(log)
+        return log
+
+    id = factory.Sequence(lambda n: n)
+    action = 'update'
+    caller = 'web'
+    attribute = 'attribute'
+    old_value ='old'
+    new_value = 'new'

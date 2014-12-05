@@ -21,7 +21,7 @@ from default import Test, with_context
 from factories import AppFactory
 from factories import TaskFactory
 from factories import TaskRunFactory
-from redis import Redis
+from redis import StrictRedis
 from rq_scheduler import Scheduler
 from mock import patch, MagicMock
 from datetime import datetime
@@ -34,7 +34,7 @@ class TestWebHooks(Test):
 
     def setUp(self):
         super(TestWebHooks, self).setUp()
-        self.connection = Redis()
+        self.connection = StrictRedis()
         self.connection.flushall()
         self.scheduler = Scheduler('test_queue', connection=self.connection)
 

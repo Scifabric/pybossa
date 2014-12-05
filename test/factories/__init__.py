@@ -24,10 +24,12 @@ from pybossa.repositories import UserRepository
 from pybossa.repositories import ProjectRepository
 from pybossa.repositories import BlogRepository
 from pybossa.repositories import TaskRepository
+from pybossa.repositories import AuditlogRepository
 user_repo = UserRepository(db)
 project_repo = ProjectRepository(db)
 blog_repo = BlogRepository(db)
 task_repo = TaskRepository(db)
+auditlog_repo = AuditlogRepository(db)
 
 
 def reset_all_pk_sequences():
@@ -44,6 +46,12 @@ class BaseFactory(factory.Factory):
     def _setup_next_sequence(cls):
         return 1
 
+    @classmethod
+    def _build(cls, model_class, *args, **kwargs):
+        project = model_class(*args, **kwargs)
+        db.session.remove()
+        return project
+
 
 # Import the factories
 from app_factory import AppFactory
@@ -52,3 +60,4 @@ from category_factory import CategoryFactory
 from task_factory import TaskFactory
 from taskrun_factory import TaskRunFactory, AnonymousTaskRunFactory
 from user_factory import UserFactory
+from auditlog_factory import AuditlogFactory
