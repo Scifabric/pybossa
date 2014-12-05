@@ -48,7 +48,8 @@ repos = {'Task'   : {'repo': task_repo, 'filter': 'filter_tasks_by',
         'User'    : {'repo': user_repo, 'filter': 'filter_by', 'get': 'get',
                      'save': 'save', 'update': 'update'},
         'App'     : {'repo': project_repo, 'filter': 'filter_by', 'get': 'get',
-                     'save': 'save', 'update': 'update', 'delete': 'delete'},
+                     'save': 'save', 'update': 'update', 'delete': 'delete',
+                     'log': 'add_log_entry'},
         'Category': {'repo': project_repo, 'filter': 'filter_categories_by',
                      'get': 'get_category', 'save': 'save_category',
                      'update': 'update_category', 'delete': 'delete_category'}
@@ -112,7 +113,7 @@ class APIBase(MethodView):
                 getattr(require, self.__class__.__name__.lower()).read(item)
             except (Forbidden, Unauthorized):
                 # Remove last added item, as it is 401 or 403
-                items.pop() 
+                items.pop()
             except: # pragma: no cover
                 raise
         if id:
@@ -185,6 +186,10 @@ class APIBase(MethodView):
             repo = repos[self.__class__.__name__]['repo']
             save_func = repos[self.__class__.__name__]['save']
             getattr(repo, save_func)(inst)
+            # Log
+            if self.__class__.__name__ == 'App':
+                log_func = repos[self.__class__.__name__].get('log')
+                getattr(repo, log_func)(inst, 'create', 'api')
             return json.dumps(inst.dictize())
         except Exception as e:
             return error.format_exception(
@@ -231,6 +236,10 @@ class APIBase(MethodView):
         if inst is None:
             raise NotFound
         getattr(require, self.__class__.__name__.lower()).delete(inst)
+        # Log
+        if self.__class__.__name__ == 'App':
+            log_func = repos[self.__class__.__name__].get('log')
+            getattr(repo, log_func)(inst, 'delete', 'api')
         delete_func = repos[self.__class__.__name__]['delete']
         getattr(repo, delete_func)(inst)
         return inst
@@ -273,9 +282,14 @@ class APIBase(MethodView):
         data['id'] = id
         data = self.hateoas.remove_links(data)
         inst = self.__class__(**data)
+        for key in data:
+            setattr(existing, key, data[key])
         update_func = repos[self.__class__.__name__]['update']
-        getattr(repo, update_func)(inst)
-        return inst
+        log_func = repos[self.__class__.__name__].get('log')
+        if self.__class__.__name__ == 'App':
+            getattr(repo, log_func)(existing, 'update', 'api')
+        getattr(repo, update_func)(existing)
+        return existing
 
 
     def _update_object(self, data_dict):
