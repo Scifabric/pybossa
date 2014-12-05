@@ -670,10 +670,11 @@ def delete_autoimporter(short_name):
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.slave)
     jobs = [job for job in scheduler.get_jobs() if job.func==auto_import_tasks and job._args[0]==app.id]
     print jobs
-    if len(jobs) == 0:
-        raise abort(404)
-    job = jobs[0]
-    job.cancel()
+    # if len(jobs) == 0:
+    #     raise abort(404)
+    if len(jobs) > 0:
+        job = jobs[0]
+        job.cancel()
     return redirect(url_for('.setup_autoimporter', short_name=app.short_name))
 
 

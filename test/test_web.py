@@ -2801,7 +2801,7 @@ class TestWeb(web.Helper):
             You will receive an email when the tasks are ready."
         assert msg in res.data
 
-    def test_autoimport_tasks_get_redirects_to_login_if_anonymous(self):
+    def test_autoimporter_get_redirects_to_login_if_anonymous(self):
         """Test WEB task autoimporter endpoint requires login"""
         app = AppFactory.create()
         url = "/app/%s/tasks/autoimporter" % app.short_name
@@ -2811,7 +2811,7 @@ class TestWeb(web.Helper):
         assert res.status_code == 302, res.status_code
         assert redirect_url in res.location, res.location
 
-    def test_autoimport_tasks_get_forbidden_non_owner(self):
+    def test_autoimporter_get_forbidden_non_owner(self):
         """Test WEB task autoimporter returns Forbidden if non owner accesses"""
         self.register()
         self.new_application()
@@ -2824,7 +2824,7 @@ class TestWeb(web.Helper):
 
         assert res.status_code == 403, res.status_code
 
-    def test_autoimport_tasks_get_forbidden_owner_no_pro(self):
+    def test_autoimporter_get_forbidden_owner_no_pro(self):
         """Test WEB task autoimporter returns Forbidden if no pro accesses"""
         self.register()
         self.signout()
@@ -2837,7 +2837,7 @@ class TestWeb(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         assert  res.status_code == 403, res.status_code
 
-    def test_autoimport_tasks_get_owner_pro(self):
+    def test_autoimporter_get_owner_pro(self):
         """Test WEB task autoimporter works for pro user"""
         self.register()
         self.signout()
@@ -2854,8 +2854,7 @@ class TestWeb(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         assert  res.status_code == 200, res.status_code
 
-
-    def test_autoimport_tasks_get_admin(self):
+    def test_autoimporter_get_admin(self):
         """Test WEB task autoimporter works for admin user"""
         self.register()
         self.signout()
@@ -2870,9 +2869,15 @@ class TestWeb(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         assert  res.status_code == 200, res.status_code
 
+    def test_autoimporter_get_nonexisting_project(self):
+        """Test WEB task autoimporter to a non existing project returns 404"""
+        self.register()
+        res = self.app.get("/app/noExists/tasks/autoimporter")
 
-    def test_autoimport_tasks_post_redirects_to_login_if_anonymous(self):
-        """Test WEB task autoimporter endpoint requires login"""
+        assert res.status_code == 404, res.status_code
+
+    def test_autoimporter_post_redirects_to_login_if_anonymous(self):
+        """Test WEB task autoimporter endpoint post requires login"""
         app = AppFactory.create()
         url = "/app/%s/tasks/autoimporter" % app.short_name
 
@@ -2881,8 +2886,8 @@ class TestWeb(web.Helper):
         assert res.status_code == 302, res.status_code
         assert redirect_url in res.location, res.location
 
-    def test_autoimport_tasks_post_forbidden_non_owner(self):
-        """Test WEB task autoimporter returns Forbidden if non owner accesses"""
+    def test_autoimporter_post_forbidden_non_owner(self):
+        """Test WEB task autoimporter post returns Forbidden if non owner accesses"""
         self.register()
         self.new_application()
         app = db.session.query(App).first()
@@ -2894,8 +2899,8 @@ class TestWeb(web.Helper):
 
         assert res.status_code == 403, res.status_code
 
-    def test_autoimport_tasks_post_forbidden_owner_no_pro(self):
-        """Test WEB task autoimporter returns Forbidden if no pro accesses"""
+    def test_autoimporter_post_forbidden_owner_no_pro(self):
+        """Test WEB task autoimporter post returns Forbidden if no pro accesses"""
         self.register()
         self.signout()
         # User
@@ -2907,8 +2912,8 @@ class TestWeb(web.Helper):
         res = self.app.post(url, data={}, follow_redirects=True)
         assert  res.status_code == 403, res.status_code
 
-    def test_autoimport_tasks_post_owner_pro(self):
-        """Test WEB task autoimporter works for pro user"""
+    def test_autoimporter_post_owner_pro(self):
+        """Test WEB task autoimporter post works for pro user"""
         self.register()
         self.signout()
         # User
@@ -2926,9 +2931,8 @@ class TestWeb(web.Helper):
                                        follow_redirects=True)
         assert  res.status_code == 200, res.status_code
 
-
-    def test_autoimport_tasks_post_admin(self):
-        """Test WEB task autoimporter works for admin user"""
+    def test_autoimporter_post_admin(self):
+        """Test WEB task autoimporter post works for admin user"""
         self.register()
         self.signout()
         # User
@@ -2944,10 +2948,86 @@ class TestWeb(web.Helper):
                                        follow_redirects=True)
         assert  res.status_code == 200, res.status_code
 
-    def test_autoimport_tasks_get_nonexisting_project(self):
-        """Test WEB task autoimporter to a non existing project returns 404"""
+    def test_autoimporter_post_nonexisting_project(self):
+        """Test WEB task autoimporter post to a non existing project returns 404"""
         self.register()
-        res = self.app.get("/app/noExists/tasks/autoimporter")
+        res = self.app.post("/app/noExists/tasks/autoimporter", data={})
+
+        assert res.status_code == 404, res.status_code
+
+    def test_delete_autoimporter_post_redirects_to_login_if_anonymous(self):
+        """Test WEB delete task autoimporter endpoint requires login"""
+        app = AppFactory.create()
+        url = "/app/%s/tasks/autoimporter/delete" % app.short_name
+
+        res = self.app.post(url, data={})
+        redirect_url = 'http://localhost/account/signin?next='
+        assert res.status_code == 302, res.status_code
+        assert redirect_url in res.location, res.location
+
+    def test_delete_autoimporter_post_forbidden_non_owner(self):
+        """Test WEB delete task autoimporter returns Forbidden if non owner accesses"""
+        self.register()
+        self.new_application()
+        app = db.session.query(App).first()
+        self.signout()
+        self.register(name='non-owner')
+        url = "/app/%s/tasks/autoimporter/delete" % app.short_name
+
+        res = self.app.post(url, data={})
+
+        assert res.status_code == 403, res.status_code
+
+    def test_delete_autoimporter_post_forbidden_owner_no_pro(self):
+        """Test WEB delete task autoimporter returns Forbidden if no pro accesses"""
+        self.register()
+        self.signout()
+        # User
+        self.register(name="owner")
+        self.new_application()
+        app = db.session.query(App).first()
+        url = "/app/%s/tasks/autoimporter/delete" % app.short_name
+
+        res = self.app.post(url, data={}, follow_redirects=True)
+        assert  res.status_code == 403, res.status_code
+
+    def test_delete_autoimporter_post_owner_pro(self):
+        """Test WEB delete task autoimporter works for pro user"""
+        self.register()
+        self.signout()
+        # User
+        self.register(name="owner")
+        owner = db.session.query(User).filter_by(name="owner").first()
+        owner.pro = True
+        db.session.commit()
+
+        self.new_application()
+        app = db.session.query(App).first()
+        url = "/app/%s/tasks/autoimporter/delete" % app.short_name
+
+        res = self.app.post(url, data={}, follow_redirects=True)
+        assert  res.status_code == 200, res.status_code
+
+
+    def test_delete_autoimporter_post_admin(self):
+        """Test WEB delete task autoimporter works for admin user"""
+        self.register()
+        self.signout()
+        # User
+        self.register(name="owner")
+        self.new_application()
+        self.signout()
+        self.signin()
+        app = db.session.query(App).first()
+        url = "/app/%s/tasks/autoimporter/delete" % app.short_name
+
+        res = self.app.post(url, data={}, follow_redirects=True)
+        assert  res.status_code == 200, res.status_code
+
+    def test_delete_autoimporter_get_nonexisting_project(self):
+        """Test WEB task delete autoimporter to a non existing project returns 404"""
+        self.register()
+        res = self.app.post("/app/noExists/tasks/autoimporter/delete")
 
         assert res.status_code == 404, res.status_code
 
