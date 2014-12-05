@@ -79,7 +79,8 @@ class TestTaskrunAPI(TestAPI):
 
     @with_context
     @patch('pybossa.api.task_run.request')
-    def test_taskrun_anonymous_post(self, mock_request):
+    @patch('pybossa.api.task_run._check_task_requested_by_user')
+    def test_taskrun_anonymous_post(self, fake_validation, mock_request):
         """Test API TaskRun creation and auth for anonymous users"""
         app = AppFactory.create()
         task = TaskFactory.create(app=app)
@@ -132,7 +133,8 @@ class TestTaskrunAPI(TestAPI):
         assert tmp.status_code == 403, err_msg
 
     @with_context
-    def test_taskrun_authenticated_post(self):
+    @patch('pybossa.api.task_run._check_task_requested_by_user')
+    def test_taskrun_authenticated_post(self, fake_validation):
         """Test API TaskRun creation and auth for authenticated users"""
         app = AppFactory.create()
         task = TaskFactory.create(app=app)
@@ -182,10 +184,61 @@ class TestTaskrunAPI(TestAPI):
 
         # If the user tries again it should be forbidden
         tmp = self.app.post(url, data=datajson)
-        err_msg = ("Authorized users should be only allowed to post \
-                    one task_run per task")
-        task_runs = self.app.get('/api/taskrun')
         assert tmp.status_code == 403, tmp.data
+
+
+    def test_taskrun_post_requires_newtask_first_anonymous(self):
+        """Test API TaskRun post fails if task was not previously requested for
+        anonymous user"""
+        app = AppFactory.create()
+        task = TaskFactory.create(app=app)
+        data = dict(
+            app_id=app.id,
+            task_id=task.id,
+            info='my task result')
+        datajson = json.dumps(data)
+        fail = self.app.post('/api/taskrun', data=datajson)
+        err = json.loads(fail.data)
+
+        assert fail.status_code == 403, fail.status_code
+        assert err['status'] == 'failed', err
+        assert err['status_code'] == 403, err
+        assert err['exception_msg'] == 'You must request a task first!', err
+        assert err['exception_cls'] == 'Forbidden', err
+        assert err['target'] == 'taskrun', err
+
+        # Succeeds after requesting a task
+        self.app.get('/api/app/%s/newtask' % app.id)
+        success = self.app.post('/api/taskrun', data=datajson)
+        assert success.status_code == 200, success.data
+
+
+    @with_context
+    def test_taskrun_post_requires_newtask_first_authenticated(self):
+        """Test API TaskRun post fails if task was not previously requested for
+        authenticated user"""
+        app = AppFactory.create()
+        task = TaskFactory.create(app=app)
+        data = dict(
+            app_id=app.id,
+            task_id=task.id,
+            info='my task result')
+        datajson = json.dumps(data)
+        url = '/api/taskrun?api_key=%s' % app.owner.api_key
+        fail = self.app.post(url, data=datajson)
+        err = json.loads(fail.data)
+
+        assert fail.status_code == 403, fail.status_code
+        assert err['status'] == 'failed', err
+        assert err['status_code'] == 403, err
+        assert err['exception_msg'] == 'You must request a task first!', err
+        assert err['exception_cls'] == 'Forbidden', err
+        assert err['target'] == 'taskrun', err
+
+        # Succeeds after requesting a task
+        self.app.get('/api/app/%s/newtask?api_key=%s' % (app.id, app.owner.api_key))
+        success = self.app.post(url, data=datajson)
+        assert success.status_code == 200, success.data
 
 
     @with_context
@@ -356,7 +409,8 @@ class TestTaskrunAPI(TestAPI):
 
     @with_context
     @patch('pybossa.api.task_run.request')
-    def test_taskrun_updates_task_state(self, mock_request):
+    @patch('pybossa.api.task_run._check_task_requested_by_user')
+    def test_taskrun_updates_task_state(self, fake_validation, mock_request):
         """Test API TaskRun POST updates task state"""
         app = AppFactory.create()
         task = TaskFactory.create(app=app, n_answers=2)

@@ -17,42 +17,19 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask.ext.login import current_user
-from pybossa.core import db, get_session
-from pybossa.model.task_run import TaskRun
 from flask import abort
-from sqlalchemy.sql import text
+from pybossa.core import task_repo, project_repo
+
 
 def create(taskrun=None):
-    authorized = False
-    try:
-        session = get_session(db, bind='slave')
-        if taskrun.user_ip:
-            sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
-                          WHERE task_run.app_id=:app_id AND
-                          task_run.task_id=:task_id AND
-                          task_run.user_ip=:user_ip;''')
-            results = session.execute(sql, dict(app_id=taskrun.app_id,
+    project = project_repo.get(task_repo.get_task(taskrun.task_id).app_id)
+    if (current_user.is_anonymous() and
+        project.allow_anonymous_contributors is False):
+        return False
+    authorized = task_repo.count_task_runs_with(app_id=taskrun.app_id,
                                                 task_id=taskrun.task_id,
-                                                user_ip=taskrun.user_ip))
-        elif taskrun.user_id:
-            sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
-                          WHERE task_run.app_id=:app_id AND
-                          task_run.task_id=:task_id AND
-                          task_run.user_id=:user_id;''')
-            results = session.execute(sql, dict(app_id=taskrun.app_id,
-                                                task_id=taskrun.task_id,
-                                                user_id=taskrun.user_id))
-        else:
-            return False
-        n_task_runs = 0
-        for row in results:
-            n_task_runs = row.n_task_runs
-        authorized = (n_task_runs <= 0)
-    except: # pragma: no cover
-        session.rollback()
-        raise
-    finally:
-        session.close()
+                                                user_id=taskrun.user_id,
+                                                user_ip=taskrun.user_ip) <= 0
     if not authorized:
         raise abort(403)
     return authorized
@@ -60,10 +37,8 @@ def create(taskrun=None):
 def read(taskrun=None):
     return True
 
-
 def update(taskrun):
     return False
-
 
 def delete(taskrun):
     if current_user.is_anonymous():
@@ -71,4 +46,3 @@ def delete(taskrun):
     if taskrun.user_id is None:
         return current_user.admin
     return current_user.admin or taskrun.user_id == current_user.id
-

@@ -17,7 +17,6 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from pybossa.core import db
-#from pybossa.model import rebuild_db
 from pybossa.core import create_app, sentinel
 from pybossa.model.app import App
 from pybossa.model.category import Category
@@ -34,7 +33,7 @@ import os
 os.environ['PYBOSSA_SETTINGS'] = '../settings_test.py'
 os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
 
-flask_app = create_app()
+flask_app = create_app(run_as_server=False)
 
 def with_context(f):
     @wraps(f)

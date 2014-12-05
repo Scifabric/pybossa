@@ -64,14 +64,7 @@ def calculate_buffer(data, salt):
 
 def sign(data, salt, pkey):
     strBuffer = calculate_buffer(data, salt)
-    # Sign data
     rsa = M2Crypto.RSA.load_key(pkey)
     digest = hashlib.new('sha512', strBuffer).digest()
-
-    # Append signature
     data['signature'] = base64.b64encode(rsa.sign(digest, "sha512"))
-    data['digest'] = digest
-    data['strBuffer'] = strBuffer
-
-    # Return new data dictionary
     return data

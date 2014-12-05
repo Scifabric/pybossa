@@ -15,12 +15,12 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-from default import Test, with_context
+from default import Test
 from pybossa.view.google import manage_user
 
 
 class TestGoogle(Test):
-    @with_context
+
     def test_manage_user(self):
         """Test GOOGLE manage_user works."""
         # First with a new user

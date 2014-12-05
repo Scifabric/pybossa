@@ -19,7 +19,7 @@
 from flask import Blueprint, request, url_for, flash, redirect, session
 from flask.ext.login import login_user, current_user
 
-from pybossa.core import db, facebook
+from pybossa.core import facebook, user_repo
 from pybossa.model.user import User
 #from pybossa.util import Facebook, get_user_signup_method
 from pybossa.util import get_user_signup_method
@@ -28,7 +28,7 @@ from pybossa.util import get_user_signup_method
 # See http://goo.gl/tbhgF for more info
 #from pybossa.core import app
 
-# This blueprint will be activated in web.py if the FACEBOOK APP ID and SECRET
+# This blueprint will be activated in core.py if the FACEBOOK APP ID and SECRET
 # are available
 blueprint = Blueprint('facebook', __name__)
 
@@ -66,9 +66,7 @@ def oauth_authorized(resp):  # pragma: no cover
     user = manage_user(access_token, user_data, next_url)
     if user is None:
         # Give a hint for the user
-        user = db.session.query(User)\
-                 .filter_by(email_addr=user_data['email'])\
-                 .first()
+        user = user_repo.get_by(email_addr=user_data['email'])
         if user is not None:
             msg, method = get_user_signup_method(user)
             flash(msg, 'info')
@@ -96,20 +94,17 @@ def oauth_authorized(resp):  # pragma: no cover
 
 def manage_user(access_token, user_data, next_url):
     """Manage the user after signin"""
-    user = db.session.query(User)\
-             .filter_by(facebook_user_id=user_data['id']).first()
+    user = user_repo.get_by(facebook_user_id=user_data['id'])
 
     if user is None:
         facebook_token = dict(oauth_token=access_token)
         info = dict(facebook_token=facebook_token)
-        user = db.session.query(User)\
-                 .filter_by(name=user_data['username']).first()
+        user = user_repo.get_by_name(user_data['username'])
         # NOTE: Sometimes users at Facebook validate their accounts without
         # registering an e-mail (see this http://stackoverflow.com/a/17809808)
         email = None
         if user_data.get('email'):
-            email = db.session.query(User)\
-                      .filter_by(email_addr=user_data['email']).first()
+            email = user_repo.get_by(email_addr=user_data['email'])
 
         if user is None and email is None:
             if not user_data.get('email'):
@@ -119,8 +114,7 @@ def manage_user(access_token, user_data, next_url):
                    email_addr=user_data['email'],
                    facebook_user_id=user_data['id'],
                    info=info)
-            db.session.add(user)
-            db.session.commit()
+            user_repo.save(user)
             return user
         else:
             return None

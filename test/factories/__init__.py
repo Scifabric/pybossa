@@ -19,7 +19,17 @@
 from pybossa.core import db
 
 import factory
-from factory.alchemy import SQLAlchemyModelFactory
+
+from pybossa.repositories import UserRepository
+from pybossa.repositories import ProjectRepository
+from pybossa.repositories import BlogRepository
+from pybossa.repositories import TaskRepository
+from pybossa.repositories import AuditlogRepository
+user_repo = UserRepository(db)
+project_repo = ProjectRepository(db)
+blog_repo = BlogRepository(db)
+task_repo = TaskRepository(db)
+auditlog_repo = AuditlogRepository(db)
 
 
 def reset_all_pk_sequences():
@@ -31,20 +41,16 @@ def reset_all_pk_sequences():
     UserFactory.reset_sequence()
 
 
-class BaseFactory(SQLAlchemyModelFactory):
-    class Meta:
-        sqlalchemy_session = db.session
+class BaseFactory(factory.Factory):
+    @classmethod
+    def _setup_next_sequence(cls):
+        return 1
 
     @classmethod
-    def _create(cls, target_class, *args, **kwargs):
-        """The default beahaviour is to simply add the object to the SQLAlchemy
-        session. Here, we also flush it as autoflush is disabled in the
-        flask-SQLAlchemy extension"""
-        session = cls._meta.sqlalchemy_session
-        obj = target_class(*args, **kwargs)
-        session.add(obj)
-        session.commit()
-        return obj
+    def _build(cls, model_class, *args, **kwargs):
+        project = model_class(*args, **kwargs)
+        db.session.remove()
+        return project
 
 
 # Import the factories
@@ -54,3 +60,4 @@ from category_factory import CategoryFactory
 from task_factory import TaskFactory
 from taskrun_factory import TaskRunFactory, AnonymousTaskRunFactory
 from user_factory import UserFactory
+from auditlog_factory import AuditlogFactory

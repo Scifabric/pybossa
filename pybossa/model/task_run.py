@@ -16,12 +16,14 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
+from datetime import datetime
 from sqlalchemy import Integer, Text
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy import event
 
-from pybossa.core import db
-from pybossa.model import DomainObject, JSONType, make_timestamp, update_redis
+from pybossa.core import db, queues
+from pybossa.model import DomainObject, JSONType, make_timestamp, update_redis, \
+    update_app_timestamp, webhook
 
 
 
@@ -62,18 +64,20 @@ class TaskRun(db.Model, DomainObject):
 def update_task_state(mapper, conn, target):
     """Update the task.state when n_answers condition is met."""
     # Get app details
-    sql_query = ('select name, short_name, info from app \
+    sql_query = ('select name, short_name, webhook, info from app \
                  where id=%s') % target.app_id
     results = conn.execute(sql_query)
     app_obj = dict(id=target.app_id,
                    name=None,
                    short_name=None,
                    info=None,
+                   webhook=None,
                    action_updated='TaskCompleted')
     for r in results:
         app_obj['name'] = r.name
         app_obj['short_name'] = r.short_name
         app_obj['info'] = r.info
+        app_obj['webhook'] = r.webhook
 
     # Check if user is Authenticated
     if target.user_id is not None:
@@ -102,3 +106,19 @@ def update_task_state(mapper, conn, target):
                      where id=%s") % target.task_id
         conn.execute(sql_query)
         update_redis(app_obj)
+        # PUSH changes via the webhook
+        if app_obj['webhook']:
+            payload = dict(event="task_completed",
+                           app_short_name=app_obj['short_name'],
+                           app_id=target.app_id,
+                           task_id=target.task_id,
+                           fired_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
+            queues['webhook'].enqueue(webhook, app_obj['webhook'], payload)
+
+
+
+@event.listens_for(TaskRun, 'after_insert')
+@event.listens_for(TaskRun, 'after_update')
+def update_app(mapper, conn, target):
+    """Update app updated timestamp."""
+    update_app_timestamp(mapper, conn, target)

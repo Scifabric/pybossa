@@ -17,12 +17,18 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from pybossa.model.category import Category
-from . import BaseFactory, factory
+from . import BaseFactory, factory, project_repo
 
 
 class CategoryFactory(BaseFactory):
     class Meta:
         model = Category
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        category = model_class(*args, **kwargs)
+        project_repo.save_category(category)
+        return category
 
     id = factory.Sequence(lambda n: n)
     name = factory.Sequence(lambda n: 'category_name_%d' % n)

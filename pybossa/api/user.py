@@ -71,10 +71,10 @@ class UserAPI(APIBase):
     def _is_requester_admin(self):
         return current_user.is_authenticated() and current_user.admin
 
-    def _custom_filter(self, query):
+    def _custom_filter(self, filters):
         if self._private_attributes_in_request() and not self._is_requester_admin():
-            query = query.filter(getattr(User, 'privacy_mode') == False)
-        return query
+            filters['privacy_mode'] = False
+        return filters
 
     def _private_attributes_in_request(self):
         for attribute in request.args.keys():

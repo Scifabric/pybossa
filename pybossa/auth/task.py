@@ -17,13 +17,13 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from flask.ext.login import current_user
-import pybossa.model as model
-from pybossa.core import db
+
+from pybossa.core import project_repo
 
 
 def create(task=None):
     if not current_user.is_anonymous():
-        app = db.session.query(model.app.App).filter_by(id=task.app_id).one()
+        app = project_repo.get(task.app_id)
         if app.owner_id == current_user.id or current_user.admin is True:
             return True
         else:
@@ -38,7 +38,7 @@ def read(task=None):
 
 def update(task):
     if not current_user.is_anonymous():
-        app = db.session.query(model.app.App).filter_by(id=task.app_id).one()
+        app = project_repo.get(task.app_id)
         if app.owner_id == current_user.id or current_user.admin is True:
             return True
         else:

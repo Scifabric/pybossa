@@ -141,11 +141,10 @@ class TestAdmin(web.Helper):
         f = json.loads(res.data)
         assert f['id'] == 1, f
         assert f['featured'] == True, f
-        # Check that it is listed in the front page
-        res = self.app.get('/', follow_redirects=True)
-        assert "Sample Project" in res.data,\
-            "The application should be listed in the front page"\
-            " as it is featured"
+        # Check can be removed from featured
+        res = self.app.get('/admin/featured', follow_redirects=True)
+        assert "Remove from Featured!" in res.data,\
+            "The project should have a button to remove from featured"
         # A retry should fail
         res = self.app.post('/admin/featured/1')
         err = json.loads(res.data)
@@ -158,11 +157,10 @@ class TestAdmin(web.Helper):
         f = json.loads(res.data)
         assert f['id'] == 1, f
         assert f['featured'] == False, f
-        # Check that it is not listed in the front page
-        res = self.app.get('/', follow_redirects=True)
-        assert "Sample Project" not in res.data,\
-            "The application should not be listed in the front page"\
-            " as it is not featured"
+        # Check that can be added to featured
+        res = self.app.get('/admin/featured', follow_redirects=True)
+        assert "Add to Featured!" in res.data,\
+            "The project should have a button to add to featured"
         # If we try to delete again, it should return an error
         res = self.app.delete('/admin/featured/1')
         err = json.loads(res.data)
@@ -449,14 +447,15 @@ class TestAdmin(web.Helper):
                             follow_redirects=True)
         assert res.status_code == 403, res.status_code
 
-    @with_context
     @patch('pybossa.ckan.requests.get')
     @patch('pybossa.core.uploader.upload_file', return_value=True)
-    def test_19_admin_update_app(self, Mock, Mock2):
+    @patch('pybossa.forms.validator.requests.get')
+    def test_19_admin_update_app(self, Mock, Mock2, mock_webhook):
         """Test ADMIN can update a project that belongs to another user"""
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
                                    {'content-type': 'application/json'})
         Mock.return_value = html_request
+        mock_webhook.return_value = html_request
         self.register()
         self.signout()
         self.register(fullname="Juan Jose", name="juan",

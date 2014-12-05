@@ -18,7 +18,7 @@
 
 import os
 import logging
-from flask import Flask, url_for, session, request, render_template, flash
+from flask import Flask, url_for, session, request, render_template, flash, _app_ctx_stack
 from flask.ext.login import current_user
 from flask.ext.heroku import Heroku
 from flask.ext.babel import lazy_gettext
@@ -29,9 +29,10 @@ from pybossa.ratelimit import get_view_rate_limit
 
 from raven.contrib.flask import Sentry
 from pybossa.util import pretty_date
+from rq import Queue
 
 
-def create_app():
+def create_app(run_as_server=True):
     app = Flask(__name__)
     if 'DATABASE_URL' in os.environ:  # pragma: no cover
         heroku = Heroku(app)
@@ -51,11 +52,14 @@ def create_app():
     #gravatar = Gravatar(app, size=100, rating='g', default='mm',
                         #force_default=False, force_lower=False)
     setup_db(app)
+    setup_repositories()
     mail.init_app(app)
     sentinel.init_app(app)
     signer.init_app(app)
     if app.config.get('SENTRY_DSN'): # pragma: no cover
         sentr = Sentry(app)
+    if run_as_server:
+        setup_scheduled_jobs(app)
     setup_blueprints(app)
     setup_hooks(app)
     setup_error_handlers(app)
@@ -65,6 +69,7 @@ def create_app():
     setup_csrf_protection(app)
     setup_debug_toolbar(app)
     setup_jinja2_filters(app)
+    setup_queues(app)
     return app
 
 
@@ -105,20 +110,56 @@ def setup_uploader(app):
         app.url_build_error_handlers.append(uploader.external_url_handler)
         uploader.init_app(app)
 
+
 def setup_markdown(app):
     misaka.init_app(app)
 
 
 def setup_db(app):
+    def create_slave_session(db, bind):
+        if app.config.get('SQLALCHEMY_BINDS')['slave'] == app.config.get('SQLALCHEMY_DATABASE_URI'):
+            return db.session
+        engine = db.get_engine(db.app, bind=bind)
+        options = dict(bind=engine,scopefunc=_app_ctx_stack.__ident_func__)
+        slave_session = db.create_scoped_session(options=options)
+        return slave_session
     db.app = app
     db.init_app(app)
+    db.slave_session = create_slave_session(db, bind='slave')
+    if db.slave_session is not db.session: #flask-sqlalchemy does it already for default session db.session
+        @app.teardown_appcontext
+        def shutdown_session(response_or_exc): # pragma: no cover
+            if app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN']:
+                if response_or_exc is None:
+                    db.slave_session.commit()
+            db.slave_session.remove()
+            return response_or_exc
+
+
+def setup_repositories():
+    from pybossa.repositories import UserRepository
+    from pybossa.repositories import ProjectRepository
+    from pybossa.repositories import BlogRepository
+    from pybossa.repositories import TaskRepository
+    from pybossa.repositories import AuditlogRepository
+    global user_repo
+    global project_repo
+    global blog_repo
+    global task_repo
+    global auditlog_repo
+    user_repo = UserRepository(db)
+    project_repo = ProjectRepository(db)
+    blog_repo = BlogRepository(db)
+    task_repo = TaskRepository(db)
+    auditlog_repo = AuditlogRepository(db)
 
 
 def setup_gravatar(app):
     gravatar.init_app(app)
 
-from logging.handlers import SMTPHandler
+
 def setup_error_email(app):
+    from logging.handlers import SMTPHandler
     ADMINS = app.config.get('ADMINS', '')
     if not app.debug and ADMINS: # pragma: no cover
         mail_handler = SMTPHandler('127.0.0.1',
@@ -127,9 +168,10 @@ def setup_error_email(app):
         mail_handler.setLevel(logging.ERROR)
         app.logger.addHandler(mail_handler)
 
-from logging.handlers import RotatingFileHandler
-from logging import Formatter
+
 def setup_logging(app):
+    from logging.handlers import RotatingFileHandler
+    from logging import Formatter
     log_file_path = app.config.get('LOG_FILE')
     log_level = app.config.get('LOG_LEVEL', logging.WARN)
     if log_file_path: # pragma: no cover
@@ -144,13 +186,14 @@ def setup_logging(app):
         logger.setLevel(log_level)
         logger.addHandler(file_handler)
 
+
 def setup_login_manager(app):
     from pybossa import model
     login_manager.login_view = 'account.signin'
     login_manager.login_message = u"Please sign in to access this page."
     @login_manager.user_loader
     def load_user(username):
-        return db.session.query(model.user.User).filter_by(name=username).first()
+        return user_repo.get_by_name(username)
 
 
 def setup_babel(app):
@@ -168,6 +211,7 @@ def setup_babel(app):
             lang = 'en'
         return lang
     return babel
+
 
 def setup_blueprints(app):
     """Configure blueprints."""
@@ -194,6 +238,12 @@ def setup_blueprints(app):
 
     for bp in blueprints:
         app.register_blueprint(bp['handler'], url_prefix=bp['url_prefix'])
+
+    # The RQDashboard is actually registering a blueprint to the app, so this is
+    # a propper place for it to be initialized
+    from rq_dashboard import RQDashboard
+    RQDashboard(app, url_prefix='/admin/rq', auth_handler=current_user,
+                redis_conn=sentinel.master)
 
 
 def setup_social_networks(app):
@@ -259,16 +309,13 @@ def setup_error_handlers(app):
     def page_not_found(e):
         return render_template('404.html'), 404
 
-
     @app.errorhandler(500)
     def server_error(e):  # pragma: no cover
         return render_template('500.html'), 500
 
-
     @app.errorhandler(403)
     def forbidden(e):
         return render_template('403.html'), 403
-
 
     @app.errorhandler(401)
     def unauthorized(e):
@@ -295,7 +342,7 @@ def setup_hooks(app):
         if 'Authorization' in request.headers:
             apikey = request.headers.get('Authorization')
         if apikey:
-            user = db.session.query(model.user.User).filter_by(api_key=apikey).first()
+            user = user_repo.get_by(api_key=apikey)
             ## HACK:
             # login_user sets a session cookie which we really don't want.
             # login_user(user)
@@ -374,6 +421,10 @@ def setup_ratelimits(app):
     ratelimits['LIMIT'] = app.config['LIMIT']
     ratelimits['PER'] = app.config['PER']
 
+def setup_queues(app):
+    global queues
+    queues['webhook'] = Queue('webhook', connection=sentinel.master)
+
 
 def setup_cache_timeouts(app):
     global timeouts
@@ -393,13 +444,39 @@ def setup_cache_timeouts(app):
     timeouts['USER_TOTAL_TIMEOUT'] = app.config['USER_TOTAL_TIMEOUT']
 
 
-def get_session(db, bind):
-    """Returns a session with for the given bind."""
-    engine = db.get_engine(db.app, bind=bind)
-    Session.configure(bind=engine)
-    session = Session()
-    # HACK: this is to fix Flask-SQLAlchemy error
-    # see: http://stackoverflow.com/a/20203277/1960596
-    # note: it looks like in Flask-SQLAlchemy 2.0 this is going to be fixed
-    session._model_changes = {}
-    return session
+def setup_scheduled_jobs(app): #pragma: no cover
+    redis_conn = sentinel.master
+    from jobs import get_scheduled_jobs
+    from rq_scheduler import Scheduler
+    all_jobs = get_scheduled_jobs()
+    scheduler = Scheduler(queue_name='scheduled_jobs', connection=redis_conn)
+
+    for function in all_jobs:
+        app.logger.info(_schedule_job(function, scheduler))
+
+
+def _schedule_job(function, scheduler):
+    """Schedules a job and returns a log message about success of the operation"""
+    from datetime import datetime
+    scheduled_jobs = scheduler.get_jobs()
+    job = scheduler.schedule(
+        scheduled_time=datetime.utcnow(),
+        func=function['name'],
+        args=function['args'],
+        kwargs=function['kwargs'],
+        interval=function['interval'],
+        repeat=None,
+        timeout=function['timeout'])
+    for sj in scheduled_jobs:
+        if (function['name'].__name__ in sj.func_name and
+            sj._args == function['args'] and
+            sj._kwargs == function['kwargs']):
+            job.cancel()
+            msg = ('WARNING: Job %s(%s, %s) is already scheduled'
+                   % (function['name'].__name__, function['args'],
+                      function['kwargs']))
+            return msg
+    msg = ('Scheduled %s(%s, %s) to run every %s seconds'
+           % (function['name'].__name__, function['args'], function['kwargs'],
+              function['interval']))
+    return msg

@@ -39,9 +39,9 @@ def warm_cache():
         import pybossa.cache.apps as cached_apps
         import pybossa.cache.categories as cached_cat
         import pybossa.cache.users as cached_users
-        import pybossa.stats as stats
+        import pybossa.cache.project_stats  as stats
 
-        def warm_app(id, short_name):
+        def warm_app(id, short_name, featured=False):
             if id not in apps_cached:
                 cached_apps.get_app(short_name)
                 cached_apps.n_tasks(id)
@@ -50,8 +50,8 @@ def warm_cache():
                 cached_apps.last_activity(id)
                 cached_apps.n_completed_tasks(id)
                 cached_apps.n_volunteers(id)
-                if n_task_runs >= 1000:
-                    print "Getting stats for %s as it has %s" % (id, n_task_runs)
+                if n_task_runs >= 1000 or featured:
+                    print "Getting stats for %s as it has %s task runs" % (short_name, n_task_runs)
                     stats.get_stats(id, app.config.get('GEO'))
                 apps_cached.append(id)
 
@@ -63,7 +63,7 @@ def warm_cache():
             apps = cached_apps.get_featured('featured', page,
                                             app.config['APPS_PER_PAGE'])
             for a in apps:
-                warm_app(a['id'], a['short_name'])
+                warm_app(a['id'], a['short_name'], featured=True)
 
         # Categories
         categories = cached_cat.get_used()

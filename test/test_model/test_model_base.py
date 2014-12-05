@@ -97,6 +97,4 @@ class TestModelBase(Test):
         assert outrun.info['answer'] == task_run_info['answer'], outrun
         assert outrun.user.name == username, outrun
 
-        user = User.by_name(username)
-        assert user.apps[0].id == app_id, user
 

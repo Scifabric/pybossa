@@ -40,6 +40,8 @@ class App(db.Model, DomainObject):
     id = Column(Integer, primary_key=True)
     #: UTC timestamp when the project is created
     created = Column(Text, default=make_timestamp)
+    #: UTC timestamp when the project is updated (or any of its relationships)
+    updated = Column(Text, default=make_timestamp, onupdate=make_timestamp)
     #: Project name
     name = Column(Unicode(length=255), unique=True, nullable=False)
     #: Project slug for the URL
@@ -48,6 +50,8 @@ class App(db.Model, DomainObject):
     description = Column(Unicode(length=255), nullable=False)
     #: Project long description
     long_description = Column(UnicodeText)
+    #: Project webhook
+    webhook = Column(Text)
     #: If the project allows anonymous contributions
     allow_anonymous_contributors = Column(Boolean, default=True)
     long_tasks = Column(Integer, default=0)
@@ -55,6 +59,10 @@ class App(db.Model, DomainObject):
     hidden = Column(Integer, default=0)
     # If the project is featured
     featured = Column(Boolean, nullable=False, default=False)
+    # If the project is completed
+    completed = Column(Boolean, nullable=False, default=False)
+    # If the project is completed
+    contacted = Column(Boolean, nullable=False, default=False)
     #: Project owner_id
     owner_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     time_estimate = Column(Integer, default=0)
@@ -102,6 +110,7 @@ class App(db.Model, DomainObject):
         if self.needs_password():
             return self.get_passwd() == password
         return False
+
 
 
 @event.listens_for(App, 'before_update')

@@ -30,13 +30,30 @@ import json
 from flask import request, abort, Response
 from flask.views import MethodView
 from werkzeug.exceptions import NotFound, Unauthorized, Forbidden
-from sqlalchemy.exc import IntegrityError
 from pybossa.util import jsonpify, crossdomain
-from pybossa.core import db, ratelimits, get_session
+from pybossa.core import ratelimits
 from pybossa.auth import require
 from pybossa.hateoas import Hateoas
 from pybossa.ratelimit import ratelimit
 from pybossa.error import ErrorStatus
+
+from pybossa.core import project_repo, user_repo, task_repo
+
+repos = {'Task'   : {'repo': task_repo, 'filter': 'filter_tasks_by',
+                     'get': 'get_task', 'save': 'save', 'update': 'update',
+                     'delete': 'delete'},
+        'TaskRun' : {'repo': task_repo, 'filter': 'filter_task_runs_by',
+                     'get': 'get_task_run',  'save': 'save', 'update': 'update',
+                     'delete': 'delete'},
+        'User'    : {'repo': user_repo, 'filter': 'filter_by', 'get': 'get',
+                     'save': 'save', 'update': 'update'},
+        'App'     : {'repo': project_repo, 'filter': 'filter_by', 'get': 'get',
+                     'save': 'save', 'update': 'update', 'delete': 'delete',
+                     'log': 'add_log_entry'},
+        'Category': {'repo': project_repo, 'filter': 'filter_categories_by',
+                     'get': 'get_category', 'save': 'save_category',
+                     'update': 'update_category', 'delete': 'delete_category'}
+        }
 
 
 cors_headers = ['Content-Type', 'Authorization']
@@ -49,8 +66,6 @@ class APIBase(MethodView):
     """Class to create CRUD methods."""
 
     hateoas = Hateoas()
-
-    slave_session = get_session(db, bind='slave')
 
     def valid_args(self):
         """Check if the domain object args are valid."""
@@ -83,13 +98,10 @@ class APIBase(MethodView):
             json_response = self._create_json_response(query, id)
             return Response(json_response, mimetype='application/json')
         except Exception as e:
-            self.slave_session.rollback()
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
                 action='GET')
-        finally:
-            self.slave_session.close()
 
     def _create_json_response(self, query_result, id):
         if len (query_result) == 1 and query_result[0] is None:
@@ -101,7 +113,7 @@ class APIBase(MethodView):
                 getattr(require, self.__class__.__name__.lower()).read(item)
             except (Forbidden, Unauthorized):
                 # Remove last added item, as it is 401 or 403
-                items.pop() 
+                items.pop()
             except: # pragma: no cover
                 raise
         if id:
@@ -122,30 +134,29 @@ class APIBase(MethodView):
         return obj
 
     def _db_query(self, id):
-        """ Returns a list with the results of the query"""
-        query = self.slave_session.query(self.__class__)
+        """Returns a list with the results of the query"""
+        repo_info = repos[self.__class__.__name__]
         if id is None:
             limit, offset = self._set_limit_and_offset()
-            query = self._filter_query(query, limit, offset)
+            results = self._filter_query(repo_info, limit, offset)
         else:
-            query = [query.get(id)]
-        return query
+            repo = repo_info['repo']
+            query_func = repo_info['get']
+            results = [getattr(repo, query_func)(id)]
+        return results
 
-    def _filter_query(self, query, limit, offset):
+    def _filter_query(self, repo_info, limit, offset):
+        filters = {}
         for k in request.args.keys():
             if k not in ['limit', 'offset', 'api_key']:
                 # Raise an error if the k arg is not a column
                 getattr(self.__class__, k)
-                query = query.filter(
-                    getattr(self.__class__, k) == request.args[k])
-        query = self._custom_filter(query)
-        return self._format_query_result(query, limit, offset)
-
-    def _format_query_result(self, query, limit, offset):
-        query = query.order_by(self.__class__.id)
-        query = query.limit(limit)
-        query = query.offset(offset)
-        return query.all()
+                filters[k] = request.args[k]
+        repo = repo_info['repo']
+        query_func = repo_info['filter']
+        filters = self._custom_filter(filters)
+        results = getattr(repo, query_func)(limit=limit, offset=offset, **filters)
+        return results
 
     def _set_limit_and_offset(self):
         try:
@@ -171,16 +182,16 @@ class APIBase(MethodView):
         try:
             self.valid_args()
             data = json.loads(request.data)
-            # Clean HATEOAS args
             inst = self._create_instance_from_request(data)
-            db.session.add(inst)
-            db.session.commit()
+            repo = repos[self.__class__.__name__]['repo']
+            save_func = repos[self.__class__.__name__]['save']
+            getattr(repo, save_func)(inst)
+            # Log
+            if self.__class__.__name__ == 'App':
+                log_func = repos[self.__class__.__name__].get('log')
+                getattr(repo, log_func)(inst, 'create', 'api')
             return json.dumps(inst.dictize())
-        except IntegrityError:
-            db.session.rollback()
-            raise
         except Exception as e:
-            db.session.rollback()
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
@@ -213,19 +224,24 @@ class APIBase(MethodView):
             self._refresh_cache(inst)
             return '', 204
         except Exception as e:
-            db.session.rollback()
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
                 action='DELETE')
 
     def _delete_instance(self, id):
-        inst = db.session.query(self.__class__).get(id)
+        repo = repos[self.__class__.__name__]['repo']
+        query_func = repos[self.__class__.__name__]['get']
+        inst = getattr(repo, query_func)(id)
         if inst is None:
             raise NotFound
         getattr(require, self.__class__.__name__.lower()).delete(inst)
-        db.session.delete(inst)
-        db.session.commit()
+        # Log
+        if self.__class__.__name__ == 'App':
+            log_func = repos[self.__class__.__name__].get('log')
+            getattr(repo, log_func)(inst, 'delete', 'api')
+        delete_func = repos[self.__class__.__name__]['delete']
+        getattr(repo, delete_func)(inst)
         return inst
 
     @jsonpify
@@ -248,30 +264,32 @@ class APIBase(MethodView):
             self._refresh_cache(inst)
             return Response(json.dumps(inst.dictize()), 200,
                             mimetype='application/json')
-        except IntegrityError:
-            db.session.rollback()
-            raise
         except Exception as e:
-            db.session.rollback()
             return error.format_exception(
                 e,
                 target=self.__class__.__name__.lower(),
                 action='PUT')
 
     def _update_instance(self, id):
-        existing = db.session.query(self.__class__).get(id)
+        repo = repos[self.__class__.__name__]['repo']
+        query_func = repos[self.__class__.__name__]['get']
+        existing = getattr(repo, query_func)(id)
         if existing is None:
             raise NotFound
         getattr(require, self.__class__.__name__.lower()).update(existing)
         data = json.loads(request.data)
         # may be missing the id as we allow partial updates
         data['id'] = id
-        # Clean HATEOAS args
         data = self.hateoas.remove_links(data)
         inst = self.__class__(**data)
-        db.session.merge(inst)
-        db.session.commit()
-        return inst
+        for key in data:
+            setattr(existing, key, data[key])
+        update_func = repos[self.__class__.__name__]['update']
+        log_func = repos[self.__class__.__name__].get('log')
+        if self.__class__.__name__ == 'App':
+            getattr(repo, log_func)(existing, 'update', 'api')
+        getattr(repo, update_func)(existing)
+        return existing
 
 
     def _update_object(self, data_dict):

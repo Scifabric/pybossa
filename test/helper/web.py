@@ -19,7 +19,6 @@
 from mock import patch
 
 from default import Test, db, Fixtures, with_context
-from helper.user import User
 from pybossa.model.app import App
 from pybossa.model.category import Category
 from pybossa.model.task import Task
@@ -29,7 +28,6 @@ from pybossa.model.task_run import TaskRun
 class Helper(Test):
     """Class to help testing the web interface"""
 
-    user = User()
 
     def html_title(self, title=None):
         """Helper function to create an HTML title"""
@@ -182,6 +180,7 @@ class Helper(Test):
                            new_long_description="Long desc",
                            new_sched="random",
                            new_hidden=False,
+                           new_webhook='http://server.com',
                            new_password=''):
         """Helper function to update a project"""
         if method == "POST":
@@ -197,6 +196,7 @@ class Helper(Test):
                                          'long_description': new_long_description,
                                          'sched': new_sched,
                                          'hidden': new_hidden,
+                                         'webhook': new_webhook,
                                          'password': new_password,
                                          'btn': 'Save'},
                                      follow_redirects=True)
@@ -210,6 +210,7 @@ class Helper(Test):
                                            'sched': new_sched,
                                            'description': new_description,
                                            'password': new_password,
+                                           'webhook': new_webhook,
                                            'btn': 'Save'
                                            },
                                      follow_redirects=True)

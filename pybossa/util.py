@@ -338,3 +338,21 @@ def get_user_id_or_ip():
     user_id = current_user.id if current_user.is_authenticated() else None
     user_ip = request.remote_addr or "127.0.0.1" if current_user.is_anonymous() else None
     return dict(user_id=user_id, user_ip=user_ip)
+
+
+def with_cache_disabled(f):
+    """Decorator that disables the cache for the execution of a function,
+    enabling it back when the function call is done."""
+    import os
+    @wraps(f)
+    def wrapper(*args, **kwargs):
+        env_cache_disabled = os.environ.get('PYBOSSA_REDIS_CACHE_DISABLED')
+        if env_cache_disabled is None or env_cache_disabled is '0':
+            os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = '1'
+        return_value = f(*args, **kwargs)
+        if env_cache_disabled is None:
+            del os.environ['PYBOSSA_REDIS_CACHE_DISABLED']
+        else:
+            os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = env_cache_disabled
+        return return_value
+    return wrapper

@@ -16,11 +16,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import Test, with_context
+from default import Test
 
 
 class TestAuthentication(Test):
-    @with_context
+
     def test_api_authenticate(self):
         """Test AUTHENTICATION works"""
         self.create()

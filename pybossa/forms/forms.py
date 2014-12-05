@@ -23,10 +23,7 @@ from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
 from wtforms.widgets import HiddenInput
 from flask.ext.babel import lazy_gettext, gettext
 
-from pybossa.core import db
-from pybossa.model.app import App
-from pybossa.model.user import User
-from pybossa.model.category import Category
+from pybossa.core import project_repo, user_repo
 import validator as pb_validator
 
 
@@ -35,13 +32,12 @@ import validator as pb_validator
 class AppForm(Form):
     name = TextField(lazy_gettext('Name'),
                      [validators.Required(),
-                      pb_validator.Unique(db.session, App, App.name,
+                      pb_validator.Unique(project_repo.get_by, 'name',
                                           message=lazy_gettext("Name is already taken."))])
     short_name = TextField(lazy_gettext('Short Name'),
                            [validators.Required(),
                             pb_validator.NotAllowedChars(),
-                            pb_validator.Unique(
-                                db.session, App, App.short_name,
+                            pb_validator.Unique(project_repo.get_by, 'short_name',
                                 message=lazy_gettext(
                                     "Short Name is already taken."))])
     long_description = TextAreaField(lazy_gettext('Long Description'),
@@ -63,6 +59,8 @@ class AppUpdateForm(AppForm):
     category_id = SelectField(lazy_gettext('Category'), coerce=int)
     hidden = BooleanField(lazy_gettext('Hide?'))
     password = TextField(lazy_gettext('Password (leave blank for no password)'))
+    webhook = TextField(lazy_gettext('Webhook'),
+                        [pb_validator.Webhook()])
 
 
 class TaskPresenterForm(Form):
@@ -189,17 +187,14 @@ class RegisterForm(Form):
     name = TextField(lazy_gettext('User name'),
                          [validators.Length(min=3, max=35, message=err_msg),
                           pb_validator.NotAllowedChars(),
-                          pb_validator.Unique(db.session, User,
-                                              User.name, err_msg_2)])
+                          pb_validator.Unique(user_repo.get_by, 'name', err_msg_2)])
 
     err_msg = lazy_gettext("Email must be between 3 and 35 characters long")
     err_msg_2 = lazy_gettext("Email is already taken")
     email_addr = TextField(lazy_gettext('Email Address'),
                            [validators.Length(min=3, max=35, message=err_msg),
                             validators.Email(),
-                            pb_validator.Unique(
-                                db.session, User,
-                                User.email_addr, err_msg_2)])
+                            pb_validator.Unique(user_repo.get_by, 'email_addr', err_msg_2)])
 
     err_msg = lazy_gettext("Password cannot be empty")
     err_msg_2 = lazy_gettext("Passwords must match")
@@ -227,17 +222,14 @@ class UpdateProfileForm(Form):
     name = TextField(lazy_gettext('Username'),
                      [validators.Length(min=3, max=35, message=err_msg),
                       pb_validator.NotAllowedChars(),
-                      pb_validator.Unique(
-                          db.session, User, User.name, err_msg_2)])
+                      pb_validator.Unique(user_repo.get_by, 'name', err_msg_2)])
 
     err_msg = lazy_gettext("Email must be between 3 and 35 characters long")
     err_msg_2 = lazy_gettext("Email is already taken")
     email_addr = TextField(lazy_gettext('Email Address'),
                            [validators.Length(min=3, max=35, message=err_msg),
                             validators.Email(),
-                            pb_validator.Unique(
-                                db.session, User,
-                                User.email_addr, err_msg_2)])
+                            pb_validator.Unique(user_repo.get_by, 'email_addr', err_msg_2)])
 
     locale = SelectField(lazy_gettext('Language'))
     ckan_api = TextField(lazy_gettext('CKAN API Key'))
@@ -304,7 +296,7 @@ class CategoryForm(Form):
     id = IntegerField(label=None, widget=HiddenInput())
     name = TextField(lazy_gettext('Name'),
                      [validators.Required(),
-                      pb_validator.Unique(db.session, Category, Category.name,
+                      pb_validator.Unique(project_repo.get_category_by, 'name',
                                           message="Name is already taken.")])
     description = TextField(lazy_gettext('Description'),
                             [validators.Required()])

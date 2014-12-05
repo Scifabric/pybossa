@@ -30,17 +30,15 @@ from flask.ext.babel import gettext
 from werkzeug.exceptions import HTTPException
 
 import pybossa.model as model
-from pybossa.core import db, get_session
 from pybossa.util import admin_required, UnicodeWriter
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
 from pybossa.auth import require
-from sqlalchemy import or_, func
+from pybossa.core import project_repo, user_repo
 import json
 from StringIO import StringIO
 
 from pybossa.forms.admin_view_forms import *
-
 
 
 blueprint = Blueprint('admin', __name__)
@@ -79,29 +77,26 @@ def featured(app_id=None):
             return render_template('/admin/applications.html', apps=apps,
                                    categories=categories)
         else:
-            app = db.session.query(model.app.App).get(app_id)
+            app = project_repo.get(app_id)
             if app:
                 require.app.update(app)
                 if request.method == 'POST':
-                    cached_apps.reset()
-                    if not app.featured:
-                        app.featured = True
-                        db.session.add(app)
-                        db.session.commit()
-                        return json.dumps(app.dictize())
-                    else:
+                    if app.featured is True:
                         msg = "App.id %s already featured" % app_id
                         return format_error(msg, 415)
-                if request.method == 'DELETE':
                     cached_apps.reset()
-                    if app.featured:
-                        app.featured = False
-                        db.session.add(app)
-                        db.session.commit()
-                        return json.dumps(app.dictize())
-                    else:
+                    app.featured = True
+                    project_repo.update(app)
+                    return json.dumps(app.dictize())
+
+                if request.method == 'DELETE':
+                    if app.featured is False:
                         msg = 'App.id %s is not featured' % app_id
                         return format_error(msg, 415)
+                    cached_apps.reset()
+                    app.featured = False
+                    project_repo.update(app)
+                    return json.dumps(app.dictize())
             else:
                 msg = 'App.id %s not found' % app_id
                 return format_error(msg, 404)
@@ -117,18 +112,11 @@ def users(user_id=None):
     """Manage users of PyBossa"""
     try:
         form = SearchForm(request.form)
-        users = db.session.query(model.user.User)\
-                  .filter(model.user.User.admin == True)\
-                  .filter(model.user.User.id != current_user.id)\
-                  .all()
+        users = [user for user in user_repo.filter_by(admin=True) if user.id != current_user.id]
 
         if request.method == 'POST' and form.user.data:
-            query = '%' + form.user.data.lower() + '%'
-            found = db.session.query(model.user.User)\
-                      .filter(or_(func.lower(model.user.User.name).like(query),
-                                  func.lower(model.user.User.fullname).like(query)))\
-                      .filter(model.user.User.id != current_user.id)\
-                      .all()
+            query = form.user.data
+            found = [user for user in user_repo.search_by_name(query) if user.id != current_user.id]
             require.user.update(found)
             if not found:
                 flash("<strong>Ooops!</strong> We didn't find a user "
@@ -139,7 +127,7 @@ def users(user_id=None):
 
         return render_template('/admin/users.html', found=[], users=users,
                                title=gettext("Manage Admin Users"), form=form)
-    except Exception as e:  # pragma: no cover
+    except Exception as e: # pragma: no cover
         current_app.logger.error(e)
         return abort(500)
 
@@ -160,18 +148,11 @@ def export_users():
         return res
 
     def gen_json():
-        try:
-            session = get_session(db, bind='slave')
-            users = session.query(model.user.User).all()
-            json_users = []
-            for user in users:
-                json_users.append(dictize_with_exportable_attributes(user))
-            return json.dumps(json_users)
-        except: # pragma: no cover
-            session.rollback()
-            raise
-        finally:
-            session.close()
+        users = user_repo.get_all()
+        json_users = []
+        for user in users:
+            json_users.append(dictize_with_exportable_attributes(user))
+        return json.dumps(json_users)
 
     def dictize_with_exportable_attributes(user):
         dict_user = {}
@@ -188,17 +169,10 @@ def export_users():
         return res
 
     def gen_csv(out, writer, write_user):
-        try:
-            session = get_session(db, bind='slave')
-            add_headers(writer)
-            for user in session.query(model.user.User).yield_per(1):
-                write_user(writer, user)
-            yield out.getvalue()
-        except: # pragma: no cover
-            session.rollback()
-            raise
-        finally:
-            session.close()
+        add_headers(writer)
+        for user in user_repo.get_all():
+            write_user(writer, user)
+        yield out.getvalue()
 
     def write_user(writer, user):
         values = [getattr(user, attr) for attr in sorted(exportable_attributes)]
@@ -224,12 +198,11 @@ def add_admin(user_id=None):
     """Add admin flag for user_id"""
     try:
         if user_id:
-            user = db.session.query(model.user.User)\
-                     .get(user_id)
+            user = user_repo.get(user_id)
             require.user.update(user)
             if user:
                 user.admin = True
-                db.session.commit()
+                user_repo.update(user)
                 return redirect(url_for(".users"))
             else:
                 msg = "User not found"
@@ -246,12 +219,11 @@ def del_admin(user_id=None):
     """Del admin flag for user_id"""
     try:
         if user_id:
-            user = db.session.query(model.user.User)\
-                     .get(user_id)
+            user = user_repo.get(user_id)
             require.user.update(user)
             if user:
                 user.admin = False
-                db.session.commit()
+                user_repo.update(user)
                 return redirect(url_for('.users'))
             else:
                 msg = "User.id not found"
@@ -281,8 +253,7 @@ def categories():
                 category = model.category.Category(name=form.name.data,
                                           short_name=slug,
                                           description=form.description.data)
-                db.session.add(category)
-                db.session.commit()
+                project_repo.save_category(category)
                 cached_cat.reset()
                 msg = gettext("Category added")
                 flash(msg, 'success')
@@ -309,7 +280,7 @@ def categories():
 def del_category(id):
     """Deletes a category"""
     try:
-        category = db.session.query(model.category.Category).get(id)
+        category = project_repo.get_category(id)
         if category:
             if len(cached_cat.get_all()) > 1:
                 require.category.delete(category)
@@ -318,8 +289,7 @@ def del_category(id):
                                            title=gettext('Delete Category'),
                                            category=category)
                 if request.method == 'POST':
-                    db.session.delete(category)
-                    db.session.commit()
+                    project_repo.delete_category(category)
                     msg = gettext("Category deleted")
                     flash(msg, 'success')
                     cached_cat.reset()
@@ -345,7 +315,7 @@ def del_category(id):
 def update_category(id):
     """Updates a category"""
     try:
-        category = db.session.query(model.category.Category).get(id)
+        category = project_repo.get_category(id)
         if category:
             require.category.update(category)
             form = CategoryForm(obj=category)
@@ -362,9 +332,7 @@ def update_category(id):
                     new_category = model.category.Category(id=form.id.data,
                                                   name=form.name.data,
                                                   short_name=slug)
-                    # print new_category.id
-                    db.session.merge(new_category)
-                    db.session.commit()
+                    project_repo.update_category(new_category)
                     cached_cat.reset()
                     msg = gettext("Category updated")
                     flash(msg, 'success')

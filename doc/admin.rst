@@ -17,7 +17,7 @@ Administrators can manage three different areas of the server:
  2. Categories, and
  3. Administrators
 
-.. image:: http://i.imgur.com/rhGXkO4.png
+.. image:: http://i.imgur.com/CIVyRak.png
     :width:100%
 
 .. note::
@@ -30,7 +30,11 @@ Administrators can manage three different areas of the server:
     to obtain a list of all registered users in the PyBossa system, in either
     json or csv formats.
 
+.. note::
+    In addition, admins can access an extension called `RQ dashboard`_ from where to
+    monitor all the background jobs and even cancel them or retry failed ones.
 
+.. _`RQ dashboard`: https://github.com/nvie/rq-dashboard
 .. _featured-apps:
 
 Featured Projects
@@ -89,4 +93,25 @@ to the admin group, while a red button will be shown to remove the user from
 the admin group.
 
 
+Audit log
+=========
 
+When a project is created, deleted or updated, the system registers its actions
+in the server. Admins will have access to all the logged actions in every
+project page, in a section named **Audit log**.
+
+.. image:: http://i.imgur.com/UQeyHPF.png
+    :width: 100%
+
+The section will let you know the following information:
+
+- **When**: when the action was taken.
+- **Action**: which action was taken: 'created', 'updated', or 'deleted'.
+- **Source**: if it was done the action via the API or the WEB interface.
+- **Attribute**: which attribute of the project has been changed.
+- **Who**: the user who took the action.
+- **Old value**: the previous value before the action.
+- **New value**: the new value after the action.
+
+.. note::
+    Only admins and users marked as *pro* can see the audit log.

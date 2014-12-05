@@ -17,9 +17,10 @@ The objects are:
 
 """
 __all__ = ['sentinel', 'db', 'signer', 'mail', 'login_manager', 'facebook',
-           'twitter', 'google', 'misaka', 'babel', 'gravatar',
-           'uploader', 'csrf', 'timeouts', 'debug_toolbar', 'ratelimits',
-           'Session']
+           'twitter', 'google', 'misaka', 'babel', 'gravatar', 'uploader',
+           'csrf', 'timeouts', 'debug_toolbar', 'ratelimits', 'queues',
+           'user_repo', 'project_repo', 'task_repo', 'blog_repo']
+
 # CACHE
 from pybossa.sentinel import Sentinel
 sentinel = Sentinel()
@@ -27,10 +28,13 @@ sentinel = Sentinel()
 # DB
 from flask.ext.sqlalchemy import SQLAlchemy
 db = SQLAlchemy()
+db.slave_session = None
 
-# Sessionmaker
-from sqlalchemy.orm import sessionmaker
-Session = sessionmaker()
+# Repositories
+user_repo = None
+project_repo = None
+blog_repo = None
+task_repo = None
 
 # Signer
 from pybossa.signer import Signer
@@ -83,3 +87,6 @@ timeouts = dict()
 
 # Ratelimits
 ratelimits = dict()
+
+# Queues
+queues = dict()
