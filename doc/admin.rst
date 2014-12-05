@@ -91,3 +91,27 @@ admin group.
 As with the :ref:`categories` section, a green button will allow you to add the user
 to the admin group, while a red button will be shown to remove the user from
 the admin group.
+
+
+Audit log
+=========
+
+When a project is created, deleted or updated, the system registers its actions
+in the server. Admins will have access to all the logged actions in every
+project page, in a section named **Audit log**.
+
+.. image:: http://i.imgur.com/tMz9zk6.png
+    :width: 100%
+
+The section will let you know the following information:
+
+- **When**: when the action was taken.
+- **Action**: which action was taken: 'created', 'updated', or 'deleted'.
+- **Source**: if it was done the action via the API or the WEB interface.
+- **Attribute**: which attribute of the project has been changed.
+- **Who**: the user who took the action.
+- **Old value**: the previous value before the action.
+- **New value**: the new value after the action.
+
+.. note::
+    Only admins and users marked as *pro* can see the audit log.
