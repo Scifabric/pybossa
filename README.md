@@ -1,6 +1,6 @@
 [![Build
-Status](https://travis-ci.org/PyBossa/pybossa.svg?branch=master)](https://travis-ci.org/PyBossa/pybossa) [![Coverage
-Status](https://img.shields.io/coveralls/PyBossa/pybossa.svg)](https://coveralls.io/r/PyBossa/pybossa?branch=master) [![Code Health](https://landscape.io/github/PyBossa/pybossa/master/landscape.svg)](https://landscape.io/github/PyBossa/pybossa/master)
+Status](https://travis-ci.org/PyBossa/pybossa.svg?branch=master)](https://travis-ci.org/PyBossa/pybossa) [![Code Health](https://landscape.io/github/PyBossa/pybossa/master/landscape.svg)](https://landscape.io/github/PyBossa/pybossa/master) [![Coverage
+Status](https://img.shields.io/coveralls/PyBossa/pybossa.svg)](https://coveralls.io/r/PyBossa/pybossa?branch=master) 
 [![Documentation](https://readthedocs.org/projects/pybossa/badge/?version=latest)](http://docs.pybossa.com)
 
 PyBossa is an open source platform for crowd-sourcing online (volunteer)
