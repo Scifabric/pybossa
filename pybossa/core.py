@@ -141,14 +141,17 @@ def setup_repositories():
     from pybossa.repositories import ProjectRepository
     from pybossa.repositories import BlogRepository
     from pybossa.repositories import TaskRepository
+    from pybossa.repositories import AuditlogRepository
     global user_repo
     global project_repo
     global blog_repo
     global task_repo
+    global auditlog_repo
     user_repo = UserRepository(db)
     project_repo = ProjectRepository(db)
     blog_repo = BlogRepository(db)
     task_repo = TaskRepository(db)
+    auditlog_repo = AuditlogRepository(db)
 
 
 def setup_gravatar(app):

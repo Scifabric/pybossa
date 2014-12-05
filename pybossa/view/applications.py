@@ -19,7 +19,6 @@
 import time
 import re
 import json
-import operator
 import math
 import requests
 from StringIO import StringIO
@@ -36,9 +35,9 @@ import pybossa.sched as sched
 import pybossa.importers as importers
 
 from pybossa.core import uploader, signer, sentinel
-from pybossa.cache import ONE_DAY, ONE_HOUR
 from pybossa.model.app import App
 from pybossa.model.task import Task
+from pybossa.model.auditlog import Auditlog
 from pybossa.util import Pagination, UnicodeWriter, admin_required, get_user_id_or_ip
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
@@ -53,7 +52,8 @@ from pybossa.jobs import import_tasks as background_import
 from pybossa.jobs import schedule_job, auto_import_tasks
 from pybossa.forms.applications_view_forms import *
 
-from pybossa.core import project_repo, user_repo, task_repo, blog_repo
+from pybossa.core import project_repo, user_repo, task_repo, blog_repo, \
+    auditlog_repo
 
 
 blueprint = Blueprint('app', __name__)
@@ -214,13 +214,13 @@ def new():
     info = {}
     category_by_default = cached_cat.get_all()[0]
 
-    app = model.app.App(name=form.name.data,
-                    short_name=form.short_name.data,
-                    description=_description_from_long_description(),
-                    long_description=form.long_description.data,
-                    owner_id=current_user.id,
-                    info=info,
-                    category_id=category_by_default.id)
+    app = App(name=form.name.data,
+              short_name=form.short_name.data,
+              description=_description_from_long_description(),
+              long_description=form.long_description.data,
+              owner_id=current_user.id,
+              info=info,
+              category_id=category_by_default.id)
 
     project_repo.save(app)
 
@@ -233,6 +233,9 @@ def new():
           '</a></strong> ' +
           gettext('for adding tasks, a thumbnail, using PyBossa.JS, etc.'),
           'info')
+    # Log it
+    project_repo.add_log_entry(app, 'create', 'web')
+
     return redirect(url_for('.update', short_name=app.short_name))
 
 
@@ -247,15 +250,30 @@ def task_presenter_editor(short_name):
     require.app.read(app)
     require.app.update(app)
 
+    old_value = app.info.get('task_presenter')
+
     form = TaskPresenterForm(request.form)
     form.id.data = app.id
     if request.method == 'POST' and form.validate():
         db_app = project_repo.get(app.id)
         db_app.info['task_presenter'] = form.editor.data
-        project_repo.save(db_app)
+        project_repo.update(db_app)
         cached_apps.delete_app(app.short_name)
         msg_1 = gettext('Task presenter added!')
         flash('<i class="icon-ok"></i> ' + msg_1, 'success')
+        # Log it
+        msg = ("User %s updated task presenter" % current_user.name)
+        log = Auditlog(
+            app_id=db_app.id,
+            app_short_name=db_app.short_name,
+            user_id=current_user.id,
+            user_name=current_user.name,
+            action='update',
+            caller='web',
+            attribute='task_presenter',
+            old_value=old_value,
+            new_value=form.editor.data)
+        auditlog_repo.save(log)
         return redirect(url_for('.tasks', short_name=app.short_name))
 
     # It does not have a validation
@@ -337,6 +355,7 @@ def delete(short_name):
     # Clean cache
     cached_apps.delete_app(app.short_name)
     cached_apps.clean(app.id)
+    project_repo.add_log_entry(app, 'delete', 'web')
     project_repo.delete(app)
     flash(gettext('Project deleted!'), 'success')
     return redirect(url_for('account.profile', name=current_user.name))
@@ -354,20 +373,21 @@ def update(short_name):
         (app, owner, n_tasks, n_task_runs,
          overall_progress, last_activity) = app_by_shortname(short_name)
 
-        new_application = model.app.App(
-            id=form.id.data,
-            name=form.name.data,
-            short_name=form.short_name.data,
-            description=form.description.data,
-            long_description=form.long_description.data,
-            hidden=hidden,
-            webhook=form.webhook.data,
-            info=app.info,
-            owner_id=app.owner_id,
-            allow_anonymous_contributors=form.allow_anonymous_contributors.data,
-            category_id=form.category_id.data)
+        new_application = project_repo.get_by_shortname(short_name)
+        if form.id.data == new_application.id:
+            new_application.name=form.name.data
+            new_application.short_name=form.short_name.data
+            new_application.description=form.description.data
+            new_application.long_description=form.long_description.data
+            new_application.hidden=int(form.hidden.data)
+            new_application.webhook=form.webhook.data
+            new_application.info=app.info
+            new_application.owner_id=app.owner_id
+            new_application.allow_anonymous_contributors=form.allow_anonymous_contributors.data
+            new_application.category_id=form.category_id.data
 
         new_application.set_password(form.password.data)
+        project_repo.add_log_entry(new_application, 'update', 'web')
         project_repo.update(new_application)
         cached_apps.delete_app(short_name)
         cached_apps.reset()
@@ -1061,7 +1081,7 @@ def export_to(short_name):
         # Export Task(/Runs) to CSV
         types = {
             "task": (
-                model.task.Task, handle_task,
+                Task, handle_task,
                 (lambda x: True),
                 gettext(
                     "Oops, the project does not have tasks to \
@@ -1234,6 +1254,21 @@ def task_n_answers(short_name):
                                owner=owner)
     elif request.method == 'POST' and form.validate():
         task_repo.update_tasks_redundancy(app, form.n_answers.data)
+        msg = ("User %s updated task redundancy to: %s" %
+               (current_user.name, form.n_answers.data))
+        # Log it
+        log = Auditlog(
+            app_id=app.id,
+            app_short_name=app.short_name,
+            user_id=current_user.id,
+            user_name=current_user.name,
+            action='update',
+            caller='web',
+            attribute='task.n_answers',
+            old_value=30,
+            new_value=form.n_answers.data)
+        auditlog_repo.save(log)
+
         msg = gettext('Redundancy of Tasks updated!')
         flash(msg, 'success')
         return redirect(url_for('.tasks', short_name=app.short_name))
@@ -1273,12 +1308,32 @@ def task_scheduler(short_name):
 
     if request.method == 'POST' and form.validate():
         app = project_repo.get_by_shortname(short_name=app.short_name)
+        if app.info.get('sched'):
+            old_sched = app.info['sched']
+        else:
+            old_sched = 'default'
         if form.sched.data:
             app.info['sched'] = form.sched.data
         project_repo.save(app)
         cached_apps.delete_app(app.short_name)
+        # Log it
+        if old_sched != app.info['sched']:
+            msg = ("User %s updated task scheduler from: %s to: %s" %
+                   (current_user.name, old_sched, app.info['sched']))
+            log = Auditlog(
+                app_id=app.id,
+                app_short_name=app.short_name,
+                user_id=current_user.id,
+                user_name=current_user.name,
+                action='update',
+                caller='web',
+                attribute='sched',
+                old_value=old_sched,
+                new_value=app.info['sched'])
+            auditlog_repo.save(log)
         msg = gettext("Project Task Scheduler updated!")
         flash(msg, 'success')
+
         return redirect(url_for('.tasks', short_name=app.short_name))
     else: # pragma: no cover
         flash(gettext('Please correct the errors'), 'error')
@@ -1309,8 +1364,34 @@ def task_priority(short_name):
             if task_id != '':
                 t = task_repo.get_task_by(app_id=app.id, id=int(task_id))
                 if t:
+                    old_priority = t.priority_0
                     t.priority_0 = form.priority_0.data
                     task_repo.update(t)
+
+                    if old_priority != t.priority_0:
+                        msg = ("User %s updated task priority for task ID: %s"
+                               " from: %s to: %s" % (current_user.name,
+                                                    t.id,
+                                                    old_priority,
+                                                    t.priority_0))
+                        old_value = json.dumps({'task_id': t.id,
+                                                'task_priority_0': old_priority})
+
+                        new_value = json.dumps({'task_id': t.id,
+                                                'task_priority_0': t.priority_0})
+
+
+                        log = Auditlog(
+                            app_id=app.id,
+                            app_short_name=app.short_name,
+                            user_id=current_user.id,
+                            user_name=current_user.name,
+                            action='update',
+                            caller='web',
+                            old_value=old_value,
+                            new_value=new_value,
+                            attribute='task.priority_0')
+                        auditlog_repo.save(log)
                 else:  # pragma: no cover
                     flash(gettext(("Ooops, Task.id=%s does not belong to the app" % task_id)), 'danger')
         cached_apps.delete_app(app.short_name)
@@ -1477,4 +1558,25 @@ def _check_if_redirect_to_password(app):
     if passwd_mngr.password_needed(app, get_user_id_or_ip()):
         return redirect(url_for('.password_required',
                                  short_name=app.short_name, next=request.path))
+
+
+@blueprint.route('/<short_name>/auditlog')
+@login_required
+def auditlog(short_name):
+    (app, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = app_by_shortname(short_name)
+
+    logs = auditlog_repo.filter_by(app_id=app.id)
+    require.auditlog.read(_app_id=app.id)
+    redirect_to_password = _check_if_redirect_to_password(app)
+    if redirect_to_password:
+        return redirect_to_password
+    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    return render_template('applications/auditlog.html', app=app,
+                           owner=owner, logs=logs,
+                           overall_progress=overall_progress,
+                           n_tasks=n_tasks,
+                           n_task_runs=n_task_runs,
+                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                           n_volunteers=cached_apps.n_volunteers(app.get('id')))
 
