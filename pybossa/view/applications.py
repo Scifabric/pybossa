@@ -19,8 +19,6 @@
 import time
 import re
 import json
-from pybossa.importers import BulkTaskImportManager, BulkImportException
-# import operator
 import math
 import requests
 from StringIO import StringIO
@@ -29,13 +27,13 @@ from flask import Blueprint, request, url_for, flash, redirect, abort, Response,
 from flask import render_template, make_response
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
+from rq import Queue
 
 import pybossa.model as model
 import pybossa.sched as sched
+import pybossa.importers as importers
 
-from pybossa.core import uploader, signer
-# from pybossa.cache import ONE_DAY, ONE_HOUR
-from pybossa.cache import ONE_DAY
+from pybossa.core import uploader, signer, sentinel
 from pybossa.model.app import App
 from pybossa.model.task import Task
 from pybossa.model.auditlog import Auditlog
@@ -49,6 +47,7 @@ from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
+from pybossa.jobs import import_tasks as background_import
 from pybossa.forms.applications_view_forms import *
 
 from pybossa.core import project_repo, user_repo, task_repo, blog_repo, \
@@ -57,7 +56,8 @@ from pybossa.core import project_repo, user_repo, task_repo, blog_repo, \
 
 blueprint = Blueprint('app', __name__)
 
-
+importer_queue = Queue('importer', connection=sentinel.master)
+MAX_NUM_SYNCHR_TASKS_IMPORT = 200
 
 def app_title(app, page_name):
     if not app:  # pragma: no cover
@@ -523,7 +523,6 @@ def compute_importer_variant_pairs(variants):
         for i in xrange(0, int(math.ceil(len(variants) / 2.0)))]
 
 
-
 @blueprint.route('/<short_name>/tasks/import', methods=['GET', 'POST'])
 @login_required
 def import_task(short_name):
@@ -548,16 +547,16 @@ def import_task(short_name):
         tmpl = '/applications/importers/%s.html' % template
         return render_template(tmpl, **template_args)
 
-    importer_mngr = BulkTaskImportManager()
-    template_args["importer_variants"] = compute_importer_variant_pairs(importer_mngr.variants())
+    variants = importers.variants()
+    template_args["importer_variants"] = compute_importer_variant_pairs(variants)
     template = request.args.get('template')
 
-    if not (template or request.method == 'POST'):
+    if template is None and request.method == 'GET':
         return render_template('/applications/import_options.html',
                                **template_args)
 
     template = template if request.method == 'GET' else request.form['form_name']
-    importer = importer_mngr.create_importer(template)
+    importer = importers.create_importer_for(template)
     form = GenericBulkTaskImportForm()(template, request.form)
     template_args['form'] = form
     if template == 'gdocs' and request.args.get('mode'):  # pragma: no cover
@@ -567,45 +566,27 @@ def import_task(short_name):
     if not (form and form.validate_on_submit()):  # pragma: no cover
         return render_forms()
 
-    _import_task(app, importer, form)
-    return render_forms()
-
-
-def _import_task(app, importer, form):
     try:
-        empty = True
-        n = 0
-        n_data = 0
-        for task_data in importer.tasks(form):
-            n_data += 1
-            task = Task(app_id=app.id)
-            [setattr(task, k, v) for k, v in task_data.iteritems()]
-            found = task_repo.get_task_by(app_id=app.id, info=task.info)
-            if found is None:
-                task_repo.save(task)
-                n += 1
-                empty = False
-        if empty and n_data == 0:
-            raise BulkImportException(
-                gettext('Oops! It looks like the file is empty.'))
-        if empty and n_data > 0:
-            flash(gettext('Oops! It looks like there are no new records to import.'), 'warning')
-
-        msg = str(n) + " " + gettext('Tasks imported successfully!')
-        if n == 1:
-            msg = str(n) + " " + gettext('Task imported successfully!')
-        flash(msg, 'success')
-        cached_apps.delete_n_tasks(app.id)
-        cached_apps.delete_n_task_runs(app.id)
-        cached_apps.delete_overall_progress(app.id)
-        cached_apps.delete_last_activity(app.id)
-        return redirect(url_for('.tasks', short_name=app.short_name))
-    except BulkImportException, err_msg:
+        return _import_tasks(app, importer, form)
+    except importers.BulkImportException, err_msg:
         flash(err_msg, 'error')
     except Exception as inst:  # pragma: no cover
         current_app.logger.error(inst)
         msg = 'Oops! Looks like there was an error with processing that file!'
         flash(gettext(msg), 'error')
+    return render_forms()
+
+
+def _import_tasks(app, importer, form):
+    tasks_data = [data for data in importer.tasks(form)]
+    if len(tasks_data) <= MAX_NUM_SYNCHR_TASKS_IMPORT:
+        msg = importers.create_tasks(task_repo, tasks_data, app.id)
+        flash(msg)
+    else:
+        importer_queue.enqueue(background_import, tasks_data, app.id)
+        flash(gettext("You're trying to import a large amount of tasks, so please be patient.\
+            You will receive an email when the tasks are ready."))
+    return redirect(url_for('.tasks', short_name=app.short_name))
 
 
 @blueprint.route('/<short_name>/password', methods=['GET', 'POST'])
