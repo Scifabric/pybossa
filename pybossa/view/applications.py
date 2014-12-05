@@ -617,7 +617,7 @@ def setup_autoimporter(short_name):
     if len(jobs) > 0:
         importer_type = 'csv' if 'csv_url' in jobs[0]._args[1] else ('googledocs' if 'googledocs_url' in jobs[0]._args[1] else 'epicollect')
         importer = dict(type=importer_type, data=jobs[0]._args[1])
-        return render_template('/applications/importers/current_autoimporter.html', importer=importer, **template_args)
+        return render_template('/applications/importers/autoimporter.html', importer=importer, **template_args)
     def render_forms():
         tmpl = '/applications/importers/%s_auto.html' % template
         return render_template(tmpl, **template_args)
