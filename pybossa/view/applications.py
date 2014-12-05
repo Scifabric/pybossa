@@ -595,6 +595,8 @@ def _import_tasks(app, importer, form):
 @blueprint.route('/<short_name>/tasks/autoimporter', methods=['GET', 'POST'])
 @login_required
 def setup_autoimporter(short_name):
+    if not current_user.pro and not current_user.admin:
+        raise abort(403)
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
     n_volunteers = cached_apps.n_volunteers(app.id)

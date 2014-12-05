@@ -607,7 +607,6 @@ class TestAuditlogWEB(web.Helper):
 
         attribute = 'task.priority_0'
 
-
         self.app.post(url, data={'task_ids': '1,2', 'priority_0': '0.5'}, follow_redirects=True)
 
         logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
@@ -705,7 +704,6 @@ class TestAuditlogWEB(web.Helper):
 
         res = self.app.get(url, follow_redirects=True)
         assert  res.status_code == 200, res.status_code
-
 
 
     @with_context
