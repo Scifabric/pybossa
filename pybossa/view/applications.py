@@ -48,8 +48,7 @@ from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
-from pybossa.jobs import import_tasks as background_import
-from pybossa.jobs import schedule_job, auto_import_tasks
+from pybossa.jobs import schedule_job, import_tasks
 from pybossa.forms.applications_view_forms import *
 
 from pybossa.core import project_repo, user_repo, task_repo, blog_repo, \
@@ -559,18 +558,17 @@ def import_task(short_name):
                                **template_args)
 
     template = template if request.method == 'GET' else request.form['form_name']
-    importer = importers.create_importer_for(template)
     form = GenericBulkTaskImportForm()(template, request.form)
     template_args['form'] = form
     if template == 'gdocs' and request.args.get('mode'):  # pragma: no cover
         mode = request.args.get('mode')
-        template_args["form"].googledocs_url.data = importer.googledocs_urls[mode]
+        template_args["form"].googledocs_url.data = importers.googledocs_urls[mode]
 
     if not (form and form.validate_on_submit()):  # pragma: no cover
         return render_forms()
 
     try:
-        return _import_tasks(app, importer, form)
+        return _import_tasks(app, template, **form.get_import_data())
     except importers.BulkImportException, err_msg:
         flash(err_msg, 'error')
     except Exception as inst:  # pragma: no cover
@@ -580,13 +578,14 @@ def import_task(short_name):
     return render_forms()
 
 
-def _import_tasks(app, importer, form):
-    tasks_data = [data for data in importer.tasks(form)]
-    if len(tasks_data) <= MAX_NUM_SYNCHR_TASKS_IMPORT:
-        msg = importers.create_tasks(task_repo, tasks_data, app.id)
+def _import_tasks(app, template, **form_data):
+    number_of_tasks = importers.count_tasks_to_import(template, **form_data)
+    print number_of_tasks
+    if number_of_tasks <= MAX_NUM_SYNCHR_TASKS_IMPORT:
+        msg = importers.create_tasks(task_repo, template, app.id, **form_data)
         flash(msg)
     else:
-        importer_queue.enqueue(background_import, tasks_data, app.id)
+        importer_queue.enqueue(import_tasks, app.id, template, **form_data)
         flash(gettext("You're trying to import a large amount of tasks, so please be patient.\
             You will receive an email when the tasks are ready."))
     return redirect(url_for('.tasks', short_name=app.short_name))
@@ -612,7 +611,7 @@ def setup_autoimporter(short_name):
     require.app.read(app)
     require.app.update(app)
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.slave)
-    jobs = [job for job in scheduler.get_jobs() if job.func==auto_import_tasks and job._args[0]==app.id]
+    jobs = [job for job in scheduler.get_jobs() if job.func==import_tasks and job._args[0]==app.id]
     print jobs
     if len(jobs) > 0:
         importer_type = 'csv' if 'csv_url' in jobs[0]._args[1] else ('googledocs' if 'googledocs_url' in jobs[0]._args[1] else 'epicollect')
@@ -631,18 +630,17 @@ def setup_autoimporter(short_name):
                                **template_args)
 
     template = template if request.method == 'GET' else request.form['form_name']
-    importer = importers.create_importer_for(template)
     form = GenericBulkTaskImportForm()(template, request.form)
     template_args['form'] = form
 
     if not (form and form.validate_on_submit()):  # pragma: no cover
         return render_forms()
-    return _setup_autoimport_job(app, importer, form)
+    return _setup_autoimport_job(app, template, form)
 
 
 def _setup_autoimport_job(app, importer, form):
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.master)
-    import_job = dict(name=auto_import_tasks, args=[app.id, form.get_import_data()], kwargs={},
+    import_job = dict(name=import_tasks, args=[app.id, form.get_import_data()], kwargs={},
                       interval=(10), timeout=(10))
     job = schedule_job(import_job, scheduler)
     print job
@@ -668,7 +666,7 @@ def delete_autoimporter(short_name):
     require.app.read(app)
     require.app.update(app)
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.slave)
-    jobs = [job for job in scheduler.get_jobs() if job.func==auto_import_tasks and job._args[0]==app.id]
+    jobs = [job for job in scheduler.get_jobs() if job.func==import_tasks and job._args[0]==app.id]
     print jobs
     # if len(jobs) == 0:
     #     raise abort(404)

@@ -2759,12 +2759,12 @@ class TestWeb(web.Helper):
         assert "1 new task was imported successfully" in res.data
         redirect.assert_called_with('/app/%s/tasks/' % app.short_name)
 
-    @patch('pybossa.view.applications.importers.create_importer_for')
-    def test_import_few_tasks_is_done_synchronously(self, create_importer):
+    @patch('pybossa.view.applications.importers.count_tasks_to_import')
+    @patch('pybossa.view.applications.importers.create_tasks')
+    def test_import_few_tasks_is_done_synchronously(self, create, count):
         """Test WEB importing a small amount of tasks is done synchronously"""
-        importer = create_importer.return_value
-        tasks_info = [{'info': {'Foo': i}} for i in range(1)]
-        importer.tasks.return_value = tasks_info
+        count.return_value = 1
+        create.return_value = "1 new task was imported successfully"
         self.register()
         self.new_application()
         app = db.session.query(App).first()
@@ -2772,20 +2772,15 @@ class TestWeb(web.Helper):
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
-        task = db.session.query(Task).first()
 
-        assert task is not None, "Task was not imported"
         assert "1 new task was imported successfully" in res.data
 
     @patch('pybossa.view.applications.importer_queue', autospec=True)
-    @patch('pybossa.view.applications.importers.create_importer_for')
-    def test_import_tasks_as_background_job(self, create_importer, queue):
+    @patch('pybossa.view.applications.importers.count_tasks_to_import')
+    def test_import_tasks_as_background_job(self, count_tasks, queue):
         """Test WEB importing a big amount of tasks is done in the background"""
         from pybossa.view.applications import MAX_NUM_SYNCHR_TASKS_IMPORT
-        number_tasks = MAX_NUM_SYNCHR_TASKS_IMPORT + 1
-        importer = create_importer.return_value
-        tasks_info = [{'info': {'Foo': i}} for i in range(number_tasks)]
-        importer.tasks.return_value = tasks_info
+        count_tasks.return_value = MAX_NUM_SYNCHR_TASKS_IMPORT + 1
         self.register()
         self.new_application()
         app = db.session.query(App).first()
@@ -2796,7 +2791,8 @@ class TestWeb(web.Helper):
         tasks = db.session.query(Task).all()
 
         assert tasks == [], "Tasks should not be immediately added"
-        queue.enqueue.assert_called_once_with(import_tasks, tasks_info, app.id)
+        data = {'csv_url': 'http://myfakecsvurl.com'}
+        queue.enqueue.assert_called_once_with(import_tasks, app.id, 'csv', **data)
         msg = "You're trying to import a large amount of tasks, so please be patient.\
             You will receive an email when the tasks are ready."
         assert msg in res.data

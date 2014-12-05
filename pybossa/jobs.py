@@ -16,9 +16,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """Jobs module for running background tasks in PyBossa server."""
+from flask import current_app
 from flask.ext.mail import Message
-from pybossa.core import mail
+from pybossa.core import mail, task_repo, project_repo
 from pybossa.util import with_cache_disabled
+import pybossa.importers as importers
 
 MINUTE = 60
 HOUR = 60 * 60
@@ -237,13 +239,9 @@ def send_mail(message_dict):
     mail.send(message)
 
 
-def import_tasks(tasks_info, app_id):
-    from pybossa.core import task_repo, project_repo
-    from flask import current_app
-    import pybossa.importers as importers
-
-    app = project_repo.get(app_id)
-    msg = importers.create_tasks(task_repo, tasks_info, app_id)
+def import_tasks(project_id, template, **form_data):
+    app = project_repo.get(project_id)
+    msg = importers.create_tasks(task_repo, project_id, template, **form_data)
     msg = msg + ' to your project %s!' % app.name
     subject = 'Tasks Import to your project %s' % app.name
     body = 'Hello,\n\n' + msg + '\n\nAll the best,\nThe %s team.' % current_app.config.get('BRAND')
@@ -251,8 +249,3 @@ def import_tasks(tasks_info, app_id):
                      subject=subject, body=body)
     send_mail(mail_dict)
     return msg
-
-
-def auto_import_tasks(app_id, url):
-    import pybossa.importers as importers
-    print app_id, url

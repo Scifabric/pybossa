@@ -29,14 +29,26 @@ class BulkImportException(Exception):
     pass
 
 
-def variants():
-    """Returns all the importers and variants defined within this module"""
-    variants = [cls.variants() for cls in _importers.values()]
-    variants = [item for sublist in variants for item in sublist]
-    return variants
+googledocs_urls = {
+    'spreadsheet': None,
+    'image': "https://docs.google.com/spreadsheet/ccc"
+             "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE"
+             "&usp=sharing",
+    'sound': "https://docs.google.com/spreadsheet/ccc"
+             "?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc"
+             "&usp=sharing",
+    'video': "https://docs.google.com/spreadsheet/ccc"
+             "?key=0AsNlt0WgPAHwdGZ2UGhxSTJjQl9YNVhfUVhGRUdoRWc"
+             "&usp=sharing",
+    'map': "https://docs.google.com/spreadsheet/ccc"
+           "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc"
+           "&usp=sharing",
+    'pdf': "https://docs.google.com/spreadsheet/ccc"
+           "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE"
+           "&usp=sharing"}
 
 
-def create_importer_for(template):
+def _create_importer_for(template):
     return _importers[template]()
 
 
@@ -47,9 +59,13 @@ class _BulkTaskImport(object):
     def variants(self):
         return [self.importer_id] if self.importer_id != None else []
 
-    def tasks(self, form):
+    def tasks(self, **form_data):
         """Returns a generator with all the tasks imported"""
         pass
+
+    def count_tasks(self, **form_data):
+        """Returns amount of tasks to be imported"""
+        return len([task for task in self.tasks(**form_data)])
 
     def _import_csv_tasks(self, csvreader):
         headers = []
@@ -98,61 +114,44 @@ class _BulkTaskImport(object):
 class _BulkTaskCSVImport(_BulkTaskImport):
     importer_id = "csv"
 
-    def tasks(self, form):
-        dataurl = self._get_data_url(form)
+    def tasks(self, **form_data):
+        dataurl = self._get_data_url(**form_data)
         r = requests.get(dataurl)
         return self._get_csv_data_from_request(r)
 
-    def _get_data_url(self, form):
-        return form.csv_url.data
+    def _get_data_url(self, **form_data):
+        return form_data['csv_url']
 
 
 class _BulkTaskGDImport(_BulkTaskImport):
     importer_id = "gdocs"
-    googledocs_urls = {
-        'spreadsheet': None,
-        'image': "https://docs.google.com/spreadsheet/ccc"
-                 "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE"
-                 "&usp=sharing",
-        'sound': "https://docs.google.com/spreadsheet/ccc"
-                 "?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc"
-                 "&usp=sharing",
-        'video': "https://docs.google.com/spreadsheet/ccc"
-                 "?key=0AsNlt0WgPAHwdGZ2UGhxSTJjQl9YNVhfUVhGRUdoRWc"
-                 "&usp=sharing",
-        'map': "https://docs.google.com/spreadsheet/ccc"
-               "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc"
-               "&usp=sharing",
-        'pdf': "https://docs.google.com/spreadsheet/ccc"
-               "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE"
-               "&usp=sharing"}
 
     @classmethod
     def variants(self):
         return [("-".join([self.importer_id, mode]))
-                for mode in self.googledocs_urls.keys()]
+                for mode in googledocs_urls.keys()]
 
-    def tasks(self, form):
-        dataurl = self._get_data_url(form)
+    def tasks(self, **form_data):
+        dataurl = self._get_data_url(**form_data)
         r = requests.get(dataurl)
         return self._get_csv_data_from_request(r)
 
-    def _get_data_url(self, form):
+    def _get_data_url(self, **form_data):
         # For old data links of Google Spreadsheets
-        if 'ccc?key' in form.googledocs_url.data:
-            return ''.join([form.googledocs_url.data, '&output=csv'])
+        if 'ccc?key' in form_data['googledocs_url']:
+            return ''.join([form_data['googledocs_url'], '&output=csv'])
         # New data format for Google Drive import is like this: 
         # https://docs.google.com/spreadsheets/d/key/edit?usp=sharing
         else:
-            return ''.join([form.googledocs_url.data.split('edit')[0], 
+            return ''.join([form_data['googledocs_url'].split('edit')[0], 
                             'export?format=csv'])
 
 
 class _BulkTaskEpiCollectPlusImport(_BulkTaskImport):
     importer_id = "epicollect"
 
-    def tasks(self, form):
-        dataurl = self._get_data_url(form)
+    def tasks(self, **form_data):
+        dataurl = self._get_data_url(**form_data)
         r = requests.get(dataurl)
         return self._get_epicollect_data_from_request(r)
 
@@ -160,9 +159,9 @@ class _BulkTaskEpiCollectPlusImport(_BulkTaskImport):
         for d in data:
             yield {"info": d}
 
-    def _get_data_url(self, form):
+    def _get_data_url(self, **form_data):
         return 'http://plus.epicollect.net/%s/%s.json' % \
-            (form.epicollect_project.data, form.epicollect_form.data)
+            (form_data['epicollect_project'], form_data['epicollect_form'])
 
     def _get_epicollect_data_from_request(self, r):
         if r.status_code == 403:
@@ -175,10 +174,18 @@ class _BulkTaskEpiCollectPlusImport(_BulkTaskImport):
         return self._import_epicollect_tasks(json.loads(r.text))
 
 
-def create_tasks(task_repo, tasks_data, project_id):
+_importers = {'csv': _BulkTaskCSVImport,
+              'gdocs': _BulkTaskGDImport,
+              'epicollect': _BulkTaskEpiCollectPlusImport}
+
+
+def create_tasks(task_repo, template, project_id, **form_data):
+    """Create tasks from a remote source using an importer object and avoiding
+    the creation of repeated tasks"""
     empty = True
     n = 0
-    for task_data in tasks_data:
+    importer = _create_importer_for(template)
+    for task_data in importer.tasks(**form_data):
         task = Task(app_id=project_id)
         [setattr(task, k, v) for k, v in task_data.iteritems()]
         found = task_repo.get_task_by(app_id=project_id, info=task.info)
@@ -199,6 +206,12 @@ def create_tasks(task_repo, tasks_data, project_id):
     return msg
 
 
-_importers = {'csv': _BulkTaskCSVImport,
-              'gdocs': _BulkTaskGDImport,
-              'epicollect': _BulkTaskEpiCollectPlusImport}
+def count_tasks_to_import(template, **form_data):
+    return _create_importer_for(template).count_tasks(**form_data)
+
+
+def variants():
+    """Returns all the importers and variants defined within this module"""
+    variants = [cls.variants() for cls in _importers.values()]
+    variants = [item for sublist in variants for item in sublist]
+    return variants
