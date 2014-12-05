@@ -100,7 +100,7 @@ When a project is created, deleted or updated, the system registers its actions
 in the server. Admins will have access to all the logged actions in every
 project page, in a section named **Audit log**.
 
-.. image:: http://i.imgur.com/tMz9zk6.png
+.. image:: http://i.imgur.com/UQeyHPF.png
     :width: 100%
 
 The section will let you know the following information:
