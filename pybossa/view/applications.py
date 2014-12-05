@@ -20,7 +20,7 @@ import time
 import re
 import json
 from pybossa.importers import BulkTaskImportManager, BulkImportException
-import operator
+# import operator
 import math
 import requests
 from StringIO import StringIO
@@ -34,7 +34,8 @@ import pybossa.model as model
 import pybossa.sched as sched
 
 from pybossa.core import uploader, signer
-from pybossa.cache import ONE_DAY, ONE_HOUR
+# from pybossa.cache import ONE_DAY, ONE_HOUR
+from pybossa.cache import ONE_DAY
 from pybossa.model.app import App
 from pybossa.model.task import Task
 from pybossa.model.auditlog import Auditlog
@@ -211,13 +212,13 @@ def new():
     info = {}
     category_by_default = cached_cat.get_all()[0]
 
-    app = model.app.App(name=form.name.data,
-                    short_name=form.short_name.data,
-                    description=_description_from_long_description(),
-                    long_description=form.long_description.data,
-                    owner_id=current_user.id,
-                    info=info,
-                    category_id=category_by_default.id)
+    app = App(name=form.name.data,
+              short_name=form.short_name.data,
+              description=_description_from_long_description(),
+              long_description=form.long_description.data,
+              owner_id=current_user.id,
+              info=info,
+              category_id=category_by_default.id)
 
     project_repo.save(app)
 
@@ -577,7 +578,7 @@ def _import_task(app, importer, form):
         n_data = 0
         for task_data in importer.tasks(form):
             n_data += 1
-            task = model.task.Task(app_id=app.id)
+            task = Task(app_id=app.id)
             [setattr(task, k, v) for k, v in task_data.iteritems()]
             found = task_repo.get_task_by(app_id=app.id, info=task.info)
             if found is None:
@@ -1013,7 +1014,7 @@ def export_to(short_name):
         # Export Task(/Runs) to CSV
         types = {
             "task": (
-                model.task.Task, handle_task,
+                Task, handle_task,
                 (lambda x: True),
                 gettext(
                     "Oops, the project does not have tasks to \
