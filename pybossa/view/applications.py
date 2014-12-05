@@ -588,7 +588,7 @@ def _import_tasks(app, importer, form):
     else:
         importer_queue.enqueue(background_import, tasks_data, app.id)
         flash(gettext("You're trying to import a large amount of tasks, so please be patient.\
-            You will receibe an email when the tasks are ready."))
+            You will receive an email when the tasks are ready."))
     return redirect(url_for('.tasks', short_name=app.short_name))
 
 
