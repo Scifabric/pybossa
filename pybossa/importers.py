@@ -55,10 +55,6 @@ def _create_importer_for(template):
 class _BulkTaskImport(object):
     importer_id = None
 
-    @classmethod
-    def variants(self):
-        return [self.importer_id] if self.importer_id != None else []
-
     def tasks(self, **form_data):
         """Returns a generator with all the tasks imported"""
         pass
@@ -125,11 +121,6 @@ class _BulkTaskCSVImport(_BulkTaskImport):
 
 class _BulkTaskGDImport(_BulkTaskImport):
     importer_id = "gdocs"
-
-    @classmethod
-    def variants(self):
-        return [("-".join([self.importer_id, mode]))
-                for mode in googledocs_urls.keys()]
 
     def tasks(self, **form_data):
         dataurl = self._get_data_url(**form_data)
@@ -208,10 +199,3 @@ def create_tasks(task_repo, project_id, template, **form_data):
 
 def count_tasks_to_import(template, **form_data):
     return _create_importer_for(template).count_tasks(**form_data)
-
-
-def variants():
-    """Returns all the importers and variants defined within this module"""
-    variants = [cls.variants() for cls in _importers.values()]
-    variants = [item for sublist in variants for item in sublist]
-    return variants

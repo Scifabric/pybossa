@@ -510,20 +510,6 @@ def settings(short_name):
                            title=title)
 
 
-def compute_importer_variant_pairs(variants):
-    """Return a list of pairs of importer variants. The pair-wise enumeration
-    is due to UI design.
-    """
-    if len(variants) % 2: # pragma: no cover
-        variants.append("empty")
-    prefix = "applications/tasks/"
-
-    importer_variants = map(lambda i: "%s%s.html" % (prefix, i), variants)
-    return [
-        (importer_variants[i * 2], importer_variants[i * 2 + 1])
-        for i in xrange(0, int(math.ceil(len(variants) / 2.0)))]
-
-
 @blueprint.route('/<short_name>/tasks/import', methods=['GET', 'POST'])
 @login_required
 def import_task(short_name):
@@ -544,12 +530,10 @@ def import_task(short_name):
     require.app.read(app)
     require.app.update(app)
 
-    variants = importers.variants()
-    template_args["importer_variants"] = compute_importer_variant_pairs(variants)
     template = request.args.get('template')
 
     if template is None and request.method == 'GET':
-        return render_template('/applications/import_options.html',
+        return render_template('/applications/task_import_options.html',
                                **template_args)
 
     template = template if request.method == 'GET' else request.form['form_name']
@@ -614,12 +598,10 @@ def setup_autoimporter(short_name):
         return render_template('/applications/importers/autoimporter.html',
                                 importer=importer, **template_args)
 
-    template_args["importer_variants"] = [('applications/tasks/csv_auto.html', 'applications/tasks/gdocs-spreadsheet_auto.html'),
-                                          ('applications/tasks/epicollect_auto.html', 'applications/tasks/empty.html')]
     template = request.args.get('template')
 
     if template is None and request.method == 'GET':
-        return render_template('applications/task_auto_import.html',
+        return render_template('applications/task_autoimport_options.html',
                                **template_args)
 
     template = template if request.method == 'GET' else request.form['form_name']

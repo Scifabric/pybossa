@@ -25,6 +25,7 @@ from factories import AppFactory
 
 
 class TestAutoimporter(web.Helper):
+
     def test_autoimporter_get_redirects_to_login_if_anonymous(self):
         """Test task autoimporter endpoint requires login"""
         app = AppFactory.create()
@@ -34,6 +35,7 @@ class TestAutoimporter(web.Helper):
         redirect_url = 'http://localhost/account/signin?next='
         assert res.status_code == 302, res.status_code
         assert redirect_url in res.location, res.location
+
 
     def test_autoimporter_get_forbidden_non_owner(self):
         """Test task autoimporter returns Forbidden if non owner accesses"""
@@ -48,6 +50,7 @@ class TestAutoimporter(web.Helper):
 
         assert res.status_code == 403, res.status_code
 
+
     def test_autoimporter_get_forbidden_owner_no_pro(self):
         """Test task autoimporter returns Forbidden if no pro accesses"""
         self.register()
@@ -60,6 +63,7 @@ class TestAutoimporter(web.Helper):
 
         res = self.app.get(url, follow_redirects=True)
         assert  res.status_code == 403, res.status_code
+
 
     def test_autoimporter_get_owner_pro(self):
         """Test task autoimporter works for pro user"""
@@ -78,6 +82,7 @@ class TestAutoimporter(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         assert  res.status_code == 200, res.status_code
 
+
     def test_autoimporter_get_admin(self):
         """Test task autoimporter works for admin user"""
         self.register()
@@ -93,12 +98,14 @@ class TestAutoimporter(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         assert  res.status_code == 200, res.status_code
 
+
     def test_autoimporter_get_nonexisting_project(self):
         """Test task autoimporter to a non existing project returns 404"""
         self.register()
         res = self.app.get("/app/noExists/tasks/autoimporter")
 
         assert res.status_code == 404, res.status_code
+
 
     def test_autoimporter_post_redirects_to_login_if_anonymous(self):
         """Test task autoimporter endpoint post requires login"""
@@ -109,6 +116,7 @@ class TestAutoimporter(web.Helper):
         redirect_url = 'http://localhost/account/signin?next='
         assert res.status_code == 302, res.status_code
         assert redirect_url in res.location, res.location
+
 
     def test_autoimporter_post_forbidden_non_owner(self):
         """Test task autoimporter post returns Forbidden if non owner accesses"""
@@ -123,6 +131,7 @@ class TestAutoimporter(web.Helper):
 
         assert res.status_code == 403, res.status_code
 
+
     def test_autoimporter_post_forbidden_owner_no_pro(self):
         """Test task autoimporter post returns Forbidden if no pro accesses"""
         self.register()
@@ -135,6 +144,7 @@ class TestAutoimporter(web.Helper):
 
         res = self.app.post(url, data={}, follow_redirects=True)
         assert  res.status_code == 403, res.status_code
+
 
     def test_autoimporter_post_owner_pro(self):
         """Test task autoimporter post works for pro user"""
@@ -155,6 +165,7 @@ class TestAutoimporter(web.Helper):
                                        follow_redirects=True)
         assert  res.status_code == 200, res.status_code
 
+
     def test_autoimporter_post_admin(self):
         """Test task autoimporter post works for admin user"""
         self.register()
@@ -172,12 +183,14 @@ class TestAutoimporter(web.Helper):
                                        follow_redirects=True)
         assert  res.status_code == 200, res.status_code
 
+
     def test_autoimporter_post_nonexisting_project(self):
         """Test task autoimporter post to a non existing project returns 404"""
         self.register()
         res = self.app.post("/app/noExists/tasks/autoimporter", data={})
 
         assert res.status_code == 404, res.status_code
+
 
     def test_delete_autoimporter_post_redirects_to_login_if_anonymous(self):
         """Test delete task autoimporter endpoint requires login"""
@@ -188,6 +201,7 @@ class TestAutoimporter(web.Helper):
         redirect_url = 'http://localhost/account/signin?next='
         assert res.status_code == 302, res.status_code
         assert redirect_url in res.location, res.location
+
 
     def test_delete_autoimporter_post_forbidden_non_owner(self):
         """Test delete task autoimporter returns Forbidden if non owner accesses"""
@@ -202,6 +216,7 @@ class TestAutoimporter(web.Helper):
 
         assert res.status_code == 403, res.status_code
 
+
     def test_delete_autoimporter_post_forbidden_owner_no_pro(self):
         """Test delete task autoimporter returns Forbidden if no pro accesses"""
         self.register()
@@ -214,6 +229,7 @@ class TestAutoimporter(web.Helper):
 
         res = self.app.post(url, data={}, follow_redirects=True)
         assert  res.status_code == 403, res.status_code
+
 
     def test_delete_autoimporter_post_owner_pro(self):
         """Test delete task autoimporter works for pro user"""
@@ -247,6 +263,7 @@ class TestAutoimporter(web.Helper):
 
         res = self.app.post(url, data={}, follow_redirects=True)
         assert  res.status_code == 200, res.status_code
+
 
     def test_delete_autoimporter_get_nonexisting_project(self):
         """Test task delete autoimporter to a non existing project returns 404"""
