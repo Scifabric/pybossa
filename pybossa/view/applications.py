@@ -638,7 +638,7 @@ def _setup_autoimport_job(app, template, **form_data):
                       kwargs=form_data, interval=10, timeout=10)
     job = schedule_job(import_job, scheduler)
     flash(gettext("Your tasks will be imported daily."))
-    return redirect(url_for('.tasks', short_name=app.short_name))
+    return redirect(url_for('.setup_autoimporter', short_name=app.short_name))
 
 
 @blueprint.route('/<short_name>/tasks/autoimporter/delete', methods=['POST'])
