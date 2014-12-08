@@ -526,7 +526,8 @@ def import_task(short_name):
                          n_tasks=n_tasks,
                          overall_progress=overall_progress,
                          n_volunteers=n_volunteers,
-                         n_completed_tasks=n_completed_tasks)
+                         n_completed_tasks=n_completed_tasks,
+                         target='app.import_task')
     require.app.read(app)
     require.app.update(app)
 
@@ -556,8 +557,6 @@ def import_task(short_name):
         msg = 'Oops! Looks like there was an error with processing that file!'
         flash(gettext(msg), 'error')
     return render_template('/applications/importers/%s.html' % template,
-                            form_action=url_for('.import_task',
-                                                short_name=app.short_name),
                             **template_args)
 
 
@@ -588,7 +587,8 @@ def setup_autoimporter(short_name):
                          n_tasks=n_tasks,
                          overall_progress=overall_progress,
                          n_volunteers=n_volunteers,
-                         n_completed_tasks=n_completed_tasks)
+                         n_completed_tasks=n_completed_tasks,
+                         target='app.setup_autoimporter')
     require.app.read(app)
     require.app.update(app)
     current_autoimporter = _get_scheduled_autoimport_job(app.id)
@@ -608,8 +608,6 @@ def setup_autoimporter(short_name):
     template_args['form'] = form
     if not (form and form.validate_on_submit()):  # pragma: no cover
         return render_template('/applications/importers/%s.html' % template,
-                                form_action=url_for('.setup_autoimporter',
-                                                    short_name=app.short_name),
                                 **template_args)
     return _setup_autoimport_job(app, template, **form.get_import_data())
 
