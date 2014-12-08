@@ -580,7 +580,6 @@ def import_task(short_name):
 
 def _import_tasks(app, template, **form_data):
     number_of_tasks = importers.count_tasks_to_import(template, **form_data)
-    print number_of_tasks
     if number_of_tasks <= MAX_NUM_SYNCHR_TASKS_IMPORT:
         msg = importers.create_tasks(task_repo, app.id, template, **form_data)
         flash(msg)
@@ -612,7 +611,6 @@ def setup_autoimporter(short_name):
     require.app.update(app)
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.slave)
     jobs = [job for job in scheduler.get_jobs() if job.func==import_tasks and job._args[0]==app.id]
-    print jobs
     if len(jobs) > 0:
         importer_type = 'csv' if 'csv_url' in jobs[0]._args[1] else ('gdocs' if 'googledocs_url' in jobs[0]._args[1] else 'epicollect')
         importer = dict(type=importer_type, data=jobs[0]._args[1])
@@ -643,7 +641,6 @@ def _setup_autoimport_job(app, template, **form_data):
     import_job = dict(name=import_tasks, args=[app.id, template],
                       kwargs=form_data, interval=10, timeout=10)
     job = schedule_job(import_job, scheduler)
-    print job
     flash(gettext("Your tasks will be imported daily."))
     return redirect(url_for('.tasks', short_name=app.short_name))
 
@@ -667,9 +664,6 @@ def delete_autoimporter(short_name):
     require.app.update(app)
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.slave)
     jobs = [job for job in scheduler.get_jobs() if job.func==import_tasks and job._args[0]==app.id]
-    print jobs
-    # if len(jobs) == 0:
-    #     raise abort(404)
     if len(jobs) > 0:
         job = jobs[0]
         job.cancel()
