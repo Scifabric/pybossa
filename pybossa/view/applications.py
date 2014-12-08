@@ -614,7 +614,7 @@ def setup_autoimporter(short_name):
     jobs = [job for job in scheduler.get_jobs() if job.func==import_tasks and job._args[0]==app.id]
     print jobs
     if len(jobs) > 0:
-        importer_type = 'csv' if 'csv_url' in jobs[0]._args[1] else ('googledocs' if 'googledocs_url' in jobs[0]._args[1] else 'epicollect')
+        importer_type = 'csv' if 'csv_url' in jobs[0]._args[1] else ('gdocs' if 'googledocs_url' in jobs[0]._args[1] else 'epicollect')
         importer = dict(type=importer_type, data=jobs[0]._args[1])
         return render_template('/applications/importers/autoimporter.html', importer=importer, **template_args)
     def render_forms():
