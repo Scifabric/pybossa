@@ -545,10 +545,6 @@ def import_task(short_name):
     require.app.read(app)
     require.app.update(app)
 
-    def render_forms():
-        tmpl = '/applications/importers/%s.html' % template
-        return render_template(tmpl, **template_args)
-
     variants = importers.variants()
     template_args["importer_variants"] = compute_importer_variant_pairs(variants)
     template = request.args.get('template')
@@ -565,7 +561,8 @@ def import_task(short_name):
         template_args["form"].googledocs_url.data = importers.googledocs_urls[mode]
 
     if not (form and form.validate_on_submit()):  # pragma: no cover
-        return render_forms()
+        return render_template('/applications/importers/%s.html' % template,
+                                **template_args)
 
     try:
         return _import_tasks(app, template, **form.get_import_data())
@@ -575,7 +572,8 @@ def import_task(short_name):
         current_app.logger.error(inst)
         msg = 'Oops! Looks like there was an error with processing that file!'
         flash(gettext(msg), 'error')
-    return render_forms()
+    return render_template('/applications/importers/%s.html' % template,
+                            **template_args)
 
 
 def _import_tasks(app, template, **form_data):
@@ -614,10 +612,8 @@ def setup_autoimporter(short_name):
     if len(jobs) > 0:
         importer_type = 'csv' if 'csv_url' in jobs[0]._args[1] else ('gdocs' if 'googledocs_url' in jobs[0]._args[1] else 'epicollect')
         importer = dict(type=importer_type, data=jobs[0]._args[1])
-        return render_template('/applications/importers/autoimporter.html', importer=importer, **template_args)
-    def render_forms():
-        tmpl = '/applications/importers/%s_auto.html' % template
-        return render_template(tmpl, **template_args)
+        return render_template('/applications/importers/autoimporter.html',
+                                importer=importer, **template_args)
 
     template_args["importer_variants"] = [('applications/tasks/csv_auto.html', 'applications/tasks/gdocs-spreadsheet_auto.html'),
                                           ('applications/tasks/epicollect_auto.html', 'applications/tasks/empty.html')]
@@ -632,7 +628,8 @@ def setup_autoimporter(short_name):
     template_args['form'] = form
 
     if not (form and form.validate_on_submit()):  # pragma: no cover
-        return render_forms()
+        return render_template('/applications/importers/%s.html' % template,
+                                **template_args)
     return _setup_autoimport_job(app, template, **form.get_import_data())
 
 
