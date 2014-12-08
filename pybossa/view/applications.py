@@ -646,7 +646,7 @@ def delete_autoimporter(short_name):
 def _get_scheduled_autoimport_job(project_id):
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.slave)
     jobs = [job for job in scheduler.get_jobs() if
-            job.func==import_tasks and job._args[0]==app.id]
+            job.func==import_tasks and job._args[0]==project_id]
     return jobs[0] if len(jobs) > 0 else None
 
 
