@@ -580,7 +580,6 @@ def setup_autoimporter(short_name):
      overall_progress, last_activity) = app_by_shortname(short_name)
     n_volunteers = cached_apps.n_volunteers(app.id)
     n_completed_tasks = cached_apps.n_completed_tasks(app.id)
-
     dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     template_args = dict(app=dict_app,
                          owner=owner,
@@ -590,16 +589,14 @@ def setup_autoimporter(short_name):
                          n_completed_tasks=n_completed_tasks)
     require.app.read(app)
     require.app.update(app)
-    scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.slave)
-    jobs = [job for job in scheduler.get_jobs() if job.func==import_tasks and job._args[0]==app.id]
-    if len(jobs) > 0:
-        importer_type = jobs[0]._args[1]
-        importer = dict(type=importer_type, **jobs[0]._kwargs)
-        return render_template('/applications/importers/autoimporter.html',
+    current_autoimporter = _get_scheduled_autoimport_job(app.id)
+    if current_autoimporter is not None:
+        importer_type = current_autoimporter._args[1]
+        importer = dict(type=importer_type, **current_autoimporter._kwargs)
+        return render_template('/applications/task_autoimporter.html',
                                 importer=importer, **template_args)
 
     template = request.args.get('template')
-
     if template is None and request.method == 'GET':
         return render_template('applications/task_autoimport_options.html',
                                **template_args)
@@ -607,7 +604,6 @@ def setup_autoimporter(short_name):
     template = template if request.method == 'GET' else request.form['form_name']
     form = GenericBulkTaskImportForm()(template, request.form)
     template_args['form'] = form
-
     if not (form and form.validate_on_submit()):  # pragma: no cover
         return render_template('/applications/importers/%s_auto.html' % template,
                                 **template_args)
@@ -630,7 +626,6 @@ def delete_autoimporter(short_name):
      overall_progress, last_activity) = app_by_shortname(short_name)
     n_volunteers = cached_apps.n_volunteers(app.id)
     n_completed_tasks = cached_apps.n_completed_tasks(app.id)
-
     dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     template_args = dict(app=dict_app,
                          owner=owner,
@@ -640,12 +635,15 @@ def delete_autoimporter(short_name):
                          n_completed_tasks=n_completed_tasks)
     require.app.read(app)
     require.app.update(app)
-    scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.slave)
-    jobs = [job for job in scheduler.get_jobs() if job.func==import_tasks and job._args[0]==app.id]
-    if len(jobs) > 0:
-        job = jobs[0]
-        job.cancel()
+    autoimporter = _get_scheduled_autoimport_job(app.id)
+    autoimporter.cancel() if autoimporter is not None else None
     return redirect(url_for('.setup_autoimporter', short_name=app.short_name))
+
+def _get_scheduled_autoimport_job(project_id):
+    scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.slave)
+    jobs = [job for job in scheduler.get_jobs() if
+            job.func==import_tasks and job._args[0]==app.id]
+    return jobs[0] if len(jobs) > 0 else None
 
 
 @blueprint.route('/<short_name>/password', methods=['GET', 'POST'])
