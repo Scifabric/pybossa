@@ -524,7 +524,6 @@ def compute_importer_variant_pairs(variants):
         for i in xrange(0, int(math.ceil(len(variants) / 2.0)))]
 
 
-
 @blueprint.route('/<short_name>/tasks/import', methods=['GET', 'POST'])
 @login_required
 def import_task(short_name):
@@ -610,8 +609,8 @@ def setup_autoimporter(short_name):
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.slave)
     jobs = [job for job in scheduler.get_jobs() if job.func==import_tasks and job._args[0]==app.id]
     if len(jobs) > 0:
-        importer_type = 'csv' if 'csv_url' in jobs[0]._args[1] else ('gdocs' if 'googledocs_url' in jobs[0]._args[1] else 'epicollect')
-        importer = dict(type=importer_type, data=jobs[0]._args[1])
+        importer_type = jobs[0]._args[1]
+        importer = dict(type=importer_type, **jobs[0]._kwargs)
         return render_template('/applications/importers/autoimporter.html',
                                 importer=importer, **template_args)
 
@@ -628,7 +627,7 @@ def setup_autoimporter(short_name):
     template_args['form'] = form
 
     if not (form and form.validate_on_submit()):  # pragma: no cover
-        return render_template('/applications/importers/%s.html' % template,
+        return render_template('/applications/importers/%s_auto.html' % template,
                                 **template_args)
     return _setup_autoimport_job(app, template, **form.get_import_data())
 
