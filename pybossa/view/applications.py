@@ -582,7 +582,7 @@ def _import_tasks(app, template, **form_data):
     number_of_tasks = importers.count_tasks_to_import(template, **form_data)
     print number_of_tasks
     if number_of_tasks <= MAX_NUM_SYNCHR_TASKS_IMPORT:
-        msg = importers.create_tasks(task_repo, template, app.id, **form_data)
+        msg = importers.create_tasks(task_repo, app.id, template, **form_data)
         flash(msg)
     else:
         importer_queue.enqueue(import_tasks, app.id, template, **form_data)
@@ -638,10 +638,10 @@ def setup_autoimporter(short_name):
     return _setup_autoimport_job(app, template, **form.get_import_data())
 
 
-def _setup_autoimport_job(app, importer, **form_data):
+def _setup_autoimport_job(app, template, **form_data):
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.master)
-    import_job = dict(name=import_tasks, args=[app.id, form_data],
-                      kwargs={}, interval=10, timeout=10)
+    import_job = dict(name=import_tasks, args=[app.id, template],
+                      kwargs=form_data, interval=10, timeout=10)
     job = schedule_job(import_job, scheduler)
     print job
     flash(gettext("Your tasks will be imported daily."))

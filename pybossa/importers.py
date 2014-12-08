@@ -179,7 +179,7 @@ _importers = {'csv': _BulkTaskCSVImport,
               'epicollect': _BulkTaskEpiCollectPlusImport}
 
 
-def create_tasks(task_repo, template, project_id, **form_data):
+def create_tasks(task_repo, project_id, template, **form_data):
     """Create tasks from a remote source using an importer object and avoiding
     the creation of repeated tasks"""
     empty = True
