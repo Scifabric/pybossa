@@ -635,13 +635,13 @@ def setup_autoimporter(short_name):
 
     if not (form and form.validate_on_submit()):  # pragma: no cover
         return render_forms()
-    return _setup_autoimport_job(app, template, form)
+    return _setup_autoimport_job(app, template, **form.get_import_data())
 
 
-def _setup_autoimport_job(app, importer, form):
+def _setup_autoimport_job(app, importer, **form_data):
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.master)
-    import_job = dict(name=import_tasks, args=[app.id, form.get_import_data()], kwargs={},
-                      interval=(10), timeout=(10))
+    import_job = dict(name=import_tasks, args=[app.id, form_data],
+                      kwargs={}, interval=10, timeout=10)
     job = schedule_job(import_job, scheduler)
     print job
     flash(gettext("Your tasks will be imported daily."))

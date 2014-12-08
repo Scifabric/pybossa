@@ -450,6 +450,5 @@ def setup_scheduled_jobs(app): #pragma: no cover
     from rq_scheduler import Scheduler
     all_jobs = get_scheduled_jobs()
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=redis_conn)
-
     for function in all_jobs:
         app.logger.info(schedule_job(function, scheduler))
