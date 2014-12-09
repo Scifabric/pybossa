@@ -72,6 +72,7 @@ class RackspaceUploader(Uploader):
                                 obj_name=secure_filename(file.filename),
                                 etag=chksum)
         except SSLError as e:
+            print "SSLError, upload retry no: %d" % attempt   # TODO: Log this!
             attempt += 1
             if (attempt < 3):
                 return self._upload_file_to_rackspace(file, container, attempt)
