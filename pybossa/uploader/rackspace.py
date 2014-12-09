@@ -28,7 +28,7 @@ import traceback
 from flask import current_app, url_for
 from pybossa.uploader import Uploader
 from werkzeug import secure_filename
-
+from ssl import SSLError
 
 class RackspaceUploader(Uploader):
 
