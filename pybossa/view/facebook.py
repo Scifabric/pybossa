@@ -19,7 +19,7 @@
 from flask import Blueprint, request, url_for, flash, redirect, session
 from flask.ext.login import login_user, current_user
 
-from pybossa.core import facebook, user_repo
+from pybossa.core import facebook, user_repo, newsletter
 from pybossa.model.user import User
 #from pybossa.util import Facebook, get_user_signup_method
 from pybossa.util import get_user_signup_method
@@ -115,6 +115,7 @@ def manage_user(access_token, user_data, next_url):
                    facebook_user_id=user_data['id'],
                    info=info)
             user_repo.save(user)
+            newsletter.subscribe_user(account)
             return user
         else:
             return None
