@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-from mock import patch, Mock
+from mock import patch, MagicMock
 from redis import StrictRedis
 from rq_scheduler import Scheduler
 from default import db
@@ -331,9 +331,9 @@ class TestAutoimporterBehaviour(web.Helper):
         self.register()
         owner = db.session.query(User).first()
         app = AppFactory.create(owner=owner)
-        mock_autoimporter_job = Mock()
-        mock_autoimporter_job._args = [app.id, 'csv']
-        mock_autoimporter_job._kwargs = {'csv_url': 'http://fakeurl.com'}
+        mock_autoimporter_job = MagicMock()
+        mock_autoimporter_job.args = [app.id, 'csv']
+        mock_autoimporter_job.kwargs = {'csv_url': 'http://fakeurl.com'}
         scheduled.return_value = mock_autoimporter_job
         url = "/app/%s/tasks/autoimporter" % app.short_name
 
@@ -365,7 +365,7 @@ class TestAutoimporterBehaviour(web.Helper):
         self.register()
         owner = db.session.query(User).first()
         app = AppFactory.create(owner=owner)
-        mock_autoimporter_job = Mock()
+        mock_autoimporter_job = MagicMock()
         mock_autoimporter_job._args = [app.id, 'csv']
         mock_autoimporter_job._kwargs = {'csv_url': 'http://fakeurl.com'}
         scheduled.return_value = mock_autoimporter_job

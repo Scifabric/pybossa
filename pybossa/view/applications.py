@@ -594,8 +594,8 @@ def setup_autoimporter(short_name):
     require.app.update(app)
     current_autoimporter = _get_scheduled_autoimport_job(app.id)
     if current_autoimporter is not None:
-        importer_type = current_autoimporter._args[1]
-        importer = dict(type=importer_type, **current_autoimporter._kwargs)
+        importer_type = current_autoimporter.args[1]
+        importer = dict(type=importer_type, **current_autoimporter.kwargs)
         return render_template('/applications/task_autoimporter.html',
                                 importer=importer, **template_args)
 
@@ -645,7 +645,7 @@ def delete_autoimporter(short_name):
 def _get_scheduled_autoimport_job(project_id):
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.slave)
     jobs = [job for job in scheduler.get_jobs() if
-            job.func==import_tasks and job._args[0]==project_id]
+            job.func==import_tasks and job.args[0]==project_id]
     return jobs[0] if len(jobs) > 0 else None
 
 

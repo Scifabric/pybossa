@@ -40,8 +40,8 @@ def schedule_job(function, scheduler):
         timeout=function['timeout'])
     for sj in scheduled_jobs:
         if (function['name'].__name__ in sj.func_name and
-            sj._args == function['args'] and
-            sj._kwargs == function['kwargs']):
+            sj.args == function['args'] and
+            sj.kwargs == function['kwargs']):
             job.cancel()
             msg = ('WARNING: Job %s(%s, %s) is already scheduled'
                    % (function['name'].__name__, function['args'],
