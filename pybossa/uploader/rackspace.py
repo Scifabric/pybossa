@@ -63,13 +63,25 @@ class RackspaceUploader(Uploader):
             self.cf.make_container_public(name)
             return c
 
-    def _upload_file_to_rackspace(self, file, container):
+    def _upload_file_to_rackspace(self, file, container, attempt=0):
         """Upload file to rackspace."""
         chksum = pyrax.utils.get_checksum(file)
-        self.cf.upload_file(container,
-                            file,
-                            obj_name=secure_filename(file.filename),
-                            etag=chksum)
+        try:
+            self.cf.upload_file(container,
+                                file,
+                                obj_name=secure_filename(file.filename),
+                                etag=chksum)
+        except SSLError as e:
+            attempt += 1
+            if (attempt < 3):
+                return self._upload_file_to_rackspace(file, container, attempt)
+            else:
+                print "SSLError tried to upload two times"  # TODO: Log this!
+                raise
+        except Exception as e:
+            print "Unknown uploader exception"
+            import traceback
+            traceback.print_exc()
         return True
 
     def _upload_file(self, file, container):
