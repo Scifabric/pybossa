@@ -41,7 +41,7 @@ import pybossa.model as model
 from flask.ext.babel import gettext
 from sqlalchemy.sql import text
 from pybossa.model.user import User
-from pybossa.core import signer, mail, uploader, sentinel
+from pybossa.core import signer, mail, uploader, sentinel, newsletter
 from pybossa.util import Pagination, pretty_date
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
@@ -212,6 +212,8 @@ def confirm_account():
                               email_addr=userdict['email_addr'])
     account.set_password(userdict['password'])
     user_repo.save(account)
+    # Add user to mailchimp if enabled
+    newsletter.subscribe_user(account)
     login_user(account, remember=True)
     flash(gettext('Thanks for signing-up'), 'success')
     return redirect(url_for('home.home'))
