@@ -20,8 +20,6 @@ import time
 import re
 import json
 import os
-from pybossa.importers import BulkTaskImportManager, BulkImportException
-import operator
 import math
 import requests
 from StringIO import StringIO
@@ -30,14 +28,16 @@ from flask import Blueprint, request, url_for, flash, redirect, abort, Response,
 from flask import render_template, make_response, send_from_directory
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
+from rq import Queue
 
 import pybossa.model as model
 import pybossa.sched as sched
+import pybossa.importers as importers
 
-from pybossa.core import uploader, signer, json_exporter, csv_exporter
-from pybossa.cache import ONE_DAY, ONE_HOUR
+from pybossa.core import uploader, signer, sentinel, json_exporter, csv_exporter
 from pybossa.model.app import App
 from pybossa.model.task import Task
+from pybossa.model.auditlog import Auditlog
 from pybossa.util import Pagination, UnicodeWriter, admin_required, get_user_id_or_ip
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
@@ -48,14 +48,17 @@ from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
+from pybossa.jobs import import_tasks as background_import
 from pybossa.forms.applications_view_forms import *
 
-from pybossa.core import project_repo, user_repo, task_repo, blog_repo
+from pybossa.core import project_repo, user_repo, task_repo, blog_repo, \
+    auditlog_repo
 
 
 blueprint = Blueprint('app', __name__)
 
-
+importer_queue = Queue('importer', connection=sentinel.master)
+MAX_NUM_SYNCHR_TASKS_IMPORT = 200
 
 def app_title(app, page_name):
     if not app:  # pragma: no cover
@@ -210,13 +213,13 @@ def new():
     info = {}
     category_by_default = cached_cat.get_all()[0]
 
-    app = model.app.App(name=form.name.data,
-                    short_name=form.short_name.data,
-                    description=_description_from_long_description(),
-                    long_description=form.long_description.data,
-                    owner_id=current_user.id,
-                    info=info,
-                    category_id=category_by_default.id)
+    app = App(name=form.name.data,
+              short_name=form.short_name.data,
+              description=_description_from_long_description(),
+              long_description=form.long_description.data,
+              owner_id=current_user.id,
+              info=info,
+              category_id=category_by_default.id)
 
     project_repo.save(app)
 
@@ -229,6 +232,9 @@ def new():
           '</a></strong> ' +
           gettext('for adding tasks, a thumbnail, using PyBossa.JS, etc.'),
           'info')
+    # Log it
+    project_repo.add_log_entry(app, 'create', 'web')
+
     return redirect(url_for('.update', short_name=app.short_name))
 
 
@@ -243,15 +249,30 @@ def task_presenter_editor(short_name):
     require.app.read(app)
     require.app.update(app)
 
+    old_value = app.info.get('task_presenter')
+
     form = TaskPresenterForm(request.form)
     form.id.data = app.id
     if request.method == 'POST' and form.validate():
         db_app = project_repo.get(app.id)
         db_app.info['task_presenter'] = form.editor.data
-        project_repo.save(db_app)
+        project_repo.update(db_app)
         cached_apps.delete_app(app.short_name)
         msg_1 = gettext('Task presenter added!')
         flash('<i class="icon-ok"></i> ' + msg_1, 'success')
+        # Log it
+        msg = ("User %s updated task presenter" % current_user.name)
+        log = Auditlog(
+            app_id=db_app.id,
+            app_short_name=db_app.short_name,
+            user_id=current_user.id,
+            user_name=current_user.name,
+            action='update',
+            caller='web',
+            attribute='task_presenter',
+            old_value=old_value,
+            new_value=form.editor.data)
+        auditlog_repo.save(log)
         return redirect(url_for('.tasks', short_name=app.short_name))
 
     # It does not have a validation
@@ -333,6 +354,7 @@ def delete(short_name):
     # Clean cache
     cached_apps.delete_app(app.short_name)
     cached_apps.clean(app.id)
+    project_repo.add_log_entry(app, 'delete', 'web')
     project_repo.delete(app)
     flash(gettext('Project deleted!'), 'success')
     return redirect(url_for('account.profile', name=current_user.name))
@@ -350,20 +372,21 @@ def update(short_name):
         (app, owner, n_tasks, n_task_runs,
          overall_progress, last_activity) = app_by_shortname(short_name)
 
-        new_application = model.app.App(
-            id=form.id.data,
-            name=form.name.data,
-            short_name=form.short_name.data,
-            description=form.description.data,
-            long_description=form.long_description.data,
-            hidden=hidden,
-            webhook=form.webhook.data,
-            info=app.info,
-            owner_id=app.owner_id,
-            allow_anonymous_contributors=form.allow_anonymous_contributors.data,
-            category_id=form.category_id.data)
+        new_application = project_repo.get_by_shortname(short_name)
+        if form.id.data == new_application.id:
+            new_application.name=form.name.data
+            new_application.short_name=form.short_name.data
+            new_application.description=form.description.data
+            new_application.long_description=form.long_description.data
+            new_application.hidden=int(form.hidden.data)
+            new_application.webhook=form.webhook.data
+            new_application.info=app.info
+            new_application.owner_id=app.owner_id
+            new_application.allow_anonymous_contributors=form.allow_anonymous_contributors.data
+            new_application.category_id=form.category_id.data
 
         new_application.set_password(form.password.data)
+        project_repo.add_log_entry(new_application, 'update', 'web')
         project_repo.update(new_application)
         cached_apps.delete_app(short_name)
         cached_apps.reset()
@@ -501,7 +524,6 @@ def compute_importer_variant_pairs(variants):
         for i in xrange(0, int(math.ceil(len(variants) / 2.0)))]
 
 
-
 @blueprint.route('/<short_name>/tasks/import', methods=['GET', 'POST'])
 @login_required
 def import_task(short_name):
@@ -526,16 +548,16 @@ def import_task(short_name):
         tmpl = '/applications/importers/%s.html' % template
         return render_template(tmpl, **template_args)
 
-    importer_mngr = BulkTaskImportManager()
-    template_args["importer_variants"] = compute_importer_variant_pairs(importer_mngr.variants())
+    variants = importers.variants()
+    template_args["importer_variants"] = compute_importer_variant_pairs(variants)
     template = request.args.get('template')
 
-    if not (template or request.method == 'POST'):
+    if template is None and request.method == 'GET':
         return render_template('/applications/import_options.html',
                                **template_args)
 
     template = template if request.method == 'GET' else request.form['form_name']
-    importer = importer_mngr.create_importer(template)
+    importer = importers.create_importer_for(template)
     form = GenericBulkTaskImportForm()(template, request.form)
     template_args['form'] = form
     if template == 'gdocs' and request.args.get('mode'):  # pragma: no cover
@@ -545,45 +567,27 @@ def import_task(short_name):
     if not (form and form.validate_on_submit()):  # pragma: no cover
         return render_forms()
 
-    _import_task(app, importer, form)
-    return render_forms()
-
-
-def _import_task(app, importer, form):
     try:
-        empty = True
-        n = 0
-        n_data = 0
-        for task_data in importer.tasks(form):
-            n_data += 1
-            task = model.task.Task(app_id=app.id)
-            [setattr(task, k, v) for k, v in task_data.iteritems()]
-            found = task_repo.get_task_by(app_id=app.id, info=task.info)
-            if found is None:
-                task_repo.save(task)
-                n += 1
-                empty = False
-        if empty and n_data == 0:
-            raise BulkImportException(
-                gettext('Oops! It looks like the file is empty.'))
-        if empty and n_data > 0:
-            flash(gettext('Oops! It looks like there are no new records to import.'), 'warning')
-
-        msg = str(n) + " " + gettext('Tasks imported successfully!')
-        if n == 1:
-            msg = str(n) + " " + gettext('Task imported successfully!')
-        flash(msg, 'success')
-        cached_apps.delete_n_tasks(app.id)
-        cached_apps.delete_n_task_runs(app.id)
-        cached_apps.delete_overall_progress(app.id)
-        cached_apps.delete_last_activity(app.id)
-        return redirect(url_for('.tasks', short_name=app.short_name))
-    except BulkImportException, err_msg:
+        return _import_tasks(app, importer, form)
+    except importers.BulkImportException, err_msg:
         flash(err_msg, 'error')
     except Exception as inst:  # pragma: no cover
         current_app.logger.error(inst)
         msg = 'Oops! Looks like there was an error with processing that file!'
         flash(gettext(msg), 'error')
+    return render_forms()
+
+
+def _import_tasks(app, importer, form):
+    tasks_data = [data for data in importer.tasks(form)]
+    if len(tasks_data) <= MAX_NUM_SYNCHR_TASKS_IMPORT:
+        msg = importers.create_tasks(task_repo, tasks_data, app.id)
+        flash(msg)
+    else:
+        importer_queue.enqueue(background_import, tasks_data, app.id)
+        flash(gettext("You're trying to import a large amount of tasks, so please be patient.\
+            You will receive an email when the tasks are ready."))
+    return redirect(url_for('.tasks', short_name=app.short_name))
 
 
 @blueprint.route('/<short_name>/password', methods=['GET', 'POST'])
@@ -652,10 +656,10 @@ def task_presenter(short_name, task_id):
 @blueprint.route('/<short_name>/newtask')
 def presenter(short_name):
 
-    def invite_new_volunteers():
+    def invite_new_volunteers(app):
         user_id = None if current_user.is_anonymous() else current_user.id
         user_ip = request.remote_addr if current_user.is_anonymous() else None
-        task = sched.new_task(app.id, user_id, user_ip, 0)
+        task = sched.new_task(app.id, app.info.get('sched'), user_id, user_ip, 0)
         return task is None and overall_progress < 100.0
 
     def respond(tmpl):
@@ -669,7 +673,7 @@ def presenter(short_name):
      overall_progress, last_activity) = app_by_shortname(short_name)
     title = app_title(app, "Contribute")
     template_args = {"app": app, "title": title, "owner": owner,
-                     "invite_new_volunteers": invite_new_volunteers()}
+                     "invite_new_volunteers": invite_new_volunteers(app)}
     require.app.read(app)
     redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
@@ -989,7 +993,7 @@ def export_to(short_name):
         # Export Task(/Runs) to CSV
         types = {
             "task": (
-                model.task.Task, handle_task,
+                Task, handle_task,
                 (lambda x: True),
                 gettext(
                     "Oops, the project does not have tasks to \
@@ -1140,6 +1144,21 @@ def task_n_answers(short_name):
                                owner=owner)
     elif request.method == 'POST' and form.validate():
         task_repo.update_tasks_redundancy(app, form.n_answers.data)
+        msg = ("User %s updated task redundancy to: %s" %
+               (current_user.name, form.n_answers.data))
+        # Log it
+        log = Auditlog(
+            app_id=app.id,
+            app_short_name=app.short_name,
+            user_id=current_user.id,
+            user_name=current_user.name,
+            action='update',
+            caller='web',
+            attribute='task.n_answers',
+            old_value=30,
+            new_value=form.n_answers.data)
+        auditlog_repo.save(log)
+
         msg = gettext('Redundancy of Tasks updated!')
         flash(msg, 'success')
         return redirect(url_for('.tasks', short_name=app.short_name))
@@ -1179,12 +1198,32 @@ def task_scheduler(short_name):
 
     if request.method == 'POST' and form.validate():
         app = project_repo.get_by_shortname(short_name=app.short_name)
+        if app.info.get('sched'):
+            old_sched = app.info['sched']
+        else:
+            old_sched = 'default'
         if form.sched.data:
             app.info['sched'] = form.sched.data
         project_repo.save(app)
         cached_apps.delete_app(app.short_name)
+        # Log it
+        if old_sched != app.info['sched']:
+            msg = ("User %s updated task scheduler from: %s to: %s" %
+                   (current_user.name, old_sched, app.info['sched']))
+            log = Auditlog(
+                app_id=app.id,
+                app_short_name=app.short_name,
+                user_id=current_user.id,
+                user_name=current_user.name,
+                action='update',
+                caller='web',
+                attribute='sched',
+                old_value=old_sched,
+                new_value=app.info['sched'])
+            auditlog_repo.save(log)
         msg = gettext("Project Task Scheduler updated!")
         flash(msg, 'success')
+
         return redirect(url_for('.tasks', short_name=app.short_name))
     else: # pragma: no cover
         flash(gettext('Please correct the errors'), 'error')
@@ -1215,8 +1254,34 @@ def task_priority(short_name):
             if task_id != '':
                 t = task_repo.get_task_by(app_id=app.id, id=int(task_id))
                 if t:
+                    old_priority = t.priority_0
                     t.priority_0 = form.priority_0.data
                     task_repo.update(t)
+
+                    if old_priority != t.priority_0:
+                        msg = ("User %s updated task priority for task ID: %s"
+                               " from: %s to: %s" % (current_user.name,
+                                                    t.id,
+                                                    old_priority,
+                                                    t.priority_0))
+                        old_value = json.dumps({'task_id': t.id,
+                                                'task_priority_0': old_priority})
+
+                        new_value = json.dumps({'task_id': t.id,
+                                                'task_priority_0': t.priority_0})
+
+
+                        log = Auditlog(
+                            app_id=app.id,
+                            app_short_name=app.short_name,
+                            user_id=current_user.id,
+                            user_name=current_user.name,
+                            action='update',
+                            caller='web',
+                            old_value=old_value,
+                            new_value=new_value,
+                            attribute='task.priority_0')
+                        auditlog_repo.save(log)
                 else:  # pragma: no cover
                     flash(gettext(("Ooops, Task.id=%s does not belong to the app" % task_id)), 'danger')
         cached_apps.delete_app(app.short_name)
@@ -1383,4 +1448,25 @@ def _check_if_redirect_to_password(app):
     if passwd_mngr.password_needed(app, get_user_id_or_ip()):
         return redirect(url_for('.password_required',
                                  short_name=app.short_name, next=request.path))
+
+
+@blueprint.route('/<short_name>/auditlog')
+@login_required
+def auditlog(short_name):
+    (app, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = app_by_shortname(short_name)
+
+    logs = auditlog_repo.filter_by(app_id=app.id)
+    require.auditlog.read(_app_id=app.id)
+    redirect_to_password = _check_if_redirect_to_password(app)
+    if redirect_to_password:
+        return redirect_to_password
+    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    return render_template('applications/auditlog.html', app=app,
+                           owner=owner, logs=logs,
+                           overall_progress=overall_progress,
+                           n_tasks=n_tasks,
+                           n_task_runs=n_task_runs,
+                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
+                           n_volunteers=cached_apps.n_volunteers(app.get('id')))
 

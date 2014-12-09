@@ -19,7 +19,7 @@
 from flask import current_app, request
 from flask.ext.login import current_user
 from pybossa.model.category import Category
-from pybossa.util import Pagination, get_user_id_or_ip
+from pybossa.util import Pagination
 from flask import Blueprint
 from flask import render_template
 from pybossa.cache import apps as cached_apps

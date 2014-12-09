@@ -20,7 +20,7 @@ from pybossa.jobs import get_project_jobs, create_dict_jobs, get_app_stats
 from default import Test, with_context
 from factories import AppFactory
 from factories import UserFactory
-from redis import Redis
+from redis import StrictRedis
 from rq_scheduler import Scheduler
 
 
@@ -28,7 +28,7 @@ class TestProjectsStats(Test):
 
     def setUp(self):
         super(TestProjectsStats, self).setUp()
-        self.connection = Redis()
+        self.connection = StrictRedis()
         self.connection.flushall()
         self.scheduler = Scheduler('test_queue', connection=self.connection)
 

@@ -24,7 +24,7 @@ from StringIO import StringIO
 from default import db, Fixtures, with_context
 from helper import web
 from mock import patch, Mock
-from flask import Response
+from flask import Response, redirect
 from itsdangerous import BadSignature
 from collections import namedtuple
 from pybossa.core import signer
@@ -39,7 +39,7 @@ from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
-from pybossa.jobs import send_mail
+from pybossa.jobs import send_mail, import_tasks
 from factories import AppFactory, CategoryFactory, TaskFactory, TaskRunFactory
 from unidecode import unidecode
 from werkzeug.utils import secure_filename
@@ -215,7 +215,6 @@ class TestWeb(web.Helper):
         assert "Just one more step, please" in res.data, res.data
 
 
-    from pybossa.view.applications import redirect
     @with_context
     @patch('pybossa.view.account.redirect', wraps=redirect)
     @patch('pybossa.view.account.signer')
@@ -635,7 +634,6 @@ class TestWeb(web.Helper):
         assert app.category is not None, \
             "A project should have a category after being created"
 
-    # After refactoring applications view, these 3 tests should be more isolated and moved to another place
     @with_context
     def test_description_is_generated_from_long_desc(self):
         """Test WEB when creating a project, the description field is
@@ -1483,11 +1481,11 @@ class TestWeb(web.Helper):
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     @patch('pybossa.importers.requests.get')
-    def test_33_bulk_csv_import_unauthorized(self, Mock, mock):
-        """Test WEB bulk import unauthorized works"""
-        unauthorized_request = FakeRequest('Unauthorized', 403,
+    def test_33_bulk_csv_import_forbidden(self, Mock, mock):
+        """Test WEB bulk import Forbidden works"""
+        forbidden_request = FakeRequest('Forbidden', 403,
                                            {'content-type': 'text/csv'})
-        Mock.return_value = unauthorized_request
+        Mock.return_value = forbidden_request
         self.register()
         self.new_application()
         app = db.session.query(App).first()
@@ -1567,7 +1565,7 @@ class TestWeb(web.Helper):
                             follow_redirects=True)
         task = db.session.query(Task).first()
         assert {u'Bar': u'2', u'Foo': u'1', u'Baz': u'3'} == task.info
-        assert "1 Task imported successfully!" in res.data
+        assert "1 new task was imported successfully" in res.data
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
@@ -1587,7 +1585,7 @@ class TestWeb(web.Helper):
         task = db.session.query(Task).first()
         assert {u'Bar': u'2', u'Foo': u'1'} == task.info
         assert task.priority_0 == 3
-        assert "1 Task imported successfully!" in res.data
+        assert "1 new task was imported successfully" in res.data
 
         # Check that only new items are imported
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
@@ -1624,7 +1622,7 @@ class TestWeb(web.Helper):
         task = db.session.query(Task).first()
         assert {u'Bar': u'2', u'Foo': u'1'} == task.info
         assert task.priority_0 == 3
-        assert "1 Task imported successfully!" in res.data
+        assert "1 new task was imported successfully" in res.data
 
         # Check that only new items are imported
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
@@ -2794,6 +2792,69 @@ class TestWeb(web.Helper):
         res = self.app.get('/app/sampleapp/tasks/import', follow_redirects=True)
         assert res.status_code == 403, res.status_code
 
+    @patch('pybossa.view.applications.redirect', wraps=redirect)
+    @patch('pybossa.importers.requests.get')
+    def test_import_tasks_redirects_on_success(self, request, redirect):
+        """Test WEB when importing tasks succeeds, user is redirected to tasks main page"""
+        csv_file = FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
+                                 {'content-type': 'text/plain'})
+        request.return_value = csv_file
+        self.register()
+        self.new_application()
+        app = db.session.query(App).first()
+        url = '/app/%s/tasks/import?template=csv' % app.short_name
+        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
+                                       'formtype': 'csv', 'form_name': 'csv'},
+                            follow_redirects=True)
+
+        assert "1 new task was imported successfully" in res.data
+        redirect.assert_called_with('/app/%s/tasks/' % app.short_name)
+        assert "Import Tasks" in res.data
+        assert "Export Tasks" in res.data
+        assert "Task Presenter" in res.data
+
+    @patch('pybossa.view.applications.importers.create_importer_for')
+    def test_import_few_tasks_is_done_synchronously(self, create_importer):
+        """Test WEB importing a small amount of tasks is done synchronously"""
+        importer = create_importer.return_value
+        tasks_info = [{'info': {'Foo': i}} for i in range(1)]
+        importer.tasks.return_value = tasks_info
+        self.register()
+        self.new_application()
+        app = db.session.query(App).first()
+        url = '/app/%s/tasks/import?template=csv' % app.short_name
+        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
+                                       'formtype': 'csv', 'form_name': 'csv'},
+                            follow_redirects=True)
+        task = db.session.query(Task).first()
+
+        assert task is not None, "Task was not imported"
+        assert "1 new task was imported successfully" in res.data
+
+    @patch('pybossa.view.applications.importer_queue', autospec=True)
+    @patch('pybossa.view.applications.importers.create_importer_for')
+    def test_import_tasks_as_background_job(self, create_importer, queue):
+        """Test WEB importing a big amount of tasks is done in the background"""
+        from pybossa.view.applications import MAX_NUM_SYNCHR_TASKS_IMPORT
+        number_tasks = MAX_NUM_SYNCHR_TASKS_IMPORT + 1
+        importer = create_importer.return_value
+        tasks_info = [{'info': {'Foo': i}} for i in range(number_tasks)]
+        importer.tasks.return_value = tasks_info
+        self.register()
+        self.new_application()
+        app = db.session.query(App).first()
+        url = '/app/%s/tasks/import?template=csv' % app.short_name
+        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
+                                       'formtype': 'csv', 'form_name': 'csv'},
+                            follow_redirects=True)
+        tasks = db.session.query(Task).all()
+
+        assert tasks == [], "Tasks should not be immediately added"
+        queue.enqueue.assert_called_once_with(import_tasks, tasks_info, app.id)
+        msg = "You're trying to import a large amount of tasks, so please be patient.\
+            You will receive an email when the tasks are ready."
+        assert msg in res.data
+
     @with_context
     def test_55_facebook_account_warning(self):
         """Test WEB Facebook OAuth user gets a hint to sign in"""
@@ -3062,9 +3123,9 @@ class TestWeb(web.Helper):
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     @patch('pybossa.importers.requests.get')
-    def test_71_bulk_epicollect_import_unauthorized(self, Mock, mock):
-        """Test WEB bulk import unauthorized works"""
-        unauthorized_request = FakeRequest('Unauthorized', 403,
+    def test_71_bulk_epicollect_import_forbidden(self, Mock, mock):
+        """Test WEB bulk import forbidden works"""
+        unauthorized_request = FakeRequest('Forbidden', 403,
                                            {'content-type': 'application/json'})
         Mock.return_value = unauthorized_request
         self.register()
@@ -3118,7 +3179,7 @@ class TestWeb(web.Helper):
 
         app = db.session.query(App).first()
         err_msg = "Tasks should be imported"
-        assert "1 Task imported successfully!" in res.data, err_msg
+        assert "1 new task was imported successfully" in res.data, err_msg
         tasks = db.session.query(Task).filter_by(app_id=app.id).all()
         err_msg = "The imported task from EpiCollect is wrong"
         assert tasks[0].info['DeviceID'] == 23, err_msg

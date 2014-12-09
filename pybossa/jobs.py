@@ -188,7 +188,7 @@ def get_non_updated_apps():
 
 def warn_old_project_owners():
     """E-mail the project owners not updated in the last 3 months."""
-    from pybossa.core import mail, db
+    from pybossa.core import mail, project_repo
     from flask import current_app
     from flask.ext.mail import Message
 
@@ -219,11 +219,26 @@ def warn_old_project_owners():
                           subject=subject)
             conn.send(msg)
             a.contacted = True
-            db.session.add(a)
-            db.session.commit()
+            project_repo.update(a)
     return True
 
 
 def send_mail(message_dict):
     message = Message(**message_dict)
     mail.send(message)
+
+
+def import_tasks(tasks_info, app_id):
+    from pybossa.core import task_repo, project_repo
+    from flask import current_app
+    import pybossa.importers as importers
+
+    app = project_repo.get(app_id)
+    msg = importers.create_tasks(task_repo, tasks_info, app_id)
+    msg = msg + ' to your project %s!' % app.name
+    subject = 'Tasks Import to your project %s' % app.name
+    body = 'Hello,\n\n' + msg + '\n\nAll the best,\nThe %s team.' % current_app.config.get('BRAND')
+    mail_dict = dict(recipients=[app.owner.email_addr],
+                     subject=subject, body=body)
+    send_mail(mail_dict)
+    return msg

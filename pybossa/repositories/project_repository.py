@@ -15,13 +15,17 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-
+import json
+from flask import request
+from flask.ext.login import current_user
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm.attributes import get_history
+from sqlalchemy import inspect
 
 from pybossa.model.app import App
+from pybossa.model.auditlog import Auditlog
 from pybossa.model.category import Category
 from pybossa.exc import WrongObjectError, DBIntegrityError
-
 
 
 class ProjectRepository(object):
@@ -59,9 +63,10 @@ class ProjectRepository(object):
             raise DBIntegrityError(e)
 
     def update(self, project):
-        self._validate_can_be('updated', project)
+        action = 'updated'
+        self._validate_can_be(action, project)
         try:
-            self.db.session.merge(project)
+            self.db.session.add(project)
             self.db.session.commit()
         except IntegrityError as e:
             self.db.session.rollback()
@@ -73,6 +78,75 @@ class ProjectRepository(object):
         self.db.session.delete(app)
         self.db.session.commit()
 
+    def add_log_entry(self, project, action, caller):
+        try:
+            if action == 'create':
+                log = Auditlog(
+                    app_id=project.id,
+                    app_short_name=project.short_name,
+                    user_id=current_user.id,
+                    user_name=current_user.name,
+                    action=action,
+                    caller=caller,
+                    attribute='project',
+                    old_value='Nothing',
+                    new_value='New project')
+                self.db.session.add(log)
+            elif action == 'delete':
+                log = Auditlog(
+                    app_id=project.id,
+                    app_short_name=project.short_name,
+                    user_id=current_user.id,
+                    user_name=current_user.name,
+                    action=action,
+                    caller=caller,
+                    attribute='project',
+                    old_value='Saved',
+                    new_value='Deleted')
+                self.db.session.add(log)
+            else:
+                user_id, user_name = self._get_user_for_log()
+                for attr in project.dictize().keys():
+                    log_attr = attr
+                    if getattr(inspect(project).attrs, attr).history.has_changes():
+                        history = getattr(inspect(project).attrs, attr).history
+                        if (len(history.deleted) == 0 and \
+                            len(history.added) > 0 and \
+                            attr == 'info'):
+                            old_value = {}
+                            new_value = history.added[0]
+                            self._manage_info_keys(project, user_id, user_name,
+                                                   old_value, new_value, action,
+                                                   caller)
+                        if len(history.deleted) > 0 and len(history.added) > 0:
+                            #history = getattr(inspect(project).attrs, attr).history
+                            old_value = history.deleted[0]
+                            new_value = history.added[0]
+                            if attr == 'info':
+                                self._manage_info_keys(project, user_id, user_name,
+                                                       old_value, new_value, action,
+                                                       caller)
+                            else:
+                                if old_value is None or '':
+                                    old_value = ''
+                                if new_value is None or '':
+                                    new_value = ''
+                                if (str(old_value) != str(new_value)):
+                                    log = Auditlog(
+                                        app_id=project.id,
+                                        app_short_name=project.short_name,
+                                        user_id=user_id,
+                                        user_name=user_name,
+                                        action=action,
+                                        caller=caller,
+                                        attribute=log_attr,
+                                        old_value=old_value,
+                                        new_value=new_value)
+                                    self.db.session.add(log)
+            self.db.session.commit()
+        except IntegrityError as e:
+            self.db.session.rollback()
+            raise DBIntegrityError(e)
 
     # Methods for Category objects
     def get_category(self, id=None):
@@ -100,7 +174,7 @@ class ProjectRepository(object):
             self.db.session.rollback()
             raise DBIntegrityError(e)
 
-    def update_category(self, new_category):
+    def update_category(self, new_category, caller="web"):
         self._validate_can_be('updated as a Category', new_category, klass=Category)
         try:
             self.db.session.merge(new_category)
@@ -120,3 +194,51 @@ class ProjectRepository(object):
             name = element.__class__.__name__
             msg = '%s cannot be %s by %s' % (name, action, self.__class__.__name__)
             raise WrongObjectError(msg)
+
+    def _get_user_for_log(self):
+        if current_user.is_authenticated():
+            user_id = current_user.id
+            user_name = current_user.name
+        else:
+            user_id = request.remote_addr
+            user_name = 'anonymous'
+        return user_id, user_name
+
+    def _manage_info_keys(self, project, user_id, user_name,
+                          old_value, new_value, action, caller):
+        s_o = set(old_value.keys())
+        s_n = set(new_value.keys())
+
+        # For new keys
+        for new_key in (s_n - s_o):
+            # handle special case passwd_hash
+            if (old_value.get(new_key) is None and
+                new_value.get(new_key) is None and
+                new_key == 'passwd_hash'):
+                pass
+            else:
+                log = Auditlog(
+                    app_id=project.id,
+                    app_short_name=project.short_name,
+                    user_id=user_id,
+                    user_name=user_name,
+                    action=action,
+                    caller=caller,
+                    attribute=new_key,
+                    old_value=json.dumps(old_value.get(new_key)),
+                    new_value=json.dumps(new_value.get(new_key)))
+                self.db.session.add(log)
+        # For updated keys
+        for same_key in (s_n & s_o):
+            log = Auditlog(
+                app_id=project.id,
+                app_short_name=project.short_name,
+                user_id=user_id,
+                user_name=user_name,
+                action=action,
+                caller=caller,
+                attribute=same_key,
+                old_value=json.dumps(old_value.get(same_key)),
+                new_value=json.dumps(new_value.get(same_key)))
+            self.db.session.add(log)
+
