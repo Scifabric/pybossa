@@ -59,6 +59,7 @@ blueprint = Blueprint('app', __name__)
 
 importer_queue = Queue('importer', connection=sentinel.master)
 MAX_NUM_SYNCHR_TASKS_IMPORT = 200
+HOUR = 60 * 60
 
 def app_title(app, page_name):
     if not app:  # pragma: no cover
@@ -609,16 +610,16 @@ def setup_autoimporter(short_name):
     if not (form and form.validate_on_submit()):  # pragma: no cover
         return render_template('/applications/importers/%s.html' % template,
                                 **template_args)
-    return _setup_autoimport_job(app, template, **form.get_import_data())
+    _setup_autoimport_job(app, template, **form.get_import_data())
+    flash(gettext("Success! Tasks will be imported daily."))
+    return redirect(url_for('.setup_autoimporter', short_name=app.short_name))
 
 
 def _setup_autoimport_job(app, template, **form_data):
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.master)
     import_job = dict(name=import_tasks, args=[app.id, template],
-                      kwargs=form_data, interval=10, timeout=10)
+                      kwargs=form_data, interval=24*HOUR, timeout=500)
     job = schedule_job(import_job, scheduler)
-    flash(gettext("Your tasks will be imported daily."))
-    return redirect(url_for('.setup_autoimporter', short_name=app.short_name))
 
 
 @blueprint.route('/<short_name>/tasks/autoimporter/delete', methods=['POST'])
@@ -639,7 +640,7 @@ def delete_autoimporter(short_name):
     require.app.update(app)
     autoimporter = _get_scheduled_autoimport_job(app.id)
     autoimporter.cancel() if autoimporter is not None else None
-    return redirect(url_for('.setup_autoimporter', short_name=app.short_name))
+    return redirect(url_for('.tasks', short_name=app.short_name))
 
 def _get_scheduled_autoimport_job(project_id):
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.slave)
