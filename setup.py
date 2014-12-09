@@ -38,7 +38,8 @@ requirements = [
     "factory_boy>=2.4.1, <2.5",
     "rq>=0.4.6, <0.5",
     "rq-scheduler",
-    "rq-dashboard"
+    "rq-dashboard",
+    "mailchimp"
 ]
 
 setup(
