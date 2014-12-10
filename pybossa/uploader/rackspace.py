@@ -28,7 +28,8 @@ import traceback
 from flask import current_app, url_for
 from pybossa.uploader import Uploader
 from werkzeug import secure_filename
-from ssl import SSLError
+import time
+import traceback
 
 class RackspaceUploader(Uploader):
 
@@ -65,25 +66,23 @@ class RackspaceUploader(Uploader):
 
     def _upload_file_to_rackspace(self, file, container, attempt=0):
         """Upload file to rackspace."""
-        chksum = pyrax.utils.get_checksum(file)
         try:
+            chksum = pyrax.utils.get_checksum(file)
             self.cf.upload_file(container,
                                 file,
                                 obj_name=secure_filename(file.filename),
                                 etag=chksum)
-        except SSLError as e:
-            print "SSLError, upload retry no: %d" % attempt   # TODO: Log this!
+            return True
+        except Exception as e:
+            print "Uploader exception"  # TODO: Log this!
+            traceback.print_exc()
             attempt += 1
             if (attempt < 3):
+                time.sleep(1)   # Wait one second and try again
                 return self._upload_file_to_rackspace(file, container, attempt)
             else:
-                print "SSLError tried to upload two times"  # TODO: Log this!
+                print "Tried to upload two times. Failed!"   # TODO: Log this!
                 raise
-        except Exception as e:
-            print "Unknown uploader exception"
-            import traceback
-            traceback.print_exc()
-        return True
 
     def _upload_file(self, file, container):
         """Upload a file into a container."""
