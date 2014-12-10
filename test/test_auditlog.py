@@ -24,7 +24,7 @@ from helper import web
 from pybossa.repositories import ProjectRepository
 from pybossa.repositories import UserRepository
 from pybossa.repositories import AuditlogRepository
-from mock import patch
+from mock import patch, MagicMock
 
 project_repo = ProjectRepository(db)
 auditlog_repo = AuditlogRepository(db)
@@ -652,6 +652,73 @@ class TestAuditlogWEB(web.Helper):
             assert log.action == 'update', log.action
             assert log.user_name == 'johndoe', log.user_name
             assert log.user_id == 1, log.user_id
+
+
+    def test_app_auditlog_autoimporter_create(self):
+        self.register()
+        self.new_application()
+        self.new_task(1)
+        short_name = 'sampleapp'
+
+        url = "/app/%s/tasks/autoimporter" % short_name
+        data = {'form_name': 'csv', 'csv_url': 'http://fakeurl.com'}
+
+        self.app.post(url, data=data, follow_redirects=True)
+
+        attribute = 'autoimporter'
+
+        new_value = '%s, url:%s ' % (data['form_name'], data['csv_url'])
+
+        old_value = 'Nothing'
+
+        self.app.post(url, data={'n_answers': '10'}, follow_redirects=True)
+
+        logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
+        assert len(logs) == 1, logs
+        for log in logs:
+            assert log.attribute == attribute, log.attribute
+            assert log.old_value == old_value, log.old_value
+            assert log.new_value == new_value, log.new_value
+            assert log.caller == 'web', log.caller
+            assert log.action == 'update', log.action
+            assert log.user_name == 'johndoe', log.user_name
+            assert log.user_id == 1, log.user_id
+
+
+    @patch('pybossa.view.applications._get_scheduled_autoimport_job')
+    def test_app_auditlog_autoimporter_delete(self, scheduled):
+        self.register()
+        self.new_application()
+        self.new_task(1)
+        short_name = 'sampleapp'
+        mock_autoimporter_job = MagicMock()
+        mock_autoimporter_job._args = [1, 'csv']
+        mock_autoimporter_job._kwargs = {'csv_url': 'http://fakeurl.com'}
+        scheduled.return_value = mock_autoimporter_job
+
+        url = "/app/%s/tasks/autoimporter/delete" % short_name
+
+        self.app.post(url, data={}, follow_redirects=True)
+
+        attribute = 'autoimporter'
+
+        old_value = 'csv, url: http://fakeurl.com'
+
+        new_value = 'Nothing'
+
+        self.app.post(url, data={'n_answers': '10'}, follow_redirects=True)
+
+        logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
+        assert len(logs) == 1, logs
+        for log in logs:
+            assert log.attribute == attribute, log.attribute
+            assert log.old_value == old_value, log.old_value
+            assert log.new_value == new_value, log.new_value
+            assert log.caller == 'web', log.caller
+            assert log.action == 'update', log.action
+            assert log.user_name == 'johndoe', log.user_name
+            assert log.user_id == 1, log.user_id
+
 
     @with_context
     def test_app_auditlog_access_anon(self):
