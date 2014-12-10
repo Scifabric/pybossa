@@ -89,6 +89,8 @@ def oauth_authorized(resp):  # pragma: no cover
             else:
                 flash("Please update your e-mail address in your profile page")
             return redirect(url_for('account.update_profile', name=user.name))
+        if user.email_addr != "None" and user.newsletter_prompted is False:
+            return redirect(url_for('account.newsletter_subscribe', next=next_url))
         return redirect(next_url)
 
 

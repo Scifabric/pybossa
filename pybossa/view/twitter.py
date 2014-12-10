@@ -114,6 +114,9 @@ def oauth_authorized(resp):  # pragma: no cover
     first_login = False
     login_user(user, remember=True)
     flash("Welcome back %s" % user.fullname, 'success')
+    if (user.email_addr != user.name) and user.newsletter_prompted is False:
+        return redirect(url_for('account.newsletter_subscribe',
+                                next=next_url))
     if user.email_addr != user.name:
         return redirect(next_url)
     if first_login:
@@ -121,4 +124,3 @@ def oauth_authorized(resp):  # pragma: no cover
     else:
         flash("Please update your e-mail address in your profile page")
     return redirect(url_for('account.update_profile', name=user.name))
-
