@@ -52,16 +52,13 @@ def get_export_task_jobs():
     for app_x in apps:
         checkuser = user_repo.get(app_x.owner_id)
         # Check if Pro User, if yes use a shorter schedule
+        schedule_hours = 24
         if checkuser.pro:
-            jobs.append(dict(name = project_export,
-                             args = [app_x.id], kwargs={},
-                             interval=(4 * HOUR),
-                             timeout = (10 * MINUTE)))
-        else:
-            jobs.append(dict(name = project_export,
-                             args = [app_x.id], kwargs={},
-                             interval=(24 * HOUR),
-                             timeout = (10 * MINUTE)))
+            schedule_hours = 4
+        jobs.append(dict(name = project_export,
+                         args = [app_x.id], kwargs={},
+                         interval=(schedule_hours * HOUR),
+                         timeout = (10 * MINUTE)))
     return jobs
 
 def project_export(id):
