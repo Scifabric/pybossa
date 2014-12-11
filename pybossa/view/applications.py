@@ -262,7 +262,6 @@ def task_presenter_editor(short_name):
         msg_1 = gettext('Task presenter added!')
         flash('<i class="icon-ok"></i> ' + msg_1, 'success')
         # Log it
-        msg = ("User %s updated task presenter" % current_user.name)
         log = Auditlog(
             app_id=db_app.id,
             app_short_name=db_app.short_name,
@@ -1230,8 +1229,6 @@ def task_n_answers(short_name):
                                owner=owner)
     elif request.method == 'POST' and form.validate():
         task_repo.update_tasks_redundancy(app, form.n_answers.data)
-        msg = ("User %s updated task redundancy to: %s" %
-               (current_user.name, form.n_answers.data))
         # Log it
         log = Auditlog(
             app_id=app.id,
@@ -1294,8 +1291,6 @@ def task_scheduler(short_name):
         cached_apps.delete_app(app.short_name)
         # Log it
         if old_sched != app.info['sched']:
-            msg = ("User %s updated task scheduler from: %s to: %s" %
-                   (current_user.name, old_sched, app.info['sched']))
             log = Auditlog(
                 app_id=app.id,
                 app_short_name=app.short_name,
@@ -1345,17 +1340,11 @@ def task_priority(short_name):
                     task_repo.update(t)
 
                     if old_priority != t.priority_0:
-                        msg = ("User %s updated task priority for task ID: %s"
-                               " from: %s to: %s" % (current_user.name,
-                                                    t.id,
-                                                    old_priority,
-                                                    t.priority_0))
                         old_value = json.dumps({'task_id': t.id,
                                                 'task_priority_0': old_priority})
 
                         new_value = json.dumps({'task_id': t.id,
                                                 'task_priority_0': t.priority_0})
-
 
                         log = Auditlog(
                             app_id=app.id,
