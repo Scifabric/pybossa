@@ -21,21 +21,6 @@ from pybossa.core import mail
 from pybossa.util import with_cache_disabled
 
 
-def export_tasks():
-    """Export tasks to zip"""
-
-    from pybossa.core import db, json_exporter, csv_exporter
-    from pybossa.model.app import App
-
-    print "Running on the background export tasks ZIPs"
-
-    apps = db.slave_session.query(App).all()
-
-    for app_x in apps:
-        json_exporter.pregenerate_zip_files(app_x)
-        csv_exporter.pregenerate_zip_files(app_x)
-
-
 MINUTE = 60
 HOUR = 60 * 60
 
@@ -50,13 +35,42 @@ def get_scheduled_jobs(): # pragma: no cover
             dict(name=warn_old_project_owners, args=[], kwargs={},
                  interval=(24 * HOUR), timeout=(10 * MINUTE)),
             dict(name=warm_cache, args=[], kwargs={},
-                 interval=(10 * MINUTE), timeout=(10 * MINUTE)),
-            dict(name=export_tasks, args=[], kwargs={},
-                 interval=(24 * HOUR), timeout=(30 * MINUTE))]      # TODO: CSV generation needs to be more performant
+                 interval=(10 * MINUTE), timeout=(10 * MINUTE))]
+    # Create ZIPs for all projects
+    zip_jobs = get_export_task_jobs()
     # Based on type of user
-    tmp = get_project_jobs()
-    return jobs + tmp
+    project_jobs = get_project_jobs()
+    return zip_jobs + jobs + project_jobs
 
+def get_export_task_jobs():
+    """Export tasks to zip"""
+    from pybossa.core import db, user_repo
+    from pybossa.model.app import App
+    apps = db.slave_session.query(App).all()
+    # Append all ZIP generation for each app as a task
+    jobs = []
+    for app_x in apps:
+        checkuser = user_repo.get(app_x.owner_id)
+        # Check if Pro User, if yes use a shorter schedule
+        if checkuser.pro:
+            jobs.append(dict(name = project_export,
+                             args = [app_x.id], kwargs={},
+                             interval=(4 * HOUR),
+                             timeout = (10 * MINUTE)))
+        else:
+            jobs.append(dict(name = project_export,
+                             args = [app_x.id], kwargs={},
+                             interval=(24 * HOUR),
+                             timeout = (10 * MINUTE)))
+    return jobs
+
+def project_export(id):
+    from pybossa.core import project_repo, json_exporter, csv_exporter
+    app = project_repo.get(id)
+    if app is not None:
+        print "Export project id %d" % id
+        json_exporter.pregenerate_zip_files(app)
+        csv_exporter.pregenerate_zip_files(app)
 
 def get_project_jobs():
     """Return a list of jobs based on user type."""
@@ -65,7 +79,6 @@ def get_project_jobs():
                             get_app_stats,
                             interval=(10 * MINUTE),
                             timeout=(10 * MINUTE))
-
 
 def create_dict_jobs(data, function,
                      interval=(24 * HOUR), timeout=(10 * MINUTE)):
