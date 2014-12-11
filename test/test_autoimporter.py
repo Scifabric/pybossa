@@ -351,6 +351,7 @@ class TestAutoimporterBehaviour(web.Helper):
         app = AppFactory.create(owner=owner)
         url = "/app/%s/tasks/autoimporter" % app.short_name
         data = {'form_name': 'csv', 'csv_url': 'http://fakeurl.com'}
+        schedule.return_value = {'kwargs': {} }
 
         self.app.post(url, data=data, follow_redirects=True)
 
