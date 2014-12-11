@@ -29,29 +29,6 @@ class BulkImportException(Exception):
     pass
 
 
-googledocs_urls = {
-    'spreadsheet': None,
-    'image': "https://docs.google.com/spreadsheet/ccc"
-             "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE"
-             "&usp=sharing",
-    'sound': "https://docs.google.com/spreadsheet/ccc"
-             "?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc"
-             "&usp=sharing",
-    'video': "https://docs.google.com/spreadsheet/ccc"
-             "?key=0AsNlt0WgPAHwdGZ2UGhxSTJjQl9YNVhfUVhGRUdoRWc"
-             "&usp=sharing",
-    'map': "https://docs.google.com/spreadsheet/ccc"
-           "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc"
-           "&usp=sharing",
-    'pdf': "https://docs.google.com/spreadsheet/ccc"
-           "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE"
-           "&usp=sharing"}
-
-
-def _create_importer_for(template):
-    return _importers[template]()
-
-
 class _BulkTaskImport(object):
     importer_id = None
 
@@ -199,3 +176,7 @@ def create_tasks(task_repo, project_id, template, **form_data):
 
 def count_tasks_to_import(template, **form_data):
     return _create_importer_for(template).count_tasks(**form_data)
+
+
+def _create_importer_for(template):
+    return _importers[template]()

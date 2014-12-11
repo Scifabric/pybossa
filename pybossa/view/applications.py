@@ -542,7 +542,8 @@ def import_task(short_name):
     template_args['form'] = form
     if template == 'gdocs' and request.args.get('mode'):  # pragma: no cover
         mode = request.args.get('mode')
-        template_args["form"].googledocs_url.data = importers.googledocs_urls[mode]
+        googledocs_urls = current_app.config.get('TEMPLATE_TASKS')
+        form.googledocs_url.data = googledocs_urls.get(mode)
 
     if not (form and form.validate_on_submit()):  # pragma: no cover
         return render_template('/applications/importers/%s.html' % template,
@@ -1568,4 +1569,3 @@ def auditlog(short_name):
                            n_task_runs=n_task_runs,
                            n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
                            n_volunteers=cached_apps.n_volunteers(app.get('id')))
-
