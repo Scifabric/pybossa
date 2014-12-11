@@ -366,8 +366,8 @@ class TestAutoimporterBehaviour(web.Helper):
         owner = db.session.query(User).first()
         app = AppFactory.create(owner=owner)
         mock_autoimporter_job = MagicMock()
-        mock_autoimporter_job._args = [app.id, 'csv']
-        mock_autoimporter_job._kwargs = {'csv_url': 'http://fakeurl.com'}
+        mock_autoimporter_job.args = [app.id, 'csv']
+        mock_autoimporter_job.kwargs = {'csv_url': 'http://fakeurl.com'}
         scheduled.return_value = mock_autoimporter_job
         url = "/app/%s/tasks/autoimporter" % app.short_name
         data = {'form_name': 'gdocs', 'googledocs_url': 'http://another.com'}

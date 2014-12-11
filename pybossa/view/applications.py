@@ -609,7 +609,18 @@ def setup_autoimporter(short_name):
     if not (form and form.validate_on_submit()):  # pragma: no cover
         return render_template('/applications/importers/%s.html' % template,
                                 **template_args)
-    _setup_autoimport_job(app, template, **form.get_import_data())
+    job = _setup_autoimport_job(app, template, **form.get_import_data())
+    log = Auditlog(
+        app_id=app.id,
+        app_short_name=app.short_name,
+        user_id=current_user.id,
+        user_name=current_user.name,
+        action='create',
+        caller='web',
+        attribute='autoimporter',
+        old_value='Nothing',
+        new_value=json.dumps(job['kwargs']))
+    auditlog_repo.save(log)
     flash(gettext("Success! Tasks will be imported daily."))
     return redirect(url_for('.setup_autoimporter', short_name=app.short_name))
 
@@ -618,7 +629,8 @@ def _setup_autoimport_job(app, template, **form_data):
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.master)
     import_job = dict(name=import_tasks, args=[app.id, template],
                       kwargs=form_data, interval=24*HOUR, timeout=500)
-    job = schedule_job(import_job, scheduler)
+    schedule_job(import_job, scheduler)
+    return import_job
 
 
 @blueprint.route('/<short_name>/tasks/autoimporter/delete', methods=['POST'])
@@ -640,7 +652,19 @@ def delete_autoimporter(short_name):
     require.app.read(app)
     require.app.update(app)
     autoimporter = _get_scheduled_autoimport_job(app.id)
-    autoimporter.cancel() if autoimporter is not None else None
+    if autoimporter is not None:
+        autoimporter.cancel()
+        log = Auditlog(
+            app_id=app.id,
+            app_short_name=app.short_name,
+            user_id=current_user.id,
+            user_name=current_user.name,
+            action='delete',
+            caller='web',
+            attribute='autoimporter',
+            old_value=json.dumps(autoimporter.kwargs),
+            new_value='Nothing')
+        auditlog_repo.save(log)
     return redirect(url_for('.tasks', short_name=app.short_name))
 
 def _get_scheduled_autoimport_job(project_id):

@@ -667,11 +667,9 @@ class TestAuditlogWEB(web.Helper):
 
         attribute = 'autoimporter'
 
-        new_value = '%s, url:%s ' % (data['form_name'], data['csv_url'])
+        new_value = '{"csv_url": "http://fakeurl.com"}'
 
         old_value = 'Nothing'
-
-        self.app.post(url, data={'n_answers': '10'}, follow_redirects=True)
 
         logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
         assert len(logs) == 1, logs
@@ -680,7 +678,7 @@ class TestAuditlogWEB(web.Helper):
             assert log.old_value == old_value, log.old_value
             assert log.new_value == new_value, log.new_value
             assert log.caller == 'web', log.caller
-            assert log.action == 'update', log.action
+            assert log.action == 'create', log.action
             assert log.user_name == 'johndoe', log.user_name
             assert log.user_id == 1, log.user_id
 
@@ -692,21 +690,18 @@ class TestAuditlogWEB(web.Helper):
         self.new_task(1)
         short_name = 'sampleapp'
         mock_autoimporter_job = MagicMock()
-        mock_autoimporter_job._args = [1, 'csv']
-        mock_autoimporter_job._kwargs = {'csv_url': 'http://fakeurl.com'}
+        mock_autoimporter_job.args = [1, 'csv']
+        mock_autoimporter_job.kwargs = {'csv_url': 'http://fakeurl.com'}
         scheduled.return_value = mock_autoimporter_job
-
-        url = "/app/%s/tasks/autoimporter/delete" % short_name
-
-        self.app.post(url, data={}, follow_redirects=True)
 
         attribute = 'autoimporter'
 
-        old_value = 'csv, url: http://fakeurl.com'
+        old_value = json.dumps(mock_autoimporter_job.kwargs)
 
         new_value = 'Nothing'
 
-        self.app.post(url, data={'n_answers': '10'}, follow_redirects=True)
+        url = "/app/%s/tasks/autoimporter/delete" % short_name
+        self.app.post(url, data={}, follow_redirects=True)
 
         logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
         assert len(logs) == 1, logs
@@ -715,7 +710,7 @@ class TestAuditlogWEB(web.Helper):
             assert log.old_value == old_value, log.old_value
             assert log.new_value == new_value, log.new_value
             assert log.caller == 'web', log.caller
-            assert log.action == 'update', log.action
+            assert log.action == 'delete', log.action
             assert log.user_name == 'johndoe', log.user_name
             assert log.user_id == 1, log.user_id
 
