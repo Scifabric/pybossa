@@ -142,17 +142,12 @@ class _BulkTaskEpiCollectPlusImport(_BulkTaskImport):
         return self._import_epicollect_tasks(json.loads(r.text))
 
 
-_importers = {'csv': _BulkTaskCSVImport,
-              'gdocs': _BulkTaskGDImport,
-              'epicollect': _BulkTaskEpiCollectPlusImport}
-
-
-def create_tasks(task_repo, project_id, template, **form_data):
+def create_tasks(task_repo, project_id, importer_id, **form_data):
     """Create tasks from a remote source using an importer object and avoiding
     the creation of repeated tasks"""
     empty = True
     n = 0
-    importer = _create_importer_for(template)
+    importer = _create_importer_for(importer_id)
     for task_data in importer.tasks(**form_data):
         task = Task(app_id=project_id)
         [setattr(task, k, v) for k, v in task_data.iteritems()]
@@ -174,9 +169,12 @@ def create_tasks(task_repo, project_id, template, **form_data):
     return msg
 
 
-def count_tasks_to_import(template, **form_data):
-    return _create_importer_for(template).count_tasks(**form_data)
+def count_tasks_to_import(importer_id, **form_data):
+    return _create_importer_for(importer_id).count_tasks(**form_data)
 
 
-def _create_importer_for(template):
-    return _importers[template]()
+def _create_importer_for(importer_id):
+    _importers = {'csv': _BulkTaskCSVImport,
+              'gdocs': _BulkTaskGDImport,
+              'epicollect': _BulkTaskEpiCollectPlusImport}
+    return _importers[importer_id]()
