@@ -20,6 +20,12 @@ The most interesting changes are the following:
  * Passwords in apps: the owner of the app can set a password so both anonymous
    and authenticated users are required to know it if they want to contribute to
    the app.
+ * Background jobs: now PyBossa computes the statistics of projects in the
+   background.
+ * Audit log for projects: admin users can see the changes that a project has
+   gone through.
+ * Newsletters: a PyBossa project can now show a newsletter subscription page
+   to a Mailchimp list.
 
 For a full list of changes, see associated `Github milestone`_.
 
