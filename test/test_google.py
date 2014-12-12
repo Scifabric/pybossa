@@ -92,8 +92,9 @@ class TestGoogle(Test):
         """Test GOOGLE manage_user_login shows newsletter works."""
         user = UserFactory.create(fullname='john', name='john',
                                   google_user_id='1')
+        user_data = dict(id=str(user.id), name=user.name, email=user.email_addr)
         next_url = '/'
-        manage_user_login(user, next_url=next_url)
+        manage_user_login(user, user_data, next_url=next_url)
         login_user.assert_called_with(user, remember=True)
         assert user.newsletter_prompted is False
         url_for.assert_called_with('account.newsletter_subscribe',
@@ -113,7 +114,43 @@ class TestGoogle(Test):
                                   google_user_id='1',
                                   newsletter_prompted=True)
         next_url = '/'
-        manage_user_login(user, next_url=next_url)
+        user_data = dict(id=str(user.id), name=user.name, email=user.email_addr)
+        manage_user_login(user, user_data, next_url=next_url)
         login_user.assert_called_with(user, remember=True)
         assert user.newsletter_prompted is True
         assert url_for.called is False
+
+    @patch('pybossa.view.google.newsletter', autospec=True)
+    @patch('pybossa.view.google.login_user', return_value=True)
+    @patch('pybossa.view.google.flash', return_value=True)
+    @patch('pybossa.view.google.url_for', return_value=True)
+    @patch('pybossa.view.google.redirect', return_value=True)
+    def test_manage_login_without_user(self, redirect,
+                                       url_for, flash,
+                                       login_user,
+                                       newsletter):
+        """Test GOOGLE manage_user_login without user works."""
+        user = UserFactory.create(fullname='john', name='john')
+        user_data = dict(id=str(user.id), name=user.name, email=user.email_addr)
+        next_url = '/'
+        manage_user_login(None, user_data, next_url=next_url)
+        assert login_user.called is False
+        url_for.assert_called_with('account.forgot_password')
+
+    @patch('pybossa.view.google.newsletter', autospec=True)
+    @patch('pybossa.view.google.login_user', return_value=True)
+    @patch('pybossa.view.google.flash', return_value=True)
+    @patch('pybossa.view.google.url_for', return_value=True)
+    @patch('pybossa.view.google.redirect', return_value=True)
+    def test_manage_login_without_user_facebook(self, redirect,
+                                                url_for, flash,
+                                                login_user,
+                                                newsletter):
+        """Test GOOGLE manage_user_login without user facebook works."""
+        user = UserFactory.create(fullname='john', name='john',
+                                  info={'facebook_token': 't'})
+        user_data = dict(id=str(user.id), name=user.name, email=user.email_addr)
+        next_url = '/'
+        manage_user_login(None, user_data, next_url=next_url)
+        assert login_user.called is False
+        url_for.assert_called_with('account.signin')
