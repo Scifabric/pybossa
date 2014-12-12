@@ -158,3 +158,22 @@ class TestFacebook(Test):
         next_url = '/'
         manage_user_login(None, user_data, next_url)
         url_for.assert_called_once_with('account.signin')
+
+    @patch('pybossa.view.facebook.newsletter', autospec=True)
+    @patch('pybossa.view.facebook.login_user', return_value=True)
+    @patch('pybossa.view.facebook.flash', return_value=True)
+    @patch('pybossa.view.facebook.url_for', return_value=True)
+    @patch('pybossa.view.facebook.redirect', return_value=True)
+    def test_manage_login_user_update_email(self, redirect,
+                                            url_for, flash,
+                                            login_user,
+                                            newsletter):
+        """Test manage login user works."""
+        newsletter.app = True
+        user = UserFactory.create(email_addr="None")
+        user_data = dict(id=str(user.id), name=user.name, email=user.email_addr)
+        next_url = '/'
+        manage_user_login(user, user_data, next_url)
+        login_user.assert_called_once_with(user, remember=True)
+        url_for.assert_called_once_with('account.update_profile',
+                                        name=user.name)
