@@ -114,10 +114,10 @@ class TestFacebook(Test):
     @patch('pybossa.view.facebook.flash', return_value=True)
     @patch('pybossa.view.facebook.url_for', return_value=True)
     @patch('pybossa.view.facebook.redirect', return_value=True)
-    def test_manage_login_user(self, redirect,
-                               url_for, flash,
-                               login_user,
-                               newsletter):
+    def test_manage_login_user_local(self, redirect,
+                                     url_for, flash,
+                                     login_user,
+                                     newsletter):
         """Test manage login user works."""
         newsletter.app = True
         user = UserFactory.create()
@@ -131,10 +131,10 @@ class TestFacebook(Test):
     @patch('pybossa.view.facebook.flash', return_value=True)
     @patch('pybossa.view.facebook.url_for', return_value=True)
     @patch('pybossa.view.facebook.redirect', return_value=True)
-    def test_manage_login_user(self, redirect,
-                               url_for, flash,
-                               login_user,
-                               newsletter):
+    def test_manage_login_user_google_token(self, redirect,
+                                            url_for, flash,
+                                            login_user,
+                                            newsletter):
         """Test manage login user works."""
         newsletter.app = True
         user = UserFactory.create(info={'google_token': 'k'})
@@ -148,10 +148,10 @@ class TestFacebook(Test):
     @patch('pybossa.view.facebook.flash', return_value=True)
     @patch('pybossa.view.facebook.url_for', return_value=True)
     @patch('pybossa.view.facebook.redirect', return_value=True)
-    def test_manage_login_user(self, redirect,
-                               url_for, flash,
-                               login_user,
-                               newsletter):
+    def test_manage_login_user_empty(self, redirect,
+                                     url_for, flash,
+                                     login_user,
+                                     newsletter):
         """Test manage login user works."""
         newsletter.app = True
         user_data = dict(id='3', name='algo', email='email')
