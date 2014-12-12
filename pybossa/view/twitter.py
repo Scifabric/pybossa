@@ -102,7 +102,7 @@ def oauth_authorized(resp):  # pragma: no cover
 
     user = manage_user(access_token, user_data, next_url)
 
-    manage_user_login(user, next_url)
+    return manage_user_login(user, next_url)
 
 def manage_user_login(user, next_url):
     """Manage user login."""
