@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from default import Test
-from pybossa.view.google import manage_user
+from pybossa.view.google import manage_user, manage_user_login
 from mock import patch
 from factories import UserFactory
 
@@ -79,3 +79,41 @@ class TestGoogle(Test):
         assert r_user.fullname == user_data['name'], user
         assert r_user.google_user_id == user_data['id'], user
         assert newsletter.subscribe_user.called is False, newsletter.subscribe_user.called
+
+    @patch('pybossa.view.google.newsletter', autospec=True)
+    @patch('pybossa.view.google.login_user', return_value=True)
+    @patch('pybossa.view.google.flash', return_value=True)
+    @patch('pybossa.view.google.url_for', return_value=True)
+    @patch('pybossa.view.google.redirect', return_value=True)
+    def test_manage_user_with_oauth_newsletter(self, redirect,
+                                               url_for, flash,
+                                               login_user,
+                                               newsletter):
+        """Test GOOGLE manage_user_login shows newsletter works."""
+        user = UserFactory.create(fullname='john', name='john',
+                                  google_user_id='1')
+        next_url = '/'
+        manage_user_login(user, next_url=next_url)
+        login_user.assert_called_with(user, remember=True)
+        assert user.newsletter_prompted is False
+        url_for.assert_called_with('account.newsletter_subscribe',
+                                   next=next_url)
+
+    @patch('pybossa.view.google.newsletter', autospec=True)
+    @patch('pybossa.view.google.login_user', return_value=True)
+    @patch('pybossa.view.google.flash', return_value=True)
+    @patch('pybossa.view.google.url_for', return_value=True)
+    @patch('pybossa.view.google.redirect', return_value=True)
+    def test_manage_user_is_not_asked_twice(self, redirect,
+                                            url_for, flash,
+                                            login_user,
+                                            newsletter):
+        """Test GOOGLE manage_user_login shows newsletter only once works."""
+        user = UserFactory.create(fullname='john', name='john',
+                                  google_user_id='1',
+                                  newsletter_prompted=True)
+        next_url = '/'
+        manage_user_login(user, next_url=next_url)
+        login_user.assert_called_with(user, remember=True)
+        assert user.newsletter_prompted is True
+        assert url_for.called is False
