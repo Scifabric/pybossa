@@ -16,7 +16,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from default import Test
-from pybossa.view.facebook import manage_user
+from pybossa.view.facebook import manage_user, manage_user_login
+from mock import patch
+from factories import UserFactory
 
 
 class TestFacebook(Test):
@@ -74,3 +76,35 @@ class TestFacebook(Test):
         user = manage_user(token, user_data, None)
         err_msg = "It should return the same user"
         assert user.facebook_user_id == 10, err_msg
+
+    @patch('pybossa.view.facebook.newsletter', autospec=True)
+    def test_manage_user_with_email_newsletter(self, newsletter):
+        """Test FACEBOOK manage_user newsletter works."""
+        newsletter.app = True
+        # First with a new user
+        user_data = dict(id=1, username='facebook',
+                         email='f@f.com', name='name')
+        token = 't'
+        user = manage_user(token, user_data, None)
+        assert user.email_addr == user_data['email'], user
+        assert user.name == user_data['username'], user
+        assert user.fullname == user_data['name'], user
+        assert user.facebook_user_id == user_data['id'], user
+
+        newsletter.subscribe_user.assert_called_once_with(user)
+
+
+    @patch('pybossa.view.facebook.newsletter', autospec=True)
+    def test_manage_user_without_email_newsletter(self, newsletter):
+        """Test FACEBOOK manage_user without e-mail newsletter works."""
+        newsletter.app = True
+        # First with a new user
+        user_data = dict(id=1, username='facebook', name='name')
+        token = 't'
+        user = manage_user(token, user_data, None)
+        assert user.email_addr == user_data['email'], user
+        assert user.name == user_data['username'], user
+        assert user.fullname == user_data['name'], user
+        assert user.facebook_user_id == user_data['id'], user
+        err_msg = "It should not be called."
+        assert newsletter.subscribe_user.called is False, err_msg
