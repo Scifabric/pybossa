@@ -255,16 +255,16 @@ def task_presenter_editor(short_name):
     form = TaskPresenterForm(request.form)
     form.id.data = app.id
     if request.method == 'POST' and form.validate():
-        db_app = project_repo.get(app.id)
-        db_app.info['task_presenter'] = form.editor.data
-        project_repo.update(db_app)
+        app = project_repo.get(app.id)
+        app.info['task_presenter'] = form.editor.data
+        project_repo.update(app)
         cached_apps.delete_app(app.short_name)
         msg_1 = gettext('Task presenter added!')
         flash('<i class="icon-ok"></i> ' + msg_1, 'success')
         # Log it
         log = Auditlog(
-            app_id=db_app.id,
-            app_short_name=db_app.short_name,
+            app_id=app.id,
+            app_short_name=app.short_name,
             user_id=current_user.id,
             user_name=current_user.name,
             action='update',
@@ -320,18 +320,18 @@ def task_presenter_editor(short_name):
                       the <strong>preview section</strong>. Click in the \
                       preview button!'
         flash(gettext(msg), 'info')
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     return render_template('applications/task_presenter_editor.html',
                            title=title,
                            form=form,
-                           app=app,
+                           app=dict_app,
                            owner=owner,
                            overall_progress=overall_progress,
                            n_tasks=n_tasks,
                            n_task_runs=n_task_runs,
                            last_activity=last_activity,
-                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                           n_volunteers=cached_apps.n_volunteers(app.get('id')),
+                           n_completed_tasks=cached_apps.n_completed_tasks(app.id),
+                           n_volunteers=cached_apps.n_volunteers(app.id),
                            errors=errors)
 
 
