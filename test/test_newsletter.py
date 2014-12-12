@@ -136,3 +136,31 @@ class TestNewsletter(web.Helper):
         assert "You are subscribed" not in res.data, err_msg
         assert newsletter.subscribe_user.called is False, err_msg
         assert "Update" in res.data, res.data
+
+    @with_context
+    @patch('pybossa.view.account.newsletter', autospec=True)
+    def test_newsletter_with_any_argument(self, newsletter):
+        """Test NEWSLETTER view with any argument works."""
+        newsletter.app = True
+        self.register()
+        res = self.app.get('/account/newsletter?subscribe=something',
+                           follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "User should not be subscribed"
+        assert "You are subscribed" not in res.data, err_msg
+        assert newsletter.subscribe_user.called is False, err_msg
+        assert dom.find(id='newsletter') is not None, err_msg
+
+    @with_context
+    @patch('pybossa.view.account.newsletter', autospec=True)
+    def test_newsletter_with_any_argument_variation(self, newsletter):
+        """Test NEWSLETTER view with any argument variation works."""
+        newsletter.app = True
+        self.register()
+        res = self.app.get('/account/newsletter?myarg=something',
+                           follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "User should not be subscribed"
+        assert "You are subscribed" not in res.data, err_msg
+        assert newsletter.subscribe_user.called is False, err_msg
+        assert dom.find(id='newsletter') is not None, err_msg
