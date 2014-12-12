@@ -57,6 +57,7 @@ class User(db.Model, DomainObject, UserMixin):
     facebook_user_id = Column(BigInteger, unique=True)
     google_user_id = Column(String, unique=True)
     ckan_api = Column(String, unique=True)
+    newsletter_prompted = Column(Boolean, default=False)
     info = Column(JSONEncodedDict, default=dict)
 
     ## Relationships

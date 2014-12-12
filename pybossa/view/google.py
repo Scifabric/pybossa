@@ -19,7 +19,7 @@
 from flask import Blueprint, request, url_for, flash, redirect, session
 from flask.ext.login import login_user, current_user
 
-from pybossa.core import google, user_repo
+from pybossa.core import google, user_repo, newsletter
 from pybossa.model.user import User
 from pybossa.util import get_user_signup_method
 # Required to access the config parameters outside a context as we are using
@@ -74,6 +74,8 @@ def manage_user(access_token, user_data, next_url):
                    google_user_id=user_data['id'],
                    info=info)
             user_repo.save(user)
+            if newsletter.app:
+                newsletter.subscribe_user(user)
             return user
         else:
             return None
@@ -113,6 +115,10 @@ def oauth_authorized(resp):  # pragma: no cover
     import json
     user_data = json.loads(r.content)
     user = manage_user(access_token, user_data, next_url)
+    return manage_user_login(user, user_data, next_url)
+
+def manage_user_login(user, user_data, next_url):
+    """Manage user login."""
     if user is None:
         # Give a hint for the user
         user = user_repo.get_by(email_addr=user_data['email'])
@@ -129,4 +135,7 @@ def oauth_authorized(resp):  # pragma: no cover
     else:
         login_user(user, remember=True)
         flash("Welcome back %s" % user.fullname, 'success')
+        if user.newsletter_prompted is False and newsletter.app:
+            return redirect(url_for('account.newsletter_subscribe',
+                                    next=next_url))
         return redirect(next_url)

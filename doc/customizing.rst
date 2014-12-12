@@ -646,3 +646,22 @@ However, if you don't need this feature, it can be disabled (as it is by default
 with this configuration parameter::
 
     ACCOUNT_CONFIRMATION_DISABLED = True
+
+Newsletters with Mailchimp
+==========================
+
+PyBossa can show a subscription page to users when they create an account. By
+default is disabled, but if you want to enable it the system will show the page
+to registered users only once, to check if they want to be subscribed or not.
+
+In order to support newsletters, you'll have to create an account in Mailchimp
+and get an API_KEY as well as a LIST_ID to add the users. Once you've those two
+items you can enable the newsletter subscription as simple as this, add to your
+settings_local.py file the following values::
+
+    MAILCHIMP_API_KEY = "your-key"
+    MAILCHIMP_LIST_ID = "your-list-id"
+
+Restart the server, and you will be done. Now in your Mailchimp account you
+will be able to create campaigns, and communicate with your registered and
+interested users.
