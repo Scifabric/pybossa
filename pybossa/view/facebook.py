@@ -64,6 +64,42 @@ def oauth_authorized(resp):  # pragma: no cover
     user_data = facebook.oauth.get('/me').data
 
     user = manage_user(access_token, user_data, next_url)
+    return manage_user_login(user, user_data, next_url)
+
+
+def manage_user(access_token, user_data, next_url):
+    """Manage the user after signin"""
+    user = user_repo.get_by(facebook_user_id=user_data['id'])
+
+    if user is None:
+        facebook_token = dict(oauth_token=access_token)
+        info = dict(facebook_token=facebook_token)
+        user = user_repo.get_by_name(user_data['username'])
+        # NOTE: Sometimes users at Facebook validate their accounts without
+        # registering an e-mail (see this http://stackoverflow.com/a/17809808)
+        email = None
+        if user_data.get('email'):
+            email = user_repo.get_by(email_addr=user_data['email'])
+
+        if user is None and email is None:
+            if not user_data.get('email'):
+                user_data['email'] = "None"
+            user = User(fullname=user_data['name'],
+                   name=user_data['username'],
+                   email_addr=user_data['email'],
+                   facebook_user_id=user_data['id'],
+                   info=info)
+            user_repo.save(user)
+            if newsletter.app and user.email_addr != "None":
+                newsletter.subscribe_user(user)
+            return user
+        else:
+            return None
+    else:
+        return user
+
+def manage_user_login(user, user_data, next_url):
+    """Manage user login."""
     if user is None:
         # Give a hint for the user
         user = user_repo.get_by(email_addr=user_data['email'])
@@ -93,35 +129,3 @@ def oauth_authorized(resp):  # pragma: no cover
                 and newsletter.app):
             return redirect(url_for('account.newsletter_subscribe', next=next_url))
         return redirect(next_url)
-
-
-def manage_user(access_token, user_data, next_url):
-    """Manage the user after signin"""
-    user = user_repo.get_by(facebook_user_id=user_data['id'])
-
-    if user is None:
-        facebook_token = dict(oauth_token=access_token)
-        info = dict(facebook_token=facebook_token)
-        user = user_repo.get_by_name(user_data['username'])
-        # NOTE: Sometimes users at Facebook validate their accounts without
-        # registering an e-mail (see this http://stackoverflow.com/a/17809808)
-        email = None
-        if user_data.get('email'):
-            email = user_repo.get_by(email_addr=user_data['email'])
-
-        if user is None and email is None:
-            if not user_data.get('email'):
-                user_data['email'] = "None"
-            user = User(fullname=user_data['name'],
-                   name=user_data['username'],
-                   email_addr=user_data['email'],
-                   facebook_user_id=user_data['id'],
-                   info=info)
-            user_repo.save(user)
-            if newsletter.app:
-                newsletter.subscribe_user(user)
-            return user
-        else:
-            return None
-    else:
-        return user
