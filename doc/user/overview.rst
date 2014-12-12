@@ -201,6 +201,7 @@ available templates are the following:
 .. _`PDF transcription`: https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE&usp=sharing
 .. _`DropBox`: http://www.dropbox.com
 
+.. _epicollect-import:
 
 Importing the tasks from an EpiCollect Plus Public Project
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

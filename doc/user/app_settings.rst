@@ -242,7 +242,37 @@ Task Runs (answers) of your project.
     task runs they will be lost forever.
 
 This feature is useful when you are testing your project, and you are
-deciding the structure that you are going to build in your answers. 
+deciding the structure that you are going to build in your answers.
+
+.. _autoimport-tasks:
+
+Import tasks automatically
+==========================
+
+Both pro users and server administrators can have access to this feature, which
+allows to schedule a background job that will automatically import tasks every
+24 hours. This option is accessible from the **Tasks** link in the left local
+navigation bar:
+
+.. image:: http://i.imgur.com/0bNR60P.png
+
+Tasks can be imported using any of the PyBossa built-in importers, such
+as :ref:`csv-import` and :ref:`epicollect-import`. To set up an autoimporter,
+please refer to the instructions for :ref:`csv-import` or :ref:`epicollect-import`,
+as the procedure is the same:
+
+.. image:: http://i.imgur.com/FtFBDi2.png
+
+The only difference is that the tasks won't be
+imported only once, but regularly, as explained. However, the same behaviour
+should be expected, so autoimporting a a CSV file that does not change will
+result in no new tasks being imported.
+
+Once an autoimporter has been set up, it can also be cancelled anytime:
+
+.. image:: http://i.imgur.com/gu6CJG0.png
+
+And a new one can then be created.
 
 .. _app-delete:
 
