@@ -196,3 +196,21 @@ class TestFacebook(Test):
         login_user.assert_called_once_with(user, remember=True)
         url_for.assert_called_once_with('account.newsletter_subscribe',
                                         next=next_url)
+
+    @patch('pybossa.view.facebook.newsletter', autospec=True)
+    @patch('pybossa.view.facebook.login_user', return_value=True)
+    @patch('pybossa.view.facebook.flash', return_value=True)
+    @patch('pybossa.view.facebook.url_for', return_value=True)
+    @patch('pybossa.view.facebook.redirect', return_value=True)
+    def test_manage_login_user_already_asked(self, redirect,
+                                             url_for, flash,
+                                             login_user,
+                                             newsletter):
+        """Test manage login user already asked works."""
+        newsletter.app = True
+        user = UserFactory.create(newsletter_prompted=True)
+        user_data = dict(id=str(user.id), name=user.name, email=user.email_addr)
+        next_url = '/'
+        manage_user_login(user, user_data, next_url)
+        login_user.assert_called_once_with(user, remember=True)
+        redirect.assert_called_once_with(next_url)
