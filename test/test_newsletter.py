@@ -79,3 +79,21 @@ class TestNewsletter(web.Helper):
         err_msg = "It should return 404"
         assert dom.find(id='newsletter') is None, err_msg
         assert res.status_code == 404, err_msg
+
+    def myfunc(user):
+        print user
+
+    @with_context
+    @patch('pybossa.view.account.newsletter', autospec=True)
+    def test_newsletter_subscribe(self, newsletter):
+        """Test NEWSLETTER view subcribe works."""
+        newsletter.app = True
+        newsletter.subcribe_user = self.myfunc
+        self.register()
+        res = self.app.get('/account/newsletter?subscribe=True',
+                           follow_redirects=True)
+        err_msg = "User should be subscribed"
+        user = user_repo.get(1)
+        assert "You are subscribed" in res.data, err_msg
+        assert newsletter.subscribe_user.called, err_msg
+        newsletter.subscribe_user.assert_called_with(user)
