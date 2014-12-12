@@ -80,9 +80,6 @@ class TestNewsletter(web.Helper):
         assert dom.find(id='newsletter') is None, err_msg
         assert res.status_code == 404, err_msg
 
-    def myfunc(user):
-        print user
-
     @with_context
     @patch('pybossa.view.account.newsletter', autospec=True)
     def test_newsletter_subscribe(self, newsletter):
