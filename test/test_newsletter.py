@@ -16,30 +16,12 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-import json
-import StringIO
-
-from default import db, Fixtures, with_context
+from default import with_context
 from helper import web
-from mock import patch, Mock
-from flask import Response, redirect
-from itsdangerous import BadSignature
+from mock import patch
 from collections import namedtuple
-from pybossa.core import signer, user_repo
-from pybossa.util import unicode_csv_reader
-from pybossa.util import get_user_signup_method
-from pybossa.ckan import Ckan
+from pybossa.core import user_repo
 from bs4 import BeautifulSoup
-from requests.exceptions import ConnectionError
-from werkzeug.exceptions import NotFound
-from pybossa.model.app import App
-from pybossa.model.category import Category
-from pybossa.model.task import Task
-from pybossa.model.task_run import TaskRun
-from pybossa.model.user import User
-from pybossa.jobs import send_mail, import_tasks
-from factories import AppFactory, CategoryFactory, TaskFactory, TaskRunFactory
-
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
@@ -85,3 +67,15 @@ class TestNewsletter(web.Helper):
         assert dom.find(id='newsletter') is None, err_msg
         assert dom.find(id='signmeup') is None, err_msg
         assert dom.find(id='notinterested') is None, err_msg
+
+    @with_context
+    @patch('pybossa.view.account.newsletter', autospec=True)
+    def test_newsletter_subscribe_returns_404(self, newsletter):
+        """Test NEWSLETTER view returns 404 works."""
+        newsletter.app = None
+        self.register()
+        res = self.app.get('/account/newsletter', follow_redirects=True)
+        dom = BeautifulSoup(res.data)
+        err_msg = "It should return 404"
+        assert dom.find(id='newsletter') is None, err_msg
+        assert res.status_code == 404, err_msg
