@@ -857,8 +857,8 @@ hidden 'div' node so you can access it just like this:
     var userLocale = document.getElementById('PYBOSSA_USER_LOCALE').textContent.trim();
 
 
-The way you use it after this, it is up to you, but let's see an example of how 
-to you can use it to make a tutorial that automatically shows the strings in the language 
+The way you use it after that is up to you. But let's see an example of how you
+can use it to make a tutorial that automatically shows the strings in the locale
 of the user.
 
 .. note::
@@ -906,7 +906,8 @@ the tutorial. Here you have a snippet of HTML tutorial file:
         </div>
     </div>
 
-To add multilingual support, copy and paste it is as many times as languages you're planning to support.
+To add multilingual support, copy and paste it is as many times as languages
+you're planning to support.
 
 Then, add to each of them an id in the most outer 'div' which corresponds to the
 abreviated name of the locale ('en' for English, 'es' for Spanish, etc.), and
@@ -1140,7 +1141,8 @@ The long description will be shown in the project home page::
  http://crowdcrafting.org/app/flickrperson
 
 If you want to modify the description you have two options, edit it via the web
-interface, or modify locally the *long_description.md* file and run pbs to update it:
+interface, or modify locally the *long_description.md* file and run pbs to
+update it:
 
 .. code-block:: bash
 

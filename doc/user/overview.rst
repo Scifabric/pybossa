@@ -132,19 +132,25 @@ built-in :ref:`task-creator`. You have to do the following:
 .. image:: http://i.imgur.com/u5vusQR.png
    :width: 100%
 
-3. And click again on the **Import Tasks** 
-   button. After clicking on it you will see 7 different options:
+3. And click again on the **Import Tasks** button. After clicking on it you will
+   see several options. The first three are for using the different kinds of
+   importers supported by PyBossa.
 
-.. image:: http://i.imgur.com/Qf2sMGV.png
+.. image:: http://i.imgur.com/xQm1w5I.png
 
-The **CSV** template, allows you to upload your own CSV file:
+The **CSV** importer, allows you to upload your own CSV file:
 
 .. image:: http://i.imgur.com/qoqIztQ.png
 
-4. Where you will have to provide a URL to a CSV file that you can have hosted
-   in DropBox or any similar web service. PyBossa also supports Google Drive
-   Spreadsheets, so use this option if you have your data in Google Drive. 
-   
+Where you will have to provide a URL to a CSV file that you can have hosted in
+any free web hosting services like DropBox_. You will only need to copy the file
+to the **public** folder of the chosen service in your own computer
+(i.e. DropbBox Public folder) and then copy the public link created by the
+service. Put that link into the text box in the above picture and click on "import".
+
+Similarly, PyBossa also supports **Google Drive Spreadsheets**, so use this
+option if you have your data in Google Drive spreadsheet.
+
 .. note::
 
    If you're trying to import from a Google Spreadsheet, ensure the file is
@@ -159,12 +165,14 @@ The **CSV** template, allows you to upload your own CSV file:
    **priority_0**, or **n_answers**, it will be saved in the respective
    columns. Your spreadsheet must be visible to public or everyone with URL.
 
-The other options pre-load a Google Docs URL to a public spreadsheet, 
-that you can automatically import for your project (the URL will
-automatically copy and pasted into the input field for importing the tasks).
-
 Finally, you will see that there is an option for importing tasks from an
-EpiCollect project, which is fully described in the next section. 
+EpiCollect project, which is fully described in the next section.
+
+The other four options pre-load a Google Docs URL of a public spreadsheet,
+that you can automatically import for your project (the URL will automatically
+copy and pasted into the input field for importing the tasks).
+
+.. image::http://i.imgur.com/5VrNFqs.png
 
 By using these templates, you'll be able to learn the structure of the tasks,
 and directly re-use the :ref:`task-presenter` templates that know the structure
@@ -180,15 +188,6 @@ available templates are the following:
 * `Video Pattern Recognition`_
 * `Geo-coding`_ and
 * `PDF transcription`_. 
-
-.. note::
-
-    You can also upload your own CSV files to free web hosting services like
-    DropBox_. You will only need to copy the file to the
-    **public** folder of the chosen service in your own computer
-    (i.e. DropbBox Public folder) and then copy the public link created by the 
-    service. Once you have the public link, all you need in order to import the 
-    tasks is to paste it in the input box of the section **From a CSV file**.
 
 .. note::
     If you import again the same URL, only new records will be added to the
@@ -246,11 +245,12 @@ project, you will have to follow the next steps:
 
     
 3. And  click on the **Import Tasks** 
-   button. After clicking on it you will see 7 different options:
+   button. After clicking on it you will see several different options. The first
+   three correspond to the different importers PyBossa supports:
 
-.. image:: http://i.imgur.com/Qf2sMGV.png
+.. image:: http://i.imgur.com/xQm1w5I.png
 
-4. Click in the first one: **Use an EpiCollect Project**
+4. Click in the **Use an EpiCollect Project** one.
 
 5. Then, type the **name of the EpiCollect project** and the name of the
    **form** that you want to import, and click in the import button
