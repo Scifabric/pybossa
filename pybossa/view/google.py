@@ -115,7 +115,7 @@ def oauth_authorized(resp):  # pragma: no cover
     import json
     user_data = json.loads(r.content)
     user = manage_user(access_token, user_data, next_url)
-    manage_user_login(user, user_data, next_url)
+    return manage_user_login(user, user_data, next_url)
 
 def manage_user_login(user, user_data, next_url):
     """Manage user login."""
