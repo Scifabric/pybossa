@@ -120,7 +120,7 @@ def manage_user_login(user, user_data, next_url):
         if (user.email_addr == "None"):
             request_email = True
         if request_email:
-            if first_login:
+            if first_login:  # pragma: no cover
                 flash("This is your first login, please add a valid e-mail")
             else:
                 flash("Please update your e-mail address in your profile page")
