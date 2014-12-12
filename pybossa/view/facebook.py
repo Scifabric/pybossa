@@ -118,7 +118,8 @@ def manage_user(access_token, user_data, next_url):
                    facebook_user_id=user_data['id'],
                    info=info)
             user_repo.save(user)
-            newsletter.subscribe_user(account)
+            if newsletter.app:
+                newsletter.subscribe_user(user)
             return user
         else:
             return None
