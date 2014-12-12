@@ -160,7 +160,7 @@ The Random scheduler has the following features:
 #. It sends a task randomly to the users.
 #. A user (authenticated or anonymous) can receive the same task two or more
    times in a row.
-#. It ignores the :task:`task-redundancy` value, so tasks will be never marked
+#. It ignores the :ref:`task-redundancy` value, so tasks will be never marked
    as *completed*.
 
 In summary, from the point of view of a user (authenticated or anonymous) the
