@@ -16,7 +16,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from default import Test
-from pybossa.view.twitter import manage_user
+from pybossa.view.twitter import manage_user, manage_user_login
+from pybossa.core import user_repo
+from mock import patch
+from factories import UserFactory
 
 
 class TestTwitter(Test):
@@ -45,3 +48,44 @@ class TestTwitter(Test):
         user = manage_user(token, user_data, None)
         err_msg = "It should return the same user"
         assert user.twitter_user_id == 10, err_msg
+
+
+    @patch('pybossa.view.twitter.newsletter', autospec=True)
+    @patch('pybossa.view.twitter.login_user', return_value=True)
+    @patch('pybossa.view.twitter.flash', return_value=True)
+    @patch('pybossa.view.twitter.url_for', return_value=True)
+    @patch('pybossa.view.twitter.redirect', return_value=True)
+    def test_manage_user_login_with_newsletter(self, redirect,
+                                               url_for,
+                                               flash,
+                                               login_user,
+                                               newsletter):
+        """Test TWITTER manage_user_login with newsletter works."""
+        newsletter.app = True
+        next_url = '/'
+        user = UserFactory.create()
+        manage_user_login(user, next_url)
+        login_user.assert_called_once_with(user, remember=True)
+        url_for.assert_called_once_with('account.newsletter_subscribe',
+                                        next=next_url)
+
+    @patch('pybossa.view.twitter.newsletter', autospec=True)
+    @patch('pybossa.view.twitter.login_user', return_value=True)
+    @patch('pybossa.view.twitter.flash', return_value=True)
+    @patch('pybossa.view.twitter.url_for', return_value=True)
+    @patch('pybossa.view.twitter.redirect', return_value=True)
+    def test_manage_user_login_with_newsletter_no_email(self, redirect,
+                                                        url_for,
+                                                        flash,
+                                                        login_user,
+                                                        newsletter):
+        """Test TWITTER manage_user_login without email with newsletter works."""
+        newsletter.app = True
+        next_url = '/'
+        user = UserFactory.create(name='john', email_addr='john')
+        user.email_addr = user.name
+        user_repo.update(user)
+        manage_user_login(user, next_url)
+        login_user.assert_called_once_with(user, remember=True)
+        url_for.assert_called_once_with('account.update_profile',
+                                        name=user.name)
