@@ -25,7 +25,7 @@ from mock import patch, Mock
 from flask import Response, redirect
 from itsdangerous import BadSignature
 from collections import namedtuple
-from pybossa.core import signer
+from pybossa.core import signer, user_repo
 from pybossa.util import unicode_csv_reader
 from pybossa.util import get_user_signup_method
 from pybossa.ckan import Ckan
@@ -63,3 +63,25 @@ class TestNewsletter(web.Helper):
         assert dom.find(id='newsletter') is not None, err_msg
         assert dom.find(id='signmeup') is not None, err_msg
         assert dom.find(id='notinterested') is not None, err_msg
+
+
+    @with_context
+    @patch('pybossa.view.account.newsletter', autospec=True)
+    def test_new_user_gets_newsletter_only_once(self, newsletter):
+        """Test NEWSLETTER user gets newsletter only once works."""
+        newsletter.app = True
+        res = self.register()
+        dom = BeautifulSoup(res.data)
+        user = user_repo.get(1)
+        err_msg = "There should be a newsletter page."
+        assert dom.find(id='newsletter') is not None, err_msg
+        assert dom.find(id='signmeup') is not None, err_msg
+        assert dom.find(id='notinterested') is not None, err_msg
+        assert user.newsletter_prompted is True, err_msg
+
+        self.signout()
+        res = self.signin()
+        dom = BeautifulSoup(res.data)
+        assert dom.find(id='newsletter') is None, err_msg
+        assert dom.find(id='signmeup') is None, err_msg
+        assert dom.find(id='notinterested') is None, err_msg
