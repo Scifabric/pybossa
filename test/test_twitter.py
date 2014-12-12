@@ -133,3 +133,24 @@ class TestTwitter(Test):
         manage_user_login(None, user_data, next_url)
         assert login_user.called is False
         url_for.assert_called_once_with('account.signin')
+
+    @patch('pybossa.view.twitter.newsletter', autospec=True)
+    @patch('pybossa.view.twitter.login_user', return_value=True)
+    @patch('pybossa.view.twitter.flash', return_value=True)
+    @patch('pybossa.view.twitter.url_for', return_value=True)
+    @patch('pybossa.view.twitter.redirect', return_value=True)
+    def test_manage_user_login_with_newsletter_twice(self, redirect,
+                                                     url_for,
+                                                     flash,
+                                                     login_user,
+                                                     newsletter):
+        """Test TWITTER manage_user_login without email with newsletter twice
+        works."""
+        newsletter.app = True
+        next_url = '/'
+        user = UserFactory.create(newsletter_prompted=True)
+        user_data = dict(id=user.id, screen_name=user.name)
+        manage_user_login(user, user_data, next_url)
+        login_user.assert_called_once_with(user, remember=True)
+        redirect.assert_called_once_with(next_url)
+
