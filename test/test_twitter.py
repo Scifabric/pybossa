@@ -97,11 +97,11 @@ class TestTwitter(Test):
     @patch('pybossa.view.twitter.flash', return_value=True)
     @patch('pybossa.view.twitter.url_for', return_value=True)
     @patch('pybossa.view.twitter.redirect', return_value=True)
-    def test_manage_user_login_without_user(self, redirect,
-                                            url_for,
-                                            flash,
-                                            login_user,
-                                            newsletter):
+    def test_manage_user_login_without_user_local(self, redirect,
+                                                  url_for,
+                                                  flash,
+                                                  login_user,
+                                                  newsletter):
         """Test TWITTER manage_user_login without user with newsletter works."""
         newsletter.app = True
         next_url = '/'
