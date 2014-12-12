@@ -85,7 +85,6 @@ class TestNewsletter(web.Helper):
     def test_newsletter_subscribe(self, newsletter):
         """Test NEWSLETTER view subcribe works."""
         newsletter.app = True
-        newsletter.subcribe_user = self.myfunc
         self.register()
         res = self.app.get('/account/newsletter?subscribe=True',
                            follow_redirects=True)
@@ -94,3 +93,20 @@ class TestNewsletter(web.Helper):
         assert "You are subscribed" in res.data, err_msg
         assert newsletter.subscribe_user.called, err_msg
         newsletter.subscribe_user.assert_called_with(user)
+
+
+    @with_context
+    @patch('pybossa.view.account.newsletter', autospec=True)
+    def test_newsletter_subscribe_next(self, newsletter):
+        """Test NEWSLETTER view subscribe next works."""
+        newsletter.app = True
+        self.register()
+        next_url = '%2Faccount%2Fjohndoe%2Fupdate'
+        url ='/account/newsletter?subscribe=True&next=%s' % next_url
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "User should be subscribed"
+        user = user_repo.get(1)
+        assert "You are subscribed" in res.data, err_msg
+        assert newsletter.subscribe_user.called, err_msg
+        newsletter.subscribe_user.assert_called_with(user)
+        assert "Update" in res.data, res.data
