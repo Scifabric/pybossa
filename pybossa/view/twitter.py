@@ -18,7 +18,7 @@
 from flask import Blueprint, request, url_for, flash, redirect
 from flask.ext.login import login_user, current_user
 
-from pybossa.core import twitter, user_repo
+from pybossa.core import twitter, user_repo, newsletter
 from pybossa.model.user import User
 from pybossa.util import get_user_signup_method
 # Required to access the config parameters outside a
@@ -114,7 +114,8 @@ def oauth_authorized(resp):  # pragma: no cover
     first_login = False
     login_user(user, remember=True)
     flash("Welcome back %s" % user.fullname, 'success')
-    if (user.email_addr != user.name) and user.newsletter_prompted is False:
+    if ((user.email_addr != user.name) and user.newsletter_prompted is False
+            and newsletter.app):
         return redirect(url_for('account.newsletter_subscribe',
                                 next=next_url))
     if user.email_addr != user.name:

@@ -130,7 +130,7 @@ def oauth_authorized(resp):  # pragma: no cover
     else:
         login_user(user, remember=True)
         flash("Welcome back %s" % user.fullname, 'success')
-        if user.newsletter_prompted is False:
+        if user.newsletter_prompted is False and newsletter.app:
             return redirect(url_for('account.newsletter_subscribe',
                                     next=next_url))
         return redirect(next_url)

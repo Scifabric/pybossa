@@ -123,7 +123,7 @@ def signin():
             login_user(user, remember=True)
             msg_1 = gettext("Welcome back") + " " + user.fullname
             flash(msg_1, 'success')
-            if user.newsletter_prompted is False:
+            if user.newsletter_prompted is False and newsletter.app:
                 return redirect(url_for('account.newsletter_subscribe',
                                         next=request.args.get('next')))
             return redirect(request.args.get("next") or url_for("home.home"))
@@ -245,7 +245,10 @@ def confirm_account():
     user_repo.save(account)
     login_user(account, remember=True)
     flash(gettext('Thanks for signing-up'), 'success')
-    return redirect(url_for('account.newsletter_subscribe'))
+    if newsletter.app:
+        return redirect(url_for('account.newsletter_subscribe'))
+    else:
+        return redirect(url_for('home.home'))
 
 
 @blueprint.route('/profile', methods=['GET'])
