@@ -532,8 +532,12 @@ def import_task(short_name):
     require.app.update(app)
 
     template = request.args.get('template')
+    template_tasks = current_app.config.get('TEMPLATE_TASKS')
 
     if template is None and request.method == 'GET':
+        wrap = lambda i: "applications/tasks/gdocs-%s.html" % i
+        task_tmpls = map(wrap, template_tasks)
+        template_args['task_tmpls'] = task_tmpls
         return render_template('/applications/task_import_options.html',
                                **template_args)
 
@@ -542,8 +546,7 @@ def import_task(short_name):
     template_args['form'] = form
     if template == 'gdocs' and request.args.get('mode'):  # pragma: no cover
         mode = request.args.get('mode')
-        googledocs_urls = current_app.config.get('TEMPLATE_TASKS')
-        form.googledocs_url.data = googledocs_urls.get(mode)
+        form.googledocs_url.data = template_tasks.get(mode)
 
     if not (form and form.validate_on_submit()):  # pragma: no cover
         return render_template('/applications/importers/%s.html' % template,
