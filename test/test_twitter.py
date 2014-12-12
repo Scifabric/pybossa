@@ -64,7 +64,8 @@ class TestTwitter(Test):
         newsletter.app = True
         next_url = '/'
         user = UserFactory.create()
-        manage_user_login(user, next_url)
+        user_data = dict(id=user.id, screen_name=user.name)
+        manage_user_login(user, user_data, next_url)
         login_user.assert_called_once_with(user, remember=True)
         url_for.assert_called_once_with('account.newsletter_subscribe',
                                         next=next_url)
@@ -83,9 +84,52 @@ class TestTwitter(Test):
         newsletter.app = True
         next_url = '/'
         user = UserFactory.create(name='john', email_addr='john')
+        user_data = dict(id=user.id, screen_name=user.name)
         user.email_addr = user.name
         user_repo.update(user)
-        manage_user_login(user, next_url)
+        manage_user_login(user, user_data, next_url)
         login_user.assert_called_once_with(user, remember=True)
         url_for.assert_called_once_with('account.update_profile',
                                         name=user.name)
+
+    @patch('pybossa.view.twitter.newsletter', autospec=True)
+    @patch('pybossa.view.twitter.login_user', return_value=True)
+    @patch('pybossa.view.twitter.flash', return_value=True)
+    @patch('pybossa.view.twitter.url_for', return_value=True)
+    @patch('pybossa.view.twitter.redirect', return_value=True)
+    def test_manage_user_login_without_user(self, redirect,
+                                            url_for,
+                                            flash,
+                                            login_user,
+                                            newsletter):
+        """Test TWITTER manage_user_login without user with newsletter works."""
+        newsletter.app = True
+        next_url = '/'
+        user = UserFactory.create()
+        user_data = dict(id=user.id, screen_name=user.name)
+        user.email_addr = user.name
+        user_repo.update(user)
+        manage_user_login(None, user_data, next_url)
+        assert login_user.called is False
+        url_for.assert_called_once_with('account.forgot_password')
+
+    @patch('pybossa.view.twitter.newsletter', autospec=True)
+    @patch('pybossa.view.twitter.login_user', return_value=True)
+    @patch('pybossa.view.twitter.flash', return_value=True)
+    @patch('pybossa.view.twitter.url_for', return_value=True)
+    @patch('pybossa.view.twitter.redirect', return_value=True)
+    def test_manage_user_login_without_user(self, redirect,
+                                            url_for,
+                                            flash,
+                                            login_user,
+                                            newsletter):
+        """Test TWITTER manage_user_login without user with newsletter works."""
+        newsletter.app = True
+        next_url = '/'
+        user = UserFactory.create(info={'google_token': 'k'})
+        user_data = dict(id=user.id, screen_name=user.name)
+        user.email_addr = user.name
+        user_repo.update(user)
+        manage_user_login(None, user_data, next_url)
+        assert login_user.called is False
+        url_for.assert_called_once_with('account.signin')
