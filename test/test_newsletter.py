@@ -123,7 +123,6 @@ class TestNewsletter(web.Helper):
         assert "You are subscribed" not in res.data, err_msg
         assert newsletter.subscribe_user.called is False, err_msg
 
-
     @with_context
     @patch('pybossa.view.account.newsletter', autospec=True)
     def test_newsletter_not_subscribe_next(self, newsletter):
