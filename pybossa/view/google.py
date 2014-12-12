@@ -115,6 +115,10 @@ def oauth_authorized(resp):  # pragma: no cover
     import json
     user_data = json.loads(r.content)
     user = manage_user(access_token, user_data, next_url)
+    manage_user_login(user, next_url)
+
+def manage_user_login(user, next_url):
+    """Manage user login."""
     if user is None:
         # Give a hint for the user
         user = user_repo.get_by(email_addr=user_data['email'])
