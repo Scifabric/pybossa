@@ -110,3 +110,30 @@ class TestNewsletter(web.Helper):
         assert newsletter.subscribe_user.called, err_msg
         newsletter.subscribe_user.assert_called_with(user)
         assert "Update" in res.data, res.data
+
+    @with_context
+    @patch('pybossa.view.account.newsletter', autospec=True)
+    def test_newsletter_not_subscribe(self, newsletter):
+        """Test NEWSLETTER view not subcribe works."""
+        newsletter.app = True
+        self.register()
+        res = self.app.get('/account/newsletter?subscribe=False',
+                           follow_redirects=True)
+        err_msg = "User should not be subscribed"
+        assert "You are subscribed" not in res.data, err_msg
+        assert newsletter.subscribe_user.called is False, err_msg
+
+
+    @with_context
+    @patch('pybossa.view.account.newsletter', autospec=True)
+    def test_newsletter_not_subscribe_next(self, newsletter):
+        """Test NEWSLETTER view subscribe next works."""
+        newsletter.app = True
+        self.register()
+        next_url = '%2Faccount%2Fjohndoe%2Fupdate'
+        url ='/account/newsletter?subscribe=False&next=%s' % next_url
+        res = self.app.get(url, follow_redirects=True)
+        err_msg = "User should not be subscribed"
+        assert "You are subscribed" not in res.data, err_msg
+        assert newsletter.subscribe_user.called is False, err_msg
+        assert "Update" in res.data, res.data
