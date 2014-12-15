@@ -14,12 +14,13 @@ The objects are:
     * gravatar: for Gravatar support,
     * uploader: for file uploads support,
     * csrf: for CSRF protection
+    * newsletter: for subscribing users to Mailchimp newsletter
 
 """
 __all__ = ['sentinel', 'db', 'signer', 'mail', 'login_manager', 'facebook',
            'twitter', 'google', 'misaka', 'babel', 'gravatar', 'uploader',
            'csrf', 'timeouts', 'debug_toolbar', 'ratelimits', 'queues',
-           'user_repo', 'project_repo', 'task_repo', 'blog_repo']
+           'user_repo', 'project_repo', 'task_repo', 'blog_repo', 'newsletter']
 
 # CACHE
 from pybossa.sentinel import Sentinel
@@ -94,3 +95,7 @@ ratelimits = dict()
 
 # Queues
 queues = dict()
+
+# Newsletter
+from newsletter import Newsletter
+newsletter = Newsletter()

@@ -71,6 +71,7 @@ def create_app(run_as_server=True):
     setup_debug_toolbar(app)
     setup_jinja2_filters(app)
     setup_queues(app)
+    setup_newsletter(app)
     return app
 
 
@@ -488,3 +489,9 @@ def _schedule_job(function, scheduler):
            % (function['name'].__name__, function['args'], function['kwargs'],
               function['interval']))
     return msg
+
+
+def setup_newsletter(app):
+    """Setup mailchimp newsletter."""
+    if app.config.get('MAILCHIMP_API_KEY'):
+        newsletter.init_app(app)

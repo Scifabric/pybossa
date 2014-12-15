@@ -39,7 +39,8 @@ requirements = [
     "rq>=0.4.6, <0.5",
     "rq-scheduler",
     "rq-dashboard",
-    "unidecode>=0.04.16, <0.05"
+    "unidecode>=0.04.16, <0.05",
+    "mailchimp"
 ]
 
 setup(

@@ -18,7 +18,7 @@
 from flask import Blueprint, request, url_for, flash, redirect
 from flask.ext.login import login_user, current_user
 
-from pybossa.core import twitter, user_repo
+from pybossa.core import twitter, user_repo, newsletter
 from pybossa.model.user import User
 from pybossa.util import get_user_signup_method
 # Required to access the config parameters outside a
@@ -102,6 +102,10 @@ def oauth_authorized(resp):  # pragma: no cover
 
     user = manage_user(access_token, user_data, next_url)
 
+    return manage_user_login(user, user_data, next_url)
+
+def manage_user_login(user, user_data, next_url):
+    """Manage user login."""
     if user is None:
         user = user_repo.get_by_name(user_data['screen_name'])
         msg, method = get_user_signup_method(user)
@@ -111,14 +115,14 @@ def oauth_authorized(resp):  # pragma: no cover
         else:
             return redirect(url_for('account.signin'))
 
-    first_login = False
     login_user(user, remember=True)
     flash("Welcome back %s" % user.fullname, 'success')
+    if ((user.email_addr != user.name) and user.newsletter_prompted is False
+            and newsletter.app):
+        return redirect(url_for('account.newsletter_subscribe',
+                                next=next_url))
     if user.email_addr != user.name:
         return redirect(next_url)
-    if first_login:
-        flash("This is your first login, please add a valid e-mail")
     else:
         flash("Please update your e-mail address in your profile page")
-    return redirect(url_for('account.update_profile', name=user.name))
-
+        return redirect(url_for('account.update_profile', name=user.name))

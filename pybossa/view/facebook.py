@@ -19,7 +19,7 @@
 from flask import Blueprint, request, url_for, flash, redirect, session
 from flask.ext.login import login_user, current_user
 
-from pybossa.core import facebook, user_repo
+from pybossa.core import facebook, user_repo, newsletter
 from pybossa.model.user import User
 #from pybossa.util import Facebook, get_user_signup_method
 from pybossa.util import get_user_signup_method
@@ -64,32 +64,7 @@ def oauth_authorized(resp):  # pragma: no cover
     user_data = facebook.oauth.get('/me').data
 
     user = manage_user(access_token, user_data, next_url)
-    if user is None:
-        # Give a hint for the user
-        user = user_repo.get_by(email_addr=user_data['email'])
-        if user is not None:
-            msg, method = get_user_signup_method(user)
-            flash(msg, 'info')
-            if method == 'local':
-                return redirect(url_for('account.forgot_password'))
-            else:
-                return redirect(url_for('account.signin'))
-        else:
-            return redirect(url_for('account.signin'))
-    else:
-        first_login = False
-        login_user(user, remember=True)
-        flash("Welcome back %s" % user.fullname, 'success')
-        request_email = False
-        if (user.email_addr == "None"):
-            request_email = True
-        if request_email:
-            if first_login:
-                flash("This is your first login, please add a valid e-mail")
-            else:
-                flash("Please update your e-mail address in your profile page")
-            return redirect(url_for('account.update_profile', name=user.name))
-        return redirect(next_url)
+    return manage_user_login(user, user_data, next_url)
 
 
 def manage_user(access_token, user_data, next_url):
@@ -115,8 +90,42 @@ def manage_user(access_token, user_data, next_url):
                    facebook_user_id=user_data['id'],
                    info=info)
             user_repo.save(user)
+            if newsletter.app and user.email_addr != "None":
+                newsletter.subscribe_user(user)
             return user
         else:
             return None
     else:
         return user
+
+def manage_user_login(user, user_data, next_url):
+    """Manage user login."""
+    if user is None:
+        # Give a hint for the user
+        user = user_repo.get_by(email_addr=user_data['email'])
+        if user is not None:
+            msg, method = get_user_signup_method(user)
+            flash(msg, 'info')
+            if method == 'local':
+                return redirect(url_for('account.forgot_password'))
+            else:
+                return redirect(url_for('account.signin'))
+        else:
+            return redirect(url_for('account.signin'))
+    else:
+        first_login = False
+        login_user(user, remember=True)
+        flash("Welcome back %s" % user.fullname, 'success')
+        request_email = False
+        if (user.email_addr == "None"):
+            request_email = True
+        if request_email:
+            if first_login:  # pragma: no cover
+                flash("This is your first login, please add a valid e-mail")
+            else:
+                flash("Please update your e-mail address in your profile page")
+            return redirect(url_for('account.update_profile', name=user.name))
+        if (user.email_addr != "None" and user.newsletter_prompted is False
+                and newsletter.app):
+            return redirect(url_for('account.newsletter_subscribe', next=next_url))
+        return redirect(next_url)
