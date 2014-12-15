@@ -19,6 +19,7 @@
 import time
 import re
 import json
+import os
 import math
 import requests
 from StringIO import StringIO
@@ -33,11 +34,11 @@ import pybossa.model as model
 import pybossa.sched as sched
 import pybossa.importers as importers
 
-from pybossa.core import uploader, signer, sentinel
+from pybossa.core import uploader, signer, sentinel, json_exporter, csv_exporter
 from pybossa.model.app import App
 from pybossa.model.task import Task
 from pybossa.model.auditlog import Auditlog
-from pybossa.util import Pagination, UnicodeWriter, admin_required, get_user_id_or_ip
+from pybossa.util import Pagination, admin_required, get_user_id_or_ip
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
@@ -917,10 +918,7 @@ def export_to(short_name):
     def respond_json(ty):
         if ty not in ['task', 'task_run']:
             return abort(404)
-        name = app.short_name.encode('utf-8', 'ignore').decode('latin-1')
-        tmp = 'attachment; filename=%s_%s.json' % (name, ty)
-        res = Response(gen_json(ty), mimetype='application/json')
-        res.headers['Content-Disposition'] = tmp
+        res = json_exporter.response_zip(app, ty)
         return res
 
     def create_ckan_datastore(ckan, table, package_id):
@@ -1011,32 +1009,10 @@ def export_to(short_name):
         except KeyError:
             return abort(404)
 
-        out = StringIO()
-        writer = UnicodeWriter(out)
+        # TODO: change check for existence below
         t = getattr(task_repo, 'get_%s_by' % ty)(app_id=app.id)
         if t is not None:
-            if test(t):
-                tmp = t.dictize().keys()
-                task_keys = []
-                for k in tmp:
-                    k = "%s__%s" % (ty, k)
-                    task_keys.append(k)
-                if (type(t.info) == dict):
-                    task_info_keys = []
-                    tmp = t.info.keys()
-                    for k in tmp:
-                        k = "%sinfo__%s" % (ty, k)
-                        task_info_keys.append(k)
-                else:
-                    task_info_keys = []
-                keys = task_keys + task_info_keys
-                writer.writerow(sorted(keys))
-
-            res = Response(get_csv(out, writer, ty, handle_row),
-                           mimetype='text/csv')
-            name = app.short_name.encode('utf-8', 'ignore').decode('latin-1')
-            tmp = 'attachment; filename=%s_%s.csv' % (name, ty)
-            res.headers['Content-Disposition'] = tmp
+            res = csv_exporter.response_zip(app, ty)
             return res
         else:
             flash(msg, 'info')
