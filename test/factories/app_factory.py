@@ -31,9 +31,9 @@ class AppFactory(BaseFactory):
         return project
 
     id = factory.Sequence(lambda n: n)
-    name = factory.Sequence(lambda n: u'My Project number %d' % n)
-    short_name = factory.Sequence(lambda n: u'app%d' % n)
-    description = u'Project description'
+    name = factory.Sequence(lambda n: u'My (utf8=✓)Project number %d' % n)
+    short_name = factory.Sequence(lambda n: u'✓app%d' % n)
+    description = u'Project description utf8=✓'
     allow_anonymous_contributors = True
     long_tasks = 0
     hidden = 0
@@ -43,4 +43,4 @@ class AppFactory(BaseFactory):
     owner_id = factory.LazyAttribute(lambda app: app.owner.id)
     category = factory.SubFactory('factories.CategoryFactory')
     category_id = factory.LazyAttribute(lambda app: app.category.id)
-    info = {'task_presenter': '<div></div>'}
+    info = {'task_presenter': '<div>utf8=✓</div>'}
