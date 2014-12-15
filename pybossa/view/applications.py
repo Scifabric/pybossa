@@ -25,7 +25,7 @@ import requests
 from StringIO import StringIO
 
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
-from flask import render_template, make_response, send_from_directory
+from flask import render_template, make_response
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
 from rq import Queue
@@ -38,7 +38,7 @@ from pybossa.core import uploader, signer, sentinel, json_exporter, csv_exporter
 from pybossa.model.app import App
 from pybossa.model.task import Task
 from pybossa.model.auditlog import Auditlog
-from pybossa.util import Pagination, UnicodeWriter, admin_required, get_user_id_or_ip
+from pybossa.util import Pagination, admin_required, get_user_id_or_ip
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
