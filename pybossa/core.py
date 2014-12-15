@@ -53,6 +53,7 @@ def create_app(run_as_server=True):
                         #force_default=False, force_lower=False)
     setup_db(app)
     setup_repositories()
+    setup_exporter(app)
     mail.init_app(app)
     sentinel.init_app(app)
     signer.init_app(app)
@@ -111,6 +112,13 @@ def setup_uploader(app):
         app.url_build_error_handlers.append(uploader.external_url_handler)
         uploader.init_app(app)
 
+def setup_exporter(app):
+    global csv_exporter
+    global json_exporter
+    from pybossa.exporter.csv_export import CsvExporter
+    from pybossa.exporter.json_export import JsonExporter
+    csv_exporter = CsvExporter()
+    json_exporter = JsonExporter()
 
 def setup_markdown(app):
     misaka.init_app(app)

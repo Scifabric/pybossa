@@ -28,7 +28,8 @@ import traceback
 from flask import current_app, url_for
 from pybossa.uploader import Uploader
 from werkzeug import secure_filename
-
+import time
+import traceback
 
 class RackspaceUploader(Uploader):
 
@@ -63,14 +64,25 @@ class RackspaceUploader(Uploader):
             self.cf.make_container_public(name)
             return c
 
-    def _upload_file_to_rackspace(self, file, container):
+    def _upload_file_to_rackspace(self, file, container, attempt=0):
         """Upload file to rackspace."""
-        chksum = pyrax.utils.get_checksum(file)
-        self.cf.upload_file(container,
-                            file,
-                            obj_name=secure_filename(file.filename),
-                            etag=chksum)
-        return True
+        try:
+            chksum = pyrax.utils.get_checksum(file)
+            self.cf.upload_file(container,
+                                file,
+                                obj_name=secure_filename(file.filename),
+                                etag=chksum)
+            return True
+        except Exception as e:
+            print "Uploader exception"  # TODO: Log this!
+            traceback.print_exc()
+            attempt += 1
+            if (attempt < 3):
+                time.sleep(1)   # Wait one second and try again
+                return self._upload_file_to_rackspace(file, container, attempt)
+            else:
+                print "Tried to upload two times. Failed!"   # TODO: Log this!
+                raise
 
     def _upload_file(self, file, container):
         """Upload a file into a container."""
