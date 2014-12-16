@@ -159,7 +159,7 @@ def overall_progress(app_id):
     """Returns the percentage of submitted Tasks Runs done when a task is
     completed"""
     if n_tasks != 0:
-        return ((n_completed_tasks() * 100)/ n_tasks())
+        return ((n_completed_tasks(app_id) * 100)/ n_tasks(app_id))
     else:
         return 0
 
