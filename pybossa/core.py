@@ -457,18 +457,23 @@ def setup_scheduled_jobs(app): #pragma: no cover
     redis_conn = sentinel.master
     from jobs import get_scheduled_jobs
     from rq_scheduler import Scheduler
-    all_jobs = get_scheduled_jobs()
+    all_jobs_to_schedule = get_scheduled_jobs()
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=redis_conn)
 
+    # to speed up the start up we check only once for all already scheduled jobs
     scheduled_jobs = scheduler.get_jobs()
 
-    for function in all_jobs:
+    # reschedule jobs if needed
+    for function in all_jobs_to_schedule:
         app.logger.info(_schedule_job(function, scheduler, scheduled_jobs))
 
 
-def _schedule_job(function, scheduler, scheduled_jobs):
+def _schedule_job(function, scheduler, scheduled_jobs=None):
     """Schedules a job and returns a log message about success of the operation"""
     from datetime import datetime
+    # This function is time consuming (1+ seconds) and will slow down start up on multiple calls
+    if scheduled_jobs is None:
+        scheduled_jobs = scheduler.get_jobs()
     job = scheduler.schedule(
         scheduled_time=datetime.utcnow(),
         func=function['name'],
