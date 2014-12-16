@@ -241,9 +241,18 @@ def confirm_account():
         userdict = signer.loads(key, max_age=3600, salt='account-validation')
     except BadData:
         abort(403)
+    # First check if the user exists
+    users = user_repo.filter_by(name=userdict['name'])
+    if len(users) == 1 and users[0].name == userdict['name']:
+        u = users[0]
+        u.validate_email = True
+        user_repo.update(u)
+        flash(gettext('Your email has been validated.'))
+        return redirect(url_for('home.home'))
     account = model.user.User(fullname=userdict['fullname'],
                               name=userdict['name'],
-                              email_addr=userdict['email_addr'])
+                              email_addr=userdict['email_addr'],
+                              validate_email=True)
     account.set_password(userdict['password'])
     user_repo.save(account)
     login_user(account, remember=True)
@@ -424,6 +433,18 @@ def update_profile(name):
                 user.id = update_form.id.data
                 user.fullname = update_form.fullname.data
                 user.name = update_form.name.data
+                if user.email_addr != update_form.email_addr.data:
+                    user.validate_email = False
+                    subject = ('You have changed your email in %s!' \
+                               % current_app.config.get('BRAND'))
+                    msg = dict(subject=subject,
+                               recipients=[update_form.email_addr.data],
+                               body=render_template(
+                                   '/account/email/validate_account.md',
+                                   user=account, confirm_url=confirm_url))
+                    msg['html'] = markdown(msg['body'])
+                    send_mail_job = mail_queue.enqueue(send_mail, msg)
+
                 user.email_addr = update_form.email_addr.data
                 user.privacy_mode = update_form.privacy_mode.data
                 user.locale = update_form.locale.data
