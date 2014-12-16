@@ -460,14 +460,15 @@ def setup_scheduled_jobs(app): #pragma: no cover
     all_jobs = get_scheduled_jobs()
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=redis_conn)
 
+    scheduled_jobs = scheduler.get_jobs()
+
     for function in all_jobs:
-        app.logger.info(_schedule_job(function, scheduler))
+        app.logger.info(_schedule_job(function, scheduler, scheduled_jobs))
 
 
-def _schedule_job(function, scheduler):
+def _schedule_job(function, scheduler, scheduled_jobs):
     """Schedules a job and returns a log message about success of the operation"""
     from datetime import datetime
-    scheduled_jobs = scheduler.get_jobs()
     job = scheduler.schedule(
         scheduled_time=datetime.utcnow(),
         func=function['name'],
