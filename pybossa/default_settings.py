@@ -57,6 +57,7 @@ ENABLE_DEBUG_TOOLBAR = False
 REDIS_CACHE_ENABLED = False
 REDIS_SENTINEL = [('localhost', 26379)]
 REDIS_MASTER = 'mymaster'
+REDIS_DB = 0
 
 REDIS_KEYPREFIX = 'pybossa_cache'
 
