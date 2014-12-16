@@ -202,6 +202,7 @@ class APIBase(MethodView):
         inst = self.__class__(**data)
         self._update_object(inst)
         getattr(require, self.__class__.__name__.lower()).create(inst)
+        self._validate_instance(inst)
         return inst
 
     @jsonpify
@@ -285,6 +286,7 @@ class APIBase(MethodView):
         for key in data:
             setattr(existing, key, data[key])
         update_func = repos[self.__class__.__name__]['update']
+        self._validate_instance(inst)
         log_func = repos[self.__class__.__name__].get('log')
         if self.__class__.__name__ == 'App':
             getattr(repo, log_func)(existing, 'update', 'api')
@@ -314,13 +316,22 @@ class APIBase(MethodView):
 
     def _select_attributes(self, item_data):
         """Method to be overriden in inheriting classes in case it is not
-        desired that every object attribute is returned by the API
+        desired that every object attribute is returned by the API.
         """
         return item_data
 
 
     def _custom_filter(self, query):
         """Method to be overriden in inheriting classes which wish to consider
-        specific filtering criteria
+        specific filtering criteria.
         """
         return query
+
+
+    def _validate_instance(self, instance):
+        """Method to be overriden in inheriting classes which may need to
+        validate the creation (POST) or modification (PUT) of a domain object for
+        reasons other than business logic ones (e.g. overlapping of a project
+        name witht a URL).
+        """
+        pass

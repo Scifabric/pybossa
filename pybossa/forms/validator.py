@@ -21,6 +21,8 @@ from wtforms.validators import ValidationError
 import re
 import requests
 
+from pybossa.util import is_reserved_name
+
 
 class Unique(object):
     """Validator that checks field uniqueness."""
@@ -100,20 +102,13 @@ class ReservedName(object):
     """Validator to avoid URL conflicts when creating/modifying projects or
     user accounts"""
 
-    def __init__(self, blueprint, flask_app, message=None):
-        self.app = flask_app
-        self.path = ''.join(['/', blueprint])
-        app = flask_app
+    def __init__(self, blueprint, message=None):
+        self.blueprint = blueprint
         if not message:  # pragma: no cover
             message = lazy_gettext(u'This name is used by the system.')
         self.message = message
 
     def __call__(self, form, field):
-        if self._is_reserved(field.data):
+        if is_reserved_name(self.blueprint, field.data):
             raise ValidationError(self.message)
 
-    def _is_reserved(self, name):
-        app_urls = [r.rule for r in self.app.url_map.iter_rules()
-                    if r.rule.startswith(self.path)]
-        reserved_names = [url.split('/')[2] for url in app_urls]
-        return name in reserved_names
