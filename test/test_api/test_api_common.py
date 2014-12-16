@@ -31,10 +31,10 @@ class TestApiCommon(TestAPI):
     def test_limits_query(self):
         """Test API GET limits works"""
         owner = UserFactory.create()
-        for i in range(30):
-            app = AppFactory.create(owner=owner)
-            task = TaskFactory(app=app)
-            taskrun = TaskRunFactory(task=task)
+        apps = AppFactory.create_batch(30, owner=owner)
+        for app in apps:
+            task = TaskFactory.create(app=app)
+            TaskRunFactory.create(task=task)
 
         res = self.app.get('/api/app')
         data = json.loads(res.data)
@@ -47,7 +47,7 @@ class TestApiCommon(TestAPI):
         res = self.app.get('/api/app?limit=10&offset=10')
         data = json.loads(res.data)
         assert len(data) == 10, len(data)
-        assert data[0].get('name') == 'My Project number 11', data[0]
+        assert data[0].get('name') == apps[10].name, data[0]
 
         res = self.app.get('/api/task')
         data = json.loads(res.data)

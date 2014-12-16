@@ -2369,7 +2369,8 @@ class TestWeb(web.Helper):
         uri = '/app/%s/tasks/export' % app.short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % app.name
-        assert heading in res.data, "Export page should be available\n %s" % res.data
+        data = res.data.decode('utf-8')
+        assert heading in data, "Export page should be available\n %s" % data
         # Now get the tasks in CSV format
         uri = "/app/%s/tasks/export?type=task&format=csv" % app.short_name
         res = self.app.get(uri, follow_redirects=True)
@@ -2455,7 +2456,8 @@ class TestWeb(web.Helper):
         uri = '/app/%s/tasks/export' % app.short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % app.name
-        assert heading in res.data, "Export page should be available\n %s" % res.data
+        data = res.data.decode('utf-8')
+        assert heading in data, "Export page should be available\n %s" % data
         # Now get the tasks in CSV format
         uri = "/app/%s/tasks/export?type=task_run&format=csv" % app.short_name
         res = self.app.get(uri, follow_redirects=True)

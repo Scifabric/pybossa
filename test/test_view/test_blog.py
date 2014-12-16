@@ -190,7 +190,7 @@ class TestBlogpostView(web.Helper):
                             data={'title':'blogpost title', 'body':'body'},
                             follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        mock_redirect.assert_called_with('/app/%s/blog' % app.short_name)
+        mock_redirect.assert_called_with('/app/%E2%9C%93app1/blog')
 
         blogpost = blog_repo.get_by(title='blogpost title')
         assert blogpost.title == 'blogpost title', blogpost.title
@@ -266,7 +266,7 @@ class TestBlogpostView(web.Helper):
                                   'body':'new body'},
                             follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        mock_redirect.assert_called_with('/app/%s/blog' % app.short_name)
+        mock_redirect.assert_called_with('/app/%E2%9C%93app1/blog')
 
         blogpost = blog_repo.get_by(title='blogpost title')
         assert blogpost.title == 'blogpost title', blogpost.title
@@ -355,7 +355,7 @@ class TestBlogpostView(web.Helper):
         app = AppFactory.create(owner=user)
         blogpost = BlogpostFactory.create(app=app)
         url = "/app/%s/%s/delete" % (app.short_name, blogpost.id)
-        redirect_url = '/app/%s/blog' % app.short_name
+        redirect_url = '/app/%E2%9C%93app1/blog'
 
         res = self.app.post(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
