@@ -392,6 +392,7 @@ def update_profile(name):
                                external_form=external_form,
                                show_passwd_form=show_passwd_form)
     else:
+        acc_conf_dis = current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED')
         # Update user avatar
         if request.form.get('btn') == 'Upload':
             avatar_form = AvatarUploadForm()
@@ -433,7 +434,8 @@ def update_profile(name):
                 user.id = update_form.id.data
                 user.fullname = update_form.fullname.data
                 user.name = update_form.name.data
-                if user.email_addr != update_form.email_addr.data:
+                if (user.email_addr != update_form.email_addr.data and
+                        acc_conf_dis is False):
                     user.validate_email = False
                     subject = ('You have changed your email in %s!' \
                                % current_app.config.get('BRAND'))
