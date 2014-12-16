@@ -265,7 +265,7 @@ as the procedure is the same:
 
 The only difference is that the tasks won't be
 imported only once, but regularly, as explained. However, the same behaviour
-should be expected, so autoimporting a a CSV file that does not change will
+should be expected, so autoimporting a CSV file that does not change will
 result in no new tasks being imported.
 
 Once an autoimporter has been set up, it can also be cancelled anytime:
