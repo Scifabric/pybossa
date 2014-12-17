@@ -19,10 +19,30 @@
 from flask.ext.mail import Message
 from pybossa.core import mail
 from pybossa.util import with_cache_disabled
+from rq_scheduler import Scheduler
 
 
 MINUTE = 60
 HOUR = 60 * 60
+
+def schedule_pybossa_jobs():
+    """Schedule all PyBossa jobs."""
+    jobs = get_scheduled_jobs()
+    from pybossa.core import sentinel, _schedule_job
+    redis_conn = sentinel.master
+    n_sched_jobs = 0
+    n_cancel_jobs = 0
+
+    scheduler = Scheduler(queue_name='scheduled_jobs',  connection=redis_conn)
+    for job in jobs:
+        msg = _schedule_job(job, scheduler)
+    if "WARNING" in msg:
+        n_cancel_jobs += 1
+    else:
+        n_sched_jobs +=1
+    msg = "%s new scheduled jobs and %s already scheduled" % (n_sched_jobs,
+                                                              n_cancel_jobs)
+    return msg
 
 def get_scheduled_jobs(): # pragma: no cover
     """Return a list of scheduled jobs."""
