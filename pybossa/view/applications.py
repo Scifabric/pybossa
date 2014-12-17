@@ -57,7 +57,7 @@ from pybossa.core import project_repo, user_repo, task_repo, blog_repo, \
 
 blueprint = Blueprint('app', __name__)
 
-importer_queue = Queue('importer', connection=sentinel.master)
+importer_queue = Queue('medium', connection=sentinel.master)
 MAX_NUM_SYNCHR_TASKS_IMPORT = 200
 
 def app_title(app, page_name):

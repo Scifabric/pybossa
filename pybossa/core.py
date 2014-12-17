@@ -432,7 +432,7 @@ def setup_ratelimits(app):
 
 def setup_queues(app):
     global queues
-    queues['webhook'] = Queue('webhook', connection=sentinel.master)
+    queues['webhook'] = Queue('high', connection=sentinel.master)
 
 
 def setup_cache_timeouts(app):
