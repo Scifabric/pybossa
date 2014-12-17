@@ -53,6 +53,7 @@ def create_app(run_as_server=True):
                         #force_default=False, force_lower=False)
     setup_db(app)
     setup_repositories()
+    setup_exporter(app)
     mail.init_app(app)
     sentinel.init_app(app)
     signer.init_app(app)
@@ -111,6 +112,13 @@ def setup_uploader(app):
         app.url_build_error_handlers.append(uploader.external_url_handler)
         uploader.init_app(app)
 
+def setup_exporter(app):
+    global csv_exporter
+    global json_exporter
+    from pybossa.exporter.csv_export import CsvExporter
+    from pybossa.exporter.json_export import JsonExporter
+    csv_exporter = CsvExporter()
+    json_exporter = JsonExporter()
 
 def setup_markdown(app):
     misaka.init_app(app)
@@ -447,12 +455,22 @@ def setup_cache_timeouts(app):
 
 def setup_scheduled_jobs(app): #pragma: no cover
     redis_conn = sentinel.master
-    from jobs import get_scheduled_jobs, schedule_job
+    from pybossa.jobs import schedule_priority_jobs, schedule_job
     from rq_scheduler import Scheduler
-    all_jobs = get_scheduled_jobs()
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=redis_conn)
-    for function in all_jobs:
-        app.logger.info(schedule_job(function, scheduler))
+    MINUTE = 60
+    HOUR = 60 * 60
+    JOBS = [dict(name=schedule_priority_jobs, args=['super', (10 * MINUTE)],
+                 kwargs={}, interval=(10 * MINUTE), timeout=(10 * MINUTE)),
+            dict(name=schedule_priority_jobs, args=['high', (1 * HOUR)],
+                 kwargs={}, interval=HOUR, timeout=(10 * MINUTE)),
+            dict(name=schedule_priority_jobs, args=['medium', (12 * HOUR)],
+                 kwargs={}, interval=(12 * HOUR), timeout=(10 * MINUTE)),
+            dict(name=schedule_priority_jobs, args=['low', (24 * HOUR)],
+                 kwargs={}, interval=(24 * HOUR), timeout=(10 * MINUTE)),]
+
+    for job in JOBS:
+        _schedule_job(job, scheduler)
 
 
 def setup_newsletter(app):

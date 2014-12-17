@@ -46,6 +46,7 @@ Changelog
 ~~~~~~~~~
 
 * v0.2.3_
+* [v0.2.2] Internal refactoring. Include RQ for asynchronous and scheduled tasks.
 * [v0.2.1] New Rate Limiting for all the API endpoints
 * [v0.2.0] New CACHE system using Redis Master-Slave infrastructure
 

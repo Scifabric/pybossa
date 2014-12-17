@@ -131,7 +131,7 @@ class ProjectRepository(object):
                                     old_value = ''
                                 if new_value is None or '':
                                     new_value = ''
-                                if (str(old_value) != str(new_value)):
+                                if (unicode(old_value) != unicode(new_value)):
                                     log = Auditlog(
                                         app_id=project.id,
                                         app_short_name=project.short_name,

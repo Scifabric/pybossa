@@ -32,6 +32,7 @@ class Newsletter(object):
 
     def init_app(self, app):
         """Configure newsletter Mailchimp client."""
+        self.app = app
         self.client = mailchimp.Mailchimp(app.config.get('MAILCHIMP_API_KEY'))
         self.list_id = app.config.get('MAILCHIMP_LIST_ID')
 

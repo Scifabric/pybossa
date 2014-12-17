@@ -158,24 +158,10 @@ def n_task_runs(app_id):
 def overall_progress(app_id):
     """Returns the percentage of submitted Tasks Runs done when a task is
     completed"""
-    sql = text('''SELECT task.id, n_answers,
-               COUNT(task_run.task_id) AS n_task_runs
-               FROM task LEFT OUTER JOIN task_run ON task.id=task_run.task_id
-               WHERE task.app_id=:app_id GROUP BY task.id''')
-
-    results = session.execute(sql, dict(app_id=app_id))
-    n_expected_task_runs = 0
-    n_task_runs = 0
-    for row in results:
-        tmp = row[2]
-        if row[2] > row[1]:
-            tmp = row[1]
-        n_expected_task_runs += row[1]
-        n_task_runs += tmp
-    pct = float(0)
-    if n_expected_task_runs != 0:
-        pct = float(n_task_runs) / float(n_expected_task_runs)
-    return (pct * 100)
+    if n_tasks(app_id) != 0:
+        return ((n_completed_tasks(app_id) * 100)/ n_tasks(app_id))
+    else:
+        return 0
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))

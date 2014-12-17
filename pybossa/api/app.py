@@ -27,6 +27,7 @@ from api_base import APIBase
 from pybossa.model.app import App
 import pybossa.cache.apps as cached_apps
 from pybossa.cache.categories import get_all as get_categories
+from pybossa.util import is_reserved_name
 
 
 class AppAPI(APIBase):
@@ -52,3 +53,8 @@ class AppAPI(APIBase):
     def _update_object(self, obj):
         if not current_user.is_anonymous():
             obj.owner_id = current_user.id
+
+    def _validate_instance(self, instance):
+        if is_reserved_name('app', instance.short_name):
+            msg = "Project short_name is not valid, as it's used by the system."
+            raise ValueError(msg)

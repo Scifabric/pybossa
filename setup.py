@@ -32,19 +32,20 @@ requirements = [
     "sphinx>=1.2.2, <2.0",
     "coverage",
     "mock",
-    "pyrax>=1.8, <1.8.1",
+    "pyrax>=1.9.3, <2.0",
     "pillow>=2.4, <2.5",
     "flask-debugtoolbar>=0.9.0, <1.0",
     "factory_boy>=2.4.1, <2.5",
     "rq>=0.4.6, <0.5",
     "rq-scheduler",
     "rq-dashboard",
+    "unidecode>=0.04.16, <0.05",
     "mailchimp"
 ]
 
 setup(
     name = 'pybossa',
-    version = '0.2.1',
+    version = '0.2.2',
     packages = find_packages(),
     install_requires = requirements,
     # only needed when installing directly from setup.py (PyPi, eggs?) and pointing to e.g. a git repo.

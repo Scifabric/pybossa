@@ -22,6 +22,7 @@ from pybossa.core import mail, task_repo, project_repo
 from pybossa.util import with_cache_disabled
 import pybossa.importers as importers
 
+
 MINUTE = 60
 HOUR = 60 * 60
 
@@ -53,21 +54,73 @@ def schedule_job(function, scheduler):
     return msg
 
 
+def schedule_priority_jobs(queue_name, interval):
+    """Schedule all PyBossa high priority jobs."""
+    jobs = get_scheduled_jobs()
+    from pybossa.core import sentinel
+    from rq import Queue
+    redis_conn = sentinel.master
+
+    n_jobs = 0
+    queue = Queue(queue_name, connection=redis_conn)
+    for job in jobs:
+        if (job['queue'] == queue_name):
+            n_jobs += 1
+            queue.enqueue_call(func=job['name'],
+                               args=job['args'],
+                               kwargs=job['kwargs'],
+                               timeout=job['timeout'])
+    msg = "%s jobs in %s have been enqueued" % (n_jobs, queue_name)
+    return msg
+
+
 def get_scheduled_jobs(): # pragma: no cover
     """Return a list of scheduled jobs."""
     # Default ones
     # A job is a dict with the following format: dict(name, args, kwargs,
     # interval)
-    jobs = [dict(name=warm_up_stats, args=[], kwargs={},
-                 interval=HOUR, timeout=(10 * MINUTE)),
+    jobs = [
+            dict(name=warm_up_stats, args=[], kwargs={},
+                 interval=HOUR, timeout=(10 * MINUTE), queue='high'),
             dict(name=warn_old_project_owners, args=[], kwargs={},
-                 interval=(24 * HOUR), timeout=(10 * MINUTE)),
+                 interval=(24 * HOUR), timeout=(10 * MINUTE), queue='low'),
             dict(name=warm_cache, args=[], kwargs={},
-                 interval=(10 * MINUTE), timeout=(10 * MINUTE))]
+                 interval=(10 * MINUTE), timeout=(10 * MINUTE), queue='super')]
+    # Create ZIPs for all projects
+    zip_jobs = get_export_task_jobs()
     # Based on type of user
-    tmp = get_project_jobs()
-    return jobs + tmp
+    project_jobs = get_project_jobs()
+    return zip_jobs + jobs + project_jobs
 
+def get_export_task_jobs():
+    """Export tasks to zip"""
+    from pybossa.core import db, user_repo
+    from pybossa.model.app import App
+    apps = db.slave_session.query(App).all()
+    # Append all ZIP generation for each app as a task
+    jobs = []
+    for app_x in apps:
+        checkuser = user_repo.get(app_x.owner_id)
+        # Check if Pro User, if yes use a shorter schedule
+        schedule_hours = 24
+        queue = 'low'
+        if checkuser.pro:
+            schedule_hours = 4
+            queue = 'high'
+        jobs.append(dict(name = project_export,
+                         args = [app_x.id], kwargs={},
+                         interval=(schedule_hours * HOUR),
+                         timeout = (10 * MINUTE),
+                         queue=queue))
+    return jobs
+
+def project_export(id):
+    from pybossa.core import project_repo, json_exporter, csv_exporter
+    app = project_repo.get(id)
+    if app is not None:
+        print "Export project id %d" % id
+        json_exporter.pregenerate_zip_files(app)
+        csv_exporter.pregenerate_zip_files(app)
 
 def get_project_jobs():
     """Return a list of jobs based on user type."""
@@ -75,17 +128,19 @@ def get_project_jobs():
     return create_dict_jobs(cached_apps.get_from_pro_user(),
                             get_app_stats,
                             interval=(10 * MINUTE),
-                            timeout=(10 * MINUTE))
-
+                            timeout=(10 * MINUTE),
+                            queue='super')
 
 def create_dict_jobs(data, function,
-                     interval=(24 * HOUR), timeout=(10 * MINUTE)):
+                     interval=(24 * HOUR), timeout=(10 * MINUTE),
+                     queue='low'):
     jobs = []
     for d in data:
         jobs.append(dict(name=function,
                          args=[d['id'], d['short_name']], kwargs={},
                          interval=interval,
-                         timeout=timeout))
+                         timeout=timeout,
+                         queue=queue))
     return jobs
 
 
@@ -175,7 +230,14 @@ def warm_cache(): # pragma: no cover
             for a in apps:
                 warm_app(a['id'], a['short_name'])
     # Users
-    cached_users.get_leaderboard(app.config['LEADERBOARD'], 'anonymous')
+    users = cached_users.get_leaderboard(app.config['LEADERBOARD'], 'anonymous')
+    for user in users:
+        print "Getting stats for %s" % user['name']
+        cached_users.get_user_summary(user['name'])
+        cached_users.apps_contributed_cached(user['id'])
+        cached_users.published_apps_cached(user['id'])
+        cached_users.draft_apps_cached(user['id'])
+
     cached_users.get_top()
 
     return True

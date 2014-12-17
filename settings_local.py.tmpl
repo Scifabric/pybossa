@@ -101,10 +101,25 @@ ENFORCE_PRIVACY = False
 REDIS_CACHE_ENABLED = True
 REDIS_SENTINEL = [('localhost', 26379)]
 REDIS_MASTER = 'mymaster'
+REDIS_DB = 0
 REDIS_KEYPREFIX = 'pybossa_cache'
 
 ## Allowed upload extensions
-ALLOWED_EXTENSIONS = ['js', 'css', 'png', 'jpg', 'jpeg', 'gif']
+ALLOWED_EXTENSIONS = ['js', 'css', 'png', 'jpg', 'jpeg', 'gif', 'zip']
+
+## If you want to use the local uploader configure which folder
+UPLOAD_METHOD = 'local'
+UPLOAD_FOLDER = 'uploads'
+
+## If you want to use Rackspace for uploads, configure it here
+# RACKSPACE_USERNAME = 'username'
+# RACKSPACE_API_KEY = 'apikey'
+# RACKSPACE_REGION = 'ORD'
+
+## Default number of users shown in the leaderboard
+# LEADERBOARD = 20
+## Default shown presenters
+# PRESENTERS = ["basic", "image", "sound", "video", "map", "pdf"]
 # Default Google Docs spreadsheet template tasks URLs
 TEMPLATE_TASKS = {
     'image': "https://docs.google.com/spreadsheet/ccc"
@@ -122,20 +137,6 @@ TEMPLATE_TASKS = {
     'pdf': "https://docs.google.com/spreadsheet/ccc"
            "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE"
            "&usp=sharing"}
-
-## If you want to use the local uploader configure which folder
-UPLOAD_METHOD = 'local'
-UPLOAD_FOLDER = 'uploads'
-
-## If you want to use Rackspace for uploads, configure it here
-# RACKSPACE_USERNAME = 'username'
-# RACKSPACE_API_KEY = 'apikey'
-# RACKSPACE_REGION = 'ORD'
-
-## Default number of users shown in the leaderboard
-# LEADERBOARD = 20
-## Default shown presenters
-# PRESENTERS = ["basic", "image", "sound", "video", "map", "pdf"]
 
 # Expiration time for password protected project cookies
 PASSWD_COOKIE_TIMEOUT = 60 * 30
