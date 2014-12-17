@@ -61,7 +61,7 @@ except ImportError:  # pragma: no cover
 blueprint = Blueprint('account', __name__)
 
 
-mail_queue = Queue('mail', connection=sentinel.master)
+mail_queue = Queue('super', connection=sentinel.master)
 
 
 
