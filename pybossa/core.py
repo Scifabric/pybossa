@@ -457,7 +457,6 @@ def setup_scheduled_jobs(app): #pragma: no cover
     redis_conn = sentinel.master
     from pybossa.jobs import schedule_pybossa_jobs
     from rq_scheduler import Scheduler
-    from datetime import datetime
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=redis_conn)
 
     scheduled_jobs = scheduler.get_jobs()
@@ -469,18 +468,6 @@ def setup_scheduled_jobs(app): #pragma: no cover
                interval=60,
                timeout=60*60)
     _schedule_job(job, scheduler)
-
-    #job = scheduler.schedule(
-    #    scheduled_time=datetime.utcnow(),
-    #    func=schedule_pybossa_jobs,
-    #    interval=60,
-    #    repeat=None,
-    #    timeout=60)
-
-    #if len(scheduled_jobs) > 0:
-    #    if job in scheduler:
-    #        app.logger.info("schedule_pybossa_jobs already scheduled.")
-    #        scheduler.cancel(job)
 
 
 def _schedule_job(function, scheduler):
