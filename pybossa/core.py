@@ -470,7 +470,7 @@ def setup_scheduled_jobs(app): #pragma: no cover
                  kwargs={}, interval=(24 * HOUR), timeout=(10 * MINUTE)),]
 
     for job in JOBS:
-        _schedule_job(job, scheduler)
+        schedule_job(job, scheduler)
 
 
 def setup_newsletter(app):
