@@ -29,19 +29,40 @@ def schedule_pybossa_jobs():
     """Schedule all PyBossa jobs."""
     jobs = get_scheduled_jobs()
     from pybossa.core import sentinel, _schedule_job
+    from rq import Queue
     redis_conn = sentinel.master
-    n_sched_jobs = 0
-    n_cancel_jobs = 0
 
-    scheduler = Scheduler(queue_name='scheduled_jobs',  connection=redis_conn)
+    ql = Queue('low', connection=redis_conn)
+    qm = Queue('medium', connection=redis_conn)
+
+    scheduler = Scheduler(queue_name='scheduled_jobs', connection=redis_conn)
+
+    n_jobs_ql = 0
+    n_jobs_qm = 0
+    n_jobs_qh = 0
+
     for job in jobs:
-        msg = _schedule_job(job, scheduler)
-    if "WARNING" in msg:
-        n_cancel_jobs += 1
-    else:
-        n_sched_jobs +=1
-    msg = "%s new scheduled jobs and %s already scheduled" % (n_sched_jobs,
-                                                              n_cancel_jobs)
+        if (job['interval'] <= (4 * HOUR)):
+            _schedule_job(job, scheduler)
+            n_jobs_qh += 1
+        elif (job['interval'] > (4 * HOUR) and
+              job['interval'] <= (24 * HOUR)):
+            qm.enqueue_call(func=job['name'],
+                            args=job['args'],
+                            kwargs=job['kwargs'],
+                            timeout=job['timeout'])
+            n_jobs_qm += 1
+        else:
+            ql.enqueue_call(func=job['name'],
+                            args=job['args'],
+                            kwargs=job['kwargs'],
+                            timeout=job['timeout'])
+            n_jobs_ql += 1
+
+
+    msg = "%s jobs in scheduled, %s jobs in medium, %s jobs in low" % (n_jobs_qh,
+                                                                       n_jobs_qm,
+                                                                       n_jobs_ql)
     return msg
 
 def get_scheduled_jobs(): # pragma: no cover
