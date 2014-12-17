@@ -465,7 +465,7 @@ def setup_scheduled_jobs(app): #pragma: no cover
     job = dict(name=schedule_pybossa_jobs,
                args=[],
                kwargs={},
-               interval=(4*60*60),
+               interval=(24*60*60),
                timeout=(4*60*60))
     _schedule_job(job, scheduler)
 
