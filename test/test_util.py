@@ -220,6 +220,12 @@ class TestIsReservedName(object):
             assert reserved is False, reserved
 
 
+    def test_returns_false_for_empty_name_string(self):
+        with self.app.app_context():
+            reserved = util.is_reserved_name('account', '')
+            assert reserved is False, reserved
+
+
 
 class TestWithCacheDisabledDecorator(object):
 
