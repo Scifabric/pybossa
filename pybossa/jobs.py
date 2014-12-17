@@ -195,7 +195,9 @@ def warm_cache(): # pragma: no cover
             for a in apps:
                 warm_app(a['id'], a['short_name'])
     # Users
-    cached_users.get_leaderboard(app.config['LEADERBOARD'], 'anonymous')
+    users = cached_users.get_leaderboard(app.config['LEADERBOARD'], 'anonymous')
+    for user in users:
+        cached_users.get_user_summary(user['name'])
     cached_users.get_top()
 
     return True
