@@ -25,45 +25,25 @@ from rq_scheduler import Scheduler
 MINUTE = 60
 HOUR = 60 * 60
 
-def schedule_pybossa_jobs():
-    """Schedule all PyBossa jobs."""
+def schedule_priority_jobs(queue_name, interval):
+    """Schedule all PyBossa high priority jobs."""
     jobs = get_scheduled_jobs()
-    from pybossa.core import sentinel, _schedule_job
+    from pybossa.core import sentinel
     from rq import Queue
     redis_conn = sentinel.master
 
-    ql = Queue('low', connection=redis_conn)
-    qm = Queue('medium', connection=redis_conn)
-
-    scheduler = Scheduler(queue_name='scheduled_jobs', connection=redis_conn)
-
-    n_jobs_ql = 0
-    n_jobs_qm = 0
-    n_jobs_qh = 0
-
+    n_jobs = 0
+    queue = Queue(queue_name, connection=redis_conn)
     for job in jobs:
-        if (job['interval'] <= (4 * HOUR)):
-            _schedule_job(job, scheduler)
-            n_jobs_qh += 1
-        elif (job['interval'] > (4 * HOUR) and
-              job['interval'] <= (24 * HOUR)):
-            qm.enqueue_call(func=job['name'],
-                            args=job['args'],
-                            kwargs=job['kwargs'],
-                            timeout=job['timeout'])
-            n_jobs_qm += 1
-        else:
-            ql.enqueue_call(func=job['name'],
-                            args=job['args'],
-                            kwargs=job['kwargs'],
-                            timeout=job['timeout'])
-            n_jobs_ql += 1
-
-
-    msg = "%s jobs in scheduled, %s jobs in medium, %s jobs in low" % (n_jobs_qh,
-                                                                       n_jobs_qm,
-                                                                       n_jobs_ql)
+        if (job['interval'] <= interval):
+                n_jobs += 1
+                queue.enqueue_call(func=job['name'],
+                                   args=job['args'],
+                                   kwargs=job['kwargs'],
+                                   timeout=job['timeout'])
+    msg = "%s jobs in %s have been enqueued" % (n_jobs, queue_name)
     return msg
+
 
 def get_scheduled_jobs(): # pragma: no cover
     """Return a list of scheduled jobs."""

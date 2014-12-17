@@ -455,19 +455,22 @@ def setup_cache_timeouts(app):
 
 def setup_scheduled_jobs(app): #pragma: no cover
     redis_conn = sentinel.master
-    from pybossa.jobs import schedule_pybossa_jobs
+    from pybossa.jobs import schedule_priority_jobs
     from rq_scheduler import Scheduler
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=redis_conn)
+    MINUTE = 60
+    HOUR = 60 * 60
+    JOBS = [dict(name=schedule_priority_jobs, args=['super', (10 * MINUTE)],
+                 kwargs={}, interval=(10 * MINUTE), timeout=(10 * MINUTE)),
+            dict(name=schedule_priority_jobs, args=['high', (1 * HOUR)],
+                 kwargs={}, interval=HOUR, timeout=(10 * MINUTE)),
+            dict(name=schedule_priority_jobs, args=['medium', (12 * HOUR)],
+                 kwargs={}, interval=(12 * HOUR), timeout=(10 * MINUTE)),
+            dict(name=schedule_priority_jobs, args=['low', (24 * HOUR)],
+                 kwargs={}, interval=(24 * HOUR), timeout=(10 * MINUTE)),]
 
-    scheduled_jobs = scheduler.get_jobs()
-    app.logger.info("There are %s scheduled jobs" % len(scheduled_jobs))
-
-    job = dict(name=schedule_pybossa_jobs,
-               args=[],
-               kwargs={},
-               interval=(24*60*60),
-               timeout=(4*60*60))
-    _schedule_job(job, scheduler)
+    for job in JOBS:
+        _schedule_job(job, scheduler)
 
 
 def _schedule_job(function, scheduler):
