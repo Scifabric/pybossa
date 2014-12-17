@@ -60,8 +60,7 @@ def get_scheduled_jobs(): # pragma: no cover
     zip_jobs = get_export_task_jobs()
     # Based on type of user
     project_jobs = get_project_jobs()
-    #return zip_jobs + jobs + project_jobs
-    return [jobs[2]]
+    return zip_jobs + jobs + project_jobs
 
 def get_export_task_jobs():
     """Export tasks to zip"""
