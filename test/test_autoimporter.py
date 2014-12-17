@@ -306,23 +306,26 @@ class TestAutoimporterBehaviour(web.Helper):
         # CSV
         url = "/app/%s/tasks/autoimporter?template=csv" % app.short_name
         res = self.app.get(url, follow_redirects=True)
+        data = res.data.decode('utf-8')
 
-        assert "From a CSV file" in res.data
-        assert 'action="/app/%s/tasks/autoimporter"' % app.short_name in res.data
+        assert "From a CSV file" in data
+        assert 'action="/app/%E2%9C%93app1/tasks/autoimporter"' in data
 
         # Google Docs
         url = "/app/%s/tasks/autoimporter?template=gdocs" % app.short_name
         res = self.app.get(url, follow_redirects=True)
+        data = res.data.decode('utf-8')
 
-        assert "From a Google Docs Spreadsheet" in res.data
-        assert 'action="/app/%s/tasks/autoimporter"' % app.short_name in res.data
+        assert "From a Google Docs Spreadsheet" in data
+        assert 'action="/app/%E2%9C%93app1/tasks/autoimporter"' in data
 
         # Epicollect Plus
         url = "/app/%s/tasks/autoimporter?template=epicollect" % app.short_name
         res = self.app.get(url, follow_redirects=True)
+        data = res.data.decode('utf-8')
 
-        assert "From an EpiCollect Plus project" in res.data
-        assert 'action="/app/%s/tasks/autoimporter"' % app.short_name in res.data
+        assert "From an EpiCollect Plus project" in data
+        assert 'action="/app/%E2%9C%93app1/tasks/autoimporter"' in data
 
 
     @patch('pybossa.view.applications._get_scheduled_autoimport_job')
