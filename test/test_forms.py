@@ -18,11 +18,11 @@
 
 from wtforms import ValidationError
 from nose.tools import raises
+from flask import current_app
 
-from pybossa.forms.forms import RegisterForm
+from pybossa.forms.forms import RegisterForm, LoginForm
 from default import Test, db, with_context
 from pybossa.forms import validator
-from pybossa.view.account import LoginForm
 from pybossa.repositories import UserRepository
 from factories import UserFactory
 
@@ -60,6 +60,24 @@ class TestValidator(Test):
             f.email.data = '1 2 3'
             u = validator.CommaSeparatedIntegers()
             u.__call__(f, f.email)
+
+    @with_context
+    @raises(ValidationError)
+    def test_reserved_names_account_signin(self):
+        """Test VALIDATOR ReservedName for account URLs"""
+        form = RegisterForm()
+        form.name.data = 'signin'
+        val = validator.ReservedName('account', current_app)
+        val(form, form.name)
+
+    @with_context
+    @raises(ValidationError)
+    def test_reserved_names_project_published(self):
+        """Test VALIDATOR ReservedName for app URLs"""
+        form = RegisterForm()
+        form.name.data = 'category'
+        val = validator.ReservedName('app', current_app)
+        val(form, form.name)
 
 
 
@@ -109,6 +127,15 @@ class TestRegisterForm(Test):
 
         assert not form.validate()
         assert "$#&\\/| and space symbols are forbidden" in form.errors['name'], form.errors
+
+    @with_context
+    def test_register_name_reserved_name(self):
+        self.fill_in_data['name'] = 'signin'
+
+        form = RegisterForm(**self.fill_in_data)
+
+        assert not form.validate()
+        assert u'This name is used by the system.' in form.errors['name'], form.errors
 
     @with_context
     def test_register_form_unique_email(self):

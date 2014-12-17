@@ -331,6 +331,55 @@ class TestAppAPI(TestAPI):
         res = self.app.delete(url, data=datajson)
         assert res.status_code == 404, error
 
+
+    @with_context
+    def test_app_post_invalid_short_name(self):
+        """Test API project POST returns error if short_name is invalid (i.e. is
+            a name used by the Flask app as a URL endpoint"""
+        users = UserFactory.create_batch(2)
+        CategoryFactory.create()
+        name = u'XXXX Project'
+        data = dict(
+            name=name,
+            short_name='new',
+            description='description',
+            owner_id=1,
+            long_description=u'Long Description\n================')
+        data = json.dumps(data)
+        res = self.app.post('/api/app?api_key=' + users[1].api_key,
+                            data=data)
+        error = json.loads(res.data)
+        assert res.status_code == 415, res.status_code
+        assert error['status'] == 'failed', error
+        assert error['action'] == 'POST', error
+        assert error['target'] == 'app', error
+        assert error['exception_cls'] == 'ValueError', error
+        message = "Project short_name is not valid, as it's used by the system."
+        assert error['exception_msg'] == message, error
+
+
+    @with_context
+    def test_app_put_invalid_short_name(self):
+        """Test API project PUT returns error if short_name is invalid (i.e. is
+            a name used by the Flask app as a URL endpoint"""
+        user = UserFactory.create()
+        CategoryFactory.create()
+        project = AppFactory.create(owner=user)
+        name = u'XXXX Project'
+        data = {'short_name': 'new'}
+        datajson = json.dumps(data)
+        res = self.app.put('/api/app/%s?api_key=%s' % (project.id, user.api_key),
+                            data=datajson)
+        error = json.loads(res.data)
+        assert res.status_code == 415, res.status_code
+        assert error['status'] == 'failed', error
+        assert error['action'] == 'PUT', error
+        assert error['target'] == 'app', error
+        assert error['exception_cls'] == 'ValueError', error
+        message = "Project short_name is not valid, as it's used by the system."
+        assert error['exception_msg'] == message, error
+
+
     @with_context
     def test_admin_app_post(self):
         """Test API project update/delete for ADMIN users"""
