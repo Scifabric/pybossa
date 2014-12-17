@@ -1,5 +1,5 @@
 [program:rq-worker]
-command={{virtualenv_path}}/bin/python app_context_rqworker.py mail super high medium low
+command={{virtualenv_path}}/bin/python app_context_rqworker.py scheduled_jobs mail super high medium low
 directory={{pybossa_path}}
 autostart=true
 autorestart=true
