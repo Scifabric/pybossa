@@ -19,7 +19,6 @@
 from flask.ext.mail import Message
 from pybossa.core import mail
 from pybossa.util import with_cache_disabled
-from rq_scheduler import Scheduler
 
 
 MINUTE = 60
@@ -36,11 +35,11 @@ def schedule_priority_jobs(queue_name, interval):
     queue = Queue(queue_name, connection=redis_conn)
     for job in jobs:
         if (job['interval'] <= interval):
-                n_jobs += 1
-                queue.enqueue_call(func=job['name'],
-                                   args=job['args'],
-                                   kwargs=job['kwargs'],
-                                   timeout=job['timeout'])
+            n_jobs += 1
+            queue.enqueue_call(func=job['name'],
+                               args=job['args'],
+                               kwargs=job['kwargs'],
+                               timeout=job['timeout'])
     msg = "%s jobs in %s have been enqueued" % (n_jobs, queue_name)
     return msg
 
