@@ -3,8 +3,7 @@ language: python
 python:
 - '2.7'
 env:
-- SWIG=swig-2.0.4
-- PYBOSSA_SETTINGS='../settings_test.py' PYBOSSA_REDIS_CACHE_DISABLED='1'
+- PYBOSSA_SETTINGS='../settings_test.py' PYBOSSA_REDIS_CACHE_DISABLED='1' SWIG=swig-2.0.4
 services:
 - redis-server
 addons:
