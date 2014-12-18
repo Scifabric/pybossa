@@ -19,16 +19,11 @@
 from flask import current_app
 from sqlalchemy.sql import text
 from pybossa.core import db
-from pybossa.cache import cache, memoize, ONE_DAY
-from pybossa.model.task import Task
-from pybossa.model.task_run import TaskRun
-from pybossa.cache import FIVE_MINUTES, memoize
+from pybossa.cache import memoize, ONE_DAY, FIVE_MINUTES
 
 import pygeoip
 import operator
-import datetime
 import time
-from datetime import timedelta
 
 
 session = db.slave_session
