@@ -24,7 +24,6 @@ This package adds GET method for:
 """
 from api_base import APIBase
 from pybossa.model.user import User
-import pybossa.cache.users as cached_users
 from werkzeug.exceptions import MethodNotAllowed
 from flask import request
 from flask.ext.login import current_user
@@ -86,8 +85,8 @@ class UserAPI(APIBase):
     def post(self):
         raise MethodNotAllowed(valid_methods=['GET'])
 
-    def delete(self):
+    def delete(self, oid=None):
         raise MethodNotAllowed(valid_methods=['GET'])
 
-    def put(self):
+    def put(self, oid=None):
         raise MethodNotAllowed(valid_methods=['GET'])

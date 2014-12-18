@@ -19,16 +19,12 @@
 from flask import current_app
 from sqlalchemy.sql import text
 from pybossa.core import db
-from pybossa.cache import cache, memoize, ONE_DAY
-from pybossa.model.task import Task
-from pybossa.model.task_run import TaskRun
-from pybossa.cache import FIVE_MINUTES, memoize
+from pybossa.cache import memoize, ONE_DAY
 
 import pygeoip
 import operator
-import datetime
 import time
-from datetime import timedelta
+import datetime
 
 
 session = db.slave_session
@@ -99,7 +95,7 @@ def stats_dates(app_id):
     dates_anon = {}
     dates_auth = {}
 
-    total_n_tasks = n_tasks(app_id)
+    n_tasks(app_id)
 
     # Get all completed tasks
     sql = text('''
@@ -132,7 +128,6 @@ def stats_dates(app_id):
 
     # No completed tasks in the last 15 days
     if len(dates.keys()) == 0:
-        import datetime
         base = datetime.datetime.today()
         for x in range(0, 15):
             tmp_date = base - datetime.timedelta(days=x)
@@ -439,11 +434,10 @@ def get_stats(app_id, geo=False):
     users, anon_users, auth_users = stats_users(app_id)
     dates, dates_anon, dates_auth = stats_dates(app_id)
 
-    total_n_tasks = n_tasks(app_id)
-    total_completed = sum(dates.values())
-    # total_completed = completed_tasks(app_id)
+    n_tasks(app_id)
+    sum(dates.values())
 
-    sorted_dates = sorted(dates.iteritems(), key=operator.itemgetter(0))
+    sorted(dates.iteritems(), key=operator.itemgetter(0))
 
     dates_stats = stats_format_dates(app_id, dates,
                                      dates_anon, dates_auth)
