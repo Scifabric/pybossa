@@ -198,7 +198,7 @@ def setup_login_manager(app):
     login_manager.login_view = 'account.signin'
     login_manager.login_message = u"Please sign in to access this page."
     @login_manager.user_loader
-    def load_user(username):
+    def _load_user(username):
         return user_repo.get_by_name(username)
 
 
@@ -207,7 +207,7 @@ def setup_babel(app):
     babel.init_app(app)
 
     @babel.localeselector
-    def get_locale():
+    def _get_locale():
         if current_user.is_authenticated():
             lang = current_user.locale
         else:
