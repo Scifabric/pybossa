@@ -44,7 +44,8 @@ class Exporter(object):
             import zlib
             assert zlib
             zip_compression= zipfile.ZIP_DEFLATED
-        except:
+        except Exception as ex:
+            print ex
             zip_compression= zipfile.ZIP_STORED
         zip = zipfile.ZipFile(file=filename, mode='w', compression=zip_compression, allowZip64=True)
         return zip
