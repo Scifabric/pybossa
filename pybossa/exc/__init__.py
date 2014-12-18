@@ -17,3 +17,6 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from repository import WrongObjectError, DBIntegrityError
+
+assert WrongObjectError
+assert DBIntegrityError
