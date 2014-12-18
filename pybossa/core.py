@@ -56,7 +56,7 @@ def create_app(run_as_server=True):
     sentinel.init_app(app)
     signer.init_app(app)
     if app.config.get('SENTRY_DSN'): # pragma: no cover
-        sentr = Sentry(app)
+        Sentry(app)
     if run_as_server:
         setup_scheduled_jobs(app)
     setup_blueprints(app)
