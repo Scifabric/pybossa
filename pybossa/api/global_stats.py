@@ -44,7 +44,7 @@ class GlobalStatsAPI(APIBase):
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
     @ratelimit(limit=300, per=15 * 60)
-    def get(self, id):
+    def get(self, oid):
         """Return global stats."""
         n_pending_tasks = stats.n_total_tasks_site() - stats.n_task_runs_site()
         n_users = stats.n_auth_users() + stats.n_anon_users()
