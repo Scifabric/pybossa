@@ -195,7 +195,6 @@ def setup_logging(app):
 
 
 def setup_login_manager(app):
-    from pybossa import model
     login_manager.login_view = 'account.signin'
     login_manager.login_message = u"Please sign in to access this page."
     @login_manager.user_loader
@@ -330,7 +329,6 @@ def setup_error_handlers(app):
 
 
 def setup_hooks(app):
-    from pybossa import model
     @app.after_request
     def inject_x_rate_headers(response):
         limit = get_view_rate_limit()
