@@ -85,7 +85,8 @@ class Exporter(object):
             # TODO: Check rackspace file existence
 
     def get_zip(self, app, ty):
-        """Get a ZIP file directly from uploaded directory or generate one on the fly and upload it if not existing."""
+        """Get a ZIP file directly from uploaded directory
+        or generate one on the fly and upload it if not existing."""
         filename=self.download_name(app, ty)
         if not self.zip_existing(app, ty):
             print "Warning: Generating %s on the fly now!" % filename
