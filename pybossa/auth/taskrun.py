@@ -24,7 +24,7 @@ from pybossa.core import task_repo, project_repo
 def create(taskrun=None):
     project = project_repo.get(task_repo.get_task(taskrun.task_id).app_id)
     if (current_user.is_anonymous() and
-        project.allow_anonymous_contributors is False):
+            project.allow_anonymous_contributors is False):
         return False
     authorized = task_repo.count_task_runs_with(app_id=taskrun.app_id,
                                                 task_id=taskrun.task_id,
