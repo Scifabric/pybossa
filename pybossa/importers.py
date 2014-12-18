@@ -45,7 +45,7 @@ class _BulkTaskImport(object):
 
     @classmethod
     def variants(self):
-        return [self.importer_id] if self.importer_id != None else []
+        return [self.importer_id] if self.importer_id is not None else []
 
     def tasks(self, form):
         """Returns a generator with all the tasks imported"""
@@ -141,10 +141,10 @@ class _BulkTaskGDImport(_BulkTaskImport):
         # For old data links of Google Spreadsheets
         if 'ccc?key' in form.googledocs_url.data:
             return ''.join([form.googledocs_url.data, '&output=csv'])
-        # New data format for Google Drive import is like this: 
+        # New data format for Google Drive import is like this:
         # https://docs.google.com/spreadsheets/d/key/edit?usp=sharing
         else:
-            return ''.join([form.googledocs_url.data.split('edit')[0], 
+            return ''.join([form.googledocs_url.data.split('edit')[0],
                             'export?format=csv'])
 
 
