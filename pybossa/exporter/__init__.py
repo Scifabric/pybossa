@@ -42,6 +42,7 @@ class Exporter(object):
         """create a ZipFile Object with compression and allow big ZIP files (allowZip64)"""
         try:
             import zlib
+            assert zlib
             zip_compression= zipfile.ZIP_DEFLATED
         except:
             zip_compression= zipfile.ZIP_STORED
