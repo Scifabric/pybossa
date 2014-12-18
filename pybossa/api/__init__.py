@@ -89,7 +89,8 @@ register_api(CategoryAPI, 'api_category', '/category', pk='oid', pk_type='int')
 register_api(TaskAPI, 'api_task', '/task', pk='oid', pk_type='int')
 register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='oid', pk_type='int')
 register_api(UserAPI, 'api_user', '/user', pk='oid', pk_type='int')
-register_api(GlobalStatsAPI, 'api_globalstats', '/globalstats')
+register_api(GlobalStatsAPI, 'api_globalstats', '/globalstats',
+             pk='oid', pk_type='int')
 register_api(VmcpAPI, 'api_vmcp', '/vmcp')
 register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
 
