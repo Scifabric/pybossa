@@ -84,11 +84,11 @@ def register_api(view, endpoint, url, pk='id', pk_type='int'):
                            view_func=view_func,
                            methods=['GET', 'PUT', 'DELETE', 'OPTIONS'])
 
-register_api(AppAPI, 'api_app', '/app', pk='id', pk_type='int')
-register_api(CategoryAPI, 'api_category', '/category', pk='id', pk_type='int')
-register_api(TaskAPI, 'api_task', '/task', pk='id', pk_type='int')
-register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
-register_api(UserAPI, 'api_user', '/user', pk='id', pk_type='int')
+register_api(AppAPI, 'api_app', '/app', pk='oid', pk_type='int')
+register_api(CategoryAPI, 'api_category', '/category', pk='oid', pk_type='int')
+register_api(TaskAPI, 'api_task', '/task', pk='oid', pk_type='int')
+register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='oid', pk_type='int')
+register_api(UserAPI, 'api_user', '/user', pk='oid', pk_type='int')
 register_api(GlobalStatsAPI, 'api_globalstats', '/globalstats')
 register_api(VmcpAPI, 'api_vmcp', '/vmcp')
 register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
