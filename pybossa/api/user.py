@@ -79,7 +79,7 @@ class UserAPI(APIBase):
     def _private_attributes_in_request(self):
         for attribute in request.args.keys():
             if (attribute in self.allowed_attributes and
-                attribute not in self.public_attributes):
+                    attribute not in self.public_attributes):
                 return True
         return False
 
