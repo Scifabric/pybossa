@@ -19,7 +19,7 @@
 from flask import current_app
 from sqlalchemy.sql import text
 from pybossa.core import db
-from pybossa.cache import memoize, ONE_DAY, FIVE_MINUTES
+from pybossa.cache import memoize, ONE_DAY
 
 import pygeoip
 import operator
