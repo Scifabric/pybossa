@@ -18,8 +18,8 @@ The objects are:
 """
 __all__ = ['sentinel', 'db', 'signer', 'mail', 'login_manager', 'facebook',
            'twitter', 'google', 'misaka', 'babel', 'uploader', 'debug_toolbar',
-           'csrf', 'timeouts', 'ratelimits', 'queues', 'auditlog_repo',
-           'user_repo', 'project_repo', 'task_repo', 'blog_repo', 'newsletter']
+           'csrf', 'timeouts', 'ratelimits', 'user_repo', 'project_repo',
+           'task_repo', 'blog_repo', 'auditlog_repo', 'newsletter']
 
 # CACHE
 from pybossa.sentinel import Sentinel
@@ -87,9 +87,6 @@ timeouts = dict()
 
 # Ratelimits
 ratelimits = dict()
-
-# Queues
-queues = dict()
 
 # Newsletter
 from newsletter import Newsletter
