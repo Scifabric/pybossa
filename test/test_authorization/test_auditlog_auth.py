@@ -63,7 +63,7 @@ class TestAuditlogAuthorization(Test):
     @patch('pybossa.auth.current_user', new=mock_pro)
     @patch('pybossa.auth.auditlog.current_user', new=mock_pro)
     def test_pro_user_can_read_auditlog(self):
-        """Test pro users can read auditlogs"""
+        """Test pro users can read auditlogs from owned projects"""
 
         owner = UserFactory.create_batch(2, pro=True)[1]
         app = AppFactory.create(owner=owner)
@@ -71,6 +71,19 @@ class TestAuditlogAuthorization(Test):
 
         assert self.mock_pro.id == app.owner_id
         assert_not_raises(Exception, getattr(require, 'auditlog').read, log)
+
+
+    @patch('pybossa.auth.current_user', new=mock_pro)
+    @patch('pybossa.auth.auditlog.current_user', new=mock_pro)
+    def test_pro_user_cannot_read_auditlog(self):
+        """Test pro users cannot read auditlogs from non-owned projects"""
+
+        users = UserFactory.create_batch(2, pro=True)
+        app = AppFactory.create(owner=users[0])
+        log = AuditlogFactory.create(app_id=app.id)
+
+        assert self.mock_pro.id != app.owner_id
+        assert_raises(Forbidden, getattr(require, 'auditlog').read, log)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
