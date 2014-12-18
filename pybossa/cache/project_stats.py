@@ -95,7 +95,7 @@ def stats_dates(app_id):
     dates_anon = {}
     dates_auth = {}
 
-    total_n_tasks = n_tasks(app_id)
+    n_tasks(app_id)
 
     # Get all completed tasks
     sql = text('''
