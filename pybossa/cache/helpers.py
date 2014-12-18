@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from sqlalchemy.sql import text
-from pybossa.core import db, timeouts
+from pybossa.core import db
 from pybossa.cache import memoize, ONE_HOUR
 from pybossa.cache.apps import overall_progress
 
