@@ -111,8 +111,8 @@ class ProjectRepository(object):
                     if getattr(inspect(project).attrs, attr).history.has_changes():
                         history = getattr(inspect(project).attrs, attr).history
                         if (len(history.deleted) == 0 and \
-                            len(history.added) > 0 and \
-                            attr == 'info'):
+                                len(history.added) > 0 and \
+                                attr == 'info'):
                             old_value = {}
                             new_value = history.added[0]
                             self._manage_info_keys(project, user_id, user_name,
