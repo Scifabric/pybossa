@@ -975,10 +975,9 @@ def export_to(short_name):
             flash(msg, 'success')
             return respond()
         except requests.exceptions.ConnectionError:
-                msg = ("CKAN server seems to be down, \
-                       try again layer or contact the CKAN admins")
-                current_app.logger.error(msg)
-                flash(msg, 'danger')
+            msg = "CKAN server seems to be down, try again layer or contact the CKAN admins"
+            current_app.logger.error(msg)
+            flash(msg, 'danger')
         except Exception as inst:
             if len(inst.args) == 3:
                 t, msg, status_code = inst.args
