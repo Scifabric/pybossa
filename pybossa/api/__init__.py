@@ -30,8 +30,7 @@ This package adds GET, POST, PUT and DELETE methods for:
 """
 
 import json
-from flask import Blueprint, request, abort, Response, \
-    current_app, make_response
+from flask import Blueprint, request, abort, Response, make_response
 from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound
 from pybossa.util import jsonpify, crossdomain, get_user_id_or_ip
