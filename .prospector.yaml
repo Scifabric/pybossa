@@ -5,3 +5,5 @@ pylint:
         - W0613
         - R0401
         - W0614
+    options:
+        dummy-variables-rgx: _|dummy
