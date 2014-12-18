@@ -227,7 +227,7 @@ def setup_blueprints(app):
     from pybossa.view.admin import blueprint as admin
     from pybossa.view.leaderboard import blueprint as leaderboard
     from pybossa.view.stats import blueprint as stats
-    from pybossa.view.help import blueprint as help
+    from pybossa.view.help import blueprint as helper
     from pybossa.view.home import blueprint as home
     from pybossa.view.uploads import blueprint as uploads
 
@@ -237,7 +237,7 @@ def setup_blueprints(app):
                   {'handler': applications, 'url_prefix': '/app'},
                   {'handler': admin, 'url_prefix': '/admin'},
                   {'handler': leaderboard, 'url_prefix': '/leaderboard'},
-                  {'handler': help, 'url_prefix': '/help'},
+                  {'handler': helper, 'url_prefix': '/help'},
                   {'handler': stats, 'url_prefix': '/stats'},
                   {'handler': uploads, 'url_prefix': '/uploads'},
                   ]
