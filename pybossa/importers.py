@@ -169,7 +169,7 @@ class _BulkTaskEpiCollectPlusImport(_BulkTaskImport):
             msg = "Oops! It looks like you don't have permission to access" \
                 " the EpiCollect Plus project"
             raise BulkImportException(gettext(msg), 'error')
-        if not 'application/json' in r.headers['content-type']:
+        if 'application/json' not in r.headers['content-type']:
             msg = "Oops! That project and form do not look like the right one."
             raise BulkImportException(gettext(msg), 'error')
         return self._import_epicollect_tasks(json.loads(r.text))
