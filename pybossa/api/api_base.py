@@ -114,7 +114,8 @@ class APIBase(MethodView):
             except (Forbidden, Unauthorized):
                 # Remove last added item, as it is 401 or 403
                 items.pop()
-            except: # pragma: no cover
+            except Exception as ex: # pragma: no cover
+                print ex
                 raise
         if id:
             getattr(require, self.__class__.__name__.lower()).read(query_result[0])
