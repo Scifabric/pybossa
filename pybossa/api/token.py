@@ -86,7 +86,7 @@ class TokenAPI(APIBase):
 
 
 
-    def post(self, oid=None):
+    def post(self):
         raise MethodNotAllowed(valid_methods=['GET'])
 
     def delete(self, oid=None):
