@@ -312,25 +312,25 @@ def setup_jinja(app):
 
 def setup_error_handlers(app):
     @app.errorhandler(404)
-    def page_not_found(e):
+    def _page_not_found(e):
         return render_template('404.html'), 404
 
     @app.errorhandler(500)
-    def server_error(e):  # pragma: no cover
+    def _server_error(e):  # pragma: no cover
         return render_template('500.html'), 500
 
     @app.errorhandler(403)
-    def forbidden(e):
+    def _forbidden(e):
         return render_template('403.html'), 403
 
     @app.errorhandler(401)
-    def unauthorized(e):
+    def _unauthorized(e):
         return render_template('401.html'), 401
 
 
 def setup_hooks(app):
     @app.after_request
-    def inject_x_rate_headers(response):
+    def _inject_x_rate_headers(response):
         limit = get_view_rate_limit()
         if limit and limit.send_x_headers:
             h = response.headers
@@ -340,7 +340,7 @@ def setup_hooks(app):
         return response
 
     @app.before_request
-    def api_authentication():
+    def _api_authentication():
         """ Attempt API authentication on a per-request basis."""
         apikey = request.args.get('api_key', None)
         from flask import _request_ctx_stack
@@ -355,7 +355,7 @@ def setup_hooks(app):
                 _request_ctx_stack.top.user = user
 
     @app.context_processor
-    def global_template_context():
+    def _global_template_context():
         if current_user.is_authenticated():
             if (current_user.email_addr == current_user.name or
                     current_user.email_addr == "None"):
@@ -408,7 +408,7 @@ def setup_hooks(app):
 
 def setup_jinja2_filters(app):
     @app.template_filter('pretty_date')
-    def pretty_date_filter(s):
+    def _pretty_date_filter(s):
         return pretty_date(s)
 
 
