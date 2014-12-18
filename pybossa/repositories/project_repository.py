@@ -213,8 +213,8 @@ class ProjectRepository(object):
         for new_key in (s_n - s_o):
             # handle special case passwd_hash
             if (old_value.get(new_key) is None and
-                new_value.get(new_key) is None and
-                new_key == 'passwd_hash'):
+                    new_value.get(new_key) is None and
+                    new_key == 'passwd_hash'):
                 pass
             else:
                 log = Auditlog(
