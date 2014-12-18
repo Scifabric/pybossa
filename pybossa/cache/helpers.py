@@ -68,11 +68,6 @@ def check_contributing_state(app, user_id=None, user_ip=None):
 
 
 def add_custom_contrib_button_to(app, user_id_or_ip):
-    if type(app) == dict:
-        app_id = app['id']
-    else:
-        app_id = app.id
-        app = app.dictize()
     app['contrib_button'] = check_contributing_state(app, **user_id_or_ip)
     return app
 
