@@ -89,5 +89,5 @@ class UserAPI(APIBase):
     def delete(self, oid=None):
         raise MethodNotAllowed(valid_methods=['GET'])
 
-    def put(self):
+    def put(self, oid=None):
         raise MethodNotAllowed(valid_methods=['GET'])
