@@ -85,8 +85,8 @@ class _BulkTaskImport(object):
             msg = "Oops! It looks like you don't have permission to access" \
                 " that file"
             raise BulkImportException(gettext(msg), 'error')
-        if ((not 'text/plain' in r.headers['content-type']) and
-                (not 'text/csv' in r.headers['content-type'])):
+        if (('text/plain' not in r.headers['content-type']) and
+                ('text/csv' not in r.headers['content-type'])):
             msg = gettext("Oops! That file doesn't look like the right file.")
             raise BulkImportException(msg, 'error')
 
