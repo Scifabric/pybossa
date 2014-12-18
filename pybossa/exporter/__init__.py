@@ -92,7 +92,10 @@ class Exporter(object):
             self._make_zip(app, ty)
         if isinstance(uploader, local.LocalUploader):
             filepath = self._download_path(app)
-            res = send_file(filename_or_fp=safe_join(filepath, filename), mimetype='application/octet-stream', as_attachment=True, attachment_filename=filename)
+            res = send_file(filename_or_fp=safe_join(filepath, filename),
+                            mimetype='application/octet-stream',
+                            as_attachment=True,
+                            attachment_filename=filename)
             # fail safe mode for more encoded filenames.
             # It seems Flask and Werkzeug do not support RFC 5987 http://greenbytes.de/tech/tc2231/#encoding-2231-char
             # res.headers['Content-Disposition'] = 'attachment; filename*=%s' % filename
