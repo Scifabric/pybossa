@@ -16,20 +16,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.core import db
+from pybossa.core import (db, user_repo, project_repo, task_repo, blog_repo,
+    auditlog_repo)
 
 import factory
-
-from pybossa.repositories import UserRepository
-from pybossa.repositories import ProjectRepository
-from pybossa.repositories import BlogRepository
-from pybossa.repositories import TaskRepository
-from pybossa.repositories import AuditlogRepository
-user_repo = UserRepository(db)
-project_repo = ProjectRepository(db)
-blog_repo = BlogRepository(db)
-task_repo = TaskRepository(db)
-auditlog_repo = AuditlogRepository(db)
 
 
 def reset_all_pk_sequences():

@@ -20,8 +20,6 @@ from pybossa.model.auditlog import Auditlog
 from . import BaseFactory, factory, auditlog_repo
 
 
-app = factory.SubFactory('factories.AppFactory')
-
 class AuditlogFactory(BaseFactory):
     class Meta:
         model = Auditlog
