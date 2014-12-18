@@ -35,7 +35,7 @@ from rq import Queue
 def create_app(run_as_server=True):
     app = Flask(__name__)
     if 'DATABASE_URL' in os.environ:  # pragma: no cover
-        heroku = Heroku(app)
+        Heroku(app)
     configure_app(app)
     setup_cache_timeouts(app)
     setup_ratelimits(app)
