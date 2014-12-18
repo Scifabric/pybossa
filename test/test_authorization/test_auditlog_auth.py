@@ -22,9 +22,8 @@ from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
 from mock import patch
 from test_authorization import mock_current_user
-from factories import AppFactory, BlogpostFactory, UserFactory
+from factories import AppFactory, UserFactory, AuditlogFactory
 from factories import reset_all_pk_sequences
-from pybossa.core import project_repo, auditlog_repo
 from pybossa.model.auditlog import Auditlog
 
 
@@ -39,73 +38,56 @@ class TestAuditlogAuthorization(Test):
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
-    @patch('pybossa.auth.blogpost.current_user', new=mock_anonymous)
+    @patch('pybossa.auth.auditlog.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_read_auditlog(self):
         """Test anonymous users cannot read auditlogs"""
 
-        app = AppFactory.create()
-        app.hidden = 1
-        project_repo.update(app)
+        log = AuditlogFactory.create()
 
-        logs = auditlog_repo.filter_by(app_short_name=app.short_name)
-
-        for log in logs:
-            assert_raises(Unauthorized, getattr(require, 'auditlog').read, log)
+        assert_raises(Unauthorized, getattr(require, 'auditlog').read, log)
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
-    @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.auditlog.current_user', new=mock_authenticated)
     def test_owner_user_cannot_read_auditlog(self):
         """Test owner users cannot read auditlogs"""
 
         owner = UserFactory.create_batch(2)[1]
         app = AppFactory.create(owner=owner)
-        app.hidden = 1
-        project_repo.update(app)
-
-        logs = auditlog_repo.filter_by(app_short_name=app.short_name)
+        log = AuditlogFactory.create(app_id=app.id)
 
         assert self.mock_authenticated.id == app.owner_id
 
-        for log in logs:
-            assert_raises(Unauthorized, getattr(require, 'auditlog').read, log)
+        assert_raises(Forbidden, getattr(require, 'auditlog').read, log)
 
-    @patch('pybossa.auth.current_user', new=mock_authenticated)
-    @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
+
+    @patch('pybossa.auth.current_user', new=mock_pro)
+    @patch('pybossa.auth.auditlog.current_user', new=mock_pro)
     def test_pro_user_can_read_auditlog(self):
         """Test pro users can read auditlogs"""
 
         owner = UserFactory.create_batch(2, pro=True)[1]
         app = AppFactory.create(owner=owner)
-        app.hidden = 1
-        project_repo.update(app)
+        log = AuditlogFactory.create(app_id=app.id)
 
-        logs = auditlog_repo.filter_by(app_short_name=app.short_name)
-
-        assert self.mock_authenticated.id == app.owner_id
-
-        for log in logs:
-            assert_not_raises(Exception, getattr(require, 'auditlog').read, log)
-
+        assert self.mock_pro.id == app.owner_id
+        assert_not_raises(Exception, getattr(require, 'auditlog').read, log)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
-    @patch('pybossa.auth.blogpost.current_user', new=mock_admin)
+    @patch('pybossa.auth.auditlog.current_user', new=mock_admin)
     def test_admin_user_can_read_auditlog(self):
         """Test admin users can read auditlogs"""
 
         owner = UserFactory.create_batch(2)[1]
         app = AppFactory.create(owner=owner)
-        app.hidden = 1
-        project_repo.update(app)
+        log = AuditlogFactory.create(app_id=app.id)
 
-        logs = auditlog_repo.filter_by(app_short_name=app.short_name)
-
-        for log in logs:
-            assert_not_raises(Exception, getattr(require, 'auditlog').read, log)
+        assert self.mock_admin.id != app.owner_id
+        assert_not_raises(Exception, getattr(require, 'auditlog').read, log)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
-    @patch('pybossa.auth.blogpost.current_user', new=mock_anonymous)
+    @patch('pybossa.auth.auditlog.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_crud_auditlog(self):
         """Test anonymous users cannot crud auditlogs"""
 
@@ -117,7 +99,7 @@ class TestAuditlogAuthorization(Test):
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
-    @patch('pybossa.auth.blogpost.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.auditlog.current_user', new=mock_authenticated)
     def test_authenticated_user_cannot_crud_auditlog(self):
         """Test authenticated users cannot crud auditlogs"""
 
@@ -129,7 +111,7 @@ class TestAuditlogAuthorization(Test):
 
 
     @patch('pybossa.auth.current_user', new=mock_pro)
-    @patch('pybossa.auth.blogpost.current_user', new=mock_pro)
+    @patch('pybossa.auth.auditlog.current_user', new=mock_pro)
     def test_pro_user_cannot_crud_auditlog(self):
         """Test pro users cannot crud auditlogs"""
 
@@ -140,7 +122,7 @@ class TestAuditlogAuthorization(Test):
         assert_raises(Forbidden, getattr(require, 'auditlog').delete, log)
 
     @patch('pybossa.auth.current_user', new=mock_admin)
-    @patch('pybossa.auth.blogpost.current_user', new=mock_admin)
+    @patch('pybossa.auth.auditlog.current_user', new=mock_admin)
     def test_admin_user_cannot_crud_auditlog(self):
         """Test authenticated users cannot crud auditlogs"""
 
