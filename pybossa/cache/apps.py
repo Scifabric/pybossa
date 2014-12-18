@@ -77,7 +77,7 @@ def browse_tasks(project_id):
 
 
 def _pct_status(n_task_runs, n_answers):
-    if n_answers != 0 and n_answers != None:
+    if n_answers != 0 and n_answers is not None:
         # Check if it's bigger the n_task_runs that n_answers
         if n_task_runs > n_answers:
             return float(1)

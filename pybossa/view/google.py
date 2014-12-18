@@ -97,7 +97,7 @@ def oauth_authorized(resp):  # pragma: no cover
         flash(u'You denied the request to sign in.', 'error')
         flash(u'Reason: ' + request.args['error'], 'error')
         if request.args.get('error'):
-                return redirect(url_for('account.signin'))
+            return redirect(url_for('account.signin'))
         return redirect(next_url)
 
     headers = {'Authorization': ' '.join(['OAuth', resp['access_token']])}

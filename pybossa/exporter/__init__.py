@@ -85,20 +85,26 @@ class Exporter(object):
             # TODO: Check rackspace file existence
 
     def get_zip(self, app, ty):
-        """Get a ZIP file directly from uploaded directory or generate one on the fly and upload it if not existing."""
+        """Get a ZIP file directly from uploaded directory
+        or generate one on the fly and upload it if not existing."""
         filename=self.download_name(app, ty)
         if not self.zip_existing(app, ty):
             print "Warning: Generating %s on the fly now!" % filename
             self._make_zip(app, ty)
         if isinstance(uploader, local.LocalUploader):
             filepath = self._download_path(app)
-            res = send_file(filename_or_fp=safe_join(filepath, filename), mimetype='application/octet-stream', as_attachment=True, attachment_filename=filename)
+            res = send_file(filename_or_fp=safe_join(filepath, filename),
+                            mimetype='application/octet-stream',
+                            as_attachment=True,
+                            attachment_filename=filename)
             # fail safe mode for more encoded filenames.
             # It seems Flask and Werkzeug do not support RFC 5987 http://greenbytes.de/tech/tc2231/#encoding-2231-char
             # res.headers['Content-Disposition'] = 'attachment; filename*=%s' % filename
             return res
         else:
-            return redirect(url_for('rackspace', filename=filename, container=self._container(app), _external=True))
+            return redirect(url_for('rackspace', filename=filename,
+                                    container=self._container(app),
+                                    _external=True))
 
     def response_zip(self, app, ty):
         return self.get_zip(app, ty)
