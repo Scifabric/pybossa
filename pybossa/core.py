@@ -47,10 +47,6 @@ def create_app(run_as_server=True):
     login_manager.setup_app(app)
     setup_babel(app)
     setup_markdown(app)
-    # Set up Gravatar for users
-    setup_gravatar(app)
-    #gravatar = Gravatar(app, size=100, rating='g', default='mm',
-                        #force_default=False, force_lower=False)
     setup_db(app)
     setup_repositories()
     setup_exporter(app)
@@ -161,10 +157,6 @@ def setup_repositories():
     blog_repo = BlogRepository(db)
     task_repo = TaskRepository(db)
     auditlog_repo = AuditlogRepository(db)
-
-
-def setup_gravatar(app):
-    gravatar.init_app(app)
 
 
 def setup_error_email(app):
