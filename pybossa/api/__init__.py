@@ -35,8 +35,7 @@ from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound
 from pybossa.util import jsonpify, crossdomain, get_user_id_or_ip
 import pybossa.model as model
-from pybossa.core import db, csrf, ratelimits, sentinel
-from itsdangerous import URLSafeSerializer
+from pybossa.core import csrf, ratelimits, sentinel
 from pybossa.ratelimit import ratelimit
 from pybossa.cache.apps import n_tasks
 import pybossa.sched as sched
@@ -49,7 +48,6 @@ from category import CategoryAPI
 from vmcp import VmcpAPI
 from user import UserAPI
 from token import TokenAPI
-from sqlalchemy.sql import text
 from pybossa.core import project_repo, task_repo
 
 blueprint = Blueprint('api', __name__)
