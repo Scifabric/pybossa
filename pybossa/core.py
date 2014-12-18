@@ -49,8 +49,6 @@ def create_app(run_as_server=True):
     setup_markdown(app)
     # Set up Gravatar for users
     setup_gravatar(app)
-    #gravatar = Gravatar(app, size=100, rating='g', default='mm',
-                        #force_default=False, force_lower=False)
     setup_db(app)
     setup_repositories()
     setup_exporter(app)
