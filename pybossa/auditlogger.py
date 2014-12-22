@@ -18,7 +18,6 @@
 
 import json
 from flask import request
-from flask.ext.login import current_user
 from sqlalchemy.orm.attributes import get_history
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import inspect
@@ -44,17 +43,17 @@ class AuditLogger(object):
         self.repo.save(log)
 
     def get_project_logs(self, project_id):
-        self.repo.filter_by(app_id=project_id)
+        return self.repo.filter_by(app_id=project_id)
 
 
-    def add_log_entry(self, project, action, caller):
+    def add_log_entry(self, user, project, action, caller):
         try:
             if action == 'create':
                 log = Auditlog(
                     app_id=project.id,
                     app_short_name=project.short_name,
-                    user_id=current_user.id,
-                    user_name=current_user.name,
+                    user_id=user.id,
+                    user_name=user.name,
                     action=action,
                     caller=caller,
                     attribute='project',
@@ -65,8 +64,8 @@ class AuditLogger(object):
                 log = Auditlog(
                     app_id=project.id,
                     app_short_name=project.short_name,
-                    user_id=current_user.id,
-                    user_name=current_user.name,
+                    user_id=user.id,
+                    user_name=user.name,
                     action=action,
                     caller=caller,
                     attribute='project',

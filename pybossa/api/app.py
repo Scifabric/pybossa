@@ -64,4 +64,4 @@ class AppAPI(APIBase):
             raise ValueError(msg)
 
     def _object_changed(self, obj, change):
-        auditlogger.add_log_entry(obj, change, 'api')
+        auditlogger.add_log_entry(obj, current_user, change, 'api')
