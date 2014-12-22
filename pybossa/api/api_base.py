@@ -36,7 +36,6 @@ from pybossa.auth import require
 from pybossa.hateoas import Hateoas
 from pybossa.ratelimit import ratelimit
 from pybossa.error import ErrorStatus
-
 from pybossa.core import project_repo, user_repo, task_repo
 
 repos = {'Task'   : {'repo': task_repo, 'filter': 'filter_tasks_by',
@@ -48,8 +47,7 @@ repos = {'Task'   : {'repo': task_repo, 'filter': 'filter_tasks_by',
         'User'    : {'repo': user_repo, 'filter': 'filter_by', 'get': 'get',
                      'save': 'save', 'update': 'update'},
         'App'     : {'repo': project_repo, 'filter': 'filter_by', 'get': 'get',
-                     'save': 'save', 'update': 'update', 'delete': 'delete',
-                     'log': 'add_log_entry'},
+                     'save': 'save', 'update': 'update', 'delete': 'delete'},
         'Category': {'repo': project_repo, 'filter': 'filter_categories_by',
                      'get': 'get_category', 'save': 'save_category',
                      'update': 'update_category', 'delete': 'delete_category'}
@@ -186,10 +184,7 @@ class APIBase(MethodView):
             repo = repos[self.__class__.__name__]['repo']
             save_func = repos[self.__class__.__name__]['save']
             getattr(repo, save_func)(inst)
-            # Log
-            if self.__class__.__name__ == 'App':
-                log_func = repos[self.__class__.__name__].get('log')
-                getattr(repo, log_func)(inst, 'create', 'api')
+            self._object_changed(inst, 'create')
             return json.dumps(inst.dictize())
         except Exception as e:
             return error.format_exception(
@@ -237,10 +232,7 @@ class APIBase(MethodView):
         if inst is None:
             raise NotFound
         getattr(require, self.__class__.__name__.lower()).delete(inst)
-        # Log
-        if self.__class__.__name__ == 'App':
-            log_func = repos[self.__class__.__name__].get('log')
-            getattr(repo, log_func)(inst, 'delete', 'api')
+        self._object_changed(inst, 'delete')
         delete_func = repos[self.__class__.__name__]['delete']
         getattr(repo, delete_func)(inst)
         return inst
@@ -286,11 +278,9 @@ class APIBase(MethodView):
         for key in data:
             setattr(existing, key, data[key])
         update_func = repos[self.__class__.__name__]['update']
-        self._validate_instance(inst)
-        log_func = repos[self.__class__.__name__].get('log')
-        if self.__class__.__name__ == 'App':
-            getattr(repo, log_func)(existing, 'update', 'api')
-        getattr(repo, update_func)(existing)
+        self._validate_instance(existing)
+        self._object_changed(existing, 'update')
+        getattr(repo, update_func)(inst)
         return existing
 
 
@@ -303,7 +293,6 @@ class APIBase(MethodView):
         """
         pass
 
-
     def _refresh_cache(self, data_dict):
         """Refresh cache.
 
@@ -313,13 +302,11 @@ class APIBase(MethodView):
         """
         pass
 
-
     def _select_attributes(self, item_data):
         """Method to be overriden in inheriting classes in case it is not
         desired that every object attribute is returned by the API.
         """
         return item_data
-
 
     def _custom_filter(self, query):
         """Method to be overriden in inheriting classes which wish to consider
@@ -327,11 +314,14 @@ class APIBase(MethodView):
         """
         return query
 
-
     def _validate_instance(self, instance):
         """Method to be overriden in inheriting classes which may need to
         validate the creation (POST) or modification (PUT) of a domain object for
         reasons other than business logic ones (e.g. overlapping of a project
         name witht a URL).
         """
+        pass
+
+    def _object_changed(self, obj, change):
+        """Method to be overriden by inheriting classes for logging purposes"""
         pass
