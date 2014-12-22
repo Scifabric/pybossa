@@ -184,7 +184,7 @@ class APIBase(MethodView):
             repo = repos[self.__class__.__name__]['repo']
             save_func = repos[self.__class__.__name__]['save']
             getattr(repo, save_func)(inst)
-            self._object_changed(inst, 'create')
+            self._log_changes(inst, 'create')
             return json.dumps(inst.dictize())
         except Exception as e:
             return error.format_exception(
@@ -232,7 +232,7 @@ class APIBase(MethodView):
         if inst is None:
             raise NotFound
         getattr(require, self.__class__.__name__.lower()).delete(inst)
-        self._object_changed(inst, 'delete')
+        self._log_changes(inst, 'delete')
         delete_func = repos[self.__class__.__name__]['delete']
         getattr(repo, delete_func)(inst)
         return inst
@@ -279,7 +279,7 @@ class APIBase(MethodView):
             setattr(existing, key, data[key])
         update_func = repos[self.__class__.__name__]['update']
         self._validate_instance(existing)
-        self._object_changed(existing, 'update')
+        self._log_changes(existing, 'update')
         getattr(repo, update_func)(inst)
         return existing
 
@@ -322,6 +322,6 @@ class APIBase(MethodView):
         """
         pass
 
-    def _object_changed(self, obj, change):
+    def _log_changes(self, obj, change):
         """Method to be overriden by inheriting classes for logging purposes"""
         pass

@@ -63,5 +63,5 @@ class AppAPI(APIBase):
             msg = "Project short_name is not valid, as it's used by the system."
             raise ValueError(msg)
 
-    def _object_changed(self, obj, change):
+    def _log_changes(self, obj, change):
         auditlogger.add_log_entry(obj, current_user, change, 'api')
