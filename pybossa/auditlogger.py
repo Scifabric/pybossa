@@ -46,7 +46,7 @@ class AuditLogger(object):
         return self.repo.filter_by(app_id=project_id)
 
 
-    def add_log_entry(self, user, project, action, caller):
+    def add_log_entry(self, project, user, action, caller):
         try:
             if action == 'create':
                 log = Auditlog(
@@ -73,7 +73,7 @@ class AuditLogger(object):
                     new_value='Deleted')
                 self.repo.db.session.add(log)
             else:
-                user_id, user_name = self._get_user_for_log()
+                user_id, user_name = self._get_user_for_log(user)
                 for attr in project.dictize().keys():
                     log_attr = attr
                     if getattr(inspect(project).attrs, attr).history.has_changes():
@@ -115,10 +115,10 @@ class AuditLogger(object):
         except IntegrityError as e:
             self.repo.db.session.rollback()
 
-    def _get_user_for_log(self):
-        if current_user.is_authenticated():
-            user_id = current_user.id
-            user_name = current_user.name
+    def _get_user_for_log(self, user):
+        if user.is_authenticated():
+            user_id = user.id
+            user_name = user.name
         else:
             user_id = request.remote_addr
             user_name = 'anonymous'

@@ -232,7 +232,7 @@ def new():
           gettext('for adding tasks, a thumbnail, using PyBossa.JS, etc.'),
           'info')
     # Log it
-    auditlogger.add_log_entry(app, 'create', 'web')
+    auditlogger.add_log_entry(app, current_user, 'create', 'web')
 
     return redirect(url_for('.update', short_name=app.short_name))
 
@@ -343,7 +343,7 @@ def delete(short_name):
     # Clean cache
     cached_apps.delete_app(app.short_name)
     cached_apps.clean(app.id)
-    auditlogger.add_log_entry(app, 'delete', 'web')
+    auditlogger.add_log_entry(app, current_user, 'delete', 'web')
     project_repo.delete(app)
     flash(gettext('Project deleted!'), 'success')
     return redirect(url_for('account.profile', name=current_user.name))
@@ -375,7 +375,7 @@ def update(short_name):
             new_application.category_id=form.category_id.data
 
         new_application.set_password(form.password.data)
-        auditlogger.add_log_entry(new_application, 'update', 'web')
+        auditlogger.add_log_entry(new_application, current_user, 'update', 'web')
         project_repo.update(new_application)
         cached_apps.delete_app(short_name)
         cached_apps.reset()
