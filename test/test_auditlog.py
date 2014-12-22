@@ -21,12 +21,10 @@ from collections import namedtuple
 from factories import AppFactory, AuditlogFactory, UserFactory, CategoryFactory
 from helper import web
 
-from pybossa.repositories import ProjectRepository
 from pybossa.repositories import UserRepository
 from pybossa.repositories import AuditlogRepository
 from mock import patch
 
-project_repo = ProjectRepository(db)
 auditlog_repo = AuditlogRepository(db)
 user_repo = UserRepository(db)
 
