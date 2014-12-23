@@ -46,7 +46,8 @@ class AuditLogger(object):
 
     def add_log_entry(self, project, user, action):
         if action == 'create':
-            self.log_event(project, user, action, 'project', 'Nothing', 'New project')
+            self.log_event(project, user, action, 'project',
+                           'Nothing', 'New project')
         elif action == 'delete':
             self.log_event(project, user, action, 'project', 'Saved', 'Deleted')
         else:
@@ -75,7 +76,8 @@ class AuditLogger(object):
                             if new_value is None or '':
                                 new_value = ''
                             if (unicode(old_value) != unicode(new_value)):
-                                self.log_event(project, user, action, attr, old_value, new_value)
+                                self.log_event(project, user, action, attr,
+                                               old_value, new_value)
 
 
     def _manage_info_keys(self, project, user, old_value,
@@ -88,10 +90,14 @@ class AuditLogger(object):
             # only log changed keys
             if old_value.get(new_key) == new_value.get(new_key):
                 continue
-            self.log_event(project, user, action, new_key, old_value.get(new_key), new_value.get(new_key))
+            self.log_event(project, user, action, new_key,
+                           old_value.get(new_key),
+                           new_value.get(new_key))
         # For updated keys
         for same_key in (s_n & s_o):
             # only log changed keys
             if old_value.get(same_key) == new_value.get(same_key):
                 continue
-            self.log_event(project, user, action, same_key, old_value.get(same_key), new_value.get(same_key))
+            self.log_event(project, user, action, same_key,
+                           old_value.get(same_key),
+                           new_value.get(same_key))

@@ -1136,7 +1136,8 @@ def task_n_answers(short_name):
     elif request.method == 'POST' and form.validate():
         task_repo.update_tasks_redundancy(app, form.n_answers.data)
         # Log it
-        auditlogger.log_event(app, current_user, 'update', 'task.n_answers', 30, form.n_answers.data)
+        auditlogger.log_event(app, current_user, 'update', 'task.n_answers', 30,
+                              form.n_answers.data)
         msg = gettext('Redundancy of Tasks updated!')
         flash(msg, 'success')
         return redirect(url_for('.tasks', short_name=app.short_name))
@@ -1186,7 +1187,8 @@ def task_scheduler(short_name):
         cached_apps.delete_app(app.short_name)
         # Log it
         if old_sched != app.info['sched']:
-            auditlogger.log_event(app, current_user, 'update', 'sched', old_sched, app.info['sched'])
+            auditlogger.log_event(app, current_user, 'update', 'sched',
+                                  old_sched, app.info['sched'])
         msg = gettext("Project Task Scheduler updated!")
         flash(msg, 'success')
 
@@ -1229,7 +1231,9 @@ def task_priority(short_name):
                                                 'task_priority_0': old_priority})
                         new_value = json.dumps({'task_id': t.id,
                                                 'task_priority_0': t.priority_0})
-                        auditlogger.log_event(app, current_user, 'update', 'task.priority_0', old_value, new_value)
+                        auditlogger.log_event(app, current_user, 'update',
+                                              'task.priority_0',
+                                               old_value, new_value)
                 else:  # pragma: no cover
                     flash(gettext(("Ooops, Task.id=%s does not belong to the app" % task_id)), 'danger')
         cached_apps.delete_app(app.short_name)
