@@ -1136,8 +1136,8 @@ def task_n_answers(short_name):
     elif request.method == 'POST' and form.validate():
         task_repo.update_tasks_redundancy(app, form.n_answers.data)
         # Log it
-        auditlogger.log_event(app, current_user, 'update', 'task.n_answers', 30,
-                              form.n_answers.data)
+        auditlogger.log_event(app, current_user, 'update', 'task.n_answers',
+                              'N/A', form.n_answers.data)
         msg = gettext('Redundancy of Tasks updated!')
         flash(msg, 'success')
         return redirect(url_for('.tasks', short_name=app.short_name))

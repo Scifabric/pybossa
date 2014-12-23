@@ -636,8 +636,8 @@ class TestAuditlogWEB(web.Helper):
         attribute = 'task.n_answers'
 
         new_string = '10'
-
-        old_value = '30'
+        # Depends on each specific task, so old value will be non-avaliable
+        old_value = 'N/A'
 
         self.app.post(url, data={'n_answers': '10'}, follow_redirects=True)
 
