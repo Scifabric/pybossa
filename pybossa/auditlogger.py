@@ -25,10 +25,11 @@ from pybossa.model.auditlog import Auditlog
 
 class AuditLogger(object):
 
-    def __init__(self, auditlog_repo):
+    def __init__(self, auditlog_repo, caller='web'):
         self.repo = auditlog_repo
+        self.caller = caller
 
-    def log_event(self, app, user, action, attribute, old_value, new_value, caller='web'):
+    def log_event(self, app, user, action, attribute, old_value, new_value):
         print app.id
         log = Auditlog(
             app_id=app.id,
@@ -36,7 +37,7 @@ class AuditLogger(object):
             user_id=user.id,
             user_name=user.name,
             action=action,
-            caller=caller,
+            caller=self.caller,
             attribute=attribute,
             old_value=old_value,
             new_value=new_value)
@@ -46,11 +47,11 @@ class AuditLogger(object):
         return self.repo.filter_by(app_id=project_id)
 
 
-    def add_log_entry(self, project, user, action, caller):
+    def add_log_entry(self, project, user, action):
         if action == 'create':
-            self.log_event(project, user, action, 'project', 'Nothing', 'New project', caller)
+            self.log_event(project, user, action, 'project', 'Nothing', 'New project')
         elif action == 'delete':
-            self.log_event(project, user, action, 'project', 'Saved', 'Deleted', caller)
+            self.log_event(project, user, action, 'project', 'Saved', 'Deleted')
         else:
             history = {}
             for attr in project.dictize().keys():
@@ -63,23 +64,21 @@ class AuditLogger(object):
                         old_value = {}
                         new_value = history[attr].added[0]
                         self._manage_info_keys(project, user,
-                                               old_value, new_value, action,
-                                               caller)
+                                               old_value, new_value, action)
                     if (len(history[attr].deleted) > 0 and
                         len(history[attr].added) > 0):
                         old_value = history[attr].deleted[0]
                         new_value = history[attr].added[0]
                         if attr == 'info':
                             self._manage_info_keys(project, user,
-                                                   old_value, new_value, action,
-                                                   caller)
+                                                   old_value, new_value, action)
                         else:
                             if old_value is None or '':
                                 old_value = ''
                             if new_value is None or '':
                                 new_value = ''
                             if (unicode(old_value) != unicode(new_value)):
-                                self.log_event(project, user, action, attr, old_value, new_value, caller)
+                                self.log_event(project, user, action, attr, old_value, new_value)
 
 
     def _get_user_for_log(self, user):
@@ -92,7 +91,7 @@ class AuditLogger(object):
         return user_id, user_name
 
     def _manage_info_keys(self, project, user, old_value,
-                          new_value, action, caller):
+                          new_value, action):
         s_o = set(old_value.keys())
         s_n = set(new_value.keys())
 
@@ -104,7 +103,7 @@ class AuditLogger(object):
                 new_key == 'passwd_hash'):
                 pass
             else:
-                self.log_event(project, user, action, new_key, old_value.get(new_key), new_value.get(new_key), caller)
+                self.log_event(project, user, action, new_key, old_value.get(new_key), new_value.get(new_key))
         # For updated keys
         for same_key in (s_n & s_o):
-            self.log_event(project, user, action, same_key, old_value.get(same_key), new_value.get(same_key), caller)
+            self.log_event(project, user, action, same_key, old_value.get(same_key), new_value.get(same_key))

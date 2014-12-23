@@ -31,7 +31,7 @@ from pybossa.util import is_reserved_name
 from pybossa.core import auditlog_repo
 from pybossa.auditlogger import AuditLogger
 
-auditlogger = AuditLogger(auditlog_repo)
+auditlogger = AuditLogger(auditlog_repo, caller='api')
 
 
 class AppAPI(APIBase):
@@ -64,4 +64,4 @@ class AppAPI(APIBase):
             raise ValueError(msg)
 
     def _log_changes(self, obj, change):
-        auditlogger.add_log_entry(obj, current_user, change, 'api')
+        auditlogger.add_log_entry(obj, current_user, change)

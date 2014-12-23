@@ -55,7 +55,7 @@ from pybossa.auditlogger import AuditLogger
 
 blueprint = Blueprint('app', __name__)
 
-auditlogger = AuditLogger(auditlog_repo)
+auditlogger = AuditLogger(auditlog_repo, caller='web')
 importer_queue = Queue('medium', connection=sentinel.master)
 MAX_NUM_SYNCHR_TASKS_IMPORT = 200
 
@@ -232,7 +232,7 @@ def new():
           gettext('for adding tasks, a thumbnail, using PyBossa.JS, etc.'),
           'info')
     # Log it
-    auditlogger.add_log_entry(app, current_user, 'create', 'web')
+    auditlogger.add_log_entry(app, current_user, 'create')
 
     return redirect(url_for('.update', short_name=app.short_name))
 
@@ -342,7 +342,7 @@ def delete(short_name):
     # Clean cache
     cached_apps.delete_app(app.short_name)
     cached_apps.clean(app.id)
-    auditlogger.add_log_entry(app, current_user, 'delete', 'web')
+    auditlogger.add_log_entry(app, current_user, 'delete')
     project_repo.delete(app)
     flash(gettext('Project deleted!'), 'success')
     return redirect(url_for('account.profile', name=current_user.name))
@@ -374,7 +374,7 @@ def update(short_name):
             new_application.category_id=form.category_id.data
 
         new_application.set_password(form.password.data)
-        auditlogger.add_log_entry(new_application, current_user, 'update', 'web')
+        auditlogger.add_log_entry(new_application, current_user, 'update')
         project_repo.update(new_application)
         cached_apps.delete_app(short_name)
         cached_apps.reset()
