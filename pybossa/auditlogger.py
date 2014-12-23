@@ -17,7 +17,6 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from sqlalchemy.orm.attributes import get_history
-from sqlalchemy.exc import IntegrityError
 
 from pybossa.model.auditlog import Auditlog
 
