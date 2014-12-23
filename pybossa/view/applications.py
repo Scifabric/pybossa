@@ -248,8 +248,6 @@ def task_presenter_editor(short_name):
     require.app.read(app)
     require.app.update(app)
 
-    old_value = app.info.get('task_presenter')
-
     form = TaskPresenterForm(request.form)
     form.id.data = app.id
     if request.method == 'POST' and form.validate():
