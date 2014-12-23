@@ -80,15 +80,6 @@ class AuditLogger(object):
                                 self.log_event(project, user, action, attr, old_value, new_value)
 
 
-    def _get_user_for_log(self, user):
-        if user.is_authenticated():
-            user_id = user.id
-            user_name = user.name
-        else:
-            user_id = request.remote_addr
-            user_name = 'anonymous'
-        return user_id, user_name
-
     def _manage_info_keys(self, project, user, old_value,
                           new_value, action):
         s_o = set(old_value.keys())
