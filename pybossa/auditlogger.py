@@ -30,7 +30,6 @@ class AuditLogger(object):
         self.caller = caller
 
     def log_event(self, app, user, action, attribute, old_value, new_value):
-        print app.id
         log = Auditlog(
             app_id=app.id,
             app_short_name=app.short_name,

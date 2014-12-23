@@ -254,13 +254,16 @@ def task_presenter_editor(short_name):
     form.id.data = app.id
     if request.method == 'POST' and form.validate():
         db_app = project_repo.get(app.id)
-        db_app.info['task_presenter'] = form.editor.data
+        old_info = dict(db_app.info)
+        assert db_app.info == old_info
+        old_info['task_presenter'] = form.editor.data
+        db_app.info = old_info
+        # Log it
+        auditlogger.add_log_entry(db_app, current_user, 'update')
         project_repo.update(db_app)
         cached_apps.delete_app(app.short_name)
         msg_1 = gettext('Task presenter added!')
         flash('<i class="icon-ok"></i> ' + msg_1, 'success')
-        # Log it
-        auditlogger.log_event(app, current_user, 'update', 'task_presenter', old_value, form.editor.data)
         return redirect(url_for('.tasks', short_name=app.short_name))
 
     # It does not have a validation
