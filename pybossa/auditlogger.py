@@ -141,8 +141,8 @@ class AuditLogger(object):
                     action=action,
                     caller=caller,
                     attribute=new_key,
-                    old_value=json.dumps(old_value.get(new_key)),
-                    new_value=json.dumps(new_value.get(new_key)))
+                    old_value=old_value.get(new_key),
+                    new_value=new_value.get(new_key))
                 self.repo.save(log)
         # For updated keys
         for same_key in (s_n & s_o):
@@ -154,6 +154,6 @@ class AuditLogger(object):
                 action=action,
                 caller=caller,
                 attribute=same_key,
-                old_value=json.dumps(old_value.get(same_key)),
-                new_value=json.dumps(new_value.get(same_key)))
+                old_value=old_value.get(same_key),
+                new_value=new_value.get(same_key))
             self.repo.save(log)
