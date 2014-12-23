@@ -96,13 +96,13 @@ class AuditLogger(object):
 
         # For new keys
         for new_key in (s_n - s_o):
-            # handle special case passwd_hash
-            if (old_value.get(new_key) is None and
-                new_value.get(new_key) is None and
-                new_key == 'passwd_hash'):
-                pass
-            else:
-                self.log_event(project, user, action, new_key, old_value.get(new_key), new_value.get(new_key))
+            # only log changed keys
+            if old_value.get(new_key) == new_value.get(new_key):
+                continue
+            self.log_event(project, user, action, new_key, old_value.get(new_key), new_value.get(new_key))
         # For updated keys
         for same_key in (s_n & s_o):
+            # only log changed keys
+            if old_value.get(same_key) == new_value.get(same_key):
+                continue
             self.log_event(project, user, action, same_key, old_value.get(same_key), new_value.get(same_key))
