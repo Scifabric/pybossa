@@ -20,7 +20,6 @@ import json
 from flask import request
 from sqlalchemy.orm.attributes import get_history
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import inspect
 
 from pybossa.model.auditlog import Auditlog
 
@@ -47,73 +46,70 @@ class AuditLogger(object):
 
 
     def add_log_entry(self, project, user, action, caller):
-        try:
-            if action == 'create':
-                log = Auditlog(
-                    app_id=project.id,
-                    app_short_name=project.short_name,
-                    user_id=user.id,
-                    user_name=user.name,
-                    action=action,
-                    caller=caller,
-                    attribute='project',
-                    old_value='Nothing',
-                    new_value='New project')
-                self.repo.db.session.add(log)
-            elif action == 'delete':
-                log = Auditlog(
-                    app_id=project.id,
-                    app_short_name=project.short_name,
-                    user_id=user.id,
-                    user_name=user.name,
-                    action=action,
-                    caller=caller,
-                    attribute='project',
-                    old_value='Saved',
-                    new_value='Deleted')
-                self.repo.db.session.add(log)
-            else:
-                user_id, user_name = self._get_user_for_log(user)
-                for attr in project.dictize().keys():
-                    log_attr = attr
-                    if getattr(inspect(project).attrs, attr).history.has_changes():
-                        history = getattr(inspect(project).attrs, attr).history
-                        if (len(history.deleted) == 0 and \
-                            len(history.added) > 0 and \
-                            attr == 'info'):
-                            old_value = {}
-                            new_value = history.added[0]
+        if action == 'create':
+            log = Auditlog(
+                app_id=project.id,
+                app_short_name=project.short_name,
+                user_id=user.id,
+                user_name=user.name,
+                action=action,
+                caller=caller,
+                attribute='project',
+                old_value='Nothing',
+                new_value='New project')
+            self.repo.save(log)
+        elif action == 'delete':
+            log = Auditlog(
+                app_id=project.id,
+                app_short_name=project.short_name,
+                user_id=user.id,
+                user_name=user.name,
+                action=action,
+                caller=caller,
+                attribute='project',
+                old_value='Saved',
+                new_value='Deleted')
+            self.repo.save(log)
+        else:
+            user_id, user_name = self._get_user_for_log(user)
+            history = {}
+            for attr in project.dictize().keys():
+                history[attr] = get_history(project, attr)
+            for attr in history:
+                if history[attr].has_changes():
+                    if (len(history[attr].deleted) == 0 and
+                        len(history[attr].added) > 0 and
+                        attr == 'info'):
+                        old_value = {}
+                        new_value = history[attr].added[0]
+                        self._manage_info_keys(project, user_id, user_name,
+                                               old_value, new_value, action,
+                                               caller)
+                    if (len(history[attr].deleted) > 0 and
+                        len(history[attr].added) > 0):
+                        old_value = history[attr].deleted[0]
+                        new_value = history[attr].added[0]
+                        if attr == 'info':
                             self._manage_info_keys(project, user_id, user_name,
                                                    old_value, new_value, action,
                                                    caller)
-                        if len(history.deleted) > 0 and len(history.added) > 0:
-                            #history = getattr(inspect(project).attrs, attr).history
-                            old_value = history.deleted[0]
-                            new_value = history.added[0]
-                            if attr == 'info':
-                                self._manage_info_keys(project, user_id, user_name,
-                                                       old_value, new_value, action,
-                                                       caller)
-                            else:
-                                if old_value is None or '':
-                                    old_value = ''
-                                if new_value is None or '':
-                                    new_value = ''
-                                if (unicode(old_value) != unicode(new_value)):
-                                    log = Auditlog(
-                                        app_id=project.id,
-                                        app_short_name=project.short_name,
-                                        user_id=user_id,
-                                        user_name=user_name,
-                                        action=action,
-                                        caller=caller,
-                                        attribute=log_attr,
-                                        old_value=old_value,
-                                        new_value=new_value)
-                                    self.repo.db.session.add(log)
-            self.repo.db.session.commit()
-        except IntegrityError as e:
-            self.repo.db.session.rollback()
+                        else:
+                            if old_value is None or '':
+                                old_value = ''
+                            if new_value is None or '':
+                                new_value = ''
+                            if (unicode(old_value) != unicode(new_value)):
+                                log = Auditlog(
+                                    app_id=project.id,
+                                    app_short_name=project.short_name,
+                                    user_id=user_id,
+                                    user_name=user_name,
+                                    action=action,
+                                    caller=caller,
+                                    attribute=attr,
+                                    old_value=old_value,
+                                    new_value=new_value)
+                                self.repo.save(log)
 
     def _get_user_for_log(self, user):
         if user.is_authenticated():
@@ -147,7 +143,7 @@ class AuditLogger(object):
                     attribute=new_key,
                     old_value=json.dumps(old_value.get(new_key)),
                     new_value=json.dumps(new_value.get(new_key)))
-                self.repo.db.session.add(log)
+                self.repo.save(log)
         # For updated keys
         for same_key in (s_n & s_o):
             log = Auditlog(
@@ -160,4 +156,4 @@ class AuditLogger(object):
                 attribute=same_key,
                 old_value=json.dumps(old_value.get(same_key)),
                 new_value=json.dumps(new_value.get(same_key)))
-            self.repo.db.session.add(log)
+            self.repo.save(log)
