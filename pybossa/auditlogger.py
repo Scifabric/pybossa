@@ -52,10 +52,8 @@ class AuditLogger(object):
         old = old_project.dictize()
         new = new_project.dictize()
         attributes = (set(old.keys()) | set(new.keys())) - set(['updated'])
-        changes = {}
-        for attr in attributes:
-            if old.get(attr) != new.get(attr):
-                changes[attr] = (old.get(attr), new.get(attr))
+        changes = {attr: (old.get(attr), new.get(attr)) for attr in attributes
+                    if old.get(attr) != new.get(attr)}
         for attr in changes:
             if changes[attr][0] is None and attr == 'info':
                 old_value = {}
@@ -81,7 +79,6 @@ class AuditLogger(object):
     def _manage_info_keys(self, project, user, old_value, new_value, action):
         s_o = set(old_value.keys())
         s_n = set(new_value.keys())
-
         # For new keys
         for new_key in (s_n - s_o):
             # only log changed keys
