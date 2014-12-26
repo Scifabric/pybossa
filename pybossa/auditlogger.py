@@ -82,7 +82,7 @@ class AuditLogger(object):
         # For new keys
         for new_key in (s_n - s_o):
             # only log changed keys
-            if old_value.get(new_key) == new_value.get(new_key):
+            if new_value.get(new_key) is None:
                 continue
             self.log_event(project, user, action, new_key,
                            old_value.get(new_key),
@@ -93,5 +93,4 @@ class AuditLogger(object):
             if old_value.get(same_key) == new_value.get(same_key):
                 continue
             self.log_event(project, user, action, same_key,
-                           old_value.get(same_key),
-                           new_value.get(same_key))
+                           old_value.get(same_key), new_value.get(same_key))
