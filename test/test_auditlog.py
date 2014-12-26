@@ -164,7 +164,6 @@ class TestAuditlogAPI(Test):
         owner_id = app.owner.id
         owner_name = app.owner.name
         data = {'info': {'task_presenter': 'new'}}
-        attributes = data.keys()
         url = '/api/app/%s?api_key=%s' % (app.id, app.owner.api_key)
         self.app.put(url, data=json.dumps(data))
         logs = auditlog_repo.filter_by(app_id=app.id)
@@ -187,7 +186,6 @@ class TestAuditlogAPI(Test):
         owner_id = app.owner.id
         owner_name = app.owner.name
         data = {'info': {'sched': 'random'}}
-        attributes = data.keys()
         url = '/api/app/%s?api_key=%s' % (app.id, app.owner.api_key)
         self.app.put(url, data=json.dumps(data))
         logs = auditlog_repo.filter_by(app_id=app.id)
