@@ -61,9 +61,9 @@ class AuditLogger(object):
                 old_value = old_value if old_value is not None else {}
                 self._manage_info_keys(new_project, user, old_value, new_value)
             else:
-                if old_value is None or '':
+                if old_value is None:
                     old_value = ''
-                if new_value is None or '':
+                if new_value is None:
                     new_value = ''
                 if (unicode(old_value) != unicode(new_value)):
                     self.log_event(new_project, user, 'update', attr,
