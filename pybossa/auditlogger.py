@@ -16,8 +16,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from sqlalchemy.orm.attributes import get_history
-
 from pybossa.model.auditlog import Auditlog
 
 class AuditLogger(object):
@@ -43,40 +41,41 @@ class AuditLogger(object):
         return self.repo.filter_by(app_id=project_id)
 
 
-    def add_log_entry(self, project, user, action):
-        if action == 'create':
-            self.log_event(project, user, action, 'project',
+    def add_log_entry(self, old_project, new_project, user):
+        if old_project is None:
+            self.log_event(new_project, user, 'create', 'project',
                            'Nothing', 'New project')
-        elif action == 'delete':
-            self.log_event(project, user, action, 'project', 'Saved', 'Deleted')
-        else:
-            history = {}
-            for attr in project.dictize().keys():
-                history[attr] = get_history(project, attr)
-            for attr in history:
-                if history[attr].has_changes():
-                    if (len(history[attr].deleted) == 0 and
-                        len(history[attr].added) > 0 and
-                        attr == 'info'):
-                        old_value = {}
-                        new_value = history[attr].added[0]
-                        self._manage_info_keys(project, user,
-                                               old_value, new_value, action)
-                    if (len(history[attr].deleted) > 0 and
-                        len(history[attr].added) > 0):
-                        old_value = history[attr].deleted[0]
-                        new_value = history[attr].added[0]
-                        if attr == 'info':
-                            self._manage_info_keys(project, user,
-                                                   old_value, new_value, action)
-                        else:
-                            if old_value is None or '':
-                                old_value = ''
-                            if new_value is None or '':
-                                new_value = ''
-                            if (unicode(old_value) != unicode(new_value)):
-                                self.log_event(project, user, action, attr,
-                                               old_value, new_value)
+            return
+        if new_project is None:
+            self.log_event(old_project, user, 'delete', 'project', 'Saved', 'Deleted')
+            return
+        previous = old_project.dictize()
+        current = new_project.dictize()
+        attributes = (set(previous.keys()) | set(current.keys())) - set(['updated'])
+        changes = {}
+        for attr in attributes:
+            if previous.get(attr) != current.get(attr):
+                changes[attr] = (previous.get(attr), current.get(attr))
+        for attr in changes:
+            if changes[attr][0] is None and attr == 'info':
+                old_value = {}
+                new_value = changes[attr][1]
+                self._manage_info_keys(new_project, user,
+                                       old_value, new_value, 'update')
+            else:
+                old_value = changes[attr][0]
+                new_value = changes[attr][1]
+                if attr == 'info':
+                    self._manage_info_keys(new_project, user,
+                                           old_value, new_value, 'update')
+                else:
+                    if old_value is None or '':
+                        old_value = ''
+                    if new_value is None or '':
+                        new_value = ''
+                    if (unicode(old_value) != unicode(new_value)):
+                        self.log_event(new_project, user, 'update', attr,
+                                       old_value, new_value)
 
 
     def _manage_info_keys(self, project, user, old_value,

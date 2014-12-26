@@ -232,7 +232,7 @@ def new():
           gettext('for adding tasks, a thumbnail, using PyBossa.JS, etc.'),
           'info')
     # Log it
-    auditlogger.add_log_entry(app, current_user, 'create')
+    auditlogger.add_log_entry(None, app, current_user)
 
     return redirect(url_for('.update', short_name=app.short_name))
 
@@ -252,12 +252,12 @@ def task_presenter_editor(short_name):
     form.id.data = app.id
     if request.method == 'POST' and form.validate():
         db_app = project_repo.get(app.id)
+        old_app = App(**db_app.dictize())
         old_info = dict(db_app.info)
-        assert db_app.info == old_info
         old_info['task_presenter'] = form.editor.data
         db_app.info = old_info
         # Log it
-        auditlogger.add_log_entry(db_app, current_user, 'update')
+        auditlogger.add_log_entry(old_app, db_app, current_user)
         project_repo.update(db_app)
         cached_apps.delete_app(app.short_name)
         msg_1 = gettext('Task presenter added!')
@@ -343,7 +343,7 @@ def delete(short_name):
     # Clean cache
     cached_apps.delete_app(app.short_name)
     cached_apps.clean(app.id)
-    auditlogger.add_log_entry(app, current_user, 'delete')
+    auditlogger.add_log_entry(app, None, current_user)
     project_repo.delete(app)
     flash(gettext('Project deleted!'), 'success')
     return redirect(url_for('account.profile', name=current_user.name))
@@ -361,29 +361,32 @@ def update(short_name):
         (app, owner, n_tasks, n_task_runs,
          overall_progress, last_activity) = app_by_shortname(short_name)
 
-        new_application = project_repo.get_by_shortname(short_name)
-        if form.id.data == new_application.id:
-            new_application.name=form.name.data
-            new_application.short_name=form.short_name.data
-            new_application.description=form.description.data
-            new_application.long_description=form.long_description.data
-            new_application.hidden=int(form.hidden.data)
-            new_application.webhook=form.webhook.data
-            new_application.info=app.info
-            new_application.owner_id=app.owner_id
-            new_application.allow_anonymous_contributors=form.allow_anonymous_contributors.data
-            new_application.category_id=form.category_id.data
+        new_project = project_repo.get_by_shortname(short_name)
+        old_project = App(**new_project.dictize())
+        old_info = dict(new_project.info)
+        old_project.info = old_info
+        if form.id.data == new_project.id:
+            new_project.name=form.name.data
+            new_project.short_name=form.short_name.data
+            new_project.description=form.description.data
+            new_project.long_description=form.long_description.data
+            new_project.hidden=int(form.hidden.data)
+            new_project.webhook=form.webhook.data
+            new_project.info=app.info
+            new_project.owner_id=app.owner_id
+            new_project.allow_anonymous_contributors=form.allow_anonymous_contributors.data
+            new_project.category_id=form.category_id.data
 
-        new_application.set_password(form.password.data)
-        auditlogger.add_log_entry(new_application, current_user, 'update')
-        project_repo.update(new_application)
+        new_project.set_password(form.password.data)
+        auditlogger.add_log_entry(old_project, new_project, current_user)
+        project_repo.update(new_project)
         cached_apps.delete_app(short_name)
         cached_apps.reset()
         cached_cat.reset()
-        cached_apps.get_app(new_application.short_name)
+        cached_apps.get_app(new_project.short_name)
         flash(gettext('Project updated!'), 'success')
         return redirect(url_for('.details',
-                                short_name=new_application.short_name))
+                                short_name=new_project.short_name))
 
     require.app.read(app)
     require.app.update(app)

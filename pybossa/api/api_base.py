@@ -184,7 +184,7 @@ class APIBase(MethodView):
             repo = repos[self.__class__.__name__]['repo']
             save_func = repos[self.__class__.__name__]['save']
             getattr(repo, save_func)(inst)
-            self._log_changes(inst, 'create')
+            self._log_changes(None, inst)
             return json.dumps(inst.dictize())
         except Exception as e:
             return error.format_exception(
@@ -232,7 +232,7 @@ class APIBase(MethodView):
         if inst is None:
             raise NotFound
         getattr(require, self.__class__.__name__.lower()).delete(inst)
-        self._log_changes(inst, 'delete')
+        self._log_changes(inst, None)
         delete_func = repos[self.__class__.__name__]['delete']
         getattr(repo, delete_func)(inst)
         return inst
@@ -273,14 +273,15 @@ class APIBase(MethodView):
         data = json.loads(request.data)
         # may be missing the id as we allow partial updates
         data['id'] = id
+        self.__class__(**data)
         data = self.hateoas.remove_links(data)
-        inst = self.__class__(**data)
+        old = self.__class__(**existing.dictize())
         for key in data:
             setattr(existing, key, data[key])
         update_func = repos[self.__class__.__name__]['update']
         self._validate_instance(existing)
-        self._log_changes(existing, 'update')
-        getattr(repo, update_func)(inst)
+        getattr(repo, update_func)(existing)
+        self._log_changes(old, existing)
         return existing
 
 
@@ -322,6 +323,6 @@ class APIBase(MethodView):
         """
         pass
 
-    def _log_changes(self, obj, change):
+    def _log_changes(self, old_obj, new_obj):
         """Method to be overriden by inheriting classes for logging purposes"""
         pass
