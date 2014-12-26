@@ -55,28 +55,22 @@ class AuditLogger(object):
         changes = {attr: (old.get(attr), new.get(attr)) for attr in attributes
                     if old.get(attr) != new.get(attr)}
         for attr in changes:
-            if changes[attr][0] is None and attr == 'info':
-                old_value = {}
-                new_value = changes[attr][1]
-                self._manage_info_keys(new_project, user,
-                                       old_value, new_value, 'update')
+            old_value = changes[attr][0]
+            new_value = changes[attr][1]
+            if attr == 'info':
+                old_value = old_value if old_value is not None else {}
+                self._manage_info_keys(new_project, user, old_value, new_value)
             else:
-                old_value = changes[attr][0]
-                new_value = changes[attr][1]
-                if attr == 'info':
-                    self._manage_info_keys(new_project, user,
-                                           old_value, new_value, 'update')
-                else:
-                    if old_value is None or '':
-                        old_value = ''
-                    if new_value is None or '':
-                        new_value = ''
-                    if (unicode(old_value) != unicode(new_value)):
-                        self.log_event(new_project, user, 'update', attr,
-                                       old_value, new_value)
+                if old_value is None or '':
+                    old_value = ''
+                if new_value is None or '':
+                    new_value = ''
+                if (unicode(old_value) != unicode(new_value)):
+                    self.log_event(new_project, user, 'update', attr,
+                                   old_value, new_value)
 
 
-    def _manage_info_keys(self, project, user, old_value, new_value, action):
+    def _manage_info_keys(self, project, user, old_value, new_value, action='update'):
         s_o = set(old_value.keys())
         s_n = set(new_value.keys())
         # For new keys
