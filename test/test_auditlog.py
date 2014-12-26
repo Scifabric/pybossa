@@ -378,7 +378,7 @@ class TestAuditlogWEB(web.Helper):
         for log in logs:
             assert log.attribute == attribute, log.attribute
             assert log.old_value == old_value, log.old_value
-            assert log.new_value == self.data[attribute], log.new_value
+            assert log.new_value == 'false', log.new_value
             assert log.caller == 'web', log.caller
             assert log.action == 'update', log.action
             assert log.user_name == 'johndoe', log.user_name

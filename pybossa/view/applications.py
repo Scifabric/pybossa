@@ -231,7 +231,6 @@ def new():
           '</a></strong> ' +
           gettext('for adding tasks, a thumbnail, using PyBossa.JS, etc.'),
           'info')
-    # Log it
     auditlogger.add_log_entry(None, app, current_user)
 
     return redirect(url_for('.update', short_name=app.short_name))
@@ -256,7 +255,6 @@ def task_presenter_editor(short_name):
         old_info = dict(db_app.info)
         old_info['task_presenter'] = form.editor.data
         db_app.info = old_info
-        # Log it
         auditlogger.add_log_entry(old_app, db_app, current_user)
         project_repo.update(db_app)
         cached_apps.delete_app(app.short_name)
@@ -343,8 +341,8 @@ def delete(short_name):
     # Clean cache
     cached_apps.delete_app(app.short_name)
     cached_apps.clean(app.id)
-    auditlogger.add_log_entry(app, None, current_user)
     project_repo.delete(app)
+    auditlogger.add_log_entry(app, None, current_user)
     flash(gettext('Project deleted!'), 'success')
     return redirect(url_for('account.profile', name=current_user.name))
 
@@ -378,8 +376,8 @@ def update(short_name):
             new_project.category_id=form.category_id.data
 
         new_project.set_password(form.password.data)
-        auditlogger.add_log_entry(old_project, new_project, current_user)
         project_repo.update(new_project)
+        auditlogger.add_log_entry(old_project, new_project, current_user)
         cached_apps.delete_app(short_name)
         cached_apps.reset()
         cached_cat.reset()
