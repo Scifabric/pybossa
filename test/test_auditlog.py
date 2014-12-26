@@ -44,7 +44,7 @@ class TestAuditlogAPI(Test):
                 'short_name': 'new_short_name',
                 'description': 'new_description',
                 'long_description': 'new_long_description',
-                'allow_anonymous_contributors': 'false',
+                'allow_anonymous_contributors': 'False',
                 }
         url = '/api/app?api_key=%s' % (user.api_key)
         self.app.post(url, data=json.dumps(data))
@@ -93,7 +93,7 @@ class TestAuditlogAPI(Test):
                 'short_name': 'new_short_name',
                 'description': 'new_description',
                 'long_description': 'new_long_description',
-                'allow_anonymous_contributors': 'false',
+                'allow_anonymous_contributors': 'False',
                 }
         attributes = data.keys()
         url = '/api/app/%s?api_key=%s' % (app.id, app.owner.api_key)
@@ -121,7 +121,7 @@ class TestAuditlogAPI(Test):
                 'short_name': 'new_short_name',
                 'description': 'new_description',
                 'long_description': 'new_long_description',
-                'allow_anonymous_contributors': 'false',
+                'allow_anonymous_contributors': 'False',
                 }
         attributes = data.keys()
         url = '/api/app/%s?api_key=%s' % (app.id, admin.api_key)
@@ -149,7 +149,7 @@ class TestAuditlogAPI(Test):
                 'short_name': 'new_short_name',
                 'description': 'new_description',
                 'long_description': 'new_long_description',
-                'allow_anonymous_contributors': 'false',
+                'allow_anonymous_contributors': 'False',
                 }
         url = '/api/app/%s?api_key=%s' % (app.id, user.api_key)
         self.app.put(url, data=json.dumps(data))
@@ -378,7 +378,7 @@ class TestAuditlogWEB(web.Helper):
         for log in logs:
             assert log.attribute == attribute, log.attribute
             assert log.old_value == old_value, log.old_value
-            assert log.new_value == 'false', log.new_value
+            assert log.new_value == new_string, log.new_value
             assert log.caller == 'web', log.caller
             assert log.action == 'update', log.action
             assert log.user_name == 'johndoe', log.user_name
@@ -394,9 +394,9 @@ class TestAuditlogWEB(web.Helper):
 
         attribute = 'hidden'
 
-        new_string = True
+        new_string = '1'
 
-        old_value = self.data[attribute]
+        old_value = 'False'
 
         self.data[attribute] = new_string
 
@@ -406,8 +406,8 @@ class TestAuditlogWEB(web.Helper):
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == attribute, log.attribute
-            assert log.old_value == old_value, log.old_value
-            assert bool(log.new_value) == self.data[attribute], log.new_value
+            assert log.old_value == old_value, (log.old_value, old_value)
+            assert log.new_value == self.data[attribute], log.new_value
             assert log.caller == 'web', log.caller
             assert log.action == 'update', log.action
             assert log.user_name == 'johndoe', log.user_name
