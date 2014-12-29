@@ -210,5 +210,6 @@ def count_tasks_to_import(importer_id, **form_data):
 def _create_importer_for(importer_id):
     _importers = {'csv': _BulkTaskCSVImport,
               'gdocs': _BulkTaskGDImport,
-              'epicollect': _BulkTaskEpiCollectPlusImport}
+              'epicollect': _BulkTaskEpiCollectPlusImport,
+              'flickr': _BulkTaskFlickrImport}
     return _importers[importer_id]()
