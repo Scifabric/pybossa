@@ -116,7 +116,7 @@ class PasswordForm(Form):
 
 
 class _BulkTaskCSVImportForm(Form):
-    form_name =TextField(label=None, widget=HiddenInput(), default='csv')
+    form_name = TextField(label=None, widget=HiddenInput(), default='csv')
     msg_required = lazy_gettext("You must provide a URL")
     msg_url = lazy_gettext("Oops! That's not a valid URL. "
                            "You must provide a valid URL")
@@ -128,7 +128,7 @@ class _BulkTaskCSVImportForm(Form):
 
 
 class _BulkTaskGDImportForm(Form):
-    form_name =TextField(label=None, widget=HiddenInput(), default='gdocs')
+    form_name = TextField(label=None, widget=HiddenInput(), default='gdocs')
     msg_required = lazy_gettext("You must provide a URL")
     msg_url = lazy_gettext("Oops! That's not a valid URL. "
                            "You must provide a valid URL")
@@ -140,7 +140,7 @@ class _BulkTaskGDImportForm(Form):
 
 
 class _BulkTaskEpiCollectPlusImportForm(Form):
-    form_name =TextField(label=None, widget=HiddenInput(), default='epicollect')
+    form_name = TextField(label=None, widget=HiddenInput(), default='epicollect')
     msg_required = lazy_gettext("You must provide an EpiCollect Plus "
                                 "project name")
     msg_form_required = lazy_gettext("You must provide a Form name "
@@ -154,12 +154,22 @@ class _BulkTaskEpiCollectPlusImportForm(Form):
                 'epicollect_form': self.epicollect_form.data}
 
 
+class _BulkTaskFlickrImportForm(Form):
+    form_name = TextField(label=None, widget=HiddenInput(), default='flickr')
+    msg_required = lazy_gettext("You must provide a valid Flickr album ID")
+    album_id = TextField(lazy_gettext('Album ID'),
+                         [validators.Required(message=msg_required)])
+    def get_import_data(self):
+        return {'album_id': self.album_id.data}
+
+
 class GenericBulkTaskImportForm(object):
     """Callable class that will return, when called, the appropriate form
     instance"""
     _forms = { 'csv': _BulkTaskCSVImportForm,
               'gdocs': _BulkTaskGDImportForm,
-              'epicollect': _BulkTaskEpiCollectPlusImportForm }
+              'epicollect': _BulkTaskEpiCollectPlusImportForm,
+              'flickr': _BulkTaskFlickrImportForm }
 
     def __call__(self, form_name, *form_args, **form_kwargs):
         return self._forms[form_name](*form_args, **form_kwargs)
