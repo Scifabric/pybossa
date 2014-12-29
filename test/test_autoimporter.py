@@ -294,6 +294,7 @@ class TestAutoimporterBehaviour(web.Helper):
         assert 'CSV' in res.data
         assert 'Google Drive Spreadsheet' in res.data
         assert 'EpiCollect Plus Project' in res.data
+        assert 'Flickr' in res.data
 
 
     def test_autoimporter_with_specific_variant_argument(self):
@@ -325,6 +326,14 @@ class TestAutoimporterBehaviour(web.Helper):
         data = res.data.decode('utf-8')
 
         assert "From an EpiCollect Plus project" in data
+        assert 'action="/app/%E2%9C%93app1/tasks/autoimporter"' in data
+
+        # Flickr
+        url = "/app/%s/tasks/autoimporter?template=flickr" % app.short_name
+        res = self.app.get(url, follow_redirects=True)
+        data = res.data.decode('utf-8')
+
+        assert "From a Flickr album" in data
         assert 'action="/app/%E2%9C%93app1/tasks/autoimporter"' in data
 
 
