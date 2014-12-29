@@ -148,7 +148,7 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
     def tasks(self, **form_data):
         album_info = self._get_album_info(form_data['album_id'])
         if album_info['stat'] == 'ok':
-            tasks = self._create_tasks_from_request(album_info)
+            tasks = self._get_tasks_data_from_request(album_info)
             return tasks
         if album_info['stat'] == 'fail':
             raise BulkImportException(album_info['message'])
@@ -162,19 +162,18 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
 
     def _get_album_info(self, album_id):
         url = 'build the url here with album id and api key and secret' # TODO
-        info = json.loads(requests.get(url).text)
-        return info
+        return json.loads(requests.get(url).text)
 
-    def _create_tasks_from_request(self, album_info):
-        photos = album_info['photoset']['photo']
-        tasks = [{"info": {'title': self._get_title(photo), 'url': self._get_url(photo)}} for photo in photos]
-        return tasks
+    def _get_tasks_data_from_request(self, album_info):
+        photo_list = album_info['photoset']['photo']
+        return [self._get_photo_info(photo) for photo in photo_list]
 
-    def _get_title(self, photo):
-        return photo['title']
+    def _get_photo_info(self, photo):
+        url = 'https://farm%s.staticflickr.com/%s/%s_%s.jpg' % (
+            photo['farm'], photo['server'], photo['id'], photo['secret'])
+        title = photo['title']
+        return {"info": {'title': title, 'url': url}}
 
-    def _get_url(self, photo):
-        return 'https://farm%s.staticflickr.com/%s/%s_%s.jpg' % (photo['farm'], photo['server'], photo['id'], photo['secret'])
 
 
 def create_tasks(task_repo, project_id, importer_id, **form_data):
