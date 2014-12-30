@@ -555,11 +555,11 @@ def import_task(short_name):
 
     try:
         return _import_tasks(app, template, **form.get_import_data())
-    except importers.BulkImportException, err_msg:
+    except importers.BulkImportException as err_msg:
         flash(err_msg, 'error')
     except Exception as inst:  # pragma: no cover
         current_app.logger.error(inst)
-        msg = 'Oops! Looks like there was an error with processing that file!'
+        msg = 'Oops! Looks like there was an error!'
         flash(gettext(msg), 'error')
     return render_template('/applications/importers/%s.html' % template,
                             **template_args)
