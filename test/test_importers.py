@@ -192,24 +192,6 @@ class Test_BulkTaskCSVImport(object):
 
 
     @patch('pybossa.importers.requests.get')
-    def test_tasks_raises_exception_if_no_rows_other_than_header(self, request):
-        empty_file = self.FakeRequest('CSV,with,no,content\n', 200,
-                                 {'content-type': 'text/plain'})
-        request.return_value = empty_file
-        importer = _BulkTaskCSVImport()
-        msg = "Oops! It looks like the file is empty."
-
-        raised = False
-        try:
-            importer.tasks(csv_url=self.url).next()
-        except BulkImportException as e:
-            assert e[0] == msg, e
-            raised = True
-        finally:
-            assert raised, "Exception not raised"
-
-
-    @patch('pybossa.importers.requests.get')
     def test_tasks_raises_exception_if_file_forbidden(self, request):
         forbidden_request = self.FakeRequest('Forbidden', 403,
                                            {'content-type': 'text/csv'})
@@ -358,24 +340,6 @@ class Test_BulkTaskGDImport(object):
             importer.count_tasks(googledocs_url=self.url)
         except BulkImportException as e:
             assert e[0] == msg, e
-
-
-    @patch('pybossa.importers.requests.get')
-    def test_tasks_raises_exception_if_no_rows_other_than_header(self, request):
-        empty_file = self.FakeRequest('CSV,with,no,content\n', 200,
-                                 {'content-type': 'text/plain'})
-        request.return_value = empty_file
-        importer = _BulkTaskGDImport()
-        msg = "Oops! It looks like the file is empty."
-
-        raised = False
-        try:
-            importer.tasks(googledocs_url=self.url).next()
-        except BulkImportException as e:
-            assert e[0] == msg, e
-            raised = True
-        finally:
-            assert raised, "Exception not raised"
 
 
     @patch('pybossa.importers.requests.get')

@@ -42,7 +42,6 @@ class _BulkTaskImport(object):
 
     def _import_csv_tasks(self, csvreader):
         headers = []
-        data_rows_present = False
         fields = set(['state', 'quorum', 'calibration', 'priority_0',
                       'n_answers'])
         field_header_index = []
@@ -58,7 +57,6 @@ class _BulkTaskImport(object):
                 for field in field_headers:
                     field_header_index.append(headers.index(field))
             else:
-                data_rows_present = True
                 task_data = {"info": {}}
                 for idx, cell in enumerate(row):
                     if idx in field_header_index:
@@ -66,8 +64,6 @@ class _BulkTaskImport(object):
                     else:
                         task_data["info"][headers[idx]] = cell
                 yield task_data
-        if data_rows_present is False:
-            raise BulkImportException(gettext('Oops! It looks like the file is empty.'))
 
     def _get_csv_data_from_request(self, r):
         if r.status_code == 403:

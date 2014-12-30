@@ -1528,7 +1528,7 @@ class TestWeb(web.Helper):
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
-        assert "Oops! It looks like the file is empty." in res.data
+        assert "It looks like there were no new records to import" in res.data
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
