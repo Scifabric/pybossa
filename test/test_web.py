@@ -2759,11 +2759,10 @@ class TestWeb(web.Helper):
             n += 1
         assert "no new records" in res.data, res.data
 
-    @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     @patch('pybossa.importers.requests.get')
     def test_bulk_epicollect_import_works(self, Mock, mock):
-        """Test WEB bulk import json works"""
+        """Test WEB bulk Epicollect import works"""
         data = [dict(DeviceID=23)]
         html_request = FakeRequest(json.dumps(data), 200,
                                    {'content-type': 'application/json'})
@@ -2800,6 +2799,48 @@ class TestWeb(web.Helper):
         for t in app.tasks:
             assert t.info == epi_tasks[n], "The task info should be the same"
             n += 1
+
+    @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
+    @patch('pybossa.importers.requests.get')
+    def test_bulk_flickr_import_works(self, request, mock):
+        """Test WEB bulk Flickr import works"""
+        data = {
+            "photoset": {
+                "id": "72157633923521788",
+                "primary": "8947113500",
+                "owner": "32985084@N00",
+                "ownername": "Teleyinex",
+                "photo": [{ "id": "8947115130", "secret": "00e2301a0d",
+                            "server": "5441", "farm": 6, "title": "Title",
+                            "isprimary": 0, "ispublic": 1, "isfriend": 0,
+                            "isfamily": 0 }
+                    ],
+                "page": 1,
+                "per_page": "500",
+                "perpage": "500",
+                "pages": 1,
+                "total": 1,
+                "title": "Science Hack Day Balloon Mapping Workshop" },
+            "stat": "ok" }
+        html_request = FakeRequest(json.dumps(data), 200,
+                                   {'content-type': 'application/json'})
+        request.return_value = html_request
+        self.register()
+        self.new_application()
+        app = db.session.query(App).first()
+        res = self.app.post(('/app/%s/tasks/import' % (app.short_name)),
+                            data={'album_id': '1234',
+                                  'form_name': 'flickr'},
+                            follow_redirects=True)
+
+        app = db.session.query(App).first()
+        err_msg = "Tasks should be imported"
+        assert "1 new task was imported successfully" in res.data, err_msg
+        tasks = db.session.query(Task).filter_by(app_id=app.id).all()
+        expected_info = {
+            u'url': u'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d.jpg',
+            u'title': u'Title'}
+        assert tasks[0].info == expected_info, tasks[0].info
 
     @with_context
     def test_55_facebook_account_warning(self):

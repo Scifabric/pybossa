@@ -27,8 +27,8 @@ from pybossa.importers import (_BulkTaskFlickrImport, _BulkTaskCSVImport,
 class Test_BulkTaskFlickrImport(object):
 
     invalid_photoset_response = { "stat": "fail",
-                                       "code": 1,
-                                       "message": "Photoset not found" }
+                                  "code": 1,
+                                  "message": "Photoset not found" }
     photoset_response = {
         "photoset": {
             "id": "72157633923521788",
