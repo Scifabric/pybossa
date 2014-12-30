@@ -111,7 +111,7 @@ class _BulkTaskGDImport(_BulkTaskImport):
         # New data format for Google Drive import is like this: 
         # https://docs.google.com/spreadsheets/d/key/edit?usp=sharing
         else:
-            return ''.join([form_data['googledocs_url'].split('edit')[0], 
+            return ''.join([form_data['googledocs_url'].split('edit')[0],
                             'export?format=csv'])
 
 
@@ -209,7 +209,7 @@ def count_tasks_to_import(importer_id, **form_data):
 
 def _create_importer_for(importer_id):
     _importers = {'csv': _BulkTaskCSVImport,
-              'gdocs': _BulkTaskGDImport,
-              'epicollect': _BulkTaskEpiCollectPlusImport,
-              'flickr': _BulkTaskFlickrImport}
+                  'gdocs': _BulkTaskGDImport,
+                  'epicollect': _BulkTaskEpiCollectPlusImport,
+                  'flickr': _BulkTaskFlickrImport}
     return _importers[importer_id]()
