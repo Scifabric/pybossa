@@ -20,7 +20,7 @@ from collections import namedtuple
 from mock import patch, Mock
 from nose.tools import assert_raises
 from pybossa.importers import (_BulkTaskFlickrImport, _BulkTaskCSVImport,
-    _BulkTaskGDImport, BulkImportException)
+    _BulkTaskGDImport, _BulkTaskEpiCollectPlusImport, BulkImportException)
 
 
 @patch('pybossa.importers.requests')
@@ -271,8 +271,7 @@ class Test_BulkTaskCSVImport(object):
 
 
     @patch('pybossa.importers.requests.get')
-    def test_38_bulk_csv_import_with_column_name(self, request):
-        """Test WEB bulk import with column name works"""
+    def test_tasks_return_tasks_with_non_info_fields_too(self, request):
         empty_file = self.FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
         request.return_value = empty_file
@@ -441,8 +440,7 @@ class Test_BulkTaskGDImport(object):
 
 
     @patch('pybossa.importers.requests.get')
-    def test_38_bulk_csv_import_with_column_name(self, request):
-        """Test WEB bulk import with column name works"""
+    def test_tasks_return_tasks_with_non_info_fields_too(self, request):
         empty_file = self.FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
         request.return_value = empty_file
@@ -454,3 +452,96 @@ class Test_BulkTaskGDImport(object):
         assert task == {'info': {u'Foo': u'1', u'Bar': u'2'},
                         u'priority_0': u'3'}, task
 
+
+class Test_BulkTaskEpiCollectPlusImport(object):
+
+    FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
+    epicollect = {'epicollect_project': 'fakeproject',
+                  'epicollect_form': 'fakeform'}
+
+    @patch('pybossa.importers.requests.get')
+    def test_count_tasks_raises_exception_if_file_forbidden(self, request):
+        unauthorized_request = self.FakeRequest('Forbidden', 403,
+                                           {'content-type': 'application/json'})
+        request.return_value = unauthorized_request
+        importer = _BulkTaskEpiCollectPlusImport()
+        msg = "Oops! It looks like you don't have permission to access the " \
+              "EpiCollect Plus project"
+
+        assert_raises(BulkImportException, importer.count_tasks, **self.epicollect)
+        try:
+            importer.count_tasks(**self.epicollect)
+        except BulkImportException as e:
+            assert e[0] == msg, e
+
+
+    @patch('pybossa.importers.requests.get')
+    def test_tasks_raises_exception_if_file_forbidden(self, request):
+        unauthorized_request = self.FakeRequest('Forbidden', 403,
+                                           {'content-type': 'application/json'})
+        request.return_value = unauthorized_request
+        importer = _BulkTaskEpiCollectPlusImport()
+        msg = "Oops! It looks like you don't have permission to access the " \
+              "EpiCollect Plus project"
+
+        assert_raises(BulkImportException, importer.tasks, **self.epicollect)
+        try:
+            importer.tasks(**self.epicollect)
+        except BulkImportException as e:
+            assert e[0] == msg, e
+
+
+    @patch('pybossa.importers.requests.get')
+    def test_count_tasks_raises_exception_if_not_json(self, request):
+        html_request = self.FakeRequest('Not an application/json', 200,
+                                   {'content-type': 'text/html'})
+        request.return_value = html_request
+        importer = _BulkTaskEpiCollectPlusImport()
+        msg = "Oops! That project and form do not look like the right one."
+
+        assert_raises(BulkImportException, importer.count_tasks, **self.epicollect)
+        try:
+            importer.count_tasks(**self.epicollect)
+        except BulkImportException as e:
+            assert e[0] == msg, e
+
+
+    @patch('pybossa.importers.requests.get')
+    def test_tasks_raises_exception_if_not_json(self, request):
+        html_request = self.FakeRequest('Not an application/json', 200,
+                                   {'content-type': 'text/html'})
+        request.return_value = html_request
+        importer = _BulkTaskEpiCollectPlusImport()
+        msg = "Oops! That project and form do not look like the right one."
+
+        assert_raises(BulkImportException, importer.tasks, **self.epicollect)
+        try:
+            importer.tasks(**self.epicollect)
+        except BulkImportException as e:
+            assert e[0] == msg, e
+
+
+    @patch('pybossa.importers.requests.get')
+    def test_count_tasks_returns_number_of_tasks_in_project(self, request):
+        data = [dict(DeviceID=23), dict(DeviceID=24)]
+        html_request = self.FakeRequest(json.dumps(data), 200,
+                                   {'content-type': 'application/json'})
+        request.return_value = html_request
+        importer = _BulkTaskEpiCollectPlusImport()
+
+        number_of_tasks = importer.count_tasks(**self.epicollect)
+
+        assert number_of_tasks is 2, number_of_tasks
+
+
+    @patch('pybossa.importers.requests.get')
+    def test_tasks_returns_tasks_in_project(self, request):
+        data = [dict(DeviceID=23), dict(DeviceID=24)]
+        html_request = self.FakeRequest(json.dumps(data), 200,
+                                   {'content-type': 'application/json'})
+        request.return_value = html_request
+        importer = _BulkTaskEpiCollectPlusImport()
+
+        task = importer.tasks(**self.epicollect).next()
+
+        assert task == {'info': {u'DeviceID': 23}}, task
