@@ -2839,6 +2839,8 @@ class TestWeb(web.Helper):
         tasks = db.session.query(Task).filter_by(app_id=app.id).all()
         expected_info = {
             u'url': u'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d.jpg',
+            u'url_m': u'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d_m.jpg',
+            u'url_b': u'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d_b.jpg',
             u'title': u'Title'}
         assert tasks[0].info == expected_info, tasks[0].info
 
