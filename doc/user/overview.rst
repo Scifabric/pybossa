@@ -133,10 +133,10 @@ built-in :ref:`task-creator`. You have to do the following:
    :width: 100%
 
 3. And click again on the **Import Tasks** button. After clicking on it you will
-   see several options. The first three are for using the different kinds of
+   see several options. The first four are for using the different kinds of
    importers supported by PyBossa.
 
-.. image:: http://i.imgur.com/xQm1w5I.png
+.. image:: http://i.imgur.com/nvTP7aX.png
 
 The **CSV** importer, allows you to upload your own CSV file:
 
@@ -165,8 +165,9 @@ option if you have your data in Google Drive spreadsheet.
    **priority_0**, or **n_answers**, it will be saved in the respective
    columns. Your spreadsheet must be visible to public or everyone with URL.
 
-Finally, you will see that there is an option for importing tasks from an
-EpiCollect project, which is fully described in the next section.
+Finally, you will see that there are options for importing tasks from both an
+EpiCollect project or a Flickr photo set, which are fully described in the next
+two sections.
 
 The other four options pre-load a Google Docs URL of a public spreadsheet,
 that you can automatically import for your project (the URL will automatically
@@ -247,9 +248,9 @@ project, you will have to follow the next steps:
     
 3. And  click on the **Import Tasks** 
    button. After clicking on it you will see several different options. The first
-   three correspond to the different importers PyBossa supports:
+   four correspond to the different importers PyBossa supports:
 
-.. image:: http://i.imgur.com/xQm1w5I.png
+.. image:: http://i.imgur.com/nvTP7aX.png
 
 4. Click in the **Use an EpiCollect Project** one.
 
@@ -267,6 +268,59 @@ All the data points should be imported now in your project.
     reason, if you import again the same EpiCollect project, only **new data
     points** will be imported. This feature will allow you to easily add new data
     points to the PyBossa project without having to do anything special.
+
+.. _flickr-import:
+
+Importing the tasks from a Flickr photo set
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+PyBossa also allows to import tasks for projects based on images (like image
+pattern recognition ones) directly from a Flickr_ `set <https://www.flickr.com/help/photos/#150321191>`_
+(also called album).
+
+When importing tasks from a Flickr set, a new task will be created for each of
+the photos in the specified set. The tasks will include the following data about
+each picture (which will be later available to be used in the task presenter):
+
+* title: the title of the photograph, as it appears on Flickr.
+* url: the url to the raw .jpg image, in its original size.
+* url_b: the url to the image, 'big sized.
+* url_m: the url to the image, 'medium' sized.
+
+To import tasks from a Flickr photo set, follow the next steps:
+
+1. Navigate to your project's page and click in the **Tasks** section:
+
+.. image:: http://i.imgur.com/u5vusQR.png
+   :width: 100%
+
+2. Then click on the **Import Tasks** button, and select the **Flickr importer**:
+
+.. image:: http://i.imgur.com/nvTP7aX.png
+
+3. Type the ID of the Flickr set you want to import the photos from, then click
+on the import button:
+
+.. image:: http://i.imgur.com/P2yU8qd.png
+   :width: 100%
+
+If you cannot find the ID or don't know what it is, just browse to your Flickr
+photo set and check the URL. Can you see that last long number rigth at the end
+of it? That's what you're looking for!
+
+.. image:: http://i.imgur.com/h6qNDX2.png
+   :width: 100%
+
+And all the photos will be imported to your project. Just like with the other
+importers, each task will be created only once, even if you import twice from the
+same Flickr set (unless you add new photos to it, of course!).
+
+.. note::
+    You will need to make sure that every photo belonging to the set has the
+    visibility set to public, so the PyBossa server can then access and present
+    them to the volunteers of your project.
+
+.. _`Flickr`: https://www.flickr.com/
 
 Flushing all the tasks
 ~~~~~~~~~~~~~~~~~~~~~~
