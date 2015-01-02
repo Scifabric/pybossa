@@ -513,7 +513,7 @@ We recommend to read the
 creating a Project <tutorial>`, as you will understand
 how to create the task presenter, which is basically adding some HTML skeleton
 to load the task data, input fields to get the answer of the users, and some
-JavaScript to make it to work.
+JavaScript to make it work.
 
 Using PyBossa API from the command line
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
