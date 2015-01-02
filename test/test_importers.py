@@ -20,7 +20,71 @@ from collections import namedtuple
 from mock import patch, Mock
 from nose.tools import assert_raises
 from pybossa.importers import (_BulkTaskFlickrImport, _BulkTaskCSVImport,
-    _BulkTaskGDImport, _BulkTaskEpiCollectPlusImport, BulkImportException)
+    _BulkTaskGDImport, _BulkTaskEpiCollectPlusImport, BulkImportException,
+    create_tasks)
+
+from default import Test
+from factories import AppFactory, TaskFactory
+from pybossa.repositories import TaskRepository
+from pybossa.core import db
+task_repo = TaskRepository(db)
+
+
+
+class TestImportersPublicFunctions(Test):
+
+    @patch('pybossa.importers._create_importer_for')
+    def test_create_tasks_creates_them_correctly(self, importer_factory):
+        mock_importer = Mock()
+        mock_importer.tasks.return_value = [{'info': {'question': 'question',
+                                                     'url': 'url'},
+                                            'n_answers': 20}]
+        importer_factory.return_value = mock_importer
+        app = AppFactory.create()
+
+        create_tasks(task_repo, app.id, 'csv', csv_url='http://fakecsv.com')
+        task = task_repo.get_task(1)
+
+        assert task is not None
+        assert task.app_id == app.id, task.app_id
+        assert task.n_answers == 20, task.n_answers
+        assert task.info == {'question': 'question', 'url': 'url'}, task.info
+        importer_factory.assert_called_with('csv')
+        mock_importer.tasks.assert_called_with(csv_url='http://fakecsv.com')
+
+
+    @patch('pybossa.importers._create_importer_for')
+    def test_create_tasks_creates_many_tasks(self, importer_factory):
+        mock_importer = Mock()
+        mock_importer.tasks.return_value = [{'info': {'question': 'question1'}},
+                                            {'info': {'question': 'question2'}}]
+        importer_factory.return_value = mock_importer
+        app = AppFactory.create()
+
+        result = create_tasks(task_repo, app.id, 'gdocs', googledocs_url='http://ggl.com')
+        tasks = task_repo.filter_tasks_by(app_id=app.id)
+
+        assert len(tasks) == 2, len(tasks)
+        assert result == '2 new tasks were imported successfully', result
+        importer_factory.assert_called_with('gdocs')
+
+
+    @patch('pybossa.importers._create_importer_for')
+    def test_create_tasks_not_creates_duplicated_tasks(self, importer_factory):
+        mock_importer = Mock()
+        mock_importer.tasks.return_value = [{'info': {'question': 'question'}}]
+        importer_factory.return_value = mock_importer
+        app = AppFactory.create()
+        TaskFactory.create(app=app, info={'question': 'question'})
+
+        result = create_tasks(task_repo, app.id, 'flickr', album_id='1234')
+        tasks = task_repo.filter_tasks_by(app_id=app.id)
+
+        assert len(tasks) == 1, len(tasks)
+        assert result == 'It looks like there were no new records to import', result
+        importer_factory.assert_called_with('flickr')
+
+
 
 
 @patch('pybossa.importers.requests')
