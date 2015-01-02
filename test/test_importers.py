@@ -116,13 +116,13 @@ class Test_BulkTaskFlickrImport(object):
 
 
 
+@patch('pybossa.importers.requests.get')
 class Test_BulkTaskCSVImport(object):
 
     FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
     url = 'http://myfakecsvurl.com'
 
 
-    @patch('pybossa.importers.requests.get')
     def test_count_tasks_returns_0_if_no_rows_other_than_header(self, request):
         empty_file = self.FakeRequest('CSV,with,no,content\n', 200,
                                  {'content-type': 'text/plain'})
@@ -134,7 +134,6 @@ class Test_BulkTaskCSVImport(object):
         assert number_of_tasks is 0, number_of_tasks
 
 
-    @patch('pybossa.importers.requests.get')
     def test_count_tasks_returns_1_for_CSV_with_one_valid_row(self, request):
         empty_file = self.FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
@@ -146,7 +145,6 @@ class Test_BulkTaskCSVImport(object):
         assert number_of_tasks is 1, number_of_tasks
 
 
-    @patch('pybossa.importers.requests.get')
     def test_count_tasks_raises_exception_if_file_forbidden(self, request):
         forbidden_request = self.FakeRequest('Forbidden', 403,
                                            {'content-type': 'text/csv'})
@@ -161,7 +159,6 @@ class Test_BulkTaskCSVImport(object):
             assert e[0] == msg, e
 
 
-    @patch('pybossa.importers.requests.get')
     def test_count_tasks_raises_exception_if_not_CSV_file(self, request):
         html_request = self.FakeRequest('Not a CSV', 200,
                                    {'content-type': 'text/html'})
@@ -176,7 +173,6 @@ class Test_BulkTaskCSVImport(object):
             assert e[0] == msg, e
 
 
-    @patch('pybossa.importers.requests.get')
     def test_count_tasks_raises_exception_if_dup_header(self, request):
         empty_file = self.FakeRequest('Foo,Bar,Foo\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
@@ -191,7 +187,6 @@ class Test_BulkTaskCSVImport(object):
             assert e[0] == msg, e
 
 
-    @patch('pybossa.importers.requests.get')
     def test_tasks_raises_exception_if_file_forbidden(self, request):
         forbidden_request = self.FakeRequest('Forbidden', 403,
                                            {'content-type': 'text/csv'})
@@ -206,7 +201,6 @@ class Test_BulkTaskCSVImport(object):
             assert e[0] == msg, e
 
 
-    @patch('pybossa.importers.requests.get')
     def test_tasks_raises_exception_if_not_CSV_file(self, request):
         html_request = self.FakeRequest('Not a CSV', 200,
                                    {'content-type': 'text/html'})
@@ -221,7 +215,6 @@ class Test_BulkTaskCSVImport(object):
             assert e[0] == msg, e
 
 
-    @patch('pybossa.importers.requests.get')
     def test_tasks_raises_exception_if_dup_header(self, request):
         empty_file = self.FakeRequest('Foo,Bar,Foo\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
@@ -239,7 +232,6 @@ class Test_BulkTaskCSVImport(object):
             assert raised, "Exception not raised"
 
 
-    @patch('pybossa.importers.requests.get')
     def test_tasks_return_tasks_with_only_info_fields(self, request):
         empty_file = self.FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
@@ -252,7 +244,6 @@ class Test_BulkTaskCSVImport(object):
         assert task == {"info": {u'Bar': u'2', u'Foo': u'1', u'Baz': u'3'}}, task
 
 
-    @patch('pybossa.importers.requests.get')
     def test_tasks_return_tasks_with_non_info_fields_too(self, request):
         empty_file = self.FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
@@ -267,13 +258,13 @@ class Test_BulkTaskCSVImport(object):
 
 
 
+@patch('pybossa.importers.requests.get')
 class Test_BulkTaskGDImport(object):
 
     FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
     url = 'http://drive.google.com'
 
 
-    @patch('pybossa.importers.requests.get')
     def test_count_tasks_returns_0_if_no_rows_other_than_header(self, request):
         empty_file = self.FakeRequest('CSV,with,no,content\n', 200,
                                  {'content-type': 'text/plain'})
@@ -285,7 +276,6 @@ class Test_BulkTaskGDImport(object):
         assert number_of_tasks is 0, number_of_tasks
 
 
-    @patch('pybossa.importers.requests.get')
     def test_count_tasks_returns_1_for_CSV_with_one_valid_row(self, request):
         empty_file = self.FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
@@ -297,7 +287,6 @@ class Test_BulkTaskGDImport(object):
         assert number_of_tasks is 1, number_of_tasks
 
 
-    @patch('pybossa.importers.requests.get')
     def test_count_tasks_raises_exception_if_file_forbidden(self, request):
         forbidden_request = self.FakeRequest('Forbidden', 403,
                                            {'content-type': 'text/plain'})
@@ -312,7 +301,6 @@ class Test_BulkTaskGDImport(object):
             assert e[0] == msg, e
 
 
-    @patch('pybossa.importers.requests.get')
     def test_count_tasks_raises_exception_if_not_CSV_file(self, request):
         html_request = self.FakeRequest('Not a CSV', 200,
                                    {'content-type': 'text/html'})
@@ -327,7 +315,6 @@ class Test_BulkTaskGDImport(object):
             assert e[0] == msg, e
 
 
-    @patch('pybossa.importers.requests.get')
     def test_count_tasks_raises_exception_if_dup_header(self, request):
         empty_file = self.FakeRequest('Foo,Bar,Foo\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
@@ -342,7 +329,6 @@ class Test_BulkTaskGDImport(object):
             assert e[0] == msg, e
 
 
-    @patch('pybossa.importers.requests.get')
     def test_tasks_raises_exception_if_file_forbidden(self, request):
         forbidden_request = self.FakeRequest('Forbidden', 403,
                                            {'content-type': 'text/plain'})
@@ -357,7 +343,6 @@ class Test_BulkTaskGDImport(object):
             assert e[0] == msg, e
 
 
-    @patch('pybossa.importers.requests.get')
     def test_tasks_raises_exception_if_not_CSV_file(self, request):
         html_request = self.FakeRequest('Not a CSV', 200,
                                    {'content-type': 'text/html'})
@@ -372,7 +357,6 @@ class Test_BulkTaskGDImport(object):
             assert e[0] == msg, e
 
 
-    @patch('pybossa.importers.requests.get')
     def test_tasks_raises_exception_if_dup_header(self, request):
         empty_file = self.FakeRequest('Foo,Bar,Foo\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
@@ -390,7 +374,6 @@ class Test_BulkTaskGDImport(object):
             assert raised, "Exception not raised"
 
 
-    @patch('pybossa.importers.requests.get')
     def test_tasks_return_tasks_with_only_info_fields(self, request):
         empty_file = self.FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
@@ -403,7 +386,6 @@ class Test_BulkTaskGDImport(object):
         assert task == {"info": {u'Bar': u'2', u'Foo': u'1', u'Baz': u'3'}}, task
 
 
-    @patch('pybossa.importers.requests.get')
     def test_tasks_return_tasks_with_non_info_fields_too(self, request):
         empty_file = self.FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
@@ -417,13 +399,14 @@ class Test_BulkTaskGDImport(object):
                         u'priority_0': u'3'}, task
 
 
+
+@patch('pybossa.importers.requests.get')
 class Test_BulkTaskEpiCollectPlusImport(object):
 
     FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
     epicollect = {'epicollect_project': 'fakeproject',
                   'epicollect_form': 'fakeform'}
 
-    @patch('pybossa.importers.requests.get')
     def test_count_tasks_raises_exception_if_file_forbidden(self, request):
         unauthorized_request = self.FakeRequest('Forbidden', 403,
                                            {'content-type': 'application/json'})
@@ -439,7 +422,6 @@ class Test_BulkTaskEpiCollectPlusImport(object):
             assert e[0] == msg, e
 
 
-    @patch('pybossa.importers.requests.get')
     def test_tasks_raises_exception_if_file_forbidden(self, request):
         unauthorized_request = self.FakeRequest('Forbidden', 403,
                                            {'content-type': 'application/json'})
@@ -455,7 +437,6 @@ class Test_BulkTaskEpiCollectPlusImport(object):
             assert e[0] == msg, e
 
 
-    @patch('pybossa.importers.requests.get')
     def test_count_tasks_raises_exception_if_not_json(self, request):
         html_request = self.FakeRequest('Not an application/json', 200,
                                    {'content-type': 'text/html'})
@@ -470,7 +451,6 @@ class Test_BulkTaskEpiCollectPlusImport(object):
             assert e[0] == msg, e
 
 
-    @patch('pybossa.importers.requests.get')
     def test_tasks_raises_exception_if_not_json(self, request):
         html_request = self.FakeRequest('Not an application/json', 200,
                                    {'content-type': 'text/html'})
@@ -485,7 +465,6 @@ class Test_BulkTaskEpiCollectPlusImport(object):
             assert e[0] == msg, e
 
 
-    @patch('pybossa.importers.requests.get')
     def test_count_tasks_returns_number_of_tasks_in_project(self, request):
         data = [dict(DeviceID=23), dict(DeviceID=24)]
         html_request = self.FakeRequest(json.dumps(data), 200,
@@ -498,7 +477,6 @@ class Test_BulkTaskEpiCollectPlusImport(object):
         assert number_of_tasks is 2, number_of_tasks
 
 
-    @patch('pybossa.importers.requests.get')
     def test_tasks_returns_tasks_in_project(self, request):
         data = [dict(DeviceID=23), dict(DeviceID=24)]
         html_request = self.FakeRequest(json.dumps(data), 200,
