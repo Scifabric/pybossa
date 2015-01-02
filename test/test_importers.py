@@ -21,7 +21,7 @@ from mock import patch, Mock
 from nose.tools import assert_raises
 from pybossa.importers import (_BulkTaskFlickrImport, _BulkTaskCSVImport,
     _BulkTaskGDImport, _BulkTaskEpiCollectPlusImport, BulkImportException,
-    create_tasks)
+    create_tasks, count_tasks_to_import)
 
 from default import Test
 from factories import AppFactory, TaskFactory
@@ -83,6 +83,20 @@ class TestImportersPublicFunctions(Test):
         assert len(tasks) == 1, len(tasks)
         assert result == 'It looks like there were no new records to import', result
         importer_factory.assert_called_with('flickr')
+
+
+    @patch('pybossa.importers._create_importer_for')
+    def test_count_tasks_to_import_returns_what_expected(self, importer_factory):
+        mock_importer = Mock()
+        mock_importer.count_tasks.return_value = 2
+        importer_factory.return_value = mock_importer
+
+        number_of_tasks = count_tasks_to_import('epicollect',
+                                                epicollect_project='project',
+                                                epicollect_form='form')
+
+        assert number_of_tasks == 2, number_of_tasks
+        importer_factory.assert_called_with('epicollect')
 
 
 
