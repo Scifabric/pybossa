@@ -40,6 +40,18 @@ class _BulkTaskImport(object):
         """Returns amount of tasks to be imported"""
         return len([task for task in self.tasks(**form_data)])
 
+
+class _BulkTaskCSVImport(_BulkTaskImport):
+    importer_id = "csv"
+
+    def tasks(self, **form_data):
+        dataurl = self._get_data_url(**form_data)
+        r = requests.get(dataurl)
+        return self._get_csv_data_from_request(r)
+
+    def _get_data_url(self, **form_data):
+        return form_data['csv_url']
+
     def _import_csv_tasks(self, csvreader):
         headers = []
         fields = set(['state', 'quorum', 'calibration', 'priority_0',
@@ -80,25 +92,8 @@ class _BulkTaskImport(object):
         return self._import_csv_tasks(csvreader)
 
 
-class _BulkTaskCSVImport(_BulkTaskImport):
-    importer_id = "csv"
-
-    def tasks(self, **form_data):
-        dataurl = self._get_data_url(**form_data)
-        r = requests.get(dataurl)
-        return self._get_csv_data_from_request(r)
-
-    def _get_data_url(self, **form_data):
-        return form_data['csv_url']
-
-
-class _BulkTaskGDImport(_BulkTaskImport):
+class _BulkTaskGDImport(_BulkTaskCSVImport):
     importer_id = "gdocs"
-
-    def tasks(self, **form_data):
-        dataurl = self._get_data_url(**form_data)
-        r = requests.get(dataurl)
-        return self._get_csv_data_from_request(r)
 
     def _get_data_url(self, **form_data):
         # For old data links of Google Spreadsheets
