@@ -173,12 +173,16 @@ class Test_BulkTaskFlickrImport(object):
         fake_response.text = json.dumps(self.photoset_response)
         requests.get.return_value = fake_response
 
-        photo_url = 'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d.jpg'
-        photo_title = self.photoset_response['photoset']['photo'][0]['title']
+        url = 'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d.jpg'
+        url_m = 'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d_m.jpg'
+        url_b = 'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d_b.jpg'
+        title = self.photoset_response['photoset']['photo'][0]['title']
         photo = self.importer.tasks(album_id='72157633923521788')[0]
 
-        assert photo['info'].get('title') == photo_title
-        assert photo['info'].get('url') == photo_url, photo['info'].get('url')
+        assert photo['info'].get('title') == title
+        assert photo['info'].get('url') == url, photo['info'].get('url')
+        assert photo['info'].get('url_m') == url_m, photo['info'].get('url_m')
+        assert photo['info'].get('url_b') == url_b, photo['info'].get('url_b')
 
 
     def test_tasks_raises_exception_if_invalid_album(self, requests):

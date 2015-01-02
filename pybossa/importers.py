@@ -160,10 +160,14 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
         return [self._get_photo_info(photo) for photo in photo_list]
 
     def _get_photo_info(self, photo):
-        url = 'https://farm%s.staticflickr.com/%s/%s_%s.jpg' % (
+        base_url = 'https://farm%s.staticflickr.com/%s/%s_%s' % (
             photo['farm'], photo['server'], photo['id'], photo['secret'])
         title = photo['title']
-        return {"info": {'title': title, 'url': url}}
+        url = ''.join([base_url, '.jpg'])
+        url_m = ''.join([base_url, '_m.jpg'])
+        url_b = ''.join([base_url, '_b.jpg'])
+        return {"info": {'title': title, 'url': url,
+                         'url_b': url_b, 'url_m': url_m}}
 
 
 
