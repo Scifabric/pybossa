@@ -136,15 +136,15 @@ class Test_BulkTaskFlickrImport(object):
             "total": 15,
             "title": "Science Hack Day Balloon Mapping Workshop" },
         "stat": "ok" }
+    importer = _BulkTaskFlickrImport()
 
 
     def test_count_tasks_returns_number_of_photos_in_album(self, requests):
         fake_response = Mock()
         fake_response.text = json.dumps(self.photoset_response)
         requests.get.return_value = fake_response
-        importer = _BulkTaskFlickrImport()
 
-        number_of_tasks = importer.count_tasks(album_id='72157633923521788')
+        number_of_tasks = self.importer.count_tasks(album_id='72157633923521788')
 
         assert number_of_tasks is 15, number_of_tasks
 
@@ -153,18 +153,16 @@ class Test_BulkTaskFlickrImport(object):
         fake_response = Mock()
         fake_response.text = json.dumps(self.invalid_photoset_response)
         requests.get.return_value = fake_response
-        importer = _BulkTaskFlickrImport()
 
-        assert_raises(BulkImportException, importer.count_tasks, album_id='bad')
+        assert_raises(BulkImportException, self.importer.count_tasks, album_id='bad')
 
 
     def test_tasks_returns_list_of_all_photos(self, requests):
         fake_response = Mock()
         fake_response.text = json.dumps(self.photoset_response)
         requests.get.return_value = fake_response
-        importer = _BulkTaskFlickrImport()
 
-        photos = importer.tasks(album_id='72157633923521788')
+        photos = self.importer.tasks(album_id='72157633923521788')
 
         assert len(photos) == 15, len(photos)
 
@@ -174,11 +172,10 @@ class Test_BulkTaskFlickrImport(object):
         fake_response = Mock()
         fake_response.text = json.dumps(self.photoset_response)
         requests.get.return_value = fake_response
-        importer = _BulkTaskFlickrImport()
 
         photo_url = 'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d.jpg'
         photo_title = self.photoset_response['photoset']['photo'][0]['title']
-        photo = importer.tasks(album_id='72157633923521788')[0]
+        photo = self.importer.tasks(album_id='72157633923521788')[0]
 
         assert photo['info'].get('title') == photo_title
         assert photo['info'].get('url') == photo_url, photo['info'].get('url')
@@ -188,9 +185,8 @@ class Test_BulkTaskFlickrImport(object):
         fake_response = Mock()
         fake_response.text = json.dumps(self.invalid_photoset_response)
         requests.get.return_value = fake_response
-        importer = _BulkTaskFlickrImport()
 
-        assert_raises(BulkImportException, importer.tasks, album_id='bad')
+        assert_raises(BulkImportException, self.importer.tasks, album_id='bad')
 
 
 
@@ -199,15 +195,15 @@ class Test_BulkTaskCSVImport(object):
 
     FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
     url = 'http://myfakecsvurl.com'
+    importer = _BulkTaskCSVImport()
 
 
     def test_count_tasks_returns_0_if_no_rows_other_than_header(self, request):
         empty_file = self.FakeRequest('CSV,with,no,content\n', 200,
                                  {'content-type': 'text/plain'})
         request.return_value = empty_file
-        importer = _BulkTaskCSVImport()
 
-        number_of_tasks = importer.count_tasks(csv_url=self.url)
+        number_of_tasks = self.importer.count_tasks(csv_url=self.url)
 
         assert number_of_tasks is 0, number_of_tasks
 
@@ -216,9 +212,8 @@ class Test_BulkTaskCSVImport(object):
         empty_file = self.FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
         request.return_value = empty_file
-        importer = _BulkTaskCSVImport()
 
-        number_of_tasks = importer.count_tasks(csv_url=self.url)
+        number_of_tasks = self.importer.count_tasks(csv_url=self.url)
 
         assert number_of_tasks is 1, number_of_tasks
 
@@ -227,12 +222,11 @@ class Test_BulkTaskCSVImport(object):
         forbidden_request = self.FakeRequest('Forbidden', 403,
                                            {'content-type': 'text/csv'})
         request.return_value = forbidden_request
-        importer = _BulkTaskCSVImport()
         msg = "Oops! It looks like you don't have permission to access that file"
 
-        assert_raises(BulkImportException, importer.count_tasks, csv_url=self.url)
+        assert_raises(BulkImportException, self.importer.count_tasks, csv_url=self.url)
         try:
-            importer.count_tasks(csv_url=self.url)
+            self.importer.count_tasks(csv_url=self.url)
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -241,12 +235,11 @@ class Test_BulkTaskCSVImport(object):
         html_request = self.FakeRequest('Not a CSV', 200,
                                    {'content-type': 'text/html'})
         request.return_value = html_request
-        importer = _BulkTaskCSVImport()
         msg = "Oops! That file doesn't look like the right file."
 
-        assert_raises(BulkImportException, importer.count_tasks, csv_url=self.url)
+        assert_raises(BulkImportException, self.importer.count_tasks, csv_url=self.url)
         try:
-            importer.count_tasks(csv_url=self.url)
+            self.importer.count_tasks(csv_url=self.url)
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -255,12 +248,11 @@ class Test_BulkTaskCSVImport(object):
         empty_file = self.FakeRequest('Foo,Bar,Foo\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
         request.return_value = empty_file
-        importer = _BulkTaskCSVImport()
         msg = "The file you uploaded has two headers with the same name."
 
-        assert_raises(BulkImportException, importer.count_tasks, csv_url=self.url)
+        assert_raises(BulkImportException, self.importer.count_tasks, csv_url=self.url)
         try:
-            importer.count_tasks(csv_url=self.url)
+            self.importer.count_tasks(csv_url=self.url)
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -269,12 +261,11 @@ class Test_BulkTaskCSVImport(object):
         forbidden_request = self.FakeRequest('Forbidden', 403,
                                            {'content-type': 'text/csv'})
         request.return_value = forbidden_request
-        importer = _BulkTaskCSVImport()
         msg = "Oops! It looks like you don't have permission to access that file"
 
-        assert_raises(BulkImportException, importer.tasks, csv_url=self.url)
+        assert_raises(BulkImportException, self.importer.tasks, csv_url=self.url)
         try:
-            importer.tasks(csv_url=self.url)
+            self.importer.tasks(csv_url=self.url)
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -283,12 +274,11 @@ class Test_BulkTaskCSVImport(object):
         html_request = self.FakeRequest('Not a CSV', 200,
                                    {'content-type': 'text/html'})
         request.return_value = html_request
-        importer = _BulkTaskCSVImport()
         msg = "Oops! That file doesn't look like the right file."
 
-        assert_raises(BulkImportException, importer.tasks, csv_url=self.url)
+        assert_raises(BulkImportException, self.importer.tasks, csv_url=self.url)
         try:
-            importer.tasks(csv_url=self.url)
+            self.importer.tasks(csv_url=self.url)
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -297,12 +287,11 @@ class Test_BulkTaskCSVImport(object):
         empty_file = self.FakeRequest('Foo,Bar,Foo\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
         request.return_value = empty_file
-        importer = _BulkTaskCSVImport()
         msg = "The file you uploaded has two headers with the same name."
 
         raised = False
         try:
-            importer.tasks(csv_url=self.url).next()
+            self.importer.tasks(csv_url=self.url).next()
         except BulkImportException as e:
             assert e[0] == msg, e
             raised = True
@@ -314,9 +303,8 @@ class Test_BulkTaskCSVImport(object):
         empty_file = self.FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
         request.return_value = empty_file
-        importer = _BulkTaskCSVImport()
 
-        tasks = importer.tasks(csv_url=self.url)
+        tasks = self.importer.tasks(csv_url=self.url)
         task = tasks.next()
 
         assert task == {"info": {u'Bar': u'2', u'Foo': u'1', u'Baz': u'3'}}, task
@@ -326,9 +314,8 @@ class Test_BulkTaskCSVImport(object):
         empty_file = self.FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
         request.return_value = empty_file
-        importer = _BulkTaskCSVImport()
 
-        tasks = importer.tasks(csv_url=self.url)
+        tasks = self.importer.tasks(csv_url=self.url)
         task = tasks.next()
 
         assert task == {'info': {u'Foo': u'1', u'Bar': u'2'},
@@ -341,15 +328,15 @@ class Test_BulkTaskGDImport(object):
 
     FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
     url = 'http://drive.google.com'
+    importer = _BulkTaskGDImport()
 
 
     def test_count_tasks_returns_0_if_no_rows_other_than_header(self, request):
         empty_file = self.FakeRequest('CSV,with,no,content\n', 200,
                                  {'content-type': 'text/plain'})
         request.return_value = empty_file
-        importer = _BulkTaskGDImport()
 
-        number_of_tasks = importer.count_tasks(googledocs_url=self.url)
+        number_of_tasks = self.importer.count_tasks(googledocs_url=self.url)
 
         assert number_of_tasks is 0, number_of_tasks
 
@@ -358,9 +345,8 @@ class Test_BulkTaskGDImport(object):
         empty_file = self.FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
         request.return_value = empty_file
-        importer = _BulkTaskGDImport()
 
-        number_of_tasks = importer.count_tasks(googledocs_url=self.url)
+        number_of_tasks = self.importer.count_tasks(googledocs_url=self.url)
 
         assert number_of_tasks is 1, number_of_tasks
 
@@ -369,12 +355,11 @@ class Test_BulkTaskGDImport(object):
         forbidden_request = self.FakeRequest('Forbidden', 403,
                                            {'content-type': 'text/plain'})
         request.return_value = forbidden_request
-        importer = _BulkTaskGDImport()
         msg = "Oops! It looks like you don't have permission to access that file"
 
-        assert_raises(BulkImportException, importer.count_tasks, googledocs_url=self.url)
+        assert_raises(BulkImportException, self.importer.count_tasks, googledocs_url=self.url)
         try:
-            importer.count_tasks(googledocs_url=self.url)
+            self.importer.count_tasks(googledocs_url=self.url)
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -383,12 +368,11 @@ class Test_BulkTaskGDImport(object):
         html_request = self.FakeRequest('Not a CSV', 200,
                                    {'content-type': 'text/html'})
         request.return_value = html_request
-        importer = _BulkTaskGDImport()
         msg = "Oops! That file doesn't look like the right file."
 
-        assert_raises(BulkImportException, importer.count_tasks, googledocs_url=self.url)
+        assert_raises(BulkImportException, self.importer.count_tasks, googledocs_url=self.url)
         try:
-            importer.count_tasks(googledocs_url=self.url)
+            self.importer.count_tasks(googledocs_url=self.url)
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -397,12 +381,11 @@ class Test_BulkTaskGDImport(object):
         empty_file = self.FakeRequest('Foo,Bar,Foo\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
         request.return_value = empty_file
-        importer = _BulkTaskGDImport()
         msg = "The file you uploaded has two headers with the same name."
 
-        assert_raises(BulkImportException, importer.count_tasks, googledocs_url=self.url)
+        assert_raises(BulkImportException, self.importer.count_tasks, googledocs_url=self.url)
         try:
-            importer.count_tasks(googledocs_url=self.url)
+            self.importer.count_tasks(googledocs_url=self.url)
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -411,12 +394,11 @@ class Test_BulkTaskGDImport(object):
         forbidden_request = self.FakeRequest('Forbidden', 403,
                                            {'content-type': 'text/plain'})
         request.return_value = forbidden_request
-        importer = _BulkTaskGDImport()
         msg = "Oops! It looks like you don't have permission to access that file"
 
-        assert_raises(BulkImportException, importer.tasks, googledocs_url=self.url)
+        assert_raises(BulkImportException, self.importer.tasks, googledocs_url=self.url)
         try:
-            importer.tasks(googledocs_url=self.url)
+            self.importer.tasks(googledocs_url=self.url)
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -425,12 +407,11 @@ class Test_BulkTaskGDImport(object):
         html_request = self.FakeRequest('Not a CSV', 200,
                                    {'content-type': 'text/html'})
         request.return_value = html_request
-        importer = _BulkTaskGDImport()
         msg = "Oops! That file doesn't look like the right file."
 
-        assert_raises(BulkImportException, importer.tasks, googledocs_url=self.url)
+        assert_raises(BulkImportException, self.importer.tasks, googledocs_url=self.url)
         try:
-            importer.tasks(googledocs_url=self.url)
+            self.importer.tasks(googledocs_url=self.url)
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -439,12 +420,11 @@ class Test_BulkTaskGDImport(object):
         empty_file = self.FakeRequest('Foo,Bar,Foo\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
         request.return_value = empty_file
-        importer = _BulkTaskGDImport()
         msg = "The file you uploaded has two headers with the same name."
 
         raised = False
         try:
-            importer.tasks(googledocs_url=self.url).next()
+            self.importer.tasks(googledocs_url=self.url).next()
         except BulkImportException as e:
             assert e[0] == msg, e
             raised = True
@@ -456,9 +436,8 @@ class Test_BulkTaskGDImport(object):
         empty_file = self.FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
         request.return_value = empty_file
-        importer = _BulkTaskGDImport()
 
-        tasks = importer.tasks(googledocs_url=self.url)
+        tasks = self.importer.tasks(googledocs_url=self.url)
         task = tasks.next()
 
         assert task == {"info": {u'Bar': u'2', u'Foo': u'1', u'Baz': u'3'}}, task
@@ -468,9 +447,8 @@ class Test_BulkTaskGDImport(object):
         empty_file = self.FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
                                  {'content-type': 'text/plain'})
         request.return_value = empty_file
-        importer = _BulkTaskGDImport()
 
-        tasks = importer.tasks(googledocs_url=self.url)
+        tasks = self.importer.tasks(googledocs_url=self.url)
         task = tasks.next()
 
         assert task == {'info': {u'Foo': u'1', u'Bar': u'2'},
@@ -484,18 +462,18 @@ class Test_BulkTaskEpiCollectPlusImport(object):
     FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
     epicollect = {'epicollect_project': 'fakeproject',
                   'epicollect_form': 'fakeform'}
+    importer = _BulkTaskEpiCollectPlusImport()
 
     def test_count_tasks_raises_exception_if_file_forbidden(self, request):
         unauthorized_request = self.FakeRequest('Forbidden', 403,
                                            {'content-type': 'application/json'})
         request.return_value = unauthorized_request
-        importer = _BulkTaskEpiCollectPlusImport()
         msg = "Oops! It looks like you don't have permission to access the " \
               "EpiCollect Plus project"
 
-        assert_raises(BulkImportException, importer.count_tasks, **self.epicollect)
+        assert_raises(BulkImportException, self.importer.count_tasks, **self.epicollect)
         try:
-            importer.count_tasks(**self.epicollect)
+            self.importer.count_tasks(**self.epicollect)
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -504,13 +482,12 @@ class Test_BulkTaskEpiCollectPlusImport(object):
         unauthorized_request = self.FakeRequest('Forbidden', 403,
                                            {'content-type': 'application/json'})
         request.return_value = unauthorized_request
-        importer = _BulkTaskEpiCollectPlusImport()
         msg = "Oops! It looks like you don't have permission to access the " \
               "EpiCollect Plus project"
 
-        assert_raises(BulkImportException, importer.tasks, **self.epicollect)
+        assert_raises(BulkImportException, self.importer.tasks, **self.epicollect)
         try:
-            importer.tasks(**self.epicollect)
+            self.importer.tasks(**self.epicollect)
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -519,12 +496,11 @@ class Test_BulkTaskEpiCollectPlusImport(object):
         html_request = self.FakeRequest('Not an application/json', 200,
                                    {'content-type': 'text/html'})
         request.return_value = html_request
-        importer = _BulkTaskEpiCollectPlusImport()
         msg = "Oops! That project and form do not look like the right one."
 
-        assert_raises(BulkImportException, importer.count_tasks, **self.epicollect)
+        assert_raises(BulkImportException, self.importer.count_tasks, **self.epicollect)
         try:
-            importer.count_tasks(**self.epicollect)
+            self.importer.count_tasks(**self.epicollect)
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -533,12 +509,11 @@ class Test_BulkTaskEpiCollectPlusImport(object):
         html_request = self.FakeRequest('Not an application/json', 200,
                                    {'content-type': 'text/html'})
         request.return_value = html_request
-        importer = _BulkTaskEpiCollectPlusImport()
         msg = "Oops! That project and form do not look like the right one."
 
-        assert_raises(BulkImportException, importer.tasks, **self.epicollect)
+        assert_raises(BulkImportException, self.importer.tasks, **self.epicollect)
         try:
-            importer.tasks(**self.epicollect)
+            self.importer.tasks(**self.epicollect)
         except BulkImportException as e:
             assert e[0] == msg, e
 
@@ -548,9 +523,8 @@ class Test_BulkTaskEpiCollectPlusImport(object):
         html_request = self.FakeRequest(json.dumps(data), 200,
                                    {'content-type': 'application/json'})
         request.return_value = html_request
-        importer = _BulkTaskEpiCollectPlusImport()
 
-        number_of_tasks = importer.count_tasks(**self.epicollect)
+        number_of_tasks = self.importer.count_tasks(**self.epicollect)
 
         assert number_of_tasks is 2, number_of_tasks
 
@@ -560,8 +534,7 @@ class Test_BulkTaskEpiCollectPlusImport(object):
         html_request = self.FakeRequest(json.dumps(data), 200,
                                    {'content-type': 'application/json'})
         request.return_value = html_request
-        importer = _BulkTaskEpiCollectPlusImport()
 
-        task = importer.tasks(**self.epicollect).next()
+        task = self.importer.tasks(**self.epicollect).next()
 
         assert task == {'info': {u'DeviceID': 23}}, task
