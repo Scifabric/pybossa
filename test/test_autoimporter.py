@@ -333,7 +333,7 @@ class TestAutoimporterBehaviour(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         data = res.data.decode('utf-8')
 
-        assert "From a Flickr album" in data
+        assert "From a Flickr set" in data
         assert 'action="/app/%E2%9C%93app1/tasks/autoimporter"' in data
 
 
