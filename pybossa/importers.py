@@ -23,6 +23,11 @@ from flask.ext.babel import gettext
 from pybossa.util import unicode_csv_reader
 from pybossa.model.task import Task
 from pybossa.cache import apps as cached_apps
+try:
+    from settings_local import FLICKR_API_KEY
+except Exception:
+    FLICKR_API_KEY = None
+
 
 
 class BulkImportException(Exception):
@@ -135,6 +140,7 @@ class _BulkTaskEpiCollectPlusImport(_BulkTaskImport):
 
 class _BulkTaskFlickrImport(_BulkTaskImport):
     importer_id = "flickr"
+    api_key = FLICKR_API_KEY
 
     def tasks(self, **form_data):
         album_info = self._get_album_info(form_data['album_id'])
@@ -152,10 +158,9 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
             raise BulkImportException(album_info['message'])
 
     def _get_album_info(self, album_id):
-        api_key = 'd388ada022f1e67d0c30bc54eac3d184'
         url = 'https://api.flickr.com/services/rest/?\
         method=flickr.photosets.getPhotos&api_key=%s&photoset_id=%s\
-        &format=json&nojsoncallback=1' % (api_key, album_id)
+        &format=json&nojsoncallback=1' % (self.api_key, album_id)
         res = requests.get(url)
         return json.loads(res.text)
 
