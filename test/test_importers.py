@@ -138,6 +138,16 @@ class Test_BulkTaskFlickrImport(object):
     importer = _BulkTaskFlickrImport()
 
 
+    def test_call_to_flickr_api_endpoint(self, requests):
+        fake_response = Mock()
+        fake_response.text = '{}'
+        requests.get.return_value = fake_response
+        self.importer._get_album_info('72157633923521788')
+        api_url = 'https://api.flickr.com/services/rest/?\
+        method=flickr.photosets.getPhotos&api_key=d388ada022f1e67d0c30bc54eac3d184&photoset_id=72157633923521788\
+        &format=json&nojsoncallback=1'
+        requests.get.assert_called_with(api_url)
+
     def test_count_tasks_returns_number_of_photos_in_album(self, requests):
         fake_response = Mock()
         fake_response.text = json.dumps(self.photoset_response)
