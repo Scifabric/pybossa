@@ -147,7 +147,7 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
     def count_tasks(self, **form_data):
         album_info = self._get_album_info(form_data['album_id'])
         if album_info['stat'] == 'ok':
-            return album_info['photoset']['total']
+            return int(album_info['photoset']['total'])
         if album_info['stat'] == 'fail':
             raise BulkImportException(album_info['message'])
 
