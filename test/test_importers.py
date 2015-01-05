@@ -104,38 +104,37 @@ class TestImportersPublicFunctions(Test):
 @patch('pybossa.importers.requests')
 class Test_BulkTaskFlickrImport(object):
 
-    invalid_photoset_response = { "stat": "fail",
-                                  "code": 1,
-                                  "message": "Photoset not found" }
+    invalid_photoset_response = {u'stat': u'fail',
+                                 u'code': 1, u'message': u'Photoset not found'}
     photoset_response = {
-        "photoset": {
-            "id": "72157633923521788",
-            "primary": "8947113500",
-            "owner": "32985084@N00",
-            "ownername": "Teleyinex", 
-            "photo": [
-                { "id": "8947115130", "secret": "00e2301a0d", "server": "5441", "farm": 6, "title": "Inflating the balloon", "isprimary": 0, "ispublic": 1, "isfriend": 0, "isfamily": 0 },
-                { "id": "8946490553", "secret": "70d482fc68", "server": "3763", "farm": 4, "title": "Inflating the balloon", "isprimary": 0, "ispublic": 1, "isfriend": 0, "isfamily": 0 },
-                { "id": "8947113960", "secret": "99cae13d87", "server": "2810", "farm": 3, "title": "Inflating the balloon", "isprimary": 0, "ispublic": 1, "isfriend": 0, "isfamily": 0 },
-                { "id": "8947113500", "secret": "10aca4ac5e", "server": "8120", "farm": 9, "title": "Best balloon ever", "isprimary": 1, "ispublic": 1, "isfriend": 0, "isfamily": 0 },
-                { "id": "8946487679", "secret": "9cfebaaa17", "server": "7393", "farm": 8, "title": "Tying the balloon", "isprimary": 0, "ispublic": 1, "isfriend": 0, "isfamily": 0 },
-                { "id": "8946487131", "secret": "a058869bc9", "server": "7367", "farm": 8, "title": "Adding a ring", "isprimary": 0, "ispublic": 1, "isfriend": 0, "isfamily": 0 },
-                { "id": "8947109952", "secret": "da953ecc07", "server": "2820", "farm": 3, "title": "Attaching the balloon to the string", "isprimary": 0, "ispublic": 1, "isfriend": 0, "isfamily": 0 },
-                { "id": "8946484353", "secret": "f8303887ec", "server": "8267", "farm": 9, "title": "Checking the balloon connections", "isprimary": 0, "ispublic": 1, "isfriend": 0, "isfamily": 0 },
-                { "id": "8947107094", "secret": "71ff58689b", "server": "3803", "farm": 4, "title": "Setting up the camera", "isprimary": 0, "ispublic": 1, "isfriend": 0, "isfamily": 0 },
-                { "id": "8946482659", "secret": "b4175399b7", "server": "5338", "farm": 6, "title": "Securing the camera", "isprimary": 0, "ispublic": 1, "isfriend": 0, "isfamily": 0 },
-                { "id": "8946480363", "secret": "f99745f017", "server": "5456", "farm": 6, "title": "Attaching the bottle rig to the balloon", "isprimary": 0, "ispublic": 1, "isfriend": 0, "isfamily": 0 },
-                { "id": "8947103528", "secret": "3447659c65", "server": "2833", "farm": 3, "title": "Infragram camera from Public Laboratory", "isprimary": 0, "ispublic": 1, "isfriend": 0, "isfamily": 0 },
-                { "id": "8946479121", "secret": "2e65b7b453", "server": "5350", "farm": 6, "title": "Balloon Mapping", "isprimary": 0, "ispublic": 1, "isfriend": 0, "isfamily": 0 },
-                { "id": "8947102174", "secret": "cc70885ab8", "server": "3714", "farm": 4, "title": "Balloon Mapping", "isprimary": 0, "ispublic": 1, "isfriend": 0, "isfamily": 0 },
-                { "id": "8947101672", "secret": "9a8f52c9f2", "server": "2810", "farm": 3, "title": "Balloon Mapping", "isprimary": 0, "ispublic": 1, "isfriend": 0, "isfamily": 0 }],
-            "page": 1,
-            "per_page": "500",
-            "perpage": "500",
-            "pages": 1,
-            "total": 15,
-            "title": "Science Hack Day Balloon Mapping Workshop" },
-        "stat": "ok" }
+        u'stat': u'ok',
+        u'photoset': {
+            u'perpage': 500,
+            u'title': u'Science Hack Day Balloon Mapping Workshop',
+            u'photo': [
+                {u'isfamily': 0, u'title': u'Inflating the balloon', u'farm': 6, u'ispublic': 1, u'server': u'5441', u'isfriend': 0, u'secret': u'00e2301a0d', u'isprimary': u'0', u'id': u'8947115130'},
+                {u'isfamily': 0, u'title': u'Inflating the balloon', u'farm': 4, u'ispublic': 1, u'server': u'3763', u'isfriend': 0, u'secret': u'70d482fc68', u'isprimary': u'0', u'id': u'8946490553'},
+                {u'isfamily': 0, u'title': u'Inflating the balloon', u'farm': 3, u'ispublic': 1, u'server': u'2810', u'isfriend': 0, u'secret': u'99cae13d87', u'isprimary': u'0', u'id': u'8947113960'},
+                {u'isfamily': 0, u'title': u'Best balloon ever', u'farm': 9, u'ispublic': 1, u'server': u'8120', u'isfriend': 0, u'secret': u'10aca4ac5e', u'isprimary': u'1', u'id': u'8947113500'},
+                {u'isfamily': 0, u'title': u'Tying the balloon', u'farm': 8, u'ispublic': 1, u'server': u'7393', u'isfriend': 0, u'secret': u'9cfebaaa17', u'isprimary': u'0', u'id': u'8946487679'},
+                {u'isfamily': 0, u'title': u'Adding a ring', u'farm': 8, u'ispublic': 1, u'server': u'7367', u'isfriend': 0, u'secret': u'a058869bc9', u'isprimary': u'0', u'id': u'8946487131'},
+                {u'isfamily': 0, u'title': u'Attaching the balloon to the string', u'farm': 3, u'ispublic': 1, u'server': u'2820', u'isfriend': 0, u'secret': u'da953ecc07', u'isprimary': u'0', u'id': u'8947109952'},
+                {u'isfamily': 0, u'title': u'Checking the balloon connections', u'farm': 9, u'ispublic': 1, u'server': u'8267', u'isfriend': 0, u'secret': u'f8303887ec', u'isprimary': u'0', u'id': u'8946484353'},
+                {u'isfamily': 0, u'title': u'Setting up the camera', u'farm': 4, u'ispublic': 1, u'server': u'3803', u'isfriend': 0, u'secret': u'71ff58689b', u'isprimary': u'0', u'id': u'8947107094'},
+                {u'isfamily': 0, u'title': u'Securing the camera', u'farm': 6, u'ispublic': 1, u'server': u'5338', u'isfriend': 0, u'secret': u'b4175399b7', u'isprimary': u'0', u'id': u'8946482659'},
+                {u'isfamily': 0, u'title': u'Attaching the bottle rig to the balloon', u'farm': 6, u'ispublic': 1, u'server': u'5456', u'isfriend': 0, u'secret': u'f99745f017', u'isprimary': u'0', u'id': u'8946480363'},
+                {u'isfamily': 0, u'title': u'Infragram camera from Public Laboratory', u'farm': 3, u'ispublic': 1, u'server': u'2833', u'isfriend': 0, u'secret': u'3447659c65', u'isprimary': u'0', u'id': u'8947103528'},
+                {u'isfamily': 0, u'title': u'Balloon Mapping', u'farm': 6, u'ispublic': 1, u'server': u'5350', u'isfriend': 0, u'secret': u'2e65b7b453', u'isprimary': u'0', u'id': u'8946479121'},
+                {u'isfamily': 0, u'title': u'Balloon Mapping', u'farm': 4, u'ispublic': 1, u'server': u'3714', u'isfriend': 0, u'secret': u'cc70885ab8', u'isprimary': u'0', u'id': u'8947102174'},
+                {u'isfamily': 0, u'title': u'Balloon Mapping', u'farm': 3, u'ispublic': 1, u'server': u'2810', u'isfriend': 0, u'secret': u'9a8f52c9f2', u'isprimary': u'0', u'id': u'8947101672'}],
+            u'pages': 1,
+            u'primary': u'8947113500',
+            u'id': u'72157633923521788',
+            u'ownername': u'Teleyinex',
+            u'owner': u'32985084@N00',
+            u'per_page': 500,
+            u'total': u'15',
+            u'page': 1}}
     importer = _BulkTaskFlickrImport()
 
 
