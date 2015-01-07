@@ -605,17 +605,8 @@ def setup_autoimporter(short_name):
         return render_template('/applications/importers/%s.html' % template,
                                 **template_args)
     job = _setup_autoimport_job(app, template, **form.get_import_data())
-    log = Auditlog(
-        app_id=app.id,
-        app_short_name=app.short_name,
-        user_id=current_user.id,
-        user_name=current_user.name,
-        action='create',
-        caller='web',
-        attribute='autoimporter',
-        old_value='Nothing',
-        new_value=json.dumps(job['kwargs']))
-    auditlog_repo.save(log)
+    auditlogger.log_event(app, current_user, 'create', 'autoimporter',
+                          'Nothing', json.dumps(job['kwargs']))
     flash(gettext("Success! Tasks will be imported daily."))
     return redirect(url_for('.setup_autoimporter', short_name=app.short_name))
 
@@ -649,17 +640,8 @@ def delete_autoimporter(short_name):
     autoimporter = _get_scheduled_autoimport_job(app.id)
     if autoimporter is not None:
         autoimporter.cancel()
-        log = Auditlog(
-            app_id=app.id,
-            app_short_name=app.short_name,
-            user_id=current_user.id,
-            user_name=current_user.name,
-            action='delete',
-            caller='web',
-            attribute='autoimporter',
-            old_value=json.dumps(autoimporter.kwargs),
-            new_value='Nothing')
-        auditlog_repo.save(log)
+        auditlogger.log_event(app, current_user, 'delete', 'autoimporter',
+                              json.dumps(autoimporter.kwargs), 'Nothing')
     return redirect(url_for('.tasks', short_name=app.short_name))
 
 def _get_scheduled_autoimport_job(project_id):
