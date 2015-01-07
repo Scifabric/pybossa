@@ -16,20 +16,13 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from sqlalchemy.sql import func, text
+from sqlalchemy.sql import text
 from pybossa.core import db, timeouts
 from pybossa.model.app import App
-from pybossa.model.task import Task
-from pybossa.model.task_run import TaskRun
 from pybossa.util import pretty_date
 from pybossa.cache import memoize, cache, delete_memoized, delete_cached
 
 import json
-import string
-import operator
-import datetime
-import time
-from datetime import timedelta
 
 
 session = db.slave_session
@@ -77,7 +70,7 @@ def browse_tasks(project_id):
 
 
 def _pct_status(n_task_runs, n_answers):
-    if n_answers != 0 and n_answers != None:
+    if n_answers != 0 and n_answers is not None:
         # Check if it's bigger the n_task_runs that n_answers
         if n_task_runs > n_answers:
             return float(1)

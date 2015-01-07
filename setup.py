@@ -6,7 +6,6 @@ requirements = [
     "blinker>=1.3, <2.0",
     "Flask-Babel>=0.9, <1.0",
     "Flask-Cache>=0.12, <1.0",
-    "Flask-Gravatar>=0.4.1, <1.0",
     "flask-heroku>=0.1.8, <1.0",
     "Flask-Login",                      # was pinned to Flask-Login==0.2.3 in the past. GitHub version 3.0+ is used now.
     "Flask-Mail>=0.9.0, <1.0",
