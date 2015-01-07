@@ -47,8 +47,6 @@ def create_app(run_as_server=True):
     login_manager.setup_app(app)
     setup_babel(app)
     setup_markdown(app)
-    # Set up Gravatar for users
-    setup_gravatar(app)
     setup_db(app)
     setup_repositories()
     setup_exporter(app)
@@ -68,7 +66,6 @@ def create_app(run_as_server=True):
     setup_csrf_protection(app)
     setup_debug_toolbar(app)
     setup_jinja2_filters(app)
-    setup_queues(app)
     setup_newsletter(app)
     return app
 
@@ -159,10 +156,6 @@ def setup_repositories():
     blog_repo = BlogRepository(db)
     task_repo = TaskRepository(db)
     auditlog_repo = AuditlogRepository(db)
-
-
-def setup_gravatar(app):
-    gravatar.init_app(app)
 
 
 def setup_error_email(app):
@@ -425,10 +418,6 @@ def setup_ratelimits(app):
     global ratelimits
     ratelimits['LIMIT'] = app.config['LIMIT']
     ratelimits['PER'] = app.config['PER']
-
-def setup_queues(app):
-    global queues
-    queues['webhook'] = Queue('high', connection=sentinel.master)
 
 
 def setup_cache_timeouts(app):
