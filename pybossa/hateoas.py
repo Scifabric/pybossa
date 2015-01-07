@@ -26,7 +26,7 @@ class Hateoas(object):
     def create_link(self, item, rel='self'):
         title = item.__class__.__name__.lower()
         method = ".api_%s" % title
-        href = url_for(method, id=item.id, _external=True)
+        href = url_for(method, oid=item.id, _external=True)
         return self.link(rel, title, href)
 
     def create_links(self, item):
