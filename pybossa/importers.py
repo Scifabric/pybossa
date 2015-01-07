@@ -45,7 +45,7 @@ class _BulkTaskImport(object):
 
     @classmethod
     def variants(self):
-        return [self.importer_id] if self.importer_id != None else []
+        return [self.importer_id] if self.importer_id is not None else []
 
     def tasks(self, form):
         """Returns a generator with all the tasks imported"""
@@ -85,8 +85,8 @@ class _BulkTaskImport(object):
             msg = "Oops! It looks like you don't have permission to access" \
                 " that file"
             raise BulkImportException(gettext(msg), 'error')
-        if ((not 'text/plain' in r.headers['content-type']) and
-                (not 'text/csv' in r.headers['content-type'])):
+        if (('text/plain' not in r.headers['content-type']) and
+                ('text/csv' not in r.headers['content-type'])):
             msg = gettext("Oops! That file doesn't look like the right file.")
             raise BulkImportException(msg, 'error')
 
@@ -141,10 +141,10 @@ class _BulkTaskGDImport(_BulkTaskImport):
         # For old data links of Google Spreadsheets
         if 'ccc?key' in form.googledocs_url.data:
             return ''.join([form.googledocs_url.data, '&output=csv'])
-        # New data format for Google Drive import is like this: 
+        # New data format for Google Drive import is like this:
         # https://docs.google.com/spreadsheets/d/key/edit?usp=sharing
         else:
-            return ''.join([form.googledocs_url.data.split('edit')[0], 
+            return ''.join([form.googledocs_url.data.split('edit')[0],
                             'export?format=csv'])
 
 
@@ -169,7 +169,7 @@ class _BulkTaskEpiCollectPlusImport(_BulkTaskImport):
             msg = "Oops! It looks like you don't have permission to access" \
                 " the EpiCollect Plus project"
             raise BulkImportException(gettext(msg), 'error')
-        if not 'application/json' in r.headers['content-type']:
+        if 'application/json' not in r.headers['content-type']:
             msg = "Oops! That project and form do not look like the right one."
             raise BulkImportException(gettext(msg), 'error')
         return self._import_epicollect_tasks(json.loads(r.text))

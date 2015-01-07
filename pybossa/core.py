@@ -35,7 +35,7 @@ from rq import Queue
 def create_app(run_as_server=True):
     app = Flask(__name__)
     if 'DATABASE_URL' in os.environ:  # pragma: no cover
-        heroku = Heroku(app)
+        Heroku(app)
     configure_app(app)
     setup_cache_timeouts(app)
     setup_ratelimits(app)
@@ -49,8 +49,6 @@ def create_app(run_as_server=True):
     setup_markdown(app)
     # Set up Gravatar for users
     setup_gravatar(app)
-    #gravatar = Gravatar(app, size=100, rating='g', default='mm',
-                        #force_default=False, force_lower=False)
     setup_db(app)
     setup_repositories()
     setup_exporter(app)
@@ -58,7 +56,7 @@ def create_app(run_as_server=True):
     sentinel.init_app(app)
     signer.init_app(app)
     if app.config.get('SENTRY_DSN'): # pragma: no cover
-        sentr = Sentry(app)
+        Sentry(app)
     if run_as_server:
         setup_scheduled_jobs(app)
     setup_blueprints(app)
@@ -137,7 +135,7 @@ def setup_db(app):
     db.slave_session = create_slave_session(db, bind='slave')
     if db.slave_session is not db.session: #flask-sqlalchemy does it already for default session db.session
         @app.teardown_appcontext
-        def shutdown_session(response_or_exc): # pragma: no cover
+        def _shutdown_session(response_or_exc): # pragma: no cover
             if app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN']:
                 if response_or_exc is None:
                     db.slave_session.commit()
@@ -197,11 +195,10 @@ def setup_logging(app):
 
 
 def setup_login_manager(app):
-    from pybossa import model
     login_manager.login_view = 'account.signin'
     login_manager.login_message = u"Please sign in to access this page."
     @login_manager.user_loader
-    def load_user(username):
+    def _load_user(username):
         return user_repo.get_by_name(username)
 
 
@@ -210,7 +207,7 @@ def setup_babel(app):
     babel.init_app(app)
 
     @babel.localeselector
-    def get_locale():
+    def _get_locale():
         if current_user.is_authenticated():
             lang = current_user.locale
         else:
@@ -230,7 +227,7 @@ def setup_blueprints(app):
     from pybossa.view.admin import blueprint as admin
     from pybossa.view.leaderboard import blueprint as leaderboard
     from pybossa.view.stats import blueprint as stats
-    from pybossa.view.help import blueprint as help
+    from pybossa.view.help import blueprint as helper
     from pybossa.view.home import blueprint as home
     from pybossa.view.uploads import blueprint as uploads
 
@@ -240,7 +237,7 @@ def setup_blueprints(app):
                   {'handler': applications, 'url_prefix': '/app'},
                   {'handler': admin, 'url_prefix': '/admin'},
                   {'handler': leaderboard, 'url_prefix': '/leaderboard'},
-                  {'handler': help, 'url_prefix': '/help'},
+                  {'handler': helper, 'url_prefix': '/help'},
                   {'handler': stats, 'url_prefix': '/stats'},
                   {'handler': uploads, 'url_prefix': '/uploads'},
                   ]
@@ -315,26 +312,25 @@ def setup_jinja(app):
 
 def setup_error_handlers(app):
     @app.errorhandler(404)
-    def page_not_found(e):
+    def _page_not_found(e):
         return render_template('404.html'), 404
 
     @app.errorhandler(500)
-    def server_error(e):  # pragma: no cover
+    def _server_error(e):  # pragma: no cover
         return render_template('500.html'), 500
 
     @app.errorhandler(403)
-    def forbidden(e):
+    def _forbidden(e):
         return render_template('403.html'), 403
 
     @app.errorhandler(401)
-    def unauthorized(e):
+    def _unauthorized(e):
         return render_template('401.html'), 401
 
 
 def setup_hooks(app):
-    from pybossa import model
     @app.after_request
-    def inject_x_rate_headers(response):
+    def _inject_x_rate_headers(response):
         limit = get_view_rate_limit()
         if limit and limit.send_x_headers:
             h = response.headers
@@ -344,7 +340,7 @@ def setup_hooks(app):
         return response
 
     @app.before_request
-    def api_authentication():
+    def _api_authentication():
         """ Attempt API authentication on a per-request basis."""
         apikey = request.args.get('api_key', None)
         from flask import _request_ctx_stack
@@ -359,7 +355,7 @@ def setup_hooks(app):
                 _request_ctx_stack.top.user = user
 
     @app.context_processor
-    def global_template_context():
+    def _global_template_context():
         if current_user.is_authenticated():
             if (current_user.email_addr == current_user.name or
                     current_user.email_addr == "None"):
@@ -412,7 +408,7 @@ def setup_hooks(app):
 
 def setup_jinja2_filters(app):
     @app.template_filter('pretty_date')
-    def pretty_date_filter(s):
+    def _pretty_date_filter(s):
         return pretty_date(s)
 
 
@@ -487,8 +483,8 @@ def _schedule_job(function, scheduler):
         timeout=function['timeout'])
     for sj in scheduled_jobs:
         if (function['name'].__name__ in sj.func_name and
-            sj._args == function['args'] and
-            sj._kwargs == function['kwargs']):
+                sj._args == function['args'] and
+                sj._kwargs == function['kwargs']):
             job.cancel()
             msg = ('WARNING: Job %s(%s, %s) is already scheduled'
                    % (function['name'].__name__, function['args'],
