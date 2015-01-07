@@ -30,14 +30,12 @@ This package adds GET, POST, PUT and DELETE methods for:
 """
 
 import json
-from flask import Blueprint, request, abort, Response, \
-    current_app, make_response
+from flask import Blueprint, request, abort, Response, make_response
 from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound
 from pybossa.util import jsonpify, crossdomain, get_user_id_or_ip
 import pybossa.model as model
-from pybossa.core import db, csrf, ratelimits, sentinel
-from itsdangerous import URLSafeSerializer
+from pybossa.core import csrf, ratelimits, sentinel
 from pybossa.ratelimit import ratelimit
 from pybossa.cache.apps import n_tasks
 import pybossa.sched as sched
@@ -50,7 +48,6 @@ from category import CategoryAPI
 from vmcp import VmcpAPI
 from user import UserAPI
 from token import TokenAPI
-from sqlalchemy.sql import text
 from pybossa.core import project_repo, task_repo
 
 blueprint = Blueprint('api', __name__)
@@ -87,13 +84,14 @@ def register_api(view, endpoint, url, pk='id', pk_type='int'):
                            view_func=view_func,
                            methods=['GET', 'PUT', 'DELETE', 'OPTIONS'])
 
-register_api(AppAPI, 'api_app', '/app', pk='id', pk_type='int')
-register_api(CategoryAPI, 'api_category', '/category', pk='id', pk_type='int')
-register_api(TaskAPI, 'api_task', '/task', pk='id', pk_type='int')
-register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='id', pk_type='int')
-register_api(UserAPI, 'api_user', '/user', pk='id', pk_type='int')
-register_api(GlobalStatsAPI, 'api_globalstats', '/globalstats')
-register_api(VmcpAPI, 'api_vmcp', '/vmcp')
+register_api(AppAPI, 'api_app', '/app', pk='oid', pk_type='int')
+register_api(CategoryAPI, 'api_category', '/category', pk='oid', pk_type='int')
+register_api(TaskAPI, 'api_task', '/task', pk='oid', pk_type='int')
+register_api(TaskRunAPI, 'api_taskrun', '/taskrun', pk='oid', pk_type='int')
+register_api(UserAPI, 'api_user', '/user', pk='oid', pk_type='int')
+register_api(GlobalStatsAPI, 'api_globalstats', '/globalstats',
+             pk='oid', pk_type='int')
+register_api(VmcpAPI, 'api_vmcp', '/vmcp', pk='oid', pk_type='int')
 register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
 
 

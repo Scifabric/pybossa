@@ -295,7 +295,7 @@ To run the scheduler, just run the following command in a console::
 
 Similarly, to get the tasks done by the worker, run::
 
-    python app_context_rqworker.py mail super high medium low
+    python app_context_rqworker.py scheduled_jobs super high medium low
 
 It is also recommended the use of supervisor_ for running these processes in an
 easier way and with a single command.

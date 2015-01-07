@@ -36,7 +36,6 @@ from pybossa.auth import require
 from pybossa.hateoas import Hateoas
 from pybossa.ratelimit import ratelimit
 from pybossa.error import ErrorStatus
-
 from pybossa.core import project_repo, user_repo, task_repo
 
 repos = {'Task'   : {'repo': task_repo, 'filter': 'filter_tasks_by',
@@ -48,8 +47,7 @@ repos = {'Task'   : {'repo': task_repo, 'filter': 'filter_tasks_by',
         'User'    : {'repo': user_repo, 'filter': 'filter_by', 'get': 'get',
                      'save': 'save', 'update': 'update'},
         'App'     : {'repo': project_repo, 'filter': 'filter_by', 'get': 'get',
-                     'save': 'save', 'update': 'update', 'delete': 'delete',
-                     'log': 'add_log_entry'},
+                     'save': 'save', 'update': 'update', 'delete': 'delete'},
         'Category': {'repo': project_repo, 'filter': 'filter_categories_by',
                      'get': 'get_category', 'save': 'save_category',
                      'update': 'update_category', 'delete': 'delete_category'}
@@ -81,21 +79,21 @@ class APIBase(MethodView):
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
     @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
-    def get(self, id):
+    def get(self, oid):
         """Get an object.
 
         Returns an item from the DB with the request.data JSON object or all
-        the items if id == None
+        the items if oid == None
 
         :arg self: The class of the object to be retrieved
-        :arg integer id: the ID of the object in the DB
+        :arg integer oid: the ID of the object in the DB
         :returns: The JSON item/s stored in the DB
 
         """
         try:
             getattr(require, self.__class__.__name__.lower()).read()
-            query = self._db_query(id)
-            json_response = self._create_json_response(query, id)
+            query = self._db_query(oid)
+            json_response = self._create_json_response(query, oid)
             return Response(json_response, mimetype='application/json')
         except Exception as e:
             return error.format_exception(
@@ -103,7 +101,7 @@ class APIBase(MethodView):
                 target=self.__class__.__name__.lower(),
                 action='GET')
 
-    def _create_json_response(self, query_result, id):
+    def _create_json_response(self, query_result, oid):
         if len (query_result) == 1 and query_result[0] is None:
             raise abort(404)
         items = []
@@ -114,9 +112,10 @@ class APIBase(MethodView):
             except (Forbidden, Unauthorized):
                 # Remove last added item, as it is 401 or 403
                 items.pop()
-            except: # pragma: no cover
+            except Exception as ex: # pragma: no cover
+                print ex
                 raise
-        if id:
+        if oid:
             getattr(require, self.__class__.__name__.lower()).read(query_result[0])
             items = items[0]
         return json.dumps(items)
@@ -133,16 +132,16 @@ class APIBase(MethodView):
             obj['link'] = link
         return obj
 
-    def _db_query(self, id):
+    def _db_query(self, oid):
         """Returns a list with the results of the query"""
         repo_info = repos[self.__class__.__name__]
-        if id is None:
+        if oid is None:
             limit, offset = self._set_limit_and_offset()
             results = self._filter_query(repo_info, limit, offset)
         else:
             repo = repo_info['repo']
             query_func = repo_info['get']
-            results = [getattr(repo, query_func)(id)]
+            results = [getattr(repo, query_func)(oid)]
         return results
 
     def _filter_query(self, repo_info, limit, offset):
@@ -186,10 +185,7 @@ class APIBase(MethodView):
             repo = repos[self.__class__.__name__]['repo']
             save_func = repos[self.__class__.__name__]['save']
             getattr(repo, save_func)(inst)
-            # Log
-            if self.__class__.__name__ == 'App':
-                log_func = repos[self.__class__.__name__].get('log')
-                getattr(repo, log_func)(inst, 'create', 'api')
+            self._log_changes(inst, 'create')
             return json.dumps(inst.dictize())
         except Exception as e:
             return error.format_exception(
@@ -208,11 +204,11 @@ class APIBase(MethodView):
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
     @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
-    def delete(self, id):
+    def delete(self, oid):
         """Delete a single item from the DB.
 
         :arg self: The class of the object to be deleted
-        :arg integer id: the ID of the object in the DB
+        :arg integer oid: the ID of the object in the DB
         :returns: An HTTP status code based on the output of the action.
 
         More info about HTTP status codes for this action `here
@@ -221,7 +217,7 @@ class APIBase(MethodView):
         """
         try:
             self.valid_args()
-            inst = self._delete_instance(id)
+            inst = self._delete_instance(oid)
             self._refresh_cache(inst)
             return '', 204
         except Exception as e:
@@ -230,17 +226,14 @@ class APIBase(MethodView):
                 target=self.__class__.__name__.lower(),
                 action='DELETE')
 
-    def _delete_instance(self, id):
+    def _delete_instance(self, oid):
         repo = repos[self.__class__.__name__]['repo']
         query_func = repos[self.__class__.__name__]['get']
-        inst = getattr(repo, query_func)(id)
+        inst = getattr(repo, query_func)(oid)
         if inst is None:
             raise NotFound
         getattr(require, self.__class__.__name__.lower()).delete(inst)
-        # Log
-        if self.__class__.__name__ == 'App':
-            log_func = repos[self.__class__.__name__].get('log')
-            getattr(repo, log_func)(inst, 'delete', 'api')
+        self._log_changes(inst, 'delete')
         delete_func = repos[self.__class__.__name__]['delete']
         getattr(repo, delete_func)(inst)
         return inst
@@ -248,11 +241,11 @@ class APIBase(MethodView):
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
     @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
-    def put(self, id):
+    def put(self, oid):
         """Update a single item in the DB.
 
         :arg self: The class of the object to be updated
-        :arg integer id: the ID of the object in the DB
+        :arg integer oid: the ID of the object in the DB
         :returns: An HTTP status code based on the output of the action.
 
         More info about HTTP status codes for this action `here
@@ -261,7 +254,7 @@ class APIBase(MethodView):
         """
         try:
             self.valid_args()
-            inst = self._update_instance(id)
+            inst = self._update_instance(oid)
             self._refresh_cache(inst)
             return Response(json.dumps(inst.dictize()), 200,
                             mimetype='application/json')
@@ -271,26 +264,24 @@ class APIBase(MethodView):
                 target=self.__class__.__name__.lower(),
                 action='PUT')
 
-    def _update_instance(self, id):
+    def _update_instance(self, oid):
         repo = repos[self.__class__.__name__]['repo']
         query_func = repos[self.__class__.__name__]['get']
-        existing = getattr(repo, query_func)(id)
+        existing = getattr(repo, query_func)(oid)
         if existing is None:
             raise NotFound
         getattr(require, self.__class__.__name__.lower()).update(existing)
         data = json.loads(request.data)
-        # may be missing the id as we allow partial updates
-        data['id'] = id
+        # may be missing the oid as we allow partial updates
+        data['id'] = oid
         data = self.hateoas.remove_links(data)
         inst = self.__class__(**data)
         for key in data:
             setattr(existing, key, data[key])
         update_func = repos[self.__class__.__name__]['update']
-        self._validate_instance(inst)
-        log_func = repos[self.__class__.__name__].get('log')
-        if self.__class__.__name__ == 'App':
-            getattr(repo, log_func)(existing, 'update', 'api')
-        getattr(repo, update_func)(existing)
+        self._validate_instance(existing)
+        self._log_changes(existing, 'update')
+        getattr(repo, update_func)(inst)
         return existing
 
 
@@ -303,7 +294,6 @@ class APIBase(MethodView):
         """
         pass
 
-
     def _refresh_cache(self, data_dict):
         """Refresh cache.
 
@@ -313,13 +303,11 @@ class APIBase(MethodView):
         """
         pass
 
-
     def _select_attributes(self, item_data):
         """Method to be overriden in inheriting classes in case it is not
         desired that every object attribute is returned by the API.
         """
         return item_data
-
 
     def _custom_filter(self, query):
         """Method to be overriden in inheriting classes which wish to consider
@@ -327,11 +315,14 @@ class APIBase(MethodView):
         """
         return query
 
-
     def _validate_instance(self, instance):
         """Method to be overriden in inheriting classes which may need to
         validate the creation (POST) or modification (PUT) of a domain object for
         reasons other than business logic ones (e.g. overlapping of a project
         name witht a URL).
         """
+        pass
+
+    def _log_changes(self, obj, change):
+        """Method to be overriden by inheriting classes for logging purposes"""
         pass

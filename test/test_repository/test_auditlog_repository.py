@@ -164,7 +164,7 @@ class TestAuditlogRepositoryForProjects(Test):
         """Test save raises a DBIntegrityError if the instance to be saved lacks
         a required value"""
 
-        log = AuditlogFactory.build()
+        log = AuditlogFactory.build(app_id=None)
 
         assert_raises(DBIntegrityError, self.auditlog_repo.save, log)
 

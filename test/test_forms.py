@@ -20,8 +20,8 @@ from wtforms import ValidationError
 from nose.tools import raises
 from flask import current_app
 
-from pybossa.forms.forms import RegisterForm, LoginForm
 from default import Test, db, with_context
+from pybossa.forms.forms import RegisterForm, LoginForm
 from pybossa.forms import validator
 from pybossa.repositories import UserRepository
 from factories import UserFactory
