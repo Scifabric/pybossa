@@ -21,12 +21,10 @@ from collections import namedtuple
 from factories import AppFactory, AuditlogFactory, UserFactory, CategoryFactory
 from helper import web
 
-from pybossa.repositories import ProjectRepository
 from pybossa.repositories import UserRepository
 from pybossa.repositories import AuditlogRepository
 from mock import patch
 
-project_repo = ProjectRepository(db)
 auditlog_repo = AuditlogRepository(db)
 user_repo = UserRepository(db)
 
@@ -180,7 +178,7 @@ class TestAuditlogAPI(Test):
             assert log.caller == 'api', log.caller
             assert log.attribute == 'task_presenter', log.attribute
             msg = "%s != %s" % (data['info']['task_presenter'], log.new_value)
-            assert data['info']['task_presenter'] == json.loads(log.new_value), msg
+            assert data['info']['task_presenter'] == log.new_value, msg
 
     def test_app_update_scheduler(self):
         """Test Auditlog API project update info scheduler works."""
@@ -203,7 +201,7 @@ class TestAuditlogAPI(Test):
             assert log.caller == 'api', log.caller
             assert log.attribute == 'sched', log.attribute
             msg = "%s != %s" % (data['info']['sched'], log.new_value)
-            assert data['info']['sched'] == json.loads(log.new_value), msg
+            assert data['info']['sched'] == log.new_value, msg
 
     def test_app_update_two_info_objects(self):
         """Test Auditlog API project update two info objects works."""
@@ -226,7 +224,7 @@ class TestAuditlogAPI(Test):
             assert log.caller == 'api', log.caller
             assert log.attribute in attributes, log.attribute
             msg = "%s != %s" % (data['info'][log.attribute], log.new_value)
-            assert data['info'][log.attribute] == json.loads(log.new_value), msg
+            assert data['info'][log.attribute] == log.new_value, msg
 
 
 class TestAuditlogWEB(web.Helper):
@@ -460,7 +458,7 @@ class TestAuditlogWEB(web.Helper):
 
         new_string = 'new password'
 
-        old_value = 'null'
+        old_value = None
 
         self.data[attribute] = new_string
 
@@ -638,8 +636,8 @@ class TestAuditlogWEB(web.Helper):
         attribute = 'task.n_answers'
 
         new_string = '10'
-
-        old_value = '30'
+        # Depends on each specific task, so old value will be non-avaliable
+        old_value = 'N/A'
 
         self.app.post(url, data={'n_answers': '10'}, follow_redirects=True)
 
