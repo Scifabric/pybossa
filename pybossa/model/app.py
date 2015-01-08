@@ -106,11 +106,11 @@ class App(db.Model, DomainObject):
             return self.get_passwd() == password
         return False
 
-    def has_autoimporer(self):
+    def has_autoimporter(self):
         return self.get_autoimporter() is not None
 
     def get_autoimporter(self):
-        return info.get('autoimporter')
+        return self.info.get('autoimporter')
 
     def set_autoimporter(self, new=None):
         self.info['autoimporter'] = new
