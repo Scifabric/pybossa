@@ -606,6 +606,7 @@ def setup_autoimporter(short_name):
     project_repo.save(app)
     auditlogger.log_event(app, current_user, 'create', 'autoimporter',
                           'Nothing', json.dumps(app.get_autoimporter()))
+    cached_apps.delete_app(short_name)
     flash(gettext("Success! Tasks will be imported daily."))
     return redirect(url_for('.setup_autoimporter', short_name=app.short_name))
 
@@ -634,6 +635,7 @@ def delete_autoimporter(short_name):
         project_repo.save(app)
         auditlogger.log_event(app, current_user, 'delete', 'autoimporter',
                               json.dumps(autoimporter), 'Nothing')
+        cached_apps.delete_app(short_name)
     return redirect(url_for('.tasks', short_name=app.short_name))
 
 
