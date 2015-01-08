@@ -151,7 +151,7 @@ def get_autoimporter_jobs():
         project = project_repo.get(project_dict['id'])
         if project.has_autoimporter():
             jobs.append(dict(name = import_tasks,
-                             args = [project.id, template],
+                             args = [project.id],
                              kwargs=project.get_autoimporter(),
                              interval=(24 * HOUR),
                              timeout = (10 * MINUTE),
