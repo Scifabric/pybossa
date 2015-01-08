@@ -602,7 +602,7 @@ def setup_autoimporter(short_name):
     if not (form and form.validate_on_submit()):  # pragma: no cover
         return render_template('/applications/importers/%s.html' % template,
                                 **template_args)
-    app.set_autoimporter()
+    app.set_autoimporter(form.get_import_data())
     project_repo.save(app)
     auditlogger.log_event(app, current_user, 'create', 'autoimporter',
                           'Nothing', json.dumps(app.get_autoimporter()))
