@@ -56,11 +56,11 @@ def schedule_job(function, scheduler):
 
 def schedule_priority_jobs(queue_name, interval):
     """Schedule all PyBossa high priority jobs."""
-    jobs = get_scheduled_jobs()
     from pybossa.core import sentinel
     from rq import Queue
     redis_conn = sentinel.master
 
+    jobs = get_scheduled_jobs()
     n_jobs = 0
     queue = Queue(queue_name, connection=redis_conn)
     for job in jobs:
@@ -142,6 +142,20 @@ def create_dict_jobs(data, function,
                          timeout=timeout,
                          queue=queue))
     return jobs
+
+def get_autoimporter_jobs():
+    from pybossa.core import project_repo
+    import pybossa.cache.apps as cached_apps
+    pro_user_projects = cached_apps.get_from_pro_user()
+    for project_dict in pro_user_projects:
+        project = project_repo.get(project_dict['id'])
+        if project.has_autoimporter():
+            jobs.append(dict(name = import_tasks,
+                             args = [project.id, template],
+                             kwargs=project.get_autoimporter(),
+                             interval=(24 * HOUR),
+                             timeout = (10 * MINUTE),
+                             queue=queue))
 
 
 @with_cache_disabled
