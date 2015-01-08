@@ -170,7 +170,7 @@ def create_tasks(task_repo, project_id, **form_data):
     return msg
 
 
-def count_tasks_to_import(importer_id, **form_data):
+def count_tasks_to_import(**form_data):
     importer_id = form_data.get('type')
     return _create_importer_for(importer_id).count_tasks(**form_data)
 

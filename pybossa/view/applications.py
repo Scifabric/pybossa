@@ -543,7 +543,7 @@ def import_task(short_name):
                                 **template_args)
 
     try:
-        return _import_tasks(app, template, **form.get_import_data())
+        return _import_tasks(app, **form.get_import_data())
     except importers.BulkImportException, err_msg:
         flash(err_msg, 'error')
     except Exception as inst:  # pragma: no cover
@@ -554,10 +554,10 @@ def import_task(short_name):
                             **template_args)
 
 
-def _import_tasks(app, template, **form_data):
-    number_of_tasks = importers.count_tasks_to_import(template, **form_data)
+def _import_tasks(app, **form_data):
+    number_of_tasks = importers.count_tasks_to_import(**form_data)
     if number_of_tasks <= MAX_NUM_SYNCHR_TASKS_IMPORT:
-        msg = importers.create_tasks(task_repo, app.id, template, **form_data)
+        msg = importers.create_tasks(task_repo, app.id, **form_data)
         flash(msg)
     else:
         importer_queue.enqueue(import_tasks, app.id, template, **form_data)
