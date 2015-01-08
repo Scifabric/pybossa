@@ -49,7 +49,6 @@ class TestProjectsStats(Test):
         job = jobs[0]
         assert 'get_app_stats' in job['name'].__name__
         assert job['args'] == [app.id, app.short_name]
-        assert job['interval'] == 10 * 60
 
     @with_context
     def test_get_project_jobs(self):

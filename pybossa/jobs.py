@@ -78,14 +78,14 @@ def get_scheduled_jobs(): # pragma: no cover
     """Return a list of scheduled jobs."""
     # Default ones
     # A job is a dict with the following format: dict(name, args, kwargs,
-    # interval)
+    # timeout)
     jobs = [
             dict(name=warm_up_stats, args=[], kwargs={},
-                 interval=HOUR, timeout=(10 * MINUTE), queue='high'),
+                 timeout=(10 * MINUTE), queue='high'),
             dict(name=warn_old_project_owners, args=[], kwargs={},
-                 interval=(24 * HOUR), timeout=(10 * MINUTE), queue='low'),
+                 timeout=(10 * MINUTE), queue='low'),
             dict(name=warm_cache, args=[], kwargs={},
-                 interval=(10 * MINUTE), timeout=(10 * MINUTE), queue='super')]
+                 timeout=(10 * MINUTE), queue='super')]
     # Create ZIPs for all projects
     zip_jobs = get_export_task_jobs()
     # Based on type of user
@@ -101,15 +101,12 @@ def get_export_task_jobs():
     jobs = []
     for app_x in apps:
         checkuser = user_repo.get(app_x.owner_id)
-        # Check if Pro User, if yes use a shorter schedule
-        schedule_hours = 24
+        # Check if Pro User, if yes use a higher priority queue
         queue = 'low'
         if checkuser.pro:
-            schedule_hours = 4
             queue = 'high'
         jobs.append(dict(name = project_export,
                          args = [app_x.id], kwargs={},
-                         interval=(schedule_hours * HOUR),
                          timeout = (10 * MINUTE),
                          queue=queue))
     return jobs
@@ -127,23 +124,19 @@ def get_project_jobs():
     from pybossa.cache import apps as cached_apps
     return create_dict_jobs(cached_apps.get_from_pro_user(),
                             get_app_stats,
-                            interval=(10 * MINUTE),
                             timeout=(10 * MINUTE),
                             queue='super')
 
-def create_dict_jobs(data, function,
-                     interval=(24 * HOUR), timeout=(10 * MINUTE),
-                     queue='low'):
+def create_dict_jobs(data, function, timeout=(10 * MINUTE), queue='low'):
     jobs = []
     for d in data:
         jobs.append(dict(name=function,
                          args=[d['id'], d['short_name']], kwargs={},
-                         interval=interval,
                          timeout=timeout,
                          queue=queue))
     return jobs
 
-def get_autoimporter_jobs():
+def get_autoimporter_jobs(queue='low'):
     from pybossa.core import project_repo
     import pybossa.cache.apps as cached_apps
     pro_user_projects = cached_apps.get_from_pro_user()
@@ -153,7 +146,6 @@ def get_autoimporter_jobs():
             jobs.append(dict(name = import_tasks,
                              args = [project.id],
                              kwargs=project.get_autoimporter(),
-                             interval=(24 * HOUR),
                              timeout = (10 * MINUTE),
                              queue=queue))
 
