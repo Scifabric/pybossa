@@ -315,9 +315,9 @@ def send_mail(message_dict):
     mail.send(message)
 
 
-def import_tasks(project_id, template, **form_data):
+def import_tasks(project_id, **form_data):
     app = project_repo.get(project_id)
-    msg = importers.create_tasks(task_repo, project_id, template, **form_data)
+    msg = importers.create_tasks(task_repo, project_id, **form_data)
     msg = msg + ' to your project %s!' % app.name
     subject = 'Tasks Import to your project %s' % app.name
     body = 'Hello,\n\n' + msg + '\n\nAll the best,\nThe %s team.' % current_app.config.get('BRAND')

@@ -142,9 +142,10 @@ class _BulkTaskEpiCollectPlusImport(_BulkTaskImport):
         return self._import_epicollect_tasks(json.loads(r.text))
 
 
-def create_tasks(task_repo, project_id, importer_id, **form_data):
+def create_tasks(task_repo, project_id, **form_data):
     """Create tasks from a remote source using an importer object and avoiding
     the creation of repeated tasks"""
+    importer_id = form_data.get('type')
     empty = True
     n = 0
     importer = _create_importer_for(importer_id)
@@ -170,6 +171,7 @@ def create_tasks(task_repo, project_id, importer_id, **form_data):
 
 
 def count_tasks_to_import(importer_id, **form_data):
+    importer_id = form_data.get('type')
     return _create_importer_for(importer_id).count_tasks(**form_data)
 
 
