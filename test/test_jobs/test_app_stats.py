@@ -20,15 +20,9 @@ from pybossa.jobs import get_project_jobs, create_dict_jobs, get_app_stats
 from default import Test, with_context
 from factories import AppFactory
 from factories import UserFactory
-from redis import StrictRedis
 
 
 class TestProjectsStats(Test):
-
-    def setUp(self):
-        super(TestProjectsStats, self).setUp()
-        self.connection = StrictRedis()
-        self.connection.flushall()
 
 
     @with_context
