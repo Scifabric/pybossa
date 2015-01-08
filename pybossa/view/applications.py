@@ -29,7 +29,6 @@ from flask import render_template, make_response
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
 from rq import Queue
-from rq_scheduler import Scheduler
 
 import pybossa.model as model
 import pybossa.sched as sched
@@ -48,7 +47,7 @@ from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
-from pybossa.jobs import schedule_job, import_tasks
+from pybossa.jobs import import_tasks
 from pybossa.forms.applications_view_forms import *
 
 from pybossa.core import project_repo, user_repo, task_repo, blog_repo, auditlog_repo
@@ -586,10 +585,9 @@ def setup_autoimporter(short_name):
                          target='app.setup_autoimporter')
     require.app.read(app)
     require.app.update(app)
-    current_autoimporter = _get_scheduled_autoimport_job(app.id)
-    if current_autoimporter is not None:
-        importer_type = current_autoimporter.args[1]
-        importer = dict(type=importer_type, **current_autoimporter.kwargs)
+    if app.has_autoimporter():
+        current_autoimporter = app.get_autoimporter()
+        importer = dict(**current_autoimporter)
         return render_template('/applications/task_autoimporter.html',
                                 importer=importer, **template_args)
 
@@ -604,19 +602,12 @@ def setup_autoimporter(short_name):
     if not (form and form.validate_on_submit()):  # pragma: no cover
         return render_template('/applications/importers/%s.html' % template,
                                 **template_args)
-    job = _setup_autoimport_job(app, template, **form.get_import_data())
+    app.set_autoimporter()
+    project_repo.save(app)
     auditlogger.log_event(app, current_user, 'create', 'autoimporter',
-                          'Nothing', json.dumps(job['kwargs']))
+                          'Nothing', json.dumps(app.get_autoimporter()))
     flash(gettext("Success! Tasks will be imported daily."))
     return redirect(url_for('.setup_autoimporter', short_name=app.short_name))
-
-
-def _setup_autoimport_job(app, template, **form_data):
-    scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.master)
-    import_job = dict(name=import_tasks, args=[app.id, template],
-                      kwargs=form_data, interval=24*HOUR, timeout=500)
-    schedule_job(import_job, scheduler)
-    return import_job
 
 
 @blueprint.route('/<short_name>/tasks/autoimporter/delete', methods=['POST'])
@@ -637,18 +628,13 @@ def delete_autoimporter(short_name):
                          n_completed_tasks=n_completed_tasks)
     require.app.read(app)
     require.app.update(app)
-    autoimporter = _get_scheduled_autoimport_job(app.id)
-    if autoimporter is not None:
-        autoimporter.cancel()
+    if app.has_autoimporter():
+        autoimporter = app.get_autoimporter()
+        app.delete_autoimporter()
+        project_repo.save(app)
         auditlogger.log_event(app, current_user, 'delete', 'autoimporter',
-                              json.dumps(autoimporter.kwargs), 'Nothing')
+                              json.dumps(autoimporter), 'Nothing')
     return redirect(url_for('.tasks', short_name=app.short_name))
-
-def _get_scheduled_autoimport_job(project_id):
-    scheduler = Scheduler(queue_name='scheduled_jobs', connection=sentinel.slave)
-    jobs = [job for job in scheduler.get_jobs() if
-            job.func==import_tasks and job.args[0]==project_id]
-    return jobs[0] if len(jobs) > 0 else None
 
 
 @blueprint.route('/<short_name>/password', methods=['GET', 'POST'])
