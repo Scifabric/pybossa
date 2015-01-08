@@ -665,7 +665,7 @@ class TestAuditlogWEB(web.Helper):
 
         attribute = 'autoimporter'
 
-        new_value = '{"csv_url": "http://fakeurl.com"}'
+        new_value = '{"type": "csv", "csv_url": "http://fakeurl.com"}'
 
         old_value = 'Nothing'
 
@@ -681,27 +681,23 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_id == 1, log.user_id
 
 
-    @patch('pybossa.view.applications._get_scheduled_autoimport_job')
-    def test_app_auditlog_autoimporter_delete(self, scheduled):
+    def test_app_auditlog_autoimporter_delete(self):
         self.register()
-        self.new_application()
-        self.new_task(1)
-        short_name = 'sampleapp'
-        mock_autoimporter_job = MagicMock()
-        mock_autoimporter_job.args = [1, 'csv']
-        mock_autoimporter_job.kwargs = {'csv_url': 'http://fakeurl.com'}
-        scheduled.return_value = mock_autoimporter_job
+        owner = user_repo.get(1)
+        autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
+        app = AppFactory.create(owner=owner, info={'autoimporter': autoimporter})
+        short_name = app.short_name
 
         attribute = 'autoimporter'
 
-        old_value = json.dumps(mock_autoimporter_job.kwargs)
+        old_value = json.dumps(autoimporter)
 
         new_value = 'Nothing'
 
         url = "/app/%s/tasks/autoimporter/delete" % short_name
         self.app.post(url, data={}, follow_redirects=True)
 
-        logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
+        logs = auditlog_repo.filter_by(app_short_name=short_name)
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == attribute, log.attribute
