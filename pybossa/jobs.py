@@ -90,7 +90,8 @@ def get_scheduled_jobs(): # pragma: no cover
     zip_jobs = get_export_task_jobs()
     # Based on type of user
     project_jobs = get_project_jobs()
-    return zip_jobs + jobs + project_jobs
+    autoimport_jobs = get_autoimport_jobs()
+    return zip_jobs + jobs + project_jobs + autoimport_jobs
 
 def get_export_task_jobs():
     """Export tasks to zip"""
@@ -136,10 +137,11 @@ def create_dict_jobs(data, function, timeout=(10 * MINUTE), queue='low'):
                          queue=queue))
     return jobs
 
-def get_autoimporter_jobs(queue='low'):
+def get_autoimport_jobs(queue='low'):
     from pybossa.core import project_repo
     import pybossa.cache.apps as cached_apps
     pro_user_projects = cached_apps.get_from_pro_user()
+    jobs = []
     for project_dict in pro_user_projects:
         project = project_repo.get(project_dict['id'])
         if project.has_autoimporter():
@@ -148,6 +150,7 @@ def get_autoimporter_jobs(queue='low'):
                              kwargs=project.get_autoimporter(),
                              timeout = (10 * MINUTE),
                              queue=queue))
+    return jobs
 
 
 @with_cache_disabled
