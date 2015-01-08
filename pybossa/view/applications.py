@@ -560,7 +560,7 @@ def _import_tasks(app, **form_data):
         msg = importers.create_tasks(task_repo, app.id, **form_data)
         flash(msg)
     else:
-        importer_queue.enqueue(import_tasks, app.id, template, **form_data)
+        importer_queue.enqueue(import_tasks, app.id, **form_data)
         flash(gettext("You're trying to import a large amount of tasks, so please be patient.\
             You will receive an email when the tasks are ready."))
     return redirect(url_for('.tasks', short_name=app.short_name))
