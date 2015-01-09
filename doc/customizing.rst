@@ -601,6 +601,30 @@ other templates to use them as a base layer for your template.
 After adding the template, the server will start offering this new template to
 your users.
 
+In addition to the project templates themselves, you can add some test tasks for
+those projects so that the users can import them to their projects and start
+"playing" with them, or taking their format as a starting point to create their
+own. These tasks can be imported from Google Docs spreadsheets, and you can add
+them, remove them, or modify the URLs of the spreadsheets changing the value of
+the variable **TEMPLATE_TASKS** in settings_local.py::
+
+    TEMPLATE_TASKS = {
+        'image': "https://docs.google.com/spreadsheet/ccc"
+                 "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE"
+                 "&usp=sharing",
+        'sound': "https://docs.google.com/spreadsheet/ccc"
+                 "?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc"
+                 "&usp=sharing",
+        'video': "https://docs.google.com/spreadsheet/ccc"
+                 "?key=0AsNlt0WgPAHwdGZ2UGhxSTJjQl9YNVhfUVhGRUdoRWc"
+                 "&usp=sharing",
+        'map': "https://docs.google.com/spreadsheet/ccc"
+               "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc"
+               "&usp=sharing",
+        'pdf': "https://docs.google.com/spreadsheet/ccc"
+               "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE"
+               "&usp=sharing"}
+
 Setting an expiration time for project passwords
 ================================================
 

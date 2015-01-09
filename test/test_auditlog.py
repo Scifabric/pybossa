@@ -23,7 +23,7 @@ from helper import web
 
 from pybossa.repositories import UserRepository
 from pybossa.repositories import AuditlogRepository
-from mock import patch
+from mock import patch, MagicMock
 
 auditlog_repo = AuditlogRepository(db)
 user_repo = UserRepository(db)
@@ -605,7 +605,6 @@ class TestAuditlogWEB(web.Helper):
 
         attribute = 'task.priority_0'
 
-
         self.app.post(url, data={'task_ids': '1,2', 'priority_0': '0.5'}, follow_redirects=True)
 
         logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
@@ -651,6 +650,64 @@ class TestAuditlogWEB(web.Helper):
             assert log.action == 'update', log.action
             assert log.user_name == 'johndoe', log.user_name
             assert log.user_id == 1, log.user_id
+
+
+    def test_app_auditlog_autoimporter_create(self):
+        self.register()
+        self.new_application()
+        self.new_task(1)
+        short_name = 'sampleapp'
+
+        url = "/app/%s/tasks/autoimporter" % short_name
+        data = {'form_name': 'csv', 'csv_url': 'http://fakeurl.com'}
+
+        self.app.post(url, data=data, follow_redirects=True)
+
+        attribute = 'autoimporter'
+
+        new_value = '{"type": "csv", "csv_url": "http://fakeurl.com"}'
+
+        old_value = 'Nothing'
+
+        logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
+        assert len(logs) == 1, logs
+        for log in logs:
+            assert log.attribute == attribute, log.attribute
+            assert log.old_value == old_value, log.old_value
+            assert log.new_value == new_value, log.new_value
+            assert log.caller == 'web', log.caller
+            assert log.action == 'create', log.action
+            assert log.user_name == 'johndoe', log.user_name
+            assert log.user_id == 1, log.user_id
+
+
+    def test_app_auditlog_autoimporter_delete(self):
+        self.register()
+        owner = user_repo.get(1)
+        autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
+        app = AppFactory.create(owner=owner, info={'autoimporter': autoimporter})
+        short_name = app.short_name
+
+        attribute = 'autoimporter'
+
+        old_value = json.dumps(autoimporter)
+
+        new_value = 'Nothing'
+
+        url = "/app/%s/tasks/autoimporter/delete" % short_name
+        self.app.post(url, data={}, follow_redirects=True)
+
+        logs = auditlog_repo.filter_by(app_short_name=short_name)
+        assert len(logs) == 1, logs
+        for log in logs:
+            assert log.attribute == attribute, log.attribute
+            assert log.old_value == old_value, log.old_value
+            assert log.new_value == new_value, log.new_value
+            assert log.caller == 'web', log.caller
+            assert log.action == 'delete', log.action
+            assert log.user_name == 'johndoe', log.user_name
+            assert log.user_id == 1, log.user_id
+
 
     @with_context
     def test_app_auditlog_access_anon(self):
@@ -703,7 +760,6 @@ class TestAuditlogWEB(web.Helper):
 
         res = self.app.get(url, follow_redirects=True)
         assert  res.status_code == 200, res.status_code
-
 
 
     @with_context

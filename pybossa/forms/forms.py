@@ -124,6 +124,9 @@ class _BulkTaskCSVImportForm(Form):
                         [validators.Required(message=msg_required),
                          validators.URL(message=msg_url)])
 
+    def get_import_data(self):
+        return {'type': 'csv', 'csv_url': self.csv_url.data}
+
 
 class _BulkTaskGDImportForm(Form):
     form_name =TextField(label=None, widget=HiddenInput(), default='gdocs')
@@ -133,6 +136,9 @@ class _BulkTaskGDImportForm(Form):
     googledocs_url = TextField(lazy_gettext('URL'),
                                [validators.Required(message=msg_required),
                                    validators.URL(message=msg_url)])
+
+    def get_import_data(self):
+        return {'type': 'gdocs', 'googledocs_url': self.googledocs_url.data}
 
 
 class _BulkTaskEpiCollectPlusImportForm(Form):
@@ -145,6 +151,11 @@ class _BulkTaskEpiCollectPlusImportForm(Form):
                                    [validators.Required(message=msg_required)])
     epicollect_form = TextField(lazy_gettext('Form name'),
                                 [validators.Required(message=msg_required)])
+
+    def get_import_data(self):
+        return {'type': 'epicollect',
+                'epicollect_project': self.epicollect_project.data,
+                'epicollect_form': self.epicollect_form.data}
 
 
 class GenericBulkTaskImportForm(object):

@@ -440,7 +440,7 @@ def setup_cache_timeouts(app):
 
 def setup_scheduled_jobs(app): #pragma: no cover
     redis_conn = sentinel.master
-    from pybossa.jobs import schedule_priority_jobs
+    from pybossa.jobs import schedule_priority_jobs, schedule_job
     from rq_scheduler import Scheduler
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=redis_conn)
     MINUTE = 60
@@ -452,37 +452,10 @@ def setup_scheduled_jobs(app): #pragma: no cover
             dict(name=schedule_priority_jobs, args=['medium', (12 * HOUR)],
                  kwargs={}, interval=(12 * HOUR), timeout=(10 * MINUTE)),
             dict(name=schedule_priority_jobs, args=['low', (24 * HOUR)],
-                 kwargs={}, interval=(24 * HOUR), timeout=(10 * MINUTE)),]
+                 kwargs={}, interval=(24 * HOUR), timeout=(10 * MINUTE))]
 
     for job in JOBS:
-        _schedule_job(job, scheduler)
-
-
-def _schedule_job(function, scheduler):
-    """Schedules a job and returns a log message about success of the operation"""
-    from datetime import datetime
-    scheduled_jobs = scheduler.get_jobs()
-    job = scheduler.schedule(
-        scheduled_time=datetime.utcnow(),
-        func=function['name'],
-        args=function['args'],
-        kwargs=function['kwargs'],
-        interval=function['interval'],
-        repeat=None,
-        timeout=function['timeout'])
-    for sj in scheduled_jobs:
-        if (function['name'].__name__ in sj.func_name and
-                sj._args == function['args'] and
-                sj._kwargs == function['kwargs']):
-            job.cancel()
-            msg = ('WARNING: Job %s(%s, %s) is already scheduled'
-                   % (function['name'].__name__, function['args'],
-                      function['kwargs']))
-            return msg
-    msg = ('Scheduled %s(%s, %s) to run every %s seconds'
-           % (function['name'].__name__, function['args'], function['kwargs'],
-              function['interval']))
-    return msg
+        schedule_job(job, scheduler)
 
 
 def setup_newsletter(app):

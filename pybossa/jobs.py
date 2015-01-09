@@ -16,21 +16,51 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """Jobs module for running background tasks in PyBossa server."""
+from flask import current_app
 from flask.ext.mail import Message
-from pybossa.core import mail
+from pybossa.core import mail, task_repo, project_repo
 from pybossa.util import with_cache_disabled
+import pybossa.importers as importers
 
 
 MINUTE = 60
 HOUR = 60 * 60
 
+
+def schedule_job(function, scheduler):
+    """Schedules a job and returns a log message about success of the operation"""
+    from datetime import datetime
+    scheduled_jobs = scheduler.get_jobs()
+    job = scheduler.schedule(
+        scheduled_time=datetime.utcnow(),
+        func=function['name'],
+        args=function['args'],
+        kwargs=function['kwargs'],
+        interval=function['interval'],
+        repeat=None,
+        timeout=function['timeout'])
+    for sj in scheduled_jobs:
+        if (function['name'].__name__ in sj.func_name and
+                sj.args == function['args'] and
+                sj.kwargs == function['kwargs']):
+            job.cancel()
+            msg = ('WARNING: Job %s(%s, %s) is already scheduled'
+                   % (function['name'].__name__, function['args'],
+                      function['kwargs']))
+            return msg
+    msg = ('Scheduled %s(%s, %s) to run every %s seconds'
+           % (function['name'].__name__, function['args'], function['kwargs'],
+              function['interval']))
+    return msg
+
+
 def schedule_priority_jobs(queue_name, interval):
     """Schedule all PyBossa high priority jobs."""
-    jobs = get_scheduled_jobs()
     from pybossa.core import sentinel
     from rq import Queue
     redis_conn = sentinel.master
 
+    jobs = get_scheduled_jobs()
     n_jobs = 0
     queue = Queue(queue_name, connection=redis_conn)
     for job in jobs:
@@ -48,19 +78,21 @@ def get_scheduled_jobs(): # pragma: no cover
     """Return a list of scheduled jobs."""
     # Default ones
     # A job is a dict with the following format: dict(name, args, kwargs,
-    # interval)
+    # timeout)
     jobs = [
-            dict(name=warm_up_stats, args=[], kwargs={},
-                 interval=HOUR, timeout=(10 * MINUTE), queue='high'),
-            dict(name=warn_old_project_owners, args=[], kwargs={},
-                 interval=(24 * HOUR), timeout=(10 * MINUTE), queue='low'),
-            dict(name=warm_cache, args=[], kwargs={},
-                 interval=(10 * MINUTE), timeout=(10 * MINUTE), queue='super')]
+        dict(name=warm_up_stats, args=[], kwargs={},
+             timeout=(10 * MINUTE), queue='high'),
+        dict(name=warn_old_project_owners, args=[], kwargs={},
+             timeout=(10 * MINUTE), queue='low'),
+        dict(name=warm_cache, args=[], kwargs={},
+             timeout=(10 * MINUTE), queue='super')]
     # Create ZIPs for all projects
     zip_jobs = get_export_task_jobs()
     # Based on type of user
     project_jobs = get_project_jobs()
-    return zip_jobs + jobs + project_jobs
+    autoimport_jobs = get_autoimport_jobs()
+    return zip_jobs + jobs + project_jobs + autoimport_jobs
+
 
 def get_export_task_jobs():
     """Export tasks to zip"""
@@ -71,18 +103,16 @@ def get_export_task_jobs():
     jobs = []
     for app_x in apps:
         checkuser = user_repo.get(app_x.owner_id)
-        # Check if Pro User, if yes use a shorter schedule
-        schedule_hours = 24
+        # Check if Pro User, if yes use a higher priority queue
         queue = 'low'
         if checkuser.pro:
-            schedule_hours = 4
             queue = 'high'
-        jobs.append(dict(name = project_export,
-                         args = [app_x.id], kwargs={},
-                         interval=(schedule_hours * HOUR),
-                         timeout = (10 * MINUTE),
+        jobs.append(dict(name=project_export,
+                         args=[app_x.id], kwargs={},
+                         timeout=(10 * MINUTE),
                          queue=queue))
     return jobs
+
 
 def project_export(id):
     from pybossa.core import project_repo, json_exporter, csv_exporter
@@ -92,25 +122,39 @@ def project_export(id):
         json_exporter.pregenerate_zip_files(app)
         csv_exporter.pregenerate_zip_files(app)
 
+
 def get_project_jobs():
     """Return a list of jobs based on user type."""
     from pybossa.cache import apps as cached_apps
     return create_dict_jobs(cached_apps.get_from_pro_user(),
                             get_app_stats,
-                            interval=(10 * MINUTE),
                             timeout=(10 * MINUTE),
                             queue='super')
 
-def create_dict_jobs(data, function,
-                     interval=(24 * HOUR), timeout=(10 * MINUTE),
-                     queue='low'):
+
+def create_dict_jobs(data, function, timeout=(10 * MINUTE), queue='low'):
     jobs = []
     for d in data:
         jobs.append(dict(name=function,
                          args=[d['id'], d['short_name']], kwargs={},
-                         interval=interval,
                          timeout=timeout,
                          queue=queue))
+    return jobs
+
+
+def get_autoimport_jobs(queue='low'):
+    from pybossa.core import project_repo
+    import pybossa.cache.apps as cached_apps
+    pro_user_projects = cached_apps.get_from_pro_user()
+    jobs = []
+    for project_dict in pro_user_projects:
+        project = project_repo.get(project_dict['id'])
+        if project.has_autoimporter():
+            jobs.append(dict(name=import_tasks,
+                             args=[project.id],
+                             kwargs=project.get_autoimporter(),
+                             timeout=(10 * MINUTE),
+                             queue=queue))
     return jobs
 
 
@@ -153,7 +197,7 @@ def warm_up_stats(): # pragma: no cover
 
 
 @with_cache_disabled
-def warm_cache(): # pragma: no cover
+def warm_cache():  # pragma: no cover
     """Background job to warm cache."""
     from pybossa.core import create_app
     app = create_app(run_as_server=False)
@@ -271,16 +315,13 @@ def send_mail(message_dict):
     mail.send(message)
 
 
-def import_tasks(tasks_info, app_id):
-    from pybossa.core import task_repo, project_repo
-    from flask import current_app
-    import pybossa.importers as importers
-
-    app = project_repo.get(app_id)
-    msg = importers.create_tasks(task_repo, tasks_info, app_id)
+def import_tasks(project_id, **form_data):
+    app = project_repo.get(project_id)
+    msg = importers.create_tasks(task_repo, project_id, **form_data)
     msg = msg + ' to your project %s!' % app.name
     subject = 'Tasks Import to your project %s' % app.name
-    body = 'Hello,\n\n' + msg + '\n\nAll the best,\nThe %s team.' % current_app.config.get('BRAND')
+    body = 'Hello,\n\n' + msg + '\n\nAll the best,\nThe %s team.'\
+        % current_app.config.get('BRAND')
     mail_dict = dict(recipients=[app.owner.email_addr],
                      subject=subject, body=body)
     send_mail(mail_dict)

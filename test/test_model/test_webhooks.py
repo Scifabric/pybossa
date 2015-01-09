@@ -22,7 +22,6 @@ from factories import AppFactory
 from factories import TaskFactory
 from factories import TaskRunFactory
 from redis import StrictRedis
-from rq_scheduler import Scheduler
 from mock import patch, MagicMock
 from datetime import datetime
 
@@ -36,7 +35,6 @@ class TestWebHooks(Test):
         super(TestWebHooks, self).setUp()
         self.connection = StrictRedis()
         self.connection.flushall()
-        self.scheduler = Scheduler('test_queue', connection=self.connection)
 
 
     @with_context
