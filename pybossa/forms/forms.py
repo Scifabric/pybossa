@@ -164,7 +164,7 @@ class _BulkTaskFlickrImportForm(Form):
     album_id = TextField(lazy_gettext('Album ID'),
                          [validators.Required(message=msg_required)])
     def get_import_data(self):
-        return {'album_id': self.album_id.data}
+        return {'type': 'flickr', 'album_id': self.album_id.data}
 
 
 class GenericBulkTaskImportForm(object):

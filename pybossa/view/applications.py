@@ -545,7 +545,6 @@ def import_task(short_name):
     try:
         return _import_tasks(app, **form.get_import_data())
     except importers.BulkImportException as err_msg:
-
         flash(err_msg, 'error')
     except Exception as inst:  # pragma: no cover
         current_app.logger.error(inst)
