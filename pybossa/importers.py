@@ -87,8 +87,8 @@ class _BulkTaskCSVImport(_BulkTaskImport):
             msg = "Oops! It looks like you don't have permission to access" \
                 " that file"
             raise BulkImportException(gettext(msg), 'error')
-        if ((not 'text/plain' in r.headers['content-type']) and
-                (not 'text/csv' in r.headers['content-type'])):
+        if (('text/plain' not in r.headers['content-type']) and
+                ('text/csv' not in r.headers['content-type'])):
             msg = gettext("Oops! That file doesn't look like the right file.")
             raise BulkImportException(msg, 'error')
 
@@ -104,7 +104,7 @@ class _BulkTaskGDImport(_BulkTaskCSVImport):
         # For old data links of Google Spreadsheets
         if 'ccc?key' in form_data['googledocs_url']:
             return ''.join([form_data['googledocs_url'], '&output=csv'])
-        # New data format for Google Drive import is like this: 
+        # New data format for Google Drive import is like this:
         # https://docs.google.com/spreadsheets/d/key/edit?usp=sharing
         else:
             return ''.join([form_data['googledocs_url'].split('edit')[0],
@@ -132,7 +132,7 @@ class _BulkTaskEpiCollectPlusImport(_BulkTaskImport):
             msg = "Oops! It looks like you don't have permission to access" \
                 " the EpiCollect Plus project"
             raise BulkImportException(gettext(msg), 'error')
-        if not 'application/json' in r.headers['content-type']:
+        if 'application/json' not in r.headers['content-type']:
             msg = "Oops! That project and form do not look like the right one."
             raise BulkImportException(gettext(msg), 'error')
         return self._import_epicollect_tasks(json.loads(r.text))
@@ -179,10 +179,10 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
                          'url_b': url_b, 'url_m': url_m}}
 
 
-
-def create_tasks(task_repo, project_id, importer_id, **form_data):
+def create_tasks(task_repo, project_id, **form_data):
     """Create tasks from a remote source using an importer object and avoiding
     the creation of repeated tasks"""
+    importer_id = form_data.get('type')
     empty = True
     n = 0
     importer = _create_importer_for(importer_id)
@@ -207,7 +207,8 @@ def create_tasks(task_repo, project_id, importer_id, **form_data):
     return msg
 
 
-def count_tasks_to_import(importer_id, **form_data):
+def count_tasks_to_import(**form_data):
+    importer_id = form_data.get('type')
     return _create_importer_for(importer_id).count_tasks(**form_data)
 
 

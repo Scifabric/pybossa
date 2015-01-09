@@ -20,15 +20,9 @@ from pybossa.jobs import get_project_jobs, create_dict_jobs, get_app_stats
 from default import Test, with_context
 from factories import AppFactory
 from factories import UserFactory
-from redis import StrictRedis
 
 
 class TestProjectsStats(Test):
-
-    def setUp(self):
-        super(TestProjectsStats, self).setUp()
-        self.connection = StrictRedis()
-        self.connection.flushall()
 
 
     @with_context
@@ -49,7 +43,6 @@ class TestProjectsStats(Test):
         job = jobs[0]
         assert 'get_app_stats' in job['name'].__name__
         assert job['args'] == [app.id, app.short_name]
-        assert job['interval'] == 10 * 60
 
     @with_context
     def test_get_project_jobs(self):

@@ -20,12 +20,14 @@ from datetime import datetime
 from sqlalchemy import Integer, Text
 from sqlalchemy.schema import Column, ForeignKey
 from sqlalchemy import event
+from rq import Queue
 
-from pybossa.core import db, queues
+from pybossa.core import db, sentinel
 from pybossa.model import DomainObject, JSONType, make_timestamp, update_redis, \
     update_app_timestamp, webhook
 
 
+webhook_queue = Queue('high', connection=sentinel.master)
 
 
 class TaskRun(db.Model, DomainObject):
@@ -113,7 +115,7 @@ def update_task_state(mapper, conn, target):
                            app_id=target.app_id,
                            task_id=target.task_id,
                            fired_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
-            queues['webhook'].enqueue(webhook, app_obj['webhook'], payload)
+            webhook_queue.enqueue(webhook, app_obj['webhook'], payload)
 
 
 

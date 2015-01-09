@@ -19,16 +19,10 @@
 from pybossa.jobs import warn_old_project_owners, get_non_updated_apps
 from default import Test, with_context
 from factories import AppFactory
-from redis import StrictRedis
 from mock import patch, MagicMock
 
 
 class TestOldProjects(Test):
-
-    def setUp(self):
-        super(TestOldProjects, self).setUp()
-        self.connection = StrictRedis()
-        self.connection.flushall()
 
     @with_context
     def test_get_non_updated_apps_returns_none(self):

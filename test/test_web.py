@@ -2663,8 +2663,8 @@ class TestWeb(web.Helper):
         tasks = db.session.query(Task).all()
 
         assert tasks == [], "Tasks should not be immediately added"
-        data = {'csv_url': 'http://myfakecsvurl.com'}
-        queue.enqueue.assert_called_once_with(import_tasks, app.id, 'csv', **data)
+        data = {'type': 'csv', 'csv_url': 'http://myfakecsvurl.com'}
+        queue.enqueue.assert_called_once_with(import_tasks, app.id, **data)
         msg = "You're trying to import a large amount of tasks, so please be patient.\
             You will receive an email when the tasks are ready."
         assert msg in res.data

@@ -74,7 +74,6 @@ class App(db.Model, DomainObject):
     #: Project info field formatted as JSON
     info = Column(JSONEncodedDict, default=dict)
 
-
     tasks = relationship(Task, cascade='all, delete, delete-orphan', backref='app')
     task_runs = relationship(TaskRun, backref='app',
                              cascade='all, delete-orphan',
@@ -82,21 +81,16 @@ class App(db.Model, DomainObject):
     category = relationship(Category)
     blogposts = relationship(Blogpost, cascade='all, delete-orphan', backref='app')
 
-
-
     def needs_password(self):
         return self.get_passwd_hash() is not None
 
-
     def get_passwd_hash(self):
         return self.info.get('passwd_hash')
-
 
     def get_passwd(self):
         if self.needs_password():
             return signer.loads(self.get_passwd_hash())
         return None
-
 
     def set_password(self, password):
         if len(password) > 1:
@@ -105,12 +99,22 @@ class App(db.Model, DomainObject):
         self.info['passwd_hash'] = None
         return False
 
-
     def check_password(self, password):
         if self.needs_password():
             return self.get_passwd() == password
         return False
 
+    def has_autoimporter(self):
+        return self.get_autoimporter() is not None
+
+    def get_autoimporter(self):
+        return self.info.get('autoimporter')
+
+    def set_autoimporter(self, new=None):
+        self.info['autoimporter'] = new
+
+    def delete_autoimporter(self):
+        del self.info['autoimporter']
 
 
 @event.listens_for(App, 'before_update')
@@ -122,6 +126,7 @@ def empty_string_to_none(mapper, conn, target):
         target.short_name = None
     if target.description == '':
         target.description = None
+
 
 @event.listens_for(App, 'after_insert')
 def add_event(mapper, conn, target):

@@ -15,17 +15,12 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-from mock import patch, MagicMock
-from redis import StrictRedis
-from rq_scheduler import Scheduler
 from default import db
 from helper import web
 from pybossa.model.app import App
 from pybossa.model.user import User
 from pybossa.jobs import import_tasks
 from factories import AppFactory
-from pybossa.view.applications import (_setup_autoimport_job, HOUR,
-    _get_scheduled_autoimport_job)
 
 class TestAutoimporterAccessAndResponses(web.Helper):
 
@@ -337,16 +332,12 @@ class TestAutoimporterBehaviour(web.Helper):
         assert 'action="/app/%E2%9C%93app1/tasks/autoimporter"' in data
 
 
-    @patch('pybossa.view.applications._get_scheduled_autoimport_job')
-    def test_autoimporter_shows_current_autoimporter_if_exists(self, scheduled):
+    def test_autoimporter_shows_current_autoimporter_if_exists(self):
         """Test task autoimporter shows the current autoimporter if exists"""
         self.register()
         owner = db.session.query(User).first()
-        app = AppFactory.create(owner=owner)
-        mock_autoimporter_job = MagicMock()
-        mock_autoimporter_job.args = [app.id, 'csv']
-        mock_autoimporter_job.kwargs = {'csv_url': 'http://fakeurl.com'}
-        scheduled.return_value = mock_autoimporter_job
+        autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
+        app = AppFactory.create(owner=owner, info={'autoimporter': autoimporter})
         url = "/app/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.get(url, follow_redirects=True)
@@ -354,89 +345,44 @@ class TestAutoimporterBehaviour(web.Helper):
         assert "You currently have the following autoimporter" in res.data
 
 
-    @patch('pybossa.view.applications._setup_autoimport_job')
-    def test_autoimporter_post_calls_setup_autoimport_job(self, schedule):
-        """Test a valid post to autoimporter endpoint calls the function that
-        handles creation of the autoimport scheduled job"""
+    def test_autoimporter_post_creates_autoimporter_attribute(self):
+        """Test a valid post to autoimporter endpoint sets an autoimporter to
+        the project"""
         self.register()
         owner = db.session.query(User).first()
+        autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
         app = AppFactory.create(owner=owner)
         url = "/app/%s/tasks/autoimporter" % app.short_name
         data = {'form_name': 'csv', 'csv_url': 'http://fakeurl.com'}
-        schedule.return_value = {'kwargs': {} }
 
         self.app.post(url, data=data, follow_redirects=True)
 
-        schedule.assert_called_with(app, 'csv', csv_url=data['csv_url'])
+        assert app.has_autoimporter() is True, app.get_autoimporter()
+        assert app.get_autoimporter() == autoimporter, app.get_autoimporter()
 
 
-    @patch('pybossa.view.applications._get_scheduled_autoimport_job')
-    @patch('pybossa.view.applications._setup_autoimport_job')
-    def test_autoimporter_prevents_from_duplicated(self, scheduler, scheduled):
+    def test_autoimporter_prevents_from_duplicated(self):
         """Test a valid post to autoimporter endpoint will not create another
         autoimporter if one exists for that app"""
         self.register()
         owner = db.session.query(User).first()
-        app = AppFactory.create(owner=owner)
-        mock_autoimporter_job = MagicMock()
-        mock_autoimporter_job.args = [app.id, 'csv']
-        mock_autoimporter_job.kwargs = {'csv_url': 'http://fakeurl.com'}
-        scheduled.return_value = mock_autoimporter_job
+        autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
+        app = AppFactory.create(owner=owner, info={'autoimporter': autoimporter})
         url = "/app/%s/tasks/autoimporter" % app.short_name
         data = {'form_name': 'gdocs', 'googledocs_url': 'http://another.com'}
 
         res = self.app.post(url, data=data, follow_redirects=True)
 
-        assert scheduler.called is False, "Another autoimporter was created"
-
-
-    def test_setup_autoimport_job_creates_and_schedules_job(self):
-        """Test _setup_autoimport_job function works as expected"""
-        app = AppFactory.create()
-        scheduler = Scheduler(queue_name='test', connection=StrictRedis())
-
-        _setup_autoimport_job(app, 'csv', csv_url='http://fakeurl.com')
-
-        job = scheduler.get_jobs()[0]
-        assert job.func == import_tasks, job.func
-        assert job.args == [app.id, 'csv'], job.args
-        assert job.kwargs == {'csv_url': 'http://fakeurl.com'}, job.kwargs
-        assert job.timeout == 500, job.timeout
-        assert job.meta['interval'] == 24 * HOUR, job.meta
+        assert app.get_autoimporter() == autoimporter, app.get_autoimporter()
 
 
     def test_delete_autoimporter_deletes_current_autoimporter_job(self):
-        from datetime import datetime
         self.register()
-        self.new_application()
-        app = db.session.query(App).first()
+        owner = db.session.query(User).first()
+        autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
+        app = AppFactory.create(owner=owner, info={'autoimporter': autoimporter})
         url = "/app/%s/tasks/autoimporter/delete" % app.short_name
-        scheduler = Scheduler(queue_name='test', connection=StrictRedis())
-        job = scheduler.schedule(datetime.utcnow(), import_tasks,
-                                 args=[app.id, 'csv'],
-                                 kwargs={'csv_url': 'http://fake.com'})
-        assert len(scheduler.get_jobs()) == 1
 
         res = self.app.post(url, data={}, follow_redirects=True)
 
-        assert scheduler.get_jobs() == [], scheduler.get_jobs()
-
-
-    def test_get_scheduled_autoimport_job_returns_None_if_no_autoimporter(self):
-        app = AppFactory.create()
-        job = _get_scheduled_autoimport_job(app.id)
-
-        assert job is None, job
-
-
-    def test_get_scheduled_autoimport_job_returns_job_autoimporter(self):
-        from datetime import datetime
-        scheduler = Scheduler(queue_name='test', connection=StrictRedis())
-        app = AppFactory.create()
-        scheduler.schedule(datetime.utcnow(), abs, args=[-1])
-        job = scheduler.schedule(datetime.utcnow(), import_tasks,
-                           args=[app.id, 'csv'],
-                           kwargs={'csv_url': 'http://fake.com'})
-        result = _get_scheduled_autoimport_job(app.id)
-
-        assert result == job
+        assert app.has_autoimporter() is False, app.get_autoimporter()

@@ -21,12 +21,10 @@ from collections import namedtuple
 from factories import AppFactory, AuditlogFactory, UserFactory, CategoryFactory
 from helper import web
 
-from pybossa.repositories import ProjectRepository
 from pybossa.repositories import UserRepository
 from pybossa.repositories import AuditlogRepository
 from mock import patch, MagicMock
 
-project_repo = ProjectRepository(db)
 auditlog_repo = AuditlogRepository(db)
 user_repo = UserRepository(db)
 
@@ -180,7 +178,7 @@ class TestAuditlogAPI(Test):
             assert log.caller == 'api', log.caller
             assert log.attribute == 'task_presenter', log.attribute
             msg = "%s != %s" % (data['info']['task_presenter'], log.new_value)
-            assert data['info']['task_presenter'] == json.loads(log.new_value), msg
+            assert data['info']['task_presenter'] == log.new_value, msg
 
     def test_app_update_scheduler(self):
         """Test Auditlog API project update info scheduler works."""
@@ -203,7 +201,7 @@ class TestAuditlogAPI(Test):
             assert log.caller == 'api', log.caller
             assert log.attribute == 'sched', log.attribute
             msg = "%s != %s" % (data['info']['sched'], log.new_value)
-            assert data['info']['sched'] == json.loads(log.new_value), msg
+            assert data['info']['sched'] == log.new_value, msg
 
     def test_app_update_two_info_objects(self):
         """Test Auditlog API project update two info objects works."""
@@ -226,7 +224,7 @@ class TestAuditlogAPI(Test):
             assert log.caller == 'api', log.caller
             assert log.attribute in attributes, log.attribute
             msg = "%s != %s" % (data['info'][log.attribute], log.new_value)
-            assert data['info'][log.attribute] == json.loads(log.new_value), msg
+            assert data['info'][log.attribute] == log.new_value, msg
 
 
 class TestAuditlogWEB(web.Helper):
@@ -460,7 +458,7 @@ class TestAuditlogWEB(web.Helper):
 
         new_string = 'new password'
 
-        old_value = 'null'
+        old_value = None
 
         self.data[attribute] = new_string
 
@@ -637,8 +635,8 @@ class TestAuditlogWEB(web.Helper):
         attribute = 'task.n_answers'
 
         new_string = '10'
-
-        old_value = '30'
+        # Depends on each specific task, so old value will be non-avaliable
+        old_value = 'N/A'
 
         self.app.post(url, data={'n_answers': '10'}, follow_redirects=True)
 
@@ -667,7 +665,7 @@ class TestAuditlogWEB(web.Helper):
 
         attribute = 'autoimporter'
 
-        new_value = '{"csv_url": "http://fakeurl.com"}'
+        new_value = '{"type": "csv", "csv_url": "http://fakeurl.com"}'
 
         old_value = 'Nothing'
 
@@ -683,27 +681,23 @@ class TestAuditlogWEB(web.Helper):
             assert log.user_id == 1, log.user_id
 
 
-    @patch('pybossa.view.applications._get_scheduled_autoimport_job')
-    def test_app_auditlog_autoimporter_delete(self, scheduled):
+    def test_app_auditlog_autoimporter_delete(self):
         self.register()
-        self.new_application()
-        self.new_task(1)
-        short_name = 'sampleapp'
-        mock_autoimporter_job = MagicMock()
-        mock_autoimporter_job.args = [1, 'csv']
-        mock_autoimporter_job.kwargs = {'csv_url': 'http://fakeurl.com'}
-        scheduled.return_value = mock_autoimporter_job
+        owner = user_repo.get(1)
+        autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
+        app = AppFactory.create(owner=owner, info={'autoimporter': autoimporter})
+        short_name = app.short_name
 
         attribute = 'autoimporter'
 
-        old_value = json.dumps(mock_autoimporter_job.kwargs)
+        old_value = json.dumps(autoimporter)
 
         new_value = 'Nothing'
 
         url = "/app/%s/tasks/autoimporter/delete" % short_name
         self.app.post(url, data={}, follow_redirects=True)
 
-        logs = auditlog_repo.filter_by(app_short_name=short_name, offset=1)
+        logs = auditlog_repo.filter_by(app_short_name=short_name)
         assert len(logs) == 1, logs
         for log in logs:
             assert log.attribute == attribute, log.attribute

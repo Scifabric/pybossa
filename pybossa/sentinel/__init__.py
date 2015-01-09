@@ -1,10 +1,12 @@
-from redis import sentinel
+from redis import sentinel, StrictRedis
 
 
 class Sentinel(object):
 
     def __init__(self, app=None):
         self.app = app
+        self.master = StrictRedis()
+        self.slave = self.master
         if app is not None: # pragma: no cover
             self.init_app(app)
 

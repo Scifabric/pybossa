@@ -28,12 +28,11 @@ class TestImportTasksJob(Test):
     @patch('pybossa.importers.create_tasks')
     def test_it_creates_the_new_tasks(self, create):
         app = AppFactory.create()
-        template = 'csv'
-        form_data = {'csv_url': 'http://google.es'}
+        form_data = {'type': 'csv', 'csv_url': 'http://google.es'}
 
-        import_tasks(app.id, template, **form_data)
+        import_tasks(app.id, **form_data)
 
-        create.assert_called_once_with(task_repo, app.id, template, **form_data)
+        create.assert_called_once_with(task_repo, app.id, **form_data)
 
 
     @with_context
@@ -49,6 +48,6 @@ class TestImportTasksJob(Test):
         email_data = dict(recipients=[app.owner.email_addr],
                           subject=subject, body=body)
 
-        import_tasks(app.id, template, **form_data)
+        import_tasks(app.id, **form_data)
 
         send_mail.assert_called_once_with(email_data)
