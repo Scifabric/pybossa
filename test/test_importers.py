@@ -41,8 +41,8 @@ class TestImportersPublicFunctions(Test):
                                             'n_answers': 20}]
         importer_factory.return_value = mock_importer
         app = AppFactory.create()
-
-        create_tasks(task_repo, app.id, 'csv', csv_url='http://fakecsv.com')
+        form_data = dict(type='csv', csv_url='http://fakecsv.com')
+        create_tasks(task_repo, app.id, **form_data)
         task = task_repo.get_task(1)
 
         assert task is not None
@@ -50,7 +50,7 @@ class TestImportersPublicFunctions(Test):
         assert task.n_answers == 20, task.n_answers
         assert task.info == {'question': 'question', 'url': 'url'}, task.info
         importer_factory.assert_called_with('csv')
-        mock_importer.tasks.assert_called_with(csv_url='http://fakecsv.com')
+        mock_importer.tasks.assert_called_with(**form_data)
 
 
     @patch('pybossa.importers._create_importer_for')
@@ -60,8 +60,8 @@ class TestImportersPublicFunctions(Test):
                                             {'info': {'question': 'question2'}}]
         importer_factory.return_value = mock_importer
         app = AppFactory.create()
-
-        result = create_tasks(task_repo, app.id, 'gdocs', googledocs_url='http://ggl.com')
+        form_data = dict(type='gdocs', googledocs_url='http://ggl.com')
+        result = create_tasks(task_repo, app.id, **form_data)
         tasks = task_repo.filter_tasks_by(app_id=app.id)
 
         assert len(tasks) == 2, len(tasks)
@@ -76,8 +76,9 @@ class TestImportersPublicFunctions(Test):
         importer_factory.return_value = mock_importer
         app = AppFactory.create()
         TaskFactory.create(app=app, info={'question': 'question'})
+        form_data = dict(type='flickr', album_id='1234')
 
-        result = create_tasks(task_repo, app.id, 'flickr', album_id='1234')
+        result = create_tasks(task_repo, app.id, **form_data)
         tasks = task_repo.filter_tasks_by(app_id=app.id)
 
         assert len(tasks) == 1, len(tasks)
@@ -90,10 +91,10 @@ class TestImportersPublicFunctions(Test):
         mock_importer = Mock()
         mock_importer.count_tasks.return_value = 2
         importer_factory.return_value = mock_importer
+        form_data = dict(type='epicollect', epicollect_project='project',
+                         epicollect_form='form')
 
-        number_of_tasks = count_tasks_to_import('epicollect',
-                                                epicollect_project='project',
-                                                epicollect_form='form')
+        number_of_tasks = count_tasks_to_import(**form_data)
 
         assert number_of_tasks == 2, number_of_tasks
         importer_factory.assert_called_with('epicollect')
