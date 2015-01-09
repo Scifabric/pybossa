@@ -67,7 +67,8 @@ class _BulkTaskImport(object):
                         task_data["info"][headers[idx]] = cell
                 yield task_data
         if data_rows_present is False:
-            raise BulkImportException(gettext('Oops! It looks like the file is empty.'))
+            msg = gettext('Oops! It looks like the file is empty.')
+            raise BulkImportException(msg)
 
     def _get_csv_data_from_request(self, r):
         if r.status_code == 403:
@@ -177,6 +178,6 @@ def count_tasks_to_import(**form_data):
 
 def _create_importer_for(importer_id):
     _importers = {'csv': _BulkTaskCSVImport,
-              'gdocs': _BulkTaskGDImport,
-              'epicollect': _BulkTaskEpiCollectPlusImport}
+                  'gdocs': _BulkTaskGDImport,
+                  'epicollect': _BulkTaskEpiCollectPlusImport}
     return _importers[importer_id]()

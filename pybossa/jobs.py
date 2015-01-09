@@ -41,8 +41,8 @@ def schedule_job(function, scheduler):
         timeout=function['timeout'])
     for sj in scheduled_jobs:
         if (function['name'].__name__ in sj.func_name and
-            sj.args == function['args'] and
-            sj.kwargs == function['kwargs']):
+                sj.args == function['args'] and
+                sj.kwargs == function['kwargs']):
             job.cancel()
             msg = ('WARNING: Job %s(%s, %s) is already scheduled'
                    % (function['name'].__name__, function['args'],
@@ -80,18 +80,19 @@ def get_scheduled_jobs(): # pragma: no cover
     # A job is a dict with the following format: dict(name, args, kwargs,
     # timeout)
     jobs = [
-            dict(name=warm_up_stats, args=[], kwargs={},
-                 timeout=(10 * MINUTE), queue='high'),
-            dict(name=warn_old_project_owners, args=[], kwargs={},
-                 timeout=(10 * MINUTE), queue='low'),
-            dict(name=warm_cache, args=[], kwargs={},
-                 timeout=(10 * MINUTE), queue='super')]
+        dict(name=warm_up_stats, args=[], kwargs={},
+             timeout=(10 * MINUTE), queue='high'),
+        dict(name=warn_old_project_owners, args=[], kwargs={},
+             timeout=(10 * MINUTE), queue='low'),
+        dict(name=warm_cache, args=[], kwargs={},
+             timeout=(10 * MINUTE), queue='super')]
     # Create ZIPs for all projects
     zip_jobs = get_export_task_jobs()
     # Based on type of user
     project_jobs = get_project_jobs()
     autoimport_jobs = get_autoimport_jobs()
     return zip_jobs + jobs + project_jobs + autoimport_jobs
+
 
 def get_export_task_jobs():
     """Export tasks to zip"""
@@ -106,11 +107,12 @@ def get_export_task_jobs():
         queue = 'low'
         if checkuser.pro:
             queue = 'high'
-        jobs.append(dict(name = project_export,
-                         args = [app_x.id], kwargs={},
-                         timeout = (10 * MINUTE),
+        jobs.append(dict(name=project_export,
+                         args=[app_x.id], kwargs={},
+                         timeout=(10 * MINUTE),
                          queue=queue))
     return jobs
+
 
 def project_export(id):
     from pybossa.core import project_repo, json_exporter, csv_exporter
@@ -120,6 +122,7 @@ def project_export(id):
         json_exporter.pregenerate_zip_files(app)
         csv_exporter.pregenerate_zip_files(app)
 
+
 def get_project_jobs():
     """Return a list of jobs based on user type."""
     from pybossa.cache import apps as cached_apps
@@ -127,6 +130,7 @@ def get_project_jobs():
                             get_app_stats,
                             timeout=(10 * MINUTE),
                             queue='super')
+
 
 def create_dict_jobs(data, function, timeout=(10 * MINUTE), queue='low'):
     jobs = []
@@ -137,6 +141,7 @@ def create_dict_jobs(data, function, timeout=(10 * MINUTE), queue='low'):
                          queue=queue))
     return jobs
 
+
 def get_autoimport_jobs(queue='low'):
     from pybossa.core import project_repo
     import pybossa.cache.apps as cached_apps
@@ -145,10 +150,10 @@ def get_autoimport_jobs(queue='low'):
     for project_dict in pro_user_projects:
         project = project_repo.get(project_dict['id'])
         if project.has_autoimporter():
-            jobs.append(dict(name = import_tasks,
-                             args = [project.id],
+            jobs.append(dict(name=import_tasks,
+                             args=[project.id],
                              kwargs=project.get_autoimporter(),
-                             timeout = (10 * MINUTE),
+                             timeout=(10 * MINUTE),
                              queue=queue))
     return jobs
 
@@ -192,7 +197,7 @@ def warm_up_stats(): # pragma: no cover
 
 
 @with_cache_disabled
-def warm_cache(): # pragma: no cover
+def warm_cache():  # pragma: no cover
     """Background job to warm cache."""
     from pybossa.core import create_app
     app = create_app(run_as_server=False)
@@ -315,7 +320,8 @@ def import_tasks(project_id, **form_data):
     msg = importers.create_tasks(task_repo, project_id, **form_data)
     msg = msg + ' to your project %s!' % app.name
     subject = 'Tasks Import to your project %s' % app.name
-    body = 'Hello,\n\n' + msg + '\n\nAll the best,\nThe %s team.' % current_app.config.get('BRAND')
+    body = 'Hello,\n\n' + msg + '\n\nAll the best,\nThe %s team.'\
+        % current_app.config.get('BRAND')
     mail_dict = dict(recipients=[app.owner.email_addr],
                      subject=subject, body=body)
     send_mail(mail_dict)

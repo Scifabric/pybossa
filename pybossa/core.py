@@ -452,11 +452,10 @@ def setup_scheduled_jobs(app): #pragma: no cover
             dict(name=schedule_priority_jobs, args=['medium', (12 * HOUR)],
                  kwargs={}, interval=(12 * HOUR), timeout=(10 * MINUTE)),
             dict(name=schedule_priority_jobs, args=['low', (24 * HOUR)],
-                 kwargs={}, interval=(24 * HOUR), timeout=(10 * MINUTE)),]
+                 kwargs={}, interval=(24 * HOUR), timeout=(10 * MINUTE))]
 
     for job in JOBS:
         schedule_job(job, scheduler)
-
 
 
 def setup_newsletter(app):
