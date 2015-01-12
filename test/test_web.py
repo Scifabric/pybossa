@@ -233,6 +233,45 @@ class TestWeb(web.Helper):
         msg = "Email not marked as invalid"
         assert user.valid_email is False, msg
 
+    @with_context
+    @patch('pybossa.view.account.mail_queue', autospec=True)
+    @patch('pybossa.view.account.render_template')
+    @patch('pybossa.view.account.signer')
+    def test_validate_email(self, signer, render, queue):
+        """Test WEB validate email sends the confirmation email
+        if account validation is enabled"""
+        from flask import current_app
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
+        self.register()
+        user = db.session.query(User).get(1)
+        user.valid_email = False
+        db.session.commit()
+        signer.dumps.return_value = ''
+        render.return_value = ''
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+        data = dict(fullname=user.fullname, name=user.name,
+                    email_addr=user.email_addr)
+        # res = self.app.get('/account/johndoe/')
+        # assert "Validate email" in res.data, res.data
+
+        res = self.app.get('/account/confirm-email', follow_redirects=True)
+        signer.dumps.assert_called_with(data, salt='account-validation')
+        render.assert_any_call('/account/email/validate_email.md',
+                                user=data,
+                                confirm_url='http://localhost/account/register/confirmation?key=')
+        assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
+        mail_data = queue.enqueue.call_args[0][1]
+        assert 'subject' in mail_data.keys()
+        assert 'recipients' in mail_data.keys()
+        assert 'body' in mail_data.keys()
+        assert 'html' in mail_data.keys()
+        assert mail_data['recipients'][0] == data['email_addr']
+        user = db.session.query(User).get(1)
+        msg = "Confirmation email flag not updated"
+        assert user.confirmation_email_sent, msg
+        msg = "Email not marked as invalid"
+        assert user.valid_email is False, msg
+
 
     @with_context
     def test_register_post_valid_data_validation_enabled(self):
@@ -287,6 +326,28 @@ class TestWeb(web.Helper):
         res = self.app.get('/account/register/confirmation?key=valid-key')
 
         fake_signer.loads.assert_called_with('valid-key', max_age=3600, salt='account-validation')
+
+
+    @patch('pybossa.view.account.signer')
+    def test_register_confirmation_validates_email(self, fake_signer):
+        """Test WEB validates email"""
+        self.register()
+        user = db.session.query(User).get(1)
+        user.valid_email = False
+        user.confirmation_email_sent = True
+        db.session.commit()
+
+        fake_signer.loads.return_value = dict(fullname=user.fullname,
+                                              name=user.name,
+                                              email_addr=user.email_addr)
+        self.app.get('/account/register/confirmation?key=valid-key')
+
+        user = db.session.query(User).get(1)
+        assert user is not None
+        msg = "Email has not been validated"
+        assert user.valid_email, msg
+        msg = "Confirmation email flag has not been restored"
+        assert user.confirmation_email_sent is False, msg
 
 
     @patch('pybossa.view.account.signer')
