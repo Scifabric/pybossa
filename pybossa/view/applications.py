@@ -58,7 +58,7 @@ blueprint = Blueprint('app', __name__)
 
 auditlogger = AuditLogger(auditlog_repo, caller='web')
 importer_queue = Queue('medium', connection=sentinel.master)
-MAX_NUM_SYNCHR_TASKS_IMPORT = 200
+MAX_NUM_SYNCHRONOUS_TASKS_IMPORT = 200
 HOUR = 60 * 60
 
 def app_title(app, page_name):
@@ -557,7 +557,7 @@ def import_task(short_name):
 
 def _import_tasks(app, **form_data):
     number_of_tasks = importer.count_tasks_to_import(**form_data)
-    if number_of_tasks <= MAX_NUM_SYNCHR_TASKS_IMPORT:
+    if number_of_tasks <= MAX_NUM_SYNCHRONOUS_TASKS_IMPORT:
         msg = importer.create_tasks(task_repo, app.id, **form_data)
         flash(msg)
     else:
