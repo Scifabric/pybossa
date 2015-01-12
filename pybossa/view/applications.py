@@ -32,9 +32,9 @@ from rq import Queue
 
 import pybossa.model as model
 import pybossa.sched as sched
-import pybossa.importers as importers
 
-from pybossa.core import uploader, signer, sentinel, json_exporter, csv_exporter
+from pybossa.core import (uploader, signer, sentinel, json_exporter,
+    csv_exporter, importer)
 from pybossa.model.app import App
 from pybossa.model.task import Task
 from pybossa.util import Pagination, admin_required, get_user_id_or_ip
@@ -49,6 +49,7 @@ from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
 from pybossa.jobs import import_tasks
 from pybossa.forms.applications_view_forms import *
+from pybossa.importers import BulkImportException
 
 from pybossa.core import project_repo, user_repo, task_repo, blog_repo, auditlog_repo
 from pybossa.auditlogger import AuditLogger
@@ -544,10 +545,11 @@ def import_task(short_name):
 
     try:
         return _import_tasks(app, **form.get_import_data())
-    except importers.BulkImportException as err_msg:
+    except BulkImportException as err_msg:
         flash(err_msg, 'error')
     except Exception as inst:  # pragma: no cover
         current_app.logger.error(inst)
+        print inst
         msg = 'Oops! Looks like there was an error!'
         flash(gettext(msg), 'error')
     return render_template('/applications/importers/%s.html' % template,
@@ -555,9 +557,9 @@ def import_task(short_name):
 
 
 def _import_tasks(app, **form_data):
-    number_of_tasks = importers.count_tasks_to_import(**form_data)
+    number_of_tasks = importer.count_tasks_to_import(**form_data)
     if number_of_tasks <= MAX_NUM_SYNCHR_TASKS_IMPORT:
-        msg = importers.create_tasks(task_repo, app.id, **form_data)
+        msg = importer.create_tasks(task_repo, app.id, **form_data)
         flash(msg)
     else:
         importer_queue.enqueue(import_tasks, app.id, **form_data)

@@ -21,13 +21,6 @@ import json
 import requests
 from flask.ext.babel import gettext
 from pybossa.util import unicode_csv_reader
-from pybossa.model.task import Task
-from pybossa.cache import apps as cached_apps
-try:
-    from settings_local import FLICKR_API_KEY
-except Exception:
-    FLICKR_API_KEY = None
-
 
 
 class BulkImportException(Exception):
@@ -140,7 +133,9 @@ class _BulkTaskEpiCollectPlusImport(_BulkTaskImport):
 
 class _BulkTaskFlickrImport(_BulkTaskImport):
     importer_id = "flickr"
-    api_key = FLICKR_API_KEY
+
+    def __init__(self, api_key):
+        self.api_key = api_key
 
     def tasks(self, **form_data):
         album_info = self._get_album_info(form_data['album_id'])
@@ -179,42 +174,55 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
                          'url_b': url_b, 'url_m': url_m}}
 
 
-def create_tasks(task_repo, project_id, **form_data):
-    """Create tasks from a remote source using an importer object and avoiding
-    the creation of repeated tasks"""
-    importer_id = form_data.get('type')
-    empty = True
-    n = 0
-    importer = _create_importer_for(importer_id)
-    for task_data in importer.tasks(**form_data):
-        task = Task(app_id=project_id)
-        [setattr(task, k, v) for k, v in task_data.iteritems()]
-        found = task_repo.get_task_by(app_id=project_id, info=task.info)
-        if found is None:
-            task_repo.save(task)
-            n += 1
-            empty = False
-    if empty:
-        msg = gettext('It looks like there were no new records to import')
+class Importer(object):
+
+    def __init__(self, app=None):
+        self.app = app
+        self._importers = {'csv': _BulkTaskCSVImport,
+                           'gdocs': _BulkTaskGDImport,
+                           'epicollect': _BulkTaskEpiCollectPlusImport}
+        if app is not None: # pragma: no cover
+            self.init_app(app)
+
+    def init_app(self, app): # pragma: no cover
+        if app.config.get('FLICKR_API_KEY') is not None:
+            self._importers['flickr'] = _BulkTaskFlickrImport
+            self._flickr_api_key = app.config.get('FLICKR_API_KEY')
+
+    def create_tasks(self, task_repo, project_id, **form_data):
+        from pybossa.cache import apps as cached_apps
+        from pybossa.model.task import Task
+        """Create tasks from a remote source using an importer object and
+        avoiding the creation of repeated tasks"""
+        importer_id = form_data.get('type')
+        empty = True
+        n = 0
+        importer = self._create_importer_for(importer_id)
+        for task_data in importer.tasks(**form_data):
+            task = Task(app_id=project_id)
+            [setattr(task, k, v) for k, v in task_data.iteritems()]
+            found = task_repo.get_task_by(app_id=project_id, info=task.info)
+            if found is None:
+                task_repo.save(task)
+                n += 1
+                empty = False
+        if empty:
+            msg = gettext('It looks like there were no new records to import')
+            return msg
+        msg = str(n) + " " + gettext('new tasks were imported successfully')
+        if n == 1:
+            msg = str(n) + " " + gettext('new task was imported successfully')
+        cached_apps.delete_n_tasks(project_id)
+        cached_apps.delete_n_task_runs(project_id)
+        cached_apps.delete_overall_progress(project_id)
+        cached_apps.delete_last_activity(project_id)
         return msg
-    msg = str(n) + " " + gettext('new tasks were imported successfully')
-    if n == 1:
-        msg = str(n) + " " + gettext('new task was imported successfully')
-    cached_apps.delete_n_tasks(project_id)
-    cached_apps.delete_n_task_runs(project_id)
-    cached_apps.delete_overall_progress(project_id)
-    cached_apps.delete_last_activity(project_id)
-    return msg
 
+    def count_tasks_to_import(self, **form_data):
+        importer_id = form_data.get('type')
+        return self._create_importer_for(importer_id).count_tasks(**form_data)
 
-def count_tasks_to_import(**form_data):
-    importer_id = form_data.get('type')
-    return _create_importer_for(importer_id).count_tasks(**form_data)
-
-
-def _create_importer_for(importer_id):
-    _importers = {'csv': _BulkTaskCSVImport,
-                  'gdocs': _BulkTaskGDImport,
-                  'epicollect': _BulkTaskEpiCollectPlusImport,
-                  'flickr': _BulkTaskFlickrImport}
-    return _importers[importer_id]()
+    def _create_importer_for(self, importer_id):
+        if importer_id == 'flickr':
+            return self._importers[importer_id](self._flickr_api_key)
+        return self._importers[importer_id]()
