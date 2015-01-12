@@ -98,6 +98,19 @@ class TestImporterPublicMethods(Test):
         importer_factory.assert_called_with('epicollect')
 
 
+    def test_get_all_importer_names_returns_default_importer_names(self, create):
+        importers = self.importer.get_all_importer_names()
+        expected_importers = ['csv', 'gdocs', 'epicollect']
+
+        assert set(importers) == set(expected_importers)
+
+
+    def test_get_all_importers_returns_configured_importers(self, create):
+        importer = Importer(self.flask_app)
+
+        assert 'flickr' in importer.get_all_importer_names()
+
+
 
 @patch('pybossa.importers.requests')
 class Test_BulkTaskFlickrImport(object):
