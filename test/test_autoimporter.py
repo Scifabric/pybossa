@@ -311,6 +311,18 @@ class TestAutoimporterBehaviour(web.Helper):
         finally:
             importer.init_app(self.flask_app)
 
+    @patch('pybossa.core.importer.get_all_importer_names')
+    def test_autoimporter_doesnt_show_unavailable_importers_v2(self, names):
+        names.return_value = ['csv', 'gdocs', 'epicollect']
+        self.register()
+        owner = db.session.query(User).first()
+        app = AppFactory.create(owner=owner)
+        url = "/app/%s/tasks/autoimporter" % app.short_name
+
+        res = self.app.get(url, follow_redirects=True)
+
+        assert 'Flickr' not in res.data
+
 
     def test_autoimporter_with_specific_variant_argument(self):
         """Test task autoimporter with specific autoimporter variant argument
