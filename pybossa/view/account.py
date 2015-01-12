@@ -172,6 +172,15 @@ def signout():
     return redirect(url_for('home.home'))
 
 
+def get_email_confirmation_url(form):
+    """Return account and confirmation url for a given user email."""
+    account = dict(fullname=form.fullname.data, name=form.name.data,
+                   email_addr=form.email_addr.data, password=form.password.data)
+    key = signer.dumps(account, salt='account-validation')
+    confirm_url = url_for('.confirm_account', key=key, _external=True)
+    return (account, confirm_url)
+
+
 @blueprint.route('/register', methods=['GET', 'POST'])
 def register():
     """
@@ -182,10 +191,7 @@ def register():
     """
     form = RegisterForm(request.form)
     if request.method == 'POST' and form.validate():
-        account = dict(fullname=form.fullname.data, name=form.name.data,
-                       email_addr=form.email_addr.data, password=form.password.data)
-        key = signer.dumps(account, salt='account-validation')
-        confirm_url = url_for('.confirm_account', key=key, _external=True)
+        account, confirm_url = get_email_confirmation_url(form)
         if current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED'):
             return redirect(confirm_url)
         msg = dict(subject='Welcome to %s!' % current_app.config.get('BRAND'),
@@ -193,7 +199,7 @@ def register():
                    body=render_template('/account/email/validate_account.md',
                                        user=account, confirm_url=confirm_url))
         msg['html'] = markdown(msg['body'])
-        send_mail_job = mail_queue.enqueue(send_mail, msg)
+        mail_queue.enqueue(send_mail, msg)
         return render_template('account/account_validation.html')
     if request.method == 'POST' and not form.validate():
         flash(gettext('Please correct the errors'), 'error')
@@ -437,7 +443,8 @@ def update_profile(name):
                 if (user.email_addr != update_form.email_addr.data and
                         acc_conf_dis is False):
                     user.validate_email = False
-                    subject = ('You have changed your email in %s!' \
+                    account, confirm_url = get_email_confirmation_url(form)
+                    subject = ('You have updated your email in %s! Verify it' \
                                % current_app.config.get('BRAND'))
                     msg = dict(subject=subject,
                                recipients=[update_form.email_addr.data],
@@ -445,7 +452,7 @@ def update_profile(name):
                                    '/account/email/validate_account.md',
                                    user=account, confirm_url=confirm_url))
                     msg['html'] = markdown(msg['body'])
-                    send_mail_job = mail_queue.enqueue(send_mail, msg)
+                    mail_queue.enqueue(send_mail, msg)
 
                 user.email_addr = update_form.email_addr.data
                 user.privacy_mode = update_form.privacy_mode.data
