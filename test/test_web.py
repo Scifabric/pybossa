@@ -217,7 +217,7 @@ class TestWeb(web.Helper):
                     email_addr="new@mail.com")
 
         signer.dumps.assert_called_with(data, salt='account-validation')
-        render.assert_any_call('/account/email/validate_account.md',
+        render.assert_any_call('/account/email/validate_email.md',
                                 user=data,
                                 confirm_url='http://localhost/account/register/confirmation?key=')
         assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
