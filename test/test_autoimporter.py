@@ -21,6 +21,7 @@ from pybossa.model.app import App
 from pybossa.model.user import User
 from pybossa.jobs import import_tasks
 from factories import AppFactory
+from mock import patch
 
 class TestAutoimporterAccessAndResponses(web.Helper):
 
