@@ -200,6 +200,36 @@ class TestWeb(web.Helper):
 
 
     @with_context
+    @patch('pybossa.view.account.mail_queue', autospec=True)
+    @patch('pybossa.view.account.render_template')
+    @patch('pybossa.view.account.signer')
+    def test_update_email_validates_email(self, signer, render, queue):
+        """Test WEB update user email creates and sends the confirmation email
+        if account validation is enabled"""
+        from flask import current_app
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = False
+        self.register()
+        signer.dumps.return_value = ''
+        render.return_value = ''
+        self.update_profile(email_addr="new@mail.com")
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
+        data = dict(fullname="John Doe", name="johndoe",
+                    email_addr="new@mail.com")
+
+        signer.dumps.assert_called_with(data, salt='account-validation')
+        render.assert_any_call('/account/email/validate_account.md',
+                                user=data,
+                                confirm_url='http://localhost/account/register/confirmation?key=')
+        assert send_mail == queue.enqueue.call_args[0][0], "send_mail not called"
+        mail_data = queue.enqueue.call_args[0][1]
+        assert 'subject' in mail_data.keys()
+        assert 'recipients' in mail_data.keys()
+        assert 'body' in mail_data.keys()
+        assert 'html' in mail_data.keys()
+        assert mail_data['recipients'][0] == data['email_addr']
+
+
+    @with_context
     def test_register_post_valid_data_validation_enabled(self):
         """Test WEB register post with valid form data and account validation
         enabled"""
