@@ -227,6 +227,11 @@ class TestWeb(web.Helper):
         assert 'body' in mail_data.keys()
         assert 'html' in mail_data.keys()
         assert mail_data['recipients'][0] == data['email_addr']
+        user = db.session.query(User).get(1)
+        msg = "Confirmation email flag not updated"
+        assert user.confirmation_email_sent, msg
+        msg = "Email not marked as invalid"
+        assert user.valid_email is False, msg
 
 
     @with_context
