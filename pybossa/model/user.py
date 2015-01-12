@@ -59,6 +59,7 @@ class User(db.Model, DomainObject, UserMixin):
     ckan_api = Column(String, unique=True)
     newsletter_prompted = Column(Boolean, default=False)
     valid_email = Column(Boolean, default=False)
+    confirmation_email_sent = Column(Boolean, default=False)
     info = Column(JSONEncodedDict, default=dict)
 
     ## Relationships
