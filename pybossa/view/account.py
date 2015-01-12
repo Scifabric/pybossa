@@ -172,19 +172,36 @@ def signout():
     return redirect(url_for('home.home'))
 
 
-def get_email_confirmation_url(form):
-    """Return account and confirmation url for a given user email."""
-    try:
-        account = dict(fullname=form.fullname.data, name=form.name.data,
-                       email_addr=form.email_addr.data,
-                       password=form.password.data)
-    except AttributeError:
-        account = dict(fullname=form.fullname.data, name=form.name.data,
-                       email_addr=form.email_addr.data)
-
+def get_email_confirmation_url(account):
+    """Return confirmation url for a given user email."""
     key = signer.dumps(account, salt='account-validation')
     confirm_url = url_for('.confirm_account', key=key, _external=True)
-    return (account, confirm_url)
+    return confirm_url
+
+@blueprint.route('/confirm-email')
+@login_required
+def confirm_email():
+    """Send email to confirm user email."""
+    if current_user.valid_email is False:
+        user = user_repo.get(current_user.id)
+        account = dict(fullname=current_user.fullname, name=current_user.name,
+                       email_addr=current_user.email_addr)
+        confirm_url = get_email_confirmation_url(account)
+        subject = ('Verify your email in %s' \
+                   % current_app.config.get('BRAND'))
+        msg = dict(subject=subject,
+                   recipients=[current_user.email_addr],
+                   body=render_template(
+                       '/account/email/validate_email.md',
+                       user=account, confirm_url=confirm_url))
+        msg['html'] = markdown(msg['body'])
+        mail_queue.enqueue(send_mail, msg)
+        msg = gettext("An e-mail has been sent to \
+                       validate your e-mail address.")
+        flash(msg, 'info')
+        user.confirmation_email_sent = True
+        user_repo.update(user)
+        return redirect(url_for('.profile', name=current_user.name))
 
 
 @blueprint.route('/register', methods=['GET', 'POST'])
@@ -197,7 +214,10 @@ def register():
     """
     form = RegisterForm(request.form)
     if request.method == 'POST' and form.validate():
-        account, confirm_url = get_email_confirmation_url(form)
+        account = dict(fullname=form.fullname.data, name=form.name.data,
+                      email_addr=form.email_addr.data,
+                      password=form.password.data)
+        confirm_url = get_email_confirmation_url(account)
         if current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED'):
             return redirect(confirm_url)
         msg = dict(subject='Welcome to %s!' % current_app.config.get('BRAND'),
@@ -257,14 +277,14 @@ def confirm_account():
     users = user_repo.filter_by(name=userdict['name'])
     if len(users) == 1 and users[0].name == userdict['name']:
         u = users[0]
-        u.validate_email = True
+        u.valid_email = True
         user_repo.update(u)
         flash(gettext('Your email has been validated.'))
         return redirect(url_for('home.home'))
     account = model.user.User(fullname=userdict['fullname'],
                               name=userdict['name'],
                               email_addr=userdict['email_addr'],
-                              validate_email=True)
+                              valid_email=True)
     account.set_password(userdict['password'])
     user_repo.save(account)
     login_user(account, remember=True)
@@ -448,8 +468,11 @@ def update_profile(name):
                 user.name = update_form.name.data
                 if (user.email_addr != update_form.email_addr.data and
                         acc_conf_dis is False):
-                    user.validate_email = False
-                    account, confirm_url = get_email_confirmation_url(update_form)
+                    user.valid_email = False
+                    account = dict(fullname=update_form.fullname.data,
+                                   name=update_form.name.data,
+                                   email_addr=update_form.email_addr.data)
+                    confirm_url = get_email_confirmation_url(account)
                     subject = ('You have updated your email in %s! Verify it' \
                                % current_app.config.get('BRAND'))
                     msg = dict(subject=subject,
@@ -459,7 +482,7 @@ def update_profile(name):
                                    user=account, confirm_url=confirm_url))
                     msg['html'] = markdown(msg['body'])
                     mail_queue.enqueue(send_mail, msg)
-
+                    user.confirmation_email_sent = True
                 user.email_addr = update_form.email_addr.data
                 user.privacy_mode = update_form.privacy_mode.data
                 user.locale = update_form.locale.data
