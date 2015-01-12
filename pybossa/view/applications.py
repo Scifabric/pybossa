@@ -524,11 +524,14 @@ def import_task(short_name):
 
     template = request.args.get('template')
     template_tasks = current_app.config.get('TEMPLATE_TASKS')
+    all_importers = importer.get_all_importer_names()
 
     if template is None and request.method == 'GET':
-        wrap = lambda i: "applications/tasks/gdocs-%s.html" % i
-        task_tmpls = map(wrap, template_tasks)
+        template_wrap = lambda i: "applications/tasks/gdocs-%s.html" % i
+        task_tmpls = map(template_wrap, template_tasks)
         template_args['task_tmpls'] = task_tmpls
+        importer_wrap = lambda i: "applications/tasks/%s.html" % i
+        template_args['available_importers'] = map(importer_wrap, all_importers)
         return render_template('/applications/task_import_options.html',
                                **template_args)
 
@@ -588,12 +591,15 @@ def setup_autoimporter(short_name):
     require.app.update(app)
     if app.has_autoimporter():
         current_autoimporter = app.get_autoimporter()
-        importer = dict(**current_autoimporter)
+        importer_info = dict(**current_autoimporter)
         return render_template('/applications/task_autoimporter.html',
-                                importer=importer, **template_args)
+                                importer=importer_info, **template_args)
 
     template = request.args.get('template')
+    all_importers = importer.get_all_importer_names()
     if template is None and request.method == 'GET':
+        wrap = lambda i: "applications/tasks/%s.html" % i
+        template_args['available_importers'] = map(wrap, all_importers)
         return render_template('applications/task_autoimport_options.html',
                                **template_args)
 

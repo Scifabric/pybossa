@@ -226,3 +226,6 @@ class Importer(object):
         if importer_id == 'flickr':
             return self._importers[importer_id](self._flickr_api_key)
         return self._importers[importer_id]()
+
+    def get_all_importer_names(self):
+        return self._importers.keys()
