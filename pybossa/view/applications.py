@@ -37,7 +37,6 @@ import pybossa.importers as importers
 from pybossa.core import uploader, signer, sentinel, json_exporter, csv_exporter
 from pybossa.model.app import App
 from pybossa.model.task import Task
-from pybossa.model.auditlog import Auditlog
 from pybossa.util import Pagination, admin_required, get_user_id_or_ip
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
@@ -48,17 +47,18 @@ from pybossa.ckan import Ckan
 from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
-from pybossa.jobs import import_tasks as background_import
+from pybossa.jobs import import_tasks
 from pybossa.forms.applications_view_forms import *
 
-from pybossa.core import project_repo, user_repo, task_repo, blog_repo, \
-    auditlog_repo
-
+from pybossa.core import project_repo, user_repo, task_repo, blog_repo, auditlog_repo
+from pybossa.auditlogger import AuditLogger
 
 blueprint = Blueprint('app', __name__)
 
-importer_queue = Queue('importer', connection=sentinel.master)
+auditlogger = AuditLogger(auditlog_repo, caller='web')
+importer_queue = Queue('medium', connection=sentinel.master)
 MAX_NUM_SYNCHR_TASKS_IMPORT = 200
+HOUR = 60 * 60
 
 def app_title(app, page_name):
     if not app:  # pragma: no cover
@@ -233,7 +233,7 @@ def new():
           gettext('for adding tasks, a thumbnail, using PyBossa.JS, etc.'),
           'info')
     # Log it
-    project_repo.add_log_entry(app, 'create', 'web')
+    auditlogger.add_log_entry(app, current_user, 'create')
 
     return redirect(url_for('.update', short_name=app.short_name))
 
@@ -249,30 +249,20 @@ def task_presenter_editor(short_name):
     require.app.read(app)
     require.app.update(app)
 
-    old_value = app.info.get('task_presenter')
-
     form = TaskPresenterForm(request.form)
     form.id.data = app.id
     if request.method == 'POST' and form.validate():
         db_app = project_repo.get(app.id)
-        db_app.info['task_presenter'] = form.editor.data
+        old_info = dict(db_app.info)
+        assert db_app.info == old_info
+        old_info['task_presenter'] = form.editor.data
+        db_app.info = old_info
+        # Log it
+        auditlogger.add_log_entry(db_app, current_user, 'update')
         project_repo.update(db_app)
         cached_apps.delete_app(app.short_name)
         msg_1 = gettext('Task presenter added!')
         flash('<i class="icon-ok"></i> ' + msg_1, 'success')
-        # Log it
-        msg = ("User %s updated task presenter" % current_user.name)
-        log = Auditlog(
-            app_id=db_app.id,
-            app_short_name=db_app.short_name,
-            user_id=current_user.id,
-            user_name=current_user.name,
-            action='update',
-            caller='web',
-            attribute='task_presenter',
-            old_value=old_value,
-            new_value=form.editor.data)
-        auditlog_repo.save(log)
         return redirect(url_for('.tasks', short_name=app.short_name))
 
     # It does not have a validation
@@ -320,18 +310,18 @@ def task_presenter_editor(short_name):
                       the <strong>preview section</strong>. Click in the \
                       preview button!'
         flash(gettext(msg), 'info')
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     return render_template('applications/task_presenter_editor.html',
                            title=title,
                            form=form,
-                           app=app,
+                           app=dict_app,
                            owner=owner,
                            overall_progress=overall_progress,
                            n_tasks=n_tasks,
                            n_task_runs=n_task_runs,
                            last_activity=last_activity,
-                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                           n_volunteers=cached_apps.n_volunteers(app.get('id')),
+                           n_completed_tasks=cached_apps.n_completed_tasks(app.id),
+                           n_volunteers=cached_apps.n_volunteers(app.id),
                            errors=errors)
 
 
@@ -354,7 +344,7 @@ def delete(short_name):
     # Clean cache
     cached_apps.delete_app(app.short_name)
     cached_apps.clean(app.id)
-    project_repo.add_log_entry(app, 'delete', 'web')
+    auditlogger.add_log_entry(app, current_user, 'delete')
     project_repo.delete(app)
     flash(gettext('Project deleted!'), 'success')
     return redirect(url_for('account.profile', name=current_user.name))
@@ -386,7 +376,7 @@ def update(short_name):
             new_application.category_id=form.category_id.data
 
         new_application.set_password(form.password.data)
-        project_repo.add_log_entry(new_application, 'update', 'web')
+        auditlogger.add_log_entry(new_application, current_user, 'update')
         project_repo.update(new_application)
         cached_apps.delete_app(short_name)
         cached_apps.reset()
@@ -510,20 +500,6 @@ def settings(short_name):
                            title=title)
 
 
-def compute_importer_variant_pairs(variants):
-    """Return a list of pairs of importer variants. The pair-wise enumeration
-    is due to UI design.
-    """
-    if len(variants) % 2: # pragma: no cover
-        variants.append("empty")
-    prefix = "applications/tasks/"
-
-    importer_variants = map(lambda i: "%s%s.html" % (prefix, i), variants)
-    return [
-        (importer_variants[i * 2], importer_variants[i * 2 + 1])
-        for i in xrange(0, int(math.ceil(len(variants) / 2.0)))]
-
-
 @blueprint.route('/<short_name>/tasks/import', methods=['GET', 'POST'])
 @login_required
 def import_task(short_name):
@@ -540,53 +516,126 @@ def import_task(short_name):
                          n_tasks=n_tasks,
                          overall_progress=overall_progress,
                          n_volunteers=n_volunteers,
-                         n_completed_tasks=n_completed_tasks)
+                         n_completed_tasks=n_completed_tasks,
+                         target='app.import_task')
     require.app.read(app)
     require.app.update(app)
 
-    def render_forms():
-        tmpl = '/applications/importers/%s.html' % template
-        return render_template(tmpl, **template_args)
-
-    variants = importers.variants()
-    template_args["importer_variants"] = compute_importer_variant_pairs(variants)
     template = request.args.get('template')
+    template_tasks = current_app.config.get('TEMPLATE_TASKS')
 
     if template is None and request.method == 'GET':
-        return render_template('/applications/import_options.html',
+        wrap = lambda i: "applications/tasks/gdocs-%s.html" % i
+        task_tmpls = map(wrap, template_tasks)
+        template_args['task_tmpls'] = task_tmpls
+        return render_template('/applications/task_import_options.html',
                                **template_args)
 
     template = template if request.method == 'GET' else request.form['form_name']
-    importer = importers.create_importer_for(template)
     form = GenericBulkTaskImportForm()(template, request.form)
     template_args['form'] = form
     if template == 'gdocs' and request.args.get('mode'):  # pragma: no cover
         mode = request.args.get('mode')
-        template_args["form"].googledocs_url.data = importer.googledocs_urls[mode]
+        form.googledocs_url.data = template_tasks.get(mode)
 
     if not (form and form.validate_on_submit()):  # pragma: no cover
-        return render_forms()
+        return render_template('/applications/importers/%s.html' % template,
+                                **template_args)
 
     try:
-        return _import_tasks(app, importer, form)
+        return _import_tasks(app, **form.get_import_data())
     except importers.BulkImportException, err_msg:
         flash(err_msg, 'error')
     except Exception as inst:  # pragma: no cover
         current_app.logger.error(inst)
         msg = 'Oops! Looks like there was an error with processing that file!'
         flash(gettext(msg), 'error')
-    return render_forms()
+    return render_template('/applications/importers/%s.html' % template,
+                            **template_args)
 
 
-def _import_tasks(app, importer, form):
-    tasks_data = [data for data in importer.tasks(form)]
-    if len(tasks_data) <= MAX_NUM_SYNCHR_TASKS_IMPORT:
-        msg = importers.create_tasks(task_repo, tasks_data, app.id)
+def _import_tasks(app, **form_data):
+    number_of_tasks = importers.count_tasks_to_import(**form_data)
+    if number_of_tasks <= MAX_NUM_SYNCHR_TASKS_IMPORT:
+        msg = importers.create_tasks(task_repo, app.id, **form_data)
         flash(msg)
     else:
-        importer_queue.enqueue(background_import, tasks_data, app.id)
+        importer_queue.enqueue(import_tasks, app.id, **form_data)
         flash(gettext("You're trying to import a large amount of tasks, so please be patient.\
             You will receive an email when the tasks are ready."))
+    return redirect(url_for('.tasks', short_name=app.short_name))
+
+
+@blueprint.route('/<short_name>/tasks/autoimporter', methods=['GET', 'POST'])
+@login_required
+def setup_autoimporter(short_name):
+    if not current_user.pro and not current_user.admin:
+        raise abort(403)
+    (app, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = app_by_shortname(short_name)
+    n_volunteers = cached_apps.n_volunteers(app.id)
+    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
+    dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    template_args = dict(app=dict_app,
+                         owner=owner,
+                         n_tasks=n_tasks,
+                         overall_progress=overall_progress,
+                         n_volunteers=n_volunteers,
+                         n_completed_tasks=n_completed_tasks,
+                         target='app.setup_autoimporter')
+    require.app.read(app)
+    require.app.update(app)
+    if app.has_autoimporter():
+        current_autoimporter = app.get_autoimporter()
+        importer = dict(**current_autoimporter)
+        return render_template('/applications/task_autoimporter.html',
+                                importer=importer, **template_args)
+
+    template = request.args.get('template')
+    if template is None and request.method == 'GET':
+        return render_template('applications/task_autoimport_options.html',
+                               **template_args)
+
+    template = template if request.method == 'GET' else request.form['form_name']
+    form = GenericBulkTaskImportForm()(template, request.form)
+    template_args['form'] = form
+    if not (form and form.validate_on_submit()):  # pragma: no cover
+        return render_template('/applications/importers/%s.html' % template,
+                                **template_args)
+    app.set_autoimporter(form.get_import_data())
+    project_repo.save(app)
+    auditlogger.log_event(app, current_user, 'create', 'autoimporter',
+                          'Nothing', json.dumps(app.get_autoimporter()))
+    cached_apps.delete_app(short_name)
+    flash(gettext("Success! Tasks will be imported daily."))
+    return redirect(url_for('.setup_autoimporter', short_name=app.short_name))
+
+
+@blueprint.route('/<short_name>/tasks/autoimporter/delete', methods=['POST'])
+@login_required
+def delete_autoimporter(short_name):
+    if not current_user.pro and not current_user.admin:
+        raise abort(403)
+    (app, owner, n_tasks, n_task_runs,
+     overall_progress, last_activity) = app_by_shortname(short_name)
+    n_volunteers = cached_apps.n_volunteers(app.id)
+    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
+    dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    template_args = dict(app=dict_app,
+                         owner=owner,
+                         n_tasks=n_tasks,
+                         overall_progress=overall_progress,
+                         n_volunteers=n_volunteers,
+                         n_completed_tasks=n_completed_tasks)
+    require.app.read(app)
+    require.app.update(app)
+    if app.has_autoimporter():
+        autoimporter = app.get_autoimporter()
+        app.delete_autoimporter()
+        project_repo.save(app)
+        auditlogger.log_event(app, current_user, 'delete', 'autoimporter',
+                              json.dumps(autoimporter), 'Nothing')
+        cached_apps.delete_app(short_name)
     return redirect(url_for('.tasks', short_name=app.short_name))
 
 
@@ -602,7 +651,7 @@ def password_required(short_name):
         if passwd_mngr.validates(password, app):
             response = make_response(redirect(request.args.get('next')))
             return passwd_mngr.update_response(response, app, get_user_id_or_ip())
-        flash('Sorry, incorrect password')
+        flash(gettext('Sorry, incorrect password'))
     return render_template('applications/password.html',
                             app=app,
                             form=form,
@@ -612,8 +661,8 @@ def password_required(short_name):
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
-    (app, owner,
-     n_tasks, n_task_runs, overall_progress, last_activity) = app_by_shortname(short_name)
+    (app, owner,n_tasks, n_task_runs,
+     overall_progress, last_activity) = app_by_shortname(short_name)
     task = task_repo.get_task(id=task_id)
     if task is None:
         raise abort(404)
@@ -975,9 +1024,9 @@ def export_to(short_name):
             flash(msg, 'success')
             return respond()
         except requests.exceptions.ConnectionError:
-                msg = "CKAN server seems to be down, try again layer or contact the CKAN admins"
-                current_app.logger.error(msg)
-                flash(msg, 'danger')
+            msg = "CKAN server seems to be down, try again layer or contact the CKAN admins"
+            current_app.logger.error(msg)
+            flash(msg, 'danger')
         except Exception as inst:
             if len(inst.args) == 3:
                 t, msg, status_code = inst.args
@@ -1144,21 +1193,9 @@ def task_n_answers(short_name):
                                owner=owner)
     elif request.method == 'POST' and form.validate():
         task_repo.update_tasks_redundancy(app, form.n_answers.data)
-        msg = ("User %s updated task redundancy to: %s" %
-               (current_user.name, form.n_answers.data))
         # Log it
-        log = Auditlog(
-            app_id=app.id,
-            app_short_name=app.short_name,
-            user_id=current_user.id,
-            user_name=current_user.name,
-            action='update',
-            caller='web',
-            attribute='task.n_answers',
-            old_value=30,
-            new_value=form.n_answers.data)
-        auditlog_repo.save(log)
-
+        auditlogger.log_event(app, current_user, 'update', 'task.n_answers',
+                              'N/A', form.n_answers.data)
         msg = gettext('Redundancy of Tasks updated!')
         flash(msg, 'success')
         return redirect(url_for('.tasks', short_name=app.short_name))
@@ -1208,19 +1245,8 @@ def task_scheduler(short_name):
         cached_apps.delete_app(app.short_name)
         # Log it
         if old_sched != app.info['sched']:
-            msg = ("User %s updated task scheduler from: %s to: %s" %
-                   (current_user.name, old_sched, app.info['sched']))
-            log = Auditlog(
-                app_id=app.id,
-                app_short_name=app.short_name,
-                user_id=current_user.id,
-                user_name=current_user.name,
-                action='update',
-                caller='web',
-                attribute='sched',
-                old_value=old_sched,
-                new_value=app.info['sched'])
-            auditlog_repo.save(log)
+            auditlogger.log_event(app, current_user, 'update', 'sched',
+                                  old_sched, app.info['sched'])
         msg = gettext("Project Task Scheduler updated!")
         flash(msg, 'success')
 
@@ -1259,29 +1285,13 @@ def task_priority(short_name):
                     task_repo.update(t)
 
                     if old_priority != t.priority_0:
-                        msg = ("User %s updated task priority for task ID: %s"
-                               " from: %s to: %s" % (current_user.name,
-                                                    t.id,
-                                                    old_priority,
-                                                    t.priority_0))
                         old_value = json.dumps({'task_id': t.id,
                                                 'task_priority_0': old_priority})
-
                         new_value = json.dumps({'task_id': t.id,
                                                 'task_priority_0': t.priority_0})
-
-
-                        log = Auditlog(
-                            app_id=app.id,
-                            app_short_name=app.short_name,
-                            user_id=current_user.id,
-                            user_name=current_user.name,
-                            action='update',
-                            caller='web',
-                            old_value=old_value,
-                            new_value=new_value,
-                            attribute='task.priority_0')
-                        auditlog_repo.save(log)
+                        auditlogger.log_event(app, current_user, 'update',
+                                              'task.priority_0',
+                                               old_value, new_value)
                 else:  # pragma: no cover
                     flash(gettext(("Ooops, Task.id=%s does not belong to the app" % task_id)), 'danger')
         cached_apps.delete_app(app.short_name)
@@ -1456,7 +1466,7 @@ def auditlog(short_name):
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
 
-    logs = auditlog_repo.filter_by(app_id=app.id)
+    logs = auditlogger.get_project_logs(app.id)
     require.auditlog.read(_app_id=app.id)
     redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
@@ -1469,4 +1479,3 @@ def auditlog(short_name):
                            n_task_runs=n_task_runs,
                            n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
                            n_volunteers=cached_apps.n_volunteers(app.get('id')))
-

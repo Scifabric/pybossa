@@ -43,7 +43,7 @@ class VmcpAPI(APIBase):
     @jsonpify
     @crossdomain(origin='*', headers=cors_headers)
     @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
-    def get(self, id):
+    def get(self, oid=None):
         """Return signed VMCP for CernVM requests."""
         if current_app.config.get('VMCP_KEY') is None:
             message = "The server is not configured properly, contact the admins"

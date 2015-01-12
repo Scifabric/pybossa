@@ -19,16 +19,12 @@
 from flask import current_app
 from sqlalchemy.sql import text
 from pybossa.core import db
-from pybossa.cache import cache, memoize, ONE_DAY
-from pybossa.model.task import Task
-from pybossa.model.task_run import TaskRun
-from pybossa.cache import FIVE_MINUTES, memoize
+from pybossa.cache import memoize, ONE_DAY
 
 import pygeoip
 import operator
-import datetime
 import time
-from datetime import timedelta
+import datetime
 
 
 session = db.slave_session
@@ -99,16 +95,25 @@ def stats_dates(app_id):
     dates_anon = {}
     dates_auth = {}
 
-    total_n_tasks = n_tasks(app_id)
+    n_tasks(app_id)
 
     # Get all completed tasks
     sql = text('''
             WITH answers AS (
-                SELECT TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') AS day, task.id, task.n_answers AS n_answers, COUNT(task_run.id) AS day_answers
-                FROM task_run, task WHERE task_run.app_id=:app_id AND task.id=task_run.task_id and TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') >= NOW() - '2 week':: INTERVAL GROUP BY day, task.id)
-            SELECT to_char(day_of_completion, 'YYYY-MM-DD') AS day, COUNT(task_id) AS completed_tasks FROM (
+             SELECT
+             TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+             AS day, task.id, task.n_answers AS n_answers,
+             COUNT(task_run.id) AS day_answers
+             FROM task_run, task WHERE task_run.app_id=:app_id
+             AND task.id=task_run.task_id AND
+             TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') >= NOW()
+               - '2 week':: INTERVAL GROUP BY day, task.id)
+            SELECT to_char(day_of_completion, 'YYYY-MM-DD') AS day,
+               COUNT(task_id) AS completed_tasks FROM (
                 SELECT MIN(day) AS day_of_completion, task_id FROM (
-                    SELECT ans1.day, ans1.id as task_id, floor(avg(ans1.n_answers)) AS n_answers, sum(ans2.day_answers) AS accum_answers
+                    SELECT ans1.day, ans1.id as task_id,
+                    floor(avg(ans1.n_answers)) AS n_answers,
+                    sum(ans2.day_answers) AS accum_answers
                     FROM answers AS ans1 INNER JOIN answers AS ans2
                     ON ans1.id=ans2.id WHERE ans1.day >= ans2.day
                     GROUP BY ans1.id, ans1.day) AS answers_day_task
@@ -123,7 +128,6 @@ def stats_dates(app_id):
 
     # No completed tasks in the last 15 days
     if len(dates.keys()) == 0:
-        import datetime
         base = datetime.datetime.today()
         for x in range(0, 15):
             tmp_date = base - datetime.timedelta(days=x)
@@ -430,11 +434,10 @@ def get_stats(app_id, geo=False):
     users, anon_users, auth_users = stats_users(app_id)
     dates, dates_anon, dates_auth = stats_dates(app_id)
 
-    total_n_tasks = n_tasks(app_id)
-    total_completed = sum(dates.values())
-    # total_completed = completed_tasks(app_id)
+    n_tasks(app_id)
+    sum(dates.values())
 
-    sorted_dates = sorted(dates.iteritems(), key=operator.itemgetter(0))
+    sorted(dates.iteritems(), key=operator.itemgetter(0))
 
     dates_stats = stats_format_dates(app_id, dates,
                                      dates_anon, dates_auth)

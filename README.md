@@ -17,7 +17,7 @@ crowd-source human problem-solving skills!
 
 # See it in Action
 
-PyBossa powers [CrowdCrafting.org](http://crowdcrafting.org/) and [ForestWatchers.net](http://forestwatchers.net)
+PyBossa powers [Crowdcrafting.org](http://crowdcrafting.org/) and [MicroPast](http://crowdsourced.micropasts.org/) a joint project by British Museum and University College of London.
 
 # Installing and Upgrading
 

@@ -170,6 +170,63 @@ class TestPybossaUtil(object):
                 for item in row:
                     assert item in fake_csv[0], err_msg
 
+
+class TestIsReservedName(object):
+    from flask import Flask
+    from pybossa.core import setup_blueprints, create_app
+    app = create_app(run_as_server=False)
+
+    def test_returns_true_for_reserved_name_for_app_blueprint(self):
+        with self.app.app_context():
+            reserved = util.is_reserved_name('app', 'new')
+            assert reserved is True, reserved
+            reserved = util.is_reserved_name('app', 'category')
+            assert reserved is True, reserved
+            reserved = util.is_reserved_name('app', 'page')
+            assert reserved is True, reserved
+            reserved = util.is_reserved_name('app', 'draft')
+            assert reserved is True, reserved
+            reserved = util.is_reserved_name('app', 'published')
+            assert reserved is True, reserved
+
+
+    def test_returns_false_for_valid_name_for_app_blueprint(self):
+        with self.app.app_context():
+            reserved = util.is_reserved_name('app', 'test_app')
+            assert reserved is False, reserved
+            reserved = util.is_reserved_name('app', 'newApp')
+            assert reserved is False, reserved
+
+
+    def test_returns_true_for_reserved_name_for_account_blueprint(self):
+        with self.app.app_context():
+            reserved = util.is_reserved_name('account', 'register')
+            assert reserved is True, reserved
+            reserved = util.is_reserved_name('account', 'forgot-password')
+            assert reserved is True, reserved
+            reserved = util.is_reserved_name('account', 'profile')
+            assert reserved is True, reserved
+            reserved = util.is_reserved_name('account', 'signin')
+            assert reserved is True, reserved
+            reserved = util.is_reserved_name('account', 'reset-password')
+            assert reserved is True, reserved
+
+
+    def test_returns_false_for_valid_name_for_account_blueprint(self):
+        with self.app.app_context():
+            reserved = util.is_reserved_name('account', 'fulanito')
+            assert reserved is False, reserved
+            reserved = util.is_reserved_name('acount', 'profileFulanito')
+            assert reserved is False, reserved
+
+
+    def test_returns_false_for_empty_name_string(self):
+        with self.app.app_context():
+            reserved = util.is_reserved_name('account', '')
+            assert reserved is False, reserved
+
+
+
 class TestWithCacheDisabledDecorator(object):
 
     def setUp(self):

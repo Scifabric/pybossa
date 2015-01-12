@@ -356,3 +356,13 @@ def with_cache_disabled(f):
             os.environ['PYBOSSA_REDIS_CACHE_DISABLED'] = env_cache_disabled
         return return_value
     return wrapper
+
+
+def is_reserved_name(blueprint, name):
+    """Checks if a name has already been registered inside a blueprint URL"""
+    path = ''.join(['/', blueprint])
+    app_urls = [r.rule for r in current_app.url_map.iter_rules()
+                if r.rule.startswith(path)]
+    reserved_names = [url.split('/')[2] for url in app_urls
+                      if url.split('/')[2] != '']
+    return name in reserved_names

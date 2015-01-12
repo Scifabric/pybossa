@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
+from flask import current_app
 from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
 from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
@@ -39,7 +40,8 @@ class AppForm(Form):
                             pb_validator.NotAllowedChars(),
                             pb_validator.Unique(project_repo.get_by, 'short_name',
                                 message=lazy_gettext(
-                                    "Short Name is already taken."))])
+                                    "Short Name is already taken.")),
+                            pb_validator.ReservedName('app', current_app)])
     long_description = TextAreaField(lazy_gettext('Long Description'),
                                      [validators.Required()])
 
@@ -122,6 +124,9 @@ class _BulkTaskCSVImportForm(Form):
                         [validators.Required(message=msg_required),
                          validators.URL(message=msg_url)])
 
+    def get_import_data(self):
+        return {'type': 'csv', 'csv_url': self.csv_url.data}
+
 
 class _BulkTaskGDImportForm(Form):
     form_name =TextField(label=None, widget=HiddenInput(), default='gdocs')
@@ -131,6 +136,9 @@ class _BulkTaskGDImportForm(Form):
     googledocs_url = TextField(lazy_gettext('URL'),
                                [validators.Required(message=msg_required),
                                    validators.URL(message=msg_url)])
+
+    def get_import_data(self):
+        return {'type': 'gdocs', 'googledocs_url': self.googledocs_url.data}
 
 
 class _BulkTaskEpiCollectPlusImportForm(Form):
@@ -143,6 +151,11 @@ class _BulkTaskEpiCollectPlusImportForm(Form):
                                    [validators.Required(message=msg_required)])
     epicollect_form = TextField(lazy_gettext('Form name'),
                                 [validators.Required(message=msg_required)])
+
+    def get_import_data(self):
+        return {'type': 'epicollect',
+                'epicollect_project': self.epicollect_project.data,
+                'epicollect_form': self.epicollect_form.data}
 
 
 class GenericBulkTaskImportForm(object):
@@ -187,7 +200,8 @@ class RegisterForm(Form):
     name = TextField(lazy_gettext('User name'),
                          [validators.Length(min=3, max=35, message=err_msg),
                           pb_validator.NotAllowedChars(),
-                          pb_validator.Unique(user_repo.get_by, 'name', err_msg_2)])
+                          pb_validator.Unique(user_repo.get_by, 'name', err_msg_2),
+                          pb_validator.ReservedName('account', current_app)])
 
     err_msg = lazy_gettext("Email must be between 3 and 35 characters long")
     err_msg_2 = lazy_gettext("Email is already taken")
@@ -222,7 +236,8 @@ class UpdateProfileForm(Form):
     name = TextField(lazy_gettext('Username'),
                      [validators.Length(min=3, max=35, message=err_msg),
                       pb_validator.NotAllowedChars(),
-                      pb_validator.Unique(user_repo.get_by, 'name', err_msg_2)])
+                      pb_validator.Unique(user_repo.get_by, 'name', err_msg_2),
+                      pb_validator.ReservedName('account', current_app)])
 
     err_msg = lazy_gettext("Email must be between 3 and 35 characters long")
     err_msg_2 = lazy_gettext("Email is already taken")

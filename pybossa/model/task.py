@@ -59,7 +59,7 @@ class Task(db.Model, DomainObject):
 
     def pct_status(self):
         """Returns the percentage of Tasks that are completed"""
-        if self.n_answers != 0 and self.n_answers != None:
+        if self.n_answers != 0 and self.n_answers is not None:
             return float(len(self.task_runs)) / self.n_answers
         else:  # pragma: no cover
             return float(0)

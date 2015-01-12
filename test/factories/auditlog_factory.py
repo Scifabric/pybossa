@@ -20,8 +20,6 @@ from pybossa.model.auditlog import Auditlog
 from . import BaseFactory, factory, auditlog_repo
 
 
-app = factory.SubFactory('factories.AppFactory')
-
 class AuditlogFactory(BaseFactory):
     class Meta:
         model = Auditlog
@@ -33,6 +31,10 @@ class AuditlogFactory(BaseFactory):
         return log
 
     id = factory.Sequence(lambda n: n)
+    app_id = 1
+    app_short_name = 'app'
+    user_id = 1
+    user_name = 'example user'
     action = 'update'
     caller = 'web'
     attribute = 'attribute'
