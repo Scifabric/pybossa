@@ -443,7 +443,7 @@ def update_profile(name):
                 if (user.email_addr != update_form.email_addr.data and
                         acc_conf_dis is False):
                     user.validate_email = False
-                    account, confirm_url = get_email_confirmation_url(form)
+                    account, confirm_url = get_email_confirmation_url(update_form)
                     subject = ('You have updated your email in %s! Verify it' \
                                % current_app.config.get('BRAND'))
                     msg = dict(subject=subject,
