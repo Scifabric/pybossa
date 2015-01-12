@@ -2658,6 +2658,25 @@ class TestWeb(web.Helper):
 
         assert res.status_code == 404, res.status_code
 
+    def test_get_importer_doesnt_show_unavailable_importers(self):
+        from pybossa.core import importer
+        try:
+            del importer._importers['flickr']
+            del importer._flickr_api_key
+
+            self.register()
+            owner = db.session.query(User).first()
+            app = AppFactory.create(owner=owner)
+            url = "/app/%s/tasks/import" % app.short_name
+
+            res = self.app.get(url, follow_redirects=True)
+
+            assert 'Flickr' not in res.data
+        except Exception:
+            raise
+        finally:
+            importer.init_app(self.flask_app)
+
     @patch('pybossa.view.applications.redirect', wraps=redirect)
     @patch('pybossa.importers.requests.get')
     def test_import_tasks_redirects_on_success(self, request, redirect):
