@@ -455,7 +455,7 @@ def update_profile(name):
                     msg = dict(subject=subject,
                                recipients=[update_form.email_addr.data],
                                body=render_template(
-                                   '/account/email/validate_account.md',
+                                   '/account/email/validate_email.md',
                                    user=account, confirm_url=confirm_url))
                     msg['html'] = markdown(msg['body'])
                     mail_queue.enqueue(send_mail, msg)
