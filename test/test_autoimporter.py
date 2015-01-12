@@ -292,6 +292,26 @@ class TestAutoimporterBehaviour(web.Helper):
         assert 'Flickr' in res.data
 
 
+    def test_autoimporter_doesnt_show_unavailable_importers(self):
+        from pybossa.core import importer
+        try:
+            del importer._importers['flickr']
+            del importer._flickr_api_key
+
+            self.register()
+            owner = db.session.query(User).first()
+            app = AppFactory.create(owner=owner)
+            url = "/app/%s/tasks/autoimporter" % app.short_name
+
+            res = self.app.get(url, follow_redirects=True)
+
+            assert 'Flickr' not in res.data
+        except Exception:
+            raise
+        finally:
+            importer.init_app(self.flask_app)
+
+
     def test_autoimporter_with_specific_variant_argument(self):
         """Test task autoimporter with specific autoimporter variant argument
         shows the form for it, for each of the variants"""
