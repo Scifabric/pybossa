@@ -2844,6 +2844,10 @@ class TestWeb(web.Helper):
             u'title': u'Title'}
         assert tasks[0].info == expected_info, tasks[0].info
 
+    def test_invalid_importer_returns_404(self):
+        app = AppFactory.create()
+        res = self.app.get('/app/%s/tasks/import' % app.short_name)
+
     @with_context
     def test_55_facebook_account_warning(self):
         """Test WEB Facebook OAuth user gets a hint to sign in"""

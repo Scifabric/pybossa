@@ -331,6 +331,12 @@ class TestAutoimporterBehaviour(web.Helper):
         assert "From a Flickr set" in data
         assert 'action="/app/%E2%9C%93app1/tasks/autoimporter"' in data
 
+        # Invalid
+        url = "/app/%s/tasks/autoimporter?template=invalid" % app.short_name
+        res = self.app.get(url, follow_redirects=True)
+
+        assert res.status_code == 404, res.status_code
+
 
     def test_autoimporter_shows_current_autoimporter_if_exists(self):
         """Test task autoimporter shows the current autoimporter if exists"""

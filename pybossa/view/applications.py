@@ -525,6 +525,8 @@ def import_task(short_name):
     template = request.args.get('template')
     template_tasks = current_app.config.get('TEMPLATE_TASKS')
     all_importers = importer.get_all_importer_names()
+    if template is not None and template not in all_importers:
+        raise abort(404)
 
     if template is None and request.method == 'GET':
         template_wrap = lambda i: "applications/tasks/gdocs-%s.html" % i
@@ -597,6 +599,9 @@ def setup_autoimporter(short_name):
 
     template = request.args.get('template')
     all_importers = importer.get_all_importer_names()
+    if template is not None and template not in all_importers:
+        raise abort(404)
+
     if template is None and request.method == 'GET':
         wrap = lambda i: "applications/tasks/%s.html" % i
         template_args['available_importers'] = map(wrap, all_importers)
