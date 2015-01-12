@@ -201,7 +201,7 @@ def confirm_email():
         flash(msg, 'info')
         user.confirmation_email_sent = True
         user_repo.update(user)
-        return redirect(url_for('.profile', name=current_user.name))
+    return redirect(url_for('.profile', name=current_user.name))
 
 
 @blueprint.route('/register', methods=['GET', 'POST'])
@@ -278,6 +278,7 @@ def confirm_account():
     if len(users) == 1 and users[0].name == userdict['name']:
         u = users[0]
         u.valid_email = True
+        u.confirmation_email_sent = False
         user_repo.update(u)
         flash(gettext('Your email has been validated.'))
         return redirect(url_for('home.home'))
