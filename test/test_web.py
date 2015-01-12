@@ -2623,7 +2623,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % app.short_name
+        url = '/app/%s/tasks/import' % app.short_name
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
@@ -2640,7 +2640,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % app.short_name
+        url = '/app/%s/tasks/import' % app.short_name
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
@@ -2656,7 +2656,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % app.short_name
+        url = '/app/%s/tasks/import' % app.short_name
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
@@ -2679,7 +2679,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
+        url = '/app/%s/tasks/import' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
@@ -2693,7 +2693,7 @@ class TestWeb(web.Helper):
                                  {'content-type': 'text/plain'})
         Mock.return_value = empty_file
         app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
+        url = '/app/%s/tasks/import' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
@@ -2715,7 +2715,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
+        url = '/app/%s/tasks/import' % (app.short_name)
         res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
                                        'formtype': 'gdocs', 'form_name': 'gdocs'},
                             follow_redirects=True)
@@ -2729,7 +2729,7 @@ class TestWeb(web.Helper):
                                  {'content-type': 'text/plain'})
         Mock.return_value = empty_file
         app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
+        url = '/app/%s/tasks/import' % (app.short_name)
         res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
                                        'formtype': 'gdocs', 'form_name': 'gdocs'},
                             follow_redirects=True)
@@ -2746,7 +2746,7 @@ class TestWeb(web.Helper):
                                  {'content-type': 'text/plain'})
         Mock.return_value = empty_file
         app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
+        url = '/app/%s/tasks/import' % (app.short_name)
         res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
                                        'formtype': 'gdocs', 'form_name': 'gdocs'},
                             follow_redirects=True)
