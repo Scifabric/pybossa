@@ -183,8 +183,9 @@ class TestWeb(web.Helper):
                     email_addr="johndoe@example.com")
         signer.dumps.return_value = ''
         render.return_value = ''
-        self.app.post('/account/register', data=data)
+        res = self.app.post('/account/register', data=data)
         del data['confirm']
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
 
         signer.dumps.assert_called_with(data, salt='account-validation')
         render.assert_any_call('/account/email/validate_account.md',
@@ -211,6 +212,7 @@ class TestWeb(web.Helper):
         signer.dumps.return_value = ''
         render.return_value = ''
         self.update_profile(email_addr="new@mail.com")
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
         data = dict(fullname="John Doe", name="johndoe",
                     email_addr="new@mail.com")
 
@@ -266,6 +268,7 @@ class TestWeb(web.Helper):
         assert user.confirmation_email_sent, msg
         msg = "Email not marked as invalid"
         assert user.valid_email is False, msg
+        current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
 
 
     @with_context
