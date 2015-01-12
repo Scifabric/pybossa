@@ -174,8 +174,14 @@ def signout():
 
 def get_email_confirmation_url(form):
     """Return account and confirmation url for a given user email."""
-    account = dict(fullname=form.fullname.data, name=form.name.data,
-                   email_addr=form.email_addr.data, password=form.password.data)
+    try:
+        account = dict(fullname=form.fullname.data, name=form.name.data,
+                       email_addr=form.email_addr.data,
+                       password=form.password.data)
+    except AttributeError:
+        account = dict(fullname=form.fullname.data, name=form.name.data,
+                       email_addr=form.email_addr.data)
+
     key = signer.dumps(account, salt='account-validation')
     confirm_url = url_for('.confirm_account', key=key, _external=True)
     return (account, confirm_url)
