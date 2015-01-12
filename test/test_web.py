@@ -2631,8 +2631,8 @@ class TestWeb(web.Helper):
         assert "1 new task was imported successfully" in res.data
         redirect.assert_called_with('/app/%s/tasks/' % app.short_name)
 
-    @patch('pybossa.view.applications.importers.count_tasks_to_import')
-    @patch('pybossa.view.applications.importers.create_tasks')
+    @patch('pybossa.view.applications.importer.count_tasks_to_import')
+    @patch('pybossa.view.applications.importer.create_tasks')
     def test_import_few_tasks_is_done_synchronously(self, create, count):
         """Test WEB importing a small amount of tasks is done synchronously"""
         count.return_value = 1
@@ -2648,7 +2648,7 @@ class TestWeb(web.Helper):
         assert "1 new task was imported successfully" in res.data
 
     @patch('pybossa.view.applications.importer_queue', autospec=True)
-    @patch('pybossa.view.applications.importers.count_tasks_to_import')
+    @patch('pybossa.view.applications.importer.count_tasks_to_import')
     def test_import_tasks_as_background_job(self, count_tasks, queue):
         """Test WEB importing a big amount of tasks is done in the background"""
         from pybossa.view.applications import MAX_NUM_SYNCHR_TASKS_IMPORT

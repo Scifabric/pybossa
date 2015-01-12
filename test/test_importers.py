@@ -21,7 +21,7 @@ from mock import patch, Mock
 from nose.tools import assert_raises
 from pybossa.importers import (_BulkTaskFlickrImport, _BulkTaskCSVImport,
     _BulkTaskGDImport, _BulkTaskEpiCollectPlusImport, BulkImportException,
-    create_tasks, count_tasks_to_import)
+    Importer)
 
 from default import Test
 from factories import AppFactory, TaskFactory
@@ -31,9 +31,10 @@ task_repo = TaskRepository(db)
 
 
 
-class TestImportersPublicFunctions(Test):
+@patch.object(Importer, '_create_importer_for')
+class TestImporterPublicMethods(Test):
+    importer = Importer()
 
-    @patch('pybossa.importers._create_importer_for')
     def test_create_tasks_creates_them_correctly(self, importer_factory):
         mock_importer = Mock()
         mock_importer.tasks.return_value = [{'info': {'question': 'question',
@@ -42,7 +43,7 @@ class TestImportersPublicFunctions(Test):
         importer_factory.return_value = mock_importer
         app = AppFactory.create()
         form_data = dict(type='csv', csv_url='http://fakecsv.com')
-        create_tasks(task_repo, app.id, **form_data)
+        self.importer.create_tasks(task_repo, app.id, **form_data)
         task = task_repo.get_task(1)
 
         assert task is not None
@@ -53,7 +54,6 @@ class TestImportersPublicFunctions(Test):
         mock_importer.tasks.assert_called_with(**form_data)
 
 
-    @patch('pybossa.importers._create_importer_for')
     def test_create_tasks_creates_many_tasks(self, importer_factory):
         mock_importer = Mock()
         mock_importer.tasks.return_value = [{'info': {'question': 'question1'}},
@@ -61,7 +61,7 @@ class TestImportersPublicFunctions(Test):
         importer_factory.return_value = mock_importer
         app = AppFactory.create()
         form_data = dict(type='gdocs', googledocs_url='http://ggl.com')
-        result = create_tasks(task_repo, app.id, **form_data)
+        result = self.importer.create_tasks(task_repo, app.id, **form_data)
         tasks = task_repo.filter_tasks_by(app_id=app.id)
 
         assert len(tasks) == 2, len(tasks)
@@ -69,7 +69,6 @@ class TestImportersPublicFunctions(Test):
         importer_factory.assert_called_with('gdocs')
 
 
-    @patch('pybossa.importers._create_importer_for')
     def test_create_tasks_not_creates_duplicated_tasks(self, importer_factory):
         mock_importer = Mock()
         mock_importer.tasks.return_value = [{'info': {'question': 'question'}}]
@@ -78,7 +77,7 @@ class TestImportersPublicFunctions(Test):
         TaskFactory.create(app=app, info={'question': 'question'})
         form_data = dict(type='flickr', album_id='1234')
 
-        result = create_tasks(task_repo, app.id, **form_data)
+        result = self.importer.create_tasks(task_repo, app.id, **form_data)
         tasks = task_repo.filter_tasks_by(app_id=app.id)
 
         assert len(tasks) == 1, len(tasks)
@@ -86,7 +85,6 @@ class TestImportersPublicFunctions(Test):
         importer_factory.assert_called_with('flickr')
 
 
-    @patch('pybossa.importers._create_importer_for')
     def test_count_tasks_to_import_returns_what_expected(self, importer_factory):
         mock_importer = Mock()
         mock_importer.count_tasks.return_value = 2
@@ -94,11 +92,10 @@ class TestImportersPublicFunctions(Test):
         form_data = dict(type='epicollect', epicollect_project='project',
                          epicollect_form='form')
 
-        number_of_tasks = count_tasks_to_import(**form_data)
+        number_of_tasks = self.importer.count_tasks_to_import(**form_data)
 
         assert number_of_tasks == 2, number_of_tasks
         importer_factory.assert_called_with('epicollect')
-
 
 
 
@@ -136,21 +133,17 @@ class Test_BulkTaskFlickrImport(object):
             u'per_page': 500,
             u'total': u'15',
             u'page': 1}}
-    importer = _BulkTaskFlickrImport()
+    importer = _BulkTaskFlickrImport(api_key='fake-key')
 
 
     def test_call_to_flickr_api_endpoint(self, requests):
-        try:
-            from settings_local import FLICKR_API_KEY as api_key
-        except Exception:
-            api_key = None
         fake_response = Mock()
         fake_response.text = '{}'
         requests.get.return_value = fake_response
         self.importer._get_album_info('72157633923521788')
         api_url = 'https://api.flickr.com/services/rest/?\
         method=flickr.photosets.getPhotos&api_key=%s&photoset_id=72157633923521788\
-        &format=json&nojsoncallback=1' % api_key
+        &format=json&nojsoncallback=1' % 'fake-key'
         requests.get.assert_called_with(api_url)
 
     def test_count_tasks_returns_number_of_photos_in_album(self, requests):

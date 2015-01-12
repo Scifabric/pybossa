@@ -25,7 +25,7 @@ from mock import patch
 class TestImportTasksJob(Test):
 
     @with_context
-    @patch('pybossa.importers.create_tasks')
+    @patch('pybossa.jobs.importer.create_tasks')
     def test_it_creates_the_new_tasks(self, create):
         app = AppFactory.create()
         form_data = {'type': 'csv', 'csv_url': 'http://google.es'}
@@ -37,7 +37,7 @@ class TestImportTasksJob(Test):
 
     @with_context
     @patch('pybossa.jobs.send_mail')
-    @patch('pybossa.importers.create_tasks')
+    @patch('pybossa.jobs.importer.create_tasks')
     def test_sends_email_to_user_with_result_on_success(self, create, send_mail):
         create.return_value = '1 new task was imported successfully'
         app = AppFactory.create()
