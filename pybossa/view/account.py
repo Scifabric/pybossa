@@ -183,7 +183,7 @@ def get_email_confirmation_url(account):
 def confirm_email():
     """Send email to confirm user email."""
     acc_conf_dis = current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED')
-    if current_user.valid_email is False and not acc_conf_dis:
+    if current_user.valid_email is False and acc_conf_dis is False:
         user = user_repo.get(current_user.id)
         account = dict(fullname=current_user.fullname, name=current_user.name,
                        email_addr=current_user.email_addr)
