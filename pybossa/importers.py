@@ -181,10 +181,10 @@ class Importer(object):
         self._importers = {'csv': _BulkTaskCSVImport,
                            'gdocs': _BulkTaskGDImport,
                            'epicollect': _BulkTaskEpiCollectPlusImport}
-        if app is not None: # pragma: no cover
+        if app is not None:  # pragma: no cover
             self.init_app(app)
 
-    def init_app(self, app): # pragma: no cover
+    def init_app(self, app):  # pragma: no cover
         if app.config.get('FLICKR_API_KEY') is not None:
             self._importers['flickr'] = _BulkTaskFlickrImport
             self._flickr_api_key = app.config.get('FLICKR_API_KEY')

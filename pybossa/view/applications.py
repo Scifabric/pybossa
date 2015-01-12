@@ -549,7 +549,6 @@ def import_task(short_name):
         flash(err_msg, 'error')
     except Exception as inst:  # pragma: no cover
         current_app.logger.error(inst)
-        print inst
         msg = 'Oops! Looks like there was an error!'
         flash(gettext(msg), 'error')
     return render_template('/applications/importers/%s.html' % template,
