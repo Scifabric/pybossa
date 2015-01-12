@@ -2613,6 +2613,51 @@ class TestWeb(web.Helper):
         res = self.app.get('/app/sampleapp/tasks/import', follow_redirects=True)
         assert res.status_code == 403, res.status_code
 
+    def test_get_import_tasks_with_specific_variant_argument(self):
+        """Test task importer with specific importer variant argument
+        shows the form for it, for each of the variants"""
+        self.register()
+        owner = db.session.query(User).first()
+        app = AppFactory.create(owner=owner)
+
+        # CSV
+        url = "/app/%s/tasks/import?template=csv" % app.short_name
+        res = self.app.get(url, follow_redirects=True)
+        data = res.data.decode('utf-8')
+
+        assert "From a CSV file" in data
+        assert 'action="/app/%E2%9C%93app1/tasks/import"' in data
+
+        # Google Docs
+        url = "/app/%s/tasks/import?template=gdocs" % app.short_name
+        res = self.app.get(url, follow_redirects=True)
+        data = res.data.decode('utf-8')
+
+        assert "From a Google Docs Spreadsheet" in data
+        assert 'action="/app/%E2%9C%93app1/tasks/import"' in data
+
+        # Epicollect Plus
+        url = "/app/%s/tasks/import?template=epicollect" % app.short_name
+        res = self.app.get(url, follow_redirects=True)
+        data = res.data.decode('utf-8')
+
+        assert "From an EpiCollect Plus project" in data
+        assert 'action="/app/%E2%9C%93app1/tasks/import"' in data
+
+        # Flickr
+        url = "/app/%s/tasks/import?template=flickr" % app.short_name
+        res = self.app.get(url, follow_redirects=True)
+        data = res.data.decode('utf-8')
+
+        assert "From a Flickr set" in data
+        assert 'action="/app/%E2%9C%93app1/tasks/import"' in data
+
+        # Invalid
+        url = "/app/%s/tasks/import?template=invalid" % app.short_name
+        res = self.app.get(url, follow_redirects=True)
+
+        assert res.status_code == 404, res.status_code
+
     @patch('pybossa.view.applications.redirect', wraps=redirect)
     @patch('pybossa.importers.requests.get')
     def test_import_tasks_redirects_on_success(self, request, redirect):
