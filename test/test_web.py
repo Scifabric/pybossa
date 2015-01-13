@@ -276,7 +276,6 @@ class TestWeb(web.Helper):
         assert user.valid_email is False, msg
         current_app.config['ACCOUNT_CONFIRMATION_DISABLED'] = True
 
-
     @with_context
     def test_register_post_valid_data_validation_enabled(self):
         """Test WEB register post with valid form data and account validation
@@ -353,6 +352,27 @@ class TestWeb(web.Helper):
         msg = "Confirmation email flag has not been restored"
         assert user.confirmation_email_sent is False, msg
 
+
+    @patch('pybossa.view.account.newsletter', autospec=True)
+    @patch('pybossa.view.account.url_for')
+    @patch('pybossa.view.account.signer')
+    def test_confirm_account_newsletter(self, fake_signer, url_for, newsletter):
+        """Test WEB confirm email shows newsletter or home."""
+        newsletter.app = True
+        self.register()
+        user = db.session.query(User).get(1)
+        user.valid_email = False
+        db.session.commit()
+        fake_signer.loads.return_value = dict(fullname=user.fullname,
+                                              name=user.name,
+                                              email_addr=user.email_addr)
+        self.app.get('/account/register/confirmation?key=valid-key')
+
+        url_for.assert_called_with('account.newsletter_subscribe')
+
+        newsletter.app = False
+        self.app.get('/account/register/confirmation?key=valid-key')
+        url_for.assert_called_with('home.home')
 
     @patch('pybossa.view.account.signer')
     def test_register_confirmation_creates_new_account(self, fake_signer):
