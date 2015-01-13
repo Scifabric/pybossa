@@ -282,7 +282,11 @@ def confirm_account():
         u.confirmation_email_sent = False
         user_repo.update(u)
         flash(gettext('Your email has been validated.'))
-        return redirect(url_for('home.home'))
+        if newsletter.app:
+            return redirect(url_for('account.newsletter_subscribe'))
+        else:
+            return redirect(url_for('home.home'))
+
     account = model.user.User(fullname=userdict['fullname'],
                               name=userdict['name'],
                               email_addr=userdict['email_addr'],
@@ -471,6 +475,7 @@ def update_profile(name):
                 if (user.email_addr != update_form.email_addr.data and
                         acc_conf_dis is False):
                     user.valid_email = False
+                    user.newsletter_prompted = False
                     account = dict(fullname=update_form.fullname.data,
                                    name=update_form.name.data,
                                    email_addr=update_form.email_addr.data)
