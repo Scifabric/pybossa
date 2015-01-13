@@ -154,10 +154,13 @@ class Test_BulkTaskFlickrImport(object):
         fake_response.text = '{}'
         requests.get.return_value = fake_response
         self.importer._get_album_info('72157633923521788')
-        api_url = 'https://api.flickr.com/services/rest/?\
-        method=flickr.photosets.getPhotos&api_key=%s&photoset_id=72157633923521788\
-        &format=json&nojsoncallback=1' % 'fake-key'
-        requests.get.assert_called_with(api_url)
+        url = 'https://api.flickr.com/services/rest/'
+        payload = {'method': 'flickr.photosets.getPhotos',
+                   'api_key': 'fake-key',
+                   'photoset_id': '72157633923521788',
+                   'format': 'json',
+                   'nojsoncallback': '1'}
+        requests.get.assert_called_with(url, params=payload)
 
     def test_count_tasks_returns_number_of_photos_in_album(self, requests):
         fake_response = Mock()

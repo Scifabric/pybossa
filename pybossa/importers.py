@@ -153,10 +153,13 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
             raise BulkImportException(album_info['message'])
 
     def _get_album_info(self, album_id):
-        url = 'https://api.flickr.com/services/rest/?\
-        method=flickr.photosets.getPhotos&api_key=%s&photoset_id=%s\
-        &format=json&nojsoncallback=1' % (self.api_key, album_id)
-        res = requests.get(url)
+        url = 'https://api.flickr.com/services/rest/'
+        payload = {'method': 'flickr.photosets.getPhotos',
+                   'api_key': self.api_key,
+                   'photoset_id': album_id,
+                   'format': 'json',
+                   'nojsoncallback': '1'}
+        res = requests.get(url, params=payload)
         return json.loads(res.text)
 
     def _get_tasks_data_from_request(self, album_info):
