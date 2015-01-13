@@ -18,9 +18,8 @@
 """Jobs module for running background tasks in PyBossa server."""
 from flask import current_app
 from flask.ext.mail import Message
-from pybossa.core import mail, task_repo, project_repo
+from pybossa.core import mail, task_repo, project_repo, importer
 from pybossa.util import with_cache_disabled
-import pybossa.importers as importers
 
 
 MINUTE = 60
@@ -317,7 +316,7 @@ def send_mail(message_dict):
 
 def import_tasks(project_id, **form_data):
     app = project_repo.get(project_id)
-    msg = importers.create_tasks(task_repo, project_id, **form_data)
+    msg = importer.create_tasks(task_repo, project_id, **form_data)
     msg = msg + ' to your project %s!' % app.name
     subject = 'Tasks Import to your project %s' % app.name
     body = 'Hello,\n\n' + msg + '\n\nAll the best,\nThe %s team.'\

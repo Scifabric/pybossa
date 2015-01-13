@@ -21,8 +21,6 @@ import json
 import requests
 from flask.ext.babel import gettext
 from pybossa.util import unicode_csv_reader
-from pybossa.model.task import Task
-from pybossa.cache import apps as cached_apps
 
 
 class BulkImportException(Exception):
@@ -40,9 +38,20 @@ class _BulkTaskImport(object):
         """Returns amount of tasks to be imported"""
         return len([task for task in self.tasks(**form_data)])
 
+
+class _BulkTaskCSVImport(_BulkTaskImport):
+    importer_id = "csv"
+
+    def tasks(self, **form_data):
+        dataurl = self._get_data_url(**form_data)
+        r = requests.get(dataurl)
+        return self._get_csv_data_from_request(r)
+
+    def _get_data_url(self, **form_data):
+        return form_data['csv_url']
+
     def _import_csv_tasks(self, csvreader):
         headers = []
-        data_rows_present = False
         fields = set(['state', 'quorum', 'calibration', 'priority_0',
                       'n_answers'])
         field_header_index = []
@@ -58,7 +67,6 @@ class _BulkTaskImport(object):
                 for field in field_headers:
                     field_header_index.append(headers.index(field))
             else:
-                data_rows_present = True
                 task_data = {"info": {}}
                 for idx, cell in enumerate(row):
                     if idx in field_header_index:
@@ -66,9 +74,6 @@ class _BulkTaskImport(object):
                     else:
                         task_data["info"][headers[idx]] = cell
                 yield task_data
-        if data_rows_present is False:
-            msg = gettext('Oops! It looks like the file is empty.')
-            raise BulkImportException(msg)
 
     def _get_csv_data_from_request(self, r):
         if r.status_code == 403:
@@ -85,25 +90,8 @@ class _BulkTaskImport(object):
         return self._import_csv_tasks(csvreader)
 
 
-class _BulkTaskCSVImport(_BulkTaskImport):
-    importer_id = "csv"
-
-    def tasks(self, **form_data):
-        dataurl = self._get_data_url(**form_data)
-        r = requests.get(dataurl)
-        return self._get_csv_data_from_request(r)
-
-    def _get_data_url(self, **form_data):
-        return form_data['csv_url']
-
-
-class _BulkTaskGDImport(_BulkTaskImport):
+class _BulkTaskGDImport(_BulkTaskCSVImport):
     importer_id = "gdocs"
-
-    def tasks(self, **form_data):
-        dataurl = self._get_data_url(**form_data)
-        r = requests.get(dataurl)
-        return self._get_csv_data_from_request(r)
 
     def _get_data_url(self, **form_data):
         # For old data links of Google Spreadsheets
@@ -143,41 +131,104 @@ class _BulkTaskEpiCollectPlusImport(_BulkTaskImport):
         return self._import_epicollect_tasks(json.loads(r.text))
 
 
-def create_tasks(task_repo, project_id, **form_data):
-    """Create tasks from a remote source using an importer object and avoiding
-    the creation of repeated tasks"""
-    importer_id = form_data.get('type')
-    empty = True
-    n = 0
-    importer = _create_importer_for(importer_id)
-    for task_data in importer.tasks(**form_data):
-        task = Task(app_id=project_id)
-        [setattr(task, k, v) for k, v in task_data.iteritems()]
-        found = task_repo.get_task_by(app_id=project_id, info=task.info)
-        if found is None:
-            task_repo.save(task)
-            n += 1
-            empty = False
-    if empty:
-        msg = gettext('It looks like there were no new records to import')
+class _BulkTaskFlickrImport(_BulkTaskImport):
+    importer_id = "flickr"
+
+    def __init__(self, api_key):
+        self.api_key = api_key
+
+    def tasks(self, **form_data):
+        album_info = self._get_album_info(form_data['album_id'])
+        if album_info['stat'] == 'ok':
+            tasks = self._get_tasks_data_from_request(album_info)
+            return tasks
+        if album_info['stat'] == 'fail':
+            raise BulkImportException(album_info['message'])
+
+    def count_tasks(self, **form_data):
+        album_info = self._get_album_info(form_data['album_id'])
+        if album_info['stat'] == 'ok':
+            return int(album_info['photoset']['total'])
+        if album_info['stat'] == 'fail':
+            raise BulkImportException(album_info['message'])
+
+    def _get_album_info(self, album_id):
+        url = 'https://api.flickr.com/services/rest/'
+        payload = {'method': 'flickr.photosets.getPhotos',
+                   'api_key': self.api_key,
+                   'photoset_id': album_id,
+                   'format': 'json',
+                   'nojsoncallback': '1'}
+        res = requests.get(url, params=payload)
+        return json.loads(res.text)
+
+    def _get_tasks_data_from_request(self, album_info):
+        photo_list = album_info['photoset']['photo']
+        return [self._get_photo_info(photo) for photo in photo_list]
+
+    def _get_photo_info(self, photo):
+        base_url = 'https://farm%s.staticflickr.com/%s/%s_%s' % (
+            photo['farm'], photo['server'], photo['id'], photo['secret'])
+        title = photo['title']
+        url = ''.join([base_url, '.jpg'])
+        url_m = ''.join([base_url, '_m.jpg'])
+        url_b = ''.join([base_url, '_b.jpg'])
+        return {"info": {'title': title, 'url': url,
+                         'url_b': url_b, 'url_m': url_m}}
+
+
+class Importer(object):
+
+    def __init__(self, app=None):
+        self.app = app
+        self._importers = {'csv': _BulkTaskCSVImport,
+                           'gdocs': _BulkTaskGDImport,
+                           'epicollect': _BulkTaskEpiCollectPlusImport}
+        if app is not None:  # pragma: no cover
+            self.init_app(app)
+
+    def init_app(self, app):  # pragma: no cover
+        if app.config.get('FLICKR_API_KEY') is not None:
+            self._importers['flickr'] = _BulkTaskFlickrImport
+            self._flickr_api_key = app.config.get('FLICKR_API_KEY')
+
+    def create_tasks(self, task_repo, project_id, **form_data):
+        from pybossa.cache import apps as cached_apps
+        from pybossa.model.task import Task
+        """Create tasks from a remote source using an importer object and
+        avoiding the creation of repeated tasks"""
+        importer_id = form_data.get('type')
+        empty = True
+        n = 0
+        importer = self._create_importer_for(importer_id)
+        for task_data in importer.tasks(**form_data):
+            task = Task(app_id=project_id)
+            [setattr(task, k, v) for k, v in task_data.iteritems()]
+            found = task_repo.get_task_by(app_id=project_id, info=task.info)
+            if found is None:
+                task_repo.save(task)
+                n += 1
+                empty = False
+        if empty:
+            msg = gettext('It looks like there were no new records to import')
+            return msg
+        msg = str(n) + " " + gettext('new tasks were imported successfully')
+        if n == 1:
+            msg = str(n) + " " + gettext('new task was imported successfully')
+        cached_apps.delete_n_tasks(project_id)
+        cached_apps.delete_n_task_runs(project_id)
+        cached_apps.delete_overall_progress(project_id)
+        cached_apps.delete_last_activity(project_id)
         return msg
-    msg = str(n) + " " + gettext('new tasks were imported successfully')
-    if n == 1:
-        msg = str(n) + " " + gettext('new task was imported successfully')
-    cached_apps.delete_n_tasks(project_id)
-    cached_apps.delete_n_task_runs(project_id)
-    cached_apps.delete_overall_progress(project_id)
-    cached_apps.delete_last_activity(project_id)
-    return msg
 
+    def count_tasks_to_import(self, **form_data):
+        importer_id = form_data.get('type')
+        return self._create_importer_for(importer_id).count_tasks(**form_data)
 
-def count_tasks_to_import(**form_data):
-    importer_id = form_data.get('type')
-    return _create_importer_for(importer_id).count_tasks(**form_data)
+    def _create_importer_for(self, importer_id):
+        if importer_id == 'flickr':
+            return self._importers[importer_id](self._flickr_api_key)
+        return self._importers[importer_id]()
 
-
-def _create_importer_for(importer_id):
-    _importers = {'csv': _BulkTaskCSVImport,
-                  'gdocs': _BulkTaskGDImport,
-                  'epicollect': _BulkTaskEpiCollectPlusImport}
-    return _importers[importer_id]()
+    def get_all_importer_names(self):
+        return self._importers.keys()
