@@ -234,6 +234,12 @@ class TestWeb(web.Helper):
         assert user.valid_email is False, msg
 
     @with_context
+    def test_confirm_email_returns_404(self):
+        """Test WEB confirm_email returns 404 when disabled."""
+        res = self.app.get('/account/confir-email', follow_redirects=True)
+        assert res.status_code == 404, res.status_code
+
+    @with_context
     @patch('pybossa.view.account.mail_queue', autospec=True)
     @patch('pybossa.view.account.render_template')
     @patch('pybossa.view.account.signer')
