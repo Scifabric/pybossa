@@ -22,6 +22,7 @@ from mock import patch
 from collections import namedtuple
 from pybossa.core import user_repo
 from pybossa.newsletter import Newsletter
+from factories import UserFactory
 from bs4 import BeautifulSoup
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
@@ -72,6 +73,24 @@ class TestNewsletter(web.Helper):
             nw.client.lists.member_info.assert_called_with(1,
                                                            [{'email': email}])
             assert res is True
+
+    @with_context
+    @patch('pybossa.newsletter.mailchimp')
+    def test_newsletter_subscribe_user(self, mailchimp):
+        """Test subscribe user works."""
+        with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
+                                                'MAILCHIMP_LIST_ID': 1}):
+            user = UserFactory.create()
+            nw = Newsletter()
+            nw.init_app(self.flask_app)
+
+            nw.subscribe_user(user)
+
+            email = {'email': user.email_addr}
+            merge_vars = {'FNAME': user.fullname}
+            nw.client.lists.subscribe.assert_called_with(1, email, merge_vars,
+                                                         update_existing=False)
+
 
 
     @with_context
