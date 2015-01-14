@@ -493,7 +493,12 @@ def update_profile(name):
                     msg['html'] = markdown(msg['body'])
                     mail_queue.enqueue(send_mail, msg)
                     user.confirmation_email_sent = True
-                user.email_addr = update_form.email_addr.data
+                    fls = gettext('An email has been sent to verify your \
+                                  new email: %s. Once you verify it, it will \
+                                  be updated.' % account['email_addr'])
+                    flash(fls, 'info')
+                if acc_conf_dis:
+                    user.email_addr = update_form.email_addr.data
                 user.privacy_mode = update_form.privacy_mode.data
                 user.locale = update_form.locale.data
                 user_repo.update(user)
