@@ -39,6 +39,8 @@ class Newsletter(object):
     def is_user_subscribed(self, email, list_id=None):
         """Check if user is subscribed or not."""
         try:
+            if list_id is None:
+                list_id = self.list_id
             res = self.client.lists.member_inf(list_id, [{'email': email}])
             if (res.get('success_count') == 1 and
                    res['data'][0]['email'] == email):
