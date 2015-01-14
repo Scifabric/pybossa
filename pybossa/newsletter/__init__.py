@@ -36,13 +36,23 @@ class Newsletter(object):
         self.client = mailchimp.Mailchimp(app.config.get('MAILCHIMP_API_KEY'))
         self.list_id = app.config.get('MAILCHIMP_LIST_ID')
 
-    def subscribe_user(self, user, list_id=None):
-        """Subscribe a user to a mailchimp list."""
+    def subscribe_user(self, user, list_id=None, old_email=None):
+        """Subscribe, update a user of a mailchimp list."""
         try:
+            update_existing = False
             if list_id is None:
                 list_id = self.list_id
-            self.client.lists.subscribe(list_id, {'email': user.email_addr},
-                                                 {'FNAME': user.fullname})
+            merge_vars = {'FNAME': user.fullname}
+            if old_email:
+                email = {'email': old_email}
+                merge_vars['new-email'] = user.email_addr
+                update_existing = True
+            else:
+                email = {'email': user.email_addr}
+                merge_vars['email'] = user.email_addr
+
+            self.client.lists.subscribe(list_id, email, merge_vars,
+                                        update_existing=update_existing)
         except mailchimp.Error, e:
             msg = 'MAILCHIMP: An error occurred: %s - %s' % (e.__class__, e)
             self.app.logger.error(msg)
