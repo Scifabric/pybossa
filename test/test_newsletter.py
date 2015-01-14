@@ -27,12 +27,6 @@ FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
 
 class TestNewsletter(web.Helper):
-    #pkg_json_not_found = {
-    #    "help": "Return ...",
-    #    "success": False,
-    #    "error": {
-    #        "message": "Not found",
-    #        "__type": "Not Found Error"}}
 
     @with_context
     @patch('pybossa.view.account.newsletter', autospec=True)
