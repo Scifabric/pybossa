@@ -224,22 +224,6 @@ class Facebook(object):
             request_token_params={'scope': 'email'})
 
 
-def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
-    # This code is taken from http://docs.python.org/library/csv.html#examples
-    # csv.py doesn't do Unicode; encode temporarily as UTF-8:
-    csv_reader = csv.reader(utf_8_encoder(unicode_csv_data),
-                            dialect=dialect, **kwargs)
-    for row in csv_reader:
-        # decode UTF-8 back to Unicode, cell by cell:
-        yield [unicode(cell, 'utf-8') for cell in row]
-
-
-def utf_8_encoder(unicode_csv_data):
-    # This code is taken from http://docs.python.org/library/csv.html#examples
-    for line in unicode_csv_data:
-        yield line.encode('utf-8')
-
-
 class Google(object):
     oauth = OAuth()
 
@@ -261,6 +245,40 @@ class Google(object):
             access_token_params={'grant_type': 'authorization_code'},
             consumer_key=app.config['GOOGLE_CLIENT_ID'],
             consumer_secret=app.config['GOOGLE_CLIENT_SECRET'])
+
+
+class Flickr(object):
+    oauth = OAuth()
+
+    def __init__(self, app=None):
+        self.app = app
+        if app is not None: # pragma: no cover
+            self.init_app(app)
+
+    def init_app(self, app):
+        self.oauth = self.oauth.remote_app(
+            'flickr',
+            request_token_url='https://www.flickr.com/services/oauth/request_token',
+            access_token_url='https://www.flickr.com/services/oauth/access_token',
+            authorize_url='https://www.flickr.com/services/oauth/authorize',
+            consumer_key=app.config['FLICK_API_KEY'],
+            consumer_secret=app.config['FLICKR_SHARED_SECRET'])
+
+
+def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
+    # This code is taken from http://docs.python.org/library/csv.html#examples
+    # csv.py doesn't do Unicode; encode temporarily as UTF-8:
+    csv_reader = csv.reader(utf_8_encoder(unicode_csv_data),
+                            dialect=dialect, **kwargs)
+    for row in csv_reader:
+        # decode UTF-8 back to Unicode, cell by cell:
+        yield [unicode(cell, 'utf-8') for cell in row]
+
+
+def utf_8_encoder(unicode_csv_data):
+    # This code is taken from http://docs.python.org/library/csv.html#examples
+    for line in unicode_csv_data:
+        yield line.encode('utf-8')
 
 
 class UnicodeWriter:
