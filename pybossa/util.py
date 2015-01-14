@@ -261,7 +261,7 @@ class Flickr(object):
             request_token_url='https://www.flickr.com/services/oauth/request_token',
             access_token_url='https://www.flickr.com/services/oauth/access_token',
             authorize_url='https://www.flickr.com/services/oauth/authorize',
-            consumer_key=app.config['FLICK_API_KEY'],
+            consumer_key=app.config['FLICKR_API_KEY'],
             consumer_secret=app.config['FLICKR_SHARED_SECRET'])
 
 
