@@ -91,6 +91,29 @@ class TestNewsletter(web.Helper):
             nw.client.lists.subscribe.assert_called_with(1, email, merge_vars,
                                                          update_existing=False)
 
+    @with_context
+    @patch('pybossa.newsletter.mailchimp')
+    def test_newsletter_subscribe_user_update_existing(self, mailchimp):
+        """Test subscribe user update existing works."""
+        with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
+                                                'MAILCHIMP_LIST_ID': 1}):
+            user = UserFactory.create()
+            nw = Newsletter()
+            nw.init_app(self.flask_app)
+
+            old_email = 'old@email.com'
+
+            tmp = {'data': [{'email': old_email}],
+                   'success_count': 1}
+            nw.client.lists.member_info.return_value = tmp
+
+            nw.subscribe_user(user, old_email=old_email)
+
+            email = {'email': old_email}
+            merge_vars = {'FNAME': user.fullname,
+                          'new-email': user.email_addr}
+            nw.client.lists.subscribe.assert_called_with(1, email, merge_vars,
+                                                         update_existing=True)
 
 
     @with_context
