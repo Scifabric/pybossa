@@ -31,18 +31,47 @@ class TestNewsletter(web.Helper):
 
     @with_context
     @patch('pybossa.newsletter.mailchimp')
-    def test_newsletter_subscribe_user(self, mailchimp):
-        """Test subscribe_user method works."""
+    def test_newsletter_init_app(self, mailchimp):
+        """Test Newsletter init_app method works."""
+        with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
+                                                'MAILCHIMP_LIST_ID': 1}):
+            nw = Newsletter()
+            assert nw.app is None
+            nw.init_app(self.flask_app)
+            assert nw.app == self.flask_app
+            assert nw.client, nw.client
+            assert nw.list_id == 1
+
+    @with_context
+    @patch('pybossa.newsletter.mailchimp')
+    def test_newsletter_is_user_subscribed_false(self, mailchimp):
+        """Test is_user_subscribed returns False."""
         with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
                                                 'MAILCHIMP_LIST_ID': 1}):
             email = 'john@john.com'
             nw = Newsletter()
             nw.init_app(self.flask_app)
-            nw.is_user_subscribed(email)
+            res = nw.is_user_subscribed(email)
             nw.client.lists.member_info.assert_called_with(1,
                                                            [{'email': email}])
+            assert res is False
 
-
+    @with_context
+    @patch('pybossa.newsletter.mailchimp')
+    def test_newsletter_is_user_subscribed_true(self, mailchimp):
+        """Test is_user_subscribed returns True."""
+        with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
+                                                'MAILCHIMP_LIST_ID': 1}):
+            email = 'john@john.com'
+            nw = Newsletter()
+            nw.init_app(self.flask_app)
+            tmp = {'data': [{'email': email}],
+                   'success_count': 1}
+            nw.client.lists.member_info.return_value = tmp
+            res = nw.is_user_subscribed(email)
+            nw.client.lists.member_info.assert_called_with(1,
+                                                           [{'email': email}])
+            assert res is True
 
 
     @with_context
