@@ -264,6 +264,13 @@ class Flickr(object):
             consumer_key=app.config['FLICKR_API_KEY'],
             consumer_secret=app.config['FLICKR_SHARED_SECRET'])
 
+    def get_own_albums(self):
+        from flask import session
+        if session.get('flickr_user') is not None and session.get('flickr_token') is not None:
+            url = 'https://api.flickr.com/services/rest/?method=flickr.photosets.getList&user_id=%s&format=json&nojsoncallback=1' % session.get('flickr_user').get('user_nsid')
+            albums = self.oauth.get(url).data['photosets']['photoset']
+            return albums
+
 
 def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
     # This code is taken from http://docs.python.org/library/csv.html#examples

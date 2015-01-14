@@ -34,7 +34,7 @@ import pybossa.model as model
 import pybossa.sched as sched
 
 from pybossa.core import (uploader, signer, sentinel, json_exporter,
-    csv_exporter, importer)
+    csv_exporter, importer, flickr)
 from pybossa.model.app import App
 from pybossa.model.task import Task
 from pybossa.util import Pagination, admin_required, get_user_id_or_ip
@@ -541,6 +541,8 @@ def import_task(short_name):
     template = template if request.method == 'GET' else request.form['form_name']
     form = GenericBulkTaskImportForm()(template, request.form)
     template_args['form'] = form
+    if template == 'flickr':
+            template_args['albums'] = flickr.get_own_albums()
     if template == 'gdocs' and request.args.get('mode'):  # pragma: no cover
         mode = request.args.get('mode')
         form.googledocs_url.data = template_tasks.get(mode)
