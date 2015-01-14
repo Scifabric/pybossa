@@ -466,3 +466,13 @@ def setup_newsletter(app):
 
 def setup_importer(app):
     importer.init_app(app)
+    try:  # pragma: no cover
+        if (app.config['FLICKR_API_KEY'] and app.config['FLICKR_SHARED_SECRET']):
+            flickr.init_app(app)
+            from pybossa.view.flickr import blueprint as flickr_bp
+            app.register_blueprint(flickr_bp, url_prefix='/flickr')
+    except Exception as inst: # pragma: no cover
+        print type(inst)
+        print inst.args
+        print inst
+        print "Flickr importer not available"
