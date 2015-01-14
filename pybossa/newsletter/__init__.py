@@ -41,7 +41,8 @@ class Newsletter(object):
         try:
             if list_id is None:
                 list_id = self.list_id
-            res = self.client.lists.member_inf(list_id, [{'email': email}])
+
+            res = self.client.lists.member_info(list_id, [{'email': email}])
             if (res.get('success_count') == 1 and
                    res['data'][0]['email'] == email):
                return True
