@@ -12,13 +12,14 @@ the following public interface:
 * tasks()
 
 importer_id is the name of the importer; any of the supported importers:
-'csv', 'gdocs' and 'epicollect'
+'csv', 'gdocs', 'epicollect' and 'flickr'.
 
 tasks() should generate a list of tasks
 
 These classes are intended for private use within the importers.py module. New
 ones can be created here to handle different kind of importing mechanisms.
-The module exposes the following public functions:
+The module exposes the public class Importer, which will be the one resposible
+for actually do the job of importing tasks, by using the their public methods:
 
 * create_tasks
 * count_tasks_to_import

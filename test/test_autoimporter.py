@@ -21,6 +21,7 @@ from pybossa.model.app import App
 from pybossa.model.user import User
 from pybossa.jobs import import_tasks
 from factories import AppFactory
+from mock import patch
 
 class TestAutoimporterAccessAndResponses(web.Helper):
 
@@ -289,6 +290,39 @@ class TestAutoimporterBehaviour(web.Helper):
         assert 'CSV' in res.data
         assert 'Google Drive Spreadsheet' in res.data
         assert 'EpiCollect Plus Project' in res.data
+        assert 'Flickr' in res.data
+
+
+    def test_autoimporter_doesnt_show_unavailable_importers(self):
+        from pybossa.core import importer
+        try:
+            del importer._importers['flickr']
+            del importer._flickr_api_key
+
+            self.register()
+            owner = db.session.query(User).first()
+            app = AppFactory.create(owner=owner)
+            url = "/app/%s/tasks/autoimporter" % app.short_name
+
+            res = self.app.get(url, follow_redirects=True)
+
+            assert 'Flickr' not in res.data
+        except Exception:
+            raise
+        finally:
+            importer.init_app(self.flask_app)
+
+    @patch('pybossa.core.importer.get_all_importer_names')
+    def test_autoimporter_doesnt_show_unavailable_importers_v2(self, names):
+        names.return_value = ['csv', 'gdocs', 'epicollect']
+        self.register()
+        owner = db.session.query(User).first()
+        app = AppFactory.create(owner=owner)
+        url = "/app/%s/tasks/autoimporter" % app.short_name
+
+        res = self.app.get(url, follow_redirects=True)
+
+        assert 'Flickr' not in res.data
 
 
     def test_autoimporter_with_specific_variant_argument(self):
@@ -321,6 +355,20 @@ class TestAutoimporterBehaviour(web.Helper):
 
         assert "From an EpiCollect Plus project" in data
         assert 'action="/app/%E2%9C%93app1/tasks/autoimporter"' in data
+
+        # Flickr
+        url = "/app/%s/tasks/autoimporter?template=flickr" % app.short_name
+        res = self.app.get(url, follow_redirects=True)
+        data = res.data.decode('utf-8')
+
+        assert "From a Flickr set" in data
+        assert 'action="/app/%E2%9C%93app1/tasks/autoimporter"' in data
+
+        # Invalid
+        url = "/app/%s/tasks/autoimporter?template=invalid" % app.short_name
+        res = self.app.get(url, follow_redirects=True)
+
+        assert res.status_code == 404, res.status_code
 
 
     def test_autoimporter_shows_current_autoimporter_if_exists(self):

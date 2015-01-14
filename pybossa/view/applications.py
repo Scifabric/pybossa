@@ -32,9 +32,9 @@ from rq import Queue
 
 import pybossa.model as model
 import pybossa.sched as sched
-import pybossa.importers as importers
 
-from pybossa.core import uploader, signer, sentinel, json_exporter, csv_exporter
+from pybossa.core import (uploader, signer, sentinel, json_exporter,
+    csv_exporter, importer)
 from pybossa.model.app import App
 from pybossa.model.task import Task
 from pybossa.util import Pagination, admin_required, get_user_id_or_ip
@@ -49,6 +49,7 @@ from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
 from pybossa.jobs import import_tasks
 from pybossa.forms.applications_view_forms import *
+from pybossa.importers import BulkImportException
 
 from pybossa.core import project_repo, user_repo, task_repo, blog_repo, auditlog_repo
 from pybossa.auditlogger import AuditLogger
@@ -57,7 +58,7 @@ blueprint = Blueprint('app', __name__)
 
 auditlogger = AuditLogger(auditlog_repo, caller='web')
 importer_queue = Queue('medium', connection=sentinel.master)
-MAX_NUM_SYNCHR_TASKS_IMPORT = 200
+MAX_NUM_SYNCHRONOUS_TASKS_IMPORT = 200
 HOUR = 60 * 60
 
 def app_title(app, page_name):
@@ -232,8 +233,7 @@ def new():
           '</a></strong> ' +
           gettext('for adding tasks, a thumbnail, using PyBossa.JS, etc.'),
           'info')
-    # Log it
-    auditlogger.add_log_entry(app, current_user, 'create')
+    auditlogger.add_log_entry(None, app, current_user)
 
     return redirect(url_for('.update', short_name=app.short_name))
 
@@ -253,12 +253,11 @@ def task_presenter_editor(short_name):
     form.id.data = app.id
     if request.method == 'POST' and form.validate():
         db_app = project_repo.get(app.id)
+        old_app = App(**db_app.dictize())
         old_info = dict(db_app.info)
-        assert db_app.info == old_info
         old_info['task_presenter'] = form.editor.data
         db_app.info = old_info
-        # Log it
-        auditlogger.add_log_entry(db_app, current_user, 'update')
+        auditlogger.add_log_entry(old_app, db_app, current_user)
         project_repo.update(db_app)
         cached_apps.delete_app(app.short_name)
         msg_1 = gettext('Task presenter added!')
@@ -344,8 +343,8 @@ def delete(short_name):
     # Clean cache
     cached_apps.delete_app(app.short_name)
     cached_apps.clean(app.id)
-    auditlogger.add_log_entry(app, current_user, 'delete')
     project_repo.delete(app)
+    auditlogger.add_log_entry(app, None, current_user)
     flash(gettext('Project deleted!'), 'success')
     return redirect(url_for('account.profile', name=current_user.name))
 
@@ -362,29 +361,32 @@ def update(short_name):
         (app, owner, n_tasks, n_task_runs,
          overall_progress, last_activity) = app_by_shortname(short_name)
 
-        new_application = project_repo.get_by_shortname(short_name)
-        if form.id.data == new_application.id:
-            new_application.name=form.name.data
-            new_application.short_name=form.short_name.data
-            new_application.description=form.description.data
-            new_application.long_description=form.long_description.data
-            new_application.hidden=int(form.hidden.data)
-            new_application.webhook=form.webhook.data
-            new_application.info=app.info
-            new_application.owner_id=app.owner_id
-            new_application.allow_anonymous_contributors=form.allow_anonymous_contributors.data
-            new_application.category_id=form.category_id.data
+        new_project = project_repo.get_by_shortname(short_name)
+        old_project = App(**new_project.dictize())
+        old_info = dict(new_project.info)
+        old_project.info = old_info
+        if form.id.data == new_project.id:
+            new_project.name=form.name.data
+            new_project.short_name=form.short_name.data
+            new_project.description=form.description.data
+            new_project.long_description=form.long_description.data
+            new_project.hidden=int(form.hidden.data)
+            new_project.webhook=form.webhook.data
+            new_project.info=app.info
+            new_project.owner_id=app.owner_id
+            new_project.allow_anonymous_contributors=form.allow_anonymous_contributors.data
+            new_project.category_id=form.category_id.data
 
-        new_application.set_password(form.password.data)
-        auditlogger.add_log_entry(new_application, current_user, 'update')
-        project_repo.update(new_application)
+        new_project.set_password(form.password.data)
+        project_repo.update(new_project)
+        auditlogger.add_log_entry(old_project, new_project, current_user)
         cached_apps.delete_app(short_name)
         cached_apps.reset()
         cached_cat.reset()
-        cached_apps.get_app(new_application.short_name)
+        cached_apps.get_app(new_project.short_name)
         flash(gettext('Project updated!'), 'success')
         return redirect(url_for('.details',
-                                short_name=new_application.short_name))
+                                short_name=new_project.short_name))
 
     require.app.read(app)
     require.app.update(app)
@@ -523,11 +525,16 @@ def import_task(short_name):
 
     template = request.args.get('template')
     template_tasks = current_app.config.get('TEMPLATE_TASKS')
+    all_importers = importer.get_all_importer_names()
+    if template is not None and template not in all_importers:
+        raise abort(404)
 
     if template is None and request.method == 'GET':
-        wrap = lambda i: "applications/tasks/gdocs-%s.html" % i
-        task_tmpls = map(wrap, template_tasks)
+        template_wrap = lambda i: "applications/tasks/gdocs-%s.html" % i
+        task_tmpls = map(template_wrap, template_tasks)
         template_args['task_tmpls'] = task_tmpls
+        importer_wrap = lambda i: "applications/tasks/%s.html" % i
+        template_args['available_importers'] = map(importer_wrap, all_importers)
         return render_template('/applications/task_import_options.html',
                                **template_args)
 
@@ -544,20 +551,20 @@ def import_task(short_name):
 
     try:
         return _import_tasks(app, **form.get_import_data())
-    except importers.BulkImportException, err_msg:
+    except BulkImportException as err_msg:
         flash(err_msg, 'error')
     except Exception as inst:  # pragma: no cover
         current_app.logger.error(inst)
-        msg = 'Oops! Looks like there was an error with processing that file!'
+        msg = 'Oops! Looks like there was an error!'
         flash(gettext(msg), 'error')
     return render_template('/applications/importers/%s.html' % template,
                             **template_args)
 
 
 def _import_tasks(app, **form_data):
-    number_of_tasks = importers.count_tasks_to_import(**form_data)
-    if number_of_tasks <= MAX_NUM_SYNCHR_TASKS_IMPORT:
-        msg = importers.create_tasks(task_repo, app.id, **form_data)
+    number_of_tasks = importer.count_tasks_to_import(**form_data)
+    if number_of_tasks <= MAX_NUM_SYNCHRONOUS_TASKS_IMPORT:
+        msg = importer.create_tasks(task_repo, app.id, **form_data)
         flash(msg)
     else:
         importer_queue.enqueue(import_tasks, app.id, **form_data)
@@ -587,12 +594,18 @@ def setup_autoimporter(short_name):
     require.app.update(app)
     if app.has_autoimporter():
         current_autoimporter = app.get_autoimporter()
-        importer = dict(**current_autoimporter)
+        importer_info = dict(**current_autoimporter)
         return render_template('/applications/task_autoimporter.html',
-                                importer=importer, **template_args)
+                                importer=importer_info, **template_args)
 
     template = request.args.get('template')
+    all_importers = importer.get_all_importer_names()
+    if template is not None and template not in all_importers:
+        raise abort(404)
+
     if template is None and request.method == 'GET':
+        wrap = lambda i: "applications/tasks/%s.html" % i
+        template_args['available_importers'] = map(wrap, all_importers)
         return render_template('applications/task_autoimport_options.html',
                                **template_args)
 

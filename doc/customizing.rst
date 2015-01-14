@@ -608,22 +608,12 @@ own. These tasks can be imported from Google Docs spreadsheets, and you can add
 them, remove them, or modify the URLs of the spreadsheets changing the value of
 the variable **TEMPLATE_TASKS** in settings_local.py::
 
-    TEMPLATE_TASKS = {
-        'image': "https://docs.google.com/spreadsheet/ccc"
-                 "?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE"
-                 "&usp=sharing",
-        'sound': "https://docs.google.com/spreadsheet/ccc"
-                 "?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc"
-                 "&usp=sharing",
-        'video': "https://docs.google.com/spreadsheet/ccc"
-                 "?key=0AsNlt0WgPAHwdGZ2UGhxSTJjQl9YNVhfUVhGRUdoRWc"
-                 "&usp=sharing",
-        'map': "https://docs.google.com/spreadsheet/ccc"
-               "?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc"
-               "&usp=sharing",
-        'pdf': "https://docs.google.com/spreadsheet/ccc"
-               "?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE"
-               "&usp=sharing"}
+TEMPLATE_TASKS = {
+    'image': "https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdHFEN29mZUF0czJWMUhIejF6dWZXdkE&usp=sharing",
+    'sound': "https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdEczcWduOXRUb1JUc1VGMmJtc2xXaXc&usp=sharing",
+    'video': "https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdGZ2UGhxSTJjQl9YNVhfUVhGRUdoRWc&usp=sharing",
+    'map': "https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdGZnbjdwcnhKRVNlN1dGXy0tTnNWWXc&usp=sharing",
+    'pdf': "https://docs.google.com/spreadsheet/ccc?key=0AsNlt0WgPAHwdEVVamc0R0hrcjlGdXRaUXlqRXlJMEE&usp=sharing"}
 
 Setting an expiration time for project passwords
 ================================================
@@ -665,3 +655,18 @@ settings_local.py file the following values::
 Restart the server, and you will be done. Now in your Mailchimp account you
 will be able to create campaigns, and communicate with your registered and
 interested users.
+
+Enabling the Flickr Task importer
+=================================
+
+PyBossa has four different types of built-in importers. Users can use them to
+import tasks for their projects directly from the Web interface. However, using
+the Flickr one requires an API key from Flickr in order to communicate with the
+service.
+
+Once you have an API key, you'll have to add it to your settings_local.py file::
+
+    FLICKR_API_KEY = "your-key"
+
+For more information on how to get a Flickr API key, please read `here <https://www.flickr.com/services/api/>`_
+

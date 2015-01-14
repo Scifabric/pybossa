@@ -67,6 +67,7 @@ def create_app(run_as_server=True):
     setup_debug_toolbar(app)
     setup_jinja2_filters(app)
     setup_newsletter(app)
+    setup_importer(app)
     return app
 
 
@@ -462,3 +463,6 @@ def setup_newsletter(app):
     """Setup mailchimp newsletter."""
     if app.config.get('MAILCHIMP_API_KEY'):
         newsletter.init_app(app)
+
+def setup_importer(app):
+    importer.init_app(app)

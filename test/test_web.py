@@ -1599,187 +1599,6 @@ class TestWeb(web.Helper):
         assert "Ooops, we didn't find you in the system" in res.data, res.data
 
     @with_context
-    @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.importers.requests.get')
-    def test_33_bulk_csv_import_forbidden(self, Mock, mock):
-        """Test WEB bulk import Forbidden works"""
-        forbidden_request = FakeRequest('Forbidden', 403,
-                                           {'content-type': 'text/csv'})
-        Mock.return_value = forbidden_request
-        self.register()
-        self.new_application()
-        app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
-        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
-                                       'formtype': 'csv', 'form_name': 'csv'},
-                            follow_redirects=True)
-        msg = "Oops! It looks like you don't have permission to access that file"
-        assert msg in res.data, res.data
-
-    @with_context
-    @patch('pybossa.importers.requests.get')
-    @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    def test_34_bulk_csv_import_non_html(self, Mock, mock):
-        """Test WEB bulk import non html works"""
-        html_request = FakeRequest('Not a CSV', 200,
-                                   {'content-type': 'text/html'})
-        Mock.return_value = html_request
-        self.register()
-        self.new_application()
-        app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
-        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
-                                       'form_name': 'csv'},
-                            follow_redirects=True)
-        assert "Oops! That file doesn't look like the right file." in res.data
-
-    @with_context
-    @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.importers.requests.get')
-    def test_35_bulk_csv_import_non_html(self, Mock, mock):
-        """Test WEB bulk import non html works"""
-        empty_file = FakeRequest('CSV,with,no,content\n', 200,
-                                 {'content-type': 'text/plain'})
-        Mock.return_value = empty_file
-        self.register()
-        self.new_application()
-        app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
-        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
-                                       'formtype': 'csv', 'form_name': 'csv'},
-                            follow_redirects=True)
-        assert "Oops! It looks like the file is empty." in res.data
-
-    @with_context
-    @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.importers.requests.get')
-    def test_36_bulk_csv_import_dup_header(self, Mock, mock):
-        """Test WEB bulk import duplicate header works"""
-        empty_file = FakeRequest('Foo,Bar,Foo\n1,2,3', 200,
-                                 {'content-type': 'text/plain'})
-        Mock.return_value = empty_file
-        self.register()
-        self.new_application()
-        app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
-        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
-                                       'formtype': 'csv', 'form_name': 'csv'},
-                            follow_redirects=True)
-        msg = "The file you uploaded has two headers with the same name"
-        assert msg in res.data
-
-    @with_context
-    @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.importers.requests.get')
-    def test_37_bulk_csv_import_no_column_names(self, Mock, mock):
-        """Test WEB bulk import no column names works"""
-        empty_file = FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
-                                 {'content-type': 'text/plain'})
-        Mock.return_value = empty_file
-        self.register()
-        self.new_application()
-        app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
-        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
-                                       'formtype': 'csv', 'form_name': 'csv'},
-                            follow_redirects=True)
-        task = db.session.query(Task).first()
-        assert {u'Bar': u'2', u'Foo': u'1', u'Baz': u'3'} == task.info
-        assert "1 new task was imported successfully" in res.data
-
-    @with_context
-    @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.importers.requests.get')
-    def test_38_bulk_csv_import_with_column_name(self, Mock, mock):
-        """Test WEB bulk import with column name works"""
-        empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
-                                 {'content-type': 'text/plain'})
-        Mock.return_value = empty_file
-        self.register()
-        self.new_application()
-        app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
-        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
-                                       'formtype': 'csv', 'form_name': 'csv'},
-                            follow_redirects=True)
-        task = db.session.query(Task).first()
-        assert {u'Bar': u'2', u'Foo': u'1'} == task.info
-        assert task.priority_0 == 3
-        assert "1 new task was imported successfully" in res.data
-
-        # Check that only new items are imported
-        empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
-                                 {'content-type': 'text/plain'})
-        Mock.return_value = empty_file
-        app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
-        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
-                                       'formtype': 'csv', 'form_name': 'csv'},
-                            follow_redirects=True)
-        app = db.session.query(App).first()
-        assert len(app.tasks) == 2, "There should be only 2 tasks"
-        n = 0
-        csv_tasks = [{u'Foo': u'1', u'Bar': u'2'}, {u'Foo': u'4', u'Bar': u'5'}]
-        for t in app.tasks:
-            assert t.info == csv_tasks[n], "The task info should be the same"
-            n += 1
-
-    @with_context
-    @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.importers.requests.get')
-    def test_38_bulk_gdocs_import(self, Mock, mock):
-        """Test WEB bulk GDocs import works."""
-        empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
-                                 {'content-type': 'text/plain'})
-        Mock.return_value = empty_file
-        self.register()
-        self.new_application()
-        app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
-        res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
-                                       'formtype': 'gdocs', 'form_name': 'gdocs'},
-                            follow_redirects=True)
-        task = db.session.query(Task).first()
-        assert {u'Bar': u'2', u'Foo': u'1'} == task.info
-        assert task.priority_0 == 3
-        assert "1 new task was imported successfully" in res.data
-
-        # Check that only new items are imported
-        empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
-                                 {'content-type': 'text/plain'})
-        Mock.return_value = empty_file
-        app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
-        res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
-                                       'formtype': 'gdocs', 'form_name': 'gdocs'},
-                            follow_redirects=True)
-        app = db.session.query(App).first()
-        assert len(app.tasks) == 2, "There should be only 2 tasks"
-        n = 0
-        csv_tasks = [{u'Foo': u'1', u'Bar': u'2'}, {u'Foo': u'4', u'Bar': u'5'}]
-        for t in app.tasks:
-            assert t.info == csv_tasks[n], "The task info should be the same"
-            n += 1
-
-        # Check that only new items are imported
-        empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
-                                 {'content-type': 'text/plain'})
-        Mock.return_value = empty_file
-        app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
-        res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
-                                       'formtype': 'gdocs', 'form_name': 'gdocs'},
-                            follow_redirects=True)
-        app = db.session.query(App).first()
-        assert len(app.tasks) == 2, "There should be only 2 tasks"
-        n = 0
-        csv_tasks = [{u'Foo': u'1', u'Bar': u'2'}, {u'Foo': u'4', u'Bar': u'5'}]
-        for t in app.tasks:
-            assert t.info == csv_tasks[n], "The task info should be the same"
-            n += 1
-        assert "no new records" in res.data, res.data
-
-    @with_context
     def test_39_google_oauth_creation(self):
         """Test WEB Google OAuth creation of user works"""
         fake_response = {
@@ -2914,6 +2733,82 @@ class TestWeb(web.Helper):
         res = self.app.get('/app/sampleapp/tasks/import', follow_redirects=True)
         assert res.status_code == 403, res.status_code
 
+    def test_get_import_tasks_with_specific_variant_argument(self):
+        """Test task importer with specific importer variant argument
+        shows the form for it, for each of the variants"""
+        self.register()
+        owner = db.session.query(User).first()
+        app = AppFactory.create(owner=owner)
+
+        # CSV
+        url = "/app/%s/tasks/import?template=csv" % app.short_name
+        res = self.app.get(url, follow_redirects=True)
+        data = res.data.decode('utf-8')
+
+        assert "From a CSV file" in data
+        assert 'action="/app/%E2%9C%93app1/tasks/import"' in data
+
+        # Google Docs
+        url = "/app/%s/tasks/import?template=gdocs" % app.short_name
+        res = self.app.get(url, follow_redirects=True)
+        data = res.data.decode('utf-8')
+
+        assert "From a Google Docs Spreadsheet" in data
+        assert 'action="/app/%E2%9C%93app1/tasks/import"' in data
+
+        # Epicollect Plus
+        url = "/app/%s/tasks/import?template=epicollect" % app.short_name
+        res = self.app.get(url, follow_redirects=True)
+        data = res.data.decode('utf-8')
+
+        assert "From an EpiCollect Plus project" in data
+        assert 'action="/app/%E2%9C%93app1/tasks/import"' in data
+
+        # Flickr
+        url = "/app/%s/tasks/import?template=flickr" % app.short_name
+        res = self.app.get(url, follow_redirects=True)
+        data = res.data.decode('utf-8')
+
+        assert "From a Flickr set" in data
+        assert 'action="/app/%E2%9C%93app1/tasks/import"' in data
+
+        # Invalid
+        url = "/app/%s/tasks/import?template=invalid" % app.short_name
+        res = self.app.get(url, follow_redirects=True)
+
+        assert res.status_code == 404, res.status_code
+
+    def test_get_importer_doesnt_show_unavailable_importers(self):
+        from pybossa.core import importer
+        try:
+            del importer._importers['flickr']
+            del importer._flickr_api_key
+
+            self.register()
+            owner = db.session.query(User).first()
+            app = AppFactory.create(owner=owner)
+            url = "/app/%s/tasks/import" % app.short_name
+
+            res = self.app.get(url, follow_redirects=True)
+
+            assert 'From a Flickr set' not in res.data
+        except Exception:
+            raise
+        finally:
+            importer.init_app(self.flask_app)
+
+    @patch('pybossa.core.importer.get_all_importer_names')
+    def test_get_importer_doesnt_show_unavailable_importers_v2(self, names):
+        names.return_value = ['csv', 'gdocs', 'epicollect']
+        self.register()
+        owner = db.session.query(User).first()
+        app = AppFactory.create(owner=owner)
+        url = "/app/%s/tasks/autoimporter" % app.short_name
+
+        res = self.app.get(url, follow_redirects=True)
+
+        assert 'From a Flickr set' not in res.data
+
     @patch('pybossa.view.applications.redirect', wraps=redirect)
     @patch('pybossa.importers.requests.get')
     def test_import_tasks_redirects_on_success(self, request, redirect):
@@ -2924,7 +2819,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % app.short_name
+        url = '/app/%s/tasks/import' % app.short_name
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
@@ -2932,8 +2827,8 @@ class TestWeb(web.Helper):
         assert "1 new task was imported successfully" in res.data
         redirect.assert_called_with('/app/%s/tasks/' % app.short_name)
 
-    @patch('pybossa.view.applications.importers.count_tasks_to_import')
-    @patch('pybossa.view.applications.importers.create_tasks')
+    @patch('pybossa.view.applications.importer.count_tasks_to_import')
+    @patch('pybossa.view.applications.importer.create_tasks')
     def test_import_few_tasks_is_done_synchronously(self, create, count):
         """Test WEB importing a small amount of tasks is done synchronously"""
         count.return_value = 1
@@ -2941,7 +2836,7 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % app.short_name
+        url = '/app/%s/tasks/import' % app.short_name
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
@@ -2949,15 +2844,15 @@ class TestWeb(web.Helper):
         assert "1 new task was imported successfully" in res.data
 
     @patch('pybossa.view.applications.importer_queue', autospec=True)
-    @patch('pybossa.view.applications.importers.count_tasks_to_import')
+    @patch('pybossa.view.applications.importer.count_tasks_to_import')
     def test_import_tasks_as_background_job(self, count_tasks, queue):
         """Test WEB importing a big amount of tasks is done in the background"""
-        from pybossa.view.applications import MAX_NUM_SYNCHR_TASKS_IMPORT
-        count_tasks.return_value = MAX_NUM_SYNCHR_TASKS_IMPORT + 1
+        from pybossa.view.applications import MAX_NUM_SYNCHRONOUS_TASKS_IMPORT
+        count_tasks.return_value = MAX_NUM_SYNCHRONOUS_TASKS_IMPORT + 1
         self.register()
         self.new_application()
         app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % app.short_name
+        url = '/app/%s/tasks/import' % app.short_name
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
@@ -2970,6 +2865,184 @@ class TestWeb(web.Helper):
             You will receive an email when the tasks are ready."
         assert msg in res.data
 
+    @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
+    @patch('pybossa.importers.requests.get')
+    def test_bulk_csv_import_works(self, Mock, mock):
+        """Test WEB bulk import works"""
+        empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
+                                 {'content-type': 'text/plain'})
+        Mock.return_value = empty_file
+        self.register()
+        self.new_application()
+        app = db.session.query(App).first()
+        url = '/app/%s/tasks/import' % (app.short_name)
+        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
+                                       'formtype': 'csv', 'form_name': 'csv'},
+                            follow_redirects=True)
+        task = db.session.query(Task).first()
+        assert {u'Bar': u'2', u'Foo': u'1'} == task.info
+        assert task.priority_0 == 3
+        assert "1 new task was imported successfully" in res.data
+
+        # Check that only new items are imported
+        empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
+                                 {'content-type': 'text/plain'})
+        Mock.return_value = empty_file
+        app = db.session.query(App).first()
+        url = '/app/%s/tasks/import' % (app.short_name)
+        res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
+                                       'formtype': 'csv', 'form_name': 'csv'},
+                            follow_redirects=True)
+        app = db.session.query(App).first()
+        assert len(app.tasks) == 2, "There should be only 2 tasks"
+        n = 0
+        csv_tasks = [{u'Foo': u'1', u'Bar': u'2'}, {u'Foo': u'4', u'Bar': u'5'}]
+        for t in app.tasks:
+            assert t.info == csv_tasks[n], "The task info should be the same"
+            n += 1
+
+    @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
+    @patch('pybossa.importers.requests.get')
+    def test_bulk_gdocs_import_works(self, Mock, mock):
+        """Test WEB bulk GDocs import works."""
+        empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
+                                 {'content-type': 'text/plain'})
+        Mock.return_value = empty_file
+        self.register()
+        self.new_application()
+        app = db.session.query(App).first()
+        url = '/app/%s/tasks/import' % (app.short_name)
+        res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
+                                       'formtype': 'gdocs', 'form_name': 'gdocs'},
+                            follow_redirects=True)
+        task = db.session.query(Task).first()
+        assert {u'Bar': u'2', u'Foo': u'1'} == task.info
+        assert task.priority_0 == 3
+        assert "1 new task was imported successfully" in res.data
+
+        # Check that only new items are imported
+        empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
+                                 {'content-type': 'text/plain'})
+        Mock.return_value = empty_file
+        app = db.session.query(App).first()
+        url = '/app/%s/tasks/import' % (app.short_name)
+        res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
+                                       'formtype': 'gdocs', 'form_name': 'gdocs'},
+                            follow_redirects=True)
+        app = db.session.query(App).first()
+        assert len(app.tasks) == 2, "There should be only 2 tasks"
+        n = 0
+        csv_tasks = [{u'Foo': u'1', u'Bar': u'2'}, {u'Foo': u'4', u'Bar': u'5'}]
+        for t in app.tasks:
+            assert t.info == csv_tasks[n], "The task info should be the same"
+            n += 1
+
+        # Check that only new items are imported
+        empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
+                                 {'content-type': 'text/plain'})
+        Mock.return_value = empty_file
+        app = db.session.query(App).first()
+        url = '/app/%s/tasks/import' % (app.short_name)
+        res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
+                                       'formtype': 'gdocs', 'form_name': 'gdocs'},
+                            follow_redirects=True)
+        app = db.session.query(App).first()
+        assert len(app.tasks) == 2, "There should be only 2 tasks"
+        n = 0
+        csv_tasks = [{u'Foo': u'1', u'Bar': u'2'}, {u'Foo': u'4', u'Bar': u'5'}]
+        for t in app.tasks:
+            assert t.info == csv_tasks[n], "The task info should be the same"
+            n += 1
+        assert "no new records" in res.data, res.data
+
+    @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
+    @patch('pybossa.importers.requests.get')
+    def test_bulk_epicollect_import_works(self, Mock, mock):
+        """Test WEB bulk Epicollect import works"""
+        data = [dict(DeviceID=23)]
+        html_request = FakeRequest(json.dumps(data), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
+        self.register()
+        self.new_application()
+        app = db.session.query(App).first()
+        res = self.app.post(('/app/%s/tasks/import' % (app.short_name)),
+                            data={'epicollect_project': 'fakeproject',
+                                  'epicollect_form': 'fakeform',
+                                  'formtype': 'json', 'form_name': 'epicollect'},
+                            follow_redirects=True)
+
+        app = db.session.query(App).first()
+        err_msg = "Tasks should be imported"
+        assert "1 new task was imported successfully" in res.data, err_msg
+        tasks = db.session.query(Task).filter_by(app_id=app.id).all()
+        err_msg = "The imported task from EpiCollect is wrong"
+        assert tasks[0].info['DeviceID'] == 23, err_msg
+
+        data = [dict(DeviceID=23), dict(DeviceID=24)]
+        html_request = FakeRequest(json.dumps(data), 200,
+                                   {'content-type': 'application/json'})
+        Mock.return_value = html_request
+        res = self.app.post(('/app/%s/tasks/import' % (app.short_name)),
+                            data={'epicollect_project': 'fakeproject',
+                                  'epicollect_form': 'fakeform',
+                                  'formtype': 'json', 'form_name': 'epicollect'},
+                            follow_redirects=True)
+        app = db.session.query(App).first()
+        assert len(app.tasks) == 2, "There should be only 2 tasks"
+        n = 0
+        epi_tasks = [{u'DeviceID': 23}, {u'DeviceID': 24}]
+        for t in app.tasks:
+            assert t.info == epi_tasks[n], "The task info should be the same"
+            n += 1
+
+    @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
+    @patch('pybossa.importers.requests.get')
+    def test_bulk_flickr_import_works(self, request, mock):
+        """Test WEB bulk Flickr import works"""
+        data = {
+            "photoset": {
+                "id": "72157633923521788",
+                "primary": "8947113500",
+                "owner": "32985084@N00",
+                "ownername": "Teleyinex",
+                "photo": [{ "id": "8947115130", "secret": "00e2301a0d",
+                            "server": "5441", "farm": 6, "title": "Title",
+                            "isprimary": 0, "ispublic": 1, "isfriend": 0,
+                            "isfamily": 0 }
+                    ],
+                "page": 1,
+                "per_page": "500",
+                "perpage": "500",
+                "pages": 1,
+                "total": 1,
+                "title": "Science Hack Day Balloon Mapping Workshop" },
+            "stat": "ok" }
+        html_request = FakeRequest(json.dumps(data), 200,
+                                   {'content-type': 'application/json'})
+        request.return_value = html_request
+        self.register()
+        self.new_application()
+        app = db.session.query(App).first()
+        res = self.app.post(('/app/%s/tasks/import' % (app.short_name)),
+                            data={'album_id': '1234',
+                                  'form_name': 'flickr'},
+                            follow_redirects=True)
+
+        app = db.session.query(App).first()
+        err_msg = "Tasks should be imported"
+        assert "1 new task was imported successfully" in res.data, err_msg
+        tasks = db.session.query(Task).filter_by(app_id=app.id).all()
+        expected_info = {
+            u'url': u'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d.jpg',
+            u'url_m': u'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d_m.jpg',
+            u'url_b': u'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d_b.jpg',
+            u'title': u'Title'}
+        assert tasks[0].info == expected_info, tasks[0].info
+
+    def test_invalid_importer_returns_404(self):
+        app = AppFactory.create()
+        res = self.app.get('/app/%s/tasks/import' % app.short_name)
 
     @with_context
     def test_55_facebook_account_warning(self):
@@ -3236,86 +3309,6 @@ class TestWeb(web.Helper):
         err_msg = "It should return a 404"
         assert res.status_code == 404, err_msg
 
-    @with_context
-    @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.importers.requests.get')
-    def test_71_bulk_epicollect_import_forbidden(self, Mock, mock):
-        """Test WEB bulk import forbidden works"""
-        unauthorized_request = FakeRequest('Forbidden', 403,
-                                           {'content-type': 'application/json'})
-        Mock.return_value = unauthorized_request
-        self.register()
-        self.new_application()
-        app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
-        res = self.app.post(url, data={'epicollect_project': 'fakeproject',
-                                       'epicollect_form': 'fakeform',
-                                       'formtype': 'json', 'form_name': 'epicollect'},
-                            follow_redirects=True)
-        msg = "Oops! It looks like you don't have permission to access the " \
-              "EpiCollect Plus project"
-        assert msg in res.data
-
-    @with_context
-    @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.importers.requests.get')
-    def test_72_bulk_epicollect_import_non_html(self, Mock, mock):
-        """Test WEB bulk import non html works"""
-        html_request = FakeRequest('Not an application/json', 200,
-                                   {'content-type': 'text/html'})
-        Mock.return_value = html_request
-        self.register()
-        self.new_application()
-        app = db.session.query(App).first()
-        url = '/app/%s/tasks/import?template=csv' % (app.short_name)
-        res = self.app.post(url, data={'epicollect_project': 'fakeproject',
-                                       'epicollect_form': 'fakeform',
-                                       'formtype': 'json', 'form_name': 'epicollect'},
-                            follow_redirects=True)
-        msg = "Oops! That project and form do not look like the right one."
-        assert msg in res.data
-
-    @with_context
-    @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    @patch('pybossa.importers.requests.get')
-    def test_73_bulk_epicollect_import_json(self, Mock, mock):
-        """Test WEB bulk import json works"""
-        data = [dict(DeviceID=23)]
-        html_request = FakeRequest(json.dumps(data), 200,
-                                   {'content-type': 'application/json'})
-        Mock.return_value = html_request
-        self.register()
-        self.new_application()
-        app = db.session.query(App).first()
-        res = self.app.post(('/app/%s/tasks/import' % (app.short_name)),
-                            data={'epicollect_project': 'fakeproject',
-                                  'epicollect_form': 'fakeform',
-                                  'formtype': 'json', 'form_name': 'epicollect'},
-                            follow_redirects=True)
-
-        app = db.session.query(App).first()
-        err_msg = "Tasks should be imported"
-        assert "1 new task was imported successfully" in res.data, err_msg
-        tasks = db.session.query(Task).filter_by(app_id=app.id).all()
-        err_msg = "The imported task from EpiCollect is wrong"
-        assert tasks[0].info['DeviceID'] == 23, err_msg
-
-        data = [dict(DeviceID=23), dict(DeviceID=24)]
-        html_request = FakeRequest(json.dumps(data), 200,
-                                   {'content-type': 'application/json'})
-        Mock.return_value = html_request
-        res = self.app.post(('/app/%s/tasks/import' % (app.short_name)),
-                            data={'epicollect_project': 'fakeproject',
-                                  'epicollect_form': 'fakeform',
-                                  'formtype': 'json', 'form_name': 'epicollect'},
-                            follow_redirects=True)
-        app = db.session.query(App).first()
-        assert len(app.tasks) == 2, "There should be only 2 tasks"
-        n = 0
-        epi_tasks = [{u'DeviceID': 23}, {u'DeviceID': 24}]
-        for t in app.tasks:
-            assert t.info == epi_tasks[n], "The task info should be the same"
-            n += 1
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
