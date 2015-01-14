@@ -282,6 +282,7 @@ def confirm_account():
         u = users[0]
         u.valid_email = True
         u.confirmation_email_sent = False
+        u.email_addr = userdict['email_addr']
         user_repo.update(u)
         flash(gettext('Your email has been validated.'))
         if newsletter.app:
