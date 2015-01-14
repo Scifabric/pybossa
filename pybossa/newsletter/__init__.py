@@ -66,7 +66,6 @@ class Newsletter(object):
                 update_existing = self.is_user_subscribed(old_email)
             else:
                 email = {'email': user.email_addr}
-                merge_vars['email'] = user.email_addr
 
             self.client.lists.subscribe(list_id, email, merge_vars,
                                         update_existing=update_existing)
