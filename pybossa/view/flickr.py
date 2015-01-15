@@ -34,6 +34,13 @@ def login():
     return flickr.oauth.authorize(callback=url_for('.oauth_authorized',
                                              next=request.args.get('next')))
 
+@blueprint.route('/revoke-access')
+def logout():
+    next_url = request.args.get('next') or url_for('home.home')
+    session.pop('flickr_token')
+    session.pop('flickr_user')
+    return redirect(next_url)
+
 @blueprint.route('/oauth-authorized')
 def oauth_authorized():
     next_url = request.args.get('next')
