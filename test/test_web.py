@@ -2578,23 +2578,32 @@ class TestWeb(web.Helper):
             err_msg = "Tasks should be exported to CKAN"
             assert msg in res.data, err_msg
 
-    @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    def test_54_import_tasks(self, mock):
-        """Test WEB import Task templates should work"""
+    def test_get_import_tasks_no_params_shows_options_and_templates(self, mock):
+        """Test WEB import tasks displays the different importers and template
+        tasks"""
         Fixtures.create()
         self.register()
         self.new_application()
-        # Without tasks, there should be a template
         res = self.app.get('/app/sampleapp/tasks/import', follow_redirects=True)
-        err_msg = "There should be a CSV template"
+        err_msg = "There should be a CSV importer"
         assert "imprt_type=csv" in res.data, err_msg
+        err_msg = "There should be a GDocs importer"
+        assert "imprt_type=gdocs" in res.data, err_msg
+        err_msg = "There should be an Epicollect importer"
+        assert "imprt_type=epicollect" in res.data, err_msg
+        err_msg = "There should be a Flickr importer"
+        assert "imprt_type=flickr" in res.data, err_msg
         err_msg = "There should be an Image template"
         assert "template=image" in res.data, err_msg
         err_msg = "There should be a Map template"
         assert "template=map" in res.data, err_msg
         err_msg = "There should be a PDF template"
         assert "template=pdf" in res.data, err_msg
+        err_msg = "There should be a Sound template"
+        assert "template=sound" in res.data, err_msg
+        err_msg = "There should be a Video template"
+        assert "template=video" in res.data, err_msg
 
         self.signout()
 
