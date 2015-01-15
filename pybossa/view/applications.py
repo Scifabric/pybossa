@@ -523,7 +523,7 @@ def import_task(short_name):
     require.app.read(app)
     require.app.update(app)
 
-    importer_type = request.args.get('imprt_type')
+    importer_type = request.args.get('type')
     template_tasks = current_app.config.get('TEMPLATE_TASKS')
     all_importers = importer.get_all_importer_names()
     if importer_type is not None and importer_type not in all_importers:
@@ -600,7 +600,7 @@ def setup_autoimporter(short_name):
         return render_template('/applications/task_autoimporter.html',
                                 importer=importer_info, **template_args)
 
-    importer_type = request.args.get('imprt_type')
+    importer_type = request.args.get('type')
     all_importers = importer.get_all_importer_names()
     if importer_type is not None and importer_type not in all_importers:
         raise abort(404)

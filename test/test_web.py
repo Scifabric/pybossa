@@ -2587,13 +2587,13 @@ class TestWeb(web.Helper):
         self.new_application()
         res = self.app.get('/app/sampleapp/tasks/import', follow_redirects=True)
         err_msg = "There should be a CSV importer"
-        assert "imprt_type=csv" in res.data, err_msg
+        assert "type=csv" in res.data, err_msg
         err_msg = "There should be a GDocs importer"
-        assert "imprt_type=gdocs" in res.data, err_msg
+        assert "type=gdocs" in res.data, err_msg
         err_msg = "There should be an Epicollect importer"
-        assert "imprt_type=epicollect" in res.data, err_msg
+        assert "type=epicollect" in res.data, err_msg
         err_msg = "There should be a Flickr importer"
-        assert "imprt_type=flickr" in res.data, err_msg
+        assert "type=flickr" in res.data, err_msg
         err_msg = "There should be an Image template"
         assert "template=image" in res.data, err_msg
         err_msg = "There should be a Map template"
@@ -2619,7 +2619,7 @@ class TestWeb(web.Helper):
         app = AppFactory.create(owner=owner)
 
         # CSV
-        url = "/app/%s/tasks/import?imprt_type=csv" % app.short_name
+        url = "/app/%s/tasks/import?type=csv" % app.short_name
         res = self.app.get(url, follow_redirects=True)
         data = res.data.decode('utf-8')
 
@@ -2627,7 +2627,7 @@ class TestWeb(web.Helper):
         assert 'action="/app/%E2%9C%93app1/tasks/import"' in data
 
         # Google Docs
-        url = "/app/%s/tasks/import?imprt_type=gdocs" % app.short_name
+        url = "/app/%s/tasks/import?type=gdocs" % app.short_name
         res = self.app.get(url, follow_redirects=True)
         data = res.data.decode('utf-8')
 
@@ -2635,7 +2635,7 @@ class TestWeb(web.Helper):
         assert 'action="/app/%E2%9C%93app1/tasks/import"' in data
 
         # Epicollect Plus
-        url = "/app/%s/tasks/import?imprt_type=epicollect" % app.short_name
+        url = "/app/%s/tasks/import?type=epicollect" % app.short_name
         res = self.app.get(url, follow_redirects=True)
         data = res.data.decode('utf-8')
 
@@ -2643,7 +2643,7 @@ class TestWeb(web.Helper):
         assert 'action="/app/%E2%9C%93app1/tasks/import"' in data
 
         # Flickr
-        url = "/app/%s/tasks/import?imprt_type=flickr" % app.short_name
+        url = "/app/%s/tasks/import?type=flickr" % app.short_name
         res = self.app.get(url, follow_redirects=True)
         data = res.data.decode('utf-8')
 
@@ -2651,7 +2651,7 @@ class TestWeb(web.Helper):
         assert 'action="/app/%E2%9C%93app1/tasks/import"' in data
 
         # Invalid
-        url = "/app/%s/tasks/import?imprt_type=invalid" % app.short_name
+        url = "/app/%s/tasks/import?type=invalid" % app.short_name
         res = self.app.get(url, follow_redirects=True)
 
         assert res.status_code == 404, res.status_code
