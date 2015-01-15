@@ -47,7 +47,7 @@ class Newsletter(object):
             print res
             if (res.get('success_count') == 1 and
                    res['data'][0]['email'] == email):
-               return True
+                return True
             else:
                 return False
         except Error as e:
