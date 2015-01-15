@@ -523,13 +523,13 @@ def import_task(short_name):
     require.app.read(app)
     require.app.update(app)
 
-    template = request.args.get('template')
+    importer_type = request.args.get('imprt_type')
     template_tasks = current_app.config.get('TEMPLATE_TASKS')
     all_importers = importer.get_all_importer_names()
-    if template is not None and template not in all_importers:
+    if importer_type is not None and importer_type not in all_importers:
         raise abort(404)
 
-    if template is None and request.method == 'GET':
+    if importer_type is None and request.method == 'GET':
         template_wrap = lambda i: "applications/tasks/gdocs-%s.html" % i
         task_tmpls = map(template_wrap, template_tasks)
         template_args['task_tmpls'] = task_tmpls
@@ -538,17 +538,17 @@ def import_task(short_name):
         return render_template('/applications/task_import_options.html',
                                **template_args)
 
-    template = template if request.method == 'GET' else request.form['form_name']
-    form = GenericBulkTaskImportForm()(template, request.form)
+    importer_type = importer_type if request.method == 'GET' else request.form['form_name']
+    form = GenericBulkTaskImportForm()(importer_type, request.form)
     template_args['form'] = form
-    if template == 'flickr':
+    if importer_type == 'flickr':
             template_args['albums'] = flickr.get_own_albums()
-    if template == 'gdocs' and request.args.get('mode'):  # pragma: no cover
+    if importer_type == 'gdocs' and request.args.get('mode'):  # pragma: no cover
         mode = request.args.get('mode')
         form.googledocs_url.data = template_tasks.get(mode)
 
     if not (form and form.validate_on_submit()):  # pragma: no cover
-        return render_template('/applications/importers/%s.html' % template,
+        return render_template('/applications/importers/%s.html' % importer_type,
                                 **template_args)
 
     try:
@@ -559,7 +559,7 @@ def import_task(short_name):
         current_app.logger.error(inst)
         msg = 'Oops! Looks like there was an error!'
         flash(gettext(msg), 'error')
-    return render_template('/applications/importers/%s.html' % template,
+    return render_template('/applications/importers/%s.html' % importer_type,
                             **template_args)
 
 
@@ -600,24 +600,24 @@ def setup_autoimporter(short_name):
         return render_template('/applications/task_autoimporter.html',
                                 importer=importer_info, **template_args)
 
-    template = request.args.get('template')
+    importer_type = request.args.get('imprt_type')
     all_importers = importer.get_all_importer_names()
-    if template is not None and template not in all_importers:
+    if importer_type is not None and importer_type not in all_importers:
         raise abort(404)
 
-    if template is None and request.method == 'GET':
+    if importer_type is None and request.method == 'GET':
         wrap = lambda i: "applications/tasks/%s.html" % i
         template_args['available_importers'] = map(wrap, all_importers)
         return render_template('applications/task_autoimport_options.html',
                                **template_args)
 
-    template = template if request.method == 'GET' else request.form['form_name']
-    form = GenericBulkTaskImportForm()(template, request.form)
+    importer_type = importer_type if request.method == 'GET' else request.form['form_name']
+    form = GenericBulkTaskImportForm()(importer_type, request.form)
     template_args['form'] = form
-    if template == 'flickr':
+    if importer_type == 'flickr':
             template_args['albums'] = flickr.get_own_albums()
     if not (form and form.validate_on_submit()):  # pragma: no cover
-        return render_template('/applications/importers/%s.html' % template,
+        return render_template('/applications/importers/%s.html' % importer_type,
                                 **template_args)
     app.set_autoimporter(form.get_import_data())
     project_repo.save(app)

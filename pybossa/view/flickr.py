@@ -50,7 +50,6 @@ def oauth_authorized():
     flickr_user = dict(username=resp['username'], user_nsid=resp['user_nsid'])
     session['flickr_token'] = flickr_token
     session['flickr_user'] = flickr_user
-    print resp
     if resp is None:
         flash(u'You denied the request to sign in.')
         return redirect(next_url)

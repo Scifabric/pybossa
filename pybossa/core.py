@@ -67,7 +67,7 @@ def create_app(run_as_server=True):
     setup_debug_toolbar(app)
     setup_jinja2_filters(app)
     setup_newsletter(app)
-    setup_importer(app)
+    setup_importers(app)
     return app
 
 
@@ -464,7 +464,7 @@ def setup_newsletter(app):
     if app.config.get('MAILCHIMP_API_KEY'):
         newsletter.init_app(app)
 
-def setup_importer(app):
+def setup_importers(app):
     importer.init_app(app)
     try:  # pragma: no cover
         if (app.config['FLICKR_API_KEY'] and app.config['FLICKR_SHARED_SECRET']):

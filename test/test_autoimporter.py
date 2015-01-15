@@ -333,7 +333,7 @@ class TestAutoimporterBehaviour(web.Helper):
         app = AppFactory.create(owner=owner)
 
         # CSV
-        url = "/app/%s/tasks/autoimporter?template=csv" % app.short_name
+        url = "/app/%s/tasks/autoimporter?imprt_type=csv" % app.short_name
         res = self.app.get(url, follow_redirects=True)
         data = res.data.decode('utf-8')
 
@@ -341,7 +341,7 @@ class TestAutoimporterBehaviour(web.Helper):
         assert 'action="/app/%E2%9C%93app1/tasks/autoimporter"' in data
 
         # Google Docs
-        url = "/app/%s/tasks/autoimporter?template=gdocs" % app.short_name
+        url = "/app/%s/tasks/autoimporter?imprt_type=gdocs" % app.short_name
         res = self.app.get(url, follow_redirects=True)
         data = res.data.decode('utf-8')
 
@@ -349,7 +349,7 @@ class TestAutoimporterBehaviour(web.Helper):
         assert 'action="/app/%E2%9C%93app1/tasks/autoimporter"' in data
 
         # Epicollect Plus
-        url = "/app/%s/tasks/autoimporter?template=epicollect" % app.short_name
+        url = "/app/%s/tasks/autoimporter?imprt_type=epicollect" % app.short_name
         res = self.app.get(url, follow_redirects=True)
         data = res.data.decode('utf-8')
 
@@ -357,7 +357,7 @@ class TestAutoimporterBehaviour(web.Helper):
         assert 'action="/app/%E2%9C%93app1/tasks/autoimporter"' in data
 
         # Flickr
-        url = "/app/%s/tasks/autoimporter?template=flickr" % app.short_name
+        url = "/app/%s/tasks/autoimporter?imprt_type=flickr" % app.short_name
         res = self.app.get(url, follow_redirects=True)
         data = res.data.decode('utf-8')
 
@@ -365,7 +365,7 @@ class TestAutoimporterBehaviour(web.Helper):
         assert 'action="/app/%E2%9C%93app1/tasks/autoimporter"' in data
 
         # Invalid
-        url = "/app/%s/tasks/autoimporter?template=invalid" % app.short_name
+        url = "/app/%s/tasks/autoimporter?imprt_type=invalid" % app.short_name
         res = self.app.get(url, follow_redirects=True)
 
         assert res.status_code == 404, res.status_code
