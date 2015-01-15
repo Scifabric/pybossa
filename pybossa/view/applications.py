@@ -614,6 +614,8 @@ def setup_autoimporter(short_name):
     template = template if request.method == 'GET' else request.form['form_name']
     form = GenericBulkTaskImportForm()(template, request.form)
     template_args['form'] = form
+    if template == 'flickr':
+            template_args['albums'] = flickr.get_own_albums()
     if not (form and form.validate_on_submit()):  # pragma: no cover
         return render_template('/applications/importers/%s.html' % template,
                                 **template_args)
