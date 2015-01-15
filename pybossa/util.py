@@ -270,7 +270,6 @@ class Flickr(object):
             url = 'https://api.flickr.com/services/rest/?method=flickr.photosets.getList&user_id=%s&primary_photo_extras=url_t&format=json&nojsoncallback=1' % session.get('flickr_user').get('user_nsid')
             res = self.oauth.get(url)
             albums = res.data['photosets']['photoset']
-            print res.data
             return [self._extract_album_info(album) for album in albums]
 
     def _extract_album_info(self, album):
