@@ -24,6 +24,8 @@ from pybossa.core import user_repo
 from pybossa.newsletter import Newsletter
 from factories import UserFactory
 from bs4 import BeautifulSoup
+from nose.tools import assert_raises
+import mailchimp
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
@@ -73,6 +75,18 @@ class TestNewsletter(web.Helper):
             nw.client.lists.member_info.assert_called_with(1,
                                                            [{'email': email}])
             assert res is True
+
+    @with_context
+    @patch('pybossa.newsletter.mailchimp')
+    def test_newsletter_is_user_subscribed_exception(self, mp):
+        """Test is_user_subscribed exception works."""
+        with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
+                                                'MAILCHIMP_LIST_ID': 1}):
+            email = 'john@john.com'
+            nw = Newsletter()
+            nw.init_app(self.flask_app)
+            nw.client.lists.member_info.side_effect = mailchimp.Error
+            assert_raises(mailchimp.Error, nw.is_user_subscribed, email)
 
     @with_context
     @patch('pybossa.newsletter.mailchimp')
