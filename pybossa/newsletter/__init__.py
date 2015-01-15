@@ -51,6 +51,7 @@ class Newsletter(object):
         except mailchimp.Error, e:
             msg = 'MAILCHIMP: An error occurred: %s - %s' % (e.__class__, e)
             self.app.logger.error(msg)
+            raise
 
 
     def subscribe_user(self, user, list_id=None, old_email=None):
@@ -72,3 +73,4 @@ class Newsletter(object):
         except mailchimp.Error, e:
             msg = 'MAILCHIMP: An error occurred: %s - %s' % (e.__class__, e)
             self.app.logger.error(msg)
+            raise
