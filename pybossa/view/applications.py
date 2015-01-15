@@ -543,9 +543,9 @@ def import_task(short_name):
     template_args['form'] = form
     if importer_type == 'flickr':
             template_args['albums'] = flickr.get_own_albums()
-    if importer_type == 'gdocs' and request.args.get('mode'):  # pragma: no cover
-        mode = request.args.get('mode')
-        form.googledocs_url.data = template_tasks.get(mode)
+    if importer_type == 'gdocs' and request.args.get('template'):  # pragma: no cover
+        template = request.args.get('template')
+        form.googledocs_url.data = template_tasks.get(template)
 
     if not (form and form.validate_on_submit()):  # pragma: no cover
         return render_template('/applications/importers/%s.html' % importer_type,
