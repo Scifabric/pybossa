@@ -232,6 +232,8 @@ class TestWeb(web.Helper):
         assert user.confirmation_email_sent, msg
         msg = "Email not marked as invalid"
         assert user.valid_email is False, msg
+        msg = "Email should remain not updated, as it's not been validated"
+        assert user.email_addr != 'new@email.com', msg
 
     @with_context
     def test_confirm_email_returns_404(self):
