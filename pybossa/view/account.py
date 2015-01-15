@@ -123,9 +123,11 @@ def signin():
             login_user(user, remember=True)
             msg_1 = gettext("Welcome back") + " " + user.fullname
             flash(msg_1, 'success')
-            if user.newsletter_prompted is False and newsletter.app:
-                return redirect(url_for('account.newsletter_subscribe',
-                                        next=request.args.get('next')))
+            if newsletter.app:
+                if user.newsletter_prompted is False:
+                    if newsletter.is_user_subscribed(user) is False:
+                        return redirect(url_for('account.newsletter_subscribe',
+                                                next=request.args.get('next')))
             return redirect(request.args.get("next") or url_for("home.home"))
         elif user:
             msg, method = get_user_signup_method(user)
