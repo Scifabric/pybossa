@@ -354,6 +354,28 @@ class TestWeb(web.Helper):
         msg = "Confirmation email flag has not been restored"
         assert user.confirmation_email_sent is False, msg
 
+    @patch('pybossa.view.account.signer')
+    def test_register_confirmation_validates_n_updates_email(self, fake_signer):
+        """Test WEB validates and updates email"""
+        self.register()
+        user = db.session.query(User).get(1)
+        user.valid_email = False
+        user.confirmation_email_sent = True
+        db.session.commit()
+
+        fake_signer.loads.return_value = dict(fullname=user.fullname,
+                                              name=user.name,
+                                              email_addr='new@email.com')
+        self.app.get('/account/register/confirmation?key=valid-key')
+
+        user = db.session.query(User).get(1)
+        assert user is not None
+        msg = "Email has not been validated"
+        assert user.valid_email, msg
+        msg = "Confirmation email flag has not been restored"
+        assert user.confirmation_email_sent is False, msg
+        msg = 'Email should be updated after validation.'
+        assert user.email_addr == 'new@email.com', msg
 
     @patch('pybossa.view.account.newsletter', autospec=True)
     @patch('pybossa.view.account.url_for')
