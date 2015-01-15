@@ -25,7 +25,7 @@ from pybossa.newsletter import Newsletter
 from factories import UserFactory
 from bs4 import BeautifulSoup
 from nose.tools import assert_raises
-import mailchimp
+from mailchimp import Error
 
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
@@ -85,8 +85,9 @@ class TestNewsletter(web.Helper):
             email = 'john@john.com'
             nw = Newsletter()
             nw.init_app(self.flask_app)
-            nw.client.lists.member_info.side_effect = mailchimp.Error
-            assert_raises(mailchimp.Error, nw.is_user_subscribed, email)
+            nw.client.lists.member_info.side_effect = Error
+            # nw.is_user_subscribed(email)
+            assert_raises(Error, nw.is_user_subscribed, email)
 
     @with_context
     @patch('pybossa.newsletter.mailchimp')
@@ -97,8 +98,11 @@ class TestNewsletter(web.Helper):
             user = UserFactory.create()
             nw = Newsletter()
             nw.init_app(self.flask_app)
-            nw.client.lists.subscribe.side_effect = mailchimp.Error
-            assert_raises(mailchimp.Error, nw.subscribe_user, user)
+            nw.client.lists.subscribe.side_effect = Error
+            tmp = {'data': [{'email': user.email_addr}],
+                   'success_count': 1}
+            nw.client.lists.member_info.return_value = tmp
+            assert_raises(Error, nw.subscribe_user, user)
 
 
     @with_context

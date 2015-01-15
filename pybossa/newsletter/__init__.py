@@ -18,6 +18,7 @@
 """PyBossa module for subscribing users to Mailchimp lists."""
 
 import mailchimp
+from mailchimp import Error
 
 
 class Newsletter(object):
@@ -43,12 +44,13 @@ class Newsletter(object):
                 list_id = self.list_id
 
             res = self.client.lists.member_info(list_id, [{'email': email}])
+            print res
             if (res.get('success_count') == 1 and
                    res['data'][0]['email'] == email):
                return True
             else:
                 return False
-        except mailchimp.Error, e:
+        except Error as e:
             msg = 'MAILCHIMP: An error occurred: %s - %s' % (e.__class__, e)
             self.app.logger.error(msg)
             raise
@@ -70,7 +72,7 @@ class Newsletter(object):
 
             self.client.lists.subscribe(list_id, email, merge_vars,
                                         update_existing=update_existing)
-        except mailchimp.Error, e:
+        except Error, e:
             msg = 'MAILCHIMP: An error occurred: %s - %s' % (e.__class__, e)
             self.app.logger.error(msg)
             raise
