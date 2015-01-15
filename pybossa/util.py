@@ -267,9 +267,19 @@ class Flickr(object):
     def get_own_albums(self):
         from flask import session
         if session.get('flickr_user') is not None and session.get('flickr_token') is not None:
-            url = 'https://api.flickr.com/services/rest/?method=flickr.photosets.getList&user_id=%s&format=json&nojsoncallback=1' % session.get('flickr_user').get('user_nsid')
-            albums = self.oauth.get(url).data['photosets']['photoset']
-            return albums
+            url = 'https://api.flickr.com/services/rest/?method=flickr.photosets.getList&user_id=%s&primary_photo_extras=url_t&format=json&nojsoncallback=1' % session.get('flickr_user').get('user_nsid')
+            res = self.oauth.get(url)
+            albums = res.data['photosets']['photoset']
+            print res.data
+            return [self._extract_album_info(album) for album in albums]
+
+    def _extract_album_info(self, album):
+        info = {'title': album['title']['_content'],
+                'photos': album['photos'],
+                'id': album['id'],
+                'thumbnail_url': album['primary_photo_extras']['url_t']}
+        return info
+
 
 
 def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
