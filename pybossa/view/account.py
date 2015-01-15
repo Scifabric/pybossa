@@ -125,7 +125,7 @@ def signin():
             flash(msg_1, 'success')
             if newsletter.app:
                 if user.newsletter_prompted is False:
-                    if newsletter.is_user_subscribed(user) is False:
+                    if newsletter.is_user_subscribed(user.email_addr) is False:
                         return redirect(url_for('account.newsletter_subscribe',
                                                 next=request.args.get('next')))
             return redirect(request.args.get("next") or url_for("home.home"))
@@ -351,15 +351,18 @@ def _show_own_profile(user):
     user.rank = rank_and_score['rank']
     user.score = rank_and_score['score']
     user.total = cached_users.get_total_users()
+    user.valid_email = user.valid_email
+    user.confirmation_email_sent = user.confirmation_email_sent
     apps_contributed = cached_users.apps_contributed_cached(user.id)
     apps_published, apps_draft = _get_user_apps(user.id)
     apps_published.extend(cached_users.hidden_apps(user.id))
+    cached_users.get_user_summary(user.name)
 
     return render_template('account/profile.html', title=gettext("Profile"),
                           apps_contrib=apps_contributed,
                           apps_published=apps_published,
                           apps_draft=apps_draft,
-                          user=cached_users.get_user_summary(user.name))
+                          user=user)
 
 
 
