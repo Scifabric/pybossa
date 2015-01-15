@@ -90,6 +90,19 @@ class TestNewsletter(web.Helper):
 
     @with_context
     @patch('pybossa.newsletter.mailchimp')
+    def test_newsletter_subscribe_user_exception(self, mp):
+        """Test subscribe_user exception works."""
+        with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
+                                                'MAILCHIMP_LIST_ID': 1}):
+            user = UserFactory.create()
+            nw = Newsletter()
+            nw.init_app(self.flask_app)
+            nw.client.lists.subscribe.side_effect = mailchimp.Error
+            assert_raises(mailchimp.Error, nw.subscribe_user, user)
+
+
+    @with_context
+    @patch('pybossa.newsletter.mailchimp')
     def test_newsletter_subscribe_user(self, mailchimp):
         """Test subscribe user works."""
         with patch.dict(self.flask_app.config, {'MAILCHIMP_API_KEY': 'k-3',
