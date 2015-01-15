@@ -2590,11 +2590,11 @@ class TestWeb(web.Helper):
         err_msg = "There should be a CSV template"
         assert "imprt_type=csv" in res.data, err_msg
         err_msg = "There should be an Image template"
-        assert "mode=image" in res.data, err_msg
+        assert "template=image" in res.data, err_msg
         err_msg = "There should be a Map template"
-        assert "mode=map" in res.data, err_msg
+        assert "template=map" in res.data, err_msg
         err_msg = "There should be a PDF template"
-        assert "mode=pdf" in res.data, err_msg
+        assert "template=pdf" in res.data, err_msg
         # With tasks
         self.new_task(1)
         res = self.app.get('/app/sampleapp/tasks/import', follow_redirects=True)
