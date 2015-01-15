@@ -2595,18 +2595,7 @@ class TestWeb(web.Helper):
         assert "template=map" in res.data, err_msg
         err_msg = "There should be a PDF template"
         assert "template=pdf" in res.data, err_msg
-        # With tasks
-        self.new_task(1)
-        res = self.app.get('/app/sampleapp/tasks/import', follow_redirects=True)
-        err_msg = "There should load directly the basic template"
-        err_msg = "There should not be a CSV template"
-        assert "imprt_type=basic" not in res.data, err_msg
-        err_msg = "There should not be an Image template"
-        assert "imprt_type=image" not in res.data, err_msg
-        err_msg = "There should not be a Map template"
-        assert "imprt_type=map" not in res.data, err_msg
-        err_msg = "There should not be a PDF template"
-        assert "imprt_type=pdf" not in res.data, err_msg
+
         self.signout()
 
         self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
