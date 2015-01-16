@@ -18,6 +18,7 @@
 """PyBossa module for subscribing users to Mailchimp lists."""
 
 import mailchimp
+from mailchimp import Error
 
 
 class Newsletter(object):
@@ -36,13 +37,42 @@ class Newsletter(object):
         self.client = mailchimp.Mailchimp(app.config.get('MAILCHIMP_API_KEY'))
         self.list_id = app.config.get('MAILCHIMP_LIST_ID')
 
-    def subscribe_user(self, user, list_id=None):
-        """Subscribe a user to a mailchimp list."""
+    def is_user_subscribed(self, email, list_id=None):
+        """Check if user is subscribed or not."""
         try:
             if list_id is None:
                 list_id = self.list_id
-            self.client.lists.subscribe(list_id, {'email': user.email_addr},
-                                                 {'FNAME': user.fullname})
-        except mailchimp.Error, e:
+
+            res = self.client.lists.member_info(list_id, [{'email': email}])
+            print res
+            if (res.get('success_count') == 1 and
+                   res['data'][0]['email'] == email):
+                return True
+            else:
+                return False
+        except Error as e:
             msg = 'MAILCHIMP: An error occurred: %s - %s' % (e.__class__, e)
             self.app.logger.error(msg)
+            raise
+
+
+    def subscribe_user(self, user, list_id=None, old_email=None):
+        """Subscribe, update a user of a mailchimp list."""
+        try:
+            update_existing = False
+            if list_id is None:
+                list_id = self.list_id
+            merge_vars = {'FNAME': user.fullname}
+            if old_email:
+                email = {'email': old_email}
+                merge_vars['new-email'] = user.email_addr
+                update_existing = self.is_user_subscribed(old_email)
+            else:
+                email = {'email': user.email_addr}
+
+            self.client.lists.subscribe(list_id, email, merge_vars,
+                                        update_existing=update_existing)
+        except Error, e:
+            msg = 'MAILCHIMP: An error occurred: %s - %s' % (e.__class__, e)
+            self.app.logger.error(msg)
+            raise

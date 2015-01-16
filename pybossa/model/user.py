@@ -58,6 +58,8 @@ class User(db.Model, DomainObject, UserMixin):
     google_user_id = Column(String, unique=True)
     ckan_api = Column(String, unique=True)
     newsletter_prompted = Column(Boolean, default=False)
+    valid_email = Column(Boolean, default=False)
+    confirmation_email_sent = Column(Boolean, default=False)
     info = Column(JSONEncodedDict, default=dict)
 
     ## Relationships

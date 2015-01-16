@@ -123,9 +123,11 @@ def signin():
             login_user(user, remember=True)
             msg_1 = gettext("Welcome back") + " " + user.fullname
             flash(msg_1, 'success')
-            if user.newsletter_prompted is False and newsletter.app:
-                return redirect(url_for('account.newsletter_subscribe',
-                                        next=request.args.get('next')))
+            if newsletter.app:
+                if user.newsletter_prompted is False:
+                    if newsletter.is_user_subscribed(user.email_addr) is False:
+                        return redirect(url_for('account.newsletter_subscribe',
+                                                next=request.args.get('next')))
             return redirect(request.args.get("next") or url_for("home.home"))
         elif user:
             msg, method = get_user_signup_method(user)
@@ -172,6 +174,41 @@ def signout():
     return redirect(url_for('home.home'))
 
 
+def get_email_confirmation_url(account):
+    """Return confirmation url for a given user email."""
+    key = signer.dumps(account, salt='account-validation')
+    confirm_url = url_for('.confirm_account', key=key, _external=True)
+    return confirm_url
+
+@blueprint.route('/confirm-email')
+@login_required
+def confirm_email():
+    """Send email to confirm user email."""
+    acc_conf_dis = current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED')
+    if acc_conf_dis:
+        return abort(404)
+    if current_user.valid_email is False:
+        user = user_repo.get(current_user.id)
+        account = dict(fullname=current_user.fullname, name=current_user.name,
+                       email_addr=current_user.email_addr)
+        confirm_url = get_email_confirmation_url(account)
+        subject = ('Verify your email in %s' \
+                   % current_app.config.get('BRAND'))
+        msg = dict(subject=subject,
+                   recipients=[current_user.email_addr],
+                   body=render_template(
+                       '/account/email/validate_email.md',
+                       user=account, confirm_url=confirm_url))
+        msg['html'] = markdown(msg['body'])
+        mail_queue.enqueue(send_mail, msg)
+        msg = gettext("An e-mail has been sent to \
+                       validate your e-mail address.")
+        flash(msg, 'info')
+        user.confirmation_email_sent = True
+        user_repo.update(user)
+    return redirect(url_for('.profile', name=current_user.name))
+
+
 @blueprint.route('/register', methods=['GET', 'POST'])
 def register():
     """
@@ -183,9 +220,9 @@ def register():
     form = RegisterForm(request.form)
     if request.method == 'POST' and form.validate():
         account = dict(fullname=form.fullname.data, name=form.name.data,
-                       email_addr=form.email_addr.data, password=form.password.data)
-        key = signer.dumps(account, salt='account-validation')
-        confirm_url = url_for('.confirm_account', key=key, _external=True)
+                      email_addr=form.email_addr.data,
+                      password=form.password.data)
+        confirm_url = get_email_confirmation_url(account)
         if current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED'):
             return redirect(confirm_url)
         msg = dict(subject='Welcome to %s!' % current_app.config.get('BRAND'),
@@ -193,7 +230,7 @@ def register():
                    body=render_template('/account/email/validate_account.md',
                                        user=account, confirm_url=confirm_url))
         msg['html'] = markdown(msg['body'])
-        send_mail_job = mail_queue.enqueue(send_mail, msg)
+        mail_queue.enqueue(send_mail, msg)
         return render_template('account/account_validation.html')
     if request.method == 'POST' and not form.validate():
         flash(gettext('Please correct the errors'), 'error')
@@ -241,9 +278,24 @@ def confirm_account():
         userdict = signer.loads(key, max_age=3600, salt='account-validation')
     except BadData:
         abort(403)
+    # First check if the user exists
+    users = user_repo.filter_by(name=userdict['name'])
+    if len(users) == 1 and users[0].name == userdict['name']:
+        u = users[0]
+        u.valid_email = True
+        u.confirmation_email_sent = False
+        u.email_addr = userdict['email_addr']
+        user_repo.update(u)
+        flash(gettext('Your email has been validated.'))
+        if newsletter.app:
+            return redirect(url_for('account.newsletter_subscribe'))
+        else:
+            return redirect(url_for('home.home'))
+
     account = model.user.User(fullname=userdict['fullname'],
                               name=userdict['name'],
-                              email_addr=userdict['email_addr'])
+                              email_addr=userdict['email_addr'],
+                              valid_email=True)
     account.set_password(userdict['password'])
     user_repo.save(account)
     login_user(account, remember=True)
@@ -299,15 +351,18 @@ def _show_own_profile(user):
     user.rank = rank_and_score['rank']
     user.score = rank_and_score['score']
     user.total = cached_users.get_total_users()
+    user.valid_email = user.valid_email
+    user.confirmation_email_sent = user.confirmation_email_sent
     apps_contributed = cached_users.apps_contributed_cached(user.id)
     apps_published, apps_draft = _get_user_apps(user.id)
     apps_published.extend(cached_users.hidden_apps(user.id))
+    cached_users.get_user_summary(user.name)
 
     return render_template('account/profile.html', title=gettext("Profile"),
                           apps_contrib=apps_contributed,
                           apps_published=apps_published,
                           apps_draft=apps_draft,
-                          user=cached_users.get_user_summary(user.name))
+                          user=user)
 
 
 
@@ -383,6 +438,7 @@ def update_profile(name):
                                external_form=external_form,
                                show_passwd_form=show_passwd_form)
     else:
+        acc_conf_dis = current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED')
         # Update user avatar
         if request.form.get('btn') == 'Upload':
             avatar_form = AvatarUploadForm()
@@ -424,7 +480,30 @@ def update_profile(name):
                 user.id = update_form.id.data
                 user.fullname = update_form.fullname.data
                 user.name = update_form.name.data
-                user.email_addr = update_form.email_addr.data
+                if (user.email_addr != update_form.email_addr.data and
+                        acc_conf_dis is False):
+                    user.valid_email = False
+                    user.newsletter_prompted = False
+                    account = dict(fullname=update_form.fullname.data,
+                                   name=update_form.name.data,
+                                   email_addr=update_form.email_addr.data)
+                    confirm_url = get_email_confirmation_url(account)
+                    subject = ('You have updated your email in %s! Verify it' \
+                               % current_app.config.get('BRAND'))
+                    msg = dict(subject=subject,
+                               recipients=[update_form.email_addr.data],
+                               body=render_template(
+                                   '/account/email/validate_email.md',
+                                   user=account, confirm_url=confirm_url))
+                    msg['html'] = markdown(msg['body'])
+                    mail_queue.enqueue(send_mail, msg)
+                    user.confirmation_email_sent = True
+                    fls = gettext('An email has been sent to verify your \
+                                  new email: %s. Once you verify it, it will \
+                                  be updated.' % account['email_addr'])
+                    flash(fls, 'info')
+                if acc_conf_dis:
+                    user.email_addr = update_form.email_addr.data
                 user.privacy_mode = update_form.privacy_mode.data
                 user.locale = update_form.locale.data
                 user_repo.update(user)
