@@ -37,8 +37,10 @@ def login():
 @blueprint.route('/revoke-access')
 def logout():
     next_url = request.args.get('next') or url_for('home.home')
-    session.pop('flickr_token')
-    session.pop('flickr_user')
+    if 'flickr_token' in session:
+        session.pop('flickr_token')
+    if 'flickr_user' in session:
+        session.pop('flickr_user')
     return redirect(next_url)
 
 @blueprint.route('/oauth-authorized')
@@ -53,5 +55,4 @@ def oauth_authorized():
     if resp is None:
         flash(u'You denied the request to sign in.')
         return redirect(next_url)
-
     return redirect(next_url)
