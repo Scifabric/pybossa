@@ -47,12 +47,12 @@ def logout():
 def oauth_authorized():
     next_url = request.args.get('next')
     resp = flickr.oauth.authorized_response()
+    if resp is None:
+        flash(u'You denied the request to sign in.')
+        return redirect(next_url)
     flickr_token = dict(oauth_token=resp['oauth_token'],
                         oauth_token_secret=resp['oauth_token_secret'])
     flickr_user = dict(username=resp['username'], user_nsid=resp['user_nsid'])
     session['flickr_token'] = flickr_token
     session['flickr_user'] = flickr_user
-    if resp is None:
-        flash(u'You denied the request to sign in.')
-        return redirect(next_url)
     return redirect(next_url)

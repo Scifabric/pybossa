@@ -102,3 +102,14 @@ class TestFlickrOauth(object):
         flask_app.test_client().get('/flickr/oauth-authorized?next=http://next')
 
         redirect.assert_called_with('http://next')
+
+
+    @patch('pybossa.view.flickr.flickr')
+    @patch('pybossa.view.flickr.redirect')
+    def test_oauth_authorized_user_refused_to_login_flickr(
+            self, redirect, flickr_oauth):
+        flickr_oauth.oauth.authorized_response.return_value = None
+        redirect.return_value = Response(302)
+        flask_app.test_client().get('/flickr/oauth-authorized?next=http://next')
+
+        redirect.assert_called_with('http://next')
