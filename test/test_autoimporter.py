@@ -17,11 +17,15 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from default import db
 from helper import web
-from pybossa.model.app import App
-from pybossa.model.user import User
 from pybossa.jobs import import_tasks
 from factories import AppFactory
+from pybossa.repositories import UserRepository
+from pybossa.repositories import ProjectRepository
+from mock import patch, MagicMock
 from mock import patch
+
+project_repo = ProjectRepository(db)
+user_repo = UserRepository(db)
 
 class TestAutoimporterAccessAndResponses(web.Helper):
 
@@ -40,7 +44,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         """Test task autoimporter returns Forbidden if non owner accesses"""
         self.register()
         self.new_application()
-        app = db.session.query(App).first()
+        app = project_repo.get(1)
         self.signout()
         self.register(name='non-owner')
         url = "/app/%s/tasks/autoimporter" % app.short_name
@@ -57,7 +61,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         # User
         self.register(name="owner")
         self.new_application()
-        app = db.session.query(App).first()
+        app = project_repo.get(1)
         url = "/app/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.get(url, follow_redirects=True)
@@ -70,12 +74,12 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         self.signout()
         # User
         self.register(name="owner")
-        owner = db.session.query(User).filter_by(name="owner").first()
+        owner = user_repo.get_by_name("owner")
         owner.pro = True
-        db.session.commit()
+        user_repo.save(owner)
 
         self.new_application()
-        app = db.session.query(App).first()
+        app = project_repo.get(1)
         url = "/app/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.get(url, follow_redirects=True)
@@ -91,7 +95,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         self.new_application()
         self.signout()
         self.signin()
-        app = db.session.query(App).first()
+        app = project_repo.get(1)
         url = "/app/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.get(url, follow_redirects=True)
@@ -121,7 +125,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         """Test task autoimporter post returns Forbidden if non owner accesses"""
         self.register()
         self.new_application()
-        app = db.session.query(App).first()
+        app = project_repo.get(1)
         self.signout()
         self.register(name='non-owner')
         url = "/app/%s/tasks/autoimporter" % app.short_name
@@ -138,7 +142,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         # User
         self.register(name="owner")
         self.new_application()
-        app = db.session.query(App).first()
+        app = project_repo.get(1)
         url = "/app/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.post(url, data={}, follow_redirects=True)
@@ -151,12 +155,12 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         self.signout()
         # User
         self.register(name="owner")
-        owner = db.session.query(User).filter_by(name="owner").first()
+        owner = user_repo.get_by_name("owner")
         owner.pro = True
-        db.session.commit()
+        user_repo.save(owner)
 
         self.new_application()
-        app = db.session.query(App).first()
+        app = project_repo.get(1)
         url = "/app/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.post(url, data={'csv_url': 'http://as.com',
@@ -174,7 +178,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         self.new_application()
         self.signout()
         self.signin()
-        app = db.session.query(App).first()
+        app = project_repo.get(1)
         url = "/app/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.post(url, data={'csv_url': 'http://as.com',
@@ -206,7 +210,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         """Test delete task autoimporter returns Forbidden if non owner accesses"""
         self.register()
         self.new_application()
-        app = db.session.query(App).first()
+        app = project_repo.get(1)
         self.signout()
         self.register(name='non-owner')
         url = "/app/%s/tasks/autoimporter/delete" % app.short_name
@@ -223,7 +227,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         # User
         self.register(name="owner")
         self.new_application()
-        app = db.session.query(App).first()
+        app = project_repo.get(1)
         url = "/app/%s/tasks/autoimporter/delete" % app.short_name
 
         res = self.app.post(url, data={}, follow_redirects=True)
@@ -236,12 +240,12 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         self.signout()
         # User
         self.register(name="owner")
-        owner = db.session.query(User).filter_by(name="owner").first()
+        owner = user_repo.get_by_name("owner")
         owner.pro = True
-        db.session.commit()
+        user_repo.save(owner)
 
         self.new_application()
-        app = db.session.query(App).first()
+        app = project_repo.get(1)
         url = "/app/%s/tasks/autoimporter/delete" % app.short_name
 
         res = self.app.post(url, data={}, follow_redirects=True)
@@ -257,7 +261,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         self.new_application()
         self.signout()
         self.signin()
-        app = db.session.query(App).first()
+        app = project_repo.get(1)
         url = "/app/%s/tasks/autoimporter/delete" % app.short_name
 
         res = self.app.post(url, data={}, follow_redirects=True)
@@ -279,7 +283,7 @@ class TestAutoimporterBehaviour(web.Helper):
         """Test task autoimporter get renders the template for creating new
         autoimporter if none exists"""
         self.register()
-        owner = db.session.query(User).first()
+        owner = user_repo.get(1)
         app = AppFactory.create(owner=owner)
         url = "/app/%s/tasks/autoimporter" % app.short_name
         expected_text = "Setup task autoimporter"
@@ -300,7 +304,7 @@ class TestAutoimporterBehaviour(web.Helper):
             del importer._flickr_api_key
 
             self.register()
-            owner = db.session.query(User).first()
+            owner = user_repo.get(1)
             app = AppFactory.create(owner=owner)
             url = "/app/%s/tasks/autoimporter" % app.short_name
 
@@ -316,7 +320,7 @@ class TestAutoimporterBehaviour(web.Helper):
     def test_autoimporter_doesnt_show_unavailable_importers_v2(self, names):
         names.return_value = ['csv', 'gdocs', 'epicollect']
         self.register()
-        owner = db.session.query(User).first()
+        owner = user_repo.get(1)
         app = AppFactory.create(owner=owner)
         url = "/app/%s/tasks/autoimporter" % app.short_name
 
@@ -329,7 +333,7 @@ class TestAutoimporterBehaviour(web.Helper):
         """Test task autoimporter with specific autoimporter variant argument
         shows the form for it, for each of the variants"""
         self.register()
-        owner = db.session.query(User).first()
+        owner = user_repo.get(1)
         app = AppFactory.create(owner=owner)
 
         # CSV
@@ -374,7 +378,7 @@ class TestAutoimporterBehaviour(web.Helper):
     def test_autoimporter_shows_current_autoimporter_if_exists(self):
         """Test task autoimporter shows the current autoimporter if exists"""
         self.register()
-        owner = db.session.query(User).first()
+        owner = user_repo.get(1)
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
         app = AppFactory.create(owner=owner, info={'autoimporter': autoimporter})
         url = "/app/%s/tasks/autoimporter" % app.short_name
@@ -388,7 +392,7 @@ class TestAutoimporterBehaviour(web.Helper):
         """Test a valid post to autoimporter endpoint sets an autoimporter to
         the project"""
         self.register()
-        owner = db.session.query(User).first()
+        owner = user_repo.get(1)
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
         app = AppFactory.create(owner=owner)
         url = "/app/%s/tasks/autoimporter" % app.short_name
@@ -404,7 +408,7 @@ class TestAutoimporterBehaviour(web.Helper):
         """Test a valid post to autoimporter endpoint will not create another
         autoimporter if one exists for that app"""
         self.register()
-        owner = db.session.query(User).first()
+        owner = user_repo.get(1)
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
         app = AppFactory.create(owner=owner, info={'autoimporter': autoimporter})
         url = "/app/%s/tasks/autoimporter" % app.short_name
@@ -417,7 +421,7 @@ class TestAutoimporterBehaviour(web.Helper):
 
     def test_delete_autoimporter_deletes_current_autoimporter_job(self):
         self.register()
-        owner = db.session.query(User).first()
+        owner = user_repo.get(1)
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
         app = AppFactory.create(owner=owner, info={'autoimporter': autoimporter})
         url = "/app/%s/tasks/autoimporter/delete" % app.short_name
@@ -429,7 +433,7 @@ class TestAutoimporterBehaviour(web.Helper):
 
     def test_flickr_autoimporter_page_shows_option_to_log_into_flickr(self):
         self.register()
-        owner = db.session.query(User).first()
+        owner = user_repo.get(1)
         app = AppFactory.create(owner=owner)
         url = "/app/%s/tasks/autoimporter?type=flickr" % app.short_name
 
@@ -447,7 +451,7 @@ class TestAutoimporterBehaviour(web.Helper):
                                                'id': u'my-fake-ID',
                                                'title': u'my-fake-title'}]
         self.register()
-        owner = db.session.query(User).first()
+        owner = user_repo.get(1)
         app = AppFactory.create(owner=owner)
         url = "/app/%s/tasks/autoimporter?type=flickr" % app.short_name
 
