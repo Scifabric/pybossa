@@ -2918,6 +2918,38 @@ class TestWeb(web.Helper):
             u'title': u'Title'}
         assert tasks[0].info == expected_info, tasks[0].info
 
+    def test_flickr_importer_page_shows_option_to_log_into_flickr(self):
+        self.register()
+        owner = db.session.query(User).first()
+        app = AppFactory.create(owner=owner)
+        url = "/app/%s/tasks/import?type=flickr" % app.short_name
+
+        res = self.app.get(url)
+        login_url = '/flickr/?next=%2Fapp%2F%25E2%259C%2593app1%2Ftasks%2Fimport%3Ftype%3Dflickr'
+
+        assert login_url in res.data
+
+    @patch('pybossa.view.applications.flickr')
+    def test_flickr_importer_page_shows_albums_and_revoke_access_option(
+            self, flickr):
+        flickr.get_own_albums.return_value = [{'photos': u'1',
+                                               'thumbnail_url': u'fake-url',
+                                               'id': u'my-fake-ID',
+                                               'title': u'my-fake-title'}]
+        self.register()
+        owner = db.session.query(User).first()
+        app = AppFactory.create(owner=owner)
+        url = "/app/%s/tasks/import?type=flickr" % app.short_name
+
+        res = self.app.get(url)
+        revoke_url = '/flickr/revoke-access?next=%2Fapp%2F%25E2%259C%2593app1%2Ftasks%2Fimport%3Ftype%3Dflickr'
+
+        assert '1 photos' in res.data
+        assert 'src="fake-url"' in res.data
+        assert 'id="my-fake-ID"' in res.data
+        assert 'my-fake-title' in res.data
+        assert revoke_url in res.data
+
     @with_context
     def test_55_facebook_account_warning(self):
         """Test WEB Facebook OAuth user gets a hint to sign in"""
