@@ -522,45 +522,51 @@ def import_task(short_name):
                          target='app.import_task')
     require.app.read(app)
     require.app.update(app)
+    if request.method == 'POST':
+        importer_type = request.form['form_name']
+        if importer_type not in importer.get_all_importer_names():
+            raise abort(404)
 
-    importer_type = request.args.get('type')
-    template_tasks = current_app.config.get('TEMPLATE_TASKS')
-    all_importers = importer.get_all_importer_names()
-    if importer_type is not None and importer_type not in all_importers:
-        raise abort(404)
+        form = GenericBulkTaskImportForm()(importer_type, request.form)
+        template_args['form'] = form
 
-    if importer_type is None and request.method == 'GET':
-        template_wrap = lambda i: "applications/tasks/gdocs-%s.html" % i
-        task_tmpls = map(template_wrap, template_tasks)
-        template_args['task_tmpls'] = task_tmpls
-        importer_wrap = lambda i: "applications/tasks/%s.html" % i
-        template_args['available_importers'] = map(importer_wrap, all_importers)
-        return render_template('/applications/task_import_options.html',
-                               **template_args)
-
-    importer_type = importer_type if request.method == 'GET' else request.form['form_name']
-    form = GenericBulkTaskImportForm()(importer_type, request.form)
-    template_args['form'] = form
-    if importer_type == 'flickr':
-        template_args['albums'] = flickr.get_own_albums()
-    if importer_type == 'gdocs' and request.args.get('template'):  # pragma: no cover
-        template = request.args.get('template')
-        form.googledocs_url.data = template_tasks.get(template)
-
-    if not (form and form.validate_on_submit()):  # pragma: no cover
+        if form.validate_on_submit():  # pragma: no cover
+            try:
+                return _import_tasks(app, **form.get_import_data())
+            except BulkImportException as err_msg:
+                flash(err_msg, 'error')
+            except Exception as inst:  # pragma: no cover
+                current_app.logger.error(inst)
+                msg = 'Oops! Looks like there was an error!'
+                flash(gettext(msg), 'error')
         return render_template('/applications/importers/%s.html' % importer_type,
                                 **template_args)
+    if request.method == 'GET':
+        importer_type = request.args.get('type')
+        template_tasks = current_app.config.get('TEMPLATE_TASKS')
+        all_importers = importer.get_all_importer_names()
+        if importer_type is not None and importer_type not in all_importers:
+            raise abort(404)
 
-    try:
-        return _import_tasks(app, **form.get_import_data())
-    except BulkImportException as err_msg:
-        flash(err_msg, 'error')
-    except Exception as inst:  # pragma: no cover
-        current_app.logger.error(inst)
-        msg = 'Oops! Looks like there was an error!'
-        flash(gettext(msg), 'error')
-    return render_template('/applications/importers/%s.html' % importer_type,
-                            **template_args)
+        if importer_type is None:
+            template_wrap = lambda i: "applications/tasks/gdocs-%s.html" % i
+            task_tmpls = map(template_wrap, template_tasks)
+            template_args['task_tmpls'] = task_tmpls
+            importer_wrap = lambda i: "applications/tasks/%s.html" % i
+            template_args['available_importers'] = map(importer_wrap, all_importers)
+            return render_template('/applications/task_import_options.html',
+                                   **template_args)
+
+        form = GenericBulkTaskImportForm()(importer_type, request.form)
+        template_args['form'] = form
+        if importer_type == 'flickr':
+            template_args['albums'] = flickr.get_own_albums()
+        if importer_type == 'gdocs' and request.args.get('template'):  # pragma: no cover
+            template = request.args.get('template')
+            form.googledocs_url.data = template_tasks.get(template)
+
+        return render_template('/applications/importers/%s.html' % importer_type,
+                                **template_args)
 
 
 def _import_tasks(app, **form_data):
