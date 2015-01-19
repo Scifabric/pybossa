@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from mock import patch
+from mock import patch, MagicMock
 from flask import Response, session
 from default import flask_app
 from pybossa.util import Flickr
@@ -127,10 +127,13 @@ class TestFlickrOauth(object):
         token = {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
         user = {'username': u'palotespaco', 'user_nsid': u'user'}
 
+        flickr = Flickr()
+        flickr.app = MagicMock()
+
         with flask_app.test_request_context():
             session['flickr_token'] = token
             session['flickr_user'] = user
-            albums = Flickr().get_own_albums()
+            albums = flickr.get_own_albums()
 
         assert albums == [], albums
 
@@ -146,12 +149,38 @@ class TestFlickrOauth(object):
         token = {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
         user = {'username': u'palotespaco', 'user_nsid': u'user'}
 
+        flickr = Flickr()
+        flickr.app = MagicMock()
+
         with flask_app.test_request_context():
             session['flickr_token'] = token
             session['flickr_user'] = user
-            albums = Flickr().get_own_albums()
+            albums = flickr.get_own_albums()
 
         assert albums == [], albums
+
+
+    @patch.object(Flickr, 'oauth')
+    def test_get_own_albums_log_response_on_request_fail(self, oauth):
+        class Res(object):
+            pass
+        response = Res()
+        response.status = 200
+        response.data = {'stat': 'fail', 'code': 1, 'message': 'User not found'}
+        oauth.get.return_value = response
+        token = {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
+        user = {'username': u'palotespaco', 'user_nsid': u'user'}
+        log_error_msg = ("Bad response from Flickr:\nStatus: %s, Content: %s"
+            % (response.status, response.data))
+
+        flickr = Flickr()
+        flickr.app = MagicMock()
+
+        with flask_app.test_request_context():
+            session['flickr_token'] = token
+            session['flickr_user'] = user
+            albums = flickr.get_own_albums()
+            flickr.app.logger.error.assert_called_with(log_error_msg)
 
 
     @patch.object(Flickr, 'oauth')

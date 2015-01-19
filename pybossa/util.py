@@ -277,6 +277,10 @@ class Flickr(object):
             if res.status == 200 and res.data.get('stat') == 'ok':
                 albums = res.data['photosets']['photoset']
                 return [self._extract_album_info(album) for album in albums]
+            else:
+                msg = ("Bad response from Flickr:\nStatus: %s, Content: %s"
+                    % (res.status, res.data))
+                self.app.logger.error(msg)
         return []
 
     def _extract_album_info(self, album):
