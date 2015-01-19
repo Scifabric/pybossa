@@ -23,6 +23,7 @@ for actually do the job of importing tasks, by using their public methods:
 
 * create_tasks
 * count_tasks_to_import
+* get_all_importer_names
 
 create_importer takes as arguments task_repo, project_id, importer_id, and
 **form_data. task_repo is a TaskRepository object that will handle the store of
@@ -35,3 +36,8 @@ count_tasks_to_import takes as arguments the importer_id and **form_data, and
 will return, before creating any task, the number of tasks that will be imported
 from the source. This is used for instance for deciding whether to import the
 tasks in a synchronous or an asynchronous way, depending on the amount of them.
+
+get_all_importer_names returns a list of all the available importers. This list
+may vary depending on the configuration of the server (e.g. if no API key for
+integration with the Flickr service is found, then the Flickr importer won't be
+available).
