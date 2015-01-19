@@ -21,7 +21,7 @@ from flask import Response, session
 from default import flask_app
 from pybossa.util import Flickr
 
-class TestFlickrOauth(object):
+class TestFlickrOauthBlueprint(object):
 
 
     @patch('pybossa.view.flickr.flickr')
@@ -116,13 +116,16 @@ class TestFlickrOauth(object):
         redirect.assert_called_with('http://next')
 
 
+class TestFlickrOauthBlueprint(object):
+    class Res(object):
+        def __init__(self, status, data):
+            self.status = status
+            self.data = data
+
+
     @patch.object(Flickr, 'oauth')
     def test_get_own_albums_return_empty_list_on_request_error(self, oauth):
-        class Res(object):
-            pass
-        response = Res()
-        response.status = 404
-        response.data = 'not found'
+        response = self.Res(404, 'not found')
         oauth.get.return_value = response
         token = {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
         user = {'username': u'palotespaco', 'user_nsid': u'user'}
@@ -140,11 +143,8 @@ class TestFlickrOauth(object):
 
     @patch.object(Flickr, 'oauth')
     def test_get_own_albums_return_empty_list_on_request_fail(self, oauth):
-        class Res(object):
-            pass
-        response = Res()
-        response.status = 200
-        response.data = {'stat': 'fail', 'code': 1, 'message': 'User not found'}
+        data = {'stat': 'fail', 'code': 1, 'message': 'User not found'}
+        response = self.Res(200, data)
         oauth.get.return_value = response
         token = {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
         user = {'username': u'palotespaco', 'user_nsid': u'user'}
@@ -162,11 +162,8 @@ class TestFlickrOauth(object):
 
     @patch.object(Flickr, 'oauth')
     def test_get_own_albums_log_response_on_request_fail(self, oauth):
-        class Res(object):
-            pass
-        response = Res()
-        response.status = 200
-        response.data = {'stat': 'fail', 'code': 1, 'message': 'User not found'}
+        data = {'stat': 'fail', 'code': 1, 'message': 'User not found'}
+        response = self.Res(200, data)
         oauth.get.return_value = response
         token = {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
         user = {'username': u'palotespaco', 'user_nsid': u'user'}
@@ -185,11 +182,7 @@ class TestFlickrOauth(object):
 
     @patch.object(Flickr, 'oauth')
     def test_get_own_albums_return_list_with_album_info(self, oauth):
-        class Res(object):
-            pass
-        response = Res()
-        response.status = 200
-        response.data = {
+        data = {
             u'stat': u'ok',
             u'photosets': {
                 u'total': 2,
@@ -215,6 +208,7 @@ class TestFlickrOauth(object):
                   u'id': u'72157649886540037'}],
                 u'page': 1,
                 u'pages': 1}}
+        response = self.Res(200, data)
         oauth.get.return_value = response
         token = {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
         user = {'username': u'palotespaco', 'user_nsid': u'user'}
