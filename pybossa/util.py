@@ -274,9 +274,10 @@ class Flickr(object):
                    '&format=json&nojsoncallback=1'
                    % session.get('flickr_user').get('user_nsid'))
             res = self.oauth.get(url)
-            print res
-            albums = res.data['photosets']['photoset']
-            return [self._extract_album_info(album) for album in albums]
+            if res.status == 200 and res.data.get('stat') == 'ok':
+                albums = res.data['photosets']['photoset']
+                return [self._extract_album_info(album) for album in albums]
+        return []
 
     def _extract_album_info(self, album):
         info = {'title': album['title']['_content'],
