@@ -350,7 +350,7 @@ def setup_hooks(app):
 
     @app.context_processor
     def _global_template_context():
-        if current_user.is_authenticated():
+        if current_user and current_user.is_authenticated():
             if (current_user.email_addr == current_user.name or
                     current_user.email_addr == "None"):
                 flash(lazy_gettext("Please update your e-mail address in your profile page,"
@@ -359,7 +359,7 @@ def setup_hooks(app):
         # Cookies warning
         cookie_name = app.config['BRAND'] + "_accept_cookies"
         show_cookies_warning = False
-        if not request.cookies.get(cookie_name):
+        if request and (not request.cookies.get(cookie_name)):
             show_cookies_warning = True
 
         # Announcement sections
@@ -446,6 +446,7 @@ def setup_scheduled_jobs(app): #pragma: no cover
     scheduler = Scheduler(queue_name='scheduled_jobs', connection=redis_conn)
     MINUTE = 60
     HOUR = 60 * 60
+    MONTH = 30 * (24 * HOUR)
     JOBS = [dict(name=schedule_priority_jobs, args=['super', (10 * MINUTE)],
                  kwargs={}, interval=(10 * MINUTE), timeout=(10 * MINUTE)),
             dict(name=schedule_priority_jobs, args=['high', (1 * HOUR)],
@@ -453,7 +454,9 @@ def setup_scheduled_jobs(app): #pragma: no cover
             dict(name=schedule_priority_jobs, args=['medium', (12 * HOUR)],
                  kwargs={}, interval=(12 * HOUR), timeout=(10 * MINUTE)),
             dict(name=schedule_priority_jobs, args=['low', (24 * HOUR)],
-                 kwargs={}, interval=(24 * HOUR), timeout=(10 * MINUTE))]
+                 kwargs={}, interval=(24 * HOUR), timeout=(10 * MINUTE)),
+            dict(name=schedule_priority_jobs, args=['monthly', (1 * MONTH)],
+                 kwargs={}, interval=(1 * MONTH), timeout=(30 * MINUTE))]
 
     for job in JOBS:
         schedule_job(job, scheduler)
