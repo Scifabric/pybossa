@@ -206,6 +206,20 @@ class TestAppAPI(TestAPI):
         res = self.app.put('/api/app/%s?api_key=%s' % (id_, users[1].api_key),
                            data=datajson)
 
+        # with hateoas links
+        assert_equal(res.status, '200 OK', res.data)
+        out2 = project_repo.get(id_)
+        assert_equal(out2.name, data['name'])
+        out = json.loads(res.data)
+        assert out.get('status') is None, error
+        assert out.get('id') == id_, error
+
+        # without hateoas links
+        del data['links']
+        newdata = json.dumps(data)
+        res = self.app.put('/api/app/%s?api_key=%s' % (id_, users[1].api_key),
+                           data=newdata)
+
         assert_equal(res.status, '200 OK', res.data)
         out2 = project_repo.get(id_)
         assert_equal(out2.name, data['name'])
