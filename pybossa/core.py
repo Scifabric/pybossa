@@ -44,7 +44,6 @@ def create_app(run_as_server=True):
     setup_error_email(app)
     setup_logging(app)
     setup_login_manager(app)
-    login_manager.setup_app(app)
     setup_babel(app)
     setup_markdown(app)
     setup_db(app)
@@ -194,6 +193,7 @@ def setup_login_manager(app):
     @login_manager.user_loader
     def _load_user(username):
         return user_repo.get_by_name(username)
+    login_manager.setup_app(app)
 
 
 def setup_babel(app):
