@@ -270,7 +270,7 @@ class Flickr(object):
                 session.get('flickr_token') is not None):
             url = ('https://api.flickr.com/services/rest/?'
                    'method=flickr.photosets.getList&user_id=%s'
-                   '&primary_photo_extras=url_t'
+                   '&primary_photo_extras=url_q'
                    '&format=json&nojsoncallback=1'
                    % session.get('flickr_user').get('user_nsid'))
             res = self.oauth.get(url)
@@ -287,7 +287,7 @@ class Flickr(object):
         info = {'title': album['title']['_content'],
                 'photos': album['photos'],
                 'id': album['id'],
-                'thumbnail_url': album['primary_photo_extras']['url_t']}
+                'thumbnail_url': album['primary_photo_extras']['url_q']}
         return info
 
 
