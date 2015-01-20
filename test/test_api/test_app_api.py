@@ -181,7 +181,7 @@ class TestAppAPI(TestAPI):
         assert res.status_code == 415, err_msg
 
         # test update
-        data = {'name': 'My New Title'}
+        data = {'name': 'My New Title', 'links': 'hateoas'}
         datajson = json.dumps(data)
         ## anonymous
         res = self.app.put('/api/app/%s' % id_, data=data)
