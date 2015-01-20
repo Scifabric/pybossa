@@ -272,10 +272,11 @@ class APIBase(MethodView):
             raise NotFound
         getattr(require, self.__class__.__name__.lower()).update(existing)
         data = json.loads(request.data)
+        # Remove hateoas links
+        data = self.hateoas.remove_links(data)
         # may be missing the id as we allow partial updates
         data['id'] = oid
         self.__class__(**data)
-        data = self.hateoas.remove_links(data)
         old = self.__class__(**existing.dictize())
         for key in data:
             setattr(existing, key, data[key])
