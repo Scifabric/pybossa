@@ -197,7 +197,7 @@ class TestFlickrOauthBlueprint(object):
                   u'primary_photo_extras': {
                       u'height_t': u'63',
                       u'width_t': u'100',
-                      u'url_t': u'https://farm9.staticflickr.com/8597/16284868505_c4a032a62e_t.jpg'},
+                      u'url_q': u'https://farm9.staticflickr.com/8597/16284868505_c4a032a62e_t.jpg'},
                   u'server': u'8597',
                   u'date_create': u'1421313790',
                   u'photos': u'3',
@@ -221,7 +221,7 @@ class TestFlickrOauthBlueprint(object):
         expected_album = response.data['photosets']['photoset'][0]
         expected_album_info = {
             'photos': expected_album['photos'],
-            'thumbnail_url': expected_album['primary_photo_extras']['url_t'],
+            'thumbnail_url': expected_album['primary_photo_extras']['url_q'],
             'id': expected_album['id'],
             'title': expected_album['title']['_content']}
 
