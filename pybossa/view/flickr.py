@@ -32,7 +32,8 @@ def get_flickr_token():  # pragma: no cover
 @blueprint.route('/')
 def login():
     return flickr.oauth.authorize(callback=url_for('.oauth_authorized',
-                                             next=request.args.get('next')))
+                                             next=request.args.get('next')),
+                                  perms='read')
 
 @blueprint.route('/revoke-access')
 def logout():
