@@ -530,7 +530,7 @@ def import_task(short_name):
         form = GenericBulkTaskImportForm()(importer_type, request.form)
         template_args['form'] = form
 
-        if form.validate_on_submit():  # pragma: no cover
+        if form.validate():  # pragma: no cover
             try:
                 return _import_tasks(app, **form.get_import_data())
             except BulkImportException as err_msg:
@@ -606,32 +606,41 @@ def setup_autoimporter(short_name):
         return render_template('/applications/task_autoimporter.html',
                                 importer=importer_info, **template_args)
 
-    importer_type = request.args.get('type')
-    all_importers = importer.get_all_importer_names()
-    if importer_type is not None and importer_type not in all_importers:
-        raise abort(404)
+    if request.method == 'POST':
+        importer_type = request.form['form_name']
+        if importer_type not in importer.get_all_importer_names():
+            raise abort(404)
 
-    if importer_type is None and request.method == 'GET':
-        wrap = lambda i: "applications/tasks/%s.html" % i
-        template_args['available_importers'] = map(wrap, all_importers)
-        return render_template('applications/task_autoimport_options.html',
-                               **template_args)
+        form = GenericBulkTaskImportForm()(importer_type, request.form)
+        template_args['form'] = form
 
-    importer_type = importer_type if request.method == 'GET' else request.form['form_name']
-    form = GenericBulkTaskImportForm()(importer_type, request.form)
-    template_args['form'] = form
-    if importer_type == 'flickr':
-        template_args['albums'] = flickr.get_own_albums()
-    if not (form and form.validate_on_submit()):  # pragma: no cover
-        return render_template('/applications/importers/%s.html' % importer_type,
+        if form.validate():  # pragma: no cover
+            app.set_autoimporter(form.get_import_data())
+            project_repo.save(app)
+            auditlogger.log_event(app, current_user, 'create', 'autoimporter',
+                                  'Nothing', json.dumps(app.get_autoimporter()))
+            cached_apps.delete_app(short_name)
+            flash(gettext("Success! Tasks will be imported daily."))
+            return redirect(url_for('.setup_autoimporter', short_name=app.short_name))
+
+    if request.method == 'GET':
+        importer_type = request.args.get('type')
+        all_importers = importer.get_all_importer_names()
+        if importer_type is not None and importer_type not in all_importers:
+            raise abort(404)
+
+        if importer_type is None:
+            wrap = lambda i: "applications/tasks/%s.html" % i
+            template_args['available_importers'] = map(wrap, all_importers)
+            return render_template('applications/task_autoimport_options.html',
+                                   **template_args)
+
+        form = GenericBulkTaskImportForm()(importer_type, request.form)
+        template_args['form'] = form
+        if importer_type == 'flickr':
+            template_args['albums'] = flickr.get_own_albums()
+    return render_template('/applications/importers/%s.html' % importer_type,
                                 **template_args)
-    app.set_autoimporter(form.get_import_data())
-    project_repo.save(app)
-    auditlogger.log_event(app, current_user, 'create', 'autoimporter',
-                          'Nothing', json.dumps(app.get_autoimporter()))
-    cached_apps.delete_app(short_name)
-    flash(gettext("Success! Tasks will be imported daily."))
-    return redirect(url_for('.setup_autoimporter', short_name=app.short_name))
 
 
 @blueprint.route('/<short_name>/tasks/autoimporter/delete', methods=['POST'])
