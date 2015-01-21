@@ -19,7 +19,6 @@ before_install:
 - export PATH=${PATH}:`pwd`/$SWIG/vendor/bin
 - redis-server --version
 - redis-server contrib/redis/sentinel.conf --sentinel
-- pip install coveralls
 install:
 - pip install -r requirements.txt
 before_script:
@@ -31,4 +30,5 @@ notifications:
   slack:
     secure: lgJj/SealCb3hZsMvclA9VQGwx9TJrtK6ccOZiiHZpJa5in0UkRwE6ymrZ5wqwUagAVwOLYVKHdmrtPMPsaOqavnzq9ItJFqSRo8T5ZgKK+m+X9l88ROn7+QfJyPUkpblhSXMm6+s7duBjdM/no80lA4GEoNWD5G5uQwjJWQSWk=
 after_success:
+- pip install coveralls
 - coveralls
