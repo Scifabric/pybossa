@@ -176,6 +176,8 @@ class GenericBulkTaskImportForm(object):
               'flickr': _BulkTaskFlickrImportForm }
 
     def __call__(self, form_name, *form_args, **form_kwargs):
+        if form_name is None:
+            return None
         return self._forms[form_name](*form_args, **form_kwargs)
 
 
