@@ -2791,7 +2791,7 @@ class TestWeb(web.Helper):
         res = self.app.get(url, follow_redirects=True)
         data = res.data.decode('utf-8')
 
-        assert "From a Flickr set" in data
+        assert "From a Flickr Album" in data
         assert 'action="/app/%E2%9C%93app1/tasks/import"' in data
 
         # Invalid
@@ -2813,7 +2813,7 @@ class TestWeb(web.Helper):
 
             res = self.app.get(url, follow_redirects=True)
 
-            assert 'From a Flickr set' not in res.data
+            assert 'From a Flickr Album' not in res.data
         except Exception:
             raise
         finally:
@@ -2829,7 +2829,7 @@ class TestWeb(web.Helper):
 
         res = self.app.get(url, follow_redirects=True)
 
-        assert 'From a Flickr set' not in res.data
+        assert 'From a Flickr Album' not in res.data
 
     @patch('pybossa.view.applications.redirect', wraps=redirect)
     @patch('pybossa.importers.requests.get')
