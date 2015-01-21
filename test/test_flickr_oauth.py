@@ -116,7 +116,7 @@ class TestFlickrOauthBlueprint(object):
         redirect.assert_called_with('http://next')
 
 
-class TestFlickrOauthBlueprint(object):
+class TestFlickrOauthService(object):
     class Res(object):
         def __init__(self, status, data):
             self.status = status
