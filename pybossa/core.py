@@ -342,9 +342,6 @@ def setup_hooks(app):
             apikey = request.headers.get('Authorization')
         if apikey:
             user = user_repo.get_by(api_key=apikey)
-            ## HACK:
-            # login_user sets a session cookie which we really don't want.
-            # login_user(user)
             if user:
                 _request_ctx_stack.top.user = user
 
