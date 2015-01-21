@@ -25,7 +25,7 @@ import requests
 from StringIO import StringIO
 
 from flask import Blueprint, request, url_for, flash, redirect, abort, Response, current_app
-from flask import render_template, make_response
+from flask import render_template, make_response, session
 from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
 from rq import Queue
@@ -553,7 +553,9 @@ def import_task(short_name):
             return render_template('/applications/task_import_options.html',
                                    **template_args)
         if importer_type == 'flickr':
-            template_args['albums'] = flickr.get_own_albums()
+            if (session.get('flickr_token') is not None):
+                user_nsid = session.get('flickr_user').get('user_nsid')
+                template_args['albums'] = flickr.get_user_albums(user_nsid)
         if importer_type == 'gdocs' and request.args.get('template'):  # pragma: no cover
             template = request.args.get('template')
             form.googledocs_url.data = template_tasks.get(template)
@@ -622,7 +624,9 @@ def setup_autoimporter(short_name):
             return render_template('applications/task_autoimport_options.html',
                                    **template_args)
         if importer_type == 'flickr':
-            template_args['albums'] = flickr.get_own_albums()
+            if (session.get('flickr_token') is not None):
+                user_nsid = session.get('flickr_user').get('user_nsid')
+                template_args['albums'] = flickr.get_user_albums(user_nsid)
     return render_template('/applications/importers/%s.html' % importer_type,
                                 **template_args)
 

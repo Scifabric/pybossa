@@ -25,13 +25,9 @@ from pybossa.core import flickr
 blueprint = Blueprint('flickr', __name__)
 
 
-@flickr.oauth.tokengetter
-def get_flickr_token():  # pragma: no cover
-    return session.get('flickr_token')
-
 @blueprint.route('/')
 def login():
-    return flickr.oauth.authorize(callback=url_for('.oauth_authorized',
+    return flickr.authorize(callback=url_for('.oauth_authorized',
                                              next=request.args.get('next')),
                                   perms='read')
 
@@ -47,7 +43,7 @@ def logout():
 @blueprint.route('/oauth-authorized')
 def oauth_authorized():
     next_url = request.args.get('next')
-    resp = flickr.oauth.authorized_response()
+    resp = flickr.authorized_response()
     if resp is None:
         flash(u'You denied the request to sign in.')
         return redirect(next_url)
