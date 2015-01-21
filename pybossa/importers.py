@@ -188,7 +188,8 @@ class Importer(object):
             self.init_app(app)
 
     def init_app(self, app):  # pragma: no cover
-        if app.config.get('FLICKR_API_KEY') is not None:
+        if (app.config.get('FLICKR_API_KEY') is not None and
+                app.config.get('FLICKR_SHARED_SECRET') is not None):
             self._importers['flickr'] = _BulkTaskFlickrImport
             self._flickr_api_key = app.config.get('FLICKR_API_KEY')
 

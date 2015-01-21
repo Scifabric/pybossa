@@ -44,7 +44,6 @@ def create_app(run_as_server=True):
     setup_error_email(app)
     setup_logging(app)
     setup_login_manager(app)
-    login_manager.setup_app(app)
     setup_babel(app)
     setup_markdown(app)
     setup_db(app)
@@ -67,7 +66,7 @@ def create_app(run_as_server=True):
     setup_debug_toolbar(app)
     setup_jinja2_filters(app)
     setup_newsletter(app)
-    setup_importer(app)
+    setup_importers(app)
     return app
 
 
@@ -194,6 +193,7 @@ def setup_login_manager(app):
     @login_manager.user_loader
     def _load_user(username):
         return user_repo.get_by_name(username)
+    login_manager.setup_app(app)
 
 
 def setup_babel(app):
@@ -464,5 +464,15 @@ def setup_newsletter(app):
     if app.config.get('MAILCHIMP_API_KEY'):
         newsletter.init_app(app)
 
-def setup_importer(app):
+def setup_importers(app):
     importer.init_app(app)
+    try:  # pragma: no cover
+        if (app.config['FLICKR_API_KEY'] and app.config['FLICKR_SHARED_SECRET']):
+            flickr.init_app(app)
+            from pybossa.view.flickr import blueprint as flickr_bp
+            app.register_blueprint(flickr_bp, url_prefix='/flickr')
+    except Exception as inst: # pragma: no cover
+        print type(inst)
+        print inst.args
+        print inst
+        print "Flickr importer not available"

@@ -287,7 +287,30 @@ each picture (which will be later available to be used in the task presenter):
 * url_b: the url to the image, 'big sized.
 * url_m: the url to the image, 'medium' sized.
 
-To import tasks from a Flickr photo set, follow the next steps:
+You can import tasks from a Flickr photo set (a.k.a. album) in either of the
+following ways:
+
+The easiest one is to give the PyBossa server permission to access your Flickr
+list of albums. To do so, you'll have to log in to your Flickr account by clicking
+the "Log in Flickr" button. Then you'll be redirected to Flickr, where you will
+be asked if you want to allow PyBossa to access your Flickr information. If you
+say yes, then you'll be again redirected to PyBossa and you'll see all of your
+albums. Choose one of them and then click the "Import" button to get all the
+photos created as tasks for your project.
+
+.. note::
+    Next time you try to import photos using the Flickr importer, you'll see
+    the albums for your account again. If you don't want PyBossa to access them
+    anymore, or just want to use another Flickr account, then click "Revoke access".
+
+Another option to import from a Flickr album is by specifying the ID of the set
+(album) directly. This option is a bit more advanced (don't be afraid, it is still
+very easy if you follow the next steps) and it allows you to import from a photo
+set that you don't own (although, it will have to be public. Also check the rights
+of the photos on it!). Another advantage is that you don't need to log in to
+Flickr, sou you don't even need to have a Flickr account.
+
+These are the steps:
 
 1. Navigate to your project's page and click in the **Tasks** section:
 
