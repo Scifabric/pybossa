@@ -27,9 +27,8 @@ blueprint = Blueprint('flickr', __name__)
 
 @blueprint.route('/')
 def login():
-    return flickr.authorize(callback=url_for('.oauth_authorized',
-                                             next=request.args.get('next')),
-                                  perms='read')
+    callback_url = url_for('.oauth_authorized', next=request.args.get('next'))
+    return flickr.authorize(callback=callback_url, perms='read')
 
 @blueprint.route('/revoke-access')
 def logout():
