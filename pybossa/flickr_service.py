@@ -40,20 +40,23 @@ class FlickrService(object):
         def get_flickr_token():  # pragma: no cover
             return session.get('flickr_token')
 
-    def get_user_albums(self, user_nsid):
-        url = ('https://api.flickr.com/services/rest/?'
-               'method=flickr.photosets.getList&user_id=%s'
-               '&primary_photo_extras=url_q'
-               '&format=json&nojsoncallback=1' % user_nsid)
-        res = self.client.get(url)
-        if res.status == 200 and res.data.get('stat') == 'ok':
-            albums = res.data['photosets']['photoset']
-            return [self._extract_album_info(album) for album in albums]
-        else:
-            msg = ("Bad response from Flickr:\nStatus: %s, Content: %s"
-                % (res.status, res.data))
-            self.app.logger.error(msg)
-            return []
+    def get_user_albums(self, session):
+        if (session.get('flickr_user') is not None and
+                session.get('flickr_token') is not None):
+            url = ('https://api.flickr.com/services/rest/?'
+                   'method=flickr.photosets.getList&user_id=%s'
+                   '&primary_photo_extras=url_q'
+                   '&format=json&nojsoncallback=1'
+                   % session.get('flickr_user').get('user_nsid'))
+            res = self.client.get(url)
+            if res.status == 200 and res.data.get('stat') == 'ok':
+                albums = res.data['photosets']['photoset']
+                return [self._extract_album_info(album) for album in albums]
+            else:
+                msg = ("Bad response from Flickr:\nStatus: %s, Content: %s"
+                    % (res.status, res.data))
+                self.app.logger.error(msg)
+        return []
 
     def authorize(self, *args, **kwargs):
         return self.client.authorize(*args, **kwargs)
