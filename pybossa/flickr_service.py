@@ -55,8 +55,8 @@ class FlickrService(object):
             self.app.logger.error(msg)
             return []
 
-    def authorize(self, args, **kwargs):
-        return self.client.authorize(args, **kwargs)
+    def authorize(self, *args, **kwargs):
+        return self.client.authorize(*args, **kwargs)
 
     def authorized_response(self):
         return self.authorized_response()
