@@ -26,8 +26,16 @@ from pybossa.core import user_repo
 class TestEngageUsers(Test):
 
     @with_context
-    def test_get_inactive_users_jobs(self):
-        """Test JOB get inactive users returns empty list."""
+    def test_get_inactive_users_jobs_no_users(self):
+        """Test JOB get without users returns empty list."""
+        jobs = get_inactive_users_jobs()
+        msg = "There should not be any job."
+        assert len(jobs) == 0,  msg
+
+    @with_context
+    def test_get_inactive_users_jobs_with_users(self):
+        """Test JOB get with users returns empty list."""
+        TaskRunFactory.create()
         jobs = get_inactive_users_jobs()
         msg = "There should not be any job."
         assert len(jobs) == 0,  msg
@@ -47,3 +55,29 @@ class TestEngageUsers(Test):
         assert job['queue'] == 'quaterly', job['queue']
         assert len(args['recipients']) == 1
         assert args['recipients'][0] == user.email_addr, args['recipients'][0]
+
+
+# class TestNonContributors(Test):
+#
+#     @with_context
+#     def test_get_non_contributors_users_jobs(self):
+#         """Test JOB get returns empty list."""
+#         jobs = get_non_contributors_users_jobs()
+#         msg = "There should not be any job."
+#         assert len(jobs) == 0,  msg
+#
+#     @with_context
+#     def test_get_inactive_users_returns_jobs(self):
+#         """Test JOB get inactive users returns a list of jobs."""
+#
+#         tr = TaskRunFactory.create(finish_time="2010-07-07T17:23:45.714210")
+#         user = user_repo.get(tr.user_id)
+#
+#         jobs = get_inactive_users_jobs()
+#         msg = "There should not be one job."
+#         assert len(jobs) == 1,  msg
+#         job = jobs[0]
+#         args = job['args'][0]
+#         assert job['queue'] == 'quaterly', job['queue']
+#         assert len(args['recipients']) == 1
+#         assert args['recipients'][0] == user.email_addr, args['recipients'][0]
