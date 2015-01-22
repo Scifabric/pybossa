@@ -19,33 +19,17 @@
 from mock import patch, MagicMock
 from flask import Response, session
 from default import flask_app
-from pybossa.util import Flickr
+from pybossa.flickr_service import FlickrService
 
 class TestFlickrOauthBlueprint(object):
 
 
     @patch('pybossa.view.flickr.flickr')
-    def test_flickr_login_specifies_callback(self, flickr_oauth):
-        flickr_oauth.oauth.authorize.return_value = Response(302)
+    def test_flickr_login_specifies_callback_and_read_permissions(self, flickr):
+        flickr.authorize.return_value = Response(302)
         flask_app.test_client().get('/flickr/')
-        flickr_oauth.oauth.authorize.assert_called_with(callback='/flickr/oauth-authorized')
-
-
-    def test_flickr_get_flickr_token_returns_None_if_no_token(self):
-        from pybossa.view.flickr import get_flickr_token
-        with flask_app.test_request_context():
-            token = get_flickr_token()
-
-        assert token is None, token
-
-
-    def test_flickr_get_flickr_token_returns_existing_token(self):
-        from pybossa.view.flickr import get_flickr_token
-        with flask_app.test_request_context():
-            session['flickr_token'] = 'fake_token'
-            token = get_flickr_token()
-
-        assert token is 'fake_token', token
+        flickr.authorize.assert_called_with(
+            callback='/flickr/oauth-authorized',perms='read')
 
 
     def test_logout_removes_token_and_user_from_session(self):
@@ -72,13 +56,13 @@ class TestFlickrOauthBlueprint(object):
 
 
     @patch('pybossa.view.flickr.flickr')
-    def test_oauth_authorized_adds_token_and_user_to_session(self, flickr_oauth):
+    def test_oauth_authorized_adds_token_and_user_to_session(self, flickr):
         fake_resp = {'oauth_token_secret': u'secret',
                      'username': u'palotespaco',
                      'fullname': u'paco palotes',
                      'oauth_token':u'token',
                      'user_nsid': u'user'}
-        flickr_oauth.oauth.authorized_response.return_value = fake_resp
+        flickr.authorized_response.return_value = fake_resp
 
         with flask_app.test_client() as c:
             c.get('/flickr/oauth-authorized')
@@ -91,14 +75,14 @@ class TestFlickrOauthBlueprint(object):
 
     @patch('pybossa.view.flickr.flickr')
     @patch('pybossa.view.flickr.redirect')
-    def test_oauth_authorized_redirects_to_url_specified_by_next_param(
-            self, redirect, flickr_oauth):
+    def test_oauth_authorized_redirects_to_url_next_param_on_authorization(
+            self, redirect, flickr):
         fake_resp = {'oauth_token_secret': u'secret',
                      'username': u'palotespaco',
                      'fullname': u'paco palotes',
                      'oauth_token':u'token',
                      'user_nsid': u'user'}
-        flickr_oauth.oauth.authorized_response.return_value = fake_resp
+        flickr.authorized_response.return_value = fake_resp
         redirect.return_value = Response(302)
         flask_app.test_client().get('/flickr/oauth-authorized?next=http://next')
 
@@ -107,81 +91,99 @@ class TestFlickrOauthBlueprint(object):
 
     @patch('pybossa.view.flickr.flickr')
     @patch('pybossa.view.flickr.redirect')
-    def test_oauth_authorized_user_refused_to_login_flickr(
-            self, redirect, flickr_oauth):
-        flickr_oauth.oauth.authorized_response.return_value = None
+    def test_oauth_authorized_redirects_to_url_next_param_on_user_no_authorizing(
+            self, redirect, flickr):
+        flickr.authorized_response.return_value = None
         redirect.return_value = Response(302)
         flask_app.test_client().get('/flickr/oauth-authorized?next=http://next')
 
         redirect.assert_called_with('http://next')
 
 
-class TestFlickrOauthService(object):
+
+class TestFlickrService(object):
     class Res(object):
         def __init__(self, status, data):
             self.status = status
             self.data = data
 
+    def test_flickr_get_flickr_token_returns_None_if_no_token(self):
+        flickr = FlickrService()
 
-    @patch.object(Flickr, 'oauth')
-    def test_get_own_albums_return_empty_list_on_request_error(self, oauth):
+        with flask_app.test_request_context():
+            token = flickr.get_flickr_token(session)
+
+        assert token is None, token
+
+
+    def test_flickr_get_flickr_token_returns_existing_token(self):
+        flickr = FlickrService()
+
+        with flask_app.test_request_context():
+            session['flickr_token'] = 'fake_token'
+            token = flickr.get_flickr_token(session)
+
+        assert token is 'fake_token', token
+
+
+    def test_get_user_albums_return_empty_list_on_request_error(self):
         response = self.Res(404, 'not found')
-        oauth.get.return_value = response
         token = {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
         user = {'username': u'palotespaco', 'user_nsid': u'user'}
 
-        flickr = Flickr()
+        flickr = FlickrService()
         flickr.app = MagicMock()
+        flickr.client = MagicMock()
+        flickr.client.get.return_value = response
 
         with flask_app.test_request_context():
             session['flickr_token'] = token
             session['flickr_user'] = user
-            albums = flickr.get_own_albums()
+            albums = flickr.get_user_albums(session)
 
         assert albums == [], albums
 
 
-    @patch.object(Flickr, 'oauth')
-    def test_get_own_albums_return_empty_list_on_request_fail(self, oauth):
+    def test_get_user_albums_return_empty_list_on_request_fail(self):
         data = {'stat': 'fail', 'code': 1, 'message': 'User not found'}
         response = self.Res(200, data)
-        oauth.get.return_value = response
         token = {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
         user = {'username': u'palotespaco', 'user_nsid': u'user'}
 
-        flickr = Flickr()
+        flickr = FlickrService()
         flickr.app = MagicMock()
+        flickr.client = MagicMock()
+        flickr.client.get.return_value = response
 
         with flask_app.test_request_context():
             session['flickr_token'] = token
             session['flickr_user'] = user
-            albums = flickr.get_own_albums()
+            albums = flickr.get_user_albums(session)
 
         assert albums == [], albums
 
 
-    @patch.object(Flickr, 'oauth')
-    def test_get_own_albums_log_response_on_request_fail(self, oauth):
+    def test_get_user_albums_log_response_on_request_fail(self):
         data = {'stat': 'fail', 'code': 1, 'message': 'User not found'}
         response = self.Res(200, data)
-        oauth.get.return_value = response
         token = {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
         user = {'username': u'palotespaco', 'user_nsid': u'user'}
         log_error_msg = ("Bad response from Flickr:\nStatus: %s, Content: %s"
             % (response.status, response.data))
 
-        flickr = Flickr()
+        flickr = FlickrService()
         flickr.app = MagicMock()
+        flickr.client = MagicMock()
+        flickr.client.get.return_value = response
 
         with flask_app.test_request_context():
             session['flickr_token'] = token
             session['flickr_user'] = user
-            albums = flickr.get_own_albums()
+            albums = flickr.get_user_albums(session)
             flickr.app.logger.error.assert_called_with(log_error_msg)
 
 
-    @patch.object(Flickr, 'oauth')
-    def test_get_own_albums_return_list_with_album_info(self, oauth):
+    def test_get_user_albums_return_list_with_album_info(self):
         data = {
             u'stat': u'ok',
             u'photosets': {
@@ -209,14 +211,17 @@ class TestFlickrOauthService(object):
                 u'page': 1,
                 u'pages': 1}}
         response = self.Res(200, data)
-        oauth.get.return_value = response
         token = {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
         user = {'username': u'palotespaco', 'user_nsid': u'user'}
+        flickr = FlickrService()
+        flickr.app = MagicMock()
+        flickr.client = MagicMock()
+        flickr.client.get.return_value = response
 
         with flask_app.test_request_context():
             session['flickr_token'] = token
             session['flickr_user'] = user
-            albums = Flickr().get_own_albums()
+            albums = flickr.get_user_albums(session)
 
         expected_album = response.data['photosets']['photoset'][0]
         expected_album_info = {
