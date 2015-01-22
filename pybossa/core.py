@@ -365,7 +365,7 @@ def setup_hooks(app):
         # Announcement sections
         if app.config.get('ANNOUNCEMENT'):
             announcement = app.config['ANNOUNCEMENT']
-            if current_user.is_authenticated():
+            if current_user and current_user.is_authenticated():
                 for key in announcement.keys():
                     if key == 'admin' and current_user.admin:
                         flash(announcement[key], 'info')
