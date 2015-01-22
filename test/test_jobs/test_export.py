@@ -58,3 +58,12 @@ class TestExport(Test):
         project_export(app.id)
         csv_exporter.pregenerate_zip_files.assert_called_once_with(app)
         json_exporter.pregenerate_zip_files.assert_called_once_with(app)
+
+    @with_context
+    @patch('pybossa.core.json_exporter')
+    @patch('pybossa.core.csv_exporter')
+    def test_project_export_none(self, csv_exporter, json_exporter):
+        """Test JOB project_export without project works."""
+        project_export(0)
+        assert not csv_exporter.pregenerate_zip_files.called
+        assert not json_exporter.pregenerate_zip_files.called
