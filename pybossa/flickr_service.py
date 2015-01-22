@@ -15,8 +15,8 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-from flask import session
 from flask_oauthlib.client import OAuth
+import functools
 
 
 class FlickrService(object):
@@ -28,6 +28,7 @@ class FlickrService(object):
             self.init_app(app)
 
     def init_app(self, app):
+        from flask import session
         self.client = OAuth().remote_app(
             'flickr',
             request_token_url='https://www.flickr.com/services/oauth/request_token',
@@ -35,10 +36,9 @@ class FlickrService(object):
             authorize_url='https://www.flickr.com/services/oauth/authorize',
             consumer_key=app.config['FLICKR_API_KEY'],
             consumer_secret=app.config['FLICKR_SHARED_SECRET'])
+        tokengetter = functools.partial(self.get_flickr_token, session)
+        self.client.tokengetter(tokengetter)
 
-        @self.client.tokengetter
-        def get_flickr_token():  # pragma: no cover
-            return session.get('flickr_token')
 
     def get_user_albums(self, session):
         if (session.get('flickr_user') is not None and
@@ -66,6 +66,9 @@ class FlickrService(object):
 
     def get_oauth_client(self):
         return self.client
+
+    def get_flickr_token(self, session):
+        return session.get('flickr_token')
 
     def _extract_album_info(self, album):
         info = {'title': album['title']['_content'],
