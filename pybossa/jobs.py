@@ -92,8 +92,9 @@ def get_scheduled_jobs(): # pragma: no cover
     autoimport_jobs = get_autoimport_jobs()
     # User engagement jobs
     engage_jobs = get_inactive_users_jobs()
-    # return zip_jobs + jobs + project_jobs + autoimport_jobs + engage_jobs
-    return engage_jobs
+    non_contrib_jobs = get_non_contributors_users_jobs()
+    return zip_jobs + jobs + project_jobs + autoimport_jobs + \
+           engage_jobs + non_contrib_jobs
 
 
 def get_export_task_jobs():
