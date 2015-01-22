@@ -318,6 +318,7 @@ def send_mail(message_dict):
 
 
 def import_tasks(project_id, **form_data):
+    from pybossa.core import project_repo
     app = project_repo.get(project_id)
     msg = importer.create_tasks(task_repo, project_id, **form_data)
     msg = msg + ' to your project %s!' % app.name
@@ -360,7 +361,6 @@ def get_inactive_users_jobs(queue='quaterly'):
                    queue=queue)
         jobs.append(job)
     return jobs
-
 
 def get_non_contributors_users_jobs(queue='quaterly'):
     """Return a list of users that have never contributed to a project."""
