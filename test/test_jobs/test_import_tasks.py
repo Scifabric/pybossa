@@ -61,7 +61,7 @@ class TestImportTasksJob(Test):
 
 
     def test_autoimport_jobs_with_autoimporter(self):
-        """Test JOB autoimport jobs works."""
+        """Test JOB autoimport jobs works with autoimporters."""
         user = UserFactory.create(pro=True)
         app = AppFactory.create(owner=user,info=dict(autoimporter='foobar'))
         jobs = get_autoimport_jobs()
@@ -72,3 +72,10 @@ class TestImportTasksJob(Test):
         assert job['args'] == [app.id], msg
         msg = "There sould be the kwargs."
         assert job['kwargs'] == 'foobar', msg
+
+    def test_autoimport_jobs_without_pro(self):
+        """Test JOB autoimport jobs works without pro users."""
+        AppFactory.create()
+        jobs = get_autoimport_jobs()
+        msg = "There should be 0 jobs."
+        assert len(jobs) == 0, msg
