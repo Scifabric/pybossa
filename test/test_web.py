@@ -2722,35 +2722,33 @@ class TestWeb(web.Helper):
             err_msg = "Tasks should be exported to CKAN"
             assert msg in res.data, err_msg
 
-    @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
-    def test_54_import_tasks(self, mock):
-        """Test WEB import Task templates should work"""
+    def test_get_import_tasks_no_params_shows_options_and_templates(self, mock):
+        """Test WEB import tasks displays the different importers and template
+        tasks"""
         Fixtures.create()
         self.register()
         self.new_application()
-        # Without tasks, there should be a template
         res = self.app.get('/app/sampleapp/tasks/import', follow_redirects=True)
-        err_msg = "There should be a CSV template"
-        assert "template=csv" in res.data, err_msg
+        err_msg = "There should be a CSV importer"
+        assert "type=csv" in res.data, err_msg
+        err_msg = "There should be a GDocs importer"
+        assert "type=gdocs" in res.data, err_msg
+        err_msg = "There should be an Epicollect importer"
+        assert "type=epicollect" in res.data, err_msg
+        err_msg = "There should be a Flickr importer"
+        assert "type=flickr" in res.data, err_msg
         err_msg = "There should be an Image template"
-        assert "mode=image" in res.data, err_msg
+        assert "template=image" in res.data, err_msg
         err_msg = "There should be a Map template"
-        assert "mode=map" in res.data, err_msg
+        assert "template=map" in res.data, err_msg
         err_msg = "There should be a PDF template"
-        assert "mode=pdf" in res.data, err_msg
-        # With tasks
-        self.new_task(1)
-        res = self.app.get('/app/sampleapp/tasks/import', follow_redirects=True)
-        err_msg = "There should load directly the basic template"
-        err_msg = "There should not be a CSV template"
-        assert "template=basic" not in res.data, err_msg
-        err_msg = "There should not be an Image template"
-        assert "template=image" not in res.data, err_msg
-        err_msg = "There should not be a Map template"
-        assert "template=map" not in res.data, err_msg
-        err_msg = "There should not be a PDF template"
-        assert "template=pdf" not in res.data, err_msg
+        assert "template=pdf" in res.data, err_msg
+        err_msg = "There should be a Sound template"
+        assert "template=sound" in res.data, err_msg
+        err_msg = "There should be a Video template"
+        assert "template=video" in res.data, err_msg
+
         self.signout()
 
         self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
@@ -2765,7 +2763,7 @@ class TestWeb(web.Helper):
         app = AppFactory.create(owner=owner)
 
         # CSV
-        url = "/app/%s/tasks/import?template=csv" % app.short_name
+        url = "/app/%s/tasks/import?type=csv" % app.short_name
         res = self.app.get(url, follow_redirects=True)
         data = res.data.decode('utf-8')
 
@@ -2773,7 +2771,7 @@ class TestWeb(web.Helper):
         assert 'action="/app/%E2%9C%93app1/tasks/import"' in data
 
         # Google Docs
-        url = "/app/%s/tasks/import?template=gdocs" % app.short_name
+        url = "/app/%s/tasks/import?type=gdocs" % app.short_name
         res = self.app.get(url, follow_redirects=True)
         data = res.data.decode('utf-8')
 
@@ -2781,7 +2779,7 @@ class TestWeb(web.Helper):
         assert 'action="/app/%E2%9C%93app1/tasks/import"' in data
 
         # Epicollect Plus
-        url = "/app/%s/tasks/import?template=epicollect" % app.short_name
+        url = "/app/%s/tasks/import?type=epicollect" % app.short_name
         res = self.app.get(url, follow_redirects=True)
         data = res.data.decode('utf-8')
 
@@ -2789,15 +2787,15 @@ class TestWeb(web.Helper):
         assert 'action="/app/%E2%9C%93app1/tasks/import"' in data
 
         # Flickr
-        url = "/app/%s/tasks/import?template=flickr" % app.short_name
+        url = "/app/%s/tasks/import?type=flickr" % app.short_name
         res = self.app.get(url, follow_redirects=True)
         data = res.data.decode('utf-8')
 
-        assert "From a Flickr set" in data
+        assert "From a Flickr Album" in data
         assert 'action="/app/%E2%9C%93app1/tasks/import"' in data
 
         # Invalid
-        url = "/app/%s/tasks/import?template=invalid" % app.short_name
+        url = "/app/%s/tasks/import?type=invalid" % app.short_name
         res = self.app.get(url, follow_redirects=True)
 
         assert res.status_code == 404, res.status_code
@@ -2815,7 +2813,7 @@ class TestWeb(web.Helper):
 
             res = self.app.get(url, follow_redirects=True)
 
-            assert 'From a Flickr set' not in res.data
+            assert 'From a Flickr Album' not in res.data
         except Exception:
             raise
         finally:
@@ -2831,7 +2829,7 @@ class TestWeb(web.Helper):
 
         res = self.app.get(url, follow_redirects=True)
 
-        assert 'From a Flickr set' not in res.data
+        assert 'From a Flickr Album' not in res.data
 
     @patch('pybossa.view.applications.redirect', wraps=redirect)
     @patch('pybossa.importers.requests.get')
@@ -3064,9 +3062,37 @@ class TestWeb(web.Helper):
             u'title': u'Title'}
         assert tasks[0].info == expected_info, tasks[0].info
 
-    def test_invalid_importer_returns_404(self):
-        app = AppFactory.create()
-        res = self.app.get('/app/%s/tasks/import' % app.short_name)
+    def test_flickr_importer_page_shows_option_to_log_into_flickr(self):
+        self.register()
+        owner = db.session.query(User).first()
+        app = AppFactory.create(owner=owner)
+        url = "/app/%s/tasks/import?type=flickr" % app.short_name
+
+        res = self.app.get(url)
+        login_url = '/flickr/?next=%2Fapp%2F%25E2%259C%2593app1%2Ftasks%2Fimport%3Ftype%3Dflickr'
+
+        assert login_url in res.data
+
+    @patch('pybossa.view.applications.flickr')
+    def test_flickr_importer_page_shows_albums_and_revoke_access_option(
+            self, flickr):
+        flickr.get_own_albums.return_value = [{'photos': u'1',
+                                               'thumbnail_url': u'fake-url',
+                                               'id': u'my-fake-ID',
+                                               'title': u'my-fake-title'}]
+        self.register()
+        owner = db.session.query(User).first()
+        app = AppFactory.create(owner=owner)
+        url = "/app/%s/tasks/import?type=flickr" % app.short_name
+
+        res = self.app.get(url)
+        revoke_url = '/flickr/revoke-access?next=%2Fapp%2F%25E2%259C%2593app1%2Ftasks%2Fimport%3Ftype%3Dflickr'
+
+        assert '1 photos' in res.data
+        assert 'src="fake-url"' in res.data
+        assert 'id="my-fake-ID"' in res.data
+        assert 'my-fake-title' in res.data
+        assert revoke_url in res.data
 
     @with_context
     def test_55_facebook_account_warning(self):

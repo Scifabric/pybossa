@@ -661,12 +661,14 @@ Enabling the Flickr Task importer
 
 PyBossa has four different types of built-in importers. Users can use them to
 import tasks for their projects directly from the Web interface. However, using
-the Flickr one requires an API key from Flickr in order to communicate with the
-service.
+the Flickr one requires an API key and shared secret from Flickr in order to
+communicate with the service.
 
 Once you have an API key, you'll have to add it to your settings_local.py file::
 
     FLICKR_API_KEY = "your-key"
+    FLICKR_SHARED_SECRET = "your-secret"
 
-For more information on how to get a Flickr API key, please read `here <https://www.flickr.com/services/api/>`_
+For more information on how to get a Flickr API key and shared secret, please
+refer to `here <https://www.flickr.com/services/api/>`_.
 

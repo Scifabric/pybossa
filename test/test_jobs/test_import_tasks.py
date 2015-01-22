@@ -41,8 +41,7 @@ class TestImportTasksJob(Test):
     def test_sends_email_to_user_with_result_on_success(self, create, send_mail):
         create.return_value = '1 new task was imported successfully'
         app = AppFactory.create()
-        template = 'csv'
-        form_data = {'csv_url': 'http://google.es'}
+        form_data = {'type': 'csv', 'csv_url': 'http://google.es'}
         subject = 'Tasks Import to your project %s' % app.name
         body = 'Hello,\n\n1 new task was imported successfully to your project %s!\n\nAll the best,\nThe PyBossa team.' % app.name
         email_data = dict(recipients=[app.owner.email_addr],
