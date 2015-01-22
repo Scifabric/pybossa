@@ -17,8 +17,8 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 from default import Test, with_context
 from factories import AppFactory, UserFactory
-from pybossa.jobs import get_export_task_jobs
-# from mock import patch
+from pybossa.jobs import get_export_task_jobs, project_export
+from mock import patch
 
 class TestExport(Test):
 
@@ -37,7 +37,7 @@ class TestExport(Test):
 
     @with_context
     def test_get_export_task_pro_jobs(self):
-        """Test JOB export task jobs works."""
+        """Test JOB export task jobs for pro users works."""
         user = UserFactory.create(pro=True)
         app = AppFactory.create(owner=user)
         jobs = get_export_task_jobs()
@@ -48,3 +48,13 @@ class TestExport(Test):
         assert job['args'] == [app.id], msg
         msg = "The job should be enqueued in high priority."
         assert job['queue'] == 'high', msg
+
+    @with_context
+    @patch('pybossa.core.json_exporter')
+    @patch('pybossa.core.csv_exporter')
+    def test_project_export(self, csv_exporter, json_exporter):
+        """Test JOB project_export works."""
+        app = AppFactory.create()
+        project_export(app.id)
+        csv_exporter.pregenerate_zip_files.assert_called_once_with(app)
+        json_exporter.pregenerate_zip_files.assert_called_once_with(app)
