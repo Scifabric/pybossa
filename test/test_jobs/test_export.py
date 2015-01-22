@@ -34,3 +34,17 @@ class TestExport(Test):
         assert job['args'] == [app.id], msg
         msg = "The job should be enqueued in low priority."
         assert job['queue'] == 'low', msg
+
+    @with_context
+    def test_get_export_task_pro_jobs(self):
+        """Test JOB export task jobs works."""
+        user = UserFactory.create(pro=True)
+        app = AppFactory.create(owner=user)
+        jobs = get_export_task_jobs()
+        msg = "There should be only one job."
+        assert len(jobs) == 1, len(jobs)
+        job = jobs[0]
+        msg = "The job should be for the same app.id"
+        assert job['args'] == [app.id], msg
+        msg = "The job should be enqueued in high priority."
+        assert job['queue'] == 'high', msg
