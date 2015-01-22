@@ -15,3 +15,15 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+from pybossa.jobs import create_dict_jobs
+from default import Test, with_context
+
+class TestJobs(Test):
+
+    @with_context
+    def test_create_dict_jobs(self):
+        """Test JOB create_dict_jobs works."""
+        data = [{'id': 1, 'short_name': 'app'}]
+        jobs = create_dict_jobs(data, 'function')
+        assert len(jobs) == 1
+        assert jobs[0]['name'] == 'function'
