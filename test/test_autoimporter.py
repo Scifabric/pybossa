@@ -446,7 +446,7 @@ class TestAutoimporterBehaviour(web.Helper):
     @patch('pybossa.view.applications.flickr')
     def test_flickr_autoimporter_page_shows_albums_and_revoke_access_option(
             self, flickr):
-        flickr.get_own_albums.return_value = [{'photos': u'1',
+        flickr.get_user_albums.return_value = [{'photos': u'1',
                                                'thumbnail_url': u'fake-url',
                                                'id': u'my-fake-ID',
                                                'title': u'my-fake-title'}]
