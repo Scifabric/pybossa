@@ -58,3 +58,17 @@ class TestImportTasksJob(Test):
         jobs = get_autoimport_jobs()
         msg = "There should be 0 jobs."
         assert len(jobs) == 0, msg
+
+
+    def test_autoimport_jobs_with_autoimporter(self):
+        """Test JOB autoimport jobs works."""
+        user = UserFactory.create(pro=True)
+        app = AppFactory.create(owner=user,info=dict(autoimporter='foobar'))
+        jobs = get_autoimport_jobs()
+        msg = "There should be 1 jobs."
+        assert len(jobs) == 1, msg
+        job = jobs[0]
+        msg = "There sould be the same app."
+        assert job['args'] == [app.id], msg
+        msg = "There sould be the kwargs."
+        assert job['kwargs'] == 'foobar', msg
