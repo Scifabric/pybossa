@@ -186,7 +186,6 @@ class Pagination(object):
 
 
 class Twitter(object):
-    oauth = OAuth()
 
     def __init__(self, app=None):
         self.app = app
@@ -194,7 +193,7 @@ class Twitter(object):
             self.init_app(app)
 
     def init_app(self, app):
-        self.oauth = self.oauth.remote_app(
+        self.oauth = OAuth().remote_app(
             'twitter',
             base_url='https://api.twitter.com/1/',
             request_token_url='https://api.twitter.com/oauth/request_token',
@@ -205,7 +204,6 @@ class Twitter(object):
 
 
 class Facebook(object):
-    oauth = OAuth()
 
     def __init__(self, app=None):
         self.app = app
@@ -213,7 +211,7 @@ class Facebook(object):
             self.init_app(app)
 
     def init_app(self, app):
-        self.oauth = self.oauth.remote_app(
+        self.oauth = OAuth().remote_app(
             'facebook',
             base_url='https://graph.facebook.com/',
             request_token_url=None,
@@ -225,7 +223,6 @@ class Facebook(object):
 
 
 class Google(object):
-    oauth = OAuth()
 
     def __init__(self, app=None):
         self.app = app
@@ -233,7 +230,7 @@ class Google(object):
             self.init_app(app)
 
     def init_app(self, app):
-        self.oauth = self.oauth.remote_app(
+        self.oauth = OAuth().remote_app(
             'google',
             base_url='https://www.google.com/accounts/',
             authorize_url='https://accounts.google.com/o/oauth2/auth',
