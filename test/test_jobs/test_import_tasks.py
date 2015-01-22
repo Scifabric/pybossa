@@ -17,9 +17,9 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from default import Test, db, with_context
-from pybossa.jobs import import_tasks, task_repo
+from pybossa.jobs import import_tasks, task_repo, get_autoimport_jobs
 from pybossa.model.task import Task
-from factories import AppFactory, TaskFactory
+from factories import AppFactory, TaskFactory, UserFactory
 from mock import patch
 
 class TestImportTasksJob(Test):
@@ -50,3 +50,11 @@ class TestImportTasksJob(Test):
         import_tasks(app.id, **form_data)
 
         send_mail.assert_called_once_with(email_data)
+
+    def test_autoimport_jobs(self):
+        """Test JOB autoimport jobs works."""
+        user = UserFactory.create(pro=True)
+        AppFactory.create(owner=user)
+        jobs = get_autoimport_jobs()
+        msg = "There should be 0 jobs."
+        assert len(jobs) == 0, msg
