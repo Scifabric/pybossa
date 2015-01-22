@@ -162,6 +162,18 @@ class Test_BulkTaskFlickrImport(object):
                    'nojsoncallback': '1'}
         requests.get.assert_called_with(url, params=payload)
 
+
+    def test_call_to_flickr_api_uses_no_credentials(self, requests):
+        fake_response = Mock()
+        fake_response.text = '{}'
+        requests.get.return_value = fake_response
+        self.importer._get_album_info('72157633923521788')
+
+        # The request MUST NOT include user credentials, to avoid private photos
+        url_call_params = requests.get.call_args_list[0][1]['params'].keys()
+        assert 'auth_token' not in url_call_params
+
+
     def test_count_tasks_returns_number_of_photos_in_album(self, requests):
         fake_response = Mock()
         fake_response.text = json.dumps(self.photoset_response)
