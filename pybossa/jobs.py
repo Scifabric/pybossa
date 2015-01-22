@@ -361,6 +361,7 @@ def get_inactive_users_jobs(queue='quaterly'):
         jobs.append(job)
     return jobs
 
+
 def get_non_contributors_users_jobs(queue='quaterly'):
     """Return a list of users that have never contributed to a project."""
     from sqlalchemy.sql import text
