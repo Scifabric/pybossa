@@ -109,9 +109,9 @@ class TestFlickrService(object):
 
     def test_flickr_get_flickr_token_returns_None_if_no_token(self):
         flickr = FlickrService()
+        session = {}
 
-        with flask_app.test_request_context():
-            token = flickr.get_flickr_token(session)
+        token = flickr.get_flickr_token(session)
 
         assert token is None, token
 
@@ -119,9 +119,8 @@ class TestFlickrService(object):
     def test_flickr_get_flickr_token_returns_existing_token(self):
         flickr = FlickrService()
 
-        with flask_app.test_request_context():
-            session['flickr_token'] = 'fake_token'
-            token = flickr.get_flickr_token(session)
+        session = {'flickr_token': 'fake_token'}
+        token = flickr.get_flickr_token(session)
 
         assert token is 'fake_token', token
 
@@ -136,10 +135,9 @@ class TestFlickrService(object):
         flickr.client = MagicMock()
         flickr.client.get.return_value = response
 
-        with flask_app.test_request_context():
-            session['flickr_token'] = token
-            session['flickr_user'] = user
-            albums = flickr.get_user_albums(session)
+        session = {'flickr_token': token, 'flickr_user': user}
+
+        albums = flickr.get_user_albums(session)
 
         assert albums == [], albums
 
@@ -155,10 +153,9 @@ class TestFlickrService(object):
         flickr.client = MagicMock()
         flickr.client.get.return_value = response
 
-        with flask_app.test_request_context():
-            session['flickr_token'] = token
-            session['flickr_user'] = user
-            albums = flickr.get_user_albums(session)
+        session = {'flickr_token': token, 'flickr_user': user}
+
+        albums = flickr.get_user_albums(session)
 
         assert albums == [], albums
 
@@ -176,11 +173,10 @@ class TestFlickrService(object):
         flickr.client = MagicMock()
         flickr.client.get.return_value = response
 
-        with flask_app.test_request_context():
-            session['flickr_token'] = token
-            session['flickr_user'] = user
-            albums = flickr.get_user_albums(session)
-            flickr.app.logger.error.assert_called_with(log_error_msg)
+        session = {'flickr_token': token, 'flickr_user': user}
+
+        albums = flickr.get_user_albums(session)
+        flickr.app.logger.error.assert_called_with(log_error_msg)
 
 
     def test_get_user_albums_return_list_with_album_info(self):
@@ -218,10 +214,9 @@ class TestFlickrService(object):
         flickr.client = MagicMock()
         flickr.client.get.return_value = response
 
-        with flask_app.test_request_context():
-            session['flickr_token'] = token
-            session['flickr_user'] = user
-            albums = flickr.get_user_albums(session)
+        session = {'flickr_token': token, 'flickr_user': user}
+
+        albums = flickr.get_user_albums(session)
 
         expected_album = response.data['photosets']['photoset'][0]
         expected_album_info = {
