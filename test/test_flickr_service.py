@@ -125,6 +125,40 @@ class TestFlickrService(object):
         assert token is 'fake_token', token
 
 
+    def test_get_user_albums_calls_flickr_api_endpoint(self):
+        user = {'username': u'palotespaco', 'user_nsid': u'user'}
+        session = {'flickr_token': 'token', 'flickr_user': user}
+        url = ('https://api.flickr.com/services/rest/?'
+               'method=flickr.photosets.getList&user_id=user'
+               '&primary_photo_extras=url_q'
+               '&format=json&nojsoncallback=1')
+        flickr = FlickrService()
+        flickr.client = MagicMock()
+        flickr.app = MagicMock()
+
+        flickr.get_user_albums(session)
+
+        flickr.client.get.assert_called_with(url)
+
+
+    def test_get_user_albums_calls_flickr_api_endpoint_with_no_credentials(self):
+        user = {'username': u'palotespaco', 'user_nsid': u'user'}
+        session = {'flickr_token': 'token', 'flickr_user': user}
+        url = ('https://api.flickr.com/services/rest/?'
+               'method=flickr.photosets.getList&user_id=user'
+               '&primary_photo_extras=url_q'
+               '&format=json&nojsoncallback=1')
+        flickr = FlickrService()
+        flickr.client = MagicMock()
+        flickr.app = MagicMock()
+
+        flickr.get_user_albums(session)
+
+        # The request MUST NOT include user credentials, to avoid private photos
+        url_call_params = flickr.client.get.call_args_list[0][0][0]
+        assert 'auth_token' not in url_call_params, url_call_params
+
+
     def test_get_user_albums_return_empty_list_on_request_error(self):
         response = self.Res(404, 'not found')
         token = {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
