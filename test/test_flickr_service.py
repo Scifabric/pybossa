@@ -107,71 +107,63 @@ class TestFlickrService(object):
             self.status = status
             self.data = data
 
+    def setUp(self):
+        self.flickr = FlickrService()
+        self.token = {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
+        self.user = {'username': u'palotespaco', 'user_nsid': u'user'}
+        self.flickr = FlickrService()
+        self.flickr.client = MagicMock()
+        self.flickr.app = MagicMock()
+
     def test_flickr_get_flickr_token_returns_None_if_no_token(self):
-        flickr = FlickrService()
         session = {}
 
-        token = flickr.get_flickr_token(session)
+        token = self.flickr.get_flickr_token(session)
 
         assert token is None, token
 
 
     def test_flickr_get_flickr_token_returns_existing_token(self):
-        flickr = FlickrService()
-
         session = {'flickr_token': 'fake_token'}
-        token = flickr.get_flickr_token(session)
+
+        token = self.flickr.get_flickr_token(session)
 
         assert token is 'fake_token', token
 
 
     def test_get_user_albums_calls_flickr_api_endpoint(self):
-        user = {'username': u'palotespaco', 'user_nsid': u'user'}
-        session = {'flickr_token': 'token', 'flickr_user': user}
+        session = {'flickr_token': self.token, 'flickr_user': self.user}
         url = ('https://api.flickr.com/services/rest/?'
                'method=flickr.photosets.getList&user_id=user'
                '&primary_photo_extras=url_q'
                '&format=json&nojsoncallback=1')
-        flickr = FlickrService()
-        flickr.client = MagicMock()
-        flickr.app = MagicMock()
 
-        flickr.get_user_albums(session)
+        self.flickr.get_user_albums(session)
 
-        flickr.client.get.assert_called_with(url)
+        self.flickr.client.get.assert_called_with(url)
 
 
     def test_get_user_albums_calls_flickr_api_endpoint_with_no_credentials(self):
-        user = {'username': u'palotespaco', 'user_nsid': u'user'}
-        session = {'flickr_token': 'token', 'flickr_user': user}
+        session = {'flickr_token': self.token, 'flickr_user': self.user}
         url = ('https://api.flickr.com/services/rest/?'
                'method=flickr.photosets.getList&user_id=user'
                '&primary_photo_extras=url_q'
                '&format=json&nojsoncallback=1')
-        flickr = FlickrService()
-        flickr.client = MagicMock()
-        flickr.app = MagicMock()
 
-        flickr.get_user_albums(session)
+        self.flickr.get_user_albums(session)
 
         # The request MUST NOT include user credentials, to avoid private photos
-        url_call_params = flickr.client.get.call_args_list[0][0][0]
+        url_call_params = self.flickr.client.get.call_args_list[0][0][0]
         assert 'auth_token' not in url_call_params, url_call_params
 
 
     def test_get_user_albums_return_empty_list_on_request_error(self):
         response = self.Res(404, 'not found')
-        token = {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
-        user = {'username': u'palotespaco', 'user_nsid': u'user'}
+        self.flickr.client.get.return_value = response
 
-        flickr = FlickrService()
-        flickr.app = MagicMock()
-        flickr.client = MagicMock()
-        flickr.client.get.return_value = response
+        session = {'flickr_token': self.token, 'flickr_user': self.user}
 
-        session = {'flickr_token': token, 'flickr_user': user}
-
-        albums = flickr.get_user_albums(session)
+        albums = self.flickr.get_user_albums(session)
 
         assert albums == [], albums
 
@@ -179,17 +171,11 @@ class TestFlickrService(object):
     def test_get_user_albums_return_empty_list_on_request_fail(self):
         data = {'stat': 'fail', 'code': 1, 'message': 'User not found'}
         response = self.Res(200, data)
-        token = {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
-        user = {'username': u'palotespaco', 'user_nsid': u'user'}
+        self.flickr.client.get.return_value = response
 
-        flickr = FlickrService()
-        flickr.app = MagicMock()
-        flickr.client = MagicMock()
-        flickr.client.get.return_value = response
+        session = {'flickr_token': self.token, 'flickr_user': self.user}
 
-        session = {'flickr_token': token, 'flickr_user': user}
-
-        albums = flickr.get_user_albums(session)
+        albums = self.flickr.get_user_albums(session)
 
         assert albums == [], albums
 
@@ -197,20 +183,14 @@ class TestFlickrService(object):
     def test_get_user_albums_log_response_on_request_fail(self):
         data = {'stat': 'fail', 'code': 1, 'message': 'User not found'}
         response = self.Res(200, data)
-        token = {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
-        user = {'username': u'palotespaco', 'user_nsid': u'user'}
+        self.flickr.client.get.return_value = response
         log_error_msg = ("Bad response from Flickr:\nStatus: %s, Content: %s"
             % (response.status, response.data))
+        session = {'flickr_token': self.token, 'flickr_user': self.user}
 
-        flickr = FlickrService()
-        flickr.app = MagicMock()
-        flickr.client = MagicMock()
-        flickr.client.get.return_value = response
+        albums = self.flickr.get_user_albums(session)
 
-        session = {'flickr_token': token, 'flickr_user': user}
-
-        albums = flickr.get_user_albums(session)
-        flickr.app.logger.error.assert_called_with(log_error_msg)
+        self.flickr.app.logger.error.assert_called_with(log_error_msg)
 
 
     def test_get_user_albums_return_list_with_album_info(self):
@@ -241,16 +221,10 @@ class TestFlickrService(object):
                 u'page': 1,
                 u'pages': 1}}
         response = self.Res(200, data)
-        token = {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
-        user = {'username': u'palotespaco', 'user_nsid': u'user'}
-        flickr = FlickrService()
-        flickr.app = MagicMock()
-        flickr.client = MagicMock()
-        flickr.client.get.return_value = response
+        self.flickr.client.get.return_value = response
+        session = {'flickr_token': self.token, 'flickr_user': self.user}
 
-        session = {'flickr_token': token, 'flickr_user': user}
-
-        albums = flickr.get_user_albums(session)
+        albums = self.flickr.get_user_albums(session)
 
         expected_album = response.data['photosets']['photoset'][0]
         expected_album_info = {
