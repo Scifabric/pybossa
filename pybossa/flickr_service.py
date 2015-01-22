@@ -59,7 +59,7 @@ class FlickrService(object):
         return self.client.authorize(*args, **kwargs)
 
     def authorized_response(self):
-        return self.authorized_response()
+        return self.client.authorized_response()
 
     def get_oauth_client(self):
         return self.client
