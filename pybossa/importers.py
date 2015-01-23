@@ -139,18 +139,11 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
 
     def tasks(self, **form_data):
         album_info = self._get_album_info(form_data['album_id'])
-        if album_info['stat'] == 'ok':
-            tasks = self._get_tasks_data_from_request(album_info)
-            return tasks
-        if album_info['stat'] == 'fail':
-            raise BulkImportException(album_info['message'])
+        return self._get_tasks_data_from_request(album_info)
 
     def count_tasks(self, **form_data):
         album_info = self._get_album_info(form_data['album_id'])
-        if album_info['stat'] == 'ok':
-            return int(album_info['photoset']['total'])
-        if album_info['stat'] == 'fail':
-            raise BulkImportException(album_info['message'])
+        return int(album_info['photoset']['total'])
 
     def _get_album_info(self, album_id):
         url = 'https://api.flickr.com/services/rest/'
@@ -160,7 +153,11 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
                    'format': 'json',
                    'nojsoncallback': '1'}
         res = requests.get(url, params=payload)
-        return json.loads(res.text)
+        content = json.loads(res.text)
+        if content.get('stat') == 'ok':
+            return content
+        if content.get('stat') == 'fail':
+            raise BulkImportException(content['message'])
 
     def _get_tasks_data_from_request(self, album_info):
         photo_list = album_info['photoset']['photo']
