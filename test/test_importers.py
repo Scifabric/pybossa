@@ -149,7 +149,7 @@ class Test_BulkTaskFlickrImport(object):
 
     def test_call_to_flickr_api_endpoint(self, requests):
         fake_response = Mock()
-        fake_response.text = '{}'
+        fake_response.text = json.dumps(self.photoset_response)
         requests.get.return_value = fake_response
         self.importer._get_album_info('72157633923521788')
         url = 'https://api.flickr.com/services/rest/'
@@ -163,7 +163,7 @@ class Test_BulkTaskFlickrImport(object):
 
     def test_call_to_flickr_api_uses_no_credentials(self, requests):
         fake_response = Mock()
-        fake_response.text = '{}'
+        fake_response.text = json.dumps(self.photoset_response)
         requests.get.return_value = fake_response
         self.importer._get_album_info('72157633923521788')
 

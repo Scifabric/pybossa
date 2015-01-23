@@ -143,7 +143,7 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
 
     def count_tasks(self, **form_data):
         album_info = self._get_album_info(form_data['album_id'])
-        return int(album_info['photoset']['total'])
+        return int(album_info['total'])
 
     def _get_album_info(self, album_id):
         url = 'https://api.flickr.com/services/rest/'
@@ -153,24 +153,33 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
                    'format': 'json',
                    'nojsoncallback': '1'}
         res = requests.get(url, params=payload)
-        content = json.loads(res.text)
-        if content.get('stat') == 'ok':
-            if content.get('photoset').get('pages') > 1:
-                next_page = 2
-                while next_page <= content.get('photoset').get('pages'):
-                    payload['page'] = next_page
-                    next_res = requests.get(url, params=payload)
-                    next_content = json.loads(next_res.text)
-                    next_page += 1
-                    if next_content.get('stat') == 'ok':
-                        extra_photos = next_content['photoset']['photo']
-                        content['photoset']['photo'] += extra_photos
+        if self._is_valid_response(res):
+            content = json.loads(res.text)['photoset']
+            total_pages = content.get('pages')
+            rest_photos = self._get_remaining_photos(url, payload, total_pages)
+            content['photo'] += rest_photos
             return content
-        if content.get('stat') == 'fail':
-            raise BulkImportException(content['message'])
+        error_message = json.loads(res.text).get('message', 'Error accessing Flickr API')
+        raise BulkImportException(error_message)
+
+    def _is_valid_response(self, response):
+        return json.loads(response.text).get('stat') == 'ok'
+
+    def _get_remaining_photos(self, url, payload, total_pages):
+        extra_photos = []
+        if total_pages > 1:
+            next_page = 2
+            while next_page <= total_pages:
+                payload['page'] = next_page
+                next_res = requests.get(url, params=payload)
+                next_content = json.loads(next_res.text)
+                next_page += 1
+                if self._is_valid_response(next_res):
+                    extra_photos += next_content['photoset']['photo']
+        return extra_photos
 
     def _get_tasks_data_from_request(self, album_info):
-        photo_list = album_info['photoset']['photo']
+        photo_list = album_info['photo']
         return [self._extract_photo_info(photo) for photo in photo_list]
 
     def _extract_photo_info(self, photo):
