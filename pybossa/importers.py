@@ -167,15 +167,12 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
 
     def _get_remaining_photos(self, url, payload, total_pages):
         extra_photos = []
-        if total_pages > 1:
-            next_page = 2
-            while next_page <= total_pages:
-                payload['page'] = next_page
-                next_res = requests.get(url, params=payload)
-                next_content = json.loads(next_res.text)
-                next_page += 1
-                if self._is_valid_response(next_res):
-                    extra_photos += next_content['photoset']['photo']
+        for page in range(2, total_pages+1):
+            payload['page'] = page
+            res = requests.get(url, params=payload)
+            content = json.loads(res.text)
+            if self._is_valid_response(res):
+                extra_photos += content['photoset']['photo']
         return extra_photos
 
     def _get_tasks_data_from_request(self, album_info):
