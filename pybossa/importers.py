@@ -155,15 +155,25 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
         res = requests.get(url, params=payload)
         content = json.loads(res.text)
         if content.get('stat') == 'ok':
+            if content.get('photoset').get('pages') > 1:
+                next_page = 2
+                while next_page <= content.get('photoset').get('pages'):
+                    payload['page'] = next_page
+                    next_res = requests.get(url, params=payload)
+                    next_content = json.loads(next_res.text)
+                    next_page += 1
+                    if next_content.get('stat') == 'ok':
+                        extra_photos = next_content['photoset']['photo']
+                        content['photoset']['photo'] += extra_photos
             return content
         if content.get('stat') == 'fail':
             raise BulkImportException(content['message'])
 
     def _get_tasks_data_from_request(self, album_info):
         photo_list = album_info['photoset']['photo']
-        return [self._get_photo_info(photo) for photo in photo_list]
+        return [self._extract_photo_info(photo) for photo in photo_list]
 
-    def _get_photo_info(self, photo):
+    def _extract_photo_info(self, photo):
         base_url = 'https://farm%s.staticflickr.com/%s/%s_%s' % (
             photo['farm'], photo['server'], photo['id'], photo['secret'])
         title = photo['title']
