@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+import copy
 import json
 from collections import namedtuple
 from mock import patch, Mock
@@ -140,6 +141,9 @@ class Test_BulkTaskFlickrImport(object):
             u'per_page': 500,
             u'total': u'3',
             u'page': 1}}
+    photo = {u'isfamily': 0, u'title': u'Inflating the balloon', u'farm': 6,
+             u'ispublic': 1, u'server': u'5441', u'isfriend': 0,
+             u'secret': u'00e2301a0d', u'isprimary': u'0', u'id': u'8947115130'}
     importer = _BulkTaskFlickrImport(api_key='fake-key')
 
 
@@ -223,22 +227,18 @@ class Test_BulkTaskFlickrImport(object):
 
 
     def test_tasks_returns_all_for_sets_with_more_than_500_photos(self, requests):
-        import copy
-        photo = {u'isfamily': 0, u'title': u'Inflating the balloon', u'farm': 6,
-                 u'ispublic': 1, u'server': u'5441', u'isfriend': 0,
-                 u'secret': u'00e2301a0d', u'isprimary': u'0', u'id': u'8947115130'}
         # Deep-copy the object, as we will be modifying it and we don't want
         # these modifications to affect other tests
         first_response = copy.deepcopy(self.photoset_response)
         first_response['photoset']['pages'] = 2
         first_response['photoset']['total'] = u'600'
         first_response['photoset']['page'] = 1
-        first_response['photoset']['photo'] = [photo for i in range(500)]
+        first_response['photoset']['photo'] = [self.photo for i in range(500)]
         second_response = copy.deepcopy(self.photoset_response)
         second_response['photoset']['pages'] = 2
         second_response['photoset']['total'] = u'600'
         second_response['photoset']['page'] = 2
-        second_response['photoset']['photo'] = [photo for i in range(100)]
+        second_response['photoset']['photo'] = [self.photo for i in range(100)]
         fake_first_response = Mock()
         fake_first_response.text = json.dumps(first_response)
         fake_second_response = Mock()
@@ -252,27 +252,23 @@ class Test_BulkTaskFlickrImport(object):
 
 
     def test_tasks_returns_all_for_sets_with_more_than_1000_photos(self, requests):
-        import copy
-        photo = {u'isfamily': 0, u'title': u'Inflating the balloon', u'farm': 6,
-                 u'ispublic': 1, u'server': u'5441', u'isfriend': 0,
-                 u'secret': u'00e2301a0d', u'isprimary': u'0', u'id': u'8947115130'}
         # Deep-copy the object, as we will be modifying it and we don't want
         # these modifications to affect other tests
         first_response = copy.deepcopy(self.photoset_response)
         first_response['photoset']['pages'] = 3
         first_response['photoset']['total'] = u'1100'
         first_response['photoset']['page'] = 1
-        first_response['photoset']['photo'] = [photo for i in range(500)]
+        first_response['photoset']['photo'] = [self.photo for i in range(500)]
         second_response = copy.deepcopy(self.photoset_response)
         second_response['photoset']['pages'] = 3
         second_response['photoset']['total'] = u'1100'
         second_response['photoset']['page'] = 2
-        second_response['photoset']['photo'] = [photo for i in range(500)]
+        second_response['photoset']['photo'] = [self.photo for i in range(500)]
         third_response = copy.deepcopy(self.photoset_response)
         third_response['photoset']['pages'] = 3
         third_response['photoset']['total'] = u'1100'
         third_response['photoset']['page'] = 3
-        third_response['photoset']['photo'] = [photo for i in range(100)]
+        third_response['photoset']['photo'] = [self.photo for i in range(100)]
         fake_first_response = Mock()
         fake_first_response.text = json.dumps(first_response)
         fake_second_response = Mock()
