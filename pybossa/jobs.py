@@ -16,9 +16,9 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """Jobs module for running background tasks in PyBossa server."""
-from flask import current_app
+from flask import current_app, render_template
 from flask.ext.mail import Message
-from pybossa.core import mail, task_repo, project_repo, importer
+from pybossa.core import mail, task_repo, importer
 from pybossa.util import with_cache_disabled
 
 
@@ -77,7 +77,7 @@ def get_scheduled_jobs(): # pragma: no cover
     """Return a list of scheduled jobs."""
     # Default ones
     # A job is a dict with the following format: dict(name, args, kwargs,
-    # timeout)
+    # timeout, queue)
     jobs = [
         dict(name=warm_up_stats, args=[], kwargs={},
              timeout=(10 * MINUTE), queue='high'),
@@ -90,7 +90,11 @@ def get_scheduled_jobs(): # pragma: no cover
     # Based on type of user
     project_jobs = get_project_jobs()
     autoimport_jobs = get_autoimport_jobs()
-    return zip_jobs + jobs + project_jobs + autoimport_jobs
+    # User engagement jobs
+    engage_jobs = get_inactive_users_jobs()
+    non_contrib_jobs = get_non_contributors_users_jobs()
+    return zip_jobs + jobs + project_jobs + autoimport_jobs + \
+           engage_jobs + non_contrib_jobs
 
 
 def get_export_task_jobs():
@@ -315,6 +319,7 @@ def send_mail(message_dict):
 
 
 def import_tasks(project_id, **form_data):
+    from pybossa.core import project_repo
     app = project_repo.get(project_id)
     msg = importer.create_tasks(task_repo, project_id, **form_data)
     msg = msg + ' to your project %s!' % app.name
@@ -325,3 +330,69 @@ def import_tasks(project_id, **form_data):
                      subject=subject, body=body)
     send_mail(mail_dict)
     return msg
+
+
+def get_inactive_users_jobs(queue='quaterly'):
+    """Return a list of inactive users that have contributed to a project."""
+    from sqlalchemy.sql import text
+    from pybossa.model.user import User
+    from pybossa.core import db
+    from pybossa.extensions import misaka
+    # First users that have participated once but more than 3 months ago
+    sql = text('''SELECT user_id FROM task_run
+               WHERE user_id IS NOT NULL
+               AND TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+               <= NOW() - '3 month'::INTERVAL GROUP BY task_run.user_id;''')
+    results = db.slave_session.execute(sql)
+    jobs = []
+    for row in results:
+
+        user = User.query.get(row.user_id)
+
+        subject = "We miss you!"
+        body = render_template('/account/email/inactive.md', user=user.dictize(),
+                               config=current_app.config)
+        mail_dict = dict(recipients=[user.email_addr],
+                         subject=subject,
+                         body=body,
+                         html=misaka.render(body))
+
+        job = dict(name=send_mail,
+                   args=[mail_dict],
+                   kwargs={},
+                   timeout=(10 * MINUTE),
+                   queue=queue)
+        jobs.append(job)
+    return jobs
+
+def get_non_contributors_users_jobs(queue='quaterly'):
+    """Return a list of users that have never contributed to a project."""
+    from sqlalchemy.sql import text
+    from pybossa.model.user import User
+    from pybossa.core import db
+    from pybossa.extensions import misaka
+    # Second users that have created an account but never participated
+    sql = text('''SELECT id FROM "user" WHERE
+               NOT EXISTS (SELECT user_id FROM task_run
+               WHERE task_run.user_id="user".id)''')
+    results = db.slave_session.execute(sql)
+    jobs = []
+    for row in results:
+        user = User.query.get(row.id)
+
+        subject = "Why don't you help us?!"
+        body = render_template('/account/email/noncontributors.md',
+                               user=user.dictize(),
+                               config=current_app.config)
+        mail_dict = dict(recipients=[user.email_addr],
+                         subject=subject,
+                         body=body,
+                         html=misaka.render(body))
+
+        job = dict(name=send_mail,
+                   args=[mail_dict],
+                   kwargs={},
+                   timeout=(10 * MINUTE),
+                   queue=queue)
+        jobs.append(job)
+    return jobs
