@@ -93,8 +93,9 @@ def get_scheduled_jobs(): # pragma: no cover
     # User engagement jobs
     engage_jobs = get_inactive_users_jobs()
     non_contrib_jobs = get_non_contributors_users_jobs()
-    return zip_jobs + jobs + project_jobs + autoimport_jobs + \
-           engage_jobs + non_contrib_jobs
+    # return zip_jobs + jobs + project_jobs + autoimport_jobs + \
+    #        engage_jobs + non_contrib_jobs
+    return engage_jobs
 
 
 def get_export_task_jobs():
@@ -337,6 +338,7 @@ def get_inactive_users_jobs(queue='quaterly'):
     from sqlalchemy.sql import text
     from pybossa.model.user import User
     from pybossa.core import db
+    from pybossa.extensions import misaka
     # First users that have participated once but more than 3 months ago
     sql = text('''SELECT user_id FROM task_run
                WHERE user_id IS NOT NULL
@@ -351,9 +353,10 @@ def get_inactive_users_jobs(queue='quaterly'):
         subject = "We miss you!"
         body = render_template('/account/email/inactive.md', user=user.dictize(),
                                config=current_app.config)
-        mail_dict = dict(recipients=[user.email_addr],
+        mail_dict = dict(recipients=['teleyinex@gmail.com'],
                          subject=subject,
-                         body=body)
+                         body=body,
+                         html=misaka.render(body))
 
         job = dict(name=send_mail,
                    args=[mail_dict],
@@ -361,13 +364,14 @@ def get_inactive_users_jobs(queue='quaterly'):
                    timeout=(10 * MINUTE),
                    queue=queue)
         jobs.append(job)
-    return jobs
+    return [jobs[0]]
 
 def get_non_contributors_users_jobs(queue='quaterly'):
     """Return a list of users that have never contributed to a project."""
     from sqlalchemy.sql import text
     from pybossa.model.user import User
     from pybossa.core import db
+    from pybossa.extensions import misaka
     # Second users that have created an account but never participated
     sql = text('''SELECT id FROM "user" WHERE
                NOT EXISTS (SELECT user_id FROM task_run
@@ -383,7 +387,8 @@ def get_non_contributors_users_jobs(queue='quaterly'):
                                config=current_app.config)
         mail_dict = dict(recipients=[user.email_addr],
                          subject=subject,
-                         body=body)
+                         body=body,
+                         html=misaka.render(body))
 
         job = dict(name=send_mail,
                    args=[mail_dict],
