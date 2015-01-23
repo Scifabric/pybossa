@@ -251,6 +251,42 @@ class Test_BulkTaskFlickrImport(object):
         assert len(photos) == 600, len(photos)
 
 
+    def test_tasks_returns_all_for_sets_with_more_than_1000_photos(self, requests):
+        import copy
+        photo = {u'isfamily': 0, u'title': u'Inflating the balloon', u'farm': 6,
+                 u'ispublic': 1, u'server': u'5441', u'isfriend': 0,
+                 u'secret': u'00e2301a0d', u'isprimary': u'0', u'id': u'8947115130'}
+        # Deep-copy the object, as we will be modifying it and we don't want
+        # these modifications to affect other tests
+        first_response = copy.deepcopy(self.photoset_response)
+        first_response['photoset']['pages'] = 3
+        first_response['photoset']['total'] = u'1100'
+        first_response['photoset']['page'] = 1
+        first_response['photoset']['photo'] = [photo for i in range(500)]
+        second_response = copy.deepcopy(self.photoset_response)
+        second_response['photoset']['pages'] = 3
+        second_response['photoset']['total'] = u'1100'
+        second_response['photoset']['page'] = 2
+        second_response['photoset']['photo'] = [photo for i in range(500)]
+        third_response = copy.deepcopy(self.photoset_response)
+        third_response['photoset']['pages'] = 3
+        third_response['photoset']['total'] = u'1100'
+        third_response['photoset']['page'] = 3
+        third_response['photoset']['photo'] = [photo for i in range(100)]
+        fake_first_response = Mock()
+        fake_first_response.text = json.dumps(first_response)
+        fake_second_response = Mock()
+        fake_second_response.text = json.dumps(second_response)
+        fake_third_response = Mock()
+        fake_third_response.text = json.dumps(third_response)
+        responses = [fake_first_response, fake_second_response, fake_third_response]
+        requests.get.side_effect = lambda *args, **kwargs: responses.pop(0)
+
+        photos = self.importer.tasks(album_id='72157633923521788')
+
+        assert len(photos) == 1100, len(photos)
+
+
 
 @patch('pybossa.importers.requests.get')
 class Test_BulkTaskCSVImport(object):
