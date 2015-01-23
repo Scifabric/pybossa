@@ -244,9 +244,7 @@ class Test_BulkTaskFlickrImport(object):
         fake_second_response = Mock()
         fake_second_response.text = json.dumps(second_response)
         responses = [fake_first_response, fake_second_response]
-        def side_effect(*args, **kwargs):
-            return responses.pop(0)
-        requests.get.side_effect = side_effect
+        requests.get.side_effect = lambda *args, **kwargs: responses.pop(0)
 
         photos = self.importer.tasks(album_id='72157633923521788')
 
