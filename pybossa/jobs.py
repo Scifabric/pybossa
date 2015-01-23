@@ -93,9 +93,8 @@ def get_scheduled_jobs(): # pragma: no cover
     # User engagement jobs
     engage_jobs = get_inactive_users_jobs()
     non_contrib_jobs = get_non_contributors_users_jobs()
-    # return zip_jobs + jobs + project_jobs + autoimport_jobs + \
-    #        engage_jobs + non_contrib_jobs
-    return engage_jobs
+    return zip_jobs + jobs + project_jobs + autoimport_jobs + \
+           engage_jobs + non_contrib_jobs
 
 
 def get_export_task_jobs():
@@ -353,7 +352,7 @@ def get_inactive_users_jobs(queue='quaterly'):
         subject = "We miss you!"
         body = render_template('/account/email/inactive.md', user=user.dictize(),
                                config=current_app.config)
-        mail_dict = dict(recipients=['teleyinex@gmail.com'],
+        mail_dict = dict(recipients=[user.email_addr],
                          subject=subject,
                          body=body,
                          html=misaka.render(body))
@@ -364,7 +363,7 @@ def get_inactive_users_jobs(queue='quaterly'):
                    timeout=(10 * MINUTE),
                    queue=queue)
         jobs.append(job)
-    return [jobs[0]]
+    return jobs
 
 def get_non_contributors_users_jobs(queue='quaterly'):
     """Return a list of users that have never contributed to a project."""
