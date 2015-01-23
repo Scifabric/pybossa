@@ -156,24 +156,26 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
         if self._is_valid_response(res):
             content = json.loads(res.text)['photoset']
             total_pages = content.get('pages')
-            rest_photos = self._get_remaining_photos(url, payload, total_pages)
+            rest_photos = self._remaining_photos(url, payload, total_pages)
             content['photo'] += rest_photos
             return content
-        error_message = json.loads(res.text).get('message', 'Error accessing Flickr API')
+        error_message = json.loads(res.text).get('message', 'Flickr API error')
         raise BulkImportException(error_message)
 
     def _is_valid_response(self, response):
         return json.loads(response.text).get('stat') == 'ok'
 
-    def _get_remaining_photos(self, url, payload, total_pages):
-        extra_photos = []
-        for page in range(2, total_pages+1):
-            payload['page'] = page
-            res = requests.get(url, params=payload)
-            content = json.loads(res.text)
-            if self._is_valid_response(res):
-                extra_photos += content['photoset']['photo']
-        return extra_photos
+    def _remaining_photos(self, url, payload, total_pages):
+        photo_lists = [self._photos_from_page(url, payload, page)
+            for page in range(2, total_pages+1)]
+        return [item for sublist in photo_lists for item in sublist]
+
+    def _photos_from_page(self, url, payload, page):
+        payload['page'] = page
+        res = requests.get(url, params=payload)
+        if self._is_valid_response(res):
+            return json.loads(res.text)['photoset']['photo']
+        return []
 
     def _get_tasks_data_from_request(self, album_info):
         photo_list = album_info['photo']
