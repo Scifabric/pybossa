@@ -150,6 +150,7 @@ class Test_BulkTaskFlickrImport(object):
     def test_call_to_flickr_api_endpoint(self, requests):
         fake_response = Mock()
         fake_response.text = json.dumps(self.photoset_response)
+        fake_response.status_code = 200
         requests.get.return_value = fake_response
         self.importer._get_album_info('72157633923521788')
         url = 'https://api.flickr.com/services/rest/'
@@ -164,6 +165,7 @@ class Test_BulkTaskFlickrImport(object):
     def test_call_to_flickr_api_uses_no_credentials(self, requests):
         fake_response = Mock()
         fake_response.text = json.dumps(self.photoset_response)
+        fake_response.status_code = 200
         requests.get.return_value = fake_response
         self.importer._get_album_info('72157633923521788')
 
@@ -175,6 +177,7 @@ class Test_BulkTaskFlickrImport(object):
     def test_count_tasks_returns_number_of_photos_in_album(self, requests):
         fake_response = Mock()
         fake_response.text = json.dumps(self.photoset_response)
+        fake_response.status_code = 200
         requests.get.return_value = fake_response
 
         number_of_tasks = self.importer.count_tasks(album_id='72157633923521788')
@@ -185,14 +188,26 @@ class Test_BulkTaskFlickrImport(object):
     def test_count_tasks_raises_exception_if_invalid_album(self, requests):
         fake_response = Mock()
         fake_response.text = json.dumps(self.invalid_photoset_response)
+        fake_response.status_code = 200
         requests.get.return_value = fake_response
 
         assert_raises(BulkImportException, self.importer.count_tasks, album_id='bad')
 
 
+    def test_count_tasks_raises_exception_on_non_200_flckr_response(self, requests):
+        fake_response = Mock()
+        fake_response.text = 'Not Found'
+        fake_response.status_code = 404
+        requests.get.return_value = fake_response
+
+        assert_raises(BulkImportException, self.importer.count_tasks,
+                      album_id='72157633923521788')
+
+
     def test_tasks_returns_list_of_all_photos(self, requests):
         fake_response = Mock()
         fake_response.text = json.dumps(self.photoset_response)
+        fake_response.status_code = 200
         requests.get.return_value = fake_response
 
         photos = self.importer.tasks(album_id='72157633923521788')
@@ -204,8 +219,9 @@ class Test_BulkTaskFlickrImport(object):
         task_data_info_fields = ['url', 'title']
         fake_response = Mock()
         fake_response.text = json.dumps(self.photoset_response)
+        fake_response.status_code = 200
         requests.get.return_value = fake_response
-
+        print fake_response.status_code
         url = 'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d.jpg'
         url_m = 'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d_m.jpg'
         url_b = 'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d_b.jpg'
@@ -226,6 +242,16 @@ class Test_BulkTaskFlickrImport(object):
         assert_raises(BulkImportException, self.importer.tasks, album_id='bad')
 
 
+    def test_tasks_raises_exception_on_non_200_flckr_response(self, requests):
+        fake_response = Mock()
+        fake_response.text = 'Not Found'
+        fake_response.status_code = 404
+        requests.get.return_value = fake_response
+
+        assert_raises(BulkImportException, self.importer.tasks,
+                      album_id='72157633923521788')
+
+
     def test_tasks_returns_all_for_sets_with_more_than_500_photos(self, requests):
         # Deep-copy the object, as we will be modifying it and we don't want
         # these modifications to affect other tests
@@ -241,8 +267,10 @@ class Test_BulkTaskFlickrImport(object):
         second_response['photoset']['photo'] = [self.photo for i in range(100)]
         fake_first_response = Mock()
         fake_first_response.text = json.dumps(first_response)
+        fake_first_response.status_code = 200
         fake_second_response = Mock()
         fake_second_response.text = json.dumps(second_response)
+        fake_second_response.status_code = 200
         responses = [fake_first_response, fake_second_response]
         requests.get.side_effect = lambda *args, **kwargs: responses.pop(0)
 
@@ -271,10 +299,13 @@ class Test_BulkTaskFlickrImport(object):
         third_response['photoset']['photo'] = [self.photo for i in range(100)]
         fake_first_response = Mock()
         fake_first_response.text = json.dumps(first_response)
+        fake_first_response.status_code = 200
         fake_second_response = Mock()
         fake_second_response.text = json.dumps(second_response)
+        fake_second_response.status_code = 200
         fake_third_response = Mock()
         fake_third_response.text = json.dumps(third_response)
+        fake_third_response.status_code = 200
         responses = [fake_first_response, fake_second_response, fake_third_response]
         requests.get.side_effect = lambda *args, **kwargs: responses.pop(0)
 
