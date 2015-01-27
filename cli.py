@@ -89,6 +89,34 @@ def markdown_db_migrate():
                 db.engine.execute(query, long_description = new_description, id = old_desc.id)
 
 
+def delete_hard_bounces():
+    '''Delete fake accounts from hard bounces.'''
+    del_users = 0
+    fake_emails = 0
+    with app.app_context():
+        with open('email.csv', 'r') as f:
+            emails = f.readlines()
+            print "Number of users: %s" % len(emails)
+            for email in emails:
+                usr = db.session.query(User).filter_by(email_addr=email.rstrip()).first()
+                if usr and len(usr.apps) == 0 and len(usr.task_runs) == 0:
+                    print "Deleting user: %s" % usr.email_addr
+                    del_users +=1
+                    db.session.delete(usr)
+                    db.session.commit()
+                else:
+                    if usr:
+                        if len(usr.apps) > 0:
+                            print "Invalid email (user owns app): %s" % usr.email_addr
+                        if len(usr.task_runs) > 0:
+                            print "Invalid email (user has contributed): %s" % usr.email_addr
+                        fake_emails +=1
+                        usr.valid_email = False
+                        db.session.commit()
+        print "%s users were deleted" % del_users
+        print "%s users have fake emails" % fake_emails
+
+
 def bootstrap_avatars():
     """Download current links from user avatar and projects to real images hosted in the
     PyBossa server."""
