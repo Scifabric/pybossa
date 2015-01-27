@@ -29,6 +29,7 @@ class FlickrService(object):
 
     def init_app(self, app):
         from flask import session
+        from pybossa.core import importer
         self.client = OAuth().remote_app(
             'flickr',
             request_token_url='https://www.flickr.com/services/oauth/request_token',
@@ -38,7 +39,8 @@ class FlickrService(object):
             consumer_secret=app.config['FLICKR_SHARED_SECRET'])
         tokengetter = functools.partial(self.get_flickr_token, session)
         self.client.tokengetter(tokengetter)
-
+        importer_params = {'api_key': app.config['FLICKR_API_KEY']}
+        importer.register_flickr_importer(importer_params)
 
     def get_user_albums(self, session):
         if (session.get('flickr_user') is not None and

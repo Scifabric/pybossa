@@ -198,19 +198,15 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
 
 class Importer(object):
 
-    def __init__(self, app=None):
-        self.app = app
+    def __init__(self):
         self._importers = {'csv': _BulkTaskCSVImport,
                            'gdocs': _BulkTaskGDImport,
                            'epicollect': _BulkTaskEpiCollectPlusImport}
-        if app is not None:  # pragma: no cover
-            self.init_app(app)
+        self._importer_constructor_params = {}
 
-    def init_app(self, app):  # pragma: no cover
-        if (app.config.get('FLICKR_API_KEY') is not None and
-                app.config.get('FLICKR_SHARED_SECRET') is not None):
-            self._importers['flickr'] = _BulkTaskFlickrImport
-            self._flickr_api_key = app.config.get('FLICKR_API_KEY')
+    def register_flickr_importer(self, flickr_params):
+        self._importers['flickr'] = _BulkTaskFlickrImport
+        self._importer_constructor_params['flickr'] = flickr_params
 
     def create_tasks(self, task_repo, project_id, **form_data):
         from pybossa.cache import apps as cached_apps
@@ -246,9 +242,8 @@ class Importer(object):
         return self._create_importer_for(importer_id).count_tasks(**form_data)
 
     def _create_importer_for(self, importer_id):
-        if importer_id == 'flickr':
-            return self._importers[importer_id](self._flickr_api_key)
-        return self._importers[importer_id]()
+        constructor_params = self._importer_constructor_params.get(importer_id)
+        return self._importers[importer_id](**constructor_params)
 
     def get_all_importer_names(self):
         return self._importers.keys()

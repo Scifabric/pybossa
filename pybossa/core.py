@@ -59,14 +59,13 @@ def create_app(run_as_server=True):
     setup_blueprints(app)
     setup_hooks(app)
     setup_error_handlers(app)
-    setup_social_networks(app)
+    setup_external_services(app)
     setup_jinja(app)
     setup_geocoding(app)
     setup_csrf_protection(app)
     setup_debug_toolbar(app)
     setup_jinja2_filters(app)
     setup_newsletter(app)
-    setup_importers(app)
     return app
 
 
@@ -246,7 +245,7 @@ def setup_blueprints(app):
                 redis_conn=sentinel.master)
 
 
-def setup_social_networks(app):
+def setup_external_services(app):
     try:  # pragma: no cover
         if (app.config['TWITTER_CONSUMER_KEY'] and
                 app.config['TWITTER_CONSUMER_SECRET']):
@@ -282,6 +281,18 @@ def setup_social_networks(app):
         print inst.args
         print inst
         print "Google signin disabled"
+
+    # Enable Flickr if available
+    try:  # pragma: no cover
+        if (app.config['FLICKR_API_KEY'] and app.config['FLICKR_SHARED_SECRET']):
+            flickr.init_app(app)
+            from pybossa.view.flickr import blueprint as flickr_bp
+            app.register_blueprint(flickr_bp, url_prefix='/flickr')
+    except Exception as inst: # pragma: no cover
+        print type(inst)
+        print inst.args
+        print inst
+        print "Flickr importer not available"
 
 
 def setup_geocoding(app):
@@ -460,16 +471,3 @@ def setup_newsletter(app):
     """Setup mailchimp newsletter."""
     if app.config.get('MAILCHIMP_API_KEY'):
         newsletter.init_app(app)
-
-def setup_importers(app):
-    importer.init_app(app)
-    try:  # pragma: no cover
-        if (app.config['FLICKR_API_KEY'] and app.config['FLICKR_SHARED_SECRET']):
-            flickr.init_app(app)
-            from pybossa.view.flickr import blueprint as flickr_bp
-            app.register_blueprint(flickr_bp, url_prefix='/flickr')
-    except Exception as inst: # pragma: no cover
-        print type(inst)
-        print inst.args
-        print inst
-        print "Flickr importer not available"

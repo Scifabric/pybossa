@@ -97,5 +97,6 @@ newsletter = Newsletter()
 from importers import Importer
 importer = Importer()
 
+# Flickr OAuth integration for importer
 from pybossa.flickr_service import FlickrService
 flickr = FlickrService()
