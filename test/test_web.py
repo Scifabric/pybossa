@@ -2800,27 +2800,8 @@ class TestWeb(web.Helper):
 
         assert res.status_code == 404, res.status_code
 
-    def test_get_importer_doesnt_show_unavailable_importers(self):
-        from pybossa.core import importer
-        try:
-            del importer._importers['flickr']
-            del importer._flickr_api_key
-
-            self.register()
-            owner = db.session.query(User).first()
-            app = AppFactory.create(owner=owner)
-            url = "/app/%s/tasks/import" % app.short_name
-
-            res = self.app.get(url, follow_redirects=True)
-
-            assert 'From a Flickr Album' not in res.data
-        except Exception:
-            raise
-        finally:
-            importer.init_app(self.flask_app)
-
     @patch('pybossa.core.importer.get_all_importer_names')
-    def test_get_importer_doesnt_show_unavailable_importers_v2(self, names):
+    def test_get_importer_doesnt_show_unavailable_importers(self, names):
         names.return_value = ['csv', 'gdocs', 'epicollect']
         self.register()
         owner = db.session.query(User).first()

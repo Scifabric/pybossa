@@ -107,7 +107,9 @@ class TestImporterPublicMethods(Test):
 
 
     def test_get_all_importers_returns_configured_importers(self, create):
-        importer = Importer(self.flask_app)
+        importer_params = {'api_key': self.flask_app.config['FLICKR_API_KEY']}
+        importer = Importer()
+        importer.register_flickr_importer(importer_params)
 
         assert 'flickr' in importer.get_all_importer_names()
 
