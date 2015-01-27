@@ -95,20 +95,24 @@ def delete_hard_bounces():
     fake_emails = 0
     with app.app_context():
         with open('email.csv', 'r') as f:
-            emails = f.read()
+            emails = f.readlines()
+            print "Number of users: %s" % len(emails)
             for email in emails:
-                usr = db.session.query(User).filter_by(email_addr=email).first()
+                usr = db.session.query(User).filter_by(email_addr=email.rstrip()).first()
                 if usr and len(usr.apps) == 0 and len(usr.task_runs) == 0:
                     print "Deleting user: %s" % usr.email_addr
                     del_users +=1
-                    # db.session.delete(usr)
-                    # db.session.commit()
+                    db.session.delete(usr)
+                    db.session.commit()
                 else:
                     if usr:
-                        print "Invalid email: %s" % usr.email_addr
+                        if len(usr.apps) > 0:
+                            print "Invalid email (user owns app): %s" % usr.email_addr
+                        if len(usr.task_runs) > 0:
+                            print "Invalid email (user has contributed): %s" % usr.email_addr
                         fake_emails +=1
-                    # usr.valid_email = False
-                    # db.session.commit()
+                        usr.valid_email = False
+                        db.session.commit()
         print "%s users were deleted" % del_users
         print "%s users have fake emails" % fake_emails
 
