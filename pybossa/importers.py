@@ -161,7 +161,7 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
             return content
 
     def _is_valid_response(self, response):
-        if type(response.tex) is dict:
+        if type(response.text) is dict:
             error_message = json.loads(response.text).get('message')
         else:
             error_message = response.text
