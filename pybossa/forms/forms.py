@@ -21,6 +21,7 @@ from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
 from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
     SelectField, validators, TextAreaField, PasswordField
+from wtforms.fields.html5 import EmailField
 from wtforms.widgets import HiddenInput
 from flask.ext.babel import lazy_gettext, gettext
 
@@ -215,7 +216,7 @@ class RegisterForm(Form):
 
     err_msg = lazy_gettext("Email must be between 3 and 35 characters long")
     err_msg_2 = lazy_gettext("Email is already taken")
-    email_addr = TextField(lazy_gettext('Email Address'),
+    email_addr = EmailField(lazy_gettext('Email Address'),
                            [validators.Length(min=3, max=35, message=err_msg),
                             validators.Email(),
                             pb_validator.Unique(user_repo.get_by, 'email_addr', err_msg_2)])
@@ -251,7 +252,7 @@ class UpdateProfileForm(Form):
 
     err_msg = lazy_gettext("Email must be between 3 and 35 characters long")
     err_msg_2 = lazy_gettext("Email is already taken")
-    email_addr = TextField(lazy_gettext('Email Address'),
+    email_addr = EmailField(lazy_gettext('Email Address'),
                            [validators.Length(min=3, max=35, message=err_msg),
                             validators.Email(),
                             pb_validator.Unique(user_repo.get_by, 'email_addr', err_msg_2)])
@@ -306,7 +307,7 @@ class ForgotPasswordForm(Form):
     """Form Class for forgotten password."""
 
     err_msg = lazy_gettext("Email must be between 3 and 35 characters long")
-    email_addr = TextField(lazy_gettext('Email Address'),
+    email_addr = EmailField(lazy_gettext('Email Address'),
                            [validators.Length(min=3, max=35, message=err_msg),
                             validators.Email()])
 
