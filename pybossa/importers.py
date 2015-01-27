@@ -242,8 +242,8 @@ class Importer(object):
         return self._create_importer_for(importer_id).count_tasks(**form_data)
 
     def _create_importer_for(self, importer_id):
-        constructor_params = self._importer_constructor_params.get(importer_id)
-        return self._importers[importer_id](**constructor_params)
+        params = self._importer_constructor_params.get(importer_id) or {}
+        return self._importers[importer_id](**params)
 
     def get_all_importer_names(self):
         return self._importers.keys()
