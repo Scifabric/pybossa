@@ -24,10 +24,10 @@ class FlickrService(object):
     def __init__(self, app=None):
         self.app = app
         self.client = None
-        if app is not None: # pragma: no cover
+        if app is not None:  # pragma: no cover
             self.init_app(app)
 
-    def init_app(self, app):
+    def init_app(self, app): # pragma: no cover
         from flask import session
         from pybossa.core import importer
         self.client = OAuth().remote_app(
