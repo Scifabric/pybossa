@@ -159,15 +159,17 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
             rest_photos = self._remaining_photos(url, payload, total_pages)
             content['photo'] += rest_photos
             return content
-        if type(res.tex) is dict:
-            error_message = json.loads(res.text).get('message')
-        else:
-            error_message = res.text
-        raise BulkImportException(error_message)
 
     def _is_valid_response(self, response):
-        return (response.status_code == 200
-                and json.loads(response.text).get('stat') == 'ok')
+        if type(response.tex) is dict:
+            error_message = json.loads(response.text).get('message')
+        else:
+            error_message = response.text
+        valid = (response.status_code == 200
+                    and json.loads(response.text).get('stat') == 'ok')
+        if not valid:
+            raise BulkImportException(error_message)
+        return valid
 
     def _remaining_photos(self, url, payload, total_pages):
         photo_lists = [self._photos_from_page(url, payload, page)
