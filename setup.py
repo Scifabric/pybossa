@@ -11,6 +11,7 @@ requirements = [
     "Flask-Mail>=0.9.0, <1.0",
     "Flask-Misaka>=0.2.0, <1.0",
     "Flask-OAuthlib>=0.8, <0.9",
+    "oauthlib>=0.7.2, <0.8",
     "Flask-SQLAlchemy>=2.0, <2.1",
     "Flask-WTF>=0.9.5, <0.9.6",         # was pinned to Flask-WTF==0.9.5
     "Flask>=0.10.1, <0.10.2",           # was pinned to Flask==0.10.1
