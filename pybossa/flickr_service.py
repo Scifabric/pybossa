@@ -30,6 +30,7 @@ class FlickrService(object):
     def init_app(self, app): # pragma: no cover
         from flask import session
         from pybossa.core import importer
+        self.app = app
         self.client = OAuth().remote_app(
             'flickr',
             request_token_url='https://www.flickr.com/services/oauth/request_token',
@@ -54,7 +55,7 @@ class FlickrService(object):
             if res.status == 200 and res.data.get('stat') == 'ok':
                 albums = res.data['photosets']['photoset']
                 return [self._extract_album_info(album) for album in albums]
-            else:
+            if self.app is not None:
                 msg = ("Bad response from Flickr:\nStatus: %s, Content: %s"
                     % (res.status, res.data))
                 self.app.logger.error(msg)
