@@ -139,18 +139,11 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
 
     def tasks(self, **form_data):
         album_info = self._get_album_info(form_data['album_id'])
-        if album_info['stat'] == 'ok':
-            tasks = self._get_tasks_data_from_request(album_info)
-            return tasks
-        if album_info['stat'] == 'fail':
-            raise BulkImportException(album_info['message'])
+        return self._get_tasks_data_from_request(album_info)
 
     def count_tasks(self, **form_data):
         album_info = self._get_album_info(form_data['album_id'])
-        if album_info['stat'] == 'ok':
-            return int(album_info['photoset']['total'])
-        if album_info['stat'] == 'fail':
-            raise BulkImportException(album_info['message'])
+        return int(album_info['total'])
 
     def _get_album_info(self, album_id):
         url = 'https://api.flickr.com/services/rest/'
@@ -160,13 +153,41 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
                    'format': 'json',
                    'nojsoncallback': '1'}
         res = requests.get(url, params=payload)
-        return json.loads(res.text)
+        if self._is_valid_response(res):
+            content = json.loads(res.text)['photoset']
+            total_pages = content.get('pages')
+            rest_photos = self._remaining_photos(url, payload, total_pages)
+            content['photo'] += rest_photos
+            return content
+
+    def _is_valid_response(self, response):
+        if type(response.text) is dict:
+            error_message = json.loads(response.text).get('message')
+        else:
+            error_message = response.text
+        valid = (response.status_code == 200
+                    and json.loads(response.text).get('stat') == 'ok')
+        if not valid:
+            raise BulkImportException(error_message)
+        return valid
+
+    def _remaining_photos(self, url, payload, total_pages):
+        photo_lists = [self._photos_from_page(url, payload, page)
+            for page in range(2, total_pages+1)]
+        return [item for sublist in photo_lists for item in sublist]
+
+    def _photos_from_page(self, url, payload, page):
+        payload['page'] = page
+        res = requests.get(url, params=payload)
+        if self._is_valid_response(res):
+            return json.loads(res.text)['photoset']['photo']
+        return []
 
     def _get_tasks_data_from_request(self, album_info):
-        photo_list = album_info['photoset']['photo']
-        return [self._get_photo_info(photo) for photo in photo_list]
+        photo_list = album_info['photo']
+        return [self._extract_photo_info(photo) for photo in photo_list]
 
-    def _get_photo_info(self, photo):
+    def _extract_photo_info(self, photo):
         base_url = 'https://farm%s.staticflickr.com/%s/%s_%s' % (
             photo['farm'], photo['server'], photo['id'], photo['secret'])
         title = photo['title']
@@ -179,19 +200,15 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
 
 class Importer(object):
 
-    def __init__(self, app=None):
-        self.app = app
+    def __init__(self):
         self._importers = {'csv': _BulkTaskCSVImport,
                            'gdocs': _BulkTaskGDImport,
                            'epicollect': _BulkTaskEpiCollectPlusImport}
-        if app is not None:  # pragma: no cover
-            self.init_app(app)
+        self._importer_constructor_params = {}
 
-    def init_app(self, app):  # pragma: no cover
-        if (app.config.get('FLICKR_API_KEY') is not None and
-                app.config.get('FLICKR_SHARED_SECRET') is not None):
-            self._importers['flickr'] = _BulkTaskFlickrImport
-            self._flickr_api_key = app.config.get('FLICKR_API_KEY')
+    def register_flickr_importer(self, flickr_params):
+        self._importers['flickr'] = _BulkTaskFlickrImport
+        self._importer_constructor_params['flickr'] = flickr_params
 
     def create_tasks(self, task_repo, project_id, **form_data):
         from pybossa.cache import apps as cached_apps
@@ -227,9 +244,8 @@ class Importer(object):
         return self._create_importer_for(importer_id).count_tasks(**form_data)
 
     def _create_importer_for(self, importer_id):
-        if importer_id == 'flickr':
-            return self._importers[importer_id](self._flickr_api_key)
-        return self._importers[importer_id]()
+        params = self._importer_constructor_params.get(importer_id) or {}
+        return self._importers[importer_id](**params)
 
     def get_all_importer_names(self):
         return self._importers.keys()

@@ -186,7 +186,6 @@ class Pagination(object):
 
 
 class Twitter(object):
-    oauth = OAuth()
 
     def __init__(self, app=None):
         self.app = app
@@ -194,7 +193,7 @@ class Twitter(object):
             self.init_app(app)
 
     def init_app(self, app):
-        self.oauth = self.oauth.remote_app(
+        self.oauth = OAuth().remote_app(
             'twitter',
             base_url='https://api.twitter.com/1/',
             request_token_url='https://api.twitter.com/oauth/request_token',
@@ -205,7 +204,6 @@ class Twitter(object):
 
 
 class Facebook(object):
-    oauth = OAuth()
 
     def __init__(self, app=None):
         self.app = app
@@ -213,7 +211,7 @@ class Facebook(object):
             self.init_app(app)
 
     def init_app(self, app):
-        self.oauth = self.oauth.remote_app(
+        self.oauth = OAuth().remote_app(
             'facebook',
             base_url='https://graph.facebook.com/',
             request_token_url=None,
@@ -225,7 +223,6 @@ class Facebook(object):
 
 
 class Google(object):
-    oauth = OAuth()
 
     def __init__(self, app=None):
         self.app = app
@@ -233,7 +230,7 @@ class Google(object):
             self.init_app(app)
 
     def init_app(self, app):
-        self.oauth = self.oauth.remote_app(
+        self.oauth = OAuth().remote_app(
             'google',
             base_url='https://www.google.com/accounts/',
             authorize_url='https://accounts.google.com/o/oauth2/auth',
@@ -245,50 +242,6 @@ class Google(object):
             access_token_params={'grant_type': 'authorization_code'},
             consumer_key=app.config['GOOGLE_CLIENT_ID'],
             consumer_secret=app.config['GOOGLE_CLIENT_SECRET'])
-
-
-class Flickr(object):
-    oauth = OAuth()
-
-    def __init__(self, app=None):
-        self.app = app
-        if app is not None: # pragma: no cover
-            self.init_app(app)
-
-    def init_app(self, app):
-        self.oauth = self.oauth.remote_app(
-            'flickr',
-            request_token_url='https://www.flickr.com/services/oauth/request_token',
-            access_token_url='https://www.flickr.com/services/oauth/access_token',
-            authorize_url='https://www.flickr.com/services/oauth/authorize',
-            consumer_key=app.config['FLICKR_API_KEY'],
-            consumer_secret=app.config['FLICKR_SHARED_SECRET'])
-
-    def get_own_albums(self):
-        from flask import session
-        if (session.get('flickr_user') is not None and
-                session.get('flickr_token') is not None):
-            url = ('https://api.flickr.com/services/rest/?'
-                   'method=flickr.photosets.getList&user_id=%s'
-                   '&primary_photo_extras=url_q'
-                   '&format=json&nojsoncallback=1'
-                   % session.get('flickr_user').get('user_nsid'))
-            res = self.oauth.get(url)
-            if res.status == 200 and res.data.get('stat') == 'ok':
-                albums = res.data['photosets']['photoset']
-                return [self._extract_album_info(album) for album in albums]
-            else:
-                msg = ("Bad response from Flickr:\nStatus: %s, Content: %s"
-                    % (res.status, res.data))
-                self.app.logger.error(msg)
-        return []
-
-    def _extract_album_info(self, album):
-        info = {'title': album['title']['_content'],
-                'photos': album['photos'],
-                'id': album['id'],
-                'thumbnail_url': album['primary_photo_extras']['url_q']}
-        return info
 
 
 def unicode_csv_reader(unicode_csv_data, dialect=csv.excel, **kwargs):
