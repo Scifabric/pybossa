@@ -238,7 +238,6 @@ class Google(object):
             request_token_params={'scope': 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email'},
             access_token_url='https://accounts.google.com/o/oauth2/token',
             access_token_method='POST',
-            access_token_params={'grant_type': 'authorization_code'},
             consumer_key=app.config['GOOGLE_CLIENT_ID'],
             consumer_secret=app.config['GOOGLE_CLIENT_SECRET'])
 
