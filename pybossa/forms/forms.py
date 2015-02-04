@@ -20,7 +20,7 @@ from flask import current_app
 from flask_wtf import Form
 from flask_wtf.file import FileField, FileRequired
 from wtforms import IntegerField, DecimalField, TextField, BooleanField, \
-    SelectField, validators, TextAreaField, PasswordField
+    SelectField, validators, TextAreaField, PasswordField, FieldList
 from wtforms.fields.html5 import EmailField
 from wtforms.widgets import HiddenInput
 from flask.ext.babel import lazy_gettext, gettext
@@ -168,13 +168,21 @@ class _BulkTaskFlickrImportForm(Form):
         return {'type': 'flickr', 'album_id': self.album_id.data}
 
 
+class _BulkTaskDropboxImportForm(Form):
+    form_name = TextField(label=None, widget=HiddenInput(), default='dropbox')
+    files = FieldList(TextField(label=None, widget=HiddenInput()))
+    def get_import_data(self):
+        return {'type': 'dropbox', 'files': self.files.data}
+
+
 class GenericBulkTaskImportForm(object):
     """Callable class that will return, when called, the appropriate form
     instance"""
     _forms = { 'csv': _BulkTaskCSVImportForm,
               'gdocs': _BulkTaskGDImportForm,
               'epicollect': _BulkTaskEpiCollectPlusImportForm,
-              'flickr': _BulkTaskFlickrImportForm }
+              'flickr': _BulkTaskFlickrImportForm,
+              'dropbox': _BulkTaskDropboxImportForm }
 
     def __call__(self, form_name, *form_args, **form_kwargs):
         if form_name is None:
