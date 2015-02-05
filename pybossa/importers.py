@@ -198,12 +198,24 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
                          'url_b': url_b, 'url_m': url_m}}
 
 
+class _BulkTaskDropboxImport(_BulkTaskImport):
+    importer_id = 'dropbox'
+
+    def tasks(self, **form_data):
+        tasks = [json.loads(_file) for _file in form_data['files']]
+        return tasks
+
+    def count_tasks(self, **form_data):
+        return len(self.tasks(**form_data))
+
+
 class Importer(object):
 
     def __init__(self):
         self._importers = {'csv': _BulkTaskCSVImport,
                            'gdocs': _BulkTaskGDImport,
-                           'epicollect': _BulkTaskEpiCollectPlusImport}
+                           'epicollect': _BulkTaskEpiCollectPlusImport,
+                           'dropbox': _BulkTaskDropboxImport}
         self._importer_constructor_params = {}
 
     def register_flickr_importer(self, flickr_params):

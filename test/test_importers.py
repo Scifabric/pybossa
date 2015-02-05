@@ -20,9 +20,9 @@ import json
 from collections import namedtuple
 from mock import patch, Mock
 from nose.tools import assert_raises
-from pybossa.importers import (_BulkTaskFlickrImport, _BulkTaskCSVImport,
-    _BulkTaskGDImport, _BulkTaskEpiCollectPlusImport, BulkImportException,
-    Importer)
+from pybossa.importers import (_BulkTaskDropboxImport, _BulkTaskFlickrImport,
+    _BulkTaskCSVImport, _BulkTaskGDImport, _BulkTaskEpiCollectPlusImport,
+    BulkImportException, Importer)
 
 from default import Test
 from factories import AppFactory, TaskFactory
@@ -101,7 +101,7 @@ class TestImporterPublicMethods(Test):
 
     def test_get_all_importer_names_returns_default_importer_names(self, create):
         importers = self.importer.get_all_importer_names()
-        expected_importers = ['csv', 'gdocs', 'epicollect']
+        expected_importers = ['csv', 'gdocs', 'epicollect', 'dropbox']
 
         assert set(importers) == set(expected_importers)
 
@@ -113,6 +113,24 @@ class TestImporterPublicMethods(Test):
 
         assert 'flickr' in importer.get_all_importer_names()
 
+
+class Test_BulkTaskDropboxImport(object):
+
+    importer = _BulkTaskDropboxImport()
+
+    def test_count_tasks_returns_0_if_no_tasks(self):
+        form_data = {'files': [], 'type': 'dropbox'}
+        number_of_tasks = self.importer.count_tasks(**form_data)
+
+        assert number_of_tasks == 0, number_of_tasks
+
+    def test_count_tasks_returns_0_if_no_tasks(self):
+        form_data = {'files':
+                    [u'{"bytes":286,"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?dl=0","name":"test.txt","icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}'],
+                    'type': 'dropbox'}
+        number_of_tasks = self.importer.count_tasks(**form_data)
+
+        assert number_of_tasks == 1, number_of_tasks
 
 
 @patch('pybossa.importers.requests')
