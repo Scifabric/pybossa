@@ -118,19 +118,36 @@ class Test_BulkTaskDropboxImport(object):
 
     importer = _BulkTaskDropboxImport()
 
-    def test_count_tasks_returns_0_if_no_tasks(self):
+    def test_count_tasks_returns_0_if_no_files_to_import(self):
         form_data = {'files': [], 'type': 'dropbox'}
         number_of_tasks = self.importer.count_tasks(**form_data)
 
         assert number_of_tasks == 0, number_of_tasks
 
-    def test_count_tasks_returns_0_if_no_tasks(self):
+
+    def test_count_tasks_returns_1_if_1_file_to_import(self):
         form_data = {'files':
                     [u'{"bytes":286,"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?dl=0","name":"test.txt","icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}'],
                     'type': 'dropbox'}
         number_of_tasks = self.importer.count_tasks(**form_data)
 
         assert number_of_tasks == 1, number_of_tasks
+
+
+    def test_tasks_return_emtpy_list_if_no_files_to_import(self):
+        form_data = {'files': [], 'type': 'dropbox'}
+        tasks = self.importer.tasks(**form_data)
+
+        assert tasks == [], tasks
+
+
+    def test_tasks_returns_list_with_1_file_data_if_1_file_to_import(self):
+        form_data = {'files':
+                    [u'{"bytes":286,"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?dl=0","name":"test.txt","icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}'],
+                    'type': 'dropbox'}
+        tasks = self.importer.tasks(**form_data)
+
+        assert len(tasks) == 1, tasks
 
 
 @patch('pybossa.importers.requests')
