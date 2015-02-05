@@ -2738,6 +2738,8 @@ class TestWeb(web.Helper):
         assert "type=epicollect" in res.data, err_msg
         err_msg = "There should be a Flickr importer"
         assert "type=flickr" in res.data, err_msg
+        err_msg = "There should be a Dropbox importer"
+        assert "type=dropbox" in res.data, err_msg
         err_msg = "There should be an Image template"
         assert "template=image" in res.data, err_msg
         err_msg = "There should be a Map template"
@@ -2792,6 +2794,14 @@ class TestWeb(web.Helper):
         data = res.data.decode('utf-8')
 
         assert "From a Flickr Album" in data
+        assert 'action="/app/%E2%9C%93app1/tasks/import"' in data
+
+        # Dropbox
+        url = "/app/%s/tasks/import?type=dropbox" % app.short_name
+        res = self.app.get(url, follow_redirects=True)
+        data = res.data.decode('utf-8')
+
+        assert "From your Dropbox account" in data
         assert 'action="/app/%E2%9C%93app1/tasks/import"' in data
 
         # Invalid
