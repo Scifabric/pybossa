@@ -16,9 +16,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from StringIO import StringIO
+import string
 import json
 import requests
+from StringIO import StringIO
 from flask.ext.babel import gettext
 from pybossa.util import unicode_csv_reader
 
@@ -202,10 +203,14 @@ class _BulkTaskDropboxImport(_BulkTaskImport):
     importer_id = 'dropbox'
 
     def tasks(self, **form_data):
-        return [json.loads(_file) for _file in form_data['files']]
+        loaded_file_info = [json.loads(_file) for _file in form_data['files']]
+        return [self._extract_file_info(_file) for _file in loaded_file_info]
 
     def count_tasks(self, **form_data):
         return len(self.tasks(**form_data))
+
+    def _extract_file_info(self, _file):
+        return {'info': {'filename': _file['name'], 'link': string.replace(_file['link'],'dl=0', 'raw=1')}}
 
 
 class Importer(object):

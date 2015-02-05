@@ -150,6 +150,16 @@ class Test_BulkTaskDropboxImport(object):
         assert len(tasks) == 1, tasks
 
 
+    def test_tasks_returns_tasks_with_filename_and_link_info_fields(self):
+        form_data = {'files':
+                    [u'{"bytes":286,"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?dl=0","name":"test.txt","icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}'],
+                    'type': 'dropbox'}
+        tasks = self.importer.tasks(**form_data)
+
+        assert tasks[0]['info']['filename'] == "test.txt"
+        assert tasks[0]['info']['link'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?raw=1"
+
+
 @patch('pybossa.importers.requests')
 class Test_BulkTaskFlickrImport(object):
 
