@@ -205,7 +205,7 @@ class _BulkTaskDropboxImport(_BulkTaskImport):
         return [json.loads(_file) for _file in form_data['files']]
 
     def count_tasks(self, **form_data):
-        return len([json.loads(_file) for _file in form_data['files']])
+        return len(self.tasks(**form_data))
 
 
 class Importer(object):
