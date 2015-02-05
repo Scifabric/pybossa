@@ -295,9 +295,10 @@ class TestAutoimporterBehaviour(web.Helper):
         assert 'Google Drive Spreadsheet' in res.data
         assert 'EpiCollect Plus Project' in res.data
         assert 'Flickr' in res.data
+        assert 'Dropbox' not in res.data
 
 
-    @patch('pybossa.core.importer.get_all_importer_names')
+    @patch('pybossa.core.importer.get_autoimporter_names')
     def test_autoimporter_doesnt_show_unavailable_importers(self, names):
         names.return_value = ['csv', 'gdocs', 'epicollect']
         self.register()
@@ -348,6 +349,13 @@ class TestAutoimporterBehaviour(web.Helper):
 
         assert "From a Flickr Album" in data
         assert 'action="/app/%E2%9C%93app1/tasks/autoimporter"' in data
+
+        # Dropbox
+        url = "/app/%s/tasks/autoimporter?type=dropbox" % app.short_name
+        res = self.app.get(url, follow_redirects=True)
+        data = res.data.decode('utf-8')
+
+        assert res.status_code == 404, res.status_code
 
         # Invalid
         url = "/app/%s/tasks/autoimporter?type=invalid" % app.short_name
