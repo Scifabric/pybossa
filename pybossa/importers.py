@@ -265,3 +265,6 @@ class Importer(object):
 
     def get_all_importer_names(self):
         return self._importers.keys()
+
+    def get_autoimporter_names(self):
+        return [name for name in self._importers.keys() if name != 'dropbox']

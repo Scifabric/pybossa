@@ -593,7 +593,7 @@ def setup_autoimporter(short_name):
     require.app.read(app)
     require.app.update(app)
     importer_type = request.form.get('form_name') or request.args.get('type')
-    all_importers = importer.get_all_importer_names()
+    all_importers = importer.get_autoimporter_names()
     if importer_type is not None and importer_type not in all_importers:
         raise abort(404)
     form = GenericBulkTaskImportForm()(importer_type, request.form)
