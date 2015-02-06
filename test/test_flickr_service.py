@@ -56,7 +56,7 @@ class TestFlickrOauthBlueprint(object):
 
 
     @patch('pybossa.view.flickr.flickr')
-    def test_oauth_authorized_adds_token_and_user_to_session(self, flickr):
+    def test_oauth_authorized_saves_token_and_adds_user_to_session(self, flickr):
         fake_resp = {'oauth_token_secret': u'secret',
                      'username': u'palotespaco',
                      'fullname': u'paco palotes',
@@ -66,10 +66,10 @@ class TestFlickrOauthBlueprint(object):
 
         with flask_app.test_client() as c:
             c.get('/flickr/oauth-authorized')
-            flickr_token = session.get('flickr_token')
             flickr_user = session.get('flickr_user')
 
-        assert flickr_token == {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
+        flickr.save_token.assert_called_with(session,
+            {'oauth_token_secret': u'secret', 'oauth_token': u'token'})
         assert flickr_user == {'username': u'palotespaco', 'user_nsid': u'user'}
 
 
@@ -129,6 +129,14 @@ class TestFlickrService(object):
         token = self.flickr.get_flickr_token(session)
 
         assert token is 'fake_token', token
+
+
+    def test_save_token_stores_token(self):
+        session = {}
+
+        self.flickr.save_token(session, self.token)
+
+        assert session.get('flickr_token') is self.token
 
 
     def test_get_user_albums_calls_flickr_api_endpoint(self):

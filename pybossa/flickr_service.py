@@ -71,7 +71,13 @@ class FlickrService(object):
         return self.client
 
     def get_flickr_token(self, session):
-        return session.get('flickr_token')
+        token = session.get('flickr_token')
+        # if token is not None:
+        #     token = (token['oauth_token'], token['oauth_token_secret'])
+        return token
+
+    def save_token(self, session, token):
+        session['flickr_token'] = token
 
     def _extract_album_info(self, album):
         info = {'title': album['title']['_content'],
