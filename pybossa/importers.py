@@ -186,17 +186,19 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
 
     def _get_tasks_data_from_request(self, album_info):
         photo_list = album_info['photo']
-        return [self._extract_photo_info(photo) for photo in photo_list]
+        owner = album_info['owner']
+        return [self._extract_photo_info(photo, owner) for photo in photo_list]
 
-    def _extract_photo_info(self, photo):
+    def _extract_photo_info(self, photo, owner):
         base_url = 'https://farm%s.staticflickr.com/%s/%s_%s' % (
             photo['farm'], photo['server'], photo['id'], photo['secret'])
         title = photo['title']
         url = ''.join([base_url, '.jpg'])
         url_m = ''.join([base_url, '_m.jpg'])
         url_b = ''.join([base_url, '_b.jpg'])
+        link = 'https://www.flickr.com/photos/%s/%s' % (owner, photo['id'])
         return {"info": {'title': title, 'url': url,
-                         'url_b': url_b, 'url_m': url_m}}
+                         'url_b': url_b, 'url_m': url_m, 'link': link}}
 
 
 class _BulkTaskDropboxImport(_BulkTaskImport):
