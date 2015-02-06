@@ -205,13 +205,13 @@ class _BulkTaskDropboxImport(_BulkTaskImport):
     importer_id = 'dropbox'
 
     def tasks(self, **form_data):
-        loaded_file_info = [json.loads(_file) for _file in form_data['files']]
-        return [self._extract_file_info(_file) for _file in loaded_file_info]
+        return [self._extract_file_info(_file) for _file in form_data['files']]
 
     def count_tasks(self, **form_data):
         return len(self.tasks(**form_data))
 
     def _extract_file_info(self, _file):
+        _file = json.loads(_file)
         info = {'filename': _file['name'],
                 'link_raw': string.replace(_file['link'],'dl=0', 'raw=1'),
                 'link': _file['link']}
@@ -222,11 +222,11 @@ class _BulkTaskDropboxImport(_BulkTaskImport):
                             'title': info['filename']}
             info.update(extra_fields)
         if _file['name'].endswith('.pdf'):
-            url = string.replace(_file['link'],'www.dropbox.com', 'dl.dropboxusercontent.com')
+            url = string.replace(_file['link'],'www.dropbox.com',
+                                 'dl.dropboxusercontent.com')
             if url.endswith('?dl=0'):
                 url = url[:-5]
-            extra_fields = {'pdf_url': url,
-                            'page': 1}
+            extra_fields = {'pdf_url': url, 'page': 1}
             info.update(extra_fields)
         return {'info': info}
 
