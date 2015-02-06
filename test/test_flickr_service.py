@@ -56,7 +56,7 @@ class TestFlickrOauthBlueprint(object):
 
 
     @patch('pybossa.view.flickr.flickr')
-    def test_oauth_authorized_saves_token_and_adds_user_to_session(self, flickr):
+    def test_oauth_authorized_saves_token_and_user_to_session(self, flickr):
         fake_resp = {'oauth_token_secret': u'secret',
                      'username': u'palotespaco',
                      'fullname': u'paco palotes',
@@ -66,11 +66,10 @@ class TestFlickrOauthBlueprint(object):
 
         with flask_app.test_client() as c:
             c.get('/flickr/oauth-authorized')
-            flickr_user = session.get('flickr_user')
 
-        flickr.save_token.assert_called_with(session,
-            {'oauth_token_secret': u'secret', 'oauth_token': u'token'})
-        assert flickr_user == {'username': u'palotespaco', 'user_nsid': u'user'}
+        flickr.save_credentials.assert_called_with(session,
+            {'oauth_token_secret': u'secret', 'oauth_token': u'token'},
+            {'username': u'palotespaco', 'user_nsid': u'user'})
 
 
     @patch('pybossa.view.flickr.flickr')
@@ -131,20 +130,22 @@ class TestFlickrService(object):
         assert token == (u'token', u'secret'), token
 
 
-    def test_save_token_stores_token(self):
+    def test_save_credentials_stores_token_and_user(self):
         session = {}
 
-        self.flickr.save_token(session, self.token)
+        self.flickr.save_credentials(session, self.token, self.user)
 
         assert session.get('flickr_token') is self.token
+        assert session.get('flickr_user') is self.user
 
 
     def test_remove_token_deletes_token(self):
-        session = {'flickr_token': self.token}
+        session = {'flickr_token': self.token, 'flickr_user': self.user}
 
-        self.flickr.remove_token(session)
+        self.flickr.remove_credentials(session)
 
         assert session.get('flickr_token') is None
+        assert session.get('flickr_user') is None
 
 
     def test_get_user_albums_calls_flickr_api_endpoint(self):

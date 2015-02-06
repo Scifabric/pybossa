@@ -50,7 +50,7 @@ class FlickrService(object):
                    'method=flickr.photosets.getList&user_id=%s'
                    '&primary_photo_extras=url_q'
                    '&format=json&nojsoncallback=1'
-                   % session.get('flickr_user').get('user_nsid'))
+                   % self._get_user_nsid(session))
             res = self.client.get(url, token='')
             if res.status == 200 and res.data.get('stat') == 'ok':
                 albums = res.data['photosets']['photoset']
@@ -76,11 +76,16 @@ class FlickrService(object):
             token = (token['oauth_token'], token['oauth_token_secret'])
         return token
 
-    def save_token(self, session, token):
+    def save_credentials(self, session, token, user):
         session['flickr_token'] = token
+        session['flickr_user'] = user
 
-    def remove_token(self, session):
+    def remove_credentials(self, session):
         session.pop('flickr_token', None)
+        session.pop('flickr_user', None)
+
+    def _get_user_nsid(self, session):
+        return session.get('flickr_user').get('user_nsid')
 
     def _extract_album_info(self, album):
         info = {'title': album['title']['_content'],
