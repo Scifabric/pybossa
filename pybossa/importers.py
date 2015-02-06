@@ -210,7 +210,16 @@ class _BulkTaskDropboxImport(_BulkTaskImport):
         return len(self.tasks(**form_data))
 
     def _extract_file_info(self, _file):
-        return {'info': {'filename': _file['name'], 'link': string.replace(_file['link'],'dl=0', 'raw=1')}}
+        info = {'filename': _file['name'],
+                'link_raw': string.replace(_file['link'],'dl=0', 'raw=1'),
+                'link': _file['link']}
+        if (_file['name'].endswith('.png') or _file['name'].endswith('.jpg') or
+            _file['name'].endswith('.jpeg') or _file['name'].endswith('.gif')):
+            extra_fields = {'url_m': info['link_raw'],
+                            'url_b': info['link_raw'],
+                            'title': info['filename']}
+            info.update(extra_fields)
+        return {'info': info}
 
 
 class Importer(object):
