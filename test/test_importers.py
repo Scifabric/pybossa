@@ -348,7 +348,7 @@ class Test_BulkTaskFlickrImport(object):
         assert_raises(BulkImportException, self.importer.count_tasks, album_id='bad')
 
 
-    def test_count_tasks_raises_exception_on_non_200_flckr_response(self, requests):
+    def test_count_tasks_raises_exception_on_non_200_flickr_response(self, requests):
         requests.get.return_value = self.make_response('Not Found', 404)
 
         assert_raises(BulkImportException, self.importer.count_tasks,
@@ -385,7 +385,7 @@ class Test_BulkTaskFlickrImport(object):
         assert_raises(BulkImportException, self.importer.tasks, album_id='bad')
 
 
-    def test_tasks_raises_exception_on_non_200_flckr_response(self, requests):
+    def test_tasks_raises_exception_on_non_200_flickr_response(self, requests):
         requests.get.return_value = self.make_response('Not Found', 404)
 
         assert_raises(BulkImportException, self.importer.tasks,
