@@ -72,8 +72,8 @@ class FlickrService(object):
 
     def get_token(self, session):
         token = session.get('flickr_token')
-        # if token is not None:
-        #     token = (token['oauth_token'], token['oauth_token_secret'])
+        if token is not None:
+            token = (token['oauth_token'], token['oauth_token_secret'])
         return token
 
     def save_token(self, session, token):

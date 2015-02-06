@@ -123,12 +123,12 @@ class TestFlickrService(object):
         assert token is None, token
 
 
-    def test_flickr_get_token_returns_existing_token(self):
-        session = {'flickr_token': 'fake_token'}
+    def test_flickr_get_token_returns_existing_token_as_a_tuple(self):
+        session = {'flickr_token': self.token}
 
         token = self.flickr.get_token(session)
 
-        assert token is 'fake_token', token
+        assert token == (u'token', u'secret'), token
 
 
     def test_save_token_stores_token(self):
