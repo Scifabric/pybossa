@@ -131,6 +131,10 @@ class TestImporterPublicMethods(Test):
 
 class Test_BulkTaskDropboxImport(object):
 
+    dropbox_file_data = (u'{"bytes":286,'
+        u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?dl=0",'
+        u'"name":"test.txt",'
+        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
     importer = _BulkTaskDropboxImport()
 
     def test_count_tasks_returns_0_if_no_files_to_import(self):
@@ -141,8 +145,7 @@ class Test_BulkTaskDropboxImport(object):
 
 
     def test_count_tasks_returns_1_if_1_file_to_import(self):
-        form_data = {'files':
-                    [u'{"bytes":286,"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?dl=0","name":"test.txt","icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}'],
+        form_data = {'files': [self.dropbox_file_data],
                     'type': 'dropbox'}
         number_of_tasks = self.importer.count_tasks(**form_data)
 
@@ -157,8 +160,7 @@ class Test_BulkTaskDropboxImport(object):
 
 
     def test_tasks_returns_list_with_1_file_data_if_1_file_to_import(self):
-        form_data = {'files':
-                    [u'{"bytes":286,"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?dl=0","name":"test.txt","icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}'],
+        form_data = {'files': [self.dropbox_file_data],
                     'type': 'dropbox'}
         tasks = self.importer.tasks(**form_data)
 
@@ -166,8 +168,7 @@ class Test_BulkTaskDropboxImport(object):
 
 
     def test_tasks_returns_tasks_with_filename_and_link_info_fields(self):
-        form_data = {'files':
-                    [u'{"bytes":286,"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?dl=0","name":"test.txt","icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}'],
+        form_data = {'files': [self.dropbox_file_data],
                     'type': 'dropbox'}
         tasks = self.importer.tasks(**form_data)
 
