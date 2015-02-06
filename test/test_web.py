@@ -3050,6 +3050,7 @@ class TestWeb(web.Helper):
             u'url': u'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d.jpg',
             u'url_m': u'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d_m.jpg',
             u'url_b': u'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d_b.jpg',
+            u'link': u'https://www.flickr.com/photos/32985084@N00/8947115130',
             u'title': u'Title'}
         assert tasks[0].info == expected_info, tasks[0].info
 
