@@ -268,7 +268,7 @@ class Test_BulkTaskDropboxImport(object):
         assert tasks[0]['info']['filename'] == "test.pdf"
         assert tasks[0]['info']['link'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.pdf?dl=0"
         assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.pdf?raw=1"
-        assert tasks[0]['info']['pdf_url'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.pdf?raw=1"
+        assert tasks[0]['info']['pdf_url'] == "https://dl.dropboxusercontent.com/s/l2b77qvlrequ6gl/test.pdf"
         assert tasks[0]['info']['page'] == 1
 
 
