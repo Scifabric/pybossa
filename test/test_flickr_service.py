@@ -156,21 +156,8 @@ class TestFlickrService(object):
 
         self.flickr.get_user_albums(session)
 
-        self.flickr.client.get.assert_called_with(url)
-
-
-    def test_get_user_albums_calls_flickr_api_endpoint_with_no_credentials(self):
-        session = {'flickr_token': self.token, 'flickr_user': self.user}
-        url = ('https://api.flickr.com/services/rest/?'
-               'method=flickr.photosets.getList&user_id=user'
-               '&primary_photo_extras=url_q'
-               '&format=json&nojsoncallback=1')
-
-        self.flickr.get_user_albums(session)
-
-        # The request MUST NOT include user credentials, to avoid private photos
-        url_call_params = self.flickr.client.get.call_args_list[0][0][0]
-        assert 'auth_token' not in url_call_params, url_call_params
+        # The request MUST NOT include a valid token, to avoid private photos
+        self.flickr.client.get.assert_called_with(url, token='')
 
 
     def test_get_user_albums_return_empty_list_on_request_error(self):

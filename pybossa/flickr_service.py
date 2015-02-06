@@ -51,7 +51,7 @@ class FlickrService(object):
                    '&primary_photo_extras=url_q'
                    '&format=json&nojsoncallback=1'
                    % session.get('flickr_user').get('user_nsid'))
-            res = self.client.get(url)
+            res = self.client.get(url, token='')
             if res.status == 200 and res.data.get('stat') == 'ok':
                 albums = res.data['photosets']['photoset']
                 return [self._extract_album_info(album) for album in albums]
