@@ -254,6 +254,24 @@ class Test_BulkTaskDropboxImport(object):
         assert tasks[0]['info']['title'] == "test.gif"
 
 
+    def test_tasks_attributes_for_pdf_files(self):
+        #For image file extensions: link, filename, link_raw, pdf_url, page
+        pdf_file_data = (u'{"bytes":286,'
+        u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.pdf?dl=0",'
+        u'"name":"test.pdf",'
+        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.pdf"}')
+
+        form_data = {'files': [pdf_file_data],
+                     'type': 'dropbox'}
+        tasks = self.importer.tasks(**form_data)
+
+        assert tasks[0]['info']['filename'] == "test.pdf"
+        assert tasks[0]['info']['link'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.pdf?dl=0"
+        assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.pdf?raw=1"
+        assert tasks[0]['info']['pdf_url'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.pdf?raw=1"
+        assert tasks[0]['info']['page'] == 1
+
+
 @patch('pybossa.importers.requests')
 class Test_BulkTaskFlickrImport(object):
 

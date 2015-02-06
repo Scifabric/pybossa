@@ -219,6 +219,10 @@ class _BulkTaskDropboxImport(_BulkTaskImport):
                             'url_b': info['link_raw'],
                             'title': info['filename']}
             info.update(extra_fields)
+        if _file['name'].endswith('.pdf'):
+            extra_fields = {'pdf_url': info['link_raw'],
+                            'page': 1}
+            info.update(extra_fields)
         return {'info': info}
 
 
