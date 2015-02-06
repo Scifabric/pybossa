@@ -364,7 +364,6 @@ class Test_BulkTaskFlickrImport(object):
 
 
     def test_tasks_returns_tasks_with_title_and_url_info_fields(self, requests):
-        task_data_info_fields = ['url', 'title']
         requests.get.return_value = self.make_response(json.dumps(self.response))
         url = 'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d.jpg'
         url_m = 'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d_m.jpg'
