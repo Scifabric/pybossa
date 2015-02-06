@@ -38,7 +38,7 @@ class FlickrService(object):
             authorize_url='https://www.flickr.com/services/oauth/authorize',
             consumer_key=app.config['FLICKR_API_KEY'],
             consumer_secret=app.config['FLICKR_SHARED_SECRET'])
-        tokengetter = functools.partial(self.get_flickr_token, session)
+        tokengetter = functools.partial(self.get_token, session)
         self.client.tokengetter(tokengetter)
         importer_params = {'api_key': app.config['FLICKR_API_KEY']}
         importer.register_flickr_importer(importer_params)
@@ -70,7 +70,7 @@ class FlickrService(object):
     def get_oauth_client(self):
         return self.client
 
-    def get_flickr_token(self, session):
+    def get_token(self, session):
         token = session.get('flickr_token')
         # if token is not None:
         #     token = (token['oauth_token'], token['oauth_token_secret'])
@@ -78,6 +78,9 @@ class FlickrService(object):
 
     def save_token(self, session, token):
         session['flickr_token'] = token
+
+    def remove_token(self, session):
+        session.pop('flickr_token', None)
 
     def _extract_album_info(self, album):
         info = {'title': album['title']['_content'],

@@ -115,18 +115,18 @@ class TestFlickrService(object):
         self.flickr.client = MagicMock()
         self.flickr.app = MagicMock()
 
-    def test_flickr_get_flickr_token_returns_None_if_no_token(self):
+    def test_flickr_get_token_returns_None_if_no_token(self):
         session = {}
 
-        token = self.flickr.get_flickr_token(session)
+        token = self.flickr.get_token(session)
 
         assert token is None, token
 
 
-    def test_flickr_get_flickr_token_returns_existing_token(self):
+    def test_flickr_get_token_returns_existing_token(self):
         session = {'flickr_token': 'fake_token'}
 
-        token = self.flickr.get_flickr_token(session)
+        token = self.flickr.get_token(session)
 
         assert token is 'fake_token', token
 
@@ -137,6 +137,14 @@ class TestFlickrService(object):
         self.flickr.save_token(session, self.token)
 
         assert session.get('flickr_token') is self.token
+
+
+    def test_remove_token_deletes_token(self):
+        session = {'flickr_token': self.token}
+
+        self.flickr.remove_token(session)
+
+        assert session.get('flickr_token') is None
 
 
     def test_get_user_albums_calls_flickr_api_endpoint(self):

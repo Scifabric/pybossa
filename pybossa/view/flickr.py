@@ -33,8 +33,7 @@ def login():
 @blueprint.route('/revoke-access')
 def logout():
     next_url = request.args.get('next') or url_for('home.home')
-    if 'flickr_token' in session:
-        session.pop('flickr_token')
+    flickr.remove_token(session)
     if 'flickr_user' in session:
         session.pop('flickr_user')
     return redirect(next_url)
