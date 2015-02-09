@@ -1,4 +1,4 @@
-SERVER_NAME='127.0.0.1'
+SERVER_NAME='localhost'
 SECRET = 'foobar'
 SECRET_KEY = 'my-session-secret'
 SQLALCHEMY_DATABASE_TEST_URI = 'postgresql://rtester:rtester@localhost/pybossa_test'
