@@ -293,6 +293,26 @@ class Test_BulkTaskDropboxImport(object):
             assert tasks[0]['info']['video_url'] == "https://dl.dropboxusercontent.com/s/l2b77qvlrequ6gl/test.%s" % ext
 
 
+    def test_tasks_attributes_for_audio_files(self):
+        #For audio file extension: link, filename, link_raw, audio_url
+        audio_ext = ['mp4', 'm4a', 'mp3', 'ogg', 'oga', 'webm', 'wav']
+        file_data = (u'{"bytes":286,'
+        u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.extension?dl=0",'
+        u'"name":"test.extension",'
+        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
+
+        for ext in audio_ext:
+            data = string.replace(file_data,'extension', ext)
+            form_data = {'files': [data],
+                         'type': 'dropbox'}
+            tasks = self.importer.tasks(**form_data)
+
+            assert tasks[0]['info']['filename'] == "test.%s" % ext
+            assert tasks[0]['info']['link'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.%s?dl=0" % ext
+            assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.%s?raw=1" % ext
+            assert tasks[0]['info']['audio_url'] == "https://dl.dropboxusercontent.com/s/l2b77qvlrequ6gl/test.%s" % ext
+
+
 @patch('pybossa.importers.requests')
 class Test_BulkTaskFlickrImport(object):
 

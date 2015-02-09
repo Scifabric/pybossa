@@ -230,6 +230,16 @@ class _BulkTaskDropboxImport(_BulkTaskImport):
                 url = url[:-5]
             extra_fields = {'video_url': url}
             info.update(extra_fields)
+        if (_file['name'].endswith('.mp4') or _file['name'].endswith('.m4a') or
+            _file['name'].endswith('.ogg') or _file['name'].endswith('.oga') or
+            _file['name'].endswith('.webm') or _file['name'].endswith('.wav') or
+            _file['name'].endswith('.mp3')):
+            url = string.replace(_file['link'],'www.dropbox.com',
+                                 'dl.dropboxusercontent.com')
+            if url.endswith('?dl=0'):
+                url = url[:-5]
+            extra_fields = {'audio_url': url}
+            info.update(extra_fields)
         if _file['name'].endswith('.pdf'):
             url = string.replace(_file['link'],'www.dropbox.com',
                                  'dl.dropboxusercontent.com')
