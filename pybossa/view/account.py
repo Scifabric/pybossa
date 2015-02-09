@@ -199,7 +199,9 @@ def confirm_email():
                    body=render_template(
                        '/account/email/validate_email.md',
                        user=account, confirm_url=confirm_url))
-        msg['html'] = markdown(msg['body'])
+        msg['html'] = render_template(
+                       '/account/email/validate_email.html',
+                       user=account, confirm_url=confirm_url)
         mail_queue.enqueue(send_mail, msg)
         msg = gettext("An e-mail has been sent to \
                        validate your e-mail address.")
@@ -653,7 +655,9 @@ def forgot_password():
                 msg['body'] = render_template(
                     '/account/email/forgot_password.md',
                     user=user, recovery_url=recovery_url)
-            msg['html'] = markdown(msg['body'])
+            msg['html'] = render_template(
+                '/account/email/forgot_password.html',
+                user=user, recovery_url=recovery_url)
             send_mail_job = mail_queue.enqueue(send_mail, msg)
             flash(gettext("We've send you email with account "
                           "recovery instructions!"),
