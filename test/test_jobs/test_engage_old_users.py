@@ -55,6 +55,21 @@ class TestEngageUsers(Test):
         assert job['queue'] == 'quaterly', job['queue']
         assert len(args['recipients']) == 1
         assert args['recipients'][0] == user.email_addr, args['recipients'][0]
+        assert "UNSUBSCRIBE" in args['body']
+        assert "Update" in args['html']
+
+    @with_context
+    def test_get_inactive_users_returns_jobs_unsubscribed(self):
+        """Test JOB get inactive users returns an empty list of jobs."""
+
+        tr = TaskRunFactory.create(finish_time="2010-07-07T17:23:45.714210")
+        user = user_repo.get(tr.user_id)
+        user.subscribed = False
+        user_repo.update(user)
+
+        jobs = get_inactive_users_jobs()
+        msg = "There should be zero jobs."
+        assert len(jobs) == 0,  msg
 
 
 class TestNonContributors(Test):
