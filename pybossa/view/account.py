@@ -506,6 +506,7 @@ def update_profile(name):
                     user.email_addr = update_form.email_addr.data
                 user.privacy_mode = update_form.privacy_mode.data
                 user.locale = update_form.locale.data
+                user.subscribed = update_form.subscribed.data
                 user_repo.update(user)
                 cached_users.delete_user_summary(user.name)
                 flash(gettext('Your profile has been updated!'), 'success')
