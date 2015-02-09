@@ -17,6 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import copy
 import json
+import string
 from collections import namedtuple
 from mock import patch, Mock
 from nose.tools import assert_raises
@@ -202,7 +203,7 @@ class Test_BulkTaskDropboxImport(object):
         jpg_file_data = (u'{"bytes":286,'
         u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.jpg?dl=0",'
         u'"name":"test.jpg",'
-        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.jpg"}')
+        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
 
         form_data = {'files': [jpg_file_data],
                      'type': 'dropbox'}
@@ -221,7 +222,7 @@ class Test_BulkTaskDropboxImport(object):
         jpeg_file_data = (u'{"bytes":286,'
         u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.jpeg?dl=0",'
         u'"name":"test.jpeg",'
-        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.jpeg"}')
+        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
 
         form_data = {'files': [jpeg_file_data],
                      'type': 'dropbox'}
@@ -240,7 +241,7 @@ class Test_BulkTaskDropboxImport(object):
         gif_file_data = (u'{"bytes":286,'
         u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.gif?dl=0",'
         u'"name":"test.gif",'
-        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.gif"}')
+        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
 
         form_data = {'files': [gif_file_data],
                      'type': 'dropbox'}
@@ -255,11 +256,11 @@ class Test_BulkTaskDropboxImport(object):
 
 
     def test_tasks_attributes_for_pdf_files(self):
-        #For image file extensions: link, filename, link_raw, pdf_url, page
+        #For pdf file extension: link, filename, link_raw, pdf_url, page
         pdf_file_data = (u'{"bytes":286,'
         u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.pdf?dl=0",'
         u'"name":"test.pdf",'
-        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.pdf"}')
+        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
 
         form_data = {'files': [pdf_file_data],
                      'type': 'dropbox'}
@@ -270,6 +271,26 @@ class Test_BulkTaskDropboxImport(object):
         assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.pdf?raw=1"
         assert tasks[0]['info']['pdf_url'] == "https://dl.dropboxusercontent.com/s/l2b77qvlrequ6gl/test.pdf"
         assert tasks[0]['info']['page'] == 1
+
+
+    def test_tasks_attributes_for_video_files(self):
+        #For video file extension: link, filename, link_raw, video_url
+        video_ext = ['mp4', 'm4v', 'ogg', 'ogv', 'webm', 'avi']
+        file_data = (u'{"bytes":286,'
+        u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.extension?dl=0",'
+        u'"name":"test.extension",'
+        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
+
+        for ext in video_ext:
+            data = string.replace(file_data,'extension', ext)
+            form_data = {'files': [data],
+                         'type': 'dropbox'}
+            tasks = self.importer.tasks(**form_data)
+
+            assert tasks[0]['info']['filename'] == "test.%s" % ext
+            assert tasks[0]['info']['link'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.%s?dl=0" % ext
+            assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.%s?raw=1" % ext
+            assert tasks[0]['info']['video_url'] == "https://dl.dropboxusercontent.com/s/l2b77qvlrequ6gl/test.%s" % ext
 
 
 @patch('pybossa.importers.requests')
