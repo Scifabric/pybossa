@@ -1,4 +1,4 @@
-"""Add unsubscribe column to user table
+"""Add subscribe column to user table
 
 Revision ID: 4e435ff8ba74
 Revises: bbba2255e00
