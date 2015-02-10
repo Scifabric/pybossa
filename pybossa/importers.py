@@ -215,39 +215,49 @@ class _BulkTaskDropboxImport(_BulkTaskImport):
         info = {'filename': _file['name'],
                 'link_raw': string.replace(_file['link'],'dl=0', 'raw=1'),
                 'link': _file['link']}
-        if (_file['name'].endswith('.png') or _file['name'].endswith('.jpg') or
-            _file['name'].endswith('.jpeg') or _file['name'].endswith('.gif')):
+        if self._is_image_file(_file['name']):
             extra_fields = {'url_m': info['link_raw'],
                             'url_b': info['link_raw'],
                             'title': info['filename']}
             info.update(extra_fields)
-        if (_file['name'].endswith('.mp4') or _file['name'].endswith('.m4v') or
-            _file['name'].endswith('.ogg') or _file['name'].endswith('.ogv') or
-            _file['name'].endswith('.webm') or _file['name'].endswith('.avi')):
-            url = string.replace(_file['link'],'www.dropbox.com',
-                                 'dl.dropboxusercontent.com')
-            if url.endswith('?dl=0'):
-                url = url[:-5]
+        if self._is_video_file(_file['name']):
+            url = self._create_raw_cors_link(_file['link'])
             extra_fields = {'video_url': url}
             info.update(extra_fields)
-        if (_file['name'].endswith('.mp4') or _file['name'].endswith('.m4a') or
-            _file['name'].endswith('.ogg') or _file['name'].endswith('.oga') or
-            _file['name'].endswith('.webm') or _file['name'].endswith('.wav') or
-            _file['name'].endswith('.mp3')):
-            url = string.replace(_file['link'],'www.dropbox.com',
-                                 'dl.dropboxusercontent.com')
-            if url.endswith('?dl=0'):
-                url = url[:-5]
+        if self._is_audio_file(_file['name']):
+            url = self._create_raw_cors_link(_file['link'])
             extra_fields = {'audio_url': url}
             info.update(extra_fields)
-        if _file['name'].endswith('.pdf'):
-            url = string.replace(_file['link'],'www.dropbox.com',
-                                 'dl.dropboxusercontent.com')
-            if url.endswith('?dl=0'):
-                url = url[:-5]
+        if self._is_pdf_file(_file['name']):
+            url = self._create_raw_cors_link(_file['link'])
             extra_fields = {'pdf_url': url, 'page': 1}
             info.update(extra_fields)
         return {'info': info}
+
+    def _is_image_file(self, filename):
+        return (filename.endswith('.png') or filename.endswith('.jpg') or
+            filename.endswith('.jpeg') or filename.endswith('.gif'))
+
+    def _is_video_file(self, filename):
+        return (filename.endswith('.mp4') or filename.endswith('.m4v') or
+            filename.endswith('.ogg') or filename.endswith('.ogv') or
+            filename.endswith('.webm') or filename.endswith('.avi'))
+
+    def _is_audio_file(self, filename):
+        return (filename.endswith('.mp4') or filename.endswith('.m4a') or
+            filename.endswith('.ogg') or filename.endswith('.oga') or
+            filename.endswith('.webm') or filename.endswith('.wav') or
+            filename.endswith('.mp3'))
+
+    def _is_pdf_file(self, filename):
+        return filename.endswith('.pdf')
+
+    def _create_raw_cors_link(self, url):
+        new_url = string.replace(url,'www.dropbox.com',
+                                 'dl.dropboxusercontent.com')
+        if new_url.endswith('?dl=0'):
+            new_url = new_url[:-5]
+        return new_url
 
 
 class Importer(object):
