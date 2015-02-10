@@ -119,7 +119,7 @@ class TestNonContributors(Test):
         TaskRunFactory.create()
         user = user_repo.get(1)
         user.subscribed = False
-        user_repo.udate(user)
+        user_repo.update(user)
 
         jobs = get_non_contributors_users_jobs()
         msg = "There should be zero jobs."
