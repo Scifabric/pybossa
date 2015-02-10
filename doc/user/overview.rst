@@ -133,10 +133,10 @@ built-in :ref:`task-creator`. You have to do the following:
    :width: 100%
 
 3. And click again on the **Import Tasks** button. After clicking on it you will
-   see several options. The first four are for using the different kinds of
+   see several options. The first five are for using the different kinds of
    importers supported by PyBossa.
 
-.. image:: http://i.imgur.com/nvTP7aX.png
+.. image:: http://i.imgur.com/e9GhNlE.png
 
 The **CSV** importer, allows you to upload your own CSV file:
 
@@ -248,9 +248,9 @@ project, you will have to follow the next steps:
     
 3. And  click on the **Import Tasks** 
    button. After clicking on it you will see several different options. The first
-   four correspond to the different importers PyBossa supports:
+   five correspond to the different importers PyBossa supports:
 
-.. image:: http://i.imgur.com/nvTP7aX.png
+.. image:: http://i.imgur.com/e9GhNlE.png
 
 4. Click in the **Use an EpiCollect Project** one.
 
@@ -286,6 +286,7 @@ each picture (which will be later available to be used in the task presenter):
 * url: the url to the raw .jpg image, in its original size.
 * url_b: the url to the image, 'big sized.
 * url_m: the url to the image, 'medium' sized.
+* link: a link to the photo page in flickr (not to the raw image).
 
 You can import tasks from a Flickr photo set (a.k.a. album) in either of the
 following ways:
@@ -319,7 +320,7 @@ These are the steps:
 
 2. Then click on the **Import Tasks** button, and select the **Flickr importer**:
 
-.. image:: http://i.imgur.com/nvTP7aX.png
+.. image:: http://i.imgur.com/e9GhNlE.png
 
 3. Type the ID of the Flickr set you want to import the photos from, then click
 on the import button:
@@ -344,6 +345,11 @@ same Flickr set (unless you add new photos to it, of course!).
     them to the volunteers of your project.
 
 .. _`Flickr`: https://www.flickr.com/
+
+Importing the tasks from a Dropbox account
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
 
 Flushing all the tasks
 ~~~~~~~~~~~~~~~~~~~~~~
