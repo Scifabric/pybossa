@@ -62,7 +62,7 @@ class TestAPI(object):
                                 long_description=u'something')
                 data = json.dumps(data)
 
-                res = self.app.put(_url + url, data)
+                res = self.app.put(_url + url, data=data)
             elif action == 'delete':
                 _url = '/api/%s/%s' % (obj, i)
                 res = self.app.delete(_url + url)
