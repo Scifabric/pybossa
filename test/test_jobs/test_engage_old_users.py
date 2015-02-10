@@ -109,3 +109,18 @@ class TestNonContributors(Test):
         assert job['queue'] == 'quaterly', job['queue']
         assert len(args['recipients']) == 1
         assert args['recipients'][0] == user.email_addr, args['recipients'][0]
+        assert "UNSUBSCRIBE" in args['body']
+        assert "Update" in args['html']
+
+    @with_context
+    def test_get_non_contrib_users_returns_unsubscribed_jobs(self):
+        """Test JOB get non contrib users returns a list of jobs."""
+
+        TaskRunFactory.create()
+        user = user_repo.get(1)
+        user.subscribed = False
+        user_repo.udate(user)
+
+        jobs = get_non_contributors_users_jobs()
+        msg = "There should be zero jobs."
+        assert len(jobs) == 0,  msg
