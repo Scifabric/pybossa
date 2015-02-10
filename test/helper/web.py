@@ -69,6 +69,7 @@ class Helper(Test):
     def update_profile(self, method="POST", id=1, fullname="John Doe",
                        name="johndoe", locale="es",
                        email_addr="johndoe@example.com",
+                       subscribed=False,
                        new_name=None,
                        btn='Profile'):
         """Helper function to update the profile of users"""

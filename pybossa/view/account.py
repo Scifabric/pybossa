@@ -199,7 +199,9 @@ def confirm_email():
                    body=render_template(
                        '/account/email/validate_email.md',
                        user=account, confirm_url=confirm_url))
-        msg['html'] = markdown(msg['body'])
+        msg['html'] = render_template(
+                       '/account/email/validate_email.html',
+                       user=account, confirm_url=confirm_url)
         mail_queue.enqueue(send_mail, msg)
         msg = gettext("An e-mail has been sent to \
                        validate your e-mail address.")
@@ -506,6 +508,7 @@ def update_profile(name):
                     user.email_addr = update_form.email_addr.data
                 user.privacy_mode = update_form.privacy_mode.data
                 user.locale = update_form.locale.data
+                user.subscribed = update_form.subscribed.data
                 user_repo.update(user)
                 cached_users.delete_user_summary(user.name)
                 flash(gettext('Your profile has been updated!'), 'success')
@@ -652,8 +655,10 @@ def forgot_password():
                 msg['body'] = render_template(
                     '/account/email/forgot_password.md',
                     user=user, recovery_url=recovery_url)
-            msg['html'] = markdown(msg['body'])
-            send_mail_job = mail_queue.enqueue(send_mail, msg)
+                msg['html'] = render_template(
+                    '/account/email/forgot_password.html',
+                    user=user, recovery_url=recovery_url)
+            mail_queue.enqueue(send_mail, msg)
             flash(gettext("We've send you email with account "
                           "recovery instructions!"),
                   'success')

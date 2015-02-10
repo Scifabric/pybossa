@@ -60,6 +60,7 @@ class User(db.Model, DomainObject, UserMixin):
     newsletter_prompted = Column(Boolean, default=False)
     valid_email = Column(Boolean, default=False)
     confirmation_email_sent = Column(Boolean, default=False)
+    subscribed = Column(Boolean, default=True)
     info = Column(JSONEncodedDict, default=dict)
 
     ## Relationships
