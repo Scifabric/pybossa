@@ -39,6 +39,7 @@ from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
+from pybossa.core import user_repo
 from pybossa.jobs import send_mail, import_tasks
 from factories import AppFactory, CategoryFactory, TaskFactory, TaskRunFactory
 from unidecode import unidecode
@@ -535,10 +536,15 @@ class TestWeb(web.Helper):
                                   locale="en")
         title = "Update your profile: John Doe 2"
         assert self.html_title(title) in res.data, res.data
+        user = user_repo.get_by(email_addr='johndoe2@example.com')
         assert "Your profile has been updated!" in res.data, res.data
         assert "John Doe 2" in res.data, res
+        assert "John Doe 2" == user.fullname, user.fullname
         assert "johndoe" in res.data, res
+        assert "johndoe" == user.name, user.name
         assert "johndoe2@example.com" in res.data, res
+        assert "johndoe2@example.com" == user.email_addr, user.email_addr
+        assert user.subscribed is False, user.subscribed
 
         # Updating the username field forces the user to re-log in
         res = self.update_profile(fullname="John Doe 2",
