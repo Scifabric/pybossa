@@ -349,20 +349,26 @@ def get_inactive_users_jobs(queue='quaterly'):
 
         user = User.query.get(row.user_id)
 
-        subject = "We miss you!"
-        body = render_template('/account/email/inactive.md', user=user.dictize(),
-                               config=current_app.config)
-        mail_dict = dict(recipients=[user.email_addr],
-                         subject=subject,
-                         body=body,
-                         html=misaka.render(body))
+        if user.subscribed:
+            subject = "We miss you!"
+            body = render_template('/account/email/inactive.md',
+                                   user=user.dictize(),
+                                   config=current_app.config)
+            html = render_template('/account/email/inactive.html',
+                                   user=user.dictize(),
+                                   config=current_app.config)
 
-        job = dict(name=send_mail,
-                   args=[mail_dict],
-                   kwargs={},
-                   timeout=(10 * MINUTE),
-                   queue=queue)
-        jobs.append(job)
+            mail_dict = dict(recipients=[user.email_addr],
+                             subject=subject,
+                             body=body,
+                             html=html)
+
+            job = dict(name=send_mail,
+                       args=[mail_dict],
+                       kwargs={},
+                       timeout=(10 * MINUTE),
+                       queue=queue)
+            jobs.append(job)
     return jobs
 
 def get_non_contributors_users_jobs(queue='quaterly'):
@@ -380,19 +386,23 @@ def get_non_contributors_users_jobs(queue='quaterly'):
     for row in results:
         user = User.query.get(row.id)
 
-        subject = "Why don't you help us?!"
-        body = render_template('/account/email/noncontributors.md',
-                               user=user.dictize(),
-                               config=current_app.config)
-        mail_dict = dict(recipients=[user.email_addr],
-                         subject=subject,
-                         body=body,
-                         html=misaka.render(body))
+        if user.subscribed:
+            subject = "Why don't you help us?!"
+            body = render_template('/account/email/noncontributors.md',
+                                   user=user.dictize(),
+                                   config=current_app.config)
+            html = render_template('/account/email/noncontributors.html',
+                                   user=user.dictize(),
+                                   config=current_app.config)
+            mail_dict = dict(recipients=[user.email_addr],
+                             subject=subject,
+                             body=body,
+                             html=html)
 
-        job = dict(name=send_mail,
-                   args=[mail_dict],
-                   kwargs={},
-                   timeout=(10 * MINUTE),
-                   queue=queue)
-        jobs.append(job)
+            job = dict(name=send_mail,
+                       args=[mail_dict],
+                       kwargs={},
+                       timeout=(10 * MINUTE),
+                       queue=queue)
+            jobs.append(job)
     return jobs
