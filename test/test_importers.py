@@ -102,7 +102,7 @@ class TestImporterPublicMethods(Test):
 
     def test_get_all_importer_names_returns_default_importer_names(self, create):
         importers = self.importer.get_all_importer_names()
-        expected_importers = ['csv', 'gdocs', 'epicollect', 'dropbox']
+        expected_importers = ['csv', 'gdocs', 'epicollect']
 
         assert set(importers) == set(expected_importers)
 
@@ -111,8 +111,10 @@ class TestImporterPublicMethods(Test):
         importer_params = {'api_key': self.flask_app.config['FLICKR_API_KEY']}
         importer = Importer()
         importer.register_flickr_importer(importer_params)
+        importer.register_dropbox_importer()
 
         assert 'flickr' in importer.get_all_importer_names()
+        assert 'dropbox' in importer.get_all_importer_names()
 
 
     def test_get_autoimporter_names_returns_default_autoimporter_names(self, create):

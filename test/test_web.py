@@ -2816,11 +2816,12 @@ class TestWeb(web.Helper):
         self.register()
         owner = db.session.query(User).first()
         app = AppFactory.create(owner=owner)
-        url = "/app/%s/tasks/autoimporter" % app.short_name
+        url = "/app/%s/tasks/import" % app.short_name
 
         res = self.app.get(url, follow_redirects=True)
 
-        assert 'From a Flickr Album' not in res.data
+        assert "type=flickr" not in res.data
+        assert "type=dropbox" not in res.data
 
     @patch('pybossa.view.applications.redirect', wraps=redirect)
     @patch('pybossa.importers.requests.get')

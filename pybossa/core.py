@@ -302,6 +302,18 @@ def setup_external_services(app):
         log_message = 'Flickr importer not available: %s' % str(inst)
         app.logger.error(log_message)
 
+    # Enable Dropbox if available
+    try:  #pragma: no cover
+        if app.config['DROPBOX_APP_KEY']:
+            importer.register_dropbox_importer()
+    except Exception as inst: # pragma: no cover
+        print type(inst)
+        print inst.args
+        print inst
+        print "Dropbox importer not available"
+        log_message = 'Dropbox importer not available: %s' % str(inst)
+        app.logger.error(log_message)
+
 
 def setup_geocoding(app):
     # Check if app stats page can generate the map

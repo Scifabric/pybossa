@@ -255,13 +255,15 @@ class Importer(object):
     def __init__(self):
         self._importers = {'csv': _BulkTaskCSVImport,
                            'gdocs': _BulkTaskGDImport,
-                           'epicollect': _BulkTaskEpiCollectPlusImport,
-                           'dropbox': _BulkTaskDropboxImport}
+                           'epicollect': _BulkTaskEpiCollectPlusImport}
         self._importer_constructor_params = {}
 
     def register_flickr_importer(self, flickr_params):
         self._importers['flickr'] = _BulkTaskFlickrImport
         self._importer_constructor_params['flickr'] = flickr_params
+
+    def register_dropbox_importer(self):
+        self._importers['dropbox'] = _BulkTaskDropboxImport
 
     def create_tasks(self, task_repo, project_id, **form_data):
         from pybossa.cache import apps as cached_apps
