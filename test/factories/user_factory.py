@@ -37,5 +37,6 @@ class UserFactory(BaseFactory):
     locale = u'en'
     admin = False
     pro = False
+    subscribed = True
     privacy_mode = True
     api_key =  factory.Sequence(lambda n: u'api-key%d' % n)
