@@ -1943,6 +1943,7 @@ class TestWeb(web.Helper):
         enqueue_call = queue.enqueue.call_args_list[0]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'Click here to recover your account' in enqueue_call[0][1]['body']
+        assert 'To recover your password' in enqueue_call[0][1]['html']
 
         data = {'password': jane.passwd_hash, 'user': jane.name}
         self.app.post('/account/forgot-password',
@@ -1951,6 +1952,7 @@ class TestWeb(web.Helper):
         enqueue_call = queue.enqueue.call_args_list[1]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'your Twitter account to ' in enqueue_call[0][1]['body']
+        assert 'your Twitter account to ' in enqueue_call[0][1]['html']
 
         data = {'password': google.passwd_hash, 'user': google.name}
         self.app.post('/account/forgot-password',
@@ -1959,6 +1961,7 @@ class TestWeb(web.Helper):
         enqueue_call = queue.enqueue.call_args_list[2]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'your Google account to ' in enqueue_call[0][1]['body']
+        assert 'your Google account to ' in enqueue_call[0][1]['html']
 
         data = {'password': facebook.passwd_hash, 'user': facebook.name}
         self.app.post('/account/forgot-password',
@@ -1967,6 +1970,7 @@ class TestWeb(web.Helper):
         enqueue_call = queue.enqueue.call_args_list[3]
         assert send_mail == enqueue_call[0][0], "send_mail not called"
         assert 'your Facebook account to ' in enqueue_call[0][1]['body']
+        assert 'your Facebook account to ' in enqueue_call[0][1]['html']
 
         # Test with not valid form
         res = self.app.post('/account/forgot-password',
