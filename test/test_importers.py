@@ -258,7 +258,7 @@ class Test_BulkTaskDropboxImport(object):
 
 
     def test_tasks_attributes_for_pdf_files(self):
-        #For pdf file extension: link, filename, link_raw, pdf_url, page
+        #For pdf file extension: link, filename, link_raw, pdf_url
         pdf_file_data = (u'{"bytes":286,'
         u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.pdf?dl=0",'
         u'"name":"test.pdf",'
@@ -272,7 +272,6 @@ class Test_BulkTaskDropboxImport(object):
         assert tasks[0]['info']['link'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.pdf?dl=0"
         assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.pdf?raw=1"
         assert tasks[0]['info']['pdf_url'] == "https://dl.dropboxusercontent.com/s/l2b77qvlrequ6gl/test.pdf"
-        assert tasks[0]['info']['page'] == 1
 
 
     def test_tasks_attributes_for_video_files(self):

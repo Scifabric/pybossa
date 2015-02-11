@@ -230,7 +230,7 @@ class _BulkTaskDropboxImport(_BulkTaskImport):
             info.update(extra_fields)
         if self._is_pdf_file(_file['name']):
             url = self._create_raw_cors_link(_file['link'])
-            extra_fields = {'pdf_url': url, 'page': 1}
+            extra_fields = {'pdf_url': url}
             info.update(extra_fields)
         return {'info': info}
 
