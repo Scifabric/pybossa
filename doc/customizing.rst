@@ -659,7 +659,7 @@ interested users.
 Enabling the Flickr Task importer
 =================================
 
-PyBossa has four different types of built-in importers. Users can use them to
+PyBossa has five different types of built-in importers. Users can use them to
 import tasks for their projects directly from the Web interface. However, using
 the Flickr one requires an API key and shared secret from Flickr in order to
 communicate with the service.
@@ -672,3 +672,15 @@ Once you have an API key, you'll have to add it to your settings_local.py file::
 For more information on how to get a Flickr API key and shared secret, please
 refer to `here <https://www.flickr.com/services/api/>`_.
 
+Enabling the Flickr Task importer
+=================================
+
+In addition to the Flickr importer, PyBossa also offers the Dropbox importer, which
+allows to import directly all kind of files from a Dropbox account. In order to
+use it, you'll need to register your PyBossa server as a Dropbox app, as explained
+`here <https://www.dropbox.com/developers/dropins/chooser/js#setup>`_.
+
+Don't worry about the Javascript snippet part, we've already handled that for you.
+Instead, get the App key you will be given and add it to your settings_local.py::
+
+    DROPBOX_APP_KEY = 'your-key'

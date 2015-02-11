@@ -17,12 +17,13 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 import copy
 import json
+import string
 from collections import namedtuple
 from mock import patch, Mock
 from nose.tools import assert_raises
-from pybossa.importers import (_BulkTaskFlickrImport, _BulkTaskCSVImport,
-    _BulkTaskGDImport, _BulkTaskEpiCollectPlusImport, BulkImportException,
-    Importer)
+from pybossa.importers import (_BulkTaskDropboxImport, _BulkTaskFlickrImport,
+    _BulkTaskCSVImport, _BulkTaskGDImport, _BulkTaskEpiCollectPlusImport,
+    BulkImportException, Importer)
 
 from default import Test
 from factories import AppFactory, TaskFactory
@@ -110,9 +111,208 @@ class TestImporterPublicMethods(Test):
         importer_params = {'api_key': self.flask_app.config['FLICKR_API_KEY']}
         importer = Importer()
         importer.register_flickr_importer(importer_params)
+        importer.register_dropbox_importer()
 
         assert 'flickr' in importer.get_all_importer_names()
+        assert 'dropbox' in importer.get_all_importer_names()
 
+
+    def test_get_autoimporter_names_returns_default_autoimporter_names(self, create):
+        importers = self.importer.get_autoimporter_names()
+        expected_importers = ['csv', 'gdocs', 'epicollect']
+
+        assert set(importers) == set(expected_importers)
+
+
+    def test_get_autoimporter_names_returns_configured_autoimporters(self, create):
+        importer_params = {'api_key': self.flask_app.config['FLICKR_API_KEY']}
+        importer = Importer()
+        importer.register_flickr_importer(importer_params)
+
+        assert 'flickr' in importer.get_autoimporter_names()
+
+
+class Test_BulkTaskDropboxImport(object):
+
+    dropbox_file_data = (u'{"bytes":286,'
+        u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?dl=0",'
+        u'"name":"test.txt",'
+        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
+    importer = _BulkTaskDropboxImport()
+
+    def test_count_tasks_returns_0_if_no_files_to_import(self):
+        form_data = {'files': [], 'type': 'dropbox'}
+        number_of_tasks = self.importer.count_tasks(**form_data)
+
+        assert number_of_tasks == 0, number_of_tasks
+
+
+    def test_count_tasks_returns_1_if_1_file_to_import(self):
+        form_data = {'files': [self.dropbox_file_data],
+                     'type': 'dropbox'}
+        number_of_tasks = self.importer.count_tasks(**form_data)
+
+        assert number_of_tasks == 1, number_of_tasks
+
+
+    def test_tasks_return_emtpy_list_if_no_files_to_import(self):
+        form_data = {'files': [], 'type': 'dropbox'}
+        tasks = self.importer.tasks(**form_data)
+
+        assert tasks == [], tasks
+
+
+    def test_tasks_returns_list_with_1_file_data_if_1_file_to_import(self):
+        form_data = {'files': [self.dropbox_file_data],
+                     'type': 'dropbox'}
+        tasks = self.importer.tasks(**form_data)
+
+        assert len(tasks) == 1, tasks
+
+
+    def test_tasks_returns_tasks_with_fields_for_generic_files(self):
+        #For generic file extensions: link, filename, link_raw
+        form_data = {'files': [self.dropbox_file_data],
+                     'type': 'dropbox'}
+        tasks = self.importer.tasks(**form_data)
+
+        assert tasks[0]['info']['filename'] == "test.txt"
+        assert tasks[0]['info']['link'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?dl=0"
+        assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?raw=1"
+
+
+    def test_tasks_attributes_for_png_image_files(self):
+        #For image file extensions: link, filename, link_raw, url_m, url_b, title
+        png_file_data = (u'{"bytes":286,'
+        u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.png?dl=0",'
+        u'"name":"test.png",'
+        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
+
+        form_data = {'files': [png_file_data],
+                     'type': 'dropbox'}
+        tasks = self.importer.tasks(**form_data)
+
+        assert tasks[0]['info']['filename'] == "test.png"
+        assert tasks[0]['info']['link'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.png?dl=0"
+        assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.png?raw=1"
+        assert tasks[0]['info']['url_m'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.png?raw=1"
+        assert tasks[0]['info']['url_b'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.png?raw=1"
+        assert tasks[0]['info']['title'] == "test.png"
+
+
+    def test_tasks_attributes_for_jpg_image_files(self):
+        #For image file extensions: link, filename, link_raw, url_m, url_b, title
+        jpg_file_data = (u'{"bytes":286,'
+        u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.jpg?dl=0",'
+        u'"name":"test.jpg",'
+        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
+
+        form_data = {'files': [jpg_file_data],
+                     'type': 'dropbox'}
+        tasks = self.importer.tasks(**form_data)
+
+        assert tasks[0]['info']['filename'] == "test.jpg"
+        assert tasks[0]['info']['link'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.jpg?dl=0"
+        assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.jpg?raw=1"
+        assert tasks[0]['info']['url_m'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.jpg?raw=1"
+        assert tasks[0]['info']['url_b'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.jpg?raw=1"
+        assert tasks[0]['info']['title'] == "test.jpg"
+
+
+    def test_tasks_attributes_for_jpeg_image_files(self):
+        #For image file extensions: link, filename, link_raw, url_m, url_b, title
+        jpeg_file_data = (u'{"bytes":286,'
+        u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.jpeg?dl=0",'
+        u'"name":"test.jpeg",'
+        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
+
+        form_data = {'files': [jpeg_file_data],
+                     'type': 'dropbox'}
+        tasks = self.importer.tasks(**form_data)
+
+        assert tasks[0]['info']['filename'] == "test.jpeg"
+        assert tasks[0]['info']['link'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.jpeg?dl=0"
+        assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.jpeg?raw=1"
+        assert tasks[0]['info']['url_m'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.jpeg?raw=1"
+        assert tasks[0]['info']['url_b'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.jpeg?raw=1"
+        assert tasks[0]['info']['title'] == "test.jpeg"
+
+
+    def test_tasks_attributes_for_gif_image_files(self):
+        #For image file extensions: link, filename, link_raw, url_m, url_b, title
+        gif_file_data = (u'{"bytes":286,'
+        u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.gif?dl=0",'
+        u'"name":"test.gif",'
+        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
+
+        form_data = {'files': [gif_file_data],
+                     'type': 'dropbox'}
+        tasks = self.importer.tasks(**form_data)
+
+        assert tasks[0]['info']['filename'] == "test.gif"
+        assert tasks[0]['info']['link'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.gif?dl=0"
+        assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.gif?raw=1"
+        assert tasks[0]['info']['url_m'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.gif?raw=1"
+        assert tasks[0]['info']['url_b'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.gif?raw=1"
+        assert tasks[0]['info']['title'] == "test.gif"
+
+
+    def test_tasks_attributes_for_pdf_files(self):
+        #For pdf file extension: link, filename, link_raw, pdf_url, page
+        pdf_file_data = (u'{"bytes":286,'
+        u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.pdf?dl=0",'
+        u'"name":"test.pdf",'
+        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
+
+        form_data = {'files': [pdf_file_data],
+                     'type': 'dropbox'}
+        tasks = self.importer.tasks(**form_data)
+
+        assert tasks[0]['info']['filename'] == "test.pdf"
+        assert tasks[0]['info']['link'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.pdf?dl=0"
+        assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.pdf?raw=1"
+        assert tasks[0]['info']['pdf_url'] == "https://dl.dropboxusercontent.com/s/l2b77qvlrequ6gl/test.pdf"
+        assert tasks[0]['info']['page'] == 1
+
+
+    def test_tasks_attributes_for_video_files(self):
+        #For video file extension: link, filename, link_raw, video_url
+        video_ext = ['mp4', 'm4v', 'ogg', 'ogv', 'webm', 'avi']
+        file_data = (u'{"bytes":286,'
+        u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.extension?dl=0",'
+        u'"name":"test.extension",'
+        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
+
+        for ext in video_ext:
+            data = string.replace(file_data,'extension', ext)
+            form_data = {'files': [data],
+                         'type': 'dropbox'}
+            tasks = self.importer.tasks(**form_data)
+
+            assert tasks[0]['info']['filename'] == "test.%s" % ext
+            assert tasks[0]['info']['link'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.%s?dl=0" % ext
+            assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.%s?raw=1" % ext
+            assert tasks[0]['info']['video_url'] == "https://dl.dropboxusercontent.com/s/l2b77qvlrequ6gl/test.%s" % ext
+
+
+    def test_tasks_attributes_for_audio_files(self):
+        #For audio file extension: link, filename, link_raw, audio_url
+        audio_ext = ['mp4', 'm4a', 'mp3', 'ogg', 'oga', 'webm', 'wav']
+        file_data = (u'{"bytes":286,'
+        u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.extension?dl=0",'
+        u'"name":"test.extension",'
+        u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
+
+        for ext in audio_ext:
+            data = string.replace(file_data,'extension', ext)
+            form_data = {'files': [data],
+                         'type': 'dropbox'}
+            tasks = self.importer.tasks(**form_data)
+
+            assert tasks[0]['info']['filename'] == "test.%s" % ext
+            assert tasks[0]['info']['link'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.%s?dl=0" % ext
+            assert tasks[0]['info']['link_raw'] == "https://www.dropbox.com/s/l2b77qvlrequ6gl/test.%s?raw=1" % ext
+            assert tasks[0]['info']['audio_url'] == "https://dl.dropboxusercontent.com/s/l2b77qvlrequ6gl/test.%s" % ext
 
 
 @patch('pybossa.importers.requests')
@@ -191,7 +391,7 @@ class Test_BulkTaskFlickrImport(object):
         assert_raises(BulkImportException, self.importer.count_tasks, album_id='bad')
 
 
-    def test_count_tasks_raises_exception_on_non_200_flckr_response(self, requests):
+    def test_count_tasks_raises_exception_on_non_200_flickr_response(self, requests):
         requests.get.return_value = self.make_response('Not Found', 404)
 
         assert_raises(BulkImportException, self.importer.count_tasks,
@@ -207,11 +407,11 @@ class Test_BulkTaskFlickrImport(object):
 
 
     def test_tasks_returns_tasks_with_title_and_url_info_fields(self, requests):
-        task_data_info_fields = ['url', 'title']
         requests.get.return_value = self.make_response(json.dumps(self.response))
         url = 'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d.jpg'
         url_m = 'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d_m.jpg'
         url_b = 'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d_b.jpg'
+        link = 'https://www.flickr.com/photos/32985084@N00/8947115130'
         title = self.response['photoset']['photo'][0]['title']
         photo = self.importer.tasks(album_id='72157633923521788')[0]
 
@@ -219,6 +419,7 @@ class Test_BulkTaskFlickrImport(object):
         assert photo['info'].get('url') == url, photo['info'].get('url')
         assert photo['info'].get('url_m') == url_m, photo['info'].get('url_m')
         assert photo['info'].get('url_b') == url_b, photo['info'].get('url_b')
+        assert photo['info'].get('link') == link, photo['info'].get('link')
 
 
     def test_tasks_raises_exception_if_invalid_album(self, requests):
@@ -227,7 +428,7 @@ class Test_BulkTaskFlickrImport(object):
         assert_raises(BulkImportException, self.importer.tasks, album_id='bad')
 
 
-    def test_tasks_raises_exception_on_non_200_flckr_response(self, requests):
+    def test_tasks_raises_exception_on_non_200_flickr_response(self, requests):
         requests.get.return_value = self.make_response('Not Found', 404)
 
         assert_raises(BulkImportException, self.importer.tasks,

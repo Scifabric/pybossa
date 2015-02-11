@@ -33,10 +33,7 @@ def login():
 @blueprint.route('/revoke-access')
 def logout():
     next_url = request.args.get('next') or url_for('home.home')
-    if 'flickr_token' in session:
-        session.pop('flickr_token')
-    if 'flickr_user' in session:
-        session.pop('flickr_user')
+    flickr.remove_credentials(session)
     return redirect(next_url)
 
 @blueprint.route('/oauth-authorized')
@@ -49,6 +46,5 @@ def oauth_authorized():
     flickr_token = dict(oauth_token=resp['oauth_token'],
                         oauth_token_secret=resp['oauth_token_secret'])
     flickr_user = dict(username=resp['username'], user_nsid=resp['user_nsid'])
-    session['flickr_token'] = flickr_token
-    session['flickr_user'] = flickr_user
+    flickr.save_credentials(session, flickr_token, flickr_user)
     return redirect(next_url)

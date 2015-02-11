@@ -16,9 +16,10 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from StringIO import StringIO
+import string
 import json
 import requests
+from StringIO import StringIO
 from flask.ext.babel import gettext
 from pybossa.util import unicode_csv_reader
 
@@ -185,17 +186,78 @@ class _BulkTaskFlickrImport(_BulkTaskImport):
 
     def _get_tasks_data_from_request(self, album_info):
         photo_list = album_info['photo']
-        return [self._extract_photo_info(photo) for photo in photo_list]
+        owner = album_info['owner']
+        return [self._extract_photo_info(photo, owner) for photo in photo_list]
 
-    def _extract_photo_info(self, photo):
+    def _extract_photo_info(self, photo, owner):
         base_url = 'https://farm%s.staticflickr.com/%s/%s_%s' % (
             photo['farm'], photo['server'], photo['id'], photo['secret'])
         title = photo['title']
         url = ''.join([base_url, '.jpg'])
         url_m = ''.join([base_url, '_m.jpg'])
         url_b = ''.join([base_url, '_b.jpg'])
+        link = 'https://www.flickr.com/photos/%s/%s' % (owner, photo['id'])
         return {"info": {'title': title, 'url': url,
-                         'url_b': url_b, 'url_m': url_m}}
+                         'url_b': url_b, 'url_m': url_m, 'link': link}}
+
+
+class _BulkTaskDropboxImport(_BulkTaskImport):
+    importer_id = 'dropbox'
+
+    def tasks(self, **form_data):
+        return [self._extract_file_info(_file) for _file in form_data['files']]
+
+    def count_tasks(self, **form_data):
+        return len(self.tasks(**form_data))
+
+    def _extract_file_info(self, _file):
+        _file = json.loads(_file)
+        info = {'filename': _file['name'],
+                'link_raw': string.replace(_file['link'],'dl=0', 'raw=1'),
+                'link': _file['link']}
+        if self._is_image_file(_file['name']):
+            extra_fields = {'url_m': info['link_raw'],
+                            'url_b': info['link_raw'],
+                            'title': info['filename']}
+            info.update(extra_fields)
+        if self._is_video_file(_file['name']):
+            url = self._create_raw_cors_link(_file['link'])
+            extra_fields = {'video_url': url}
+            info.update(extra_fields)
+        if self._is_audio_file(_file['name']):
+            url = self._create_raw_cors_link(_file['link'])
+            extra_fields = {'audio_url': url}
+            info.update(extra_fields)
+        if self._is_pdf_file(_file['name']):
+            url = self._create_raw_cors_link(_file['link'])
+            extra_fields = {'pdf_url': url, 'page': 1}
+            info.update(extra_fields)
+        return {'info': info}
+
+    def _is_image_file(self, filename):
+        return (filename.endswith('.png') or filename.endswith('.jpg') or
+            filename.endswith('.jpeg') or filename.endswith('.gif'))
+
+    def _is_video_file(self, filename):
+        return (filename.endswith('.mp4') or filename.endswith('.m4v') or
+            filename.endswith('.ogg') or filename.endswith('.ogv') or
+            filename.endswith('.webm') or filename.endswith('.avi'))
+
+    def _is_audio_file(self, filename):
+        return (filename.endswith('.mp4') or filename.endswith('.m4a') or
+            filename.endswith('.ogg') or filename.endswith('.oga') or
+            filename.endswith('.webm') or filename.endswith('.wav') or
+            filename.endswith('.mp3'))
+
+    def _is_pdf_file(self, filename):
+        return filename.endswith('.pdf')
+
+    def _create_raw_cors_link(self, url):
+        new_url = string.replace(url,'www.dropbox.com',
+                                 'dl.dropboxusercontent.com')
+        if new_url.endswith('?dl=0'):
+            new_url = new_url[:-5]
+        return new_url
 
 
 class Importer(object):
@@ -209,6 +271,9 @@ class Importer(object):
     def register_flickr_importer(self, flickr_params):
         self._importers['flickr'] = _BulkTaskFlickrImport
         self._importer_constructor_params['flickr'] = flickr_params
+
+    def register_dropbox_importer(self):
+        self._importers['dropbox'] = _BulkTaskDropboxImport
 
     def create_tasks(self, task_repo, project_id, **form_data):
         from pybossa.cache import apps as cached_apps
@@ -249,3 +314,6 @@ class Importer(object):
 
     def get_all_importer_names(self):
         return self._importers.keys()
+
+    def get_autoimporter_names(self):
+        return [name for name in self._importers.keys() if name != 'dropbox']
