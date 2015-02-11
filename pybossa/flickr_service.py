@@ -30,6 +30,7 @@ class FlickrService(object):
     def init_app(self, app): # pragma: no cover
         from flask import session
         from pybossa.core import importer
+        self.app = app
         self.client = OAuth().remote_app(
             'flickr',
             request_token_url='https://www.flickr.com/services/oauth/request_token',
@@ -37,7 +38,7 @@ class FlickrService(object):
             authorize_url='https://www.flickr.com/services/oauth/authorize',
             consumer_key=app.config['FLICKR_API_KEY'],
             consumer_secret=app.config['FLICKR_SHARED_SECRET'])
-        tokengetter = functools.partial(self.get_flickr_token, session)
+        tokengetter = functools.partial(self.get_token, session)
         self.client.tokengetter(tokengetter)
         importer_params = {'api_key': app.config['FLICKR_API_KEY']}
         importer.register_flickr_importer(importer_params)
@@ -49,12 +50,12 @@ class FlickrService(object):
                    'method=flickr.photosets.getList&user_id=%s'
                    '&primary_photo_extras=url_q'
                    '&format=json&nojsoncallback=1'
-                   % session.get('flickr_user').get('user_nsid'))
-            res = self.client.get(url)
+                   % self._get_user_nsid(session))
+            res = self.client.get(url, token='')
             if res.status == 200 and res.data.get('stat') == 'ok':
                 albums = res.data['photosets']['photoset']
                 return [self._extract_album_info(album) for album in albums]
-            else:
+            if self.app is not None:
                 msg = ("Bad response from Flickr:\nStatus: %s, Content: %s"
                     % (res.status, res.data))
                 self.app.logger.error(msg)
@@ -69,8 +70,22 @@ class FlickrService(object):
     def get_oauth_client(self):
         return self.client
 
-    def get_flickr_token(self, session):
-        return session.get('flickr_token')
+    def get_token(self, session):
+        token = session.get('flickr_token')
+        if token is not None:
+            token = (token['oauth_token'], token['oauth_token_secret'])
+        return token
+
+    def save_credentials(self, session, token, user):
+        session['flickr_token'] = token
+        session['flickr_user'] = user
+
+    def remove_credentials(self, session):
+        session.pop('flickr_token', None)
+        session.pop('flickr_user', None)
+
+    def _get_user_nsid(self, session):
+        return session.get('flickr_user').get('user_nsid')
 
     def _extract_album_info(self, album):
         info = {'title': album['title']['_content'],

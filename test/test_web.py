@@ -2748,6 +2748,8 @@ class TestWeb(web.Helper):
         assert "type=epicollect" in res.data, err_msg
         err_msg = "There should be a Flickr importer"
         assert "type=flickr" in res.data, err_msg
+        err_msg = "There should be a Dropbox importer"
+        assert "type=dropbox" in res.data, err_msg
         err_msg = "There should be an Image template"
         assert "template=image" in res.data, err_msg
         err_msg = "There should be a Map template"
@@ -2804,6 +2806,14 @@ class TestWeb(web.Helper):
         assert "From a Flickr Album" in data
         assert 'action="/app/%E2%9C%93app1/tasks/import"' in data
 
+        # Dropbox
+        url = "/app/%s/tasks/import?type=dropbox" % app.short_name
+        res = self.app.get(url, follow_redirects=True)
+        data = res.data.decode('utf-8')
+
+        assert "From your Dropbox account" in data
+        assert 'action="/app/%E2%9C%93app1/tasks/import"' in data
+
         # Invalid
         url = "/app/%s/tasks/import?type=invalid" % app.short_name
         res = self.app.get(url, follow_redirects=True)
@@ -2816,11 +2826,12 @@ class TestWeb(web.Helper):
         self.register()
         owner = db.session.query(User).first()
         app = AppFactory.create(owner=owner)
-        url = "/app/%s/tasks/autoimporter" % app.short_name
+        url = "/app/%s/tasks/import" % app.short_name
 
         res = self.app.get(url, follow_redirects=True)
 
-        assert 'From a Flickr Album' not in res.data
+        assert "type=flickr" not in res.data
+        assert "type=dropbox" not in res.data
 
     @patch('pybossa.view.applications.redirect', wraps=redirect)
     @patch('pybossa.importers.requests.get')
@@ -3009,9 +3020,8 @@ class TestWeb(web.Helper):
             assert t.info == epi_tasks[n], "The task info should be the same"
             n += 1
 
-    @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
     @patch('pybossa.importers.requests.get')
-    def test_bulk_flickr_import_works(self, request, mock):
+    def test_bulk_flickr_import_works(self, request):
         """Test WEB bulk Flickr import works"""
         data = {
             "photoset": {
@@ -3050,6 +3060,7 @@ class TestWeb(web.Helper):
             u'url': u'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d.jpg',
             u'url_m': u'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d_m.jpg',
             u'url_b': u'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d_b.jpg',
+            u'link': u'https://www.flickr.com/photos/32985084@N00/8947115130',
             u'title': u'Title'}
         assert tasks[0].info == expected_info, tasks[0].info
 
@@ -3084,6 +3095,30 @@ class TestWeb(web.Helper):
         assert 'id="my-fake-ID"' in res.data
         assert 'my-fake-title' in res.data
         assert revoke_url in res.data
+
+    def test_bulk_dropbox_import_works(self):
+        """Test WEB bulk Dropbox import works"""
+        dropbox_file_data = (u'{"bytes":286,'
+            u'"link":"https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?dl=0",'
+            u'"name":"test.txt",'
+            u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
+        self.register()
+        self.new_application()
+        app = db.session.query(App).first()
+        res = self.app.post('/app/%s/tasks/import' % app.short_name,
+                            data={'files-0': dropbox_file_data,
+                                  'form_name': 'dropbox'},
+                            follow_redirects=True)
+
+        app = db.session.query(App).first()
+        err_msg = "Tasks should be imported"
+        #assert "1 new task was imported successfully" in res.data, res.data
+        tasks = db.session.query(Task).filter_by(app_id=app.id).all()
+        expected_info = {
+            u'link_raw': u'https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?raw=1',
+            u'link': u'https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?dl=0',
+            u'filename': u'test.txt'}
+        assert tasks[0].info == expected_info, tasks[0].info
 
     @with_context
     def test_55_facebook_account_warning(self):

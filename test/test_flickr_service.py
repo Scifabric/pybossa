@@ -56,7 +56,7 @@ class TestFlickrOauthBlueprint(object):
 
 
     @patch('pybossa.view.flickr.flickr')
-    def test_oauth_authorized_adds_token_and_user_to_session(self, flickr):
+    def test_oauth_authorized_saves_token_and_user_to_session(self, flickr):
         fake_resp = {'oauth_token_secret': u'secret',
                      'username': u'palotespaco',
                      'fullname': u'paco palotes',
@@ -66,11 +66,10 @@ class TestFlickrOauthBlueprint(object):
 
         with flask_app.test_client() as c:
             c.get('/flickr/oauth-authorized')
-            flickr_token = session.get('flickr_token')
-            flickr_user = session.get('flickr_user')
 
-        assert flickr_token == {'oauth_token_secret': u'secret', 'oauth_token': u'token'}
-        assert flickr_user == {'username': u'palotespaco', 'user_nsid': u'user'}
+        flickr.save_credentials.assert_called_with(session,
+            {'oauth_token_secret': u'secret', 'oauth_token': u'token'},
+            {'username': u'palotespaco', 'user_nsid': u'user'})
 
 
     @patch('pybossa.view.flickr.flickr')
@@ -115,20 +114,38 @@ class TestFlickrService(object):
         self.flickr.client = MagicMock()
         self.flickr.app = MagicMock()
 
-    def test_flickr_get_flickr_token_returns_None_if_no_token(self):
+    def test_flickr_get_token_returns_None_if_no_token(self):
         session = {}
 
-        token = self.flickr.get_flickr_token(session)
+        token = self.flickr.get_token(session)
 
         assert token is None, token
 
 
-    def test_flickr_get_flickr_token_returns_existing_token(self):
-        session = {'flickr_token': 'fake_token'}
+    def test_flickr_get_token_returns_existing_token_as_a_tuple(self):
+        session = {'flickr_token': self.token}
 
-        token = self.flickr.get_flickr_token(session)
+        token = self.flickr.get_token(session)
 
-        assert token is 'fake_token', token
+        assert token == (u'token', u'secret'), token
+
+
+    def test_save_credentials_stores_token_and_user(self):
+        session = {}
+
+        self.flickr.save_credentials(session, self.token, self.user)
+
+        assert session.get('flickr_token') is self.token
+        assert session.get('flickr_user') is self.user
+
+
+    def test_remove_token_deletes_token(self):
+        session = {'flickr_token': self.token, 'flickr_user': self.user}
+
+        self.flickr.remove_credentials(session)
+
+        assert session.get('flickr_token') is None
+        assert session.get('flickr_user') is None
 
 
     def test_get_user_albums_calls_flickr_api_endpoint(self):
@@ -140,21 +157,8 @@ class TestFlickrService(object):
 
         self.flickr.get_user_albums(session)
 
-        self.flickr.client.get.assert_called_with(url)
-
-
-    def test_get_user_albums_calls_flickr_api_endpoint_with_no_credentials(self):
-        session = {'flickr_token': self.token, 'flickr_user': self.user}
-        url = ('https://api.flickr.com/services/rest/?'
-               'method=flickr.photosets.getList&user_id=user'
-               '&primary_photo_extras=url_q'
-               '&format=json&nojsoncallback=1')
-
-        self.flickr.get_user_albums(session)
-
-        # The request MUST NOT include user credentials, to avoid private photos
-        url_call_params = self.flickr.client.get.call_args_list[0][0][0]
-        assert 'auth_token' not in url_call_params, url_call_params
+        # The request MUST NOT include a valid token, to avoid private photos
+        self.flickr.client.get.assert_called_with(url, token='')
 
 
     def test_get_user_albums_return_empty_list_on_request_error(self):

@@ -133,10 +133,10 @@ built-in :ref:`task-creator`. You have to do the following:
    :width: 100%
 
 3. And click again on the **Import Tasks** button. After clicking on it you will
-   see several options. The first four are for using the different kinds of
+   see several options. The first five are for using the different kinds of
    importers supported by PyBossa.
 
-.. image:: http://i.imgur.com/nvTP7aX.png
+.. image:: http://i.imgur.com/e9GhNlE.png
 
 The **CSV** importer, allows you to upload your own CSV file:
 
@@ -248,9 +248,9 @@ project, you will have to follow the next steps:
     
 3. And  click on the **Import Tasks** 
    button. After clicking on it you will see several different options. The first
-   four correspond to the different importers PyBossa supports:
+   five correspond to the different importers PyBossa supports:
 
-.. image:: http://i.imgur.com/nvTP7aX.png
+.. image:: http://i.imgur.com/e9GhNlE.png
 
 4. Click in the **Use an EpiCollect Project** one.
 
@@ -286,6 +286,7 @@ each picture (which will be later available to be used in the task presenter):
 * url: the url to the raw .jpg image, in its original size.
 * url_b: the url to the image, 'big sized.
 * url_m: the url to the image, 'medium' sized.
+* link: a link to the photo page in flickr (not to the raw image).
 
 You can import tasks from a Flickr photo set (a.k.a. album) in either of the
 following ways:
@@ -319,7 +320,7 @@ These are the steps:
 
 2. Then click on the **Import Tasks** button, and select the **Flickr importer**:
 
-.. image:: http://i.imgur.com/nvTP7aX.png
+.. image:: http://i.imgur.com/e9GhNlE.png
 
 3. Type the ID of the Flickr set you want to import the photos from, then click
 on the import button:
@@ -344,6 +345,77 @@ same Flickr set (unless you add new photos to it, of course!).
     them to the volunteers of your project.
 
 .. _`Flickr`: https://www.flickr.com/
+
+Importing the tasks from a Dropbox account
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You can import tasks from arbitrary data hosted on a Dropbox account with the
+Dropbox importer. When importer tasks like this, the following information will
+be added to the info field of each tasks, available later to be used in the task
+presenter of the project:
+
+* filename: just it, the name of the file you're importing as a task.
+* link: the link to the Dropbox page showing the file.
+* link_raw: the link to the raw file served by Dropbox. This is the one you'll
+have to use if you want to direct link to the file from the presenter (e.g. for
+using an image in a <img> tag, you'd do: <img src=task.info.link_raw>).
+
+In addition to these generic information, the Dropbox importer also will recognize
+some kind of files by their extension and will attach some extra information to
+them.
+
+For pdf files (.pdf extension), the following field will be obtained too:
+
+* pdf_url: direct linkt to the raw pdf file, with CORS support.
+
+For image files (.png, jpg, .jpeg and .gif extensions) the following data will be
+available:
+
+* url_m: the same as link_raw
+* url_b: the same as link_raw
+* title: the same as filename
+
+For audio files (.mp4, .m4a, .mp3, .ogg, .oga, .webm and .wav extensions):
+
+* audio_url: raw link to the audio file, which can be used inside an HTML 5 <audio>
+tag and supports CORS.
+
+For video files (.mp4, .m4v, .ogg, .ogv, .webm and .avi extensions):
+
+* audio_url: raw link to the video file, which can be used inside an HTML 5 <video>
+tag and supports CORS.
+
+The tasks created with the Dropbox importer are ready to be used with the template
+project presenters available in PyBossa, as they include the described fields.
+
+Thus, importing your images from Dropbox will allow you to immediately use the
+image pattern recognition template with them; importing videos, audio files or
+pdfs with the Dropbox importer will also grant you to use the presenter templates
+for video pattern recognition, sound pattern recognition or documents transcription,
+respectively, with no additional modifications and have them working right away
+(as long as the files have any of the mentioned file extensions, of course).
+
+These are the steps:
+
+1. Navigate to your project's page and click in the **Tasks** section:
+
+.. image:: http://i.imgur.com/u5vusQR.png
+
+2. Then click on the **Import Tasks** button, and select the **Flickr importer**:
+
+.. image:: http://i.imgur.com/e9GhNlE.png
+
+3. Click on the "Choose from Dropbox" icon. You will be asked your Dropbox
+account credentials. then select as many files as you want:
+
+.. image:: http://i.imgur.com/It2I1H3.png
+
+4. You can repeat step 3 as many times as you want, and more files will be added
+to your import.
+
+5. When you're ready, click on "Import", and that's all:
+
+.. image:: http://i.imgur.com/0bzRc2b.png
 
 Flushing all the tasks
 ~~~~~~~~~~~~~~~~~~~~~~

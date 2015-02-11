@@ -12,7 +12,7 @@ the following public interface:
 * tasks()
 
 importer_id is the name of the importer; any of the supported importers:
-'csv', 'gdocs', 'epicollect' and 'flickr'.
+'csv', 'gdocs', 'epicollect', 'flickr' and 'dropbox'.
 
 tasks() should generate a list of tasks
 
@@ -24,6 +24,7 @@ for actually do the job of importing tasks, by using their public methods:
 * create_tasks
 * count_tasks_to_import
 * get_all_importer_names
+* get_autoimporter_names
 
 create_importer takes as arguments task_repo, project_id, importer_id, and
 **form_data. task_repo is a TaskRepository object that will handle the store of
@@ -41,3 +42,7 @@ get_all_importer_names returns a list of all the available importers. This list
 may vary depending on the configuration of the server (e.g. if no API key for
 integration with the Flickr service is found, then the Flickr importer won't be
 available).
+
+get_autoimporter_names returns a list of the available importers for using as
+autoimport background jobs. Again, this list may vary depending on the  server
+configuration.
