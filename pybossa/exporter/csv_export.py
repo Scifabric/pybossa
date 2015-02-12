@@ -33,6 +33,7 @@ from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 from flask import abort
 
+
 class CsvExporter(Exporter):
 
     def _format_csv_properly(self, row, ty=None):
@@ -100,7 +101,7 @@ class CsvExporter(Exporter):
             try:
                 table, handle_row, test, msg = types[ty]
             except KeyError:
-                return abort(404) # TODO!
+                return abort(404)  # TODO!
 
             out = tempfile.TemporaryFile()
             writer = UnicodeWriter(out)
@@ -125,15 +126,17 @@ class CsvExporter(Exporter):
 
                 return self._get_csv(out, writer, ty, handle_row, id)
             else:
-                pass # TODO
-        except: # pragma: no cover
+                pass  # TODO
+        except:  # pragma: no cover
             raise
 
     def _make_zip(self, app, ty):
         name = self._app_name_latin_encoded(app)
         csv_task_generator = self._respond_csv(ty, app.id)
         if csv_task_generator is not None:
-            datafile = tempfile.NamedTemporaryFile()    # TODO: use temp file from csv generation directly (1 temp file instead of 2)
+            # TODO: use temp file from csv generation directly (1 temp file
+            # instead of 2)
+            datafile = tempfile.NamedTemporaryFile()
             try:
                 for line in csv_task_generator:
                     datafile.write(str(line))
@@ -142,10 +145,12 @@ class CsvExporter(Exporter):
                 zipped_datafile = tempfile.NamedTemporaryFile()
                 try:
                     zip = self._zip_factory(zipped_datafile.name)
-                    zip.write(datafile.name, secure_filename('%s_%s.csv' % (name, ty)))
+                    zip.write(
+                        datafile.name, secure_filename('%s_%s.csv' % (name, ty)))
                     zip.close()
                     container = "user_%d" % app.owner_id
-                    file = FileStorage(filename=self.download_name(app, ty), stream=zipped_datafile)
+                    file = FileStorage(
+                        filename=self.download_name(app, ty), stream=zipped_datafile)
                     uploader.upload_file(file, container=container)
                 finally:
                     zipped_datafile.close()
