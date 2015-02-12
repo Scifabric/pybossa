@@ -672,8 +672,8 @@ Once you have an API key, you'll have to add it to your settings_local.py file::
 For more information on how to get a Flickr API key and shared secret, please
 refer to `here <https://www.flickr.com/services/api/>`_.
 
-Enabling the Flickr Task importer
-=================================
+Enabling the Dropbox Task importer
+==================================
 
 In addition to the Flickr importer, PyBossa also offers the Dropbox importer, which
 allows to import directly all kind of files from a Dropbox account. In order to
