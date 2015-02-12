@@ -78,7 +78,8 @@ class CsvExporter(Exporter):
         for tr in getattr(task_repo, 'filter_%ss_by' % table)(app_id=id,
                                                               yielded=True):
             handle_row(writer, tr)
-        yield out.getvalue()
+        out.seek(0)
+        yield out.read()
 
     def _respond_csv(self, ty, id):
         try:
@@ -101,7 +102,7 @@ class CsvExporter(Exporter):
             except KeyError:
                 return abort(404) # TODO!
 
-            out = StringIO()
+            out = tempfile.TemporaryFile()
             writer = UnicodeWriter(out)
             t = getattr(task_repo, 'get_%s_by' % ty)(app_id=id)
             if t is not None:
