@@ -133,11 +133,12 @@ class CsvExporter(Exporter):
         name = self._app_name_latin_encoded(app)
         csv_task_generator = self._respond_csv(ty, app.id)
         if csv_task_generator is not None:
-            datafile = tempfile.NamedTemporaryFile()
+            datafile = tempfile.NamedTemporaryFile()    # TODO: use temp file from csv generation directly (1 temp file instead of 2)
             try:
                 for line in csv_task_generator:
                     datafile.write(str(line))
                 datafile.flush()
+                csv_task_generator.close()  # delete temp csv file
                 zipped_datafile = tempfile.NamedTemporaryFile()
                 try:
                     zip = self._zip_factory(zipped_datafile.name)
