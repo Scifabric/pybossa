@@ -134,8 +134,7 @@ class CsvExporter(Exporter):
         name = self._app_name_latin_encoded(app)
         csv_task_generator = self._respond_csv(ty, app.id)
         if csv_task_generator is not None:
-            # TODO: use temp file from csv generation directly (1 temp file
-            # instead of 2)
+            # TODO: use temp file from csv generation directly
             datafile = tempfile.NamedTemporaryFile()
             try:
                 for line in csv_task_generator:
