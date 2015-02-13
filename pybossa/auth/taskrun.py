@@ -16,33 +16,41 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from flask.ext.login import current_user
 from flask import abort
-from pybossa.core import task_repo, project_repo
 
+class TaskRunAuth(object):
 
-def create(taskrun=None):
-    project = project_repo.get(task_repo.get_task(taskrun.task_id).app_id)
-    if (current_user.is_anonymous() and
-            project.allow_anonymous_contributors is False):
+    def __init__(self, task_repo, project_repo):
+        self.task_repo = task_repo
+        self.project_repo = project_repo
+
+    def can(self, user, action, taskrun=None):
+        action = ''.join(['_', action])
+        return getattr(self, action)(user, taskrun)
+
+    def _create(self, user, taskrun=None):
+        project = self.project_repo.get(self.task_repo.get_task(taskrun.task_id).app_id)
+        if (user.is_anonymous() and
+                project.allow_anonymous_contributors is False):
+            return False
+        authorized = self.task_repo.count_task_runs_with(
+            app_id=taskrun.app_id,
+            task_id=taskrun.task_id,
+            user_id=taskrun.user_id,
+            user_ip=taskrun.user_ip) <= 0
+        if not authorized:
+            raise abort(403)
+        return authorized
+
+    def _read(self, user, taskrun=None):
+        return True
+
+    def _update(self, user, taskrun):
         return False
-    authorized = task_repo.count_task_runs_with(app_id=taskrun.app_id,
-                                                task_id=taskrun.task_id,
-                                                user_id=taskrun.user_id,
-                                                user_ip=taskrun.user_ip) <= 0
-    if not authorized:
-        raise abort(403)
-    return authorized
 
-def read(taskrun=None):
-    return True
-
-def update(taskrun):
-    return False
-
-def delete(taskrun):
-    if current_user.is_anonymous():
-        return False
-    if taskrun.user_id is None:
-        return current_user.admin
-    return current_user.admin or taskrun.user_id == current_user.id
+    def _delete(self, user, taskrun):
+        if user.is_anonymous():
+            return False
+        if taskrun.user_id is None:
+            return user.admin
+        return user.admin or taskrun.user_id == user.id

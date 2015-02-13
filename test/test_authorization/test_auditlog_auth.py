@@ -38,16 +38,14 @@ class TestAuditlogAuthorization(Test):
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
-    @patch('pybossa.auth.auditlog.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_read_auditlog(self):
         """Test anonymous users cannot read auditlogs"""
 
         log = AuditlogFactory.create()
 
-        assert_raises(Unauthorized, getattr(require, 'auditlog').read, log)
+        assert_raises(Unauthorized, require.ensure_authorized, 'read', log)
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
-    @patch('pybossa.auth.auditlog.current_user', new=mock_authenticated)
     def test_owner_user_cannot_read_auditlog(self):
         """Test owner users cannot read auditlogs"""
 
@@ -57,11 +55,10 @@ class TestAuditlogAuthorization(Test):
 
         assert self.mock_authenticated.id == app.owner_id
 
-        assert_raises(Forbidden, getattr(require, 'auditlog').read, log)
+        assert_raises(Forbidden, require.ensure_authorized, 'read', log)
 
 
     @patch('pybossa.auth.current_user', new=mock_pro)
-    @patch('pybossa.auth.auditlog.current_user', new=mock_pro)
     def test_pro_user_can_read_auditlog(self):
         """Test pro users can read auditlogs from owned projects"""
 
@@ -70,11 +67,10 @@ class TestAuditlogAuthorization(Test):
         log = AuditlogFactory.create(app_id=app.id)
 
         assert self.mock_pro.id == app.owner_id
-        assert_not_raises(Exception, getattr(require, 'auditlog').read, log)
+        assert_not_raises(Exception, require.ensure_authorized, 'read', log)
 
 
     @patch('pybossa.auth.current_user', new=mock_pro)
-    @patch('pybossa.auth.auditlog.current_user', new=mock_pro)
     def test_pro_user_cannot_read_auditlog(self):
         """Test pro users cannot read auditlogs from non-owned projects"""
 
@@ -83,11 +79,10 @@ class TestAuditlogAuthorization(Test):
         log = AuditlogFactory.create(app_id=app.id)
 
         assert self.mock_pro.id != app.owner_id
-        assert_raises(Forbidden, getattr(require, 'auditlog').read, log)
+        assert_raises(Forbidden, require.ensure_authorized, 'read', log)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
-    @patch('pybossa.auth.auditlog.current_user', new=mock_admin)
     def test_admin_user_can_read_auditlog(self):
         """Test admin users can read auditlogs"""
 
@@ -96,51 +91,47 @@ class TestAuditlogAuthorization(Test):
         log = AuditlogFactory.create(app_id=app.id)
 
         assert self.mock_admin.id != app.owner_id
-        assert_not_raises(Exception, getattr(require, 'auditlog').read, log)
+        assert_not_raises(Exception, require.ensure_authorized, 'read', log)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
-    @patch('pybossa.auth.auditlog.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_crud_auditlog(self):
         """Test anonymous users cannot crud auditlogs"""
 
         log = Auditlog()
 
-        assert_raises(Unauthorized, getattr(require, 'auditlog').create, log)
-        assert_raises(Unauthorized, getattr(require, 'auditlog').update, log)
-        assert_raises(Unauthorized, getattr(require, 'auditlog').delete, log)
+        assert_raises(Unauthorized, require.ensure_authorized, 'create', log)
+        assert_raises(Unauthorized, require.ensure_authorized, 'update', log)
+        assert_raises(Unauthorized, require.ensure_authorized, 'delete', log)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
-    @patch('pybossa.auth.auditlog.current_user', new=mock_authenticated)
     def test_authenticated_user_cannot_crud_auditlog(self):
         """Test authenticated users cannot crud auditlogs"""
 
         log = Auditlog()
 
-        assert_raises(Forbidden, getattr(require, 'auditlog').create, log)
-        assert_raises(Forbidden, getattr(require, 'auditlog').update, log)
-        assert_raises(Forbidden, getattr(require, 'auditlog').delete, log)
+        assert_raises(Forbidden, require.ensure_authorized, 'create', log)
+        assert_raises(Forbidden, require.ensure_authorized, 'update', log)
+        assert_raises(Forbidden, require.ensure_authorized, 'delete', log)
 
 
     @patch('pybossa.auth.current_user', new=mock_pro)
-    @patch('pybossa.auth.auditlog.current_user', new=mock_pro)
     def test_pro_user_cannot_crud_auditlog(self):
         """Test pro users cannot crud auditlogs"""
 
         log = Auditlog()
 
-        assert_raises(Forbidden, getattr(require, 'auditlog').create, log)
-        assert_raises(Forbidden, getattr(require, 'auditlog').update, log)
-        assert_raises(Forbidden, getattr(require, 'auditlog').delete, log)
+        assert_raises(Forbidden, require.ensure_authorized, 'create', log)
+        assert_raises(Forbidden, require.ensure_authorized, 'update', log)
+        assert_raises(Forbidden, require.ensure_authorized, 'delete', log)
 
     @patch('pybossa.auth.current_user', new=mock_admin)
-    @patch('pybossa.auth.auditlog.current_user', new=mock_admin)
     def test_admin_user_cannot_crud_auditlog(self):
         """Test authenticated users cannot crud auditlogs"""
 
         log = Auditlog()
 
-        assert_raises(Forbidden, getattr(require, 'auditlog').create, log)
-        assert_raises(Forbidden, getattr(require, 'auditlog').update, log)
-        assert_raises(Forbidden, getattr(require, 'auditlog').delete, log)
+        assert_raises(Forbidden, require.ensure_authorized, 'create', log)
+        assert_raises(Forbidden, require.ensure_authorized, 'update', log)
+        assert_raises(Forbidden, require.ensure_authorized, 'delete', log)

@@ -16,29 +16,32 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from flask.ext.login import current_user
+class AppAuth(object):
+
+    def can(self, user, action, taskrun=None):
+        action = ''.join(['_', action])
+        return getattr(self, action)(user, taskrun)
+
+    def _create(self, user, app=None):
+        return user.is_authenticated()
 
 
-def create(app=None):
-    return current_user.is_authenticated()
-
-
-def read(app=None):
-    if app is None:
+    def _read(self, user, app=None):
+        if app is None:
+            return True
+        if app.hidden:
+            return self._only_admin_or_owner(user, app)
         return True
-    if app.hidden:
-        return _only_admin_or_owner(app)
-    return True
 
 
-def update(app):
-    return _only_admin_or_owner(app)
+    def _update(self, user, app):
+        return self._only_admin_or_owner(user, app)
 
 
-def delete(app):
-    return _only_admin_or_owner(app)
+    def _delete(self, user, app):
+        return self._only_admin_or_owner(user, app)
 
 
-def _only_admin_or_owner(app):
-    return (not current_user.is_anonymous() and
-                (app.owner_id == current_user.id or current_user.admin))
+    def _only_admin_or_owner(self, user, app):
+        return (not user.is_anonymous() and
+                    (app.owner_id == user.id or user.admin))
