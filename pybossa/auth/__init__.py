@@ -44,19 +44,20 @@ class Authorizer(object):
     actions = ['create', 'read', 'update', 'delete']
     auth_classes = {'app': app.AppAuth,
                     'auditlog': auditlog.AuditlogAuth,
+                    'blogpost': blogpost.BlogpostAuth,
                     'taskrun': taskrun.TaskRunAuth}
 
 
-    def is_authorized(self, user, action, resource):
+    def is_authorized(self, user, action, resource, **kwargs):
         assert action in self.actions
         is_class = inspect.isclass(resource)
         name = resource.__name__ if is_class else resource.__class__.__name__
         resource = None if is_class else resource
         auth = self._authorizer_for(name.lower())
-        return auth.can(user, action, resource)
+        return auth.can(user, action, resource, **kwargs)
 
-    def ensure_authorized(self, action, resource):
-        authorized = self.is_authorized(current_user, action, resource)
+    def ensure_authorized(self, action, resource, **kwargs):
+        authorized = self.is_authorized(current_user, action, resource, **kwargs)
         if authorized is False:
             if current_user.is_anonymous():
                 raise abort(401)
@@ -70,7 +71,7 @@ class Authorizer(object):
         print resource_name
         if resource_name == 'taskrun':
             kwargs = {'task_repo': task_repo, 'project_repo': project_repo}
-        if resource_name == 'auditlog':
+        if resource_name in ['auditlog', 'blogpost']:
             kwargs = {'project_repo': project_repo}
         return self.auth_classes[resource_name](**kwargs)
 
