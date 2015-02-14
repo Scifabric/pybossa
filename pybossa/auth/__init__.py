@@ -41,12 +41,13 @@ assert auditlog
 
 
 class Authorizer(object):
+
     actions = ['create', 'read', 'update', 'delete']
     auth_classes = {'app': app.AppAuth,
                     'auditlog': auditlog.AuditlogAuth,
                     'blogpost': blogpost.BlogpostAuth,
+                    'task': task.TaskAuth,
                     'taskrun': taskrun.TaskRunAuth}
-
 
     def is_authorized(self, user, action, resource, **kwargs):
         assert action in self.actions
@@ -65,13 +66,11 @@ class Authorizer(object):
                 raise abort(403)
         return authorized
 
-
     def _authorizer_for(self, resource_name):
         kwargs = {}
-        print resource_name
         if resource_name == 'taskrun':
             kwargs = {'task_repo': task_repo, 'project_repo': project_repo}
-        if resource_name in ['auditlog', 'blogpost']:
+        if resource_name in ['auditlog', 'blogpost', 'task']:
             kwargs = {'project_repo': project_repo}
         return self.auth_classes[resource_name](**kwargs)
 

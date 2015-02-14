@@ -23,6 +23,7 @@ from werkzeug.exceptions import Forbidden, Unauthorized
 from mock import patch
 from test_authorization import mock_current_user
 from factories import AppFactory, UserFactory, TaskFactory
+from pybossa.model.task import Task
 
 
 
@@ -35,28 +36,31 @@ class TestTaskAuthorization(Test):
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
-    def test_anonymous_user_cannot_create(self):
+    def test_anonymous_user_cannot_crud(self):
         """Test anonymous users cannot create tasks"""
         user = UserFactory.create()
         app = AppFactory.create(owner=user)
         task = TaskFactory.create(app=app)
-        with patch('pybossa.auth.task.current_user', new=self.mock_anonymous):
-            assert_raises(Unauthorized, getattr(require, 'task').create)
-            assert_not_raises(Forbidden, getattr(require, 'task').read, task)
-            assert_raises(Unauthorized, getattr(require, 'task').update, task)
-            assert_raises(Unauthorized, getattr(require, 'task').delete, task)
+
+        assert_raises(Unauthorized, require.ensure_authorized, 'create', Task)
+        assert_not_raises(Forbidden, require.ensure_authorized, 'read', task)
+        assert_raises(Unauthorized, require.ensure_authorized, 'update', task)
+        assert_raises(Unauthorized, require.ensure_authorized, 'delete', task)
 
 
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_project_owner_can_crud(self):
         """Test project owner can crud tasks"""
         user = UserFactory.create()
-        app = AppFactory.create(owner=user)
+        owner = UserFactory.create()
+        app = AppFactory.create(owner=owner)
         task = TaskFactory.create(app=app)
-        with patch('pybossa.auth.task.current_user', new=user):
-            assert_not_raises(Forbidden, getattr(require, 'task').create, task)
-            assert_not_raises(Forbidden, getattr(require, 'task').read, task)
-            assert_not_raises(Forbidden, getattr(require, 'task').update, task)
-            assert_not_raises(Forbidden, getattr(require, 'task').delete, task)
+
+        assert_not_raises(Forbidden, require.ensure_authorized, 'create', task)
+        assert_not_raises(Forbidden, require.ensure_authorized, 'read', task)
+        assert_not_raises(Forbidden, require.ensure_authorized, 'update', task)
+        assert_not_raises(Forbidden, require.ensure_authorized, 'delete', task)
+
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_not_project_owner_cannot_crud(self):
@@ -65,20 +69,22 @@ class TestTaskAuthorization(Test):
         user2 = UserFactory.create()
         app = AppFactory.create(owner=user)
         task = TaskFactory.create(app=app)
-        with patch('pybossa.auth.task.current_user', new=user2):
-            assert_raises(Forbidden, getattr(require, 'task').create, task)
-            assert_not_raises(Forbidden, getattr(require, 'task').read, task)
-            assert_raises(Forbidden, getattr(require, 'task').update, task)
-            assert_raises(Forbidden, getattr(require, 'task').delete, task)
 
+        assert_raises(Forbidden, require.ensure_authorized, 'create', task)
+        assert_not_raises(Forbidden, require.ensure_authorized, 'read', task)
+        assert_raises(Forbidden, require.ensure_authorized, 'update', task)
+        assert_raises(Forbidden, require.ensure_authorized, 'delete', task)
+
+
+    @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_admin_can_crud(self):
         """Test admin user can crud tasks"""
         user = UserFactory.create()
         user2 = UserFactory.create()
         app = AppFactory.create(owner=user2)
         task = TaskFactory.create(app=app)
-        with patch('pybossa.auth.task.current_user', new=user):
-            assert_not_raises(Forbidden, getattr(require, 'task').create, task)
-            assert_not_raises(Forbidden, getattr(require, 'task').read, task)
-            assert_not_raises(Forbidden, getattr(require, 'task').update, task)
-            assert_not_raises(Forbidden, getattr(require, 'task').delete, task)
+
+        assert_not_raises(Forbidden, require.ensure_authorized, 'create', task)
+        assert_not_raises(Forbidden, require.ensure_authorized, 'read', task)
+        assert_not_raises(Forbidden, require.ensure_authorized, 'update', task)
+        assert_not_raises(Forbidden, require.ensure_authorized, 'delete', task)
