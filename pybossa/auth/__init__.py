@@ -47,12 +47,16 @@ class Authorizer(object):
                     'auditlog': auditlog.AuditlogAuth,
                     'blogpost': blogpost.BlogpostAuth,
                     'task': task.TaskAuth,
-                    'taskrun': taskrun.TaskRunAuth}
+                    'taskrun': taskrun.TaskRunAuth,
+                    'token': token.TokenAuth,
+                    'user': user.UserAuth}
 
     def is_authorized(self, user, action, resource, **kwargs):
         assert action in self.actions
         is_class = inspect.isclass(resource)
         name = resource.__name__ if is_class else resource.__class__.__name__
+        if isinstance(resource, str):
+            name = 'token'
         resource = None if is_class else resource
         auth = self._authorizer_for(name.lower())
         return auth.can(user, action, resource, **kwargs)

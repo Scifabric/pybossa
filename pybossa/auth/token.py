@@ -16,20 +16,20 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from flask.ext.login import current_user
+class TokenAuth(object):
 
+    def can(self, user, action, token=None):
+        action = ''.join(['_', action])
+        return getattr(self, action)(user, token)
 
-def create(token=None):
-    return False
+    def _create(self, user, token=None):
+        return False
 
+    def _read(self, user, token=None):
+        return not user.is_anonymous()
 
-def read(token=None):
-    return not current_user.is_anonymous()
+    def _update(self, user, token):
+        return False
 
-
-def update(token):
-    return False
-
-
-def delete(token):
-    return False
+    def _delete(self, user, token):
+        return False
