@@ -56,8 +56,8 @@ class Authorizer(object):
         assert action in self.actions
         is_class = inspect.isclass(resource)
         name = resource.__name__ if is_class else resource.__class__.__name__
-        if isinstance(resource, str):
-            name = 'token'
+        if resource == 'token':
+            name = resource
         resource = None if is_class else resource
         auth = self._authorizer_for(name.lower())
         return auth.can(user, action, resource, **kwargs)
