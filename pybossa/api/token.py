@@ -45,7 +45,7 @@ class TokenAPI(APIBase):
     @ratelimit(limit=300, per=15 * 60)
     def get(self, token):
         try:
-            getattr(require, self._resource_name).read()
+            require.ensure_authorized('read', self._resource_name)
             user_tokens = self._get_all_tokens()
             if token:
                 response = self._get_token(token, user_tokens)

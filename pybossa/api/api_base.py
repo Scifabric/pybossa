@@ -91,7 +91,7 @@ class APIBase(MethodView):
 
         """
         try:
-            getattr(require, self.__class__.__name__.lower()).read()
+            require.ensure_authorized('read', self.__class__)
             query = self._db_query(oid)
             json_response = self._create_json_response(query, oid)
             return Response(json_response, mimetype='application/json')
@@ -108,7 +108,7 @@ class APIBase(MethodView):
         for item in query_result:
             try:
                 items.append(self._create_dict_from_model(item))
-                getattr(require, self.__class__.__name__.lower()).read(item)
+                require.ensure_authorized('read', item)
             except (Forbidden, Unauthorized):
                 # Remove last added item, as it is 401 or 403
                 items.pop()
@@ -116,7 +116,7 @@ class APIBase(MethodView):
                 print ex
                 raise
         if oid:
-            getattr(require, self.__class__.__name__.lower()).read(query_result[0])
+            require.ensure_authorized('read', query_result[0])
             items = items[0]
         return json.dumps(items)
 
@@ -197,7 +197,7 @@ class APIBase(MethodView):
         data = self.hateoas.remove_links(data)
         inst = self.__class__(**data)
         self._update_object(inst)
-        getattr(require, self.__class__.__name__.lower()).create(inst)
+        require.ensure_authorized('create', inst)
         self._validate_instance(inst)
         return inst
 
@@ -232,7 +232,7 @@ class APIBase(MethodView):
         inst = getattr(repo, query_func)(oid)
         if inst is None:
             raise NotFound
-        getattr(require, self.__class__.__name__.lower()).delete(inst)
+        require.ensure_authorized('delete', inst)
         self._log_changes(inst, None)
         delete_func = repos[self.__class__.__name__]['delete']
         getattr(repo, delete_func)(inst)
@@ -270,7 +270,7 @@ class APIBase(MethodView):
         existing = getattr(repo, query_func)(oid)
         if existing is None:
             raise NotFound
-        getattr(require, self.__class__.__name__.lower()).update(existing)
+        require.ensure_authorized('update', existing)
         data = json.loads(request.data)
         # Remove hateoas links
         data = self.hateoas.remove_links(data)
