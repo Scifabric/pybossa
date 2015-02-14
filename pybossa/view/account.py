@@ -412,7 +412,7 @@ def update_profile(name):
     user = user_repo.get_by_name(name)
     if not user:
         return abort(404)
-    require.user.update(user)
+    require.ensure_authorized('update', user)
     show_passwd_form = True
     if user.twitter_user_id or user.google_user_id or user.facebook_user_id:
         show_passwd_form = False
@@ -694,7 +694,7 @@ def reset_api_key(name):
     user = user_repo.get_by_name(name)
     if not user:
         return abort(404)
-    require.user.update(user)
+    require.ensure_authorized('update', user)
     title = ("User: %s &middot; Settings"
              "- Reset API KEY") % current_user.fullname
     user.api_key = model.make_uuid()
