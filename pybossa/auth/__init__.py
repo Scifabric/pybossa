@@ -46,6 +46,7 @@ class Authorizer(object):
     auth_classes = {'app': app.AppAuth,
                     'auditlog': auditlog.AuditlogAuth,
                     'blogpost': blogpost.BlogpostAuth,
+                    'category': category.CategoryAuth,
                     'task': task.TaskAuth,
                     'taskrun': taskrun.TaskRunAuth,
                     'token': token.TokenAuth,
@@ -79,16 +80,4 @@ class Authorizer(object):
         return self.auth_classes[resource_name](**kwargs)
 
 
-
 require = Authorizer()
-
-
-
-
-
-
-
-
-
-
-
