@@ -217,8 +217,8 @@ def del_admin(user_id=None):
     try:
         if user_id:
             user = user_repo.get(user_id)
-            require.ensure_authorized('update', user)
             if user:
+                require.ensure_authorized('update', user)
                 user.admin = False
                 user_repo.update(user)
                 return redirect(url_for('.users'))
