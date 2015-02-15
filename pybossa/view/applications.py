@@ -38,6 +38,7 @@ from pybossa.core import (uploader, signer, sentinel, json_exporter,
 from pybossa.model.app import App
 from pybossa.model.task import Task
 from pybossa.model.auditlog import Auditlog
+from pybossa.model.blogpost import Blogpost
 from pybossa.util import Pagination, admin_required, get_user_id_or_ip
 from pybossa.auth import require
 from pybossa.cache import apps as cached_apps
@@ -1387,18 +1388,18 @@ def new_blogpost(short_name):
     del form.id
 
     if request.method != 'POST':
-        require.blogpost.create(app_id=app.id)
+        require.ensure_authorized('create', Blogpost, app_id=app.id)
         return respond()
 
     if not form.validate():
         flash(gettext('Please correct the errors'), 'error')
         return respond()
 
-    blogpost = model.blogpost.Blogpost(title=form.title.data,
-                                body=form.body.data,
-                                user_id=current_user.id,
-                                app_id=app.id)
-    require.blogpost.create(blogpost)
+    blogpost = Blogpost(title=form.title.data,
+                        body=form.body.data,
+                        user_id=current_user.id,
+                        app_id=app.id)
+    require.ensure_authorized('create', blogpost)
     blog_repo.save(blogpost)
     cached_apps.delete_app(short_name)
 
@@ -1431,7 +1432,7 @@ def update_blogpost(short_name, id):
     form = BlogpostForm()
 
     if request.method != 'POST':
-        require.blogpost.update(blogpost)
+        require.ensure_authorized('update', blogpost)
         form = BlogpostForm(obj=blogpost)
         return respond()
 
@@ -1439,12 +1440,12 @@ def update_blogpost(short_name, id):
         flash(gettext('Please correct the errors'), 'error')
         return respond()
 
-    require.blogpost.update(blogpost)
-    blogpost = model.blogpost.Blogpost(id=form.id.data,
-                                title=form.title.data,
-                                body=form.body.data,
-                                user_id=current_user.id,
-                                app_id=app.id)
+    require.ensure_authorized('update', blogpost)
+    blogpost = Blogpost(id=form.id.data,
+                        title=form.title.data,
+                        body=form.body.data,
+                        user_id=current_user.id,
+                        app_id=app.id)
     blog_repo.update(blogpost)
     cached_apps.delete_app(short_name)
 
@@ -1462,7 +1463,7 @@ def delete_blogpost(short_name, id):
     if blogpost is None:
         raise abort(404)
 
-    require.blogpost.delete(blogpost)
+    require.ensure_authorized('delete', blogpost)
     blog_repo.delete(blogpost)
     cached_apps.delete_app(short_name)
     flash('<i class="icon-ok"></i> ' + 'Blog post deleted!', 'success')
