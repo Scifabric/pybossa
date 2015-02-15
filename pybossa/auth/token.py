@@ -18,7 +18,7 @@
 
 class TokenAuth(object):
 
-    def can(self, user, action, token=None):
+    def can(self, user, action, _, token=None):
         action = ''.join(['_', action])
         return getattr(self, action)(user, token)
 
