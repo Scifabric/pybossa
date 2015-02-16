@@ -34,11 +34,18 @@ class TestI18n(web.Helper):
         """Test i18n anonymous works"""
         # First default 'en' locale
         err_msg = "The page should be in English"
-        res = self.app.get('/', headers=[('Accept-Language', 'en')])
+        res = self.app.get('/')
         assert "Community" in res.data, err_msg
+
+        self.app.set_cookie('localhost', 'language', 'RU')
+        err_msg = "The page should be in English"
+        res = self.app.get('/')
+        assert "Community" in res.data, err_msg
+
         # Second with 'es' locale
+        self.app.set_cookie('localhost', 'language', 'ES')
         err_msg = "The page should be in Spanish"
-        res = self.app.get('/', headers=[('Accept-Language', 'es')])
+        res = self.app.get('/')
         assert "Comunidad" in res.data, err_msg
 
     def test_01_i18n_authenticated(self):
