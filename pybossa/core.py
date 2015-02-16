@@ -204,11 +204,11 @@ def setup_babel(app):
         if current_user.is_authenticated():
             lang = current_user.locale
         else:
-            lang = session.get('lang',
-                               request.accept_languages.best_match(app.config['LOCALES']))
-        if lang is None:
+            lang = request.cookies.get('language')
+        if (lang is None or lang == ''
+                or lang.lower() not in app.config['LOCALES']):
             lang = 'en'
-        return lang
+        return lang.lower()
     return babel
 
 
