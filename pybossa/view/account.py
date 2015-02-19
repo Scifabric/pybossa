@@ -62,7 +62,7 @@ blueprint = Blueprint('account', __name__)
 
 
 mail_queue = Queue('super', connection=sentinel.master)
-LINK_EXPIRATION = 5 * 60 * 60
+LINK_EXPIRATION = current_app.config.get('ACCOUNT_LINK_EXPIRATION', 3600)
 
 
 def get_update_feed():
