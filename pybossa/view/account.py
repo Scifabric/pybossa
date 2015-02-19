@@ -60,9 +60,7 @@ except ImportError:  # pragma: no cover
 
 blueprint = Blueprint('account', __name__)
 
-
 mail_queue = Queue('super', connection=sentinel.master)
-LINK_EXPIRATION = current_app.config.get('ACCOUNT_LINK_EXPIRATION', 3600)
 
 
 def get_update_feed():
@@ -277,7 +275,8 @@ def confirm_account():
     if key is None:
         abort(403)
     try:
-        userdict = signer.loads(key, max_age=LINK_EXPIRATION, salt='account-validation')
+        timeout = current_app.config.get('ACCOUNT_LINK_EXPIRATION', 3600)
+        userdict = signer.loads(key, max_age=timeout, salt='account-validation')
     except BadData:
         abort(403)
     # First check if the user exists
@@ -600,7 +599,8 @@ def reset_password():
         abort(403)
     userdict = {}
     try:
-        userdict = signer.loads(key, max_age=LINK_EXPIRATION, salt='password-reset')
+        timeout = current_app.config.get('ACCOUNT_LINK_EXPIRATION', 3600)
+        userdict = signer.loads(key, max_age=timeout, salt='password-reset')
     except BadData:
         abort(403)
     username = userdict.get('user')
