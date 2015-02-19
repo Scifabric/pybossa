@@ -95,6 +95,9 @@ PER = 15 * 60
 # Expiration time for password protected project cookies
 PASSWD_COOKIE_TIMEOUT = 60 * 30
 
+# Expiration time for account confirmation / password recovery links
+ACCOUNT_LINK_EXPIRATION = 5 * 60 * 60
+
 # Rate limits default values
 LIMIT = 300
 PER = 15 * 60

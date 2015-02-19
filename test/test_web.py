@@ -327,11 +327,12 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.account.signer')
     def test_register_confirmation_gets_account_data_from_key(self, fake_signer):
         """Test WEB register confirmation gets the account data from the key"""
+        exp_time = self.flask_app.config.get('ACCOUNT_LINK_EXPIRATION')
         fake_signer.loads.return_value = dict(fullname='FN', name='name',
                        email_addr='email', password='password')
         res = self.app.get('/account/register/confirmation?key=valid-key')
 
-        fake_signer.loads.assert_called_with('valid-key', max_age=3600, salt='account-validation')
+        fake_signer.loads.assert_called_with('valid-key', max_age=exp_time, salt='account-validation')
 
 
     @patch('pybossa.view.account.signer')
