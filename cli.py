@@ -139,7 +139,7 @@ def bootstrap_avatars():
         if app.config['UPLOAD_METHOD'] == 'local':
             users = User.query.order_by('id').all()
             print "Downloading avatars for %s users" % len(users)
-            for u in users[0:10]:
+            for u in users:
                 print "Downloading avatar for %s ..." % u.name
                 container = "user_%s" % u.id
                 path = os.path.join(app.config.get('UPLOAD_FOLDER'), container)
@@ -167,7 +167,7 @@ def bootstrap_avatars():
 
             apps = App.query.all()
             print "Downloading avatars for %s projects" % len(apps)
-            for a in apps[0:1]:
+            for a in apps:
                 if a.info.get('thumbnail') and not a.info.get('container'):
                     print "Working on project: %s ..." % a.short_name
                     print "Saving avatar: %s ..." % a.info.get('thumbnail')
