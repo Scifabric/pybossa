@@ -60,9 +60,7 @@ except ImportError:  # pragma: no cover
 
 blueprint = Blueprint('account', __name__)
 
-
 mail_queue = Queue('super', connection=sentinel.master)
-
 
 
 def get_update_feed():
@@ -270,14 +268,14 @@ def newsletter_subscribe():
         return abort(404)
 
 
-
 @blueprint.route('/register/confirmation', methods=['GET'])
 def confirm_account():
     key = request.args.get('key')
     if key is None:
         abort(403)
     try:
-        userdict = signer.loads(key, max_age=3600, salt='account-validation')
+        timeout = current_app.config.get('ACCOUNT_LINK_EXPIRATION', 3600)
+        userdict = signer.loads(key, max_age=timeout, salt='account-validation')
     except BadData:
         abort(403)
     # First check if the user exists
@@ -367,7 +365,6 @@ def _show_own_profile(user):
                           user=user)
 
 
-
 @blueprint.route('/<name>/applications')
 @login_required
 def applications(name):
@@ -428,7 +425,6 @@ def update_profile(name):
     avatar_form = AvatarUploadForm()
     password_form = ChangePasswordForm()
     external_form = update_form
-
 
     if request.method == 'GET':
         return render_template('account/update.html',
@@ -600,7 +596,8 @@ def reset_password():
         abort(403)
     userdict = {}
     try:
-        userdict = signer.loads(key, max_age=3600, salt='password-reset')
+        timeout = current_app.config.get('ACCOUNT_LINK_EXPIRATION', 3600)
+        userdict = signer.loads(key, max_age=timeout, salt='password-reset')
     except BadData:
         abort(403)
     username = userdict.get('user')
