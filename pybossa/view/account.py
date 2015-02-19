@@ -268,7 +268,6 @@ def newsletter_subscribe():
         return abort(404)
 
 
-
 @blueprint.route('/register/confirmation', methods=['GET'])
 def confirm_account():
     key = request.args.get('key')
@@ -366,7 +365,6 @@ def _show_own_profile(user):
                           user=user)
 
 
-
 @blueprint.route('/<name>/applications')
 @login_required
 def applications(name):
@@ -427,7 +425,6 @@ def update_profile(name):
     avatar_form = AvatarUploadForm()
     password_form = ChangePasswordForm()
     external_form = update_form
-
 
     if request.method == 'GET':
         return render_template('account/update.html',
