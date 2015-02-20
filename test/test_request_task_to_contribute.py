@@ -19,7 +19,7 @@
 from redis import StrictRedis
 from mock import patch
 
-from pybossa.api import _mark_task_as_requested_by_user
+from pybossa.api.task import mark_task_as_requested_by_user
 from pybossa.api.task_run import _check_task_requested_by_user
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
@@ -32,7 +32,7 @@ class TestTasksMarkedForContribution(object):
         self.connection.flushall()
 
 
-    @patch('pybossa.api.get_user_id_or_ip')
+    @patch('pybossa.api.task.get_user_id_or_ip')
     def test_mark_task_as_requested_by_user_creates_key_for_auth(self, user):
         """When an authenticated user requests a task, a key is stored in Redis
         with his id and task id"""
@@ -40,12 +40,12 @@ class TestTasksMarkedForContribution(object):
         task = Task(id=22)
         key = 'pybossa:task_requested:user:33:task:22'
 
-        _mark_task_as_requested_by_user(task, self.connection)
+        mark_task_as_requested_by_user(task.id, self.connection)
 
         assert key in self.connection.keys(), self.connection.keys()
 
 
-    @patch('pybossa.api.get_user_id_or_ip')
+    @patch('pybossa.api.task.get_user_id_or_ip')
     def test_mark_task_as_requested_by_user_creates_key_for_anon(self, user):
         """When an anonymous user requests a task, a key is stored in Redis
         with his IP and task id"""
@@ -53,19 +53,19 @@ class TestTasksMarkedForContribution(object):
         task = Task(id=22)
         key = 'pybossa:task_requested:user:127.0.0.1:task:22'
 
-        _mark_task_as_requested_by_user(task, self.connection)
+        mark_task_as_requested_by_user(task.id, self.connection)
 
         assert key in self.connection.keys(), self.connection.keys()
 
 
-    @patch('pybossa.api.get_user_id_or_ip')
+    @patch('pybossa.api.task.get_user_id_or_ip')
     def test_mark_task_as_requested_by_user_sets_expiration_for_key(self, user):
         """When a user requests a task, a key is stored with TTL of 1 hour"""
         user.return_value = {'user_id': 33, 'user_ip': None}
         task = Task(id=22)
         key = 'pybossa:task_requested:user:33:task:22'
 
-        _mark_task_as_requested_by_user(task, self.connection)
+        mark_task_as_requested_by_user(task.id, self.connection)
 
         assert self.connection.ttl(key) == 60 * 60, self.connection.ttl(key)
 
