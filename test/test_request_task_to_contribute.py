@@ -21,7 +21,6 @@ from mock import patch
 
 from pybossa.api.task import mark_task_as_requested_by_user
 from pybossa.api.task_run import _check_task_requested_by_user
-from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 
 
@@ -37,10 +36,10 @@ class TestTasksMarkedForContribution(object):
         """When an authenticated user requests a task, a key is stored in Redis
         with his id and task id"""
         user.return_value = {'user_id': 33, 'user_ip': None}
-        task = Task(id=22)
+        task_id = 22
         key = 'pybossa:task_requested:user:33:task:22'
 
-        mark_task_as_requested_by_user(task.id, self.connection)
+        mark_task_as_requested_by_user(task_id, self.connection)
 
         assert key in self.connection.keys(), self.connection.keys()
 
@@ -50,10 +49,10 @@ class TestTasksMarkedForContribution(object):
         """When an anonymous user requests a task, a key is stored in Redis
         with his IP and task id"""
         user.return_value = {'user_id': None, 'user_ip': '127.0.0.1'}
-        task = Task(id=22)
+        task_id = 22
         key = 'pybossa:task_requested:user:127.0.0.1:task:22'
 
-        mark_task_as_requested_by_user(task.id, self.connection)
+        mark_task_as_requested_by_user(task_id, self.connection)
 
         assert key in self.connection.keys(), self.connection.keys()
 
@@ -62,10 +61,10 @@ class TestTasksMarkedForContribution(object):
     def test_mark_task_as_requested_by_user_sets_expiration_for_key(self, user):
         """When a user requests a task, a key is stored with TTL of 1 hour"""
         user.return_value = {'user_id': 33, 'user_ip': None}
-        task = Task(id=22)
+        task_id = 22
         key = 'pybossa:task_requested:user:33:task:22'
 
-        mark_task_as_requested_by_user(task.id, self.connection)
+        mark_task_as_requested_by_user(task_id, self.connection)
 
         assert self.connection.ttl(key) == 60 * 60, self.connection.ttl(key)
 
