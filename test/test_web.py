@@ -39,7 +39,7 @@ from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
-from pybossa.core import user_repo
+from pybossa.core import user_repo, sentinel
 from pybossa.jobs import send_mail, import_tasks
 from factories import AppFactory, CategoryFactory, TaskFactory, TaskRunFactory
 from unidecode import unidecode
@@ -1437,12 +1437,20 @@ class TestWeb(web.Helper):
         self.register()
         self.signin()
         app = db.session.query(App).first()
-        task = db.session.query(Task)\
-                 .filter(App.id == app.id)\
-                 .first()
+        task = db.session.query(Task).filter(App.id == app.id).first()
         res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
                            follow_redirects=True)
         assert 'TaskPresenter' in res.data, res.data
+
+    @patch('pybossa.view.applications.mark_task_as_requested_by_user')
+    def test_get_specific_ongoing_task_marks_task_as_requested(self, mark):
+        self.create()
+        self.register()
+        app = db.session.query(App).first()
+        task = db.session.query(Task).filter(App.id == app.id).first()
+        res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
+                           follow_redirects=True)
+        mark.assert_called_with(task, sentinel.master)
 
     @with_context
     @patch('pybossa.view.applications.uploader.upload_file', return_value=True)
@@ -1452,17 +1460,13 @@ class TestWeb(web.Helper):
         app1 = db.session.query(App).get(1)
         app1_short_name = app1.short_name
 
-        db.session.query(Task)\
-                  .filter(Task.app_id == 1)\
-                  .first()
+        db.session.query(Task).filter(Task.app_id == 1).first()
 
         self.register()
         self.new_application()
         app2 = db.session.query(App).get(2)
         self.new_task(app2.id)
-        task2 = db.session.query(Task)\
-                  .filter(Task.app_id == 2)\
-                  .first()
+        task2 = db.session.query(Task).filter(Task.app_id == 2).first()
         task2_id = task2.id
         self.signout()
 
