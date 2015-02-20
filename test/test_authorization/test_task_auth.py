@@ -37,13 +37,14 @@ class TestTaskAuthorization(Test):
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_crud(self):
-        """Test anonymous users cannot create tasks"""
+        """Test anonymous users cannot crud tasks"""
         user = UserFactory.create()
         app = AppFactory.create(owner=user)
         task = TaskFactory.create(app=app)
 
-        assert_raises(Unauthorized, require.ensure_authorized, 'create', Task)
+        assert_raises(Unauthorized, require.ensure_authorized, 'create', task)
         assert_not_raises(Forbidden, require.ensure_authorized, 'read', task)
+        assert_not_raises(Forbidden, require.ensure_authorized, 'read', Task)
         assert_raises(Unauthorized, require.ensure_authorized, 'update', task)
         assert_raises(Unauthorized, require.ensure_authorized, 'delete', task)
 
@@ -58,6 +59,7 @@ class TestTaskAuthorization(Test):
 
         assert_not_raises(Forbidden, require.ensure_authorized, 'create', task)
         assert_not_raises(Forbidden, require.ensure_authorized, 'read', task)
+        assert_not_raises(Forbidden, require.ensure_authorized, 'read', Task)
         assert_not_raises(Forbidden, require.ensure_authorized, 'update', task)
         assert_not_raises(Forbidden, require.ensure_authorized, 'delete', task)
 
@@ -72,6 +74,7 @@ class TestTaskAuthorization(Test):
 
         assert_raises(Forbidden, require.ensure_authorized, 'create', task)
         assert_not_raises(Forbidden, require.ensure_authorized, 'read', task)
+        assert_not_raises(Forbidden, require.ensure_authorized, 'read', Task)
         assert_raises(Forbidden, require.ensure_authorized, 'update', task)
         assert_raises(Forbidden, require.ensure_authorized, 'delete', task)
 
@@ -86,5 +89,6 @@ class TestTaskAuthorization(Test):
 
         assert_not_raises(Forbidden, require.ensure_authorized, 'create', task)
         assert_not_raises(Forbidden, require.ensure_authorized, 'read', task)
+        assert_not_raises(Forbidden, require.ensure_authorized, 'read', Task)
         assert_not_raises(Forbidden, require.ensure_authorized, 'update', task)
         assert_not_raises(Forbidden, require.ensure_authorized, 'delete', task)

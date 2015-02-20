@@ -25,7 +25,7 @@ class TaskAuth(object):
         action = ''.join(['_', action])
         return getattr(self, action)(user, task)
 
-    def _create(self, user, task=None):
+    def _create(self, user, task):
         if not user.is_anonymous():
             app = self.project_repo.get(task.app_id)
             if app.owner_id == user.id or user.admin is True:

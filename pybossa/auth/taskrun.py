@@ -28,7 +28,7 @@ class TaskRunAuth(object):
         action = ''.join(['_', action])
         return getattr(self, action)(user, taskrun)
 
-    def _create(self, user, taskrun=None):
+    def _create(self, user, taskrun):
         project = self.project_repo.get(self.task_repo.get_task(taskrun.task_id).app_id)
         if (user.is_anonymous() and
                 project.allow_anonymous_contributors is False):
