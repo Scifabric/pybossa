@@ -57,6 +57,7 @@ class TestTaskAuthorization(Test):
         app = AppFactory.create(owner=owner)
         task = TaskFactory.create(app=app)
 
+        assert self.mock_authenticated.id == owner.id
         assert_not_raises(Forbidden, require.ensure_authorized, 'create', task)
         assert_not_raises(Forbidden, require.ensure_authorized, 'read', task)
         assert_not_raises(Forbidden, require.ensure_authorized, 'read', Task)
@@ -66,12 +67,13 @@ class TestTaskAuthorization(Test):
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_not_project_owner_cannot_crud(self):
-        """Test authenticated user cannot crud tasks"""
-        user = UserFactory.create()
-        user2 = UserFactory.create()
-        app = AppFactory.create(owner=user)
+        """Test non owner user cannot crud tasks"""
+        owner = UserFactory.create()
+        non_owner = UserFactory.create()
+        app = AppFactory.create(owner=owner)
         task = TaskFactory.create(app=app)
 
+        assert self.mock_authenticated.id != owner.id
         assert_raises(Forbidden, require.ensure_authorized, 'create', task)
         assert_not_raises(Forbidden, require.ensure_authorized, 'read', task)
         assert_not_raises(Forbidden, require.ensure_authorized, 'read', Task)
@@ -79,14 +81,15 @@ class TestTaskAuthorization(Test):
         assert_raises(Forbidden, require.ensure_authorized, 'delete', task)
 
 
-    @patch('pybossa.auth.current_user', new=mock_authenticated)
+    @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_can_crud(self):
         """Test admin user can crud tasks"""
-        user = UserFactory.create()
-        user2 = UserFactory.create()
-        app = AppFactory.create(owner=user2)
+        admin = UserFactory.create()
+        owner = UserFactory.create()
+        app = AppFactory.create(owner=owner)
         task = TaskFactory.create(app=app)
 
+        assert self.mock_admin.id != owner.id
         assert_not_raises(Forbidden, require.ensure_authorized, 'create', task)
         assert_not_raises(Forbidden, require.ensure_authorized, 'read', task)
         assert_not_raises(Forbidden, require.ensure_authorized, 'read', Task)
