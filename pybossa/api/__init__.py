@@ -33,7 +33,7 @@ import json
 from flask import Blueprint, request, abort, Response, make_response
 from flask.ext.login import current_user
 from werkzeug.exceptions import NotFound
-from pybossa.util import jsonpify, crossdomain, get_user_id_or_ip
+from pybossa.util import jsonpify, crossdomain
 import pybossa.model as model
 from pybossa.core import csrf, ratelimits, sentinel
 from pybossa.ratelimit import ratelimit
@@ -41,7 +41,7 @@ from pybossa.cache.apps import n_tasks
 import pybossa.sched as sched
 from pybossa.error import ErrorStatus
 from global_stats import GlobalStatsAPI
-from task import TaskAPI
+from task import TaskAPI, mark_task_as_requested_by_user
 from task_run import TaskRunAPI
 from app import AppAPI
 from category import CategoryAPI
@@ -106,7 +106,7 @@ def new_task(app_id):
         task = _retrieve_new_task(app_id)
         # If there is a task for the user, return it
         if task is not None:
-            _mark_task_as_requested_by_user(task, sentinel.master)
+            mark_task_as_requested_by_user(task.id, sentinel.master)
             response = make_response(json.dumps(task.dictize()))
             response.mimetype = "application/json"
             return response
@@ -131,12 +131,6 @@ def _retrieve_new_task(app_id):
     user_ip = request.remote_addr if current_user.is_anonymous() else None
     task = sched.new_task(app_id, app.info.get('sched'), user_id, user_ip, offset)
     return task
-
-def _mark_task_as_requested_by_user(task, redis_conn):
-    usr = get_user_id_or_ip()['user_id'] or get_user_id_or_ip()['user_ip']
-    key = 'pybossa:task_requested:user:%s:task:%s' % (usr, task.id)
-    timeout = 60 * 60
-    redis_conn.setex(key, timeout, True)
 
 
 @jsonpify

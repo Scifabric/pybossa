@@ -23,7 +23,16 @@ This package adds GET, POST, PUT and DELETE methods for:
 
 """
 from pybossa.model.task import Task
+from pybossa.util import get_user_id_or_ip
 from api_base import APIBase
+from pybossa.core import sentinel
+
+
+def mark_task_as_requested_by_user(task_id, redis_conn):
+    usr = get_user_id_or_ip()['user_id'] or get_user_id_or_ip()['user_ip']
+    key = 'pybossa:task_requested:user:%s:task:%s' % (usr, task_id)
+    timeout = 60 * 60
+    redis_conn.setex(key, timeout, True)
 
 
 class TaskAPI(APIBase):
@@ -31,3 +40,7 @@ class TaskAPI(APIBase):
     """Class for domain object Task."""
 
     __class__ = Task
+
+    def get(self, oid):
+        mark_task_as_requested_by_user(oid, sentinel.master)
+        return super(TaskAPI, self).get(oid)
