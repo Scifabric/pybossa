@@ -24,7 +24,6 @@ from mock import patch
 from test_authorization import mock_current_user
 from factories import (AppFactory, AnonymousTaskRunFactory,
                        TaskFactory, TaskRunFactory, UserFactory)
-from factories import reset_all_pk_sequences
 
 
 

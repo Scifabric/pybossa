@@ -23,7 +23,6 @@ from werkzeug.exceptions import Forbidden, Unauthorized
 from mock import patch
 from test_authorization import mock_current_user
 from factories import AppFactory, UserFactory, AuditlogFactory
-from factories import reset_all_pk_sequences
 from pybossa.model.auditlog import Auditlog
 
 
