@@ -53,6 +53,7 @@ from pybossa.importers import BulkImportException
 
 from pybossa.core import project_repo, user_repo, task_repo, blog_repo, auditlog_repo
 from pybossa.auditlogger import AuditLogger
+from pybossa.api import mark_task_as_requested_by_user
 
 blueprint = Blueprint('app', __name__)
 
@@ -714,6 +715,7 @@ def task_presenter(short_name, task_id):
 
     if not (task.app_id == app.id):
         return respond('/applications/task/wrong.html')
+    mark_task_as_requested_by_user(task, sentinel.master)
     return respond('/applications/presenter.html')
 
 

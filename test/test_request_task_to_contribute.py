@@ -19,7 +19,7 @@
 from redis import StrictRedis
 from mock import patch
 
-from pybossa.api import _mark_task_as_requested_by_user
+from pybossa.api import mark_task_as_requested_by_user
 from pybossa.api.task_run import _check_task_requested_by_user
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
@@ -40,7 +40,7 @@ class TestTasksMarkedForContribution(object):
         task = Task(id=22)
         key = 'pybossa:task_requested:user:33:task:22'
 
-        _mark_task_as_requested_by_user(task, self.connection)
+        mark_task_as_requested_by_user(task, self.connection)
 
         assert key in self.connection.keys(), self.connection.keys()
 
@@ -53,7 +53,7 @@ class TestTasksMarkedForContribution(object):
         task = Task(id=22)
         key = 'pybossa:task_requested:user:127.0.0.1:task:22'
 
-        _mark_task_as_requested_by_user(task, self.connection)
+        mark_task_as_requested_by_user(task, self.connection)
 
         assert key in self.connection.keys(), self.connection.keys()
 
@@ -65,7 +65,7 @@ class TestTasksMarkedForContribution(object):
         task = Task(id=22)
         key = 'pybossa:task_requested:user:33:task:22'
 
-        _mark_task_as_requested_by_user(task, self.connection)
+        mark_task_as_requested_by_user(task, self.connection)
 
         assert self.connection.ttl(key) == 60 * 60, self.connection.ttl(key)
 
