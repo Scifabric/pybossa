@@ -26,27 +26,19 @@ class TaskAuth(object):
         return getattr(self, action)(user, task)
 
     def _create(self, user, task):
-        if not user.is_anonymous():
-            app = self.project_repo.get(task.app_id)
-            if app.owner_id == user.id or user.admin is True:
-                return True
-            else:
-                return False
-        else:
-            return False
+        return self._only_admin_or_owner(user, task)
 
     def _read(self, user, task=None):
         return True
 
     def _update(self, user, task):
-        if not user.is_anonymous():
-            app = self.project_repo.get(task.app_id)
-            if app.owner_id == user.id or user.admin is True:
-                return True
-            else:
-                return False
-        else:
-            return False
+        return self._only_admin_or_owner(user, task)
 
     def _delete(self, user, task):
-        return self._update(user, task)
+        return self._only_admin_or_owner(user, task)
+
+    def _only_admin_or_owner(self, user, task):
+        if not user.is_anonymous():
+            app = self.project_repo.get(task.app_id)
+            return (app.owner_id == user.id or user.admin)
+        return False

@@ -25,7 +25,6 @@ class AppAuth(object):
     def _create(self, user, app=None):
         return user.is_authenticated()
 
-
     def _read(self, user, app=None):
         if app is None:
             return True
@@ -33,14 +32,11 @@ class AppAuth(object):
             return self._only_admin_or_owner(user, app)
         return True
 
-
     def _update(self, user, app):
         return self._only_admin_or_owner(user, app)
 
-
     def _delete(self, user, app):
         return self._only_admin_or_owner(user, app)
-
 
     def _only_admin_or_owner(self, user, app):
         return (not user.is_anonymous() and
