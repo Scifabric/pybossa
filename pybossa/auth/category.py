@@ -23,19 +23,16 @@ class CategoryAuth(object):
         return getattr(self, action)(user, category)
 
     def _create(self, user, category=None):
-        if user.is_authenticated():
-            if user.admin is True:
-                return True
-            else:
-                return False
-        else:
-            return False
+        return self._only_admin(user)
 
     def _read(self, user, category=None):
         return True
 
     def _update(self, user, category):
-        return self._create(user, category)
+        return self._only_admin(user)
 
     def _delete(self, user, category):
-        return self._create(user, category)
+        return self._only_admin(user)
+
+    def _only_admin(self, user):
+        return user.is_authenticated() and user.admin
