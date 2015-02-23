@@ -16,26 +16,24 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from flask.ext.login import current_user
 
+class CategoryAuth(object):
 
-def create(category=None):
-    if current_user.is_authenticated():
-        if current_user.admin is True:
-            return True
-        else:
-            return False
-    else:
-        return False
+    def can(self, user, action, category=None):
+        action = ''.join(['_', action])
+        return getattr(self, action)(user, category)
 
+    def _create(self, user, category=None):
+        return self._only_admin(user)
 
-def read(category=None):
-    return True
+    def _read(self, user, category=None):
+        return True
 
+    def _update(self, user, category):
+        return self._only_admin(user)
 
-def update(category):
-    return create(category)
+    def _delete(self, user, category):
+        return self._only_admin(user)
 
-
-def delete(category):
-    return create(category)
+    def _only_admin(self, user):
+        return user.is_authenticated() and user.admin

@@ -29,11 +29,11 @@ from flask.ext.login import login_required, current_user
 from flask.ext.babel import gettext
 from werkzeug.exceptions import HTTPException
 
-import pybossa.model as model
+from pybossa.model.category import Category
 from pybossa.util import admin_required, UnicodeWriter
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
-from pybossa.auth import require
+from pybossa.auth import ensure_authorized_to
 from pybossa.core import project_repo, user_repo
 import json
 from StringIO import StringIO
@@ -79,7 +79,7 @@ def featured(app_id=None):
         else:
             app = project_repo.get(app_id)
             if app:
-                require.app.update(app)
+                ensure_authorized_to('update', app)
                 if request.method == 'POST':
                     if app.featured is True:
                         msg = "App.id %s already featured" % app_id
@@ -110,26 +110,23 @@ def featured(app_id=None):
 @admin_required
 def users(user_id=None):
     """Manage users of PyBossa"""
-    try:
-        form = SearchForm(request.form)
-        users = [user for user in user_repo.filter_by(admin=True) if user.id != current_user.id]
+    form = SearchForm(request.form)
+    users = [user for user in user_repo.filter_by(admin=True) if user.id != current_user.id]
 
-        if request.method == 'POST' and form.user.data:
-            query = form.user.data
-            found = [user for user in user_repo.search_by_name(query) if user.id != current_user.id]
-            require.user.update(found)
-            if not found:
-                flash("<strong>Ooops!</strong> We didn't find a user "
-                      "matching your query: <strong>%s</strong>" % form.user.data)
-            return render_template('/admin/users.html', found=found, users=users,
-                                   title=gettext("Manage Admin Users"),
-                                   form=form)
+    if request.method == 'POST' and form.user.data:
+        query = form.user.data
+        found = [user for user in user_repo.search_by_name(query) if user.id != current_user.id]
+        [ensure_authorized_to('update', found_user) for found_user in found]
+        if not found:
+            flash("<strong>Ooops!</strong> We didn't find a user "
+                  "matching your query: <strong>%s</strong>" % form.user.data)
+        return render_template('/admin/users.html', found=found, users=users,
+                               title=gettext("Manage Admin Users"),
+                               form=form)
 
-        return render_template('/admin/users.html', found=[], users=users,
-                               title=gettext("Manage Admin Users"), form=form)
-    except Exception as e: # pragma: no cover
-        current_app.logger.error(e)
-        return abort(500)
+    return render_template('/admin/users.html', found=[], users=users,
+                           title=gettext("Manage Admin Users"), form=form)
+
 
 
 @blueprint.route('/users/export')
@@ -199,8 +196,8 @@ def add_admin(user_id=None):
     try:
         if user_id:
             user = user_repo.get(user_id)
-            require.user.update(user)
             if user:
+                ensure_authorized_to('update', user)
                 user.admin = True
                 user_repo.update(user)
                 return redirect(url_for(".users"))
@@ -220,8 +217,8 @@ def del_admin(user_id=None):
     try:
         if user_id:
             user = user_repo.get(user_id)
-            require.user.update(user)
             if user:
+                ensure_authorized_to('update', user)
                 user.admin = False
                 user_repo.update(user)
                 return redirect(url_for('.users'))
@@ -243,16 +240,16 @@ def categories():
     """List Categories"""
     try:
         if request.method == 'GET':
-            require.category.read()
+            ensure_authorized_to('read', Category)
             form = CategoryForm()
         if request.method == 'POST':
-            require.category.create()
+            ensure_authorized_to('create', Category)
             form = CategoryForm(request.form)
             if form.validate():
                 slug = form.name.data.lower().replace(" ", "")
-                category = model.category.Category(name=form.name.data,
-                                          short_name=slug,
-                                          description=form.description.data)
+                category = Category(name=form.name.data,
+                                    short_name=slug,
+                                    description=form.description.data)
                 project_repo.save_category(category)
                 cached_cat.reset()
                 msg = gettext("Category added")
@@ -283,7 +280,7 @@ def del_category(id):
         category = project_repo.get_category(id)
         if category:
             if len(cached_cat.get_all()) > 1:
-                require.category.delete(category)
+                ensure_authorized_to('delete', category)
                 if request.method == 'GET':
                     return render_template('admin/del_category.html',
                                            title=gettext('Delete Category'),
@@ -317,7 +314,7 @@ def update_category(id):
     try:
         category = project_repo.get_category(id)
         if category:
-            require.category.update(category)
+            ensure_authorized_to('update', category)
             form = CategoryForm(obj=category)
             form.populate_obj(category)
             if request.method == 'GET':
@@ -329,9 +326,9 @@ def update_category(id):
                 form = CategoryForm(request.form)
                 if form.validate():
                     slug = form.name.data.lower().replace(" ", "")
-                    new_category = model.category.Category(id=form.id.data,
-                                                  name=form.name.data,
-                                                  short_name=slug)
+                    new_category = Category(id=form.id.data,
+                                            name=form.name.data,
+                                            short_name=slug)
                     project_repo.update_category(new_category)
                     cached_cat.reset()
                     msg = gettext("Category updated")

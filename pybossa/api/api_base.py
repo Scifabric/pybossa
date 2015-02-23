@@ -32,7 +32,7 @@ from flask.views import MethodView
 from werkzeug.exceptions import NotFound, Unauthorized, Forbidden
 from pybossa.util import jsonpify, crossdomain
 from pybossa.core import ratelimits
-from pybossa.auth import require
+from pybossa.auth import ensure_authorized_to
 from pybossa.hateoas import Hateoas
 from pybossa.ratelimit import ratelimit
 from pybossa.error import ErrorStatus
@@ -91,7 +91,7 @@ class APIBase(MethodView):
 
         """
         try:
-            getattr(require, self.__class__.__name__.lower()).read()
+            ensure_authorized_to('read', self.__class__)
             query = self._db_query(oid)
             json_response = self._create_json_response(query, oid)
             return Response(json_response, mimetype='application/json')
@@ -108,7 +108,7 @@ class APIBase(MethodView):
         for item in query_result:
             try:
                 items.append(self._create_dict_from_model(item))
-                getattr(require, self.__class__.__name__.lower()).read(item)
+                ensure_authorized_to('read', item)
             except (Forbidden, Unauthorized):
                 # Remove last added item, as it is 401 or 403
                 items.pop()
@@ -116,7 +116,7 @@ class APIBase(MethodView):
                 print ex
                 raise
         if oid:
-            getattr(require, self.__class__.__name__.lower()).read(query_result[0])
+            ensure_authorized_to('read', query_result[0])
             items = items[0]
         return json.dumps(items)
 
@@ -197,7 +197,7 @@ class APIBase(MethodView):
         data = self.hateoas.remove_links(data)
         inst = self.__class__(**data)
         self._update_object(inst)
-        getattr(require, self.__class__.__name__.lower()).create(inst)
+        ensure_authorized_to('create', inst)
         self._validate_instance(inst)
         return inst
 
@@ -232,7 +232,7 @@ class APIBase(MethodView):
         inst = getattr(repo, query_func)(oid)
         if inst is None:
             raise NotFound
-        getattr(require, self.__class__.__name__.lower()).delete(inst)
+        ensure_authorized_to('delete', inst)
         self._log_changes(inst, None)
         delete_func = repos[self.__class__.__name__]['delete']
         getattr(repo, delete_func)(inst)
@@ -270,7 +270,7 @@ class APIBase(MethodView):
         existing = getattr(repo, query_func)(oid)
         if existing is None:
             raise NotFound
-        getattr(require, self.__class__.__name__.lower()).update(existing)
+        ensure_authorized_to('update', existing)
         data = json.loads(request.data)
         # Remove hateoas links
         data = self.hateoas.remove_links(data)

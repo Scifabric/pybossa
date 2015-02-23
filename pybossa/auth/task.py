@@ -16,36 +16,30 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from flask.ext.login import current_user
 
-from pybossa.core import project_repo
+class TaskAuth(object):
 
+    def __init__(self, project_repo):
+        self.project_repo = project_repo
 
-def create(task=None):
-    if not current_user.is_anonymous():
-        app = project_repo.get(task.app_id)
-        if app.owner_id == current_user.id or current_user.admin is True:
-            return True
-        else:
-            return False
-    else:
+    def can(self, user, action, task=None):
+        action = ''.join(['_', action])
+        return getattr(self, action)(user, task)
+
+    def _create(self, user, task):
+        return self._only_admin_or_owner(user, task)
+
+    def _read(self, user, task=None):
+        return True
+
+    def _update(self, user, task):
+        return self._only_admin_or_owner(user, task)
+
+    def _delete(self, user, task):
+        return self._only_admin_or_owner(user, task)
+
+    def _only_admin_or_owner(self, user, task):
+        if not user.is_anonymous():
+            app = self.project_repo.get(task.app_id)
+            return (app.owner_id == user.id or user.admin)
         return False
-
-
-def read(task=None):
-    return True
-
-
-def update(task):
-    if not current_user.is_anonymous():
-        app = project_repo.get(task.app_id)
-        if app.owner_id == current_user.id or current_user.admin is True:
-            return True
-        else:
-            return False
-    else:
-        return False
-
-
-def delete(task):
-    return update(task)

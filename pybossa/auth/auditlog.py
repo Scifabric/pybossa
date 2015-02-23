@@ -16,32 +16,32 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from flask.ext.login import current_user
 
-from pybossa.core import project_repo
+class AuditlogAuth(object):
 
+    def __init__(self, project_repo):
+        self.project_repo = project_repo
 
-def create(_auditlog):
-    return False
+    def can(self, user, action, auditlog=None, app_id=None):
+        action = ''.join(['_', action])
+        return getattr(self, action)(user, auditlog, app_id)
 
-
-def read(_auditlog=None, _app_id=None):
-    app = _get_app(_auditlog, _app_id)
-    if current_user.is_anonymous() or (_auditlog is None and _app_id is None):
+    def _create(self, user, auditlog, app_id=None):
         return False
-    return current_user.admin or (current_user.id == app.owner_id
-                                  and current_user.pro)
 
+    def _read(self, user, auditlog=None, app_id=None):
+        if user.is_anonymous() or (auditlog is None and app_id is None):
+            return False
+        app = self._get_app(auditlog, app_id)
+        return user.admin or (user.id == app.owner_id and user.pro)
 
-def update(_auditlog):
-    return False
+    def _update(self, user, auditlog, app_id=None):
+        return False
 
+    def _delete(self, user, auditlog, app_id=None):
+        return False
 
-def delete(_auditlog):
-    return False
-
-
-def _get_app(_auditlog, _app_id):
-    if _auditlog is not None:
-        return project_repo.get(_auditlog.app_id)
-    return project_repo.get(_app_id)
+    def _get_app(self, auditlog, app_id):
+        if auditlog is not None:
+            return self.project_repo.get(auditlog.app_id)
+        return self.project_repo.get(app_id)
