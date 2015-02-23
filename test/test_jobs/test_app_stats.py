@@ -35,7 +35,10 @@ class TestProjectsStats(Test):
         sql = text('''SELECT app.id, app.short_name FROM app, "user"
                    WHERE app.owner_id="user".id AND "user".pro=True;''')
         results = db.slave_session.execute(sql)
-        jobs = create_dict_jobs(results, get_app_stats, (10 * 60))
+        jobs_generator = create_dict_jobs(results, get_app_stats, (10 * 60))
+        jobs = []
+        for job in jobs_generator:
+            jobs.append(job)
 
         err_msg = "There should be only one job"
         assert len(jobs) == 1, err_msg
