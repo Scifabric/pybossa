@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from default import Test, assert_not_raises
-from pybossa.auth import require
+from pybossa.auth import ensure_authorized
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
 from mock import patch
@@ -39,11 +39,11 @@ class TestProjectAuthorization(Test):
         """Test anonymous users cannot crud categories"""
         category = CategoryFactory.build()
 
-        assert_raises(Unauthorized, require.ensure_authorized, 'create', category)
-        assert_not_raises(Exception, require.ensure_authorized, 'read', category)
-        assert_not_raises(Exception, require.ensure_authorized, 'read', Category)
-        assert_raises(Unauthorized, require.ensure_authorized, 'update', category)
-        assert_raises(Unauthorized, require.ensure_authorized, 'delete', category)
+        assert_raises(Unauthorized, ensure_authorized, 'create', category)
+        assert_not_raises(Exception, ensure_authorized, 'read', category)
+        assert_not_raises(Exception, ensure_authorized, 'read', Category)
+        assert_raises(Unauthorized, ensure_authorized, 'update', category)
+        assert_raises(Unauthorized, ensure_authorized, 'delete', category)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -51,11 +51,11 @@ class TestProjectAuthorization(Test):
         """Test authenticated users cannot crud categories"""
         category = CategoryFactory.build()
 
-        assert_raises(Forbidden, require.ensure_authorized, 'create', category)
-        assert_not_raises(Exception, require.ensure_authorized, 'read', category)
-        assert_not_raises(Exception, require.ensure_authorized, 'read', Category)
-        assert_raises(Forbidden, require.ensure_authorized, 'update', category)
-        assert_raises(Forbidden, require.ensure_authorized, 'delete', category)
+        assert_raises(Forbidden, ensure_authorized, 'create', category)
+        assert_not_raises(Exception, ensure_authorized, 'read', category)
+        assert_not_raises(Exception, ensure_authorized, 'read', Category)
+        assert_raises(Forbidden, ensure_authorized, 'update', category)
+        assert_raises(Forbidden, ensure_authorized, 'delete', category)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
@@ -63,8 +63,8 @@ class TestProjectAuthorization(Test):
         """Test admin user can crud categories"""
         category = CategoryFactory.build()
 
-        assert_not_raises(Forbidden, require.ensure_authorized, 'create', category)
-        assert_not_raises(Forbidden, require.ensure_authorized, 'read', category)
-        assert_not_raises(Forbidden, require.ensure_authorized, 'read', Category)
-        assert_not_raises(Forbidden, require.ensure_authorized, 'update', category)
-        assert_not_raises(Forbidden, require.ensure_authorized, 'delete', category)
+        assert_not_raises(Forbidden, ensure_authorized, 'create', category)
+        assert_not_raises(Forbidden, ensure_authorized, 'read', category)
+        assert_not_raises(Forbidden, ensure_authorized, 'read', Category)
+        assert_not_raises(Forbidden, ensure_authorized, 'update', category)
+        assert_not_raises(Forbidden, ensure_authorized, 'delete', category)

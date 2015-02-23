@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from default import Test, assert_not_raises
-from pybossa.auth import require
+from pybossa.auth import ensure_authorized
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
 from mock import patch
@@ -42,7 +42,7 @@ class TestBlogpostAuthorization(Test):
         app = AppFactory.create()
         blogpost = BlogpostFactory.build(app=app, owner=None)
 
-        assert_raises(Unauthorized, require.ensure_authorized, 'create', blogpost)
+        assert_raises(Unauthorized, ensure_authorized, 'create', blogpost)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -51,7 +51,7 @@ class TestBlogpostAuthorization(Test):
 
         app = AppFactory.create()
 
-        assert_raises(Unauthorized, require.ensure_authorized, 'create', Blogpost, app_id=app.id)
+        assert_raises(Unauthorized, ensure_authorized, 'create', Blogpost, app_id=app.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -59,7 +59,7 @@ class TestBlogpostAuthorization(Test):
         """Test anonymous users cannot create any blogposts"""
 
 
-        assert_raises(Unauthorized, require.ensure_authorized, 'create', Blogpost)
+        assert_raises(Unauthorized, ensure_authorized, 'create', Blogpost)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
@@ -72,7 +72,7 @@ class TestBlogpostAuthorization(Test):
         blogpost = BlogpostFactory.build(app=app, owner=admin)
 
         assert self.mock_admin.id != app.owner_id
-        assert_raises(Forbidden, require.ensure_authorized, 'create', blogpost)
+        assert_raises(Forbidden, ensure_authorized, 'create', blogpost)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
@@ -84,7 +84,7 @@ class TestBlogpostAuthorization(Test):
         app = AppFactory.create(owner=owner)
 
         assert self.mock_admin.id != app.owner.id
-        assert_raises(Forbidden, require.ensure_authorized, 'create', Blogpost, app_id=app.id)
+        assert_raises(Forbidden, ensure_authorized, 'create', Blogpost, app_id=app.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -96,7 +96,7 @@ class TestBlogpostAuthorization(Test):
         blogpost = BlogpostFactory.build(app=app, owner=owner)
 
         assert self.mock_authenticated.id == app.owner_id
-        assert_not_raises(Exception, require.ensure_authorized, 'create', blogpost)
+        assert_not_raises(Exception, ensure_authorized, 'create', blogpost)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -108,7 +108,7 @@ class TestBlogpostAuthorization(Test):
         app = AppFactory.create(owner=owner)
 
         assert self.mock_authenticated.id == app.owner.id
-        assert_not_raises(Exception, require.ensure_authorized, 'create', Blogpost, app_id=app.id)
+        assert_not_raises(Exception, ensure_authorized, 'create', Blogpost, app_id=app.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -122,7 +122,7 @@ class TestBlogpostAuthorization(Test):
                                           owner=another_user)
 
         assert self.mock_authenticated.id == app.owner_id
-        assert_raises(Forbidden, require.ensure_authorized, 'create', blogpost)
+        assert_raises(Forbidden, ensure_authorized, 'create', blogpost)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -132,7 +132,7 @@ class TestBlogpostAuthorization(Test):
         app = AppFactory.create()
         blogpost = BlogpostFactory.create(app=app)
 
-        assert_not_raises(Exception, require.ensure_authorized, 'read', blogpost)
+        assert_not_raises(Exception, ensure_authorized, 'read', blogpost)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -140,7 +140,7 @@ class TestBlogpostAuthorization(Test):
         """Test anonymous users can read blogposts of a given project"""
 
         app = AppFactory.create()
-        assert_not_raises(Exception, require.ensure_authorized, 'read', Blogpost, app_id=app.id)
+        assert_not_raises(Exception, ensure_authorized, 'read', Blogpost, app_id=app.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -150,7 +150,7 @@ class TestBlogpostAuthorization(Test):
         app = AppFactory.create(hidden=1)
         blogpost = BlogpostFactory.create(app=app)
 
-        assert_raises(Unauthorized, require.ensure_authorized, 'read', blogpost)
+        assert_raises(Unauthorized, ensure_authorized, 'read', blogpost)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -159,7 +159,7 @@ class TestBlogpostAuthorization(Test):
 
         app = AppFactory.create(hidden=1)
 
-        assert_raises(Unauthorized, require.ensure_authorized, 'read', Blogpost, app_id=app.id)
+        assert_raises(Unauthorized, ensure_authorized, 'read', Blogpost, app_id=app.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -171,7 +171,7 @@ class TestBlogpostAuthorization(Test):
         blogpost = BlogpostFactory.create(app=app)
 
         assert self.mock_authenticated.id != app.owner.id
-        assert_not_raises(Exception, require.ensure_authorized, 'read', blogpost)
+        assert_not_raises(Exception, ensure_authorized, 'read', blogpost)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -183,7 +183,7 @@ class TestBlogpostAuthorization(Test):
         user = UserFactory.create()
 
         assert self.mock_authenticated.id != app.owner.id
-        assert_not_raises(Exception, require.ensure_authorized, 'read', Blogpost, app_id=app.id)
+        assert_not_raises(Exception, ensure_authorized, 'read', Blogpost, app_id=app.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -196,7 +196,7 @@ class TestBlogpostAuthorization(Test):
         blogpost = BlogpostFactory.create(app=app)
 
         assert self.mock_authenticated.id != app.owner.id
-        assert_raises(Forbidden, require.ensure_authorized, 'read', blogpost)
+        assert_raises(Forbidden, ensure_authorized, 'read', blogpost)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -208,7 +208,7 @@ class TestBlogpostAuthorization(Test):
         user = UserFactory.create()
 
         assert self.mock_authenticated.id != app.owner.id
-        assert_raises(Forbidden, require.ensure_authorized, 'read', Blogpost, app_id=app.id)
+        assert_raises(Forbidden, ensure_authorized, 'read', Blogpost, app_id=app.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -220,7 +220,7 @@ class TestBlogpostAuthorization(Test):
         blogpost = BlogpostFactory.create(app=app)
 
         assert self.mock_authenticated.id == app.owner.id
-        assert_not_raises(Exception, require.ensure_authorized, 'read', blogpost)
+        assert_not_raises(Exception, ensure_authorized, 'read', blogpost)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -232,7 +232,7 @@ class TestBlogpostAuthorization(Test):
         app = AppFactory.create(owner=owner)
 
         assert self.mock_authenticated.id == app.owner.id
-        assert_not_raises(Exception, require.ensure_authorized, 'read', Blogpost, app_id=app.id)
+        assert_not_raises(Exception, ensure_authorized, 'read', Blogpost, app_id=app.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -245,7 +245,7 @@ class TestBlogpostAuthorization(Test):
         blogpost = BlogpostFactory.create(app=app)
 
         assert self.mock_authenticated.id == app.owner.id
-        assert_not_raises(Exception, require.ensure_authorized, 'read', blogpost)
+        assert_not_raises(Exception, ensure_authorized, 'read', blogpost)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -257,7 +257,7 @@ class TestBlogpostAuthorization(Test):
         app = AppFactory.create(owner=owner, hidden=1)
 
         assert self.mock_authenticated.id == app.owner.id
-        assert_not_raises(Exception, require.ensure_authorized, 'read', Blogpost, app_id=app.id)
+        assert_not_raises(Exception, ensure_authorized, 'read', Blogpost, app_id=app.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
@@ -269,7 +269,7 @@ class TestBlogpostAuthorization(Test):
         blogpost = BlogpostFactory.create(app=app)
 
         assert self.mock_admin.id != app.owner.id
-        assert_not_raises(Exception, require.ensure_authorized, 'read', blogpost)
+        assert_not_raises(Exception, ensure_authorized, 'read', blogpost)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
@@ -280,7 +280,7 @@ class TestBlogpostAuthorization(Test):
         app = AppFactory.create(hidden=1)
 
         assert self.mock_admin.id != app.owner.id
-        assert_not_raises(Exception, require.ensure_authorized, 'read', Blogpost, app_id=app.id)
+        assert_not_raises(Exception, ensure_authorized, 'read', Blogpost, app_id=app.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -289,7 +289,7 @@ class TestBlogpostAuthorization(Test):
 
         blogpost = BlogpostFactory.create()
 
-        assert_raises(Unauthorized, require.ensure_authorized, 'update', blogpost)
+        assert_raises(Unauthorized, ensure_authorized, 'update', blogpost)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
@@ -302,7 +302,7 @@ class TestBlogpostAuthorization(Test):
         blogpost = BlogpostFactory.create(app=app)
 
         assert self.mock_admin.id != blogpost.owner.id
-        assert_raises(Forbidden, require.ensure_authorized, 'update', blogpost)
+        assert_raises(Forbidden, ensure_authorized, 'update', blogpost)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -314,7 +314,7 @@ class TestBlogpostAuthorization(Test):
         blogpost = BlogpostFactory.create(app=app, owner=owner)
 
         assert self.mock_authenticated.id == blogpost.owner.id
-        assert_not_raises(Exception, require.ensure_authorized, 'update', blogpost)
+        assert_not_raises(Exception, ensure_authorized, 'update', blogpost)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -323,7 +323,7 @@ class TestBlogpostAuthorization(Test):
 
         blogpost = BlogpostFactory.create()
 
-        assert_raises(Unauthorized, require.ensure_authorized, 'delete', blogpost)
+        assert_raises(Unauthorized, ensure_authorized, 'delete', blogpost)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -335,7 +335,7 @@ class TestBlogpostAuthorization(Test):
 
         assert self.mock_authenticated.id != blogpost.owner.id
         assert not self.mock_authenticated.admin
-        assert_raises(Forbidden, require.ensure_authorized, 'delete', blogpost)
+        assert_raises(Forbidden, ensure_authorized, 'delete', blogpost)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -347,7 +347,7 @@ class TestBlogpostAuthorization(Test):
         blogpost = BlogpostFactory.create(app=app, owner=owner)
 
         assert self.mock_authenticated.id == blogpost.owner.id
-        assert_not_raises(Exception, require.ensure_authorized, 'delete', blogpost)
+        assert_not_raises(Exception, ensure_authorized, 'delete', blogpost)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
@@ -358,4 +358,4 @@ class TestBlogpostAuthorization(Test):
         blogpost = BlogpostFactory.create()
 
         assert self.mock_admin.id != blogpost.owner.id
-        assert_not_raises(Exception, require.ensure_authorized, 'delete', blogpost)
+        assert_not_raises(Exception, ensure_authorized, 'delete', blogpost)
