@@ -28,7 +28,10 @@ class TestEngageUsers(Test):
     @with_context
     def test_get_inactive_users_jobs_no_users(self):
         """Test JOB get without users returns empty list."""
-        jobs = get_inactive_users_jobs()
+        jobs_generator = get_inactive_users_jobs()
+        jobs = []
+        for job in jobs_generator:
+            jobs.append(job)
         msg = "There should not be any job."
         assert len(jobs) == 0,  msg
 
@@ -36,7 +39,11 @@ class TestEngageUsers(Test):
     def test_get_inactive_users_jobs_with_users(self):
         """Test JOB get with users returns empty list."""
         TaskRunFactory.create()
-        jobs = get_inactive_users_jobs()
+        jobs_generator = get_inactive_users_jobs()
+        jobs = []
+        for job in jobs_generator:
+            jobs.append(job)
+
         msg = "There should not be any job."
         assert len(jobs) == 0,  msg
 
@@ -47,7 +54,11 @@ class TestEngageUsers(Test):
         tr = TaskRunFactory.create(finish_time="2010-07-07T17:23:45.714210")
         user = user_repo.get(tr.user_id)
 
-        jobs = get_inactive_users_jobs()
+        jobs_generator = get_inactive_users_jobs()
+        jobs = []
+        for job in jobs_generator:
+            jobs.append(job)
+
         msg = "There should be one job."
         assert len(jobs) == 1,  msg
         job = jobs[0]
@@ -67,7 +78,11 @@ class TestEngageUsers(Test):
         user.subscribed = False
         user_repo.update(user)
 
-        jobs = get_inactive_users_jobs()
+        jobs_generator = get_inactive_users_jobs()
+        jobs = []
+        for job in jobs_generator:
+            jobs.append(job)
+
         msg = "There should be zero jobs."
         assert len(jobs) == 0,  msg
 
@@ -77,7 +92,11 @@ class TestNonContributors(Test):
     @with_context
     def test_get_non_contrib_users_jobs_no_users(self):
         """Test JOB get without users returns empty list."""
-        jobs = get_non_contributors_users_jobs()
+        jobs_generator = get_non_contributors_users_jobs()
+        jobs = []
+        for job in jobs_generator:
+            jobs.append(job)
+
         msg = "There should not be any job."
         assert len(jobs) == 0,  msg
 
@@ -86,7 +105,11 @@ class TestNonContributors(Test):
         """Test JOB get with users returns empty list."""
         TaskRunFactory.create()
         user = user_repo.get(1)
-        jobs = get_non_contributors_users_jobs()
+        jobs_generator = get_non_contributors_users_jobs()
+        jobs = []
+        for job in jobs_generator:
+            jobs.append(job)
+
         msg = "There should not be any job."
         assert len(jobs) == 1,  msg
         job = jobs[0]
@@ -100,7 +123,11 @@ class TestNonContributors(Test):
         TaskRunFactory.create()
         user = user_repo.get(1)
 
-        jobs = get_non_contributors_users_jobs()
+        jobs_generator = get_non_contributors_users_jobs()
+        jobs = []
+        for job in jobs_generator:
+            jobs.append(job)
+
         msg = "There should be one job."
         print jobs
         assert len(jobs) == 1,  msg
@@ -121,6 +148,10 @@ class TestNonContributors(Test):
         user.subscribed = False
         user_repo.update(user)
 
-        jobs = get_non_contributors_users_jobs()
+        jobs_generator = get_non_contributors_users_jobs()
+        jobs = []
+        for job in jobs_generator:
+            jobs.append(job)
+
         msg = "There should be zero jobs."
         assert len(jobs) == 0,  msg
