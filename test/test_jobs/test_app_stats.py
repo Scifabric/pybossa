@@ -52,7 +52,10 @@ class TestProjectsStats(Test):
         """Test JOB get project jobs works."""
         user = UserFactory.create(pro=True)
         app = AppFactory.create(owner=user)
-        jobs = get_project_jobs()
+        jobs_generator = get_project_jobs()
+        jobs = []
+        for job in jobs_generator:
+            jobs.append(job)
         err_msg = "There should be only one job"
 
         assert len(jobs) == 1, err_msg
