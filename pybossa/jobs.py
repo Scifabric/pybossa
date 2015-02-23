@@ -60,12 +60,9 @@ def schedule_priority_jobs(queue_name, interval):
     redis_conn = sentinel.master
 
     jobs_generator = get_scheduled_jobs()
-    print jobs_generator
-    print len(jobs_generator)
     n_jobs = 0
     queue = Queue(queue_name, connection=redis_conn)
     for job_gen in jobs_generator:
-        print job_gen
         for job in job_gen:
             if (job['queue'] == queue_name):
                 n_jobs += 1
