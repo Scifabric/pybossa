@@ -22,7 +22,6 @@ CSV Exporter module for exporting tasks and tasks results out of PyBossa
 
 from pybossa.exporter import Exporter
 import tempfile
-from StringIO import StringIO
 from pybossa.core import uploader, task_repo
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
@@ -32,6 +31,7 @@ import pybossa.model as model
 from werkzeug.datastructures import FileStorage
 from werkzeug.utils import secure_filename
 from flask import abort
+
 
 class CsvExporter(Exporter):
 
@@ -78,7 +78,8 @@ class CsvExporter(Exporter):
         for tr in getattr(task_repo, 'filter_%ss_by' % table)(app_id=id,
                                                               yielded=True):
             handle_row(writer, tr)
-        yield out.getvalue()
+        out.seek(0)
+        yield out.read()
 
     def _respond_csv(self, ty, id):
         try:
@@ -99,9 +100,9 @@ class CsvExporter(Exporter):
             try:
                 table, handle_row, test, msg = types[ty]
             except KeyError:
-                return abort(404) # TODO!
+                return abort(404)  # TODO!
 
-            out = StringIO()
+            out = tempfile.TemporaryFile()
             writer = UnicodeWriter(out)
             t = getattr(task_repo, 'get_%s_by' % ty)(app_id=id)
             if t is not None:
@@ -124,26 +125,30 @@ class CsvExporter(Exporter):
 
                 return self._get_csv(out, writer, ty, handle_row, id)
             else:
-                pass # TODO
-        except: # pragma: no cover
+                pass  # TODO
+        except:  # pragma: no cover
             raise
 
     def _make_zip(self, app, ty):
         name = self._app_name_latin_encoded(app)
         csv_task_generator = self._respond_csv(ty, app.id)
         if csv_task_generator is not None:
+            # TODO: use temp file from csv generation directly
             datafile = tempfile.NamedTemporaryFile()
             try:
                 for line in csv_task_generator:
                     datafile.write(str(line))
                 datafile.flush()
+                csv_task_generator.close()  # delete temp csv file
                 zipped_datafile = tempfile.NamedTemporaryFile()
                 try:
                     zip = self._zip_factory(zipped_datafile.name)
-                    zip.write(datafile.name, secure_filename('%s_%s.csv' % (name, ty)))
+                    zip.write(
+                        datafile.name, secure_filename('%s_%s.csv' % (name, ty)))
                     zip.close()
                     container = "user_%d" % app.owner_id
-                    file = FileStorage(filename=self.download_name(app, ty), stream=zipped_datafile)
+                    file = FileStorage(
+                        filename=self.download_name(app, ty), stream=zipped_datafile)
                     uploader.upload_file(file, container=container)
                 finally:
                     zipped_datafile.close()
