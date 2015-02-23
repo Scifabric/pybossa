@@ -28,7 +28,10 @@ class TestJobs(Test):
     def test_create_dict_jobs(self):
         """Test JOB create_dict_jobs works."""
         data = [{'id': 1, 'short_name': 'app'}]
-        jobs = create_dict_jobs(data, 'function')
+        jobs_gen = create_dict_jobs(data, 'function')
+        jobs = []
+        for j in jobs_gen:
+            jobs.append(j)
         assert len(jobs) == 1
         assert jobs[0]['name'] == 'function'
 
