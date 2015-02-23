@@ -43,13 +43,13 @@ assert auditlog
 
 _actions = ['create', 'read', 'update', 'delete']
 _auth_classes = {'app': app.AppAuth,
-                'auditlog': auditlog.AuditlogAuth,
-                'blogpost': blogpost.BlogpostAuth,
-                'category': category.CategoryAuth,
-                'task': task.TaskAuth,
-                'taskrun': taskrun.TaskRunAuth,
-                'token': token.TokenAuth,
-                'user': user.UserAuth}
+                 'auditlog': auditlog.AuditlogAuth,
+                 'blogpost': blogpost.BlogpostAuth,
+                 'category': category.CategoryAuth,
+                 'task': task.TaskAuth,
+                 'taskrun': taskrun.TaskRunAuth,
+                 'token': token.TokenAuth,
+                 'user': user.UserAuth}
 
 def is_authorized(user, action, resource, **kwargs):
     assert action in _actions, "%s is not a valid action" % action
