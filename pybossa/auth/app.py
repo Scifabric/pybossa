@@ -16,6 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
+
 class AppAuth(object):
 
     def can(self, user, action, taskrun=None):
@@ -40,4 +41,4 @@ class AppAuth(object):
 
     def _only_admin_or_owner(self, user, app):
         return (not user.is_anonymous() and
-                    (app.owner_id == user.id or user.admin))
+                (app.owner_id == user.id or user.admin))

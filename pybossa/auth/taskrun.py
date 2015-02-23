@@ -18,6 +18,7 @@
 
 from flask import abort
 
+
 class TaskRunAuth(object):
 
     def __init__(self, task_repo, project_repo):
@@ -29,7 +30,8 @@ class TaskRunAuth(object):
         return getattr(self, action)(user, taskrun)
 
     def _create(self, user, taskrun):
-        project = self.project_repo.get(self.task_repo.get_task(taskrun.task_id).app_id)
+        project_id = self.task_repo.get_task(taskrun.task_id).app_id
+        project = self.project_repo.get(project_id)
         if (user.is_anonymous() and
                 project.allow_anonymous_contributors is False):
             return False

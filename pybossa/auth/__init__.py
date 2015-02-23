@@ -40,7 +40,6 @@ assert blogpost
 assert auditlog
 
 
-
 _actions = ['create', 'read', 'update', 'delete']
 _auth_classes = {'app': app.AppAuth,
                  'auditlog': auditlog.AuditlogAuth,
@@ -50,6 +49,7 @@ _auth_classes = {'app': app.AppAuth,
                  'taskrun': taskrun.TaskRunAuth,
                  'token': token.TokenAuth,
                  'user': user.UserAuth}
+
 
 def is_authorized(user, action, resource, **kwargs):
     assert action in _actions, "%s is not a valid action" % action
@@ -61,6 +61,7 @@ def is_authorized(user, action, resource, **kwargs):
     auth = _authorizer_for(name.lower())
     return auth.can(user, action, resource, **kwargs)
 
+
 def ensure_authorized(action, resource, **kwargs):
     authorized = is_authorized(current_user, action, resource, **kwargs)
     if authorized is False:
@@ -69,6 +70,7 @@ def ensure_authorized(action, resource, **kwargs):
         else:
             raise abort(403)
     return authorized
+
 
 def _authorizer_for(resource_name):
     kwargs = {}
