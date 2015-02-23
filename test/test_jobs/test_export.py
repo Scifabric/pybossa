@@ -26,7 +26,11 @@ class TestExport(Test):
     def test_get_export_task_jobs(self):
         """Test JOB export task jobs works."""
         app = AppFactory.create()
-        jobs = get_export_task_jobs()
+        jobs_generator = get_export_task_jobs()
+        jobs = []
+        for job in jobs_generator:
+            jobs.append(job)
+
         msg = "There should be only one job."
         assert len(jobs) == 1, len(jobs)
         job = jobs[0]
