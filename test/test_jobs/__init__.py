@@ -45,10 +45,14 @@ class TestJobs(Test):
     @patch('pybossa.jobs.get_scheduled_jobs')
     def test_schedule_priority_jobs_same_queue_name(self, get_scheduled_jobs):
         """Test JOB schedule_priority_jobs same queue works."""
-        get_scheduled_jobs.return_value = self.jobs()
+        get_scheduled_jobs.return_value = jobs()
         queue_name = 'low'
         res = schedule_priority_jobs(queue_name, 10)
-        msg = "%s jobs in %s have been enqueued" % (len(self.jobs), queue_name)
+        all_jobs = []
+        for j in jobs():
+            for h in j:
+                all_jobs.append(h)
+        msg = "%s jobs in %s have been enqueued" % (len(all_jobs), queue_name)
         assert res == msg, res
 
     @with_context
