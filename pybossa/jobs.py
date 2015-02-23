@@ -59,18 +59,28 @@ def schedule_priority_jobs(queue_name, interval):
     from rq import Queue
     redis_conn = sentinel.master
 
-    jobs = get_scheduled_jobs()
+    jobs_generator = get_scheduled_jobs()
     n_jobs = 0
     queue = Queue(queue_name, connection=redis_conn)
-    for job in jobs:
-        if (job['queue'] == queue_name):
-            n_jobs += 1
-            queue.enqueue_call(func=job['name'],
-                               args=job['args'],
-                               kwargs=job['kwargs'],
-                               timeout=job['timeout'])
+    for job_gen in jobs_generator:
+        for job in job_gen:
+            if (job['queue'] == queue_name):
+                n_jobs += 1
+                queue.enqueue_call(func=job['name'],
+                                   args=job['args'],
+                                   kwargs=job['kwargs'],
+                                   timeout=job['timeout'])
     msg = "%s jobs in %s have been enqueued" % (n_jobs, queue_name)
     return msg
+
+def get_default_jobs(): # pragma: no cover
+    """Return default jobs."""
+    yield dict(name=warm_up_stats, args=[], kwargs={},
+               timeout=(10 * MINUTE), queue='high')
+    yield dict(name=warn_old_project_owners, args=[], kwargs={},
+               timeout=(10 * MINUTE), queue='low')
+    yield dict(name=warm_cache, args=[], kwargs={},
+               timeout=(10 * MINUTE), queue='super')
 
 
 def get_scheduled_jobs(): # pragma: no cover
@@ -78,13 +88,7 @@ def get_scheduled_jobs(): # pragma: no cover
     # Default ones
     # A job is a dict with the following format: dict(name, args, kwargs,
     # timeout, queue)
-    jobs = [
-        dict(name=warm_up_stats, args=[], kwargs={},
-             timeout=(10 * MINUTE), queue='high'),
-        dict(name=warn_old_project_owners, args=[], kwargs={},
-             timeout=(10 * MINUTE), queue='low'),
-        dict(name=warm_cache, args=[], kwargs={},
-             timeout=(10 * MINUTE), queue='super')]
+    jobs = get_default_jobs()
     # Create ZIPs for all projects
     zip_jobs = get_export_task_jobs()
     # Based on type of user
@@ -93,8 +97,8 @@ def get_scheduled_jobs(): # pragma: no cover
     # User engagement jobs
     engage_jobs = get_inactive_users_jobs()
     non_contrib_jobs = get_non_contributors_users_jobs()
-    return zip_jobs + jobs + project_jobs + autoimport_jobs + \
-           engage_jobs + non_contrib_jobs
+    return [zip_jobs, jobs, project_jobs, autoimport_jobs, \
+           engage_jobs, non_contrib_jobs]
 
 
 def get_export_task_jobs():
@@ -102,19 +106,17 @@ def get_export_task_jobs():
     from pybossa.core import db, user_repo
     from pybossa.model.app import App
     apps = db.slave_session.query(App).all()
-    # Append all ZIP generation for each app as a task
-    jobs = []
     for app_x in apps:
         checkuser = user_repo.get(app_x.owner_id)
         # Check if Pro User, if yes use a higher priority queue
         queue = 'low'
         if checkuser.pro:
             queue = 'high'
-        jobs.append(dict(name=project_export,
-                         args=[app_x.id], kwargs={},
-                         timeout=(10 * MINUTE),
-                         queue=queue))
-    return jobs
+        job = dict(name=project_export,
+                   args=[app_x.id], kwargs={},
+                   timeout=(10 * MINUTE),
+                   queue=queue)
+        yield job
 
 
 def project_export(id):
@@ -136,29 +138,27 @@ def get_project_jobs():
 
 
 def create_dict_jobs(data, function, timeout=(10 * MINUTE), queue='low'):
-    jobs = []
     for d in data:
-        jobs.append(dict(name=function,
-                         args=[d['id'], d['short_name']], kwargs={},
-                         timeout=timeout,
-                         queue=queue))
-    return jobs
+        jobs =  dict(name=function,
+                     args=[d['id'], d['short_name']], kwargs={},
+                     timeout=timeout,
+                     queue=queue)
+        yield jobs
 
 
 def get_autoimport_jobs(queue='low'):
     from pybossa.core import project_repo
     import pybossa.cache.apps as cached_apps
     pro_user_projects = cached_apps.get_from_pro_user()
-    jobs = []
     for project_dict in pro_user_projects:
         project = project_repo.get(project_dict['id'])
         if project.has_autoimporter():
-            jobs.append(dict(name=import_tasks,
-                             args=[project.id],
-                             kwargs=project.get_autoimporter(),
-                             timeout=(10 * MINUTE),
-                             queue=queue))
-    return jobs
+            job = dict(name=import_tasks,
+                       args=[project.id],
+                       kwargs=project.get_autoimporter(),
+                       timeout=(10 * MINUTE),
+                       queue=queue)
+            yield job
 
 
 @with_cache_disabled
@@ -344,7 +344,6 @@ def get_inactive_users_jobs(queue='quaterly'):
                AND TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
                <= NOW() - '3 month'::INTERVAL GROUP BY task_run.user_id;''')
     results = db.slave_session.execute(sql)
-    jobs = []
     for row in results:
 
         user = User.query.get(row.user_id)
@@ -368,8 +367,7 @@ def get_inactive_users_jobs(queue='quaterly'):
                        kwargs={},
                        timeout=(10 * MINUTE),
                        queue=queue)
-            jobs.append(job)
-    return jobs
+            yield job
 
 def get_non_contributors_users_jobs(queue='quaterly'):
     """Return a list of users that have never contributed to a project."""
@@ -382,7 +380,6 @@ def get_non_contributors_users_jobs(queue='quaterly'):
                NOT EXISTS (SELECT user_id FROM task_run
                WHERE task_run.user_id="user".id)''')
     results = db.slave_session.execute(sql)
-    jobs = []
     for row in results:
         user = User.query.get(row.id)
 
@@ -404,5 +401,4 @@ def get_non_contributors_users_jobs(queue='quaterly'):
                        kwargs={},
                        timeout=(10 * MINUTE),
                        queue=queue)
-            jobs.append(job)
-    return jobs
+            yield job

@@ -35,7 +35,10 @@ class TestProjectsStats(Test):
         sql = text('''SELECT app.id, app.short_name FROM app, "user"
                    WHERE app.owner_id="user".id AND "user".pro=True;''')
         results = db.slave_session.execute(sql)
-        jobs = create_dict_jobs(results, get_app_stats, (10 * 60))
+        jobs_generator = create_dict_jobs(results, get_app_stats, (10 * 60))
+        jobs = []
+        for job in jobs_generator:
+            jobs.append(job)
 
         err_msg = "There should be only one job"
         assert len(jobs) == 1, err_msg
@@ -49,7 +52,10 @@ class TestProjectsStats(Test):
         """Test JOB get project jobs works."""
         user = UserFactory.create(pro=True)
         app = AppFactory.create(owner=user)
-        jobs = get_project_jobs()
+        jobs_generator = get_project_jobs()
+        jobs = []
+        for job in jobs_generator:
+            jobs.append(job)
         err_msg = "There should be only one job"
 
         assert len(jobs) == 1, err_msg
@@ -66,7 +72,10 @@ class TestProjectsStats(Test):
     def test_get_project_jobs_for_non_pro_users(self):
         """Test JOB get project jobs works for non pro users."""
         AppFactory.create()
-        jobs = get_project_jobs()
+        jobs_generator = get_project_jobs()
+        jobs = []
+        for job in jobs_generator:
+            jobs.append(job)
 
         err_msg = "There should be only 0 jobs"
         assert len(jobs) == 0, err_msg
