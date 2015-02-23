@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from default import Test, assert_not_raises
-from pybossa.auth import ensure_authorized
+from pybossa.auth import ensure_authorized_to
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
 from mock import patch
@@ -42,7 +42,7 @@ class TestAuditlogAuthorization(Test):
 
         log = AuditlogFactory.create()
 
-        assert_raises(Unauthorized, ensure_authorized, 'read', log)
+        assert_raises(Unauthorized, ensure_authorized_to, 'read', log)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -51,7 +51,7 @@ class TestAuditlogAuthorization(Test):
 
         app = AppFactory.create()
 
-        assert_raises(Unauthorized, ensure_authorized, 'read', Auditlog, app_id=app.id)
+        assert_raises(Unauthorized, ensure_authorized_to, 'read', Auditlog, app_id=app.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -64,7 +64,7 @@ class TestAuditlogAuthorization(Test):
 
         assert self.mock_authenticated.id == app.owner_id
 
-        assert_raises(Forbidden, ensure_authorized, 'read', log)
+        assert_raises(Forbidden, ensure_authorized_to, 'read', log)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -74,7 +74,7 @@ class TestAuditlogAuthorization(Test):
         owner = UserFactory.create_batch(2)[1]
         app = AppFactory.create(owner=owner)
 
-        assert_raises(Forbidden, ensure_authorized, 'read', Auditlog, app_id=app.id)
+        assert_raises(Forbidden, ensure_authorized_to, 'read', Auditlog, app_id=app.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_pro)
@@ -86,7 +86,7 @@ class TestAuditlogAuthorization(Test):
         log = AuditlogFactory.create(app_id=app.id)
 
         assert self.mock_pro.id == app.owner_id
-        assert_not_raises(Exception, ensure_authorized, 'read', log)
+        assert_not_raises(Exception, ensure_authorized_to, 'read', log)
 
 
     @patch('pybossa.auth.current_user', new=mock_pro)
@@ -97,7 +97,7 @@ class TestAuditlogAuthorization(Test):
         app = AppFactory.create(owner=owner)
 
         assert self.mock_pro.id == app.owner_id
-        assert_not_raises(Exception, ensure_authorized, 'read', Auditlog, app_id=app.id)
+        assert_not_raises(Exception, ensure_authorized_to, 'read', Auditlog, app_id=app.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_pro)
@@ -109,7 +109,7 @@ class TestAuditlogAuthorization(Test):
         log = AuditlogFactory.create(app_id=app.id)
 
         assert self.mock_pro.id != app.owner_id
-        assert_raises(Forbidden, ensure_authorized, 'read', log)
+        assert_raises(Forbidden, ensure_authorized_to, 'read', log)
 
 
     @patch('pybossa.auth.current_user', new=mock_pro)
@@ -120,7 +120,7 @@ class TestAuditlogAuthorization(Test):
         app = AppFactory.create(owner=users[0])
 
         assert self.mock_pro.id != app.owner_id
-        assert_raises(Forbidden, ensure_authorized, 'read', Auditlog, app_id=app.id)
+        assert_raises(Forbidden, ensure_authorized_to, 'read', Auditlog, app_id=app.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
@@ -132,7 +132,7 @@ class TestAuditlogAuthorization(Test):
         log = AuditlogFactory.create(app_id=app.id)
 
         assert self.mock_admin.id != app.owner_id
-        assert_not_raises(Exception, ensure_authorized, 'read', log)
+        assert_not_raises(Exception, ensure_authorized_to, 'read', log)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
@@ -143,7 +143,7 @@ class TestAuditlogAuthorization(Test):
         app = AppFactory.create(owner=owner)
 
         assert self.mock_admin.id != app.owner_id
-        assert_not_raises(Exception, ensure_authorized, 'read', Auditlog, app_id=app.id)
+        assert_not_raises(Exception, ensure_authorized_to, 'read', Auditlog, app_id=app.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -152,9 +152,9 @@ class TestAuditlogAuthorization(Test):
 
         log = Auditlog()
 
-        assert_raises(Unauthorized, ensure_authorized, 'create', log)
-        assert_raises(Unauthorized, ensure_authorized, 'update', log)
-        assert_raises(Unauthorized, ensure_authorized, 'delete', log)
+        assert_raises(Unauthorized, ensure_authorized_to, 'create', log)
+        assert_raises(Unauthorized, ensure_authorized_to, 'update', log)
+        assert_raises(Unauthorized, ensure_authorized_to, 'delete', log)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -163,9 +163,9 @@ class TestAuditlogAuthorization(Test):
 
         log = Auditlog()
 
-        assert_raises(Forbidden, ensure_authorized, 'create', log)
-        assert_raises(Forbidden, ensure_authorized, 'update', log)
-        assert_raises(Forbidden, ensure_authorized, 'delete', log)
+        assert_raises(Forbidden, ensure_authorized_to, 'create', log)
+        assert_raises(Forbidden, ensure_authorized_to, 'update', log)
+        assert_raises(Forbidden, ensure_authorized_to, 'delete', log)
 
 
     @patch('pybossa.auth.current_user', new=mock_pro)
@@ -174,9 +174,9 @@ class TestAuditlogAuthorization(Test):
 
         log = Auditlog()
 
-        assert_raises(Forbidden, ensure_authorized, 'create', log)
-        assert_raises(Forbidden, ensure_authorized, 'update', log)
-        assert_raises(Forbidden, ensure_authorized, 'delete', log)
+        assert_raises(Forbidden, ensure_authorized_to, 'create', log)
+        assert_raises(Forbidden, ensure_authorized_to, 'update', log)
+        assert_raises(Forbidden, ensure_authorized_to, 'delete', log)
 
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admin_user_cannot_crud_auditlog(self):
@@ -184,6 +184,6 @@ class TestAuditlogAuthorization(Test):
 
         log = Auditlog()
 
-        assert_raises(Forbidden, ensure_authorized, 'create', log)
-        assert_raises(Forbidden, ensure_authorized, 'update', log)
-        assert_raises(Forbidden, ensure_authorized, 'delete', log)
+        assert_raises(Forbidden, ensure_authorized_to, 'create', log)
+        assert_raises(Forbidden, ensure_authorized_to, 'update', log)
+        assert_raises(Forbidden, ensure_authorized_to, 'delete', log)

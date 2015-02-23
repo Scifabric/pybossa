@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from default import Test, assert_not_raises
-from pybossa.auth import ensure_authorized
+from pybossa.auth import ensure_authorized_to
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
 from mock import patch
@@ -42,11 +42,11 @@ class TestTaskAuthorization(Test):
         app = AppFactory.create(owner=user)
         task = TaskFactory.create(app=app)
 
-        assert_raises(Unauthorized, ensure_authorized, 'create', task)
-        assert_not_raises(Forbidden, ensure_authorized, 'read', task)
-        assert_not_raises(Forbidden, ensure_authorized, 'read', Task)
-        assert_raises(Unauthorized, ensure_authorized, 'update', task)
-        assert_raises(Unauthorized, ensure_authorized, 'delete', task)
+        assert_raises(Unauthorized, ensure_authorized_to, 'create', task)
+        assert_not_raises(Forbidden, ensure_authorized_to, 'read', task)
+        assert_not_raises(Forbidden, ensure_authorized_to, 'read', Task)
+        assert_raises(Unauthorized, ensure_authorized_to, 'update', task)
+        assert_raises(Unauthorized, ensure_authorized_to, 'delete', task)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -58,11 +58,11 @@ class TestTaskAuthorization(Test):
         task = TaskFactory.create(app=app)
 
         assert self.mock_authenticated.id == owner.id
-        assert_not_raises(Forbidden, ensure_authorized, 'create', task)
-        assert_not_raises(Forbidden, ensure_authorized, 'read', task)
-        assert_not_raises(Forbidden, ensure_authorized, 'read', Task)
-        assert_not_raises(Forbidden, ensure_authorized, 'update', task)
-        assert_not_raises(Forbidden, ensure_authorized, 'delete', task)
+        assert_not_raises(Forbidden, ensure_authorized_to, 'create', task)
+        assert_not_raises(Forbidden, ensure_authorized_to, 'read', task)
+        assert_not_raises(Forbidden, ensure_authorized_to, 'read', Task)
+        assert_not_raises(Forbidden, ensure_authorized_to, 'update', task)
+        assert_not_raises(Forbidden, ensure_authorized_to, 'delete', task)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -74,11 +74,11 @@ class TestTaskAuthorization(Test):
         task = TaskFactory.create(app=app)
 
         assert self.mock_authenticated.id != owner.id
-        assert_raises(Forbidden, ensure_authorized, 'create', task)
-        assert_not_raises(Forbidden, ensure_authorized, 'read', task)
-        assert_not_raises(Forbidden, ensure_authorized, 'read', Task)
-        assert_raises(Forbidden, ensure_authorized, 'update', task)
-        assert_raises(Forbidden, ensure_authorized, 'delete', task)
+        assert_raises(Forbidden, ensure_authorized_to, 'create', task)
+        assert_not_raises(Forbidden, ensure_authorized_to, 'read', task)
+        assert_not_raises(Forbidden, ensure_authorized_to, 'read', Task)
+        assert_raises(Forbidden, ensure_authorized_to, 'update', task)
+        assert_raises(Forbidden, ensure_authorized_to, 'delete', task)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
@@ -90,8 +90,8 @@ class TestTaskAuthorization(Test):
         task = TaskFactory.create(app=app)
 
         assert self.mock_admin.id != owner.id
-        assert_not_raises(Forbidden, ensure_authorized, 'create', task)
-        assert_not_raises(Forbidden, ensure_authorized, 'read', task)
-        assert_not_raises(Forbidden, ensure_authorized, 'read', Task)
-        assert_not_raises(Forbidden, ensure_authorized, 'update', task)
-        assert_not_raises(Forbidden, ensure_authorized, 'delete', task)
+        assert_not_raises(Forbidden, ensure_authorized_to, 'create', task)
+        assert_not_raises(Forbidden, ensure_authorized_to, 'read', task)
+        assert_not_raises(Forbidden, ensure_authorized_to, 'read', Task)
+        assert_not_raises(Forbidden, ensure_authorized_to, 'update', task)
+        assert_not_raises(Forbidden, ensure_authorized_to, 'delete', task)

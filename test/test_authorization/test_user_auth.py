@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from default import Test, assert_not_raises
-from pybossa.auth import ensure_authorized
+from pybossa.auth import ensure_authorized_to
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
 from mock import patch
@@ -37,65 +37,65 @@ class TestUserAuthorization(Test):
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_create(self):
         """Test anonymous users cannot create users"""
-        assert_raises(Unauthorized, ensure_authorized, 'create', User)
+        assert_raises(Unauthorized, ensure_authorized_to, 'create', User)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_cannot_create(self):
         """Test authenticated users cannot create users"""
-        assert_raises(Forbidden, ensure_authorized, 'create', User)
+        assert_raises(Forbidden, ensure_authorized_to, 'create', User)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admins_can_create(self):
         """Test admins users can create users"""
-        assert_not_raises(Exception, ensure_authorized, 'create', User)
+        assert_not_raises(Exception, ensure_authorized_to, 'create', User)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_can_read(self):
         """Test anonymous users can read users"""
-        assert_not_raises(Exception, ensure_authorized, 'read', User)
+        assert_not_raises(Exception, ensure_authorized_to, 'read', User)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_can_read(self):
         """Test authenticated users can read users"""
-        assert_not_raises(Exception, ensure_authorized, 'read', User)
+        assert_not_raises(Exception, ensure_authorized_to, 'read', User)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admins_can_read(self):
         """Test admins users can read users"""
-        assert_not_raises(Exception, ensure_authorized, 'read', User)
+        assert_not_raises(Exception, ensure_authorized_to, 'read', User)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_can_read_given_user(self):
         """Test anonymous users can read a given user"""
         user = UserFactory.create()
-        assert_not_raises(Exception, ensure_authorized, 'read', user)
+        assert_not_raises(Exception, ensure_authorized_to, 'read', user)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_can_read_given_user(self):
         """Test authenticated users can read a given user"""
         user = UserFactory.create()
-        assert_not_raises(Exception, ensure_authorized, 'read', user)
+        assert_not_raises(Exception, ensure_authorized_to, 'read', user)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
     def test_admins_can_read_given_user(self):
         """Test admins users can read a given user"""
         user = UserFactory.create()
-        assert_not_raises(Exception, ensure_authorized, 'read', user)
+        assert_not_raises(Exception, ensure_authorized_to, 'read', user)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_update_given_user(self):
         """Test anonymous users cannot update a given user"""
         user = UserFactory.create()
-        assert_raises(Unauthorized, ensure_authorized, 'update', user)
+        assert_raises(Unauthorized, ensure_authorized_to, 'update', user)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -104,7 +104,7 @@ class TestUserAuthorization(Test):
         user = UserFactory.create()
 
         assert user.id != self.mock_authenticated.id, user.id
-        assert_raises(Forbidden, ensure_authorized, 'update', user)
+        assert_raises(Forbidden, ensure_authorized_to, 'update', user)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -113,7 +113,7 @@ class TestUserAuthorization(Test):
         user = UserFactory.create_batch(2)[1]
 
         assert user.id == self.mock_authenticated.id, user.id
-        assert_not_raises(Exception, ensure_authorized, 'update', user)
+        assert_not_raises(Exception, ensure_authorized_to, 'update', user)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
@@ -124,14 +124,14 @@ class TestUserAuthorization(Test):
 
         assert himself.id == self.mock_admin.id
         assert other_user.id != self.mock_admin.id
-        assert_not_raises(Exception, ensure_authorized, 'update', other_user)
+        assert_not_raises(Exception, ensure_authorized_to, 'update', other_user)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_delete_given_user(self):
         """Test anonymous users cannot delete a given user"""
         user = UserFactory.create()
-        assert_raises(Unauthorized, ensure_authorized, 'delete', user)
+        assert_raises(Unauthorized, ensure_authorized_to, 'delete', user)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -140,7 +140,7 @@ class TestUserAuthorization(Test):
         user = UserFactory.create()
 
         assert user.id != self.mock_authenticated.id, user.id
-        assert_raises(Forbidden, ensure_authorized, 'delete', user)
+        assert_raises(Forbidden, ensure_authorized_to, 'delete', user)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -149,7 +149,7 @@ class TestUserAuthorization(Test):
         user = UserFactory.create_batch(2)[1]
 
         assert user.id == self.mock_authenticated.id, user.id
-        assert_not_raises(Exception, ensure_authorized, 'delete', user)
+        assert_not_raises(Exception, ensure_authorized_to, 'delete', user)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
@@ -160,4 +160,4 @@ class TestUserAuthorization(Test):
 
         assert himself.id == self.mock_admin.id
         assert other_user.id != self.mock_admin.id
-        assert_not_raises(Exception, ensure_authorized, 'delete', other_user)
+        assert_not_raises(Exception, ensure_authorized_to, 'delete', other_user)

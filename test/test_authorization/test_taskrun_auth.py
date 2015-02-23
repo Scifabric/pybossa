@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from default import Test, assert_not_raises
-from pybossa.auth import ensure_authorized
+from pybossa.auth import ensure_authorized_to
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
 from mock import patch
@@ -43,7 +43,7 @@ class TestTaskrunAuthorization(Test):
         task = TaskFactory.create()
         taskrun = AnonymousTaskRunFactory.build(task=task)
 
-        assert_not_raises(Exception, ensure_authorized, 'create', taskrun)
+        assert_not_raises(Exception, ensure_authorized_to, 'create', taskrun)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -55,7 +55,7 @@ class TestTaskrunAuthorization(Test):
         taskrun1 = AnonymousTaskRunFactory.create(task=task)
         taskrun2 = AnonymousTaskRunFactory.build(task=task)
 
-        assert_raises(Forbidden, ensure_authorized, 'create', taskrun2)
+        assert_raises(Forbidden, ensure_authorized_to, 'create', taskrun2)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -68,7 +68,7 @@ class TestTaskrunAuthorization(Test):
         taskrun2 = AnonymousTaskRunFactory.build(task_id=tasks[1].id)
 
         assert_not_raises(Exception,
-                          ensure_authorized, 'create', taskrun2)
+                          ensure_authorized_to, 'create', taskrun2)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -80,7 +80,7 @@ class TestTaskrunAuthorization(Test):
         task = TaskFactory.create(app=project)
         taskrun = AnonymousTaskRunFactory.build(task=task)
 
-        assert_raises(Unauthorized, ensure_authorized, 'create', taskrun)
+        assert_raises(Unauthorized, ensure_authorized_to, 'create', taskrun)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -93,7 +93,7 @@ class TestTaskrunAuthorization(Test):
                                        user_id=self.mock_authenticated.id)
 
         assert self.mock_authenticated.id == taskrun.user_id, taskrun
-        assert_not_raises(Exception, ensure_authorized, 'create', taskrun)
+        assert_not_raises(Exception, ensure_authorized_to, 'create', taskrun)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -106,7 +106,7 @@ class TestTaskrunAuthorization(Test):
         taskrun2 = TaskRunFactory.build(task=task, user=taskrun1.user)
 
         assert self.mock_authenticated.id == taskrun1.user.id
-        assert_raises(Forbidden, ensure_authorized, 'create', taskrun2)
+        assert_raises(Forbidden, ensure_authorized_to, 'create', taskrun2)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -121,7 +121,7 @@ class TestTaskrunAuthorization(Test):
 
         assert self.mock_authenticated.id == taskrun2.user_id
         assert_not_raises(Exception,
-                          ensure_authorized, 'create', taskrun2)
+                          ensure_authorized_to, 'create', taskrun2)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -134,7 +134,7 @@ class TestTaskrunAuthorization(Test):
         taskrun = TaskRunFactory.build(task_id=task.id)
 
         assert_not_raises(Exception,
-                          ensure_authorized, 'create', taskrun)
+                          ensure_authorized_to, 'create', taskrun)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -145,9 +145,9 @@ class TestTaskrunAuthorization(Test):
         user_taskrun = TaskRunFactory.create()
 
         assert_not_raises(Exception,
-                          ensure_authorized, 'read', anonymous_taskrun)
+                          ensure_authorized_to, 'read', anonymous_taskrun)
         assert_not_raises(Exception,
-                          ensure_authorized, 'read', user_taskrun)
+                          ensure_authorized_to, 'read', user_taskrun)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -161,11 +161,11 @@ class TestTaskrunAuthorization(Test):
         assert self.mock_authenticated.id == own_taskrun.user.id
         assert self.mock_authenticated.id != other_users_taskrun.user.id
         assert_not_raises(Exception,
-                          ensure_authorized, 'read', anonymous_taskrun)
+                          ensure_authorized_to, 'read', anonymous_taskrun)
         assert_not_raises(Exception,
-                          ensure_authorized, 'read', other_users_taskrun)
+                          ensure_authorized_to, 'read', other_users_taskrun)
         assert_not_raises(Exception,
-                          ensure_authorized, 'read', own_taskrun)
+                          ensure_authorized_to, 'read', own_taskrun)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -175,7 +175,7 @@ class TestTaskrunAuthorization(Test):
         anonymous_taskrun = AnonymousTaskRunFactory.create()
 
         assert_raises(Unauthorized,
-                      ensure_authorized, 'update', anonymous_taskrun)
+                      ensure_authorized_to, 'update', anonymous_taskrun)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -185,7 +185,7 @@ class TestTaskrunAuthorization(Test):
         anonymous_taskrun = AnonymousTaskRunFactory.create()
 
         assert_raises(Forbidden,
-                      ensure_authorized, 'update', anonymous_taskrun)
+                      ensure_authorized_to, 'update', anonymous_taskrun)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
@@ -195,7 +195,7 @@ class TestTaskrunAuthorization(Test):
         anonymous_taskrun = AnonymousTaskRunFactory.create()
 
         assert_raises(Forbidden,
-                      ensure_authorized, 'update', anonymous_taskrun)
+                      ensure_authorized_to, 'update', anonymous_taskrun)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -205,7 +205,7 @@ class TestTaskrunAuthorization(Test):
         user_taskrun = TaskRunFactory.create()
 
         assert_raises(Unauthorized, 
-                      ensure_authorized, 'update', user_taskrun)
+                      ensure_authorized_to, 'update', user_taskrun)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -218,9 +218,9 @@ class TestTaskrunAuthorization(Test):
         assert self.mock_authenticated.id == own_taskrun.user.id
         assert self.mock_authenticated.id != other_users_taskrun.user.id
         assert_raises(Forbidden,
-                      ensure_authorized, 'update', own_taskrun)
+                      ensure_authorized_to, 'update', own_taskrun)
         assert_raises(Forbidden,
-                      ensure_authorized, 'update', other_users_taskrun)
+                      ensure_authorized_to, 'update', other_users_taskrun)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
@@ -231,7 +231,7 @@ class TestTaskrunAuthorization(Test):
 
         assert self.mock_admin.id != user_taskrun.user.id
         assert_raises(Forbidden,
-                      ensure_authorized, 'update', user_taskrun)
+                      ensure_authorized_to, 'update', user_taskrun)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -241,7 +241,7 @@ class TestTaskrunAuthorization(Test):
         anonymous_taskrun = AnonymousTaskRunFactory.create()
 
         assert_raises(Unauthorized,
-                      ensure_authorized, 'delete', anonymous_taskrun)
+                      ensure_authorized_to, 'delete', anonymous_taskrun)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -251,7 +251,7 @@ class TestTaskrunAuthorization(Test):
         anonymous_taskrun = AnonymousTaskRunFactory.create()
 
         assert_raises(Forbidden,
-                      ensure_authorized, 'delete', anonymous_taskrun)
+                      ensure_authorized_to, 'delete', anonymous_taskrun)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
@@ -261,7 +261,7 @@ class TestTaskrunAuthorization(Test):
         anonymous_taskrun = AnonymousTaskRunFactory.create()
 
         assert_not_raises(Exception,
-                          ensure_authorized, 'delete', anonymous_taskrun)
+                          ensure_authorized_to, 'delete', anonymous_taskrun)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
@@ -271,7 +271,7 @@ class TestTaskrunAuthorization(Test):
         user_taskrun = TaskRunFactory.create()
 
         assert_raises(Unauthorized,
-                      ensure_authorized, 'delete', user_taskrun)
+                      ensure_authorized_to, 'delete', user_taskrun)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -285,9 +285,9 @@ class TestTaskrunAuthorization(Test):
         assert self.mock_authenticated.id == own_taskrun.user.id
         assert self.mock_authenticated.id != other_users_taskrun.user.id
         assert_not_raises(Exception,
-                          ensure_authorized, 'delete', own_taskrun)
+                          ensure_authorized_to, 'delete', own_taskrun)
         assert_raises(Forbidden,
-                      ensure_authorized, 'delete', other_users_taskrun)
+                      ensure_authorized_to, 'delete', other_users_taskrun)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
@@ -298,4 +298,4 @@ class TestTaskrunAuthorization(Test):
 
         assert self.mock_admin.id != user_taskrun.user.id, user_taskrun.user.id
         assert_not_raises(Exception,
-                          ensure_authorized, 'delete', user_taskrun)
+                          ensure_authorized_to, 'delete', user_taskrun)

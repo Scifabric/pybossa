@@ -46,7 +46,7 @@ from pybossa.util import Pagination, pretty_date
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
 from pybossa.cache import apps as cached_apps
-from pybossa.auth import ensure_authorized
+from pybossa.auth import ensure_authorized_to
 from pybossa.jobs import send_mail
 from pybossa.core import user_repo
 
@@ -409,7 +409,7 @@ def update_profile(name):
     user = user_repo.get_by_name(name)
     if not user:
         return abort(404)
-    ensure_authorized('update', user)
+    ensure_authorized_to('update', user)
     show_passwd_form = True
     if user.twitter_user_id or user.google_user_id or user.facebook_user_id:
         show_passwd_form = False
@@ -691,7 +691,7 @@ def reset_api_key(name):
     user = user_repo.get_by_name(name)
     if not user:
         return abort(404)
-    ensure_authorized('update', user)
+    ensure_authorized_to('update', user)
     title = ("User: %s &middot; Settings"
              "- Reset API KEY") % current_user.fullname
     user.api_key = model.make_uuid()

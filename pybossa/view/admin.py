@@ -33,7 +33,7 @@ from pybossa.model.category import Category
 from pybossa.util import admin_required, UnicodeWriter
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
-from pybossa.auth import ensure_authorized
+from pybossa.auth import ensure_authorized_to
 from pybossa.core import project_repo, user_repo
 import json
 from StringIO import StringIO
@@ -79,7 +79,7 @@ def featured(app_id=None):
         else:
             app = project_repo.get(app_id)
             if app:
-                ensure_authorized('update', app)
+                ensure_authorized_to('update', app)
                 if request.method == 'POST':
                     if app.featured is True:
                         msg = "App.id %s already featured" % app_id
@@ -116,7 +116,7 @@ def users(user_id=None):
     if request.method == 'POST' and form.user.data:
         query = form.user.data
         found = [user for user in user_repo.search_by_name(query) if user.id != current_user.id]
-        [ensure_authorized('update', found_user) for found_user in found]
+        [ensure_authorized_to('update', found_user) for found_user in found]
         if not found:
             flash("<strong>Ooops!</strong> We didn't find a user "
                   "matching your query: <strong>%s</strong>" % form.user.data)
@@ -197,7 +197,7 @@ def add_admin(user_id=None):
         if user_id:
             user = user_repo.get(user_id)
             if user:
-                ensure_authorized('update', user)
+                ensure_authorized_to('update', user)
                 user.admin = True
                 user_repo.update(user)
                 return redirect(url_for(".users"))
@@ -218,7 +218,7 @@ def del_admin(user_id=None):
         if user_id:
             user = user_repo.get(user_id)
             if user:
-                ensure_authorized('update', user)
+                ensure_authorized_to('update', user)
                 user.admin = False
                 user_repo.update(user)
                 return redirect(url_for('.users'))
@@ -240,10 +240,10 @@ def categories():
     """List Categories"""
     try:
         if request.method == 'GET':
-            ensure_authorized('read', Category)
+            ensure_authorized_to('read', Category)
             form = CategoryForm()
         if request.method == 'POST':
-            ensure_authorized('create', Category)
+            ensure_authorized_to('create', Category)
             form = CategoryForm(request.form)
             if form.validate():
                 slug = form.name.data.lower().replace(" ", "")
@@ -280,7 +280,7 @@ def del_category(id):
         category = project_repo.get_category(id)
         if category:
             if len(cached_cat.get_all()) > 1:
-                ensure_authorized('delete', category)
+                ensure_authorized_to('delete', category)
                 if request.method == 'GET':
                     return render_template('admin/del_category.html',
                                            title=gettext('Delete Category'),
@@ -314,7 +314,7 @@ def update_category(id):
     try:
         category = project_repo.get_category(id)
         if category:
-            ensure_authorized('update', category)
+            ensure_authorized_to('update', category)
             form = CategoryForm(obj=category)
             form.populate_obj(category)
             if request.method == 'GET':

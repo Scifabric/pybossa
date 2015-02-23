@@ -29,7 +29,7 @@ from flask.ext.login import current_user
 from pybossa.util import jsonpify
 from pybossa.ratelimit import ratelimit
 from api_base import APIBase, error
-from pybossa.auth import ensure_authorized
+from pybossa.auth import ensure_authorized_to
 
 class TokenAPI(APIBase):
 
@@ -45,7 +45,7 @@ class TokenAPI(APIBase):
     @ratelimit(limit=300, per=15 * 60)
     def get(self, token):
         try:
-            ensure_authorized('read', self._resource_name, token=token)
+            ensure_authorized_to('read', self._resource_name, token=token)
             user_tokens = self._get_all_tokens()
             if token:
                 response = self._get_token(token, user_tokens)

@@ -18,7 +18,7 @@
 
 from default import assert_not_raises
 from mock import Mock, patch
-from pybossa.auth import ensure_authorized, is_authorized
+from pybossa.auth import ensure_authorized_to, is_authorized
 from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
 from pybossa.model.user import User
@@ -44,14 +44,14 @@ class TestAuthorizationFunctions(object):
     def test_ensure_authorized_raises_401_anonymous_non_authorized(self, auth):
         auth.return_value = False
 
-        assert_raises(Unauthorized, ensure_authorized, 'create', User)
+        assert_raises(Unauthorized, ensure_authorized_to, 'create', User)
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     @patch('pybossa.auth.is_authorized')
     def test_ensure_authorized_not_raises_exc_anonymous_authorized(self, auth):
         auth.return_value = True
 
-        assert_not_raises(Exception, ensure_authorized, 'create', User)
+        assert_not_raises(Exception, ensure_authorized_to, 'create', User)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -59,14 +59,14 @@ class TestAuthorizationFunctions(object):
     def test_ensure_authorized_raises_403_authenticated_non_authorized(self, auth):
         auth.return_value = False
 
-        assert_raises(Forbidden, ensure_authorized, 'create', User)
+        assert_raises(Forbidden, ensure_authorized_to, 'create', User)
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     @patch('pybossa.auth.is_authorized')
     def test_ensure_authorized_not_raises_exc_authenticated_authorized(self, auth):
         auth.return_value = True
 
-        assert_not_raises(Exception, ensure_authorized, 'create', User)
+        assert_not_raises(Exception, ensure_authorized_to, 'create', User)
 
 
     @patch('pybossa.auth._authorizer_for')

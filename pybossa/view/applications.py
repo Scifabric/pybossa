@@ -40,7 +40,7 @@ from pybossa.model.task import Task
 from pybossa.model.auditlog import Auditlog
 from pybossa.model.blogpost import Blogpost
 from pybossa.util import Pagination, admin_required, get_user_id_or_ip
-from pybossa.auth import ensure_authorized
+from pybossa.auth import ensure_authorized_to
 from pybossa.cache import apps as cached_apps
 from pybossa.cache import categories as cached_cat
 from pybossa.cache import project_stats as stats
@@ -187,7 +187,7 @@ def app_cat_index(category, page):
 @blueprint.route('/new', methods=['GET', 'POST'])
 @login_required
 def new():
-    ensure_authorized('create', App)
+    ensure_authorized_to('create', App)
     form = AppForm(request.form)
 
     def respond(errors):
@@ -248,8 +248,8 @@ def task_presenter_editor(short_name):
      overall_progress, last_activity) = app_by_shortname(short_name)
 
     title = app_title(app, "Task Presenter Editor")
-    ensure_authorized('read', app)
-    ensure_authorized('update', app)
+    ensure_authorized_to('read', app)
+    ensure_authorized_to('update', app)
 
     form = TaskPresenterForm(request.form)
     form.id.data = app.id
@@ -332,8 +332,8 @@ def delete(short_name):
     (app, owner, n_tasks,
     n_task_runs, overall_progress, last_activity) = app_by_shortname(short_name)
     title = app_title(app, "Delete")
-    ensure_authorized('read', app)
-    ensure_authorized('delete', app)
+    ensure_authorized_to('read', app)
+    ensure_authorized_to('delete', app)
     if request.method == 'GET':
         return render_template('/applications/delete.html',
                                title=title,
@@ -390,8 +390,8 @@ def update(short_name):
         return redirect(url_for('.details',
                                 short_name=new_project.short_name))
 
-    ensure_authorized('read', app)
-    ensure_authorized('update', app)
+    ensure_authorized_to('read', app)
+    ensure_authorized_to('update', app)
 
     title = app_title(app, "Update")
     if request.method == 'GET':
@@ -459,7 +459,7 @@ def details(short_name):
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
 
-    ensure_authorized('read', app)
+    ensure_authorized_to('read', app)
     template = '/applications/app.html'
 
     redirect_to_password = _check_if_redirect_to_password(app)
@@ -489,8 +489,8 @@ def settings(short_name):
      overall_progress, last_activity) = app_by_shortname(short_name)
 
     title = app_title(app, "Settings")
-    ensure_authorized('read', app)
-    ensure_authorized('update', app)
+    ensure_authorized_to('read', app)
+    ensure_authorized_to('update', app)
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     return render_template('/applications/settings.html',
                            app=app,
@@ -522,8 +522,8 @@ def import_task(short_name):
                          n_volunteers=n_volunteers,
                          n_completed_tasks=n_completed_tasks,
                          target='app.import_task')
-    ensure_authorized('read', app)
-    ensure_authorized('update', app)
+    ensure_authorized_to('read', app)
+    ensure_authorized_to('update', app)
     importer_type = request.form.get('form_name') or request.args.get('type')
     all_importers = importer.get_all_importer_names()
     if importer_type is not None and importer_type not in all_importers:
@@ -592,8 +592,8 @@ def setup_autoimporter(short_name):
                          n_volunteers=n_volunteers,
                          n_completed_tasks=n_completed_tasks,
                          target='app.setup_autoimporter')
-    ensure_authorized('read', app)
-    ensure_authorized('update', app)
+    ensure_authorized_to('read', app)
+    ensure_authorized_to('update', app)
     importer_type = request.form.get('form_name') or request.args.get('type')
     all_importers = importer.get_autoimporter_names()
     if importer_type is not None and importer_type not in all_importers:
@@ -645,8 +645,8 @@ def delete_autoimporter(short_name):
                          overall_progress=overall_progress,
                          n_volunteers=n_volunteers,
                          n_completed_tasks=n_completed_tasks)
-    ensure_authorized('read', app)
-    ensure_authorized('update', app)
+    ensure_authorized_to('read', app)
+    ensure_authorized_to('update', app)
     if app.has_autoimporter():
         autoimporter = app.get_autoimporter()
         app.delete_autoimporter()
@@ -684,7 +684,7 @@ def task_presenter(short_name, task_id):
     task = task_repo.get_task(id=task_id)
     if task is None:
         raise abort(404)
-    ensure_authorized('read', app)
+    ensure_authorized_to('read', app)
     redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
@@ -741,7 +741,7 @@ def presenter(short_name):
     title = app_title(app, "Contribute")
     template_args = {"app": app, "title": title, "owner": owner,
                      "invite_new_volunteers": invite_new_volunteers(app)}
-    ensure_authorized('read', app)
+    ensure_authorized_to('read', app)
     redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
@@ -772,7 +772,7 @@ def tutorial(short_name):
      overall_progress, last_activity) = app_by_shortname(short_name)
     title = app_title(app, "Tutorial")
 
-    ensure_authorized('read', app)
+    ensure_authorized_to('read', app)
     redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
@@ -787,7 +787,7 @@ def export(short_name, task_id):
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
 
-    ensure_authorized('read', app)
+    ensure_authorized_to('read', app)
     redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
@@ -808,7 +808,7 @@ def tasks(short_name):
      overall_progress, last_activity) = app_by_shortname(short_name)
     title = app_title(app, "Tasks")
 
-    ensure_authorized('read', app)
+    ensure_authorized_to('read', app)
     redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
@@ -854,7 +854,7 @@ def tasks_browse(short_name, page):
                                overall_progress=overall_progress,
                                n_volunteers=n_volunteers,
                                n_completed_tasks=n_completed_tasks)
-    ensure_authorized('read', app)
+    ensure_authorized_to('read', app)
     redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
@@ -868,8 +868,8 @@ def delete_tasks(short_name):
     """Delete ALL the tasks for a given project"""
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
-    ensure_authorized('read', app)
-    ensure_authorized('update', app)
+    ensure_authorized_to('read', app)
+    ensure_authorized_to('update', app)
     if request.method == 'GET':
         title = app_title(app, "Delete")
         n_volunteers = cached_apps.n_volunteers(app.id)
@@ -907,7 +907,7 @@ def export_to(short_name):
     title = app_title(app, gettext("Export"))
     loading_text = gettext("Exporting data..., this may take a while")
 
-    ensure_authorized('read', app)
+    ensure_authorized_to('read', app)
     redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
@@ -1121,7 +1121,7 @@ def show_stats(short_name):
     n_completed_tasks = cached_apps.n_completed_tasks(app.id)
     title = app_title(app, "Statistics")
 
-    ensure_authorized('read', app)
+    ensure_authorized_to('read', app)
     redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
@@ -1182,8 +1182,8 @@ def task_settings(short_name):
      overall_progress, last_activity) = app_by_shortname(short_name)
     n_volunteers = cached_apps.n_volunteers(app.id)
     n_completed_tasks = cached_apps.n_completed_tasks(app.id)
-    ensure_authorized('read', app)
-    ensure_authorized('update', app)
+    ensure_authorized_to('read', app)
+    ensure_authorized_to('update', app)
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     return render_template('applications/task_settings.html',
                            app=app,
@@ -1201,8 +1201,8 @@ def task_n_answers(short_name):
      overall_progress, last_activity) = app_by_shortname(short_name)
     title = app_title(app, gettext('Redundancy'))
     form = TaskRedundancyForm()
-    ensure_authorized('read', app)
-    ensure_authorized('update', app)
+    ensure_authorized_to('read', app)
+    ensure_authorized_to('update', app)
     if request.method == 'GET':
         return render_template('/applications/task_n_answers.html',
                                title=title,
@@ -1240,8 +1240,8 @@ def task_scheduler(short_name):
                                form=form,
                                app=app,
                                owner=owner)
-    ensure_authorized('read', app)
-    ensure_authorized('update', app)
+    ensure_authorized_to('read', app)
+    ensure_authorized_to('update', app)
 
     if request.method == 'GET':
         if app.info.get('sched'):
@@ -1288,8 +1288,8 @@ def task_priority(short_name):
                                form=form,
                                app=app,
                                owner=owner)
-    ensure_authorized('read', app)
-    ensure_authorized('update', app)
+    ensure_authorized_to('read', app)
+    ensure_authorized_to('update', app)
 
     if request.method == 'GET':
         return respond()
@@ -1326,7 +1326,7 @@ def show_blogposts(short_name):
      overall_progress, last_activity) = app_by_shortname(short_name)
 
     blogposts = blog_repo.filter_by(app_id=app.id)
-    ensure_authorized('read', Blogpost, app_id=app.id)
+    ensure_authorized_to('read', Blogpost, app_id=app.id)
     redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
@@ -1347,7 +1347,7 @@ def show_blogpost(short_name, id):
     blogpost = blog_repo.get_by(id=id, app_id=app.id)
     if blogpost is None:
         raise abort(404)
-    ensure_authorized('read', blogpost)
+    ensure_authorized_to('read', blogpost)
     redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
@@ -1388,7 +1388,7 @@ def new_blogpost(short_name):
     del form.id
 
     if request.method != 'POST':
-        ensure_authorized('create', Blogpost, app_id=app.id)
+        ensure_authorized_to('create', Blogpost, app_id=app.id)
         return respond()
 
     if not form.validate():
@@ -1399,7 +1399,7 @@ def new_blogpost(short_name):
                         body=form.body.data,
                         user_id=current_user.id,
                         app_id=app.id)
-    ensure_authorized('create', blogpost)
+    ensure_authorized_to('create', blogpost)
     blog_repo.save(blogpost)
     cached_apps.delete_app(short_name)
 
@@ -1432,7 +1432,7 @@ def update_blogpost(short_name, id):
     form = BlogpostForm()
 
     if request.method != 'POST':
-        ensure_authorized('update', blogpost)
+        ensure_authorized_to('update', blogpost)
         form = BlogpostForm(obj=blogpost)
         return respond()
 
@@ -1440,7 +1440,7 @@ def update_blogpost(short_name, id):
         flash(gettext('Please correct the errors'), 'error')
         return respond()
 
-    ensure_authorized('update', blogpost)
+    ensure_authorized_to('update', blogpost)
     blogpost = Blogpost(id=form.id.data,
                         title=form.title.data,
                         body=form.body.data,
@@ -1463,7 +1463,7 @@ def delete_blogpost(short_name, id):
     if blogpost is None:
         raise abort(404)
 
-    ensure_authorized('delete', blogpost)
+    ensure_authorized_to('delete', blogpost)
     blog_repo.delete(blogpost)
     cached_apps.delete_app(short_name)
     flash('<i class="icon-ok"></i> ' + 'Blog post deleted!', 'success')
@@ -1485,7 +1485,7 @@ def auditlog(short_name):
      overall_progress, last_activity) = app_by_shortname(short_name)
 
     logs = auditlogger.get_project_logs(app.id)
-    ensure_authorized('read', Auditlog, app_id=app.id)
+    ensure_authorized_to('read', Auditlog, app_id=app.id)
     redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
