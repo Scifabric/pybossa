@@ -23,7 +23,7 @@ PyBossa powers [Crowdcrafting.org](http://crowdcrafting.org/) and [MicroPast](ht
 
 **Important: if you are updating a server, please, be sure to check the
 Database Migration scripts, as new changes could introduce new tables,
-columns, etc, in the DB model. See the [Migration Section](http://docs.pybossa.com/en/latest/install.html#migrating-the-database-table-structure) from the
+columns, etc, in the DB model. See the [Updating Section](http://docs.pybossa.com/en/latest/install.html#updating-pybossa) from the
 documentation**
 
 See [installation instructions](http://docs.pybossa.com/en/latest/install.html).
