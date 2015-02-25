@@ -98,3 +98,10 @@ class TestJobs(object):
         assert get_quarterly_date(october_1st) == datetime(2015, 12, 31)
         assert get_quarterly_date(november_24th) == datetime(2015, 12, 31)
         assert get_quarterly_date(december_31st) == datetime(2015, 12, 31)
+
+    def test_get_quarterly_date_returns_same_time_as_passed(self):
+        now = datetime.utcnow()
+
+        returned_date = get_quarterly_date(now)
+
+        assert now.time() == returned_date.time()
