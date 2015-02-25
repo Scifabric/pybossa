@@ -3,16 +3,16 @@ language: python
 python:
 - '2.7'
 env:
-- PYBOSSA_SETTINGS='../settings_test.py' PYBOSSA_REDIS_CACHE_DISABLED='1' SWIG=swig-2.0.11
+- PYBOSSA_SETTINGS='../settings_test.py' PYBOSSA_REDIS_CACHE_DISABLED='1' SWIG=rel-2.0.11
 services:
 - redis-server
 addons:
   postgresql: "9.3"
 before_install:
 # Install swig by compiling (sudo not allowed)
-- wget https://github.com/swig/swig/archive/rel-2.0.11.tar.gz
+- wget https://github.com/swig/swig/archive/$SWIG.tar.gz
 - tar -xvf $SWIG.tar.gz
-- pushd $SWIG && mkdir vendor
+- pushd swig-$SWIG && mkdir vendor
 - ./configure --prefix=`pwd`/vendor
 - make -j 5 && make install
 - popd
