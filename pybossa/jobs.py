@@ -16,6 +16,8 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 """Jobs module for running background tasks in PyBossa server."""
+from datetime import datetime
+import math
 from flask import current_app, render_template
 from flask.ext.mail import Message
 from pybossa.core import mail, task_repo, importer
@@ -28,10 +30,9 @@ HOUR = 60 * 60
 
 def schedule_job(function, scheduler):
     """Schedules a job and returns a log message about success of the operation"""
-    from datetime import datetime
     scheduled_jobs = scheduler.get_jobs()
     job = scheduler.schedule(
-        scheduled_time=datetime.utcnow(),
+        scheduled_time=(function.get('scheduled_time') or datetime.utcnow()),
         func=function['name'],
         args=function['args'],
         kwargs=function['kwargs'],
@@ -51,6 +52,15 @@ def schedule_job(function, scheduler):
            % (function['name'].__name__, function['args'], function['kwargs'],
               function['interval']))
     return msg
+
+
+def get_quarterly_date(now):
+    if not isinstance(now, datetime):
+        raise TypeError('Expected %s, got %s' % (type(datetime), type(now)))
+    execute_month = int(math.ceil(now.month / 3.0) * 3)
+    execute_day = 31 if execute_month in [3, 12] else 30
+    execute_date = datetime(now.year, execute_month, execute_day)
+    return datetime.combine(execute_date, now.time())
 
 
 def schedule_priority_jobs(queue_name, interval):
