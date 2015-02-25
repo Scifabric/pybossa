@@ -468,7 +468,7 @@ def setup_cache_timeouts(app):
 
 
 def setup_scheduled_jobs(app):  #pragma: no cover
-from datetime import datetime
+    from datetime import datetime
     from pybossa.jobs import schedule_priority_jobs, schedule_job, \
         get_quarterly_date
     from rq_scheduler import Scheduler
