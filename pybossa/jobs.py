@@ -63,13 +63,13 @@ def get_quarterly_date(now):
     return datetime.combine(execute_date, now.time())
 
 
-def schedule_priority_jobs(queue_name):
-    """Schedule all PyBossa high priority jobs."""
+def enqueue_periodic_jobs(queue_name):
+    """Enqueue all PyBossa periodic jobs."""
     from pybossa.core import sentinel
     from rq import Queue
     redis_conn = sentinel.master
 
-    jobs_generator = get_scheduled_jobs()
+    jobs_generator = get_periodic_jobs()
     n_jobs = 0
     queue = Queue(queue_name, connection=redis_conn)
     for job_gen in jobs_generator:
@@ -84,8 +84,8 @@ def schedule_priority_jobs(queue_name):
     return msg
 
 
-def get_scheduled_jobs(): # pragma: no cover
-    """Return a list of scheduled jobs."""
+def get_periodic_jobs(): # pragma: no cover
+    """Return a list of periodic jobs."""
     # Default ones
     # A job is a dict with the following format: dict(name, args, kwargs,
     # timeout, queue)

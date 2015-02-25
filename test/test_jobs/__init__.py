@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import datetime
-from pybossa.jobs import create_dict_jobs, schedule_priority_jobs, get_quarterly_date
+from pybossa.jobs import create_dict_jobs, enqueue_periodic_jobs, get_quarterly_date
 from mock import patch
 from nose.tools import assert_raises
 
@@ -42,12 +42,12 @@ class TestJobs(object):
         assert len(jobs) == 1
         assert jobs[0]['name'] == 'function'
 
-    @patch('pybossa.jobs.get_scheduled_jobs')
-    def test_schedule_priority_jobs_same_queue_name(self, get_scheduled_jobs):
-        """Test JOB schedule_priority_jobs same queue works."""
-        get_scheduled_jobs.return_value = jobs()
+    @patch('pybossa.jobs.get_periodic_jobs')
+    def test_enqueue_periodic_jobs_same_queue_name(self, get_periodic_jobs):
+        """Test JOB enqueue_periodic_jobs same queue works."""
+        get_periodic_jobs.return_value = jobs()
         queue_name = 'low'
-        res = schedule_priority_jobs(queue_name)
+        res = enqueue_periodic_jobs(queue_name)
         all_jobs = []
         for j in jobs():
             for h in j:
@@ -55,12 +55,12 @@ class TestJobs(object):
         msg = "%s jobs in %s have been enqueued" % (len(all_jobs), queue_name)
         assert res == msg, res
 
-    @patch('pybossa.jobs.get_scheduled_jobs')
-    def test_schedule_priority_jobs_diff_queue_name(self, mock_get_scheduled_jobs):
-        """Test JOB schedule_priority_jobs diff queue name works."""
-        mock_get_scheduled_jobs.return_value = jobs()
+    @patch('pybossa.jobs.get_periodic_jobs')
+    def test_enqueue_periodic_jobs_diff_queue_name(self, mock_get_periodic_jobs):
+        """Test JOB enqueue_periodic_jobs diff queue name works."""
+        mock_get_periodic_jobs.return_value = jobs()
         queue_name = 'high'
-        res = schedule_priority_jobs(queue_name)
+        res = enqueue_periodic_jobs(queue_name)
         msg = "%s jobs in %s have been enqueued" % (0, queue_name)
         assert res == msg, res
 
