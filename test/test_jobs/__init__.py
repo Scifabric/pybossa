@@ -19,6 +19,7 @@
 from datetime import datetime
 from pybossa.jobs import create_dict_jobs, schedule_priority_jobs, get_quarterly_date
 from mock import patch
+from nose.tools import assert_raises
 
 def jobs():
     """Generator."""
@@ -105,3 +106,6 @@ class TestJobs(object):
         returned_date = get_quarterly_date(now)
 
         assert now.time() == returned_date.time()
+
+    def test_get_quarterly_date_raises_TypeError_on_wrong_args(self):
+        assert_raises(TypeError, get_quarterly_date, 'wrong_arg')
