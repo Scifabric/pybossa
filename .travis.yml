@@ -11,7 +11,7 @@ addons:
 before_install:
 # Install swig by compiling (sudo not allowed)
 - wget https://github.com/swig/swig/archive/$SWIG.tar.gz
-- tar -xvf $SWIG.tar.gz
+- tar xf $SWIG.tar.gz
 - pushd swig-$SWIG && mkdir vendor
 - ./configure --prefix=`pwd`/vendor
 - make -j 5 && make install
