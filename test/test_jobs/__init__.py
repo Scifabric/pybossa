@@ -47,7 +47,7 @@ class TestJobs(object):
         """Test JOB schedule_priority_jobs same queue works."""
         get_scheduled_jobs.return_value = jobs()
         queue_name = 'low'
-        res = schedule_priority_jobs(queue_name, 10)
+        res = schedule_priority_jobs(queue_name)
         all_jobs = []
         for j in jobs():
             for h in j:
@@ -60,7 +60,7 @@ class TestJobs(object):
         """Test JOB schedule_priority_jobs diff queue name works."""
         mock_get_scheduled_jobs.return_value = jobs()
         queue_name = 'high'
-        res = schedule_priority_jobs(queue_name, 10)
+        res = schedule_priority_jobs(queue_name)
         msg = "%s jobs in %s have been enqueued" % (0, queue_name)
         assert res == msg, res
 

@@ -63,7 +63,7 @@ def get_quarterly_date(now):
     return datetime.combine(execute_date, now.time())
 
 
-def schedule_priority_jobs(queue_name, interval):
+def schedule_priority_jobs(queue_name):
     """Schedule all PyBossa high priority jobs."""
     from pybossa.core import sentinel
     from rq import Queue
