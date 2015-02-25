@@ -371,27 +371,13 @@ def warn_old_project_owners():
 
     with mail.connect() as conn:
         for a in apps:
-            message = ("Dear %s,\
-                       \
-                       Your project %s has been inactive for the last 3 months.\
-                       And we would like to inform you that if you need help \
-                       with it, just contact us answering to this email.\
-                       \
-                       Otherwise, we will archive the project, removing it \
-                       from the server. You have one month to upload any new \
-                       tasks, add a new blog post, or engage new volunteers.\
-                       \
-                       If at the end the project is deleted, we will send you \
-                       a ZIP file where you can download your project.\
-                       \
-                       All the best,\
-                       \
-                       The team.") % (a.owner.fullname, a.name)
             subject = ('Your %s project: %s has been inactive'
                        % (current_app.config.get('BRAND'), a.name))
+            body = render_template('/account/email/inactive_project.md',
+                                   project=a)
             msg = Message(recipients=[a.owner.email_addr],
-                          body=message,
-                          subject=subject)
+                          subject=subject,
+                          body=body)
             conn.send(msg)
             a.contacted = True
             project_repo.update(a)
