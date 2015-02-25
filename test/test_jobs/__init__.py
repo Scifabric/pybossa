@@ -15,9 +15,11 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-from pybossa.jobs import create_dict_jobs, schedule_priority_jobs
-from default import Test, with_context
+
+from datetime import datetime
+from pybossa.jobs import create_dict_jobs, schedule_priority_jobs, get_quarterly_date
 from mock import patch
+from nose.tools import assert_raises
 
 def jobs():
     """Generator."""
@@ -27,10 +29,9 @@ def fake_job():
     yield dict(name='name', args=[], kwargs={}, timeout=10, queue='low')
 
 
-class TestJobs(Test):
+class TestJobs(object):
 
 
-    @with_context
     def test_create_dict_jobs(self):
         """Test JOB create_dict_jobs works."""
         data = [{'id': 1, 'short_name': 'app'}]
@@ -41,7 +42,6 @@ class TestJobs(Test):
         assert len(jobs) == 1
         assert jobs[0]['name'] == 'function'
 
-    @with_context
     @patch('pybossa.jobs.get_scheduled_jobs')
     def test_schedule_priority_jobs_same_queue_name(self, get_scheduled_jobs):
         """Test JOB schedule_priority_jobs same queue works."""
@@ -55,7 +55,6 @@ class TestJobs(Test):
         msg = "%s jobs in %s have been enqueued" % (len(all_jobs), queue_name)
         assert res == msg, res
 
-    @with_context
     @patch('pybossa.jobs.get_scheduled_jobs')
     def test_schedule_priority_jobs_diff_queue_name(self, mock_get_scheduled_jobs):
         """Test JOB schedule_priority_jobs diff queue name works."""
@@ -64,3 +63,49 @@ class TestJobs(Test):
         res = schedule_priority_jobs(queue_name, 10)
         msg = "%s jobs in %s have been enqueued" % (0, queue_name)
         assert res == msg, res
+
+    def test_get_quarterly_date_1st_quarter_returns_31_march(self):
+        january_1st = datetime(2015, 1, 1)
+        february_2nd = datetime(2015, 2, 2)
+        march_31st = datetime(2015, 3, 31)
+
+        assert get_quarterly_date(january_1st) == datetime(2015, 3, 31)
+        assert get_quarterly_date(february_2nd) == datetime(2015, 3, 31)
+        assert get_quarterly_date(march_31st) == datetime(2015, 3, 31)
+
+    def test_get_quarterly_date_2nd_quarter_returns_30_june(self):
+        april_1st = datetime(2015, 4, 1)
+        may_5th = datetime(2015, 5, 5)
+        june_30th = datetime(2015, 4, 10)
+
+        assert get_quarterly_date(april_1st) == datetime(2015, 6, 30)
+        assert get_quarterly_date(may_5th) == datetime(2015, 6, 30)
+        assert get_quarterly_date(june_30th) == datetime(2015, 6, 30)
+
+    def test_get_quarterly_date_3rd_quarter_returns_30_september(self):
+        july_1st = datetime(2015, 7, 1)
+        august_6th = datetime(2015, 8, 6)
+        september_30th = datetime(2015, 9, 30)
+
+        assert get_quarterly_date(july_1st) == datetime(2015, 9, 30)
+        assert get_quarterly_date(august_6th) == datetime(2015, 9, 30)
+        assert get_quarterly_date(september_30th) == datetime(2015, 9, 30)
+
+    def test_get_quarterly_date_4th_quarter_returns_31_december(self):
+        october_1st = datetime(2015, 10, 1)
+        november_24th = datetime(2015, 11,24)
+        december_31st = datetime(2015, 12, 31)
+
+        assert get_quarterly_date(october_1st) == datetime(2015, 12, 31)
+        assert get_quarterly_date(november_24th) == datetime(2015, 12, 31)
+        assert get_quarterly_date(december_31st) == datetime(2015, 12, 31)
+
+    def test_get_quarterly_date_returns_same_time_as_passed(self):
+        now = datetime.utcnow()
+
+        returned_date = get_quarterly_date(now)
+
+        assert now.time() == returned_date.time()
+
+    def test_get_quarterly_date_raises_TypeError_on_wrong_args(self):
+        assert_raises(TypeError, get_quarterly_date, 'wrong_arg')
