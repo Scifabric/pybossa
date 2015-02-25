@@ -15,7 +15,9 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-from pybossa.jobs import create_dict_jobs, schedule_priority_jobs
+
+from datetime import datetime
+from pybossa.jobs import create_dict_jobs, schedule_priority_jobs, get_quarterly_date
 from mock import patch
 
 def jobs():
@@ -60,3 +62,39 @@ class TestJobs(object):
         res = schedule_priority_jobs(queue_name, 10)
         msg = "%s jobs in %s have been enqueued" % (0, queue_name)
         assert res == msg, res
+
+    def test_get_quarterly_date_1st_quarter_returns_31_march(self):
+        january_1st = datetime(2015, 1, 1)
+        february_2nd = datetime(2015, 2, 2)
+        march_31st = datetime(2015, 3, 31)
+
+        assert get_quarterly_date(january_1st) == datetime(2015, 3, 31)
+        assert get_quarterly_date(february_2nd) == datetime(2015, 3, 31)
+        assert get_quarterly_date(march_31st) == datetime(2015, 3, 31)
+
+    def test_get_quarterly_date_2nd_quarter_returns_30_june(self):
+        april_1st = datetime(2015, 4, 1)
+        may_5th = datetime(2015, 5, 5)
+        june_30th = datetime(2015, 4, 10)
+
+        assert get_quarterly_date(april_1st) == datetime(2015, 6, 30)
+        assert get_quarterly_date(may_5th) == datetime(2015, 6, 30)
+        assert get_quarterly_date(june_30th) == datetime(2015, 6, 30)
+
+    def test_get_quarterly_date_3rd_quarter_returns_30_september(self):
+        july_1st = datetime(2015, 7, 1)
+        august_6th = datetime(2015, 8, 6)
+        september_30th = datetime(2015, 9, 30)
+
+        assert get_quarterly_date(july_1st) == datetime(2015, 9, 30)
+        assert get_quarterly_date(august_6th) == datetime(2015, 9, 30)
+        assert get_quarterly_date(september_30th) == datetime(2015, 9, 30)
+
+    def test_get_quarterly_date_4th_quarter_returns_31_december(self):
+        october_1st = datetime(2015, 10, 1)
+        november_24th = datetime(2015, 11,24)
+        december_31st = datetime(2015, 12, 31)
+
+        assert get_quarterly_date(october_1st) == datetime(2015, 12, 31)
+        assert get_quarterly_date(november_24th) == datetime(2015, 12, 31)
+        assert get_quarterly_date(december_31st) == datetime(2015, 12, 31)
