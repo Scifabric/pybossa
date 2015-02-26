@@ -366,20 +366,23 @@ def warn_old_project_owners():
     from flask import current_app
     from flask.ext.mail import Message
 
-    apps = get_non_updated_apps()
+    projects = get_non_updated_apps()
 
     with mail.connect() as conn:
-        for a in apps:
+        for project in projects:
             subject = ('Your %s project: %s has been inactive'
-                       % (current_app.config.get('BRAND'), a.name))
+                       % (current_app.config.get('BRAND'), project.name))
             body = render_template('/account/email/inactive_project.md',
-                                   project=a)
-            msg = Message(recipients=[a.owner.email_addr],
+                                   project=project)
+            html = render_template('/account/email/inactive_project.html',
+                                   project=project)
+            msg = Message(recipients=[project.owner.email_addr],
                           subject=subject,
-                          body=body)
+                          body=body,
+                          html=html)
             conn.send(msg)
-            a.contacted = True
-            project_repo.update(a)
+            project.contacted = True
+            project_repo.update(project)
     return True
 
 
