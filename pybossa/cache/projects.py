@@ -121,7 +121,7 @@ def n_anonymous_volunteers(project_id):
     sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip)) AS n_anonymous_volunteers FROM task_run
            WHERE task_run.user_ip IS NOT NULL AND
            task_run.user_id IS NULL AND
-           task_run.project_id=:project_id;''')
+           task_run.app_id=:project_id;''')
 
     results = session.execute(sql, dict(project_id=project_id))
     n_anonymous_volunteers = 0
