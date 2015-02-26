@@ -509,23 +509,23 @@ def settings(short_name):
 @blueprint.route('/<short_name>/tasks/import', methods=['GET', 'POST'])
 @login_required
 def import_task(short_name):
-    (app, owner, n_tasks, n_task_runs,
+    (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
-    n_volunteers = cached_apps.n_volunteers(app.id)
-    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
-    title = project_title(app, "Import Tasks")
+    n_volunteers = cached_apps.n_volunteers(project.id)
+    n_completed_tasks = cached_apps.n_completed_tasks(project.id)
+    title = project_title(project, "Import Tasks")
     loading_text = gettext("Importing tasks, this may take a while, wait...")
-    dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     template_args = dict(title=title, loading_text=loading_text,
-                         app=dict_app,
+                         project=dict_project,
                          owner=owner,
                          n_tasks=n_tasks,
                          overall_progress=overall_progress,
                          n_volunteers=n_volunteers,
                          n_completed_tasks=n_completed_tasks,
-                         target='app.import_task')
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('update', app)
+                         target='project.import_task')
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
     importer_type = request.form.get('form_name') or request.args.get('type')
     all_importers = importer.get_all_importer_names()
     if importer_type is not None and importer_type not in all_importers:
@@ -536,7 +536,7 @@ def import_task(short_name):
     if request.method == 'POST':
         if form.validate():  # pragma: no cover
             try:
-                return _import_tasks(app, **form.get_import_data())
+                return _import_tasks(project, **form.get_import_data())
             except BulkImportException as err_msg:
                 flash(err_msg, 'error')
             except Exception as inst:  # pragma: no cover
@@ -565,16 +565,16 @@ def import_task(short_name):
                                 **template_args)
 
 
-def _import_tasks(app, **form_data):
+def _import_tasks(project, **form_data):
     number_of_tasks = importer.count_tasks_to_import(**form_data)
     if number_of_tasks <= MAX_NUM_SYNCHRONOUS_TASKS_IMPORT:
-        msg = importer.create_tasks(task_repo, app.id, **form_data)
+        msg = importer.create_tasks(task_repo, project.id, **form_data)
         flash(msg)
     else:
-        importer_queue.enqueue(import_tasks, app.id, **form_data)
+        importer_queue.enqueue(import_tasks, project.id, **form_data)
         flash(gettext("You're trying to import a large amount of tasks, so please be patient.\
             You will receive an email when the tasks are ready."))
-    return redirect(url_for('.tasks', short_name=app.short_name))
+    return redirect(url_for('.tasks', short_name=project.short_name))
 
 
 @blueprint.route('/<short_name>/tasks/autoimporter', methods=['GET', 'POST'])
