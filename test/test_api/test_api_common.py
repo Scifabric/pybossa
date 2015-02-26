@@ -36,15 +36,15 @@ class TestApiCommon(TestAPI):
             task = TaskFactory.create(app=app)
             TaskRunFactory.create(task=task)
 
-        res = self.app.get('/api/app')
+        res = self.app.get('/api/project')
         data = json.loads(res.data)
         assert len(data) == 20, len(data)
 
-        res = self.app.get('/api/app?limit=10')
+        res = self.app.get('/api/project?limit=10')
         data = json.loads(res.data)
         assert len(data) == 10, len(data)
 
-        res = self.app.get('/api/app?limit=10&offset=10')
+        res = self.app.get('/api/project?limit=10&offset=10')
         data = json.loads(res.data)
         assert len(data) == 10, len(data)
         assert data[0].get('name') == apps[10].name, data[0]
@@ -152,7 +152,7 @@ class TestApiCommon(TestAPI):
 
     def test_jsonpify(self):
         """Test API jsonpify decorator works."""
-        res = self.app.get('/api/app/1?callback=mycallback')
+        res = self.app.get('/api/project/1?callback=mycallback')
         err_msg = "mycallback should be included in the response"
         assert "mycallback" in res.data, err_msg
         err_msg = "Status code should be 200"
@@ -161,7 +161,7 @@ class TestApiCommon(TestAPI):
 
     def test_cors(self):
         """Test CORS decorator works."""
-        res = self.app.get('/api/app/1')
+        res = self.app.get('/api/project/1')
         err_msg = "CORS should be enabled"
         print res.headers
         assert res.headers['Access-Control-Allow-Origin'] == '*', err_msg
