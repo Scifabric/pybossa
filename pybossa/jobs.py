@@ -69,7 +69,7 @@ def enqueue_periodic_jobs(queue_name):
     from rq import Queue
     redis_conn = sentinel.master
 
-    jobs_generator = get_periodic_jobs()
+    jobs_generator = get_periodic_jobs(queue_name)
     n_jobs = 0
     queue = Queue(queue_name, connection=redis_conn)
     for job in jobs_generator:
@@ -83,20 +83,20 @@ def enqueue_periodic_jobs(queue_name):
     return msg
 
 
-def get_periodic_jobs():  # pragma: no cover
+def get_periodic_jobs(queue):  # pragma: no cover
     """Return a list of periodic jobs."""
     # Default ones
     # A job is a dict with the following format: dict(name, args, kwargs,
     # timeout, queue)
-    jobs = get_default_jobs()  # high, low, super
+    jobs = get_default_jobs()
     # Create ZIPs for all projects
-    zip_jobs = get_export_task_jobs()  # high, low
+    zip_jobs = get_export_task_jobs() if queue in ('high', 'low') else []
     # Based on type of user
-    project_jobs = get_project_jobs()  # super
-    autoimport_jobs = get_autoimport_jobs()  # low
+    project_jobs = get_project_jobs() if queue == 'super' else []
+    autoimport_jobs = get_autoimport_jobs() if queue == 'low' else []
     # User engagement jobs
-    engage_jobs = get_inactive_users_jobs()  # quaterly
-    non_contrib_jobs = get_non_contributors_users_jobs()  # quaterly
+    engage_jobs = get_inactive_users_jobs() if queue == 'quaterly' else []
+    non_contrib_jobs = get_non_contributors_users_jobs() if queue == 'quaterly' else []
     _all = [zip_jobs, jobs, project_jobs, autoimport_jobs, \
            engage_jobs, non_contrib_jobs]
     return (job for sublist in _all for job in sublist)
