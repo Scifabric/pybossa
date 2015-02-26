@@ -72,14 +72,13 @@ def enqueue_periodic_jobs(queue_name):
     jobs_generator = get_periodic_jobs()
     n_jobs = 0
     queue = Queue(queue_name, connection=redis_conn)
-    for job_gen in jobs_generator:
-        for job in job_gen:
-            if (job['queue'] == queue_name):
-                n_jobs += 1
-                queue.enqueue_call(func=job['name'],
-                                   args=job['args'],
-                                   kwargs=job['kwargs'],
-                                   timeout=job['timeout'])
+    for job in jobs_generator:
+        if (job['queue'] == queue_name):
+            n_jobs += 1
+            queue.enqueue_call(func=job['name'],
+                               args=job['args'],
+                               kwargs=job['kwargs'],
+                               timeout=job['timeout'])
     msg = "%s jobs in %s have been enqueued" % (n_jobs, queue_name)
     return msg
 
@@ -98,8 +97,9 @@ def get_periodic_jobs(): # pragma: no cover
     # User engagement jobs
     engage_jobs = get_inactive_users_jobs()
     non_contrib_jobs = get_non_contributors_users_jobs()
-    return [zip_jobs, jobs, project_jobs, autoimport_jobs, \
+    _all = [zip_jobs, jobs, project_jobs, autoimport_jobs, \
            engage_jobs, non_contrib_jobs]
+    return (job for sublist in _all for job in sublist)
 
 
 def get_default_jobs(): # pragma: no cover

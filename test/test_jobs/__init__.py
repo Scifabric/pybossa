@@ -23,9 +23,6 @@ from nose.tools import assert_raises
 
 def jobs():
     """Generator."""
-    return [fake_job()]
-
-def fake_job():
     yield dict(name='name', args=[], kwargs={}, timeout=10, queue='low')
 
 
@@ -50,8 +47,7 @@ class TestJobs(object):
         res = enqueue_periodic_jobs(queue_name)
         all_jobs = []
         for j in jobs():
-            for h in j:
-                all_jobs.append(h)
+            all_jobs.append(j)
         msg = "%s jobs in %s have been enqueued" % (len(all_jobs), queue_name)
         assert res == msg, res
 
