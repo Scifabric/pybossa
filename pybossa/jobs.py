@@ -83,26 +83,26 @@ def enqueue_periodic_jobs(queue_name):
     return msg
 
 
-def get_periodic_jobs(): # pragma: no cover
+def get_periodic_jobs():  # pragma: no cover
     """Return a list of periodic jobs."""
     # Default ones
     # A job is a dict with the following format: dict(name, args, kwargs,
     # timeout, queue)
-    jobs = get_default_jobs()
+    jobs = get_default_jobs()  # high, low, super
     # Create ZIPs for all projects
-    zip_jobs = get_export_task_jobs()
+    zip_jobs = get_export_task_jobs()  # high, low
     # Based on type of user
-    project_jobs = get_project_jobs()
-    autoimport_jobs = get_autoimport_jobs()
+    project_jobs = get_project_jobs()  # super
+    autoimport_jobs = get_autoimport_jobs()  # low
     # User engagement jobs
-    engage_jobs = get_inactive_users_jobs()
-    non_contrib_jobs = get_non_contributors_users_jobs()
+    engage_jobs = get_inactive_users_jobs()  # quaterly
+    non_contrib_jobs = get_non_contributors_users_jobs()  # quaterly
     _all = [zip_jobs, jobs, project_jobs, autoimport_jobs, \
            engage_jobs, non_contrib_jobs]
     return (job for sublist in _all for job in sublist)
 
 
-def get_default_jobs(): # pragma: no cover
+def get_default_jobs():  # pragma: no cover
     """Return default jobs."""
     yield dict(name=warm_up_stats, args=[], kwargs={},
                timeout=(10 * MINUTE), queue='high')
@@ -139,13 +139,13 @@ def project_export(id):
         csv_exporter.pregenerate_zip_files(app)
 
 
-def get_project_jobs():
+def get_project_jobs(queue='super'):
     """Return a list of jobs based on user type."""
     from pybossa.cache import apps as cached_apps
     return create_dict_jobs(cached_apps.get_from_pro_user(),
                             get_app_stats,
                             timeout=(10 * MINUTE),
-                            queue='super')
+                            queue=queue)
 
 
 def create_dict_jobs(data, function, timeout=(10 * MINUTE), queue='low'):
@@ -229,8 +229,6 @@ def get_non_contributors_users_jobs(queue='quaterly'):
             yield job
 
 
-### The following are the actual jobs (i.e. tasks performed in the background)
-
 def get_autoimport_jobs(queue='low'):
     from pybossa.core import project_repo
     import pybossa.cache.apps as cached_apps
@@ -245,6 +243,7 @@ def get_autoimport_jobs(queue='low'):
                        queue=queue)
             yield job
 
+### The following are the actual jobs (i.e. tasks performed in the background)
 
 @with_cache_disabled
 def get_app_stats(id, short_name): # pragma: no cover
