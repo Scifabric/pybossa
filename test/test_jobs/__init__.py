@@ -17,13 +17,20 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import datetime
-from pybossa.jobs import create_dict_jobs, enqueue_periodic_jobs, get_quarterly_date
+from pybossa.jobs import create_dict_jobs, enqueue_periodic_jobs,\
+    get_quarterly_date, get_periodic_jobs
 from mock import patch
 from nose.tools import assert_raises
 
 def jobs():
     """Generator."""
     yield dict(name='name', args=[], kwargs={}, timeout=10, queue='low')
+    yield dict(name='name', args=[], kwargs={}, timeout=10, queue='low')
+    yield dict(name='name', args=[], kwargs={}, timeout=10, queue='high')
+    yield dict(name='name', args=[], kwargs={}, timeout=10, queue='super')
+    yield dict(name='name', args=[], kwargs={}, timeout=10, queue='medium')
+    yield dict(name='name', args=[], kwargs={}, timeout=10, queue='monthly')
+    yield dict(name='name', args=[], kwargs={}, timeout=10, queue='quaterly')
 
 
 class TestJobs(object):
@@ -40,22 +47,20 @@ class TestJobs(object):
         assert jobs[0]['name'] == 'function'
 
     @patch('pybossa.jobs.get_periodic_jobs')
-    def test_enqueue_periodic_jobs_same_queue_name(self, get_periodic_jobs):
-        """Test JOB enqueue_periodic_jobs same queue works."""
+    def test_enqueue_periodic_jobs(self, get_periodic_jobs):
+        """Test JOB enqueue_periodic_jobs works."""
         get_periodic_jobs.return_value = jobs()
         queue_name = 'low'
         res = enqueue_periodic_jobs(queue_name)
-        all_jobs = []
-        for j in jobs():
-            all_jobs.append(j)
-        msg = "%s jobs in %s have been enqueued" % (len(all_jobs), queue_name)
+        expected_jobs = [job for job in jobs() if job['queue'] == queue_name]
+        msg = "%s jobs in %s have been enqueued" % (len(expected_jobs), queue_name)
         assert res == msg, res
 
     @patch('pybossa.jobs.get_periodic_jobs')
-    def test_enqueue_periodic_jobs_diff_queue_name(self, mock_get_periodic_jobs):
+    def test_enqueue_periodic_jobs_bad_queue_name(self, mock_get_periodic_jobs):
         """Test JOB enqueue_periodic_jobs diff queue name works."""
         mock_get_periodic_jobs.return_value = jobs()
-        queue_name = 'high'
+        queue_name = 'badqueue'
         res = enqueue_periodic_jobs(queue_name)
         msg = "%s jobs in %s have been enqueued" % (0, queue_name)
         assert res == msg, res
