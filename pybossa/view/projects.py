@@ -217,7 +217,7 @@ def new():
     info = {}
     category_by_default = cached_cat.get_all()[0]
 
-    app = App(name=form.name.data,
+    project = App(name=form.name.data,
               short_name=form.short_name.data,
               description=_description_from_long_description(),
               long_description=form.long_description.data,
@@ -225,7 +225,7 @@ def new():
               info=info,
               category_id=category_by_default.id)
 
-    project_repo.save(app)
+    project_repo.save(project)
 
     msg_1 = gettext('Project created!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')
@@ -236,9 +236,9 @@ def new():
           '</a></strong> ' +
           gettext('for adding tasks, a thumbnail, using PyBossa.JS, etc.'),
           'info')
-    auditlogger.add_log_entry(None, app, current_user)
+    auditlogger.add_log_entry(None, project, current_user)
 
-    return redirect(url_for('.update', short_name=app.short_name))
+    return redirect(url_for('.update', short_name=project.short_name))
 
 
 @blueprint.route('/<short_name>/tasks/taskpresentereditor', methods=['GET', 'POST'])
@@ -487,22 +487,22 @@ def details(short_name):
 @blueprint.route('/<short_name>/settings')
 @login_required
 def settings(short_name):
-    (app, owner, n_tasks, n_task_runs,
+    (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
 
-    title = project_title(app, "Settings")
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('update', app)
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    title = project_title(project, "Settings")
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return render_template('/projects/settings.html',
-                           app=app,
+                           project=project,
                            owner=owner,
                            n_tasks=n_tasks,
                            overall_progress=overall_progress,
                            n_task_runs=n_task_runs,
                            last_activity=last_activity,
-                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                           n_volunteers=cached_apps.n_volunteers(app.get('id')),
+                           n_completed_tasks=cached_apps.n_completed_tasks(project.get('id')),
+                           n_volunteers=cached_apps.n_volunteers(project.get('id')),
                            title=title)
 
 
@@ -1178,15 +1178,15 @@ def show_stats(short_name):
 @login_required
 def task_settings(short_name):
     """Settings page for tasks of the project"""
-    (app, owner, n_tasks, n_task_runs,
+    (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
-    n_volunteers = cached_apps.n_volunteers(app.id)
-    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('update', app)
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    n_volunteers = cached_apps.n_volunteers(project.id)
+    n_completed_tasks = cached_apps.n_completed_tasks(project.id)
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return render_template('projects/task_settings.html',
-                           app=app,
+                           project=project,
                            owner=owner,
                            n_tasks=n_tasks,
                            overall_progress=overall_progress,
