@@ -808,26 +808,26 @@ def export(short_name, task_id):
 
 @blueprint.route('/<short_name>/tasks/')
 def tasks(short_name):
-    (app, owner, n_tasks, n_task_runs,
+    (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
-    title = project_title(app, "Tasks")
+    title = project_title(project, "Tasks")
 
-    ensure_authorized_to('read', app)
-    redirect_to_password = _check_if_redirect_to_password(app)
+    ensure_authorized_to('read', project)
+    redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
 
     return render_template('/projects/tasks.html',
                            title=title,
-                           app=app,
+                           project=project,
                            owner=owner,
                            n_tasks=n_tasks,
                            n_task_runs=n_task_runs,
                            overall_progress=overall_progress,
                            last_activity=last_activity,
-                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                           n_volunteers=cached_apps.n_volunteers(app.get('id')))
+                           n_completed_tasks=cached_apps.n_completed_tasks(project.get('id')),
+                           n_volunteers=cached_apps.n_volunteers(project.get('id')))
 
 
 @blueprint.route('/<short_name>/tasks/browse', defaults={'page': 1})
