@@ -130,11 +130,11 @@ def get_export_task_jobs(queue):
         yield job
 
 
-def project_export(id):
+def project_export(_id):
     from pybossa.core import project_repo, json_exporter, csv_exporter
-    app = project_repo.get(id)
+    app = project_repo.get(_id)
     if app is not None:
-        print "Export project id %d" % id
+        print "Export project id %d" % _id
         json_exporter.pregenerate_zip_files(app)
         csv_exporter.pregenerate_zip_files(app)
 
@@ -246,20 +246,20 @@ def get_autoimport_jobs(queue='low'):
 # The following are the actual jobs (i.e. tasks performed in the background)
 
 @with_cache_disabled
-def get_app_stats(id, short_name):  # pragma: no cover
+def get_app_stats(_id, short_name):  # pragma: no cover
     """Get stats for app."""
     import pybossa.cache.apps as cached_apps
     import pybossa.cache.project_stats as stats
     from flask import current_app
 
     cached_apps.get_app(short_name)
-    cached_apps.n_tasks(id)
-    cached_apps.n_task_runs(id)
-    cached_apps.overall_progress(id)
-    cached_apps.last_activity(id)
-    cached_apps.n_completed_tasks(id)
-    cached_apps.n_volunteers(id)
-    stats.get_stats(id, current_app.config.get('GEO'))
+    cached_apps.n_tasks(_id)
+    cached_apps.n_task_runs(_id)
+    cached_apps.overall_progress(_id)
+    cached_apps.last_activity(_id)
+    cached_apps.n_completed_tasks(_id)
+    cached_apps.n_volunteers(_id)
+    stats.get_stats(_id, current_app.config.get('GEO'))
 
 
 @with_cache_disabled
@@ -296,20 +296,20 @@ def warm_cache():  # pragma: no cover
     import pybossa.cache.users as cached_users
     import pybossa.cache.project_stats as stats
 
-    def warm_app(id, short_name, featured=False):
-        if id not in apps_cached:
+    def warm_app(_id, short_name, featured=False):
+        if _id not in apps_cached:
             cached_apps.get_app(short_name)
-            cached_apps.n_tasks(id)
-            n_task_runs = cached_apps.n_task_runs(id)
-            cached_apps.overall_progress(id)
-            cached_apps.last_activity(id)
-            cached_apps.n_completed_tasks(id)
-            cached_apps.n_volunteers(id)
+            cached_apps.n_tasks(_id)
+            n_task_runs = cached_apps.n_task_runs(_id)
+            cached_apps.overall_progress(_id)
+            cached_apps.last_activity(_id)
+            cached_apps.n_completed_tasks(_id)
+            cached_apps.n_volunteers(_id)
             if n_task_runs >= 1000 or featured:
                 print ("Getting stats for %s as it has %s task runs" %
                        (short_name, n_task_runs))
-                stats.get_stats(id, app.config.get('GEO'))
-            apps_cached.append(id)
+                stats.get_stats(_id, app.config.get('GEO'))
+            apps_cached.append(_id)
 
     # Cache top projects
     apps = cached_apps.get_top()
