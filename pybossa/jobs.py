@@ -98,7 +98,7 @@ def get_periodic_jobs(queue):
     engage_jobs = get_inactive_users_jobs() if queue == 'quaterly' else []
     non_contrib_jobs = get_non_contributors_users_jobs() if queue == 'quaterly' else []
     _all = [zip_jobs, jobs, project_jobs, autoimport_jobs,
-           engage_jobs, non_contrib_jobs]
+            engage_jobs, non_contrib_jobs]
     return (job for sublist in _all for job in sublist if job['queue'] == queue)
 
 
@@ -150,10 +150,10 @@ def get_project_jobs(queue='super'):
 
 def create_dict_jobs(data, function, timeout=(10 * MINUTE), queue='low'):
     for d in data:
-        jobs =  dict(name=function,
-                     args=[d['id'], d['short_name']], kwargs={},
-                     timeout=timeout,
-                     queue=queue)
+        jobs = dict(name=function,
+                    args=[d['id'], d['short_name']], kwargs={},
+                    timeout=timeout,
+                    queue=queue)
         yield jobs
 
 
@@ -192,6 +192,7 @@ def get_inactive_users_jobs(queue='quaterly'):
                        timeout=(10 * MINUTE),
                        queue=queue)
             yield job
+
 
 def get_non_contributors_users_jobs(queue='quaterly'):
     """Return a list of users that have never contributed to a project."""
@@ -241,10 +242,11 @@ def get_autoimport_jobs(queue='low'):
                        queue=queue)
             yield job
 
-### The following are the actual jobs (i.e. tasks performed in the background)
+
+# The following are the actual jobs (i.e. tasks performed in the background)
 
 @with_cache_disabled
-def get_app_stats(id, short_name): # pragma: no cover
+def get_app_stats(id, short_name):  # pragma: no cover
     """Get stats for app."""
     import pybossa.cache.apps as cached_apps
     import pybossa.cache.project_stats as stats
@@ -261,7 +263,7 @@ def get_app_stats(id, short_name): # pragma: no cover
 
 
 @with_cache_disabled
-def warm_up_stats(): # pragma: no cover
+def warm_up_stats():  # pragma: no cover
     """Background job for warming stats."""
     print "Running on the background warm_up_stats"
     from pybossa.cache.site_stats import (n_auth_users, n_anon_users,
