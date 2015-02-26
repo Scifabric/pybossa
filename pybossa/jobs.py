@@ -83,8 +83,8 @@ def enqueue_periodic_jobs(queue_name):
     return msg
 
 
-def get_periodic_jobs(queue):  # pragma: no cover
-    """Return a list of periodic jobs."""
+def get_periodic_jobs(queue):
+    """Return a list of periodic jobs for a given queue."""
     # A job is a dict with the following format: dict(name, args, kwargs,
     # timeout, queue)
     # Default ones
@@ -99,7 +99,7 @@ def get_periodic_jobs(queue):  # pragma: no cover
     non_contrib_jobs = get_non_contributors_users_jobs() if queue == 'quaterly' else []
     _all = [zip_jobs, jobs, project_jobs, autoimport_jobs,
            engage_jobs, non_contrib_jobs]
-    return (job for sublist in _all for job in sublist)
+    return (job for sublist in _all for job in sublist if job['queue'] == queue)
 
 
 def get_default_jobs():  # pragma: no cover
