@@ -245,35 +245,35 @@ def new():
 @login_required
 def task_presenter_editor(short_name):
     errors = False
-    (app, owner, n_tasks, n_task_runs,
+    (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
 
-    title = project_title(app, "Task Presenter Editor")
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('update', app)
+    title = project_title(project, "Task Presenter Editor")
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
 
     form = TaskPresenterForm(request.form)
-    form.id.data = app.id
+    form.id.data = project.id
     if request.method == 'POST' and form.validate():
-        db_app = project_repo.get(app.id)
-        old_app = App(**db_app.dictize())
-        old_info = dict(db_app.info)
+        db_project = project_repo.get(project.id)
+        old_project = App(**db_project.dictize())
+        old_info = dict(db_project.info)
         old_info['task_presenter'] = form.editor.data
-        db_app.info = old_info
-        auditlogger.add_log_entry(old_app, db_app, current_user)
-        project_repo.update(db_app)
-        cached_apps.delete_app(app.short_name)
+        db_project.info = old_info
+        auditlogger.add_log_entry(old_project, db_project, current_user)
+        project_repo.update(db_project)
+        cached_apps.delete_project(project.short_name)
         msg_1 = gettext('Task presenter added!')
         flash('<i class="icon-ok"></i> ' + msg_1, 'success')
-        return redirect(url_for('.tasks', short_name=app.short_name))
+        return redirect(url_for('.tasks', short_name=project.short_name))
 
     # It does not have a validation
     if request.method == 'POST' and not form.validate():  # pragma: no cover
         flash(gettext('Please correct the errors'), 'error')
         errors = True
 
-    if app.info.get('task_presenter'):
-        form.editor.data = app.info['task_presenter']
+    if project.info.get('task_presenter'):
+        form.editor.data = project.info['task_presenter']
     else:
         if not request.args.get('template'):
             msg_1 = gettext('<strong>Note</strong> You will need to upload the'
@@ -283,47 +283,47 @@ def task_presenter_editor(short_name):
                             ' <strong>createTasks.py</strong> script in your'
                             ' computer')
             url = '<a href="%s"> %s</a>' % (url_for('app.import_task',
-                                                    short_name=app.short_name), msg_2)
+                                                    short_name=project.short_name), msg_2)
             msg = msg_1 + url + msg_3
             flash(msg, 'info')
 
             wrap = lambda i: "projects/presenters/%s.html" % i
             pres_tmpls = map(wrap, current_app.config.get('PRESENTERS'))
 
-            app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+            project = add_custom_contrib_button_to(project, get_user_id_or_ip())
             return render_template(
                 'projects/task_presenter_options.html',
                 title=title,
-                app=app,
+                project=project,
                 owner=owner,
                 overall_progress=overall_progress,
                 n_tasks=n_tasks,
                 n_task_runs=n_task_runs,
                 last_activity=last_activity,
-                n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                n_volunteers=cached_apps.n_volunteers(app.get('id')),
+                n_completed_tasks=cached_apps.n_completed_tasks(project.get('id')),
+                n_volunteers=cached_apps.n_volunteers(project.get('id')),
                 presenters=pres_tmpls)
 
         tmpl_uri = "projects/snippets/%s.html" \
             % request.args.get('template')
-        tmpl = render_template(tmpl_uri, app=app)
+        tmpl = render_template(tmpl_uri, project=project)
         form.editor.data = tmpl
         msg = 'Your code will be <em>automagically</em> rendered in \
                       the <strong>preview section</strong>. Click in the \
                       preview button!'
         flash(gettext(msg), 'info')
-    dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return render_template('projects/task_presenter_editor.html',
                            title=title,
                            form=form,
-                           app=dict_app,
+                           project=dict_project,
                            owner=owner,
                            overall_progress=overall_progress,
                            n_tasks=n_tasks,
                            n_task_runs=n_task_runs,
                            last_activity=last_activity,
-                           n_completed_tasks=cached_apps.n_completed_tasks(app.id),
-                           n_volunteers=cached_apps.n_volunteers(app.id),
+                           n_completed_tasks=cached_apps.n_completed_tasks(project.id),
+                           n_volunteers=cached_apps.n_volunteers(project.id),
                            errors=errors)
 
 
