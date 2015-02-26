@@ -85,19 +85,19 @@ def enqueue_periodic_jobs(queue_name):
 
 def get_periodic_jobs(queue):  # pragma: no cover
     """Return a list of periodic jobs."""
-    # Default ones
     # A job is a dict with the following format: dict(name, args, kwargs,
     # timeout, queue)
+    # Default ones
     jobs = get_default_jobs()
     # Create ZIPs for all projects
-    zip_jobs = get_export_task_jobs() if queue in ('high', 'low') else []
+    zip_jobs = get_export_task_jobs(queue) if queue in ('high', 'low') else []
     # Based on type of user
     project_jobs = get_project_jobs() if queue == 'super' else []
     autoimport_jobs = get_autoimport_jobs() if queue == 'low' else []
     # User engagement jobs
     engage_jobs = get_inactive_users_jobs() if queue == 'quaterly' else []
     non_contrib_jobs = get_non_contributors_users_jobs() if queue == 'quaterly' else []
-    _all = [zip_jobs, jobs, project_jobs, autoimport_jobs, \
+    _all = [zip_jobs, jobs, project_jobs, autoimport_jobs,
            engage_jobs, non_contrib_jobs]
     return (job for sublist in _all for job in sublist)
 
@@ -112,19 +112,19 @@ def get_default_jobs():  # pragma: no cover
                timeout=(10 * MINUTE), queue='super')
 
 
-def get_export_task_jobs():
+def get_export_task_jobs(queue):
     """Export tasks to zip"""
-    from pybossa.core import db, user_repo
-    from pybossa.model.app import App
-    apps = db.slave_session.query(App).all()
-    for app_x in apps:
-        checkuser = user_repo.get(app_x.owner_id)
-        # Check if Pro User, if yes use a higher priority queue
-        queue = 'low'
-        if checkuser.pro:
-            queue = 'high'
+    from pybossa.core import project_repo
+    import pybossa.cache.apps as cached_apps
+    if queue == 'high':
+        projects = cached_apps.get_from_pro_user()
+    else:
+        projects = (p.dictize() for p in project_repo.get_all()
+                    if p.owner.pro is False)
+    for project in projects:
+        project_id = project.get('id')
         job = dict(name=project_export,
-                   args=[app_x.id], kwargs={},
+                   args=[project_id], kwargs={},
                    timeout=(10 * MINUTE),
                    queue=queue)
         yield job
