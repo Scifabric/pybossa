@@ -46,7 +46,7 @@ class TestAuditlogAPI(Test):
                 'long_description': 'new_long_description',
                 'allow_anonymous_contributors': 'False',
                 }
-        url = '/api/app?api_key=%s' % (user.api_key)
+        url = '/api/project?api_key=%s' % (user.api_key)
         self.app.post(url, data=json.dumps(data))
         logs = auditlog_repo.filter_by(app_short_name='new_short_name')
 
@@ -68,7 +68,7 @@ class TestAuditlogAPI(Test):
         app = AppFactory.create(owner=user)
         app_short_name = app.short_name
 
-        url = '/api/app/%s?api_key=%s' % (app.id, user.api_key)
+        url = '/api/project/%s?api_key=%s' % (app.id, user.api_key)
         self.app.delete(url)
         logs = auditlog_repo.filter_by(app_short_name=app_short_name)
 
@@ -96,7 +96,7 @@ class TestAuditlogAPI(Test):
                 'allow_anonymous_contributors': 'False',
                 }
         attributes = data.keys()
-        url = '/api/app/%s?api_key=%s' % (app.id, app.owner.api_key)
+        url = '/api/project/%s?api_key=%s' % (app.id, app.owner.api_key)
         self.app.put(url, data=json.dumps(data))
         logs = auditlog_repo.filter_by(app_id=app.id)
 
@@ -124,7 +124,7 @@ class TestAuditlogAPI(Test):
                 'allow_anonymous_contributors': 'False',
                 }
         attributes = data.keys()
-        url = '/api/app/%s?api_key=%s' % (app.id, admin.api_key)
+        url = '/api/project/%s?api_key=%s' % (app.id, admin.api_key)
         self.app.put(url, data=json.dumps(data))
         logs = auditlog_repo.filter_by(app_id=app.id)
 
@@ -151,7 +151,7 @@ class TestAuditlogAPI(Test):
                 'long_description': 'new_long_description',
                 'allow_anonymous_contributors': 'False',
                 }
-        url = '/api/app/%s?api_key=%s' % (app.id, user.api_key)
+        url = '/api/project/%s?api_key=%s' % (app.id, user.api_key)
         self.app.put(url, data=json.dumps(data))
         logs = auditlog_repo.filter_by(app_id=app.id)
 
@@ -164,7 +164,7 @@ class TestAuditlogAPI(Test):
         owner_id = app.owner.id
         owner_name = app.owner.name
         data = {'info': {'task_presenter': 'new'}}
-        url = '/api/app/%s?api_key=%s' % (app.id, app.owner.api_key)
+        url = '/api/project/%s?api_key=%s' % (app.id, app.owner.api_key)
         self.app.put(url, data=json.dumps(data))
         logs = auditlog_repo.filter_by(app_id=app.id)
 
@@ -186,7 +186,7 @@ class TestAuditlogAPI(Test):
         owner_id = app.owner.id
         owner_name = app.owner.name
         data = {'info': {'sched': 'random'}}
-        url = '/api/app/%s?api_key=%s' % (app.id, app.owner.api_key)
+        url = '/api/project/%s?api_key=%s' % (app.id, app.owner.api_key)
         self.app.put(url, data=json.dumps(data))
         logs = auditlog_repo.filter_by(app_id=app.id)
 
@@ -209,7 +209,7 @@ class TestAuditlogAPI(Test):
         owner_name = app.owner.name
         data = {'info': {'sched': 'random', 'task_presenter': 'new'}}
         attributes = data['info'].keys()
-        url = '/api/app/%s?api_key=%s' % (app.id, app.owner.api_key)
+        url = '/api/project/%s?api_key=%s' % (app.id, app.owner.api_key)
         self.app.put(url, data=json.dumps(data))
         logs = auditlog_repo.filter_by(app_id=app.id)
 
