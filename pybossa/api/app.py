@@ -22,6 +22,7 @@ This package adds GET, POST, PUT and DELETE methods for:
     * projects,
 
 """
+from flask import redirect, url_for, request
 from flask.ext.login import current_user
 from api_base import APIBase
 from pybossa.model.app import App
@@ -45,23 +46,17 @@ class AppAPI(APIBase):
 
     __class__ = App
 
-    def _create_instance_from_request(self, data):
-        inst = super(AppAPI, self)._create_instance_from_request(data)
-        default_category = get_categories()[0]
-        inst.category_id = default_category.id
-        return inst
+    def get(self, oid):
+        return redirect(url_for('api.api_project', oid=oid))
 
-    def _refresh_cache(self, obj):
-        cached_apps.delete_app(obj.short_name)
+    def post(self):
+        return redirect(url_for('api.api_project'), code=307)
 
-    def _update_object(self, obj):
-        if not current_user.is_anonymous():
-            obj.owner_id = current_user.id
+    def delete(self, oid):
+        return redirect(url_for('api.api_project', oid=oid), code=307)
 
-    def _validate_instance(self, project):
-        if project.short_name and is_reserved_name('app', project.short_name):
-            msg = "Project short_name is not valid, as it's used by the system."
-            raise ValueError(msg)
-
-    def _log_changes(self, old_project, new_project):
-        auditlogger.add_log_entry(old_project, new_project, current_user)
+    def put(self, oid):
+        api_key = request.args.get('api_key')
+        return redirect(url_for('api.api_project',
+                                oid=oid,
+                                api_key=api_key), code=307)

@@ -99,6 +99,7 @@ register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
 
 @jsonpify
 @blueprint.route('/app/<app_id>/newtask')
+@blueprint.route('/project/<app_id>/newtask')
 @crossdomain(origin='*', headers=cors_headers)
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
 def new_task(app_id):
@@ -143,7 +144,9 @@ def mark_task_as_requested_by_user(task, redis_conn):
 
 @jsonpify
 @blueprint.route('/app/<short_name>/userprogress')
+@blueprint.route('/project/<short_name>/userprogress')
 @blueprint.route('/app/<int:app_id>/userprogress')
+@blueprint.route('/project/<int:app_id>/userprogress')
 @crossdomain(origin='*', headers=cors_headers)
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
 def user_progress(app_id=None, short_name=None):
