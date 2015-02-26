@@ -905,15 +905,15 @@ def delete_tasks(short_name):
 @blueprint.route('/<short_name>/tasks/export')
 def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
-    (app, owner, n_tasks, n_task_runs,
+    (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
-    n_volunteers = cached_apps.n_volunteers(app.id)
-    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
-    title = project_title(app, gettext("Export"))
+    n_volunteers = cached_apps.n_volunteers(project.id)
+    n_completed_tasks = cached_apps.n_completed_tasks(project.id)
+    title = project_title(project, gettext("Export"))
     loading_text = gettext("Exporting data..., this may take a while")
 
-    ensure_authorized_to('read', app)
-    redirect_to_password = _check_if_redirect_to_password(app)
+    ensure_authorized_to('read', project)
+    redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
 
@@ -922,7 +922,7 @@ def export_to(short_name):
                                title=title,
                                loading_text=loading_text,
                                ckan_name=current_app.config.get('CKAN_NAME'),
-                               app=app,
+                               project=project,
                                owner=owner,
                                n_tasks=n_tasks,
                                n_task_runs=n_task_runs,
@@ -932,10 +932,10 @@ def export_to(short_name):
 
 
     def gen_json(table):
-        n = getattr(task_repo, 'count_%ss_with' % table)(app_id=app.id)
+        n = getattr(task_repo, 'count_%ss_with' % table)(app_id=project.id)
         sep = ", "
         yield "["
-        for i, tr in enumerate(getattr(task_repo, 'filter_%ss_by' % table)(app_id=app.id, yielded=True), 1):
+        for i, tr in enumerate(getattr(task_repo, 'filter_%ss_by' % table)(app_id=project.id, yielded=True), 1):
             item = json.dumps(tr.dictize())
             if (i == n):
                 sep = ""
@@ -982,7 +982,7 @@ def export_to(short_name):
         writer.writerow(format_csv_properly(t.dictize(), ty='taskrun'))
 
     def get_csv(out, writer, table, handle_row):
-        for tr in getattr(task_repo, 'filter_%ss_by' % table)(app_id=app.id,
+        for tr in getattr(task_repo, 'filter_%ss_by' % table)(app_id=project.id,
                                                               yielded=True):
             handle_row(writer, tr)
         yield out.getvalue()
@@ -990,7 +990,7 @@ def export_to(short_name):
     def respond_json(ty):
         if ty not in ['task', 'task_run']:
             return abort(404)
-        res = json_exporter.response_zip(app, ty)
+        res = json_exporter.response_zip(project, ty)
         return res
 
     def create_ckan_datastore(ckan, table, package_id):
@@ -1008,7 +1008,7 @@ def export_to(short_name):
         msg = msg_1 + "%s ..." % current_app.config['CKAN_URL']
         ckan = Ckan(url=current_app.config['CKAN_URL'],
                     api_key=current_user.ckan_api)
-        app_url = url_for('.details', short_name=app.short_name, _external=True)
+        project_url = url_for('.details', short_name=project.short_name, _external=True)
 
         try:
             package, e = ckan.package_exists(name=app.short_name)
@@ -1016,8 +1016,9 @@ def export_to(short_name):
                 raise e
             if package:
                 # Update the package
-                owner = user_repo.get(app.owner_id)
-                package = ckan.package_update(app=app, user=owner, url=app_url,
+                owner = user_repo.get(project.owner_id)
+                package = ckan.package_update(project=project, user=owner,
+                                              url=project_url,
                                               resources=package['resources'])
 
                 ckan.package = package
@@ -1034,16 +1035,10 @@ def export_to(short_name):
                 if not resource_found:
                     create_ckan_datastore(ckan, ty, package['id'])
             else:
-                owner = user_repo.get(app.owner_id)
-                package = ckan.package_create(app=app, user=owner, url=app_url)
+                owner = user_repo.get(project.owner_id)
+                package = ckan.package_create(project=project, user=owner,
+                                              url=project_url)
                 create_ckan_datastore(ckan, ty, package['id'])
-                #new_resource = ckan.resource_create(name=ty,
-                #                                    package_id=package['id'])
-                #ckan.datastore_create(name=ty,
-                #                      resource_id=new_resource['result']['id'])
-                #ckan.datastore_upsert(name=ty,
-                #                     records=gen_json(ty),
-                #                     resource_id=new_resource['result']['id'])
             flash(msg, 'success')
             return respond()
         except requests.exceptions.ConnectionError:
@@ -1082,9 +1077,9 @@ def export_to(short_name):
             return abort(404)
 
         # TODO: change check for existence below
-        t = getattr(task_repo, 'get_%s_by' % ty)(app_id=app.id)
+        t = getattr(task_repo, 'get_%s_by' % ty)(app_id=project.id)
         if t is not None:
-            res = csv_exporter.response_zip(app, ty)
+            res = csv_exporter.response_zip(project, ty)
             return res
         else:
             flash(msg, 'info')
@@ -1100,12 +1095,12 @@ def export_to(short_name):
     if not (fmt and ty):
         if len(request.args) >= 1:
             abort(404)
-        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+        project = add_custom_contrib_button_to(project, get_user_id_or_ip())
         return render_template('/projects/export.html',
                                title=title,
                                loading_text=loading_text,
                                ckan_name=current_app.config.get('CKAN_NAME'),
-                               app=app,
+                               project=project,
                                owner=owner,
                                n_tasks=n_tasks,
                                n_task_runs=n_task_runs,
