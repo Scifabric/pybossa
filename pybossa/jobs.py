@@ -162,7 +162,6 @@ def get_inactive_users_jobs(queue='quaterly'):
     from sqlalchemy.sql import text
     from pybossa.model.user import User
     from pybossa.core import db
-    from pybossa.extensions import misaka
     # First users that have participated once but more than 3 months ago
     sql = text('''SELECT user_id FROM task_run
                WHERE user_id IS NOT NULL
@@ -199,7 +198,6 @@ def get_non_contributors_users_jobs(queue='quaterly'):
     from sqlalchemy.sql import text
     from pybossa.model.user import User
     from pybossa.core import db
-    from pybossa.extensions import misaka
     # Second users that have created an account but never participated
     sql = text('''SELECT id FROM "user" WHERE
                NOT EXISTS (SELECT user_id FROM task_run
