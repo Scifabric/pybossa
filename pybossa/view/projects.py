@@ -41,7 +41,7 @@ from pybossa.model.auditlog import Auditlog
 from pybossa.model.blogpost import Blogpost
 from pybossa.util import Pagination, admin_required, get_user_id_or_ip
 from pybossa.auth import ensure_authorized_to
-from pybossa.cache import apps as cached_apps
+from pybossa.cache import projects as cached_apps
 from pybossa.cache import categories as cached_cat
 from pybossa.cache import project_stats as stats
 from pybossa.cache.helpers import add_custom_contrib_button_to
@@ -57,7 +57,7 @@ from pybossa.core import project_repo, user_repo, task_repo, blog_repo, auditlog
 from pybossa.auditlogger import AuditLogger
 from pybossa.api import mark_task_as_requested_by_user
 
-blueprint = Blueprint('app', __name__)
+blueprint = Blueprint('project', __name__)
 
 auditlogger = AuditLogger(auditlog_repo, caller='web')
 importer_queue = Queue('medium', connection=sentinel.master)
@@ -165,7 +165,7 @@ def app_index(page, lookup, category, fallback, use_count):
 
     if use_count:
         template_args.update({"count": count})
-    return render_template('/applications/index.html', **template_args)
+    return render_template('/projects/index.html', **template_args)
 
 
 @blueprint.route('/category/draft/', defaults={'page': 1})
@@ -192,7 +192,7 @@ def new():
     form = AppForm(request.form)
 
     def respond(errors):
-        return render_template('applications/new.html',
+        return render_template('projects/new.html',
                                title=gettext("Create a Project"),
                                form=form, errors=errors)
 
@@ -287,12 +287,12 @@ def task_presenter_editor(short_name):
             msg = msg_1 + url + msg_3
             flash(msg, 'info')
 
-            wrap = lambda i: "applications/presenters/%s.html" % i
+            wrap = lambda i: "projects/presenters/%s.html" % i
             pres_tmpls = map(wrap, current_app.config.get('PRESENTERS'))
 
             app = add_custom_contrib_button_to(app, get_user_id_or_ip())
             return render_template(
-                'applications/task_presenter_options.html',
+                'projects/task_presenter_options.html',
                 title=title,
                 app=app,
                 owner=owner,
@@ -304,7 +304,7 @@ def task_presenter_editor(short_name):
                 n_volunteers=cached_apps.n_volunteers(app.get('id')),
                 presenters=pres_tmpls)
 
-        tmpl_uri = "applications/snippets/%s.html" \
+        tmpl_uri = "projects/snippets/%s.html" \
             % request.args.get('template')
         tmpl = render_template(tmpl_uri, app=app)
         form.editor.data = tmpl
@@ -313,7 +313,7 @@ def task_presenter_editor(short_name):
                       preview button!'
         flash(gettext(msg), 'info')
     dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return render_template('applications/task_presenter_editor.html',
+    return render_template('projects/task_presenter_editor.html',
                            title=title,
                            form=form,
                            app=dict_app,
@@ -336,7 +336,7 @@ def delete(short_name):
     ensure_authorized_to('read', app)
     ensure_authorized_to('delete', app)
     if request.method == 'GET':
-        return render_template('/applications/delete.html',
+        return render_template('/projects/delete.html',
                                title=title,
                                app=app,
                                owner=owner,
@@ -441,7 +441,7 @@ def update(short_name):
             return redirect(url_for('.update', short_name=short_name))
 
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return render_template('/applications/update.html',
+    return render_template('/projects/update.html',
                            form=form,
                            upload_form=upload_form,
                            app=app,
@@ -461,7 +461,7 @@ def details(short_name):
      overall_progress, last_activity) = app_by_shortname(short_name)
 
     ensure_authorized_to('read', app)
-    template = '/applications/app.html'
+    template = '/projects/app.html'
 
     redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
@@ -494,7 +494,7 @@ def settings(short_name):
     ensure_authorized_to('read', app)
     ensure_authorized_to('update', app)
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return render_template('/applications/settings.html',
+    return render_template('/projects/settings.html',
                            app=app,
                            owner=owner,
                            n_tasks=n_tasks,
@@ -543,25 +543,25 @@ def import_task(short_name):
                 current_app.logger.error(inst)
                 msg = 'Oops! Looks like there was an error!'
                 flash(gettext(msg), 'error')
-        return render_template('/applications/importers/%s.html' % importer_type,
+        return render_template('/projects/importers/%s.html' % importer_type,
                                 **template_args)
 
     if request.method == 'GET':
         template_tasks = current_app.config.get('TEMPLATE_TASKS')
         if importer_type is None:
-            template_wrap = lambda i: "applications/tasks/gdocs-%s.html" % i
+            template_wrap = lambda i: "projects/tasks/gdocs-%s.html" % i
             task_tmpls = map(template_wrap, template_tasks)
             template_args['task_tmpls'] = task_tmpls
-            importer_wrap = lambda i: "applications/tasks/%s.html" % i
+            importer_wrap = lambda i: "projects/tasks/%s.html" % i
             template_args['available_importers'] = map(importer_wrap, all_importers)
-            return render_template('/applications/task_import_options.html',
+            return render_template('/projects/task_import_options.html',
                                    **template_args)
         if importer_type == 'flickr':
             template_args['albums'] = flickr.get_user_albums(session)
         if importer_type == 'gdocs' and request.args.get('template'):  # pragma: no cover
             template = request.args.get('template')
             form.googledocs_url.data = template_tasks.get(template)
-        return render_template('/applications/importers/%s.html' % importer_type,
+        return render_template('/projects/importers/%s.html' % importer_type,
                                 **template_args)
 
 
@@ -606,7 +606,7 @@ def setup_autoimporter(short_name):
     if app.has_autoimporter():
         current_autoimporter = app.get_autoimporter()
         importer_info = dict(**current_autoimporter)
-        return render_template('/applications/task_autoimporter.html',
+        return render_template('/projects/task_autoimporter.html',
                                 importer=importer_info, **template_args)
 
     if request.method == 'POST':
@@ -621,13 +621,13 @@ def setup_autoimporter(short_name):
 
     if request.method == 'GET':
         if importer_type is None:
-            wrap = lambda i: "applications/tasks/%s.html" % i
+            wrap = lambda i: "projects/tasks/%s.html" % i
             template_args['available_importers'] = map(wrap, all_importers)
-            return render_template('applications/task_autoimport_options.html',
+            return render_template('projects/task_autoimport_options.html',
                                    **template_args)
         if importer_type == 'flickr':
             template_args['albums'] = flickr.get_user_albums(session)
-    return render_template('/applications/importers/%s.html' % importer_type,
+    return render_template('/projects/importers/%s.html' % importer_type,
                                 **template_args)
 
 
@@ -672,7 +672,7 @@ def password_required(short_name):
             response = make_response(redirect(request.args.get('next')))
             return passwd_mngr.update_response(response, app, get_user_id_or_ip())
         flash(gettext('Sorry, incorrect password'))
-    return render_template('applications/password.html',
+    return render_template('projects/password.html',
                             app=app,
                             form=form,
                             short_name=short_name,
@@ -717,9 +717,9 @@ def task_presenter(short_name, task_id):
         return render_template(tmpl, **template_args)
 
     if not (task.app_id == app.id):
-        return respond('/applications/task/wrong.html')
+        return respond('/projects/task/wrong.html')
     mark_task_as_requested_by_user(task, sentinel.master)
-    return respond('/applications/presenter.html')
+    return respond('/projects/presenter.html')
 
 
 @blueprint.route('/<short_name>/presenter')
@@ -762,11 +762,11 @@ def presenter(short_name):
 
     if app.info.get("tutorial") and \
             request.cookies.get(app.short_name + "tutorial") is None:
-        resp = respond('/applications/tutorial.html')
+        resp = respond('/projects/tutorial.html')
         resp.set_cookie(app.short_name + 'tutorial', 'seen')
         return resp
     else:
-        return respond('/applications/presenter.html')
+        return respond('/projects/presenter.html')
 
 
 @blueprint.route('/<short_name>/tutorial')
@@ -779,7 +779,7 @@ def tutorial(short_name):
     redirect_to_password = _check_if_redirect_to_password(app)
     if redirect_to_password:
         return redirect_to_password
-    return render_template('/applications/tutorial.html', title=title,
+    return render_template('/projects/tutorial.html', title=title,
                            app=app, owner=owner)
 
 
@@ -817,7 +817,7 @@ def tasks(short_name):
         return redirect_to_password
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
 
-    return render_template('/applications/tasks.html',
+    return render_template('/projects/tasks.html',
                            title=title,
                            app=app,
                            owner=owner,
@@ -848,7 +848,7 @@ def tasks_browse(short_name, page):
             abort(404)
 
         pagination = Pagination(page, per_page, count)
-        return render_template('/applications/tasks_browse.html',
+        return render_template('/projects/tasks_browse.html',
                                app=app,
                                owner=owner,
                                tasks=page_tasks,
@@ -879,7 +879,7 @@ def delete_tasks(short_name):
         n_volunteers = cached_apps.n_volunteers(app.id)
         n_completed_tasks = cached_apps.n_completed_tasks(app.id)
         app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-        return render_template('applications/tasks/delete.html',
+        return render_template('projects/tasks/delete.html',
                                app=app,
                                owner=owner,
                                n_tasks=n_tasks,
@@ -917,7 +917,7 @@ def export_to(short_name):
         return redirect_to_password
 
     def respond():
-        return render_template('/applications/export.html',
+        return render_template('/projects/export.html',
                                title=title,
                                loading_text=loading_text,
                                ckan_name=current_app.config.get('CKAN_NAME'),
@@ -1100,7 +1100,7 @@ def export_to(short_name):
         if len(request.args) >= 1:
             abort(404)
         app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-        return render_template('/applications/export.html',
+        return render_template('/projects/export.html',
                                title=title,
                                loading_text=loading_text,
                                ckan_name=current_app.config.get('CKAN_NAME'),
@@ -1132,7 +1132,7 @@ def show_stats(short_name):
 
     if not ((n_tasks > 0) and (n_task_runs > 0)):
         app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-        return render_template('/applications/non_stats.html',
+        return render_template('/projects/non_stats.html',
                                title=title,
                                app=app,
                                owner=owner,
@@ -1166,7 +1166,7 @@ def show_stats(short_name):
                hourStats=hours_stats)
 
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return render_template('/applications/stats.html',
+    return render_template('/projects/stats.html',
                            title=title,
                            appStats=json.dumps(tmp),
                            userStats=userStats,
@@ -1189,7 +1189,7 @@ def task_settings(short_name):
     ensure_authorized_to('read', app)
     ensure_authorized_to('update', app)
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return render_template('applications/task_settings.html',
+    return render_template('projects/task_settings.html',
                            app=app,
                            owner=owner,
                            n_tasks=n_tasks,
@@ -1208,7 +1208,7 @@ def task_n_answers(short_name):
     ensure_authorized_to('read', app)
     ensure_authorized_to('update', app)
     if request.method == 'GET':
-        return render_template('/applications/task_n_answers.html',
+        return render_template('/projects/task_n_answers.html',
                                title=title,
                                form=form,
                                app=app,
@@ -1223,7 +1223,7 @@ def task_n_answers(short_name):
         return redirect(url_for('.tasks', short_name=app.short_name))
     else:
         flash(gettext('Please correct the errors'), 'error')
-        return render_template('/applications/task_n_answers.html',
+        return render_template('/projects/task_n_answers.html',
                                title=title,
                                form=form,
                                app=app,
@@ -1239,7 +1239,7 @@ def task_scheduler(short_name):
     form = TaskSchedulerForm()
 
     def respond():
-        return render_template('/applications/task_scheduler.html',
+        return render_template('/projects/task_scheduler.html',
                                title=title,
                                form=form,
                                app=app,
@@ -1287,7 +1287,7 @@ def task_priority(short_name):
     form = TaskPriorityForm()
 
     def respond():
-        return render_template('/applications/task_priority.html',
+        return render_template('/projects/task_priority.html',
                                title=title,
                                form=form,
                                app=app,
@@ -1335,7 +1335,7 @@ def show_blogposts(short_name):
     if redirect_to_password:
         return redirect_to_password
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return render_template('applications/blog.html', app=app,
+    return render_template('projects/blog.html', app=app,
                            owner=owner, blogposts=blogposts,
                            overall_progress=overall_progress,
                            n_tasks=n_tasks,
@@ -1356,7 +1356,7 @@ def show_blogpost(short_name, id):
     if redirect_to_password:
         return redirect_to_password
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return render_template('applications/blog_post.html',
+    return render_template('projects/blog_post.html',
                             app=app,
                             owner=owner,
                             blogpost=blogpost,
@@ -1373,7 +1373,7 @@ def new_blogpost(short_name):
 
     def respond():
         dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-        return render_template('applications/new_blogpost.html',
+        return render_template('projects/new_blogpost.html',
                                title=gettext("Write a new post"),
                                form=form,
                                app=dict_app,
@@ -1424,7 +1424,7 @@ def update_blogpost(short_name, id):
         raise abort(404)
 
     def respond():
-        return render_template('applications/update_blogpost.html',
+        return render_template('projects/update_blogpost.html',
                                title=gettext("Edit a post"),
                                form=form, app=app, owner=owner,
                                blogpost=blogpost,
@@ -1494,7 +1494,7 @@ def auditlog(short_name):
     if redirect_to_password:
         return redirect_to_password
     app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return render_template('applications/auditlog.html', app=app,
+    return render_template('projects/auditlog.html', app=app,
                            owner=owner, logs=logs,
                            overall_progress=overall_progress,
                            n_tasks=n_tasks,

@@ -25,7 +25,7 @@ import json
 from api_base import APIBase, cors_headers
 from flask import Response
 import pybossa.cache.site_stats as stats
-import pybossa.cache.apps as cached_apps
+import pybossa.cache.projects as cached_apps
 import pybossa.cache.categories as cached_categories
 from pybossa.util import jsonpify, crossdomain
 from pybossa.ratelimit import ratelimit

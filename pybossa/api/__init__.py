@@ -37,7 +37,7 @@ from pybossa.util import jsonpify, crossdomain, get_user_id_or_ip
 import pybossa.model as model
 from pybossa.core import csrf, ratelimits, sentinel
 from pybossa.ratelimit import ratelimit
-from pybossa.cache.apps import n_tasks
+from pybossa.cache.projects import n_tasks
 import pybossa.sched as sched
 from pybossa.error import ErrorStatus
 from global_stats import GlobalStatsAPI

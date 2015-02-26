@@ -31,7 +31,7 @@ from werkzeug.exceptions import HTTPException
 
 from pybossa.model.category import Category
 from pybossa.util import admin_required, UnicodeWriter
-from pybossa.cache import apps as cached_apps
+from pybossa.cache import projects as cached_apps
 from pybossa.cache import categories as cached_cat
 from pybossa.auth import ensure_authorized_to
 from pybossa.core import project_repo, user_repo

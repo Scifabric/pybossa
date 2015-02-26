@@ -19,7 +19,7 @@
 from sqlalchemy.sql import text
 from pybossa.core import db
 from pybossa.cache import memoize, ONE_HOUR
-from pybossa.cache.apps import overall_progress
+from pybossa.cache.projects import overall_progress
 
 
 

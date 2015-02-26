@@ -21,7 +21,7 @@ from flask import Blueprint
 from flask import render_template
 
 from pybossa.cache import site_stats
-from pybossa.cache import apps as cached_apps
+from pybossa.cache import projects as cached_apps
 
 blueprint = Blueprint('stats', __name__)
 
