@@ -330,24 +330,24 @@ def task_presenter_editor(short_name):
 @blueprint.route('/<short_name>/delete', methods=['GET', 'POST'])
 @login_required
 def delete(short_name):
-    (app, owner, n_tasks,
+    (project, owner, n_tasks,
     n_task_runs, overall_progress, last_activity) = project_by_shortname(short_name)
-    title = project_title(app, "Delete")
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('delete', app)
+    title = project_title(project, "Delete")
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('delete', project)
     if request.method == 'GET':
         return render_template('/projects/delete.html',
                                title=title,
-                               app=app,
+                               project=project,
                                owner=owner,
                                n_tasks=n_tasks,
                                overall_progress=overall_progress,
                                last_activity=last_activity)
     # Clean cache
-    cached_apps.delete_project(app.short_name)
-    cached_apps.clean(app.id)
-    project_repo.delete(app)
-    auditlogger.add_log_entry(app, None, current_user)
+    cached_apps.delete_project(project.short_name)
+    cached_apps.clean(project.id)
+    project_repo.delete(project)
+    auditlogger.add_log_entry(project, None, current_user)
     flash(gettext('Project deleted!'), 'success')
     return redirect(url_for('account.profile', name=current_user.name))
 
