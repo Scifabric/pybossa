@@ -2873,7 +2873,7 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.projects.importer.count_tasks_to_import')
     def test_import_tasks_as_background_job(self, count_tasks, queue):
         """Test WEB importing a big amount of tasks is done in the background"""
-        from pybossa.view.applications import MAX_NUM_SYNCHRONOUS_TASKS_IMPORT
+        from pybossa.view.projects import MAX_NUM_SYNCHRONOUS_TASKS_IMPORT
         count_tasks.return_value = MAX_NUM_SYNCHRONOUS_TASKS_IMPORT + 1
         self.register()
         self.new_application()
