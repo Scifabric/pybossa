@@ -31,7 +31,7 @@ session = db.slave_session
 
 @memoize(timeout=ONE_DAY)
 def n_tasks(app_id):
-    from .apps import n_tasks
+    from .projects import n_tasks
     return n_tasks(app_id)
 
 

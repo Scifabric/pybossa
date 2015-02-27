@@ -155,7 +155,7 @@ class TestPrivacyWebPublic(web_helper.Helper):
     def test_05_app_stats_index(self):
         """Test PRIVACY project stats privacy is respected"""
         # As Anonymou user
-        url = "/app/%s/stats" % self.app_short_name
+        url = "/project/%s/stats" % self.app_short_name
         res = self.app.get(url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
         err_msg = "App Stats page should be shown to anonymous users"
@@ -339,7 +339,7 @@ class TestPrivacyWebPrivacy(web_helper.Helper):
     def test_05_app_stats_index(self):
         """Test PRIVACY project stats privacy is respected"""
         # As Anonymou user
-        url = "/app/%s/stats" % self.app_short_name
+        url = "/project/%s/stats" % self.app_short_name
         res = self.app.get(url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
         err_msg = "App Stats page should not be shown to anonymous users"
