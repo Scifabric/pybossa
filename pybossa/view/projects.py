@@ -871,17 +871,17 @@ def tasks_browse(short_name, page):
 @login_required
 def delete_tasks(short_name):
     """Delete ALL the tasks for a given project"""
-    (app, owner, n_tasks, n_task_runs,
+    (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('update', app)
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
     if request.method == 'GET':
-        title = project_title(app, "Delete")
-        n_volunteers = cached_apps.n_volunteers(app.id)
-        n_completed_tasks = cached_apps.n_completed_tasks(app.id)
-        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+        title = project_title(project, "Delete")
+        n_volunteers = cached_apps.n_volunteers(project.id)
+        n_completed_tasks = cached_apps.n_completed_tasks(project.id)
+        project = add_custom_contrib_button_to(project, get_user_id_or_ip())
         return render_template('projects/tasks/delete.html',
-                               app=app,
+                               project=project,
                                owner=owner,
                                n_tasks=n_tasks,
                                n_task_runs=n_task_runs,
@@ -891,15 +891,15 @@ def delete_tasks(short_name):
                                last_activity=last_activity,
                                title=title)
     else:
-        tasks = task_repo.filter_tasks_by(app_id=app.id)
+        tasks = task_repo.filter_tasks_by(app_id=project.id)
         task_repo.delete_all(tasks)
         msg = gettext("All the tasks and associated task runs have been deleted")
         flash(msg, 'success')
-        cached_apps.delete_last_activity(app.id)
-        cached_apps.delete_n_tasks(app.id)
-        cached_apps.delete_n_task_runs(app.id)
-        cached_apps.delete_overall_progress(app.id)
-        return redirect(url_for('.tasks', short_name=app.short_name))
+        cached_apps.delete_last_activity(project.id)
+        cached_apps.delete_n_tasks(project.id)
+        cached_apps.delete_n_task_runs(project.id)
+        cached_apps.delete_overall_progress(project.id)
+        return redirect(url_for('.tasks', short_name=project.short_name))
 
 
 @blueprint.route('/<short_name>/tasks/export')
