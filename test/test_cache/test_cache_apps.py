@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from default import Test, with_context
-from pybossa.cache import apps as cached_apps
+from pybossa.cache import projects as cached_projects
 from factories import UserFactory, AppFactory, TaskFactory, \
     TaskRunFactory, AnonymousTaskRunFactory
 from mock import patch
@@ -57,7 +57,7 @@ class TestAppsCache(Test):
 
         AppFactory.create(featured=True)
 
-        featured = cached_apps.get_featured()
+        featured = cached_projects.get_featured()
 
         assert len(featured) is 1, featured
 
@@ -68,7 +68,7 @@ class TestAppsCache(Test):
         featured_app = AppFactory.create(featured=True)
         non_featured_app = AppFactory.create()
 
-        featured = cached_apps.get_featured()
+        featured = cached_projects.get_featured()
 
         assert len(featured) is 1, featured
 
@@ -78,7 +78,7 @@ class TestAppsCache(Test):
 
         featured_app = AppFactory.create(hidden=1, featured=True)
 
-        featured = cached_apps.get_featured()
+        featured = cached_projects.get_featured()
 
         assert len(featured) is 0, featured
 
@@ -93,7 +93,7 @@ class TestAppsCache(Test):
 
         AppFactory.create(featured=True)
 
-        featured = cached_apps.get_featured()[0]
+        featured = cached_projects.get_featured()[0]
 
         for field in fields:
             assert featured.has_key(field), "%s not in app info" % field
@@ -104,7 +104,7 @@ class TestAppsCache(Test):
 
         project = self.create_app_with_tasks(1, 0)
 
-        projects = cached_apps.get(project.category.short_name)
+        projects = cached_projects.get(project.category.short_name)
 
         assert len(projects) is 1, projects
 
@@ -116,7 +116,7 @@ class TestAppsCache(Test):
         #create a non published project too
         AppFactory.create()
 
-        projects = cached_apps.get(project.category.short_name)
+        projects = cached_projects.get(project.category.short_name)
 
         assert len(projects) is 1, projects
 
@@ -126,7 +126,7 @@ class TestAppsCache(Test):
 
         project = self.create_app_with_contributors(1, 0, hidden=1)
 
-        projects = cached_apps.get(project.category.short_name)
+        projects = cached_projects.get(project.category.short_name)
 
         assert len(projects) is 0, projects
 
@@ -138,7 +138,7 @@ class TestAppsCache(Test):
         # Create a project wothout presenter
         AppFactory.create(info={}, category=project.category)
 
-        projects = cached_apps.get(project.category.short_name)
+        projects = cached_projects.get(project.category.short_name)
 
         assert len(projects) is 1, projects
 
@@ -153,7 +153,7 @@ class TestAppsCache(Test):
 
         project = self.create_app_with_tasks(1, 0)
 
-        retrieved_project = cached_apps.get(project.category.short_name)[0]
+        retrieved_project = cached_projects.get(project.category.short_name)[0]
 
         for field in fields:
             assert retrieved_project.has_key(field), "%s not in app info" % field
@@ -165,7 +165,7 @@ class TestAppsCache(Test):
 
         AppFactory.create(info={})
 
-        drafts = cached_apps.get_draft()
+        drafts = cached_projects.get_draft()
 
         assert len(drafts) is 1, drafts
 
@@ -175,7 +175,7 @@ class TestAppsCache(Test):
 
         AppFactory.create(info={}, hidden=1)
 
-        drafts = cached_apps.get_draft()
+        drafts = cached_projects.get_draft()
 
         assert len(drafts) is 0, drafts
 
@@ -187,7 +187,7 @@ class TestAppsCache(Test):
         TaskFactory.create(app=app_no_presenter)
         app_no_task = AppFactory.create()
 
-        drafts = cached_apps.get_draft()
+        drafts = cached_projects.get_draft()
 
         assert len(drafts) is 0, drafts
 
@@ -202,7 +202,7 @@ class TestAppsCache(Test):
 
         AppFactory.create(info={})
 
-        draft = cached_apps.get_draft()[0]
+        draft = cached_projects.get_draft()[0]
 
         for field in fields:
             assert draft.has_key(field), "%s not in app info" % field
@@ -216,7 +216,7 @@ class TestAppsCache(Test):
         ranked_1_app = self.create_app_with_contributors(10, 0, name='one')
         ranked_4_app = self.create_app_with_contributors(7, 0, name='four')
 
-        top_apps = cached_apps.get_top()
+        top_apps = cached_projects.get_top()
 
         assert top_apps[0]['name'] == 'one', top_apps
         assert top_apps[1]['name'] == 'two', top_apps
@@ -232,7 +232,7 @@ class TestAppsCache(Test):
         ranked_1_app = self.create_app_with_contributors(10, 0, name='one')
         ranked_4_app = self.create_app_with_contributors(7, 0, name='four')
 
-        top_apps = cached_apps.get_top(n=2)
+        top_apps = cached_projects.get_top(n=2)
 
         assert len(top_apps) is 2, len(top_apps)
 
@@ -246,7 +246,7 @@ class TestAppsCache(Test):
         ranked_4_app = self.create_app_with_contributors(7, 0, name='four')
         ranked_5_app = self.create_app_with_contributors(7, 0, name='five')
 
-        top_apps = cached_apps.get_top()
+        top_apps = cached_projects.get_top()
 
         assert len(top_apps) is 4, len(top_apps)
 
@@ -259,7 +259,7 @@ class TestAppsCache(Test):
         ranked_1_app = self.create_app_with_contributors(10, 0, name='one')
         hidden_app = self.create_app_with_contributors(11, 0, name='hidden', hidden=1)
 
-        top_apps = cached_apps.get_top()
+        top_apps = cached_projects.get_top()
 
         assert len(top_apps) is 3, len(top_apps)
         for app in top_apps:
@@ -269,7 +269,7 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS n_completed_tasks returns 0 if no completed tasks"""
 
         app = self.create_app_with_tasks(completed_tasks=0, ongoing_tasks=5)
-        completed_tasks = cached_apps.n_completed_tasks(app.id)
+        completed_tasks = cached_projects.n_completed_tasks(app.id)
 
         err_msg = "Completed tasks is %s, it should be 0" % completed_tasks
         assert completed_tasks == 0, err_msg
@@ -280,7 +280,7 @@ class TestAppsCache(Test):
         if there are any"""
 
         app = self.create_app_with_tasks(completed_tasks=5, ongoing_tasks=5)
-        completed_tasks = cached_apps.n_completed_tasks(app.id)
+        completed_tasks = cached_projects.n_completed_tasks(app.id)
 
         err_msg = "Completed tasks is %s, it should be 5" % completed_tasks
         assert completed_tasks == 5, err_msg
@@ -291,7 +291,7 @@ class TestAppsCache(Test):
         tasks are completed"""
 
         app = self.create_app_with_tasks(completed_tasks=4, ongoing_tasks=0)
-        completed_tasks = cached_apps.n_completed_tasks(app.id)
+        completed_tasks = cached_projects.n_completed_tasks(app.id)
 
         err_msg = "Completed tasks is %s, it should be 4" % completed_tasks
         assert completed_tasks == 4, err_msg
@@ -302,7 +302,7 @@ class TestAppsCache(Test):
         that contributed to a project when each only submited one task run"""
 
         app = self.create_app_with_contributors(anonymous=0, registered=3)
-        registered_volunteers = cached_apps.n_registered_volunteers(app.id)
+        registered_volunteers = cached_projects.n_registered_volunteers(app.id)
 
         err_msg = "Volunteers is %s, it should be 3" % registered_volunteers
         assert registered_volunteers == 3, err_msg
@@ -313,7 +313,7 @@ class TestAppsCache(Test):
         that contributed to a project when any submited more than one task run"""
 
         app = self.create_app_with_contributors(anonymous=0, registered=2, two_tasks=True)
-        registered_volunteers = cached_apps.n_registered_volunteers(app.id)
+        registered_volunteers = cached_projects.n_registered_volunteers(app.id)
 
         err_msg = "Volunteers is %s, it should be 2" % registered_volunteers
         assert registered_volunteers == 2, err_msg
@@ -324,7 +324,7 @@ class TestAppsCache(Test):
         that contributed to a project when each only submited one task run"""
 
         app = self.create_app_with_contributors(anonymous=3, registered=0)
-        anonymous_volunteers = cached_apps.n_anonymous_volunteers(app.id)
+        anonymous_volunteers = cached_projects.n_anonymous_volunteers(app.id)
 
         err_msg = "Volunteers is %s, it should be 3" % anonymous_volunteers
         assert anonymous_volunteers == 3, err_msg
@@ -335,7 +335,7 @@ class TestAppsCache(Test):
         that contributed to a project when any submited more than one task run"""
 
         app = self.create_app_with_contributors(anonymous=2, registered=0, two_tasks=True)
-        anonymous_volunteers = cached_apps.n_anonymous_volunteers(app.id)
+        anonymous_volunteers = cached_projects.n_anonymous_volunteers(app.id)
 
         err_msg = "Volunteers is %s, it should be 2" % anonymous_volunteers
         assert anonymous_volunteers == 2, err_msg
@@ -346,7 +346,7 @@ class TestAppsCache(Test):
         plus registered volunteers that contributed to a project"""
 
         app = self.create_app_with_contributors(anonymous=2, registered=3, two_tasks=True)
-        total_volunteers = cached_apps.n_volunteers(app.id)
+        total_volunteers = cached_projects.n_volunteers(app.id)
 
         err_msg = "Volunteers is %s, it should be 5" % total_volunteers
         assert total_volunteers == 5, err_msg
@@ -359,7 +359,7 @@ class TestAppsCache(Test):
         app = AppFactory.create(info={})
         TaskFactory.create_batch(2, app=app)
 
-        number_of_drafts = cached_apps._n_draft()
+        number_of_drafts = cached_projects._n_draft()
 
         assert number_of_drafts == 0, number_of_drafts
 
@@ -370,7 +370,7 @@ class TestAppsCache(Test):
 
         AppFactory.create_batch(2, info={})
 
-        number_of_drafts = cached_apps._n_draft()
+        number_of_drafts = cached_projects._n_draft()
 
         assert number_of_drafts == 2, number_of_drafts
 
@@ -381,7 +381,7 @@ class TestAppsCache(Test):
 
         project = AppFactory.create()
 
-        browse_tasks = cached_apps.browse_tasks(project.id)
+        browse_tasks = cached_projects.browse_tasks(project.id)
 
         assert browse_tasks == [], browse_tasks
 
@@ -393,7 +393,7 @@ class TestAppsCache(Test):
         project = AppFactory.create()
         TaskFactory.create_batch(2, app=project)
 
-        browse_tasks = cached_apps.browse_tasks(project.id)
+        browse_tasks = cached_projects.browse_tasks(project.id)
 
         assert len(browse_tasks) == 2, browse_tasks
 
@@ -406,7 +406,7 @@ class TestAppsCache(Test):
         task = TaskFactory.create( app=project, info={})
         attributes = ('id', 'n_answers')
 
-        cached_task = cached_apps.browse_tasks(project.id)[0]
+        cached_task = cached_projects.browse_tasks(project.id)[0]
 
         for attr in attributes:
             assert cached_task.get(attr) == getattr(task, attr), attr
@@ -419,29 +419,29 @@ class TestAppsCache(Test):
         project = AppFactory.create()
         task = TaskFactory.create( app=project, info={}, n_answers=4)
 
-        cached_task = cached_apps.browse_tasks(project.id)[0]
+        cached_task = cached_projects.browse_tasks(project.id)[0]
         # 0 if no task runs
         assert cached_task.get('pct_status') == 0, cached_task.get('pct_status')
 
         TaskRunFactory.create(task=task)
-        cached_task = cached_apps.browse_tasks(project.id)[0]
+        cached_task = cached_projects.browse_tasks(project.id)[0]
         # Gets updated with new task runs
         assert cached_task.get('pct_status') == 0.25, cached_task.get('pct_status')
 
         TaskRunFactory.create_batch(3, task=task)
-        cached_task = cached_apps.browse_tasks(project.id)[0]
+        cached_task = cached_projects.browse_tasks(project.id)[0]
         # To a maximum of 1
         assert cached_task.get('pct_status') == 1.0, cached_task.get('pct_status')
 
         TaskRunFactory.create(task=task)
-        cached_task = cached_apps.browse_tasks(project.id)[0]
+        cached_task = cached_projects.browse_tasks(project.id)[0]
         # And it does not go over 1 (that is 100%!!)
         assert cached_task.get('pct_status') == 1.0, cached_task.get('pct_status')
 
 
     def test_n_featured_returns_nothing(self):
         """Test CACHE PROJECTS _n_featured 0 if there are no featured projects"""
-        number_of_featured = cached_apps._n_featured()
+        number_of_featured = cached_projects._n_featured()
 
         assert number_of_featured == 0, number_of_featured
 
@@ -450,7 +450,7 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS _n_featured returns number of featured projects"""
         AppFactory.create(featured=True)
 
-        number_of_featured = cached_apps._n_featured()
+        number_of_featured = cached_projects._n_featured()
 
         assert number_of_featured == 1, number_of_featured
 
@@ -460,7 +460,7 @@ class TestAppsCache(Test):
     def test_n_count_calls_n_draft(self, _n_draft, pickle):
         """Test CACHE PROJECTS n_count calls _n_draft when called with argument
         'draft'"""
-        cached_apps.n_count('draft')
+        cached_projects.n_count('draft')
 
         _n_draft.assert_called_with()
 
@@ -470,7 +470,7 @@ class TestAppsCache(Test):
     def test_n_count_calls_n_featuredt(self, _n_featured, pickle):
         """Test CACHE PROJECTS n_count calls _n_featured when called with
         argument 'featured'"""
-        cached_apps.n_count('featured')
+        cached_projects.n_count('featured')
 
         _n_featured.assert_called_with()
 
@@ -480,7 +480,7 @@ class TestAppsCache(Test):
         projects from requested category"""
         project = self.create_app_with_tasks(1, 0)
 
-        n_projects = cached_apps.n_count('nocategory')
+        n_projects = cached_projects.n_count('nocategory')
 
         assert n_projects == 0, n_projects
 
@@ -492,7 +492,7 @@ class TestAppsCache(Test):
         #create a non published project too
         AppFactory.create()
 
-        n_projects = cached_apps.n_count(project.category.short_name)
+        n_projects = cached_projects.n_count(project.category.short_name)
 
         assert n_projects == 1, n_projects
 
@@ -503,7 +503,7 @@ class TestAppsCache(Test):
         pro_user = UserFactory.create(pro=True)
         AppFactory.create()
 
-        pro_owned_projects = cached_apps.get_from_pro_user()
+        pro_owned_projects = cached_projects.get_from_pro_user()
 
         assert pro_owned_projects == [], pro_owned_projects
 
@@ -515,7 +515,7 @@ class TestAppsCache(Test):
         AppFactory.create()
         pro_project = AppFactory.create(owner=pro_user)
 
-        pro_owned_projects = cached_apps.get_from_pro_user()
+        pro_owned_projects = cached_projects.get_from_pro_user()
 
         assert len(pro_owned_projects) is 1, len(pro_owned_projects)
         assert pro_owned_projects[0]['short_name'] == pro_project.short_name
@@ -527,7 +527,7 @@ class TestAppsCache(Test):
         AppFactory.create(owner=pro_user)
         fields = ('id', 'short_name')
 
-        pro_owned_projects = cached_apps.get_from_pro_user()
+        pro_owned_projects = cached_projects.get_from_pro_user()
 
         for field in fields:
             assert field in pro_owned_projects[0].keys(), field
