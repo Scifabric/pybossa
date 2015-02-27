@@ -355,13 +355,13 @@ def delete(short_name):
 @blueprint.route('/<short_name>/update', methods=['GET', 'POST'])
 @login_required
 def update(short_name):
-    (app, owner, n_tasks,
+    (project, owner, n_tasks,
      n_task_runs, overall_progress, last_activity) = project_by_shortname(short_name)
 
     def handle_valid_form(form):
         hidden = int(form.hidden.data)
 
-        (app, owner, n_tasks, n_task_runs,
+        (project, owner, n_tasks, n_task_runs,
          overall_progress, last_activity) = project_by_shortname(short_name)
 
         new_project = project_repo.get_by_shortname(short_name)
@@ -375,8 +375,8 @@ def update(short_name):
             new_project.long_description=form.long_description.data
             new_project.hidden=int(form.hidden.data)
             new_project.webhook=form.webhook.data
-            new_project.info=app.info
-            new_project.owner_id=app.owner_id
+            new_project.info=project.info
+            new_project.owner_id=project.owner_id
             new_project.allow_anonymous_contributors=form.allow_anonymous_contributors.data
             new_project.category_id=form.category_id.data
 
@@ -391,18 +391,18 @@ def update(short_name):
         return redirect(url_for('.details',
                                 short_name=new_project.short_name))
 
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('update', app)
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
 
-    title = project_title(app, "Update")
+    title = project_title(project, "Update")
     if request.method == 'GET':
-        form = AppUpdateForm(obj=app)
+        form = AppUpdateForm(obj=project)
         upload_form = AvatarUploadForm()
         categories = project_repo.get_all_categories()
         form.category_id.choices = [(c.id, c.name) for c in categories]
-        if app.category_id is None:
-            app.category_id = categories[0].id
-        form.populate_obj(app)
+        if project.category_id is None:
+            project.category_id = categories[0].id
+        form.populate_obj(project)
 
     if request.method == 'POST':
         upload_form = AvatarUploadForm()
@@ -416,23 +416,23 @@ def update(short_name):
             flash(gettext('Please correct the errors'), 'error')
         else:
             if upload_form.validate_on_submit():
-                app = project_repo.get(app.id)
+                project = project_repo.get(project.id)
                 file = request.files['avatar']
                 coordinates = (upload_form.x1.data, upload_form.y1.data,
                                upload_form.x2.data, upload_form.y2.data)
                 prefix = time.time()
-                file.filename = "app_%s_thumbnail_%i.png" % (app.id, prefix)
+                file.filename = "app_%s_thumbnail_%i.png" % (project.id, prefix)
                 container = "user_%s" % current_user.id
                 uploader.upload_file(file,
                                      container=container,
                                      coordinates=coordinates)
                 # Delete previous avatar from storage
-                if app.info.get('thumbnail'):
-                    uploader.delete_file(app.info['thumbnail'], container)
-                app.info['thumbnail'] = file.filename
-                app.info['container'] = container
-                project_repo.save(app)
-                cached_apps.delete_project(app.short_name)
+                if project.info.get('thumbnail'):
+                    uploader.delete_file(project.info['thumbnail'], container)
+                project.info['thumbnail'] = file.filename
+                project.info['container'] = container
+                project_repo.save(project)
+                cached_apps.delete_project(project.short_name)
                 flash(gettext('Your project thumbnail has been updated! It may \
                                   take some minutes to refresh...'), 'success')
             else:
@@ -440,18 +440,18 @@ def update(short_name):
                       'error')
             return redirect(url_for('.update', short_name=short_name))
 
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return render_template('/projects/update.html',
                            form=form,
                            upload_form=upload_form,
-                           app=app,
+                           project=project,
                            owner=owner,
                            n_tasks=n_tasks,
                            overall_progress=overall_progress,
                            n_task_runs=n_task_runs,
                            last_activity=last_activity,
-                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                           n_volunteers=cached_apps.n_volunteers(app.get('id')),
+                           n_completed_tasks=cached_apps.n_completed_tasks(project.get('id')),
+                           n_volunteers=cached_apps.n_volunteers(project.get('id')),
                            title=title)
 
 
