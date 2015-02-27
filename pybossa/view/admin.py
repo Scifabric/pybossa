@@ -82,7 +82,7 @@ def featured(project_id=None):
                 ensure_authorized_to('update', project)
                 if request.method == 'POST':
                     if project.featured is True:
-                        msg = "App.id %s already featured" % project_id
+                        msg = "Project.id %s already featured" % project_id
                         return format_error(msg, 415)
                     cached_apps.reset()
                     project.featured = True
