@@ -20,6 +20,7 @@ before_install:
 - redis-server --version
 - redis-server contrib/redis/sentinel.conf --sentinel
 install:
+- pip install -U pip
 - pip install -r requirements.txt
 before_script:
 - psql -c "create user rtester with createdb login password 'rtester'" -U postgres
