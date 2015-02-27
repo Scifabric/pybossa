@@ -1412,22 +1412,22 @@ def new_blogpost(short_name):
 @blueprint.route('/<short_name>/<int:id>/update', methods=['GET', 'POST'])
 @login_required
 def update_blogpost(short_name, id):
-    (app, owner, n_tasks, n_task_runs,
+    (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
 
-    blogpost = blog_repo.get_by(id=id, app_id=app.id)
+    blogpost = blog_repo.get_by(id=id, app_id=project.id)
     if blogpost is None:
         raise abort(404)
 
     def respond():
         return render_template('projects/update_blogpost.html',
                                title=gettext("Edit a post"),
-                               form=form, app=app, owner=owner,
+                               form=form, project=project, owner=owner,
                                blogpost=blogpost,
                                overall_progress=overall_progress,
                                n_task_runs=n_task_runs,
-                               n_completed_tasks=cached_projects.n_completed_tasks(app.id),
-                               n_volunteers=cached_projects.n_volunteers(app.id))
+                               n_completed_tasks=cached_projects.n_completed_tasks(project.id),
+                               n_volunteers=cached_projects.n_volunteers(project.id))
 
     form = BlogpostForm()
 
@@ -1445,7 +1445,7 @@ def update_blogpost(short_name, id):
                         title=form.title.data,
                         body=form.body.data,
                         user_id=current_user.id,
-                        app_id=app.id)
+                        app_id=project.id)
     blog_repo.update(blogpost)
     cached_projects.delete_project(short_name)
 

@@ -38,7 +38,7 @@ class TestBlogpostView(web.Helper):
         blogpost_1 = BlogpostFactory.create(owner=user, app=app, title='titleone')
         blogpost_2 = BlogpostFactory.create(owner=user, app=app, title='titletwo')
 
-        url = "/app/%s/blog" % app.short_name
+        url = "/project/%s/blog" % app.short_name
 
         # As anonymous
         res = self.app.get(url, follow_redirects=True)
@@ -64,7 +64,7 @@ class TestBlogpostView(web.Helper):
         app = AppFactory.create(owner=user, hidden=1)
         blogpost = BlogpostFactory.create(app=app, title='title')
 
-        url = "/app/%s/blog" % app.short_name
+        url = "/project/%s/blog" % app.short_name
 
         # As app owner
         res = self.app.get(url, follow_redirects=True)
@@ -91,7 +91,7 @@ class TestBlogpostView(web.Helper):
 
     def test_blogpost_get_all_errors(self):
         """Test blogpost GET all raises error if the project does not exist"""
-        url = "/app/non-existing-app/blog"
+        url = "/project/non-existing-app/blog"
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
@@ -102,7 +102,7 @@ class TestBlogpostView(web.Helper):
         user = self.create_users()[1]
         app = AppFactory.create(owner=user)
         blogpost = BlogpostFactory.create(app=app, title='title')
-        url = "/app/%s/%s" % (app.short_name, blogpost.id)
+        url = "/project/%s/%s" % (app.short_name, blogpost.id)
 
         # As anonymous
         res = self.app.get(url, follow_redirects=True)
@@ -125,7 +125,7 @@ class TestBlogpostView(web.Helper):
         user = user_repo.get(2)
         app = AppFactory.create(owner=user, hidden=1)
         blogpost = BlogpostFactory.create(app=app, title='title')
-        url = "/app/%s/%s" % (app.short_name, blogpost.id)
+        url = "/project/%s/%s" % (app.short_name, blogpost.id)
 
         # As app owner
         res = self.app.get(url, follow_redirects=True)
@@ -158,30 +158,30 @@ class TestBlogpostView(web.Helper):
         blogpost = BlogpostFactory.create(app=app1)
 
         # To a non-existing app
-        url = "/app/non-existing-app/%s" % blogpost.id
+        url = "/project/non-existing-app/%s" % blogpost.id
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
         # To a non-existing post
-        url = "/app/%s/999999" % app1.short_name
+        url = "/project/%s/999999" % app1.short_name
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
         # To an existing post but with a project in the URL it does not belong to
-        url = "/app/%s/%s" % (app2.short_name, blogpost.id)
+        url = "/project/%s/%s" % (app2.short_name, blogpost.id)
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
 
-    from pybossa.view.applications import redirect
+    from pybossa.view.projects import redirect
 
-    @patch('pybossa.view.applications.redirect', wraps=redirect)
+    @patch('pybossa.view.projects.redirect', wraps=redirect)
     def test_blogpost_create_by_owner(self, mock_redirect):
         """Test blogposts, project owners can create"""
         self.register()
         user = user_repo.get(1)
         app = AppFactory.create(owner=user)
-        url = "/app/%s/new-blogpost" % app.short_name
+        url = "/project/%s/new-blogpost" % app.short_name
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
@@ -190,7 +190,7 @@ class TestBlogpostView(web.Helper):
                             data={'title':'blogpost title', 'body':'body'},
                             follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        mock_redirect.assert_called_with('/app/%E2%9C%93app1/blog')
+        mock_redirect.assert_called_with('/project/%E2%9C%93app1/blog')
 
         blogpost = blog_repo.get_by(title='blogpost title')
         assert blogpost.title == 'blogpost title', blogpost.title
@@ -201,7 +201,7 @@ class TestBlogpostView(web.Helper):
     def test_blogpost_create_by_anonymous(self):
         """Test blogpost create, anonymous users are redirected to signin"""
         app = AppFactory.create()
-        url = "/app/%s/new-blogpost" % app.short_name
+        url = "/project/%s/new-blogpost" % app.short_name
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
@@ -222,7 +222,7 @@ class TestBlogpostView(web.Helper):
         self.register()
         user = user_repo.get(1)
         app = AppFactory.create(owner=user)
-        url = "/app/%s/new-blogpost" % app.short_name
+        url = "/project/%s/new-blogpost" % app.short_name
         self.signout()
         self.register(name='notowner', email='user2@user.com')
 
@@ -238,7 +238,7 @@ class TestBlogpostView(web.Helper):
     def test_blogpost_create_errors(self):
         """Test blogposts create for non existing projects raises errors"""
         self.register()
-        url = "/app/non-existing-app/new-blogpost"
+        url = "/project/non-existing-app/new-blogpost"
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
@@ -248,14 +248,14 @@ class TestBlogpostView(web.Helper):
         assert res.status_code == 404, res.status_code
 
 
-    @patch('pybossa.view.applications.redirect', wraps=redirect)
+    @patch('pybossa.view.projects.redirect', wraps=redirect)
     def test_blogpost_update_by_owner(self, mock_redirect):
         """Test blogposts, project owners can update"""
         self.register()
         user = user_repo.get(1)
         app = AppFactory.create(owner=user)
         blogpost = BlogpostFactory.create(app=app)
-        url = "/app/%s/%s/update" % (app.short_name, blogpost.id)
+        url = "/project/%s/%s/update" % (app.short_name, blogpost.id)
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
@@ -266,7 +266,7 @@ class TestBlogpostView(web.Helper):
                                   'body':'new body'},
                             follow_redirects=True)
         assert res.status_code == 200, res.status_code
-        mock_redirect.assert_called_with('/app/%E2%9C%93app1/blog')
+        mock_redirect.assert_called_with('/project/%E2%9C%93app1/blog')
 
         blogpost = blog_repo.get_by(title='blogpost title')
         assert blogpost.title == 'blogpost title', blogpost.title
@@ -278,7 +278,7 @@ class TestBlogpostView(web.Helper):
         """Test blogpost update, anonymous users are redirected to signin"""
         app = AppFactory.create()
         blogpost = BlogpostFactory.create(app=app, title='title')
-        url = "/app/%s/%s/update" % (app.short_name, blogpost.id)
+        url = "/project/%s/%s/update" % (app.short_name, blogpost.id)
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
@@ -303,10 +303,10 @@ class TestBlogpostView(web.Helper):
         user = user_repo.get(1)
         app = AppFactory.create(owner=user)
         blogpost = BlogpostFactory.create(app=app, title='title', body='body')
-        url = "/app/%s/new-blogpost" % app.short_name
+        url = "/project/%s/new-blogpost" % app.short_name
         self.signout()
         self.register(name='notowner', email='user2@user.com')
-        url = "/app/%s/%s/update" % (app.short_name, blogpost.id)
+        url = "/project/%s/%s/update" % (app.short_name, blogpost.id)
 
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 403, res.status_code
@@ -329,33 +329,33 @@ class TestBlogpostView(web.Helper):
         blogpost = BlogpostFactory.create(app=app1, body='body')
 
         # To a non-existing app
-        url = "/app/non-existing-app/%s/update" % blogpost.id
+        url = "/project/non-existing-app/%s/update" % blogpost.id
         res = self.app.post(url, data={'title':'new title', 'body':'body'},
                             follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
         # To a non-existing post
-        url = "/app/%s/999999/update" % app1.short_name
+        url = "/project/%s/999999/update" % app1.short_name
         res = self.app.post(url, data={'title':'new title', 'body':'body'},
                             follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
         # To an existing post but with a project in the URL it does not belong to
-        url = "/app/%s/%s/update" % (app2.short_name, blogpost.id)
+        url = "/project/%s/%s/update" % (app2.short_name, blogpost.id)
         res = self.app.post(url, data={'title':'new title', 'body':'body'},
                             follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
 
-    @patch('pybossa.view.applications.redirect', wraps=redirect)
+    @patch('pybossa.view.projects.redirect', wraps=redirect)
     def test_blogpost_delete_by_owner(self, mock_redirect):
         """Test blogposts, project owner can delete"""
         self.register()
         user = user_repo.get(1)
         app = AppFactory.create(owner=user)
         blogpost = BlogpostFactory.create(app=app)
-        url = "/app/%s/%s/delete" % (app.short_name, blogpost.id)
-        redirect_url = '/app/%E2%9C%93app1/blog'
+        url = "/project/%s/%s/delete" % (app.short_name, blogpost.id)
+        redirect_url = '/project/%E2%9C%93app1/blog'
 
         res = self.app.post(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
@@ -370,7 +370,7 @@ class TestBlogpostView(web.Helper):
         """Test blogpost delete, anonymous users are redirected to signin"""
         app = AppFactory.create()
         blogpost = BlogpostFactory.create(app=app)
-        url = "/app/%s/%s/delete" % (app.short_name, blogpost.id)
+        url = "/project/%s/%s/delete" % (app.short_name, blogpost.id)
 
         res = self.app.post(url, follow_redirects=True)
         assert res.status_code == 200, res.status_code
@@ -387,9 +387,9 @@ class TestBlogpostView(web.Helper):
         user = user_repo.get(1)
         app = AppFactory.create(owner=user)
         blogpost = BlogpostFactory.create(app=app)
-        url = "/app/%s/new-blogpost" % app.short_name
+        url = "/project/%s/new-blogpost" % app.short_name
         self.signout()
-        url = "/app/%s/%s/delete" % (app.short_name, blogpost.id)
+        url = "/project/%s/%s/delete" % (app.short_name, blogpost.id)
         self.register(name='notowner', email='user2@user.com')
 
         res = self.app.post(url, follow_redirects=True)
@@ -408,16 +408,16 @@ class TestBlogpostView(web.Helper):
         blogpost = BlogpostFactory.create(app=app1)
 
         # To a non-existing app
-        url = "/app/non-existing-app/%s/delete" % blogpost.id
+        url = "/project/non-existing-app/%s/delete" % blogpost.id
         res = self.app.post(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
         # To a non-existing post
-        url = "/app/%s/999999/delete" % app1.short_name
+        url = "/project/%s/999999/delete" % app1.short_name
         res = self.app.post(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
         # To an existing post but with a project in the URL it does not belong to
-        url = "/app/%s/%s/delete" % (app2.short_name, blogpost.id)
+        url = "/project/%s/%s/delete" % (app2.short_name, blogpost.id)
         res = self.app.post(url, follow_redirects=True)
         assert res.status_code == 404, res.status_code
