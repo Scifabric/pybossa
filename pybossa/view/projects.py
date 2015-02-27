@@ -661,19 +661,19 @@ def delete_autoimporter(short_name):
 
 @blueprint.route('/<short_name>/password', methods=['GET', 'POST'])
 def password_required(short_name):
-    (app, owner, n_tasks, n_task_runs,
+    (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
     form = PasswordForm(request.form)
     if request.method == 'POST' and form.validate():
         password = request.form.get('password')
         cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
         passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
-        if passwd_mngr.validates(password, app):
+        if passwd_mngr.validates(password, project):
             response = make_response(redirect(request.args.get('next')))
-            return passwd_mngr.update_response(response, app, get_user_id_or_ip())
+            return passwd_mngr.update_response(response, project, get_user_id_or_ip())
         flash(gettext('Sorry, incorrect password'))
     return render_template('projects/password.html',
-                            app=app,
+                            project=project,
                             form=form,
                             short_name=short_name,
                             next=request.args.get('next'))
