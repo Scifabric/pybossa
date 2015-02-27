@@ -285,7 +285,7 @@ class TestAuditlogWEB(web.Helper):
         self.new_application()
         short_name = 'sampleapp'
 
-        url = "/app/%s/update" % short_name
+        url = "/project/%s/update" % short_name
 
         self.data['name'] = 'New'
 
@@ -308,7 +308,7 @@ class TestAuditlogWEB(web.Helper):
         self.new_application()
         short_name = 'newshort_name'
 
-        url = "/app/sampleapp/update"
+        url = "/project/sampleapp/update"
 
         self.data['short_name'] = 'newshort_name'
 
@@ -331,7 +331,7 @@ class TestAuditlogWEB(web.Helper):
         self.new_application()
         short_name = 'sampleapp'
 
-        url = "/app/%s/update" % short_name
+        url = "/project/%s/update" % short_name
 
         attribute = 'description'
 
@@ -361,7 +361,7 @@ class TestAuditlogWEB(web.Helper):
         self.new_application()
         short_name = 'sampleapp'
 
-        url = "/app/%s/update" % short_name
+        url = "/project/%s/update" % short_name
 
         attribute = 'allow_anonymous_contributors'
 
@@ -390,7 +390,7 @@ class TestAuditlogWEB(web.Helper):
         self.new_application()
         short_name = 'sampleapp'
 
-        url = "/app/%s/update" % short_name
+        url = "/project/%s/update" % short_name
 
         attribute = 'hidden'
 
@@ -420,7 +420,7 @@ class TestAuditlogWEB(web.Helper):
         self.new_application()
         short_name = 'sampleapp'
 
-        url = "/app/%s/update" % short_name
+        url = "/project/%s/update" % short_name
 
         attribute = 'long_description'
 
@@ -450,7 +450,7 @@ class TestAuditlogWEB(web.Helper):
         self.new_application()
         short_name = 'sampleapp'
 
-        url = "/app/%s/update" % short_name
+        url = "/project/%s/update" % short_name
 
         attribute = 'password'
 
@@ -484,7 +484,7 @@ class TestAuditlogWEB(web.Helper):
         self.new_application()
         short_name = 'sampleapp'
 
-        url = "/app/%s/update" % short_name
+        url = "/project/%s/update" % short_name
 
         attribute = 'webhook'
 
@@ -513,7 +513,7 @@ class TestAuditlogWEB(web.Helper):
         self.new_application()
         short_name = 'sampleapp'
 
-        url = "/app/%s/tasks/taskpresentereditor" % short_name
+        url = "/project/%s/tasks/taskpresentereditor" % short_name
 
         attribute = 'editor'
 
@@ -542,7 +542,7 @@ class TestAuditlogWEB(web.Helper):
         self.new_application()
         short_name = 'sampleapp'
 
-        url = "/app/%s/tasks/scheduler" % short_name
+        url = "/project/%s/tasks/scheduler" % short_name
 
         attribute = 'sched'
 
@@ -570,7 +570,7 @@ class TestAuditlogWEB(web.Helper):
         self.new_task(1)
         short_name = 'sampleapp'
 
-        url = "/app/%s/tasks/priority" % short_name
+        url = "/project/%s/tasks/priority" % short_name
 
         attribute = 'task.priority_0'
 
@@ -599,7 +599,7 @@ class TestAuditlogWEB(web.Helper):
         self.new_task(1)
         short_name = 'sampleapp'
 
-        url = "/app/%s/tasks/priority" % short_name
+        url = "/project/%s/tasks/priority" % short_name
 
         attribute = 'task.priority_0'
 
@@ -628,7 +628,7 @@ class TestAuditlogWEB(web.Helper):
         self.new_task(1)
         short_name = 'sampleapp'
 
-        url = "/app/%s/tasks/redundancy" % short_name
+        url = "/project/%s/tasks/redundancy" % short_name
 
         attribute = 'task.n_answers'
 
@@ -656,7 +656,7 @@ class TestAuditlogWEB(web.Helper):
         self.new_task(1)
         short_name = 'sampleapp'
 
-        url = "/app/%s/tasks/autoimporter" % short_name
+        url = "/project/%s/tasks/autoimporter" % short_name
         data = {'form_name': 'csv', 'csv_url': 'http://fakeurl.com'}
 
         self.app.post(url, data=data, follow_redirects=True)
@@ -692,7 +692,7 @@ class TestAuditlogWEB(web.Helper):
 
         new_value = 'Nothing'
 
-        url = "/app/%s/tasks/autoimporter/delete" % short_name
+        url = "/project/%s/tasks/autoimporter/delete" % short_name
         self.app.post(url, data={}, follow_redirects=True)
 
         logs = auditlog_repo.filter_by(app_short_name=short_name)
@@ -716,7 +716,7 @@ class TestAuditlogWEB(web.Helper):
         short_name = 'sampleapp'
         self.signout()
 
-        url = "/app/%s/auditlog" % short_name
+        url = "/project/%s/auditlog" % short_name
 
         res = self.app.get(url, follow_redirects=True)
         assert "Sign in" in res.data, res.data
@@ -733,7 +733,7 @@ class TestAuditlogWEB(web.Helper):
         self.new_task(1)
         short_name = 'sampleapp'
 
-        url = "/app/%s/auditlog" % short_name
+        url = "/project/%s/auditlog" % short_name
 
         res = self.app.get(url, follow_redirects=True)
         assert  res.status_code == 403, res.status_code
@@ -754,7 +754,7 @@ class TestAuditlogWEB(web.Helper):
         user.pro = True
         user_repo.save(user)
 
-        url = "/app/%s/auditlog" % short_name
+        url = "/project/%s/auditlog" % short_name
 
         res = self.app.get(url, follow_redirects=True)
         assert  res.status_code == 200, res.status_code
@@ -774,7 +774,7 @@ class TestAuditlogWEB(web.Helper):
         self.signin()
         short_name = 'sampleapp'
 
-        url = "/app/%s/auditlog" % short_name
+        url = "/project/%s/auditlog" % short_name
 
         res = self.app.get(url, follow_redirects=True)
         assert  res.status_code == 200, res.status_code
