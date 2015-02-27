@@ -395,7 +395,7 @@ class TestAppAPI(TestAPI):
 
 
     @with_context
-    def test_admin_app_post(self):
+    def test_admin_project_post(self):
         """Test API project update/delete for ADMIN users"""
         admin = UserFactory.create()
         assert admin.admin

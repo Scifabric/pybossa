@@ -52,7 +52,7 @@ class ProjectAPI(APIBase):
         return inst
 
     def _refresh_cache(self, obj):
-        cached_apps.delete_app(obj.short_name)
+        cached_apps.delete_project(obj.short_name)
 
     def _update_object(self, obj):
         if not current_user.is_anonymous():
