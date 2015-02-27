@@ -58,7 +58,7 @@ def browse_tasks(project_id):
     sql = text('''
                SELECT task.id, count(task_run.id) as n_task_runs, task.n_answers
                FROM task LEFT OUTER JOIN task_run ON (task.id=task_run.task_id)
-               WHERE task.app_id=:app_id GROUP BY task.id ORDER BY task.id''')
+               WHERE task.app_id=:project_id GROUP BY task.id ORDER BY task.id''')
     results = session.execute(sql, dict(project_id=project_id))
     tasks = []
     for row in results:

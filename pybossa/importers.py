@@ -276,7 +276,7 @@ class Importer(object):
         self._importers['dropbox'] = _BulkTaskDropboxImport
 
     def create_tasks(self, task_repo, project_id, **form_data):
-        from pybossa.cache import apps as cached_apps
+        from pybossa.cache import projects as cached_apps
         from pybossa.model.task import Task
         """Create tasks from a remote source using an importer object and
         avoiding the creation of repeated tasks"""
