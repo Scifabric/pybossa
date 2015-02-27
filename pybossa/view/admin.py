@@ -31,7 +31,7 @@ from werkzeug.exceptions import HTTPException
 
 from pybossa.model.category import Category
 from pybossa.util import admin_required, UnicodeWriter
-from pybossa.cache import projects as cached_apps
+from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from pybossa.auth import ensure_authorized_to
 from pybossa.core import project_repo, user_repo
@@ -70,8 +70,8 @@ def featured(project_id=None):
             categories = cached_cat.get_all()
             projects = {}
             for c in categories:
-                n_projects = cached_apps.n_count(category=c.short_name)
-                projects[c.short_name] = cached_apps.get(category=c.short_name,
+                n_projects = cached_projects.n_count(category=c.short_name)
+                projects[c.short_name] = cached_projects.get(category=c.short_name,
                                                              page=1,
                                                              per_page=n_projects)
             return render_template('/admin/applications.html', projects=projects,
@@ -84,7 +84,7 @@ def featured(project_id=None):
                     if project.featured is True:
                         msg = "Project.id %s already featured" % project_id
                         return format_error(msg, 415)
-                    cached_apps.reset()
+                    cached_projects.reset()
                     project.featured = True
                     project_repo.update(project)
                     return json.dumps(project.dictize())
@@ -93,7 +93,7 @@ def featured(project_id=None):
                     if project.featured is False:
                         msg = 'Project.id %s is not featured' % project_id
                         return format_error(msg, 415)
-                    cached_apps.reset()
+                    cached_projects.reset()
                     project.featured = False
                     project_repo.update(project)
                     return json.dumps(project.dictize())
@@ -259,7 +259,7 @@ def categories():
         categories = cached_cat.get_all()
         n_apps_per_category = dict()
         for c in categories:
-            n_apps_per_category[c.short_name] = cached_apps.n_count(c.short_name)
+            n_apps_per_category[c.short_name] = cached_projects.n_count(c.short_name)
 
         return render_template('admin/categories.html',
                                title=gettext('Categories'),

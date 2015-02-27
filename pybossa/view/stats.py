@@ -21,7 +21,7 @@ from flask import Blueprint
 from flask import render_template
 
 from pybossa.cache import site_stats
-from pybossa.cache import projects as cached_apps
+from pybossa.cache import projects as cached_projects
 
 blueprint = Blueprint('stats', __name__)
 
@@ -38,8 +38,8 @@ def index():
 
     n_total_users = n_anon + n_auth
 
-    n_published_apps = cached_apps.n_published()
-    n_draft_apps = cached_apps.n_count('draft')
+    n_published_apps = cached_projects.n_published()
+    n_draft_apps = cached_projects.n_count('draft')
     n_total_apps = n_published_apps + n_draft_apps
 
     n_tasks = site_stats.n_tasks_site()

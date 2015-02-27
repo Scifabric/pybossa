@@ -18,7 +18,7 @@
 
 from flask import Blueprint
 from flask import render_template
-from pybossa.cache import projects as cached_apps
+from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from random import choice
 
@@ -29,7 +29,7 @@ blueprint = Blueprint('help', __name__)
 def api():
     """Render help/api page"""
     categories = cached_cat.get_used()
-    apps = cached_apps.get(categories[0]['short_name'])
+    apps = cached_projects.get(categories[0]['short_name'])
     if len(apps) > 0:
         app_id = choice(apps)['id']
     else:  # pragma: no cover

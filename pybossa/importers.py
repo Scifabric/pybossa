@@ -276,7 +276,7 @@ class Importer(object):
         self._importers['dropbox'] = _BulkTaskDropboxImport
 
     def create_tasks(self, task_repo, project_id, **form_data):
-        from pybossa.cache import projects as cached_apps
+        from pybossa.cache import projects as cached_projects
         from pybossa.model.task import Task
         """Create tasks from a remote source using an importer object and
         avoiding the creation of repeated tasks"""
@@ -298,10 +298,10 @@ class Importer(object):
         msg = str(n) + " " + gettext('new tasks were imported successfully')
         if n == 1:
             msg = str(n) + " " + gettext('new task was imported successfully')
-        cached_apps.delete_n_tasks(project_id)
-        cached_apps.delete_n_task_runs(project_id)
-        cached_apps.delete_overall_progress(project_id)
-        cached_apps.delete_last_activity(project_id)
+        cached_projects.delete_n_tasks(project_id)
+        cached_projects.delete_n_task_runs(project_id)
+        cached_projects.delete_overall_progress(project_id)
+        cached_projects.delete_last_activity(project_id)
         return msg
 
     def count_tasks_to_import(self, **form_data):

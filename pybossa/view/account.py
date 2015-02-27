@@ -45,7 +45,7 @@ from pybossa.core import signer, mail, uploader, sentinel, newsletter
 from pybossa.util import Pagination, pretty_date
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
-from pybossa.cache import projects as cached_apps
+from pybossa.cache import projects as cached_projects
 from pybossa.auth import ensure_authorized_to
 from pybossa.jobs import send_mail
 from pybossa.core import user_repo

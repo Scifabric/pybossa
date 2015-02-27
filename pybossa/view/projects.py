@@ -41,7 +41,7 @@ from pybossa.model.auditlog import Auditlog
 from pybossa.model.blogpost import Blogpost
 from pybossa.util import Pagination, admin_required, get_user_id_or_ip
 from pybossa.auth import ensure_authorized_to
-from pybossa.cache import projects as cached_apps
+from pybossa.cache import projects as cached_projects
 from pybossa.cache import categories as cached_cat
 from pybossa.cache import project_stats as stats
 from pybossa.cache.helpers import add_custom_contrib_button_to
@@ -73,20 +73,20 @@ def project_title(app, page_name):
 
 
 def project_by_shortname(short_name):
-    app = cached_apps.get_project(short_name)
+    app = cached_projects.get_project(short_name)
     if app:
         # Get owner
         owner = user_repo.get(app.owner_id)
         # Populate CACHE with the data of the app
         return (app,
                 owner,
-                cached_apps.n_tasks(app.id),
-                cached_apps.n_task_runs(app.id),
-                cached_apps.overall_progress(app.id),
-                cached_apps.last_activity(app.id))
+                cached_projects.n_tasks(app.id),
+                cached_projects.n_task_runs(app.id),
+                cached_projects.overall_progress(app.id),
+                cached_projects.last_activity(app.id))
 
     else:
-        cached_apps.delete_project(short_name)
+        cached_projects.delete_project(short_name)
         return abort(404)
 
 
@@ -116,8 +116,8 @@ def redirect_old_draft(page):
 @blueprint.route('/category/featured/page/<int:page>/')
 def index(page):
     """List apps in the system"""
-    if cached_apps.n_count('featured') > 0:
-        return app_index(page, cached_apps.get_featured, 'featured',
+    if cached_projects.n_count('featured') > 0:
+        return app_index(page, cached_projects.get_featured, 'featured',
                          True, False)
     else:
         categories = cached_cat.get_all()
@@ -131,7 +131,7 @@ def app_index(page, lookup, category, fallback, use_count):
     per_page = current_app.config['APPS_PER_PAGE']
 
     apps = lookup(category, page, per_page)
-    count = cached_apps.n_count(category)
+    count = cached_projects.n_count(category)
 
     data = []
 
@@ -154,7 +154,7 @@ def app_index(page, lookup, category, fallback, use_count):
         active_cat = project_repo.get_category_by(short_name=category)
 
     # Check if we have to add the section Featured to local nav
-    if cached_apps.n_count('featured') > 0:
+    if cached_projects.n_count('featured') > 0:
         categories.insert(0, featured_cat)
     template_args = {
         "apps": apps,
@@ -174,7 +174,7 @@ def app_index(page, lookup, category, fallback, use_count):
 @admin_required
 def draft(page):
     """Show the Draft apps"""
-    return app_index(page, cached_apps.get_draft, 'draft',
+    return app_index(page, cached_projects.get_draft, 'draft',
                      False, True)
 
 
@@ -182,7 +182,7 @@ def draft(page):
 @blueprint.route('/category/<string:category>/page/<int:page>/')
 def app_cat_index(category, page):
     """Show Apps that belong to a given category"""
-    return app_index(page, cached_apps.get, category, False, True)
+    return app_index(page, cached_projects.get, category, False, True)
 
 
 @blueprint.route('/new', methods=['GET', 'POST'])
@@ -262,7 +262,7 @@ def task_presenter_editor(short_name):
         db_project.info = old_info
         auditlogger.add_log_entry(old_project, db_project, current_user)
         project_repo.update(db_project)
-        cached_apps.delete_project(project.short_name)
+        cached_projects.delete_project(project.short_name)
         msg_1 = gettext('Task presenter added!')
         flash('<i class="icon-ok"></i> ' + msg_1, 'success')
         return redirect(url_for('.tasks', short_name=project.short_name))
@@ -300,8 +300,8 @@ def task_presenter_editor(short_name):
                 n_tasks=n_tasks,
                 n_task_runs=n_task_runs,
                 last_activity=last_activity,
-                n_completed_tasks=cached_apps.n_completed_tasks(project.get('id')),
-                n_volunteers=cached_apps.n_volunteers(project.get('id')),
+                n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
+                n_volunteers=cached_projects.n_volunteers(project.get('id')),
                 presenters=pres_tmpls)
 
         tmpl_uri = "projects/snippets/%s.html" \
@@ -322,8 +322,8 @@ def task_presenter_editor(short_name):
                            n_tasks=n_tasks,
                            n_task_runs=n_task_runs,
                            last_activity=last_activity,
-                           n_completed_tasks=cached_apps.n_completed_tasks(project.id),
-                           n_volunteers=cached_apps.n_volunteers(project.id),
+                           n_completed_tasks=cached_projects.n_completed_tasks(project.id),
+                           n_volunteers=cached_projects.n_volunteers(project.id),
                            errors=errors)
 
 
@@ -344,8 +344,8 @@ def delete(short_name):
                                overall_progress=overall_progress,
                                last_activity=last_activity)
     # Clean cache
-    cached_apps.delete_project(project.short_name)
-    cached_apps.clean(project.id)
+    cached_projects.delete_project(project.short_name)
+    cached_projects.clean(project.id)
     project_repo.delete(project)
     auditlogger.add_log_entry(project, None, current_user)
     flash(gettext('Project deleted!'), 'success')
@@ -383,10 +383,10 @@ def update(short_name):
         new_project.set_password(form.password.data)
         project_repo.update(new_project)
         auditlogger.add_log_entry(old_project, new_project, current_user)
-        cached_apps.delete_project(short_name)
-        cached_apps.reset()
+        cached_projects.delete_project(short_name)
+        cached_projects.reset()
         cached_cat.reset()
-        cached_apps.get_project(new_project.short_name)
+        cached_projects.get_project(new_project.short_name)
         flash(gettext('Project updated!'), 'success')
         return redirect(url_for('.details',
                                 short_name=new_project.short_name))
@@ -432,7 +432,7 @@ def update(short_name):
                 project.info['thumbnail'] = file.filename
                 project.info['container'] = container
                 project_repo.save(project)
-                cached_apps.delete_project(project.short_name)
+                cached_projects.delete_project(project.short_name)
                 flash(gettext('Your project thumbnail has been updated! It may \
                                   take some minutes to refresh...'), 'success')
             else:
@@ -450,8 +450,8 @@ def update(short_name):
                            overall_progress=overall_progress,
                            n_task_runs=n_task_runs,
                            last_activity=last_activity,
-                           n_completed_tasks=cached_apps.n_completed_tasks(project.get('id')),
-                           n_volunteers=cached_apps.n_volunteers(project.get('id')),
+                           n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
+                           n_volunteers=cached_projects.n_volunteers(project.get('id')),
                            title=title)
 
 
@@ -475,8 +475,8 @@ def details(short_name):
                      "n_task_runs": n_task_runs,
                      "overall_progress": overall_progress,
                      "last_activity": last_activity,
-                     "n_completed_tasks": cached_apps.n_completed_tasks(project.get('id')),
-                     "n_volunteers": cached_apps.n_volunteers(project.get('id'))}
+                     "n_completed_tasks": cached_projects.n_completed_tasks(project.get('id')),
+                     "n_volunteers": cached_projects.n_volunteers(project.get('id'))}
     if current_app.config.get('CKAN_URL'):
         template_args['ckan_name'] = current_app.config.get('CKAN_NAME')
         template_args['ckan_url'] = current_app.config.get('CKAN_URL')
@@ -501,8 +501,8 @@ def settings(short_name):
                            overall_progress=overall_progress,
                            n_task_runs=n_task_runs,
                            last_activity=last_activity,
-                           n_completed_tasks=cached_apps.n_completed_tasks(project.get('id')),
-                           n_volunteers=cached_apps.n_volunteers(project.get('id')),
+                           n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
+                           n_volunteers=cached_projects.n_volunteers(project.get('id')),
                            title=title)
 
 
@@ -511,8 +511,8 @@ def settings(short_name):
 def import_task(short_name):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
-    n_volunteers = cached_apps.n_volunteers(project.id)
-    n_completed_tasks = cached_apps.n_completed_tasks(project.id)
+    n_volunteers = cached_projects.n_volunteers(project.id)
+    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
     title = project_title(project, "Import Tasks")
     loading_text = gettext("Importing tasks, this may take a while, wait...")
     dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip())
@@ -584,8 +584,8 @@ def setup_autoimporter(short_name):
         raise abort(403)
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
-    n_volunteers = cached_apps.n_volunteers(project.id)
-    n_completed_tasks = cached_apps.n_completed_tasks(project.id)
+    n_volunteers = cached_projects.n_volunteers(project.id)
+    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
     dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     template_args = dict(project=dict_project,
                          owner=owner,
@@ -615,7 +615,7 @@ def setup_autoimporter(short_name):
             project_repo.save(project)
             auditlogger.log_event(project, current_user, 'create', 'autoimporter',
                                   'Nothing', json.dumps(project.get_autoimporter()))
-            cached_apps.delete_project(short_name)
+            cached_projects.delete_project(short_name)
             flash(gettext("Success! Tasks will be imported daily."))
             return redirect(url_for('.setup_autoimporter', short_name=project.short_name))
 
@@ -638,8 +638,8 @@ def delete_autoimporter(short_name):
         raise abort(403)
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
-    n_volunteers = cached_apps.n_volunteers(app.id)
-    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
+    n_volunteers = cached_projects.n_volunteers(app.id)
+    n_completed_tasks = cached_projects.n_completed_tasks(app.id)
     dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
     template_args = dict(app=dict_app,
                          owner=owner,
@@ -655,7 +655,7 @@ def delete_autoimporter(short_name):
         project_repo.save(app)
         auditlogger.log_event(app, current_user, 'delete', 'autoimporter',
                               json.dumps(autoimporter), 'Nothing')
-        cached_apps.delete_project(short_name)
+        cached_projects.delete_project(short_name)
     return redirect(url_for('.tasks', short_name=app.short_name))
 
 
@@ -826,8 +826,8 @@ def tasks(short_name):
                            n_task_runs=n_task_runs,
                            overall_progress=overall_progress,
                            last_activity=last_activity,
-                           n_completed_tasks=cached_apps.n_completed_tasks(project.get('id')),
-                           n_volunteers=cached_apps.n_volunteers(project.get('id')))
+                           n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
+                           n_volunteers=cached_projects.n_volunteers(project.get('id')))
 
 
 @blueprint.route('/<short_name>/tasks/browse', defaults={'page': 1})
@@ -836,14 +836,14 @@ def tasks_browse(short_name, page):
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
     title = project_title(app, "Tasks")
-    n_volunteers = cached_apps.n_volunteers(app.id)
-    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
+    n_volunteers = cached_projects.n_volunteers(app.id)
+    n_completed_tasks = cached_projects.n_completed_tasks(app.id)
 
     def respond():
         per_page = 10
         offset = (page - 1) * per_page
         count = n_tasks
-        app_tasks = cached_apps.browse_tasks(app.get('id'))
+        app_tasks = cached_projects.browse_tasks(app.get('id'))
         page_tasks = app_tasks[offset:offset+per_page]
         if not page_tasks and page != 1:
             abort(404)
@@ -877,8 +877,8 @@ def delete_tasks(short_name):
     ensure_authorized_to('update', project)
     if request.method == 'GET':
         title = project_title(project, "Delete")
-        n_volunteers = cached_apps.n_volunteers(project.id)
-        n_completed_tasks = cached_apps.n_completed_tasks(project.id)
+        n_volunteers = cached_projects.n_volunteers(project.id)
+        n_completed_tasks = cached_projects.n_completed_tasks(project.id)
         project = add_custom_contrib_button_to(project, get_user_id_or_ip())
         return render_template('projects/tasks/delete.html',
                                project=project,
@@ -895,10 +895,10 @@ def delete_tasks(short_name):
         task_repo.delete_all(tasks)
         msg = gettext("All the tasks and associated task runs have been deleted")
         flash(msg, 'success')
-        cached_apps.delete_last_activity(project.id)
-        cached_apps.delete_n_tasks(project.id)
-        cached_apps.delete_n_task_runs(project.id)
-        cached_apps.delete_overall_progress(project.id)
+        cached_projects.delete_last_activity(project.id)
+        cached_projects.delete_n_tasks(project.id)
+        cached_projects.delete_n_task_runs(project.id)
+        cached_projects.delete_overall_progress(project.id)
         return redirect(url_for('.tasks', short_name=project.short_name))
 
 
@@ -907,8 +907,8 @@ def export_to(short_name):
     """Export Tasks and TaskRuns in the given format"""
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
-    n_volunteers = cached_apps.n_volunteers(project.id)
-    n_completed_tasks = cached_apps.n_completed_tasks(project.id)
+    n_volunteers = cached_projects.n_volunteers(project.id)
+    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
     title = project_title(project, gettext("Export"))
     loading_text = gettext("Exporting data..., this may take a while")
 
@@ -1117,8 +1117,8 @@ def show_stats(short_name):
     """Returns App Stats"""
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
-    n_volunteers = cached_apps.n_volunteers(app.id)
-    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
+    n_volunteers = cached_projects.n_volunteers(app.id)
+    n_completed_tasks = cached_projects.n_completed_tasks(app.id)
     title = project_title(app, "Statistics")
 
     ensure_authorized_to('read', app)
@@ -1180,8 +1180,8 @@ def task_settings(short_name):
     """Settings page for tasks of the project"""
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
-    n_volunteers = cached_apps.n_volunteers(project.id)
-    n_completed_tasks = cached_apps.n_completed_tasks(project.id)
+    n_volunteers = cached_projects.n_volunteers(project.id)
+    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
     ensure_authorized_to('read', project)
     ensure_authorized_to('update', project)
     project = add_custom_contrib_button_to(project, get_user_id_or_ip())
@@ -1260,7 +1260,7 @@ def task_scheduler(short_name):
         if form.sched.data:
             project.info['sched'] = form.sched.data
         project_repo.save(project)
-        cached_apps.delete_project(project.short_name)
+        cached_projects.delete_project(project.short_name)
         # Log it
         if old_sched != project.info['sched']:
             auditlogger.log_event(project, current_user, 'update', 'sched',
@@ -1312,7 +1312,7 @@ def task_priority(short_name):
                                                old_value, new_value)
                 else:  # pragma: no cover
                     flash(gettext(("Ooops, Task.id=%s does not belong to the app" % task_id)), 'danger')
-        cached_apps.delete_project(project.short_name)
+        cached_projects.delete_project(project.short_name)
         flash(gettext("Task priority has been changed"), 'success')
         return respond()
     else:
@@ -1336,8 +1336,8 @@ def show_blogposts(short_name):
                            overall_progress=overall_progress,
                            n_tasks=n_tasks,
                            n_task_runs=n_task_runs,
-                           n_completed_tasks=cached_apps.n_completed_tasks(project.get('id')),
-                           n_volunteers=cached_apps.n_volunteers(project.get('id')))
+                           n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
+                           n_volunteers=cached_projects.n_volunteers(project.get('id')))
 
 
 @blueprint.route('/<short_name>/<int:id>')
@@ -1359,8 +1359,8 @@ def show_blogpost(short_name, id):
                             overall_progress=overall_progress,
                             n_tasks=n_tasks,
                             n_task_runs=n_task_runs,
-                            n_completed_tasks=cached_apps.n_completed_tasks(project.get('id')),
-                            n_volunteers=cached_apps.n_volunteers(project.get('id')))
+                            n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
+                            n_volunteers=cached_projects.n_volunteers(project.get('id')))
 
 
 @blueprint.route('/<short_name>/new-blogpost', methods=['GET', 'POST'])
@@ -1377,8 +1377,8 @@ def new_blogpost(short_name):
                                overall_progress=overall_progress,
                                n_tasks=n_tasks,
                                n_task_runs=n_task_runs,
-                               n_completed_tasks=cached_apps.n_completed_tasks(dict_project.get('id')),
-                               n_volunteers=cached_apps.n_volunteers(dict_project.get('id')))
+                               n_completed_tasks=cached_projects.n_completed_tasks(dict_project.get('id')),
+                               n_volunteers=cached_projects.n_volunteers(dict_project.get('id')))
 
 
     (project, owner, n_tasks, n_task_runs,
@@ -1401,7 +1401,7 @@ def new_blogpost(short_name):
                         app_id=project.id)
     ensure_authorized_to('create', blogpost)
     blog_repo.save(blogpost)
-    cached_apps.delete_project(short_name)
+    cached_projects.delete_project(short_name)
 
     msg_1 = gettext('Blog post created!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')
@@ -1426,8 +1426,8 @@ def update_blogpost(short_name, id):
                                blogpost=blogpost,
                                overall_progress=overall_progress,
                                n_task_runs=n_task_runs,
-                               n_completed_tasks=cached_apps.n_completed_tasks(app.id),
-                               n_volunteers=cached_apps.n_volunteers(app.id))
+                               n_completed_tasks=cached_projects.n_completed_tasks(app.id),
+                               n_volunteers=cached_projects.n_volunteers(app.id))
 
     form = BlogpostForm()
 
@@ -1447,7 +1447,7 @@ def update_blogpost(short_name, id):
                         user_id=current_user.id,
                         app_id=app.id)
     blog_repo.update(blogpost)
-    cached_apps.delete_project(short_name)
+    cached_projects.delete_project(short_name)
 
     msg_1 = gettext('Blog post updated!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')
@@ -1465,7 +1465,7 @@ def delete_blogpost(short_name, id):
 
     ensure_authorized_to('delete', blogpost)
     blog_repo.delete(blogpost)
-    cached_apps.delete_project(short_name)
+    cached_projects.delete_project(short_name)
     flash('<i class="icon-ok"></i> ' + 'Blog post deleted!', 'success')
     return redirect(url_for('.show_blogposts', short_name=short_name))
 
@@ -1495,5 +1495,5 @@ def auditlog(short_name):
                            overall_progress=overall_progress,
                            n_tasks=n_tasks,
                            n_task_runs=n_task_runs,
-                           n_completed_tasks=cached_apps.n_completed_tasks(project.get('id')),
-                           n_volunteers=cached_apps.n_volunteers(project.get('id')))
+                           n_completed_tasks=cached_projects.n_completed_tasks(project.get('id')),
+                           n_volunteers=cached_projects.n_volunteers(project.get('id')))

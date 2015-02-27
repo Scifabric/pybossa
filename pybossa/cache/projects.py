@@ -260,7 +260,7 @@ def get_draft(category=None, page=1, per_page=5):
 
     offset = (page - 1) * per_page
     results = session.execute(sql, dict(limit=per_page, offset=offset))
-    apps = []
+    projects = []
     for row in results:
         project = dict(id=row.id, name=row.name, short_name=row.short_name,
                    created=row.created,
