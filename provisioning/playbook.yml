@@ -63,6 +63,10 @@
     - name: start Sentinel and enable it at boot
       service: name=redis-sentinel state=started enabled=yes
 
+    - name: "upgrade pip itself"
+      sudo_user: "{{pybossa_user}}"
+      pip: name=pip state=latest chdir={{pybossa_path}} virtualenv={{virtualenv_path}} virtualenv_site_packages=yes
+
     - name: "install PyBossa virtualenv packages, can take some time..."
       sudo_user: "{{pybossa_user}}"
       pip: chdir={{pybossa_path}} requirements={{pybossa_path}}/requirements.txt virtualenv={{virtualenv_path}} virtualenv_site_packages=yes
@@ -158,4 +162,3 @@
   handlers:
     - name: restart supervisor
       service: name=supervisor state=restarted
-

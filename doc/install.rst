@@ -7,7 +7,7 @@ PyBossa is a python web application built using the Flask micro-framework.
 Pre-requisites:
 
   * Python >= 2.7.2, <3.0
-  * PostgreSQL version 9.1 and the Python bindings for PostgreSQL database. 
+  * PostgreSQL version 9.1 and the Python bindings for PostgreSQL database.
   * Redis >= 2.6
   * pip for installing python packages (e.g. on ubuntu python-pip)
 
@@ -17,11 +17,11 @@ Pre-requisites:
     isolated Python environment, helping you to manage different dependencies and
     versions without having to deal with root permissions in your server machine.
 
-    virtualenv_ creates an environment that has its own installation directories, 
-    that doesn't share libraries with other virtualenv environments (and 
+    virtualenv_ creates an environment that has its own installation directories,
+    that doesn't share libraries with other virtualenv environments (and
     optionally doesn't access the globally installed libraries either).
 
-    
+
     You can install the software if you want at the system level if you have root
     privileges, however this may lead to broken dependencies in the OS for all your
     Python packages, so if possible, avoid this solution and use the virtualenv_
@@ -44,7 +44,7 @@ Installing git -a distributed version control system
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 PyBossa uses the git_ distributed version control system for handling the
-PyBossa server source code as well as the template projects. 
+PyBossa server source code as well as the template projects.
 
 Git_ is a freen and open source distributed version control system designed to
 handle everything from small to very large projects with seepd and efficiency.
@@ -60,8 +60,8 @@ In order to install the software, all you have to do is::
 Installing the PostgreSQL database
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-PostgreSQL_ is a powerful, open source object-relational database system. 
-It has more than 15 years of active development and a proven architecture that 
+PostgreSQL_ is a powerful, open source object-relational database system.
+It has more than 15 years of active development and a proven architecture that
 has earned it a strong reputation for reliability, data integrity, and correctness.
 
 PyBossa uses PostgreSQL_ as the main database for storing all the data, and you
@@ -79,8 +79,8 @@ We recommend to install PyBossa using a `virtualenv`_ as it will create a an
 isolated Python environment, helping you to manage different dependencies and
 versions without having to deal with root permissions in your server machine.
 
-virtualenv_ creates an environment that has its own installation directories, 
-that doesn't share libraries with other virtualenv environments (and 
+virtualenv_ creates an environment that has its own installation directories,
+that doesn't share libraries with other virtualenv environments (and
 optionally doesn't access the globally installed libraries either).
 
 You can install the software if you want at the system level if you have root
@@ -108,7 +108,7 @@ install the following packages::
 Then, you are ready to download the code and install the required libraries for
 running PyBossa.
 
-.. note:: 
+.. note::
     We recommend you to install the required libraries using a **virtual
     environment** with the command virtualenv (you can install the package
     python-virtualenv). This will allow to have all the libraries for PyBossa
@@ -126,6 +126,8 @@ with **#** are comments)::
   virtualenv env
   # Activate the virtual environment
   source env/bin/activate
+  # Upgrade pip to latest version
+  pip install -U pip
   # Install the required libraries
   pip install -r requirements.txt
 
@@ -137,6 +139,8 @@ this::
   git clone --recursive https://github.com/PyBossa/pybossa
   # Access the source code folder
   cd pybossa
+  # Upgrade pip to latest version
+  pip install -U pip
   # Install the required libraries
   pip install -r requirements.txt
 
@@ -248,8 +252,8 @@ system uses the Sentinel_ feature of Redis_, so you can have several
 master/slave nodes configured with Sentinel_, and your PyBossa server will use
 them "automagically".
 
-Once you have started your master Redis-server to accept connections, 
-Sentinel will manage it and its slaves. If you add a slave, Sentinel will 
+Once you have started your master Redis-server to accept connections,
+Sentinel will manage it and its slaves. If you add a slave, Sentinel will
 find it and start using it for load-balancing queries in PyBossa Cache system.
 
 For more details about Redis_ and Sentinel_, please, read the official documentation_.
@@ -369,6 +373,7 @@ Alembic_ for performing the migrations, so in case that your production server
 need to upgrade the DB structure to a new version, all you have to do is to::
 
   git pull origin master
+  pip install -U pip
   pip install -r requirements.txt
   alembic upgrade head
 
@@ -401,6 +406,7 @@ In order to avoid this, you can run a simple script to convert all the DB app's
 'long_description' field from HTML to Markdown, just by running the following
 commands::
 
+  pip install -U pip
   pip install -r requirements.txt
   python cli.py markdown_db_migrate
 
@@ -410,4 +416,3 @@ Markdown conversion, while the second one will convert your DB entries.
 .. note::
     As always, if you are using the virtualenv_ be sure to activate it before
     running the pip install command.
-
