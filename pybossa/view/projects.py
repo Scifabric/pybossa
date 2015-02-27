@@ -282,7 +282,7 @@ def task_presenter_editor(short_name):
             msg_3 = gettext(' or download the project bundle and run the'
                             ' <strong>createTasks.py</strong> script in your'
                             ' computer')
-            url = '<a href="%s"> %s</a>' % (url_for('app.import_task',
+            url = '<a href="%s"> %s</a>' % (url_for('project.import_task',
                                                     short_name=project.short_name), msg_2)
             msg = msg_1 + url + msg_3
             flash(msg, 'info')
@@ -833,24 +833,24 @@ def tasks(short_name):
 @blueprint.route('/<short_name>/tasks/browse', defaults={'page': 1})
 @blueprint.route('/<short_name>/tasks/browse/<int:page>')
 def tasks_browse(short_name, page):
-    (app, owner, n_tasks, n_task_runs,
+    (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
-    title = project_title(app, "Tasks")
-    n_volunteers = cached_projects.n_volunteers(app.id)
-    n_completed_tasks = cached_projects.n_completed_tasks(app.id)
+    title = project_title(project, "Tasks")
+    n_volunteers = cached_projects.n_volunteers(project.id)
+    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
 
     def respond():
         per_page = 10
         offset = (page - 1) * per_page
         count = n_tasks
-        app_tasks = cached_projects.browse_tasks(app.get('id'))
-        page_tasks = app_tasks[offset:offset+per_page]
+        project_tasks = cached_projects.browse_tasks(project.get('id'))
+        page_tasks = project_tasks[offset:offset+per_page]
         if not page_tasks and page != 1:
             abort(404)
 
         pagination = Pagination(page, per_page, count)
         return render_template('/projects/tasks_browse.html',
-                               app=app,
+                               project=project,
                                owner=owner,
                                tasks=page_tasks,
                                title=title,
@@ -859,11 +859,11 @@ def tasks_browse(short_name, page):
                                overall_progress=overall_progress,
                                n_volunteers=n_volunteers,
                                n_completed_tasks=n_completed_tasks)
-    ensure_authorized_to('read', app)
-    redirect_to_password = _check_if_redirect_to_password(app)
+    ensure_authorized_to('read', project)
+    redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return respond()
 
 

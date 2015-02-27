@@ -1309,7 +1309,7 @@ class TestWeb(web.Helper):
         self.create()
         self.signout()
 
-        res = self.app.get('app', follow_redirects=True)
+        res = self.app.get('project', follow_redirects=True)
         assert "Projects" in res.data, res.data
         assert Fixtures.cat_1 in res.data, res.data
 
@@ -1359,7 +1359,7 @@ class TestWeb(web.Helper):
         db.session.commit()
         self.signout()
 
-        res = self.app.get('app', follow_redirects=True)
+        res = self.app.get('project', follow_redirects=True)
         assert "%s Projects" % Fixtures.cat_1 in res.data, res.data
         assert "draft" not in res.data, res.data
         assert "Sample Project" in res.data, res.data
@@ -1409,7 +1409,7 @@ class TestWeb(web.Helper):
         res = self.app.get('project/%s/task/%s' % (app.short_name, task.id),
                            follow_redirects=True)
         assert 'TaskPresenter' in res.data, res.data
-        msg = "?next=%2Fapp%2F" + app.short_name + "%2Ftask%2F" + str(task.id)
+        msg = "?next=%2Fproject%2F" + app.short_name + "%2Ftask%2F" + str(task.id)
         assert msg in res.data, res.data
 
         # Try with a hidden app
@@ -3076,7 +3076,7 @@ class TestWeb(web.Helper):
         url = "/project/%s/tasks/import?type=flickr" % app.short_name
 
         res = self.app.get(url)
-        login_url = '/flickr/?next=%2Fapp%2F%25E2%259C%2593app1%2Ftasks%2Fimport%3Ftype%3Dflickr'
+        login_url = '/flickr/?next=%2Fproject%2F%25E2%259C%2593app1%2Ftasks%2Fimport%3Ftype%3Dflickr'
 
         assert login_url in res.data
 
@@ -3093,7 +3093,7 @@ class TestWeb(web.Helper):
         url = "/project/%s/tasks/import?type=flickr" % app.short_name
 
         res = self.app.get(url)
-        revoke_url = '/flickr/revoke-access?next=%2Fapp%2F%25E2%259C%2593app1%2Ftasks%2Fimport%3Ftype%3Dflickr'
+        revoke_url = '/flickr/revoke-access?next=%2Fproject%2F%25E2%259C%2593app1%2Ftasks%2Fimport%3Ftype%3Dflickr'
 
         assert '1 photos' in res.data
         assert 'src="fake-url"' in res.data
