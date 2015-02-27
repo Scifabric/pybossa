@@ -60,45 +60,45 @@ def index():
 
 
 @blueprint.route('/featured')
-@blueprint.route('/featured/<int:app_id>', methods=['POST', 'DELETE'])
+@blueprint.route('/featured/<int:project_id>', methods=['POST', 'DELETE'])
 @login_required
 @admin_required
-def featured(app_id=None):
+def featured(project_id=None):
     """List featured apps of PyBossa"""
     try:
         if request.method == 'GET':
             categories = cached_cat.get_all()
-            apps = {}
+            projects = {}
             for c in categories:
-                n_apps = cached_apps.n_count(category=c.short_name)
-                apps[c.short_name] = cached_apps.get(category=c.short_name,
+                n_projects = cached_apps.n_count(category=c.short_name)
+                projects[c.short_name] = cached_apps.get(category=c.short_name,
                                                              page=1,
-                                                             per_page=n_apps)
-            return render_template('/admin/applications.html', apps=apps,
+                                                             per_page=n_projects)
+            return render_template('/admin/applications.html', projects=projects,
                                    categories=categories)
         else:
-            app = project_repo.get(app_id)
-            if app:
-                ensure_authorized_to('update', app)
+            project = project_repo.get(project_id)
+            if project:
+                ensure_authorized_to('update', project)
                 if request.method == 'POST':
-                    if app.featured is True:
-                        msg = "App.id %s already featured" % app_id
+                    if project.featured is True:
+                        msg = "App.id %s already featured" % project_id
                         return format_error(msg, 415)
                     cached_apps.reset()
-                    app.featured = True
-                    project_repo.update(app)
-                    return json.dumps(app.dictize())
+                    project.featured = True
+                    project_repo.update(project)
+                    return json.dumps(project.dictize())
 
                 if request.method == 'DELETE':
-                    if app.featured is False:
-                        msg = 'App.id %s is not featured' % app_id
+                    if project.featured is False:
+                        msg = 'Project.id %s is not featured' % project_id
                         return format_error(msg, 415)
                     cached_apps.reset()
-                    app.featured = False
-                    project_repo.update(app)
-                    return json.dumps(app.dictize())
+                    project.featured = False
+                    project_repo.update(project)
+                    return json.dumps(project.dictize())
             else:
-                msg = 'App.id %s not found' % app_id
+                msg = 'Project.id %s not found' % project_id
                 return format_error(msg, 404)
     except Exception as e: # pragma: no cover
         current_app.logger.error(e)
