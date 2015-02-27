@@ -1197,32 +1197,32 @@ def task_settings(short_name):
 @blueprint.route('/<short_name>/tasks/redundancy', methods=['GET', 'POST'])
 @login_required
 def task_n_answers(short_name):
-    (app, owner, n_tasks, n_task_runs,
+    (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
-    title = project_title(app, gettext('Redundancy'))
+    title = project_title(project, gettext('Redundancy'))
     form = TaskRedundancyForm()
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('update', app)
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
     if request.method == 'GET':
         return render_template('/projects/task_n_answers.html',
                                title=title,
                                form=form,
-                               app=app,
+                               project=project,
                                owner=owner)
     elif request.method == 'POST' and form.validate():
-        task_repo.update_tasks_redundancy(app, form.n_answers.data)
+        task_repo.update_tasks_redundancy(project, form.n_answers.data)
         # Log it
-        auditlogger.log_event(app, current_user, 'update', 'task.n_answers',
+        auditlogger.log_event(project, current_user, 'update', 'task.n_answers',
                               'N/A', form.n_answers.data)
         msg = gettext('Redundancy of Tasks updated!')
         flash(msg, 'success')
-        return redirect(url_for('.tasks', short_name=app.short_name))
+        return redirect(url_for('.tasks', short_name=project.short_name))
     else:
         flash(gettext('Please correct the errors'), 'error')
         return render_template('/projects/task_n_answers.html',
                                title=title,
                                form=form,
-                               app=app,
+                               project=project,
                                owner=owner)
 
 
