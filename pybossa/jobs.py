@@ -158,8 +158,8 @@ def create_dict_jobs(data, function, timeout=(10 * MINUTE), queue='low'):
 
 def get_autoimport_jobs(queue='low'):
     from pybossa.core import project_repo
-    import pybossa.cache.apps as cached_apps
-    pro_user_projects = cached_apps.get_from_pro_user()
+    import pybossa.cache.projects as cached_projects
+    pro_user_projects = cached_projects.get_from_pro_user()
     for project_dict in pro_user_projects:
         project = project_repo.get(project_dict['id'])
         if project.has_autoimporter():
