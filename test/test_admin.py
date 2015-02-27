@@ -464,7 +464,7 @@ class TestAdmin(web.Helper):
         self.signout()
         # Sign in with the root user
         self.signin()
-        res = self.app.get('/app/sampleapp/settings')
+        res = self.app.get('/project/sampleapp/settings')
         err_msg = "Admin users should be able to get the settings page for any project"
         assert res.status == "200 OK", err_msg
         res = self.update_application(method="GET")
@@ -472,7 +472,7 @@ class TestAdmin(web.Helper):
             "The project should be updated by admin users"
         res = self.update_application(new_name="Root",
                                       new_short_name="rootsampleapp")
-        res = self.app.get('/app/rootsampleapp', follow_redirects=True)
+        res = self.app.get('/project/rootsampleapp', follow_redirects=True)
         assert "Root" in res.data, "The app should be updated by admin users"
 
         app = db.session.query(App)\
@@ -483,7 +483,7 @@ class TestAdmin(web.Helper):
         res = self.update_application(short_name="rootsampleapp",
                                       new_short_name="sampleapp",
                                       new_long_description="New Long Desc")
-        res = self.app.get('/app/sampleapp', follow_redirects=True)
+        res = self.app.get('/project/sampleapp', follow_redirects=True)
         err_msg = "The long description should have been updated"
         assert "New Long Desc" in res.data, err_msg
 
@@ -514,10 +514,10 @@ class TestAdmin(web.Helper):
         tasks = db.session.query(Task).filter_by(app_id=1).all()
         assert len(tasks) > 0, "len(app.tasks) > 0"
         res = self.signin(email=u'root@root.com', password=u'tester' + 'root')
-        res = self.app.get('/app/test-app/tasks/delete', follow_redirects=True)
+        res = self.app.get('/project/test-app/tasks/delete', follow_redirects=True)
         err_msg = "Admin user should get 200 in GET"
         assert res.status_code == 200, err_msg
-        res = self.app.post('/app/test-app/tasks/delete', follow_redirects=True)
+        res = self.app.post('/project/test-app/tasks/delete', follow_redirects=True)
         err_msg = "Admin should get 200 in POST"
         assert res.status_code == 200, err_msg
         tasks = db.session.query(Task).filter_by(app_id=1).all()
