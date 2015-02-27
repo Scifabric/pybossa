@@ -32,7 +32,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
     def test_autoimporter_get_redirects_to_login_if_anonymous(self):
         """Test task autoimporter endpoint requires login"""
         app = AppFactory.create()
-        url = "/app/%s/tasks/autoimporter" % app.short_name
+        url = "/project/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.get(url)
         redirect_url = 'http://localhost/account/signin?next='
@@ -47,7 +47,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         app = project_repo.get(1)
         self.signout()
         self.register(name='non-owner')
-        url = "/app/%s/tasks/autoimporter" % app.short_name
+        url = "/project/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.get(url)
 
@@ -62,7 +62,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         self.register(name="owner")
         self.new_application()
         app = project_repo.get(1)
-        url = "/app/%s/tasks/autoimporter" % app.short_name
+        url = "/project/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.get(url, follow_redirects=True)
         assert  res.status_code == 403, res.status_code
@@ -80,7 +80,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
 
         self.new_application()
         app = project_repo.get(1)
-        url = "/app/%s/tasks/autoimporter" % app.short_name
+        url = "/project/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.get(url, follow_redirects=True)
         assert  res.status_code == 200, res.status_code
@@ -96,7 +96,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         self.signout()
         self.signin()
         app = project_repo.get(1)
-        url = "/app/%s/tasks/autoimporter" % app.short_name
+        url = "/project/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.get(url, follow_redirects=True)
         assert  res.status_code == 200, res.status_code
@@ -105,7 +105,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
     def test_autoimporter_get_nonexisting_project(self):
         """Test task autoimporter to a non existing project returns 404"""
         self.register()
-        res = self.app.get("/app/noExists/tasks/autoimporter")
+        res = self.app.get("/project/noExists/tasks/autoimporter")
 
         assert res.status_code == 404, res.status_code
 
@@ -113,7 +113,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
     def test_autoimporter_post_redirects_to_login_if_anonymous(self):
         """Test task autoimporter endpoint post requires login"""
         app = AppFactory.create()
-        url = "/app/%s/tasks/autoimporter" % app.short_name
+        url = "/project/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.post(url, data={})
         redirect_url = 'http://localhost/account/signin?next='
@@ -128,7 +128,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         app = project_repo.get(1)
         self.signout()
         self.register(name='non-owner')
-        url = "/app/%s/tasks/autoimporter" % app.short_name
+        url = "/project/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.post(url, data={})
 
@@ -143,7 +143,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         self.register(name="owner")
         self.new_application()
         app = project_repo.get(1)
-        url = "/app/%s/tasks/autoimporter" % app.short_name
+        url = "/project/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.post(url, data={}, follow_redirects=True)
         assert  res.status_code == 403, res.status_code
@@ -161,7 +161,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
 
         self.new_application()
         app = project_repo.get(1)
-        url = "/app/%s/tasks/autoimporter" % app.short_name
+        url = "/project/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.post(url, data={'csv_url': 'http://as.com',
                                        'formtype': 'json', 'form_name': 'csv'},
@@ -179,7 +179,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         self.signout()
         self.signin()
         app = project_repo.get(1)
-        url = "/app/%s/tasks/autoimporter" % app.short_name
+        url = "/project/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.post(url, data={'csv_url': 'http://as.com',
                                        'formtype': 'json', 'form_name': 'csv'},
@@ -190,7 +190,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
     def test_autoimporter_post_nonexisting_project(self):
         """Test task autoimporter post to a non existing project returns 404"""
         self.register()
-        res = self.app.post("/app/noExists/tasks/autoimporter", data={})
+        res = self.app.post("/project/noExists/tasks/autoimporter", data={})
 
         assert res.status_code == 404, res.status_code
 
@@ -198,7 +198,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
     def test_delete_autoimporter_post_redirects_to_login_if_anonymous(self):
         """Test delete task autoimporter endpoint requires login"""
         app = AppFactory.create()
-        url = "/app/%s/tasks/autoimporter/delete" % app.short_name
+        url = "/project/%s/tasks/autoimporter/delete" % app.short_name
 
         res = self.app.post(url, data={})
         redirect_url = 'http://localhost/account/signin?next='
@@ -213,7 +213,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         app = project_repo.get(1)
         self.signout()
         self.register(name='non-owner')
-        url = "/app/%s/tasks/autoimporter/delete" % app.short_name
+        url = "/project/%s/tasks/autoimporter/delete" % app.short_name
 
         res = self.app.post(url, data={})
 
@@ -228,7 +228,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         self.register(name="owner")
         self.new_application()
         app = project_repo.get(1)
-        url = "/app/%s/tasks/autoimporter/delete" % app.short_name
+        url = "/project/%s/tasks/autoimporter/delete" % app.short_name
 
         res = self.app.post(url, data={}, follow_redirects=True)
         assert  res.status_code == 403, res.status_code
@@ -246,7 +246,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
 
         self.new_application()
         app = project_repo.get(1)
-        url = "/app/%s/tasks/autoimporter/delete" % app.short_name
+        url = "/project/%s/tasks/autoimporter/delete" % app.short_name
 
         res = self.app.post(url, data={}, follow_redirects=True)
         assert  res.status_code == 200, res.status_code
@@ -262,7 +262,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         self.signout()
         self.signin()
         app = project_repo.get(1)
-        url = "/app/%s/tasks/autoimporter/delete" % app.short_name
+        url = "/project/%s/tasks/autoimporter/delete" % app.short_name
 
         res = self.app.post(url, data={}, follow_redirects=True)
         assert  res.status_code == 200, res.status_code
@@ -271,7 +271,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
     def test_delete_autoimporter_get_nonexisting_project(self):
         """Test task delete autoimporter to a non existing project returns 404"""
         self.register()
-        res = self.app.post("/app/noExists/tasks/autoimporter/delete")
+        res = self.app.post("/project/noExists/tasks/autoimporter/delete")
 
         assert res.status_code == 404, res.status_code
 
@@ -285,7 +285,7 @@ class TestAutoimporterBehaviour(web.Helper):
         self.register()
         owner = user_repo.get(1)
         app = AppFactory.create(owner=owner)
-        url = "/app/%s/tasks/autoimporter" % app.short_name
+        url = "/project/%s/tasks/autoimporter" % app.short_name
         expected_text = "Setup task autoimporter"
 
         res = self.app.get(url, follow_redirects=True)
@@ -304,7 +304,7 @@ class TestAutoimporterBehaviour(web.Helper):
         self.register()
         owner = user_repo.get(1)
         app = AppFactory.create(owner=owner)
-        url = "/app/%s/tasks/autoimporter" % app.short_name
+        url = "/project/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.get(url, follow_redirects=True)
 
@@ -319,46 +319,46 @@ class TestAutoimporterBehaviour(web.Helper):
         app = AppFactory.create(owner=owner)
 
         # CSV
-        url = "/app/%s/tasks/autoimporter?type=csv" % app.short_name
+        url = "/project/%s/tasks/autoimporter?type=csv" % app.short_name
         res = self.app.get(url, follow_redirects=True)
         data = res.data.decode('utf-8')
 
         assert "From a CSV file" in data
-        assert 'action="/app/%E2%9C%93app1/tasks/autoimporter"' in data
+        assert 'action="/project/%E2%9C%93app1/tasks/autoimporter"' in data
 
         # Google Docs
-        url = "/app/%s/tasks/autoimporter?type=gdocs" % app.short_name
+        url = "/project/%s/tasks/autoimporter?type=gdocs" % app.short_name
         res = self.app.get(url, follow_redirects=True)
         data = res.data.decode('utf-8')
 
         assert "From a Google Docs Spreadsheet" in data
-        assert 'action="/app/%E2%9C%93app1/tasks/autoimporter"' in data
+        assert 'action="/project/%E2%9C%93app1/tasks/autoimporter"' in data
 
         # Epicollect Plus
-        url = "/app/%s/tasks/autoimporter?type=epicollect" % app.short_name
+        url = "/project/%s/tasks/autoimporter?type=epicollect" % app.short_name
         res = self.app.get(url, follow_redirects=True)
         data = res.data.decode('utf-8')
 
         assert "From an EpiCollect Plus project" in data
-        assert 'action="/app/%E2%9C%93app1/tasks/autoimporter"' in data
+        assert 'action="/project/%E2%9C%93app1/tasks/autoimporter"' in data
 
         # Flickr
-        url = "/app/%s/tasks/autoimporter?type=flickr" % app.short_name
+        url = "/project/%s/tasks/autoimporter?type=flickr" % app.short_name
         res = self.app.get(url, follow_redirects=True)
         data = res.data.decode('utf-8')
 
         assert "From a Flickr Album" in data
-        assert 'action="/app/%E2%9C%93app1/tasks/autoimporter"' in data
+        assert 'action="/project/%E2%9C%93app1/tasks/autoimporter"' in data
 
         # Dropbox
-        url = "/app/%s/tasks/autoimporter?type=dropbox" % app.short_name
+        url = "/project/%s/tasks/autoimporter?type=dropbox" % app.short_name
         res = self.app.get(url, follow_redirects=True)
         data = res.data.decode('utf-8')
 
         assert res.status_code == 404, res.status_code
 
         # Invalid
-        url = "/app/%s/tasks/autoimporter?type=invalid" % app.short_name
+        url = "/project/%s/tasks/autoimporter?type=invalid" % app.short_name
         res = self.app.get(url, follow_redirects=True)
 
         assert res.status_code == 404, res.status_code
@@ -370,7 +370,7 @@ class TestAutoimporterBehaviour(web.Helper):
         owner = user_repo.get(1)
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
         app = AppFactory.create(owner=owner, info={'autoimporter': autoimporter})
-        url = "/app/%s/tasks/autoimporter" % app.short_name
+        url = "/project/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.get(url, follow_redirects=True)
 
@@ -384,7 +384,7 @@ class TestAutoimporterBehaviour(web.Helper):
         owner = user_repo.get(1)
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
         app = AppFactory.create(owner=owner)
-        url = "/app/%s/tasks/autoimporter" % app.short_name
+        url = "/project/%s/tasks/autoimporter" % app.short_name
         data = {'form_name': 'csv', 'csv_url': 'http://fakeurl.com'}
 
         self.app.post(url, data=data, follow_redirects=True)
@@ -400,7 +400,7 @@ class TestAutoimporterBehaviour(web.Helper):
         owner = user_repo.get(1)
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
         app = AppFactory.create(owner=owner, info={'autoimporter': autoimporter})
-        url = "/app/%s/tasks/autoimporter" % app.short_name
+        url = "/project/%s/tasks/autoimporter" % app.short_name
         data = {'form_name': 'gdocs', 'googledocs_url': 'http://another.com'}
 
         res = self.app.post(url, data=data, follow_redirects=True)
@@ -413,7 +413,7 @@ class TestAutoimporterBehaviour(web.Helper):
         owner = user_repo.get(1)
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
         app = AppFactory.create(owner=owner, info={'autoimporter': autoimporter})
-        url = "/app/%s/tasks/autoimporter/delete" % app.short_name
+        url = "/project/%s/tasks/autoimporter/delete" % app.short_name
 
         res = self.app.post(url, data={}, follow_redirects=True)
 
@@ -424,7 +424,7 @@ class TestAutoimporterBehaviour(web.Helper):
         self.register()
         owner = user_repo.get(1)
         app = AppFactory.create(owner=owner)
-        url = "/app/%s/tasks/autoimporter?type=flickr" % app.short_name
+        url = "/project/%s/tasks/autoimporter?type=flickr" % app.short_name
 
         res = self.app.get(url)
         login_url = '/flickr/?next=%2Fapp%2F%25E2%259C%2593app1%2Ftasks%2Fautoimporter%3Ftype%3Dflickr'
@@ -442,7 +442,7 @@ class TestAutoimporterBehaviour(web.Helper):
         self.register()
         owner = user_repo.get(1)
         app = AppFactory.create(owner=owner)
-        url = "/app/%s/tasks/autoimporter?type=flickr" % app.short_name
+        url = "/project/%s/tasks/autoimporter?type=flickr" % app.short_name
 
         res = self.app.get(url)
         revoke_url = '/flickr/revoke-access?next=%2Fapp%2F%25E2%259C%2593app1%2Ftasks%2Fautoimporter%3Ftype%3Dflickr'
