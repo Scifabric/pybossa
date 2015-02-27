@@ -1161,7 +1161,7 @@ class TestWeb(web.Helper):
         db.session.add(task)
         db.session.commit()
 
-        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
+        res = self.app.get('project/%s/tasks/browse' % (app.short_name),
                            follow_redirects=True)
         dom = BeautifulSoup(res.data)
         assert "Sample Project" in res.data, res.data
@@ -1176,7 +1176,7 @@ class TestWeb(web.Helper):
             db.session.commit()
             self.app.get('api/project/%s/newtask' % app.id)
 
-        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
+        res = self.app.get('project/%s/tasks/browse' % (app.short_name),
                            follow_redirects=True)
         dom = BeautifulSoup(res.data)
         assert "Sample Project" in res.data, res.data
@@ -1195,7 +1195,7 @@ class TestWeb(web.Helper):
 
         app = db.session.query(App).first()
 
-        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
+        res = self.app.get('project/%s/tasks/browse' % (app.short_name),
                            follow_redirects=True)
         assert "Sample Project" in res.data, res.data
         msg = 'Task <span class="label label-success">#1</span>'
@@ -1208,13 +1208,13 @@ class TestWeb(web.Helper):
         app.hidden = 1
         db.session.add(app)
         db.session.commit()
-        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
+        res = self.app.get('project/%s/tasks/browse' % (app.short_name),
                            follow_redirects=True)
         assert res.status_code == 401, res.status_code
 
         self.create()
         self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
-        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
+        res = self.app.get('project/%s/tasks/browse' % (app.short_name),
                            follow_redirects=True)
         assert res.status_code == 403, res.status_code
 
@@ -1236,7 +1236,7 @@ class TestWeb(web.Helper):
             db.session.commit()
 
         app = db.session.query(App).first()
-        res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
+        res = self.app.get('project/%s/%s/results.json' % (app.short_name, 1),
                            follow_redirects=True)
         data = json.loads(res.data)
         assert len(data) == 10, data
@@ -1244,7 +1244,7 @@ class TestWeb(web.Helper):
             assert tr['info']['answer'] == 1, tr
 
         # Check with correct app but wrong task id
-        res = self.app.get('app/%s/%s/results.json' % (app.short_name, 5000),
+        res = self.app.get('project/%s/%s/results.json' % (app.short_name, 5000),
                            follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
@@ -1252,7 +1252,7 @@ class TestWeb(web.Helper):
         app.hidden = 1
         db.session.add(app)
         db.session.commit()
-        res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
+        res = self.app.get('project/%s/%s/results.json' % (app.short_name, 1),
                            follow_redirects=True)
         data = json.loads(res.data)
         assert len(data) == 10, data
@@ -1262,14 +1262,14 @@ class TestWeb(web.Helper):
 
         # Check with hidden app: non-owner should not have access to it
         self.register(fullname="Non Owner", name="nonowner")
-        res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
+        res = self.app.get('project/%s/%s/results.json' % (app.short_name, 1),
                            follow_redirects=True)
         assert res.status_code == 403, res.data
         assert "Forbidden" in res.data, res.data
 
         # Check with hidden app: anonymous should not have access to it
         self.signout()
-        res = self.app.get('app/%s/%s/results.json' % (app.short_name, 1),
+        res = self.app.get('project/%s/%s/results.json' % (app.short_name, 1),
                            follow_redirects=True)
         assert res.status_code == 401, res.data
         assert "Unauthorized" in res.data, res.data
@@ -1289,7 +1289,7 @@ class TestWeb(web.Helper):
 
         app = db.session.query(App).first()
 
-        res = self.app.get('app/%s/tasks/browse' % (app.short_name),
+        res = self.app.get('project/%s/tasks/browse' % (app.short_name),
                            follow_redirects=True)
         assert "Sample Project" in res.data, res.data
         msg = 'Task <span class="label label-info">#1</span>'
@@ -1297,7 +1297,7 @@ class TestWeb(web.Helper):
         assert '0 of 10' in res.data, res.data
 
         # For a non existing page
-        res = self.app.get('app/%s/tasks/browse/5000' % (app.short_name),
+        res = self.app.get('project/%s/tasks/browse/5000' % (app.short_name),
                            follow_redirects=True)
         assert res.status_code == 404, res.status_code
 
@@ -1406,7 +1406,7 @@ class TestWeb(web.Helper):
         task = db.session.query(Task)\
                  .filter(App.id == app.id)\
                  .first()
-        res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
+        res = self.app.get('project/%s/task/%s' % (app.short_name, task.id),
                            follow_redirects=True)
         assert 'TaskPresenter' in res.data, res.data
         msg = "?next=%2Fapp%2F" + app.short_name + "%2Ftask%2F" + str(task.id)
@@ -1416,7 +1416,7 @@ class TestWeb(web.Helper):
         app.hidden = 1
         db.session.add(app)
         db.session.commit()
-        res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
+        res = self.app.get('project/%s/task/%s' % (app.short_name, task.id),
                            follow_redirects=True)
         assert 'Unauthorized' in res.data, res.data
         assert res.status_code == 401, res.status_code
@@ -1425,7 +1425,7 @@ class TestWeb(web.Helper):
         app.hidden = 0
         db.session.add(app)
         db.session.commit()
-        res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
+        res = self.app.get('project/%s/task/%s' % (app.short_name, task.id),
                            follow_redirects=True)
         assert "sign in to participate" in res.data
 
@@ -1438,7 +1438,7 @@ class TestWeb(web.Helper):
         self.signin()
         app = db.session.query(App).first()
         task = db.session.query(Task).filter(App.id == app.id).first()
-        res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
+        res = self.app.get('project/%s/task/%s' % (app.short_name, task.id),
                            follow_redirects=True)
         assert 'TaskPresenter' in res.data, res.data
 
@@ -1448,7 +1448,7 @@ class TestWeb(web.Helper):
         self.register()
         app = db.session.query(App).first()
         task = db.session.query(Task).filter(App.id == app.id).first()
-        res = self.app.get('app/%s/task/%s' % (app.short_name, task.id),
+        res = self.app.get('project/%s/task/%s' % (app.short_name, task.id),
                            follow_redirects=True)
         mark.assert_called_with(task, sentinel.master)
 
@@ -2236,31 +2236,31 @@ class TestWeb(web.Helper):
         app.hidden = 1
         db.session.add(app)
         db.session.commit()
-        res = self.app.get('app/%s/tasks/export' % (app.short_name),
+        res = self.app.get('project/%s/tasks/export' % (app.short_name),
                            follow_redirects=True)
         assert res.status_code == 401, res.status_code
 
         self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
-        res = self.app.get('app/%s/tasks/export' % (app.short_name),
+        res = self.app.get('project/%s/tasks/export' % (app.short_name),
                            follow_redirects=True)
         assert res.status_code == 403, res.status_code
         # Owner
         self.signin(email=Fixtures.email_addr, password=Fixtures.password)
-        res = self.app.get('app/%s/tasks/export' % (app.short_name),
+        res = self.app.get('project/%s/tasks/export' % (app.short_name),
                            follow_redirects=True)
         assert res.status_code == 200, res.status_code
 
     def test_export_task_json_support_non_latin1_project_names(self):
         app = AppFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
         self.clear_temp_container(app.owner_id)
-        res = self.app.get('app/%s/tasks/export?type=task&format=json' % app.short_name,
+        res = self.app.get('project/%s/tasks/export?type=task&format=json' % app.short_name,
                            follow_redirects=True)
         filename = secure_filename(unidecode(u'Измени Киев!'))
         assert filename in res.headers.get('Content-Disposition'), res.headers
 
     def test_export_taskrun_json_support_non_latin1_project_names(self):
         app = AppFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
-        res = self.app.get('app/%s/tasks/export?type=task_run&format=json' % app.short_name,
+        res = self.app.get('project/%s/tasks/export?type=task_run&format=json' % app.short_name,
                            follow_redirects=True)
         filename = secure_filename(unidecode(u'Измени Киев!'))
         assert filename in res.headers.get('Content-Disposition'), res.headers
