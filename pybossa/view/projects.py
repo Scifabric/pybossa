@@ -1481,19 +1481,19 @@ def _check_if_redirect_to_password(app):
 @blueprint.route('/<short_name>/auditlog')
 @login_required
 def auditlog(short_name):
-    (app, owner, n_tasks, n_task_runs,
+    (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
 
-    logs = auditlogger.get_project_logs(app.id)
-    ensure_authorized_to('read', Auditlog, app_id=app.id)
-    redirect_to_password = _check_if_redirect_to_password(app)
+    logs = auditlogger.get_project_logs(project.id)
+    ensure_authorized_to('read', Auditlog, app_id=project.id)
+    redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return render_template('projects/auditlog.html', app=app,
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    return render_template('projects/auditlog.html', project=project,
                            owner=owner, logs=logs,
                            overall_progress=overall_progress,
                            n_tasks=n_tasks,
                            n_task_runs=n_task_runs,
-                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                           n_volunteers=cached_apps.n_volunteers(app.get('id')))
+                           n_completed_tasks=cached_apps.n_completed_tasks(project.get('id')),
+                           n_volunteers=cached_apps.n_volunteers(project.get('id')))
