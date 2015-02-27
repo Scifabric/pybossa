@@ -32,7 +32,7 @@ FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
 
 class TestCkanWeb(web_helper.Helper):
-    url = "/app/test-app/tasks/export"
+    url = "/project/test-app/tasks/export"
 
     def setUp(self):
         super(TestCkanWeb, self).setUp()
@@ -138,7 +138,7 @@ class TestCkanModule(Test, object):
                     "cache_url": None,
                     "name": "task",
                     "created": "2013-04-12T05:50:41.776512",
-                    "url": "http://localhost:5000/app/urbanpark/",
+                    "url": "http://localhost:5000/project/urbanpark/",
                     "webstore_url": None,
                     "position": 0,
                     "revision_id": "85027e11-fcbd-4362-9298-9755c99729b0",
@@ -165,7 +165,7 @@ class TestCkanModule(Test, object):
                     "cache_url": None,
                     "name": "task_run",
                     "created": "2013-04-12T05:50:45.193953",
-                    "url": "http://localhost:5000/app/urbanpark/",
+                    "url": "http://localhost:5000/project/urbanpark/",
                     "webstore_url": None,
                     "position": 1,
                     "revision_id": "a1c52da7-5f2a-4bd4-8e58-b58e3caa11b5",
@@ -181,7 +181,7 @@ class TestCkanModule(Test, object):
             "relationships_as_subject": [],
             "name": "urbanpark",
             "isopen": False,
-            "url": "http://localhost:5000/app/urbanpark/",
+            "url": "http://localhost:5000/project/urbanpark/",
             "notes": "",
             "title": "Urban Parks",
             "extras": [],
