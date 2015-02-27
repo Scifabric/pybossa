@@ -2691,7 +2691,7 @@ class TestWeb(web.Helper):
     @with_context
     @patch('pybossa.view.projects.Ckan', autospec=True)
     def test_task_export_tasks_ckan_without_resources(self, mock1):
-        """Test WEB Export CKAN Tasks works without resources ."""
+        """Test WEB Export CKAN Tasks works without resources."""
         mocks = [Mock()]
         package = dict(id=3, resources=[])
         mocks[0].package_exists.return_value = (package, None)

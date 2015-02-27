@@ -1011,7 +1011,7 @@ def export_to(short_name):
         project_url = url_for('.details', short_name=project.short_name, _external=True)
 
         try:
-            package, e = ckan.package_exists(name=app.short_name)
+            package, e = ckan.package_exists(name=project.short_name)
             if e:
                 raise e
             if package:
