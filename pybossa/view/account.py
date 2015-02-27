@@ -382,7 +382,7 @@ def applications(name):
 
     user = user_repo.get(current_user.id)
     projects_published, projects_draft = _get_user_projects(user.id)
-    projects_published.extend(cached_users.hidden_projects(user.id))
+    projects_published.extend(cached_users.hidden_apps(user.id))
 
     return render_template('account/applications.html',
                            title=gettext("Projects"),
