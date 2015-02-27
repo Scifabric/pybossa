@@ -59,7 +59,7 @@ class ProjectAPI(APIBase):
             obj.owner_id = current_user.id
 
     def _validate_instance(self, project):
-        if project.short_name and is_reserved_name('app', project.short_name):
+        if project.short_name and is_reserved_name('project', project.short_name):
             msg = "Project short_name is not valid, as it's used by the system."
             raise ValueError(msg)
 

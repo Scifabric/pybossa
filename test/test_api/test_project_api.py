@@ -363,6 +363,7 @@ class TestAppAPI(TestAPI):
         res = self.app.post('/api/project?api_key=' + users[1].api_key,
                             data=data)
         error = json.loads(res.data)
+        print error
         assert res.status_code == 415, res.status_code
         assert error['status'] == 'failed', error
         assert error['action'] == 'POST', error
