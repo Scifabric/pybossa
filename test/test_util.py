@@ -178,23 +178,23 @@ class TestIsReservedName(object):
 
     def test_returns_true_for_reserved_name_for_app_blueprint(self):
         with self.app.app_context():
-            reserved = util.is_reserved_name('app', 'new')
+            reserved = util.is_reserved_name('project', 'new')
             assert reserved is True, reserved
-            reserved = util.is_reserved_name('app', 'category')
+            reserved = util.is_reserved_name('project', 'category')
             assert reserved is True, reserved
-            reserved = util.is_reserved_name('app', 'page')
+            reserved = util.is_reserved_name('project', 'page')
             assert reserved is True, reserved
-            reserved = util.is_reserved_name('app', 'draft')
+            reserved = util.is_reserved_name('project', 'draft')
             assert reserved is True, reserved
-            reserved = util.is_reserved_name('app', 'published')
+            reserved = util.is_reserved_name('project', 'published')
             assert reserved is True, reserved
 
 
     def test_returns_false_for_valid_name_for_app_blueprint(self):
         with self.app.app_context():
-            reserved = util.is_reserved_name('app', 'test_app')
+            reserved = util.is_reserved_name('project', 'test_project')
             assert reserved is False, reserved
-            reserved = util.is_reserved_name('app', 'newApp')
+            reserved = util.is_reserved_name('project', 'newProject')
             assert reserved is False, reserved
 
 
