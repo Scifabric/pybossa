@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.jobs import get_project_jobs, create_dict_jobs, get_app_stats
+from pybossa.jobs import get_project_jobs, create_dict_jobs, get_project_stats
 from default import Test, with_context
 from factories import AppFactory
 from factories import UserFactory
@@ -35,7 +35,7 @@ class TestProjectsStats(Test):
         sql = text('''SELECT app.id, app.short_name FROM app, "user"
                    WHERE app.owner_id="user".id AND "user".pro=True;''')
         results = db.slave_session.execute(sql)
-        jobs_generator = create_dict_jobs(results, get_app_stats, (10 * 60))
+        jobs_generator = create_dict_jobs(results, get_project_stats, (10 * 60))
         jobs = []
         for job in jobs_generator:
             jobs.append(job)
@@ -44,7 +44,7 @@ class TestProjectsStats(Test):
         assert len(jobs) == 1, err_msg
 
         job = jobs[0]
-        assert 'get_app_stats' in job['name'].__name__
+        assert 'get_project_stats' in job['name'].__name__
         assert job['args'] == [app.id, app.short_name]
 
     @with_context
@@ -62,7 +62,7 @@ class TestProjectsStats(Test):
 
         job = jobs[0]
         err_msg = "There should have the same name, but it's: %s" % job['name']
-        assert "get_app_stats" == job['name'].__name__, err_msg
+        assert "get_project_stats" == job['name'].__name__, err_msg
         err_msg = "There should have the same args, but it's: %s" % job['args']
         assert [app.id, app.short_name] == job['args'], err_msg
         err_msg = "There should have the same kwargs, but it's: %s" % job['kwargs']

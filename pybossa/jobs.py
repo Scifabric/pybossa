@@ -140,9 +140,9 @@ def project_export(id):
 
 def get_project_jobs():
     """Return a list of jobs based on user type."""
-    from pybossa.cache import apps as cached_apps
-    return create_dict_jobs(cached_apps.get_from_pro_user(),
-                            get_app_stats,
+    from pybossa.cache import projects as cached_projects
+    return create_dict_jobs(cached_projects.get_from_pro_user(),
+                            get_project_stats,
                             timeout=(10 * MINUTE),
                             queue='super')
 
@@ -172,7 +172,7 @@ def get_autoimport_jobs(queue='low'):
 
 
 @with_cache_disabled
-def get_app_stats(id, short_name): # pragma: no cover
+def get_project_stats(id, short_name): # pragma: no cover
     """Get stats for app."""
     import pybossa.cache.apps as cached_apps
     import pybossa.cache.project_stats as stats
