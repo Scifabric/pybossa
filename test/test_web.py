@@ -1609,7 +1609,6 @@ class TestWeb(web.Helper):
         task = Task(app_id=app.id, n_answers = 10)
         db.session.add(task)
         db.session.commit()
-        print app
         for i in range(10):
             task_run = TaskRun(app_id=app.id, task_id=1, user_id=1,
                                      info={'answer': 1})

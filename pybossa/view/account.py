@@ -332,18 +332,18 @@ def profile(name):
 
 def _show_public_profile(user):
     user_dict = cached_users.get_user_summary(user.name)
-    apps_contributed = cached_users.apps_contributed_cached(user.id)
-    apps_created = cached_users.published_apps_cached(user.id)
+    projects_contributed = cached_users.apps_contributed_cached(user.id)
+    projects_created = cached_users.published_apps_cached(user.id)
     if current_user.is_authenticated() and current_user.admin:
-        apps_hidden = cached_users.hidden_apps(user.id)
-        apps_created.extend(apps_hidden)
+        projects_hidden = cached_users.hidden_apps(user.id)
+        projects_created.extend(projects_hidden)
     if user_dict:
         title = "%s &middot; User Profile" % user_dict['fullname']
         return render_template('/account/public_profile.html',
                                title=title,
                                user=user_dict,
-                               apps=apps_contributed,
-                               apps_created=apps_created)
+                               projects=projects_contributed,
+                               projects_created=projects_created)
 
 
 def _show_own_profile(user):
@@ -353,15 +353,15 @@ def _show_own_profile(user):
     user.total = cached_users.get_total_users()
     user.valid_email = user.valid_email
     user.confirmation_email_sent = user.confirmation_email_sent
-    apps_contributed = cached_users.apps_contributed_cached(user.id)
-    apps_published, apps_draft = _get_user_apps(user.id)
-    apps_published.extend(cached_users.hidden_apps(user.id))
+    projects_contributed = cached_users.apps_contributed_cached(user.id)
+    projects_published, projects_draft = _get_user_projects(user.id)
+    projects_published.extend(cached_users.hidden_apps(user.id))
     cached_users.get_user_summary(user.name)
 
     return render_template('account/profile.html', title=gettext("Profile"),
-                          apps_contrib=apps_contributed,
-                          apps_published=apps_published,
-                          apps_draft=apps_draft,
+                          projects_contrib=projects_contributed,
+                          projects_published=projects_published,
+                          projects_draft=projects_draft,
                           user=user)
 
 
@@ -381,19 +381,19 @@ def applications(name):
         return abort(403)
 
     user = user_repo.get(current_user.id)
-    apps_published, apps_draft = _get_user_apps(user.id)
-    apps_published.extend(cached_users.hidden_apps(user.id))
+    projects_published, projects_draft = _get_user_projects(user.id)
+    projects_published.extend(cached_users.hidden_projects(user.id))
 
     return render_template('account/applications.html',
                            title=gettext("Projects"),
-                           apps_published=apps_published,
-                           apps_draft=apps_draft)
+                           projects_published=projects_published,
+                           projects_draft=projects_draft)
 
 
-def _get_user_apps(user_id):
-    apps_published = cached_users.published_apps(user_id)
-    apps_draft = cached_users.draft_apps(user_id)
-    return apps_published, apps_draft
+def _get_user_projects(user_id):
+    projects_published = cached_users.published_apps(user_id)
+    projects_draft = cached_users.draft_apps(user_id)
+    return projects_published, projects_draft
 
 
 
