@@ -1322,45 +1322,45 @@ def task_priority(short_name):
 
 @blueprint.route('/<short_name>/blog')
 def show_blogposts(short_name):
-    (app, owner, n_tasks, n_task_runs,
+    (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
 
-    blogposts = blog_repo.filter_by(app_id=app.id)
-    ensure_authorized_to('read', Blogpost, app_id=app.id)
-    redirect_to_password = _check_if_redirect_to_password(app)
+    blogposts = blog_repo.filter_by(app_id=project.id)
+    ensure_authorized_to('read', Blogpost, app_id=project.id)
+    redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    return render_template('projects/blog.html', app=app,
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    return render_template('projects/blog.html', project=project,
                            owner=owner, blogposts=blogposts,
                            overall_progress=overall_progress,
                            n_tasks=n_tasks,
                            n_task_runs=n_task_runs,
-                           n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                           n_volunteers=cached_apps.n_volunteers(app.get('id')))
+                           n_completed_tasks=cached_apps.n_completed_tasks(project.get('id')),
+                           n_volunteers=cached_apps.n_volunteers(project.get('id')))
 
 
 @blueprint.route('/<short_name>/<int:id>')
 def show_blogpost(short_name, id):
-    (app, owner, n_tasks, n_task_runs,
+    (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
-    blogpost = blog_repo.get_by(id=id, app_id=app.id)
+    blogpost = blog_repo.get_by(id=id, app_id=project.id)
     if blogpost is None:
         raise abort(404)
     ensure_authorized_to('read', blogpost)
-    redirect_to_password = _check_if_redirect_to_password(app)
+    redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return render_template('projects/blog_post.html',
-                            app=app,
+                            project=project,
                             owner=owner,
                             blogpost=blogpost,
                             overall_progress=overall_progress,
                             n_tasks=n_tasks,
                             n_task_runs=n_task_runs,
-                            n_completed_tasks=cached_apps.n_completed_tasks(app.get('id')),
-                            n_volunteers=cached_apps.n_volunteers(app.get('id')))
+                            n_completed_tasks=cached_apps.n_completed_tasks(project.get('id')),
+                            n_volunteers=cached_apps.n_volunteers(project.get('id')))
 
 
 @blueprint.route('/<short_name>/new-blogpost', methods=['GET', 'POST'])
@@ -1368,27 +1368,27 @@ def show_blogpost(short_name, id):
 def new_blogpost(short_name):
 
     def respond():
-        dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+        dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip())
         return render_template('projects/new_blogpost.html',
                                title=gettext("Write a new post"),
                                form=form,
-                               app=dict_app,
+                               project=dict_project,
                                owner=owner,
                                overall_progress=overall_progress,
                                n_tasks=n_tasks,
                                n_task_runs=n_task_runs,
-                               n_completed_tasks=cached_apps.n_completed_tasks(dict_app.get('id')),
-                               n_volunteers=cached_apps.n_volunteers(dict_app.get('id')))
+                               n_completed_tasks=cached_apps.n_completed_tasks(dict_project.get('id')),
+                               n_volunteers=cached_apps.n_volunteers(dict_project.get('id')))
 
 
-    (app, owner, n_tasks, n_task_runs,
+    (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
 
     form = BlogpostForm(request.form)
     del form.id
 
     if request.method != 'POST':
-        ensure_authorized_to('create', Blogpost, app_id=app.id)
+        ensure_authorized_to('create', Blogpost, app_id=project.id)
         return respond()
 
     if not form.validate():
@@ -1398,7 +1398,7 @@ def new_blogpost(short_name):
     blogpost = Blogpost(title=form.title.data,
                         body=form.body.data,
                         user_id=current_user.id,
-                        app_id=app.id)
+                        app_id=project.id)
     ensure_authorized_to('create', blogpost)
     blog_repo.save(blogpost)
     cached_apps.delete_project(short_name)
