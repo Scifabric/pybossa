@@ -582,20 +582,20 @@ def _import_tasks(project, **form_data):
 def setup_autoimporter(short_name):
     if not current_user.pro and not current_user.admin:
         raise abort(403)
-    (app, owner, n_tasks, n_task_runs,
+    (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
-    n_volunteers = cached_apps.n_volunteers(app.id)
-    n_completed_tasks = cached_apps.n_completed_tasks(app.id)
-    dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    template_args = dict(app=dict_app,
+    n_volunteers = cached_apps.n_volunteers(project.id)
+    n_completed_tasks = cached_apps.n_completed_tasks(project.id)
+    dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    template_args = dict(project=dict_project,
                          owner=owner,
                          n_tasks=n_tasks,
                          overall_progress=overall_progress,
                          n_volunteers=n_volunteers,
                          n_completed_tasks=n_completed_tasks,
-                         target='app.setup_autoimporter')
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('update', app)
+                         target='project.setup_autoimporter')
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
     importer_type = request.form.get('form_name') or request.args.get('type')
     all_importers = importer.get_autoimporter_names()
     if importer_type is not None and importer_type not in all_importers:
@@ -603,21 +603,21 @@ def setup_autoimporter(short_name):
     form = GenericBulkTaskImportForm()(importer_type, request.form)
     template_args['form'] = form
 
-    if app.has_autoimporter():
-        current_autoimporter = app.get_autoimporter()
+    if project.has_autoimporter():
+        current_autoimporter = project.get_autoimporter()
         importer_info = dict(**current_autoimporter)
         return render_template('/projects/task_autoimporter.html',
                                 importer=importer_info, **template_args)
 
     if request.method == 'POST':
         if form.validate():  # pragma: no cover
-            app.set_autoimporter(form.get_import_data())
-            project_repo.save(app)
-            auditlogger.log_event(app, current_user, 'create', 'autoimporter',
-                                  'Nothing', json.dumps(app.get_autoimporter()))
+            project.set_autoimporter(form.get_import_data())
+            project_repo.save(project)
+            auditlogger.log_event(project, current_user, 'create', 'autoimporter',
+                                  'Nothing', json.dumps(project.get_autoimporter()))
             cached_apps.delete_project(short_name)
             flash(gettext("Success! Tasks will be imported daily."))
-            return redirect(url_for('.setup_autoimporter', short_name=app.short_name))
+            return redirect(url_for('.setup_autoimporter', short_name=project.short_name))
 
     if request.method == 'GET':
         if importer_type is None:
