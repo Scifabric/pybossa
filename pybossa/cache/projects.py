@@ -208,7 +208,7 @@ def get_featured(category=None, page=1, per_page=5):
                    n_tasks=n_tasks(row.id),
                    n_volunteers=n_volunteers(row.id),
                    info=dict(json.loads(row.info)))
-        projects.projectend(project)
+        projects.append(project)
     return projects
 
 
