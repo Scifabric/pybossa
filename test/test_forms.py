@@ -73,10 +73,10 @@ class TestValidator(Test):
     @with_context
     @raises(ValidationError)
     def test_reserved_names_project_published(self):
-        """Test VALIDATOR ReservedName for app URLs"""
+        """Test VALIDATOR ReservedName for project URLs"""
         form = RegisterForm()
         form.name.data = 'category'
-        val = validator.ReservedName('app', current_app)
+        val = validator.ReservedName('project', current_app)
         val(form, form.name)
 
 
