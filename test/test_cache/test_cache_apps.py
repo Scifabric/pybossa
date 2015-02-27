@@ -456,7 +456,7 @@ class TestAppsCache(Test):
 
 
     @patch('pybossa.cache.pickle')
-    @patch('pybossa.cache.apps._n_draft')
+    @patch('pybossa.cache.projects._n_draft')
     def test_n_count_calls_n_draft(self, _n_draft, pickle):
         """Test CACHE PROJECTS n_count calls _n_draft when called with argument
         'draft'"""
@@ -466,7 +466,7 @@ class TestAppsCache(Test):
 
 
     @patch('pybossa.cache.pickle')
-    @patch('pybossa.cache.apps._n_featured')
+    @patch('pybossa.cache.projects._n_featured')
     def test_n_count_calls_n_featuredt(self, _n_featured, pickle):
         """Test CACHE PROJECTS n_count calls _n_featured when called with
         argument 'featured'"""
