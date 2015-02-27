@@ -432,7 +432,7 @@ class TestAutoimporterBehaviour(web.Helper):
         assert login_url in res.data
 
 
-    @patch('pybossa.view.applications.flickr')
+    @patch('pybossa.view.projects.flickr')
     def test_flickr_autoimporter_page_shows_albums_and_revoke_access_option(
             self, flickr):
         flickr.get_user_albums.return_value = [{'photos': u'1',
@@ -441,11 +441,12 @@ class TestAutoimporterBehaviour(web.Helper):
                                                'title': u'my-fake-title'}]
         self.register()
         owner = user_repo.get(1)
-        app = AppFactory.create(owner=owner)
-        url = "/project/%s/tasks/autoimporter?type=flickr" % app.short_name
+        project = AppFactory.create(owner=owner)
+        url = "/project/%s/tasks/autoimporter?type=flickr" % project.short_name
 
         res = self.app.get(url)
-        revoke_url = '/flickr/revoke-access?next=%2Fapp%2F%25E2%259C%2593app1%2Ftasks%2Fautoimporter%3Ftype%3Dflickr'
+        print res.data
+        revoke_url = '/flickr/revoke-access?next=%2Fproject%2F%25E2%259C%2593app1%2Ftasks%2Fautoimporter%3Ftype%3Dflickr'
 
         assert '1 photos' in res.data
         assert 'src="fake-url"' in res.data
