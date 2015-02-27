@@ -1608,13 +1608,10 @@ class TestWeb(web.Helper):
         app = db.session.query(App).first()
         task = Task(app_id=app.id, n_answers = 10)
         db.session.add(task)
+        task_run = TaskRun(app_id=app.id, task_id=1, user_id=1,
+                                 info={'answer': 1})
+        db.session.add(task_run)
         db.session.commit()
-        for i in range(10):
-            task_run = TaskRun(app_id=app.id, task_id=1, user_id=1,
-                                     info={'answer': 1})
-            db.session.add(task_run)
-            db.session.commit()
-            self.app.get('api/project/%s/newtask' % app.id)
 
         res = self.app.get('account/johndoe', follow_redirects=True)
         assert "Sample Project" in res.data
