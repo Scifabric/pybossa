@@ -37,7 +37,7 @@ class TestProjectPassword(Test):
 
 
     from pybossa.view.projects import redirect
-    @patch('pybossa.view.applications.redirect', wraps=redirect)
+    @patch('pybossa.view.projects.redirect', wraps=redirect)
     def test_password_view_func_post(self, redirect):
         """Test when posting to /project/short_name/password and password is correct
         the user is redirected to where they came from"""
