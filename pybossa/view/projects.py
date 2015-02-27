@@ -641,7 +641,7 @@ def delete_autoimporter(short_name):
     n_volunteers = cached_projects.n_volunteers(app.id)
     n_completed_tasks = cached_projects.n_completed_tasks(app.id)
     dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    template_args = dict(app=dict_app,
+    template_args = dict(project=dict_app,
                          owner=owner,
                          n_tasks=n_tasks,
                          overall_progress=overall_progress,
@@ -1130,7 +1130,7 @@ def show_stats(short_name):
         app = add_custom_contrib_button_to(app, get_user_id_or_ip())
         return render_template('/projects/non_stats.html',
                                title=title,
-                               app=app,
+                               project=app,
                                owner=owner,
                                n_tasks=n_tasks,
                                overall_progress=overall_progress,
@@ -1166,7 +1166,7 @@ def show_stats(short_name):
                            title=title,
                            appStats=json.dumps(tmp),
                            userStats=userStats,
-                           app=app,
+                           project=app,
                            owner=owner,
                            n_tasks=n_tasks,
                            overall_progress=overall_progress,

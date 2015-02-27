@@ -1609,6 +1609,7 @@ class TestWeb(web.Helper):
         task = Task(app_id=app.id, n_answers = 10)
         db.session.add(task)
         db.session.commit()
+        print app
         for i in range(10):
             task_run = TaskRun(app_id=app.id, task_id=1, user_id=1,
                                      info={'answer': 1})
@@ -1617,17 +1618,17 @@ class TestWeb(web.Helper):
             self.app.get('api/project/%s/newtask' % app.id)
 
         res = self.app.get('account/johndoe', follow_redirects=True)
-        assert "Sample Project" in res.data, res.data
+        assert "Sample Project" in res.data
         assert "Contribute!" in res.data, "There should be a Contribute button"
 
     @with_context
     def test_32_oauth_password(self):
         """Test WEB user sign in without password works"""
         user = User(email_addr="johndoe@johndoe.com",
-                          name="John Doe",
-                          passwd_hash=None,
-                          fullname="johndoe",
-                          api_key="api-key")
+                    name="John Doe",
+                    passwd_hash=None,
+                    fullname="johndoe",
+                    api_key="api-key")
         db.session.add(user)
         db.session.commit()
         res = self.signin()
