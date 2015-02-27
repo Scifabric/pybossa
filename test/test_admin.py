@@ -129,9 +129,9 @@ class TestAdmin(web.Helper):
             " as it is not featured"
         # Only projects that have been published can be featured
         self.new_task(1)
-        app = db.session.query(App).get(1)
-        app.info = dict(task_presenter="something")
-        db.session.add(app)
+        project = db.session.query(App).get(1)
+        project.info = dict(task_presenter="something")
+        db.session.add(project)
         db.session.commit()
         res = self.app.get('/admin/featured', follow_redirects=True)
         assert "Featured" in res.data, res.data
@@ -148,7 +148,7 @@ class TestAdmin(web.Helper):
         # A retry should fail
         res = self.app.post('/admin/featured/1')
         err = json.loads(res.data)
-        err_msg = "App.id 1 already featured"
+        err_msg = "Project.id 1 already featured"
         assert err['error'] == err_msg, err_msg
         assert err['status_code'] == 415, "Status code should be 415"
 
@@ -165,14 +165,14 @@ class TestAdmin(web.Helper):
         res = self.app.delete('/admin/featured/1')
         err = json.loads(res.data)
         assert err['status_code'] == 415, "Project should not be found"
-        err_msg = 'App.id 1 is not featured'
+        err_msg = 'Project.id 1 is not featured'
         assert err['error'] == err_msg, err_msg
 
         # Try with an id that does not exist
         res = self.app.delete('/admin/featured/999')
         err = json.loads(res.data)
         assert err['status_code'] == 404, "Project should not be found"
-        err_msg = 'App.id 999 not found'
+        err_msg = 'Project.id 999 not found'
         assert err['error'] == err_msg, err_msg
 
     @with_context
