@@ -86,7 +86,7 @@ def project_by_shortname(short_name):
                 cached_apps.last_activity(app.id))
 
     else:
-        cached_apps.delete_app(short_name)
+        cached_apps.delete_project(short_name)
         return abort(404)
 
 
@@ -344,7 +344,7 @@ def delete(short_name):
                                overall_progress=overall_progress,
                                last_activity=last_activity)
     # Clean cache
-    cached_apps.delete_app(app.short_name)
+    cached_apps.delete_project(app.short_name)
     cached_apps.clean(app.id)
     project_repo.delete(app)
     auditlogger.add_log_entry(app, None, current_user)
@@ -383,7 +383,7 @@ def update(short_name):
         new_project.set_password(form.password.data)
         project_repo.update(new_project)
         auditlogger.add_log_entry(old_project, new_project, current_user)
-        cached_apps.delete_app(short_name)
+        cached_apps.delete_project(short_name)
         cached_apps.reset()
         cached_cat.reset()
         cached_apps.get_project(new_project.short_name)
@@ -432,7 +432,7 @@ def update(short_name):
                 app.info['thumbnail'] = file.filename
                 app.info['container'] = container
                 project_repo.save(app)
-                cached_apps.delete_app(app.short_name)
+                cached_apps.delete_project(app.short_name)
                 flash(gettext('Your project thumbnail has been updated! It may \
                                   take some minutes to refresh...'), 'success')
             else:
@@ -615,7 +615,7 @@ def setup_autoimporter(short_name):
             project_repo.save(app)
             auditlogger.log_event(app, current_user, 'create', 'autoimporter',
                                   'Nothing', json.dumps(app.get_autoimporter()))
-            cached_apps.delete_app(short_name)
+            cached_apps.delete_project(short_name)
             flash(gettext("Success! Tasks will be imported daily."))
             return redirect(url_for('.setup_autoimporter', short_name=app.short_name))
 
@@ -655,7 +655,7 @@ def delete_autoimporter(short_name):
         project_repo.save(app)
         auditlogger.log_event(app, current_user, 'delete', 'autoimporter',
                               json.dumps(autoimporter), 'Nothing')
-        cached_apps.delete_app(short_name)
+        cached_apps.delete_project(short_name)
     return redirect(url_for('.tasks', short_name=app.short_name))
 
 
@@ -1229,46 +1229,46 @@ def task_n_answers(short_name):
 @blueprint.route('/<short_name>/tasks/scheduler', methods=['GET', 'POST'])
 @login_required
 def task_scheduler(short_name):
-    (app, owner, n_tasks, n_task_runs,
+    (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
-    title = project_title(app, gettext('Task Scheduler'))
+    title = project_title(project, gettext('Task Scheduler'))
     form = TaskSchedulerForm()
 
     def respond():
         return render_template('/projects/task_scheduler.html',
                                title=title,
                                form=form,
-                               app=app,
+                               project=project,
                                owner=owner)
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('update', app)
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
 
     if request.method == 'GET':
-        if app.info.get('sched'):
+        if project.info.get('sched'):
             for s in form.sched.choices:
-                if app.info['sched'] == s[0]:
+                if project.info['sched'] == s[0]:
                     form.sched.data = s[0]
                     break
         return respond()
 
     if request.method == 'POST' and form.validate():
-        app = project_repo.get_by_shortname(short_name=app.short_name)
-        if app.info.get('sched'):
-            old_sched = app.info['sched']
+        project = project_repo.get_by_shortname(short_name=project.short_name)
+        if project.info.get('sched'):
+            old_sched = project.info['sched']
         else:
             old_sched = 'default'
         if form.sched.data:
-            app.info['sched'] = form.sched.data
-        project_repo.save(app)
-        cached_apps.delete_app(app.short_name)
+            project.info['sched'] = form.sched.data
+        project_repo.save(project)
+        cached_apps.delete_project(project.short_name)
         # Log it
-        if old_sched != app.info['sched']:
-            auditlogger.log_event(app, current_user, 'update', 'sched',
-                                  old_sched, app.info['sched'])
+        if old_sched != project.info['sched']:
+            auditlogger.log_event(project, current_user, 'update', 'sched',
+                                  old_sched, project.info['sched'])
         msg = gettext("Project Task Scheduler updated!")
         flash(msg, 'success')
 
-        return redirect(url_for('.tasks', short_name=app.short_name))
+        return redirect(url_for('.tasks', short_name=project.short_name))
     else: # pragma: no cover
         flash(gettext('Please correct the errors'), 'error')
         return respond()
@@ -1277,9 +1277,9 @@ def task_scheduler(short_name):
 @blueprint.route('/<short_name>/tasks/priority', methods=['GET', 'POST'])
 @login_required
 def task_priority(short_name):
-    (app, owner, n_tasks, n_task_runs,
+    (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
-    title = project_title(app, gettext('Task Priority'))
+    title = project_title(project, gettext('Task Priority'))
     form = TaskPriorityForm()
 
     def respond():
@@ -1288,15 +1288,15 @@ def task_priority(short_name):
                                form=form,
                                project=project,
                                owner=owner)
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('update', app)
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
 
     if request.method == 'GET':
         return respond()
     if request.method == 'POST' and form.validate():
         for task_id in form.task_ids.data.split(","):
             if task_id != '':
-                t = task_repo.get_task_by(app_id=app.id, id=int(task_id))
+                t = task_repo.get_task_by(app_id=project.id, id=int(task_id))
                 if t:
                     old_priority = t.priority_0
                     t.priority_0 = form.priority_0.data
@@ -1307,12 +1307,12 @@ def task_priority(short_name):
                                                 'task_priority_0': old_priority})
                         new_value = json.dumps({'task_id': t.id,
                                                 'task_priority_0': t.priority_0})
-                        auditlogger.log_event(app, current_user, 'update',
+                        auditlogger.log_event(project, current_user, 'update',
                                               'task.priority_0',
                                                old_value, new_value)
                 else:  # pragma: no cover
                     flash(gettext(("Ooops, Task.id=%s does not belong to the app" % task_id)), 'danger')
-        cached_apps.delete_app(app.short_name)
+        cached_apps.delete_project(project.short_name)
         flash(gettext("Task priority has been changed"), 'success')
         return respond()
     else:
@@ -1401,7 +1401,7 @@ def new_blogpost(short_name):
                         app_id=app.id)
     ensure_authorized_to('create', blogpost)
     blog_repo.save(blogpost)
-    cached_apps.delete_app(short_name)
+    cached_apps.delete_project(short_name)
 
     msg_1 = gettext('Blog post created!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')
@@ -1447,7 +1447,7 @@ def update_blogpost(short_name, id):
                         user_id=current_user.id,
                         app_id=app.id)
     blog_repo.update(blogpost)
-    cached_apps.delete_app(short_name)
+    cached_apps.delete_project(short_name)
 
     msg_1 = gettext('Blog post updated!')
     flash('<i class="icon-ok"></i> ' + msg_1, 'success')
@@ -1465,7 +1465,7 @@ def delete_blogpost(short_name, id):
 
     ensure_authorized_to('delete', blogpost)
     blog_repo.delete(blogpost)
-    cached_apps.delete_app(short_name)
+    cached_apps.delete_project(short_name)
     flash('<i class="icon-ok"></i> ' + 'Blog post deleted!', 'success')
     return redirect(url_for('.show_blogposts', short_name=short_name))
 
