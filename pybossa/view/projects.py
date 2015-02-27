@@ -681,42 +681,42 @@ def password_required(short_name):
 
 @blueprint.route('/<short_name>/task/<int:task_id>')
 def task_presenter(short_name, task_id):
-    (app, owner,n_tasks, n_task_runs,
+    (project, owner,n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
     task = task_repo.get_task(id=task_id)
     if task is None:
         raise abort(404)
-    ensure_authorized_to('read', app)
-    redirect_to_password = _check_if_redirect_to_password(app)
+    ensure_authorized_to('read', project)
+    redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
 
     if current_user.is_anonymous():
-        if not app.allow_anonymous_contributors:
+        if not project.allow_anonymous_contributors:
             msg = ("Oops! You have to sign in to participate in "
                    "<strong>%s</strong>"
-                   "project" % app.name)
+                   "project" % project.name)
             flash(gettext(msg), 'warning')
             return redirect(url_for('account.signin',
                                     next=url_for('.presenter',
-                                    short_name=app.short_name)))
+                                    short_name=project.short_name)))
         else:
             msg_1 = gettext(
                 "Ooops! You are an anonymous user and will not "
                 "get any credit"
                 " for your contributions.")
-            next_url = url_for('app.task_presenter',
+            next_url = url_for('project.task_presenter',
                                 short_name=short_name, task_id=task_id)
             url = url_for('account.signin', next=next_url)
             flash(msg_1 + "<a href=\"" + url + "\">Sign in now!</a>", "warning")
 
-    title = project_title(app, "Contribute")
-    template_args = {"app": app, "title": title, "owner": owner}
+    title = project_title(project, "Contribute")
+    template_args = {"project": project, "title": title, "owner": owner}
 
     def respond(tmpl):
         return render_template(tmpl, **template_args)
 
-    if not (task.app_id == app.id):
+    if not (task.app_id == project.id):
         return respond('/projects/task/wrong.html')
     mark_task_as_requested_by_user(task, sentinel.master)
     return respond('/projects/presenter.html')
