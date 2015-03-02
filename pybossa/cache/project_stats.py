@@ -42,7 +42,7 @@ def n_tasks(project_id):
 
 @memoize(timeout=ONE_DAY)
 def stats_users(project_id):
-    """Return users's stats for a given app_id."""
+    """Return users's stats for a given project_id."""
     users = {}
     auth_users = []
     anon_users = []
@@ -338,7 +338,7 @@ def stats_format_dates(project_id, dates, dates_anon, dates_auth):
 
 
 @memoize(timeout=ONE_DAY)
-def stats_format_hours(app_id, hours, hours_anon, hours_auth,
+def stats_format_hours(project_id, hours, hours_anon, hours_auth,
                        max_hours, max_hours_anon, max_hours_auth):
     """Format hours stats into a JSON format."""
     hourNewStats = dict(label="Anon + Auth", disabled="True", values=[], max=0)
