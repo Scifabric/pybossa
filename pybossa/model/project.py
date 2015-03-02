@@ -130,7 +130,7 @@ def empty_string_to_none(mapper, conn, target):
 
 @event.listens_for(App, 'after_insert')
 def add_event(mapper, conn, target):
-    """Update PyBossa feed with new app."""
+    """Update PyBossa feed with new project."""
     obj = dict(id=target.id,
                name=target.name,
                short_name=target.short_name,

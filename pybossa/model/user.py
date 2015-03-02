@@ -24,7 +24,7 @@ from flask.ext.login import UserMixin
 
 from pybossa.core import db, signer
 from pybossa.model import DomainObject, make_timestamp, JSONEncodedDict, make_uuid, update_redis
-from pybossa.model.app import App
+from pybossa.model.project import App
 from pybossa.model.task_run import TaskRun
 from pybossa.model.blogpost import Blogpost
 

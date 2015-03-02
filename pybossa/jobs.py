@@ -114,7 +114,7 @@ def get_scheduled_jobs(): # pragma: no cover
 def get_export_task_jobs():
     """Export tasks to zip"""
     from pybossa.core import db, user_repo
-    from pybossa.model.app import App
+    from pybossa.model.project import App
     apps = db.slave_session.query(App).all()
     for app_x in apps:
         checkuser = user_repo.get(app_x.owner_id)
@@ -273,7 +273,7 @@ def warm_cache():  # pragma: no cover
 def get_non_updated_apps():
     """Return a list of non updated apps."""
     from sqlalchemy.sql import text
-    from pybossa.model.app import App
+    from pybossa.model.project import App
     from pybossa.core import db
     sql = text('''SELECT id FROM app WHERE TO_DATE(updated,
                 'YYYY-MM-DD\THH24:MI:SS.US') <= NOW() - '3 month':: INTERVAL

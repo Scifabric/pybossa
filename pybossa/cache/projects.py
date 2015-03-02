@@ -18,7 +18,7 @@
 
 from sqlalchemy.sql import text
 from pybossa.core import db, timeouts
-from pybossa.model.app import App
+from pybossa.model.project import App
 from pybossa.util import pretty_date
 from pybossa.cache import memoize, cache, delete_memoized, delete_cached
 

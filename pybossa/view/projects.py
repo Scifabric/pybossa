@@ -35,7 +35,7 @@ import pybossa.sched as sched
 
 from pybossa.core import (uploader, signer, sentinel, json_exporter,
     csv_exporter, importer, flickr)
-from pybossa.model.app import App
+from pybossa.model.project import App
 from pybossa.model.task import Task
 from pybossa.model.auditlog import Auditlog
 from pybossa.model.blogpost import Blogpost

@@ -18,7 +18,7 @@
 
 from sqlalchemy.exc import IntegrityError
 
-from pybossa.model.app import App
+from pybossa.model.project import App
 from pybossa.model.category import Category
 from pybossa.exc import WrongObjectError, DBIntegrityError
 
