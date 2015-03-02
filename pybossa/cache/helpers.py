@@ -22,15 +22,16 @@ from pybossa.cache import memoize, ONE_HOUR
 from pybossa.cache.projects import overall_progress
 
 
-
 session = db.slave_session
 
 
 @memoize(timeout=ONE_HOUR * 3)
 def n_available_tasks(project_id, user_id=None, user_ip=None):
-    """Returns the number of tasks for a given project a user can contribute to,
-    based on the completion of the project tasks, and previous task_runs submitted
-    by the user"""
+    """Return the number of tasks for a given project a user can contribute to.
+
+    based on the completion of the project tasks, and previous task_runs
+    submitted by the user.
+    """
     if user_id and not user_ip:
         query = text('''SELECT COUNT(id) AS n_tasks FROM task WHERE NOT EXISTS
                        (SELECT task_id FROM task_run WHERE
