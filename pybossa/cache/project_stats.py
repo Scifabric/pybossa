@@ -255,7 +255,6 @@ def stats_hours(project_id):
     for row in results:
         max_hours_anon = row.max
 
-
     # Get hour stats for Auth users
     sql = text('''
                WITH myquery AS
@@ -291,7 +290,8 @@ def stats_hours(project_id):
     for row in results:
         max_hours_auth = row.max
 
-    return hours, hours_anon, hours_auth, max_hours, max_hours_anon, max_hours_auth
+    return hours, hours_anon, hours_auth, max_hours, max_hours_anon, \
+        max_hours_auth
 
 
 @memoize(timeout=ONE_DAY)
@@ -442,24 +442,25 @@ def stats_format_users(project_id, users, anon_users, auth_users, geo=False):
 
 
 @memoize(timeout=ONE_DAY)
-def get_stats(app_id, geo=False):
-    """Return the stats of a given app"""
+def get_stats(project_id, geo=False):
+    """Return the stats of a given project."""
     hours, hours_anon, hours_auth, max_hours, \
-        max_hours_anon, max_hours_auth = stats_hours(app_id)
-    users, anon_users, auth_users = stats_users(app_id)
-    dates, dates_anon, dates_auth = stats_dates(app_id)
+        max_hours_anon, max_hours_auth = stats_hours(project_id)
+    users, anon_users, auth_users = stats_users(project_id)
+    dates, dates_anon, dates_auth = stats_dates(project_id)
 
-    n_tasks(app_id)
+    n_tasks(project_id)
     sum(dates.values())
 
     sorted(dates.iteritems(), key=operator.itemgetter(0))
 
-    dates_stats = stats_format_dates(app_id, dates,
+    dates_stats = stats_format_dates(project_id, dates,
                                      dates_anon, dates_auth)
 
-    hours_stats = stats_format_hours(app_id, hours, hours_anon, hours_auth,
+    hours_stats = stats_format_hours(project_id, hours, hours_anon, hours_auth,
                                      max_hours, max_hours_anon, max_hours_auth)
 
-    users_stats = stats_format_users(app_id, users, anon_users, auth_users, geo)
+    users_stats = stats_format_users(project_id, users, anon_users, auth_users,
+                                     geo)
 
     return dates_stats, hours_stats, users_stats
