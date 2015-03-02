@@ -332,10 +332,10 @@ def profile(name):
 
 def _show_public_profile(user):
     user_dict = cached_users.get_user_summary(user.name)
-    projects_contributed = cached_users.apps_contributed_cached(user.id)
-    projects_created = cached_users.published_apps_cached(user.id)
+    projects_contributed = cached_users.projects_contributed_cached(user.id)
+    projects_created = cached_users.published_projects_cached(user.id)
     if current_user.is_authenticated() and current_user.admin:
-        projects_hidden = cached_users.hidden_apps(user.id)
+        projects_hidden = cached_users.hidden_projects(user.id)
         projects_created.extend(projects_hidden)
     if user_dict:
         title = "%s &middot; User Profile" % user_dict['fullname']
@@ -353,9 +353,9 @@ def _show_own_profile(user):
     user.total = cached_users.get_total_users()
     user.valid_email = user.valid_email
     user.confirmation_email_sent = user.confirmation_email_sent
-    projects_contributed = cached_users.apps_contributed_cached(user.id)
+    projects_contributed = cached_users.projects_contributed_cached(user.id)
     projects_published, projects_draft = _get_user_projects(user.id)
-    projects_published.extend(cached_users.hidden_apps(user.id))
+    projects_published.extend(cached_users.hidden_projects(user.id))
     cached_users.get_user_summary(user.name)
 
     return render_template('account/profile.html', title=gettext("Profile"),
@@ -382,7 +382,7 @@ def applications(name):
 
     user = user_repo.get(current_user.id)
     projects_published, projects_draft = _get_user_projects(user.id)
-    projects_published.extend(cached_users.hidden_apps(user.id))
+    projects_published.extend(cached_users.hidden_projects(user.id))
 
     return render_template('account/applications.html',
                            title=gettext("Projects"),
@@ -391,8 +391,8 @@ def applications(name):
 
 
 def _get_user_projects(user_id):
-    projects_published = cached_users.published_apps(user_id)
-    projects_draft = cached_users.draft_apps(user_id)
+    projects_published = cached_users.published_projects(user_id)
+    projects_draft = cached_users.draft_projects(user_id)
     return projects_published, projects_draft
 
 

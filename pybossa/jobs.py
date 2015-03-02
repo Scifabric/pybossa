@@ -261,9 +261,9 @@ def warm_cache():  # pragma: no cover
     for user in users:
         print "Getting stats for %s" % user['name']
         cached_users.get_user_summary(user['name'])
-        cached_users.apps_contributed_cached(user['id'])
-        cached_users.published_apps_cached(user['id'])
-        cached_users.draft_apps_cached(user['id'])
+        cached_users.projects_contributed_cached(user['id'])
+        cached_users.published_projects_cached(user['id'])
+        cached_users.draft_projects_cached(user['id'])
 
     cached_users.get_top()
 

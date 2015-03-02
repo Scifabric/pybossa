@@ -82,7 +82,7 @@ class TestUsersCache(Test):
         not contributed to any project"""
         user = UserFactory.create()
 
-        apps_contributed = cached_users.apps_contributed(user.id)
+        apps_contributed = cached_users.projects_contributed(user.id)
 
         assert apps_contributed == [], apps_contributed
 
@@ -96,7 +96,7 @@ class TestUsersCache(Test):
         TaskRunFactory.create(task=task, user=user)
         another_app = ProjectFactory.create()
 
-        apps_contributed = cached_users.apps_contributed(user.id)
+        apps_contributed = cached_users.projects_contributed(user.id)
 
         assert len(apps_contributed) == 1
         assert apps_contributed[0]['short_name'] == app_contributed.short_name, apps_contributed
@@ -112,7 +112,7 @@ class TestUsersCache(Test):
         fields = ('id', 'name', 'short_name', 'owner_id', 'description',
                  'overall_progress', 'n_tasks', 'n_volunteers', 'info')
 
-        apps_contributed = cached_users.apps_contributed(user.id)
+        apps_contributed = cached_users.projects_contributed(user.id)
 
         for field in fields:
             assert field in apps_contributed[0].keys(), field
@@ -123,7 +123,7 @@ class TestUsersCache(Test):
         not created any project"""
         user = UserFactory.create()
 
-        apps_published = cached_users.published_apps(user.id)
+        apps_published = cached_users.published_projects(user.id)
 
         assert apps_published == [], apps_published
 
@@ -135,7 +135,7 @@ class TestUsersCache(Test):
         published_project = ProjectFactory.create(owner=user)
         TaskFactory.create(app=published_project)
 
-        apps_published = cached_users.published_apps(user.id)
+        apps_published = cached_users.published_projects(user.id)
 
         assert len(apps_published) == 1, apps_published
         assert apps_published[0]['short_name'] == published_project.short_name, apps_published
@@ -151,7 +151,7 @@ class TestUsersCache(Test):
         hidden_project = ProjectFactory.create(owner=user, hidden=1)
         TaskFactory.create(app=hidden_project)
 
-        apps_published = cached_users.published_apps(user.id)
+        apps_published = cached_users.published_projects(user.id)
 
         assert len(apps_published) == 0, apps_published
 
@@ -165,7 +165,7 @@ class TestUsersCache(Test):
         fields = ('id', 'name', 'short_name', 'owner_id', 'description',
                  'overall_progress', 'n_tasks', 'n_volunteers', 'info')
 
-        apps_published = cached_users.published_apps(user.id)
+        apps_published = cached_users.published_projects(user.id)
 
         for field in fields:
             assert field in apps_published[0].keys(), field
@@ -177,7 +177,7 @@ class TestUsersCache(Test):
         user = UserFactory.create()
         published_project = ProjectFactory.create(owner=user)
 
-        draft_projects = cached_users.draft_apps(user.id)
+        draft_projects = cached_users.draft_projects(user.id)
 
         assert len(draft_projects) == 0, draft_projects
 
@@ -187,7 +187,7 @@ class TestUsersCache(Test):
         user = UserFactory.create()
         draft_project = ProjectFactory.create(owner=user, info={})
 
-        draft_projects = cached_users.draft_apps(user.id)
+        draft_projects = cached_users.draft_projects(user.id)
 
         assert len(draft_projects) == 1, draft_projects
         assert draft_projects[0]['short_name'] == draft_project.short_name, draft_projects
@@ -201,7 +201,7 @@ class TestUsersCache(Test):
         TaskFactory.create(app=published_project)
         other_users_draft_project = ProjectFactory.create(info={})
 
-        draft_projects = cached_users.draft_apps(user.id)
+        draft_projects = cached_users.draft_projects(user.id)
 
         assert len(draft_projects) == 0, draft_projects
 
@@ -212,7 +212,7 @@ class TestUsersCache(Test):
         user = UserFactory.create()
         hidden_draft_project = ProjectFactory.create(owner=user, hidden=1, info={})
 
-        draft_projects = cached_users.draft_apps(user.id)
+        draft_projects = cached_users.draft_projects(user.id)
 
         assert len(draft_projects) == 1, draft_projects
 
@@ -225,7 +225,7 @@ class TestUsersCache(Test):
         fields = ('id', 'name', 'short_name', 'owner_id', 'description',
                  'overall_progress', 'n_tasks', 'n_volunteers', 'info')
 
-        draft_project = cached_users.draft_apps(user.id)
+        draft_project = cached_users.draft_projects(user.id)
 
         for field in fields:
             assert field in draft_project[0].keys(), field
@@ -236,7 +236,7 @@ class TestUsersCache(Test):
         not created any hidden project"""
         user = UserFactory.create()
 
-        hidden_projects = cached_users.hidden_apps(user.id)
+        hidden_projects = cached_users.hidden_projects(user.id)
 
         assert hidden_projects == [], hidden_projects
 
@@ -248,7 +248,7 @@ class TestUsersCache(Test):
         hidden_project = ProjectFactory.create(owner=user, hidden=1)
         TaskFactory.create(app=hidden_project)
 
-        hidden_projects = cached_users.hidden_apps(user.id)
+        hidden_projects = cached_users.hidden_projects(user.id)
 
         assert len(hidden_projects) == 1, hidden_projects
         assert hidden_projects[0]['short_name'] == hidden_project.short_name, hidden_projects
@@ -262,7 +262,7 @@ class TestUsersCache(Test):
         TaskFactory.create(app=another_user_hidden_project)
         hidden_draft_project = ProjectFactory.create(owner=user, hidden=1, info={})
 
-        hidden_projects = cached_users.hidden_apps(user.id)
+        hidden_projects = cached_users.hidden_projects(user.id)
 
         assert len(hidden_projects) == 0, hidden_projects
 
@@ -276,7 +276,7 @@ class TestUsersCache(Test):
         fields = ('id', 'name', 'short_name', 'owner_id', 'description',
                  'overall_progress', 'n_tasks', 'n_volunteers', 'info')
 
-        hidden_projects = cached_users.hidden_apps(user.id)
+        hidden_projects = cached_users.hidden_projects(user.id)
 
         for field in fields:
             assert field in hidden_projects[0].keys(), field
