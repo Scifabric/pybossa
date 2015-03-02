@@ -324,7 +324,7 @@ class TestAutoimporterBehaviour(web.Helper):
         data = res.data.decode('utf-8')
 
         assert "From a CSV file" in data
-        assert 'action="/project/%E2%9C%93app1/tasks/autoimporter"' in data
+        assert 'action="/project/%E2%9C%93project1/tasks/autoimporter"' in data
 
         # Google Docs
         url = "/project/%s/tasks/autoimporter?type=gdocs" % app.short_name
@@ -332,7 +332,7 @@ class TestAutoimporterBehaviour(web.Helper):
         data = res.data.decode('utf-8')
 
         assert "From a Google Docs Spreadsheet" in data
-        assert 'action="/project/%E2%9C%93app1/tasks/autoimporter"' in data
+        assert 'action="/project/%E2%9C%93project1/tasks/autoimporter"' in data
 
         # Epicollect Plus
         url = "/project/%s/tasks/autoimporter?type=epicollect" % app.short_name
@@ -340,7 +340,7 @@ class TestAutoimporterBehaviour(web.Helper):
         data = res.data.decode('utf-8')
 
         assert "From an EpiCollect Plus project" in data
-        assert 'action="/project/%E2%9C%93app1/tasks/autoimporter"' in data
+        assert 'action="/project/%E2%9C%93project1/tasks/autoimporter"' in data
 
         # Flickr
         url = "/project/%s/tasks/autoimporter?type=flickr" % app.short_name
@@ -348,7 +348,7 @@ class TestAutoimporterBehaviour(web.Helper):
         data = res.data.decode('utf-8')
 
         assert "From a Flickr Album" in data
-        assert 'action="/project/%E2%9C%93app1/tasks/autoimporter"' in data
+        assert 'action="/project/%E2%9C%93project1/tasks/autoimporter"' in data
 
         # Dropbox
         url = "/project/%s/tasks/autoimporter?type=dropbox" % app.short_name

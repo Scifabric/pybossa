@@ -1457,8 +1457,8 @@ class TestWeb(web.Helper):
     def test_25_get_wrong_task_app(self, mock):
         """Test WEB get wrong task.id for a project works"""
         self.create()
-        app1 = db.session.query(Project).get(1)
-        app1_short_name = app1.short_name
+        project1 = db.session.query(Project).get(1)
+        project1_short_name = project1.short_name
 
         db.session.query(Task).filter(Task.project_id == 1).first()
 
@@ -1470,17 +1470,17 @@ class TestWeb(web.Helper):
         task2_id = task2.id
         self.signout()
 
-        res = self.app.get('/project/%s/task/%s' % (app1_short_name, task2_id))
+        res = self.app.get('/project/%s/task/%s' % (project1_short_name, task2_id))
         assert "Error" in res.data, res.data
-        msg = "This task does not belong to %s" % app1_short_name
+        msg = "This task does not belong to %s" % project1_short_name
         assert msg in res.data, res.data
 
     @with_context
     def test_26_tutorial_signed_user(self):
         """Test WEB tutorials work as signed in user"""
         self.create()
-        app1 = db.session.query(Project).get(1)
-        app1.info = dict(tutorial="some help")
+        project1 = db.session.query(Project).get(1)
+        project1.info = dict(tutorial="some help")
         db.session.commit()
         self.register()
         # First time accessing the app should redirect me to the tutorial
@@ -1497,10 +1497,10 @@ class TestWeb(web.Helper):
         assert "some help" in res.data, err_msg
 
         # Hidden app
-        app1.hidden = 1
-        db.session.add(app1)
+        project1.hidden = 1
+        db.session.add(project1)
         db.session.commit()
-        url = '/project/%s/tutorial' % app1.short_name
+        url = '/project/%s/tutorial' % project1.short_name
         res = self.app.get(url, follow_redirects=True)
         assert res.status_code == 403, res.status_code
 
@@ -1509,8 +1509,8 @@ class TestWeb(web.Helper):
     def test_27_tutorial_anonymous_user(self):
         """Test WEB tutorials work as an anonymous user"""
         self.create()
-        app1 = db.session.query(Project).get(1)
-        app1.info = dict(tutorial="some help")
+        project1 = db.session.query(Project).get(1)
+        project1.info = dict(tutorial="some help")
         db.session.commit()
         # First time accessing the app should redirect me to the tutorial
         res = self.app.get('/project/test-app/newtask', follow_redirects=True)
@@ -1526,8 +1526,8 @@ class TestWeb(web.Helper):
         assert "some help" in res.data, err_msg
 
         # Hidden app
-        app1.hidden = 1
-        db.session.add(app1)
+        project1.hidden = 1
+        db.session.add(project1)
         db.session.commit()
         res = self.app.get('/project/test-app/tutorial', follow_redirects=True)
         assert res.status_code == 401, res.status_code
@@ -2355,7 +2355,7 @@ class TestWeb(web.Helper):
         assert len(zip.namelist()) == 1, err_msg
         # Check ZIP filename
         extracted_filename = zip.namelist()[0]
-        assert extracted_filename == 'app1_task.csv', zip.namelist()[0]
+        assert extracted_filename == 'project1_task.csv', zip.namelist()[0]
 
         csv_content = StringIO(zip.read(extracted_filename))
         csvreader = unicode_csv_reader(csv_content)
@@ -2399,7 +2399,7 @@ class TestWeb(web.Helper):
                 err_msg = "%s != %s" % (task_dict['info'][k], et[keys.index(slug)])
                 assert unicode(task_dict['info'][k]) == et[keys.index(slug)], err_msg
         # Tasks are exported as an attached file
-        content_disposition = 'attachment; filename=%d_app1_task_csv.zip' % app.id
+        content_disposition = 'attachment; filename=%d_project1_task_csv.zip' % app.id
         assert res.headers.get('Content-Disposition') == content_disposition, res.headers
 
         # With an empty app
@@ -2442,7 +2442,7 @@ class TestWeb(web.Helper):
         assert len(zip.namelist()) == 1, err_msg
         # Check ZIP filename
         extracted_filename = zip.namelist()[0]
-        assert extracted_filename == 'app1_task_run.csv', zip.namelist()[0]
+        assert extracted_filename == 'project1_task_run.csv', zip.namelist()[0]
 
         csv_content = StringIO(zip.read(extracted_filename))
         csvreader = unicode_csv_reader(csv_content)
@@ -2485,7 +2485,7 @@ class TestWeb(web.Helper):
                 err_msg = "%s != %s" % (task_run_dict['info'][k], et[keys.index(slug)])
                 assert unicode(task_run_dict['info'][k]) == et[keys.index(slug)], err_msg
         # Task runs are exported as an attached file
-        content_disposition = 'attachment; filename=%d_app1_task_run_csv.zip' % app.id
+        content_disposition = 'attachment; filename=%d_project1_task_run_csv.zip' % app.id
         assert res.headers.get('Content-Disposition') == content_disposition, res.headers
 
     @with_context
@@ -2782,7 +2782,7 @@ class TestWeb(web.Helper):
         data = res.data.decode('utf-8')
 
         assert "From a CSV file" in data
-        assert 'action="/project/%E2%9C%93app1/tasks/import"' in data
+        assert 'action="/project/%E2%9C%93project1/tasks/import"' in data
 
         # Google Docs
         url = "/project/%s/tasks/import?type=gdocs" % app.short_name
@@ -2790,7 +2790,7 @@ class TestWeb(web.Helper):
         data = res.data.decode('utf-8')
 
         assert "From a Google Docs Spreadsheet" in data
-        assert 'action="/project/%E2%9C%93app1/tasks/import"' in data
+        assert 'action="/project/%E2%9C%93project1/tasks/import"' in data
 
         # Epicollect Plus
         url = "/project/%s/tasks/import?type=epicollect" % app.short_name
@@ -2798,7 +2798,7 @@ class TestWeb(web.Helper):
         data = res.data.decode('utf-8')
 
         assert "From an EpiCollect Plus project" in data
-        assert 'action="/project/%E2%9C%93app1/tasks/import"' in data
+        assert 'action="/project/%E2%9C%93project1/tasks/import"' in data
 
         # Flickr
         url = "/project/%s/tasks/import?type=flickr" % app.short_name
@@ -2806,7 +2806,7 @@ class TestWeb(web.Helper):
         data = res.data.decode('utf-8')
 
         assert "From a Flickr Album" in data
-        assert 'action="/project/%E2%9C%93app1/tasks/import"' in data
+        assert 'action="/project/%E2%9C%93project1/tasks/import"' in data
 
         # Dropbox
         url = "/project/%s/tasks/import?type=dropbox" % app.short_name
@@ -2814,7 +2814,7 @@ class TestWeb(web.Helper):
         data = res.data.decode('utf-8')
 
         assert "From your Dropbox account" in data
-        assert 'action="/project/%E2%9C%93app1/tasks/import"' in data
+        assert 'action="/project/%E2%9C%93project1/tasks/import"' in data
 
         # Invalid
         url = "/project/%s/tasks/import?type=invalid" % app.short_name
@@ -3073,7 +3073,7 @@ class TestWeb(web.Helper):
         url = "/project/%s/tasks/import?type=flickr" % app.short_name
 
         res = self.app.get(url)
-        login_url = '/flickr/?next=%2Fproject%2F%25E2%259C%2593app1%2Ftasks%2Fimport%3Ftype%3Dflickr'
+        login_url = '/flickr/?next=%2Fproject%2F%25E2%259C%2593project1%2Ftasks%2Fimport%3Ftype%3Dflickr'
 
         assert login_url in res.data
 
@@ -3090,7 +3090,7 @@ class TestWeb(web.Helper):
         url = "/project/%s/tasks/import?type=flickr" % app.short_name
 
         res = self.app.get(url)
-        revoke_url = '/flickr/revoke-access?next=%2Fproject%2F%25E2%259C%2593app1%2Ftasks%2Fimport%3Ftype%3Dflickr'
+        revoke_url = '/flickr/revoke-access?next=%2Fproject%2F%25E2%259C%2593project1%2Ftasks%2Fimport%3Ftype%3Dflickr'
 
         assert '1 photos' in res.data
         assert 'src="fake-url"' in res.data

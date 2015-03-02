@@ -636,27 +636,27 @@ def setup_autoimporter(short_name):
 def delete_autoimporter(short_name):
     if not current_user.pro and not current_user.admin:
         raise abort(403)
-    (app, owner, n_tasks, n_task_runs,
+    (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
-    n_volunteers = cached_projects.n_volunteers(app.id)
-    n_completed_tasks = cached_projects.n_completed_tasks(app.id)
-    dict_app = add_custom_contrib_button_to(app, get_user_id_or_ip())
-    template_args = dict(project=dict_app,
+    n_volunteers = cached_projects.n_volunteers(project.id)
+    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
+    dict_project = add_custom_contrib_button_to(project, get_user_id_or_ip())
+    template_args = dict(project=dict_project,
                          owner=owner,
                          n_tasks=n_tasks,
                          overall_progress=overall_progress,
                          n_volunteers=n_volunteers,
                          n_completed_tasks=n_completed_tasks)
-    ensure_authorized_to('read', app)
-    ensure_authorized_to('update', app)
-    if app.has_autoimporter():
-        autoimporter = app.get_autoimporter()
-        app.delete_autoimporter()
-        project_repo.save(app)
-        auditlogger.log_event(app, current_user, 'delete', 'autoimporter',
+    ensure_authorized_to('read', project)
+    ensure_authorized_to('update', project)
+    if project.has_autoimporter():
+        autoimporter = project.get_autoimporter()
+        project.delete_autoimporter()
+        project_repo.save(project)
+        auditlogger.log_event(project, current_user, 'delete', 'autoimporter',
                               json.dumps(autoimporter), 'Nothing')
         cached_projects.delete_project(short_name)
-    return redirect(url_for('.tasks', short_name=app.short_name))
+    return redirect(url_for('.tasks', short_name=project.short_name))
 
 
 @blueprint.route('/<short_name>/password', methods=['GET', 'POST'])
