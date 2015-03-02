@@ -115,13 +115,13 @@ def new_task(app_id):
             return response
         return Response(json.dumps({}), mimetype="application/json")
     except Exception as e:
-        return error.format_exception(e, target='app', action='GET')
+        return error.format_exception(e, target='project', action='GET')
 
 def _retrieve_new_task(app_id):
-    app = project_repo.get(app_id)
-    if app is None:
+    project = project_repo.get(app_id)
+    if project is None:
         raise NotFound
-    if not app.allow_anonymous_contributors and current_user.is_anonymous():
+    if not project.allow_anonymous_contributors and current_user.is_anonymous():
         info = dict(
             error="This project does not allow anonymous contributors")
         error = model.task.Task(info=info)
@@ -132,7 +132,7 @@ def _retrieve_new_task(app_id):
         offset = 0
     user_id = None if current_user.is_anonymous() else current_user.id
     user_ip = request.remote_addr if current_user.is_anonymous() else None
-    task = sched.new_task(app_id, app.info.get('sched'), user_id, user_ip, offset)
+    task = sched.new_task(app_id, project.info.get('sched'), user_id, user_ip, offset)
     return task
 
 def mark_task_as_requested_by_user(task, redis_conn):
@@ -162,19 +162,19 @@ def user_progress(app_id=None, short_name=None):
     """
     if app_id or short_name:
         if short_name:
-            app = project_repo.get_by_shortname(short_name)
+            project = project_repo.get_by_shortname(short_name)
         elif app_id:
-            app = project_repo.get(app_id)
+            project = project_repo.get(app_id)
 
-        if app:
+        if project:
             # For now, keep this version, but wait until redis cache is used here for task_runs too
-            query_attrs = dict(app_id=app.id)
+            query_attrs = dict(app_id=project.id)
             if current_user.is_anonymous():
                 query_attrs['user_ip'] = request.remote_addr or '127.0.0.1'
             else:
                 query_attrs['user_id'] = current_user.id
             taskrun_count = task_repo.count_task_runs_with(**query_attrs)
-            tmp = dict(done=taskrun_count, total=n_tasks(app.id))
+            tmp = dict(done=taskrun_count, total=n_tasks(project.id))
             return Response(json.dumps(tmp), mimetype="application/json")
         else:
             return abort(404)

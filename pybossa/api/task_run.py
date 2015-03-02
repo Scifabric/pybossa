@@ -40,7 +40,7 @@ class TaskRunAPI(APIBase):
 
     def _update_object(self, taskrun):
         """Update task_run object with user id or ip."""
-        # validate the task and app for that taskrun are ok
+        # validate the task and project for that taskrun are ok
         task = task_repo.get_task(taskrun.task_id)
         if task is None:  # pragma: no cover
             raise Forbidden('Invalid task_id')

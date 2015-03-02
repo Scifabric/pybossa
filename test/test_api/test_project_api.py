@@ -638,9 +638,9 @@ class TestAppAPI(TestAPI):
         err = json.loads(res.data)
         err_msg = "The app does not exist"
         assert err['status'] == 'failed', err_msg
-        assert err['status_code'] == 404, err_msg
+        assert err['status_code'] == 404, err
         assert err['exception_cls'] == 'NotFound', err_msg
-        assert err['target'] == 'app', err_msg
+        assert err['target'] == 'project', err_msg
 
         # Get an empty task
         url = '/api/project/%s/newtask?offset=1000' % app.id
