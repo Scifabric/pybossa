@@ -34,7 +34,7 @@ class Newsletter(object):
     def init_app(self, app):
         """Configure newsletter Mailchimp client."""
         self.app = app
-        self.app = mailchimp.Mailchimp(app.config.get('MAILCHIMP_API_KEY'))
+        self.client = mailchimp.Mailchimp(app.config.get('MAILCHIMP_API_KEY'))
         self.list_id = app.config.get('MAILCHIMP_LIST_ID')
 
     def is_user_subscribed(self, email, list_id=None):
@@ -43,7 +43,7 @@ class Newsletter(object):
             if list_id is None:
                 list_id = self.list_id
 
-            res = self.app.lists.member_info(list_id, [{'email': email}])
+            res = self.client.lists.member_info(list_id, [{'email': email}])
             print res
             if (res.get('success_count') == 1 and
                    res['data'][0]['email'] == email):
@@ -70,7 +70,7 @@ class Newsletter(object):
             else:
                 email = {'email': user.email_addr}
 
-            self.app.lists.subscribe(list_id, email, merge_vars,
+            self.client.lists.subscribe(list_id, email, merge_vars,
                                         update_existing=update_existing)
         except Error, e:
             msg = 'MAILCHIMP: An error occurred: %s - %s' % (e.__class__, e)
