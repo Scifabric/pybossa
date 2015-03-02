@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-
+"""Cache module for project stats."""
 from flask import current_app
 from sqlalchemy.sql import text
 from pybossa.core import db
@@ -29,10 +29,15 @@ import datetime
 
 session = db.slave_session
 
+
 @memoize(timeout=ONE_DAY)
-def n_tasks(app_id):
+def n_tasks(project_id):
+    """Return number of tasks of project.
+
+    Data is cached for one day.
+    """
     from .projects import n_tasks
-    return n_tasks(app_id)
+    return n_tasks(project_id)
 
 
 @memoize(timeout=ONE_DAY)
