@@ -295,11 +295,12 @@ def stats_hours(project_id):
 
 
 @memoize(timeout=ONE_DAY)
-def stats_format_dates(app_id, dates, dates_anon, dates_auth):
-    """Format dates stats into a JSON format"""
-    dayNewStats = dict(label="Anon + Auth",   values=[])
-    dayTotalTasks = dict(label="Total Tasks",   values=[])
-    dayCompletedTasks = dict(label="Completed Tasks", disabled="True", values=[])
+def stats_format_dates(project_id, dates, dates_anon, dates_auth):
+    """Format dates stats into a JSON format."""
+    dayNewStats = dict(label="Anon + Auth", values=[])
+    dayTotalTasks = dict(label="Total Tasks", values=[])
+    dayCompletedTasks = dict(label="Completed Tasks",
+                             disabled="True", values=[])
     dayNewAnonStats = dict(label="Anonymous", values=[])
     dayNewAuthStats = dict(label="Authenticated", values=[])
 
@@ -309,7 +310,8 @@ def stats_format_dates(app_id, dates, dates_anon, dates_auth):
     for d in sorted(dates.keys()):
         # JavaScript expects miliseconds since EPOCH
         dayTotalTasks['values'].append(
-            [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000), n_tasks(app_id)])
+            [int(time.mktime(time.strptime(d, "%Y-%m-%d")) * 1000),
+             n_tasks(project_id)])
 
         # Total tasks completed per day
         total = total + dates[d]
