@@ -32,8 +32,8 @@ class TestProjectsStats(Test):
         app = ProjectFactory.create(owner=user)
         from sqlalchemy.sql import text
         from pybossa.core import db
-        sql = text('''SELECT app.id, app.short_name FROM app, "user"
-                   WHERE app.owner_id="user".id AND "user".pro=True;''')
+        sql = text('''SELECT project.id, project.short_name FROM project, "user"
+                   WHERE project.owner_id="user".id AND "user".pro=True;''')
         results = db.slave_session.execute(sql)
         jobs_generator = create_dict_jobs(results, get_project_stats, (10 * 60))
         jobs = []
