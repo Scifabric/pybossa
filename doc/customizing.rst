@@ -305,7 +305,7 @@ fast as possible. PyBossa comes with a default set of timeouts for different
 views that you can change or modify to your own taste. All you have to do is
 modify the following variables in your settings file::
 
-    # App cache
+    # Project cache
     APP_TIMEOUT = 15 * 60
     REGISTERED_USERS_TIMEOUT = 15 * 60
     ANON_USERS_TIMEOUT = 5 * 60 * 60

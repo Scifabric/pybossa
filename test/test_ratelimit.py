@@ -122,7 +122,7 @@ class TestAPI(object):
 
     @patch('pybossa.api._retrieve_new_task')
     def test_04_new_task(self, mock):
-        """Test API.new_task(app_id) GET rate limit."""
+        """Test API.new_task(project_id) GET rate limit."""
         mock.return_value = {}
         url = '/api/project/1/newtask'
         self.check_limit(url, 'get', 'project')

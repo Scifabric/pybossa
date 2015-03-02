@@ -19,7 +19,7 @@
 from default import Test, db, with_context, assert_not_raises
 from nose.tools import raises, assert_raises
 from sqlalchemy.exc import IntegrityError, DataError
-from pybossa.model.project import App
+from pybossa.model.project import Project
 from pybossa.model.user import User
 from pybossa.model.category import Category
 from pybossa.model.blogpost import Blogpost
@@ -35,14 +35,14 @@ class TestBlogpostModel(Test):
                         fullname="John Doe",
                         locale="en")
             category = Category(name=u'cat', short_name=u'cat', description=u'cat')
-            app = App(name='Application', short_name='app', description='desc',
+            app = Project(name='Application', short_name='app', description='desc',
                       owner=user, category=category)
             db.session.add(user)
             db.session.add(app)
             db.session.commit()
 
     def configure_fixtures(self):
-        self.app = db.session.query(App).first()
+        self.app = db.session.query(Project).first()
         self.user = db.session.query(User).first()
 
 

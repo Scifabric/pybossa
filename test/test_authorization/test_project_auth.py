@@ -23,7 +23,7 @@ from werkzeug.exceptions import Forbidden, Unauthorized
 from mock import patch
 from test_authorization import mock_current_user
 from factories import ProjectFactory, UserFactory
-from pybossa.model.project import App
+from pybossa.model.project import Project
 
 
 class TestProjectAuthorization(Test):
@@ -37,25 +37,25 @@ class TestProjectAuthorization(Test):
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_cannot_create(self):
         """Test anonymous users cannot projects"""
-        assert_raises(Unauthorized, ensure_authorized_to, 'create', App)
+        assert_raises(Unauthorized, ensure_authorized_to, 'create', Project)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_can_create(self):
         """Test authenticated users can create projects"""
-        assert_not_raises(Exception, ensure_authorized_to, 'create', App)
+        assert_not_raises(Exception, ensure_authorized_to, 'create', Project)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)
     def test_anonymous_user_can_read_all_projects(self):
         """Test anonymous users can read non hidden projects"""
-        assert_not_raises(Exception, ensure_authorized_to, 'read', App)
+        assert_not_raises(Exception, ensure_authorized_to, 'read', Project)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
     def test_authenticated_user_can_read_all_projects(self):
         """Test authenticated users can read non hidden projects"""
-        assert_not_raises(Exception, ensure_authorized_to, 'read', App)
+        assert_not_raises(Exception, ensure_authorized_to, 'read', Project)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)

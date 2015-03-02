@@ -19,7 +19,7 @@
 from default import Test, db, with_context
 from nose.tools import assert_raises
 from mock import patch
-from pybossa.model.project import App
+from pybossa.model.project import Project
 from pybossa.model.user import User
 from sqlalchemy.exc import IntegrityError
 from factories import ProjectFactory
@@ -30,17 +30,17 @@ class TestModelApp(Test):
     @with_context
     def test_app_errors(self):
         """Test project model errors."""
-        app = App(name='Project',
+        app = Project(name='Project',
                   short_name='proj',
                   description='desc',
                   owner_id=None)
 
-        # App.owner_id should not be nullable
+        # Project.owner_id should not be nullable
         db.session.add(app)
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
 
-        # App.name should not be nullable
+        # Project.name should not be nullable
         user = User(email_addr="john.doe@example.com",
                     name="johndoe",
                     fullname="John Doe",
@@ -59,7 +59,7 @@ class TestModelApp(Test):
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
 
-        # App.short_name should not be nullable
+        # Project.short_name should not be nullable
         app.name = "Project"
         app.short_name = None
         db.session.add(app)
@@ -71,7 +71,7 @@ class TestModelApp(Test):
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
 
-        # App.description should not be nullable
+        # Project.description should not be nullable
         db.session.add(app)
         app.short_name = "project"
         app.description = None
@@ -83,7 +83,7 @@ class TestModelApp(Test):
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
 
-        # App.featured should not be nullable
+        # Project.featured should not be nullable
         app.description = 'description'
         app.featured = None
         db.session.add(app)

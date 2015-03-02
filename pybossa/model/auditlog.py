@@ -31,10 +31,10 @@ class Auditlog(db.Model, DomainObject):
 
     #: Audit log ID
     id = Column(Integer, primary_key=True)
-    #: App.id
-    app_id = Column(Integer, nullable=False)
+    #: Project.id
+    project_id = Column(Integer, nullable=False)
     #: Short name of the project
-    app_short_name = Column(Text, nullable=False)
+    project_short_name = Column(Text, nullable=False)
     #: User.id that took the action
     user_id = Column(Integer, nullable=False)
     #: Nickname of the user

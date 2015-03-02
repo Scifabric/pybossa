@@ -33,7 +33,7 @@ class TestApiCommon(TestAPI):
         owner = UserFactory.create()
         apps = ProjectFactory.create_batch(30, owner=owner)
         for app in apps:
-            task = TaskFactory.create(app=app)
+            task = TaskFactory.create(project=app)
             TaskRunFactory.create(task=task)
 
         res = self.app.get('/api/project')
@@ -79,7 +79,7 @@ class TestApiCommon(TestAPI):
         """ Test API GET query with an API-KEY"""
         users = UserFactory.create_batch(3)
         app = ProjectFactory.create(owner=users[0], info={'total': 150})
-        task = TaskFactory.create(app=app, info={'url': 'my url'})
+        task = TaskFactory.create(project=app, info={'url': 'my url'})
         taskrun = TaskRunFactory.create(task=task, user=users[0],
                                         info={'answer': 'annakarenina'})
         for endpoint in self.endpoints:
@@ -87,7 +87,7 @@ class TestApiCommon(TestAPI):
             res = self.app.get(url)
             data = json.loads(res.data)
 
-            if endpoint == 'app':
+            if endpoint == 'project':
                 assert len(data) == 1, data
                 app = data[0]
                 assert app['info']['total'] == 150, data
@@ -137,15 +137,15 @@ class TestApiCommon(TestAPI):
         assert error['status'] == 'failed', error
         assert error['target'] == 'task', error
 
-        q = 'app_id=1%3D1;SELECT%20*%20FROM%20task%20WHERE%201'
+        q = 'project_id=1%3D1;SELECT%20*%20FROM%20task%20WHERE%201'
         res = self.app.get('/api/apappp?' + q)
         assert res.status_code == 404, res.data
 
-        q = 'app_id=1%3D1;SELECT%20*%20FROM%20task%20WHERE%201'
+        q = 'project_id=1%3D1;SELECT%20*%20FROM%20task%20WHERE%201'
         res = self.app.get('/api/' + q)
         assert res.status_code == 404, res.data
 
-        q = 'app_id=1%3D1;SELECT%20*%20FROM%20task%20WHERE%201'
+        q = 'project_id=1%3D1;SELECT%20*%20FROM%20task%20WHERE%201'
         res = self.app.get('/api' + q)
         assert res.status_code == 404, res.data
 

@@ -177,7 +177,7 @@ class TestProjectRepositoryForProjects(Test):
 
     def test_save_only_saves_projects(self):
         """Test save raises a WrongObjectError when an object which is not
-        a Project (App) instance is saved"""
+        a Project instance is saved"""
 
         bad_object = dict()
 
@@ -208,7 +208,7 @@ class TestProjectRepositoryForProjects(Test):
 
     def test_update_only_updates_projects(self):
         """Test update raises a WrongObjectError when an object which is not
-        a Project (App) instance is updated"""
+        a Project instance is updated"""
 
         bad_object = dict()
 
@@ -232,9 +232,9 @@ class TestProjectRepositoryForProjects(Test):
         from pybossa.repositories import TaskRepository, BlogRepository
 
         project = ProjectFactory.create()
-        task = TaskFactory.create(app=project)
+        task = TaskFactory.create(project=project)
         taskrun = TaskRunFactory.create(task=task)
-        blogpost = BlogpostFactory.create(app=project)
+        blogpost = BlogpostFactory.create(project=project)
 
         self.project_repo.delete(project)
         deleted_task = TaskRepository(db).get_task(task.id)

@@ -57,7 +57,7 @@ class TestOldProjects(Test):
 
         date = '2010-10-22T11:02:00.000000'
         app = ProjectFactory.create(updated=date)
-        app_id = app.id
+        project_id = app.id
         warn_old_project_owners()
         err_msg = "mail.connect() should be called"
         assert mail.connect.called, err_msg
@@ -75,7 +75,7 @@ class TestOldProjects(Test):
         with mail.record_messages() as outbox:
             date = '2010-10-22T11:02:00.000000'
             app = ProjectFactory.create(updated=date)
-            app_id = app.id
+            project_id = app.id
             warn_old_project_owners()
             assert len(outbox) == 1, outbox
             subject = 'Your PyBossa project: %s has been inactive' % app.name

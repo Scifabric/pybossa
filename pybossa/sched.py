@@ -20,7 +20,7 @@
 #from flask import Blueprint, request, url_for, flash, redirect, abort
 #from flask import abort, request, make_response, current_app
 from sqlalchemy.sql import text
-from pybossa.model.project import App
+from pybossa.model.project import Project
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
 from pybossa.core import db
@@ -30,7 +30,7 @@ import random
 
 session = db.slave_session
 
-def new_task(app_id, sched, user_id=None, user_ip=None, offset=0):
+def new_task(project_id, sched, user_id=None, user_ip=None, offset=0):
     '''Get a new task by calling the appropriate scheduler function.
     '''
     sched_map = {
@@ -40,10 +40,10 @@ def new_task(app_id, sched, user_id=None, user_ip=None, offset=0):
         'random': get_random_task,
         'incremental': get_incremental_task}
     scheduler = sched_map.get(sched, sched_map['default'])
-    return scheduler(app_id, user_id, user_ip, offset=offset)
+    return scheduler(project_id, user_id, user_ip, offset=offset)
 
 
-def get_breadth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
+def get_breadth_first_task(project_id, user_id=None, user_ip=None, n_answers=30, offset=0):
     """Gets a new task which have the least number of task runs (excluding the
     current user).
 
@@ -53,33 +53,33 @@ def get_breadth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, off
     """
     # Uncomment the next three lines to profile the sched function
     #import timeit
-    #T = timeit.Timer(lambda: get_candidate_tasks(app_id, user_id,
+    #T = timeit.Timer(lambda: get_candidate_tasks(project_id, user_id,
     #                  user_ip, n_answers))
     #print "First algorithm: %s" % T.timeit(number=1)
     if user_id and not user_ip:
         sql = text('''
                    SELECT task.id, COUNT(task_run.task_id) AS taskcount FROM task
                    LEFT JOIN task_run ON (task.id = task_run.task_id) WHERE NOT EXISTS
-                   (SELECT 1 FROM task_run WHERE app_id=:app_id AND
+                   (SELECT 1 FROM task_run WHERE project_id=:project_id AND
                    user_id=:user_id AND task_id=task.id)
-                   AND task.app_id=:app_id AND task.state !='completed'
+                   AND task.project_id=:project_id AND task.state !='completed'
                    group by task.id ORDER BY taskcount, id ASC LIMIT 10;
                    ''')
-        tasks = session.execute(sql, dict(app_id=app_id, user_id=user_id))
+        tasks = session.execute(sql, dict(project_id=project_id, user_id=user_id))
     else:
         if not user_ip: # pragma: no cover
             user_ip = '127.0.0.1'
         sql = text('''
                    SELECT task.id, COUNT(task_run.task_id) AS taskcount FROM task
                    LEFT JOIN task_run ON (task.id = task_run.task_id) WHERE NOT EXISTS
-                   (SELECT 1 FROM task_run WHERE app_id=:app_id AND
+                   (SELECT 1 FROM task_run WHERE project_id=:project_id AND
                    user_ip=:user_ip AND task_id=task.id)
-                   AND task.app_id=:app_id AND task.state !='completed'
+                   AND task.project_id=:project_id AND task.state !='completed'
                    group by task.id ORDER BY taskcount, id ASC LIMIT 10;
                    ''')
 
         # results will be list of (taskid, count)
-        tasks = session.execute(sql, dict(app_id=app_id, user_ip=user_ip))
+        tasks = session.execute(sql, dict(project_id=project_id, user_ip=user_ip))
     # ignore n_answers for the present - we will just keep going once we've
     # done as many as we need
     tasks = [x[0] for x in tasks]
@@ -95,14 +95,14 @@ def get_breadth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, off
         return None
 
 
-def get_depth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
+def get_depth_first_task(project_id, user_id=None, user_ip=None, n_answers=30, offset=0):
     """Gets a new task for a given project"""
     # Uncomment the next three lines to profile the sched function
     #import timeit
-    #T = timeit.Timer(lambda: get_candidate_tasks(app_id, user_id,
+    #T = timeit.Timer(lambda: get_candidate_tasks(project_id, user_id,
     #                  user_ip, n_answers))
     #print "First algorithm: %s" % T.timeit(number=1)
-    candidate_tasks = get_candidate_tasks(app_id, user_id, user_ip, n_answers, offset=offset)
+    candidate_tasks = get_candidate_tasks(project_id, user_id, user_ip, n_answers, offset=offset)
     total_remaining = len(candidate_tasks)
     #print "Available tasks %s " % total_remaining
     if total_remaining == 0:
@@ -116,9 +116,9 @@ def get_depth_first_task(app_id, user_id=None, user_ip=None, n_answers=30, offse
             return None
 
 
-def get_random_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
+def get_random_task(project_id, user_id=None, user_ip=None, n_answers=30, offset=0):
     """Returns a random task for the user"""
-    app = session.query(App).get(app_id)
+    app = session.query(Project).get(project_id)
     from random import choice
     if len(app.tasks) > 0:
         return choice(app.tasks)
@@ -126,13 +126,13 @@ def get_random_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
         return None
 
 
-def get_incremental_task(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
+def get_incremental_task(project_id, user_id=None, user_ip=None, n_answers=30, offset=0):
     """
     Get a new task for a given project with its last given answer.
     It is an important strategy when dealing with large tasks, as
     transcriptions.
     """
-    candidate_tasks = get_candidate_tasks(app_id, user_id, user_ip,
+    candidate_tasks = get_candidate_tasks(project_id, user_id, user_ip,
                                           n_answers, offset=0)
     total_remaining = len(candidate_tasks)
     if total_remaining == 0:
@@ -151,27 +151,27 @@ def get_incremental_task(app_id, user_id=None, user_ip=None, n_answers=30, offse
     return task
 
 
-def get_candidate_tasks(app_id, user_id=None, user_ip=None, n_answers=30, offset=0):
+def get_candidate_tasks(project_id, user_id=None, user_ip=None, n_answers=30, offset=0):
     """Gets all available tasks for a given project and user"""
     rows = None
     if user_id and not user_ip:
         query = text('''
                      SELECT id FROM task WHERE NOT EXISTS
                      (SELECT task_id FROM task_run WHERE
-                     app_id=:app_id AND user_id=:user_id AND task_id=task.id)
-                     AND app_id=:app_id AND state !='completed'
+                     project_id=:project_id AND user_id=:user_id AND task_id=task.id)
+                     AND project_id=:project_id AND state !='completed'
                      ORDER BY priority_0 DESC, id ASC LIMIT 10''')
-        rows = session.execute(query, dict(app_id=app_id, user_id=user_id))
+        rows = session.execute(query, dict(project_id=project_id, user_id=user_id))
     else:
         if not user_ip:
             user_ip = '127.0.0.1'
         query = text('''
                      SELECT id FROM task WHERE NOT EXISTS
                      (SELECT task_id FROM task_run WHERE
-                     app_id=:app_id AND user_ip=:user_ip AND task_id=task.id)
-                     AND app_id=:app_id AND state !='completed'
+                     project_id=:project_id AND user_ip=:user_ip AND task_id=task.id)
+                     AND project_id=:project_id AND state !='completed'
                      ORDER BY priority_0 DESC, id ASC LIMIT 10''')
-        rows = session.execute(query, dict(app_id=app_id, user_ip=user_ip))
+        rows = session.execute(query, dict(project_id=project_id, user_ip=user_ip))
 
     tasks = []
     for t in rows:

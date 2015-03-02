@@ -49,7 +49,7 @@ class TestProjectAPI(TestAPI):
         err = json.loads(res.data)
         assert res.status_code == 404, err
         assert err['status'] == 'failed', err
-        assert err['target'] == 'app', err
+        assert err['target'] == 'project', err
         assert err['exception_cls'] == 'NotFound', err
         assert err['action'] == 'GET', err
 
@@ -314,7 +314,7 @@ class TestProjectAPI(TestAPI):
         error = json.loads(res.data)
         assert error['status'] == 'failed', error
         assert error['action'] == 'DELETE', error
-        assert error['target'] == 'app', error
+        assert error['target'] == 'project', error
         ### real user but not allowed as not owner!
         url = '/api/project/%s?api_key=%s' % (id_, non_owner.api_key)
         res = self.app.delete(url, data=datajson)
@@ -323,7 +323,7 @@ class TestProjectAPI(TestAPI):
         error = json.loads(res.data)
         assert error['status'] == 'failed', error
         assert error['action'] == 'DELETE', error
-        assert error['target'] == 'app', error
+        assert error['target'] == 'project', error
 
         url = '/api/project/%s?api_key=%s' % (id_, users[1].api_key)
         res = self.app.delete(url, data=datajson)
@@ -337,7 +337,7 @@ class TestProjectAPI(TestAPI):
         assert res.status_code == 404, error
         assert error['status'] == 'failed', error
         assert error['action'] == 'DELETE', error
-        assert error['target'] == 'app', error
+        assert error['target'] == 'project', error
         assert error['exception_cls'] == 'NotFound', error
 
         # delete a project that does not exist
@@ -367,7 +367,7 @@ class TestProjectAPI(TestAPI):
         assert res.status_code == 415, res.status_code
         assert error['status'] == 'failed', error
         assert error['action'] == 'POST', error
-        assert error['target'] == 'app', error
+        assert error['target'] == 'project', error
         assert error['exception_cls'] == 'ValueError', error
         message = "Project short_name is not valid, as it's used by the system."
         assert error['exception_msg'] == message, error
@@ -389,7 +389,7 @@ class TestProjectAPI(TestAPI):
         assert res.status_code == 415, res.status_code
         assert error['status'] == 'failed', error
         assert error['action'] == 'PUT', error
-        assert error['target'] == 'app', error
+        assert error['target'] == 'project', error
         assert error['exception_cls'] == 'ValueError', error
         message = "Project short_name is not valid, as it's used by the system."
         assert error['exception_msg'] == message, error
@@ -419,7 +419,7 @@ class TestProjectAPI(TestAPI):
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
-        assert err['target'] == 'app', err
+        assert err['target'] == 'project', err
         assert err['action'] == 'PUT', err
         assert err['exception_cls'] == 'ValueError', err
 
@@ -428,7 +428,7 @@ class TestProjectAPI(TestAPI):
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
-        assert err['target'] == 'app', err
+        assert err['target'] == 'project', err
         assert err['action'] == 'PUT', err
         assert err['exception_cls'] == 'AttributeError', err
 
@@ -438,7 +438,7 @@ class TestProjectAPI(TestAPI):
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
-        assert err['target'] == 'app', err
+        assert err['target'] == 'project', err
         assert err['action'] == 'PUT', err
         assert err['exception_cls'] == 'TypeError', err
         data.pop('wrongfield')
@@ -450,7 +450,7 @@ class TestProjectAPI(TestAPI):
         err = json.loads(res.data)
         assert res.status_code == 415, err
         assert err['status'] == 'failed', err
-        assert err['target'] == 'app', err
+        assert err['target'] == 'project', err
         assert err['action'] == 'DELETE', err
         assert err['exception_cls'] == 'AttributeError', err
 
@@ -463,7 +463,7 @@ class TestProjectAPI(TestAPI):
         """Test API userprogress as anonymous works"""
         user = UserFactory.create()
         app = ProjectFactory.create(owner=user)
-        tasks = TaskFactory.create_batch(2, app=app)
+        tasks = TaskFactory.create_batch(2, project=app)
         taskruns = []
         for task in tasks:
             taskruns.extend(AnonymousTaskRunFactory.create_batch(2, task=task))
@@ -493,7 +493,7 @@ class TestProjectAPI(TestAPI):
         """Test API userprogress as an authenticated user works"""
         user = UserFactory.create()
         app = ProjectFactory.create(owner=user)
-        tasks = TaskFactory.create_batch(2, app=app)
+        tasks = TaskFactory.create_batch(2, project=app)
         taskruns = []
         for task in tasks:
             taskruns.extend(TaskRunFactory.create_batch(2, task=task, user=user))
@@ -538,15 +538,15 @@ class TestProjectAPI(TestAPI):
     def test_delete_app_cascade(self):
         """Test API delete project deletes associated tasks and taskruns"""
         app = ProjectFactory.create()
-        tasks = TaskFactory.create_batch(2, app=app)
-        task_runs = TaskRunFactory.create_batch(2, app=app)
+        tasks = TaskFactory.create_batch(2, project=app)
+        task_runs = TaskRunFactory.create_batch(2, project=app)
         url = '/api/project/%s?api_key=%s' % (1, app.owner.api_key)
         self.app.delete(url)
 
-        tasks = task_repo.filter_tasks_by(app_id=app.id)
+        tasks = task_repo.filter_tasks_by(project_id=app.id)
         assert len(tasks) == 0, "There should not be any task"
 
-        task_runs = task_repo.filter_task_runs_by(app_id=app.id)
+        task_runs = task_repo.filter_task_runs_by(project_id=app.id)
         assert len(task_runs) == 0, "There should not be any task run"
 
 
@@ -555,15 +555,15 @@ class TestProjectAPI(TestAPI):
         """Test API get a newtask - allow anonymous contributors"""
         app = ProjectFactory.create()
         user = UserFactory.create()
-        tasks = TaskFactory.create_batch(2, app=app, info={'question': 'answer'})
+        tasks = TaskFactory.create_batch(2, project=app, info={'question': 'answer'})
 
         # All users are allowed to participate by default
         # As Anonymous user
         url = '/api/project/%s/newtask' % app.id
         res = self.app.get(url, follow_redirects=True)
         task = json.loads(res.data)
-        err_msg = "The task.app_id is different from the app.id"
-        assert task['app_id'] == app.id, err_msg
+        err_msg = "The task.project_id is different from the app.id"
+        assert task['project_id'] == app.id, err_msg
         err_msg = "There should not be an error message"
         assert task['info'].get('error') is None, err_msg
         err_msg = "There should be a question"
@@ -573,8 +573,8 @@ class TestProjectAPI(TestAPI):
         url = '/api/project/%s/newtask?api_key=%s' % (app.id, user.api_key)
         res = self.app.get(url, follow_redirects=True)
         task = json.loads(res.data)
-        err_msg = "The task.app_id is different from the app.id"
-        assert task['app_id'] == app.id, err_msg
+        err_msg = "The task.project_id is different from the app.id"
+        assert task['project_id'] == app.id, err_msg
         err_msg = "There should not be an error message"
         assert task['info'].get('error') is None, err_msg
         err_msg = "There should be a question"
@@ -588,8 +588,8 @@ class TestProjectAPI(TestAPI):
         url = '/api/project/%s/newtask' % app.id
         res = self.app.get(url, follow_redirects=True)
         task = json.loads(res.data)
-        err_msg = "The task.app_id should be null"
-        assert task['app_id'] is None, err_msg
+        err_msg = "The task.project_id should be null"
+        assert task['project_id'] is None, err_msg
         err_msg = "There should be an error message"
         err = "This project does not allow anonymous contributors"
         assert task['info'].get('error') == err, err_msg
@@ -600,8 +600,8 @@ class TestProjectAPI(TestAPI):
         url = '/api/project/%s/newtask?api_key=%s' % (app.id, user.api_key)
         res = self.app.get(url, follow_redirects=True)
         task = json.loads(res.data)
-        err_msg = "The task.app_id is different from the app.id"
-        assert task['app_id'] == app.id, err_msg
+        err_msg = "The task.project_id is different from the app.id"
+        assert task['project_id'] == app.id, err_msg
         err_msg = "There should not be an error message"
         assert task['info'].get('error') is None, err_msg
         err_msg = "There should be a question"
@@ -612,7 +612,7 @@ class TestProjectAPI(TestAPI):
     def test_newtask(self):
         """Test API project new_task method and authentication"""
         app = ProjectFactory.create()
-        TaskFactory.create_batch(2, app=app)
+        TaskFactory.create_batch(2, project=app)
         user = UserFactory.create()
 
         # anonymous
@@ -620,7 +620,7 @@ class TestProjectAPI(TestAPI):
         res = self.app.get('/api/project/%s/newtask' % app.id)
         assert res, res
         task = json.loads(res.data)
-        assert_equal(task['app_id'], app.id)
+        assert_equal(task['project_id'], app.id)
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
@@ -630,7 +630,7 @@ class TestProjectAPI(TestAPI):
         res = self.app.get(url)
         assert res, res
         task = json.loads(res.data)
-        assert_equal(task['app_id'], app.id)
+        assert_equal(task['project_id'], app.id)
 
         # Get NotFound for an non-existing app
         url = '/api/project/5000/newtask'

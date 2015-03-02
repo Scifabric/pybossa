@@ -75,7 +75,7 @@ class CsvExporter(Exporter):
         writer.writerow(self._format_csv_properly(t.dictize(), ty='taskrun'))
 
     def _get_csv(self, out, writer, table, handle_row, id):
-        for tr in getattr(task_repo, 'filter_%ss_by' % table)(app_id=id,
+        for tr in getattr(task_repo, 'filter_%ss_by' % table)(project_id=id,
                                                               yielded=True):
             handle_row(writer, tr)
         out.seek(0)
@@ -104,7 +104,7 @@ class CsvExporter(Exporter):
 
             out = tempfile.TemporaryFile()
             writer = UnicodeWriter(out)
-            t = getattr(task_repo, 'get_%s_by' % ty)(app_id=id)
+            t = getattr(task_repo, 'get_%s_by' % ty)(project_id=id)
             if t is not None:
                 if test(t):
                     tmp = t.dictize().keys()

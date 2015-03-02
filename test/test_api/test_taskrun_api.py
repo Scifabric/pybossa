@@ -46,34 +46,34 @@ class TestTaskrunAPI(TestAPI):
     def test_query_taskrun(self):
         """Test API query for taskrun with params works"""
         app = ProjectFactory.create()
-        TaskRunFactory.create_batch(10, app=app)
+        TaskRunFactory.create_batch(10, project=app)
         # Test for real field
-        res = self.app.get("/api/taskrun?app_id=1")
+        res = self.app.get("/api/taskrun?project_id=1")
         data = json.loads(res.data)
         # Should return one result
         assert len(data) == 10, data
         # Correct result
-        assert data[0]['app_id'] == 1, data
+        assert data[0]['project_id'] == 1, data
 
         # Valid field but wrong value
-        res = self.app.get("/api/taskrun?app_id=99999999")
+        res = self.app.get("/api/taskrun?project_id=99999999")
         data = json.loads(res.data)
         assert len(data) == 0, data
 
         # Multiple fields
-        res = self.app.get('/api/taskrun?app_id=1&task_id=1')
+        res = self.app.get('/api/taskrun?project_id=1&task_id=1')
         data = json.loads(res.data)
         # One result
         assert len(data) == 1, data
         # Correct result
-        assert data[0]['app_id'] == 1, data
+        assert data[0]['project_id'] == 1, data
         assert data[0]['task_id'] == 1, data
 
         # Limits
-        res = self.app.get("/api/taskrun?app_id=1&limit=5")
+        res = self.app.get("/api/taskrun?project_id=1&limit=5")
         data = json.loads(res.data)
         for item in data:
-            assert item['app_id'] == 1, item
+            assert item['project_id'] == 1, item
         assert len(data) == 5, data
 
 
@@ -83,28 +83,28 @@ class TestTaskrunAPI(TestAPI):
     def test_taskrun_anonymous_post(self, fake_validation, mock_request):
         """Test API TaskRun creation and auth for anonymous users"""
         app = ProjectFactory.create()
-        task = TaskFactory.create(app=app)
+        task = TaskFactory.create(project=app)
         data = dict(
-            app_id=app.id,
+            project_id=app.id,
             task_id=task.id,
             info='my task result')
 
-        # With wrong app_id
+        # With wrong project_id
         mock_request.remote_addr = '127.0.0.0'
-        data['app_id'] = 100000000000000000
+        data['project_id'] = 100000000000000000
         datajson = json.dumps(data)
         tmp = self.app.post('/api/taskrun', data=datajson)
-        err_msg = "This post should fail as the app_id is wrong"
+        err_msg = "This post should fail as the project_id is wrong"
         err = json.loads(tmp.data)
         assert tmp.status_code == 403, tmp.data
         assert err['status'] == 'failed', err_msg
         assert err['status_code'] == 403, err_msg
-        assert err['exception_msg'] == 'Invalid app_id', err_msg
+        assert err['exception_msg'] == 'Invalid project_id', err_msg
         assert err['exception_cls'] == 'Forbidden', err_msg
         assert err['target'] == 'taskrun', err_msg
 
         # With wrong task_id
-        data['app_id'] = task.app_id
+        data['project_id'] = task.project_id
         data['task_id'] = 100000000000000000000
         datajson = json.dumps(data)
         tmp = self.app.post('/api/taskrun', data=datajson)
@@ -118,7 +118,7 @@ class TestTaskrunAPI(TestAPI):
 
         # Now with everything fine
         data = dict(
-            app_id=task.app_id,
+            project_id=task.project_id,
             task_id=task.id,
             info='my task result')
         datajson = json.dumps(data)
@@ -137,28 +137,28 @@ class TestTaskrunAPI(TestAPI):
     def test_taskrun_authenticated_post(self, fake_validation):
         """Test API TaskRun creation and auth for authenticated users"""
         app = ProjectFactory.create()
-        task = TaskFactory.create(app=app)
+        task = TaskFactory.create(project=app)
         data = dict(
-            app_id=app.id,
+            project_id=app.id,
             task_id=task.id,
             info='my task result')
 
-        # With wrong app_id
-        data['app_id'] = 100000000000000000
+        # With wrong project_id
+        data['project_id'] = 100000000000000000
         datajson = json.dumps(data)
         url = '/api/taskrun?api_key=%s' % app.owner.api_key
         tmp = self.app.post(url, data=datajson)
-        err_msg = "This post should fail as the app_id is wrong"
+        err_msg = "This post should fail as the project_id is wrong"
         err = json.loads(tmp.data)
         assert tmp.status_code == 403, err_msg
         assert err['status'] == 'failed', err_msg
         assert err['status_code'] == 403, err_msg
-        assert err['exception_msg'] == 'Invalid app_id', err_msg
+        assert err['exception_msg'] == 'Invalid project_id', err_msg
         assert err['exception_cls'] == 'Forbidden', err_msg
         assert err['target'] == 'taskrun', err_msg
 
         # With wrong task_id
-        data['app_id'] = task.app_id
+        data['project_id'] = task.project_id
         data['task_id'] = 100000000000000000000
         datajson = json.dumps(data)
         tmp = self.app.post(url, data=datajson)
@@ -173,7 +173,7 @@ class TestTaskrunAPI(TestAPI):
 
         # Now with everything fine
         data = dict(
-            app_id=task.app_id,
+            project_id=task.project_id,
             task_id=task.id,
             user_id=app.owner.id,
             info='my task result')
@@ -191,9 +191,9 @@ class TestTaskrunAPI(TestAPI):
         """Test API TaskRun post fails if task was not previously requested for
         anonymous user"""
         app = ProjectFactory.create()
-        task = TaskFactory.create(app=app)
+        task = TaskFactory.create(project=app)
         data = dict(
-            app_id=app.id,
+            project_id=app.id,
             task_id=task.id,
             info='my task result')
         datajson = json.dumps(data)
@@ -218,9 +218,9 @@ class TestTaskrunAPI(TestAPI):
         """Test API TaskRun post fails if task was not previously requested for
         authenticated user"""
         app = ProjectFactory.create()
-        task = TaskFactory.create(app=app)
+        task = TaskFactory.create(project=app)
         data = dict(
-            app_id=app.id,
+            project_id=app.id,
             task_id=task.id,
             info='my task result')
         datajson = json.dumps(data)
@@ -245,9 +245,9 @@ class TestTaskrunAPI(TestAPI):
     def test_taskrun_post_with_bad_data(self):
         """Test API TaskRun error messages."""
         app = ProjectFactory.create()
-        task = TaskFactory.create(app=app)
-        app_id = app.id
-        task_run = dict(app_id=app.id, task_id=task.id, info='my task result')
+        task = TaskFactory.create(project=app)
+        project_id = app.id
+        task_run = dict(project_id=app.id, task_id=task.id, info='my task result')
         url = '/api/taskrun?api_key=%s' % app.owner.api_key
 
         # POST with not JSON data
@@ -286,11 +286,11 @@ class TestTaskrunAPI(TestAPI):
         owner = UserFactory.create()
         non_owner = UserFactory.create()
         app = ProjectFactory.create(owner=owner)
-        task = TaskFactory.create(app=app)
+        task = TaskFactory.create(project=app)
         anonymous_taskrun = AnonymousTaskRunFactory.create(task=task, info='my task result')
         user_taskrun = TaskRunFactory.create(task=task, user=owner, info='my task result')
 
-        task_run = dict(app_id=app.id, task_id=task.id, info='another result')
+        task_run = dict(project_id=app.id, task_id=task.id, info='another result')
         datajson = json.dumps(task_run)
 
         # anonymous user
@@ -363,7 +363,7 @@ class TestTaskrunAPI(TestAPI):
         owner = UserFactory.create()
         non_owner = UserFactory.create()
         app = ProjectFactory.create(owner=owner)
-        task = TaskFactory.create(app=app)
+        task = TaskFactory.create(project=app)
         anonymous_taskrun = AnonymousTaskRunFactory.create(task=task, info='my task result')
         user_taskrun = TaskRunFactory.create(task=task, user=owner, info='my task result')
 
@@ -413,12 +413,12 @@ class TestTaskrunAPI(TestAPI):
     def test_taskrun_updates_task_state(self, fake_validation, mock_request):
         """Test API TaskRun POST updates task state"""
         app = ProjectFactory.create()
-        task = TaskFactory.create(app=app, n_answers=2)
+        task = TaskFactory.create(project=app, n_answers=2)
         url = '/api/taskrun?api_key=%s' % app.owner.api_key
 
         # Post first taskrun
         data = dict(
-            app_id=task.app_id,
+            project_id=task.project_id,
             task_id=task.id,
             user_id=app.owner.id,
             info='my task result')
@@ -435,7 +435,7 @@ class TestTaskrunAPI(TestAPI):
         mock_request.remote_addr = '127.0.0.0'
         url = '/api/taskrun'
         data = dict(
-            app_id=task.app_id,
+            project_id=task.project_id,
             task_id=task.id,
             info='my task result anon')
         datajson = json.dumps(data)

@@ -23,7 +23,7 @@ class FlickrService(object):
 
     def __init__(self, app=None):
         self.app = app
-        self.client = None
+        self.app = None
         if app is not None:  # pragma: no cover
             self.init_app(app)
 
@@ -31,7 +31,7 @@ class FlickrService(object):
         from flask import session
         from pybossa.core import importer
         self.app = app
-        self.client = OAuth().remote_app(
+        self.app = OAuth().remote_app(
             'flickr',
             request_token_url='https://www.flickr.com/services/oauth/request_token',
             access_token_url='https://www.flickr.com/services/oauth/access_token',
@@ -39,7 +39,7 @@ class FlickrService(object):
             consumer_key=app.config['FLICKR_API_KEY'],
             consumer_secret=app.config['FLICKR_SHARED_SECRET'])
         tokengetter = functools.partial(self.get_token, session)
-        self.client.tokengetter(tokengetter)
+        self.app.tokengetter(tokengetter)
         importer_params = {'api_key': app.config['FLICKR_API_KEY']}
         importer.register_flickr_importer(importer_params)
 
@@ -51,7 +51,7 @@ class FlickrService(object):
                    '&primary_photo_extras=url_q'
                    '&format=json&nojsoncallback=1'
                    % self._get_user_nsid(session))
-            res = self.client.get(url, token='')
+            res = self.app.get(url, token='')
             if res.status == 200 and res.data.get('stat') == 'ok':
                 albums = res.data['photosets']['photoset']
                 return [self._extract_album_info(album) for album in albums]
@@ -62,13 +62,13 @@ class FlickrService(object):
         return []
 
     def authorize(self, *args, **kwargs):
-        return self.client.authorize(*args, **kwargs)
+        return self.app.authorize(*args, **kwargs)
 
     def authorized_response(self):
-        return self.client.authorized_response()
+        return self.app.authorized_response()
 
     def get_oauth_client(self):
-        return self.client
+        return self.app
 
     def get_token(self, session):
         token = session.get('flickr_token')

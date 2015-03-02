@@ -45,8 +45,8 @@ class TestAuditlogRepositoryForProjects(Test):
         """Test get method returns a log if exists"""
 
         app = ProjectFactory.create()
-        log = AuditlogFactory.create(app_id=app.id,
-                                     app_short_name=app.short_name,
+        log = AuditlogFactory.create(project_id=app.id,
+                                     project_short_name=app.short_name,
                                      user_id=app.owner.id,
                                      user_name=app.owner.name)
 
@@ -59,8 +59,8 @@ class TestAuditlogRepositoryForProjects(Test):
         """Test get_by returns a log with the specified attribute"""
 
         app = ProjectFactory.create()
-        log = AuditlogFactory.create(app_id=app.id,
-                                     app_short_name=app.short_name,
+        log = AuditlogFactory.create(project_id=app.id,
+                                     project_short_name=app.short_name,
                                      user_id=app.owner.id,
                                      user_name=app.owner.name)
 
@@ -74,8 +74,8 @@ class TestAuditlogRepositoryForProjects(Test):
         """Test get_by returns None if no log matches the query"""
 
         app = ProjectFactory.create()
-        AuditlogFactory.create(app_id=app.id,
-                               app_short_name=app.short_name,
+        AuditlogFactory.create(project_id=app.id,
+                               project_short_name=app.short_name,
                                user_id=app.owner.id,
                                user_name=app.owner.name)
 
@@ -88,8 +88,8 @@ class TestAuditlogRepositoryForProjects(Test):
         """Test filter_by returns an empty list if no log matches the query"""
 
         app = ProjectFactory.create()
-        AuditlogFactory.create(app_id=app.id,
-                               app_short_name=app.short_name,
+        AuditlogFactory.create(project_id=app.id,
+                               project_short_name=app.short_name,
                                user_id=app.owner.id,
                                user_name=app.owner.name)
 
@@ -104,14 +104,14 @@ class TestAuditlogRepositoryForProjects(Test):
         condition"""
 
         app = ProjectFactory.create()
-        AuditlogFactory.create_batch(size=3, app_id=app.id,
-                               app_short_name=app.short_name,
+        AuditlogFactory.create_batch(size=3, project_id=app.id,
+                               project_short_name=app.short_name,
                                user_id=app.owner.id,
                                user_name=app.owner.name)
 
         app2 = ProjectFactory.create()
-        should_be_missing = AuditlogFactory.create_batch(size=3, app_id=app2.id,
-                                                   app_short_name=app2.short_name,
+        should_be_missing = AuditlogFactory.create_batch(size=3, project_id=app2.id,
+                                                   project_short_name=app2.short_name,
                                                    user_id=app2.owner.id,
                                                    user_name=app2.owner.name)
 
@@ -127,17 +127,17 @@ class TestAuditlogRepositoryForProjects(Test):
 
         app = ProjectFactory.create()
         user = UserFactory.create()
-        AuditlogFactory.create_batch(size=3, app_id=app.id,
-                               app_short_name=app.short_name,
+        AuditlogFactory.create_batch(size=3, project_id=app.id,
+                               project_short_name=app.short_name,
                                user_id=app.owner.id,
                                user_name=app.owner.name)
 
-        log = AuditlogFactory.create(app_id=app.id,
-                                     app_short_name=app.short_name,
+        log = AuditlogFactory.create(project_id=app.id,
+                                     project_short_name=app.short_name,
                                      user_id=user.id,
                                      user_name=user.name)
 
-        retrieved_logs = self.auditlog_repo.filter_by(app_id=app.id,
+        retrieved_logs = self.auditlog_repo.filter_by(project_id=app.id,
                                                       user_id=user.id)
 
         assert len(retrieved_logs) == 1, retrieved_logs
@@ -148,8 +148,8 @@ class TestAuditlogRepositoryForProjects(Test):
         """Test save persist the log"""
 
         app = ProjectFactory.create()
-        log = AuditlogFactory.build(app_id=app.id,
-                                    app_short_name=app.short_name,
+        log = AuditlogFactory.build(project_id=app.id,
+                                    project_short_name=app.short_name,
                                     user_id=app.owner.id,
                                     user_name=app.owner.name)
 
@@ -164,7 +164,7 @@ class TestAuditlogRepositoryForProjects(Test):
         """Test save raises a DBIntegrityError if the instance to be saved lacks
         a required value"""
 
-        log = AuditlogFactory.build(app_id=None)
+        log = AuditlogFactory.build(project_id=None)
 
         assert_raises(DBIntegrityError, self.auditlog_repo.save, log)
 

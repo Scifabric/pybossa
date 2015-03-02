@@ -353,7 +353,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         """Test save raises a DBIntegrityError if the instance to be saved lacks
         a required value"""
 
-        task = TaskFactory.build(app_id=None, app=None)
+        task = TaskFactory.build(project_id=None, project=None)
 
         assert_raises(DBIntegrityError, self.task_repo.save, task)
 
@@ -396,7 +396,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         lacks a required value"""
 
         task = TaskFactory.create()
-        task.app_id = None
+        task.project_id = None
 
         assert_raises(DBIntegrityError, self.task_repo.update, task)
 
@@ -501,10 +501,10 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         task in the project"""
 
         project = ProjectFactory.create()
-        TaskFactory.create_batch(2, app=project, n_answers=1)
+        TaskFactory.create_batch(2, project=project, n_answers=1)
 
         self.task_repo.update_tasks_redundancy(project, 2)
-        tasks = self.task_repo.filter_tasks_by(app_id=project.id)
+        tasks = self.task_repo.filter_tasks_by(project_id=project.id)
 
         for task in tasks:
             assert task.n_answers == 2, task.n_answers
@@ -515,7 +515,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         if n_answers is incremented enough"""
 
         project = ProjectFactory.create()
-        tasks = TaskFactory.create_batch(2, app=project, n_answers=2)
+        tasks = TaskFactory.create_batch(2, project=project, n_answers=2)
         TaskRunFactory.create_batch(2, task=tasks[0])
         tasks[0].state = 'completed'
         self.task_repo.update(tasks[0])
@@ -524,7 +524,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert tasks[1].state == 'ongoing', tasks[1].state
 
         self.task_repo.update_tasks_redundancy(project, 3)
-        tasks = self.task_repo.filter_tasks_by(app_id=project.id)
+        tasks = self.task_repo.filter_tasks_by(project_id=project.id)
 
         for task in tasks:
             assert task.state == 'ongoing', task.state
@@ -535,7 +535,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         if n_answers is decremented enough"""
 
         project = ProjectFactory.create()
-        tasks = TaskFactory.create_batch(2, app=project, n_answers=2)
+        tasks = TaskFactory.create_batch(2, project=project, n_answers=2)
         TaskRunFactory.create_batch(2, task=tasks[0])
         TaskRunFactory.create(task=tasks[1])
         tasks[0].state = 'completed'
@@ -545,7 +545,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         assert tasks[1].state == 'ongoing', tasks[1].state
 
         self.task_repo.update_tasks_redundancy(project, 1)
-        tasks = self.task_repo.filter_tasks_by(app_id=project.id)
+        tasks = self.task_repo.filter_tasks_by(project_id=project.id)
 
         for task in tasks:
             assert task.state == 'completed', task.state

@@ -49,7 +49,7 @@ class TestImporterPublicMethods(Test):
         task = task_repo.get_task(1)
 
         assert task is not None
-        assert task.app_id == app.id, task.app_id
+        assert task.project_id == app.id, task.project_id
         assert task.n_answers == 20, task.n_answers
         assert task.info == {'question': 'question', 'url': 'url'}, task.info
         importer_factory.assert_called_with('csv')
@@ -64,7 +64,7 @@ class TestImporterPublicMethods(Test):
         app = ProjectFactory.create()
         form_data = dict(type='gdocs', googledocs_url='http://ggl.com')
         result = self.importer.create_tasks(task_repo, app.id, **form_data)
-        tasks = task_repo.filter_tasks_by(app_id=app.id)
+        tasks = task_repo.filter_tasks_by(project_id=app.id)
 
         assert len(tasks) == 2, len(tasks)
         assert result == '2 new tasks were imported successfully', result
@@ -76,11 +76,11 @@ class TestImporterPublicMethods(Test):
         mock_importer.tasks.return_value = [{'info': {'question': 'question'}}]
         importer_factory.return_value = mock_importer
         app = ProjectFactory.create()
-        TaskFactory.create(app=app, info={'question': 'question'})
+        TaskFactory.create(project=app, info={'question': 'question'})
         form_data = dict(type='flickr', album_id='1234')
 
         result = self.importer.create_tasks(task_repo, app.id, **form_data)
-        tasks = task_repo.filter_tasks_by(app_id=app.id)
+        tasks = task_repo.filter_tasks_by(project_id=app.id)
 
         assert len(tasks) == 1, len(tasks)
         assert result == 'It looks like there were no new records to import', result

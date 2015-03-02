@@ -98,15 +98,15 @@ register_api(TokenAPI, 'api_token', '/token', pk='token', pk_type='string')
 
 
 @jsonpify
-@blueprint.route('/app/<app_id>/newtask')
-@blueprint.route('/project/<app_id>/newtask')
+@blueprint.route('/app/<project_id>/newtask')
+@blueprint.route('/project/<project_id>/newtask')
 @crossdomain(origin='*', headers=cors_headers)
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
-def new_task(app_id):
+def new_task(project_id):
     """Return a new task for a project."""
     # Check if the request has an arg:
     try:
-        task = _retrieve_new_task(app_id)
+        task = _retrieve_new_task(project_id)
         # If there is a task for the user, return it
         if task is not None:
             mark_task_as_requested_by_user(task, sentinel.master)
@@ -117,8 +117,8 @@ def new_task(app_id):
     except Exception as e:
         return error.format_exception(e, target='project', action='GET')
 
-def _retrieve_new_task(app_id):
-    project = project_repo.get(app_id)
+def _retrieve_new_task(project_id):
+    project = project_repo.get(project_id)
     if project is None:
         raise NotFound
     if not project.allow_anonymous_contributors and current_user.is_anonymous():
@@ -132,7 +132,7 @@ def _retrieve_new_task(app_id):
         offset = 0
     user_id = None if current_user.is_anonymous() else current_user.id
     user_ip = request.remote_addr if current_user.is_anonymous() else None
-    task = sched.new_task(app_id, project.info.get('sched'), user_id, user_ip, offset)
+    task = sched.new_task(project_id, project.info.get('sched'), user_id, user_ip, offset)
     return task
 
 def mark_task_as_requested_by_user(task, redis_conn):
@@ -145,11 +145,11 @@ def mark_task_as_requested_by_user(task, redis_conn):
 @jsonpify
 @blueprint.route('/app/<short_name>/userprogress')
 @blueprint.route('/project/<short_name>/userprogress')
-@blueprint.route('/app/<int:app_id>/userprogress')
-@blueprint.route('/project/<int:app_id>/userprogress')
+@blueprint.route('/app/<int:project_id>/userprogress')
+@blueprint.route('/project/<int:project_id>/userprogress')
 @crossdomain(origin='*', headers=cors_headers)
 @ratelimit(limit=ratelimits.get('LIMIT'), per=ratelimits.get('PER'))
-def user_progress(app_id=None, short_name=None):
+def user_progress(project_id=None, short_name=None):
     """API endpoint for user progress.
 
     Return a JSON object with two fields regarding the tasks for the user:
@@ -160,15 +160,15 @@ def user_progress(app_id=None, short_name=None):
        him
 
     """
-    if app_id or short_name:
+    if project_id or short_name:
         if short_name:
             project = project_repo.get_by_shortname(short_name)
-        elif app_id:
-            project = project_repo.get(app_id)
+        elif project_id:
+            project = project_repo.get(project_id)
 
         if project:
             # For now, keep this version, but wait until redis cache is used here for task_runs too
-            query_attrs = dict(app_id=project.id)
+            query_attrs = dict(project_id=project.id)
             if current_user.is_anonymous():
                 query_attrs['user_ip'] = request.remote_addr or '127.0.0.1'
             else:

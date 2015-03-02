@@ -28,16 +28,16 @@ class TestAppsCache(Test):
 
     def create_app_with_tasks(self, completed_tasks, ongoing_tasks):
         app = ProjectFactory.create()
-        TaskFactory.create_batch(completed_tasks, state='completed', app=app)
-        TaskFactory.create_batch(ongoing_tasks, state='ongoing', app=app)
+        TaskFactory.create_batch(completed_tasks, state='completed', project=app)
+        TaskFactory.create_batch(ongoing_tasks, state='ongoing', project=app)
         return app
 
     def create_app_with_contributors(self, anonymous, registered,
                                      two_tasks=False, name='my_app', hidden=0):
         app = ProjectFactory.create(name=name, hidden=hidden)
-        task = TaskFactory(app=app)
+        task = TaskFactory(project=app)
         if two_tasks:
-            task2 = TaskFactory(app=app)
+            task2 = TaskFactory(project=app)
         for i in range(anonymous):
             task_run = AnonymousTaskRunFactory(task=task,
                                user_ip='127.0.0.%s' % i)
@@ -184,7 +184,7 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS get_draft does not return projects with either tasks or a presenter (REVIEW DEFINITION OF A DRAFT PROJECT REQUIRED)"""
 
         app_no_presenter = ProjectFactory.create(info={})
-        TaskFactory.create(app=app_no_presenter)
+        TaskFactory.create(project=app_no_presenter)
         app_no_task = ProjectFactory.create()
 
         drafts = cached_projects.get_draft()
@@ -357,7 +357,7 @@ class TestAppsCache(Test):
         # Here, we are suposing that a project is draft iff has no presenter AND has no tasks
 
         app = ProjectFactory.create(info={})
-        TaskFactory.create_batch(2, app=app)
+        TaskFactory.create_batch(2, project=app)
 
         number_of_drafts = cached_projects._n_draft()
 
@@ -391,7 +391,7 @@ class TestAppsCache(Test):
         from a given project"""
 
         project = ProjectFactory.create()
-        TaskFactory.create_batch(2, app=project)
+        TaskFactory.create_batch(2, project=project)
 
         browse_tasks = cached_projects.browse_tasks(project.id)
 
@@ -403,7 +403,7 @@ class TestAppsCache(Test):
         with the required task attributes"""
 
         project = ProjectFactory.create()
-        task = TaskFactory.create( app=project, info={})
+        task = TaskFactory.create( project=project, info={})
         attributes = ('id', 'n_answers')
 
         cached_task = cached_projects.browse_tasks(project.id)[0]
@@ -417,7 +417,7 @@ class TestAppsCache(Test):
         percentage of each task"""
 
         project = ProjectFactory.create()
-        task = TaskFactory.create( app=project, info={}, n_answers=4)
+        task = TaskFactory.create( project=project, info={}, n_answers=4)
 
         cached_task = cached_projects.browse_tasks(project.id)[0]
         # 0 if no task runs

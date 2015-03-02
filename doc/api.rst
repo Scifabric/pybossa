@@ -230,7 +230,7 @@ If an error occurs, the action will return a JSON object like this:
         "status": "failed",
         "action": "POST",
         "target": "app",
-        "exception_msg": "type object 'App' has no attribute 'short_ame'",
+        "exception_msg": "type object 'Project' has no attribute 'short_ame'",
         "status_code": 415,
         "exception_cls": "AttributeError"
     }
@@ -256,7 +256,7 @@ If an error occurs, the action will return a JSON object like this:
         "status": "failed",
         "action": "PUT",
         "target": "app",
-        "exception_msg": "type object 'App' has no attribute 'short_ame'",
+        "exception_msg": "type object 'Project' has no attribute 'short_ame'",
         "status_code": 415,
         "exception_cls": "AttributeError"
     }
@@ -282,7 +282,7 @@ If an error occurs, the action will return a JSON object like this:
         "status": "failed",
         "action": "DELETE",
         "target": "app",
-        "exception_msg": "type object 'App' has no attribute 'short_ame'",
+        "exception_msg": "type object 'Project' has no attribute 'short_ame'",
         "status_code": 415,
         "exception_cls": "AttributeError"
     }

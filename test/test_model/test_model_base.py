@@ -19,7 +19,7 @@
 from default import Test, db, with_context
 from nose.tools import raises
 from pybossa.model.user import User
-from pybossa.model.project import App
+from pybossa.model.project import Project
 from pybossa.model.task import Task
 from pybossa.model.category import Category
 from pybossa.model.task_run import TaskRun
@@ -50,7 +50,7 @@ class TestModelBase(Test):
         info = {
             'total': 150,
             'long_description': 'hello world'}
-        app = App(
+        app = Project(
             name=u'My New Project',
             short_name=u'my-new-app',
             description=u'description',
@@ -64,17 +64,17 @@ class TestModelBase(Test):
         task = Task(info=task_info)
         task_run_info = {'answer': u'annakarenina'}
         task_run = TaskRun(info=task_run_info)
-        task.app = app
+        task.project = app
         task_run.task = task
-        task_run.app = app
+        task_run.project = app
         task_run.user = user
         db.session.add_all([user, app, task, task_run])
         db.session.commit()
-        app_id = app.id
+        project_id = app.id
 
         db.session.remove()
 
-        app = db.session.query(App).get(app_id)
+        app = db.session.query(Project).get(project_id)
         assert app.name == u'My New Project', app
         # year would start with 201...
         assert app.created.startswith('201'), app.created

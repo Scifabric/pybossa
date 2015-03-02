@@ -26,8 +26,8 @@ class AuditLogger(object):
 
     def log_event(self, app, user, action, attribute, old_value, new_value):
         log = Auditlog(
-            app_id=app.id,
-            app_short_name=app.short_name,
+            project_id=app.id,
+            project_short_name=app.short_name,
             user_id=user.id,
             user_name=user.name,
             action=action,
@@ -38,7 +38,7 @@ class AuditLogger(object):
         self.repo.save(log)
 
     def get_project_logs(self, project_id):
-        return self.repo.filter_by(app_id=project_id)
+        return self.repo.filter_by(project_id=project_id)
 
 
     def add_log_entry(self, old_project, new_project, user):

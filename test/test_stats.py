@@ -28,7 +28,7 @@ class TestStats(Test):
     def setUp(self):
         super(TestStats, self).setUp()
         self.project = ProjectFactory.create()
-        for task in TaskFactory.create_batch(4, app=self.project, n_answers=3):
+        for task in TaskFactory.create_batch(4, project=self.project, n_answers=3):
             TaskRunFactory.create(task=task)
             AnonymousTaskRunFactory.create(task=task)
 

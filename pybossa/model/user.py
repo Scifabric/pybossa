@@ -24,7 +24,7 @@ from flask.ext.login import UserMixin
 
 from pybossa.core import db, signer
 from pybossa.model import DomainObject, make_timestamp, JSONEncodedDict, make_uuid, update_redis
-from pybossa.model.project import App
+from pybossa.model.project import Project
 from pybossa.model.task_run import TaskRun
 from pybossa.model.blogpost import Blogpost
 
@@ -65,7 +65,7 @@ class User(db.Model, DomainObject, UserMixin):
 
     ## Relationships
     task_runs = relationship(TaskRun, backref='user')
-    apps = relationship(App, backref='owner')
+    projects = relationship(Project, backref='owner')
     blogposts = relationship(Blogpost, backref='owner')
 
 

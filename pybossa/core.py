@@ -321,7 +321,7 @@ def setup_geocoding(app):
     if not os.path.exists(geolite):  # pragma: no cover
         app.config['GEO'] = False
         print("GeoLiteCity.dat file not found")
-        print("App page stats web map disabled")
+        print("Project page stats web map disabled")
     else:  # pragma: no cover
         app.config['GEO'] = True
 
@@ -397,7 +397,7 @@ def setup_hooks(app):
                 for key in announcement.keys():
                     if key == 'admin' and current_user.admin:
                         flash(announcement[key], 'info')
-                    if key == 'owner' and len(current_user.apps) != 0:
+                    if key == 'owner' and len(current_user.projects) != 0:
                         flash(announcement[key], 'info')
                     if key == 'user':
                         flash(announcement[key], 'info')

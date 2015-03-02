@@ -19,7 +19,6 @@
 from mock import patch
 
 from default import Test, db, Fixtures, with_context
-from pybossa.model.project import App
 from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
@@ -121,13 +120,13 @@ class Helper(Test):
         """Helper function to create tasks for a project"""
         tasks = []
         for i in range(0, 10):
-            tasks.append(Task(app_id=project_id, state='0', info={}))
+            tasks.append(Task(project_id=project_id, state='0', info={}))
         db.session.add_all(tasks)
         db.session.commit()
 
-    def delete_task_runs(self, app_id=1):
-        """Deletes all TaskRuns for a given app_id"""
-        db.session.query(TaskRun).filter_by(app_id=1).delete()
+    def delete_task_runs(self, project_id=1):
+        """Deletes all TaskRuns for a given project_id"""
+        db.session.query(TaskRun).filter_by(project_id=1).delete()
         db.session.commit()
 
     def task_settings_scheduler(self, method="POST", short_name='sampleapp',

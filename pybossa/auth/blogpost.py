@@ -54,5 +54,5 @@ class BlogpostAuth(object):
 
     def _get_project(self, blogpost, project_id):
         if blogpost is not None:
-            return self.project_repo.get(blogpost.app_id)
+            return self.project_repo.get(blogpost.project_id)
         return self.project_repo.get(project_id)

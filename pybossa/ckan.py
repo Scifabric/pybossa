@@ -25,7 +25,7 @@ from pybossa.model.task_run import TaskRun
 
 class Ckan(object):
     def _field_setup(self, obj):
-        int_fields = ['id', 'app_id', 'task_id', 'user_id', 'n_answers', 'timeout',
+        int_fields = ['id', 'project_id', 'task_id', 'user_id', 'n_answers', 'timeout',
                       'calibration', 'quorum']
         text_fields = ['state', 'user_ip']
         float_fields = ['priority_0']

@@ -33,8 +33,8 @@ class TaskRunFactory(BaseFactory):
     id = factory.Sequence(lambda n: n)
     task = factory.SubFactory('factories.TaskFactory')
     task_id = factory.LazyAttribute(lambda task_run: task_run.task.id)
-    app = factory.SelfAttribute('task.app')
-    app_id = factory.LazyAttribute(lambda task_run: task_run.app.id)
+    project = factory.SelfAttribute('task.project')
+    project_id = factory.LazyAttribute(lambda task_run: task_run.project.id)
     user = factory.SubFactory('factories.UserFactory')
     user_id = factory.LazyAttribute(lambda task_run: task_run.user.id)
 

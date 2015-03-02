@@ -18,7 +18,7 @@
 
 from pybossa.core import db
 from pybossa.core import create_app, sentinel
-from pybossa.model.project import App
+from pybossa.model.project import Project
 from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
@@ -74,7 +74,7 @@ class Test(object):
     api_key_2 = 'tester-2'
     root_api_key = 'root'
     app_name = u'My New Project'
-    app_short_name = u'test-app'
+    project_short_name = u'test-app'
     password = u'tester'
     root_password = password + 'root'
     cat_1 = 'thinking'
@@ -183,9 +183,9 @@ class Test(object):
             if category is None:
                 self._create_categories()
                 category = db.session.query(Category).first()
-            app = App(
+            app = Project(
                     name=self.app_name,
-                    short_name=self.app_short_name,
+                    short_name=self.project_short_name,
                     description=u'description',
                     hidden=0,
                     category_id=category.id,
@@ -194,19 +194,19 @@ class Test(object):
             return app
 
     def create_task_and_run(self,task_info, task_run_info, app, user, order):
-        task = Task(app_id = 1, state = '0', info = task_info, n_answers=10)
-        task.app = app
+        task = Task(project_id = 1, state = '0', info = task_info, n_answers=10)
+        task.project = app
         # Taskruns will be assigned randomly to a signed user or an anonymous one
         if random.randint(0,1) == 1:
             task_run = TaskRun(
-                    app_id = 1,
+                    project_id = 1,
                     task_id = 1,
                     user_id = 1,
                     info = task_run_info)
             task_run.user = user
         else:
             task_run = TaskRun(
-                    app_id = 1,
+                    project_id = 1,
                     task_id = 1,
                     user_ip = '127.0.0.%s' % order,
                     info = task_run_info)
@@ -237,7 +237,7 @@ class Fixtures:
     api_key_2 = 'tester-2'
     root_api_key = 'root'
     app_name = u'My New Project'
-    app_short_name = u'test-app'
+    project_short_name = u'test-app'
     password = u'tester'
     root_password = password + 'root'
     cat_1 = 'thinking'
@@ -348,9 +348,9 @@ class Fixtures:
         if category is None:
             cls.create_categories()
             category = db.session.query(Category).first()
-        app = App(
+        app = Project(
                 name=cls.app_name,
-                short_name=cls.app_short_name,
+                short_name=cls.project_short_name,
                 description=u'description',
                 hidden=0,
                 category_id=category.id,
@@ -360,19 +360,19 @@ class Fixtures:
 
     @classmethod
     def create_task_and_run(cls,task_info, task_run_info, app, user, order):
-        task = Task(app_id = 1, state = '0', info = task_info, n_answers=10)
-        task.app = app
+        task = Task(project_id = 1, state = '0', info = task_info, n_answers=10)
+        task.project = app
         # Taskruns will be assigned randomly to a signed user or an anonymous one
         if random.randint(0,1) == 1:
             task_run = TaskRun(
-                    app_id = 1,
+                    project_id = 1,
                     task_id = 1,
                     user_id = 1,
                     info = task_run_info)
             task_run.user = user
         else:
             task_run = TaskRun(
-                    app_id = 1,
+                    project_id = 1,
                     task_id = 1,
                     user_ip = '127.0.0.%s' % order,
                     info = task_run_info)

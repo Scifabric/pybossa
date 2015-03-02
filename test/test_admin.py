@@ -23,7 +23,7 @@ from mock import patch
 from collections import namedtuple
 from bs4 import BeautifulSoup
 from pybossa.model.user import User
-from pybossa.model.project import App
+from pybossa.model.project import Project
 from pybossa.model.task import Task
 from pybossa.model.category import Category
 
@@ -129,7 +129,7 @@ class TestAdmin(web.Helper):
             " as it is not featured"
         # Only projects that have been published can be featured
         self.new_task(1)
-        project = db.session.query(App).get(1)
+        project = db.session.query(Project).get(1)
         project.info = dict(task_presenter="something")
         db.session.add(project)
         db.session.commit()
@@ -475,7 +475,7 @@ class TestAdmin(web.Helper):
         res = self.app.get('/project/rootsampleapp', follow_redirects=True)
         assert "Root" in res.data, "The app should be updated by admin users"
 
-        app = db.session.query(App)\
+        app = db.session.query(Project)\
                 .filter_by(short_name="rootsampleapp").first()
         juan = db.session.query(User).filter_by(name="juan").first()
         assert app.owner_id == juan.id, "Owner_id should be: %s" % juan.id
@@ -511,7 +511,7 @@ class TestAdmin(web.Helper):
         """Test ADMIN can delete a project's tasks that belongs to another user"""
         # Admin
         self.create()
-        tasks = db.session.query(Task).filter_by(app_id=1).all()
+        tasks = db.session.query(Task).filter_by(project_id=1).all()
         assert len(tasks) > 0, "len(app.tasks) > 0"
         res = self.signin(email=u'root@root.com', password=u'tester' + 'root')
         res = self.app.get('/project/test-app/tasks/delete', follow_redirects=True)
@@ -520,7 +520,7 @@ class TestAdmin(web.Helper):
         res = self.app.post('/project/test-app/tasks/delete', follow_redirects=True)
         err_msg = "Admin should get 200 in POST"
         assert res.status_code == 200, err_msg
-        tasks = db.session.query(Task).filter_by(app_id=1).all()
+        tasks = db.session.query(Task).filter_by(project_id=1).all()
         assert len(tasks) == 0, "len(app.tasks) != 0"
 
     @with_context

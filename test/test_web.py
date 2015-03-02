@@ -34,7 +34,7 @@ from pybossa.ckan import Ckan
 from bs4 import BeautifulSoup
 from requests.exceptions import ConnectionError
 from werkzeug.exceptions import NotFound
-from pybossa.model.project import App
+from pybossa.model.project import Project
 from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun
@@ -91,7 +91,7 @@ class TestWeb(web.Helper):
         returns[0].GeoIP.record_by_addr.return_value = {}
         mock1.side_effects = returns
 
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         user = db.session.query(User).first()
         # Without stats
         url = '/project/%s/stats' % app.short_name
@@ -99,12 +99,12 @@ class TestWeb(web.Helper):
         assert "Sorry" in res.data, res.data
 
         # We use a string here to check that it works too
-        task = Task(app_id=app.id, n_answers=10)
+        task = Task(project_id=app.id, n_answers=10)
         db.session.add(task)
         db.session.commit()
 
         for i in range(10):
-            task_run = TaskRun(app_id=app.id, task_id=1,
+            task_run = TaskRun(project_id=app.id, task_id=1,
                                      user_id=user.id,
                                      info={'answer': 1})
             db.session.add(task_run)
@@ -669,7 +669,7 @@ class TestWeb(web.Helper):
         res = self.app.get('/project', follow_redirects=True)
         assert self.html_title("Projects") in res.data, res.data
         assert "Projects" in res.data, res.data
-        assert Fixtures.app_short_name in res.data, res.data
+        assert Fixtures.project_short_name in res.data, res.data
 
 
     @with_context
@@ -677,7 +677,7 @@ class TestWeb(web.Helper):
         """Test WEB projects index shows featured projects in all the pages works"""
         self.create()
 
-        app = db.session.query(App).get(1)
+        app = db.session.query(Project).get(1)
         app.featured = True
         db.session.add(app)
         db.session.commit()
@@ -774,7 +774,7 @@ class TestWeb(web.Helper):
         assert "<strong>Sample Project</strong>: Update the project" in res.data
         assert "Project created!" in res.data, res
 
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         assert app.name == 'Sample Project', 'Different names %s' % app.name
         assert app.short_name == 'sampleapp', \
             'Different names %s' % app.short_name
@@ -792,7 +792,7 @@ class TestWeb(web.Helper):
         self.register()
         res = self.new_application(long_description="Hello")
 
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         assert app.description == "Hello", app.description
 
     @with_context
@@ -802,7 +802,7 @@ class TestWeb(web.Helper):
         self.register()
         res = self.new_application(long_description="## Hello")
 
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         assert '##' not in app.description, app.description
         assert '<h2>' not in app.description, app.description
 
@@ -813,7 +813,7 @@ class TestWeb(web.Helper):
         self.register()
         res = self.new_application(long_description="a"*300)
 
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         assert len(app.description) == 255, len(app.description)
         assert app.description[-3:] == '...'
 
@@ -885,7 +885,7 @@ class TestWeb(web.Helper):
                                       new_description="New description",
                                       new_long_description='New long desc',
                                       new_hidden=True)
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         assert "Project updated!" in res.data, res.data
         err_msg = "Project name not updated %s" % app.name
         assert app.name == "New Sample Project", err_msg
@@ -916,7 +916,7 @@ class TestWeb(web.Helper):
         assert "Forbidden" in res.data, res.data
         assert res.status_code == 403
 
-        tmp = db.session.query(App).first()
+        tmp = db.session.query(Project).first()
         tmp.hidden = 0
         db.session.add(tmp)
         db.session.commit()
@@ -1109,7 +1109,7 @@ class TestWeb(web.Helper):
         assert self.html_title(msg) in res.data, res
         assert "No, do not delete it" in res.data, res
 
-        app = db.session.query(App).filter_by(short_name='sampleapp').first()
+        app = db.session.query(Project).filter_by(short_name='sampleapp').first()
         app.hidden = 1
         db.session.add(app)
         db.session.commit()
@@ -1122,7 +1122,7 @@ class TestWeb(web.Helper):
         assert "Project deleted!" in res.data, res
 
         self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
-        res = self.delete_application(short_name=Fixtures.app_short_name)
+        res = self.delete_application(short_name=Fixtures.project_short_name)
         assert res.status_code == 403, res.status_code
 
 
@@ -1155,9 +1155,9 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
 
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         # We use a string here to check that it works too
-        task = Task(app_id=app.id, n_answers = 10)
+        task = Task(project_id=app.id, n_answers = 10)
         db.session.add(task)
         db.session.commit()
 
@@ -1170,7 +1170,7 @@ class TestWeb(web.Helper):
         assert dom.find(id='nothingtodownload') is not None, err_msg
 
         for i in range(5):
-            task_run = TaskRun(app_id=app.id, task_id=1,
+            task_run = TaskRun(project_id=app.id, task_id=1,
                                      info={'answer': 1})
             db.session.add(task_run)
             db.session.commit()
@@ -1185,7 +1185,7 @@ class TestWeb(web.Helper):
         assert dom.find(id='partialdownload') is not None, err_msg
 
         for i in range(5):
-            task_run = TaskRun(app_id=app.id, task_id=1,
+            task_run = TaskRun(project_id=app.id, task_id=1,
                                      info={'answer': 1})
             db.session.add(task_run)
             db.session.commit()
@@ -1193,7 +1193,7 @@ class TestWeb(web.Helper):
 
         self.signout()
 
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
 
         res = self.app.get('project/%s/tasks/browse' % (app.short_name),
                            follow_redirects=True)
@@ -1225,17 +1225,17 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
 
-        app = db.session.query(App).first()
-        task = Task(app_id=app.id, n_answers = 10)
+        app = db.session.query(Project).first()
+        task = Task(project_id=app.id, n_answers = 10)
         db.session.add(task)
         db.session.commit()
 
         for i in range(10):
-            task_run = TaskRun(app_id=app.id, task_id=1, info={'answer': 1})
+            task_run = TaskRun(project_id=app.id, task_id=1, info={'answer': 1})
             db.session.add(task_run)
             db.session.commit()
 
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         res = self.app.get('project/%s/%s/results.json' % (app.short_name, 1),
                            follow_redirects=True)
         data = json.loads(res.data)
@@ -1281,13 +1281,13 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
 
-        app = db.session.query(App).first()
-        task = Task(app_id=app.id, n_answers = 10)
+        app = db.session.query(Project).first()
+        task = Task(project_id=app.id, n_answers = 10)
         db.session.add(task)
         db.session.commit()
         self.signout()
 
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
 
         res = self.app.get('project/%s/tasks/browse' % (app.short_name),
                            follow_redirects=True)
@@ -1333,7 +1333,7 @@ class TestWeb(web.Helper):
         current_app.config['APPS_PER_PAGE'] = 1
         category = CategoryFactory.create(name='category', short_name='cat')
         for project in ProjectFactory.create_batch(2, category=category):
-            TaskFactory.create(app=project)
+            TaskFactory.create(project=project)
         page1 = self.app.get('/project/category/%s/' % category.short_name)
         page2 = self.app.get('/project/category/%s/page/2/' % category.short_name)
         current_app.config['APPS_PER_PAGE'] = n_apps
@@ -1350,11 +1350,11 @@ class TestWeb(web.Helper):
         self.register()
         self.new_application()
         self.update_application(new_category_id="1")
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         info = dict(task_presenter="some html")
         app.info = info
         db.session.commit()
-        task = Task(app_id=app.id, n_answers = 10)
+        task = Task(project_id=app.id, n_answers = 10)
         db.session.add(task)
         db.session.commit()
         self.signout()
@@ -1402,9 +1402,9 @@ class TestWeb(web.Helper):
         a project works as anonymous"""
         self.create()
         self.delete_task_runs()
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         task = db.session.query(Task)\
-                 .filter(App.id == app.id)\
+                 .filter(Project.id == app.id)\
                  .first()
         res = self.app.get('project/%s/task/%s' % (app.short_name, task.id),
                            follow_redirects=True)
@@ -1436,8 +1436,8 @@ class TestWeb(web.Helper):
         self.delete_task_runs()
         self.register()
         self.signin()
-        app = db.session.query(App).first()
-        task = db.session.query(Task).filter(App.id == app.id).first()
+        app = db.session.query(Project).first()
+        task = db.session.query(Task).filter(Project.id == app.id).first()
         res = self.app.get('project/%s/task/%s' % (app.short_name, task.id),
                            follow_redirects=True)
         assert 'TaskPresenter' in res.data, res.data
@@ -1446,8 +1446,8 @@ class TestWeb(web.Helper):
     def test_get_specific_ongoing_task_marks_task_as_requested(self, mark):
         self.create()
         self.register()
-        app = db.session.query(App).first()
-        task = db.session.query(Task).filter(App.id == app.id).first()
+        app = db.session.query(Project).first()
+        task = db.session.query(Task).filter(Project.id == app.id).first()
         res = self.app.get('project/%s/task/%s' % (app.short_name, task.id),
                            follow_redirects=True)
         mark.assert_called_with(task, sentinel.master)
@@ -1457,16 +1457,16 @@ class TestWeb(web.Helper):
     def test_25_get_wrong_task_app(self, mock):
         """Test WEB get wrong task.id for a project works"""
         self.create()
-        app1 = db.session.query(App).get(1)
+        app1 = db.session.query(Project).get(1)
         app1_short_name = app1.short_name
 
-        db.session.query(Task).filter(Task.app_id == 1).first()
+        db.session.query(Task).filter(Task.project_id == 1).first()
 
         self.register()
         self.new_application()
-        app2 = db.session.query(App).get(2)
+        app2 = db.session.query(Project).get(2)
         self.new_task(app2.id)
-        task2 = db.session.query(Task).filter(Task.app_id == 2).first()
+        task2 = db.session.query(Task).filter(Task.project_id == 2).first()
         task2_id = task2.id
         self.signout()
 
@@ -1479,7 +1479,7 @@ class TestWeb(web.Helper):
     def test_26_tutorial_signed_user(self):
         """Test WEB tutorials work as signed in user"""
         self.create()
-        app1 = db.session.query(App).get(1)
+        app1 = db.session.query(Project).get(1)
         app1.info = dict(tutorial="some help")
         db.session.commit()
         self.register()
@@ -1509,7 +1509,7 @@ class TestWeb(web.Helper):
     def test_27_tutorial_anonymous_user(self):
         """Test WEB tutorials work as an anonymous user"""
         self.create()
-        app1 = db.session.query(App).get(1)
+        app1 = db.session.query(Project).get(1)
         app1.info = dict(tutorial="some help")
         db.session.commit()
         # First time accessing the app should redirect me to the tutorial
@@ -1605,10 +1605,10 @@ class TestWeb(web.Helper):
         """Test WEB user progress profile page works"""
         self.register()
         self.new_application()
-        app = db.session.query(App).first()
-        task = Task(app_id=app.id, n_answers = 10)
+        app = db.session.query(Project).first()
+        task = Task(project_id=app.id, n_answers = 10)
         db.session.add(task)
-        task_run = TaskRun(app_id=app.id, task_id=1, user_id=1,
+        task_run = TaskRun(project_id=app.id, task_id=1, user_id=1,
                                  info={'answer': 1})
         db.session.add(task_run)
         db.session.commit()
@@ -1991,7 +1991,7 @@ class TestWeb(web.Helper):
         assert "Edit the task presenter" in res.data, \
             "Task Presenter Editor should be an option"
 
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         app.hidden = 1
         db.session.add(app)
         db.session.commit()
@@ -2038,7 +2038,7 @@ class TestWeb(web.Helper):
         """Test WEB task presenter editor works"""
         self.register()
         self.new_application()
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         err_msg = "Task Presenter should be empty"
         assert not app.info.get('task_presenter'), err_msg
 
@@ -2051,7 +2051,7 @@ class TestWeb(web.Helper):
                             data={'editor': 'Some HTML code!'},
                             follow_redirects=True)
         assert "Sample Project" in res.data, "Does not return to app details"
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         err_msg = "Task Presenter failed to update"
         assert app.info['task_presenter'] == 'Some HTML code!', err_msg
 
@@ -2074,7 +2074,7 @@ class TestWeb(web.Helper):
                             data={'editor': 'Some HTML code!'},
                             follow_redirects=True)
         assert "Sample Project" in res.data, "Does not return to app details"
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         err_msg = "Task Presenter failed to update"
         assert app.info['task_presenter'] == 'Some HTML code!', err_msg
 
@@ -2103,7 +2103,7 @@ class TestWeb(web.Helper):
         mock_webhook.return_value = html_request
         self.register()
         self.new_application()
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         err_msg = "Task Presenter should be empty"
         assert not app.info.get('task_presenter'), err_msg
 
@@ -2111,7 +2111,7 @@ class TestWeb(web.Helper):
                             data={'editor': 'Some HTML code!'},
                             follow_redirects=True)
         assert "Sample Project" in res.data, "Does not return to app details"
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         for i in range(10):
             key = "key_%s" % i
             app.info[key] = i
@@ -2120,7 +2120,7 @@ class TestWeb(web.Helper):
         _info = app.info
 
         self.update_application()
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         for key in _info:
             assert key in app.info.keys(), \
                 "The key %s is lost and it should be here" % key
@@ -2189,28 +2189,28 @@ class TestWeb(web.Helper):
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real app
-        uri = '/project/%s/tasks/export' % Fixtures.app_short_name
+        uri = '/project/%s/tasks/export' % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now test that a 404 is raised when an arg is invalid
-        uri = "/project/%s/tasks/export?type=ask&format=json" % Fixtures.app_short_name
+        uri = "/project/%s/tasks/export?type=ask&format=json" % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
-        uri = "/project/%s/tasks/export?format=json" % Fixtures.app_short_name
+        uri = "/project/%s/tasks/export?format=json" % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
-        uri = "/project/%s/tasks/export?type=task" % Fixtures.app_short_name
+        uri = "/project/%s/tasks/export?type=task" % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
         # And a 415 is raised if the requested format is not supported or invalid
-        uri = "/project/%s/tasks/export?type=task&format=gson" % Fixtures.app_short_name
+        uri = "/project/%s/tasks/export?type=task&format=gson" % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '415 UNSUPPORTED MEDIA TYPE', res.status
 
         # Now get the tasks in JSON format
-        self.clear_temp_container(1)   # App ID 1 is assumed here. See app.id below.
-        uri = "/project/%s/tasks/export?type=task&format=json" % Fixtures.app_short_name
+        self.clear_temp_container(1)   # Project ID 1 is assumed here. See app.id below.
+        uri = "/project/%s/tasks/export?type=task&format=json" % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
         zip = zipfile.ZipFile(StringIO(res.data))
         # Check only one file in zipfile
@@ -2221,10 +2221,10 @@ class TestWeb(web.Helper):
         assert extracted_filename == 'test-app_task.json', zip.namelist()[0]
 
         exported_tasks = json.loads(zip.read(extracted_filename))
-        app = db.session.query(App)\
-                .filter_by(short_name=Fixtures.app_short_name)\
+        app = db.session.query(Project)\
+                .filter_by(short_name=Fixtures.project_short_name)\
                 .first()
-        err_msg = "The number of exported tasks is different from App Tasks"
+        err_msg = "The number of exported tasks is different from Project Tasks"
         assert len(exported_tasks) == len(app.tasks), err_msg
         # Tasks are exported as an attached file
         content_disposition = 'attachment; filename=%d_test-app_task_json.zip' % app.id
@@ -2264,7 +2264,7 @@ class TestWeb(web.Helper):
 
     def test_export_task_csv_support_non_latin1_project_names(self):
         app = ProjectFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
-        TaskFactory.create(app=app)
+        TaskFactory.create(project=app)
         res = self.app.get('/project/%s/tasks/export?type=task&format=csv' % app.short_name,
                            follow_redirects=True)
         filename = secure_filename(unidecode(u'Измени Киев!'))
@@ -2272,7 +2272,7 @@ class TestWeb(web.Helper):
 
     def test_export_taskrun_csv_support_non_latin1_project_names(self):
         app = ProjectFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
-        task = TaskFactory.create(app=app)
+        task = TaskFactory.create(project=app)
         TaskRunFactory.create(task=task)
         res = self.app.get('/project/%s/tasks/export?type=task_run&format=csv' % app.short_name,
                            follow_redirects=True)
@@ -2293,13 +2293,13 @@ class TestWeb(web.Helper):
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real app
-        self.clear_temp_container(1)   # App ID 1 is assumed here. See app.id below.
-        uri = '/project/%s/tasks/export' % Fixtures.app_short_name
+        self.clear_temp_container(1)   # Project ID 1 is assumed here. See app.id below.
+        uri = '/project/%s/tasks/export' % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in JSON format
-        uri = "/project/%s/tasks/export?type=task_run&format=json" % Fixtures.app_short_name
+        uri = "/project/%s/tasks/export?type=task_run&format=json" % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
         zip = zipfile.ZipFile(StringIO(res.data))
         # Check only one file in zipfile
@@ -2310,10 +2310,10 @@ class TestWeb(web.Helper):
         assert extracted_filename == 'test-app_task_run.json', zip.namelist()[0]
 
         exported_task_runs = json.loads(zip.read(extracted_filename))
-        app = db.session.query(App)\
-                .filter_by(short_name=Fixtures.app_short_name)\
+        app = db.session.query(Project)\
+                .filter_by(short_name=Fixtures.project_short_name)\
                 .first()
-        err_msg = "The number of exported task runs is different from App Tasks"
+        err_msg = "The number of exported task runs is different from Project Tasks"
         assert len(exported_task_runs) == len(app.task_runs), err_msg
         # Task runs are exported as an attached file
         content_disposition = 'attachment; filename=%d_test-app_task_run_json.zip' % app.id
@@ -2332,7 +2332,7 @@ class TestWeb(web.Helper):
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
         # Now get the wrong table name in CSV format
-        uri = "/project/%s/tasks/export?type=wrong&format=csv" % Fixtures.app_short_name
+        uri = "/project/%s/tasks/export?type=wrong&format=csv" % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
 
@@ -2340,7 +2340,7 @@ class TestWeb(web.Helper):
         app = ProjectFactory.create()
         self.clear_temp_container(app.owner_id)
         for i in range(0, 5):
-            task = TaskFactory.create(app=app, info={'question': i})
+            task = TaskFactory.create(project=app, info={'question': i})
         uri = '/project/%s/tasks/export' % app.short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % app.name
@@ -2359,7 +2359,7 @@ class TestWeb(web.Helper):
 
         csv_content = StringIO(zip.read(extracted_filename))
         csvreader = unicode_csv_reader(csv_content)
-        app = db.session.query(App)\
+        app = db.session.query(Project)\
                 .filter_by(short_name=app.short_name)\
                 .first()
         exported_tasks = []
@@ -2371,7 +2371,7 @@ class TestWeb(web.Helper):
             else:
                 keys = row
             n = n + 1
-        err_msg = "The number of exported tasks is different from App Tasks"
+        err_msg = "The number of exported tasks is different from Project Tasks"
         assert len(exported_tasks) == len(app.tasks), err_msg
         for t in app.tasks:
             err_msg = "All the task column names should be included"
@@ -2425,9 +2425,9 @@ class TestWeb(web.Helper):
         # Now with a real app
         app = ProjectFactory.create()
         self.clear_temp_container(app.owner_id)
-        task = TaskFactory.create(app=app)
+        task = TaskFactory.create(project=app)
         for i in range(2):
-            task_run = TaskRunFactory.create(app=app, task=task, info={'answer': i})
+            task_run = TaskRunFactory.create(project=app, task=task, info={'answer': i})
         uri = '/project/%s/tasks/export' % app.short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % app.name
@@ -2446,7 +2446,7 @@ class TestWeb(web.Helper):
 
         csv_content = StringIO(zip.read(extracted_filename))
         csvreader = unicode_csv_reader(csv_content)
-        app = db.session.query(App)\
+        app = db.session.query(Project)\
                 .filter_by(short_name=app.short_name)\
                 .first()
         exported_task_runs = []
@@ -2458,7 +2458,7 @@ class TestWeb(web.Helper):
                 keys = row
             n = n + 1
         err_msg = "The number of exported task runs is different \
-                   from App Tasks Runs: %s != %s" % (len(exported_task_runs), len(app.task_runs))
+                   from Project Tasks Runs: %s != %s" % (len(exported_task_runs), len(app.task_runs))
         assert len(exported_task_runs) == len(app.task_runs), err_msg
 
         for t in app.tasks[0].task_runs:
@@ -2509,7 +2509,7 @@ class TestWeb(web.Helper):
         """Test WEB Export CKAN Tasks works."""
         Fixtures.create()
         user = db.session.query(User).filter_by(name=Fixtures.name).first()
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         user.ckan_api = 'ckan-api-key'
         app.owner_id = user.id
         db.session.add(user)
@@ -2518,12 +2518,12 @@ class TestWeb(web.Helper):
 
         self.signin(email=user.email_addr, password=Fixtures.password)
         # Now with a real app
-        uri = '/project/%s/tasks/export' % Fixtures.app_short_name
+        uri = '/project/%s/tasks/export' % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in CKAN format
-        uri = "/project/%s/tasks/export?type=task&format=ckan" % Fixtures.app_short_name
+        uri = "/project/%s/tasks/export?type=task&format=ckan" % Fixtures.project_short_name
         with patch.dict(self.flask_app.config, {'CKAN_URL': 'http://ckan.com'}):
             # First time exporting the package
             res = self.app.get(uri, follow_redirects=True)
@@ -2550,7 +2550,7 @@ class TestWeb(web.Helper):
         """Test WEB Export CKAN Tasks works."""
         Fixtures.create()
         user = db.session.query(User).filter_by(name=Fixtures.name).first()
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         user.ckan_api = 'ckan-api-key'
         app.owner_id = user.id
         db.session.add(user)
@@ -2559,12 +2559,12 @@ class TestWeb(web.Helper):
 
         self.signin(email=user.email_addr, password=Fixtures.password)
         # Now with a real app
-        uri = '/project/%s/tasks/export' % Fixtures.app_short_name
+        uri = '/project/%s/tasks/export' % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in CKAN format
-        uri = "/project/%s/tasks/export?type=task&format=ckan" % Fixtures.app_short_name
+        uri = "/project/%s/tasks/export?type=task&format=ckan" % Fixtures.project_short_name
         with patch.dict(self.flask_app.config, {'CKAN_URL': 'http://ckan.com'}):
             # First time exporting the package
             res = self.app.get(uri, follow_redirects=True)
@@ -2593,7 +2593,7 @@ class TestWeb(web.Helper):
 
         Fixtures.create()
         user = db.session.query(User).filter_by(name=Fixtures.name).first()
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         user.ckan_api = 'ckan-api-key'
         app.owner_id = user.id
         db.session.add(user)
@@ -2616,12 +2616,12 @@ class TestWeb(web.Helper):
 
 
         # Now with a real app
-        uri = '/project/%s/tasks/export' % Fixtures.app_short_name
+        uri = '/project/%s/tasks/export' % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in CKAN format
-        uri = "/project/%s/tasks/export?type=task&format=ckan" % Fixtures.app_short_name
+        uri = "/project/%s/tasks/export?type=task&format=ckan" % Fixtures.project_short_name
         #res = self.app.get(uri, follow_redirects=True)
         with patch.dict(self.flask_app.config, {'CKAN_URL': 'http://ckan.com'}):
             # First time exporting the package
@@ -2653,7 +2653,7 @@ class TestWeb(web.Helper):
 
         Fixtures.create()
         user = db.session.query(User).filter_by(name=Fixtures.name).first()
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         user.ckan_api = 'ckan-api-key'
         app.owner_id = user.id
         db.session.add(user)
@@ -2671,12 +2671,12 @@ class TestWeb(web.Helper):
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real app
-        uri = '/project/%s/tasks/export' % Fixtures.app_short_name
+        uri = '/project/%s/tasks/export' % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in CKAN format
-        uri = "/project/%s/tasks/export?type=task&format=ckan" % Fixtures.app_short_name
+        uri = "/project/%s/tasks/export?type=task&format=ckan" % Fixtures.project_short_name
         #res = self.app.get(uri, follow_redirects=True)
         with patch.dict(self.flask_app.config, {'CKAN_URL': 'http://ckan.com'}):
             # First time exporting the package
@@ -2702,7 +2702,7 @@ class TestWeb(web.Helper):
 
         Fixtures.create()
         user = db.session.query(User).filter_by(name=Fixtures.name).first()
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         user.ckan_api = 'ckan-api-key'
         app.owner_id = user.id
         db.session.add(user)
@@ -2720,12 +2720,12 @@ class TestWeb(web.Helper):
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real app
-        uri = '/project/%s/tasks/export' % Fixtures.app_short_name
+        uri = '/project/%s/tasks/export' % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
         heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in CKAN format
-        uri = "/project/%s/tasks/export?type=task&format=ckan" % Fixtures.app_short_name
+        uri = "/project/%s/tasks/export?type=task&format=ckan" % Fixtures.project_short_name
         #res = self.app.get(uri, follow_redirects=True)
         with patch.dict(self.flask_app.config, {'CKAN_URL': 'http://ckan.com'}):
             # First time exporting the package
@@ -2844,7 +2844,7 @@ class TestWeb(web.Helper):
         request.return_value = csv_file
         self.register()
         self.new_application()
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         url = '/project/%s/tasks/import' % app.short_name
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv', 'form_name': 'csv'},
@@ -2861,7 +2861,7 @@ class TestWeb(web.Helper):
         create.return_value = "1 new task was imported successfully"
         self.register()
         self.new_application()
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         url = '/project/%s/tasks/import' % app.short_name
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv', 'form_name': 'csv'},
@@ -2877,7 +2877,7 @@ class TestWeb(web.Helper):
         count_tasks.return_value = MAX_NUM_SYNCHRONOUS_TASKS_IMPORT + 1
         self.register()
         self.new_application()
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         url = '/project/%s/tasks/import' % app.short_name
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv', 'form_name': 'csv'},
@@ -2900,7 +2900,7 @@ class TestWeb(web.Helper):
         Mock.return_value = empty_file
         self.register()
         self.new_application()
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         url = '/project/%s/tasks/import' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv', 'form_name': 'csv'},
@@ -2914,12 +2914,12 @@ class TestWeb(web.Helper):
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
                                  {'content-type': 'text/plain'})
         Mock.return_value = empty_file
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         url = '/project/%s/tasks/import' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
                                        'formtype': 'csv', 'form_name': 'csv'},
                             follow_redirects=True)
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         assert len(app.tasks) == 2, "There should be only 2 tasks"
         n = 0
         csv_tasks = [{u'Foo': u'1', u'Bar': u'2'}, {u'Foo': u'4', u'Bar': u'5'}]
@@ -2936,7 +2936,7 @@ class TestWeb(web.Helper):
         Mock.return_value = empty_file
         self.register()
         self.new_application()
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         url = '/project/%s/tasks/import' % (app.short_name)
         res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
                                        'formtype': 'gdocs', 'form_name': 'gdocs'},
@@ -2950,12 +2950,12 @@ class TestWeb(web.Helper):
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
                                  {'content-type': 'text/plain'})
         Mock.return_value = empty_file
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         url = '/project/%s/tasks/import' % (app.short_name)
         res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
                                        'formtype': 'gdocs', 'form_name': 'gdocs'},
                             follow_redirects=True)
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         assert len(app.tasks) == 2, "There should be only 2 tasks"
         n = 0
         csv_tasks = [{u'Foo': u'1', u'Bar': u'2'}, {u'Foo': u'4', u'Bar': u'5'}]
@@ -2967,12 +2967,12 @@ class TestWeb(web.Helper):
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
                                  {'content-type': 'text/plain'})
         Mock.return_value = empty_file
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         url = '/project/%s/tasks/import' % (app.short_name)
         res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
                                        'formtype': 'gdocs', 'form_name': 'gdocs'},
                             follow_redirects=True)
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         assert len(app.tasks) == 2, "There should be only 2 tasks"
         n = 0
         csv_tasks = [{u'Foo': u'1', u'Bar': u'2'}, {u'Foo': u'4', u'Bar': u'5'}]
@@ -2991,17 +2991,17 @@ class TestWeb(web.Helper):
         Mock.return_value = html_request
         self.register()
         self.new_application()
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         res = self.app.post(('/project/%s/tasks/import' % (app.short_name)),
                             data={'epicollect_project': 'fakeproject',
                                   'epicollect_form': 'fakeform',
                                   'formtype': 'json', 'form_name': 'epicollect'},
                             follow_redirects=True)
 
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         err_msg = "Tasks should be imported"
         assert "1 new task was imported successfully" in res.data, err_msg
-        tasks = db.session.query(Task).filter_by(app_id=app.id).all()
+        tasks = db.session.query(Task).filter_by(project_id=app.id).all()
         err_msg = "The imported task from EpiCollect is wrong"
         assert tasks[0].info['DeviceID'] == 23, err_msg
 
@@ -3014,7 +3014,7 @@ class TestWeb(web.Helper):
                                   'epicollect_form': 'fakeform',
                                   'formtype': 'json', 'form_name': 'epicollect'},
                             follow_redirects=True)
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         assert len(app.tasks) == 2, "There should be only 2 tasks"
         n = 0
         epi_tasks = [{u'DeviceID': 23}, {u'DeviceID': 24}]
@@ -3048,16 +3048,16 @@ class TestWeb(web.Helper):
         request.return_value = html_request
         self.register()
         self.new_application()
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         res = self.app.post(('/project/%s/tasks/import' % (app.short_name)),
                             data={'album_id': '1234',
                                   'form_name': 'flickr'},
                             follow_redirects=True)
 
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         err_msg = "Tasks should be imported"
         assert "1 new task was imported successfully" in res.data, err_msg
-        tasks = db.session.query(Task).filter_by(app_id=app.id).all()
+        tasks = db.session.query(Task).filter_by(project_id=app.id).all()
         expected_info = {
             u'url': u'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d.jpg',
             u'url_m': u'https://farm6.staticflickr.com/5441/8947115130_00e2301a0d_m.jpg',
@@ -3106,16 +3106,16 @@ class TestWeb(web.Helper):
             u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
         self.register()
         self.new_application()
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         res = self.app.post('/project/%s/tasks/import' % app.short_name,
                             data={'files-0': dropbox_file_data,
                                   'form_name': 'dropbox'},
                             follow_redirects=True)
 
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         err_msg = "Tasks should be imported"
         #assert "1 new task was imported successfully" in res.data, res.data
-        tasks = db.session.query(Task).filter_by(app_id=app.id).all()
+        tasks = db.session.query(Task).filter_by(project_id=app.id).all()
         expected_info = {
             u'link_raw': u'https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?raw=1',
             u'link': u'https://www.dropbox.com/s/l2b77qvlrequ6gl/test.txt?dl=0',
@@ -3174,7 +3174,7 @@ class TestWeb(web.Helper):
         self.signout()
 
         # Owner
-        tasks = db.session.query(Task).filter_by(app_id=1).all()
+        tasks = db.session.query(Task).filter_by(project_id=1).all()
         res = self.signin(email=u'tester@tester.com', password=u'tester')
         res = self.app.get('/project/test-app/tasks/delete', follow_redirects=True)
         err_msg = "Owner user should get 200 in GET"
@@ -3183,7 +3183,7 @@ class TestWeb(web.Helper):
         res = self.app.post('/project/test-app/tasks/delete', follow_redirects=True)
         err_msg = "Owner should get 200 in POST"
         assert res.status == '200 OK', err_msg
-        tasks = db.session.query(Task).filter_by(app_id=1).all()
+        tasks = db.session.query(Task).filter_by(project_id=1).all()
         assert len(tasks) == 0, "len(app.tasks) != 0"
 
         # Admin
@@ -3292,7 +3292,7 @@ class TestWeb(web.Helper):
     def test_69_allow_anonymous_contributors(self):
         """Test WEB allow anonymous contributors works"""
         Fixtures.create()
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         url = '/project/%s/newtask' % app.short_name
 
         # All users are allowed to participate by default
@@ -3317,7 +3317,7 @@ class TestWeb(web.Helper):
         # As Anonymous user
         res = self.app.get(url, follow_redirects=True)
         err_msg = "User should be redirected to sign in"
-        app = db.session.query(App).first()
+        app = db.session.query(Project).first()
         msg = "Oops! You have to sign in to participate in <strong>%s</strong>" % app.name
         assert msg in res.data, err_msg
 
@@ -3462,7 +3462,7 @@ class TestWeb(web.Helper):
             dom = BeautifulSoup(res.data)
             err_msg = "Task Scheduler should be updated"
             assert dom.find(id='msg_success') is not None, err_msg
-            app = db.session.query(App).get(1)
+            app = db.session.query(Project).get(1)
             assert app.info['sched'] == sched, err_msg
             self.signout()
 
@@ -3531,7 +3531,7 @@ class TestWeb(web.Helper):
             dom = BeautifulSoup(res.data)
             err_msg = "Task Redundancy should be updated"
             assert dom.find(id='msg_success') is not None, err_msg
-            app = db.session.query(App).get(1)
+            app = db.session.query(Project).get(1)
             for t in app.tasks:
                 assert t.n_answers == n_answers, err_msg
             # Wrong values, triggering the validators
@@ -3587,9 +3587,9 @@ class TestWeb(web.Helper):
 
         url = "/project/sampleapp/tasks/redundancy"
 
-        app = db.session.query(App).get(1)
+        app = db.session.query(Project).get(1)
         for t in app.tasks:
-            tr = TaskRun(app_id=app.id, task_id=t.id)
+            tr = TaskRun(project_id=app.id, task_id=t.id)
             db.session.add(tr)
             db.session.commit()
 
@@ -3626,7 +3626,7 @@ class TestWeb(web.Helper):
         self.signout()
 
         # As owner and root
-        app = db.session.query(App).get(1)
+        app = db.session.query(Project).get(1)
         _id = app.tasks[0].id
         for i in range(0, 1):
             if i == 0:
@@ -3762,7 +3762,7 @@ class TestWeb(web.Helper):
         self.register()
         user = User.query.first()
         app = ProjectFactory.create(owner=user)
-        task = TaskFactory.create(app=app)
+        task = TaskFactory.create(project=app)
         taskrun = TaskRunFactory.create(task=task, user=user)
         res = self.app.get('/project/%s/newtask' % app.short_name)
 
@@ -3780,7 +3780,7 @@ class TestWeb(web.Helper):
         self.register()
         user = User.query.first()
         app = ProjectFactory.create(owner=user)
-        task = TaskFactory.create(app=app, n_answers=1)
+        task = TaskFactory.create(project=app, n_answers=1)
         taskrun = TaskRunFactory.create(task=task, user=user)
         res = self.app.get('/project/%s/newtask' % app.short_name)
 

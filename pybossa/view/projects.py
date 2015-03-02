@@ -35,7 +35,7 @@ import pybossa.sched as sched
 
 from pybossa.core import (uploader, signer, sentinel, json_exporter,
     csv_exporter, importer, flickr)
-from pybossa.model.project import App
+from pybossa.model.project import Project
 from pybossa.model.task import Task
 from pybossa.model.auditlog import Auditlog
 from pybossa.model.blogpost import Blogpost
@@ -188,7 +188,7 @@ def app_cat_index(category, page):
 @blueprint.route('/new', methods=['GET', 'POST'])
 @login_required
 def new():
-    ensure_authorized_to('create', App)
+    ensure_authorized_to('create', Project)
     form = AppForm(request.form)
 
     def respond(errors):
@@ -217,7 +217,7 @@ def new():
     info = {}
     category_by_default = cached_cat.get_all()[0]
 
-    project = App(name=form.name.data,
+    project = Project(name=form.name.data,
               short_name=form.short_name.data,
               description=_description_from_long_description(),
               long_description=form.long_description.data,
@@ -256,7 +256,7 @@ def task_presenter_editor(short_name):
     form.id.data = project.id
     if request.method == 'POST' and form.validate():
         db_project = project_repo.get(project.id)
-        old_project = App(**db_project.dictize())
+        old_project = Project(**db_project.dictize())
         old_info = dict(db_project.info)
         old_info['task_presenter'] = form.editor.data
         db_project.info = old_info
@@ -365,7 +365,7 @@ def update(short_name):
          overall_progress, last_activity) = project_by_shortname(short_name)
 
         new_project = project_repo.get_by_shortname(short_name)
-        old_project = App(**new_project.dictize())
+        old_project = Project(**new_project.dictize())
         old_info = dict(new_project.info)
         old_project.info = old_info
         if form.id.data == new_project.id:
@@ -716,7 +716,7 @@ def task_presenter(short_name, task_id):
     def respond(tmpl):
         return render_template(tmpl, **template_args)
 
-    if not (task.app_id == project.id):
+    if not (task.project_id == project.id):
         return respond('/projects/task/wrong.html')
     mark_task_as_requested_by_user(task, sentinel.master)
     return respond('/projects/presenter.html')
@@ -797,9 +797,9 @@ def export(short_name, task_id):
         return redirect_to_password
 
     # Check if the task belongs to the app and exists
-    task = task_repo.get_task_by(app_id=app.id, id=task_id)
+    task = task_repo.get_task_by(project_id=app.id, id=task_id)
     if task:
-        taskruns = task_repo.filter_task_runs_by(task_id=task_id, app_id=app.id)
+        taskruns = task_repo.filter_task_runs_by(task_id=task_id, project_id=app.id)
         results = [tr.dictize() for tr in taskruns]
         return Response(json.dumps(results), mimetype='application/json')
     else:
@@ -891,7 +891,7 @@ def delete_tasks(short_name):
                                last_activity=last_activity,
                                title=title)
     else:
-        tasks = task_repo.filter_tasks_by(app_id=project.id)
+        tasks = task_repo.filter_tasks_by(project_id=project.id)
         task_repo.delete_all(tasks)
         msg = gettext("All the tasks and associated task runs have been deleted")
         flash(msg, 'success')
@@ -932,10 +932,10 @@ def export_to(short_name):
 
 
     def gen_json(table):
-        n = getattr(task_repo, 'count_%ss_with' % table)(app_id=project.id)
+        n = getattr(task_repo, 'count_%ss_with' % table)(project_id=project.id)
         sep = ", "
         yield "["
-        for i, tr in enumerate(getattr(task_repo, 'filter_%ss_by' % table)(app_id=project.id, yielded=True), 1):
+        for i, tr in enumerate(getattr(task_repo, 'filter_%ss_by' % table)(project_id=project.id, yielded=True), 1):
             item = json.dumps(tr.dictize())
             if (i == n):
                 sep = ""
@@ -982,7 +982,7 @@ def export_to(short_name):
         writer.writerow(format_csv_properly(t.dictize(), ty='taskrun'))
 
     def get_csv(out, writer, table, handle_row):
-        for tr in getattr(task_repo, 'filter_%ss_by' % table)(app_id=project.id,
+        for tr in getattr(task_repo, 'filter_%ss_by' % table)(project_id=project.id,
                                                               yielded=True):
             handle_row(writer, tr)
         yield out.getvalue()
@@ -1077,7 +1077,7 @@ def export_to(short_name):
             return abort(404)
 
         # TODO: change check for existence below
-        t = getattr(task_repo, 'get_%s_by' % ty)(app_id=project.id)
+        t = getattr(task_repo, 'get_%s_by' % ty)(project_id=project.id)
         if t is not None:
             res = csv_exporter.response_zip(project, ty)
             return res
@@ -1114,7 +1114,7 @@ def export_to(short_name):
 
 @blueprint.route('/<short_name>/stats')
 def show_stats(short_name):
-    """Returns App Stats"""
+    """Returns Project Stats"""
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
     n_volunteers = cached_projects.n_volunteers(app.id)
@@ -1296,7 +1296,7 @@ def task_priority(short_name):
     if request.method == 'POST' and form.validate():
         for task_id in form.task_ids.data.split(","):
             if task_id != '':
-                t = task_repo.get_task_by(app_id=project.id, id=int(task_id))
+                t = task_repo.get_task_by(project_id=project.id, id=int(task_id))
                 if t:
                     old_priority = t.priority_0
                     t.priority_0 = form.priority_0.data
@@ -1325,7 +1325,7 @@ def show_blogposts(short_name):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
 
-    blogposts = blog_repo.filter_by(app_id=project.id)
+    blogposts = blog_repo.filter_by(project_id=project.id)
     ensure_authorized_to('read', Blogpost, project_id=project.id)
     redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
@@ -1344,7 +1344,7 @@ def show_blogposts(short_name):
 def show_blogpost(short_name, id):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
-    blogpost = blog_repo.get_by(id=id, app_id=project.id)
+    blogpost = blog_repo.get_by(id=id, project_id=project.id)
     if blogpost is None:
         raise abort(404)
     ensure_authorized_to('read', blogpost)
@@ -1398,7 +1398,7 @@ def new_blogpost(short_name):
     blogpost = Blogpost(title=form.title.data,
                         body=form.body.data,
                         user_id=current_user.id,
-                        app_id=project.id)
+                        project_id=project.id)
     ensure_authorized_to('create', blogpost)
     blog_repo.save(blogpost)
     cached_projects.delete_project(short_name)
@@ -1415,7 +1415,7 @@ def update_blogpost(short_name, id):
     (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
 
-    blogpost = blog_repo.get_by(id=id, app_id=project.id)
+    blogpost = blog_repo.get_by(id=id, project_id=project.id)
     if blogpost is None:
         raise abort(404)
 
@@ -1445,7 +1445,7 @@ def update_blogpost(short_name, id):
                         title=form.title.data,
                         body=form.body.data,
                         user_id=current_user.id,
-                        app_id=project.id)
+                        project_id=project.id)
     blog_repo.update(blogpost)
     cached_projects.delete_project(short_name)
 
@@ -1459,7 +1459,7 @@ def update_blogpost(short_name, id):
 @login_required
 def delete_blogpost(short_name, id):
     app = project_by_shortname(short_name)[0]
-    blogpost = blog_repo.get_by(id=id, app_id=app.id)
+    blogpost = blog_repo.get_by(id=id, project_id=app.id)
     if blogpost is None:
         raise abort(404)
 

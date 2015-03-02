@@ -41,7 +41,7 @@ assert auditlog
 
 
 _actions = ['create', 'read', 'update', 'delete']
-_auth_classes = {'app': project.ProjectAuth,
+_auth_classes = {'project': project.ProjectAuth,
                  'auditlog': auditlog.AuditlogAuth,
                  'blogpost': blogpost.BlogpostAuth,
                  'category': category.CategoryAuth,

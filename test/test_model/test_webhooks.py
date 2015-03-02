@@ -60,8 +60,8 @@ class TestWebHooks(Test):
     def test_trigger_webhook_without_url(self):
         """Test WEBHOOK is triggered without url."""
         app = ProjectFactory.create()
-        task = TaskFactory.create(app=app, n_answers=1)
-        TaskRunFactory.create(app=app, task=task)
+        task = TaskFactory.create(project=app, n_answers=1)
+        TaskRunFactory.create(project=app, task=task)
         assert queue.enqueue.called is False, queue.enqueue.called
         queue.reset_mock()
 
@@ -71,9 +71,9 @@ class TestWebHooks(Test):
         """Test WEBHOOK is not triggered for uncompleted tasks."""
         import random
         app = ProjectFactory.create()
-        task = TaskFactory.create(app=app)
+        task = TaskFactory.create(project=app)
         for i in range(1, random.randrange(2, 5)):
-            TaskRunFactory.create(app=app, task=task)
+            TaskRunFactory.create(project=app, task=task)
         assert queue.enqueue.called is False, queue.enqueue.called
         assert task.state != 'completed'
         queue.reset_mock()
@@ -85,11 +85,11 @@ class TestWebHooks(Test):
         """Test WEBHOOK is triggered with url."""
         url = 'http://server.com'
         app = ProjectFactory.create(webhook=url,)
-        task = TaskFactory.create(app=app, n_answers=1)
-        TaskRunFactory.create(app=app, task=task)
+        task = TaskFactory.create(project=app, n_answers=1)
+        TaskRunFactory.create(project=app, task=task)
         payload = dict(event='task_completed',
-                       app_short_name=app.short_name,
-                       app_id=app.id,
+                       project_short_name=app.short_name,
+                       project_id=app.id,
                        task_id=task.id,
                        fired_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
         assert queue.enqueue.called

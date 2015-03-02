@@ -184,11 +184,11 @@ def projects_contributed(user_id):
     """Return projects that user_id has contributed to."""
     sql = text('''
                WITH apps_contributed as
-                    (SELECT DISTINCT(app_id) FROM task_run
+                    (SELECT DISTINCT(project_id) FROM task_run
                      WHERE user_id=:user_id)
-               SELECT app.id, app.name, app.short_name, app.owner_id,
-               app.description, app.info FROM app, apps_contributed
-               WHERE app.id=apps_contributed.app_id ORDER BY app.name DESC;
+               SELECT project.id, project.name, project.short_name, project.owner_id,
+               project.description, project.info FROM project, apps_contributed
+               WHERE project.id=apps_contributed.project_id ORDER BY project.name DESC;
                ''')
     results = session.execute(sql, dict(user_id=user_id))
     projects_contributed = []
@@ -213,15 +213,15 @@ def projects_contributed_cached(user_id):
 def published_projects(user_id):
     """Return published projects for user_id."""
     sql = text('''
-               SELECT app.id, app.name, app.short_name, app.description,
-               app.owner_id,
-               app.info
-               FROM app, task
-               WHERE app.id=task.app_id AND app.owner_id=:user_id AND
-               app.hidden=0 AND app.info LIKE('%task_presenter%')
-               GROUP BY app.id, app.name, app.short_name,
-               app.description,
-               app.info;''')
+               SELECT project.id, project.name, project.short_name, project.description,
+               project.owner_id,
+               project.info
+               FROM project, task
+               WHERE project.id=task.project_id AND project.owner_id=:user_id AND
+               project.hidden=0 AND project.info LIKE('%task_presenter%')
+               GROUP BY project.id, project.name, project.short_name,
+               project.description,
+               project.info;''')
     projects_published = []
     results = session.execute(sql, dict(user_id=user_id))
     for row in results:
@@ -245,15 +245,15 @@ def published_projects_cached(user_id):
 def draft_projects(user_id):
     """Return draft projects for user_id."""
     sql = text('''
-               SELECT app.id, app.name, app.short_name, app.description,
+               SELECT project.id, project.name, project.short_name, project.description,
                owner_id,
-               app.info
-               FROM app
-               WHERE app.owner_id=:user_id
-               AND app.info NOT LIKE('%task_presenter%')
-               GROUP BY app.id, app.name, app.short_name,
-               app.description,
-               app.info;''')
+               project.info
+               FROM project
+               WHERE project.owner_id=:user_id
+               AND project.info NOT LIKE('%task_presenter%')
+               GROUP BY project.id, project.name, project.short_name,
+               project.description,
+               project.info;''')
     projects_draft = []
     results = session.execute(sql, dict(user_id=user_id))
     for row in results:
@@ -277,15 +277,15 @@ def draft_projects_cached(user_id):
 def hidden_projects(user_id):
     """Return hidden projects for user_id."""
     sql = text('''
-               SELECT app.id, app.name, app.short_name, app.description,
-               app.owner_id,
-               app.info
-               FROM app, task
-               WHERE app.id=task.app_id AND app.owner_id=:user_id AND
-               app.hidden=1 AND app.info LIKE('%task_presenter%')
-               GROUP BY app.id, app.name, app.short_name,
-               app.description,
-               app.info;''')
+               SELECT project.id, project.name, project.short_name, project.description,
+               project.owner_id,
+               project.info
+               FROM project, task
+               WHERE project.id=task.project_id AND project.owner_id=:user_id AND
+               project.hidden=1 AND project.info LIKE('%task_presenter%')
+               GROUP BY project.id, project.name, project.short_name,
+               project.description,
+               project.info;''')
     projects_published = []
     results = session.execute(sql, dict(user_id=user_id))
     for row in results:

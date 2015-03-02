@@ -77,7 +77,7 @@ class TestTaskrunAuthorization(Test):
         not allow for anonymous contributors"""
 
         project = ProjectFactory.create(allow_anonymous_contributors=False)
-        task = TaskFactory.create(app=project)
+        task = TaskFactory.create(project=project)
         taskrun = AnonymousTaskRunFactory.build(task=task)
 
         assert_raises(Unauthorized, ensure_authorized_to, 'create', taskrun)
@@ -130,7 +130,7 @@ class TestTaskrunAuthorization(Test):
         not allow for anonymous contributors"""
 
         project = ProjectFactory.create(allow_anonymous_contributors=False)
-        task = TaskFactory.create(app=project)
+        task = TaskFactory.create(project=project)
         taskrun = TaskRunFactory.build(task_id=task.id)
 
         assert_not_raises(Exception,

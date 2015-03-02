@@ -62,7 +62,7 @@ class TestBlogpostView(web.Helper):
         self.register(name='user', email='user@user.com')
         user = user_repo.get(2)
         app = ProjectFactory.create(owner=user, hidden=1)
-        blogpost = BlogpostFactory.create(app=app, title='title')
+        blogpost = BlogpostFactory.create(project=app, title='title')
 
         url = "/project/%s/blog" % app.short_name
 
@@ -101,7 +101,7 @@ class TestBlogpostView(web.Helper):
         """Test blogpost GET with id shows one blogpost"""
         user = self.create_users()[1]
         app = ProjectFactory.create(owner=user)
-        blogpost = BlogpostFactory.create(app=app, title='title')
+        blogpost = BlogpostFactory.create(project=app, title='title')
         url = "/project/%s/%s" % (app.short_name, blogpost.id)
 
         # As anonymous
@@ -124,7 +124,7 @@ class TestBlogpostView(web.Helper):
         self.register(name='user', email='user@user.com')
         user = user_repo.get(2)
         app = ProjectFactory.create(owner=user, hidden=1)
-        blogpost = BlogpostFactory.create(app=app, title='title')
+        blogpost = BlogpostFactory.create(project=app, title='title')
         url = "/project/%s/%s" % (app.short_name, blogpost.id)
 
         # As app owner
@@ -155,7 +155,7 @@ class TestBlogpostView(web.Helper):
         self.register()
         user = user_repo.get(1)
         app1, app2 = ProjectFactory.create_batch(2, owner=user)
-        blogpost = BlogpostFactory.create(app=app1)
+        blogpost = BlogpostFactory.create(project=app1)
 
         # To a non-existing app
         url = "/project/non-existing-app/%s" % blogpost.id
@@ -194,7 +194,7 @@ class TestBlogpostView(web.Helper):
 
         blogpost = blog_repo.get_by(title='blogpost title')
         assert blogpost.title == 'blogpost title', blogpost.title
-        assert blogpost.app_id == app.id, blogpost.app.id
+        assert blogpost.project_id == app.id, blogpost.project.id
         assert blogpost.user_id == user.id, blogpost.user_id
 
 
@@ -254,7 +254,7 @@ class TestBlogpostView(web.Helper):
         self.register()
         user = user_repo.get(1)
         app = ProjectFactory.create(owner=user)
-        blogpost = BlogpostFactory.create(app=app)
+        blogpost = BlogpostFactory.create(project=app)
         url = "/project/%s/%s/update" % (app.short_name, blogpost.id)
 
         res = self.app.get(url, follow_redirects=True)
@@ -277,7 +277,7 @@ class TestBlogpostView(web.Helper):
     def test_blogpost_update_by_anonymous(self):
         """Test blogpost update, anonymous users are redirected to signin"""
         app = ProjectFactory.create()
-        blogpost = BlogpostFactory.create(app=app, title='title')
+        blogpost = BlogpostFactory.create(project=app, title='title')
         url = "/project/%s/%s/update" % (app.short_name, blogpost.id)
 
         res = self.app.get(url, follow_redirects=True)
@@ -302,7 +302,7 @@ class TestBlogpostView(web.Helper):
         self.register()
         user = user_repo.get(1)
         app = ProjectFactory.create(owner=user)
-        blogpost = BlogpostFactory.create(app=app, title='title', body='body')
+        blogpost = BlogpostFactory.create(project=app, title='title', body='body')
         url = "/project/%s/new-blogpost" % app.short_name
         self.signout()
         self.register(name='notowner', email='user2@user.com')
@@ -326,7 +326,7 @@ class TestBlogpostView(web.Helper):
         user = user_repo.get(1)
         app1 = ProjectFactory.create(owner=user)
         app2 = ProjectFactory.create(owner=user)
-        blogpost = BlogpostFactory.create(app=app1, body='body')
+        blogpost = BlogpostFactory.create(project=app1, body='body')
 
         # To a non-existing app
         url = "/project/non-existing-app/%s/update" % blogpost.id
@@ -353,7 +353,7 @@ class TestBlogpostView(web.Helper):
         self.register()
         user = user_repo.get(1)
         app = ProjectFactory.create(owner=user)
-        blogpost = BlogpostFactory.create(app=app)
+        blogpost = BlogpostFactory.create(project=app)
         url = "/project/%s/%s/delete" % (app.short_name, blogpost.id)
         redirect_url = '/project/%E2%9C%93app1/blog'
 
@@ -369,7 +369,7 @@ class TestBlogpostView(web.Helper):
     def test_blogpost_delete_by_anonymous(self):
         """Test blogpost delete, anonymous users are redirected to signin"""
         app = ProjectFactory.create()
-        blogpost = BlogpostFactory.create(app=app)
+        blogpost = BlogpostFactory.create(project=app)
         url = "/project/%s/%s/delete" % (app.short_name, blogpost.id)
 
         res = self.app.post(url, follow_redirects=True)
@@ -386,7 +386,7 @@ class TestBlogpostView(web.Helper):
         self.register()
         user = user_repo.get(1)
         app = ProjectFactory.create(owner=user)
-        blogpost = BlogpostFactory.create(app=app)
+        blogpost = BlogpostFactory.create(project=app)
         url = "/project/%s/new-blogpost" % app.short_name
         self.signout()
         url = "/project/%s/%s/delete" % (app.short_name, blogpost.id)
@@ -405,7 +405,7 @@ class TestBlogpostView(web.Helper):
         user = user_repo.get(1)
         app1 = ProjectFactory.create(owner=user)
         app2 = ProjectFactory.create(owner=user)
-        blogpost = BlogpostFactory.create(app=app1)
+        blogpost = BlogpostFactory.create(project=app1)
 
         # To a non-existing app
         url = "/project/non-existing-app/%s/delete" % blogpost.id

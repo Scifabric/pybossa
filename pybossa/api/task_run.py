@@ -44,8 +44,8 @@ class TaskRunAPI(APIBase):
         task = task_repo.get_task(taskrun.task_id)
         if task is None:  # pragma: no cover
             raise Forbidden('Invalid task_id')
-        if (task.app_id != taskrun.app_id):
-            raise Forbidden('Invalid app_id')
+        if (task.project_id != taskrun.project_id):
+            raise Forbidden('Invalid project_id')
         if _check_task_requested_by_user(taskrun, sentinel.master) is False:
             raise Forbidden('You must request a task first!')
 

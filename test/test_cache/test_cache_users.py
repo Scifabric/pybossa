@@ -61,7 +61,7 @@ class TestUsersCache(Test):
         """Test CACHE USERS rank_and_score returns the correct rank and score"""
         i = 0
         app = ProjectFactory.create()
-        tasks = TaskFactory.create_batch(4, app=app)
+        tasks = TaskFactory.create_batch(4, project=app)
         users = UserFactory.create_batch(4)
         for user in users:
             i += 1
@@ -92,7 +92,7 @@ class TestUsersCache(Test):
         contributed to"""
         user = UserFactory.create()
         app_contributed = ProjectFactory.create()
-        task = TaskFactory.create(app=app_contributed)
+        task = TaskFactory.create(project=app_contributed)
         TaskRunFactory.create(task=task, user=user)
         another_app = ProjectFactory.create()
 
@@ -107,7 +107,7 @@ class TestUsersCache(Test):
         the required fields"""
         user = UserFactory.create()
         app_contributed = ProjectFactory.create()
-        task = TaskFactory.create(app=app_contributed)
+        task = TaskFactory.create(project=app_contributed)
         TaskRunFactory.create(task=task, user=user)
         fields = ('id', 'name', 'short_name', 'owner_id', 'description',
                  'overall_progress', 'n_tasks', 'n_volunteers', 'info')
@@ -133,7 +133,7 @@ class TestUsersCache(Test):
         are published by the user"""
         user = UserFactory.create()
         published_project = ProjectFactory.create(owner=user)
-        TaskFactory.create(app=published_project)
+        TaskFactory.create(project=published_project)
 
         apps_published = cached_users.published_projects(user.id)
 
@@ -146,10 +146,10 @@ class TestUsersCache(Test):
         or another user's projects"""
         user = UserFactory.create()
         another_user_published_project = ProjectFactory.create()
-        TaskFactory.create(app=another_user_published_project)
+        TaskFactory.create(project=another_user_published_project)
         draft_project = ProjectFactory.create(info={})
         hidden_project = ProjectFactory.create(owner=user, hidden=1)
-        TaskFactory.create(app=hidden_project)
+        TaskFactory.create(project=hidden_project)
 
         apps_published = cached_users.published_projects(user.id)
 
@@ -161,7 +161,7 @@ class TestUsersCache(Test):
         the required fields"""
         user = UserFactory.create()
         published_project = ProjectFactory.create(owner=user)
-        task = TaskFactory.create(app=published_project)
+        task = TaskFactory.create(project=published_project)
         fields = ('id', 'name', 'short_name', 'owner_id', 'description',
                  'overall_progress', 'n_tasks', 'n_volunteers', 'info')
 
@@ -198,7 +198,7 @@ class TestUsersCache(Test):
         (published) or drafts that belong to another user"""
         user = UserFactory.create()
         published_project = ProjectFactory.create(owner=user)
-        TaskFactory.create(app=published_project)
+        TaskFactory.create(project=published_project)
         other_users_draft_project = ProjectFactory.create(info={})
 
         draft_projects = cached_users.draft_projects(user.id)
@@ -246,7 +246,7 @@ class TestUsersCache(Test):
         are no drafts but are hidden"""
         user = UserFactory.create()
         hidden_project = ProjectFactory.create(owner=user, hidden=1)
-        TaskFactory.create(app=hidden_project)
+        TaskFactory.create(project=hidden_project)
 
         hidden_projects = cached_users.hidden_projects(user.id)
 
@@ -259,7 +259,7 @@ class TestUsersCache(Test):
         or another user's hidden projects"""
         user = UserFactory.create()
         another_user_hidden_project = ProjectFactory.create(hidden=1)
-        TaskFactory.create(app=another_user_hidden_project)
+        TaskFactory.create(project=another_user_hidden_project)
         hidden_draft_project = ProjectFactory.create(owner=user, hidden=1, info={})
 
         hidden_projects = cached_users.hidden_projects(user.id)
@@ -272,7 +272,7 @@ class TestUsersCache(Test):
         the required fields"""
         user = UserFactory.create()
         hidden_project = ProjectFactory.create(owner=user, hidden=1)
-        TaskFactory.create(app=hidden_project)
+        TaskFactory.create(project=hidden_project)
         fields = ('id', 'name', 'short_name', 'owner_id', 'description',
                  'overall_progress', 'n_tasks', 'n_volunteers', 'info')
 

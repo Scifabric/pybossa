@@ -42,7 +42,7 @@ class TestProjectPassword(Test):
         """Test when posting to /project/short_name/password and password is correct
         the user is redirected to where they came from"""
         app = ProjectFactory.create()
-        task = TaskFactory.create(app=app)
+        task = TaskFactory.create(project=app)
         app.set_password('mysecret')
         project_repo.update(app)
         redirect_url = '/project/%s/task/%s' % (app.short_name, task.id)
@@ -56,7 +56,7 @@ class TestProjectPassword(Test):
         """Test when posting to /project/short_name/password and password is incorrect
         an error message is flashed"""
         app = ProjectFactory.create()
-        task = TaskFactory.create(app=app)
+        task = TaskFactory.create(project=app)
         app.set_password('mysecret')
         project_repo.update(app)
         url = '/project/%s/password?next=/project/%s/task/%s' % (app.short_name, app.short_name, task.id)
@@ -78,7 +78,7 @@ class TestProjectPassword(Test):
         """Test when an anonymous user wants to contribute to a password
         protected project is redirected to the password view"""
         app = ProjectFactory.create()
-        TaskFactory.create(app=app)
+        TaskFactory.create(project=app)
         app.set_password('mysecret')
         project_repo.update(app)
 
@@ -93,7 +93,7 @@ class TestProjectPassword(Test):
         """Test when an anonymous user wants to contribute to a non-password
         protected project is able to do it"""
         app = ProjectFactory.create()
-        TaskFactory.create(app=app)
+        TaskFactory.create(project=app)
 
         res = self.app.get('/project/%s/newtask' % app.short_name, follow_redirects=True)
         assert 'Enter the password to contribute' not in res.data
@@ -107,7 +107,7 @@ class TestProjectPassword(Test):
         """Test when an authenticated user wants to contribute to a password
         protected project is redirected to the password view"""
         app = ProjectFactory.create()
-        TaskFactory.create(app=app)
+        TaskFactory.create(project=app)
         app.set_password('mysecret')
         project_repo.update(app)
         user = UserFactory.create()
@@ -125,7 +125,7 @@ class TestProjectPassword(Test):
         """Test when an authenticated user wants to contribute to a non-password
         protected project is able to do it"""
         app = ProjectFactory.create()
-        TaskFactory.create(app=app)
+        TaskFactory.create(project=app)
         user = UserFactory.create()
         configure_mock_current_user_from(user, mock_user)
 
@@ -144,7 +144,7 @@ class TestProjectPassword(Test):
         configure_mock_current_user_from(user, mock_user)
         assert mock_user.admin
         app = ProjectFactory.create()
-        TaskFactory.create(app=app)
+        TaskFactory.create(project=app)
         app.set_password('mysecret')
         project_repo.update(app)
 
@@ -164,7 +164,7 @@ class TestProjectPassword(Test):
         assert owner.admin is False
         app = ProjectFactory.create(owner=owner)
         assert app.owner.id == owner.id
-        TaskFactory.create(app=app)
+        TaskFactory.create(project=app)
         app.set_password('mysecret')
         project_repo.update(app)
 
@@ -184,7 +184,7 @@ class TestProjectPassword(Test):
         """Test when an anonymous user wants to visit a password
         protected project is redirected to the password view"""
         app = ProjectFactory.create()
-        TaskFactory.create(app=app)
+        TaskFactory.create(project=app)
         app.set_password('mysecret')
         project_repo.update(app)
 
@@ -199,7 +199,7 @@ class TestProjectPassword(Test):
         """Test when an anonymous user wants to visit a non-password
         protected project is able to do it"""
         app = ProjectFactory.create()
-        TaskFactory.create(app=app)
+        TaskFactory.create(project=app)
 
         for endpoint in self.endpoints_requiring_password:
             res = self.app.get('/project/%s%s' % (app.short_name, endpoint),
@@ -212,7 +212,7 @@ class TestProjectPassword(Test):
         """Test when an authenticated user wants to visit a password
         protected project is redirected to the password view"""
         app = ProjectFactory.create()
-        TaskFactory.create(app=app)
+        TaskFactory.create(project=app)
         app.set_password('mysecret')
         project_repo.update(app)
         user = UserFactory.create()
@@ -229,7 +229,7 @@ class TestProjectPassword(Test):
         """Test when an authenticated user wants to visit a non-password
         protected project is able to do it"""
         app = ProjectFactory.create()
-        TaskFactory.create(app=app)
+        TaskFactory.create(project=app)
         user = UserFactory.create()
         configure_mock_current_user_from(user, mock_user)
 
@@ -247,7 +247,7 @@ class TestProjectPassword(Test):
         configure_mock_current_user_from(user, mock_user)
         assert mock_user.admin
         app = ProjectFactory.create()
-        TaskFactory.create(app=app)
+        TaskFactory.create(project=app)
         app.set_password('mysecret')
         project_repo.update(app)
 
@@ -266,7 +266,7 @@ class TestProjectPassword(Test):
         assert owner.admin is False
         app = ProjectFactory.create(owner=owner)
         assert app.owner.id == owner.id
-        TaskFactory.create(app=app)
+        TaskFactory.create(project=app)
         app.set_password('mysecret')
         project_repo.update(app)
 

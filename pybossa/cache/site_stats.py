@@ -83,13 +83,13 @@ def n_task_runs_site():
 def get_top5_projects_24_hours():
     """Return the top 5 projects more active in the last 24 hours."""
     # Top 5 Most active apps in last 24 hours
-    sql = text('''SELECT app.id, app.name, app.short_name, app.info,
-               COUNT(task_run.app_id) AS n_answers FROM app, task_run
-               WHERE app.id=task_run.app_id
-               AND app.hidden=0
+    sql = text('''SELECT project.id, project.name, project.short_name, project.info,
+               COUNT(task_run.project_id) AS n_answers FROM project, task_run
+               WHERE project.id=task_run.project_id
+               AND project.hidden=0
                AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
                AND DATE(task_run.finish_time) <= NOW()
-               GROUP BY app.id
+               GROUP BY project.id
                ORDER BY n_answers DESC LIMIT 5;''')
 
     results = session.execute(sql, dict(limit=5))
@@ -106,7 +106,7 @@ def get_top5_users_24_hours():
     """Return top 5 users in last 24 hours."""
     # Top 5 Most active users in last 24 hours
     sql = text('''SELECT "user".id, "user".fullname, "user".name,
-               COUNT(task_run.app_id) AS n_answers FROM "user", task_run
+               COUNT(task_run.project_id) AS n_answers FROM "user", task_run
                WHERE "user".id=task_run.user_id
                AND DATE(task_run.finish_time) > NOW() - INTERVAL '24 hour'
                AND DATE(task_run.finish_time) <= NOW()

@@ -51,9 +51,9 @@ class TestActivityFeed(Test):
         blogpost = BlogpostFactory.create()
         update_feed = get_update_feed()
         err_msg = "It should be the blog post"
-        assert update_feed[0]['id'] == blogpost.app_id, err_msg
-        assert update_feed[0]['name'] == blogpost.app.name, err_msg
-        assert update_feed[0]['short_name'] == blogpost.app.short_name, err_msg
+        assert update_feed[0]['id'] == blogpost.project_id, err_msg
+        assert update_feed[0]['name'] == blogpost.project.name, err_msg
+        assert update_feed[0]['short_name'] == blogpost.project.short_name, err_msg
         assert update_feed[0].get('info') is not None, err_msg
         err_msg = "The update action should be Project"
         assert update_feed[0]['action_updated'] == 'Blog', err_msg
@@ -63,9 +63,9 @@ class TestActivityFeed(Test):
         task = TaskFactory.create()
         update_feed = get_update_feed()
         err_msg = "It should be the task"
-        assert update_feed[0]['id'] == task.app_id, err_msg
-        assert update_feed[0]['name'] == task.app.name, err_msg
-        assert update_feed[0]['short_name'] == task.app.short_name, err_msg
+        assert update_feed[0]['id'] == task.project_id, err_msg
+        assert update_feed[0]['name'] == task.project.name, err_msg
+        assert update_feed[0]['short_name'] == task.project.short_name, err_msg
         assert update_feed[0].get('info') is not None, err_msg
         err_msg = "The update action should be Project"
         assert update_feed[0]['action_updated'] == 'Task', err_msg
@@ -78,8 +78,8 @@ class TestActivityFeed(Test):
         assert update_feed[0]['id'] == task_run.user.id, err_msg
         assert update_feed[0]['name'] == task_run.user.name, err_msg
         assert update_feed[0]['fullname'] == task_run.user.fullname, err_msg
-        assert update_feed[0]['app_name'] == task_run.app.name, err_msg
-        assert update_feed[0]['app_short_name'] == task_run.app.short_name, err_msg
+        assert update_feed[0]['app_name'] == task_run.project.name, err_msg
+        assert update_feed[0]['project_short_name'] == task_run.project.short_name, err_msg
         assert update_feed[0].get('info') is not None, err_msg
         err_msg = "The update action should be Project"
         assert update_feed[0]['action_updated'] == 'UserContribution', err_msg
@@ -90,9 +90,9 @@ class TestActivityFeed(Test):
         task_run = TaskRunFactory.create(task=task)
         update_feed = get_update_feed()
         err_msg = "It should be the same task_run"
-        assert update_feed[0]['id'] == task_run.app.id, err_msg
-        assert update_feed[0]['name'] == task_run.app.name, err_msg
-        assert update_feed[0]['short_name'] == task_run.app.short_name, err_msg
+        assert update_feed[0]['id'] == task_run.project.id, err_msg
+        assert update_feed[0]['name'] == task_run.project.name, err_msg
+        assert update_feed[0]['short_name'] == task_run.project.short_name, err_msg
         assert update_feed[0].get('info') is not None, err_msg
         err_msg = "The update action should be Project"
         assert update_feed[0]['action_updated'] == 'TaskCompleted', err_msg

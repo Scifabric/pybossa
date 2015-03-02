@@ -43,5 +43,5 @@ class AuditlogAuth(object):
 
     def _get_project(self, auditlog, project_id):
         if auditlog is not None:
-            return self.project_repo.get(auditlog.app_id)
+            return self.project_repo.get(auditlog.project_id)
         return self.project_repo.get(project_id)

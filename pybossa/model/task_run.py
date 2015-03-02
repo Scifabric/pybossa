@@ -24,7 +24,7 @@ from rq import Queue
 
 from pybossa.core import db, sentinel
 from pybossa.model import DomainObject, JSONType, make_timestamp, update_redis, \
-    update_app_timestamp, webhook
+    update_project_timestamp, webhook
 
 
 webhook_queue = Queue('high', connection=sentinel.master)
@@ -40,7 +40,7 @@ class TaskRun(db.Model, DomainObject):
     #: UTC timestamp for when TaskRun is created.
     created = Column(Text, default=make_timestamp)
     #: Project.id of the project associated with this TaskRun.
-    app_id = Column(Integer, ForeignKey('app.id'), nullable=False)
+    project_id = Column(Integer, ForeignKey('project.id'), nullable=False)
     #: Task.id of the task associated with this TaskRun.
     task_id = Column(Integer, ForeignKey('task.id', ondelete='CASCADE'),
                      nullable=False)
@@ -65,11 +65,11 @@ class TaskRun(db.Model, DomainObject):
 @event.listens_for(TaskRun, 'after_insert')
 def update_task_state(mapper, conn, target):
     """Update the task.state when n_answers condition is met."""
-    # Get app details
-    sql_query = ('select name, short_name, webhook, info from app \
-                 where id=%s') % target.app_id
+    # Get project details
+    sql_query = ('select name, short_name, webhook, info from project \
+                 where id=%s') % target.project_id
     results = conn.execute(sql_query)
-    app_obj = dict(id=target.app_id,
+    app_obj = dict(id=target.project_id,
                    name=None,
                    short_name=None,
                    info=None,
@@ -92,7 +92,7 @@ def update_task_state(mapper, conn, target):
                        fullname=r.fullname,
                        info=r.info,
                        app_name=app_obj['name'],
-                       app_short_name=app_obj['short_name'],
+                       project_short_name=app_obj['short_name'],
                        action_updated='UserContribution')
         # Add the event
         update_redis(obj)
@@ -111,8 +111,8 @@ def update_task_state(mapper, conn, target):
         # PUSH changes via the webhook
         if app_obj['webhook']:
             payload = dict(event="task_completed",
-                           app_short_name=app_obj['short_name'],
-                           app_id=target.app_id,
+                           project_short_name=app_obj['short_name'],
+                           project_id=target.project_id,
                            task_id=target.task_id,
                            fired_at=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
             webhook_queue.enqueue(webhook, app_obj['webhook'], payload)
@@ -122,5 +122,5 @@ def update_task_state(mapper, conn, target):
 @event.listens_for(TaskRun, 'after_insert')
 @event.listens_for(TaskRun, 'after_update')
 def update_app(mapper, conn, target):
-    """Update app updated timestamp."""
-    update_app_timestamp(mapper, conn, target)
+    """Update project updated timestamp."""
+    update_project_timestamp(mapper, conn, target)

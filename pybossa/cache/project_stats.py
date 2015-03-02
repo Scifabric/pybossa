@@ -52,7 +52,7 @@ def stats_users(project_id):
                COUNT(task_run.id) as n_tasks FROM task_run
                WHERE task_run.user_id IS NOT NULL AND
                task_run.user_ip IS NULL AND
-               task_run.app_id=:project_id
+               task_run.project_id=:project_id
                GROUP BY task_run.user_id ORDER BY n_tasks DESC
                LIMIT 5;''')
     results = session.execute(sql, dict(project_id=project_id))
@@ -63,7 +63,7 @@ def stats_users(project_id):
     sql = text('''SELECT count(distinct(task_run.user_id)) AS user_id
                FROM task_run WHERE task_run.user_id IS NOT NULL AND
                task_run.user_ip IS NULL AND
-               task_run.app_id=:project_id;''')
+               task_run.project_id=:project_id;''')
 
     results = session.execute(sql, dict(project_id=project_id))
     for row in results:
@@ -74,7 +74,7 @@ def stats_users(project_id):
                COUNT(task_run.id) as n_tasks FROM task_run
                WHERE task_run.user_ip IS NOT NULL AND
                task_run.user_id IS NULL AND
-               task_run.app_id=:project_id
+               task_run.project_id=:project_id
                GROUP BY task_run.user_ip ORDER BY n_tasks DESC;''')\
         .execution_options(stream=True)
     results = session.execute(sql, dict(project_id=project_id))
@@ -85,7 +85,7 @@ def stats_users(project_id):
     sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip)) AS user_ip
                FROM task_run WHERE task_run.user_ip IS NOT NULL AND
                task_run.user_id IS NULL AND
-               task_run.app_id=:project_id;''')
+               task_run.project_id=:project_id;''')
 
     results = session.execute(sql, dict(project_id=project_id))
 
@@ -111,7 +111,7 @@ def stats_dates(project_id):
              TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
              AS day, task.id, task.n_answers AS n_answers,
              COUNT(task_run.id) AS day_answers
-             FROM task_run, task WHERE task_run.app_id=:project_id
+             FROM task_run, task WHERE task_run.project_id=:project_id
              AND task.id=task_run.task_id AND
              TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') >= NOW()
                - '2 week':: INTERVAL GROUP BY day, task.id)
@@ -145,7 +145,7 @@ def stats_dates(project_id):
                 WITH myquery AS (
                     SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
                     as d, COUNT(id)
-                    FROM task_run WHERE app_id=:project_id
+                    FROM task_run WHERE project_id=:project_id
                     AND user_ip IS NULL GROUP BY d)
                 SELECT to_char(d, 'YYYY-MM-DD') as d, count from myquery;
                ''').execution_options(stream=True)
@@ -159,7 +159,7 @@ def stats_dates(project_id):
                 WITH myquery AS (
                     SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
                     as d, COUNT(id)
-                    FROM task_run WHERE app_id=:project_id
+                    FROM task_run WHERE project_id=:project_id
                     AND user_id IS NULL GROUP BY d)
                SELECT to_char(d, 'YYYY-MM-DD') as d, count  from myquery;
                ''').execution_options(stream=True)
@@ -195,7 +195,7 @@ def stats_hours(project_id):
                         TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
                     ),
                     'HH24') AS h, COUNT(id)
-                    FROM task_run WHERE app_id=:project_id GROUP BY h)
+                    FROM task_run WHERE project_id=:project_id GROUP BY h)
                SELECT h, count from myquery;
                ''').execution_options(stream=True)
 
@@ -212,7 +212,7 @@ def stats_hours(project_id):
                         TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
                     ),
                     'HH24') AS h, COUNT(id)
-                    FROM task_run WHERE app_id=:project_id GROUP BY h)
+                    FROM task_run WHERE project_id=:project_id GROUP BY h)
                SELECT max(count) from myquery;
                ''').execution_options(stream=True)
 
@@ -228,7 +228,7 @@ def stats_hours(project_id):
                         TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
                     ),
                     'HH24') AS h, COUNT(id)
-                    FROM task_run WHERE app_id=:project_id
+                    FROM task_run WHERE project_id=:project_id
                     AND user_id IS NULL GROUP BY h)
                SELECT h, count from myquery;
                ''').execution_options(stream=True)
@@ -246,7 +246,7 @@ def stats_hours(project_id):
                         TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
                     ),
                     'HH24') AS h, COUNT(id)
-                    FROM task_run WHERE app_id=:project_id
+                    FROM task_run WHERE project_id=:project_id
                     AND user_id IS NULL GROUP BY h)
                SELECT max(count) from myquery;
                ''').execution_options(stream=True)
@@ -263,7 +263,7 @@ def stats_hours(project_id):
                         TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
                     ),
                     'HH24') AS h, COUNT(id)
-                    FROM task_run WHERE app_id=:project_id
+                    FROM task_run WHERE project_id=:project_id
                     AND user_ip IS NULL GROUP BY h)
                SELECT h, count from myquery;
                ''').execution_options(stream=True)
@@ -281,7 +281,7 @@ def stats_hours(project_id):
                         TO_TIMESTAMP(finish_time, 'YYYY-MM-DD"T"HH24:MI:SS.US')
                     ),
                     'HH24') AS h, COUNT(id)
-                    FROM task_run WHERE app_id=:project_id
+                    FROM task_run WHERE project_id=:project_id
                     AND user_ip IS NULL GROUP BY h)
                SELECT max(count) from myquery;
                ''').execution_options(stream=True)

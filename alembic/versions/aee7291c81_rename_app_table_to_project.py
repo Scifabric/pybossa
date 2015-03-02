@@ -28,6 +28,8 @@ def upgrade():
     op.execute(query)
     query = 'ALTER TABLE task_run RENAME app_id TO project_id;'
     op.execute(query)
+    query = 'ALTER TABLE auditlog RENAME app_short_name TO project_short_name;'
+    op.execute(query)
     # Rename primary and unique keys
     query = 'ALTER TABLE app_pkey RENAME TO project_pkey;'
     op.execute(query)
@@ -62,6 +64,8 @@ def downgrade():
     query = 'ALTER TABLE task RENAME project_id TO app_id;'
     op.execute(query)
     query = 'ALTER TABLE task_run RENAME project_id TO app_id;'
+    op.execute(query)
+    query = 'ALTER TABLE auditlog RENAME project_short_name TO app_short_name;'
     op.execute(query)
     # Rename primary and unique keys
     query = 'ALTER TABLE project_pkey RENAME TO app_pkey;'

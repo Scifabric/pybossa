@@ -51,7 +51,7 @@ class TestSched(sched.Helper):
         assert not data.get('info').get('last_answer')
 
         # Submit an Answer for the assigned task
-        tr = dict(app_id=data['app_id'], task_id=data['id'], info={'answer': 'No'})
+        tr = dict(project_id=data['project_id'], task_id=data['id'], info={'answer': 'No'})
         tr = json.dumps(tr)
 
         self.app.post('/api/taskrun', data=tr)
@@ -70,7 +70,7 @@ class TestSched(sched.Helper):
         assert data.get('info').get('last_answer').get('answer') == 'No'
 
         # Submit a second Answer as Anonimous
-        tr = dict(app_id=data['app_id'], task_id=data['id'],
+        tr = dict(project_id=data['project_id'], task_id=data['id'],
                   info={'answer': 'No No'})
         tr = json.dumps(tr)
 

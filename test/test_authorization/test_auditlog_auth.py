@@ -60,7 +60,7 @@ class TestAuditlogAuthorization(Test):
 
         owner = UserFactory.create_batch(2)[1]
         project = ProjectFactory.create(owner=owner)
-        log = AuditlogFactory.create(app_id=project.id)
+        log = AuditlogFactory.create(project_id=project.id)
 
         assert self.mock_authenticated.id == project.owner_id
 
@@ -83,7 +83,7 @@ class TestAuditlogAuthorization(Test):
 
         owner = UserFactory.create_batch(2, pro=True)[1]
         project = ProjectFactory.create(owner=owner)
-        log = AuditlogFactory.create(app_id=project.id)
+        log = AuditlogFactory.create(project_id=project.id)
 
         assert self.mock_pro.id == project.owner_id
         assert_not_raises(Exception, ensure_authorized_to, 'read', log)
@@ -106,7 +106,7 @@ class TestAuditlogAuthorization(Test):
 
         users = UserFactory.create_batch(2, pro=True)
         project = ProjectFactory.create(owner=users[0])
-        log = AuditlogFactory.create(app_id=project.id)
+        log = AuditlogFactory.create(project_id=project.id)
 
         assert self.mock_pro.id != project.owner_id
         assert_raises(Forbidden, ensure_authorized_to, 'read', log)
@@ -129,7 +129,7 @@ class TestAuditlogAuthorization(Test):
 
         owner = UserFactory.create_batch(2)[1]
         project = ProjectFactory.create(owner=owner)
-        log = AuditlogFactory.create(app_id=project.id)
+        log = AuditlogFactory.create(project_id=project.id)
 
         assert self.mock_admin.id != project.owner_id
         assert_not_raises(Exception, ensure_authorized_to, 'read', log)

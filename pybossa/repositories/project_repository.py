@@ -18,7 +18,7 @@
 
 from sqlalchemy.exc import IntegrityError
 
-from pybossa.model.project import App
+from pybossa.model.project import Project
 from pybossa.model.category import Category
 from pybossa.exc import WrongObjectError, DBIntegrityError
 
@@ -30,22 +30,22 @@ class ProjectRepository(object):
         self.db = db
 
 
-    # Methods for App/Project objects
+    # Methods for Project objects
     def get(self, id):
-        return self.db.session.query(App).get(id)
+        return self.db.session.query(Project).get(id)
 
     def get_by_shortname(self, short_name):
-        return self.db.session.query(App).filter_by(short_name=short_name).first()
+        return self.db.session.query(Project).filter_by(short_name=short_name).first()
 
     def get_by(self, **attributes):
-        return self.db.session.query(App).filter_by(**attributes).first()
+        return self.db.session.query(Project).filter_by(**attributes).first()
 
     def get_all(self):
-        return self.db.session.query(App).all()
+        return self.db.session.query(Project).all()
 
     def filter_by(self, limit=None, offset=0, **filters):
-        query = self.db.session.query(App).filter_by(**filters)
-        query = query.order_by(App.id).limit(limit).offset(offset)
+        query = self.db.session.query(Project).filter_by(**filters)
+        query = query.order_by(Project.id).limit(limit).offset(offset)
         return query.all()
 
     def save(self, project):
@@ -68,7 +68,7 @@ class ProjectRepository(object):
 
     def delete(self, project):
         self._validate_can_be('deleted', project)
-        app = self.db.session.query(App).filter(App.id==project.id).first()
+        app = self.db.session.query(Project).filter(Project.id==project.id).first()
         self.db.session.delete(app)
         self.db.session.commit()
 
@@ -114,7 +114,7 @@ class ProjectRepository(object):
         self.db.session.commit()
 
 
-    def _validate_can_be(self, action, element, klass=App):
+    def _validate_can_be(self, action, element, klass=Project):
         if not isinstance(element, klass):
             name = element.__class__.__name__
             msg = '%s cannot be %s by %s' % (name, action, self.__class__.__name__)

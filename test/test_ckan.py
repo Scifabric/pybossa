@@ -23,7 +23,7 @@ from bs4 import BeautifulSoup
 
 from default import Test, db, with_context
 from pybossa.model.user import User
-from pybossa.model.project import App
+from pybossa.model.project import Project
 from helper import web as web_helper
 from pybossa.ckan import Ckan
 
@@ -199,7 +199,7 @@ class TestCkanModule(Test, object):
                         {u'type': u'timestamp', u'id': u'created'},
                         {u'type': u'timestamp', u'id': u'finish_time'},
                         {u'type': u'int', u'id': u'calibration'},
-                        {u'type': u'int', u'id': u'app_id'},
+                        {u'type': u'int', u'id': u'project_id'},
                         {u'type': u'text', u'id': u'user_ip'},
                         {u'type': u'int', u'id': u'TaskRun_task'},
                         {u'type': u'int', u'id': u'TaskRun_user'},
@@ -219,7 +219,7 @@ class TestCkanModule(Test, object):
                             "quorum": 0,
                             "created": "2012-07-29T17:12:10.519270",
                             "calibration": 0,
-                            "app_id": 120,
+                            "project_id": 120,
                             "state": "0",
                             "id": 6345,
                             "priority_0": 0.0}],
@@ -311,7 +311,7 @@ class TestCkanModule(Test, object):
         Mock.return_value = html_request
         with self.flask_app.test_request_context('/'):
             # Resource that exists
-            app = App(short_name='urbanpark', name='Urban Parks')
+            app = Project(short_name='urbanpark', name='Urban Parks')
             user = User(fullname='Daniel Lombrana Gonzalez')
             out = self.ckan.package_create(app=app, user=user, url="http://something.com")
             err_msg = "The package ID should be the same"
@@ -340,7 +340,7 @@ class TestCkanModule(Test, object):
         Mock.return_value = pkg_request
         with self.flask_app.test_request_context('/'):
             # Resource that exists
-            app = App(short_name='urbanpark', name='Urban Parks')
+            app = Project(short_name='urbanpark', name='Urban Parks')
             user = User(fullname='Daniel Lombrana Gonzalez')
             self.ckan.package_create(app=app, user=user, url="http://something.com")
             Mock.return_value = rsrc_request
@@ -486,7 +486,7 @@ class TestCkanModule(Test, object):
         Mock.return_value = html_request
         with self.flask_app.test_request_context('/'):
             # Resource that exists
-            app = App(short_name='urbanpark', name='Urban Parks')
+            app = Project(short_name='urbanpark', name='Urban Parks')
             user = User(fullname='Daniel Lombrana Gonzalez')
             out = self.ckan.package_update(app=app, user=user,
                                            url="http://something.com",

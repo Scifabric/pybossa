@@ -31,11 +31,11 @@ def api():
     categories = cached_cat.get_used()
     apps = cached_projects.get(categories[0]['short_name'])
     if len(apps) > 0:
-        app_id = choice(apps)['id']
+        project_id = choice(apps)['id']
     else:  # pragma: no cover
-        app_id = None
+        project_id = None
     return render_template('help/api.html', title="Help: API",
-                           app_id=app_id)
+                           project_id=project_id)
 
 
 @blueprint.route('/license')
