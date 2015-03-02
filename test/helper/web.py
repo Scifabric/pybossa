@@ -19,7 +19,7 @@
 from mock import patch
 
 from default import Test, db, Fixtures, with_context
-from pybossa.model.app import App
+from pybossa.model.project import App
 from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun

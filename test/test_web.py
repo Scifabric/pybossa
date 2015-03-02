@@ -34,7 +34,7 @@ from pybossa.ckan import Ckan
 from bs4 import BeautifulSoup
 from requests.exceptions import ConnectionError
 from werkzeug.exceptions import NotFound
-from pybossa.model.app import App
+from pybossa.model.project import App
 from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun

@@ -19,7 +19,7 @@
 from default import Test, db, with_context, assert_not_raises
 from nose.tools import raises, assert_raises
 from sqlalchemy.exc import IntegrityError, DataError
-from pybossa.model.app import App
+from pybossa.model.project import App
 from pybossa.model.user import User
 from pybossa.model.category import Category
 from pybossa.model.blogpost import Blogpost

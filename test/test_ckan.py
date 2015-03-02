@@ -23,7 +23,7 @@ from bs4 import BeautifulSoup
 
 from default import Test, db, with_context
 from pybossa.model.user import User
-from pybossa.model.app import App
+from pybossa.model.project import App
 from helper import web as web_helper
 from pybossa.ckan import Ckan
 

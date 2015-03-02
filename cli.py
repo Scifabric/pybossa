@@ -6,7 +6,7 @@ import inspect
 
 #import pybossa.model as model
 from pybossa.core import db, create_app
-from pybossa.model.app import App
+from pybossa.model.project import App
 from pybossa.model.user import User
 from pybossa.model.category import Category
 

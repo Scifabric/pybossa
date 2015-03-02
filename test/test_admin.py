@@ -23,7 +23,7 @@ from mock import patch
 from collections import namedtuple
 from bs4 import BeautifulSoup
 from pybossa.model.user import User
-from pybossa.model.app import App
+from pybossa.model.project import App
 from pybossa.model.task import Task
 from pybossa.model.category import Category
 

@@ -24,7 +24,7 @@ from mock import patch
 from helper import sched
 from default import Test, db, with_context
 from pybossa.model.task import Task
-from pybossa.model.app import App
+from pybossa.model.project import App
 from pybossa.model.user import User
 from pybossa.model.task_run import TaskRun
 from pybossa.model.category import Category

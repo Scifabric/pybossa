@@ -23,7 +23,7 @@ from werkzeug.exceptions import Forbidden, Unauthorized
 from mock import patch
 from test_authorization import mock_current_user
 from factories import ProjectFactory, UserFactory
-from pybossa.model.app import App
+from pybossa.model.project import App
 
 
 class TestProjectAuthorization(Test):

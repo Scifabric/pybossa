@@ -18,7 +18,7 @@
 
 from pybossa.core import db
 from pybossa.core import create_app, sentinel
-from pybossa.model.app import App
+from pybossa.model.project import App
 from pybossa.model.category import Category
 from pybossa.model.task import Task
 from pybossa.model.task_run import TaskRun

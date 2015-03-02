@@ -39,7 +39,7 @@ documentation of main model attributes.
 App
 ---
 
-.. autoclass:: pybossa.model.app.App
+.. autoclass:: pybossa.model.project.App
    :members:
 
 Category
