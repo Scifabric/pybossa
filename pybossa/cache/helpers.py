@@ -15,6 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+"""Cache module with helper functions."""
 
 from sqlalchemy.sql import text
 from pybossa.core import db
@@ -76,7 +77,8 @@ def add_custom_contrib_button_to(project, user_id_or_ip):
     """Add a customized contrib button for a project."""
     if type(project) != dict:
         project = project.dictize()
-    project['contrib_button'] = check_contributing_state(project, **user_id_or_ip)
+    project['contrib_button'] = check_contributing_state(project,
+                                                         **user_id_or_ip)
     return project
 
 
@@ -90,10 +92,11 @@ def _has_no_presenter(project):
         except AttributeError:
             return True
 
+
 def _has_no_tasks(project_id):
     """Return if a project has no tasks."""
     query = text('''SELECT COUNT(id) AS n_tasks FROM task
-               WHERE app_id=:app_id;''')
+               WHERE app_id=:project_id;''')
     result = session.execute(query, dict(project_id=project_id))
     for row in result:
         n_tasks = row.n_tasks
