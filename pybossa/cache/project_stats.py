@@ -376,14 +376,16 @@ def stats_format_hours(app_id, hours, hours_anon, hours_auth,
 
 
 @memoize(timeout=ONE_DAY)
-def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
-    """Format User Stats into JSON"""
+def stats_format_users(project_id, users, anon_users, auth_users, geo=False):
+    """Format User Stats into JSON."""
     userStats = dict(label="User Statistics", values=[])
     userAnonStats = dict(label="Anonymous Users", values=[], top5=[], locs=[])
     userAuthStats = dict(label="Authenticated Users", values=[], top5=[])
 
-    userStats['values'].append(dict(label="Anonymous", value=[0, users['n_anon']]))
-    userStats['values'].append(dict(label="Authenticated", value=[0, users['n_auth']]))
+    userStats['values'].append(dict(label="Anonymous",
+                                    value=[0, users['n_anon']]))
+    userStats['values'].append(dict(label="Authenticated",
+                                    value=[0, users['n_auth']]))
 
     for u in anon_users:
         userAnonStats['values'].append(dict(label=u[0], value=[u[1]]))
@@ -397,14 +399,14 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
     loc_anon = []
     # Check if the GeoLiteCity.dat exists
     geolite = current_app.root_path + '/../dat/GeoLiteCity.dat'
-    if geo: # pragma: no cover
+    if geo:  # pragma: no cover
         gic = pygeoip.GeoIP(geolite)
     for u in anon_users:
-        if geo: # pragma: no cover
+        if geo:  # pragma: no cover
             loc = gic.record_by_addr(u[0])
         else:
             loc = {}
-        if loc is None: # pragma: no cover
+        if loc is None:  # pragma: no cover
             loc = {}
         if (len(loc.keys()) == 0):
             loc['latitude'] = 0
@@ -412,11 +414,11 @@ def stats_format_users(app_id, users, anon_users, auth_users, geo=False):
         top5_anon.append(dict(ip=u[0], loc=loc, tasks=u[1]))
 
     for u in anon_users:
-        if geo: # pragma: no cover
+        if geo:  # pragma: no cover
             loc = gic.record_by_addr(u[0])
         else:
             loc = {}
-        if loc is None: # pragma: no cover
+        if loc is None:  # pragma: no cover
             loc = {}
         if (len(loc.keys()) == 0):
             loc['latitude'] = 0
