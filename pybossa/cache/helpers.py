@@ -27,25 +27,27 @@ session = db.slave_session
 
 
 @memoize(timeout=ONE_HOUR * 3)
-def n_available_tasks(app_id, user_id=None, user_ip=None):
-    """Returns the number of tasks for a given app a user can contribute to,
-    based on the completion of the app tasks, and previous task_runs submitted
+def n_available_tasks(project_id, user_id=None, user_ip=None):
+    """Returns the number of tasks for a given project a user can contribute to,
+    based on the completion of the project tasks, and previous task_runs submitted
     by the user"""
     if user_id and not user_ip:
         query = text('''SELECT COUNT(id) AS n_tasks FROM task WHERE NOT EXISTS
                        (SELECT task_id FROM task_run WHERE
                        app_id=:app_id AND user_id=:user_id AND task_id=task.id)
-                       AND app_id=:app_id AND state !='completed';''')
-        result = session.execute(query, dict(app_id=app_id, user_id=user_id))
+                       AND app_id=:project_id AND state !='completed';''')
+        result = session.execute(query, dict(project_id=project_id,
+                                             user_id=user_id))
     else:
         if not user_ip:
             user_ip = '127.0.0.1'
         query = text('''SELECT COUNT(id) AS n_tasks FROM task WHERE NOT EXISTS
                        (SELECT task_id FROM task_run WHERE
                        app_id=:app_id AND user_ip=:user_ip AND task_id=task.id)
-                       AND app_id=:app_id AND state !='completed';''')
+                       AND app_id=:project_id AND state !='completed';''')
 
-        result = session.execute(query, dict(app_id=app_id, user_ip=user_ip))
+        result = session.execute(query, dict(project_id=project_id,
+                                             user_ip=user_ip))
     n_tasks = 0
     for row in result:
         n_tasks = row.n_tasks
