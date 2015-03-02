@@ -22,26 +22,26 @@ class AuditlogAuth(object):
     def __init__(self, project_repo):
         self.project_repo = project_repo
 
-    def can(self, user, action, auditlog=None, app_id=None):
+    def can(self, user, action, auditlog=None, project_id=None):
         action = ''.join(['_', action])
-        return getattr(self, action)(user, auditlog, app_id)
+        return getattr(self, action)(user, auditlog, project_id)
 
-    def _create(self, user, auditlog, app_id=None):
+    def _create(self, user, auditlog, project_id=None):
         return False
 
-    def _read(self, user, auditlog=None, app_id=None):
-        if user.is_anonymous() or (auditlog is None and app_id is None):
+    def _read(self, user, auditlog=None, project_id=None):
+        if user.is_anonymous() or (auditlog is None and project_id is None):
             return False
-        app = self._get_app(auditlog, app_id)
-        return user.admin or (user.id == app.owner_id and user.pro)
+        project = self._get_project(auditlog, project_id)
+        return user.admin or (user.id == project.owner_id and user.pro)
 
-    def _update(self, user, auditlog, app_id=None):
+    def _update(self, user, auditlog, project_id=None):
         return False
 
-    def _delete(self, user, auditlog, app_id=None):
+    def _delete(self, user, auditlog, project_id=None):
         return False
 
-    def _get_app(self, auditlog, app_id):
+    def _get_project(self, auditlog, project_id):
         if auditlog is not None:
             return self.project_repo.get(auditlog.app_id)
-        return self.project_repo.get(app_id)
+        return self.project_repo.get(project_id)

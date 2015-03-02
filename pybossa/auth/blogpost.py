@@ -22,37 +22,37 @@ class BlogpostAuth(object):
     def __init__(self, project_repo):
         self.project_repo = project_repo
 
-    def can(self, user, action, blogpost=None, app_id=None):
+    def can(self, user, action, blogpost=None, project_id=None):
         action = ''.join(['_', action])
-        return getattr(self, action)(user, blogpost, app_id)
+        return getattr(self, action)(user, blogpost, project_id)
 
-    def _create(self, user, blogpost=None, app_id=None):
-        if user.is_anonymous() or (blogpost is None and app_id is None):
+    def _create(self, user, blogpost=None, project_id=None):
+        if user.is_anonymous() or (blogpost is None and project_id is None):
             return False
-        app = self._get_app(blogpost, app_id)
+        project = self._get_project(blogpost, project_id)
         if blogpost is None:
-            return app.owner_id == user.id
-        return blogpost.user_id == app.owner_id == user.id
+            return project.owner_id == user.id
+        return blogpost.user_id == project.owner_id == user.id
 
-    def _read(self, user, blogpost=None, app_id=None):
-        app = self._get_app(blogpost, app_id)
-        if app and not app.hidden:
+    def _read(self, user, blogpost=None, project_id=None):
+        project = self._get_project(blogpost, project_id)
+        if project and not project.hidden:
             return True
-        if user.is_anonymous() or (blogpost is None and app_id is None):
+        if user.is_anonymous() or (blogpost is None and project_id is None):
             return False
-        return user.admin or user.id == app.owner_id
+        return user.admin or user.id == project.owner_id
 
-    def _update(self, user, blogpost, app_id=None):
+    def _update(self, user, blogpost, project_id=None):
         if user.is_anonymous():
             return False
         return blogpost.user_id == user.id
 
-    def _delete(self, user, blogpost, app_id=None):
+    def _delete(self, user, blogpost, project_id=None):
         if user.is_anonymous():
             return False
         return user.admin or blogpost.user_id == user.id
 
-    def _get_app(self, blogpost, app_id):
+    def _get_project(self, blogpost, project_id):
         if blogpost is not None:
             return self.project_repo.get(blogpost.app_id)
-        return self.project_repo.get(app_id)
+        return self.project_repo.get(project_id)

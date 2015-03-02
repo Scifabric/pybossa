@@ -49,9 +49,9 @@ class TestAuditlogAuthorization(Test):
     def test_anonymous_user_cannot_read_project_auditlogs(self):
         """Test anonymous users cannot read auditlogs of a specific project"""
 
-        app = AppFactory.create()
+        project = AppFactory.create()
 
-        assert_raises(Unauthorized, ensure_authorized_to, 'read', Auditlog, app_id=app.id)
+        assert_raises(Unauthorized, ensure_authorized_to, 'read', Auditlog, project_id=project.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_authenticated)
@@ -59,10 +59,10 @@ class TestAuditlogAuthorization(Test):
         """Test owner users cannot read an auditlog"""
 
         owner = UserFactory.create_batch(2)[1]
-        app = AppFactory.create(owner=owner)
-        log = AuditlogFactory.create(app_id=app.id)
+        project = AppFactory.create(owner=owner)
+        log = AuditlogFactory.create(app_id=project.id)
 
-        assert self.mock_authenticated.id == app.owner_id
+        assert self.mock_authenticated.id == project.owner_id
 
         assert_raises(Forbidden, ensure_authorized_to, 'read', log)
 
@@ -72,9 +72,9 @@ class TestAuditlogAuthorization(Test):
         """Test owner users cannot read auditlogs of a specific project"""
 
         owner = UserFactory.create_batch(2)[1]
-        app = AppFactory.create(owner=owner)
+        project = AppFactory.create(owner=owner)
 
-        assert_raises(Forbidden, ensure_authorized_to, 'read', Auditlog, app_id=app.id)
+        assert_raises(Forbidden, ensure_authorized_to, 'read', Auditlog, project_id=project.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_pro)
@@ -82,10 +82,10 @@ class TestAuditlogAuthorization(Test):
         """Test pro users can read an auditlog from an owned project"""
 
         owner = UserFactory.create_batch(2, pro=True)[1]
-        app = AppFactory.create(owner=owner)
-        log = AuditlogFactory.create(app_id=app.id)
+        project = AppFactory.create(owner=owner)
+        log = AuditlogFactory.create(app_id=project.id)
 
-        assert self.mock_pro.id == app.owner_id
+        assert self.mock_pro.id == project.owner_id
         assert_not_raises(Exception, ensure_authorized_to, 'read', log)
 
 
@@ -94,10 +94,10 @@ class TestAuditlogAuthorization(Test):
         """Test pro users cannot read auditlogs from an owned project"""
 
         owner = UserFactory.create_batch(2, pro=True)[1]
-        app = AppFactory.create(owner=owner)
+        project = AppFactory.create(owner=owner)
 
-        assert self.mock_pro.id == app.owner_id
-        assert_not_raises(Exception, ensure_authorized_to, 'read', Auditlog, app_id=app.id)
+        assert self.mock_pro.id == project.owner_id
+        assert_not_raises(Exception, ensure_authorized_to, 'read', Auditlog, project_id=project.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_pro)
@@ -105,10 +105,10 @@ class TestAuditlogAuthorization(Test):
         """Test pro users cannot read an auditlog from a non-owned project"""
 
         users = UserFactory.create_batch(2, pro=True)
-        app = AppFactory.create(owner=users[0])
-        log = AuditlogFactory.create(app_id=app.id)
+        project = AppFactory.create(owner=users[0])
+        log = AuditlogFactory.create(app_id=project.id)
 
-        assert self.mock_pro.id != app.owner_id
+        assert self.mock_pro.id != project.owner_id
         assert_raises(Forbidden, ensure_authorized_to, 'read', log)
 
 
@@ -117,10 +117,10 @@ class TestAuditlogAuthorization(Test):
         """Test pro users cannot read auditlogs from a non-owned project"""
 
         users = UserFactory.create_batch(2, pro=True)
-        app = AppFactory.create(owner=users[0])
+        project = AppFactory.create(owner=users[0])
 
-        assert self.mock_pro.id != app.owner_id
-        assert_raises(Forbidden, ensure_authorized_to, 'read', Auditlog, app_id=app.id)
+        assert self.mock_pro.id != project.owner_id
+        assert_raises(Forbidden, ensure_authorized_to, 'read', Auditlog, project_id=project.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_admin)
@@ -128,10 +128,10 @@ class TestAuditlogAuthorization(Test):
         """Test admin users can read an auditlog"""
 
         owner = UserFactory.create_batch(2)[1]
-        app = AppFactory.create(owner=owner)
-        log = AuditlogFactory.create(app_id=app.id)
+        project = AppFactory.create(owner=owner)
+        log = AuditlogFactory.create(app_id=project.id)
 
-        assert self.mock_admin.id != app.owner_id
+        assert self.mock_admin.id != project.owner_id
         assert_not_raises(Exception, ensure_authorized_to, 'read', log)
 
 
@@ -140,10 +140,10 @@ class TestAuditlogAuthorization(Test):
         """Test admin users can read auditlogs from a project"""
 
         owner = UserFactory.create_batch(2)[1]
-        app = AppFactory.create(owner=owner)
+        project = AppFactory.create(owner=owner)
 
-        assert self.mock_admin.id != app.owner_id
-        assert_not_raises(Exception, ensure_authorized_to, 'read', Auditlog, app_id=app.id)
+        assert self.mock_admin.id != project.owner_id
+        assert_not_raises(Exception, ensure_authorized_to, 'read', Auditlog, project_id=project.id)
 
 
     @patch('pybossa.auth.current_user', new=mock_anonymous)

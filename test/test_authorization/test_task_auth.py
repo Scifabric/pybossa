@@ -39,8 +39,8 @@ class TestTaskAuthorization(Test):
     def test_anonymous_user_cannot_crud(self):
         """Test anonymous users cannot crud tasks"""
         user = UserFactory.create()
-        app = AppFactory.create(owner=user)
-        task = TaskFactory.create(app=app)
+        project = AppFactory.create(owner=user)
+        task = TaskFactory.create(app=project)
 
         assert_raises(Unauthorized, ensure_authorized_to, 'create', task)
         assert_not_raises(Forbidden, ensure_authorized_to, 'read', task)
@@ -54,8 +54,8 @@ class TestTaskAuthorization(Test):
         """Test project owner can crud tasks"""
         user = UserFactory.create()
         owner = UserFactory.create()
-        app = AppFactory.create(owner=owner)
-        task = TaskFactory.create(app=app)
+        project = AppFactory.create(owner=owner)
+        task = TaskFactory.create(app=project)
 
         assert self.mock_authenticated.id == owner.id
         assert_not_raises(Forbidden, ensure_authorized_to, 'create', task)
@@ -70,8 +70,8 @@ class TestTaskAuthorization(Test):
         """Test non owner user cannot crud tasks"""
         owner = UserFactory.create()
         non_owner = UserFactory.create()
-        app = AppFactory.create(owner=owner)
-        task = TaskFactory.create(app=app)
+        project = AppFactory.create(owner=owner)
+        task = TaskFactory.create(app=project)
 
         assert self.mock_authenticated.id != owner.id
         assert_raises(Forbidden, ensure_authorized_to, 'create', task)
@@ -86,8 +86,8 @@ class TestTaskAuthorization(Test):
         """Test admin user can crud tasks"""
         admin = UserFactory.create()
         owner = UserFactory.create()
-        app = AppFactory.create(owner=owner)
-        task = TaskFactory.create(app=app)
+        project = AppFactory.create(owner=owner)
+        task = TaskFactory.create(app=project)
 
         assert self.mock_admin.id != owner.id
         assert_not_raises(Forbidden, ensure_authorized_to, 'create', task)

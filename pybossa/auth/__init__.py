@@ -21,7 +21,7 @@ from flask import abort
 from flask.ext.login import current_user
 from pybossa.core import task_repo, project_repo
 
-import app
+import project
 import task
 import taskrun
 import category
@@ -30,7 +30,7 @@ import token
 import blogpost
 import auditlog
 
-assert app
+assert project
 assert task
 assert taskrun
 assert category
@@ -41,7 +41,7 @@ assert auditlog
 
 
 _actions = ['create', 'read', 'update', 'delete']
-_auth_classes = {'app': app.AppAuth,
+_auth_classes = {'app': project.ProjectAuth,
                  'auditlog': auditlog.AuditlogAuth,
                  'blogpost': blogpost.BlogpostAuth,
                  'category': category.CategoryAuth,
