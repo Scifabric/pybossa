@@ -55,17 +55,19 @@ def n_available_tasks(project_id, user_id=None, user_ip=None):
     return n_tasks
 
 
-def check_contributing_state(app, user_id=None, user_ip=None):
-    """Returns the state of a given app for a given user, depending on whether
-    the app is completed or not and the user can contribute more to it or not"""
+def check_contributing_state(project, user_id=None, user_ip=None):
+    """Return the state of a given project for a given user.
 
-    app_id = app['id'] if type(app) == dict else app.id
+    Depending on whether the project is completed or not and the user can
+    contribute more to it or not.
+    """
+    project_id = project['id'] if type(project) == dict else project.id
     states = ('completed', 'draft', 'can_contribute', 'cannot_contribute')
-    if overall_progress(app_id) >= 100:
+    if overall_progress(project_id) >= 100:
         return states[0]
-    if _has_no_presenter(app) or _has_no_tasks(app_id):
+    if _has_no_presenter(project) or _has_no_tasks(project_id):
         return states[1]
-    if n_available_tasks(app_id, user_id=user_id, user_ip=user_ip) > 0:
+    if n_available_tasks(project_id, user_id=user_id, user_ip=user_ip) > 0:
         return states[2]
     return states[3]
 
