@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-
+"""Cache module for projects."""
 from sqlalchemy.sql import text
 from pybossa.core import db, timeouts
 from pybossa.model.project import App
@@ -27,8 +27,10 @@ import json
 
 session = db.slave_session
 
+
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def get_project(short_name):
+    """Get project by short_name."""
     project = session.query(App).filter_by(short_name=short_name).first()
     return project
 
@@ -36,29 +38,32 @@ def get_project(short_name):
 @cache(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'),
        key_prefix="front_page_top_projects")
 def get_top(n=4):
-    """Return top n=4 projects"""
-    sql = text('''SELECT app.id, app.name, app.short_name, app.description, app.info,
-              COUNT(app_id) AS total FROM task_run, app
-              WHERE app_id IS NOT NULL AND app.id=app_id AND app.hidden=0
-              GROUP BY app.id ORDER BY total DESC LIMIT :limit;''')
+    """Return top n=4 projects."""
+    sql = text('''SELECT app.id, app.name, app.short_name, app.description,
+               app.info,
+               COUNT(app_id) AS total FROM task_run, app
+               WHERE app_id IS NOT NULL AND app.id=project_id AND app.hidden=0
+               GROUP BY app.id ORDER BY total DESC LIMIT :limit;''')
     results = session.execute(sql, dict(limit=n))
     top_projects = []
     for row in results:
         project = dict(id=row.id, name=row.name, short_name=row.short_name,
-                   description=row.description,
-                   info=json.loads(row.info),
-                   n_volunteers=n_volunteers(row.id),
-                   n_completed_tasks=n_completed_tasks(row.id))
+                       description=row.description,
+                       info=json.loads(row.info),
+                       n_volunteers=n_volunteers(row.id),
+                       n_completed_tasks=n_completed_tasks(row.id))
         top_projects.append(project)
     return top_projects
 
 
 @memoize(timeout=timeouts.get('BROWSE_TASKS_TIMEOUT'))
 def browse_tasks(project_id):
+    """Cache browse tasks view for a project."""
     sql = text('''
                SELECT task.id, count(task_run.id) as n_task_runs, task.n_answers
                FROM task LEFT OUTER JOIN task_run ON (task.id=task_run.task_id)
-               WHERE task.app_id=:project_id GROUP BY task.id ORDER BY task.id''')
+               WHERE task.app_id=:project_id
+               GROUP BY task.id ORDER BY task.id''')
     results = session.execute(sql, dict(project_id=project_id))
     tasks = []
     for row in results:
@@ -70,6 +75,7 @@ def browse_tasks(project_id):
 
 
 def _pct_status(n_task_runs, n_answers):
+    """Return percentage status."""
     if n_answers != 0 and n_answers is not None:
         # Check if it's bigger the n_task_runs that n_answers
         if n_task_runs > n_answers:
@@ -81,6 +87,7 @@ def _pct_status(n_task_runs, n_answers):
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def n_tasks(project_id):
+    """Return number of tasks of a project."""
     sql = text('''SELECT COUNT(task.id) AS n_tasks FROM task
                   WHERE task.app_id=:project_id''')
     results = session.execute(sql, dict(project_id=project_id))
@@ -92,6 +99,7 @@ def n_tasks(project_id):
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def n_completed_tasks(project_id):
+    """Return number of completed tasks of a project."""
     sql = text('''SELECT COUNT(task.id) AS n_completed_tasks FROM task
                 WHERE task.app_id=:project_id AND task.state=\'completed\';''')
 
@@ -104,10 +112,12 @@ def n_completed_tasks(project_id):
 
 @memoize(timeout=timeouts.get('REGISTERED_USERS_TIMEOUT'))
 def n_registered_volunteers(project_id):
-    sql = text('''SELECT COUNT(DISTINCT(task_run.user_id)) AS n_registered_volunteers FROM task_run
-           WHERE task_run.user_id IS NOT NULL AND
-           task_run.user_ip IS NULL AND
-           task_run.app_id=:project_id;''')
+    """Return number of registered users that have participated in a project."""
+    sql = text('''SELECT COUNT(DISTINCT(task_run.user_id))
+               AS n_registered_volunteers FROM task_run
+               WHERE task_run.user_id IS NOT NULL AND
+               task_run.user_ip IS NULL AND
+               task_run.app_id=:project_id;''')
 
     results = session.execute(sql, dict(project_id=project_id))
     n_registered_volunteers = 0
@@ -118,10 +128,12 @@ def n_registered_volunteers(project_id):
 
 @memoize(timeout=timeouts.get('ANON_USERS_TIMEOUT'))
 def n_anonymous_volunteers(project_id):
-    sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip)) AS n_anonymous_volunteers FROM task_run
-           WHERE task_run.user_ip IS NOT NULL AND
-           task_run.user_id IS NULL AND
-           task_run.app_id=:project_id;''')
+    """Return number of anonymous users that have participated in a project."""
+    sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip))
+               AS n_anonymous_volunteers FROM task_run
+               WHERE task_run.user_ip IS NOT NULL AND
+               task_run.user_id IS NULL AND
+               task_run.app_id=:project_id;''')
 
     results = session.execute(sql, dict(project_id=project_id))
     n_anonymous_volunteers = 0
@@ -132,11 +144,15 @@ def n_anonymous_volunteers(project_id):
 
 @memoize()
 def n_volunteers(project_id):
-    return n_anonymous_volunteers(project_id) + n_registered_volunteers(project_id)
+    """Return total number of volunteers of a project."""
+    total = (n_anonymous_volunteers(project_id) +
+             n_registered_volunteers(project_id))
+    return total
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def n_task_runs(project_id):
+    """Return number of task_runs of a project."""
     sql = text('''SELECT COUNT(task_run.id) AS n_task_runs FROM task_run
                   WHERE task_run.app_id=:project_id''')
 
@@ -149,16 +165,16 @@ def n_task_runs(project_id):
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def overall_progress(project_id):
-    """Returns the percentage of submitted Tasks Runs done when a task is
-    completed"""
+    """Return the percentage of completed tasks for a project."""
     if n_tasks(project_id) != 0:
-        return ((n_completed_tasks(project_id) * 100)/ n_tasks(project_id))
+        return ((n_completed_tasks(project_id) * 100) / n_tasks(project_id))
     else:
         return 0
 
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def last_activity(project_id):
+    """Return last activity, date, from a project."""
     sql = text('''SELECT finish_time FROM task_run WHERE app_id=:project_id
                ORDER BY finish_time DESC LIMIT 1''')
 
@@ -174,7 +190,7 @@ def last_activity(project_id):
 @cache(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'),
        key_prefix="number_featured_projects")
 def _n_featured():
-    """Return number of featured projects"""
+    """Return number of featured projects."""
     sql = text('''SELECT COUNT(*) FROM app WHERE featured=true;''')
 
     results = session.execute(sql)
@@ -186,7 +202,7 @@ def _n_featured():
 # This function does not change too much, so cache it for a longer time
 @memoize(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'))
 def get_featured(category=None, page=1, per_page=5):
-    """Return a list of featured projects with a pagination"""
+    """Return a list of featured projects with a pagination."""
     sql = text('''SELECT app.id, app.name, app.short_name, app.info, app.created,
                app.description,
                "user".fullname AS owner FROM app, "user"
@@ -200,14 +216,14 @@ def get_featured(category=None, page=1, per_page=5):
     projects = []
     for row in results:
         project = dict(id=row.id, name=row.name, short_name=row.short_name,
-                   created=row.created, description=row.description,
-                   last_activity=pretty_date(last_activity(row.id)),
-                   last_activity_raw=last_activity(row.id),
-                   owner=row.owner,
-                   overall_progress=overall_progress(row.id),
-                   n_tasks=n_tasks(row.id),
-                   n_volunteers=n_volunteers(row.id),
-                   info=dict(json.loads(row.info)))
+                       created=row.created, description=row.description,
+                       last_activity=pretty_date(last_activity(row.id)),
+                       last_activity_raw=last_activity(row.id),
+                       owner=row.owner,
+                       overall_progress=overall_progress(row.id),
+                       n_tasks=n_tasks(row.id),
+                       n_volunteers=n_volunteers(row.id),
+                       info=dict(json.loads(row.info)))
         projects.append(project)
     return projects
 
@@ -215,7 +231,7 @@ def get_featured(category=None, page=1, per_page=5):
 @cache(key_prefix="number_published_projects",
        timeout=timeouts.get('STATS_APP_TIMEOUT'))
 def n_published():
-    """Return number of published projects"""
+    """Return number of published projects."""
     sql = text('''
                WITH published_apps as
                (SELECT app.id FROM app, task WHERE
@@ -234,10 +250,11 @@ def n_published():
 @cache(timeout=timeouts.get('STATS_DRAFT_TIMEOUT'),
        key_prefix="number_draft_projects")
 def _n_draft():
-    """Return number of draft projects"""
+    """Return number of draft projects."""
     sql = text('''SELECT COUNT(app.id) FROM app
                LEFT JOIN task on app.id=task.app_id
-               WHERE task.app_id IS NULL AND app.info NOT LIKE('%task_presenter%')
+               WHERE task.app_id IS NULL
+               AND app.info NOT LIKE('%task_presenter%')
                AND app.hidden=0;''')
 
     results = session.execute(sql)
@@ -248,11 +265,12 @@ def _n_draft():
 
 @memoize(timeout=timeouts.get('STATS_FRONTPAGE_TIMEOUT'))
 def get_draft(category=None, page=1, per_page=5):
-    """Return list of draft projects"""
+    """Return list of draft projects."""
     sql = text('''SELECT app.id, app.name, app.short_name, app.created,
                app.description, app.info, "user".fullname as owner
                FROM "user", app LEFT JOIN task ON app.id=task.app_id
-               WHERE task.app_id IS NULL AND app.info NOT LIKE('%task_presenter%')
+               WHERE task.app_id IS NULL
+               AND app.info NOT LIKE('%task_presenter%')
                AND app.hidden=0
                AND app.owner_id="user".id
                OFFSET :offset
@@ -263,22 +281,22 @@ def get_draft(category=None, page=1, per_page=5):
     projects = []
     for row in results:
         project = dict(id=row.id, name=row.name, short_name=row.short_name,
-                   created=row.created,
-                   description=row.description,
-                   owner=row.owner,
-                   last_activity=pretty_date(last_activity(row.id)),
-                   last_activity_raw=last_activity(row.id),
-                   overall_progress=overall_progress(row.id),
-                   n_tasks=n_tasks(row.id),
-                   n_volunteers=n_volunteers(row.id),
-                   info=dict(json.loads(row.info)))
+                       created=row.created,
+                       description=row.description,
+                       owner=row.owner,
+                       last_activity=pretty_date(last_activity(row.id)),
+                       last_activity_raw=last_activity(row.id),
+                       overall_progress=overall_progress(row.id),
+                       n_tasks=n_tasks(row.id),
+                       n_volunteers=n_volunteers(row.id),
+                       info=dict(json.loads(row.info)))
         projects.append(project)
     return projects
 
 
 @memoize(timeout=timeouts.get('N_APPS_PER_CATEGORY_TIMEOUT'))
 def n_count(category):
-    """Count the number of projects in a given category"""
+    """Count the number of projects in a given category."""
     if category == 'featured':
         return _n_featured()
     if category == 'draft':
@@ -305,10 +323,13 @@ def n_count(category):
 
 @memoize(timeout=timeouts.get('APP_TIMEOUT'))
 def get(category, page=1, per_page=5):
-    """Return a list of apps with at least one task and a task_presenter
-       with a pagination for a given category"""
+    """Return a list of projects with at least one task and a task_presenter.
+
+    It also returns  a pagination for a given category.
+    """
     sql = text('''SELECT app.id, app.name, app.short_name, app.description,
-               app.info, app.created, app.category_id, app.featured, "user".fullname AS owner
+               app.info, app.created,
+               app.category_id, app.featured, "user".fullname AS owner
                FROM "user", task, app
                LEFT OUTER JOIN category ON app.category_id=category.id
                WHERE
@@ -322,28 +343,29 @@ def get(category, page=1, per_page=5):
                LIMIT :limit;''')
 
     offset = (page - 1) * per_page
-    results = session.execute(sql, dict(category=category, limit=per_page, offset=offset))
+    results = session.execute(sql, dict(category=category,
+                                        limit=per_page, offset=offset))
     projects = []
     for row in results:
         project = dict(id=row.id,
-                   name=row.name, short_name=row.short_name,
-                   created=row.created,
-                   description=row.description,
-                   owner=row.owner,
-                   featured=row.featured,
-                   last_activity=pretty_date(last_activity(row.id)),
-                   last_activity_raw=last_activity(row.id),
-                   overall_progress=overall_progress(row.id),
-                   n_tasks=n_tasks(row.id),
-                   n_volunteers=n_volunteers(row.id),
-                   info=dict(json.loads(row.info)))
+                       name=row.name, short_name=row.short_name,
+                       created=row.created,
+                       description=row.description,
+                       owner=row.owner,
+                       featured=row.featured,
+                       last_activity=pretty_date(last_activity(row.id)),
+                       last_activity_raw=last_activity(row.id),
+                       overall_progress=overall_progress(row.id),
+                       n_tasks=n_tasks(row.id),
+                       n_volunteers=n_volunteers(row.id),
+                       info=dict(json.loads(row.info)))
         projects.append(project)
     return projects
 
 
 # TODO: find a convenient cache timeout and cache, if needed
 def get_from_pro_user():
-    """Return the list of projects belonging to 'pro' users"""
+    """Return the list of projects belonging to 'pro' users."""
     sql = text('''SELECT app.id, app.short_name FROM app, "user"
                WHERE app.owner_id="user".id AND "user".pro=True;''')
     results = db.slave_session.execute(sql)
@@ -355,7 +377,7 @@ def get_from_pro_user():
 
 
 def reset():
-    """Clean the cache"""
+    """Clean the cache."""
     delete_cached("index_front_page")
     delete_cached('front_page_featured_projects')
     delete_cached('front_page_top_projects')
@@ -369,52 +391,52 @@ def reset():
 
 
 def delete_project(short_name):
-    """Reset project values in cache"""
+    """Reset project values in cache."""
     delete_memoized(get_project, short_name)
 
 
 def delete_n_tasks(project_id):
-    """Reset n_tasks value in cache"""
+    """Reset n_tasks value in cache."""
     delete_memoized(n_tasks, project_id)
 
 
 def delete_n_completed_tasks(project_id):
-    """Reset n_completed_tasks value in cache"""
+    """Reset n_completed_tasks value in cache."""
     delete_memoized(n_completed_tasks, project_id)
 
 
 def delete_n_task_runs(project_id):
-    """Reset n_tasks value in cache"""
+    """Reset n_tasks value in cache."""
     delete_memoized(n_task_runs, project_id)
 
 
 def delete_overall_progress(project_id):
-    """Reset overall_progress value in cache"""
+    """Reset overall_progress value in cache."""
     delete_memoized(overall_progress, project_id)
 
 
 def delete_last_activity(project_id):
-    """Reset last_activity value in cache"""
+    """Reset last_activity value in cache."""
     delete_memoized(last_activity, project_id)
 
 
 def delete_n_registered_volunteers(project_id):
-    """Reset n_registered_volunteers value in cache"""
+    """Reset n_registered_volunteers value in cache."""
     delete_memoized(n_registered_volunteers, project_id)
 
 
 def delete_n_anonymous_volunteers(project_id):
-    """Reset n_anonymous_volunteers value in cache"""
+    """Reset n_anonymous_volunteers value in cache."""
     delete_memoized(n_anonymous_volunteers, project_id)
 
 
 def delete_n_volunteers(project_id):
-    """Reset n_volunteers value in cache"""
+    """Reset n_volunteers value in cache."""
     delete_memoized(n_volunteers, project_id)
 
 
 def clean(project_id):
-    """Clean all items in cache"""
+    """Clean all items in cache."""
     reset()
     delete_n_tasks(project_id)
     delete_n_completed_tasks(project_id)
