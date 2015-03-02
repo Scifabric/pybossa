@@ -52,7 +52,7 @@ class TestBlogpostModel(Test):
         self.configure_fixtures()
         valid_title = 'a' * 255
         invalid_title = 'a' * 256
-        blogpost = Blogpost(title=valid_title, body="body", app=self.app)
+        blogpost = Blogpost(title=valid_title, body="body", project=self.app)
         db.session.add(blogpost)
 
         assert_not_raises(DataError, db.session.commit)
@@ -64,7 +64,7 @@ class TestBlogpostModel(Test):
     def test_blogpost_title_presence(self):
         """Test BLOGPOST a blogpost must have a title"""
         self.configure_fixtures()
-        blogpost = Blogpost(title=None, body="body", app=self.app)
+        blogpost = Blogpost(title=None, body="body", project=self.app)
         db.session.add(blogpost)
 
         assert_raises(IntegrityError, db.session.commit)
@@ -73,31 +73,31 @@ class TestBlogpostModel(Test):
     def test_blogpost_body_presence(self):
         """Test BLOGPOST a blogpost must have a body"""
         self.configure_fixtures()
-        blogpost = Blogpost(title='title', body=None, app=self.app)
+        blogpost = Blogpost(title='title', body=None, project=self.app)
         db.session.add(blogpost)
 
         assert_raises(IntegrityError, db.session.commit)
 
     @with_context
-    def test_blogpost_belongs_to_app(self):
+    def test_blogpost_belongs_to_project(self):
         """Test BLOGPOSTS must belong to a project"""
         self.configure_fixtures()
-        blogpost = Blogpost(title='title', body="body", app=None)
+        blogpost = Blogpost(title='title', body="body", project=None)
 
     @with_context
-    def test_blogpost_belongs_to_app(self):
+    def test_blogpost_belongs_to_project(self):
         """Test BLOGPOSTS must belong to a project"""
         self.configure_fixtures()
-        blogpost = Blogpost(title='title', app = None)
+        blogpost = Blogpost(title='title', blogpost=None)
         db.session.add(blogpost)
 
         assert_raises(IntegrityError, db.session.commit)
 
     @with_context
-    def test_blogpost_is_deleted_after_app_deletion(self):
+    def test_blogpost_is_deleted_after_project_deletion(self):
         """Test BLOGPOST no blogposts can exist after its project has been removed"""
         self.configure_fixtures()
-        blogpost = Blogpost(title='title', body="body", app=self.app)
+        blogpost = Blogpost(title='title', body="body", project=self.app)
         db.session.add(blogpost)
         db.session.commit()
 
@@ -110,10 +110,10 @@ class TestBlogpostModel(Test):
         assert blogpost not in db.session
 
     @with_context
-    def test_blogpost_deletion_doesnt_delete_app(self):
+    def test_blogpost_deletion_doesnt_delete_project(self):
         """Test BLOGPOST when deleting a blogpost its parent project is not affected"""
         self.configure_fixtures()
-        blogpost = Blogpost(title='title', body="body", app=self.app)
+        blogpost = Blogpost(title='title', body="body", project=self.app)
         db.session.add(blogpost)
         db.session.commit()
 
@@ -130,7 +130,7 @@ class TestBlogpostModel(Test):
         """Test BLOGPOST a blogpost owner can be none
         (if the user is removed from the system)"""
         self.configure_fixtures()
-        blogpost = Blogpost(title='title', body="body", app=self.app, owner=None)
+        blogpost = Blogpost(title='title', body="body", project=self.app, owner=None)
         db.session.add(blogpost)
 
         assert_not_raises(IntegrityError, db.session.commit)
@@ -145,7 +145,7 @@ class TestBlogpostModel(Test):
             name="johndoe2",
             fullname="John Doe2",
             locale="en")
-        blogpost = Blogpost(title='title', body="body", app=self.app, owner=owner)
+        blogpost = Blogpost(title='title', body="body", project=self.app, owner=owner)
         db.session.add(blogpost)
         db.session.commit()
 
