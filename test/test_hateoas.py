@@ -35,7 +35,7 @@ class TestHateoas(Test):
     def test_00_link_object(self):
         """Test HATEOAS object link is created"""
         # For app
-        res = self.app.get("/api/app/1", follow_redirects=True)
+        res = self.app.get("/api/project/1", follow_redirects=True)
         output = json.loads(res.data)
         err_msg = "There should be a Link with the object URI"
         assert output['link'] is not None, err_msg
@@ -47,8 +47,8 @@ class TestHateoas(Test):
                                      href='http://localhost/api/category/1')
         assert app_link == output['links'][0], err_msg
 
-        app_link = self.hateoas.link(rel='self', title='app',
-                                     href='http://localhost/api/app/1')
+        app_link = self.hateoas.link(rel='self', title='project',
+                                     href='http://localhost/api/project/1')
         err_msg = "The object link is wrong: %s" % output['link']
         assert app_link == output['link'], err_msg
 
@@ -61,12 +61,12 @@ class TestHateoas(Test):
                                       href='http://localhost/api/task/1')
         err_msg = "The object link is wrong: %s" % output['link']
         assert task_link == output['link'], err_msg
-        err_msg = "There should be one parent link: app"
+        err_msg = "There should be one parent link: project"
         assert output.get('links') is not None, err_msg
         assert len(output.get('links')) == 1, err_msg
         err_msg = "The parent link is wrong"
-        app_link = self.hateoas.link(rel='parent', title='app',
-                                     href='http://localhost/api/app/1')
+        app_link = self.hateoas.link(rel='parent', title='project',
+                                     href='http://localhost/api/project/1')
         assert output.get('links')[0] == app_link, err_msg
 
         # For taskrun
@@ -78,12 +78,12 @@ class TestHateoas(Test):
                                       href='http://localhost/api/taskrun/1')
         err_msg = "The object link is wrong: %s" % output['link']
         assert task_link == output['link'], err_msg
-        err_msg = "There should be two parent links: app and task"
+        err_msg = "There should be two parent links: project and task"
         assert output.get('links') is not None, err_msg
         assert len(output.get('links')) == 2, err_msg
-        err_msg = "The parent app link is wrong"
-        app_link = self.hateoas.link(rel='parent', title='app',
-                                     href='http://localhost/api/app/1')
+        err_msg = "The parent project link is wrong"
+        app_link = self.hateoas.link(rel='parent', title='project',
+                                     href='http://localhost/api/project/1')
         assert output.get('links')[0] == app_link, err_msg
 
         err_msg = "The parent task link is wrong"
@@ -124,12 +124,12 @@ class TestHateoas(Test):
     def test_01_link_object(self):
         """Test HATEOAS object link is created"""
         # For app
-        res = self.app.get("/api/app", follow_redirects=True)
+        res = self.app.get("/api/project", follow_redirects=True)
         output = json.loads(res.data)[0]
         err_msg = "There should be a Link with the object URI"
         assert output['link'] is not None, err_msg
-        app_link = self.hateoas.link(rel='self', title='app',
-                                     href='http://localhost/api/app/1')
+        app_link = self.hateoas.link(rel='self', title='project',
+                                     href='http://localhost/api/project/1')
 
         err_msg = "The object link is wrong: %s" % output['link']
         assert app_link == output['link'], err_msg
@@ -150,13 +150,13 @@ class TestHateoas(Test):
                                       href='http://localhost/api/task/1')
         err_msg = "The object link is wrong: %s" % output['link']
         assert task_link == output['link'], err_msg
-        err_msg = "There should be one parent link: app"
+        err_msg = "There should be one parent link: project"
         assert output.get('links') is not None, err_msg
         assert len(output.get('links')) == 1, err_msg
         err_msg = "The parent link is wrong"
-        app_link = self.hateoas.link(rel='parent', title='app',
-                                     href='http://localhost/api/app/1')
-        assert output.get('links')[0] == app_link, err_msg
+        app_link = self.hateoas.link(rel='parent', title='project',
+                                     href='http://localhost/api/project/1')
+        assert output.get('links')[0] == app_link, app_link
 
         # For taskrun
         res = self.app.get("/api/taskrun", follow_redirects=True)
@@ -167,12 +167,12 @@ class TestHateoas(Test):
                                       href='http://localhost/api/taskrun/1')
         err_msg = "The object link is wrong: %s" % output['link']
         assert task_link == output['link'], err_msg
-        err_msg = "There should be two parent links: app and task"
+        err_msg = "There should be two parent links: project and task"
         assert output.get('links') is not None, err_msg
         assert len(output.get('links')) == 2, err_msg
-        err_msg = "The parent app link is wrong"
-        app_link = self.hateoas.link(rel='parent', title='app',
-                                     href='http://localhost/api/app/1')
+        err_msg = "The parent project link is wrong"
+        app_link = self.hateoas.link(rel='parent', title='project',
+                                     href='http://localhost/api/project/1')
         assert output.get('links')[0] == app_link, err_msg
 
         err_msg = "The parent task link is wrong"

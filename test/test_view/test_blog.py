@@ -35,8 +35,8 @@ class TestBlogpostView(web.Helper):
         """Test blogpost GET all blogposts"""
         user = self.create_users()[1]
         app = ProjectFactory.create(owner=user)
-        blogpost_1 = BlogpostFactory.create(owner=user, app=app, title='titleone')
-        blogpost_2 = BlogpostFactory.create(owner=user, app=app, title='titletwo')
+        blogpost_1 = BlogpostFactory.create(owner=user, project=app, title='titleone')
+        blogpost_2 = BlogpostFactory.create(owner=user, project=app, title='titletwo')
 
         url = "/project/%s/blog" % app.short_name
 

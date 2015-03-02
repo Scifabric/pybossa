@@ -427,7 +427,7 @@ class TestAutoimporterBehaviour(web.Helper):
         url = "/project/%s/tasks/autoimporter?type=flickr" % app.short_name
 
         res = self.app.get(url)
-        login_url = '/flickr/?next=%2Fproject%2F%25E2%259C%2593app1%2Ftasks%2Fautoimporter%3Ftype%3Dflickr'
+        login_url = '/flickr/?next=%2Fproject%2F%25E2%259C%2593project1%2Ftasks%2Fautoimporter%3Ftype%3Dflickr'
 
         assert login_url in res.data
 
@@ -446,7 +446,7 @@ class TestAutoimporterBehaviour(web.Helper):
 
         res = self.app.get(url)
         print res.data
-        revoke_url = '/flickr/revoke-access?next=%2Fproject%2F%25E2%259C%2593app1%2Ftasks%2Fautoimporter%3Ftype%3Dflickr'
+        revoke_url = '/flickr/revoke-access?next=%2Fproject%2F%25E2%259C%2593project1%2Ftasks%2Fautoimporter%3Ftype%3Dflickr'
 
         assert '1 photos' in res.data
         assert 'src="fake-url"' in res.data

@@ -88,7 +88,7 @@ class TestBlogpostModel(Test):
     def test_blogpost_belongs_to_project(self):
         """Test BLOGPOSTS must belong to a project"""
         self.configure_fixtures()
-        blogpost = Blogpost(title='title', blogpost=None)
+        blogpost = Blogpost(title='title', project=None)
         db.session.add(blogpost)
 
         assert_raises(IntegrityError, db.session.commit)
