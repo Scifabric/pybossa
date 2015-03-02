@@ -41,8 +41,8 @@ def n_tasks(project_id):
 
 
 @memoize(timeout=ONE_DAY)
-def stats_users(app_id):
-    """Return users's stats for a given app_id"""
+def stats_users(project_id):
+    """Return users's stats for a given app_id."""
     users = {}
     auth_users = []
     anon_users = []
@@ -52,20 +52,20 @@ def stats_users(app_id):
                COUNT(task_run.id) as n_tasks FROM task_run
                WHERE task_run.user_id IS NOT NULL AND
                task_run.user_ip IS NULL AND
-               task_run.app_id=:app_id
+               task_run.app_id=:project_id
                GROUP BY task_run.user_id ORDER BY n_tasks DESC
                LIMIT 5;''')
-    results = session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(project_id=project_id))
 
     for row in results:
         auth_users.append([row.user_id, row.n_tasks])
 
-    sql = text('''SELECT count(distinct(task_run.user_id)) AS user_id FROM task_run
-               WHERE task_run.user_id IS NOT NULL AND
+    sql = text('''SELECT count(distinct(task_run.user_id)) AS user_id
+               FROM task_run WHERE task_run.user_id IS NOT NULL AND
                task_run.user_ip IS NULL AND
-               task_run.app_id=:app_id;''')
+               task_run.app_id=:project_id;''')
 
-    results = session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(project_id=project_id))
     for row in results:
         users['n_auth'] = row[0]
 
@@ -74,19 +74,20 @@ def stats_users(app_id):
                COUNT(task_run.id) as n_tasks FROM task_run
                WHERE task_run.user_ip IS NOT NULL AND
                task_run.user_id IS NULL AND
-               task_run.app_id=:app_id
-               GROUP BY task_run.user_ip ORDER BY n_tasks DESC;''').execution_options(stream=True)
-    results = session.execute(sql, dict(app_id=app_id))
+               task_run.app_id=:project_id
+               GROUP BY task_run.user_ip ORDER BY n_tasks DESC;''')\
+        .execution_options(stream=True)
+    results = session.execute(sql, dict(project_id=project_id))
 
     for row in results:
         anon_users.append([row.user_ip, row.n_tasks])
 
-    sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip)) AS user_ip FROM task_run
-               WHERE task_run.user_ip IS NOT NULL AND
+    sql = text('''SELECT COUNT(DISTINCT(task_run.user_ip)) AS user_ip
+               FROM task_run WHERE task_run.user_ip IS NOT NULL AND
                task_run.user_id IS NULL AND
-               task_run.app_id=:app_id;''')
+               task_run.app_id=:project_id;''')
 
-    results = session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(project_id=project_id))
 
     for row in results:
         users['n_anon'] = row[0]
