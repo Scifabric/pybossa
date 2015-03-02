@@ -80,19 +80,21 @@ def add_custom_contrib_button_to(project, user_id_or_ip):
     return project
 
 
-def _has_no_presenter(app):
+def _has_no_presenter(project):
+    """Return if a project has no presenter."""
     try:
-        return 'task_presenter' not in app.info
+        return 'task_presenter' not in project.info
     except AttributeError:
         try:
-            return 'task_presenter' not in app.get('info')
+            return 'task_presenter' not in project.get('info')
         except AttributeError:
             return True
 
-def _has_no_tasks(app_id):
+def _has_no_tasks(project_id):
+    """Return if a project has no tasks."""
     query = text('''SELECT COUNT(id) AS n_tasks FROM task
                WHERE app_id=:app_id;''')
-    result = session.execute(query, dict(app_id=app_id))
+    result = session.execute(query, dict(project_id=project_id))
     for row in result:
         n_tasks = row.n_tasks
     return n_tasks == 0
