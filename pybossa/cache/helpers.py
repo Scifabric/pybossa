@@ -72,11 +72,12 @@ def check_contributing_state(project, user_id=None, user_ip=None):
     return states[3]
 
 
-def add_custom_contrib_button_to(app, user_id_or_ip):
-    if type(app) != dict:
-        app = app.dictize()
-    app['contrib_button'] = check_contributing_state(app, **user_id_or_ip)
-    return app
+def add_custom_contrib_button_to(project, user_id_or_ip):
+    """Add a customized contrib button for a project."""
+    if type(project) != dict:
+        project = project.dictize()
+    project['contrib_button'] = check_contributing_state(project, **user_id_or_ip)
+    return project
 
 
 def _has_no_presenter(app):
