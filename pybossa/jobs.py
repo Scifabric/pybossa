@@ -174,7 +174,7 @@ def get_autoimport_jobs(queue='low'):
 @with_cache_disabled
 def get_project_stats(id, short_name): # pragma: no cover
     """Get stats for app."""
-    import pybossa.cache.apps as cached_apps
+    import pybossa.cache.projects as cached_apps
     import pybossa.cache.project_stats as stats
     from flask import current_app
 
@@ -217,7 +217,7 @@ def warm_cache():  # pragma: no cover
     # Cache 3 pages
     apps_cached = []
     pages = range(1, 4)
-    import pybossa.cache.apps as cached_apps
+    import pybossa.cache.projects as cached_apps
     import pybossa.cache.categories as cached_cat
     import pybossa.cache.users as cached_users
     import pybossa.cache.project_stats as stats
@@ -275,7 +275,7 @@ def get_non_updated_apps():
     from sqlalchemy.sql import text
     from pybossa.model.project import Project
     from pybossa.core import db
-    sql = text('''SELECT id FROM app WHERE TO_DATE(updated,
+    sql = text('''SELECT id FROM project WHERE TO_DATE(updated,
                 'YYYY-MM-DD\THH24:MI:SS.US') <= NOW() - '3 month':: INTERVAL
                AND contacted != True LIMIT 25''')
     results = db.slave_session.execute(sql)
