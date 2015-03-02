@@ -96,12 +96,13 @@ def stats_users(project_id):
 
 
 @memoize(timeout=ONE_DAY)
-def stats_dates(app_id):
+def stats_dates(project_id):
+    """Return statistics with dates for a project."""
     dates = {}
     dates_anon = {}
     dates_auth = {}
 
-    n_tasks(app_id)
+    n_tasks(project_id)
 
     # Get all completed tasks
     sql = text('''
@@ -110,7 +111,7 @@ def stats_dates(app_id):
              TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
              AS day, task.id, task.n_answers AS n_answers,
              COUNT(task_run.id) AS day_answers
-             FROM task_run, task WHERE task_run.app_id=:app_id
+             FROM task_run, task WHERE task_run.app_id=:project_id
              AND task.id=task_run.task_id AND
              TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') >= NOW()
                - '2 week':: INTERVAL GROUP BY day, task.id)
@@ -128,7 +129,7 @@ def stats_dates(app_id):
             GROUP BY day;
                ''').execution_options(stream=True)
 
-    results = session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(project_id=project_id))
     for row in results:
         dates[row.day] = row.completed_tasks
 
@@ -142,26 +143,28 @@ def stats_dates(app_id):
     # Get all answers per date for auth
     sql = text('''
                 WITH myquery AS (
-                    SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') as d,
-                                   COUNT(id)
-                    FROM task_run WHERE app_id=:app_id AND user_ip IS NULL GROUP BY d)
-               SELECT to_char(d, 'YYYY-MM-DD') as d, count from myquery;
+                    SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                    as d, COUNT(id)
+                    FROM task_run WHERE app_id=:project_id
+                    AND user_ip IS NULL GROUP BY d)
+                SELECT to_char(d, 'YYYY-MM-DD') as d, count from myquery;
                ''').execution_options(stream=True)
 
-    results = session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(project_id=project_id))
     for row in results:
         dates_auth[row.d] = row.count
 
     # Get all answers per date for anon
     sql = text('''
                 WITH myquery AS (
-                    SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US') as d,
-                                   COUNT(id)
-                    FROM task_run WHERE app_id=:app_id AND user_id IS NULL GROUP BY d)
+                    SELECT TO_DATE(finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+                    as d, COUNT(id)
+                    FROM task_run WHERE app_id=:project_id
+                    AND user_id IS NULL GROUP BY d)
                SELECT to_char(d, 'YYYY-MM-DD') as d, count  from myquery;
                ''').execution_options(stream=True)
 
-    results = session.execute(sql, dict(app_id=app_id))
+    results = session.execute(sql, dict(project_id=project_id))
     for row in results:
         dates_anon[row.d] = row.count
 
