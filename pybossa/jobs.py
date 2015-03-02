@@ -195,14 +195,14 @@ def warm_up_stats(): # pragma: no cover
     from pybossa.cache.site_stats import (n_auth_users, n_anon_users,
                                           n_tasks_site, n_total_tasks_site,
                                           n_task_runs_site,
-                                          get_top5_apps_24_hours,
+                                          get_top5_projects_24_hours,
                                           get_top5_users_24_hours, get_locs)
     n_auth_users()
     n_anon_users()
     n_tasks_site()
     n_total_tasks_site()
     n_task_runs_site()
-    get_top5_apps_24_hours()
+    get_top5_projects_24_hours()
     get_top5_users_24_hours()
     get_locs()
 

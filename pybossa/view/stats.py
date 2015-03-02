@@ -46,7 +46,7 @@ def index():
 
     n_task_runs = site_stats.n_task_runs_site()
 
-    top5_apps_24_hours = site_stats.get_top5_apps_24_hours()
+    top5_apps_24_hours = site_stats.get_top5_projects_24_hours()
 
     top5_users_24_hours = site_stats.get_top5_users_24_hours()
 
