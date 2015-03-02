@@ -18,7 +18,7 @@
 
 from pybossa.jobs import warn_old_project_owners, get_non_updated_apps
 from default import Test, with_context
-from factories import AppFactory
+from factories import ProjectFactory
 from mock import patch, MagicMock
 
 
@@ -35,7 +35,7 @@ class TestOldProjects(Test):
     @with_context
     def test_get_non_updated_apps_returns_one_project(self):
         """Test JOB get non updated returns one project."""
-        app = AppFactory.create(updated='2010-10-22T11:02:00.000000')
+        app = ProjectFactory.create(updated='2010-10-22T11:02:00.000000')
         apps = get_non_updated_apps()
         err_msg = "There should be one outdated project."
         assert len(apps) == 1, err_msg
@@ -56,7 +56,7 @@ class TestOldProjects(Test):
         mail.connect.return_value = connection
 
         date = '2010-10-22T11:02:00.000000'
-        app = AppFactory.create(updated=date)
+        app = ProjectFactory.create(updated=date)
         app_id = app.id
         warn_old_project_owners()
         err_msg = "mail.connect() should be called"
@@ -74,7 +74,7 @@ class TestOldProjects(Test):
         from pybossa.core import mail
         with mail.record_messages() as outbox:
             date = '2010-10-22T11:02:00.000000'
-            app = AppFactory.create(updated=date)
+            app = ProjectFactory.create(updated=date)
             app_id = app.id
             warn_old_project_owners()
             assert len(outbox) == 1, outbox
@@ -93,7 +93,7 @@ class TestOldProjects(Test):
         date = '2010-10-22T11:02:00.000000'
         apps = []
         for i in range(0, 50):
-            apps.append(AppFactory.create(updated=date))
+            apps.append(ProjectFactory.create(updated=date))
         # The first day that we run the job only 25 emails should be sent
         with mail.record_messages() as outbox:
             warn_old_project_owners()

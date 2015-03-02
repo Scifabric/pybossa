@@ -28,7 +28,7 @@ from pybossa.model.app import App
 from pybossa.model.user import User
 from pybossa.model.task_run import TaskRun
 from pybossa.model.category import Category
-from factories import TaskFactory, AppFactory, TaskRunFactory, AnonymousTaskRunFactory, UserFactory
+from factories import TaskFactory, ProjectFactory, TaskRunFactory, AnonymousTaskRunFactory, UserFactory
 import pybossa
 
 
@@ -41,7 +41,7 @@ class TestSched(sched.Helper):
     @with_context
     def test_anonymous_01_newtask(self):
         """ Test SCHED newtask returns a Task for the Anonymous User"""
-        project = AppFactory.create()
+        project = ProjectFactory.create()
         TaskFactory.create(app=project, info='hola')
 
         res = self.app.get('api/app/%s/newtask' %project.id)
@@ -54,7 +54,7 @@ class TestSched(sched.Helper):
         """ Test SCHED newtask returns N different Tasks for the Anonymous User"""
         assigned_tasks = []
         # Get a Task until scheduler returns None
-        project = AppFactory.create()
+        project = ProjectFactory.create()
         tasks = TaskFactory.create_batch(3, app=project)
         res = self.app.get('api/app/%s/newtask' %project.id)
         data = json.loads(res.data)
@@ -380,7 +380,7 @@ class TestSched(sched.Helper):
     def test_no_more_tasks(self):
         """Test that a users gets always tasks"""
         owner = UserFactory.create()
-        app = AppFactory.create(owner=owner, short_name='egil', name='egil',
+        app = ProjectFactory.create(owner=owner, short_name='egil', name='egil',
                   description='egil')
 
         app_id = app.id

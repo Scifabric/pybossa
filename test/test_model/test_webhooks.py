@@ -18,7 +18,7 @@
 
 from pybossa.model import webhook
 from default import Test, with_context
-from factories import AppFactory
+from factories import ProjectFactory
 from factories import TaskFactory
 from factories import TaskRunFactory
 from redis import StrictRedis
@@ -59,7 +59,7 @@ class TestWebHooks(Test):
     @patch('pybossa.model.task_run.webhook_queue', new=queue)
     def test_trigger_webhook_without_url(self):
         """Test WEBHOOK is triggered without url."""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         task = TaskFactory.create(app=app, n_answers=1)
         TaskRunFactory.create(app=app, task=task)
         assert queue.enqueue.called is False, queue.enqueue.called
@@ -70,7 +70,7 @@ class TestWebHooks(Test):
     def test_trigger_webhook_with_url_not_completed_task(self):
         """Test WEBHOOK is not triggered for uncompleted tasks."""
         import random
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         task = TaskFactory.create(app=app)
         for i in range(1, random.randrange(2, 5)):
             TaskRunFactory.create(app=app, task=task)
@@ -84,7 +84,7 @@ class TestWebHooks(Test):
     def test_trigger_webhook_with_url(self):
         """Test WEBHOOK is triggered with url."""
         url = 'http://server.com'
-        app = AppFactory.create(webhook=url,)
+        app = ProjectFactory.create(webhook=url,)
         task = TaskFactory.create(app=app, n_answers=1)
         TaskRunFactory.create(app=app, task=task)
         payload = dict(event='task_completed',

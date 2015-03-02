@@ -25,7 +25,7 @@ API endpoints like userprogress or vmcp.
 import json
 
 from default import flask_app, sentinel
-from factories import AppFactory, UserFactory
+from factories import ProjectFactory, UserFactory
 from mock import patch
 
 

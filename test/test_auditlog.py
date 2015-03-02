@@ -18,7 +18,7 @@
 import json
 from default import db, Test, with_context
 from collections import namedtuple
-from factories import AppFactory, AuditlogFactory, UserFactory, CategoryFactory
+from factories import ProjectFactory, AuditlogFactory, UserFactory, CategoryFactory
 from helper import web
 
 from pybossa.repositories import UserRepository
@@ -36,7 +36,7 @@ class TestAuditlogAPI(Test):
     @with_context
     def test_app_create(self):
         """Test Auditlog API project create works."""
-        # app = AppFactory.create()
+        # app = ProjectFactory.create()
         CategoryFactory.create()
         user = UserFactory.create()
 
@@ -65,7 +65,7 @@ class TestAuditlogAPI(Test):
     def test_app_delete(self):
         """Test Auditlog API project create works."""
         user = UserFactory.create()
-        app = AppFactory.create(owner=user)
+        app = ProjectFactory.create(owner=user)
         app_short_name = app.short_name
 
         url = '/api/project/%s?api_key=%s' % (app.id, user.api_key)
@@ -87,7 +87,7 @@ class TestAuditlogAPI(Test):
     @with_context
     def test_app_update_attributes(self):
         """Test Auditlog API project update attributes works."""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
 
         data = {'name': 'New Name',
                 'short_name': 'new_short_name',
@@ -114,7 +114,7 @@ class TestAuditlogAPI(Test):
     @with_context
     def test_app_update_attributes_admin(self):
         """Test Auditlog API project update attributes works for admins."""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         admin = UserFactory.create(admin=True)
 
         data = {'name': 'New Name',
@@ -142,7 +142,7 @@ class TestAuditlogAPI(Test):
     @with_context
     def test_app_update_attributes_non_owner(self):
         """Test Auditlog API project update attributes works for non owners."""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         user = UserFactory.create()
 
         data = {'name': 'New Name',
@@ -159,7 +159,7 @@ class TestAuditlogAPI(Test):
 
     def test_app_update_task_presenter(self):
         """Test Auditlog API project update info task_presenter works."""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
 
         owner_id = app.owner.id
         owner_name = app.owner.name
@@ -181,7 +181,7 @@ class TestAuditlogAPI(Test):
 
     def test_app_update_scheduler(self):
         """Test Auditlog API project update info scheduler works."""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
 
         owner_id = app.owner.id
         owner_name = app.owner.name
@@ -203,7 +203,7 @@ class TestAuditlogAPI(Test):
 
     def test_app_update_two_info_objects(self):
         """Test Auditlog API project update two info objects works."""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
 
         owner_id = app.owner.id
         owner_name = app.owner.name
@@ -683,7 +683,7 @@ class TestAuditlogWEB(web.Helper):
         self.register()
         owner = user_repo.get(1)
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
-        app = AppFactory.create(owner=owner, info={'autoimporter': autoimporter})
+        app = ProjectFactory.create(owner=owner, info={'autoimporter': autoimporter})
         short_name = app.short_name
 
         attribute = 'autoimporter'

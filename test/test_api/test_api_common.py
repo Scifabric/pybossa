@@ -20,7 +20,7 @@ from default import with_context
 from nose.tools import assert_equal, assert_raises
 from test_api import TestAPI
 
-from factories import AppFactory, TaskFactory, TaskRunFactory, UserFactory
+from factories import ProjectFactory, TaskFactory, TaskRunFactory, UserFactory
 
 
 
@@ -31,7 +31,7 @@ class TestApiCommon(TestAPI):
     def test_limits_query(self):
         """Test API GET limits works"""
         owner = UserFactory.create()
-        apps = AppFactory.create_batch(30, owner=owner)
+        apps = ProjectFactory.create_batch(30, owner=owner)
         for app in apps:
             task = TaskFactory.create(app=app)
             TaskRunFactory.create(task=task)
@@ -78,7 +78,7 @@ class TestApiCommon(TestAPI):
     def test_get_query_with_api_key(self):
         """ Test API GET query with an API-KEY"""
         users = UserFactory.create_batch(3)
-        app = AppFactory.create(owner=users[0], info={'total': 150})
+        app = ProjectFactory.create(owner=users[0], info={'total': 150})
         task = TaskFactory.create(app=app, info={'url': 'my url'})
         taskrun = TaskRunFactory.create(task=task, user=users[0],
                                         info={'answer': 'annakarenina'})

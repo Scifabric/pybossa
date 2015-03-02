@@ -19,7 +19,7 @@
 
 from default import Test, db
 from nose.tools import assert_raises
-from factories import TaskFactory, TaskRunFactory, AppFactory
+from factories import TaskFactory, TaskRunFactory, ProjectFactory
 from pybossa.repositories import TaskRepository
 from pybossa.exc import WrongObjectError, DBIntegrityError
 
@@ -500,7 +500,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         """Test update_tasks_redundancy updates the n_answers value for every
         task in the project"""
 
-        project = AppFactory.create()
+        project = ProjectFactory.create()
         TaskFactory.create_batch(2, app=project, n_answers=1)
 
         self.task_repo.update_tasks_redundancy(project, 2)
@@ -514,7 +514,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         """Test update_tasks_redundancy changes 'completed' tasks to 'ongoing'
         if n_answers is incremented enough"""
 
-        project = AppFactory.create()
+        project = ProjectFactory.create()
         tasks = TaskFactory.create_batch(2, app=project, n_answers=2)
         TaskRunFactory.create_batch(2, task=tasks[0])
         tasks[0].state = 'completed'
@@ -534,7 +534,7 @@ class TestTaskRepositorySaveDeleteUpdate(Test):
         """Test update_tasks_redundancy changes 'ongoing' tasks to 'completed'
         if n_answers is decremented enough"""
 
-        project = AppFactory.create()
+        project = ProjectFactory.create()
         tasks = TaskFactory.create_batch(2, app=project, n_answers=2)
         TaskRunFactory.create_batch(2, task=tasks[0])
         TaskRunFactory.create(task=tasks[1])

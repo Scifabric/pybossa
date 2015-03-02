@@ -20,7 +20,7 @@ from default import db, with_context
 from nose.tools import assert_equal
 from test_api import TestAPI
 
-from factories import AppFactory, TaskFactory, TaskRunFactory, UserFactory
+from factories import ProjectFactory, TaskFactory, TaskRunFactory, UserFactory
 
 from pybossa.repositories import TaskRepository
 task_repo = TaskRepository(db)
@@ -32,7 +32,7 @@ class TestTaskAPI(TestAPI):
     @with_context
     def test_task_query_without_params(self):
         """ Test API Task query"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         TaskFactory.create_batch(10, app=app, info={'question': 'answer'})
         res = self.app.get('/api/task')
         tasks = json.loads(res.data)
@@ -47,7 +47,7 @@ class TestTaskAPI(TestAPI):
     @with_context
     def test_task_query_with_params(self):
         """Test API query for task with params works"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         TaskFactory.create_batch(10, app=app)
         # Test for real field
         res = self.app.get("/api/task?app_id=1")
@@ -85,7 +85,7 @@ class TestTaskAPI(TestAPI):
         admin = UserFactory.create()
         user = UserFactory.create()
         non_owner = UserFactory.create()
-        app = AppFactory.create(owner=user)
+        app = ProjectFactory.create(owner=user)
         data = dict(app_id=app.id, state='0', info='my task data')
         root_data = dict(app_id=app.id, state='0', info='my root task data')
 
@@ -158,7 +158,7 @@ class TestTaskAPI(TestAPI):
         admin = UserFactory.create()
         user = UserFactory.create()
         non_owner = UserFactory.create()
-        app = AppFactory.create(owner=user)
+        app = ProjectFactory.create(owner=user)
         task = TaskFactory.create(app=app)
         root_task = TaskFactory.create(app=app)
         data = {'state': '1'}
@@ -223,7 +223,7 @@ class TestTaskAPI(TestAPI):
         admin = UserFactory.create()
         user = UserFactory.create()
         non_owner = UserFactory.create()
-        app = AppFactory.create(owner=user)
+        app = ProjectFactory.create(owner=user)
         task = TaskFactory.create(app=app)
         root_task = TaskFactory.create(app=app)
 

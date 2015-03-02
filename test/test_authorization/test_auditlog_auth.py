@@ -22,7 +22,7 @@ from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
 from mock import patch
 from test_authorization import mock_current_user
-from factories import AppFactory, UserFactory, AuditlogFactory
+from factories import ProjectFactory, UserFactory, AuditlogFactory
 from pybossa.model.auditlog import Auditlog
 
 
@@ -49,7 +49,7 @@ class TestAuditlogAuthorization(Test):
     def test_anonymous_user_cannot_read_project_auditlogs(self):
         """Test anonymous users cannot read auditlogs of a specific project"""
 
-        project = AppFactory.create()
+        project = ProjectFactory.create()
 
         assert_raises(Unauthorized, ensure_authorized_to, 'read', Auditlog, project_id=project.id)
 
@@ -59,7 +59,7 @@ class TestAuditlogAuthorization(Test):
         """Test owner users cannot read an auditlog"""
 
         owner = UserFactory.create_batch(2)[1]
-        project = AppFactory.create(owner=owner)
+        project = ProjectFactory.create(owner=owner)
         log = AuditlogFactory.create(app_id=project.id)
 
         assert self.mock_authenticated.id == project.owner_id
@@ -72,7 +72,7 @@ class TestAuditlogAuthorization(Test):
         """Test owner users cannot read auditlogs of a specific project"""
 
         owner = UserFactory.create_batch(2)[1]
-        project = AppFactory.create(owner=owner)
+        project = ProjectFactory.create(owner=owner)
 
         assert_raises(Forbidden, ensure_authorized_to, 'read', Auditlog, project_id=project.id)
 
@@ -82,7 +82,7 @@ class TestAuditlogAuthorization(Test):
         """Test pro users can read an auditlog from an owned project"""
 
         owner = UserFactory.create_batch(2, pro=True)[1]
-        project = AppFactory.create(owner=owner)
+        project = ProjectFactory.create(owner=owner)
         log = AuditlogFactory.create(app_id=project.id)
 
         assert self.mock_pro.id == project.owner_id
@@ -94,7 +94,7 @@ class TestAuditlogAuthorization(Test):
         """Test pro users cannot read auditlogs from an owned project"""
 
         owner = UserFactory.create_batch(2, pro=True)[1]
-        project = AppFactory.create(owner=owner)
+        project = ProjectFactory.create(owner=owner)
 
         assert self.mock_pro.id == project.owner_id
         assert_not_raises(Exception, ensure_authorized_to, 'read', Auditlog, project_id=project.id)
@@ -105,7 +105,7 @@ class TestAuditlogAuthorization(Test):
         """Test pro users cannot read an auditlog from a non-owned project"""
 
         users = UserFactory.create_batch(2, pro=True)
-        project = AppFactory.create(owner=users[0])
+        project = ProjectFactory.create(owner=users[0])
         log = AuditlogFactory.create(app_id=project.id)
 
         assert self.mock_pro.id != project.owner_id
@@ -117,7 +117,7 @@ class TestAuditlogAuthorization(Test):
         """Test pro users cannot read auditlogs from a non-owned project"""
 
         users = UserFactory.create_batch(2, pro=True)
-        project = AppFactory.create(owner=users[0])
+        project = ProjectFactory.create(owner=users[0])
 
         assert self.mock_pro.id != project.owner_id
         assert_raises(Forbidden, ensure_authorized_to, 'read', Auditlog, project_id=project.id)
@@ -128,7 +128,7 @@ class TestAuditlogAuthorization(Test):
         """Test admin users can read an auditlog"""
 
         owner = UserFactory.create_batch(2)[1]
-        project = AppFactory.create(owner=owner)
+        project = ProjectFactory.create(owner=owner)
         log = AuditlogFactory.create(app_id=project.id)
 
         assert self.mock_admin.id != project.owner_id
@@ -140,7 +140,7 @@ class TestAuditlogAuthorization(Test):
         """Test admin users can read auditlogs from a project"""
 
         owner = UserFactory.create_batch(2)[1]
-        project = AppFactory.create(owner=owner)
+        project = ProjectFactory.create(owner=owner)
 
         assert self.mock_admin.id != project.owner_id
         assert_not_raises(Exception, ensure_authorized_to, 'read', Auditlog, project_id=project.id)

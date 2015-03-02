@@ -19,7 +19,7 @@
 
 from default import Test, db
 from nose.tools import assert_raises
-from factories import AppFactory
+from factories import ProjectFactory
 from factories import AuditlogFactory, UserFactory
 from pybossa.repositories import AuditlogRepository
 from pybossa.exc import WrongObjectError, DBIntegrityError
@@ -44,7 +44,7 @@ class TestAuditlogRepositoryForProjects(Test):
     def test_get_returns_log(self):
         """Test get method returns a log if exists"""
 
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         log = AuditlogFactory.create(app_id=app.id,
                                      app_short_name=app.short_name,
                                      user_id=app.owner.id,
@@ -58,7 +58,7 @@ class TestAuditlogRepositoryForProjects(Test):
     def test_get_by(self):
         """Test get_by returns a log with the specified attribute"""
 
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         log = AuditlogFactory.create(app_id=app.id,
                                      app_short_name=app.short_name,
                                      user_id=app.owner.id,
@@ -73,7 +73,7 @@ class TestAuditlogRepositoryForProjects(Test):
     def test_get_by_returns_none_if_no_log(self):
         """Test get_by returns None if no log matches the query"""
 
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         AuditlogFactory.create(app_id=app.id,
                                app_short_name=app.short_name,
                                user_id=app.owner.id,
@@ -87,7 +87,7 @@ class TestAuditlogRepositoryForProjects(Test):
     def test_filter_by_no_matches(self):
         """Test filter_by returns an empty list if no log matches the query"""
 
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         AuditlogFactory.create(app_id=app.id,
                                app_short_name=app.short_name,
                                user_id=app.owner.id,
@@ -103,13 +103,13 @@ class TestAuditlogRepositoryForProjects(Test):
         """Test filter_by returns a list of logs that meet the filtering
         condition"""
 
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         AuditlogFactory.create_batch(size=3, app_id=app.id,
                                app_short_name=app.short_name,
                                user_id=app.owner.id,
                                user_name=app.owner.name)
 
-        app2 = AppFactory.create()
+        app2 = ProjectFactory.create()
         should_be_missing = AuditlogFactory.create_batch(size=3, app_id=app2.id,
                                                    app_short_name=app2.short_name,
                                                    user_id=app2.owner.id,
@@ -125,7 +125,7 @@ class TestAuditlogRepositoryForProjects(Test):
     def test_filter_by_multiple_conditions(self):
         """Test filter_by supports multiple-condition queries"""
 
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         user = UserFactory.create()
         AuditlogFactory.create_batch(size=3, app_id=app.id,
                                app_short_name=app.short_name,
@@ -147,7 +147,7 @@ class TestAuditlogRepositoryForProjects(Test):
     def test_save(self):
         """Test save persist the log"""
 
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         log = AuditlogFactory.build(app_id=app.id,
                                     app_short_name=app.short_name,
                                     user_id=app.owner.id,

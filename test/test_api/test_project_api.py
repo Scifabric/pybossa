@@ -21,7 +21,7 @@ from default import db, with_context
 from nose.tools import assert_equal, assert_raises
 from test_api import TestAPI
 
-from factories import (AppFactory, TaskFactory, TaskRunFactory, AnonymousTaskRunFactory, UserFactory,
+from factories import (ProjectFactory, TaskFactory, TaskRunFactory, AnonymousTaskRunFactory, UserFactory,
                        CategoryFactory)
 
 from pybossa.repositories import ProjectRepository
@@ -34,7 +34,7 @@ class TestProjectAPI(TestAPI):
     @with_context
     def test_app_query(self):
         """ Test API project query"""
-        AppFactory.create(info={'total': 150})
+        ProjectFactory.create(info={'total': 150})
         res = self.app.get('/api/project')
         data = json.loads(res.data)
         assert len(data) == 1, data
@@ -56,7 +56,7 @@ class TestProjectAPI(TestAPI):
 
     def test_hidden_app(self):
         """ Test API hidden project works. """
-        AppFactory.create(hidden=1)
+        ProjectFactory.create(hidden=1)
         res = self.app.get('/api/project')
         data = json.loads(res.data)
 
@@ -66,7 +66,7 @@ class TestProjectAPI(TestAPI):
         assert res.status_code == 200, err_msg
 
         # Now we add a second project that it is not hidden
-        AppFactory.create(info={'hello': 'world'})
+        ProjectFactory.create(info={'hello': 'world'})
         res = self.app.get('/api/project')
         data = json.loads(res.data)
 
@@ -81,7 +81,7 @@ class TestProjectAPI(TestAPI):
     @with_context
     def test_query_app(self):
         """Test API query for project endpoint works"""
-        AppFactory.create(short_name='test-app', name='My New Project')
+        ProjectFactory.create(short_name='test-app', name='My New Project')
         # Test for real field
         res = self.app.get("/api/project?short_name=test-app", follow_redirects=True)
         data = json.loads(res.data)
@@ -379,7 +379,7 @@ class TestProjectAPI(TestAPI):
             a name used by the Flask app as a URL endpoint"""
         user = UserFactory.create()
         CategoryFactory.create()
-        project = AppFactory.create(owner=user)
+        project = ProjectFactory.create(owner=user)
         name = u'XXXX Project'
         data = {'short_name': 'new'}
         datajson = json.dumps(data)
@@ -401,7 +401,7 @@ class TestProjectAPI(TestAPI):
         admin = UserFactory.create()
         assert admin.admin
         user = UserFactory.create()
-        app = AppFactory.create(owner=user, short_name='xxxx-project')
+        app = ProjectFactory.create(owner=user, short_name='xxxx-project')
 
         # test update
         data = {'name': 'My New Title'}
@@ -462,7 +462,7 @@ class TestProjectAPI(TestAPI):
     def test_user_progress_anonymous(self):
         """Test API userprogress as anonymous works"""
         user = UserFactory.create()
-        app = AppFactory.create(owner=user)
+        app = ProjectFactory.create(owner=user)
         tasks = TaskFactory.create_batch(2, app=app)
         taskruns = []
         for task in tasks:
@@ -492,7 +492,7 @@ class TestProjectAPI(TestAPI):
     def test_user_progress_authenticated_user(self):
         """Test API userprogress as an authenticated user works"""
         user = UserFactory.create()
-        app = AppFactory.create(owner=user)
+        app = ProjectFactory.create(owner=user)
         tasks = TaskFactory.create_batch(2, app=app)
         taskruns = []
         for task in tasks:
@@ -537,7 +537,7 @@ class TestProjectAPI(TestAPI):
     @with_context
     def test_delete_app_cascade(self):
         """Test API delete project deletes associated tasks and taskruns"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         tasks = TaskFactory.create_batch(2, app=app)
         task_runs = TaskRunFactory.create_batch(2, app=app)
         url = '/api/project/%s?api_key=%s' % (1, app.owner.api_key)
@@ -553,7 +553,7 @@ class TestProjectAPI(TestAPI):
     @with_context
     def test_newtask_allow_anonymous_contributors(self):
         """Test API get a newtask - allow anonymous contributors"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         user = UserFactory.create()
         tasks = TaskFactory.create_batch(2, app=app, info={'question': 'answer'})
 
@@ -611,7 +611,7 @@ class TestProjectAPI(TestAPI):
     @with_context
     def test_newtask(self):
         """Test API project new_task method and authentication"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         TaskFactory.create_batch(2, app=app)
         user = UserFactory.create()
 

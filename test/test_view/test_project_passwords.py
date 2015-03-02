@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from default import Test, db, with_context
-from factories import AppFactory, TaskFactory, UserFactory
+from factories import ProjectFactory, TaskFactory, UserFactory
 from mock import patch
 
 from pybossa.repositories import ProjectRepository
@@ -41,7 +41,7 @@ class TestProjectPassword(Test):
     def test_password_view_func_post(self, redirect):
         """Test when posting to /project/short_name/password and password is correct
         the user is redirected to where they came from"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         task = TaskFactory.create(app=app)
         app.set_password('mysecret')
         project_repo.update(app)
@@ -55,7 +55,7 @@ class TestProjectPassword(Test):
     def test_password_view_func_post_wrong_passwd(self):
         """Test when posting to /project/short_name/password and password is incorrect
         an error message is flashed"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         task = TaskFactory.create(app=app)
         app.set_password('mysecret')
         project_repo.update(app)
@@ -77,7 +77,7 @@ class TestProjectPassword(Test):
     def test_password_required_for_anonymous_contributors(self):
         """Test when an anonymous user wants to contribute to a password
         protected project is redirected to the password view"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         TaskFactory.create(app=app)
         app.set_password('mysecret')
         project_repo.update(app)
@@ -92,7 +92,7 @@ class TestProjectPassword(Test):
     def test_password_not_required_for_anonymous_contributors(self):
         """Test when an anonymous user wants to contribute to a non-password
         protected project is able to do it"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         TaskFactory.create(app=app)
 
         res = self.app.get('/project/%s/newtask' % app.short_name, follow_redirects=True)
@@ -106,7 +106,7 @@ class TestProjectPassword(Test):
     def test_password_required_for_authenticated_contributors(self, mock_user):
         """Test when an authenticated user wants to contribute to a password
         protected project is redirected to the password view"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         TaskFactory.create(app=app)
         app.set_password('mysecret')
         project_repo.update(app)
@@ -124,7 +124,7 @@ class TestProjectPassword(Test):
     def test_password_not_required_for_authenticated_contributors(self, mock_user):
         """Test when an authenticated user wants to contribute to a non-password
         protected project is able to do it"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         TaskFactory.create(app=app)
         user = UserFactory.create()
         configure_mock_current_user_from(user, mock_user)
@@ -143,7 +143,7 @@ class TestProjectPassword(Test):
         user = UserFactory.create()
         configure_mock_current_user_from(user, mock_user)
         assert mock_user.admin
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         TaskFactory.create(app=app)
         app.set_password('mysecret')
         project_repo.update(app)
@@ -162,7 +162,7 @@ class TestProjectPassword(Test):
         owner = UserFactory.create_batch(2)[1]
         configure_mock_current_user_from(owner, mock_user)
         assert owner.admin is False
-        app = AppFactory.create(owner=owner)
+        app = ProjectFactory.create(owner=owner)
         assert app.owner.id == owner.id
         TaskFactory.create(app=app)
         app.set_password('mysecret')
@@ -183,7 +183,7 @@ class TestProjectPassword(Test):
     def test_password_required_for_anonymous_users_to_see_project(self):
         """Test when an anonymous user wants to visit a password
         protected project is redirected to the password view"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         TaskFactory.create(app=app)
         app.set_password('mysecret')
         project_repo.update(app)
@@ -198,7 +198,7 @@ class TestProjectPassword(Test):
     def test_password_not_required_for_anonymous_users_to_see_project(self):
         """Test when an anonymous user wants to visit a non-password
         protected project is able to do it"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         TaskFactory.create(app=app)
 
         for endpoint in self.endpoints_requiring_password:
@@ -211,7 +211,7 @@ class TestProjectPassword(Test):
     def test_password_required_for_authenticated_users_to_see_project(self, mock_user):
         """Test when an authenticated user wants to visit a password
         protected project is redirected to the password view"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         TaskFactory.create(app=app)
         app.set_password('mysecret')
         project_repo.update(app)
@@ -228,7 +228,7 @@ class TestProjectPassword(Test):
     def test_password_not_required_for_authenticated_users_to_see_project(self, mock_user):
         """Test when an authenticated user wants to visit a non-password
         protected project is able to do it"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         TaskFactory.create(app=app)
         user = UserFactory.create()
         configure_mock_current_user_from(user, mock_user)
@@ -246,7 +246,7 @@ class TestProjectPassword(Test):
         user = UserFactory.create()
         configure_mock_current_user_from(user, mock_user)
         assert mock_user.admin
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         TaskFactory.create(app=app)
         app.set_password('mysecret')
         project_repo.update(app)
@@ -264,7 +264,7 @@ class TestProjectPassword(Test):
         owner = UserFactory.create_batch(2)[1]
         configure_mock_current_user_from(owner, mock_user)
         assert owner.admin is False
-        app = AppFactory.create(owner=owner)
+        app = ProjectFactory.create(owner=owner)
         assert app.owner.id == owner.id
         TaskFactory.create(app=app)
         app.set_password('mysecret')

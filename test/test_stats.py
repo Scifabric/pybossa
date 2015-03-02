@@ -18,7 +18,7 @@
 
 import datetime
 import time
-from factories import AppFactory, TaskFactory, TaskRunFactory, AnonymousTaskRunFactory
+from factories import ProjectFactory, TaskFactory, TaskRunFactory, AnonymousTaskRunFactory
 from default import Test, with_context
 from pybossa.model.task_run import TaskRun
 import pybossa.cache.project_stats as stats
@@ -27,7 +27,7 @@ import pybossa.cache.project_stats as stats
 class TestStats(Test):
     def setUp(self):
         super(TestStats, self).setUp()
-        self.project = AppFactory.create()
+        self.project = ProjectFactory.create()
         for task in TaskFactory.create_batch(4, app=self.project, n_answers=3):
             TaskRunFactory.create(task=task)
             AnonymousTaskRunFactory.create(task=task)
