@@ -44,9 +44,9 @@ class JsonExporter(Exporter):
         # TODO: check ty here
         return self._gen_json(ty, id)
 
-    def _make_zip(self, app, ty):
-        name = self._app_name_latin_encoded(app)
-        json_task_generator = self._respond_json(ty, app.id)
+    def _make_zip(self, project, ty):
+        name = self._project_name_latin_encoded(project)
+        json_task_generator = self._respond_json(ty, project.id)
         if json_task_generator is not None:
             datafile = tempfile.NamedTemporaryFile()
             try:
@@ -58,18 +58,18 @@ class JsonExporter(Exporter):
                     zip = self._zip_factory(zipped_datafile.name)
                     zip.write(datafile.name, secure_filename('%s_%s.json' % (name, ty)))
                     zip.close()
-                    container = "user_%d" % app.owner_id
-                    file = FileStorage(filename=self.download_name(app, ty), stream=zipped_datafile)
+                    container = "user_%d" % project.owner_id
+                    file = FileStorage(filename=self.download_name(project, ty), stream=zipped_datafile)
                     uploader.upload_file(file, container=container)
                 finally:
                     zipped_datafile.close()
             finally:
                 datafile.close()
 
-    def download_name(self, app, ty):
-        return super(JsonExporter, self).download_name(app, ty, 'json')
+    def download_name(self, project, ty):
+        return super(JsonExporter, self).download_name(project, ty, 'json')
 
-    def pregenerate_zip_files(self, app):
-        print "%d (json)" % app.id
-        self._make_zip(app, "task")
-        self._make_zip(app, "task_run")
+    def pregenerate_zip_files(self, project):
+        print "%d (json)" % project.id
+        self._make_zip(project, "task")
+        self._make_zip(project, "task_run")

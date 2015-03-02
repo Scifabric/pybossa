@@ -32,10 +32,10 @@ class Exporter(object):
 
     """Abstract generic exporter class."""
 
-    def _app_name_latin_encoded(self, app):
-        """app short name for later HTML header usage"""
-        # name = app.short_name.encode('utf-8', 'ignore').decode('latin-1')
-        name = unidecode(app.short_name)
+    def _project_name_latin_encoded(self, project):
+        """project short name for later HTML header usage"""
+        # name = project.short_name.encode('utf-8', 'ignore').decode('latin-1')
+        name = unidecode(project.short_name)
         return name
 
     def _zip_factory(self, filename):
@@ -50,15 +50,15 @@ class Exporter(object):
         zip = zipfile.ZipFile(file=filename, mode='w', compression=zip_compression, allowZip64=True)
         return zip
 
-    def _make_zip(self, app, ty):
+    def _make_zip(self, project, ty):
         """Generate a ZIP of a certain type and upload it"""
         pass
 
-    def _container(self, app):
-        return "user_%d" % app.owner_id
+    def _container(self, project):
+        return "user_%d" % project.owner_id
 
-    def _download_path(self, app):
-        container = self._container(app)
+    def _download_path(self, project):
+        container = self._container(project)
         if isinstance(uploader, local.LocalUploader):
             filepath = safe_join(uploader.upload_folder, container)
         else:
@@ -66,35 +66,35 @@ class Exporter(object):
             filepath = container
         return filepath
 
-    def download_name(self, app, ty, format):
+    def download_name(self, project, ty, format):
         """Get the filename (without) path of the file which should be downloaded.
            This function does not check if this filename actually exists!"""
         # TODO: Check if ty is valid
-        name = self._app_name_latin_encoded(app)
-        filename = '%s_%s_%s_%s.zip' % (str(app.id), name, ty, format)  # Example: 123_feynman_tasks_json.zip
+        name = self._project_name_latin_encoded(project)
+        filename = '%s_%s_%s_%s.zip' % (str(project.id), name, ty, format)  # Example: 123_feynman_tasks_json.zip
         filename = secure_filename(filename)
         return filename
 
-    def zip_existing(self, app, ty):
+    def zip_existing(self, project, ty):
         """Check if exported ZIP is existing"""
         # TODO: Check ty
-        filename=self.download_name(app, ty)
+        filename=self.download_name(project, ty)
         if isinstance(uploader, local.LocalUploader):
-            filepath = self._download_path(app)
+            filepath = self._download_path(project)
             return os.path.isfile(safe_join(filepath, filename))
         else:
             return True
             # TODO: Check rackspace file existence
 
-    def get_zip(self, app, ty):
+    def get_zip(self, project, ty):
         """Get a ZIP file directly from uploaded directory
         or generate one on the fly and upload it if not existing."""
-        filename=self.download_name(app, ty)
-        if not self.zip_existing(app, ty):
+        filename=self.download_name(project, ty)
+        if not self.zip_existing(project, ty):
             print "Warning: Generating %s on the fly now!" % filename
-            self._make_zip(app, ty)
+            self._make_zip(project, ty)
         if isinstance(uploader, local.LocalUploader):
-            filepath = self._download_path(app)
+            filepath = self._download_path(project)
             res = send_file(filename_or_fp=safe_join(filepath, filename),
                             mimetype='application/octet-stream',
                             as_attachment=True,
@@ -105,15 +105,12 @@ class Exporter(object):
             return res
         else:
             return redirect(url_for('rackspace', filename=filename,
-                                    container=self._container(app),
+                                    container=self._container(project),
                                     _external=True))
 
-    def response_zip(self, app, ty):
-        return self.get_zip(app, ty)
+    def response_zip(self, project, ty):
+        return self.get_zip(project, ty)
 
-    def pregenerate_zip_files(self, app):
+    def pregenerate_zip_files(self, project):
         """Cache and generate all types (tasks and task_run) of ZIP files"""
         pass
-
-
-

@@ -129,9 +129,9 @@ class CsvExporter(Exporter):
         except:  # pragma: no cover
             raise
 
-    def _make_zip(self, app, ty):
-        name = self._app_name_latin_encoded(app)
-        csv_task_generator = self._respond_csv(ty, app.id)
+    def _make_zip(self, project, ty):
+        name = self._project_name_latin_encoded(project)
+        csv_task_generator = self._respond_csv(ty, project.id)
         if csv_task_generator is not None:
             # TODO: use temp file from csv generation directly
             datafile = tempfile.NamedTemporaryFile()
@@ -146,19 +146,19 @@ class CsvExporter(Exporter):
                     zip.write(
                         datafile.name, secure_filename('%s_%s.csv' % (name, ty)))
                     zip.close()
-                    container = "user_%d" % app.owner_id
+                    container = "user_%d" % project.owner_id
                     file = FileStorage(
-                        filename=self.download_name(app, ty), stream=zipped_datafile)
+                        filename=self.download_name(project, ty), stream=zipped_datafile)
                     uploader.upload_file(file, container=container)
                 finally:
                     zipped_datafile.close()
             finally:
                 datafile.close()
 
-    def download_name(self, app, ty):
-        return super(CsvExporter, self).download_name(app, ty, 'csv')
+    def download_name(self, project, ty):
+        return super(CsvExporter, self).download_name(project, ty, 'csv')
 
-    def pregenerate_zip_files(self, app):
-        print "%d (csv)" % app.id
-        self._make_zip(app, "task")
-        self._make_zip(app, "task_run")
+    def pregenerate_zip_files(self, project):
+        print "%d (csv)" % project.id
+        self._make_zip(project, "task")
+        self._make_zip(project, "task_run")
