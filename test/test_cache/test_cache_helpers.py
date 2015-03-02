@@ -156,12 +156,12 @@ class TestHelpersCache(Test):
     def test_check_contributing_state_completed(self):
         """Test check_contributing_state returns 'completed' for a project with all
         tasks completed and user that has contributed to it"""
-        app = ProjectFactory.create()
-        task = TaskFactory.create(app=app, n_answers=1)
+        project = ProjectFactory.create()
+        task = TaskFactory.create(app=project, n_answers=1)
         user = UserFactory.create()
         TaskRunFactory.create_batch(1, task=task, user=user)
 
-        contributing_state = helpers.check_contributing_state(app=app,
+        contributing_state = helpers.check_contributing_state(project=project,
                                                               user_id=user.id)
 
         assert task.state == 'completed', task.state
@@ -171,12 +171,12 @@ class TestHelpersCache(Test):
     def test_check_contributing_state_completed_user_not_contributed(self):
         """Test check_contributing_state returns 'completed' for a project with all
         tasks completed even if the user has not contributed to it"""
-        app = ProjectFactory.create()
-        task = TaskFactory.create(app=app, n_answers=2)
+        project = ProjectFactory.create()
+        task = TaskFactory.create(app=project, n_answers=2)
         TaskRunFactory.create_batch(2, task=task)
         user = UserFactory.create()
 
-        contributing_state = helpers.check_contributing_state(app=app,
+        contributing_state = helpers.check_contributing_state(project=project,
                                                               user_id=user.id)
 
         assert task.state == 'completed', task.state
@@ -186,11 +186,11 @@ class TestHelpersCache(Test):
     def test_check_contributing_state_ongoing_tasks_not_contributed(self):
         """Test check_contributing_state returns 'can_contribute' for a project
         with ongoing tasks a user has not contributed to"""
-        app = ProjectFactory.create()
-        task = TaskFactory.create(app=app)
+        project = ProjectFactory.create()
+        task = TaskFactory.create(app=project)
         user = UserFactory.create()
 
-        contributing_state = helpers.check_contributing_state(app=app,
+        contributing_state = helpers.check_contributing_state(project=project,
                                                               user_id=user.id)
 
         assert contributing_state == 'can_contribute', contributing_state
@@ -199,11 +199,11 @@ class TestHelpersCache(Test):
     def test_check_contributing_state_ongoing_tasks_contributed(self):
         """Test check_contributing_state returns 'cannot_contribute' for a project
         with ongoing tasks to which the user has already contributed"""
-        app = ProjectFactory.create()
-        task = TaskFactory.create(app=app, n_answers=3)
+        project = ProjectFactory.create()
+        task = TaskFactory.create(app=project, n_answers=3)
         user = UserFactory.create()
         TaskRunFactory.create(task=task, user=user)
-        contributing_state = helpers.check_contributing_state(app=app,
+        contributing_state = helpers.check_contributing_state(project=project,
                                                               user_id=user.id)
 
         assert contributing_state == 'cannot_contribute', contributing_state
@@ -212,24 +212,24 @@ class TestHelpersCache(Test):
     def test_check_contributing_state_draft(self):
         """Test check_contributing_state returns 'draft' for a project that has
         ongoing tasks but has no presenter"""
-        app = ProjectFactory.create(info={})
-        task = TaskFactory.create(app=app)
+        project = ProjectFactory.create(info={})
+        task = TaskFactory.create(app=project)
         user = UserFactory.create()
 
-        contributing_state = helpers.check_contributing_state(app=app,
+        contributing_state = helpers.check_contributing_state(project=project,
                                                               user_id=user.id)
 
-        assert 'task_presenter' not in app.info
+        assert 'task_presenter' not in project.info
         assert contributing_state == 'draft', contributing_state
 
     def test_check_contributing_state_draft_presenter(self):
         """Test check_contributing_state returns 'draft' for a project that has
         no tasks but has a presenter"""
-        app = ProjectFactory.create()
+        project = ProjectFactory.create()
         user = UserFactory.create()
 
-        contributing_state = helpers.check_contributing_state(app=app,
+        contributing_state = helpers.check_contributing_state(project=project,
                                                               user_id=user.id)
 
-        assert 'task_presenter' in app.info
+        assert 'task_presenter' in project.info
         assert contributing_state == 'draft', contributing_state
