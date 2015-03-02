@@ -18,7 +18,7 @@
 from default import Test, with_context
 from pybossa.view.account import get_update_feed
 
-from factories import AppFactory, TaskFactory, TaskRunFactory, UserFactory, BlogpostFactory
+from factories import ProjectFactory, TaskFactory, TaskRunFactory, UserFactory, BlogpostFactory
 
 class TestActivityFeed(Test):
 
@@ -36,7 +36,7 @@ class TestActivityFeed(Test):
 
     def test_project_creation(self):
         """Test ACTIVITY FEED works for project creation."""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         update_feed = get_update_feed()
         err_msg = "It should be the same project"
         assert update_feed[0]['id'] == app.id, err_msg
@@ -100,7 +100,7 @@ class TestActivityFeed(Test):
     def test_max_limit(self):
         """Test ACTIVITY FEED limit works."""
         for i in range(0,105):
-            app = AppFactory.create()
+            app = ProjectFactory.create()
 
         update_feed = get_update_feed()
         err_msg = "There should be at max 100 updates."

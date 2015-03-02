@@ -33,7 +33,7 @@ auditlog_repo = AuditlogRepository(db)
 
 
 def reset_all_pk_sequences():
-    AppFactory.reset_sequence()
+    ProjectFactory.reset_sequence()
     BlogpostFactory.reset_sequence()
     CategoryFactory.reset_sequence()
     TaskFactory.reset_sequence()
@@ -54,7 +54,7 @@ class BaseFactory(factory.Factory):
 
 
 # Import the factories
-from app_factory import AppFactory
+from project_factory import ProjectFactory
 from blogpost_factory import BlogpostFactory
 from category_factory import CategoryFactory
 from task_factory import TaskFactory

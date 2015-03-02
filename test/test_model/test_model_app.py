@@ -22,7 +22,7 @@ from mock import patch
 from pybossa.model.app import App
 from pybossa.model.user import User
 from sqlalchemy.exc import IntegrityError
-from factories import AppFactory
+from factories import ProjectFactory
 
 
 class TestModelApp(Test):
@@ -93,7 +93,7 @@ class TestModelApp(Test):
 
     def test_needs_password_no_password_key(self):
         """Test needs_password returns false if the app has not a password"""
-        app = AppFactory.build(info={})
+        app = ProjectFactory.build(info={})
 
         assert app.needs_password() is False
 
@@ -102,7 +102,7 @@ class TestModelApp(Test):
     def test_needs_password_empty_password_key(self, mock_signer):
         """Test needs_password returns false if the app has an empty password"""
         mock_signer.loads = lambda x: x
-        app = AppFactory.build(info={'passwd_hash': None})
+        app = ProjectFactory.build(info={'passwd_hash': None})
 
         assert app.needs_password() is False
 
@@ -111,7 +111,7 @@ class TestModelApp(Test):
     def test_needs_password_with_password_key_and_value(self, mock_signer):
         """Test needs_password returns true if the app has a password"""
         mock_signer.loads = lambda x: x
-        app = AppFactory.build(info={'passwd_hash': 'mypassword'})
+        app = ProjectFactory.build(info={'passwd_hash': 'mypassword'})
 
         assert app.needs_password() is True
 
@@ -119,7 +119,7 @@ class TestModelApp(Test):
     @patch('pybossa.model.app.signer')
     def test_check_password(self, mock_signer):
         mock_signer.loads = lambda x: x
-        app = AppFactory.build(info={'passwd_hash': 'mypassword'})
+        app = ProjectFactory.build(info={'passwd_hash': 'mypassword'})
 
         assert app.check_password('mypassword')
 
@@ -127,34 +127,34 @@ class TestModelApp(Test):
     @patch('pybossa.model.app.signer')
     def test_check_password_bad_password(self, mock_signer):
         mock_signer.loads = lambda x: x
-        app = AppFactory.build(info={'passwd_hash': 'mypassword'})
+        app = ProjectFactory.build(info={'passwd_hash': 'mypassword'})
 
         assert not app.check_password('notmypassword')
 
 
     def test_has_autoimporter_returns_true_if_autoimporter(self):
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
-        app = AppFactory.build(info={'autoimporter': autoimporter})
+        app = ProjectFactory.build(info={'autoimporter': autoimporter})
 
         assert app.has_autoimporter() is True
 
 
     def test_has_autoimporter_returns_false_if_no_autoimporter(self):
-        app = AppFactory.build(info={})
+        app = ProjectFactory.build(info={})
 
         assert app.has_autoimporter() is False
 
 
     def test_get_autoimporter_returns_autoimporter(self):
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
-        app = AppFactory.build(info={'autoimporter': autoimporter})
+        app = ProjectFactory.build(info={'autoimporter': autoimporter})
 
         assert app.get_autoimporter() == autoimporter, app.get_autoimporter()
 
 
     def test_set_autoimporter_works_as_expected(self):
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
-        app = AppFactory.build(info={})
+        app = ProjectFactory.build(info={})
         assert app.has_autoimporter() is False
 
         app.set_autoimporter(autoimporter)
@@ -164,7 +164,7 @@ class TestModelApp(Test):
 
     def test_delete_autoimporter_works_as_expected(self):
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
-        app = AppFactory.build(info={'autoimporter': autoimporter})
+        app = ProjectFactory.build(info={'autoimporter': autoimporter})
         assert app.has_autoimporter() is True
 
         app.delete_autoimporter()

@@ -17,7 +17,7 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from default import Test, db, with_context
-from factories import (AppFactory, TaskFactory, TaskRunFactory,
+from factories import (ProjectFactory, TaskFactory, TaskRunFactory,
                       AnonymousTaskRunFactory, UserFactory)
 from pybossa.cache import helpers
 
@@ -27,7 +27,7 @@ class TestHelpersCache(Test):
     def test_n_available_tasks_no_tasks_authenticated_user(self):
         """Test n_available_tasks returns 0 for authenticated user if the project
         has no tasks"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
 
         n_available_tasks = helpers.n_available_tasks(app.id, user_id=1)
 
@@ -37,7 +37,7 @@ class TestHelpersCache(Test):
     def test_n_available_tasks_no_tasks_anonymous_user(self):
         """Test n_available_tasks returns 0 for anonymous user if the project
         has no tasks"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
 
         n_available_tasks = helpers.n_available_tasks(app.id, user_ip='127.0.0.1')
 
@@ -47,7 +47,7 @@ class TestHelpersCache(Test):
     def test_n_available_tasks_no_taskruns_authenticated_user(self):
         """Test n_available_tasks returns 1 for authenticated user
         if there are no taskruns"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         task = TaskFactory.create(app=app)
 
         n_available_tasks = helpers.n_available_tasks(app.id, user_id=1)
@@ -58,7 +58,7 @@ class TestHelpersCache(Test):
     def test_n_available_tasks_no_taskruns_anonymous_user(self):
         """Test n_available_tasks returns 1 for anonymous user
         if there are no taskruns"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         task = TaskFactory.create(app=app)
 
         n_available_tasks = helpers.n_available_tasks(app.id, user_ip='127.0.0.1')
@@ -69,7 +69,7 @@ class TestHelpersCache(Test):
     def test_n_available_tasks_all_tasks_completed_authenticated_user(self):
         """Test n_available_tasks returns 0 for authenticated user if all the
         tasks are completed"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         task = TaskFactory.create(app=app, state='completed')
 
         n_available_tasks = helpers.n_available_tasks(app.id, user_id=1)
@@ -80,7 +80,7 @@ class TestHelpersCache(Test):
     def test_n_available_tasks_all_tasks_completed_anonymous_user(self):
         """Test n_available_tasks returns 0 for anonymous user if all the
         tasks are completed"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         task = TaskFactory.create(app=app, state='completed')
 
         n_available_tasks = helpers.n_available_tasks(app.id, user_ip='127.0.0.1')
@@ -91,7 +91,7 @@ class TestHelpersCache(Test):
     def test_n_available_tasks_all_tasks_answered_by_authenticated_user(self):
         """Test n_available_tasks returns 0 for authenticated user if he has
         submitted taskruns for all the tasks"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         task = TaskFactory.create(app=app, n_answers=2)
         user = UserFactory.create()
         taskrun = TaskRunFactory.create(task=task, user=user)
@@ -105,7 +105,7 @@ class TestHelpersCache(Test):
     def test_n_available_tasks_all_tasks_answered_by_anonymous_user(self):
         """Test n_available_tasks returns 0 for anonymous user if he has
         submitted taskruns for all the tasks"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         task = TaskFactory.create(app=app, n_answers=2)
         taskrun = AnonymousTaskRunFactory.create(task=task)
 
@@ -118,7 +118,7 @@ class TestHelpersCache(Test):
     def test_n_available_tasks_some_tasks_answered_by_authenticated_user(self):
         """Test n_available_tasks returns 1 for authenticated user if he has
         submitted taskruns for one of the tasks but there is still another task"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         answered_task = TaskFactory.create(app=app)
         available_task = TaskFactory.create(app=app)
         user = UserFactory.create()
@@ -131,7 +131,7 @@ class TestHelpersCache(Test):
     def test_n_available_some_all_tasks_answered_by_anonymous_user(self):
         """Test n_available_tasks returns 1 for anonymous user if he has
         submitted taskruns for one of the tasks but there is still another task"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         answered_task = TaskFactory.create(app=app)
         available_task = TaskFactory.create(app=app)
         taskrun = AnonymousTaskRunFactory.create(task=answered_task)
@@ -144,7 +144,7 @@ class TestHelpersCache(Test):
     def test_n_available_tasks_task_answered_by_another_user(self):
         """Test n_available_tasks returns 1 for a user if another
         user has submitted taskruns for the task but he hasn't"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         task = TaskFactory.create(app=app)
         user = UserFactory.create()
         taskrun = TaskRunFactory.create(task=task)
@@ -156,7 +156,7 @@ class TestHelpersCache(Test):
     def test_check_contributing_state_completed(self):
         """Test check_contributing_state returns 'completed' for a project with all
         tasks completed and user that has contributed to it"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         task = TaskFactory.create(app=app, n_answers=1)
         user = UserFactory.create()
         TaskRunFactory.create_batch(1, task=task, user=user)
@@ -171,7 +171,7 @@ class TestHelpersCache(Test):
     def test_check_contributing_state_completed_user_not_contributed(self):
         """Test check_contributing_state returns 'completed' for a project with all
         tasks completed even if the user has not contributed to it"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         task = TaskFactory.create(app=app, n_answers=2)
         TaskRunFactory.create_batch(2, task=task)
         user = UserFactory.create()
@@ -186,7 +186,7 @@ class TestHelpersCache(Test):
     def test_check_contributing_state_ongoing_tasks_not_contributed(self):
         """Test check_contributing_state returns 'can_contribute' for a project
         with ongoing tasks a user has not contributed to"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         task = TaskFactory.create(app=app)
         user = UserFactory.create()
 
@@ -199,7 +199,7 @@ class TestHelpersCache(Test):
     def test_check_contributing_state_ongoing_tasks_contributed(self):
         """Test check_contributing_state returns 'cannot_contribute' for a project
         with ongoing tasks to which the user has already contributed"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         task = TaskFactory.create(app=app, n_answers=3)
         user = UserFactory.create()
         TaskRunFactory.create(task=task, user=user)
@@ -212,7 +212,7 @@ class TestHelpersCache(Test):
     def test_check_contributing_state_draft(self):
         """Test check_contributing_state returns 'draft' for a project that has
         ongoing tasks but has no presenter"""
-        app = AppFactory.create(info={})
+        app = ProjectFactory.create(info={})
         task = TaskFactory.create(app=app)
         user = UserFactory.create()
 
@@ -225,7 +225,7 @@ class TestHelpersCache(Test):
     def test_check_contributing_state_draft_presenter(self):
         """Test check_contributing_state returns 'draft' for a project that has
         no tasks but has a presenter"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         user = UserFactory.create()
 
         contributing_state = helpers.check_contributing_state(app=app,

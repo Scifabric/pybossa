@@ -41,7 +41,7 @@ from pybossa.model.task_run import TaskRun
 from pybossa.model.user import User
 from pybossa.core import user_repo, sentinel
 from pybossa.jobs import send_mail, import_tasks
-from factories import AppFactory, CategoryFactory, TaskFactory, TaskRunFactory
+from factories import ProjectFactory, CategoryFactory, TaskFactory, TaskRunFactory
 from unidecode import unidecode
 from werkzeug.utils import secure_filename
 
@@ -949,7 +949,7 @@ class TestWeb(web.Helper):
 
         self.register()
         owner = db.session.query(User).first()
-        app = AppFactory.create(owner=owner)
+        app = ProjectFactory.create(owner=owner)
 
         new_webhook = 'http://mynewserver.com/'
 
@@ -970,7 +970,7 @@ class TestWeb(web.Helper):
 
         self.register()
         owner = db.session.query(User).first()
-        app = AppFactory.create(owner=owner)
+        app = ProjectFactory.create(owner=owner)
 
         new_webhook = 'http://mynewserver.com/'
 
@@ -989,7 +989,7 @@ class TestWeb(web.Helper):
 
         self.register()
         owner = db.session.query(User).first()
-        app = AppFactory.create(owner=owner)
+        app = ProjectFactory.create(owner=owner)
 
         new_webhook = 'http://mynewserver.com/'
 
@@ -1009,7 +1009,7 @@ class TestWeb(web.Helper):
         mock_webhook.return_value = html_request
         self.register()
         owner = db.session.query(User).first()
-        app = AppFactory.create(owner=owner)
+        app = ProjectFactory.create(owner=owner)
 
         self.update_application(id=app.id, short_name=app.short_name,
                                 new_password='mysecret')
@@ -1026,7 +1026,7 @@ class TestWeb(web.Helper):
         mock_webhook.return_value = html_request
         self.register()
         owner = db.session.query(User).first()
-        app = AppFactory.create(info={'passwd_hash': 'mysecret'}, owner=owner)
+        app = ProjectFactory.create(info={'passwd_hash': 'mysecret'}, owner=owner)
 
         self.update_application(id=app.id, short_name=app.short_name,
                                 new_password='')
@@ -1332,7 +1332,7 @@ class TestWeb(web.Helper):
         n_apps = current_app.config.get('APPS_PER_PAGE')
         current_app.config['APPS_PER_PAGE'] = 1
         category = CategoryFactory.create(name='category', short_name='cat')
-        for project in AppFactory.create_batch(2, category=category):
+        for project in ProjectFactory.create_batch(2, category=category):
             TaskFactory.create(app=project)
         page1 = self.app.get('/project/category/%s/' % category.short_name)
         page2 = self.app.get('/project/category/%s/page/2/' % category.short_name)
@@ -2248,7 +2248,7 @@ class TestWeb(web.Helper):
         assert res.status_code == 200, res.status_code
 
     def test_export_task_json_support_non_latin1_project_names(self):
-        app = AppFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
+        app = ProjectFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
         self.clear_temp_container(app.owner_id)
         res = self.app.get('project/%s/tasks/export?type=task&format=json' % app.short_name,
                            follow_redirects=True)
@@ -2256,14 +2256,14 @@ class TestWeb(web.Helper):
         assert filename in res.headers.get('Content-Disposition'), res.headers
 
     def test_export_taskrun_json_support_non_latin1_project_names(self):
-        app = AppFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
+        app = ProjectFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
         res = self.app.get('project/%s/tasks/export?type=task_run&format=json' % app.short_name,
                            follow_redirects=True)
         filename = secure_filename(unidecode(u'Измени Киев!'))
         assert filename in res.headers.get('Content-Disposition'), res.headers
 
     def test_export_task_csv_support_non_latin1_project_names(self):
-        app = AppFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
+        app = ProjectFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
         TaskFactory.create(app=app)
         res = self.app.get('/project/%s/tasks/export?type=task&format=csv' % app.short_name,
                            follow_redirects=True)
@@ -2271,7 +2271,7 @@ class TestWeb(web.Helper):
         assert filename in res.headers.get('Content-Disposition'), res.headers
 
     def test_export_taskrun_csv_support_non_latin1_project_names(self):
-        app = AppFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
+        app = ProjectFactory.create(name=u'Измени Киев!', short_name=u'Измени Киев!')
         task = TaskFactory.create(app=app)
         TaskRunFactory.create(task=task)
         res = self.app.get('/project/%s/tasks/export?type=task_run&format=csv' % app.short_name,
@@ -2337,7 +2337,7 @@ class TestWeb(web.Helper):
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real app
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         self.clear_temp_container(app.owner_id)
         for i in range(0, 5):
             task = TaskFactory.create(app=app, info={'question': i})
@@ -2403,7 +2403,7 @@ class TestWeb(web.Helper):
         assert res.headers.get('Content-Disposition') == content_disposition, res.headers
 
         # With an empty app
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         # Now get the tasks in CSV format
         uri = "/project/%s/tasks/export?type=task&format=csv" % app.short_name
         res = self.app.get(uri, follow_redirects=True)
@@ -2423,7 +2423,7 @@ class TestWeb(web.Helper):
         assert res.status == '404 NOT FOUND', res.status
 
         # Now with a real app
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         self.clear_temp_container(app.owner_id)
         task = TaskFactory.create(app=app)
         for i in range(2):
@@ -2774,7 +2774,7 @@ class TestWeb(web.Helper):
         shows the form for it, for each of the variants"""
         self.register()
         owner = db.session.query(User).first()
-        app = AppFactory.create(owner=owner)
+        app = ProjectFactory.create(owner=owner)
 
         # CSV
         url = "/project/%s/tasks/import?type=csv" % app.short_name
@@ -2827,7 +2827,7 @@ class TestWeb(web.Helper):
         names.return_value = ['csv', 'gdocs', 'epicollect']
         self.register()
         owner = db.session.query(User).first()
-        app = AppFactory.create(owner=owner)
+        app = ProjectFactory.create(owner=owner)
         url = "/project/%s/tasks/import" % app.short_name
 
         res = self.app.get(url, follow_redirects=True)
@@ -3069,7 +3069,7 @@ class TestWeb(web.Helper):
     def test_flickr_importer_page_shows_option_to_log_into_flickr(self):
         self.register()
         owner = db.session.query(User).first()
-        app = AppFactory.create(owner=owner)
+        app = ProjectFactory.create(owner=owner)
         url = "/project/%s/tasks/import?type=flickr" % app.short_name
 
         res = self.app.get(url)
@@ -3086,7 +3086,7 @@ class TestWeb(web.Helper):
                                                'title': u'my-fake-title'}]
         self.register()
         owner = db.session.query(User).first()
-        app = AppFactory.create(owner=owner)
+        app = ProjectFactory.create(owner=owner)
         url = "/project/%s/tasks/import?type=flickr" % app.short_name
 
         res = self.app.get(url)
@@ -3761,7 +3761,7 @@ class TestWeb(web.Helper):
 
         self.register()
         user = User.query.first()
-        app = AppFactory.create(owner=user)
+        app = ProjectFactory.create(owner=user)
         task = TaskFactory.create(app=app)
         taskrun = TaskRunFactory.create(task=task, user=user)
         res = self.app.get('/project/%s/newtask' % app.short_name)
@@ -3779,7 +3779,7 @@ class TestWeb(web.Helper):
 
         self.register()
         user = User.query.first()
-        app = AppFactory.create(owner=user)
+        app = ProjectFactory.create(owner=user)
         task = TaskFactory.create(app=app, n_answers=1)
         taskrun = TaskRunFactory.create(task=task, user=user)
         res = self.app.get('/project/%s/newtask' % app.short_name)

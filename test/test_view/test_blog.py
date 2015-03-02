@@ -19,7 +19,7 @@
 
 from helper import web
 from default import db, with_context
-from factories import AppFactory, BlogpostFactory
+from factories import ProjectFactory, BlogpostFactory
 from mock import patch
 
 from pybossa.repositories import BlogRepository
@@ -34,7 +34,7 @@ class TestBlogpostView(web.Helper):
     def test_blogposts_get_all(self):
         """Test blogpost GET all blogposts"""
         user = self.create_users()[1]
-        app = AppFactory.create(owner=user)
+        app = ProjectFactory.create(owner=user)
         blogpost_1 = BlogpostFactory.create(owner=user, app=app, title='titleone')
         blogpost_2 = BlogpostFactory.create(owner=user, app=app, title='titletwo')
 
@@ -61,7 +61,7 @@ class TestBlogpostView(web.Helper):
         self.signout()
         self.register(name='user', email='user@user.com')
         user = user_repo.get(2)
-        app = AppFactory.create(owner=user, hidden=1)
+        app = ProjectFactory.create(owner=user, hidden=1)
         blogpost = BlogpostFactory.create(app=app, title='title')
 
         url = "/project/%s/blog" % app.short_name
@@ -100,7 +100,7 @@ class TestBlogpostView(web.Helper):
     def test_blogpost_get_one(self):
         """Test blogpost GET with id shows one blogpost"""
         user = self.create_users()[1]
-        app = AppFactory.create(owner=user)
+        app = ProjectFactory.create(owner=user)
         blogpost = BlogpostFactory.create(app=app, title='title')
         url = "/project/%s/%s" % (app.short_name, blogpost.id)
 
@@ -123,7 +123,7 @@ class TestBlogpostView(web.Helper):
         self.signout()
         self.register(name='user', email='user@user.com')
         user = user_repo.get(2)
-        app = AppFactory.create(owner=user, hidden=1)
+        app = ProjectFactory.create(owner=user, hidden=1)
         blogpost = BlogpostFactory.create(app=app, title='title')
         url = "/project/%s/%s" % (app.short_name, blogpost.id)
 
@@ -154,7 +154,7 @@ class TestBlogpostView(web.Helper):
         """Test blogposts GET non existing posts raises errors"""
         self.register()
         user = user_repo.get(1)
-        app1, app2 = AppFactory.create_batch(2, owner=user)
+        app1, app2 = ProjectFactory.create_batch(2, owner=user)
         blogpost = BlogpostFactory.create(app=app1)
 
         # To a non-existing app
@@ -180,7 +180,7 @@ class TestBlogpostView(web.Helper):
         """Test blogposts, project owners can create"""
         self.register()
         user = user_repo.get(1)
-        app = AppFactory.create(owner=user)
+        app = ProjectFactory.create(owner=user)
         url = "/project/%s/new-blogpost" % app.short_name
 
         res = self.app.get(url, follow_redirects=True)
@@ -200,7 +200,7 @@ class TestBlogpostView(web.Helper):
 
     def test_blogpost_create_by_anonymous(self):
         """Test blogpost create, anonymous users are redirected to signin"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         url = "/project/%s/new-blogpost" % app.short_name
 
         res = self.app.get(url, follow_redirects=True)
@@ -221,7 +221,7 @@ class TestBlogpostView(web.Helper):
         """Test blogpost create by non owner of the project is forbidden"""
         self.register()
         user = user_repo.get(1)
-        app = AppFactory.create(owner=user)
+        app = ProjectFactory.create(owner=user)
         url = "/project/%s/new-blogpost" % app.short_name
         self.signout()
         self.register(name='notowner', email='user2@user.com')
@@ -253,7 +253,7 @@ class TestBlogpostView(web.Helper):
         """Test blogposts, project owners can update"""
         self.register()
         user = user_repo.get(1)
-        app = AppFactory.create(owner=user)
+        app = ProjectFactory.create(owner=user)
         blogpost = BlogpostFactory.create(app=app)
         url = "/project/%s/%s/update" % (app.short_name, blogpost.id)
 
@@ -276,7 +276,7 @@ class TestBlogpostView(web.Helper):
 
     def test_blogpost_update_by_anonymous(self):
         """Test blogpost update, anonymous users are redirected to signin"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         blogpost = BlogpostFactory.create(app=app, title='title')
         url = "/project/%s/%s/update" % (app.short_name, blogpost.id)
 
@@ -301,7 +301,7 @@ class TestBlogpostView(web.Helper):
         """Test blogpost update by non owner of the project is forbidden"""
         self.register()
         user = user_repo.get(1)
-        app = AppFactory.create(owner=user)
+        app = ProjectFactory.create(owner=user)
         blogpost = BlogpostFactory.create(app=app, title='title', body='body')
         url = "/project/%s/new-blogpost" % app.short_name
         self.signout()
@@ -324,8 +324,8 @@ class TestBlogpostView(web.Helper):
         """Test blogposts update for non existing projects raises errors"""
         self.register()
         user = user_repo.get(1)
-        app1 = AppFactory.create(owner=user)
-        app2 = AppFactory.create(owner=user)
+        app1 = ProjectFactory.create(owner=user)
+        app2 = ProjectFactory.create(owner=user)
         blogpost = BlogpostFactory.create(app=app1, body='body')
 
         # To a non-existing app
@@ -352,7 +352,7 @@ class TestBlogpostView(web.Helper):
         """Test blogposts, project owner can delete"""
         self.register()
         user = user_repo.get(1)
-        app = AppFactory.create(owner=user)
+        app = ProjectFactory.create(owner=user)
         blogpost = BlogpostFactory.create(app=app)
         url = "/project/%s/%s/delete" % (app.short_name, blogpost.id)
         redirect_url = '/project/%E2%9C%93app1/blog'
@@ -368,7 +368,7 @@ class TestBlogpostView(web.Helper):
 
     def test_blogpost_delete_by_anonymous(self):
         """Test blogpost delete, anonymous users are redirected to signin"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         blogpost = BlogpostFactory.create(app=app)
         url = "/project/%s/%s/delete" % (app.short_name, blogpost.id)
 
@@ -385,7 +385,7 @@ class TestBlogpostView(web.Helper):
         """Test blogpost delete by non owner of the project is forbidden"""
         self.register()
         user = user_repo.get(1)
-        app = AppFactory.create(owner=user)
+        app = ProjectFactory.create(owner=user)
         blogpost = BlogpostFactory.create(app=app)
         url = "/project/%s/new-blogpost" % app.short_name
         self.signout()
@@ -403,8 +403,8 @@ class TestBlogpostView(web.Helper):
         """Test blogposts delete for non existing projects raises errors"""
         self.register()
         user = user_repo.get(1)
-        app1 = AppFactory.create(owner=user)
-        app2 = AppFactory.create(owner=user)
+        app1 = ProjectFactory.create(owner=user)
+        app2 = ProjectFactory.create(owner=user)
         blogpost = BlogpostFactory.create(app=app1)
 
         # To a non-existing app

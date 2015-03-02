@@ -19,7 +19,7 @@
 
 from default import Test, db
 from nose.tools import assert_raises
-from factories import AppFactory, CategoryFactory
+from factories import ProjectFactory, CategoryFactory
 from pybossa.repositories import ProjectRepository
 from pybossa.exc import WrongObjectError, DBIntegrityError
 
@@ -43,7 +43,7 @@ class TestProjectRepositoryForProjects(Test):
     def test_get_returns_project(self):
         """Test get method returns a project if exists"""
 
-        project = AppFactory.create()
+        project = ProjectFactory.create()
 
         retrieved_project = self.project_repo.get(project.id)
 
@@ -62,7 +62,7 @@ class TestProjectRepositoryForProjects(Test):
     def test_get_by_shortname_returns_the_project(self):
         """Test get_by_shortname returns a project if exists"""
 
-        project = AppFactory.create()
+        project = ProjectFactory.create()
 
         retrieved_project = self.project_repo.get_by_shortname(project.short_name)
 
@@ -72,7 +72,7 @@ class TestProjectRepositoryForProjects(Test):
     def test_get_by(self):
         """Test get_by returns a project with the specified attribute"""
 
-        project = AppFactory.create(name='My Project', short_name='myproject')
+        project = ProjectFactory.create(name='My Project', short_name='myproject')
 
         retrieved_project = self.project_repo.get_by(name=project.name)
 
@@ -82,7 +82,7 @@ class TestProjectRepositoryForProjects(Test):
     def test_get_by_returns_none_if_no_project(self):
         """Test get_by returns None if no project matches the query"""
 
-        AppFactory.create(name='My Project', short_name='myproject')
+        ProjectFactory.create(name='My Project', short_name='myproject')
 
         project = self.project_repo.get_by(name='no_name')
 
@@ -92,7 +92,7 @@ class TestProjectRepositoryForProjects(Test):
     def get_all_returns_list_of_all_projects(self):
         """Test get_all returns a list of all the existing projects"""
 
-        projects = AppFactory.create_batch(3)
+        projects = ProjectFactory.create_batch(3)
 
         retrieved_projects = self.project_repo.get_all()
 
@@ -105,7 +105,7 @@ class TestProjectRepositoryForProjects(Test):
     def test_filter_by_no_matches(self):
         """Test filter_by returns an empty list if no projects match the query"""
 
-        AppFactory.create(name='My Project', short_name='myproject')
+        ProjectFactory.create(name='My Project', short_name='myproject')
 
         retrieved_projects = self.project_repo.filter_by(name='no_name')
 
@@ -117,8 +117,8 @@ class TestProjectRepositoryForProjects(Test):
         """Test filter_by returns a list of projects that meet the filtering
         condition"""
 
-        AppFactory.create_batch(3, allow_anonymous_contributors=False)
-        should_be_missing = AppFactory.create(allow_anonymous_contributors=True)
+        ProjectFactory.create_batch(3, allow_anonymous_contributors=False)
+        should_be_missing = ProjectFactory.create(allow_anonymous_contributors=True)
 
         retrieved_projects = self.project_repo.filter_by(allow_anonymous_contributors=False)
 
@@ -129,8 +129,8 @@ class TestProjectRepositoryForProjects(Test):
     def test_filter_by_multiple_conditions(self):
         """Test filter_by supports multiple-condition queries"""
 
-        AppFactory.create_batch(2, allow_anonymous_contributors=False, hidden=0)
-        project = AppFactory.create(allow_anonymous_contributors=False, hidden=1)
+        ProjectFactory.create_batch(2, allow_anonymous_contributors=False, hidden=0)
+        project = ProjectFactory.create(allow_anonymous_contributors=False, hidden=1)
 
         retrieved_projects = self.project_repo.filter_by(
                                             allow_anonymous_contributors=False,
@@ -143,7 +143,7 @@ class TestProjectRepositoryForProjects(Test):
     def test_filter_by_limit_offset(self):
         """Test that filter_by supports limit and offset options"""
 
-        AppFactory.create_batch(4)
+        ProjectFactory.create_batch(4)
         all_projects = self.project_repo.filter_by()
 
         first_two = self.project_repo.filter_by(limit=2)
@@ -158,7 +158,7 @@ class TestProjectRepositoryForProjects(Test):
     def test_save(self):
         """Test save persist the project"""
 
-        project = AppFactory.build()
+        project = ProjectFactory.build()
         assert self.project_repo.get(project.id) is None
 
         self.project_repo.save(project)
@@ -170,7 +170,7 @@ class TestProjectRepositoryForProjects(Test):
         """Test save raises a DBIntegrityError if the instance to be saved lacks
         a required value"""
 
-        project = AppFactory.build(name=None)
+        project = ProjectFactory.build(name=None)
 
         assert_raises(DBIntegrityError, self.project_repo.save, project)
 
@@ -187,7 +187,7 @@ class TestProjectRepositoryForProjects(Test):
     def test_update(self):
         """Test update persists the changes made to the project"""
 
-        project = AppFactory.create(description='this is a project')
+        project = ProjectFactory.create(description='this is a project')
         project.description = 'the description has changed'
 
         self.project_repo.update(project)
@@ -200,7 +200,7 @@ class TestProjectRepositoryForProjects(Test):
         """Test update raises a DBIntegrityError if the instance to be updated
         lacks a required value"""
 
-        project = AppFactory.create()
+        project = ProjectFactory.create()
         project.name = None
 
         assert_raises(DBIntegrityError, self.project_repo.update, project)
@@ -218,7 +218,7 @@ class TestProjectRepositoryForProjects(Test):
     def test_delete(self):
         """Test delete removes the project instance"""
 
-        project = AppFactory.create()
+        project = ProjectFactory.create()
 
         self.project_repo.delete(project)
         deleted = self.project_repo.get(project.id)
@@ -231,7 +231,7 @@ class TestProjectRepositoryForProjects(Test):
         from factories import TaskFactory, TaskRunFactory, BlogpostFactory
         from pybossa.repositories import TaskRepository, BlogRepository
 
-        project = AppFactory.create()
+        project = ProjectFactory.create()
         task = TaskFactory.create(app=project)
         taskrun = TaskRunFactory.create(task=task)
         blogpost = BlogpostFactory.create(app=project)
@@ -379,7 +379,7 @@ class TestProjectRepositoryForCategories(Test):
         """Test save_category raises a WrongObjectError when an object which is
         not a Category instance is saved"""
 
-        bad_object = AppFactory.build()
+        bad_object = ProjectFactory.build()
 
         assert_raises(WrongObjectError, self.project_repo.save_category, bad_object)
 
@@ -410,7 +410,7 @@ class TestProjectRepositoryForCategories(Test):
         """Test update_category raises a WrongObjectError when an object which is
         not a Category instance is updated"""
 
-        bad_object = AppFactory.build()
+        bad_object = ProjectFactory.build()
 
         assert_raises(WrongObjectError, self.project_repo.update_category, bad_object)
 

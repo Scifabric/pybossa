@@ -19,7 +19,7 @@
 from default import Test
 from pybossa.cache import users as cached_users
 
-from factories import AppFactory, TaskFactory, TaskRunFactory, UserFactory
+from factories import ProjectFactory, TaskFactory, TaskRunFactory, UserFactory
 from factories import reset_all_pk_sequences
 
 
@@ -60,7 +60,7 @@ class TestUsersCache(Test):
     def test_rank_and_score(self):
         """Test CACHE USERS rank_and_score returns the correct rank and score"""
         i = 0
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         tasks = TaskFactory.create_batch(4, app=app)
         users = UserFactory.create_batch(4)
         for user in users:
@@ -91,10 +91,10 @@ class TestUsersCache(Test):
         """Test CACHE USERS apps_contributed returns a list of projects that has
         contributed to"""
         user = UserFactory.create()
-        app_contributed = AppFactory.create()
+        app_contributed = ProjectFactory.create()
         task = TaskFactory.create(app=app_contributed)
         TaskRunFactory.create(task=task, user=user)
-        another_app = AppFactory.create()
+        another_app = ProjectFactory.create()
 
         apps_contributed = cached_users.apps_contributed(user.id)
 
@@ -106,7 +106,7 @@ class TestUsersCache(Test):
         """Test CACHE USERS apps_contributed returns the info of the projects with
         the required fields"""
         user = UserFactory.create()
-        app_contributed = AppFactory.create()
+        app_contributed = ProjectFactory.create()
         task = TaskFactory.create(app=app_contributed)
         TaskRunFactory.create(task=task, user=user)
         fields = ('id', 'name', 'short_name', 'owner_id', 'description',
@@ -132,7 +132,7 @@ class TestUsersCache(Test):
         """Test CACHE USERS published_apps returns a list with the projects that
         are published by the user"""
         user = UserFactory.create()
-        published_project = AppFactory.create(owner=user)
+        published_project = ProjectFactory.create(owner=user)
         TaskFactory.create(app=published_project)
 
         apps_published = cached_users.published_apps(user.id)
@@ -145,10 +145,10 @@ class TestUsersCache(Test):
         """Test CACHE USERS published_apps does not return hidden, draft
         or another user's projects"""
         user = UserFactory.create()
-        another_user_published_project = AppFactory.create()
+        another_user_published_project = ProjectFactory.create()
         TaskFactory.create(app=another_user_published_project)
-        draft_project = AppFactory.create(info={})
-        hidden_project = AppFactory.create(owner=user, hidden=1)
+        draft_project = ProjectFactory.create(info={})
+        hidden_project = ProjectFactory.create(owner=user, hidden=1)
         TaskFactory.create(app=hidden_project)
 
         apps_published = cached_users.published_apps(user.id)
@@ -160,7 +160,7 @@ class TestUsersCache(Test):
         """Test CACHE USERS published_apps returns the info of the projects with
         the required fields"""
         user = UserFactory.create()
-        published_project = AppFactory.create(owner=user)
+        published_project = ProjectFactory.create(owner=user)
         task = TaskFactory.create(app=published_project)
         fields = ('id', 'name', 'short_name', 'owner_id', 'description',
                  'overall_progress', 'n_tasks', 'n_volunteers', 'info')
@@ -175,7 +175,7 @@ class TestUsersCache(Test):
         """Test CACHE USERS draft_apps returns an empty list if the user has no
         draft projects"""
         user = UserFactory.create()
-        published_project = AppFactory.create(owner=user)
+        published_project = ProjectFactory.create(owner=user)
 
         draft_projects = cached_users.draft_apps(user.id)
 
@@ -185,7 +185,7 @@ class TestUsersCache(Test):
     def test_draft_apps_return_drafts(self):
         """Test CACHE USERS draft_apps returns draft belonging to the user"""
         user = UserFactory.create()
-        draft_project = AppFactory.create(owner=user, info={})
+        draft_project = ProjectFactory.create(owner=user, info={})
 
         draft_projects = cached_users.draft_apps(user.id)
 
@@ -197,9 +197,9 @@ class TestUsersCache(Test):
         """Test CACHE USERS draft_apps does not return any apps that are not draft
         (published) or drafts that belong to another user"""
         user = UserFactory.create()
-        published_project = AppFactory.create(owner=user)
+        published_project = ProjectFactory.create(owner=user)
         TaskFactory.create(app=published_project)
-        other_users_draft_project = AppFactory.create(info={})
+        other_users_draft_project = ProjectFactory.create(info={})
 
         draft_projects = cached_users.draft_apps(user.id)
 
@@ -210,7 +210,7 @@ class TestUsersCache(Test):
         """Test CACHE USERS draft_apps returns a project that belongs to the
         user and is a draft, even it's marked as hidden"""
         user = UserFactory.create()
-        hidden_draft_project = AppFactory.create(owner=user, hidden=1, info={})
+        hidden_draft_project = ProjectFactory.create(owner=user, hidden=1, info={})
 
         draft_projects = cached_users.draft_apps(user.id)
 
@@ -221,7 +221,7 @@ class TestUsersCache(Test):
         """Test CACHE USERS draft_apps returns the info of the projects with
         the required fields"""
         user = UserFactory.create()
-        draft_project = AppFactory.create(owner=user, info={})
+        draft_project = ProjectFactory.create(owner=user, info={})
         fields = ('id', 'name', 'short_name', 'owner_id', 'description',
                  'overall_progress', 'n_tasks', 'n_volunteers', 'info')
 
@@ -245,7 +245,7 @@ class TestUsersCache(Test):
         """Test CACHE USERS hidden_apps returns a list with the user projects that
         are no drafts but are hidden"""
         user = UserFactory.create()
-        hidden_project = AppFactory.create(owner=user, hidden=1)
+        hidden_project = ProjectFactory.create(owner=user, hidden=1)
         TaskFactory.create(app=hidden_project)
 
         hidden_projects = cached_users.hidden_apps(user.id)
@@ -258,9 +258,9 @@ class TestUsersCache(Test):
         """Test CACHE USERS hidden_apps does not return draft (even hidden)
         or another user's hidden projects"""
         user = UserFactory.create()
-        another_user_hidden_project = AppFactory.create(hidden=1)
+        another_user_hidden_project = ProjectFactory.create(hidden=1)
         TaskFactory.create(app=another_user_hidden_project)
-        hidden_draft_project = AppFactory.create(owner=user, hidden=1, info={})
+        hidden_draft_project = ProjectFactory.create(owner=user, hidden=1, info={})
 
         hidden_projects = cached_users.hidden_apps(user.id)
 
@@ -271,7 +271,7 @@ class TestUsersCache(Test):
         """Test CACHE USERS hidden_apps returns the info of the projects with
         the required fields"""
         user = UserFactory.create()
-        hidden_project = AppFactory.create(owner=user, hidden=1)
+        hidden_project = ProjectFactory.create(owner=user, hidden=1)
         TaskFactory.create(app=hidden_project)
         fields = ('id', 'name', 'short_name', 'owner_id', 'description',
                  'overall_progress', 'n_tasks', 'n_volunteers', 'info')

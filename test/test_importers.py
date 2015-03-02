@@ -26,7 +26,7 @@ from pybossa.importers import (_BulkTaskDropboxImport, _BulkTaskFlickrImport,
     BulkImportException, Importer)
 
 from default import Test
-from factories import AppFactory, TaskFactory
+from factories import ProjectFactory, TaskFactory
 from pybossa.repositories import TaskRepository
 from pybossa.core import db
 task_repo = TaskRepository(db)
@@ -43,7 +43,7 @@ class TestImporterPublicMethods(Test):
                                                      'url': 'url'},
                                             'n_answers': 20}]
         importer_factory.return_value = mock_importer
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         form_data = dict(type='csv', csv_url='http://fakecsv.com')
         self.importer.create_tasks(task_repo, app.id, **form_data)
         task = task_repo.get_task(1)
@@ -61,7 +61,7 @@ class TestImporterPublicMethods(Test):
         mock_importer.tasks.return_value = [{'info': {'question': 'question1'}},
                                             {'info': {'question': 'question2'}}]
         importer_factory.return_value = mock_importer
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         form_data = dict(type='gdocs', googledocs_url='http://ggl.com')
         result = self.importer.create_tasks(task_repo, app.id, **form_data)
         tasks = task_repo.filter_tasks_by(app_id=app.id)
@@ -75,7 +75,7 @@ class TestImporterPublicMethods(Test):
         mock_importer = Mock()
         mock_importer.tasks.return_value = [{'info': {'question': 'question'}}]
         importer_factory.return_value = mock_importer
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         TaskFactory.create(app=app, info={'question': 'question'})
         form_data = dict(type='flickr', album_id='1234')
 

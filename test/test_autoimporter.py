@@ -18,7 +18,7 @@
 from default import db
 from helper import web
 from pybossa.jobs import import_tasks
-from factories import AppFactory
+from factories import ProjectFactory
 from pybossa.repositories import UserRepository
 from pybossa.repositories import ProjectRepository
 from mock import patch, MagicMock
@@ -31,7 +31,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
 
     def test_autoimporter_get_redirects_to_login_if_anonymous(self):
         """Test task autoimporter endpoint requires login"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         url = "/project/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.get(url)
@@ -112,7 +112,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
 
     def test_autoimporter_post_redirects_to_login_if_anonymous(self):
         """Test task autoimporter endpoint post requires login"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         url = "/project/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.post(url, data={})
@@ -197,7 +197,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
 
     def test_delete_autoimporter_post_redirects_to_login_if_anonymous(self):
         """Test delete task autoimporter endpoint requires login"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         url = "/project/%s/tasks/autoimporter/delete" % app.short_name
 
         res = self.app.post(url, data={})
@@ -284,7 +284,7 @@ class TestAutoimporterBehaviour(web.Helper):
         autoimporter if none exists"""
         self.register()
         owner = user_repo.get(1)
-        app = AppFactory.create(owner=owner)
+        app = ProjectFactory.create(owner=owner)
         url = "/project/%s/tasks/autoimporter" % app.short_name
         expected_text = "Setup task autoimporter"
 
@@ -303,7 +303,7 @@ class TestAutoimporterBehaviour(web.Helper):
         names.return_value = ['csv', 'gdocs', 'epicollect']
         self.register()
         owner = user_repo.get(1)
-        app = AppFactory.create(owner=owner)
+        app = ProjectFactory.create(owner=owner)
         url = "/project/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.get(url, follow_redirects=True)
@@ -316,7 +316,7 @@ class TestAutoimporterBehaviour(web.Helper):
         shows the form for it, for each of the variants"""
         self.register()
         owner = user_repo.get(1)
-        app = AppFactory.create(owner=owner)
+        app = ProjectFactory.create(owner=owner)
 
         # CSV
         url = "/project/%s/tasks/autoimporter?type=csv" % app.short_name
@@ -369,7 +369,7 @@ class TestAutoimporterBehaviour(web.Helper):
         self.register()
         owner = user_repo.get(1)
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
-        app = AppFactory.create(owner=owner, info={'autoimporter': autoimporter})
+        app = ProjectFactory.create(owner=owner, info={'autoimporter': autoimporter})
         url = "/project/%s/tasks/autoimporter" % app.short_name
 
         res = self.app.get(url, follow_redirects=True)
@@ -383,7 +383,7 @@ class TestAutoimporterBehaviour(web.Helper):
         self.register()
         owner = user_repo.get(1)
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
-        app = AppFactory.create(owner=owner)
+        app = ProjectFactory.create(owner=owner)
         url = "/project/%s/tasks/autoimporter" % app.short_name
         data = {'form_name': 'csv', 'csv_url': 'http://fakeurl.com'}
 
@@ -399,7 +399,7 @@ class TestAutoimporterBehaviour(web.Helper):
         self.register()
         owner = user_repo.get(1)
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
-        app = AppFactory.create(owner=owner, info={'autoimporter': autoimporter})
+        app = ProjectFactory.create(owner=owner, info={'autoimporter': autoimporter})
         url = "/project/%s/tasks/autoimporter" % app.short_name
         data = {'form_name': 'gdocs', 'googledocs_url': 'http://another.com'}
 
@@ -412,7 +412,7 @@ class TestAutoimporterBehaviour(web.Helper):
         self.register()
         owner = user_repo.get(1)
         autoimporter = {'type': 'csv', 'csv_url': 'http://fakeurl.com'}
-        app = AppFactory.create(owner=owner, info={'autoimporter': autoimporter})
+        app = ProjectFactory.create(owner=owner, info={'autoimporter': autoimporter})
         url = "/project/%s/tasks/autoimporter/delete" % app.short_name
 
         res = self.app.post(url, data={}, follow_redirects=True)
@@ -423,7 +423,7 @@ class TestAutoimporterBehaviour(web.Helper):
     def test_flickr_autoimporter_page_shows_option_to_log_into_flickr(self):
         self.register()
         owner = user_repo.get(1)
-        app = AppFactory.create(owner=owner)
+        app = ProjectFactory.create(owner=owner)
         url = "/project/%s/tasks/autoimporter?type=flickr" % app.short_name
 
         res = self.app.get(url)
@@ -441,7 +441,7 @@ class TestAutoimporterBehaviour(web.Helper):
                                                'title': u'my-fake-title'}]
         self.register()
         owner = user_repo.get(1)
-        project = AppFactory.create(owner=owner)
+        project = ProjectFactory.create(owner=owner)
         url = "/project/%s/tasks/autoimporter?type=flickr" % project.short_name
 
         res = self.app.get(url)

@@ -19,7 +19,7 @@
 from default import Test, db, with_context
 from pybossa.jobs import import_tasks, task_repo, get_autoimport_jobs
 from pybossa.model.task import Task
-from factories import AppFactory, TaskFactory, UserFactory
+from factories import ProjectFactory, TaskFactory, UserFactory
 from mock import patch
 
 class TestImportTasksJob(Test):
@@ -27,7 +27,7 @@ class TestImportTasksJob(Test):
     @with_context
     @patch('pybossa.jobs.importer.create_tasks')
     def test_it_creates_the_new_tasks(self, create):
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         form_data = {'type': 'csv', 'csv_url': 'http://google.es'}
 
         import_tasks(app.id, **form_data)
@@ -40,7 +40,7 @@ class TestImportTasksJob(Test):
     @patch('pybossa.jobs.importer.create_tasks')
     def test_sends_email_to_user_with_result_on_success(self, create, send_mail):
         create.return_value = '1 new task was imported successfully'
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         form_data = {'type': 'csv', 'csv_url': 'http://google.es'}
         subject = 'Tasks Import to your project %s' % app.name
         body = 'Hello,\n\n1 new task was imported successfully to your project %s!\n\nAll the best,\nThe PyBossa team.' % app.name
@@ -54,7 +54,7 @@ class TestImportTasksJob(Test):
     def test_autoimport_jobs(self):
         """Test JOB autoimport jobs works."""
         user = UserFactory.create(pro=True)
-        AppFactory.create(owner=user)
+        ProjectFactory.create(owner=user)
         jobs_generator = get_autoimport_jobs()
         jobs = []
         for job in jobs_generator:
@@ -67,7 +67,7 @@ class TestImportTasksJob(Test):
     def test_autoimport_jobs_with_autoimporter(self):
         """Test JOB autoimport jobs works with autoimporters."""
         user = UserFactory.create(pro=True)
-        app = AppFactory.create(owner=user,info=dict(autoimporter='foobar'))
+        app = ProjectFactory.create(owner=user,info=dict(autoimporter='foobar'))
         jobs_generator = get_autoimport_jobs()
         jobs = []
         for job in jobs_generator:
@@ -83,7 +83,7 @@ class TestImportTasksJob(Test):
 
     def test_autoimport_jobs_without_pro(self):
         """Test JOB autoimport jobs works without pro users."""
-        AppFactory.create()
+        ProjectFactory.create()
         jobs_generator = get_autoimport_jobs()
         jobs = []
         for job in jobs_generator:

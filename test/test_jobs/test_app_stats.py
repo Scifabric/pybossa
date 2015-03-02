@@ -18,7 +18,7 @@
 
 from pybossa.jobs import get_project_jobs, create_dict_jobs, get_project_stats
 from default import Test, with_context
-from factories import AppFactory
+from factories import ProjectFactory
 from factories import UserFactory
 
 
@@ -29,7 +29,7 @@ class TestProjectsStats(Test):
     def test_create_dict_job(self):
         """Test JOB create dict job works."""
         user = UserFactory.create(pro=True)
-        app = AppFactory.create(owner=user)
+        app = ProjectFactory.create(owner=user)
         from sqlalchemy.sql import text
         from pybossa.core import db
         sql = text('''SELECT app.id, app.short_name FROM app, "user"
@@ -51,7 +51,7 @@ class TestProjectsStats(Test):
     def test_get_project_jobs(self):
         """Test JOB get project jobs works."""
         user = UserFactory.create(pro=True)
-        app = AppFactory.create(owner=user)
+        app = ProjectFactory.create(owner=user)
         jobs_generator = get_project_jobs()
         jobs = []
         for job in jobs_generator:
@@ -71,7 +71,7 @@ class TestProjectsStats(Test):
     @with_context
     def test_get_project_jobs_for_non_pro_users(self):
         """Test JOB get project jobs works for non pro users."""
-        AppFactory.create()
+        ProjectFactory.create()
         jobs_generator = get_project_jobs()
         jobs = []
         for job in jobs_generator:

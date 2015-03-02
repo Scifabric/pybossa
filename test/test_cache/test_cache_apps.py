@@ -18,7 +18,7 @@
 
 from default import Test, with_context
 from pybossa.cache import projects as cached_projects
-from factories import UserFactory, AppFactory, TaskFactory, \
+from factories import UserFactory, ProjectFactory, TaskFactory, \
     TaskRunFactory, AnonymousTaskRunFactory
 from mock import patch
 
@@ -27,14 +27,14 @@ class TestAppsCache(Test):
 
 
     def create_app_with_tasks(self, completed_tasks, ongoing_tasks):
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         TaskFactory.create_batch(completed_tasks, state='completed', app=app)
         TaskFactory.create_batch(ongoing_tasks, state='ongoing', app=app)
         return app
 
     def create_app_with_contributors(self, anonymous, registered,
                                      two_tasks=False, name='my_app', hidden=0):
-        app = AppFactory.create(name=name, hidden=hidden)
+        app = ProjectFactory.create(name=name, hidden=hidden)
         task = TaskFactory(app=app)
         if two_tasks:
             task2 = TaskFactory(app=app)
@@ -55,7 +55,7 @@ class TestAppsCache(Test):
     def test_get_featured(self):
         """Test CACHE PROJECTS get_featured returns featured projects"""
 
-        AppFactory.create(featured=True)
+        ProjectFactory.create(featured=True)
 
         featured = cached_projects.get_featured()
 
@@ -65,8 +65,8 @@ class TestAppsCache(Test):
     def test_get_featured_only_returns_featured(self):
         """Test CACHE PROJECTS get_featured returns only featured projects"""
 
-        featured_app = AppFactory.create(featured=True)
-        non_featured_app = AppFactory.create()
+        featured_app = ProjectFactory.create(featured=True)
+        non_featured_app = ProjectFactory.create()
 
         featured = cached_projects.get_featured()
 
@@ -76,7 +76,7 @@ class TestAppsCache(Test):
     def test_get_featured_not_returns_hidden_apps(self):
         """Test CACHE PROJECTS get_featured does not return hidden projects"""
 
-        featured_app = AppFactory.create(hidden=1, featured=True)
+        featured_app = ProjectFactory.create(hidden=1, featured=True)
 
         featured = cached_projects.get_featured()
 
@@ -91,7 +91,7 @@ class TestAppsCache(Test):
                   'last_activity', 'last_activity_raw', 'overall_progress',
                    'n_tasks', 'n_volunteers', 'owner', 'info')
 
-        AppFactory.create(featured=True)
+        ProjectFactory.create(featured=True)
 
         featured = cached_projects.get_featured()[0]
 
@@ -114,7 +114,7 @@ class TestAppsCache(Test):
 
         project = self.create_app_with_tasks(1, 0)
         #create a non published project too
-        AppFactory.create()
+        ProjectFactory.create()
 
         projects = cached_projects.get(project.category.short_name)
 
@@ -136,7 +136,7 @@ class TestAppsCache(Test):
 
         project = self.create_app_with_contributors(1, 0)
         # Create a project wothout presenter
-        AppFactory.create(info={}, category=project.category)
+        ProjectFactory.create(info={}, category=project.category)
 
         projects = cached_projects.get(project.category.short_name)
 
@@ -163,7 +163,7 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS get_draft returns draft_projects"""
         # Here, we are suposing that a project is draft iff has no presenter AND has no tasks
 
-        AppFactory.create(info={})
+        ProjectFactory.create(info={})
 
         drafts = cached_projects.get_draft()
 
@@ -173,7 +173,7 @@ class TestAppsCache(Test):
     def test_get_draft_not_returns_hidden_apps(self):
         """Test CACHE PROJECTS get_draft does not return hidden projects"""
 
-        AppFactory.create(info={}, hidden=1)
+        ProjectFactory.create(info={}, hidden=1)
 
         drafts = cached_projects.get_draft()
 
@@ -183,9 +183,9 @@ class TestAppsCache(Test):
     def test_get_draft_not_returns_published_apps(self):
         """Test CACHE PROJECTS get_draft does not return projects with either tasks or a presenter (REVIEW DEFINITION OF A DRAFT PROJECT REQUIRED)"""
 
-        app_no_presenter = AppFactory.create(info={})
+        app_no_presenter = ProjectFactory.create(info={})
         TaskFactory.create(app=app_no_presenter)
-        app_no_task = AppFactory.create()
+        app_no_task = ProjectFactory.create()
 
         drafts = cached_projects.get_draft()
 
@@ -200,7 +200,7 @@ class TestAppsCache(Test):
                   'last_activity', 'last_activity_raw', 'overall_progress',
                    'n_tasks', 'n_volunteers', 'owner', 'info')
 
-        AppFactory.create(info={})
+        ProjectFactory.create(info={})
 
         draft = cached_projects.get_draft()[0]
 
@@ -356,7 +356,7 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS _n_draft returns 0 if there are no draft projects"""
         # Here, we are suposing that a project is draft iff has no presenter AND has no tasks
 
-        app = AppFactory.create(info={})
+        app = ProjectFactory.create(info={})
         TaskFactory.create_batch(2, app=app)
 
         number_of_drafts = cached_projects._n_draft()
@@ -368,7 +368,7 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS _n_draft returns 2 if there are 2 draft projects"""
         # Here, we are suposing that a project is draft iff has no presenter AND has no tasks
 
-        AppFactory.create_batch(2, info={})
+        ProjectFactory.create_batch(2, info={})
 
         number_of_drafts = cached_projects._n_draft()
 
@@ -379,7 +379,7 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS browse_tasks returns an empty list if a project
         has no tasks"""
 
-        project = AppFactory.create()
+        project = ProjectFactory.create()
 
         browse_tasks = cached_projects.browse_tasks(project.id)
 
@@ -390,7 +390,7 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS browse_tasks returns a list with all the tasks
         from a given project"""
 
-        project = AppFactory.create()
+        project = ProjectFactory.create()
         TaskFactory.create_batch(2, app=project)
 
         browse_tasks = cached_projects.browse_tasks(project.id)
@@ -402,7 +402,7 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS browse_tasks returns a list with objects
         with the required task attributes"""
 
-        project = AppFactory.create()
+        project = ProjectFactory.create()
         task = TaskFactory.create( app=project, info={})
         attributes = ('id', 'n_answers')
 
@@ -416,7 +416,7 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS browse_tasks returns also the completion
         percentage of each task"""
 
-        project = AppFactory.create()
+        project = ProjectFactory.create()
         task = TaskFactory.create( app=project, info={}, n_answers=4)
 
         cached_task = cached_projects.browse_tasks(project.id)[0]
@@ -448,7 +448,7 @@ class TestAppsCache(Test):
 
     def test_n_featured_returns_featured(self):
         """Test CACHE PROJECTS _n_featured returns number of featured projects"""
-        AppFactory.create(featured=True)
+        ProjectFactory.create(featured=True)
 
         number_of_featured = cached_projects._n_featured()
 
@@ -490,7 +490,7 @@ class TestAppsCache(Test):
         of a given category"""
         project = self.create_app_with_tasks(1, 0)
         #create a non published project too
-        AppFactory.create()
+        ProjectFactory.create()
 
         n_projects = cached_projects.n_count(project.category.short_name)
 
@@ -501,7 +501,7 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS get_from_pro_user returns empty list if no projects
         with 'pro' owners"""
         pro_user = UserFactory.create(pro=True)
-        AppFactory.create()
+        ProjectFactory.create()
 
         pro_owned_projects = cached_projects.get_from_pro_user()
 
@@ -512,8 +512,8 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS get_from_pro_user returns list of projects with
         'pro' owners only"""
         pro_user = UserFactory.create(pro=True)
-        AppFactory.create()
-        pro_project = AppFactory.create(owner=pro_user)
+        ProjectFactory.create()
+        pro_project = ProjectFactory.create(owner=pro_user)
 
         pro_owned_projects = cached_projects.get_from_pro_user()
 
@@ -524,7 +524,7 @@ class TestAppsCache(Test):
     def test_get_from_pro_users_returns_required_fields(self):
         """Test CACHE PROJECTS get_from_pro_user returns required fields"""
         pro_user = UserFactory.create(pro=True)
-        AppFactory.create(owner=pro_user)
+        ProjectFactory.create(owner=pro_user)
         fields = ('id', 'short_name')
 
         pro_owned_projects = cached_projects.get_from_pro_user()

@@ -22,7 +22,7 @@ from nose.tools import assert_raises
 from werkzeug.exceptions import Forbidden, Unauthorized
 from mock import patch
 from test_authorization import mock_current_user
-from factories import AppFactory, BlogpostFactory, UserFactory
+from factories import ProjectFactory, BlogpostFactory, UserFactory
 from pybossa.model.blogpost import Blogpost
 
 
@@ -39,7 +39,7 @@ class TestBlogpostAuthorization(Test):
     def test_anonymous_user_create_given_blogpost(self):
         """Test anonymous users cannot create a given blogpost"""
 
-        project = AppFactory.create()
+        project = ProjectFactory.create()
         blogpost = BlogpostFactory.build(app=project, owner=None)
 
         assert_raises(Unauthorized, ensure_authorized_to, 'create', blogpost)
@@ -49,7 +49,7 @@ class TestBlogpostAuthorization(Test):
     def test_anonymous_user_create_blogposts_for_given_project(self):
         """Test anonymous users cannot create blogposts for a given project"""
 
-        project = AppFactory.create()
+        project = ProjectFactory.create()
 
         assert_raises(Unauthorized, ensure_authorized_to, 'create', Blogpost, project_id=project.id)
 
@@ -68,7 +68,7 @@ class TestBlogpostAuthorization(Test):
         project owner, even if is admin"""
 
         admin = UserFactory.create()
-        project = AppFactory.create()
+        project = ProjectFactory.create()
         blogpost = BlogpostFactory.build(app=project, owner=admin)
 
         assert self.mock_admin.id != project.owner_id
@@ -81,7 +81,7 @@ class TestBlogpostAuthorization(Test):
         if is not the project owner, even if is admin"""
 
         owner = UserFactory.create_batch(2)[1]
-        project = AppFactory.create(owner=owner)
+        project = ProjectFactory.create(owner=owner)
 
         assert self.mock_admin.id != project.owner.id
         assert_raises(Forbidden, ensure_authorized_to, 'create', Blogpost, project_id=project.id)
@@ -92,7 +92,7 @@ class TestBlogpostAuthorization(Test):
         """Test authenticated user can create a given blogpost if is project owner"""
 
         owner = UserFactory.create_batch(2)[1]
-        project = AppFactory.create(owner=owner)
+        project = ProjectFactory.create(owner=owner)
         blogpost = BlogpostFactory.build(app=project, owner=owner)
 
         assert self.mock_authenticated.id == project.owner_id
@@ -105,7 +105,7 @@ class TestBlogpostAuthorization(Test):
         if is project owner"""
 
         owner = UserFactory.create_batch(2)[1]
-        project = AppFactory.create(owner=owner)
+        project = ProjectFactory.create(owner=owner)
 
         assert self.mock_authenticated.id == project.owner.id
         assert_not_raises(Exception, ensure_authorized_to, 'create', Blogpost, project_id=project.id)
@@ -117,7 +117,7 @@ class TestBlogpostAuthorization(Test):
         sets another person as the author of the blogpost"""
 
         another_user = UserFactory.create()
-        project = AppFactory.create()
+        project = ProjectFactory.create()
         blogpost = BlogpostFactory.build(app_id=project.id,
                                           owner=another_user)
 
@@ -129,7 +129,7 @@ class TestBlogpostAuthorization(Test):
     def test_anonymous_user_read_given_blogpost(self):
         """Test anonymous users can read a given blogpost"""
 
-        project = AppFactory.create()
+        project = ProjectFactory.create()
         blogpost = BlogpostFactory.create(app=project)
 
         assert_not_raises(Exception, ensure_authorized_to, 'read', blogpost)
@@ -139,7 +139,7 @@ class TestBlogpostAuthorization(Test):
     def test_anonymous_user_read_blogposts_for_given_project(self):
         """Test anonymous users can read blogposts of a given project"""
 
-        project = AppFactory.create()
+        project = ProjectFactory.create()
         assert_not_raises(Exception, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
 
 
@@ -147,7 +147,7 @@ class TestBlogpostAuthorization(Test):
     def test_anonymous_user_read_given_blogpost_hidden_project(self):
         """Test anonymous users cannot read a given blogpost of a hidden project"""
 
-        project = AppFactory.create(hidden=1)
+        project = ProjectFactory.create(hidden=1)
         blogpost = BlogpostFactory.create(app=project)
 
         assert_raises(Unauthorized, ensure_authorized_to, 'read', blogpost)
@@ -157,7 +157,7 @@ class TestBlogpostAuthorization(Test):
     def test_anonymous_user_read_blogposts_for_given_hidden_project(self):
         """Test anonymous users cannot read blogposts of a given project if is hidden"""
 
-        project = AppFactory.create(hidden=1)
+        project = ProjectFactory.create(hidden=1)
 
         assert_raises(Unauthorized, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
 
@@ -166,7 +166,7 @@ class TestBlogpostAuthorization(Test):
     def test_non_owner_authenticated_user_read_given_blogpost(self):
         """Test authenticated user can read a given blogpost if is not the project owner"""
 
-        project = AppFactory.create()
+        project = ProjectFactory.create()
         user = UserFactory.create()
         blogpost = BlogpostFactory.create(app=project)
 
@@ -179,7 +179,7 @@ class TestBlogpostAuthorization(Test):
         """Test authenticated user can read blogposts of a given project if
         is not the project owner"""
 
-        project = AppFactory.create()
+        project = ProjectFactory.create()
         user = UserFactory.create()
 
         assert self.mock_authenticated.id != project.owner.id
@@ -191,7 +191,7 @@ class TestBlogpostAuthorization(Test):
         """Test authenticated user cannot read a given blogpost of a hidden project
         if is not the project owner"""
 
-        project = AppFactory.create(hidden=1)
+        project = ProjectFactory.create(hidden=1)
         user = UserFactory.create()
         blogpost = BlogpostFactory.create(app=project)
 
@@ -204,7 +204,7 @@ class TestBlogpostAuthorization(Test):
         """Test authenticated user cannot read blogposts of a given project if is
         hidden and is not the project owner"""
 
-        project = AppFactory.create(hidden=1)
+        project = ProjectFactory.create(hidden=1)
         user = UserFactory.create()
 
         assert self.mock_authenticated.id != project.owner.id
@@ -216,7 +216,7 @@ class TestBlogpostAuthorization(Test):
         """Test authenticated user can read a given blogpost if is the project owner"""
 
         owner = UserFactory.create_batch(2)[1]
-        project = AppFactory.create(owner=owner)
+        project = ProjectFactory.create(owner=owner)
         blogpost = BlogpostFactory.create(app=project)
 
         assert self.mock_authenticated.id == project.owner.id
@@ -229,7 +229,7 @@ class TestBlogpostAuthorization(Test):
         project owner"""
 
         owner = UserFactory.create_batch(2)[1]
-        project = AppFactory.create(owner=owner)
+        project = ProjectFactory.create(owner=owner)
 
         assert self.mock_authenticated.id == project.owner.id
         assert_not_raises(Exception, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
@@ -241,7 +241,7 @@ class TestBlogpostAuthorization(Test):
         is the project owner"""
 
         owner = UserFactory.create_batch(2)[1]
-        project = AppFactory.create(owner=owner, hidden=1)
+        project = ProjectFactory.create(owner=owner, hidden=1)
         blogpost = BlogpostFactory.create(app=project)
 
         assert self.mock_authenticated.id == project.owner.id
@@ -254,7 +254,7 @@ class TestBlogpostAuthorization(Test):
         is the project owner"""
 
         owner = UserFactory.create_batch(2)[1]
-        project = AppFactory.create(owner=owner, hidden=1)
+        project = ProjectFactory.create(owner=owner, hidden=1)
 
         assert self.mock_authenticated.id == project.owner.id
         assert_not_raises(Exception, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
@@ -265,7 +265,7 @@ class TestBlogpostAuthorization(Test):
         """Test admin can read a given blogpost of a hidden project"""
 
         admin = UserFactory.create()
-        project = AppFactory.create(hidden=1)
+        project = ProjectFactory.create(hidden=1)
         blogpost = BlogpostFactory.create(app=project)
 
         assert self.mock_admin.id != project.owner.id
@@ -277,7 +277,7 @@ class TestBlogpostAuthorization(Test):
         """Test admin can read blogposts of a given hidden project"""
 
         admin = UserFactory.create()
-        project = AppFactory.create(hidden=1)
+        project = ProjectFactory.create(hidden=1)
 
         assert self.mock_admin.id != project.owner.id
         assert_not_raises(Exception, ensure_authorized_to, 'read', Blogpost, project_id=project.id)
@@ -298,7 +298,7 @@ class TestBlogpostAuthorization(Test):
         owner, even if is admin"""
 
         admin = UserFactory.create()
-        project = AppFactory.create()
+        project = ProjectFactory.create()
         blogpost = BlogpostFactory.create(app=project)
 
         assert self.mock_admin.id != blogpost.owner.id
@@ -310,7 +310,7 @@ class TestBlogpostAuthorization(Test):
         """Test authenticated user can update blogpost if is the post owner"""
 
         owner = UserFactory.create_batch(2)[1]
-        project = AppFactory.create()
+        project = ProjectFactory.create()
         blogpost = BlogpostFactory.create(app=project, owner=owner)
 
         assert self.mock_authenticated.id == blogpost.owner.id
@@ -343,7 +343,7 @@ class TestBlogpostAuthorization(Test):
         """Test authenticated user can delete a blogpost if is the post owner"""
 
         owner = UserFactory.create_batch(2)[1]
-        project = AppFactory.create()
+        project = ProjectFactory.create()
         blogpost = BlogpostFactory.create(app=project, owner=owner)
 
         assert self.mock_authenticated.id == blogpost.owner.id

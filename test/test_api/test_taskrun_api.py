@@ -20,7 +20,7 @@ from default import with_context
 from nose.tools import assert_equal
 from test_api import TestAPI
 from mock import patch
-from factories import (AppFactory, TaskFactory, TaskRunFactory,
+from factories import (ProjectFactory, TaskFactory, TaskRunFactory,
                         AnonymousTaskRunFactory, UserFactory)
 
 
@@ -45,7 +45,7 @@ class TestTaskrunAPI(TestAPI):
     @with_context
     def test_query_taskrun(self):
         """Test API query for taskrun with params works"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         TaskRunFactory.create_batch(10, app=app)
         # Test for real field
         res = self.app.get("/api/taskrun?app_id=1")
@@ -82,7 +82,7 @@ class TestTaskrunAPI(TestAPI):
     @patch('pybossa.api.task_run._check_task_requested_by_user')
     def test_taskrun_anonymous_post(self, fake_validation, mock_request):
         """Test API TaskRun creation and auth for anonymous users"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         task = TaskFactory.create(app=app)
         data = dict(
             app_id=app.id,
@@ -136,7 +136,7 @@ class TestTaskrunAPI(TestAPI):
     @patch('pybossa.api.task_run._check_task_requested_by_user')
     def test_taskrun_authenticated_post(self, fake_validation):
         """Test API TaskRun creation and auth for authenticated users"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         task = TaskFactory.create(app=app)
         data = dict(
             app_id=app.id,
@@ -190,7 +190,7 @@ class TestTaskrunAPI(TestAPI):
     def test_taskrun_post_requires_newtask_first_anonymous(self):
         """Test API TaskRun post fails if task was not previously requested for
         anonymous user"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         task = TaskFactory.create(app=app)
         data = dict(
             app_id=app.id,
@@ -217,7 +217,7 @@ class TestTaskrunAPI(TestAPI):
     def test_taskrun_post_requires_newtask_first_authenticated(self):
         """Test API TaskRun post fails if task was not previously requested for
         authenticated user"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         task = TaskFactory.create(app=app)
         data = dict(
             app_id=app.id,
@@ -244,7 +244,7 @@ class TestTaskrunAPI(TestAPI):
     @with_context
     def test_taskrun_post_with_bad_data(self):
         """Test API TaskRun error messages."""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         task = TaskFactory.create(app=app)
         app_id = app.id
         task_run = dict(app_id=app.id, task_id=task.id, info='my task result')
@@ -285,7 +285,7 @@ class TestTaskrunAPI(TestAPI):
         admin = UserFactory.create()
         owner = UserFactory.create()
         non_owner = UserFactory.create()
-        app = AppFactory.create(owner=owner)
+        app = ProjectFactory.create(owner=owner)
         task = TaskFactory.create(app=app)
         anonymous_taskrun = AnonymousTaskRunFactory.create(task=task, info='my task result')
         user_taskrun = TaskRunFactory.create(task=task, user=owner, info='my task result')
@@ -362,7 +362,7 @@ class TestTaskrunAPI(TestAPI):
         admin = UserFactory.create()
         owner = UserFactory.create()
         non_owner = UserFactory.create()
-        app = AppFactory.create(owner=owner)
+        app = ProjectFactory.create(owner=owner)
         task = TaskFactory.create(app=app)
         anonymous_taskrun = AnonymousTaskRunFactory.create(task=task, info='my task result')
         user_taskrun = TaskRunFactory.create(task=task, user=owner, info='my task result')
@@ -412,7 +412,7 @@ class TestTaskrunAPI(TestAPI):
     @patch('pybossa.api.task_run._check_task_requested_by_user')
     def test_taskrun_updates_task_state(self, fake_validation, mock_request):
         """Test API TaskRun POST updates task state"""
-        app = AppFactory.create()
+        app = ProjectFactory.create()
         task = TaskFactory.create(app=app, n_answers=2)
         url = '/api/taskrun?api_key=%s' % app.owner.api_key
 
