@@ -340,7 +340,7 @@ def stats_format_dates(project_id, dates, dates_anon, dates_auth):
 @memoize(timeout=ONE_DAY)
 def stats_format_hours(app_id, hours, hours_anon, hours_auth,
                        max_hours, max_hours_anon, max_hours_auth):
-    """Format hours stats into a JSON format"""
+    """Format hours stats into a JSON format."""
     hourNewStats = dict(label="Anon + Auth", disabled="True", values=[], max=0)
     hourNewAnonStats = dict(label="Anonymous", values=[], max=0)
     hourNewAuthStats = dict(label="Authenticated", values=[], max=0)
@@ -351,7 +351,6 @@ def stats_format_hours(app_id, hours, hours_anon, hours_auth,
 
     for h in sorted(hours.keys()):
         # New answers per hour
-        #hourNewStats['values'].append(dict(x=int(h), y=hours[h], size=hours[h]*10))
         if (hours[h] != 0):
             hourNewStats['values'].append([int(h), hours[h],
                                            (hours[h] * 5) / max_hours])
@@ -360,19 +359,17 @@ def stats_format_hours(app_id, hours, hours_anon, hours_auth,
 
         # New Anonymous answers per hour
         if h in hours_anon.keys():
-            #hourNewAnonStats['values'].append(dict(x=int(h), y=hours[h], size=hours_anon[h]*10))
             if (hours_anon[h] != 0):
-                hourNewAnonStats['values'].append([int(h), hours_anon[h],
-                                                   (hours_anon[h] * 5) / max_hours])
+                tmph = (hours_anon[h] * 5) / max_hours
+                hourNewAnonStats['values'].append([int(h), hours_anon[h], tmph])
             else:
                 hourNewAnonStats['values'].append([int(h), hours_anon[h], 0])
 
         # New Authenticated answers per hour
         if h in hours_auth.keys():
-            #hourNewAuthStats['values'].append(dict(x=int(h), y=hours[h], size=hours_auth[h]*10))
             if (hours_auth[h] != 0):
-                hourNewAuthStats['values'].append([int(h), hours_auth[h],
-                                                   (hours_auth[h] * 5) / max_hours])
+                tmph = (hours_auth[h] * 5) / max_hours
+                hourNewAuthStats['values'].append([int(h), hours_auth[h], tmph])
             else:
                 hourNewAuthStats['values'].append([int(h), hours_auth[h], 0])
     return hourNewStats, hourNewAnonStats, hourNewAuthStats
