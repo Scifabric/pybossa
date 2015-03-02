@@ -29,7 +29,7 @@ from pybossa.repositories import TaskRepository
 project_repo = ProjectRepository(db)
 task_repo = TaskRepository(db)
 
-class TestAppAPI(TestAPI):
+class TestProjectAPI(TestAPI):
 
     @with_context
     def test_app_query(self):

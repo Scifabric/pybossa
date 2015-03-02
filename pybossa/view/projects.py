@@ -1326,7 +1326,7 @@ def show_blogposts(short_name):
      overall_progress, last_activity) = project_by_shortname(short_name)
 
     blogposts = blog_repo.filter_by(app_id=project.id)
-    ensure_authorized_to('read', Blogpost, app_id=project.id)
+    ensure_authorized_to('read', Blogpost, project_id=project.id)
     redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
@@ -1388,7 +1388,7 @@ def new_blogpost(short_name):
     del form.id
 
     if request.method != 'POST':
-        ensure_authorized_to('create', Blogpost, app_id=project.id)
+        ensure_authorized_to('create', Blogpost, project_id=project.id)
         return respond()
 
     if not form.validate():
@@ -1485,7 +1485,7 @@ def auditlog(short_name):
      overall_progress, last_activity) = project_by_shortname(short_name)
 
     logs = auditlogger.get_project_logs(project.id)
-    ensure_authorized_to('read', Auditlog, app_id=project.id)
+    ensure_authorized_to('read', Auditlog, project_id=project.id)
     redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
