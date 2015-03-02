@@ -36,7 +36,8 @@ def n_available_tasks(project_id, user_id=None, user_ip=None):
     if user_id and not user_ip:
         query = text('''SELECT COUNT(id) AS n_tasks FROM task WHERE NOT EXISTS
                        (SELECT task_id FROM task_run WHERE
-                       app_id=:app_id AND user_id=:user_id AND task_id=task.id)
+                       app_id=:project_id AND user_id=:user_id
+                       AND task_id=task.id)
                        AND app_id=:project_id AND state !='completed';''')
         result = session.execute(query, dict(project_id=project_id,
                                              user_id=user_id))
@@ -45,7 +46,7 @@ def n_available_tasks(project_id, user_id=None, user_ip=None):
             user_ip = '127.0.0.1'
         query = text('''SELECT COUNT(id) AS n_tasks FROM task WHERE NOT EXISTS
                        (SELECT task_id FROM task_run WHERE
-                       app_id=:app_id AND user_ip=:user_ip AND task_id=task.id)
+                       app_id=:project_id AND user_ip=:user_ip AND task_id=task.id)
                        AND app_id=:project_id AND state !='completed';''')
 
         result = session.execute(query, dict(project_id=project_id,
