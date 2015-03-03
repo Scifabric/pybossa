@@ -100,7 +100,7 @@ class RackspaceUploader(Uploader):
         """Return Rackspace URL for object."""
         try:
             # Create failover urls for avatars
-            if 'app_' in values['filename']:
+            if 'project_' in values['filename']:
                 failover_url = url_for('static',
                                        filename='img/placeholder.project.png')
             else:
