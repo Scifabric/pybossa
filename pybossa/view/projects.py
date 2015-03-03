@@ -64,27 +64,26 @@ importer_queue = Queue('medium', connection=sentinel.master)
 MAX_NUM_SYNCHRONOUS_TASKS_IMPORT = 200
 HOUR = 60 * 60
 
-def project_title(app, page_name):
-    if not app:  # pragma: no cover
+def project_title(project, page_name):
+    if not project:  # pragma: no cover
         return "Project not found"
     if page_name is None:
-        return "Project: %s" % (app.name)
-    return "Project: %s &middot; %s" % (app.name, page_name)
+        return "Project: %s" % (project.name)
+    return "Project: %s &middot; %s" % (project.name, page_name)
 
 
 def project_by_shortname(short_name):
-    app = cached_projects.get_project(short_name)
-    if app:
+    project = cached_projects.get_project(short_name)
+    if project:
         # Get owner
-        owner = user_repo.get(app.owner_id)
-        # Populate CACHE with the data of the app
-        return (app,
+        owner = user_repo.get(project.owner_id)
+        # Populate CACHE with the data of the project
+        return (project,
                 owner,
-                cached_projects.n_tasks(app.id),
-                cached_projects.n_task_runs(app.id),
-                cached_projects.overall_progress(app.id),
-                cached_projects.last_activity(app.id))
-
+                cached_projects.n_tasks(project.id),
+                cached_projects.n_task_runs(project.id),
+                cached_projects.overall_progress(project.id),
+                cached_projects.last_activity(project.id))
     else:
         cached_projects.delete_project(short_name)
         return abort(404)
@@ -102,7 +101,7 @@ def redirect_old_featured(page):
 def redirect_old_published(page):  # pragma: no cover
     """DEPRECATED only to redirect old links"""
     category = project_repo.get_category()
-    return redirect(url_for('.app_cat_index', category=category.short_name, page=page), 301)
+    return redirect(url_for('.project_cat_index', category=category.short_name, page=page), 301)
 
 
 @blueprint.route('/draft/', defaults={'page': 1})
@@ -115,27 +114,27 @@ def redirect_old_draft(page):
 @blueprint.route('/category/featured/', defaults={'page': 1})
 @blueprint.route('/category/featured/page/<int:page>/')
 def index(page):
-    """List apps in the system"""
+    """List projects in the system"""
     if cached_projects.n_count('featured') > 0:
-        return app_index(page, cached_projects.get_featured, 'featured',
+        return project_index(page, cached_projects.get_featured, 'featured',
                          True, False)
     else:
         categories = cached_cat.get_all()
         cat_short_name = categories[0].short_name
-        return redirect(url_for('.app_cat_index', category=cat_short_name))
+        return redirect(url_for('.project_cat_index', category=cat_short_name))
 
 
-def app_index(page, lookup, category, fallback, use_count):
-    """Show apps of app_type"""
+def project_index(page, lookup, category, fallback, use_count):
+    """Show projects of a category"""
 
     per_page = current_app.config['APPS_PER_PAGE']
 
-    apps = lookup(category, page, per_page)
+    projects = lookup(category, page, per_page)
     count = cached_projects.n_count(category)
 
     data = []
 
-    if fallback and not apps:  # pragma: no cover
+    if fallback and not projects:  # pragma: no cover
         return redirect(url_for('.index'))
 
     pagination = Pagination(page, per_page, count)
@@ -157,7 +156,7 @@ def app_index(page, lookup, category, fallback, use_count):
     if cached_projects.n_count('featured') > 0:
         categories.insert(0, featured_cat)
     template_args = {
-        "apps": apps,
+        "projects": projects,
         "title": gettext("Projects"),
         "pagination": pagination,
         "active_cat": active_cat,
@@ -173,16 +172,16 @@ def app_index(page, lookup, category, fallback, use_count):
 @login_required
 @admin_required
 def draft(page):
-    """Show the Draft apps"""
-    return app_index(page, cached_projects.get_draft, 'draft',
+    """Show the Draft projects"""
+    return project_index(page, cached_projects.get_draft, 'draft',
                      False, True)
 
 
 @blueprint.route('/category/<string:category>/', defaults={'page': 1})
 @blueprint.route('/category/<string:category>/page/<int:page>/')
-def app_cat_index(category, page):
-    """Show Apps that belong to a given category"""
-    return app_index(page, cached_projects.get, category, False, True)
+def project_cat_index(category, page):
+    """Show Projects that belong to a given category"""
+    return project_index(page, cached_projects.get, category, False, True)
 
 
 @blueprint.route('/new', methods=['GET', 'POST'])
@@ -461,7 +460,7 @@ def details(short_name):
      overall_progress, last_activity) = project_by_shortname(short_name)
 
     ensure_authorized_to('read', project)
-    template = '/projects/app.html'
+    template = '/projects/project.html'
 
     redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
@@ -787,19 +786,19 @@ def tutorial(short_name):
 @blueprint.route('/<short_name>/<int:task_id>/results.json')
 def export(short_name, task_id):
     """Return a file with all the TaskRuns for a give Task"""
-    # Check if the app exists
-    (app, owner, n_tasks, n_task_runs,
+    # Check if the project exists
+    (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
 
-    ensure_authorized_to('read', app)
-    redirect_to_password = _check_if_redirect_to_password(app)
+    ensure_authorized_to('read', project)
+    redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
 
-    # Check if the task belongs to the app and exists
-    task = task_repo.get_task_by(project_id=app.id, id=task_id)
+    # Check if the task belongs to the project and exists
+    task = task_repo.get_task_by(project_id=project.id, id=task_id)
     if task:
-        taskruns = task_repo.filter_task_runs_by(task_id=task_id, project_id=app.id)
+        taskruns = task_repo.filter_task_runs_by(task_id=task_id, project_id=project.id)
         results = [tr.dictize() for tr in taskruns]
         return Response(json.dumps(results), mimetype='application/json')
     else:
@@ -1115,22 +1114,22 @@ def export_to(short_name):
 @blueprint.route('/<short_name>/stats')
 def show_stats(short_name):
     """Returns Project Stats"""
-    (app, owner, n_tasks, n_task_runs,
+    (project, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = project_by_shortname(short_name)
-    n_volunteers = cached_projects.n_volunteers(app.id)
-    n_completed_tasks = cached_projects.n_completed_tasks(app.id)
-    title = project_title(app, "Statistics")
+    n_volunteers = cached_projects.n_volunteers(project.id)
+    n_completed_tasks = cached_projects.n_completed_tasks(project.id)
+    title = project_title(project, "Statistics")
 
-    ensure_authorized_to('read', app)
-    redirect_to_password = _check_if_redirect_to_password(app)
+    ensure_authorized_to('read', project)
+    redirect_to_password = _check_if_redirect_to_password(project)
     if redirect_to_password:
         return redirect_to_password
 
     if not ((n_tasks > 0) and (n_task_runs > 0)):
-        app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+        project = add_custom_contrib_button_to(project, get_user_id_or_ip())
         return render_template('/projects/non_stats.html',
                                title=title,
-                               project=app,
+                               project=project,
                                owner=owner,
                                n_tasks=n_tasks,
                                overall_progress=overall_progress,
@@ -1138,7 +1137,7 @@ def show_stats(short_name):
                                n_completed_tasks=n_completed_tasks)
 
     dates_stats, hours_stats, users_stats = stats.get_stats(
-        app.id,
+        project.id,
         current_app.config['GEO'])
     anon_pct_taskruns = int((users_stats['n_anon'] * 100) /
                             (users_stats['n_anon'] + users_stats['n_auth']))
@@ -1161,12 +1160,12 @@ def show_stats(short_name):
                dayStats=dates_stats,
                hourStats=hours_stats)
 
-    app = add_custom_contrib_button_to(app, get_user_id_or_ip())
+    project = add_custom_contrib_button_to(project, get_user_id_or_ip())
     return render_template('/projects/stats.html',
                            title=title,
                            appStats=json.dumps(tmp),
                            userStats=userStats,
-                           project=app,
+                           project=project,
                            owner=owner,
                            n_tasks=n_tasks,
                            overall_progress=overall_progress,
@@ -1311,7 +1310,7 @@ def task_priority(short_name):
                                               'task.priority_0',
                                                old_value, new_value)
                 else:  # pragma: no cover
-                    flash(gettext(("Ooops, Task.id=%s does not belong to the app" % task_id)), 'danger')
+                    flash(gettext(("Ooops, Task.id=%s does not belong to the project" % task_id)), 'danger')
         cached_projects.delete_project(project.short_name)
         flash(gettext("Task priority has been changed"), 'success')
         return respond()
@@ -1458,8 +1457,8 @@ def update_blogpost(short_name, id):
 @blueprint.route('/<short_name>/<int:id>/delete', methods=['POST'])
 @login_required
 def delete_blogpost(short_name, id):
-    app = project_by_shortname(short_name)[0]
-    blogpost = blog_repo.get_by(id=id, project_id=app.id)
+    project = project_by_shortname(short_name)[0]
+    blogpost = blog_repo.get_by(id=id, project_id=project.id)
     if blogpost is None:
         raise abort(404)
 
@@ -1470,12 +1469,12 @@ def delete_blogpost(short_name, id):
     return redirect(url_for('.show_blogposts', short_name=short_name))
 
 
-def _check_if_redirect_to_password(app):
+def _check_if_redirect_to_password(project):
     cookie_exp = current_app.config.get('PASSWD_COOKIE_TIMEOUT')
     passwd_mngr = ProjectPasswdManager(CookieHandler(request, signer, cookie_exp))
-    if passwd_mngr.password_needed(app, get_user_id_or_ip()):
+    if passwd_mngr.password_needed(project, get_user_id_or_ip()):
         return redirect(url_for('.password_required',
-                                 short_name=app.short_name, next=request.path))
+                                 short_name=project.short_name, next=request.path))
 
 
 @blueprint.route('/<short_name>/auditlog')
