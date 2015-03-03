@@ -313,14 +313,14 @@ class TestCkanModule(Test, object):
             # Resource that exists
             app = Project(short_name='urbanpark', name='Urban Parks')
             user = User(fullname='Daniel Lombrana Gonzalez')
-            out = self.ckan.package_create(app=app, user=user, url="http://something.com")
+            out = self.ckan.package_create(project=app, user=user, url="http://something.com")
             err_msg = "The package ID should be the same"
             assert out['id'] == self.package_id, err_msg
 
             # Check the exception
             Mock.return_value = self.server_error
             try:
-                self.ckan.package_create(app=app, user=user, url="http://something.com")
+                self.ckan.package_create(project=app, user=user, url="http://something.com")
             except Exception as out:
                 type, msg, status_code = out.args
                 assert "Server Error" in msg, msg
@@ -342,7 +342,7 @@ class TestCkanModule(Test, object):
             # Resource that exists
             app = Project(short_name='urbanpark', name='Urban Parks')
             user = User(fullname='Daniel Lombrana Gonzalez')
-            self.ckan.package_create(app=app, user=user, url="http://something.com")
+            self.ckan.package_create(project=app, user=user, url="http://something.com")
             Mock.return_value = rsrc_request
             out = self.ckan.resource_create(name='task')
             err_msg = "It should create the task resource"
@@ -488,7 +488,7 @@ class TestCkanModule(Test, object):
             # Resource that exists
             app = Project(short_name='urbanpark', name='Urban Parks')
             user = User(fullname='Daniel Lombrana Gonzalez')
-            out = self.ckan.package_update(app=app, user=user,
+            out = self.ckan.package_update(project=app, user=user,
                                            url="http://something.com",
                                            resources=self.pkg_json_found['result']['resources'])
             err_msg = "The package ID should be the same"
@@ -497,7 +497,7 @@ class TestCkanModule(Test, object):
             # Check the exception
             Mock.return_value = self.server_error
             try:
-                self.ckan.package_update(app=app, user=user,
+                self.ckan.package_update(project=app, user=user,
                                          url="http://something.com",
                                          resources=self.pkg_json_found['result']['resources'])
             except Exception as out:
