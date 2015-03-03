@@ -27,7 +27,7 @@ class FlickrService(object):
         if app is not None:  # pragma: no cover
             self.init_app(app)
 
-    def init_app(self, app): # pragma: no cover
+    def init_app(self, app):  # pragma: no cover
         from flask import session
         from pybossa.core import importer
         self.app = app
@@ -57,7 +57,7 @@ class FlickrService(object):
                 return [self._extract_album_info(album) for album in albums]
             if self.app is not None:
                 msg = ("Bad response from Flickr:\nStatus: %s, Content: %s"
-                    % (res.status, res.data))
+                       % (res.status, res.data))
                 self.app.logger.error(msg)
         return []
 
