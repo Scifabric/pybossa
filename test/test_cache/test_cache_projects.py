@@ -23,21 +23,21 @@ from factories import UserFactory, ProjectFactory, TaskFactory, \
 from mock import patch
 
 
-class TestAppsCache(Test):
+class TestProjectsCache(Test):
 
 
     def create_app_with_tasks(self, completed_tasks, ongoing_tasks):
-        app = ProjectFactory.create()
-        TaskFactory.create_batch(completed_tasks, state='completed', project=app)
-        TaskFactory.create_batch(ongoing_tasks, state='ongoing', project=app)
-        return app
+        project = ProjectFactory.create()
+        TaskFactory.create_batch(completed_tasks, state='completed', project=project)
+        TaskFactory.create_batch(ongoing_tasks, state='ongoing', project=project)
+        return project
 
     def create_app_with_contributors(self, anonymous, registered,
                                      two_tasks=False, name='my_app', hidden=0):
-        app = ProjectFactory.create(name=name, hidden=hidden)
-        task = TaskFactory(project=app)
+        project = ProjectFactory.create(name=name, hidden=hidden)
+        task = TaskFactory(project=project)
         if two_tasks:
-            task2 = TaskFactory(project=app)
+            task2 = TaskFactory(project=project)
         for i in range(anonymous):
             task_run = AnonymousTaskRunFactory(task=task,
                                user_ip='127.0.0.%s' % i)
@@ -49,7 +49,7 @@ class TestAppsCache(Test):
             task_run = TaskRunFactory(task=task, user=user)
             if two_tasks:
                 task_run2 = TaskRunFactory(task=task2, user=user)
-        return app
+        return project
 
 
     def test_get_featured(self):
@@ -96,7 +96,7 @@ class TestAppsCache(Test):
         featured = cached_projects.get_featured()[0]
 
         for field in fields:
-            assert featured.has_key(field), "%s not in app info" % field
+            assert featured.has_key(field), "%s not in project info" % field
 
 
     def test_get_category(self):
@@ -156,7 +156,7 @@ class TestAppsCache(Test):
         retrieved_project = cached_projects.get(project.category.short_name)[0]
 
         for field in fields:
-            assert retrieved_project.has_key(field), "%s not in app info" % field
+            assert retrieved_project.has_key(field), "%s not in project info" % field
 
 
     def test_get_draft(self):
@@ -205,7 +205,7 @@ class TestAppsCache(Test):
         draft = cached_projects.get_draft()[0]
 
         for field in fields:
-            assert draft.has_key(field), "%s not in app info" % field
+            assert draft.has_key(field), "%s not in project info" % field
 
 
     def test_get_top_returns_apps_with_most_taskruns(self):
@@ -262,14 +262,14 @@ class TestAppsCache(Test):
         top_apps = cached_projects.get_top()
 
         assert len(top_apps) is 3, len(top_apps)
-        for app in top_apps:
-            assert app['name'] != 'hidden', app['name']
+        for project in top_apps:
+            assert project['name'] != 'hidden', project['name']
 
     def test_n_completed_tasks_no_completed_tasks(self):
         """Test CACHE PROJECTS n_completed_tasks returns 0 if no completed tasks"""
 
-        app = self.create_app_with_tasks(completed_tasks=0, ongoing_tasks=5)
-        completed_tasks = cached_projects.n_completed_tasks(app.id)
+        project = self.create_app_with_tasks(completed_tasks=0, ongoing_tasks=5)
+        completed_tasks = cached_projects.n_completed_tasks(project.id)
 
         err_msg = "Completed tasks is %s, it should be 0" % completed_tasks
         assert completed_tasks == 0, err_msg
@@ -279,8 +279,8 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS n_completed_tasks returns number of completed tasks
         if there are any"""
 
-        app = self.create_app_with_tasks(completed_tasks=5, ongoing_tasks=5)
-        completed_tasks = cached_projects.n_completed_tasks(app.id)
+        project = self.create_app_with_tasks(completed_tasks=5, ongoing_tasks=5)
+        completed_tasks = cached_projects.n_completed_tasks(project.id)
 
         err_msg = "Completed tasks is %s, it should be 5" % completed_tasks
         assert completed_tasks == 5, err_msg
@@ -290,8 +290,8 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS n_completed_tasks returns number of tasks if all
         tasks are completed"""
 
-        app = self.create_app_with_tasks(completed_tasks=4, ongoing_tasks=0)
-        completed_tasks = cached_projects.n_completed_tasks(app.id)
+        project = self.create_app_with_tasks(completed_tasks=4, ongoing_tasks=0)
+        completed_tasks = cached_projects.n_completed_tasks(project.id)
 
         err_msg = "Completed tasks is %s, it should be 4" % completed_tasks
         assert completed_tasks == 4, err_msg
@@ -301,8 +301,8 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS n_registered_volunteers returns number of volunteers
         that contributed to a project when each only submited one task run"""
 
-        app = self.create_app_with_contributors(anonymous=0, registered=3)
-        registered_volunteers = cached_projects.n_registered_volunteers(app.id)
+        project = self.create_app_with_contributors(anonymous=0, registered=3)
+        registered_volunteers = cached_projects.n_registered_volunteers(project.id)
 
         err_msg = "Volunteers is %s, it should be 3" % registered_volunteers
         assert registered_volunteers == 3, err_msg
@@ -312,8 +312,8 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS n_registered_volunteers returns number of volunteers
         that contributed to a project when any submited more than one task run"""
 
-        app = self.create_app_with_contributors(anonymous=0, registered=2, two_tasks=True)
-        registered_volunteers = cached_projects.n_registered_volunteers(app.id)
+        project = self.create_app_with_contributors(anonymous=0, registered=2, two_tasks=True)
+        registered_volunteers = cached_projects.n_registered_volunteers(project.id)
 
         err_msg = "Volunteers is %s, it should be 2" % registered_volunteers
         assert registered_volunteers == 2, err_msg
@@ -323,8 +323,8 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS n_anonymous_volunteers returns number of volunteers
         that contributed to a project when each only submited one task run"""
 
-        app = self.create_app_with_contributors(anonymous=3, registered=0)
-        anonymous_volunteers = cached_projects.n_anonymous_volunteers(app.id)
+        project = self.create_app_with_contributors(anonymous=3, registered=0)
+        anonymous_volunteers = cached_projects.n_anonymous_volunteers(project.id)
 
         err_msg = "Volunteers is %s, it should be 3" % anonymous_volunteers
         assert anonymous_volunteers == 3, err_msg
@@ -334,8 +334,8 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS n_anonymous_volunteers returns number of volunteers
         that contributed to a project when any submited more than one task run"""
 
-        app = self.create_app_with_contributors(anonymous=2, registered=0, two_tasks=True)
-        anonymous_volunteers = cached_projects.n_anonymous_volunteers(app.id)
+        project = self.create_app_with_contributors(anonymous=2, registered=0, two_tasks=True)
+        anonymous_volunteers = cached_projects.n_anonymous_volunteers(project.id)
 
         err_msg = "Volunteers is %s, it should be 2" % anonymous_volunteers
         assert anonymous_volunteers == 2, err_msg
@@ -345,8 +345,8 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS n_volunteers returns the sum of the anonymous
         plus registered volunteers that contributed to a project"""
 
-        app = self.create_app_with_contributors(anonymous=2, registered=3, two_tasks=True)
-        total_volunteers = cached_projects.n_volunteers(app.id)
+        project = self.create_app_with_contributors(anonymous=2, registered=3, two_tasks=True)
+        total_volunteers = cached_projects.n_volunteers(project.id)
 
         err_msg = "Volunteers is %s, it should be 5" % total_volunteers
         assert total_volunteers == 5, err_msg
@@ -356,8 +356,8 @@ class TestAppsCache(Test):
         """Test CACHE PROJECTS _n_draft returns 0 if there are no draft projects"""
         # Here, we are suposing that a project is draft iff has no presenter AND has no tasks
 
-        app = ProjectFactory.create(info={})
-        TaskFactory.create_batch(2, project=app)
+        project = ProjectFactory.create(info={})
+        TaskFactory.create_batch(2, project=project)
 
         number_of_drafts = cached_projects._n_draft()
 
