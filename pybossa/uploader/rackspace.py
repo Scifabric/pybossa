@@ -100,12 +100,12 @@ class RackspaceUploader(Uploader):
         """Return Rackspace URL for object."""
         try:
             # Create failover urls for avatars
-            if 'app_' in values['filename']:
-                failover_url = url_for('static',
-                                       filename='img/placehodler.project.png')
-            else:
+            if '_avatar' in values['filename']:
                 failover_url = url_for('static',
                                        filename='img/placeholder.user.png')
+            else:
+                failover_url = url_for('static',
+                                       filename='img/placeholder.project.png')
             cont = self.get_container(values['container'])
             if cont.cdn_enabled:
                 return "%s/%s" % (cont.cdn_uri, values['filename'])
