@@ -84,6 +84,6 @@ def add_event(mapper, conn, target):
 
 @event.listens_for(Task, 'after_insert')
 @event.listens_for(Task, 'after_update')
-def update_app(mapper, conn, target):
+def update_project(mapper, conn, target):
     """Update project updated timestamp."""
     update_project_timestamp(mapper, conn, target)

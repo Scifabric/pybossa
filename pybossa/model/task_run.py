@@ -121,6 +121,6 @@ def update_task_state(mapper, conn, target):
 
 @event.listens_for(TaskRun, 'after_insert')
 @event.listens_for(TaskRun, 'after_update')
-def update_app(mapper, conn, target):
+def update_project(mapper, conn, target):
     """Update project updated timestamp."""
     update_project_timestamp(mapper, conn, target)

@@ -68,8 +68,8 @@ class ProjectRepository(object):
 
     def delete(self, project):
         self._validate_can_be('deleted', project)
-        app = self.db.session.query(Project).filter(Project.id==project.id).first()
-        self.db.session.delete(app)
+        project = self.db.session.query(Project).filter(Project.id==project.id).first()
+        self.db.session.delete(project)
         self.db.session.commit()
 
 
