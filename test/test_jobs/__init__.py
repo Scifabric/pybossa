@@ -17,16 +17,20 @@
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
 from datetime import datetime
-from pybossa.jobs import create_dict_jobs, schedule_priority_jobs, get_quarterly_date
+from pybossa.jobs import create_dict_jobs, enqueue_periodic_jobs,\
+    get_quarterly_date, get_periodic_jobs
 from mock import patch
 from nose.tools import assert_raises
 
 def jobs():
     """Generator."""
-    return [fake_job()]
-
-def fake_job():
     yield dict(name='name', args=[], kwargs={}, timeout=10, queue='low')
+    yield dict(name='name', args=[], kwargs={}, timeout=10, queue='low')
+    yield dict(name='name', args=[], kwargs={}, timeout=10, queue='high')
+    yield dict(name='name', args=[], kwargs={}, timeout=10, queue='super')
+    yield dict(name='name', args=[], kwargs={}, timeout=10, queue='medium')
+    yield dict(name='name', args=[], kwargs={}, timeout=10, queue='monthly')
+    yield dict(name='name', args=[], kwargs={}, timeout=10, queue='quaterly')
 
 
 class TestJobs(object):
@@ -42,27 +46,96 @@ class TestJobs(object):
         assert len(jobs) == 1
         assert jobs[0]['name'] == 'function'
 
-    @patch('pybossa.jobs.get_scheduled_jobs')
-    def test_schedule_priority_jobs_same_queue_name(self, get_scheduled_jobs):
-        """Test JOB schedule_priority_jobs same queue works."""
-        get_scheduled_jobs.return_value = jobs()
+    @patch('pybossa.jobs.get_periodic_jobs')
+    def test_enqueue_periodic_jobs(self, get_periodic_jobs):
+        """Test JOB enqueue_periodic_jobs works."""
+        get_periodic_jobs.return_value = jobs()
         queue_name = 'low'
-        res = schedule_priority_jobs(queue_name, 10)
-        all_jobs = []
-        for j in jobs():
-            for h in j:
-                all_jobs.append(h)
-        msg = "%s jobs in %s have been enqueued" % (len(all_jobs), queue_name)
+        res = enqueue_periodic_jobs(queue_name)
+        expected_jobs = [job for job in jobs() if job['queue'] == queue_name]
+        msg = "%s jobs in %s have been enqueued" % (len(expected_jobs), queue_name)
         assert res == msg, res
 
-    @patch('pybossa.jobs.get_scheduled_jobs')
-    def test_schedule_priority_jobs_diff_queue_name(self, mock_get_scheduled_jobs):
-        """Test JOB schedule_priority_jobs diff queue name works."""
-        mock_get_scheduled_jobs.return_value = jobs()
-        queue_name = 'high'
-        res = schedule_priority_jobs(queue_name, 10)
+    @patch('pybossa.jobs.get_periodic_jobs')
+    def test_enqueue_periodic_jobs_bad_queue_name(self, mock_get_periodic_jobs):
+        """Test JOB enqueue_periodic_jobs diff queue name works."""
+        mock_get_periodic_jobs.return_value = jobs()
+        queue_name = 'badqueue'
+        res = enqueue_periodic_jobs(queue_name)
         msg = "%s jobs in %s have been enqueued" % (0, queue_name)
         assert res == msg, res
+
+    @patch('pybossa.jobs.get_export_task_jobs')
+    @patch('pybossa.jobs.get_project_jobs')
+    @patch('pybossa.jobs.get_autoimport_jobs')
+    @patch('pybossa.jobs.get_inactive_users_jobs')
+    @patch('pybossa.jobs.get_non_contributors_users_jobs')
+    def test_get_periodic_jobs_with_low_queue(self, non_contr, inactive,
+            autoimport, project, export):
+        export.return_value = jobs()
+        autoimport.return_value = jobs()
+        low_jobs = get_periodic_jobs('low')
+        # Only returns jobs for the specified queue
+        for job in low_jobs:
+            assert job['queue'] == 'low'
+        # Does not call unnecessary functions for performance
+        assert non_contr.called == False
+        assert inactive.called == False
+        assert project.called == False
+
+    @patch('pybossa.jobs.get_export_task_jobs')
+    @patch('pybossa.jobs.get_project_jobs')
+    @patch('pybossa.jobs.get_autoimport_jobs')
+    @patch('pybossa.jobs.get_inactive_users_jobs')
+    @patch('pybossa.jobs.get_non_contributors_users_jobs')
+    def test_get_periodic_jobs_with_high_queue(self, non_contr, inactive,
+            autoimport, project, export):
+        export.return_value = jobs()
+        high_jobs = get_periodic_jobs('high')
+        # Only returns jobs for the specified queue
+        for job in high_jobs:
+            assert job['queue'] == 'high'
+        # Does not call unnecessary functions for performance
+        assert non_contr.called == False
+        assert inactive.called == False
+        assert project.called == False
+        assert autoimport.called == False
+
+    @patch('pybossa.jobs.get_export_task_jobs')
+    @patch('pybossa.jobs.get_project_jobs')
+    @patch('pybossa.jobs.get_autoimport_jobs')
+    @patch('pybossa.jobs.get_inactive_users_jobs')
+    @patch('pybossa.jobs.get_non_contributors_users_jobs')
+    def test_get_periodic_jobs_with_super_queue(self, non_contr, inactive,
+            autoimport, project, export):
+        project.return_value = jobs()
+        super_jobs = get_periodic_jobs('super')
+        # Only returns jobs for the specified queue
+        for job in super_jobs:
+            assert job['queue'] == 'super'
+        # Does not call unnecessary functions for performance
+        assert non_contr.called == False
+        assert inactive.called == False
+        assert export.called == False
+        assert autoimport.called == False
+
+    @patch('pybossa.jobs.get_export_task_jobs')
+    @patch('pybossa.jobs.get_project_jobs')
+    @patch('pybossa.jobs.get_autoimport_jobs')
+    @patch('pybossa.jobs.get_inactive_users_jobs')
+    @patch('pybossa.jobs.get_non_contributors_users_jobs')
+    def test_get_periodic_jobs_with_quaterly_queue(self, non_contr, inactive,
+            autoimport, project, export):
+        inactive.return_value = jobs()
+        non_contr.return_value = jobs()
+        quaterly_jobs = get_periodic_jobs('quaterly')
+        # Only returns jobs for the specified queue
+        for job in quaterly_jobs:
+            assert job['queue'] == 'quaterly'
+        # Does not call unnecessary functions for performance
+        assert autoimport.called == False
+        assert export.called == False
+        assert project.called == False
 
     def test_get_quarterly_date_1st_quarter_returns_31_march(self):
         january_1st = datetime(2015, 1, 1)

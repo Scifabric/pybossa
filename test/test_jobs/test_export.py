@@ -26,7 +26,7 @@ class TestExport(Test):
     def test_get_export_task_jobs(self):
         """Test JOB export task jobs works."""
         app = ProjectFactory.create()
-        jobs_generator = get_export_task_jobs()
+        jobs_generator = get_export_task_jobs(queue='low')
         jobs = []
         for job in jobs_generator:
             jobs.append(job)
@@ -44,7 +44,7 @@ class TestExport(Test):
         """Test JOB export task jobs for pro users works."""
         user = UserFactory.create(pro=True)
         app = ProjectFactory.create(owner=user)
-        jobs_generator = get_export_task_jobs()
+        jobs_generator = get_export_task_jobs(queue='high')
         jobs = []
         for job in jobs_generator:
             jobs.append(job)

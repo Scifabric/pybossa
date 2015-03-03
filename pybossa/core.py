@@ -469,7 +469,7 @@ def setup_cache_timeouts(app):
 
 def setup_scheduled_jobs(app):  #pragma: no cover
     from datetime import datetime
-    from pybossa.jobs import schedule_priority_jobs, schedule_job, \
+    from pybossa.jobs import enqueue_periodic_jobs, schedule_job, \
         get_quarterly_date
     from rq_scheduler import Scheduler
     redis_conn = sentinel.master
@@ -478,18 +478,18 @@ def setup_scheduled_jobs(app):  #pragma: no cover
     HOUR = 60 * 60
     MONTH = 30 * (24 * HOUR)
     first_quaterly_execution = get_quarterly_date(datetime.utcnow())
-    JOBS = [dict(name=schedule_priority_jobs, args=['super', (10 * MINUTE)],
-                 kwargs={}, interval=(10 * MINUTE), timeout=(10 * MINUTE)),
-            dict(name=schedule_priority_jobs, args=['high', (1 * HOUR)],
-                 kwargs={}, interval=HOUR, timeout=(10 * MINUTE)),
-            dict(name=schedule_priority_jobs, args=['medium', (12 * HOUR)],
-                 kwargs={}, interval=(12 * HOUR), timeout=(10 * MINUTE)),
-            dict(name=schedule_priority_jobs, args=['low', (24 * HOUR)],
-                 kwargs={}, interval=(24 * HOUR), timeout=(10 * MINUTE)),
-            dict(name=schedule_priority_jobs, args=['monthly', (1 * MONTH)],
-                 kwargs={}, interval=(1 * MONTH), timeout=(30 * MINUTE)),
-            dict(name=schedule_priority_jobs, args=['quaterly', (3 * MONTH)],
-                 kwargs={}, interval=(3 * MONTH), timeout=(30 * MINUTE),
+    JOBS = [dict(name=enqueue_periodic_jobs, args=['super'], kwargs={},
+                 interval=(10 * MINUTE), timeout=(10 * MINUTE)),
+            dict(name=enqueue_periodic_jobs, args=['high'], kwargs={},
+                 interval=HOUR, timeout=(10 * MINUTE)),
+            dict(name=enqueue_periodic_jobs, args=['medium'], kwargs={},
+                 interval=(12 * HOUR), timeout=(10 * MINUTE)),
+            dict(name=enqueue_periodic_jobs, args=['low'], kwargs={},
+                 interval=(24 * HOUR), timeout=(10 * MINUTE)),
+            dict(name=enqueue_periodic_jobs, args=['monthly'], kwargs={},
+                 interval=(1 * MONTH), timeout=(30 * MINUTE)),
+            dict(name=enqueue_periodic_jobs, args=['quaterly'], kwargs={},
+                 interval=(3 * MONTH), timeout=(30 * MINUTE),
                  scheduled_time=first_quaterly_execution)]
 
     for job in JOBS:
