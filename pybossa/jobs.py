@@ -246,7 +246,7 @@ def get_autoimport_jobs(queue='low'):
 # The following are the actual jobs (i.e. tasks performed in the background)
 
 @with_cache_disabled
-def get_project_stats(id, short_name): # pragma: no cover
+def get_project_stats(id, short_name):  # pragma: no cover
     """Get stats for project."""
     import pybossa.cache.projects as cached_projects
     import pybossa.cache.project_stats as stats
@@ -317,7 +317,7 @@ def warm_cache():  # pragma: no cover
         warm_project(p['id'], p['short_name'])
     for page in pages:
         projects = cached_projects.get_featured('featured', page,
-                                        app.config['projects_PER_PAGE'])
+                                                app.config['projects_PER_PAGE'])
         for p in projects:
             warm_project(p['id'], p['short_name'], featured=True)
 
@@ -326,8 +326,8 @@ def warm_cache():  # pragma: no cover
     for c in categories:
         for page in pages:
             projects = cached_projects.get(c['short_name'],
-                                   page,
-                                   app.config['projects_PER_PAGE'])
+                                           page,
+                                           app.config['projects_PER_PAGE'])
             for p in projects:
                 warm_project(p['id'], p['short_name'])
     # Users
