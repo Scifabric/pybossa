@@ -115,7 +115,7 @@ def get_default_jobs():  # pragma: no cover
 def get_export_task_jobs(queue):
     """Export tasks to zip"""
     from pybossa.core import project_repo
-    import pybossa.cache.apps as cached_apps
+    import pybossa.cache.projects as cached_apps
     if queue == 'high':
         projects = cached_apps.get_from_pro_user()
     else:
