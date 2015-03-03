@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 # This file is part of PyBossa.
 #
-# Copyright (C) 2014 SF Isle of Man Limited
+# Copyright (C) 2015 SF Isle of Man Limited
 #
 # PyBossa is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published by
@@ -29,7 +29,7 @@ HOUR = 60 * 60
 
 
 def schedule_job(function, scheduler):
-    """Schedules a job and returns a log message about success of the operation"""
+    """Schedule a job and return a log message."""
     scheduled_jobs = scheduler.get_jobs()
     job = scheduler.schedule(
         scheduled_time=(function.get('scheduled_time') or datetime.utcnow()),
@@ -55,6 +55,7 @@ def schedule_job(function, scheduler):
 
 
 def get_quarterly_date(now):
+    """Get quarterly date."""
     if not isinstance(now, datetime):
         raise TypeError('Expected %s, got %s' % (type(datetime), type(now)))
     execute_month = int(math.ceil(now.month / 3.0) * 3)
@@ -96,7 +97,8 @@ def get_periodic_jobs(queue):
     autoimport_jobs = get_autoimport_jobs() if queue == 'low' else []
     # User engagement jobs
     engage_jobs = get_inactive_users_jobs() if queue == 'quaterly' else []
-    non_contrib_jobs = get_non_contributors_users_jobs() if queue == 'quaterly' else []
+    non_contrib_jobs = get_non_contributors_users_jobs() \
+        if queue == 'quaterly' else []
     _all = [zip_jobs, jobs, project_jobs, autoimport_jobs,
             engage_jobs, non_contrib_jobs]
     return (job for sublist in _all for job in sublist if job['queue'] == queue)
@@ -113,7 +115,7 @@ def get_default_jobs():  # pragma: no cover
 
 
 def get_export_task_jobs(queue):
-    """Export tasks to zip"""
+    """Export tasks to zip."""
     from pybossa.core import project_repo
     import pybossa.cache.projects as cached_projects
     if queue == 'high':
@@ -131,6 +133,7 @@ def get_export_task_jobs(queue):
 
 
 def project_export(_id):
+    """Export project."""
     from pybossa.core import project_repo, json_exporter, csv_exporter
     app = project_repo.get(_id)
     if app is not None:
@@ -149,6 +152,7 @@ def get_project_jobs(queue='super'):
 
 
 def create_dict_jobs(data, function, timeout=(10 * MINUTE), queue='low'):
+    """Create a dict job."""
     for d in data:
         jobs = dict(name=function,
                     args=[d['id'], d['short_name']], kwargs={},
@@ -229,6 +233,7 @@ def get_non_contributors_users_jobs(queue='quaterly'):
 
 
 def get_autoimport_jobs(queue='low'):
+    """Get autoimport jobs."""
     from pybossa.core import project_repo
     import pybossa.cache.projects as cached_projects
     pro_user_projects = cached_projects.get_from_pro_user()
@@ -246,7 +251,7 @@ def get_autoimport_jobs(queue='low'):
 # The following are the actual jobs (i.e. tasks performed in the background)
 
 @with_cache_disabled
-def get_project_stats(id, short_name):  # pragma: no cover
+def get_project_stats(_id, short_name):  # pragma: no cover
     """Get stats for project."""
     import pybossa.cache.projects as cached_projects
     import pybossa.cache.project_stats as stats
@@ -387,11 +392,13 @@ def warn_old_project_owners():
 
 
 def send_mail(message_dict):
+    """Send email."""
     message = Message(**message_dict)
     mail.send(message)
 
 
 def import_tasks(project_id, **form_data):
+    """Import tasks for a project."""
     from pybossa.core import project_repo
     app = project_repo.get(project_id)
     msg = importer.create_tasks(task_repo, project_id, **form_data)
