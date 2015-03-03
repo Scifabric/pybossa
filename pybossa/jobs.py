@@ -115,9 +115,9 @@ def get_default_jobs():  # pragma: no cover
 def get_export_task_jobs(queue):
     """Export tasks to zip"""
     from pybossa.core import project_repo
-    import pybossa.cache.projects as cached_apps
+    import pybossa.cache.projects as cached_projects
     if queue == 'high':
-        projects = cached_apps.get_from_pro_user()
+        projects = cached_projects.get_from_pro_user()
     else:
         projects = (p.dictize() for p in project_repo.get_all()
                     if p.owner.pro is False)
@@ -246,19 +246,19 @@ def get_autoimport_jobs(queue='low'):
 # The following are the actual jobs (i.e. tasks performed in the background)
 
 @with_cache_disabled
-def get_project_stats(id, short_name): # pragma: no cover
-    """Get stats for app."""
-    import pybossa.cache.projects as cached_apps
+def get_project_stats(id, short_name):  # pragma: no cover
+    """Get stats for project."""
+    import pybossa.cache.projects as cached_projects
     import pybossa.cache.project_stats as stats
     from flask import current_app
 
-    cached_apps.get_app(short_name)
-    cached_apps.n_tasks(_id)
-    cached_apps.n_task_runs(_id)
-    cached_apps.overall_progress(_id)
-    cached_apps.last_activity(_id)
-    cached_apps.n_completed_tasks(_id)
-    cached_apps.n_volunteers(_id)
+    cached_projects.get_project(short_name)
+    cached_projects.n_tasks(_id)
+    cached_projects.n_task_runs(_id)
+    cached_projects.overall_progress(_id)
+    cached_projects.last_activity(_id)
+    cached_projects.n_completed_tasks(_id)
+    cached_projects.n_volunteers(_id)
     stats.get_stats(_id, current_app.config.get('GEO'))
 
 
@@ -289,47 +289,47 @@ def warm_cache():  # pragma: no cover
     from pybossa.core import create_app
     app = create_app(run_as_server=False)
     # Cache 3 pages
-    apps_cached = []
+    projects_cached = []
     pages = range(1, 4)
-    import pybossa.cache.projects as cached_apps
+    import pybossa.cache.projects as cached_projects
     import pybossa.cache.categories as cached_cat
     import pybossa.cache.users as cached_users
     import pybossa.cache.project_stats as stats
 
-    def warm_app(_id, short_name, featured=False):
-        if _id not in apps_cached:
-            cached_apps.get_app(short_name)
-            cached_apps.n_tasks(_id)
-            n_task_runs = cached_apps.n_task_runs(_id)
-            cached_apps.overall_progress(_id)
-            cached_apps.last_activity(_id)
-            cached_apps.n_completed_tasks(_id)
-            cached_apps.n_volunteers(_id)
+    def warm_project(_id, short_name, featured=False):
+        if _id not in projects_cached:
+            cached_projects.get_project(short_name)
+            cached_projects.n_tasks(_id)
+            n_task_runs = cached_projects.n_task_runs(_id)
+            cached_projects.overall_progress(_id)
+            cached_projects.last_activity(_id)
+            cached_projects.n_completed_tasks(_id)
+            cached_projects.n_volunteers(_id)
             if n_task_runs >= 1000 or featured:
                 print ("Getting stats for %s as it has %s task runs" %
                        (short_name, n_task_runs))
                 stats.get_stats(_id, app.config.get('GEO'))
-            apps_cached.append(_id)
+            projects_cached.append(_id)
 
     # Cache top projects
-    apps = cached_apps.get_top()
-    for a in apps:
-        warm_app(a['id'], a['short_name'])
+    projects = cached_projects.get_top()
+    for p in projects:
+        warm_project(p['id'], p['short_name'])
     for page in pages:
-        apps = cached_apps.get_featured('featured', page,
-                                        app.config['APPS_PER_PAGE'])
-        for a in apps:
-            warm_app(a['id'], a['short_name'], featured=True)
+        projects = cached_projects.get_featured('featured', page,
+                                                app.config['projects_PER_PAGE'])
+        for p in projects:
+            warm_project(p['id'], p['short_name'], featured=True)
 
     # Categories
     categories = cached_cat.get_used()
     for c in categories:
         for page in pages:
-            apps = cached_apps.get(c['short_name'],
-                                   page,
-                                   app.config['APPS_PER_PAGE'])
-            for a in apps:
-                warm_app(a['id'], a['short_name'])
+            projects = cached_projects.get(c['short_name'],
+                                           page,
+                                           app.config['projects_PER_PAGE'])
+            for p in projects:
+                warm_project(p['id'], p['short_name'])
     # Users
     users = cached_users.get_leaderboard(app.config['LEADERBOARD'], 'anonymous')
     for user in users:
@@ -344,8 +344,8 @@ def warm_cache():  # pragma: no cover
     return True
 
 
-def get_non_updated_apps():
-    """Return a list of non updated apps."""
+def get_non_updated_projects():
+    """Return a list of non updated projects."""
     from sqlalchemy.sql import text
     from pybossa.model.project import Project
     from pybossa.core import db
@@ -353,11 +353,11 @@ def get_non_updated_apps():
                 'YYYY-MM-DD\THH24:MI:SS.US') <= NOW() - '3 month':: INTERVAL
                AND contacted != True LIMIT 25''')
     results = db.slave_session.execute(sql)
-    apps = []
+    projects = []
     for row in results:
         a = Project.query.get(row.id)
-        apps.append(a)
-    return apps
+        projects.append(a)
+    return projects
 
 
 def warn_old_project_owners():
@@ -366,7 +366,7 @@ def warn_old_project_owners():
     from flask import current_app
     from flask.ext.mail import Message
 
-    projects = get_non_updated_apps()
+    projects = get_non_updated_projects()
 
     with mail.connect() as conn:
         for project in projects:

@@ -407,7 +407,7 @@ def setup_hooks(app):
             if (current_user.email_addr == current_user.name or
                     current_user.email_addr == "None"):
                 flash(lazy_gettext("Please update your e-mail address in your"
-                      "profile page, right now it is empty!"), 'error')
+                      " profile page, right now it is empty!"), 'error')
 
         # Cookies warning
         cookie_name = app.config['BRAND'] + "_accept_cookies"

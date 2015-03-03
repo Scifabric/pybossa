@@ -53,9 +53,10 @@ class Hateoas(object):
             return links, link
         elif cls == 'user':
             link = self.create_link(item)
-            # TODO: add the apps created by the user as the links with rel=? (maybe 'app'??)
+            # TODO: add the projects created by the user as the
+            # links with rel=? (maybe 'project'??)
             return None, link
-        else: # pragma: no cover
+        else:  # pragma: no cover
             return False
 
     def remove_links(self, item):

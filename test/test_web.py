@@ -1144,8 +1144,8 @@ class TestWeb(web.Helper):
         # Sign in again and check the warning message
         self.signin(email="tester", password="tester")
         res = self.app.get('/', follow_redirects=True)
-        msg = "Please update your e-mail address in your profile page, " \
-              "right now it is empty!"
+        msg = ("Please update your e-mail address in your"
+               " profile page, right now it is empty!")
         user = db.session.query(User).get(1)
         assert msg in res.data, res.data
 
