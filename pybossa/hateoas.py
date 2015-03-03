@@ -15,21 +15,27 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-
+"""Hateoas module for PyBossa."""
 from flask import url_for
 
 
 class Hateoas(object):
+
+    """Hateoas class."""
+
     def link(self, rel, title, href):
+        """Return hateoas link."""
         return "<link rel='%s' title='%s' href='%s'/>" % (rel, title, href)
 
     def create_link(self, item, rel='self'):
+        """Create hateoas link."""
         title = item.__class__.__name__.lower()
         method = ".api_%s" % title
         href = url_for(method, oid=item.id, _external=True)
         return self.link(rel, title, href)
 
     def create_links(self, item):
+        """Create Hateoas links."""
         cls = item.__class__.__name__.lower()
         links = []
         if cls == 'taskrun':
@@ -60,7 +66,7 @@ class Hateoas(object):
             return False
 
     def remove_links(self, item):
-        """Remove HATEOAS link and links from item"""
+        """Remove HATEOAS link and links from item."""
         if item.get('link'):
             item.pop('link')
         if item.get('links'):
