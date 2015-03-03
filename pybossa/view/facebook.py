@@ -15,33 +15,28 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-
+"""Facebook view for PyBossa."""
 from flask import Blueprint, request, url_for, flash, redirect, session
 from flask.ext.login import login_user, current_user
-
 from pybossa.core import facebook, user_repo, newsletter
 from pybossa.model.user import User
-#from pybossa.util import Facebook, get_user_signup_method
 from pybossa.util import get_user_signup_method
-# Required to access the config parameters outside a context as we are using
-# Flask 0.8
-# See http://goo.gl/tbhgF for more info
-#from pybossa.core import app
 
-# This blueprint will be activated in core.py if the FACEBOOK APP ID and SECRET
-# are available
 blueprint = Blueprint('facebook', __name__)
 
 
 @blueprint.route('/', methods=['GET', 'POST'])
 def login():  # pragma: no cover
+    """Login using Facebook Oauth."""
+    next_url = request.args.get("next")
     return facebook.oauth.authorize(callback=url_for('.oauth_authorized',
-                                                     next=request.args.get("next"),
+                                                     next=next_url,
                                                      _external=True))
 
 
 @facebook.oauth.tokengetter
 def get_facebook_token():  # pragma: no cover
+    """Get Facebook token from session."""
     if current_user.is_anonymous():
         return session.get('oauth_token')
     else:
@@ -51,6 +46,7 @@ def get_facebook_token():  # pragma: no cover
 @blueprint.route('/oauth-authorized')
 @facebook.oauth.authorized_handler
 def oauth_authorized(resp):  # pragma: no cover
+    """Authorize facebook login."""
     next_url = request.args.get('next') or url_for('home.home')
     if resp is None:
         flash(u'You denied the request to sign in.', 'error')
@@ -68,7 +64,7 @@ def oauth_authorized(resp):  # pragma: no cover
 
 
 def manage_user(access_token, user_data, next_url):
-    """Manage the user after signin"""
+    """Manage the user after signin."""
     user = user_repo.get_by(facebook_user_id=user_data['id'])
 
     if user is None:
@@ -85,10 +81,10 @@ def manage_user(access_token, user_data, next_url):
             if not user_data.get('email'):
                 user_data['email'] = "None"
             user = User(fullname=user_data['name'],
-                   name=user_data['username'],
-                   email_addr=user_data['email'],
-                   facebook_user_id=user_data['id'],
-                   info=info)
+                        name=user_data['username'],
+                        email_addr=user_data['email'],
+                        facebook_user_id=user_data['id'],
+                        info=info)
             user_repo.save(user)
             if newsletter.app and user.email_addr != "None":
                 newsletter.subscribe_user(user)
@@ -97,6 +93,7 @@ def manage_user(access_token, user_data, next_url):
             return None
     else:
         return user
+
 
 def manage_user_login(user, user_data, next_url):
     """Manage user login."""
@@ -127,5 +124,6 @@ def manage_user_login(user, user_data, next_url):
             return redirect(url_for('account.update_profile', name=user.name))
         if (user.email_addr != "None" and user.newsletter_prompted is False
                 and newsletter.app):
-            return redirect(url_for('account.newsletter_subscribe', next=next_url))
+            return redirect(url_for('account.newsletter_subscribe',
+                                    next=next_url))
         return redirect(next_url)

@@ -15,29 +15,31 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+"""Flickr view for PyBossa."""
 from flask import Blueprint, request, url_for, flash, redirect, session
-
 from pybossa.core import flickr
 
-# This blueprint will be activated in core.py
-# if the FLICKR API KEY and SECRET
-# are available
 blueprint = Blueprint('flickr', __name__)
 
 
 @blueprint.route('/')
 def login():
+    """Login using Flickr view."""
     callback_url = url_for('.oauth_authorized', next=request.args.get('next'))
     return flickr.authorize(callback=callback_url, perms='read')
 
+
 @blueprint.route('/revoke-access')
 def logout():
+    """Log out."""
     next_url = request.args.get('next') or url_for('home.home')
     flickr.remove_credentials(session)
     return redirect(next_url)
 
+
 @blueprint.route('/oauth-authorized')
 def oauth_authorized():
+    """Authorize Flickr login."""
     next_url = request.args.get('next')
     resp = flickr.authorized_response()
     if resp is None:
