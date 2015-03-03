@@ -24,4 +24,6 @@ This exports:
     * view: for web front views
 
 """
-__version__ = "0.1" # pragma: no cover
+
+
+__version__ = "0.1"  # pragma: no cover
