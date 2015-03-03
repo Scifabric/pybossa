@@ -63,27 +63,46 @@ def get_quarterly_date(now):
     return datetime.combine(execute_date, now.time())
 
 
-def schedule_priority_jobs(queue_name, interval):
-    """Schedule all PyBossa high priority jobs."""
+def enqueue_periodic_jobs(queue_name):
+    """Enqueue all PyBossa periodic jobs."""
     from pybossa.core import sentinel
     from rq import Queue
     redis_conn = sentinel.master
 
-    jobs_generator = get_scheduled_jobs()
+    jobs_generator = get_periodic_jobs(queue_name)
     n_jobs = 0
     queue = Queue(queue_name, connection=redis_conn)
-    for job_gen in jobs_generator:
-        for job in job_gen:
-            if (job['queue'] == queue_name):
-                n_jobs += 1
-                queue.enqueue_call(func=job['name'],
-                                   args=job['args'],
-                                   kwargs=job['kwargs'],
-                                   timeout=job['timeout'])
+    for job in jobs_generator:
+        if (job['queue'] == queue_name):
+            n_jobs += 1
+            queue.enqueue_call(func=job['name'],
+                               args=job['args'],
+                               kwargs=job['kwargs'],
+                               timeout=job['timeout'])
     msg = "%s jobs in %s have been enqueued" % (n_jobs, queue_name)
     return msg
 
-def get_default_jobs(): # pragma: no cover
+
+def get_periodic_jobs(queue):
+    """Return a list of periodic jobs for a given queue."""
+    # A job is a dict with the following format: dict(name, args, kwargs,
+    # timeout, queue)
+    # Default ones
+    jobs = get_default_jobs()
+    # Create ZIPs for all projects
+    zip_jobs = get_export_task_jobs(queue) if queue in ('high', 'low') else []
+    # Based on type of user
+    project_jobs = get_project_jobs() if queue == 'super' else []
+    autoimport_jobs = get_autoimport_jobs() if queue == 'low' else []
+    # User engagement jobs
+    engage_jobs = get_inactive_users_jobs() if queue == 'quaterly' else []
+    non_contrib_jobs = get_non_contributors_users_jobs() if queue == 'quaterly' else []
+    _all = [zip_jobs, jobs, project_jobs, autoimport_jobs,
+            engage_jobs, non_contrib_jobs]
+    return (job for sublist in _all for job in sublist if job['queue'] == queue)
+
+
+def get_default_jobs():  # pragma: no cover
     """Return default jobs."""
     yield dict(name=warm_up_stats, args=[], kwargs={},
                timeout=(10 * MINUTE), queue='high')
@@ -93,67 +112,120 @@ def get_default_jobs(): # pragma: no cover
                timeout=(10 * MINUTE), queue='super')
 
 
-def get_scheduled_jobs(): # pragma: no cover
-    """Return a list of scheduled jobs."""
-    # Default ones
-    # A job is a dict with the following format: dict(name, args, kwargs,
-    # timeout, queue)
-    jobs = get_default_jobs()
-    # Create ZIPs for all projects
-    zip_jobs = get_export_task_jobs()
-    # Based on type of user
-    project_jobs = get_project_jobs()
-    autoimport_jobs = get_autoimport_jobs()
-    # User engagement jobs
-    engage_jobs = get_inactive_users_jobs()
-    non_contrib_jobs = get_non_contributors_users_jobs()
-    return [zip_jobs, jobs, project_jobs, autoimport_jobs, \
-           engage_jobs, non_contrib_jobs]
-
-
-def get_export_task_jobs():
+def get_export_task_jobs(queue):
     """Export tasks to zip"""
-    from pybossa.core import db, user_repo
-    from pybossa.model.app import App
-    apps = db.slave_session.query(App).all()
-    for app_x in apps:
-        checkuser = user_repo.get(app_x.owner_id)
-        # Check if Pro User, if yes use a higher priority queue
-        queue = 'low'
-        if checkuser.pro:
-            queue = 'high'
+    from pybossa.core import project_repo
+    import pybossa.cache.apps as cached_apps
+    if queue == 'high':
+        projects = cached_apps.get_from_pro_user()
+    else:
+        projects = (p.dictize() for p in project_repo.get_all()
+                    if p.owner.pro is False)
+    for project in projects:
+        project_id = project.get('id')
         job = dict(name=project_export,
-                   args=[app_x.id], kwargs={},
+                   args=[project_id], kwargs={},
                    timeout=(10 * MINUTE),
                    queue=queue)
         yield job
 
 
-def project_export(id):
+def project_export(_id):
     from pybossa.core import project_repo, json_exporter, csv_exporter
-    app = project_repo.get(id)
+    app = project_repo.get(_id)
     if app is not None:
-        print "Export project id %d" % id
+        print "Export project id %d" % _id
         json_exporter.pregenerate_zip_files(app)
         csv_exporter.pregenerate_zip_files(app)
 
 
-def get_project_jobs():
+def get_project_jobs(queue='super'):
     """Return a list of jobs based on user type."""
     from pybossa.cache import apps as cached_apps
     return create_dict_jobs(cached_apps.get_from_pro_user(),
                             get_app_stats,
                             timeout=(10 * MINUTE),
-                            queue='super')
+                            queue=queue)
 
 
 def create_dict_jobs(data, function, timeout=(10 * MINUTE), queue='low'):
     for d in data:
-        jobs =  dict(name=function,
-                     args=[d['id'], d['short_name']], kwargs={},
-                     timeout=timeout,
-                     queue=queue)
+        jobs = dict(name=function,
+                    args=[d['id'], d['short_name']], kwargs={},
+                    timeout=timeout,
+                    queue=queue)
         yield jobs
+
+
+def get_inactive_users_jobs(queue='quaterly'):
+    """Return a list of inactive users that have contributed to a project."""
+    from sqlalchemy.sql import text
+    from pybossa.model.user import User
+    from pybossa.core import db
+    # First users that have participated once but more than 3 months ago
+    sql = text('''SELECT user_id FROM task_run
+               WHERE user_id IS NOT NULL
+               AND TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
+               <= NOW() - '3 month'::INTERVAL GROUP BY task_run.user_id;''')
+    results = db.slave_session.execute(sql)
+    for row in results:
+
+        user = User.query.get(row.user_id)
+
+        if user.subscribed:
+            subject = "We miss you!"
+            body = render_template('/account/email/inactive.md',
+                                   user=user.dictize(),
+                                   config=current_app.config)
+            html = render_template('/account/email/inactive.html',
+                                   user=user.dictize(),
+                                   config=current_app.config)
+
+            mail_dict = dict(recipients=[user.email_addr],
+                             subject=subject,
+                             body=body,
+                             html=html)
+
+            job = dict(name=send_mail,
+                       args=[mail_dict],
+                       kwargs={},
+                       timeout=(10 * MINUTE),
+                       queue=queue)
+            yield job
+
+
+def get_non_contributors_users_jobs(queue='quaterly'):
+    """Return a list of users that have never contributed to a project."""
+    from sqlalchemy.sql import text
+    from pybossa.model.user import User
+    from pybossa.core import db
+    # Second users that have created an account but never participated
+    sql = text('''SELECT id FROM "user" WHERE
+               NOT EXISTS (SELECT user_id FROM task_run
+               WHERE task_run.user_id="user".id)''')
+    results = db.slave_session.execute(sql)
+    for row in results:
+        user = User.query.get(row.id)
+
+        if user.subscribed:
+            subject = "Why don't you help us?!"
+            body = render_template('/account/email/noncontributors.md',
+                                   user=user.dictize(),
+                                   config=current_app.config)
+            html = render_template('/account/email/noncontributors.html',
+                                   user=user.dictize(),
+                                   config=current_app.config)
+            mail_dict = dict(recipients=[user.email_addr],
+                             subject=subject,
+                             body=body,
+                             html=html)
+
+            job = dict(name=send_mail,
+                       args=[mail_dict],
+                       kwargs={},
+                       timeout=(10 * MINUTE),
+                       queue=queue)
+            yield job
 
 
 def get_autoimport_jobs(queue='low'):
@@ -171,25 +243,27 @@ def get_autoimport_jobs(queue='low'):
             yield job
 
 
+# The following are the actual jobs (i.e. tasks performed in the background)
+
 @with_cache_disabled
-def get_app_stats(id, short_name): # pragma: no cover
+def get_app_stats(_id, short_name):  # pragma: no cover
     """Get stats for app."""
     import pybossa.cache.apps as cached_apps
     import pybossa.cache.project_stats as stats
     from flask import current_app
 
     cached_apps.get_app(short_name)
-    cached_apps.n_tasks(id)
-    cached_apps.n_task_runs(id)
-    cached_apps.overall_progress(id)
-    cached_apps.last_activity(id)
-    cached_apps.n_completed_tasks(id)
-    cached_apps.n_volunteers(id)
-    stats.get_stats(id, current_app.config.get('GEO'))
+    cached_apps.n_tasks(_id)
+    cached_apps.n_task_runs(_id)
+    cached_apps.overall_progress(_id)
+    cached_apps.last_activity(_id)
+    cached_apps.n_completed_tasks(_id)
+    cached_apps.n_volunteers(_id)
+    stats.get_stats(_id, current_app.config.get('GEO'))
 
 
 @with_cache_disabled
-def warm_up_stats(): # pragma: no cover
+def warm_up_stats():  # pragma: no cover
     """Background job for warming stats."""
     print "Running on the background warm_up_stats"
     from pybossa.cache.site_stats import (n_auth_users, n_anon_users,
@@ -222,20 +296,20 @@ def warm_cache():  # pragma: no cover
     import pybossa.cache.users as cached_users
     import pybossa.cache.project_stats as stats
 
-    def warm_app(id, short_name, featured=False):
-        if id not in apps_cached:
+    def warm_app(_id, short_name, featured=False):
+        if _id not in apps_cached:
             cached_apps.get_app(short_name)
-            cached_apps.n_tasks(id)
-            n_task_runs = cached_apps.n_task_runs(id)
-            cached_apps.overall_progress(id)
-            cached_apps.last_activity(id)
-            cached_apps.n_completed_tasks(id)
-            cached_apps.n_volunteers(id)
+            cached_apps.n_tasks(_id)
+            n_task_runs = cached_apps.n_task_runs(_id)
+            cached_apps.overall_progress(_id)
+            cached_apps.last_activity(_id)
+            cached_apps.n_completed_tasks(_id)
+            cached_apps.n_volunteers(_id)
             if n_task_runs >= 1000 or featured:
                 print ("Getting stats for %s as it has %s task runs" %
                        (short_name, n_task_runs))
-                stats.get_stats(id, app.config.get('GEO'))
-            apps_cached.append(id)
+                stats.get_stats(_id, app.config.get('GEO'))
+            apps_cached.append(_id)
 
     # Cache top projects
     apps = cached_apps.get_top()
@@ -292,34 +366,23 @@ def warn_old_project_owners():
     from flask import current_app
     from flask.ext.mail import Message
 
-    apps = get_non_updated_apps()
+    projects = get_non_updated_apps()
 
     with mail.connect() as conn:
-        for a in apps:
-            message = ("Dear %s,\
-                       \
-                       Your project %s has been inactive for the last 3 months.\
-                       And we would like to inform you that if you need help \
-                       with it, just contact us answering to this email.\
-                       \
-                       Otherwise, we will archive the project, removing it \
-                       from the server. You have one month to upload any new \
-                       tasks, add a new blog post, or engage new volunteers.\
-                       \
-                       If at the end the project is deleted, we will send you \
-                       a ZIP file where you can download your project.\
-                       \
-                       All the best,\
-                       \
-                       The team.") % (a.owner.fullname, a.name)
+        for project in projects:
             subject = ('Your %s project: %s has been inactive'
-                       % (current_app.config.get('BRAND'), a.name))
-            msg = Message(recipients=[a.owner.email_addr],
-                          body=message,
-                          subject=subject)
+                       % (current_app.config.get('BRAND'), project.name))
+            body = render_template('/account/email/inactive_project.md',
+                                   project=project)
+            html = render_template('/account/email/inactive_project.html',
+                                   project=project)
+            msg = Message(recipients=[project.owner.email_addr],
+                          subject=subject,
+                          body=body,
+                          html=html)
             conn.send(msg)
-            a.contacted = True
-            project_repo.update(a)
+            project.contacted = True
+            project_repo.update(project)
     return True
 
 
@@ -340,75 +403,3 @@ def import_tasks(project_id, **form_data):
                      subject=subject, body=body)
     send_mail(mail_dict)
     return msg
-
-
-def get_inactive_users_jobs(queue='quaterly'):
-    """Return a list of inactive users that have contributed to a project."""
-    from sqlalchemy.sql import text
-    from pybossa.model.user import User
-    from pybossa.core import db
-    from pybossa.extensions import misaka
-    # First users that have participated once but more than 3 months ago
-    sql = text('''SELECT user_id FROM task_run
-               WHERE user_id IS NOT NULL
-               AND TO_DATE(task_run.finish_time, 'YYYY-MM-DD\THH24:MI:SS.US')
-               <= NOW() - '3 month'::INTERVAL GROUP BY task_run.user_id;''')
-    results = db.slave_session.execute(sql)
-    for row in results:
-
-        user = User.query.get(row.user_id)
-
-        if user.subscribed:
-            subject = "We miss you!"
-            body = render_template('/account/email/inactive.md',
-                                   user=user.dictize(),
-                                   config=current_app.config)
-            html = render_template('/account/email/inactive.html',
-                                   user=user.dictize(),
-                                   config=current_app.config)
-
-            mail_dict = dict(recipients=[user.email_addr],
-                             subject=subject,
-                             body=body,
-                             html=html)
-
-            job = dict(name=send_mail,
-                       args=[mail_dict],
-                       kwargs={},
-                       timeout=(10 * MINUTE),
-                       queue=queue)
-            yield job
-
-def get_non_contributors_users_jobs(queue='quaterly'):
-    """Return a list of users that have never contributed to a project."""
-    from sqlalchemy.sql import text
-    from pybossa.model.user import User
-    from pybossa.core import db
-    from pybossa.extensions import misaka
-    # Second users that have created an account but never participated
-    sql = text('''SELECT id FROM "user" WHERE
-               NOT EXISTS (SELECT user_id FROM task_run
-               WHERE task_run.user_id="user".id)''')
-    results = db.slave_session.execute(sql)
-    for row in results:
-        user = User.query.get(row.id)
-
-        if user.subscribed:
-            subject = "Why don't you help us?!"
-            body = render_template('/account/email/noncontributors.md',
-                                   user=user.dictize(),
-                                   config=current_app.config)
-            html = render_template('/account/email/noncontributors.html',
-                                   user=user.dictize(),
-                                   config=current_app.config)
-            mail_dict = dict(recipients=[user.email_addr],
-                             subject=subject,
-                             body=body,
-                             html=html)
-
-            job = dict(name=send_mail,
-                       args=[mail_dict],
-                       kwargs={},
-                       timeout=(10 * MINUTE),
-                       queue=queue)
-            yield job
