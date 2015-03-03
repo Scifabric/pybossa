@@ -39,13 +39,10 @@ from rq import Queue
 
 import pybossa.model as model
 from flask.ext.babel import gettext
-from sqlalchemy.sql import text
-from pybossa.model.user import User
-from pybossa.core import signer, mail, uploader, sentinel, newsletter
-from pybossa.util import Pagination, pretty_date
+from pybossa.core import signer, uploader, sentinel, newsletter
+from pybossa.util import Pagination
 from pybossa.util import get_user_signup_method
 from pybossa.cache import users as cached_users
-from pybossa.cache import projects as cached_projects
 from pybossa.auth import ensure_authorized_to
 from pybossa.jobs import send_mail
 from pybossa.core import user_repo
@@ -74,6 +71,7 @@ def get_update_feed():
             tmp['info'] = json.loads(tmp['info'])
         update_feed.append(tmp)
     return update_feed
+
 
 @blueprint.route('/', defaults={'page': 1})
 @blueprint.route('/page/<int:page>')
@@ -144,11 +142,11 @@ def signin():
     auth = {'twitter': False, 'facebook': False, 'google': False}
     if current_user.is_anonymous():
         # If Twitter is enabled in config, show the Twitter Sign in button
-        if ('twitter' in current_app.blueprints): # pragma: no cover
+        if ('twitter' in current_app.blueprints):  # pragma: no cover
             auth['twitter'] = True
-        if ('facebook' in current_app.blueprints): # pragma: no cover
+        if ('facebook' in current_app.blueprints):  # pragma: no cover
             auth['facebook'] = True
-        if ('google' in current_app.blueprints): # pragma: no cover
+        if ('google' in current_app.blueprints):  # pragma: no cover
             auth['google'] = True
         return render_template('account/signin.html',
                                title="Sign in",
@@ -178,6 +176,7 @@ def get_email_confirmation_url(account):
     confirm_url = url_for('.confirm_account', key=key, _external=True)
     return confirm_url
 
+
 @blueprint.route('/confirm-email')
 @login_required
 def confirm_email():
@@ -190,16 +189,13 @@ def confirm_email():
         account = dict(fullname=current_user.fullname, name=current_user.name,
                        email_addr=current_user.email_addr)
         confirm_url = get_email_confirmation_url(account)
-        subject = ('Verify your email in %s' \
-                   % current_app.config.get('BRAND'))
+        subject = ('Verify your email in %s' % current_app.config.get('BRAND'))
         msg = dict(subject=subject,
                    recipients=[current_user.email_addr],
-                   body=render_template(
-                       '/account/email/validate_email.md',
-                       user=account, confirm_url=confirm_url))
-        msg['html'] = render_template(
-                       '/account/email/validate_email.html',
-                       user=account, confirm_url=confirm_url)
+                   body=render_template('/account/email/validate_email.md',
+                                        user=account, confirm_url=confirm_url))
+        msg['html'] = render_template('/account/email/validate_email.html',
+                                      user=account, confirm_url=confirm_url)
         mail_queue.enqueue(send_mail, msg)
         msg = gettext("An e-mail has been sent to \
                        validate your e-mail address.")
@@ -220,15 +216,15 @@ def register():
     form = RegisterForm(request.form)
     if request.method == 'POST' and form.validate():
         account = dict(fullname=form.fullname.data, name=form.name.data,
-                      email_addr=form.email_addr.data,
-                      password=form.password.data)
+                       email_addr=form.email_addr.data,
+                       password=form.password.data)
         confirm_url = get_email_confirmation_url(account)
         if current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED'):
             return redirect(confirm_url)
         msg = dict(subject='Welcome to %s!' % current_app.config.get('BRAND'),
                    recipients=[account['email_addr']],
                    body=render_template('/account/email/validate_account.md',
-                                       user=account, confirm_url=confirm_url))
+                                        user=account, confirm_url=confirm_url))
         msg['html'] = markdown(msg['body'])
         mail_queue.enqueue(send_mail, msg)
         return render_template('account/account_validation.html')
@@ -270,6 +266,7 @@ def newsletter_subscribe():
 
 @blueprint.route('/register/confirmation', methods=['GET'])
 def confirm_account():
+    """Confir account endpoint."""
     key = request.args.get('key')
     if key is None:
         abort(403)
@@ -308,7 +305,8 @@ def confirm_account():
 
 @blueprint.route('/profile', methods=['GET'])
 def redirect_profile():
-    if current_user.is_anonymous(): # pragma: no cover
+    """Redirect method for profile."""
+    if current_user.is_anonymous():  # pragma: no cover
         return redirect(url_for('.signin'))
     return redirect(url_for('.profile', name=current_user.name), 302)
 
@@ -359,13 +357,14 @@ def _show_own_profile(user):
     cached_users.get_user_summary(user.name)
 
     return render_template('account/profile.html', title=gettext("Profile"),
-                          projects_contrib=projects_contributed,
-                          projects_published=projects_published,
-                          projects_draft=projects_draft,
-                          user=user)
+                           projects_contrib=projects_contributed,
+                           projects_published=projects_published,
+                           projects_draft=projects_draft,
+                           user=user)
 
 
 @blueprint.route('/<name>/applications')
+@blueprint.route('/<name>/projects')
 @login_required
 def applications(name):
     """
@@ -384,7 +383,7 @@ def applications(name):
     projects_published, projects_draft = _get_user_projects(user.id)
     projects_published.extend(cached_users.hidden_projects(user.id))
 
-    return render_template('account/applications.html',
+    return render_template('account/projects.html',
                            title=gettext("Projects"),
                            projects_published=projects_published,
                            projects_draft=projects_draft)
@@ -394,7 +393,6 @@ def _get_user_projects(user_id):
     projects_published = cached_users.published_projects(user_id)
     projects_draft = cached_users.draft_projects(user_id)
     return projects_published, projects_draft
-
 
 
 @blueprint.route('/<name>/update', methods=['GET', 'POST'])
@@ -453,8 +451,7 @@ def update_profile(name):
                 # Delete previous avatar from storage
                 if user.info.get('avatar'):
                     uploader.delete_file(user.info['avatar'], container)
-                user.info = {'avatar': file.filename,
-                                     'container': container}
+                user.info = {'avatar': file.filename, 'container': container}
                 user_repo.update(user)
                 cached_users.delete_user_summary(user.name)
                 flash(gettext('Your avatar has been updated! It may \
@@ -486,7 +483,7 @@ def update_profile(name):
                                    name=update_form.name.data,
                                    email_addr=update_form.email_addr.data)
                     confirm_url = get_email_confirmation_url(account)
-                    subject = ('You have updated your email in %s! Verify it' \
+                    subject = ('You have updated your email in %s! Verify it'
                                % current_app.config.get('BRAND'))
                     msg = dict(subject=subject,
                                recipients=[update_form.email_addr.data],
@@ -522,7 +519,8 @@ def update_profile(name):
 
         # Update user password
         elif request.form.get('btn') == 'Password':
-            # Update the data because passing it in the constructor does not work
+            # Update the data because passing it in the constructor
+            # does not work
             update_form.name.data = user.name
             update_form.fullname.data = user.fullname
             update_form.email_addr.data = user.email_addr
@@ -533,8 +531,8 @@ def update_profile(name):
                 if user.check_password(password_form.current_password.data):
                     user.set_password(password_form.new_password.data)
                     user_repo.update(user)
-                    flash(gettext('Yay, you changed your password succesfully!'),
-                          'success')
+                    msg = gettext('Yay, you changed your password succesfully!')
+                    flash(msg, 'success')
                     return redirect(url_for('.update_profile', name=name))
                 else:
                     msg = gettext("Your current password doesn't match the "
@@ -692,8 +690,6 @@ def reset_api_key(name):
     if not user:
         return abort(404)
     ensure_authorized_to('update', user)
-    title = ("User: %s &middot; Settings"
-             "- Reset API KEY") % current_user.fullname
     user.api_key = model.make_uuid()
     user_repo.update(user)
     cached_users.delete_user_summary(user.name)
