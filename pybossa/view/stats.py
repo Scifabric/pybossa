@@ -15,7 +15,7 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
-
+"""Stats view on PyBossa."""
 import json
 from flask import Blueprint
 from flask import render_template
@@ -28,8 +28,7 @@ blueprint = Blueprint('stats', __name__)
 
 @blueprint.route('/')
 def index():
-    """Return Global Statistics for the site"""
-
+    """Return Global Statistics for the site."""
     title = "Global Statistics"
 
     n_auth = site_stats.n_auth_users()
@@ -38,15 +37,15 @@ def index():
 
     n_total_users = n_anon + n_auth
 
-    n_published_apps = cached_projects.n_published()
-    n_draft_apps = cached_projects.n_count('draft')
-    n_total_apps = n_published_apps + n_draft_apps
+    n_published_projects = cached_projects.n_published()
+    n_draft_projects = cached_projects.n_count('draft')
+    n_total_projects = n_published_projects + n_draft_projects
 
     n_tasks = site_stats.n_tasks_site()
 
     n_task_runs = site_stats.n_task_runs_site()
 
-    top5_apps_24_hours = site_stats.get_top5_projects_24_hours()
+    top5_projects_24_hours = site_stats.get_top5_projects_24_hours()
 
     top5_users_24_hours = site_stats.get_top5_users_24_hours()
 
@@ -57,9 +56,9 @@ def index():
         show_locs = True
 
     stats = dict(n_total_users=n_total_users, n_auth=n_auth, n_anon=n_anon,
-                 n_published_apps=n_published_apps,
-                 n_draft_apps=n_draft_apps,
-                 n_total_apps=n_total_apps,
+                 n_published_projects=n_published_projects,
+                 n_draft_projects=n_draft_projects,
+                 n_total_projects=n_total_projects,
                  n_tasks=n_tasks,
                  n_task_runs=n_task_runs)
 
@@ -68,10 +67,11 @@ def index():
                      dict(label='Anonymous', value=[0, n_anon]),
                      dict(label='Authenticated', value=[0, n_auth])])
 
-    apps = dict(label="Apps Statistics",
-                values=[
-                    dict(label='Published', value=[0, n_published_apps]),
-                    dict(label='Draft', value=[0, n_draft_apps])])
+    projects = dict(label="Projects Statistics",
+                    values=[
+                        dict(label='Published',
+                             value=[0, n_published_projects]),
+                        dict(label='Draft', value=[0, n_draft_projects])])
 
     tasks = dict(label="Task and Task Run Statistics",
                  values=[
@@ -80,10 +80,10 @@ def index():
 
     return render_template('/stats/global.html', title=title,
                            users=json.dumps(users),
-                           apps=json.dumps(apps),
+                           projects=json.dumps(projects),
                            tasks=json.dumps(tasks),
                            locs=json.dumps(locs),
                            show_locs=show_locs,
                            top5_users_24_hours=top5_users_24_hours,
-                           top5_apps_24_hours=top5_apps_24_hours,
+                           top5_projects_24_hours=top5_projects_24_hours,
                            stats=stats)
