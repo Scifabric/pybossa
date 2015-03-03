@@ -15,30 +15,27 @@
 #
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
+"""Twitter view for PyBossa."""
 from flask import Blueprint, request, url_for, flash, redirect
 from flask.ext.login import login_user, current_user
-
 from pybossa.core import twitter, user_repo, newsletter
 from pybossa.model.user import User
 from pybossa.util import get_user_signup_method
-# Required to access the config parameters outside a
-# context as we are using Flask 0.8
-# See http://goo.gl/tbhgF for more info
 
-# This blueprint will be activated in core.py
-# if the TWITTER CONSUMER KEY and SECRET
-# are available
 blueprint = Blueprint('twitter', __name__)
 
 
 @blueprint.route('/', methods=['GET', 'POST'])
 def login():  # pragma: no cover
+    """Login with Twitter."""
+    next_url = request.args.get("next")
     return twitter.oauth.authorize(callback=url_for('.oauth_authorized',
-                                                    next=request.args.get("next")))
+                                                    next=next_url))
 
 
 @twitter.oauth.tokengetter
 def get_twitter_token():  # pragma: no cover
+    """Get Twitter token from session."""
     if current_user.is_anonymous():
         return None
 
@@ -47,7 +44,7 @@ def get_twitter_token():  # pragma: no cover
 
 
 def manage_user(access_token, user_data, next_url):
-    """Manage the user after signin"""
+    """Manage the user after signin."""
     # Twitter API does not provide a way
     # to get the e-mail so we will ask for it
     # only the first time
@@ -65,10 +62,10 @@ def manage_user(access_token, user_data, next_url):
         return None
 
     user = User(fullname=user_data['screen_name'],
-           name=user_data['screen_name'],
-           email_addr=user_data['screen_name'],
-           twitter_user_id=user_data['user_id'],
-           info=info)
+                name=user_data['screen_name'],
+                email_addr=user_data['screen_name'],
+                twitter_user_id=user_data['user_id'],
+                info=info)
     user_repo.save(user)
     return user
 
@@ -76,7 +73,9 @@ def manage_user(access_token, user_data, next_url):
 @blueprint.route('/oauth-authorized')
 @twitter.oauth.authorized_handler
 def oauth_authorized(resp):  # pragma: no cover
-    """Called after authorization. After this function finished handling,
+    """Called after authorization.
+
+    After this function finished handling,
     the OAuth information is removed from the session again. When this
     happened, the tokengetter from above is used to retrieve the oauth
     token and secret.
@@ -103,6 +102,7 @@ def oauth_authorized(resp):  # pragma: no cover
     user = manage_user(access_token, user_data, next_url)
 
     return manage_user_login(user, user_data, next_url)
+
 
 def manage_user_login(user, user_data, next_url):
     """Manage user login."""
