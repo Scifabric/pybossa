@@ -50,7 +50,7 @@ from pybossa.extensions import misaka
 from pybossa.cookies import CookieHandler
 from pybossa.password_manager import ProjectPasswdManager
 from pybossa.jobs import import_tasks
-from pybossa.forms.applications_view_forms import *
+from pybossa.forms.projects_view_forms import *
 from pybossa.importers import BulkImportException
 
 from pybossa.core import project_repo, user_repo, task_repo, blog_repo, auditlog_repo
@@ -189,7 +189,7 @@ def app_cat_index(category, page):
 @login_required
 def new():
     ensure_authorized_to('create', Project)
-    form = AppForm(request.form)
+    form = ProjectForm(request.form)
 
     def respond(errors):
         return render_template('projects/new.html',
@@ -396,7 +396,7 @@ def update(short_name):
 
     title = project_title(project, "Update")
     if request.method == 'GET':
-        form = AppUpdateForm(obj=project)
+        form = ProjectUpdateForm(obj=project)
         upload_form = AvatarUploadForm()
         categories = project_repo.get_all_categories()
         form.category_id.choices = [(c.id, c.name) for c in categories]
@@ -406,7 +406,7 @@ def update(short_name):
 
     if request.method == 'POST':
         upload_form = AvatarUploadForm()
-        form = AppUpdateForm(request.form)
+        form = ProjectUpdateForm(request.form)
         categories = cached_cat.get_all()
         form.category_id.choices = [(c.id, c.name) for c in categories]
 
