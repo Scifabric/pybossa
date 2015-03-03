@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from pybossa.jobs import warn_old_project_owners, get_non_updated_apps
+from pybossa.jobs import warn_old_project_owners, get_non_updated_projects
 from default import Test, with_context
 from factories import ProjectFactory
 from mock import patch, MagicMock
@@ -25,18 +25,18 @@ from mock import patch, MagicMock
 class TestOldProjects(Test):
 
     @with_context
-    def test_get_non_updated_apps_returns_none(self):
+    def test_get_non_updated_projects_returns_none(self):
         """Test JOB get non updated returns none."""
-        apps = get_non_updated_apps()
+        apps = get_non_updated_projects()
         err_msg = "There should not be any outdated project."
         assert len(apps) == 0, err_msg
 
 
     @with_context
-    def test_get_non_updated_apps_returns_one_project(self):
+    def test_get_non_updated_projects_returns_one_project(self):
         """Test JOB get non updated returns one project."""
         app = ProjectFactory.create(updated='2010-10-22T11:02:00.000000')
-        apps = get_non_updated_apps()
+        apps = get_non_updated_projects()
         err_msg = "There should be one outdated project."
         assert len(apps) == 1, err_msg
         assert apps[0].name == app.name, err_msg
