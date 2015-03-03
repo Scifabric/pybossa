@@ -52,7 +52,7 @@ def create_app(run_as_server=True):
     mail.init_app(app)
     sentinel.init_app(app)
     signer.init_app(app)
-    if app.config.get('SENTRY_DSN'): # pragma: no cover
+    if app.config.get('SENTRY_DSN'):  # pragma: no cover
         Sentry(app)
     if run_as_server:
         setup_scheduled_jobs(app)
@@ -73,10 +73,10 @@ def configure_app(app):
     app.config.from_object(settings)
     app.config.from_envvar('PYBOSSA_SETTINGS', silent=True)
     # parent directory
-    if not os.environ.get('PYBOSSA_SETTINGS'): # pragma: no cover
+    if not os.environ.get('PYBOSSA_SETTINGS'):  # pragma: no cover
         here = os.path.dirname(os.path.abspath(__file__))
         config_path = os.path.join(os.path.dirname(here), 'settings_local.py')
-        if os.path.exists(config_path): # pragma: no cover
+        if os.path.exists(config_path):  # pragma: no cover
             app.config.from_pyfile(config_path)
     # Override DB in case of testing
     if app.config.get('SQLALCHEMY_DATABASE_TEST_URI'):
@@ -100,11 +100,12 @@ def setup_uploader(app):
         from pybossa.uploader.local import LocalUploader
         uploader = LocalUploader()
         uploader.init_app(app)
-    if app.config.get('UPLOAD_METHOD') == 'rackspace': # pragma: no cover
+    if app.config.get('UPLOAD_METHOD') == 'rackspace':  # pragma: no cover
         from pybossa.uploader.rackspace import RackspaceUploader
         uploader = RackspaceUploader()
         app.url_build_error_handlers.append(uploader.external_url_handler)
         uploader.init_app(app)
+
 
 def setup_exporter(app):
     global csv_exporter
@@ -113,6 +114,7 @@ def setup_exporter(app):
     from pybossa.exporter.json_export import JsonExporter
     csv_exporter = CsvExporter()
     json_exporter = JsonExporter()
+
 
 def setup_markdown(app):
     misaka.init_app(app)
@@ -123,15 +125,15 @@ def setup_db(app):
         if app.config.get('SQLALCHEMY_BINDS')['slave'] == app.config.get('SQLALCHEMY_DATABASE_URI'):
             return db.session
         engine = db.get_engine(db.app, bind=bind)
-        options = dict(bind=engine,scopefunc=_app_ctx_stack.__ident_func__)
+        options = dict(bind=engine, scopefunc=_app_ctx_stack.__ident_func__)
         slave_session = db.create_scoped_session(options=options)
         return slave_session
     db.app = app
     db.init_app(app)
     db.slave_session = create_slave_session(db, bind='slave')
-    if db.slave_session is not db.session: #flask-sqlalchemy does it already for default session db.session
+    if db.slave_session is not db.session:  # flask-sqlalchemy does it already for default session db.session
         @app.teardown_appcontext
-        def _shutdown_session(response_or_exc): # pragma: no cover
+        def _shutdown_session(response_or_exc):  # pragma: no cover
             if app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN']:
                 if response_or_exc is None:
                     db.slave_session.commit()
@@ -160,7 +162,7 @@ def setup_repositories():
 def setup_error_email(app):
     from logging.handlers import SMTPHandler
     ADMINS = app.config.get('ADMINS', '')
-    if not app.debug and ADMINS: # pragma: no cover
+    if not app.debug and ADMINS:  # pragma: no cover
         mail_handler = SMTPHandler('127.0.0.1',
                                    'server-error@no-reply.com',
                                    ADMINS, 'error')
@@ -173,7 +175,7 @@ def setup_logging(app):
     from logging import Formatter
     log_file_path = app.config.get('LOG_FILE')
     log_level = app.config.get('LOG_LEVEL', logging.WARN)
-    if log_file_path: # pragma: no cover
+    if log_file_path:  # pragma: no cover
         file_handler = RotatingFileHandler(log_file_path)
         file_handler.setFormatter(Formatter(
             '%(name)s:%(levelname)s:[%(asctime)s] %(message)s '
@@ -189,6 +191,7 @@ def setup_logging(app):
 def setup_login_manager(app):
     login_manager.login_view = 'account.signin'
     login_manager.login_message = u"Please sign in to access this page."
+
     @login_manager.user_loader
     def _load_user(username):
         return user_repo.get_by_name(username)
@@ -205,8 +208,8 @@ def setup_babel(app):
             lang = current_user.locale
         else:
             lang = request.cookies.get('language')
-        if (lang is None or lang == ''
-                or lang.lower() not in app.config['LOCALES']):
+        if (lang is None or lang == '' or
+                lang.lower() not in app.config['LOCALES']):
             lang = 'en'
         return lang.lower()
     return babel
@@ -266,7 +269,7 @@ def setup_external_services(app):
             facebook.init_app(app)
             from pybossa.view.facebook import blueprint as facebook_bp
             app.register_blueprint(facebook_bp, url_prefix='/facebook')
-    except Exception as inst: # pragma: no cover
+    except Exception as inst:  # pragma: no cover
         print type(inst)
         print inst.args
         print inst
@@ -294,7 +297,7 @@ def setup_external_services(app):
             flickr.init_app(app)
             from pybossa.view.flickr import blueprint as flickr_bp
             app.register_blueprint(flickr_bp, url_prefix='/flickr')
-    except Exception as inst: # pragma: no cover
+    except Exception as inst:  # pragma: no cover
         print type(inst)
         print inst.args
         print inst
@@ -303,10 +306,10 @@ def setup_external_services(app):
         app.logger.error(log_message)
 
     # Enable Dropbox if available
-    try:  #pragma: no cover
+    try:  # pragma: no cover
         if app.config['DROPBOX_APP_KEY']:
             importer.register_dropbox_importer()
-    except Exception as inst: # pragma: no cover
+    except Exception as inst:  # pragma: no cover
         print type(inst)
         print inst.args
         print inst
@@ -330,6 +333,7 @@ def url_for_other_page(page):
     args = request.view_args.copy()
     args['page'] = page
     return url_for(request.endpoint, **args)
+
 
 def setup_jinja(app):
     app.jinja_env.globals['url_for_other_page'] = url_for_other_page
@@ -381,8 +385,8 @@ def setup_hooks(app):
         if current_user and current_user.is_authenticated():
             if (current_user.email_addr == current_user.name or
                     current_user.email_addr == "None"):
-                flash(lazy_gettext("Please update your e-mail address in your profile page,"
-                      " right now it is empty!"), 'error')
+                flash(lazy_gettext("Please update your e-mail address in your"
+                      "profile page, right now it is empty!"), 'error')
 
         # Cookies warning
         cookie_name = app.config['BRAND'] + "_accept_cookies"
@@ -421,12 +425,13 @@ def setup_hooks(app):
             terms_of_use=app.config['TERMSOFUSE'],
             data_use=app.config['DATAUSE'],
             enforce_privacy=app.config['ENFORCE_PRIVACY'],
-            #version=pybossa.__version__,
+            # version=pybossa.__version__,
             current_user=current_user,
             show_cookies_warning=show_cookies_warning,
             contact_email=contact_email,
             contact_twitter=contact_twitter,
             upload_method=app.config['UPLOAD_METHOD'])
+
 
 def setup_jinja2_filters(app):
     @app.template_filter('pretty_date')
@@ -438,7 +443,7 @@ def setup_csrf_protection(app):
     csrf.init_app(app)
 
 
-def setup_debug_toolbar(app): # pragma: no cover
+def setup_debug_toolbar(app):  # pragma: no cover
     if app.config['ENABLE_DEBUG_TOOLBAR']:
         debug_toolbar.init_app(app)
 
@@ -467,7 +472,7 @@ def setup_cache_timeouts(app):
     timeouts['USER_TOTAL_TIMEOUT'] = app.config['USER_TOTAL_TIMEOUT']
 
 
-def setup_scheduled_jobs(app):  #pragma: no cover
+def setup_scheduled_jobs(app):  # pragma: no cover
     from datetime import datetime
     from pybossa.jobs import enqueue_periodic_jobs, schedule_job, \
         get_quarterly_date
