@@ -53,7 +53,7 @@ class TestCkanWeb(web_helper.Helper):
         res = self.signin(email=self.email_addr, password=self.password)
         res = self.app.get(self.url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
-        err_msg = "The CKAN exporter should be available for the owner of the app"
+        err_msg = "The CKAN exporter should be available for the owner of the project"
         assert dom.find(id="ckan") is not None, err_msg
 
         self.signout()
@@ -61,7 +61,7 @@ class TestCkanWeb(web_helper.Helper):
         self.signin(email=self.email_addr2, password=self.password)
         res = self.app.get(self.url, follow_redirects=True)
         dom = BeautifulSoup(res.data)
-        err_msg = "The CKAN exporter should be ONLY available for the owner of the app"
+        err_msg = "The CKAN exporter should be ONLY available for the owner of the project"
         assert dom.find(id="ckan") is None, err_msg
 
     @with_context
@@ -311,16 +311,16 @@ class TestCkanModule(Test, object):
         Mock.return_value = html_request
         with self.flask_app.test_request_context('/'):
             # Resource that exists
-            app = Project(short_name='urbanpark', name='Urban Parks')
+            project = Project(short_name='urbanpark', name='Urban Parks')
             user = User(fullname='Daniel Lombrana Gonzalez')
-            out = self.ckan.package_create(project=app, user=user, url="http://something.com")
+            out = self.ckan.package_create(project=project, user=user, url="http://something.com")
             err_msg = "The package ID should be the same"
             assert out['id'] == self.package_id, err_msg
 
             # Check the exception
             Mock.return_value = self.server_error
             try:
-                self.ckan.package_create(project=app, user=user, url="http://something.com")
+                self.ckan.package_create(project=project, user=user, url="http://something.com")
             except Exception as out:
                 type, msg, status_code = out.args
                 assert "Server Error" in msg, msg
@@ -340,9 +340,9 @@ class TestCkanModule(Test, object):
         Mock.return_value = pkg_request
         with self.flask_app.test_request_context('/'):
             # Resource that exists
-            app = Project(short_name='urbanpark', name='Urban Parks')
+            project = Project(short_name='urbanpark', name='Urban Parks')
             user = User(fullname='Daniel Lombrana Gonzalez')
-            self.ckan.package_create(project=app, user=user, url="http://something.com")
+            self.ckan.package_create(project=project, user=user, url="http://something.com")
             Mock.return_value = rsrc_request
             out = self.ckan.resource_create(name='task')
             err_msg = "It should create the task resource"
@@ -486,9 +486,9 @@ class TestCkanModule(Test, object):
         Mock.return_value = html_request
         with self.flask_app.test_request_context('/'):
             # Resource that exists
-            app = Project(short_name='urbanpark', name='Urban Parks')
+            project = Project(short_name='urbanpark', name='Urban Parks')
             user = User(fullname='Daniel Lombrana Gonzalez')
-            out = self.ckan.package_update(project=app, user=user,
+            out = self.ckan.package_update(project=project, user=user,
                                            url="http://something.com",
                                            resources=self.pkg_json_found['result']['resources'])
             err_msg = "The package ID should be the same"
@@ -497,7 +497,7 @@ class TestCkanModule(Test, object):
             # Check the exception
             Mock.return_value = self.server_error
             try:
-                self.ckan.package_update(project=app, user=user,
+                self.ckan.package_update(project=project, user=user,
                                          url="http://something.com",
                                          resources=self.pkg_json_found['result']['resources'])
             except Exception as out:
