@@ -172,7 +172,7 @@ class Helper(Test):
             return self.app.get("/project/%s/delete" % short_name,
                                 follow_redirects=True)
 
-    def update_application(self, method="POST", short_name="sampleapp", id=1,
+    def update_project(self, method="POST", short_name="sampleapp", id=1,
                            new_name="Sample Project", new_short_name="sampleapp",
                            new_description="Description",
                            new_allow_anonymous_contributors="False",

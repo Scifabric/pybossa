@@ -121,7 +121,7 @@ class TestAdmin(web.Helper):
         """Test ADMIN featured projects add-remove works as an admin user"""
         self.register()
         self.new_project()
-        self.update_application()
+        self.update_project()
         # The project is in the system but not in the front page
         res = self.app.get('/', follow_redirects=True)
         assert "Sample Project" not in res.data,\
@@ -467,10 +467,10 @@ class TestAdmin(web.Helper):
         res = self.app.get('/project/sampleapp/settings')
         err_msg = "Admin users should be able to get the settings page for any project"
         assert res.status == "200 OK", err_msg
-        res = self.update_application(method="GET")
+        res = self.update_project(method="GET")
         assert "Update the project" in res.data,\
             "The project should be updated by admin users"
-        res = self.update_application(new_name="Root",
+        res = self.update_project(new_name="Root",
                                       new_short_name="rootsampleapp")
         res = self.app.get('/project/rootsampleapp', follow_redirects=True)
         assert "Root" in res.data, "The app should be updated by admin users"
@@ -480,7 +480,7 @@ class TestAdmin(web.Helper):
         juan = db.session.query(User).filter_by(name="juan").first()
         assert app.owner_id == juan.id, "Owner_id should be: %s" % juan.id
         assert app.owner_id != 1, "The owner should be not updated"
-        res = self.update_application(short_name="rootsampleapp",
+        res = self.update_project(short_name="rootsampleapp",
                                       new_short_name="sampleapp",
                                       new_long_description="New Long Desc")
         res = self.app.get('/project/sampleapp', follow_redirects=True)

@@ -623,7 +623,7 @@ class TestWeb(web.Helper):
         res = self.app.get('/project/noapp/update', follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.status
         # POST
-        res = self.update_application(short_name="noapp")
+        res = self.update_project(short_name="noapp")
         assert res.status == '404 NOT FOUND', res.status
 
     @with_context
@@ -864,7 +864,7 @@ class TestWeb(web.Helper):
         self.new_project()
 
         # Get the Update Project web page
-        res = self.update_application(method="GET")
+        res = self.update_project(method="GET")
         msg = "Project: Sample Project &middot; Update"
         assert self.html_title(msg) in res.data, res
         msg = 'input id="id" name="id" type="hidden" value="1"'
@@ -872,7 +872,7 @@ class TestWeb(web.Helper):
         assert "Save the changes" in res.data, res
 
         # Check form validation
-        res = self.update_application(new_name="",
+        res = self.update_project(new_name="",
                                       new_short_name="",
                                       new_description="New description",
                                       new_long_description='New long desc',
@@ -880,7 +880,7 @@ class TestWeb(web.Helper):
         assert "Please correct the errors" in res.data, res.data
 
         # Update the project
-        res = self.update_application(new_name="New Sample Project",
+        res = self.update_project(new_name="New Sample Project",
                                       new_short_name="newshortname",
                                       new_description="New description",
                                       new_long_description='New long desc',
@@ -953,7 +953,7 @@ class TestWeb(web.Helper):
 
         new_webhook = 'http://mynewserver.com/'
 
-        self.update_application(id=app.id, short_name=app.short_name,
+        self.update_project(id=app.id, short_name=app.short_name,
                                 new_webhook=new_webhook)
 
         err_msg = "There should be an updated webhook url."
@@ -974,7 +974,7 @@ class TestWeb(web.Helper):
 
         new_webhook = 'http://mynewserver.com/'
 
-        self.update_application(id=app.id, short_name=app.short_name,
+        self.update_project(id=app.id, short_name=app.short_name,
                                 new_webhook=new_webhook)
 
         err_msg = "There should not be an updated webhook url."
@@ -993,7 +993,7 @@ class TestWeb(web.Helper):
 
         new_webhook = 'http://mynewserver.com/'
 
-        res = self.update_application(id=app.id, short_name=app.short_name,
+        res = self.update_project(id=app.id, short_name=app.short_name,
                                       new_webhook=new_webhook)
 
         err_msg = "There should not be an updated webhook url."
@@ -1011,7 +1011,7 @@ class TestWeb(web.Helper):
         owner = db.session.query(User).first()
         app = ProjectFactory.create(owner=owner)
 
-        self.update_application(id=app.id, short_name=app.short_name,
+        self.update_project(id=app.id, short_name=app.short_name,
                                 new_password='mysecret')
 
         assert app.needs_password(), 'Password not set"'
@@ -1028,7 +1028,7 @@ class TestWeb(web.Helper):
         owner = db.session.query(User).first()
         app = ProjectFactory.create(info={'passwd_hash': 'mysecret'}, owner=owner)
 
-        self.update_application(id=app.id, short_name=app.short_name,
+        self.update_project(id=app.id, short_name=app.short_name,
                                 new_password='')
 
         assert not app.needs_password(), 'Password not deleted'
@@ -1040,19 +1040,19 @@ class TestWeb(web.Helper):
         self.register()
         self.new_project()
 
-        res = self.update_application(new_name="")
+        res = self.update_project(new_name="")
         assert "This field is required" in res.data
 
-        res = self.update_application(new_short_name="")
+        res = self.update_project(new_short_name="")
         assert "This field is required" in res.data
 
-        res = self.update_application(new_description="")
+        res = self.update_project(new_description="")
         assert "You must provide a description." in res.data
 
-        res = self.update_application(new_description="a"*256)
+        res = self.update_project(new_description="a"*256)
         assert "Field cannot be longer than 255 characters." in res.data
 
-        res = self.update_application(new_long_description="")
+        res = self.update_project(new_long_description="")
         assert "This field is required" not in res.data
 
 
@@ -1066,7 +1066,7 @@ class TestWeb(web.Helper):
         Mock.return_value = html_request
         self.register()
         self.new_project()
-        self.update_application(new_hidden=True)
+        self.update_project(new_hidden=True)
         self.signout()
 
         res = self.app.get('/project/', follow_redirects=True)
@@ -1087,7 +1087,7 @@ class TestWeb(web.Helper):
 
         self.register()
         self.new_project()
-        self.update_application(new_hidden=True)
+        self.update_project(new_hidden=True)
 
         res = self.app.get('/project/', follow_redirects=True)
         assert "Sample Project" not in res.data, ("Projects should be hidden"
@@ -1349,7 +1349,7 @@ class TestWeb(web.Helper):
         """Test WEB Project Index published works"""
         self.register()
         self.new_project()
-        self.update_application(new_category_id="1")
+        self.update_project(new_category_id="1")
         app = db.session.query(Project).first()
         info = dict(task_presenter="some html")
         app.info = info
@@ -2119,7 +2119,7 @@ class TestWeb(web.Helper):
         db.session.commit()
         _info = app.info
 
-        self.update_application()
+        self.update_project()
         app = db.session.query(Project).first()
         for key in _info:
             assert key in app.info.keys(), \
