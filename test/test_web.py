@@ -612,7 +612,7 @@ class TestWeb(web.Helper):
         res = self.app.get('/project/noapp/delete', follow_redirects=True)
         assert res.status == '404 NOT FOUND', res.data
         # POST
-        res = self.delete_application(short_name="noapp")
+        res = self.delete_project(short_name="noapp")
         assert res.status == '404 NOT FOUND', res.status
 
     @with_context
@@ -1104,7 +1104,7 @@ class TestWeb(web.Helper):
         self.create()
         self.register()
         self.new_project()
-        res = self.delete_application(method="GET")
+        res = self.delete_project(method="GET")
         msg = "Project: Sample Project &middot; Delete"
         assert self.html_title(msg) in res.data, res
         assert "No, do not delete it" in res.data, res
@@ -1113,16 +1113,16 @@ class TestWeb(web.Helper):
         app.hidden = 1
         db.session.add(app)
         db.session.commit()
-        res = self.delete_application(method="GET")
+        res = self.delete_project(method="GET")
         msg = "Project: Sample Project &middot; Delete"
         assert self.html_title(msg) in res.data, res
         assert "No, do not delete it" in res.data, res
 
-        res = self.delete_application()
+        res = self.delete_project()
         assert "Project deleted!" in res.data, res
 
         self.signin(email=Fixtures.email_addr2, password=Fixtures.password)
-        res = self.delete_application(short_name=Fixtures.project_short_name)
+        res = self.delete_project(short_name=Fixtures.project_short_name)
         assert res.status_code == 403, res.status_code
 
 

@@ -163,7 +163,7 @@ class Helper(Test):
         else:
             return self.app.get(url, follow_redirects=True)
 
-    def delete_application(self, method="POST", short_name="sampleapp"):
+    def delete_project(self, method="POST", short_name="sampleapp"):
         """Helper function to delete a project"""
         if method == "POST":
             return self.app.post("/project/%s/delete" % short_name,

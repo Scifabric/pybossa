@@ -264,7 +264,7 @@ class TestAuditlogWEB(web.Helper):
     def test_app_create(self):
         self.register()
         self.new_project()
-        self.delete_application()
+        self.delete_project()
         short_name = 'sampleapp'
 
         logs = auditlog_repo.filter_by(project_short_name=short_name, offset=1)

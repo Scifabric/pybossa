@@ -499,10 +499,10 @@ class TestAdmin(web.Helper):
         self.signout()
         # Sign in with the root user
         self.signin()
-        res = self.delete_application(method="GET")
+        res = self.delete_project(method="GET")
         assert "Yes, delete it" in res.data,\
             "The project should be deleted by admin users"
-        res = self.delete_application()
+        res = self.delete_project()
         err_msg = "The project should be deleted by admin users"
         assert "Project deleted!" in res.data, err_msg
 
