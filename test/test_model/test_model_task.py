@@ -40,9 +40,9 @@ class TestModelTask(Test):
         db.session.commit()
         user = db.session.query(User).first()
         category = Category(name=u'cat', short_name=u'cat', description=u'cat')
-        app = Project(name='Application', short_name='app', description='desc',
+        project = Project(name='Application', short_name='app', description='desc',
                   owner_id=user.id, category=category)
-        db.session.add(app)
+        db.session.add(project)
         db.session.commit()
 
         task = Task(project_id=None)

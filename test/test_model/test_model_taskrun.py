@@ -41,12 +41,12 @@ class TestModelTaskRun(Test):
 
         user = db.session.query(User).first()
         category = Category(name=u'cat', short_name=u'cat', description=u'cat')
-        app = Project(name='Application', short_name='app', description='desc',
+        project = Project(name='Application', short_name='app', description='desc',
                   owner_id=user.id, category=category)
-        db.session.add(app)
+        db.session.add(project)
         db.session.commit()
 
-        task = Task(project_id=app.id)
+        task = Task(project_id=project.id)
         db.session.add(task)
         db.session.commit()
 
@@ -55,7 +55,7 @@ class TestModelTaskRun(Test):
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
 
-        task_run = TaskRun(project_id=app.id, task_id=None)
+        task_run = TaskRun(project_id=project.id, task_id=None)
         db.session.add(task_run)
         assert_raises(IntegrityError, db.session.commit)
         db.session.rollback()
