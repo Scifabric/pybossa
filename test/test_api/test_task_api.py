@@ -32,8 +32,8 @@ class TestTaskAPI(TestAPI):
     @with_context
     def test_task_query_without_params(self):
         """ Test API Task query"""
-        app = ProjectFactory.create()
-        TaskFactory.create_batch(10, project=app, info={'question': 'answer'})
+        project = ProjectFactory.create()
+        TaskFactory.create_batch(10, project=project, info={'question': 'answer'})
         res = self.app.get('/api/task')
         tasks = json.loads(res.data)
         assert len(tasks) == 10, tasks
@@ -47,8 +47,8 @@ class TestTaskAPI(TestAPI):
     @with_context
     def test_task_query_with_params(self):
         """Test API query for task with params works"""
-        app = ProjectFactory.create()
-        TaskFactory.create_batch(10, project=app)
+        project = ProjectFactory.create()
+        TaskFactory.create_batch(10, project=project)
         # Test for real field
         res = self.app.get("/api/task?project_id=1")
         data = json.loads(res.data)
@@ -85,9 +85,9 @@ class TestTaskAPI(TestAPI):
         admin = UserFactory.create()
         user = UserFactory.create()
         non_owner = UserFactory.create()
-        app = ProjectFactory.create(owner=user)
-        data = dict(project_id=app.id, state='0', info='my task data')
-        root_data = dict(project_id=app.id, state='0', info='my root task data')
+        project = ProjectFactory.create(owner=user)
+        data = dict(project_id=project.id, state='0', info='my task data')
+        root_data = dict(project_id=project.id, state='0', info='my root task data')
 
         # anonymous user
         # no api-key
@@ -99,7 +99,7 @@ class TestTaskAPI(TestAPI):
         res = self.app.post('/api/task?api_key=' + non_owner.api_key,
                             data=json.dumps(data))
 
-        error_msg = 'Should not be able to post tasks for apps of others'
+        error_msg = 'Should not be able to post tasks for projects of others'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
 
         # now a real user
@@ -110,7 +110,7 @@ class TestTaskAPI(TestAPI):
         out = task_repo.get_task(datajson['id'])
         assert out, out
         assert_equal(out.info, 'my task data'), out
-        assert_equal(out.project_id, app.id)
+        assert_equal(out.project_id, project.id)
 
         # now the root user
         res = self.app.post('/api/task?api_key=' + admin.api_key,
@@ -120,7 +120,7 @@ class TestTaskAPI(TestAPI):
         out = task_repo.get_task(datajson['id'])
         assert out, out
         assert_equal(out.info, 'my root task data'), out
-        assert_equal(out.project_id, app.id)
+        assert_equal(out.project_id, project.id)
 
         # POST with not JSON data
         url = '/api/task?api_key=%s' % user.api_key
@@ -158,9 +158,9 @@ class TestTaskAPI(TestAPI):
         admin = UserFactory.create()
         user = UserFactory.create()
         non_owner = UserFactory.create()
-        app = ProjectFactory.create(owner=user)
-        task = TaskFactory.create(project=app)
-        root_task = TaskFactory.create(project=app)
+        project = ProjectFactory.create(owner=user)
+        task = TaskFactory.create(project=project)
+        root_task = TaskFactory.create(project=project)
         data = {'state': '1'}
         datajson = json.dumps(data)
         root_data = {'state': '4'}
@@ -223,9 +223,9 @@ class TestTaskAPI(TestAPI):
         admin = UserFactory.create()
         user = UserFactory.create()
         non_owner = UserFactory.create()
-        app = ProjectFactory.create(owner=user)
-        task = TaskFactory.create(project=app)
-        root_task = TaskFactory.create(project=app)
+        project = ProjectFactory.create(owner=user)
+        task = TaskFactory.create(project=project)
+        root_task = TaskFactory.create(project=project)
 
         ## anonymous
         res = self.app.delete('/api/task/%s' % task.id)
@@ -259,7 +259,7 @@ class TestTaskAPI(TestAPI):
         res = self.app.delete(url)
         assert_equal(res.status, '204 NO CONTENT', res.data)
 
-        tasks = task_repo.filter_tasks_by(project_id=app.id)
+        tasks = task_repo.filter_tasks_by(project_id=project.id)
         assert task not in tasks, tasks
         assert root_task not in tasks, tasks
 
