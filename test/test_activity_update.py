@@ -36,12 +36,12 @@ class TestActivityFeed(Test):
 
     def test_project_creation(self):
         """Test ACTIVITY FEED works for project creation."""
-        app = ProjectFactory.create()
+        project = ProjectFactory.create()
         update_feed = get_update_feed()
         err_msg = "It should be the same project"
-        assert update_feed[0]['id'] == app.id, err_msg
-        assert update_feed[0]['name'] == app.name, err_msg
-        assert update_feed[0]['short_name'] == app.short_name, err_msg
+        assert update_feed[0]['id'] == project.id, err_msg
+        assert update_feed[0]['name'] == project.name, err_msg
+        assert update_feed[0]['short_name'] == project.short_name, err_msg
         assert update_feed[0].get('info') is None, err_msg
         err_msg = "The update action should be Project"
         assert update_feed[0]['action_updated'] == 'Project', err_msg
@@ -99,10 +99,8 @@ class TestActivityFeed(Test):
 
     def test_max_limit(self):
         """Test ACTIVITY FEED limit works."""
-        for i in range(0,105):
-            app = ProjectFactory.create()
+        ProjectFactory.create_batch(101)
 
         update_feed = get_update_feed()
         err_msg = "There should be at max 100 updates."
-        print len(update_feed)
         assert len(update_feed) == 100, err_msg
