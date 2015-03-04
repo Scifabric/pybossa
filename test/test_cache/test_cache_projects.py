@@ -26,13 +26,13 @@ from mock import patch
 class TestProjectsCache(Test):
 
 
-    def create_app_with_tasks(self, completed_tasks, ongoing_tasks):
+    def create_project_with_tasks(self, completed_tasks, ongoing_tasks):
         project = ProjectFactory.create()
         TaskFactory.create_batch(completed_tasks, state='completed', project=project)
         TaskFactory.create_batch(ongoing_tasks, state='ongoing', project=project)
         return project
 
-    def create_app_with_contributors(self, anonymous, registered,
+    def create_project_with_contributors(self, anonymous, registered,
                                      two_tasks=False, name='my_app', hidden=0):
         project = ProjectFactory.create(name=name, hidden=hidden)
         task = TaskFactory(project=project)
@@ -65,18 +65,18 @@ class TestProjectsCache(Test):
     def test_get_featured_only_returns_featured(self):
         """Test CACHE PROJECTS get_featured returns only featured projects"""
 
-        featured_app = ProjectFactory.create(featured=True)
-        non_featured_app = ProjectFactory.create()
+        featured_project = ProjectFactory.create(featured=True)
+        non_featured_project = ProjectFactory.create()
 
         featured = cached_projects.get_featured()
 
         assert len(featured) is 1, featured
 
 
-    def test_get_featured_not_returns_hidden_apps(self):
+    def test_get_featured_not_returns_hidden_projects(self):
         """Test CACHE PROJECTS get_featured does not return hidden projects"""
 
-        featured_app = ProjectFactory.create(hidden=1, featured=True)
+        featured_project = ProjectFactory.create(hidden=1, featured=True)
 
         featured = cached_projects.get_featured()
 
@@ -102,7 +102,7 @@ class TestProjectsCache(Test):
     def test_get_category(self):
         """Test CACHE PROJECTS get returns projects from given category"""
 
-        project = self.create_app_with_tasks(1, 0)
+        project = self.create_project_with_tasks(1, 0)
 
         projects = cached_projects.get(project.category.short_name)
 
@@ -112,7 +112,7 @@ class TestProjectsCache(Test):
     def test_get_only_returns_category_projects(self):
         """Test CACHE PROJECTS get returns only projects from required category"""
 
-        project = self.create_app_with_tasks(1, 0)
+        project = self.create_project_with_tasks(1, 0)
         #create a non published project too
         ProjectFactory.create()
 
@@ -121,20 +121,20 @@ class TestProjectsCache(Test):
         assert len(projects) is 1, projects
 
 
-    def test_get_not_returns_hidden_apps(self):
+    def test_get_not_returns_hidden_projects(self):
         """Test CACHE PROJECTS get does not return hidden projects"""
 
-        project = self.create_app_with_contributors(1, 0, hidden=1)
+        project = self.create_project_with_contributors(1, 0, hidden=1)
 
         projects = cached_projects.get(project.category.short_name)
 
         assert len(projects) is 0, projects
 
 
-    def test_get_not_returns_draft_apps(self):
+    def test_get_not_returns_draft_projects(self):
         """Test CACHE PROJECTS get does not return draft (non-published) projects"""
 
-        project = self.create_app_with_contributors(1, 0)
+        project = self.create_project_with_contributors(1, 0)
         # Create a project wothout presenter
         ProjectFactory.create(info={}, category=project.category)
 
@@ -151,7 +151,7 @@ class TestProjectsCache(Test):
                   'last_activity', 'last_activity_raw', 'overall_progress',
                    'n_tasks', 'n_volunteers', 'owner', 'info')
 
-        project = self.create_app_with_tasks(1, 0)
+        project = self.create_project_with_tasks(1, 0)
 
         retrieved_project = cached_projects.get(project.category.short_name)[0]
 
@@ -170,7 +170,7 @@ class TestProjectsCache(Test):
         assert len(drafts) is 1, drafts
 
 
-    def test_get_draft_not_returns_hidden_apps(self):
+    def test_get_draft_not_returns_hidden_projects(self):
         """Test CACHE PROJECTS get_draft does not return hidden projects"""
 
         ProjectFactory.create(info={}, hidden=1)
@@ -180,12 +180,12 @@ class TestProjectsCache(Test):
         assert len(drafts) is 0, drafts
 
 
-    def test_get_draft_not_returns_published_apps(self):
+    def test_get_draft_not_returns_published_projects(self):
         """Test CACHE PROJECTS get_draft does not return projects with either tasks or a presenter (REVIEW DEFINITION OF A DRAFT PROJECT REQUIRED)"""
 
-        app_no_presenter = ProjectFactory.create(info={})
-        TaskFactory.create(project=app_no_presenter)
-        app_no_task = ProjectFactory.create()
+        project_no_presenter = ProjectFactory.create(info={})
+        TaskFactory.create(project=project_no_presenter)
+        project_no_task = ProjectFactory.create()
 
         drafts = cached_projects.get_draft()
 
@@ -208,67 +208,67 @@ class TestProjectsCache(Test):
             assert draft.has_key(field), "%s not in project info" % field
 
 
-    def test_get_top_returns_apps_with_most_taskruns(self):
+    def test_get_top_returns_projects_with_most_taskruns(self):
         """Test CACHE PROJECTS get_top returns the projects with most taskruns in order"""
 
-        ranked_3_app = self.create_app_with_contributors(8, 0, name='three')
-        ranked_2_app = self.create_app_with_contributors(9, 0, name='two')
-        ranked_1_app = self.create_app_with_contributors(10, 0, name='one')
-        ranked_4_app = self.create_app_with_contributors(7, 0, name='four')
+        rankded_3_project = self.create_project_with_contributors(8, 0, name='three')
+        ranked_2_project = self.create_project_with_contributors(9, 0, name='two')
+        ranked_1_project = self.create_project_with_contributors(10, 0, name='one')
+        ranked_4_project = self.create_project_with_contributors(7, 0, name='four')
 
-        top_apps = cached_projects.get_top()
+        top_projects = cached_projects.get_top()
 
-        assert top_apps[0]['name'] == 'one', top_apps
-        assert top_apps[1]['name'] == 'two', top_apps
-        assert top_apps[2]['name'] == 'three', top_apps
-        assert top_apps[3]['name'] == 'four', top_apps
+        assert top_projects[0]['name'] == 'one', top_projects
+        assert top_projects[1]['name'] == 'two', top_projects
+        assert top_projects[2]['name'] == 'three', top_projects
+        assert top_projects[3]['name'] == 'four', top_projects
 
 
     def test_get_top_respects_limit(self):
         """Test CACHE PROJECTS get_top returns only the top n projects"""
 
-        ranked_3_app = self.create_app_with_contributors(8, 0, name='three')
-        ranked_2_app = self.create_app_with_contributors(9, 0, name='two')
-        ranked_1_app = self.create_app_with_contributors(10, 0, name='one')
-        ranked_4_app = self.create_app_with_contributors(7, 0, name='four')
+        ranked_3_project = self.create_project_with_contributors(8, 0, name='three')
+        ranked_2_project = self.create_project_with_contributors(9, 0, name='two')
+        ranked_1_project = self.create_project_with_contributors(10, 0, name='one')
+        ranked_4_project = self.create_project_with_contributors(7, 0, name='four')
 
-        top_apps = cached_projects.get_top(n=2)
+        top_projects = cached_projects.get_top(n=2)
 
-        assert len(top_apps) is 2, len(top_apps)
+        assert len(top_projects) is 2, len(top_projects)
 
 
-    def test_get_top_returns_four_apps_by_default(self):
+    def test_get_top_returns_four_projects_by_default(self):
         """Test CACHE PROJECTS get_top returns the top 4 projects by default"""
 
-        ranked_3_app = self.create_app_with_contributors(8, 0, name='three')
-        ranked_2_app = self.create_app_with_contributors(9, 0, name='two')
-        ranked_1_app = self.create_app_with_contributors(10, 0, name='one')
-        ranked_4_app = self.create_app_with_contributors(7, 0, name='four')
-        ranked_5_app = self.create_app_with_contributors(7, 0, name='five')
+        ranked_3_project = self.create_project_with_contributors(8, 0, name='three')
+        ranked_2_project = self.create_project_with_contributors(9, 0, name='two')
+        ranked_1_project = self.create_project_with_contributors(10, 0, name='one')
+        ranked_4_project = self.create_project_with_contributors(7, 0, name='four')
+        ranked_5_project = self.create_project_with_contributors(7, 0, name='five')
 
-        top_apps = cached_projects.get_top()
+        top_projects = cached_projects.get_top()
 
-        assert len(top_apps) is 4, len(top_apps)
+        assert len(top_projects) is 4, len(top_projects)
 
 
-    def test_get_top_doesnt_return_hidden_apps(self):
+    def test_get_top_doesnt_return_hidden_projects(self):
         """Test CACHE PROJECTS get_top does not return projects that are hidden"""
 
-        ranked_3_app = self.create_app_with_contributors(8, 0, name='three')
-        ranked_2_app = self.create_app_with_contributors(9, 0, name='two')
-        ranked_1_app = self.create_app_with_contributors(10, 0, name='one')
-        hidden_app = self.create_app_with_contributors(11, 0, name='hidden', hidden=1)
+        ranked_3_project = self.create_project_with_contributors(8, 0, name='three')
+        ranked_2_project = self.create_project_with_contributors(9, 0, name='two')
+        ranked_1_project = self.create_project_with_contributors(10, 0, name='one')
+        hidden_project = self.create_project_with_contributors(11, 0, name='hidden', hidden=1)
 
-        top_apps = cached_projects.get_top()
+        top_projects = cached_projects.get_top()
 
-        assert len(top_apps) is 3, len(top_apps)
-        for project in top_apps:
+        assert len(top_projects) is 3, len(top_projects)
+        for project in top_projects:
             assert project['name'] != 'hidden', project['name']
 
     def test_n_completed_tasks_no_completed_tasks(self):
         """Test CACHE PROJECTS n_completed_tasks returns 0 if no completed tasks"""
 
-        project = self.create_app_with_tasks(completed_tasks=0, ongoing_tasks=5)
+        project = self.create_project_with_tasks(completed_tasks=0, ongoing_tasks=5)
         completed_tasks = cached_projects.n_completed_tasks(project.id)
 
         err_msg = "Completed tasks is %s, it should be 0" % completed_tasks
@@ -279,7 +279,7 @@ class TestProjectsCache(Test):
         """Test CACHE PROJECTS n_completed_tasks returns number of completed tasks
         if there are any"""
 
-        project = self.create_app_with_tasks(completed_tasks=5, ongoing_tasks=5)
+        project = self.create_project_with_tasks(completed_tasks=5, ongoing_tasks=5)
         completed_tasks = cached_projects.n_completed_tasks(project.id)
 
         err_msg = "Completed tasks is %s, it should be 5" % completed_tasks
@@ -290,7 +290,7 @@ class TestProjectsCache(Test):
         """Test CACHE PROJECTS n_completed_tasks returns number of tasks if all
         tasks are completed"""
 
-        project = self.create_app_with_tasks(completed_tasks=4, ongoing_tasks=0)
+        project = self.create_project_with_tasks(completed_tasks=4, ongoing_tasks=0)
         completed_tasks = cached_projects.n_completed_tasks(project.id)
 
         err_msg = "Completed tasks is %s, it should be 4" % completed_tasks
@@ -301,7 +301,7 @@ class TestProjectsCache(Test):
         """Test CACHE PROJECTS n_registered_volunteers returns number of volunteers
         that contributed to a project when each only submited one task run"""
 
-        project = self.create_app_with_contributors(anonymous=0, registered=3)
+        project = self.create_project_with_contributors(anonymous=0, registered=3)
         registered_volunteers = cached_projects.n_registered_volunteers(project.id)
 
         err_msg = "Volunteers is %s, it should be 3" % registered_volunteers
@@ -312,7 +312,7 @@ class TestProjectsCache(Test):
         """Test CACHE PROJECTS n_registered_volunteers returns number of volunteers
         that contributed to a project when any submited more than one task run"""
 
-        project = self.create_app_with_contributors(anonymous=0, registered=2, two_tasks=True)
+        project = self.create_project_with_contributors(anonymous=0, registered=2, two_tasks=True)
         registered_volunteers = cached_projects.n_registered_volunteers(project.id)
 
         err_msg = "Volunteers is %s, it should be 2" % registered_volunteers
@@ -323,7 +323,7 @@ class TestProjectsCache(Test):
         """Test CACHE PROJECTS n_anonymous_volunteers returns number of volunteers
         that contributed to a project when each only submited one task run"""
 
-        project = self.create_app_with_contributors(anonymous=3, registered=0)
+        project = self.create_project_with_contributors(anonymous=3, registered=0)
         anonymous_volunteers = cached_projects.n_anonymous_volunteers(project.id)
 
         err_msg = "Volunteers is %s, it should be 3" % anonymous_volunteers
@@ -334,7 +334,7 @@ class TestProjectsCache(Test):
         """Test CACHE PROJECTS n_anonymous_volunteers returns number of volunteers
         that contributed to a project when any submited more than one task run"""
 
-        project = self.create_app_with_contributors(anonymous=2, registered=0, two_tasks=True)
+        project = self.create_project_with_contributors(anonymous=2, registered=0, two_tasks=True)
         anonymous_volunteers = cached_projects.n_anonymous_volunteers(project.id)
 
         err_msg = "Volunteers is %s, it should be 2" % anonymous_volunteers
@@ -345,7 +345,7 @@ class TestProjectsCache(Test):
         """Test CACHE PROJECTS n_volunteers returns the sum of the anonymous
         plus registered volunteers that contributed to a project"""
 
-        project = self.create_app_with_contributors(anonymous=2, registered=3, two_tasks=True)
+        project = self.create_project_with_contributors(anonymous=2, registered=3, two_tasks=True)
         total_volunteers = cached_projects.n_volunteers(project.id)
 
         err_msg = "Volunteers is %s, it should be 5" % total_volunteers
@@ -478,7 +478,7 @@ class TestProjectsCache(Test):
     def test_n_count_with_different_category(self):
         """Test CACHE PROJECTS n_count returns 0 if there are no published
         projects from requested category"""
-        project = self.create_app_with_tasks(1, 0)
+        project = self.create_project_with_tasks(1, 0)
 
         n_projects = cached_projects.n_count('nocategory')
 
@@ -488,7 +488,7 @@ class TestProjectsCache(Test):
     def test_n_count_with_published_projects(self):
         """Test CACHE PROJECTS n_count returns the number of published projects
         of a given category"""
-        project = self.create_app_with_tasks(1, 0)
+        project = self.create_project_with_tasks(1, 0)
         #create a non published project too
         ProjectFactory.create()
 
