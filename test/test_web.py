@@ -1509,8 +1509,8 @@ class TestWeb(web.Helper):
     def test_27_tutorial_anonymous_user(self):
         """Test WEB tutorials work as an anonymous user"""
         self.create()
-        project1 = db.session.query(Project).get(1)
-        project1.info = dict(tutorial="some help")
+        project = db.session.query(Project).get(1)
+        project.info = dict(tutorial="some help")
         db.session.commit()
         # First time accessing the project should redirect me to the tutorial
         res = self.app.get('/project/test-app/newtask', follow_redirects=True)
@@ -1526,41 +1526,43 @@ class TestWeb(web.Helper):
         assert "some help" in res.data, err_msg
 
         # Hidden project
-        project1.hidden = 1
-        db.session.add(project1)
+        project.hidden = 1
+        db.session.add(project)
         db.session.commit()
         res = self.app.get('/project/test-app/tutorial', follow_redirects=True)
         assert res.status_code == 401, res.status_code
 
     @with_context
+    #@patch('pybossa.view.projects.render', wraps=render)
     def test_28_non_tutorial_signed_user(self):
         """Test WEB project without tutorial work as signed in user"""
         self.create()
+        project = db.session.query(Project).get(1)
+        project.info = dict(task_presenter="the real presenter")
         db.session.commit()
         self.register()
-        # First time accessing the project should not redirect to the tutorial
-        # and give a task instead
-        res = self.app.get('/project/test-project/newtask', follow_redirects=True)
-        err_msg = "There should not be a tutorial for the project"
-        assert "some help" not in res.data, err_msg
-        # Second time should give me a task, and not the tutorial
-        res = self.app.get('/project/test-project/newtask', follow_redirects=True)
-        assert "some help" not in res.data
+        # First time accessing the project should show the presenter
+        res = self.app.get('/project/test-app/newtask', follow_redirects=True)
+        err_msg = "There should be a presenter for the project"
+        assert "the real presenter" in res.data, err_msg
+        # Second time accessing the project should show the presenter
+        res = self.app.get('/project/test-app/newtask', follow_redirects=True)
+        assert "the real presenter" in res.data, err_msg
 
     @with_context
     def test_29_non_tutorial_anonymous_user(self):
         """Test WEB project without tutorials work as an anonymous user"""
         self.create()
+        project = db.session.query(Project).get(1)
+        project.info = dict(task_presenter="the real presenter")
         db.session.commit()
-        self.register()
-        # First time accessing the project should not redirect to the tutorial
-        # and give a task instead
-        res = self.app.get('/project/test-project/newtask', follow_redirects=True)
-        err_msg = "There should not be a tutorial for the project"
-        assert "some help" not in res.data, err_msg
-        # Second time should give me a task, and not the tutorial
-        res = self.app.get('/project/test-project/newtask', follow_redirects=True)
-        assert "some help" not in res.data
+        # First time accessing the project should show the presenter
+        res = self.app.get('/project/test-app/newtask', follow_redirects=True)
+        err_msg = "There should be a presenter for the project"
+        assert "the real presenter" in res.data, err_msg
+        # Second time accessing the project should show the presenter
+        res = self.app.get('/project/test-app/newtask', follow_redirects=True)
+        assert "the real presenter" in res.data, err_msg
 
     @with_context
     @patch('pybossa.view.projects.uploader.upload_file', return_value=True)
