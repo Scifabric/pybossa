@@ -1533,7 +1533,6 @@ class TestWeb(web.Helper):
         assert res.status_code == 401, res.status_code
 
     @with_context
-    #@patch('pybossa.view.projects.render', wraps=render)
     def test_28_non_tutorial_signed_user(self):
         """Test WEB project without tutorial work as signed in user"""
         self.create()
