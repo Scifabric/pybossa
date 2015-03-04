@@ -45,8 +45,8 @@ class TestTaskrunAPI(TestAPI):
     @with_context
     def test_query_taskrun(self):
         """Test API query for taskrun with params works"""
-        app = ProjectFactory.create()
-        TaskRunFactory.create_batch(10, project=app)
+        project = ProjectFactory.create()
+        TaskRunFactory.create_batch(10, project=project)
         # Test for real field
         res = self.app.get("/api/taskrun?project_id=1")
         data = json.loads(res.data)
@@ -82,10 +82,10 @@ class TestTaskrunAPI(TestAPI):
     @patch('pybossa.api.task_run._check_task_requested_by_user')
     def test_taskrun_anonymous_post(self, fake_validation, mock_request):
         """Test API TaskRun creation and auth for anonymous users"""
-        app = ProjectFactory.create()
-        task = TaskFactory.create(project=app)
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project)
         data = dict(
-            project_id=app.id,
+            project_id=project.id,
             task_id=task.id,
             info='my task result')
 
@@ -136,17 +136,17 @@ class TestTaskrunAPI(TestAPI):
     @patch('pybossa.api.task_run._check_task_requested_by_user')
     def test_taskrun_authenticated_post(self, fake_validation):
         """Test API TaskRun creation and auth for authenticated users"""
-        app = ProjectFactory.create()
-        task = TaskFactory.create(project=app)
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project)
         data = dict(
-            project_id=app.id,
+            project_id=project.id,
             task_id=task.id,
             info='my task result')
 
         # With wrong project_id
         data['project_id'] = 100000000000000000
         datajson = json.dumps(data)
-        url = '/api/taskrun?api_key=%s' % app.owner.api_key
+        url = '/api/taskrun?api_key=%s' % project.owner.api_key
         tmp = self.app.post(url, data=datajson)
         err_msg = "This post should fail as the project_id is wrong"
         err = json.loads(tmp.data)
@@ -175,7 +175,7 @@ class TestTaskrunAPI(TestAPI):
         data = dict(
             project_id=task.project_id,
             task_id=task.id,
-            user_id=app.owner.id,
+            user_id=project.owner.id,
             info='my task result')
         datajson = json.dumps(data)
         tmp = self.app.post(url, data=datajson)
@@ -190,10 +190,10 @@ class TestTaskrunAPI(TestAPI):
     def test_taskrun_post_requires_newtask_first_anonymous(self):
         """Test API TaskRun post fails if task was not previously requested for
         anonymous user"""
-        app = ProjectFactory.create()
-        task = TaskFactory.create(project=app)
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project)
         data = dict(
-            project_id=app.id,
+            project_id=project.id,
             task_id=task.id,
             info='my task result')
         datajson = json.dumps(data)
@@ -208,7 +208,7 @@ class TestTaskrunAPI(TestAPI):
         assert err['target'] == 'taskrun', err
 
         # Succeeds after requesting a task
-        self.app.get('/api/app/%s/newtask' % app.id)
+        self.app.get('/api/project/%s/newtask' % project.id)
         success = self.app.post('/api/taskrun', data=datajson)
         assert success.status_code == 200, success.data
 
@@ -217,14 +217,14 @@ class TestTaskrunAPI(TestAPI):
     def test_taskrun_post_requires_newtask_first_authenticated(self):
         """Test API TaskRun post fails if task was not previously requested for
         authenticated user"""
-        app = ProjectFactory.create()
-        task = TaskFactory.create(project=app)
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project)
         data = dict(
-            project_id=app.id,
+            project_id=project.id,
             task_id=task.id,
             info='my task result')
         datajson = json.dumps(data)
-        url = '/api/taskrun?api_key=%s' % app.owner.api_key
+        url = '/api/taskrun?api_key=%s' % project.owner.api_key
         fail = self.app.post(url, data=datajson)
         err = json.loads(fail.data)
 
@@ -236,7 +236,7 @@ class TestTaskrunAPI(TestAPI):
         assert err['target'] == 'taskrun', err
 
         # Succeeds after requesting a task
-        self.app.get('/api/app/%s/newtask?api_key=%s' % (app.id, app.owner.api_key))
+        self.app.get('/api/project/%s/newtask?api_key=%s' % (project.id, project.owner.api_key))
         success = self.app.post(url, data=datajson)
         assert success.status_code == 200, success.data
 
@@ -244,11 +244,11 @@ class TestTaskrunAPI(TestAPI):
     @with_context
     def test_taskrun_post_with_bad_data(self):
         """Test API TaskRun error messages."""
-        app = ProjectFactory.create()
-        task = TaskFactory.create(project=app)
-        project_id = app.id
-        task_run = dict(project_id=app.id, task_id=task.id, info='my task result')
-        url = '/api/taskrun?api_key=%s' % app.owner.api_key
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project)
+        project_id = project.id
+        task_run = dict(project_id=project.id, task_id=task.id, info='my task result')
+        url = '/api/taskrun?api_key=%s' % project.owner.api_key
 
         # POST with not JSON data
         res = self.app.post(url, data=task_run)
@@ -285,12 +285,12 @@ class TestTaskrunAPI(TestAPI):
         admin = UserFactory.create()
         owner = UserFactory.create()
         non_owner = UserFactory.create()
-        app = ProjectFactory.create(owner=owner)
-        task = TaskFactory.create(project=app)
+        project = ProjectFactory.create(owner=owner)
+        task = TaskFactory.create(project=project)
         anonymous_taskrun = AnonymousTaskRunFactory.create(task=task, info='my task result')
         user_taskrun = TaskRunFactory.create(task=task, user=owner, info='my task result')
 
-        task_run = dict(project_id=app.id, task_id=task.id, info='another result')
+        task_run = dict(project_id=project.id, task_id=task.id, info='another result')
         datajson = json.dumps(task_run)
 
         # anonymous user
@@ -362,8 +362,8 @@ class TestTaskrunAPI(TestAPI):
         admin = UserFactory.create()
         owner = UserFactory.create()
         non_owner = UserFactory.create()
-        app = ProjectFactory.create(owner=owner)
-        task = TaskFactory.create(project=app)
+        project = ProjectFactory.create(owner=owner)
+        task = TaskFactory.create(project=project)
         anonymous_taskrun = AnonymousTaskRunFactory.create(task=task, info='my task result')
         user_taskrun = TaskRunFactory.create(task=task, user=owner, info='my task result')
 
@@ -412,15 +412,15 @@ class TestTaskrunAPI(TestAPI):
     @patch('pybossa.api.task_run._check_task_requested_by_user')
     def test_taskrun_updates_task_state(self, fake_validation, mock_request):
         """Test API TaskRun POST updates task state"""
-        app = ProjectFactory.create()
-        task = TaskFactory.create(project=app, n_answers=2)
-        url = '/api/taskrun?api_key=%s' % app.owner.api_key
+        project = ProjectFactory.create()
+        task = TaskFactory.create(project=project, n_answers=2)
+        url = '/api/taskrun?api_key=%s' % project.owner.api_key
 
         # Post first taskrun
         data = dict(
             project_id=task.project_id,
             task_id=task.id,
-            user_id=app.owner.id,
+            user_id=project.owner.id,
             info='my task result')
         datajson = json.dumps(data)
         tmp = self.app.post(url, data=datajson)
