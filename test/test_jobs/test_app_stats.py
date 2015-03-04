@@ -29,7 +29,7 @@ class TestProjectsStats(Test):
     def test_create_dict_job(self):
         """Test JOB create dict job works."""
         user = UserFactory.create(pro=True)
-        app = ProjectFactory.create(owner=user)
+        project = ProjectFactory.create(owner=user)
         from sqlalchemy.sql import text
         from pybossa.core import db
         sql = text('''SELECT project.id, project.short_name FROM project, "user"
@@ -45,13 +45,13 @@ class TestProjectsStats(Test):
 
         job = jobs[0]
         assert 'get_project_stats' in job['name'].__name__
-        assert job['args'] == [app.id, app.short_name]
+        assert job['args'] == [project.id, project.short_name]
 
     @with_context
     def test_get_project_jobs(self):
         """Test JOB get project jobs works."""
         user = UserFactory.create(pro=True)
-        app = ProjectFactory.create(owner=user)
+        project = ProjectFactory.create(owner=user)
         jobs_generator = get_project_jobs()
         jobs = []
         for job in jobs_generator:
@@ -64,7 +64,7 @@ class TestProjectsStats(Test):
         err_msg = "There should have the same name, but it's: %s" % job['name']
         assert "get_project_stats" == job['name'].__name__, err_msg
         err_msg = "There should have the same args, but it's: %s" % job['args']
-        assert [app.id, app.short_name] == job['args'], err_msg
+        assert [project.id, project.short_name] == job['args'], err_msg
         err_msg = "There should have the same kwargs, but it's: %s" % job['kwargs']
         assert {} == job['kwargs'], err_msg
 
