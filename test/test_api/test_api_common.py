@@ -31,9 +31,9 @@ class TestApiCommon(TestAPI):
     def test_limits_query(self):
         """Test API GET limits works"""
         owner = UserFactory.create()
-        apps = ProjectFactory.create_batch(30, owner=owner)
-        for app in apps:
-            task = TaskFactory.create(project=app)
+        projects = ProjectFactory.create_batch(30, owner=owner)
+        for project in projects:
+            task = TaskFactory.create(project=project)
             TaskRunFactory.create(task=task)
 
         res = self.app.get('/api/project')
@@ -47,7 +47,7 @@ class TestApiCommon(TestAPI):
         res = self.app.get('/api/project?limit=10&offset=10')
         data = json.loads(res.data)
         assert len(data) == 10, len(data)
-        assert data[0].get('name') == apps[10].name, data[0]
+        assert data[0].get('name') == projects[10].name, data[0]
 
         res = self.app.get('/api/task')
         data = json.loads(res.data)
@@ -78,8 +78,8 @@ class TestApiCommon(TestAPI):
     def test_get_query_with_api_key(self):
         """ Test API GET query with an API-KEY"""
         users = UserFactory.create_batch(3)
-        app = ProjectFactory.create(owner=users[0], info={'total': 150})
-        task = TaskFactory.create(project=app, info={'url': 'my url'})
+        project = ProjectFactory.create(owner=users[0], info={'total': 150})
+        task = TaskFactory.create(project=project, info={'url': 'my url'})
         taskrun = TaskRunFactory.create(task=task, user=users[0],
                                         info={'answer': 'annakarenina'})
         for endpoint in self.endpoints:
@@ -89,8 +89,8 @@ class TestApiCommon(TestAPI):
 
             if endpoint == 'project':
                 assert len(data) == 1, data
-                app = data[0]
-                assert app['info']['total'] == 150, data
+                project = data[0]
+                assert project['info']['total'] == 150, data
                 assert res.mimetype == 'application/json', res
 
             if endpoint == 'task':
