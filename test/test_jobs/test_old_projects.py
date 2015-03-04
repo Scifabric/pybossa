@@ -27,19 +27,19 @@ class TestOldProjects(Test):
     @with_context
     def test_get_non_updated_projects_returns_none(self):
         """Test JOB get non updated returns none."""
-        apps = get_non_updated_projects()
+        projects = get_non_updated_projects()
         err_msg = "There should not be any outdated project."
-        assert len(apps) == 0, err_msg
+        assert len(projects) == 0, err_msg
 
 
     @with_context
     def test_get_non_updated_projects_returns_one_project(self):
         """Test JOB get non updated returns one project."""
-        app = ProjectFactory.create(updated='2010-10-22T11:02:00.000000')
-        apps = get_non_updated_projects()
+        project = ProjectFactory.create(updated='2010-10-22T11:02:00.000000')
+        projects = get_non_updated_projects()
         err_msg = "There should be one outdated project."
-        assert len(apps) == 1, err_msg
-        assert apps[0].name == app.name, err_msg
+        assert len(projects) == 1, err_msg
+        assert projects[0].name == project.name, err_msg
 
 
     @with_context
@@ -56,17 +56,17 @@ class TestOldProjects(Test):
         mail.connect.return_value = connection
 
         date = '2010-10-22T11:02:00.000000'
-        app = ProjectFactory.create(updated=date)
-        project_id = app.id
+        project = ProjectFactory.create(updated=date)
+        project_id = project.id
         warn_old_project_owners()
         err_msg = "mail.connect() should be called"
         assert mail.connect.called, err_msg
         err_msg = "conn.send() should be called"
         assert send_mock.send.called, err_msg
-        err_msg = "app.contacted field should be True"
-        assert app.contacted, err_msg
+        err_msg = "project.contacted field should be True"
+        assert project.contacted, err_msg
         err_msg = "The update date should be different"
-        assert app.updated != date, err_msg
+        assert project.updated != date, err_msg
 
     @with_context
     def test_warn_project_owner_two(self):
@@ -74,16 +74,16 @@ class TestOldProjects(Test):
         from pybossa.core import mail
         with mail.record_messages() as outbox:
             date = '2010-10-22T11:02:00.000000'
-            app = ProjectFactory.create(updated=date)
-            project_id = app.id
+            project = ProjectFactory.create(updated=date)
+            project_id = project.id
             warn_old_project_owners()
             assert len(outbox) == 1, outbox
-            subject = 'Your PyBossa project: %s has been inactive' % app.name
+            subject = 'Your PyBossa project: %s has been inactive' % project.name
             assert outbox[0].subject == subject
-            err_msg = "app.contacted field should be True"
-            assert app.contacted, err_msg
+            err_msg = "project.contacted field should be True"
+            assert project.contacted, err_msg
             err_msg = "The update date should be different"
-            assert app.updated != date, err_msg
+            assert project.updated != date, err_msg
 
     @with_context
     def test_warn_project_owner_limits(self):
@@ -91,9 +91,9 @@ class TestOldProjects(Test):
         from pybossa.core import mail
         # Create 50 projects with old updated dates
         date = '2010-10-22T11:02:00.000000'
-        apps = []
+        projects = []
         for i in range(0, 50):
-            apps.append(ProjectFactory.create(updated=date))
+            projects.append(ProjectFactory.create(updated=date))
         # The first day that we run the job only 25 emails should be sent
         with mail.record_messages() as outbox:
             warn_old_project_owners()
