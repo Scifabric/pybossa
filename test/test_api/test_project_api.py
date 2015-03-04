@@ -32,14 +32,14 @@ task_repo = TaskRepository(db)
 class TestProjectAPI(TestAPI):
 
     @with_context
-    def test_app_query(self):
+    def test_project_query(self):
         """ Test API project query"""
         ProjectFactory.create(info={'total': 150})
         res = self.app.get('/api/project')
         data = json.loads(res.data)
         assert len(data) == 1, data
-        app = data[0]
-        assert app['info']['total'] == 150, data
+        project = data[0]
+        assert project['info']['total'] == 150, data
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
@@ -54,7 +54,7 @@ class TestProjectAPI(TestAPI):
         assert err['action'] == 'GET', err
 
 
-    def test_hidden_app(self):
+    def test_hidden_project(self):
         """ Test API hidden project works. """
         ProjectFactory.create(hidden=1)
         res = self.app.get('/api/project')
@@ -79,7 +79,7 @@ class TestProjectAPI(TestAPI):
 
 
     @with_context
-    def test_query_app(self):
+    def test_query_project(self):
         """Test API query for project endpoint works"""
         ProjectFactory.create(short_name='test-app', name='My New Project')
         # Test for real field
@@ -106,7 +106,7 @@ class TestProjectAPI(TestAPI):
 
 
     @with_context
-    def test_app_post(self):
+    def test_project_post(self):
         """Test API project creation and auth"""
         users = UserFactory.create_batch(2)
         CategoryFactory.create()
@@ -133,15 +133,15 @@ class TestProjectAPI(TestAPI):
 
         # now a real user with headers auth
         headers = [('Authorization', users[1].api_key)]
-        new_app = dict(
+        new_project = dict(
             name=name + '2',
             short_name='xxxx-project2',
             description='description2',
             owner_id=1,
             long_description=u'Long Description\n================')
-        new_app = json.dumps(new_app)
+        new_project = json.dumps(new_project)
         res = self.app.post('/api/project', headers=headers,
-                            data=new_app)
+                            data=new_project)
         out = project_repo.get_by(name=name + '2')
         assert out, out
         assert_equal(out.short_name, 'xxxx-project2'), out
@@ -196,7 +196,7 @@ class TestProjectAPI(TestAPI):
         non_owner = UserFactory.create()
         url = '/api/project/%s?api_key=%s' % (id_, non_owner.api_key)
         res = self.app.put(url, data=datajson)
-        error_msg = 'Should not be able to update apps of others'
+        error_msg = 'Should not be able to update projects of others'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
         error = json.loads(res.data)
         assert error['status'] == 'failed', error
@@ -318,7 +318,7 @@ class TestProjectAPI(TestAPI):
         ### real user but not allowed as not owner!
         url = '/api/project/%s?api_key=%s' % (id_, non_owner.api_key)
         res = self.app.delete(url, data=datajson)
-        error_msg = 'Should not be able to delete apps of others'
+        error_msg = 'Should not be able to delete projects of others'
         assert_equal(res.status, '403 FORBIDDEN', error_msg)
         error = json.loads(res.data)
         assert error['status'] == 'failed', error
@@ -347,7 +347,7 @@ class TestProjectAPI(TestAPI):
 
 
     @with_context
-    def test_app_post_invalid_short_name(self):
+    def test_project_post_invalid_short_name(self):
         """Test API project POST returns error if short_name is invalid (i.e. is
             a name used by the Flask app as a URL endpoint"""
         users = UserFactory.create_batch(2)
@@ -374,7 +374,7 @@ class TestProjectAPI(TestAPI):
 
 
     @with_context
-    def test_app_put_invalid_short_name(self):
+    def test_project_put_invalid_short_name(self):
         """Test API project PUT returns error if short_name is invalid (i.e. is
             a name used by the Flask app as a URL endpoint"""
         user = UserFactory.create()
@@ -401,17 +401,17 @@ class TestProjectAPI(TestAPI):
         admin = UserFactory.create()
         assert admin.admin
         user = UserFactory.create()
-        app = ProjectFactory.create(owner=user, short_name='xxxx-project')
+        project = ProjectFactory.create(owner=user, short_name='xxxx-project')
 
         # test update
         data = {'name': 'My New Title'}
         datajson = json.dumps(data)
         ### admin user but not owner!
-        url = '/api/project/%s?api_key=%s' % (app.id, admin.api_key)
+        url = '/api/project/%s?api_key=%s' % (project.id, admin.api_key)
         res = self.app.put(url, data=datajson, follow_redirects=True)
 
         assert_equal(res.status, '200 OK', res.data)
-        out2 = project_repo.get(app.id)
+        out2 = project_repo.get(project.id)
         assert_equal(out2.name, data['name'])
 
         # PUT with not JSON data
@@ -444,7 +444,7 @@ class TestProjectAPI(TestAPI):
         data.pop('wrongfield')
 
         # test delete
-        url = '/api/project/%s?api_key=%s' % (app.id, admin.api_key)
+        url = '/api/project/%s?api_key=%s' % (project.id, admin.api_key)
         # DELETE with not allowed args
         res = self.app.delete(url + "&foo=bar", data=json.dumps(data))
         err = json.loads(res.data)
@@ -462,8 +462,8 @@ class TestProjectAPI(TestAPI):
     def test_user_progress_anonymous(self):
         """Test API userprogress as anonymous works"""
         user = UserFactory.create()
-        app = ProjectFactory.create(owner=user)
-        tasks = TaskFactory.create_batch(2, project=app)
+        project = ProjectFactory.create(owner=user)
+        tasks = TaskFactory.create_batch(2, project=project)
         taskruns = []
         for task in tasks:
             taskruns.extend(AnonymousTaskRunFactory.create_batch(2, task=task))
@@ -492,8 +492,8 @@ class TestProjectAPI(TestAPI):
     def test_user_progress_authenticated_user(self):
         """Test API userprogress as an authenticated user works"""
         user = UserFactory.create()
-        app = ProjectFactory.create(owner=user)
-        tasks = TaskFactory.create_batch(2, project=app)
+        project = ProjectFactory.create(owner=user)
+        tasks = TaskFactory.create_batch(2, project=project)
         taskruns = []
         for task in tasks:
             taskruns.extend(TaskRunFactory.create_batch(2, task=task, user=user))
@@ -504,7 +504,7 @@ class TestProjectAPI(TestAPI):
         error_msg = "The reported total number of tasks is wrong"
         assert len(tasks) == data['total'], error_msg
 
-        url = '/api/project/%s/userprogress?api_key=%s' % (app.short_name, user.api_key)
+        url = '/api/project/%s/userprogress?api_key=%s' % (project.short_name, user.api_key)
         res = self.app.get(url, follow_redirects=True)
         data = json.loads(res.data)
         error_msg = "The reported total number of tasks is wrong"
@@ -535,57 +535,57 @@ class TestProjectAPI(TestAPI):
 
 
     @with_context
-    def test_delete_app_cascade(self):
+    def test_delete_project_cascade(self):
         """Test API delete project deletes associated tasks and taskruns"""
-        app = ProjectFactory.create()
-        tasks = TaskFactory.create_batch(2, project=app)
-        task_runs = TaskRunFactory.create_batch(2, project=app)
-        url = '/api/project/%s?api_key=%s' % (1, app.owner.api_key)
+        project = ProjectFactory.create()
+        tasks = TaskFactory.create_batch(2, project=project)
+        task_runs = TaskRunFactory.create_batch(2, project=project)
+        url = '/api/project/%s?api_key=%s' % (1, project.owner.api_key)
         self.app.delete(url)
 
-        tasks = task_repo.filter_tasks_by(project_id=app.id)
+        tasks = task_repo.filter_tasks_by(project_id=project.id)
         assert len(tasks) == 0, "There should not be any task"
 
-        task_runs = task_repo.filter_task_runs_by(project_id=app.id)
+        task_runs = task_repo.filter_task_runs_by(project_id=project.id)
         assert len(task_runs) == 0, "There should not be any task run"
 
 
     @with_context
     def test_newtask_allow_anonymous_contributors(self):
         """Test API get a newtask - allow anonymous contributors"""
-        app = ProjectFactory.create()
+        project = ProjectFactory.create()
         user = UserFactory.create()
-        tasks = TaskFactory.create_batch(2, project=app, info={'question': 'answer'})
+        tasks = TaskFactory.create_batch(2, project=project, info={'question': 'answer'})
 
         # All users are allowed to participate by default
         # As Anonymous user
-        url = '/api/project/%s/newtask' % app.id
+        url = '/api/project/%s/newtask' % project.id
         res = self.app.get(url, follow_redirects=True)
         task = json.loads(res.data)
-        err_msg = "The task.project_id is different from the app.id"
-        assert task['project_id'] == app.id, err_msg
+        err_msg = "The task.project_id is different from the project.id"
+        assert task['project_id'] == project.id, err_msg
         err_msg = "There should not be an error message"
         assert task['info'].get('error') is None, err_msg
         err_msg = "There should be a question"
         assert task['info'].get('question') == 'answer', err_msg
 
         # As registered user
-        url = '/api/project/%s/newtask?api_key=%s' % (app.id, user.api_key)
+        url = '/api/project/%s/newtask?api_key=%s' % (project.id, user.api_key)
         res = self.app.get(url, follow_redirects=True)
         task = json.loads(res.data)
-        err_msg = "The task.project_id is different from the app.id"
-        assert task['project_id'] == app.id, err_msg
+        err_msg = "The task.project_id is different from the project.id"
+        assert task['project_id'] == project.id, err_msg
         err_msg = "There should not be an error message"
         assert task['info'].get('error') is None, err_msg
         err_msg = "There should be a question"
         assert task['info'].get('question') == 'answer', err_msg
 
         # Now only allow authenticated users
-        app.allow_anonymous_contributors = False
-        project_repo.update(app)
+        project.allow_anonymous_contributors = False
+        project_repo.update(project)
 
         # As Anonymous user
-        url = '/api/project/%s/newtask' % app.id
+        url = '/api/project/%s/newtask' % project.id
         res = self.app.get(url, follow_redirects=True)
         task = json.loads(res.data)
         err_msg = "The task.project_id should be null"
@@ -597,11 +597,11 @@ class TestProjectAPI(TestAPI):
         assert task['info'].get('question') is None, err_msg
 
         # As registered user
-        url = '/api/project/%s/newtask?api_key=%s' % (app.id, user.api_key)
+        url = '/api/project/%s/newtask?api_key=%s' % (project.id, user.api_key)
         res = self.app.get(url, follow_redirects=True)
         task = json.loads(res.data)
-        err_msg = "The task.project_id is different from the app.id"
-        assert task['project_id'] == app.id, err_msg
+        err_msg = "The task.project_id is different from the project.id"
+        assert task['project_id'] == project.id, err_msg
         err_msg = "There should not be an error message"
         assert task['info'].get('error') is None, err_msg
         err_msg = "There should be a question"
@@ -611,38 +611,38 @@ class TestProjectAPI(TestAPI):
     @with_context
     def test_newtask(self):
         """Test API project new_task method and authentication"""
-        app = ProjectFactory.create()
-        TaskFactory.create_batch(2, project=app)
+        project = ProjectFactory.create()
+        TaskFactory.create_batch(2, project=project)
         user = UserFactory.create()
 
         # anonymous
         # test getting a new task
-        res = self.app.get('/api/project/%s/newtask' % app.id)
+        res = self.app.get('/api/project/%s/newtask' % project.id)
         assert res, res
         task = json.loads(res.data)
-        assert_equal(task['project_id'], app.id)
+        assert_equal(task['project_id'], project.id)
 
         # The output should have a mime-type: application/json
         assert res.mimetype == 'application/json', res
 
         # as a real user
-        url = '/api/project/%s/newtask?api_key=%s' % (app.id, user.api_key)
+        url = '/api/project/%s/newtask?api_key=%s' % (project.id, user.api_key)
         res = self.app.get(url)
         assert res, res
         task = json.loads(res.data)
-        assert_equal(task['project_id'], app.id)
+        assert_equal(task['project_id'], project.id)
 
-        # Get NotFound for an non-existing app
+        # Get NotFound for an non-existing project
         url = '/api/project/5000/newtask'
         res = self.app.get(url)
         err = json.loads(res.data)
-        err_msg = "The app does not exist"
+        err_msg = "The project does not exist"
         assert err['status'] == 'failed', err_msg
         assert err['status_code'] == 404, err
         assert err['exception_cls'] == 'NotFound', err_msg
         assert err['target'] == 'project', err_msg
 
         # Get an empty task
-        url = '/api/project/%s/newtask?offset=1000' % app.id
+        url = '/api/project/%s/newtask?offset=1000' % project.id
         res = self.app.get(url)
         assert res.data == '{}', res.data
