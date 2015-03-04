@@ -494,7 +494,7 @@ class TestWeb(web.Helper):
         assert "Projects" in res.data, res.data
         assert "Published" in res.data, res.data
         assert "Draft" in res.data, res.data
-        assert Fixtures.app_name in res.data, res.data
+        assert Fixtures.project_name in res.data, res.data
 
         url = '/account/fakename/applications'
         res = self.app.get(url)
@@ -2195,7 +2195,7 @@ class TestWeb(web.Helper):
         # Now with a real project
         uri = '/project/%s/tasks/export' % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
-        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.project_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now test that a 404 is raised when an arg is invalid
         uri = "/project/%s/tasks/export?type=ask&format=json" % Fixtures.project_short_name
@@ -2300,7 +2300,7 @@ class TestWeb(web.Helper):
         self.clear_temp_container(1)   # Project ID 1 is assumed here. See project.id below.
         uri = '/project/%s/tasks/export' % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
-        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.project_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in JSON format
         uri = "/project/%s/tasks/export?type=task_run&format=json" % Fixtures.project_short_name
@@ -2524,7 +2524,7 @@ class TestWeb(web.Helper):
         # Now with a real project
         uri = '/project/%s/tasks/export' % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
-        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.project_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in CKAN format
         uri = "/project/%s/tasks/export?type=task&format=ckan" % Fixtures.project_short_name
@@ -2565,7 +2565,7 @@ class TestWeb(web.Helper):
         # Now with a real project
         uri = '/project/%s/tasks/export' % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
-        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.project_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in CKAN format
         uri = "/project/%s/tasks/export?type=task&format=ckan" % Fixtures.project_short_name
@@ -2622,7 +2622,7 @@ class TestWeb(web.Helper):
         # Now with a real project
         uri = '/project/%s/tasks/export' % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
-        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.project_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in CKAN format
         uri = "/project/%s/tasks/export?type=task&format=ckan" % Fixtures.project_short_name
@@ -2677,7 +2677,7 @@ class TestWeb(web.Helper):
         # Now with a real project
         uri = '/project/%s/tasks/export' % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
-        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.project_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in CKAN format
         uri = "/project/%s/tasks/export?type=task&format=ckan" % Fixtures.project_short_name
@@ -2726,7 +2726,7 @@ class TestWeb(web.Helper):
         # Now with a real project
         uri = '/project/%s/tasks/export' % Fixtures.project_short_name
         res = self.app.get(uri, follow_redirects=True)
-        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.app_name
+        heading = "<strong>%s</strong>: Export All Tasks and Task Runs" % Fixtures.project_name
         assert heading in res.data, "Export page should be available\n %s" % res.data
         # Now get the tasks in CKAN format
         uri = "/project/%s/tasks/export?type=task&format=ckan" % Fixtures.project_short_name
