@@ -47,7 +47,7 @@ class TestAPI(object):
             if action == 'get':
                 res = self.app.get(url)
             elif action == 'post':
-                if obj == 'app':
+                if obj == 'project':
                     data = dict(name=i,
                                 short_name=i,
                                 long_description=u'something')
@@ -56,7 +56,7 @@ class TestAPI(object):
             elif action == 'put':
                 _url = '/api/%s/%s' % (obj, i)
 
-                if obj == 'app':
+                if obj == 'project':
                     data = dict(name=i,
                                 short_name=i,
                                 long_description=u'something')
@@ -91,8 +91,8 @@ class TestAPI(object):
         self.check_limit(url, action, 'project')
 
     @patch('pybossa.api.api_base.APIBase._db_query')
-    def test_00_app_get(self, mock):
-        """Test API.app GET rate limit."""
+    def test_00_project_get(self, mock):
+        """Test API.project GET rate limit."""
         mock.return_value = {}
         # GET as Anonymous
         url = '/api/project'
@@ -100,22 +100,22 @@ class TestAPI(object):
         self.check_limit(url, action, 'project')
 
     @patch('pybossa.api.api_base.APIBase._create_instance_from_request')
-    def test_01_app_post(self, mock):
-        """Test API.app POST rate limit."""
+    def test_01_project_post(self, mock):
+        """Test API.project POST rate limit."""
         mock.return_value = {}
         url = '/api/project'
         self.check_limit(url, 'post', 'project')
 
     @patch('pybossa.api.api_base.APIBase._delete_instance')
-    def test_02_app_delete(self, mock):
-        """Test API.app DELETE rate limit."""
+    def test_02_project_delete(self, mock):
+        """Test API.project DELETE rate limit."""
         mock.return_value = {}
         url = ''
         self.check_limit(url, 'delete', 'project')
 
     @patch('pybossa.api.api_base.APIBase._update_instance')
-    def test_03_app_put(self, mock):
-        """Test API.app PUT rate limit."""
+    def test_03_project_put(self, mock):
+        """Test API.project PUT rate limit."""
         mock.return_value = {}
         url = ''
         self.check_limit(url, 'put', 'project')
