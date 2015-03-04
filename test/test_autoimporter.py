@@ -43,7 +43,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
     def test_autoimporter_get_forbidden_non_owner(self):
         """Test task autoimporter returns Forbidden if non owner accesses"""
         self.register()
-        self.new_application()
+        self.new_project()
         app = project_repo.get(1)
         self.signout()
         self.register(name='non-owner')
@@ -60,7 +60,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         self.signout()
         # User
         self.register(name="owner")
-        self.new_application()
+        self.new_project()
         app = project_repo.get(1)
         url = "/project/%s/tasks/autoimporter" % app.short_name
 
@@ -78,7 +78,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         owner.pro = True
         user_repo.save(owner)
 
-        self.new_application()
+        self.new_project()
         app = project_repo.get(1)
         url = "/project/%s/tasks/autoimporter" % app.short_name
 
@@ -92,7 +92,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         self.signout()
         # User
         self.register(name="owner")
-        self.new_application()
+        self.new_project()
         self.signout()
         self.signin()
         app = project_repo.get(1)
@@ -124,7 +124,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
     def test_autoimporter_post_forbidden_non_owner(self):
         """Test task autoimporter post returns Forbidden if non owner accesses"""
         self.register()
-        self.new_application()
+        self.new_project()
         app = project_repo.get(1)
         self.signout()
         self.register(name='non-owner')
@@ -141,7 +141,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         self.signout()
         # User
         self.register(name="owner")
-        self.new_application()
+        self.new_project()
         app = project_repo.get(1)
         url = "/project/%s/tasks/autoimporter" % app.short_name
 
@@ -159,7 +159,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         owner.pro = True
         user_repo.save(owner)
 
-        self.new_application()
+        self.new_project()
         app = project_repo.get(1)
         url = "/project/%s/tasks/autoimporter" % app.short_name
 
@@ -175,7 +175,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         self.signout()
         # User
         self.register(name="owner")
-        self.new_application()
+        self.new_project()
         self.signout()
         self.signin()
         app = project_repo.get(1)
@@ -209,7 +209,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
     def test_delete_autoimporter_post_forbidden_non_owner(self):
         """Test delete task autoimporter returns Forbidden if non owner accesses"""
         self.register()
-        self.new_application()
+        self.new_project()
         app = project_repo.get(1)
         self.signout()
         self.register(name='non-owner')
@@ -226,7 +226,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         self.signout()
         # User
         self.register(name="owner")
-        self.new_application()
+        self.new_project()
         app = project_repo.get(1)
         url = "/project/%s/tasks/autoimporter/delete" % app.short_name
 
@@ -244,7 +244,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         owner.pro = True
         user_repo.save(owner)
 
-        self.new_application()
+        self.new_project()
         app = project_repo.get(1)
         url = "/project/%s/tasks/autoimporter/delete" % app.short_name
 
@@ -258,7 +258,7 @@ class TestAutoimporterAccessAndResponses(web.Helper):
         self.signout()
         # User
         self.register(name="owner")
-        self.new_application()
+        self.new_project()
         self.signout()
         self.signin()
         app = project_repo.get(1)

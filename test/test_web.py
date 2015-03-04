@@ -85,7 +85,7 @@ class TestWeb(web.Helper):
         """Test WEB leaderboard or stats page works"""
         res = self.register()
         res = self.signin()
-        res = self.new_application(short_name="igil")
+        res = self.new_project(short_name="igil")
         returns = [Mock()]
         returns[0].GeoIP.return_value = 'gic'
         returns[0].GeoIP.record_by_addr.return_value = {}
@@ -488,7 +488,7 @@ class TestWeb(web.Helper):
         """Test WEB user profile project page works."""
         self.create()
         self.signin(email=Fixtures.email_addr, password=Fixtures.password)
-        self.new_application()
+        self.new_project()
         url = '/account/%s/applications' % Fixtures.name
         res = self.app.get(url)
         assert "Projects" in res.data, res.data
@@ -709,7 +709,7 @@ class TestWeb(web.Helper):
                                    {'content-type': 'application/json'})
         Mock.return_value = html_request
         self.register()
-        res = self.new_application()
+        res = self.new_project()
 
         res = self.app.get('/project/sampleapp', follow_redirects=True)
         msg = "Project: Sample Project"
@@ -744,7 +744,7 @@ class TestWeb(web.Helper):
         """Test WEB long description markdown is supported"""
         markdown_description = u'Markdown\n======='
         self.register()
-        self.new_application(long_description=markdown_description)
+        self.new_project(long_description=markdown_description)
 
         res = self.app.get('/project/sampleapp', follow_redirects=True)
         data = res.data
@@ -755,22 +755,22 @@ class TestWeb(web.Helper):
     def test_11_create_application(self, mock):
         """Test WEB create a project works"""
         # Create a project as an anonymous user
-        res = self.new_application(method="GET")
+        res = self.new_project(method="GET")
         assert self.html_title("Sign in") in res.data, res
         assert "Please sign in to access this page" in res.data, res
 
-        res = self.new_application()
+        res = self.new_project()
         assert self.html_title("Sign in") in res.data, res.data
         assert "Please sign in to access this page." in res.data, res.data
 
         # Sign in and create a project
         res = self.register()
 
-        res = self.new_application(method="GET")
+        res = self.new_project(method="GET")
         assert self.html_title("Create a Project") in res.data, res
         assert "Create the project" in res.data, res
 
-        res = self.new_application(long_description='My Description')
+        res = self.new_project(long_description='My Description')
         assert "<strong>Sample Project</strong>: Update the project" in res.data
         assert "Project created!" in res.data, res
 
@@ -790,7 +790,7 @@ class TestWeb(web.Helper):
         """Test WEB when creating a project, the description field is
         automatically filled in by truncating the long_description"""
         self.register()
-        res = self.new_application(long_description="Hello")
+        res = self.new_project(long_description="Hello")
 
         app = db.session.query(Project).first()
         assert app.description == "Hello", app.description
@@ -800,7 +800,7 @@ class TestWeb(web.Helper):
         """Test WEB when when creating a project, the description generated
         from the long_description is only text (no html, no markdown)"""
         self.register()
-        res = self.new_application(long_description="## Hello")
+        res = self.new_project(long_description="## Hello")
 
         app = db.session.query(Project).first()
         assert '##' not in app.description, app.description
@@ -811,7 +811,7 @@ class TestWeb(web.Helper):
         """Test WEB when when creating a project, the description generated
         from the long_description is only text (no html, no markdown)"""
         self.register()
-        res = self.new_application(long_description="a"*300)
+        res = self.new_project(long_description="a"*300)
 
         app = db.session.query(Project).first()
         assert len(app.description) == 255, len(app.description)
@@ -824,28 +824,28 @@ class TestWeb(web.Helper):
         self.register()
         # Required fields checks
         # Issue the error for the app.name
-        res = self.new_application(name="")
+        res = self.new_project(name="")
         err_msg = "A project must have a name"
         assert "This field is required" in res.data, err_msg
 
         # Issue the error for the app.short_name
-        res = self.new_application(short_name="")
+        res = self.new_project(short_name="")
         err_msg = "A project must have a short_name"
         assert "This field is required" in res.data, err_msg
 
         # Issue the error for the app.description
-        res = self.new_application(long_description="")
+        res = self.new_project(long_description="")
         err_msg = "A project must have a description"
         assert "This field is required" in res.data, err_msg
 
         # Issue the error for the app.short_name
-        res = self.new_application(short_name='$#/|')
+        res = self.new_project(short_name='$#/|')
         err_msg = "A project must have a short_name without |/$# chars"
         assert '$#&amp;\/| and space symbols are forbidden' in res.data, err_msg
 
         # Now Unique checks
-        self.new_application()
-        res = self.new_application()
+        self.new_project()
+        res = self.new_project()
         err_msg = "There should be a Unique field"
         assert "Name is already taken" in res.data, err_msg
         assert "Short Name is already taken" in res.data, err_msg
@@ -861,7 +861,7 @@ class TestWeb(web.Helper):
         mock_webhook.return_value = html_request
 
         self.register()
-        self.new_application()
+        self.new_project()
 
         # Get the Update Project web page
         res = self.update_application(method="GET")
@@ -1038,7 +1038,7 @@ class TestWeb(web.Helper):
     def test_update_application_errors(self):
         """Test WEB update form validation issues the errors"""
         self.register()
-        self.new_application()
+        self.new_project()
 
         res = self.update_application(new_name="")
         assert "This field is required" in res.data
@@ -1065,7 +1065,7 @@ class TestWeb(web.Helper):
                                    {'content-type': 'application/json'})
         Mock.return_value = html_request
         self.register()
-        self.new_application()
+        self.new_project()
         self.update_application(new_hidden=True)
         self.signout()
 
@@ -1086,7 +1086,7 @@ class TestWeb(web.Helper):
         Mock.return_value = html_request
 
         self.register()
-        self.new_application()
+        self.new_project()
         self.update_application(new_hidden=True)
 
         res = self.app.get('/project/', follow_redirects=True)
@@ -1103,7 +1103,7 @@ class TestWeb(web.Helper):
         """Test WEB delete project works"""
         self.create()
         self.register()
-        self.new_application()
+        self.new_project()
         res = self.delete_application(method="GET")
         msg = "Project: Sample Project &middot; Delete"
         assert self.html_title(msg) in res.data, res
@@ -1153,7 +1153,7 @@ class TestWeb(web.Helper):
     def test_16_task_status_completed(self, mock):
         """Test WEB Task Status Completed works"""
         self.register()
-        self.new_application()
+        self.new_project()
 
         app = db.session.query(Project).first()
         # We use a string here to check that it works too
@@ -1223,7 +1223,7 @@ class TestWeb(web.Helper):
     def test_17_export_task_runs(self, mock):
         """Test WEB TaskRun export works"""
         self.register()
-        self.new_application()
+        self.new_project()
 
         app = db.session.query(Project).first()
         task = Task(project_id=app.id, n_answers = 10)
@@ -1279,7 +1279,7 @@ class TestWeb(web.Helper):
     def test_18_task_status_wip(self, mock):
         """Test WEB Task Status on going works"""
         self.register()
-        self.new_application()
+        self.new_project()
 
         app = db.session.query(Project).first()
         task = Task(project_id=app.id, n_answers = 10)
@@ -1348,7 +1348,7 @@ class TestWeb(web.Helper):
     def test_20_app_index_published(self, mock):
         """Test WEB Project Index published works"""
         self.register()
-        self.new_application()
+        self.new_project()
         self.update_application(new_category_id="1")
         app = db.session.query(Project).first()
         info = dict(task_presenter="some html")
@@ -1370,7 +1370,7 @@ class TestWeb(web.Helper):
         """Test WEB Project Index draft works"""
         # Create root
         self.register()
-        self.new_application()
+        self.new_project()
         self.signout()
         # Create a user
         self.register(fullname="jane", name="jane", email="jane@jane.com")
@@ -1463,7 +1463,7 @@ class TestWeb(web.Helper):
         db.session.query(Task).filter(Task.project_id == 1).first()
 
         self.register()
-        self.new_application()
+        self.new_project()
         app2 = db.session.query(Project).get(2)
         self.new_task(app2.id)
         task2 = db.session.query(Task).filter(Task.project_id == 2).first()
@@ -1565,7 +1565,7 @@ class TestWeb(web.Helper):
     def test_30_app_id_owner(self, mock):
         """Test WEB project settings page shows the ID to the owner"""
         self.register()
-        self.new_application()
+        self.new_project()
 
         res = self.app.get('/project/sampleapp/settings', follow_redirects=True)
         assert "Sample Project" in res.data, ("Project should be shown to "
@@ -1590,7 +1590,7 @@ class TestWeb(web.Helper):
         Mock.return_value = html_request
 
         self.register()
-        self.new_application()
+        self.new_project()
         self.signout()
 
         res = self.app.get('/project/sampleapp', follow_redirects=True)
@@ -1604,7 +1604,7 @@ class TestWeb(web.Helper):
     def test_31_user_profile_progress(self, mock):
         """Test WEB user progress profile page works"""
         self.register()
-        self.new_application()
+        self.new_project()
         app = db.session.query(Project).first()
         task = Task(project_id=app.id, n_answers = 10)
         db.session.add(task)
@@ -1986,7 +1986,7 @@ class TestWeb(web.Helper):
     def test_46_tasks_exists(self, mock):
         """Test WEB tasks page works."""
         self.register()
-        self.new_application()
+        self.new_project()
         res = self.app.get('/project/sampleapp/tasks/', follow_redirects=True)
         assert "Edit the task presenter" in res.data, \
             "Task Presenter Editor should be an option"
@@ -2018,7 +2018,7 @@ class TestWeb(web.Helper):
     def test_47_task_presenter_editor_loads(self, mock):
         """Test WEB task presenter editor loads"""
         self.register()
-        self.new_application()
+        self.new_project()
         res = self.app.get('/project/sampleapp/tasks/taskpresentereditor',
                            follow_redirects=True)
         err_msg = "Task Presenter options not found"
@@ -2037,7 +2037,7 @@ class TestWeb(web.Helper):
     def test_48_task_presenter_editor_works(self, mock):
         """Test WEB task presenter editor works"""
         self.register()
-        self.new_application()
+        self.new_project()
         app = db.session.query(Project).first()
         err_msg = "Task Presenter should be empty"
         assert not app.info.get('task_presenter'), err_msg
@@ -2102,7 +2102,7 @@ class TestWeb(web.Helper):
 
         mock_webhook.return_value = html_request
         self.register()
-        self.new_application()
+        self.new_project()
         app = db.session.query(Project).first()
         err_msg = "Task Presenter should be empty"
         assert not app.info.get('task_presenter'), err_msg
@@ -2144,7 +2144,7 @@ class TestWeb(web.Helper):
         error_msg = "There should not be an owner message"
         assert "Owner Message" not in res.data, error_msg
         # Now make the user a project owner
-        self.new_application()
+        self.new_project()
         res = self.app.get("/", follow_redirects=True)
         error_msg = "There should be a message for the root user"
         assert "Root Message" in res.data, error_msg
@@ -2740,7 +2740,7 @@ class TestWeb(web.Helper):
         tasks"""
         Fixtures.create()
         self.register()
-        self.new_application()
+        self.new_project()
         res = self.app.get('/project/sampleapp/tasks/import', follow_redirects=True)
         err_msg = "There should be a CSV importer"
         assert "type=csv" in res.data, err_msg
@@ -2843,7 +2843,7 @@ class TestWeb(web.Helper):
                                  {'content-type': 'text/plain'})
         request.return_value = csv_file
         self.register()
-        self.new_application()
+        self.new_project()
         app = db.session.query(Project).first()
         url = '/project/%s/tasks/import' % app.short_name
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
@@ -2860,7 +2860,7 @@ class TestWeb(web.Helper):
         count.return_value = 1
         create.return_value = "1 new task was imported successfully"
         self.register()
-        self.new_application()
+        self.new_project()
         app = db.session.query(Project).first()
         url = '/project/%s/tasks/import' % app.short_name
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
@@ -2876,7 +2876,7 @@ class TestWeb(web.Helper):
         from pybossa.view.projects import MAX_NUM_SYNCHRONOUS_TASKS_IMPORT
         count_tasks.return_value = MAX_NUM_SYNCHRONOUS_TASKS_IMPORT + 1
         self.register()
-        self.new_application()
+        self.new_project()
         app = db.session.query(Project).first()
         url = '/project/%s/tasks/import' % app.short_name
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
@@ -2899,7 +2899,7 @@ class TestWeb(web.Helper):
                                  {'content-type': 'text/plain'})
         Mock.return_value = empty_file
         self.register()
-        self.new_application()
+        self.new_project()
         app = db.session.query(Project).first()
         url = '/project/%s/tasks/import' % (app.short_name)
         res = self.app.post(url, data={'csv_url': 'http://myfakecsvurl.com',
@@ -2935,7 +2935,7 @@ class TestWeb(web.Helper):
                                  {'content-type': 'text/plain'})
         Mock.return_value = empty_file
         self.register()
-        self.new_application()
+        self.new_project()
         app = db.session.query(Project).first()
         url = '/project/%s/tasks/import' % (app.short_name)
         res = self.app.post(url, data={'googledocs_url': 'http://drive.google.com',
@@ -2990,7 +2990,7 @@ class TestWeb(web.Helper):
                                    {'content-type': 'application/json'})
         Mock.return_value = html_request
         self.register()
-        self.new_application()
+        self.new_project()
         app = db.session.query(Project).first()
         res = self.app.post(('/project/%s/tasks/import' % (app.short_name)),
                             data={'epicollect_project': 'fakeproject',
@@ -3047,7 +3047,7 @@ class TestWeb(web.Helper):
                                    {'content-type': 'application/json'})
         request.return_value = html_request
         self.register()
-        self.new_application()
+        self.new_project()
         app = db.session.query(Project).first()
         res = self.app.post(('/project/%s/tasks/import' % (app.short_name)),
                             data={'album_id': '1234',
@@ -3105,7 +3105,7 @@ class TestWeb(web.Helper):
             u'"name":"test.txt",'
             u'"icon":"https://www.dropbox.com/static/images/icons64/page_white_text.png"}')
         self.register()
-        self.new_application()
+        self.new_project()
         app = db.session.query(Project).first()
         res = self.app.post('/project/%s/tasks/import' % app.short_name,
                             data={'files-0': dropbox_file_data,
@@ -3397,7 +3397,7 @@ class TestWeb(web.Helper):
         self.signout()
         # As owner
         self.register(fullname="owner", name="owner")
-        res = self.new_application()
+        res = self.new_project()
         url = "/project/sampleapp/tasks/settings"
 
         res = self.app.get(url, follow_redirects=True)
@@ -3439,7 +3439,7 @@ class TestWeb(web.Helper):
         self.signout()
         # Create owner
         self.register(fullname="owner", name="owner")
-        self.new_application()
+        self.new_project()
         url = "/project/sampleapp/tasks/scheduler"
         form_id = 'task_scheduler'
         self.signout()
@@ -3504,7 +3504,7 @@ class TestWeb(web.Helper):
         self.signout()
         # Create owner
         self.register(fullname="owner", name="owner")
-        self.new_application()
+        self.new_project()
         self.new_task(1)
 
         url = "/project/sampleapp/tasks/redundancy"
@@ -3582,7 +3582,7 @@ class TestWeb(web.Helper):
         state of the task is updated in consecuence"""
         # Creat root user
         self.register()
-        self.new_application()
+        self.new_project()
         self.new_task(1)
 
         url = "/project/sampleapp/tasks/redundancy"
@@ -3619,7 +3619,7 @@ class TestWeb(web.Helper):
         self.signout()
         # Create owner
         self.register(fullname="owner", name="owner")
-        self.new_application()
+        self.new_project()
         self.new_task(1)
         url = "/project/sampleapp/tasks/priority"
         form_id = 'task_priority'

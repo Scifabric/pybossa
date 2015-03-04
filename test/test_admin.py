@@ -120,7 +120,7 @@ class TestAdmin(web.Helper):
     def test_06_admin_featured_apps_add_remove_app(self, mock):
         """Test ADMIN featured projects add-remove works as an admin user"""
         self.register()
-        self.new_application()
+        self.new_project()
         self.update_application()
         # The project is in the system but not in the front page
         res = self.app.get('/', follow_redirects=True)
@@ -183,7 +183,7 @@ class TestAdmin(web.Helper):
         self.signout()
         self.register(name="John2", email="john2@john.com",
                       password="passwd")
-        self.new_application()
+        self.new_project()
         # The project is in the system but not in the front page
         res = self.app.get('/', follow_redirects=True)
         err_msg = ("The project should not be listed in the front page"
@@ -209,7 +209,7 @@ class TestAdmin(web.Helper):
     def test_08_admin_featured_apps_add_remove_app_anonymous(self, mock):
         """Test ADMIN featured projects add-remove works as an anonymous user"""
         self.register()
-        self.new_application()
+        self.new_project()
         self.signout()
         # The project is in the system but not in the front page
         res = self.app.get('/', follow_redirects=True)
@@ -460,7 +460,7 @@ class TestAdmin(web.Helper):
         self.signout()
         self.register(fullname="Juan Jose", name="juan",
                       email="juan@juan.com", password="juan")
-        self.new_application()
+        self.new_project()
         self.signout()
         # Sign in with the root user
         self.signin()
@@ -495,7 +495,7 @@ class TestAdmin(web.Helper):
         self.signout()
         self.register(fullname="Juan Jose", name="juan",
                       email="juan@juan.com", password="juan")
-        self.new_application()
+        self.new_project()
         self.signout()
         # Sign in with the root user
         self.signin()
