@@ -50,43 +50,43 @@ class TestModelBase(Test):
         info = {
             'total': 150,
             'long_description': 'hello world'}
-        app = Project(
+        project = Project(
             name=u'My New Project',
             short_name=u'my-new-app',
             description=u'description',
             info=info)
         category = Category(name=u'cat', short_name=u'cat', description=u'cat')
-        app.category = category
-        app.owner = user
+        project.category = category
+        project.owner = user
         task_info = {
             'question': 'My random question',
             'url': 'my url'}
         task = Task(info=task_info)
         task_run_info = {'answer': u'annakarenina'}
         task_run = TaskRun(info=task_run_info)
-        task.project = app
+        task.project = project
         task_run.task = task
-        task_run.project = app
+        task_run.project = project
         task_run.user = user
-        db.session.add_all([user, app, task, task_run])
+        db.session.add_all([user, project, task, task_run])
         db.session.commit()
-        project_id = app.id
+        project_id = project.id
 
         db.session.remove()
 
-        app = db.session.query(Project).get(project_id)
-        assert app.name == u'My New Project', app
+        project = db.session.query(Project).get(project_id)
+        assert project.name == u'My New Project', project
         # year would start with 201...
-        assert app.created.startswith('201'), app.created
-        assert app.long_tasks == 0, app.long_tasks
-        assert app.hidden == 0, app.hidden
-        assert app.time_estimate == 0, app
-        assert app.time_limit == 0, app
-        assert app.calibration_frac == 0, app
-        assert app.bolt_course_id == 0
-        assert len(app.tasks) == 1, app
-        assert app.owner.name == username, app
-        out_task = app.tasks[0]
+        assert project.created.startswith('201'), project.created
+        assert project.long_tasks == 0, project.long_tasks
+        assert project.hidden == 0, project.hidden
+        assert project.time_estimate == 0, project
+        assert project.time_limit == 0, project
+        assert project.calibration_frac == 0, project
+        assert project.bolt_course_id == 0
+        assert len(project.tasks) == 1, project
+        assert project.owner.name == username, project
+        out_task = project.tasks[0]
         assert out_task.info['question'] == task_info['question'], out_task
         assert out_task.quorum == 0, out_task
         assert out_task.state == "ongoing", out_task
