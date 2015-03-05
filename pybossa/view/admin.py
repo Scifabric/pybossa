@@ -245,6 +245,7 @@ def categories():
         if request.method == 'POST':
             ensure_authorized_to('create', Category)
             form = CategoryForm(request.form)
+            del form.id
             if form.validate():
                 slug = form.name.data.lower().replace(" ", "")
                 category = Category(name=form.name.data,
