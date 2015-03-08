@@ -1627,7 +1627,7 @@ msgid "Do you want to hide your project?"
 msgstr ""
 
 #: themes/default/templates/applications/update.html:46
-msgid "Save te changes"
+msgid "Save the changes"
 msgstr ""
 
 #: themes/default/templates/applications/update_blogpost.html:14
