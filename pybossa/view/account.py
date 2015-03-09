@@ -366,7 +366,7 @@ def _show_own_profile(user):
 @blueprint.route('/<name>/applications')
 @blueprint.route('/<name>/projects')
 @login_required
-def applications(name):
+def projects(name):
     """
     List user's project list.
 
