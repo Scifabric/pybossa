@@ -27,7 +27,7 @@ sections.
 Can I disable anonymous contributions?
 --------------------------------------
 Yes, you can. Check your project settings and toggle the drop down menu:
-*Allow Anonymous Contributors* from Yes to No. Check the :ref:`app-details`
+*Allow Anonymous Contributors* from Yes to No. Check the :ref:`project-details`
 for further information.
 
 Can I create *golden tasks*?
@@ -45,7 +45,7 @@ Can I delete my project and all the task and task runs?
 -----------------------------------------------------------
 Yes, you can. If you are the owner of the project you can delete the
 project, and automatically all the task and associated task runs will be
-deleted (**note**: this cannot be undone!). Check the :ref:`app-delete` section
+deleted (**note**: this cannot be undone!). Check the :ref:`project-delete` section
 for further details.
 
 Do you provide any statistics about the users for my project?
@@ -56,7 +56,7 @@ will take to complete all your tasks, the top 5 authenticated and anonymous
 users, etc. Check the *Statistics* link in the left local sidebar of your
 project.
 
-My project is not getting too much attention, how can it be a *featured* app?
+My project is not getting too much attention, how can it be a *featured* project?
 ---------------------------------------------------------------------------------
 Featured projects are managed by the administrators of the site. Contact
 them about this issue, and they will decide about your project.
@@ -68,7 +68,7 @@ your file to a file server like DropBox, copy the public link and paste it in
 the importer section. PyBossa also supports Google Drive Spreadsheets, see
 :ref:`csv-import` section for further details.
 
-My data is in a Google Doc Spreadsheet, can I import the data into my app?
+My data is in a Google Doc Spreadsheet, can I import the data into my project?
 --------------------------------------------------------------------------
 Yes, you can. PyBossa supports the Google Drive Spreadsheets, so make it
 public, copy the link and use that link to import it the Google Drive importer
@@ -110,11 +110,11 @@ version 3.0`_.
 
 .. _`GNU Affero general public license version 3.0`: http://www.gnu.org/licenses/agpl-3.0.html
 
-Do you provide project templates or examples apps?
+Do you provide project templates or examples projects?
 ------------------------------------------------------
 Yes, we do. You can find several open source project examples that can be
 re-used for image/sound pattern recognition problems, geo-coding, PDF transcription, 
-etc. Check the official `Git repository`_ for all the available apps.
+etc. Check the official `Git repository`_ for all the available projects.
 
 .. _`Git repository`: http://github.com/PyBossa/
 

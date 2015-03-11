@@ -16,6 +16,9 @@ It expects and returns JSON.
 .. autoclass:: pybossa.api.AppAPI
    :members:
 
+.. autoclass:: pybossa.api.ProjectAPI
+   :members:
+
 .. autoclass:: pybossa.api.TaskAPI
    :members:
 
@@ -50,14 +53,14 @@ get something like this:
     "info": 65,
     "user_id": null,
     "links": [
-        "<link rel='parent' title='app' href='http://localhost:5000/api/app/90'/>",
+        "<link rel='parent' title='project' href='http://localhost:5000/api/project/90'/>",
         "<link rel='parent' title='task' href='http://localhost:5000/api/task/5894'/>"
     ],
     "task_id": 5894,
     "created": "2012-07-07T17:23:45.714184",
     "finish_time": "2012-07-07T17:23:45.714210",
     "calibration": null,
-    "app_id": 90,
+    "project_id": 90,
     "user_ip": "X.X.X.X",
     "link": "<link rel='self' title='taskrun' href='http://localhost:5000/api/taskrun/8969'/>",
     "timeout": null,
@@ -66,14 +69,14 @@ get something like this:
 
 The object link will have a tag **rel** equal to **self**, while the parent
 objects will be tagged with **parent**. The **title** field is used to specify
-the type of the object: task, taskrun or app.
+the type of the object: task, taskrun or project.
 
-Apps will not have a **links** field, because these objects do not have
+Projects will not have a **links** field, because these objects do not have
 parents.
 
-Tasks will have only one parent: the associated project (application).
+Tasks will have only one parent: the associated project.
 
-Task Runs will have only two parents: the associated task and associated app.
+Task Runs will have only two parents: the associated task and associated project.
 
 .. _`Hypermedia as the Engine of Application State`: http://en.wikipedia.org/wiki/HATEOAS 
 
@@ -102,13 +105,11 @@ PyBossa, as it is really simple to check those values:
     import requests
     import time
 
-    res = requests.get('http://SERVER/api/app')
+    res = requests.get('http://SERVER/api/project')
     if int(res.headers['X-RateLimit-Remaining']) < 10:
         time.sleep(300) # Sleep for 5 minutes
     else:
         pass # Do your stuff
-
-
 
 
 Operations
@@ -123,9 +124,9 @@ List domain objects::
      
     GET http://{pybossa-site-url}/api/{domain-object}
     
-For example, you can get a list of registered projects (applications) like this::
+For example, you can get a list of registered Projects like this::
 
-    GET http://{pybossa-site-url}/api/app
+    GET http://{pybossa-site-url}/api/project
 
 Or a list of Tasks::
 
@@ -177,7 +178,7 @@ If the object is not found you will get a JSON object like this:
     {
         "status": "failed",
         "action": "GET",
-        "target": "app",
+        "target": "project",
         "exception_msg": "404 Not Found",
         "status_code": 404,
         "exception_cls": "NotFound"
@@ -229,7 +230,7 @@ If an error occurs, the action will return a JSON object like this:
     {
         "status": "failed",
         "action": "POST",
-        "target": "app",
+        "target": "project",
         "exception_msg": "type object 'Project' has no attribute 'short_ame'",
         "status_code": 415,
         "exception_cls": "AttributeError"
@@ -255,7 +256,7 @@ If an error occurs, the action will return a JSON object like this:
     {
         "status": "failed",
         "action": "PUT",
-        "target": "app",
+        "target": "project",
         "exception_msg": "type object 'Project' has no attribute 'short_ame'",
         "status_code": 415,
         "exception_cls": "AttributeError"
@@ -281,7 +282,7 @@ If an error occurs, the action will return a JSON object like this:
     {
         "status": "failed",
         "action": "DELETE",
-        "target": "app",
+        "target": "project",
         "exception_msg": "type object 'Project' has no attribute 'short_ame'",
         "status_code": 415,
         "exception_cls": "AttributeError"
@@ -296,7 +297,7 @@ Requesting a new task for current user
 You can request a new task for the current user (anonymous or authenticated)
 by::
 
-    GET http://{pybossa-site-url}/api/{app.id}/newtask
+    GET http://{pybossa-site-url}/api/{project.id}/newtask
 
 This will return a domain Task object in JSON format if there is a task
 available for the user, otherwise it will return **None**.
@@ -327,6 +328,6 @@ Where 'provider' will be any of the third parties supported, i.e. 'twitter',
 Example Usage
 -------------
 
-Create a Project (Application) object::
+Create a Project object::
 
-  curl -X POST -H "Content-Type:application/json" -s -d '{"name":"myapp", "info":{"xyz":1}}' 'http://localhost:5000/api/app?api_key=API-KEY'
+  curl -X POST -H "Content-Type:application/json" -s -d '{"name":"myproject", "info":{"xyz":1}}' 'http://localhost:5000/api/project?api_key=API-KEY'

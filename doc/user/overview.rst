@@ -17,7 +17,7 @@ will have the following items:
 #. **Description**
 
 The **slug** or **short name** is a shortcut for accessing the project via
-the web (short urls like this http://domain.com/app/slug).
+the web (short urls like this http://domain.com/project/slug).
 
 The **description** is a short sentence that will be used to describe your
 project.
@@ -123,7 +123,7 @@ Tasks can be imported from a CSV file or a Google Spreadsheet via the simple
 built-in :ref:`task-creator`. You have to do the following:
 
 1. Navigate to your project's page (you can directly access it using 
-   the *slug* project name: http://server/app/slug).
+   the *slug* project name: http://server/project/slug).
 
 .. image:: http://i.imgur.com/98o4ixD.png
 
@@ -236,7 +236,7 @@ If you want to import the data points submitted to a **public** EpiCollect_
 project, you will have to follow the next steps:
 
 1. Navigate to your project's page (you can directly access it using 
-   the *slug* project name: http://server/app/slug).
+   the *slug* project name: http://server/project/slug).
 
 .. image:: http://i.imgur.com/98o4ixD.png
 
@@ -428,7 +428,7 @@ tasks and associated task runs** from your project.
     delete all the tasks.**
 
 If you are sure that you want to flush all the tasks and task runs for your
-project, go to the project page (http://server/app/slug/tasks/) and click in
+project, go to the project page (http://server/project/slug/tasks/) and click in
 the **Settings** option of the left local navigation menu:
 
 .. image:: http://i.imgur.com/XsAOjnb.png
@@ -461,7 +461,7 @@ to access your project URL to work with your project. If your project
 *slug* or *short name* is *flickrperson* you will be able to access the
 project managing options in this URL::
 
-    http://PYBOSSA-SERVER/app/flickrperson
+    http://PYBOSSA-SERVER/project/flickrperson
 
 .. note::
     
@@ -531,7 +531,7 @@ Creating a project using the API involves also three steps:
 Creating the project
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-You can create a project via the API URL **/api/app** with a POST request (See
+You can create a project via the API URL **/api/project** with a POST request (See
 :ref:`api`).
 
 You have to provide the following information about the project and convert
@@ -580,7 +580,7 @@ that should have the link to the photo that we want to identify:
     info = dict (link=photo['link'], 
                  url=photo['url_m'],
                  question='Do you see a human face in this photo?')
-    data = dict (app_id=app_id,
+    data = dict (project_id=project_id,
                  state=0,
                  info=info,
                  calibration=0,
@@ -655,7 +655,7 @@ with your own editor, or using the PyBossa interface (see previous section).
     This API-KEY should be passed as a POST argument like this with the
     previous data:
 
-    [POST] http://domain/api/app/?api_key=API-KEY
+    [POST] http://domain/api/project/?api_key=API-KEY
 
 We recommend to read the 
 :doc:`Step by step tutorial on
