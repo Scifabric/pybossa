@@ -297,17 +297,15 @@ class TestWeb(web.Helper):
 
     @with_context
     @patch('pybossa.view.account.redirect', wraps=redirect)
-    @patch('pybossa.view.account.signer')
-    def test_register_post_valid_data_validation_disabled(self, signer, redirect):
+    def test_register_post_valid_data_validation_disabled(self, redirect):
         """Test WEB register post with valid form data and account validation
-        disabled redirects to the confirmation URL with valid arguments"""
+        disabled redirects to home page"""
         data = dict(fullname="John Doe", name="johndoe",
                     password="p4ssw0rd", confirm="p4ssw0rd",
                     email_addr="johndoe@example.com")
-        signer.dumps.return_value = 'key'
         res = self.app.post('/account/register', data=data)
         print dir(redirect)
-        redirect.assert_called_with('http://localhost/account/register/confirmation?key=key')
+        redirect.assert_called_with('/')
 
 
     def test_register_confirmation_fails_without_key(self):
