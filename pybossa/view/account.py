@@ -136,7 +136,7 @@ def signin():
                 flash(msg, 'info')
         else:
             msg = gettext("Ooops, we didn't find you in the system, \
-                          did you sign in?")
+                          did you sign up?")
             flash(msg, 'info')
 
     if request.method == 'POST' and not form.validate():

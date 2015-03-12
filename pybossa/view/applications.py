@@ -785,7 +785,7 @@ def tutorial(short_name):
 
 @blueprint.route('/<short_name>/<int:task_id>/results.json')
 def export(short_name, task_id):
-    """Return a file with all the TaskRuns for a give Task"""
+    """Return a file with all the TaskRuns for a given Task"""
     # Check if the app exists
     (app, owner, n_tasks, n_task_runs,
      overall_progress, last_activity) = app_by_shortname(short_name)
