@@ -152,6 +152,7 @@ class TestNewsletter(web.Helper):
     def test_new_user_gets_newsletter(self, newsletter):
         """Test NEWSLETTER new user works."""
         newsletter.app = True
+        newsletter.is_user_subscribed.return_value = False
         res = self.register()
         dom = BeautifulSoup(res.data)
         err_msg = "There should be a newsletter page."
@@ -165,6 +166,7 @@ class TestNewsletter(web.Helper):
     def test_new_user_gets_newsletter_only_once(self, newsletter):
         """Test NEWSLETTER user gets newsletter only once works."""
         newsletter.app = True
+        newsletter.is_user_subscribed.return_value = False
         res = self.register()
         dom = BeautifulSoup(res.data)
         user = user_repo.get(1)
