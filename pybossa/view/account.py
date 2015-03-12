@@ -118,15 +118,9 @@ def signin():
         email = form.email.data
         user = user_repo.get_by(email_addr=email)
         if user and user.check_password(password):
-            login_user(user, remember=True)
             msg_1 = gettext("Welcome back") + " " + user.fullname
             flash(msg_1, 'success')
-            if newsletter.app:
-                if user.newsletter_prompted is False:
-                    if newsletter.is_user_subscribed(user.email_addr) is False:
-                        return redirect(url_for('account.newsletter_subscribe',
-                                                next=request.args.get('next')))
-            return redirect(request.args.get("next") or url_for("home.home"))
+            return _sign_in_user(user)
         elif user:
             msg, method = get_user_signup_method(user)
             if method == 'local':
@@ -157,6 +151,16 @@ def signin():
     else:
         # User already signed in, so redirect to home page
         return redirect(url_for("home.home"))
+
+
+def _sign_in_user(user):
+    login_user(user, remember=True)
+    if newsletter.app:
+        if user.newsletter_prompted is False:
+            if newsletter.is_user_subscribed(user.email_addr) is False:
+                return redirect(url_for('account.newsletter_subscribe',
+                                        next=request.args.get('next')))
+    return redirect(request.args.get("next") or url_for("home.home"))
 
 
 @blueprint.route('/signout')
@@ -293,12 +297,8 @@ def _create_account(user_data):
                                valid_email=True)
     new_user.set_password(user_data['password'])
     user_repo.save(new_user)
-    login_user(new_user, remember=True)
     flash(gettext('Thanks for signing-up'), 'success')
-    if newsletter.app:
-        return redirect(url_for('account.newsletter_subscribe'))
-    else:
-        return redirect(url_for('home.home'))
+    return _sign_in_user(new_user)
 
 
 def _update_user_with_valid_email(user, email_addr):
@@ -307,10 +307,7 @@ def _update_user_with_valid_email(user, email_addr):
     user.email_addr = email_addr
     user_repo.update(user)
     flash(gettext('Your email has been validated.'))
-    if newsletter.app:
-        return redirect(url_for('account.newsletter_subscribe'))
-    else:
-        return redirect(url_for('home.home'))
+    return _sign_in_user(user)
 
 
 @blueprint.route('/profile', methods=['GET'])
@@ -617,9 +614,8 @@ def reset_password():
     if form.validate_on_submit():
         user.set_password(form.new_password.data)
         user_repo.update(user)
-        login_user(user)
         flash(gettext('You reset your password successfully!'), 'success')
-        return redirect(url_for('.signin'))
+        return _sign_in_user(user)
     if request.method == 'POST' and not form.validate():
         flash(gettext('Please correct the errors'), 'error')
     return render_template('/account/password_reset.html', form=form)
