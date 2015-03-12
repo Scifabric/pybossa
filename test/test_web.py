@@ -383,6 +383,7 @@ class TestWeb(web.Helper):
     def test_confirm_account_newsletter(self, fake_signer, url_for, newsletter):
         """Test WEB confirm email shows newsletter or home."""
         newsletter.app = True
+        newsletter.is_user_subscribed.return_value = False
         self.register()
         user = db.session.query(User).get(1)
         user.valid_email = False
@@ -392,9 +393,10 @@ class TestWeb(web.Helper):
                                               email_addr=user.email_addr)
         self.app.get('/account/register/confirmation?key=valid-key')
 
-        url_for.assert_called_with('account.newsletter_subscribe')
+        url_for.assert_called_with('account.newsletter_subscribe', next=None)
 
         newsletter.app = False
+        newsletter.is_user_subscribed.return_value = True
         self.app.get('/account/register/confirmation?key=valid-key')
         url_for.assert_called_with('home.home')
 
