@@ -178,6 +178,7 @@ def get_email_confirmation_url(account):
     confirm_url = url_for('.confirm_account', key=key, _external=True)
     return confirm_url
 
+
 @blueprint.route('/confirm-email')
 @login_required
 def confirm_email():
@@ -224,7 +225,7 @@ def register():
                       password=form.password.data)
         confirm_url = get_email_confirmation_url(account)
         if current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED'):
-            return redirect(confirm_url)
+            return _create_account(account)
         msg = dict(subject='Welcome to %s!' % current_app.config.get('BRAND'),
                    recipients=[account['email_addr']],
                    body=render_template('/account/email/validate_account.md',
@@ -281,24 +282,31 @@ def confirm_account():
     # First check if the user exists
     user = user_repo.get_by_name(userdict['name'])
     if user is not None:
-        user.valid_email = True
-        user.confirmation_email_sent = False
-        user.email_addr = userdict['email_addr']
-        user_repo.update(user)
-        flash(gettext('Your email has been validated.'))
-        if newsletter.app:
-            return redirect(url_for('account.newsletter_subscribe'))
-        else:
-            return redirect(url_for('home.home'))
+        return _update_user_with_valid_email(user, userdict['email_addr'])
+    return _create_account(userdict)
 
-    account = model.user.User(fullname=userdict['fullname'],
-                              name=userdict['name'],
-                              email_addr=userdict['email_addr'],
-                              valid_email=True)
-    account.set_password(userdict['password'])
-    user_repo.save(account)
-    login_user(account, remember=True)
+
+def _create_account(user_data):
+    new_user = model.user.User(fullname=user_data['fullname'],
+                               name=user_data['name'],
+                               email_addr=user_data['email_addr'],
+                               valid_email=True)
+    new_user.set_password(user_data['password'])
+    user_repo.save(new_user)
+    login_user(new_user, remember=True)
     flash(gettext('Thanks for signing-up'), 'success')
+    if newsletter.app:
+        return redirect(url_for('account.newsletter_subscribe'))
+    else:
+        return redirect(url_for('home.home'))
+
+
+def _update_user_with_valid_email(user, email_addr):
+    user.valid_email = True
+    user.confirmation_email_sent = False
+    user.email_addr = email_addr
+    user_repo.update(user)
+    flash(gettext('Your email has been validated.'))
     if newsletter.app:
         return redirect(url_for('account.newsletter_subscribe'))
     else:
