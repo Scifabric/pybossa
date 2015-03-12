@@ -279,13 +279,12 @@ def confirm_account():
     except BadData:
         abort(403)
     # First check if the user exists
-    users = user_repo.filter_by(name=userdict['name'])
-    if len(users) == 1 and users[0].name == userdict['name']:
-        u = users[0]
-        u.valid_email = True
-        u.confirmation_email_sent = False
-        u.email_addr = userdict['email_addr']
-        user_repo.update(u)
+    user = user_repo.get_by_name(userdict['name'])
+    if user is not None:
+        user.valid_email = True
+        user.confirmation_email_sent = False
+        user.email_addr = userdict['email_addr']
+        user_repo.update(user)
         flash(gettext('Your email has been validated.'))
         if newsletter.app:
             return redirect(url_for('account.newsletter_subscribe'))
