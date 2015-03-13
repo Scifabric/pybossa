@@ -18,7 +18,7 @@
 
 from default import with_context
 from helper import web
-from mock import patch
+from mock import patch, MagicMock
 from collections import namedtuple
 from pybossa.core import user_repo
 from pybossa.newsletter import Newsletter
@@ -145,6 +145,21 @@ class TestNewsletter(web.Helper):
                           'new-email': user.email_addr}
             nw.client.lists.subscribe.assert_called_with(1, email, merge_vars,
                                                          update_existing=True)
+
+    @patch('pybossa.newsletter.mailchimp')
+    def test_is_initialized_returns_false_before_calling_init_app(self,mailchimp):
+        nw = Newsletter()
+        app = MagicMock()
+
+        assert nw.is_initialized() is False
+
+    @patch('pybossa.newsletter.mailchimp')
+    def test_is_initialized_returns_true_after_calling_init_app(self,mailchimp):
+        nw = Newsletter()
+        app = MagicMock()
+        nw.init_app(app)
+
+        assert nw.is_initialized() is True
 
 
     @with_context
