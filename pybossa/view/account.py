@@ -423,18 +423,8 @@ def update_profile(name):
     update_form.set_locales(current_app.config['LOCALES'])
     avatar_form = AvatarUploadForm()
     password_form = ChangePasswordForm()
-    external_form = update_form
 
-    if request.method == 'GET':
-        return render_template('account/update.html',
-                               title=title_msg,
-                               user=usr,
-                               form=update_form,
-                               upload_form=avatar_form,
-                               password_form=password_form,
-                               external_form=external_form,
-                               show_passwd_form=show_passwd_form)
-    else:
+    if request.method == 'POST':
         acc_conf_dis = current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED')
         # Update user avatar
         if request.form.get('btn') == 'Upload':
@@ -462,13 +452,6 @@ def update_profile(name):
             else:
                 flash("You have to provide an image file to update your avatar",
                       "error")
-                return render_template('/account/update.html',
-                                       form=update_form,
-                                       upload_form=avatar_form,
-                                       password_form=password_form,
-                                       external_form=external_form,
-                                       title=title_msg,
-                                       show_passwd_form=show_passwd_form)
         # Update user profile
         elif request.form.get('btn') == 'Profile':
             update_form = UpdateProfileForm()
@@ -511,13 +494,6 @@ def update_profile(name):
             else:
                 flash(gettext('Please correct the errors'), 'error')
                 title_msg = 'Update your profile: %s' % user.fullname
-                return render_template('/account/update.html',
-                                       form=update_form,
-                                       upload_form=avatar_form,
-                                       password_form=password_form,
-                                       external_form=external_form,
-                                       title=title_msg,
-                                       show_passwd_form=show_passwd_form)
 
         # Update user password
         elif request.form.get('btn') == 'Password':
@@ -539,22 +515,8 @@ def update_profile(name):
                     msg = gettext("Your current password doesn't match the "
                                   "one in our records")
                     flash(msg, 'error')
-                    return render_template('/account/update.html',
-                                           form=update_form,
-                                           upload_form=avatar_form,
-                                           password_form=password_form,
-                                           external_form=external_form,
-                                           title=title_msg,
-                                           show_passwd_form=show_passwd_form)
             else:
                 flash(gettext('Please correct the errors'), 'error')
-                return render_template('/account/update.html',
-                                       form=update_form,
-                                       upload_form=avatar_form,
-                                       password_form=password_form,
-                                       external_form=external_form,
-                                       title=title_msg,
-                                       show_passwd_form=show_passwd_form)
         # Update user external services
         elif request.form.get('btn') == 'External':
             del external_form.locale
@@ -570,16 +532,15 @@ def update_profile(name):
             else:
                 flash(gettext('Please correct the errors'), 'error')
                 title_msg = 'Update your profile: %s' % user.fullname
-                return render_template('/account/update.html',
-                                       form=update_form,
-                                       upload_form=avatar_form,
-                                       password_form=password_form,
-                                       external_form=external_form,
-                                       title=title_msg,
-                                       show_passwd_form=show_passwd_form)
         # Otherwise return 415
         else:
             return abort(415)
+    return render_template('/account/update.html',
+                           form=update_form,
+                           upload_form=avatar_form,
+                           password_form=password_form,
+                           title=title_msg,
+                           show_passwd_form=show_passwd_form)
 
 
 @blueprint.route('/reset-password', methods=['GET', 'POST'])
