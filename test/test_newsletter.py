@@ -162,7 +162,7 @@ class TestNewsletterViewFuntions(web.Helper):
     def test_new_user_gets_newsletter(self, newsletter):
         """Test NEWSLETTER new user works."""
         newsletter.is_initialized.return_value = True
-        newsletter.is_user_subscribed.return_value = False
+        newsletter.ask_user_to_subscribe.return_value = True
         res = self.register()
         dom = BeautifulSoup(res.data)
         err_msg = "There should be a newsletter page."
@@ -176,7 +176,7 @@ class TestNewsletterViewFuntions(web.Helper):
     def test_new_user_gets_newsletter_only_once(self, newsletter):
         """Test NEWSLETTER user gets newsletter only once works."""
         newsletter.is_initialized.return_value = True
-        newsletter.is_user_subscribed.return_value = False
+        newsletter.ask_user_to_subscribe.return_value = True
         res = self.register()
         dom = BeautifulSoup(res.data)
         user = user_repo.get(1)
@@ -187,6 +187,7 @@ class TestNewsletterViewFuntions(web.Helper):
         assert user.newsletter_prompted is True, err_msg
 
         self.signout()
+        newsletter.ask_user_to_subscribe.return_value = False
         res = self.signin()
         dom = BeautifulSoup(res.data)
         assert dom.find(id='newsletter') is None, err_msg
@@ -198,6 +199,7 @@ class TestNewsletterViewFuntions(web.Helper):
     def test_newsletter_subscribe_returns_404(self, newsletter):
         """Test NEWSLETTER view returns 404 works."""
         newsletter.is_initialized.return_value = False
+        newsletter.ask_user_to_subscribe.return_value = True
         self.register()
         res = self.app.get('/account/newsletter', follow_redirects=True)
         dom = BeautifulSoup(res.data)
@@ -210,6 +212,7 @@ class TestNewsletterViewFuntions(web.Helper):
     def test_newsletter_subscribe(self, newsletter):
         """Test NEWSLETTER view subcribe works."""
         newsletter.is_initialized.return_value = True
+        newsletter.ask_user_to_subscribe.return_value = True
         self.register()
         res = self.app.get('/account/newsletter?subscribe=True',
                            follow_redirects=True)
@@ -225,6 +228,7 @@ class TestNewsletterViewFuntions(web.Helper):
     def test_newsletter_subscribe_next(self, newsletter):
         """Test NEWSLETTER view subscribe next works."""
         newsletter.is_initialized.return_value = True
+        newsletter.ask_user_to_subscribe.return_value = True
         self.register()
         next_url = '%2Faccount%2Fjohndoe%2Fupdate'
         url ='/account/newsletter?subscribe=True&next=%s' % next_url
@@ -241,6 +245,7 @@ class TestNewsletterViewFuntions(web.Helper):
     def test_newsletter_not_subscribe(self, newsletter):
         """Test NEWSLETTER view not subcribe works."""
         newsletter.is_initialized.return_value = True
+        newsletter.ask_user_to_subscribe.return_value = True
         self.register()
         res = self.app.get('/account/newsletter?subscribe=False',
                            follow_redirects=True)
@@ -253,6 +258,7 @@ class TestNewsletterViewFuntions(web.Helper):
     def test_newsletter_not_subscribe_next(self, newsletter):
         """Test NEWSLETTER view subscribe next works."""
         newsletter.is_initialized.return_value = True
+        newsletter.ask_user_to_subscribe.return_value = True
         self.register()
         next_url = '%2Faccount%2Fjohndoe%2Fupdate'
         url ='/account/newsletter?subscribe=False&next=%s' % next_url
@@ -267,6 +273,7 @@ class TestNewsletterViewFuntions(web.Helper):
     def test_newsletter_with_any_argument(self, newsletter):
         """Test NEWSLETTER view with any argument works."""
         newsletter.is_initialized.return_value = True
+        newsletter.ask_user_to_subscribe.return_value = True
         self.register()
         res = self.app.get('/account/newsletter?subscribe=something',
                            follow_redirects=True)
@@ -281,6 +288,7 @@ class TestNewsletterViewFuntions(web.Helper):
     def test_newsletter_with_any_argument_variation(self, newsletter):
         """Test NEWSLETTER view with any argument variation works."""
         newsletter.is_initialized.return_value = True
+        newsletter.ask_user_to_subscribe.return_value = True
         self.register()
         res = self.app.get('/account/newsletter?myarg=something',
                            follow_redirects=True)
