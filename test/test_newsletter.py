@@ -16,7 +16,7 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with PyBossa.  If not, see <http://www.gnu.org/licenses/>.
 
-from default import with_context
+from default import with_context, Test
 from helper import web
 from mock import patch, MagicMock
 from collections import namedtuple
@@ -30,9 +30,8 @@ from mailchimp import Error
 FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
 
 
-class TestNewsletter(web.Helper):
+class TestNewsletterClass(Test):
 
-    @with_context
     @patch('pybossa.newsletter.mailchimp')
     def test_newsletter_init_app(self, mailchimp):
         """Test Newsletter init_app method works."""
@@ -45,7 +44,6 @@ class TestNewsletter(web.Helper):
             assert nw.client, nw.client
             assert nw.list_id == 1
 
-    @with_context
     @patch('pybossa.newsletter.mailchimp')
     def test_newsletter_is_user_subscribed_false(self, mailchimp):
         """Test is_user_subscribed returns False."""
@@ -59,7 +57,6 @@ class TestNewsletter(web.Helper):
                                                            [{'email': email}])
             assert res is False
 
-    @with_context
     @patch('pybossa.newsletter.mailchimp')
     def test_newsletter_is_user_subscribed_true(self, mailchimp):
         """Test is_user_subscribed returns True."""
@@ -76,7 +73,6 @@ class TestNewsletter(web.Helper):
                                                            [{'email': email}])
             assert res is True
 
-    @with_context
     @patch('pybossa.newsletter.mailchimp')
     def test_newsletter_is_user_subscribed_exception(self, mp):
         """Test is_user_subscribed exception works."""
@@ -89,7 +85,6 @@ class TestNewsletter(web.Helper):
             # nw.is_user_subscribed(email)
             assert_raises(Error, nw.is_user_subscribed, email)
 
-    @with_context
     @patch('pybossa.newsletter.mailchimp')
     def test_newsletter_subscribe_user_exception(self, mp):
         """Test subscribe_user exception works."""
@@ -105,7 +100,6 @@ class TestNewsletter(web.Helper):
             assert_raises(Error, nw.subscribe_user, user)
 
 
-    @with_context
     @patch('pybossa.newsletter.mailchimp')
     def test_newsletter_subscribe_user(self, mailchimp):
         """Test subscribe user works."""
@@ -122,7 +116,6 @@ class TestNewsletter(web.Helper):
             nw.client.lists.subscribe.assert_called_with(1, email, merge_vars,
                                                          update_existing=False)
 
-    @with_context
     @patch('pybossa.newsletter.mailchimp')
     def test_newsletter_subscribe_user_update_existing(self, mailchimp):
         """Test subscribe user update existing works."""
@@ -161,6 +154,8 @@ class TestNewsletter(web.Helper):
 
         assert nw.is_initialized() is True
 
+
+class TestNewsletterViewFuntions(web.Helper):
 
     @with_context
     @patch('pybossa.view.account.newsletter', autospec=True)
