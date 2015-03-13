@@ -44,12 +44,8 @@ class Newsletter(object):
                 list_id = self.list_id
 
             res = self.client.lists.member_info(list_id, [{'email': email}])
-            print res
-            if (res.get('success_count') == 1 and
-                   res['data'][0]['email'] == email):
-                return True
-            else:
-                return False
+            return (res.get('success_count') == 1 and
+                    res['data'][0]['email'] == email)
         except Error as e:
             msg = 'MAILCHIMP: An error occurred: %s - %s' % (e.__class__, e)
             self.app.logger.error(msg)
