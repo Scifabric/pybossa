@@ -341,13 +341,12 @@ def _show_public_profile(user):
     if current_user.is_authenticated() and current_user.admin:
         apps_hidden = cached_users.hidden_apps(user.id)
         apps_created.extend(apps_hidden)
-    if user_dict:
-        title = "%s &middot; User Profile" % user_dict['fullname']
-        return render_template('/account/public_profile.html',
-                               title=title,
-                               user=user_dict,
-                               apps=apps_contributed,
-                               apps_created=apps_created)
+    title = "%s &middot; User Profile" % user_dict['fullname']
+    return render_template('/account/public_profile.html',
+                           title=title,
+                           user=user_dict,
+                           apps=apps_contributed,
+                           apps_created=apps_created)
 
 
 def _show_own_profile(user):
@@ -396,7 +395,6 @@ def _get_user_apps(user_id):
     apps_published = cached_users.published_apps(user_id)
     apps_draft = cached_users.draft_apps(user_id)
     return apps_published, apps_draft
-
 
 
 @blueprint.route('/<name>/update', methods=['GET', 'POST'])
