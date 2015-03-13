@@ -40,6 +40,11 @@ class Newsletter(object):
     def is_initialized(self):
         return self.app is not None
 
+    def ask_user_to_subscribe(self, user):
+        return (self.is_initialized() and
+                user.newsletter_prompted is False and
+                self.is_user_subscribed(user.email_addr) is False)
+
     def is_user_subscribed(self, email, list_id=None):
         """Check if user is subscribed or not."""
         try:

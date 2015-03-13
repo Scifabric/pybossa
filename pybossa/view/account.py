@@ -75,6 +75,7 @@ def get_update_feed():
         update_feed.append(tmp)
     return update_feed
 
+
 @blueprint.route('/', defaults={'page': 1})
 @blueprint.route('/page/<int:page>')
 def index(page):
@@ -155,11 +156,9 @@ def signin():
 
 def _sign_in_user(user):
     login_user(user, remember=True)
-    if newsletter.is_initialized():
-        if user.newsletter_prompted is False:
-            if newsletter.is_user_subscribed(user.email_addr) is False:
-                return redirect(url_for('account.newsletter_subscribe',
-                                        next=request.args.get('next')))
+    if newsletter.ask_user_to_subscribe(user):
+        return redirect(url_for('account.newsletter_subscribe',
+                                 next=request.args.get('next')))
     return redirect(request.args.get("next") or url_for("home.home"))
 
 
