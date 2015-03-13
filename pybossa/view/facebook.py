@@ -90,7 +90,7 @@ def manage_user(access_token, user_data, next_url):
                    facebook_user_id=user_data['id'],
                    info=info)
             user_repo.save(user)
-            if newsletter.app and user.email_addr != "None":
+            if newsletter.is_initialized() and user.email_addr != "None":
                 newsletter.subscribe_user(user)
             return user
         else:
@@ -126,6 +126,6 @@ def manage_user_login(user, user_data, next_url):
                 flash("Please update your e-mail address in your profile page")
             return redirect(url_for('account.update_profile', name=user.name))
         if (user.email_addr != "None" and user.newsletter_prompted is False
-                and newsletter.app):
+                and newsletter.is_initialized()):
             return redirect(url_for('account.newsletter_subscribe', next=next_url))
         return redirect(next_url)

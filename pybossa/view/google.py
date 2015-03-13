@@ -74,7 +74,7 @@ def manage_user(access_token, user_data, next_url):
                    google_user_id=user_data['id'],
                    info=info)
             user_repo.save(user)
-            if newsletter.app:
+            if newsletter.is_initialized():
                 newsletter.subscribe_user(user)
             return user
         else:
@@ -135,7 +135,7 @@ def manage_user_login(user, user_data, next_url):
     else:
         login_user(user, remember=True)
         flash("Welcome back %s" % user.fullname, 'success')
-        if user.newsletter_prompted is False and newsletter.app:
+        if user.newsletter_prompted is False and newsletter.is_initialized():
             return redirect(url_for('account.newsletter_subscribe',
                                     next=next_url))
         return redirect(next_url)

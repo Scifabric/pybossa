@@ -37,6 +37,9 @@ class Newsletter(object):
         self.client = mailchimp.Mailchimp(app.config.get('MAILCHIMP_API_KEY'))
         self.list_id = app.config.get('MAILCHIMP_LIST_ID')
 
+    def is_initialized(self):
+        return self.app is not None
+
     def is_user_subscribed(self, email, list_id=None):
         """Check if user is subscribed or not."""
         try:
@@ -50,7 +53,6 @@ class Newsletter(object):
             msg = 'MAILCHIMP: An error occurred: %s - %s' % (e.__class__, e)
             self.app.logger.error(msg)
             raise
-
 
     def subscribe_user(self, user, list_id=None, old_email=None):
         """Subscribe, update a user of a mailchimp list."""

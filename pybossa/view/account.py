@@ -155,7 +155,7 @@ def signin():
 
 def _sign_in_user(user):
     login_user(user, remember=True)
-    if newsletter.app:
+    if newsletter.is_initialized():
         if user.newsletter_prompted is False:
             if newsletter.is_user_subscribed(user.email_addr) is False:
                 return redirect(url_for('account.newsletter_subscribe',
@@ -253,7 +253,7 @@ def newsletter_subscribe():
 
     """
     # Save that we've prompted the user to sign up in the newsletter
-    if newsletter.app and current_user.is_authenticated():
+    if newsletter.is_initialized() and current_user.is_authenticated():
         next_url = request.args.get('next') or url_for('home.home')
         user = user_repo.get(current_user.id)
         if current_user.newsletter_prompted is False:
