@@ -382,8 +382,7 @@ class TestWeb(web.Helper):
     @patch('pybossa.view.account.signer')
     def test_confirm_account_newsletter(self, fake_signer, url_for, newsletter):
         """Test WEB confirm email shows newsletter or home."""
-        newsletter.app = True
-        newsletter.is_user_subscribed.return_value = False
+        newsletter.ask_user_to_subscribe.return_value = True
         self.register()
         user = db.session.query(User).get(1)
         user.valid_email = False
@@ -395,8 +394,7 @@ class TestWeb(web.Helper):
 
         url_for.assert_called_with('account.newsletter_subscribe', next=None)
 
-        newsletter.app = False
-        newsletter.is_user_subscribed.return_value = True
+        newsletter.ask_user_to_subscribe.return_value = False
         self.app.get('/account/register/confirmation?key=valid-key')
         url_for.assert_called_with('home.home')
 
