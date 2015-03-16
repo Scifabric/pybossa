@@ -430,19 +430,19 @@ def update_profile(name):
         if request.form.get('btn') == 'Upload':
             avatar_form = AvatarUploadForm()
             if avatar_form.validate_on_submit():
-                file = request.files['avatar']
+                _file = request.files['avatar']
                 coordinates = (avatar_form.x1.data, avatar_form.y1.data,
                                avatar_form.x2.data, avatar_form.y2.data)
                 prefix = time.time()
-                file.filename = "%s_avatar.png" % prefix
+                _file.filename = "%s_avatar.png" % prefix
                 container = "user_%s" % user.id
-                uploader.upload_file(file,
+                uploader.upload_file(_file,
                                      container=container,
                                      coordinates=coordinates)
                 # Delete previous avatar from storage
                 if user.info.get('avatar'):
                     uploader.delete_file(user.info['avatar'], container)
-                user.info = {'avatar': file.filename,
+                user.info = {'avatar': _file.filename,
                                      'container': container}
                 user_repo.update(user)
                 cached_users.delete_user_summary(user.name)

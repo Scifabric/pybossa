@@ -417,19 +417,19 @@ def update(short_name):
         else:
             if upload_form.validate_on_submit():
                 app = project_repo.get(app.id)
-                file = request.files['avatar']
+                _file = request.files['avatar']
                 coordinates = (upload_form.x1.data, upload_form.y1.data,
                                upload_form.x2.data, upload_form.y2.data)
                 prefix = time.time()
-                file.filename = "app_%s_thumbnail_%i.png" % (app.id, prefix)
+                _file.filename = "app_%s_thumbnail_%i.png" % (app.id, prefix)
                 container = "user_%s" % current_user.id
-                uploader.upload_file(file,
+                uploader.upload_file(_file,
                                      container=container,
                                      coordinates=coordinates)
                 # Delete previous avatar from storage
                 if app.info.get('thumbnail'):
                     uploader.delete_file(app.info['thumbnail'], container)
-                app.info['thumbnail'] = file.filename
+                app.info['thumbnail'] = _file.filename
                 app.info['container'] = container
                 project_repo.save(app)
                 cached_apps.delete_app(app.short_name)
