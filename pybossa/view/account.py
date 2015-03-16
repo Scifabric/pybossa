@@ -497,12 +497,6 @@ def update_profile(name):
 
         # Update user password
         elif request.form.get('btn') == 'Password':
-            # Update the data because passing it in the constructor does not work
-            update_form.name.data = user.name
-            update_form.fullname.data = user.fullname
-            update_form.email_addr.data = user.email_addr
-            update_form.ckan_api.data = user.ckan_api
-            external_form = update_form
             if password_form.validate_on_submit():
                 user = user_repo.get(user.id)
                 if user.check_password(password_form.current_password.data):
@@ -519,12 +513,12 @@ def update_profile(name):
                 flash(gettext('Please correct the errors'), 'error')
         # Update user external services
         elif request.form.get('btn') == 'External':
-            del external_form.locale
-            del external_form.email_addr
-            del external_form.fullname
-            del external_form.name
-            if external_form.validate():
-                user.ckan_api = external_form.ckan_api.data or None
+            del update_form.locale
+            del update_form.email_addr
+            del update_form.fullname
+            del update_form.name
+            if update_form.validate():
+                user.ckan_api = update_form.ckan_api.data or None
                 user_repo.update(user)
                 cached_users.delete_user_summary(user.name)
                 flash(gettext('Your profile has been updated!'), 'success')
