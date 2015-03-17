@@ -428,7 +428,6 @@ def update_profile(name):
         acc_conf_dis = current_app.config.get('ACCOUNT_CONFIRMATION_DISABLED')
         # Update user avatar
         if request.form.get('btn') == 'Upload':
-            avatar_form = AvatarUploadForm()
             if avatar_form.validate_on_submit():
                 _file = request.files['avatar']
                 coordinates = (avatar_form.x1.data, avatar_form.y1.data,
@@ -454,8 +453,6 @@ def update_profile(name):
                       "error")
         # Update user profile
         elif request.form.get('btn') == 'Profile':
-            update_form = UpdateProfileForm()
-            update_form.set_locales(current_app.config['LOCALES'])
             if update_form.validate():
                 user.id = update_form.id.data
                 user.fullname = update_form.fullname.data
