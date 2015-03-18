@@ -52,14 +52,6 @@ class TestFacebook(Test):
         assert user.fullname == self.user_data['name'], user
         assert user.facebook_user_id == self.user_data['id'], user
 
-        # Finally with a user that already is in the system
-        self.user_data = dict(id=10, username=self.name,
-                         email=self.email_addr, name=self.fullname)
-        token = 'tA'
-        user = manage_user(token, self.user_data, None)
-        err_msg = "It should return the same user"
-        assert user.facebook_user_id == 10, err_msg
-
     def test_manage_user_without_email(self):
         """Test FACEBOOK manage_user without e-mail works."""
         # First with a new user
@@ -77,14 +69,6 @@ class TestFacebook(Test):
         assert user.name == self.name, user
         assert user.fullname == self.user_data['name'], user
         assert user.facebook_user_id == self.user_data['id'], user
-
-        # Finally with a user that already is in the system
-        self.user_data = dict(id=10, username=self.name,
-                         email=self.email_addr, name=self.fullname)
-        token = 'tA'
-        user = manage_user(token, self.user_data, None)
-        err_msg = "It should return the same user"
-        assert user.facebook_user_id == 10, err_msg
 
     @patch('pybossa.view.facebook.newsletter', autospec=True)
     def test_manage_user_with_email_newsletter(self, newsletter):
