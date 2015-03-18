@@ -112,17 +112,13 @@ def manage_user_login(user, user_data, next_url):
         else:
             return redirect(url_for('account.signin'))
     else:
-        first_login = False
         login_user(user, remember=True)
         flash("Welcome back %s" % user.fullname, 'success')
         request_email = False
         if (user.email_addr == "None"):
             request_email = True
         if request_email:
-            if first_login:  # pragma: no cover
-                flash("This is your first login, please add a valid e-mail")
-            else:
-                flash("Please update your e-mail address in your profile page")
+            flash("Please update your e-mail address in your profile page")
             return redirect(url_for('account.update_profile', name=user.name))
         if (user.email_addr != "None" and user.newsletter_prompted is False
                 and newsletter.app):
