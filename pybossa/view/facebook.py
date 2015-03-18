@@ -74,7 +74,8 @@ def manage_user(access_token, user_data, next_url):
     if user is None:
         facebook_token = dict(oauth_token=access_token)
         info = dict(facebook_token=facebook_token)
-        user_exists = user_repo.get_by_name(user_data['username']) is not None
+        name = user_data['name'].encode('ascii', 'ignore').lower().replace(' ', '')
+        user_exists = user_repo.get_by_name(name) is not None
         # NOTE: Sometimes users at Facebook validate their accounts without
         # registering an e-mail (see this http://stackoverflow.com/a/17809808)
         email_exists = (user_data.get('email') is not None and
@@ -84,7 +85,7 @@ def manage_user(access_token, user_data, next_url):
             if not user_data.get('email'):
                 user_data['email'] = "None"
             user = User(fullname=user_data['name'],
-                   name=user_data['username'],
+                   name=name,
                    email_addr=user_data['email'],
                    facebook_user_id=user_data['id'],
                    info=info)
