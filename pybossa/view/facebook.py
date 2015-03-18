@@ -22,7 +22,7 @@ from flask.ext.login import login_user, current_user
 from pybossa.core import facebook, user_repo, newsletter
 from pybossa.model.user import User
 #from pybossa.util import Facebook, get_user_signup_method
-from pybossa.util import get_user_signup_method
+from pybossa.util import get_user_signup_method, username_from_full_name
 # Required to access the config parameters outside a context as we are using
 # Flask 0.8
 # See http://goo.gl/tbhgF for more info
@@ -74,7 +74,7 @@ def manage_user(access_token, user_data, next_url):
     if user is None:
         facebook_token = dict(oauth_token=access_token)
         info = dict(facebook_token=facebook_token)
-        name = user_data['name'].encode('ascii', 'ignore').lower().replace(' ', '')
+        name = username_from_full_name(user_data['name'])
         user_exists = user_repo.get_by_name(name) is not None
         # NOTE: Sometimes users at Facebook validate their accounts without
         # registering an e-mail (see this http://stackoverflow.com/a/17809808)

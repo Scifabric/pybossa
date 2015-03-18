@@ -21,7 +21,7 @@ from flask.ext.login import login_user, current_user
 
 from pybossa.core import google, user_repo, newsletter
 from pybossa.model.user import User
-from pybossa.util import get_user_signup_method
+from pybossa.util import get_user_signup_method, username_from_full_name
 # Required to access the config parameters outside a context as we are using
 # Flask 0.8
 # See http://goo.gl/tbhgF for more info
@@ -92,7 +92,7 @@ def manage_user(access_token, user_data, next_url):
     if user is None:
         google_token = dict(oauth_token=access_token)
         info = dict(google_token=google_token)
-        name = user_data['name'].encode('ascii', 'ignore').lower().replace(" ", "")
+        name = username_from_full_name(user_data['name'])
         user = user_repo.get_by_name(name)
 
         email = user_repo.get_by(email_addr=user_data['email'])
@@ -112,7 +112,7 @@ def manage_user(access_token, user_data, next_url):
     else:
         # Update the name to fit with new paradigm to avoid UTF8 problems
         if type(user.name) == unicode or ' ' in user.name:
-            user.name = user.name.encode('ascii', 'ignore').lower().replace(" ", "")
+            user.name = username_from_full_name(user.name)
             user_repo.update(user)
         return user
 
@@ -123,7 +123,7 @@ def manage_user_login(user, user_data, next_url):
         # Give a hint for the user
         user = user_repo.get_by(email_addr=user_data['email'])
         if user is None:
-            name = user_data['name'].encode('ascii', 'ignore').lower().replace(' ', '')
+            name = username_from_full_name(user_data['name'])
             user = user_repo.get_by_name(name)
 
         msg, method = get_user_signup_method(user)

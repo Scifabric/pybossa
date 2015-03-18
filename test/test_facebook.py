@@ -19,6 +19,7 @@ from default import Test
 from pybossa.view.facebook import manage_user, manage_user_login
 from mock import patch
 from factories import UserFactory
+from pybossa.util import username_from_full_name
 
 
 class TestFacebook(Test):
@@ -32,8 +33,7 @@ class TestFacebook(Test):
             "last_name": "Perez Sanchez",
             "name": "Mauricio Perez Sanchez"
         }
-        self.name = (self.user_data['name'].encode('ascii', 'ignore')
-                     .lower().replace(' ', ''))
+        self.name = username_from_full_name(self.user_data['name'])
 
     def test_manage_user_with_email(self):
         """Test FACEBOOK manage_user works."""
