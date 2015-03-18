@@ -98,6 +98,7 @@ def manage_user(access_token, user_data, next_url):
     else:
         return user
 
+
 def manage_user_login(user, user_data, next_url):
     """Manage user login."""
     if user is None:
