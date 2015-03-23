@@ -25,16 +25,12 @@ from pybossa.importers import (_BulkTaskDropboxImport, _BulkTaskFlickrImport,
     _BulkTaskCSVImport, _BulkTaskGDImport, _BulkTaskEpiCollectPlusImport,
     BulkImportException, Importer)
 
-from default import Test
+from default import Test, FakeResponse
 from factories import AppFactory, TaskFactory
 from pybossa.repositories import TaskRepository
 from pybossa.core import db
 task_repo = TaskRepository(db)
 
-
-class FakeResponse(object):
-    def __init__(self, **kwargs):
-        self.__dict__.update(**kwargs)
 
 
 @patch.object(Importer, '_create_importer_for')

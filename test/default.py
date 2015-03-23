@@ -398,3 +398,8 @@ def assert_not_raises(exception, call, *args, **kwargs):
         assert True
     except exception as ex:
         assert False, str(ex)
+
+
+class FakeResponse(object):
+    def __init__(self, **kwargs):
+        self.__dict__.update(**kwargs)

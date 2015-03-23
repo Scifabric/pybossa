@@ -21,7 +21,7 @@ import os
 import shutil
 import zipfile
 from StringIO import StringIO
-from default import db, Fixtures, with_context
+from default import db, Fixtures, with_context, FakeResponse
 from helper import web
 from mock import patch, Mock
 from flask import Response, redirect
@@ -45,10 +45,6 @@ from factories import AppFactory, CategoryFactory, TaskFactory, TaskRunFactory
 from unidecode import unidecode
 from werkzeug.utils import secure_filename
 
-
-class FakeResponse(object):
-    def __init__(self, **kwargs):
-        self.__dict__.update(**kwargs)
 
 
 class TestWeb(web.Helper):
