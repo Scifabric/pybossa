@@ -46,7 +46,8 @@ from unidecode import unidecode
 from werkzeug.utils import secure_filename
 
 
-FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
+FakeRequest = namedtuple('FakeRequest',
+                        ['text', 'status_code', 'headers', 'encoding'])
 
 
 class TestWeb(web.Helper):
@@ -706,7 +707,7 @@ class TestWeb(web.Helper):
         """Test WEB project URL/<short_name> works"""
         # Sign in and create a project
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                   {'content-type': 'application/json'})
+                                   {'content-type': 'application/json'}, 'utf-8')
         Mock.return_value = html_request
         self.register()
         res = self.new_application()
@@ -856,7 +857,7 @@ class TestWeb(web.Helper):
     def test_12_update_application(self, Mock, mock, mock_webhook):
         """Test WEB update project works"""
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                   {'content-type': 'application/json'})
+                                   {'content-type': 'application/json'}, 'utf-8')
         Mock.return_value = html_request
         mock_webhook.return_value = html_request
 
@@ -944,7 +945,7 @@ class TestWeb(web.Helper):
     def test_webhook_to_project(self, mock):
         """Test WEB update sets a webhook for the project"""
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                   {'content-type': 'application/json'})
+                                   {'content-type': 'application/json'}, 'utf-8')
         mock.return_value = html_request
 
         self.register()
@@ -965,7 +966,7 @@ class TestWeb(web.Helper):
     def test_webhook_to_project_fails(self, mock):
         """Test WEB update does not set a webhook for the project"""
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 404,
-                                   {'content-type': 'application/json'})
+                                   {'content-type': 'application/json'}, 'utf-8')
         mock.return_value = html_request
 
         self.register()
@@ -1005,7 +1006,7 @@ class TestWeb(web.Helper):
     def test_add_password_to_project(self, mock_webhook):
         """Test WEB update sets a password for the project"""
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                   {'content-type': 'application/json'})
+                                   {'content-type': 'application/json'}, 'utf-8')
         mock_webhook.return_value = html_request
         self.register()
         owner = db.session.query(User).first()
@@ -1022,7 +1023,7 @@ class TestWeb(web.Helper):
     def test_remove_password_from_project(self, mock_webhook):
         """Test WEB update removes the password of the project"""
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                   {'content-type': 'application/json'})
+                                   {'content-type': 'application/json'}, 'utf-8')
         mock_webhook.return_value = html_request
         self.register()
         owner = db.session.query(User).first()
@@ -1062,7 +1063,7 @@ class TestWeb(web.Helper):
     def test_13_hidden_applications(self, Mock, mock):
         """Test WEB hidden project works"""
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                   {'content-type': 'application/json'})
+                                   {'content-type': 'application/json'}, 'utf-8')
         Mock.return_value = html_request
         self.register()
         self.new_application()
@@ -1082,7 +1083,7 @@ class TestWeb(web.Helper):
     def test_13a_hidden_applications_owner(self, Mock, mock):
         """Test WEB hidden projects are shown to their owners"""
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                   {'content-type': 'application/json'})
+                                   {'content-type': 'application/json'}, 'utf-8')
         Mock.return_value = html_request
 
         self.register()
@@ -1586,7 +1587,7 @@ class TestWeb(web.Helper):
     def test_30_app_id_anonymous_user(self, Mock, mock):
         """Test WEB project page does not show the ID to anonymous users"""
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                   {'content-type': 'application/json'})
+                                   {'content-type': 'application/json'}, 'utf-8')
         Mock.return_value = html_request
 
         self.register()
@@ -2100,7 +2101,7 @@ class TestWeb(web.Helper):
     def test_48_update_app_info(self, Mock, mock, mock_webhook):
         """Test WEB project update/edit works keeping previous info values"""
         html_request = FakeRequest(json.dumps(self.pkg_json_not_found), 200,
-                                   {'content-type': 'application/json'})
+                                   {'content-type': 'application/json'}, 'utf-8')
         Mock.return_value = html_request
 
         mock_webhook.return_value = html_request
@@ -2843,7 +2844,7 @@ class TestWeb(web.Helper):
     def test_import_tasks_redirects_on_success(self, request, redirect):
         """Test WEB when importing tasks succeeds, user is redirected to tasks main page"""
         csv_file = FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
-                                 {'content-type': 'text/plain'})
+                                 {'content-type': 'text/plain'}, 'utf-8')
         request.return_value = csv_file
         self.register()
         self.new_application()
@@ -2899,7 +2900,7 @@ class TestWeb(web.Helper):
     def test_bulk_csv_import_works(self, Mock, mock):
         """Test WEB bulk import works"""
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
-                                 {'content-type': 'text/plain'})
+                                 {'content-type': 'text/plain'}, 'utf-8')
         Mock.return_value = empty_file
         self.register()
         self.new_application()
@@ -2915,7 +2916,7 @@ class TestWeb(web.Helper):
 
         # Check that only new items are imported
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
-                                 {'content-type': 'text/plain'})
+                                 {'content-type': 'text/plain'}, 'utf-8')
         Mock.return_value = empty_file
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import' % (app.short_name)
@@ -2935,7 +2936,7 @@ class TestWeb(web.Helper):
     def test_bulk_gdocs_import_works(self, Mock, mock):
         """Test WEB bulk GDocs import works."""
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
-                                 {'content-type': 'text/plain'})
+                                 {'content-type': 'text/plain'}, 'utf-8')
         Mock.return_value = empty_file
         self.register()
         self.new_application()
@@ -2951,7 +2952,7 @@ class TestWeb(web.Helper):
 
         # Check that only new items are imported
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
-                                 {'content-type': 'text/plain'})
+                                 {'content-type': 'text/plain'}, 'utf-8')
         Mock.return_value = empty_file
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import' % (app.short_name)
@@ -2968,7 +2969,7 @@ class TestWeb(web.Helper):
 
         # Check that only new items are imported
         empty_file = FakeRequest('Foo,Bar,priority_0\n1,2,3\n4,5,6', 200,
-                                 {'content-type': 'text/plain'})
+                                 {'content-type': 'text/plain'}, 'utf-8')
         Mock.return_value = empty_file
         app = db.session.query(App).first()
         url = '/app/%s/tasks/import' % (app.short_name)
@@ -2990,7 +2991,7 @@ class TestWeb(web.Helper):
         """Test WEB bulk Epicollect import works"""
         data = [dict(DeviceID=23)]
         html_request = FakeRequest(json.dumps(data), 200,
-                                   {'content-type': 'application/json'})
+                                   {'content-type': 'application/json'}, 'utf-8')
         Mock.return_value = html_request
         self.register()
         self.new_application()
@@ -3010,7 +3011,7 @@ class TestWeb(web.Helper):
 
         data = [dict(DeviceID=23), dict(DeviceID=24)]
         html_request = FakeRequest(json.dumps(data), 200,
-                                   {'content-type': 'application/json'})
+                                   {'content-type': 'application/json'}, 'utf-8')
         Mock.return_value = html_request
         res = self.app.post(('/app/%s/tasks/import' % (app.short_name)),
                             data={'epicollect_project': 'fakeproject',
@@ -3047,7 +3048,7 @@ class TestWeb(web.Helper):
                 "title": "Science Hack Day Balloon Mapping Workshop" },
             "stat": "ok" }
         html_request = FakeRequest(json.dumps(data), 200,
-                                   {'content-type': 'application/json'})
+                                   {'content-type': 'application/json'}, 'utf-8')
         request.return_value = html_request
         self.register()
         self.new_application()
