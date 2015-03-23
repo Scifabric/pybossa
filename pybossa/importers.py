@@ -86,7 +86,9 @@ class _BulkTaskCSVImport(_BulkTaskImport):
             msg = gettext("Oops! That file doesn't look like the right file.")
             raise BulkImportException(msg, 'error')
 
-        csvcontent = StringIO(r.text)
+        encoding = r.encoding or 'utf-8'
+        content = r.text.encode(encoding).decode('utf-8')
+        csvcontent = StringIO(content)
         csvreader = unicode_csv_reader(csvcontent)
         return self._import_csv_tasks(csvreader)
 
