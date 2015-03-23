@@ -32,6 +32,10 @@ from pybossa.core import db
 task_repo = TaskRepository(db)
 
 
+class FakeResponse(object):
+    def __init__(self, **kwargs):
+        self.__dict__.update(**kwargs)
+
 
 @patch.object(Importer, '_create_importer_for')
 class TestImporterPublicMethods(Test):
@@ -461,16 +465,14 @@ class Test_BulkTaskFlickrImport(object):
 @patch('pybossa.importers.requests.get')
 class Test_BulkTaskCSVImport(object):
 
-    FakeRequest = namedtuple('FakeRequest',
-                            ['text', 'status_code', 'headers', 'encoding'])
     url = 'http://myfakecsvurl.com'
     importer = _BulkTaskCSVImport()
 
 
     def test_count_tasks_returns_0_if_no_rows_other_than_header(self, request):
-        empty_file = self.FakeRequest('CSV,with,no,content\n', 200,
-                                      {'content-type': 'text/plain'},
-                                      'utf-8')
+        empty_file = FakeResponse(text='CSV,with,no,content\n', status_code=200,
+                                 headers={'content-type': 'text/plain'},
+                                 encoding='utf-8')
         request.return_value = empty_file
 
         number_of_tasks = self.importer.count_tasks(csv_url=self.url)
@@ -478,9 +480,9 @@ class Test_BulkTaskCSVImport(object):
         assert number_of_tasks is 0, number_of_tasks
 
     def test_count_tasks_returns_1_for_CSV_with_one_valid_row(self, request):
-        empty_file = self.FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
-                                      {'content-type': 'text/plain'},
-                                      'utf-8')
+        empty_file = FakeResponse(text='Foo,Bar,Baz\n1,2,3', status_code=200,
+                                 headers={'content-type': 'text/plain'},
+                                 encoding='utf-8')
         request.return_value = empty_file
 
         number_of_tasks = self.importer.count_tasks(csv_url=self.url)
@@ -488,9 +490,9 @@ class Test_BulkTaskCSVImport(object):
         assert number_of_tasks is 1, number_of_tasks
 
     def test_count_tasks_raises_exception_if_file_forbidden(self, request):
-        forbidden_request = self.FakeRequest('Forbidden', 403,
-                                             {'content-type': 'text/csv'},
-                                             'utf-8')
+        forbidden_request = FakeResponse(text='Forbidden', status_code=403,
+                                        headers={'content-type': 'text/csv'},
+                                        encoding='utf-8')
         request.return_value = forbidden_request
         msg = "Oops! It looks like you don't have permission to access that file"
 
@@ -501,9 +503,9 @@ class Test_BulkTaskCSVImport(object):
             assert e[0] == msg, e
 
     def test_count_tasks_raises_exception_if_not_CSV_file(self, request):
-        html_request = self.FakeRequest('Not a CSV', 200,
-                                        {'content-type': 'text/html'},
-                                        'utf-8')
+        html_request = FakeResponse(text='Not a CSV', status_code=200,
+                                   headers={'content-type': 'text/html'},
+                                   encoding='utf-8')
         request.return_value = html_request
         msg = "Oops! That file doesn't look like the right file."
 
@@ -514,9 +516,9 @@ class Test_BulkTaskCSVImport(object):
             assert e[0] == msg, e
 
     def test_count_tasks_raises_exception_if_dup_header(self, request):
-        empty_file = self.FakeRequest('Foo,Bar,Foo\n1,2,3', 200,
-                                      {'content-type': 'text/plain'},
-                                      'utf-8')
+        empty_file = FakeResponse(text='Foo,Bar,Foo\n1,2,3', status_code=200,
+                                 headers={'content-type': 'text/plain'},
+                                 encoding='utf-8')
         request.return_value = empty_file
         msg = "The file you uploaded has two headers with the same name."
 
@@ -527,9 +529,9 @@ class Test_BulkTaskCSVImport(object):
             assert e[0] == msg, e
 
     def test_tasks_raises_exception_if_file_forbidden(self, request):
-        forbidden_request = self.FakeRequest('Forbidden', 403,
-                                             {'content-type': 'text/csv'},
-                                             'utf-8')
+        forbidden_request = FakeResponse(text='Forbidden', status_code=403,
+                                        headers={'content-type': 'text/csv'},
+                                        encoding='utf-8')
         request.return_value = forbidden_request
         msg = "Oops! It looks like you don't have permission to access that file"
 
@@ -540,9 +542,9 @@ class Test_BulkTaskCSVImport(object):
             assert e[0] == msg, e
 
     def test_tasks_raises_exception_if_not_CSV_file(self, request):
-        html_request = self.FakeRequest('Not a CSV', 200,
-                                        {'content-type': 'text/html'},
-                                        'utf-8')
+        html_request = FakeResponse(text='Not a CSV', status_code=200,
+                                   headers={'content-type': 'text/html'},
+                                   encoding='utf-8')
         request.return_value = html_request
         msg = "Oops! That file doesn't look like the right file."
 
@@ -553,9 +555,9 @@ class Test_BulkTaskCSVImport(object):
             assert e[0] == msg, e
 
     def test_tasks_raises_exception_if_dup_header(self, request):
-        empty_file = self.FakeRequest('Foo,Bar,Foo\n1,2,3', 200,
-                                      {'content-type': 'text/plain'},
-                                      'utf-8')
+        empty_file = FakeResponse(text='Foo,Bar,Foo\n1,2,3', status_code=200,
+                                 headers={'content-type': 'text/plain'},
+                                 encoding='utf-8')
         request.return_value = empty_file
         msg = "The file you uploaded has two headers with the same name."
 
@@ -569,9 +571,9 @@ class Test_BulkTaskCSVImport(object):
             assert raised, "Exception not raised"
 
     def test_tasks_return_tasks_with_only_info_fields(self, request):
-        empty_file = self.FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
-                                      {'content-type': 'text/plain'},
-                                      'utf-8')
+        empty_file = FakeResponse(text='Foo,Bar,Baz\n1,2,3', status_code=200,
+                                 headers={'content-type': 'text/plain'},
+                                 encoding='utf-8')
         request.return_value = empty_file
 
         tasks = self.importer.tasks(csv_url=self.url)
@@ -580,9 +582,10 @@ class Test_BulkTaskCSVImport(object):
         assert task == {"info": {u'Bar': u'2', u'Foo': u'1', u'Baz': u'3'}}, task
 
     def test_tasks_return_tasks_with_non_info_fields_too(self, request):
-        empty_file = self.FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
-                                      {'content-type': 'text/plain'},
-                                      'utf-8')
+        empty_file = FakeResponse(text='Foo,Bar,priority_0\n1,2,3',
+                                 status_code=200,
+                                 headers={'content-type': 'text/plain'},
+                                 encoding='utf-8')
         request.return_value = empty_file
 
         tasks = self.importer.tasks(csv_url=self.url)
@@ -592,32 +595,28 @@ class Test_BulkTaskCSVImport(object):
                         u'priority_0': u'3'}, task
 
     def test_tasks_works_with_encodings_other_than_utf8(self, request):
-        empty_file = self.FakeRequest(u'Foo\nM\xc3\xbcnchen', 200,
-                                      {'content-type': 'text/plain'},
-                                      'ISO-8859-1')
+        empty_file = FakeResponse(text=u'Foo\nM\xc3\xbcnchen', status_code=200,
+                                 headers={'content-type': 'text/plain'},
+                                 encoding='ISO-8859-1')
         request.return_value = empty_file
 
         tasks = self.importer.tasks(csv_url=self.url)
         task = tasks.next()
 
-        assert unicode(task['info']['Foo']) == u"München", unicode(task['info']['Foo'])
-        assert task == {'info': {u'Foo': u'M\xfcnchen'}}, task
+        assert empty_file.encoding == 'utf-8'
 
 
 
 @patch('pybossa.importers.requests.get')
 class Test_BulkTaskGDImport(object):
 
-    FakeRequest = namedtuple('FakeRequest',
-                            ['text', 'status_code', 'headers', 'encoding'])
     url = 'http://drive.google.com'
     importer = _BulkTaskGDImport()
 
-
     def test_count_tasks_returns_0_if_no_rows_other_than_header(self, request):
-        empty_file = self.FakeRequest('CSV,with,no,content\n', 200,
-                                      {'content-type': 'text/plain'},
-                                      'utf-8')
+        empty_file = FakeResponse(text='CSV,with,no,content\n', status_code=200,
+                                 headers={'content-type': 'text/plain'},
+                                 encoding='utf-8')
         request.return_value = empty_file
 
         number_of_tasks = self.importer.count_tasks(googledocs_url=self.url)
@@ -625,19 +624,19 @@ class Test_BulkTaskGDImport(object):
         assert number_of_tasks is 0, number_of_tasks
 
     def test_count_tasks_returns_1_for_CSV_with_one_valid_row(self, request):
-        empty_file = self.FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
-                                      {'content-type': 'text/plain'},
-                                      'utf-8')
-        request.return_value = empty_file
+        valid_file = FakeResponse(text='Foo,Bar,Baz\n1,2,3', status_code=200,
+                                 headers={'content-type': 'text/plain'},
+                                 encoding='utf-8')
+        request.return_value = valid_file
 
         number_of_tasks = self.importer.count_tasks(googledocs_url=self.url)
 
         assert number_of_tasks is 1, number_of_tasks
 
     def test_count_tasks_raises_exception_if_file_forbidden(self, request):
-        forbidden_request = self.FakeRequest('Forbidden', 403,
-                                             {'content-type': 'text/plain'},
-                                             'utf-8')
+        forbidden_request = FakeResponse(text='Forbidden', status_code=403,
+                                        headers={'content-type': 'text/plain'},
+                                        encoding='utf-8')
         request.return_value = forbidden_request
         msg = "Oops! It looks like you don't have permission to access that file"
 
@@ -648,9 +647,9 @@ class Test_BulkTaskGDImport(object):
             assert e[0] == msg, e
 
     def test_count_tasks_raises_exception_if_not_CSV_file(self, request):
-        html_request = self.FakeRequest('Not a CSV', 200,
-                                        {'content-type': 'text/html'},
-                                        'utf-8')
+        html_request = FakeResponse(text='Not a CSV', status_code=200,
+                                   headers={'content-type': 'text/html'},
+                                   encoding='utf-8')
         request.return_value = html_request
         msg = "Oops! That file doesn't look like the right file."
 
@@ -661,9 +660,9 @@ class Test_BulkTaskGDImport(object):
             assert e[0] == msg, e
 
     def test_count_tasks_raises_exception_if_dup_header(self, request):
-        empty_file = self.FakeRequest('Foo,Bar,Foo\n1,2,3', 200,
-                                      {'content-type': 'text/plain'},
-                                      'utf-8')
+        empty_file = FakeResponse(text='Foo,Bar,Foo\n1,2,3', status_code=200,
+                                 headers={'content-type': 'text/plain'},
+                                 encoding='utf-8')
         request.return_value = empty_file
         msg = "The file you uploaded has two headers with the same name."
 
@@ -674,9 +673,9 @@ class Test_BulkTaskGDImport(object):
             assert e[0] == msg, e
 
     def test_tasks_raises_exception_if_file_forbidden(self, request):
-        forbidden_request = self.FakeRequest('Forbidden', 403,
-                                             {'content-type': 'text/plain'},
-                                             'utf-8')
+        forbidden_request = FakeResponse(text='Forbidden', status_code=403,
+                                        headers={'content-type': 'text/plain'},
+                                        encoding='utf-8')
         request.return_value = forbidden_request
         msg = "Oops! It looks like you don't have permission to access that file"
 
@@ -687,9 +686,9 @@ class Test_BulkTaskGDImport(object):
             assert e[0] == msg, e
 
     def test_tasks_raises_exception_if_not_CSV_file(self, request):
-        html_request = self.FakeRequest('Not a CSV', 200,
-                                        {'content-type': 'text/html'},
-                                        'utf-8')
+        html_request = FakeResponse(text='Not a CSV', status_code=200,
+                                   headers={'content-type': 'text/html'},
+                                   encoding='utf-8')
         request.return_value = html_request
         msg = "Oops! That file doesn't look like the right file."
 
@@ -700,9 +699,9 @@ class Test_BulkTaskGDImport(object):
             assert e[0] == msg, e
 
     def test_tasks_raises_exception_if_dup_header(self, request):
-        empty_file = self.FakeRequest('Foo,Bar,Foo\n1,2,3', 200,
-                                      {'content-type': 'text/plain'},
-                                      'utf-8')
+        empty_file = FakeResponse(text='Foo,Bar,Foo\n1,2,3', status_code=200,
+                                 headers={'content-type': 'text/plain'},
+                                 encoding='utf-8')
         request.return_value = empty_file
         msg = "The file you uploaded has two headers with the same name."
 
@@ -716,9 +715,9 @@ class Test_BulkTaskGDImport(object):
             assert raised, "Exception not raised"
 
     def test_tasks_return_tasks_with_only_info_fields(self, request):
-        empty_file = self.FakeRequest('Foo,Bar,Baz\n1,2,3', 200,
-                                      {'content-type': 'text/plain'},
-                                      'utf-8')
+        empty_file = FakeResponse(text='Foo,Bar,Baz\n1,2,3', status_code=200,
+                                 headers={'content-type': 'text/plain'},
+                                 encoding='utf-8')
         request.return_value = empty_file
 
         tasks = self.importer.tasks(googledocs_url=self.url)
@@ -727,9 +726,10 @@ class Test_BulkTaskGDImport(object):
         assert task == {"info": {u'Bar': u'2', u'Foo': u'1', u'Baz': u'3'}}, task
 
     def test_tasks_return_tasks_with_non_info_fields_too(self, request):
-        empty_file = self.FakeRequest('Foo,Bar,priority_0\n1,2,3', 200,
-                                      {'content-type': 'text/plain'},
-                                      'utf-8')
+        empty_file = FakeResponse(text='Foo,Bar,priority_0\n1,2,3',
+                                 status_code=200,
+                                 headers={'content-type': 'text/plain'},
+                                 encoding='utf-8')
         request.return_value = empty_file
 
         tasks = self.importer.tasks(googledocs_url=self.url)
@@ -739,31 +739,30 @@ class Test_BulkTaskGDImport(object):
                         u'priority_0': u'3'}, task
 
     def test_tasks_works_with_encodings_other_than_utf8(self, request):
-        empty_file = self.FakeRequest(u'Foo\nM\xc3\xbcnchen', 200,
-                                      {'content-type': 'text/plain'},
-                                      'ISO-8859-1')
+        empty_file = FakeResponse(text=u'Foo\nM\xc3\xbcnchen', status_code=200,
+                                 headers={'content-type': 'text/plain'},
+                                 encoding='ISO-8859-1')
         request.return_value = empty_file
 
         tasks = self.importer.tasks(googledocs_url=self.url)
         task = tasks.next()
 
-        assert unicode(task['info']['Foo']) == u"München", unicode(task['info']['Foo'])
-        assert task == {'info': {u'Foo': u'M\xfcnchen'}}, task
+        assert empty_file.encoding == 'utf-8'
 
 
 
 @patch('pybossa.importers.requests.get')
 class Test_BulkTaskEpiCollectPlusImport(object):
 
-    FakeRequest = namedtuple('FakeRequest', ['text', 'status_code', 'headers'])
     epicollect = {'epicollect_project': 'fakeproject',
                   'epicollect_form': 'fakeform'}
     importer = _BulkTaskEpiCollectPlusImport()
 
     def test_count_tasks_raises_exception_if_file_forbidden(self, request):
-        unauthorized_request = self.FakeRequest('Forbidden', 403,
-                                           {'content-type': 'application/json'})
-        request.return_value = unauthorized_request
+        forbidden_request = FakeResponse(text='Forbidden', status_code=403,
+                                        headers={'content-type': 'text/json'},
+                                        encoding='utf-8')
+        request.return_value = forbidden_request
         msg = "Oops! It looks like you don't have permission to access the " \
               "EpiCollect Plus project"
 
@@ -774,9 +773,10 @@ class Test_BulkTaskEpiCollectPlusImport(object):
             assert e[0] == msg, e
 
     def test_tasks_raises_exception_if_file_forbidden(self, request):
-        unauthorized_request = self.FakeRequest('Forbidden', 403,
-                                           {'content-type': 'application/json'})
-        request.return_value = unauthorized_request
+        forbidden_request = FakeResponse(text='Forbidden', status_code=403,
+                                        headers={'content-type': 'text/json'},
+                                        encoding='utf-8')
+        request.return_value = forbidden_request
         msg = "Oops! It looks like you don't have permission to access the " \
               "EpiCollect Plus project"
 
@@ -787,8 +787,10 @@ class Test_BulkTaskEpiCollectPlusImport(object):
             assert e[0] == msg, e
 
     def test_count_tasks_raises_exception_if_not_json(self, request):
-        html_request = self.FakeRequest('Not an application/json', 200,
-                                        {'content-type': 'text/html'})
+        html_request = FakeResponse(text='Not an application/json',
+                                   status_code=200,
+                                   headers={'content-type': 'text/html'},
+                                   encoding='utf-8')
         request.return_value = html_request
         msg = "Oops! That project and form do not look like the right one."
 
@@ -799,8 +801,10 @@ class Test_BulkTaskEpiCollectPlusImport(object):
             assert e[0] == msg, e
 
     def test_tasks_raises_exception_if_not_json(self, request):
-        html_request = self.FakeRequest('Not an application/json', 200,
-                                        {'content-type': 'text/html'})
+        html_request = FakeResponse(text='Not an application/json',
+                                   status_code=200,
+                                   headers={'content-type': 'text/html'},
+                                   encoding='utf-8')
         request.return_value = html_request
         msg = "Oops! That project and form do not look like the right one."
 
@@ -812,9 +816,10 @@ class Test_BulkTaskEpiCollectPlusImport(object):
 
     def test_count_tasks_returns_number_of_tasks_in_project(self, request):
         data = [dict(DeviceID=23), dict(DeviceID=24)]
-        html_request = self.FakeRequest(json.dumps(data), 200,
-                                       {'content-type': 'application/json'})
-        request.return_value = html_request
+        response = FakeResponse(text=json.dumps(data), status_code=200,
+                               headers={'content-type': 'application/json'},
+                               encoding='utf-8')
+        request.return_value = response
 
         number_of_tasks = self.importer.count_tasks(**self.epicollect)
 
@@ -822,9 +827,10 @@ class Test_BulkTaskEpiCollectPlusImport(object):
 
     def test_tasks_returns_tasks_in_project(self, request):
         data = [dict(DeviceID=23), dict(DeviceID=24)]
-        html_request = self.FakeRequest(json.dumps(data), 200,
-                                        {'content-type': 'application/json'})
-        request.return_value = html_request
+        response = FakeResponse(text=json.dumps(data), status_code=200,
+                               headers={'content-type': 'application/json'},
+                               encoding='utf-8')
+        request.return_value = response
 
         task = self.importer.tasks(**self.epicollect).next()
 
