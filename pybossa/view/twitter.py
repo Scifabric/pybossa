@@ -73,12 +73,12 @@ def oauth_authorized(resp):  # pragma: no cover
     user_data = dict(screen_name=resp['screen_name'],
                      user_id=resp['user_id'])
 
-    user = manage_user(access_token, user_data, next_url)
+    user = manage_user(access_token, user_data)
 
     return manage_user_login(user, user_data, next_url)
 
 
-def manage_user(access_token, user_data, next_url):
+def manage_user(access_token, user_data):
     """Manage the user after signin"""
     # Twitter API does not provide a way
     # to get the e-mail so we will ask for it
