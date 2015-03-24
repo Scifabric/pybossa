@@ -63,11 +63,11 @@ def oauth_authorized(resp):  # pragma: no cover
     session['oauth_token'] = (resp['access_token'], '')
     user_data = facebook.oauth.get('/me').data
 
-    user = manage_user(access_token, user_data, next_url)
+    user = manage_user(access_token, user_data)
     return manage_user_login(user, user_data, next_url)
 
 
-def manage_user(access_token, user_data, next_url):
+def manage_user(access_token, user_data):
     """Manage the user after signin"""
     user = user_repo.get_by(facebook_user_id=user_data['id'])
 

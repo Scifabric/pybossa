@@ -39,14 +39,14 @@ class TestFacebook(Test):
         """Test FACEBOOK manage_user works."""
         # First with a new user
         token = 't'
-        user = manage_user(token, self.user_data, None)
+        user = manage_user(token, self.user_data)
         assert user.email_addr == self.user_data['email'], user
         assert user.name == self.name, user
         assert user.fullname == self.user_data['name'], user
         assert user.facebook_user_id == self.user_data['id'], user
 
         # Second with the same user
-        user = manage_user(token, self.user_data, None)
+        user = manage_user(token, self.user_data)
         assert user.email_addr == self.user_data['email'], user
         assert user.name == self.name, user
         assert user.fullname == self.user_data['name'], user
@@ -57,14 +57,14 @@ class TestFacebook(Test):
         # First with a new user
         del self.user_data['email']
         token = 't'
-        user = manage_user(token, self.user_data, None)
+        user = manage_user(token, self.user_data)
         assert user.email_addr == self.user_data['email'], user
         assert user.name == self.name, user
         assert user.fullname == self.user_data['name'], user
         assert user.facebook_user_id == self.user_data['id'], user
 
         # Second with the same user
-        user = manage_user(token, self.user_data, None)
+        user = manage_user(token, self.user_data)
         assert user.email_addr == self.user_data['email'], user
         assert user.name == self.name, user
         assert user.fullname == self.user_data['name'], user
@@ -75,7 +75,7 @@ class TestFacebook(Test):
         """Test FACEBOOK manage_user newsletter works."""
         newsletter.app = True
         token = 't'
-        user = manage_user(token, self.user_data, None)
+        user = manage_user(token, self.user_data)
         assert user.email_addr == self.user_data['email'], user
         assert user.name == self.name, user
         assert user.fullname == self.user_data['name'], user
@@ -89,7 +89,7 @@ class TestFacebook(Test):
         newsletter.app = True
         del self.user_data['email']
         token = 't'
-        user = manage_user(token, self.user_data, None)
+        user = manage_user(token, self.user_data)
         assert user.email_addr == self.user_data['email'], user
         assert user.name == self.name, user
         assert user.fullname == self.user_data['name'], user
